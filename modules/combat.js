@@ -47,9 +47,18 @@ function cdBusy(b) {
   else if (overlayBusySeen.get(b)) { overlayBusySeen.delete(b); overlayReadySeen.add(b); }
   return busy;
 }
+// 7.2.1 (лог 10.10 22:19, РБ Гниле Дерево Репіро): сервер считал Blaze готовым через 1,4 с после нажатия, игра на экране клик
+// отклоняла («ещё на КД — жду 0.0 с») — 11 раз за бой, по ≈1 с. Свой откат по нажатию (последние 5 с) тоже учитываем: берём больший
+// (серверные откаты переписывают rt.cdUntil, поэтому свой — от нажатия: 85 % замеренного отката; Blaze 3,1 → 2,6 с — столько сервер и принял)
+const ownLeft = b => {
+  const k = env.skKey(b), u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
+  if (!k || !u || Date.now() - u > 5000 || env.slotKind(b) !== 'скилл') return 0;
+  const cd = (S.cdNet || Math.max(S.cd || 0, S.cdFloor || 0)) * 1000 * 0.85;
+  return Math.max(0, u + cd - Date.now()) / 1000;
+};
 function localCdLeft(b) {
   const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
-  if (action && env.combatCooldown.skillKnown?.(action, spawn)) return env.combatCooldown.skillWait(action, spawn) / 1000;
+  if (action && env.combatCooldown.skillKnown?.(action, spawn)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, ownLeft(b));
   if (overlayReadySeen.has(b)) return 0; // observed busy -> ready; an absent overlay alone is not evidence
   return env.memLeft(b);
 }
