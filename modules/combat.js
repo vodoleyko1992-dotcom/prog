@@ -65,10 +65,15 @@ const ownLeft = b => {
   const cd = (S.cdNet || Math.max(last || S.cd || 0, floor)) * 1000 * 0.85;
   return Math.max(lost, Math.max(0, u + cd - Date.now()) / 1000);
 };
+// 8.0.2 (игрок 11.10: «откат может сильно меняться от моих баффов»): игра на экране показала откат ЭТОГО нажатия и он кончился —
+// верим экрану сразу (баффы вроде «Дара Серафима» −30 % уже учтены игрой). Своя оценка (ownLeft) — только пока откат на экране
+// ещё не появился после нажатия; потерянный клик по-прежнему держит заклинание «занятым» 0,7 с (lostUntil)
+const lostLeft = b => Math.max(0, (lostUntil.get(env.skKey(b)) || 0) - Date.now()) / 1000;
 function localCdLeft(b) {
   const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
-  if (action && env.combatCooldown.skillKnown?.(action, spawn)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, ownLeft(b));
-  if (overlayReadySeen.has(b)) return ownLeft(b); // observed busy -> ready; an absent overlay alone is not evidence
+  const own = overlayReadySeen.has(b) ? lostLeft(b) : ownLeft(b);
+  if (action && env.combatCooldown.skillKnown?.(action, spawn)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, own);
+  if (overlayReadySeen.has(b)) return own; // observed busy -> ready; an absent overlay alone is not evidence
   return Math.max(env.memLeft(b), ownLeft(b));
 }
 

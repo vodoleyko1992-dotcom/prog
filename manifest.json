@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "8.0.1",
-  "description": "L2wap Bot 8.0.1 — обновление игры: пояса (сила крита), плащи (баффы)",
+  "version": "8.0.2",
+  "description": "L2wap Bot 8.0.2 — откаты заклинаний следуют за баффами",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "8.0.1"
+  "version_name": "8.0.2"
 }
