@@ -78,7 +78,7 @@ const DEF = { farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 
               nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
-              fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
+              fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
               shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0 };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
@@ -1201,7 +1201,7 @@ $('zoneBox').onclick = async e => {
 // 100 пакетов наживки (1000 шт. ≈ 680 рыб) и заряды под наживку (≈75 пакетов, кончаются вместе) — v4.56, без лимита, разделка каждые 100, Old Box
 $('fishBest').onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  await menuPatch({}, { cfgPatch: { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true } });
+  await menuPatch({}, { cfgPatch: { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true } });
   load();
 };
 $('fishReset').onclick = async () => {

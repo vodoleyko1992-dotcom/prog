@@ -1,4 +1,4 @@
-// ===== L2wap Bot v7.2.3 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v7.2.4 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
@@ -3842,7 +3842,10 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('trial7128', () => { if (!(C('zoneTrial') >= 15)) cf.zoneTrial = 20; });   // 7.1.30: проба зоны < 15 боёв — шум, а не замер (было 5)   // 7.1.30: автофарм (подбор локации) по умолчанию выключен — включается в «Быстрых режимах»
   once('weap7128', () => { Object.assign(rf, { weaponsT: 0 }); });   // 7.1.30: перечитать оружие (в памяти могла остаться кукла NG как «надето»)
   once('mag7125', () => { cf.autoMagister = false; Object.assign(rf, { magister: null }); });   // 7.1.30: магистр — только руками
-  once('shots723', () => { cf.shopShots = '1000/5000'; });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
+  once('shots723', () => { cf.shopShots = '1000/5000'; });
+  // 7.2.4: настройки рыбалки игрока (скрин 10.10) — базовые: наживка «Авто», заряды вкл., докупать вкл., 1000 пакетов наживки,
+  // заряды под наживку (авто), 750 пакетов, если авто выкл., без лимита забросов
+  once('fish724', () => { Object.assign(cf, { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 }); });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
     const S = { ...(rt.rbStats || {}) }, sig = {};
     for (const [id, v] of Object.entries(S)) (sig[`${v.hp}|${v.patk}`] ||= []).push(id);

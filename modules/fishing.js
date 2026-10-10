@@ -455,7 +455,7 @@ async function fishPrepare() {                  // удочка, наживка 
   }
   if (nb === 0 && env.cfg.fishAutoBuy && want === 'basicBait' && buyOk('bait')) {   // хорошая наживка — только за Proof, её не покупаем
     env.setStatus('Рыбалка: наживка кончилась — покупаю');
-    await buy('bait', want === 'goodBait' ? 'good_bait_x10' : 'bait_x10', env.cfg.fishBuyPacks || 100, want === 'goodBait' ? 'Good Fishing Lure ×10' : 'Fishing Lure ×10');
+    await buy('bait', want === 'goodBait' ? 'good_bait_x10' : 'bait_x10', env.cfg.fishBuyPacks || 1000, want === 'goodBait' ? 'Good Fishing Lure ×10' : 'Fishing Lure ×10');
     nb = fishQty(want);
   }
   if (nb === 0) { await fishSoft(env.cfg.fishAutoBuy ? 'Рыбалка: наживка кончилась, купить не вышло (хватает ли аден?)' : 'Рыбалка: кончилась наживка (включите «докупать» или купите в магазине рыбака)'); return false; }
@@ -466,14 +466,14 @@ async function fishPrepare() {                  // удочка, наживка 
     if (fishQty('soulshot') === 0 && env.cfg.fishAutoBuy && buyOk('shot')) {
       env.setStatus('Рыбалка: кончились заряды — покупаю');
       // v4.56: соотношение — зарядов столько, чтобы кончились вместе с наживкой (по замеру расхода: наживки и зарядов на рыбу)
-      let sp = env.cfg.fishShotPacks || 75, why = '';
+      let sp = env.cfg.fishShotPacks || 750, why = '';
       if (env.cfg.fishShotAuto !== false) {
         const F = env.rt.fish || {}, S = env.rt.fishSess || {};
         const baitPerFish = F.caught >= 30 ? Math.min(3, Math.max(1.1, F.casts / F.caught)) : 1.47;
         const shotPerFish = S.n >= 30 && S.shots ? Math.min(12, Math.max(3, S.shots / S.n)) : 5.5;
         const baitNow = fishQty(want) || 0;
         const fishLeft = baitNow / baitPerFish;
-        sp = Math.max(5, Math.min(400, Math.ceil(fishLeft * shotPerFish / 50)));
+        sp = Math.max(5, Math.min(1000, Math.ceil(fishLeft * shotPerFish / 50)));   // 7.2.4: до 1000 пак. — под 1000 пакетов наживки (было 400)
         why = ` (под наживку: ${baitNow} шт. ≈ ${Math.round(fishLeft)} рыб × ${shotPerFish.toFixed(1)} заряда)`;
       }
       await buy('shot', 'soulshot_x50', sp, 'Fishing Soulshot ×50' + why);

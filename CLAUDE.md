@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная, интерфейс игры на украинском, журнал бота на русском). Текущая версия: **7.2.3**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная, интерфейс игры на украинском, журнал бота на русском). Текущая версия: **7.2.4**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 ## Игрок и его правила (обязательно соблюдать)
 
@@ -35,7 +35,7 @@ popup.html/js, ui-v7.* меню: 7 разделов (overview, hunt, rb, fish, p
                        скрытие по классу (data-cls="fighter|mage|spoil" + html.cls-mage/cls-fighter/cls-spoil, «показать всё»)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (77 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (78 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -82,7 +82,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 77 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 78 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -98,6 +98,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
+- 7.2.4: настройки рыбалки игрока — базовые (наживка «Авто», 1000 пакетов наживки, заряды авто до 1000 пак. / 750 вручную; once fish724). Рыбалка ≈562 рыбы/ч, ≈0,33 Proof с рыбы → ≈185 Proof/ч, ≈15–18 тыс. аден за Proof. Цены наград рыбака (плащи/татуировки/пояса/ресурсы) пока неизвестны — нужен снимок вкладок магазина.
 - 7.2.3 (собрана; логи 23:17–23:30): городской набор не понижает активные баффы (buffs.tbDowngrade, hudLevels «· Lv.N», rt.tbLvl со страницы баффера); недобитый РБ первым (rt.rbWound, raid.rbWounded); повтор призыва кота через ≈2 с. Сет Авадон (мантия): M.Atk +12 %, каст +10 %, маг. крит урон +9 %, HP/MP/CP. Лог 23:30: запас по сумке из сети (hook.js `inv` — полный `inventory.stacks`, content INV_NET/invQty в sessionStorage, economy.shopNeedByPanel; redact в hook режет массивы до 8!), заряды 1000/5000 (once shots723), закупка в туре РБ только между боями (raid.rbShopFirst: все расходники, force; при отходе — магазин и обратно к тому же РБ), окно-индикатор не прыгает (engine-core.stickyFree, localStorage l2bot-indw).
 - 7.2.2 (логи 22:10–23:07, экспорты 22:40): РБ-сессия с баффом FA; список «что фармить» как на форуме (popup renderTree, поиск, 🎯); диапазон уровней источников cfg.farmLvlBelow/Above (−3…+5, farmWin/farmFit, inWin в приоритете); базовый профиль из экспортов 22:40; потерянный клик → заклинание «занято» 0,7 с (combat.lostUntil); итог боя с раненым РБ — от HP на входе.
 - 7.2.1 (логи 10.10 21:05–21:31): дебаффы по L2WAP (IL_FIX 1083/1222/1164/1168: mDefDown/pAtkDown) + замер выгоды `rt.debuffGain` (spellSample из observeSlot через BUFF_CTX); банка маны не попадает в «Банку HP»; **цепочка: игра шлёт battleSpawnId первого боя, а URL меняется** — откаты по `cdSpawn()`/`GAME_SPAWN`, принятый сервером ход (ACT_NET.ok) засчитывается, потерянный клик без ожидания; средний урон — последние ≈40–60 замеров; кампания убрана (квесты игрок ведёт сам, once camp721), «Квесты на ресурсы» только счётчик; нет своих рядом — свои дальше по локации до телепорта; слот зарядов не того грейда заменяется (shotSlotSwap: «#id»/цвет иконки); Servitor Ultimate Defense не бафф кота. РБ: окно карты должно показать этого РБ (rbModalIs: NPC из spawnId), спецудар ×rbSpK() по боям, «не по силам» по оценке — только пропуск 30 мин, РБ невосприимчивы к дебаффам (rt.debuffImmune), индикатор `#l2bot-ind.wide` по левому краю. Рыбалка: учёт после поимки фоном (fishStat/bg), наживка «Авто» по замеру Proof/ч (rt.fishBaitStat, rt.fishVal по разделке, rt.fishRates из магазина; хорошая за Proof — только если +0,3 Proof/заброс). Заточка удочки — только шанс Old Box +1 %/ур., урон не растёт. РБ-сессия (rt.rbSess, cfg.rbSessBuffs/rbSessNob, raid.rbSessTick/rbSessEnd): баффы FA по 1/5 FA на 3 ч, покупка один раз, после смерти только Noblesse (1323), конец → автофарм. FA с мобов, Coin of Luck донатная. Свой откат по нажатию (combat.ownLeft) не перекрывается серверным «готов».

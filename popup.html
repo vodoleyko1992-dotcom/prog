@@ -574,12 +574,12 @@
   <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
   <div class="hint">Счёт — с момента постановки цели. Достигнута — бот останавливается. «Рыбы»: перед остановкой разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
   <h4>Снаряжение</h4>
-  <div class="row"><button id="fishBest" title="Обычная наживка · заряды вкл · докупка вкл · 100 пакетов наживки, заряды под наживку (≈75 пакетов) · без лимита забросов · разделка каждые 100 · Old Box открывать">⚙ Рекомендуемые настройки рыбалки</button></div>
+  <div class="row"><button id="fishBest" title="Наживка «Авто» · заряды вкл · докупка вкл · 1000 пакетов наживки, заряды под наживку (≈750 пакетов) · без лимита забросов · разделка каждые 100 · Old Box открывать">⚙ Рекомендуемые настройки рыбалки</button></div>
   <label>Наживка <select id="fishBait"><option value="auto">Авто — по замеру Proof/ч (хорошая — только бесплатная, из Old Box)</option><option value="basic">Обычная (Fishing Lure)</option><option value="good">Хорошая (Good Fishing Lure)</option></select></label>
   <label>Рыболовные заряды (Soulshot) <input id="fishShots" type="checkbox"></label>
   <label>Докупать наживку и заряды за аден <input id="fishAutoBuy" type="checkbox"></label>
   <label>Наживки за раз, пакетов по 10 (1 000 аден) <input id="fishBuyPacks" type="number" min="1"></label>
-  <label title="Бот считает расход наживки и зарядов на рыбу и покупает зарядов столько, чтобы они кончились вместе с наживкой (≈75 пакетов на 100 пакетов наживки)">Заряды под наживку (авто-соотношение) <input id="fishShotAuto" type="checkbox"></label>
+  <label title="Бот считает расход наживки и зарядов на рыбу и покупает зарядов столько, чтобы они кончились вместе с наживкой (≈750 пакетов на 1000 пакетов наживки)">Заряды под наживку (авто-соотношение) <input id="fishShotAuto" type="checkbox"></label>
   <label>Зарядов за раз, пакетов по 50 (5 000 аден), если авто выкл. <input id="fishShotPacks" type="number" min="1"></label>
   <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
   <div class="hint">Хорошая наживка покупается только в «Рыболовном магазине» за Proof of Catching a Fish — бот её не докупает.</div>
