@@ -73,7 +73,7 @@ Playwright-смоуки с реальным расширением (headless Chr
 
 **Сборка:**
 ```
-zip -qr l2wap-bot-v7.1.NN.zip . -x 'tests/*' -x '*.orig'
+zip -qr l2wap-bot-v7.1.NN.zip . -x 'tests/*' -x '*.orig' -x '.claude/*' -x '.git/*'
 # Firefox: копия без tests, в manifest.json: background: {scripts:["background.js"]}, убрать minimum_chrome_version/version_name,
 # добавить browser_specific_settings.gecko {id:"l2wap-bot@local", strict_min_version:"128.0"}; зип -firefox
 # проверить: grep -ci 'passw\|"auth"' base-profile.json → 0
