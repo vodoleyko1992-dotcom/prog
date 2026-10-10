@@ -302,6 +302,7 @@ function debuffGain() {                                   // медиана от
 }
 function debuffPlan(ctx, mp, me) {
   if (env.cfg.debuffAuto === false) return null;
+  if (env.rt.debuffImmune?.[ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob']) return null;   // 7.2.1: «має імунітет до негативних ефектів»
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
   const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto', g = debuffGain();
   const actsLeft = mob.cur / Math.max(1, avg + petExpect(ctx));
@@ -738,6 +739,14 @@ async function battle() {
       await env.setRt({ epic: { ...env.rt.epic, startHp: mob0.cur, resetN: reset ? (env.rt.epic.resetN || 0) + 1 : 0 } });
       env.rec('B', 'эпики', `${ctx.name}: заход ${(env.rt.epic.deaths || 0) + 1} · у него ${Math.round(mob0.cur / mob0.max * 1000) / 10} % (${env.fmtK(mob0.cur)}/${env.fmtK(mob0.max)})${reset ? ' — HP восстановилось полностью!' : ''}`);
     }
+    // 7.2.1 (лог 10.10 21:32: у Короля Тарлка сохранились цифры окна карты другого РБ — HP 273k при настоящих 920k): HP из окна карты
+    // не совпадает с HP в бою больше чем на 10 % — цифры чужие, стираем (по ним оценивались и другие РБ)
+    { const st0 = env.rt.rbStats?.[ctx.rb.id];
+      if (st0?.hp && mob0.max && Math.abs(st0.hp - mob0.max) > mob0.max * 0.1) {
+        const S = { ...env.rt.rbStats }; delete S[ctx.rb.id];
+        await env.setRt({ rbStats: S });
+        env.rec('B', 'РБ', `${nm}: в памяти были чужие цифры (HP ${env.fmtK(st0.hp)} вместо ${env.fmtK(mob0.max)}) — стёр, оценю заново`);
+      } }
     // HP РБ сохраняется между заходами: «Моб ще поранений: HP 143526 / 148507» (через 13 мин — ровно столько же)
     const prevR = env.rt.rb?.[ctx.rb.id], dbR = env.rt.rbDb?.[ctx.rb.id] || {};
     const wounded = env.logLines().some(l => /(?:Моб ще поранений|Моб ещё ранен|still wounded)/i.test(l)) || mob0.cur < mob0.max;
@@ -1211,6 +1220,14 @@ async function battle() {
         const added = env.newLines(before, env.logLines()).join(' ⏎ ');
         const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|сопротивл|resist|не подіяв|не подействовал/i.test(added);
         if (fail && !ok && ctx.debuffed) delete ctx.debuffed[dbf.k];   // 7.2.1: не прошёл — цель не под дебаффом (иначе замер выгоды врёт)
+        // 7.2.1 (лог 10.10 21:32–21:39): «Raid Boss має імунітет до негативних ефектів» — 3 хода на каждый заход к РБ (и Surrender снова
+        // каждые 15 с) впустую. Запоминаем: на этот вид целей дебаффы не вешаем (rt.debuffImmune.rb / .champ / .mob)
+        if (/імунітет|иммунитет|immune/i.test(added)) {
+          const kind = ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob';
+          if (ctx.debuffed) delete ctx.debuffed[dbf.k];
+          if (!env.rt.debuffImmune?.[kind]) { await env.setRt({ debuffImmune: { ...(env.rt.debuffImmune || {}), [kind]: Date.now() } }); env.rec('B', 'дебафф', `${kind === 'rb' ? 'рейд-боссы' : kind === 'champ' ? 'чемпионы' : 'мобы'} невосприимчивы к дебаффам («${(added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim()}») — больше не вешаю`); }
+          continue;
+        }
         if (ok || fail) {
           const S = { ...(env.rt.debuffStat || {}) }, s = { ok: 0, fail: 0, ...(S[dbf.k] || {}) };
           if (ok) s.ok++; else s.fail++;

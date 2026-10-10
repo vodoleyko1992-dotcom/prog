@@ -885,7 +885,7 @@ const RECENT = [];                               // v4.47: последние д
 let statusShape = '', statusW = 0;
 function setStatus(s) {
   const shape = String(s).replace(/[\d.,]+/g, '#');
-  if (s !== rt.status && shape !== statusShape) { statusShape = shape; recBot(s); RECENT.unshift({ t: Date.now(), s }); RECENT.length = Math.min(RECENT.length, 6); }
+  if (s !== rt.status && shape !== statusShape) { statusShape = shape; recBot(s); RECENT.unshift({ t: Date.now(), s }); RECENT.length = Math.min(RECENT.length, 31); }
   if (s !== rt.status && Date.now() - statusW > 2500) { statusW = Date.now(); setRt({ status: s }); }
   else rt = { ...rt, status: s };
   draw();
@@ -2308,7 +2308,7 @@ function scheduleDock() {
 }
 function dockGameBounds(viewport) {
   const anchors = [...document.querySelectorAll('#l2-nav-bottom, #battle-content, #map-mob-list, .l2-battle-hotbar, #fishing-target')];
-  let right = 0;
+  let right = 0, left = Infinity;
   const observed = [];
   for (const anchor of anchors) {
     if (!shown(anchor)) continue;
@@ -2320,12 +2320,12 @@ function dockGameBounds(viewport) {
       const r = el.getBoundingClientRect();
       if (r.width > base.width + 96 || r.width >= viewport - 8) break;
       if (r.width >= base.width && r.right > 0 && r.left >= -1) {
-        right = Math.max(right, r.right);
+        right = Math.max(right, r.right); left = Math.min(left, r.left);
         observed.push(el);
       }
     }
   }
-  return { right: Math.ceil(right), observed };
+  return { right: Math.ceil(right), left: left === Infinity ? 0 : Math.floor(left), observed };
 }
 // v5.2: сторож встроенной панели. Панель (iframe с меню) шлёт «я жива» каждые 3 с; если 20 с тишины, а вкладка на экране —
 // панель упала (в Chrome — «грустный листок»), пересоздаём её. Не чаще раза в минуту; бот при этом работает дальше.
@@ -2342,8 +2342,18 @@ setInterval(() => {
   try { rec('S', 'меню', `встроенная панель не отвечает ${Math.round((now - Math.max(dockHb, dockBorn)) / 1000)} с — перезапускаю её`); } catch (e) {}
   const nf = fr.cloneNode(false); nf.src = chrome.runtime.getURL('popup.html?dock=1&r=' + now); fr.replaceWith(nf); dockBorn = now;
 }, 5000);
+// 7.2.1 (игрок 10.10: «информационное окно крупнее, полностью по левому пустому краю, текст покрупнее»): слева от игры есть место
+// (≥ 300 px) — окно на всю высоту и ширину этого поля, шрифт крупнее; места нет — компактное окно внизу слева, как раньше
+function layoutInd(bounds) {
+  try {
+    const free = (bounds?.left || 0) - 16;
+    ui.classList.toggle('wide', free >= 300);
+    ui.style.width = free >= 300 ? `${Math.min(free, 760)}px` : '';
+  } catch (e) {}   // индикатор ещё не создан
+}
 function dock() {
   if (window.top !== window) return;
+  if (!cfg.dock) try { layoutInd(dockGameBounds(document.documentElement.clientWidth || innerWidth)); } catch (e) {}
   let wrap = document.getElementById('l2bot-dock');
   if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; return; }
   const min = !!cfg.dockMin;
@@ -2367,6 +2377,7 @@ function dock() {
   }
   const viewport = document.documentElement.clientWidth || innerWidth;
   const bounds = dockGameBounds(viewport), available = viewport - bounds.right - 8;
+  layoutInd(bounds);
   // Если рядом места нет (узкое окно или ещё не загрузилась игра), оставляем компактную панель.
   const w = bounds.right > 0 && available >= 300 ? available : Math.min(380, Math.max(0, viewport - 16));
   wrap.style.cssText = `position:fixed;top:8px;right:${min ? -w : 8}px;bottom:8px;width:${w}px;z-index:2147483646;`
@@ -2409,7 +2420,12 @@ uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:21474
 #l2bot-ind .h i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 6px currentColor}
 #l2bot-ind .s{font-weight:600;font-size:13px;margin:4px 0 3px;color:#fff}
 #l2bot-ind .r{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#a39280;font-size:11px}
-#l2bot-ind .k{color:#a39280}`;
+#l2bot-ind .k{color:#a39280}
+#l2bot-ind.wide{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:auto;font-size:16px;line-height:1.5;padding:14px 18px 16px}
+#l2bot-ind.wide .h{font-size:15px}
+#l2bot-ind.wide .h i{width:11px;height:11px;flex-basis:11px}
+#l2bot-ind.wide .s{font-size:18px;margin:8px 0 6px}
+#l2bot-ind.wide .r{font-size:14.5px;margin-top:10px;padding-top:9px}`;
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
@@ -2445,8 +2461,9 @@ function draw() {
   const F = rt.fish;
   if (cfg.fishMode && F?.casts) L.push(`🎣 ${F.caught} поймано / ${F.lost} сорвалось / ${F.casts} забросов${rt.fishSess?.n ? '\n🎣 сессия: ' + fishRateTxt() : ''}`);
   const q = questSummary(); if (q) L.push(q.replace(/^\s*·\s*/, ''));
-  const rec5 = RECENT.slice(1, 6);                  // [0] — текущий статус, он уже сверху
-  if (rec5.length) L.push('— последние действия —\n' + rec5.map(x => `${new Date(x.t).toLocaleTimeString('ru')} ${x.s.replace(/\[РБ [^\]]*\]/, '[РБ]').slice(0, 64)}`).join('\n'));
+  const wide = ui.classList.contains('wide');        // 7.2.1: окно на всю высоту — больше истории и длиннее строки
+  const rec5 = RECENT.slice(1, wide ? 31 : 6);      // [0] — текущий статус, он уже сверху
+  if (rec5.length) L.push('— последние действия —\n' + rec5.map(x => `${new Date(x.t).toLocaleTimeString('ru')} ${x.s.replace(/\[РБ [^\]]*\]/, '[РБ]').slice(0, wide ? 140 : 64)}`).join('\n'));
   const mode = cfg.indMode || 'full';
   if (mode === 'off') { ui.style.display = 'none'; return; }
   ui.style.display = '';
@@ -3798,6 +3815,14 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('trial7128', () => { if (!(C('zoneTrial') >= 15)) cf.zoneTrial = 20; });   // 7.1.30: проба зоны < 15 боёв — шум, а не замер (было 5)   // 7.1.30: автофарм (подбор локации) по умолчанию выключен — включается в «Быстрых режимах»
   once('weap7128', () => { Object.assign(rf, { weaponsT: 0 }); });   // 7.1.30: перечитать оружие (в памяти могла остаться кукла NG как «надето»)
   once('mag7125', () => { cf.autoMagister = false; Object.assign(rf, { magister: null }); });   // 7.1.30: магистр — только руками
+  once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
+    const S = { ...(rt.rbStats || {}) }, sig = {};
+    for (const [id, v] of Object.entries(S)) (sig[`${v.hp}|${v.patk}`] ||= []).push(id);
+    for (const ids of Object.values(sig)) if (ids.length > 1) ids.forEach(id => delete S[id]);
+    const D = {};
+    for (const [id, d] of Object.entries(rt.rbDb || {})) D[id] = d.verdict === 'no' && /^оценка до боя/.test(d.note || '') ? { ...d, verdict: null } : d;
+    Object.assign(rf, { rbStats: S, rbDb: D, rbPreSkip: {}, debuffImmune: { ...(rt.debuffImmune || {}), rb: Date.now() } });   // лог 21:32: «Raid Boss має імунітет до негативних ефектів»
+  });
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('camp721', () => { cf.campaign = false; Object.assign(rf, { campOnce: false, campaignDue: false }); });   // 7.2.1: кампания убрана — квесты игрок ведёт сам
   once('deep10_7123', () => { cf.deepEvery = 10; });                                   // 7.1.30: карта раз в 10 боёв (просьба игрока)

@@ -59,6 +59,14 @@ function rbModalStats() {
   return o.hp ? o : null;
 }
 
+// 7.2.1 (лог 10.10 21:32–21:46: «много РБ на 8–9 ур. ниже, а бот пропускает»): спецудар незнакомого РБ считался как 6,8 × обычный удар,
+// а у Орка Тимака Госмоса (45) реально 1344 при обычном ≈313 — ×4,3. Множитель — по реальным боям (спецудар / обычный удар по P.Atk),
+// с запасом 15 %; замеров нет — ×5,5
+function rbSpK() {
+  const k = env.rt.rbK || 0.109, S = env.rt.rbStats || {};
+  const r = Object.entries(env.rt.rbDb || {}).map(([id, d]) => d.sp > 0 && S[id]?.patk ? d.sp / (S[id].patk * k) : 0).filter(x => x > 1 && x < 20).sort((a, b) => a - b);
+  return r.length ? Math.min(6.8, Math.max(3, r[r.length >> 1] * 1.15)) : 5.5;
+}
 function rbPreCheck(id, st, slack = 1) {
   const me = env.meHp(), maxHp = me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {};
@@ -68,7 +76,7 @@ function rbPreCheck(id, st, slack = 1) {
   const pot = env.potModel(), pool = pot?.pool || 0;
   const p90 = historical.hitP90 || historical.p90 || Math.max(150, base * 1.65);
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
-  const sp = historical.sp > 0 ? historical.sp : base * 4 * 1.7;
+  const sp = historical.sp > 0 ? historical.sp : base * rbSpK();
   const measured = historical.sp > 0;
   const loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
   const need = loss * t;
@@ -76,18 +84,33 @@ function rbPreCheck(id, st, slack = 1) {
   const info = `спецудар ${Math.round(sp)} HP${measured ? ' (из боёв)' : ' (оценка)'}, обычный ≈${Math.round(base)}, ` +
     `потеря ≈${Math.round(loss)} HP/с, РБ HP ${env.fmtK(curHp)} ≈${env.fmtT(t)}, ` +
     `банки ≈${env.fmtK(need)} из ${env.fmtK(pool)}`;
-  if (sp >= maxHp * 0.45) return { ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}` };
-  if (sp + 2 * p90 >= maxHp * 0.60) return { ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}` };
+  // по прикидке (РБ ни разу не видели — цифры по другим РБ) отсекаем только явно неподъёмных; на месте решат настоящие цифры из окна карты
+  const lim = st.est ? 1.5 : 1;
+  if (sp >= maxHp * 0.45 * lim) return { ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}` };
+  if (sp + 2 * p90 >= maxHp * 0.60 * lim) return { ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}` };
   if (loss > potRate * 0.8 * slack && loss > 0) return { ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}` };
   if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}` };
   return { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}` };
 }
 
+// 7.2.1 (лог 10.10 21:32:54–21:33:09, смерть): окно карты ещё показывало «Розпалений Голем · ур. 44 · NPC 25431» (HP 273k, удар ≈110),
+// бот прочёл его как «Король Тарлк» (48, 920k HP) — «иду: спецудар 747» — и героя с 4022 HP убили одним ударом через 7 с.
+// Данные Тарлка пришли через 0,3 с после решения. Теперь окно должно показать ИМЕННО этого РБ (номер NPC из spawnId или имя)
+const nmNorm = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '').replace(/\s+/g, ' ').trim();
+function rbModalIs(r) {
+  const m = env.$q('#map-mob-modal');
+  if (!m || !env.shown(m)) return false;
+  const npc = String(env.$q('#map-mob-modal-sub')?.textContent || '').match(/NPC\s*(\d+)/i)?.[1], idN = String(r.id || '').match(/(\d+)$/)?.[1];
+  if (npc && idN) return npc === idN;
+  const t = nmNorm(env.$q('#map-mob-modal-title')?.textContent), n = nmNorm(r.name);
+  return !!t && !!n && (t.includes(n) || n.includes(t));
+}
 async function rbScout(r) {
   const pin = env.$q(`.l2-map-mob-pin[data-spawn-id="${CSS.escape(r.id)}"]`);   // v5.5: и метка эпика
   if (!pin) return null;
+  if (env.shown(env.$q('#map-mob-modal')) && !rbModalIs(r)) { closeMobModal(); await env.sleep(250); }
   env.fire(pin);
-  const st = await env.waitFor(rbModalStats, 3000, 100);
+  const st = await env.waitFor(() => rbModalIs(r) ? rbModalStats() : null, 4000, 100);
   if (!st) return null;
   await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: { ...st, t: Date.now() } } });
   return rbPreCheck(r.id, st);
@@ -102,8 +125,10 @@ async function rbEngage(r, label, opt = {}) {
   if (chk && !chk.ok) {
     closeMobModal();
     // v5.2: «мало банок» — не приговор РБ: закупим банки — снова можно. Такой РБ пропускаем 30 мин, «не по силам» не пишем
-    if (chk.kind === 'pots') await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: Date.now() } });
-    else await rbNote(r.id, { verdict: 'no', name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
+    // 7.2.1: «не по силам» по ОЦЕНКЕ — не вечный приговор (оценка бывает по чужим цифрам: лог 21:32 — окно карты от другого РБ);
+    // пропуск на 30 мин, цифры РБ сохранены — следующая проверка до телепорта увидит их сама. Вечный «не по силам» — только по бою
+    await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: Date.now() } });
+    if (chk.kind !== 'pots') await rbNote(r.id, { name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
     env.rec('B', 'РБ', `${r.name} (${r.lvl}): не полезу — ${chk.why}`);
     return 'skip';
   }
@@ -232,8 +257,12 @@ function rbTeleportCheck(id, x) {                 // → null (можно лет
   return why;
 }
 function noteRbSkip(id, reason) {
-  if (Date.now() - (rbSkipNotices.get(id) || 0) > 1800000) {
+  // 7.2.1 (лог 21:36–21:46: 452 строки «не полетел к …» за 10 мин): метка «уже писал» жила только до перезагрузки страницы
+  const seen = Math.max(rbSkipNotices.get(id) || 0, env.rt.rbSkipNote?.[id] || 0);
+  if (Date.now() - seen > 1800000) {
     rbSkipNotices.set(id, Date.now());
+    const keep = Object.fromEntries(Object.entries(env.rt.rbSkipNote || {}).filter(([, t]) => Date.now() - t < 1800000));
+    try { env.setRt?.({ rbSkipNote: { ...keep, [id]: Date.now() } })?.catch?.(() => {}); } catch (e) {}
     env.rec('B', 'РБ-тур', `не полетел к ${env.rt.rbList?.[id]?.name || id}: ${reason}`);
   }
 }
@@ -648,6 +677,6 @@ async function rbShopFirst(label) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
