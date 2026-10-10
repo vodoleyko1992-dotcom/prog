@@ -74,6 +74,16 @@ assert.equal(due({ deepEvery: 99999, farmRes: 'Coal', searchChamp: false }, { zo
 assert.equal(due({ deepEvery: 0, farmRes: 'Coal', searchChamp: false }, { zone: 'other', sinceDeep: 50 }), false, 'not at the farm spot: 0 = never');
 assert.equal(due({ deepEvery: 0, farmRes: '', searchChamp: false }, { zone: 'z1', sinceDeep: 50 }), false, 'no goal: 0 = never');
 ctx.document.querySelector = q0;
+// 7.2 (лог 10.10 20:21–20:29): «Hatar Ratman Boss» — обычный моб, а не РБ (45 уходов из боя); РБ — по приписке «· рейд-босс»
+vm.runInContext(`cfg = mergeCfg({}); rt = { ...DEF_RT };`, ctx);
+assert.equal(vm.runInContext(`isBoss('Hatar Ratman Boss · ур. 48 · агрессивный')`, ctx), false, 'boss word in the name is not a raid boss');
+assert.equal(vm.runInContext(`isBoss('Карте · ур. 49 · рейд-босс')`, ctx), true);
+assert.equal(vm.runInContext(`isBoss('Hatar Ratman Boss')`, ctx), false);
+assert.equal(vm.runInContext(`cfg = mergeCfg({ champMark: 'чемпион, champion' }); isChamp('Probe Golem Champion I · ур. 49')`, ctx), false, 'champion word in the name is not a champion');
+assert.equal(vm.runInContext(`isChamp('Probe Golem Champion I · ур. 49 · чемпион')`, ctx), true);
+// 7.2 (лог 10.10 20:52): Corpse Life Drain на L2WAP — лечение себя в бою (178 HP, MP 0), а не «маг. атака по трупу»
+const cld = vm.runInContext(`ilOf('Corpse Life Drain')`, ctx);
+assert.equal(cld.c, 'Лечение'); assert.equal(cld.t, 'HEAL'); assert.equal(cld.target, 'SELF');
 // Every env.foo access in source modules needs a corresponding lazy binding.
 for (const modName of required) {
   const source=fs.readFileSync(path.join(root,'modules',modName+'.js'),'utf8');

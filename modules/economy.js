@@ -9,7 +9,9 @@
 // Грейд: надетое оружие → оружие из настроек «Основное» в списке → по уровню героя (D с 20, C с 40…).
 // Маг: класс по профессии/профилю → или на панели/в настройках уже Blessed Spiritshot
 function shotGrade() {
-  const W = env.rt.weapons || [], ok = g => g && g !== '—' && /^(NG|D|C|B|A|S)$/i.test(g);
+  // 7.2 (лог 10.10 20:08): после новой установки память об оружии пришла из базового профиля («надето: Посох життя D») — куплено 3000
+  // D-зарядов при Demon's Staff C. Списку оружия верим, только если инвентарь читали в этой установке (rt.weaponsT), иначе — сначала чтение
+  const W = env.rt.weaponsT ? env.rt.weapons || [] : [], ok = g => g && g !== '—' && /^(NG|D|C|B|A|S)$/i.test(g);
   const eq = W.find(w => w.where === 'надето');
   if (ok(eq?.g)) return { g: eq.g.toUpperCase(), src: `надето: ${eq.name || eq.en}` };
   const main = String(env.cfg.nWeaponMain || '').toLowerCase().trim();
@@ -32,7 +34,7 @@ function weaponIsMage(w) {
   return ma / pa >= (/двуруч/.test(wt) ? 0.6 : 0.7);
 }
 function equippedWeapon() {
-  const W = env.rt.weapons || [];
+  const W = env.rt.weaponsT ? env.rt.weapons || [] : [];   // 7.2: не прочитан в этой установке — не знаем
   const eq = W.find(w => w.where === 'надето');
   if (eq) return eq;
   const main = String(env.cfg.nWeaponMain || '').toLowerCase().trim();

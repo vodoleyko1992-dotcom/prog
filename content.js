@@ -440,8 +440,13 @@ function ilOf(x) {                               // x: кнопка слота, 
     if (m) id = +m[1]; else name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
   } else name = x || '';
   if (id == null && name) id = IL_BY_NAME[name.trim().toLowerCase()];
-  return id != null && IL[id] ? { id, ...IL[id] } : null;
+  return id != null && IL[id] ? { id, ...IL[id], ...(IL_FIX[id] || {}) } : null;
 }
+// 7.2: скиллы, которые на L2WAP работают иначе, чем в справочнике Interlude.
+// Corpse Life Drain (лог 10.10 20:52–20:53, игрок поставил вместо Heal): лечит себя в бою по живой цели («Витяг життя з трупа»,
+// HP = уровень×3 + ранг×5 = 178 на 51 ур./ранге 5, MP 0, повтор через ≈2 с; кот бьёт и на этот ход). В Interlude — «маг. атака по трупу»
+const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
+  L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -665,8 +670,12 @@ async function autoRoles(...args) { return L2V7Modules.equipment.autoRoles(...ar
 // #map-mob-markers[data-l2-marker-sig] = «498|id:тип,…» — тип спавна: passive/aggressive/neutral/champion/raid
 // #map-mob-list a.l2-map-mob-link[href=/battle.html?spawnId=…] — строки текущей страницы (по 15)
 function hasMark(text, marks) { const t = text.toLowerCase(); return names(marks).some(w => t.includes(w)); }
-const isChamp = text => hasMark(text, cfg.champMark);
-const isBoss  = text => hasMark(text, cfg.bossMark);
+// 7.2 (лог 10.10 20:21–20:29): обычный моб «Hatar Ratman Boss · ур. 48» считался рейд-боссом по слову «boss» в имени — бот 45 раз
+// уходил из боя на карту и ни разу его не убил. Метки ищем только в приписках ПОСЛЕ имени («Карте · ур. 49 · рейд-босс», «… · чемпион»);
+// настоящий РБ и так узнаётся по spawnId l2dop_rb_* и метке карты --raid
+const markTail = text => String(text || '').split(/\s*[·•]\s*/).slice(1).join(' · ');
+const isChamp = text => hasMark(markTail(text), cfg.champMark);
+const isBoss  = text => hasMark(markTail(text), cfg.bossMark);
 const PAGE_SIZE = 15;
 const LV_RE = /^([^\p{L}\d]*)(.+?)\s*[·•]\s*ур\.?\s*(\d+)/iu;
 const isRaidId = id => /^l2dop_(?:rb|eg)_/i.test(id);   // 7.1.30: + охрана эпика (l2dop_eg_…) — не цель обычного фарма

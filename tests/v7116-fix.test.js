@@ -33,6 +33,9 @@ const eco = sb.L2V7Factories.economy(env);
   let shots = eco.shopPlan().find(x => x.key === 'shots');
   assert.equal(shots, undefined, 'no weapon info yet: shots are skipped, not guessed by level');
   env.rt.weapons = [{ name: 'Staff of Life', g: 'D', where: 'надето', pa: 74, ma: 72, wt: 'дубина' }];
+  // 7.2 (лог 10.10 20:08): список оружия из базового профиля, инвентарь в этой установке не читали — заряды не покупаем
+  assert.equal(eco.shopPlan().find(x => x.key === 'shots'), undefined, 'weapons from the base profile (no weaponsT) are not trusted');
+  env.rt.weaponsT = Date.now();   // инвентарь прочитан
   shots = eco.shopPlan().find(x => x.key === 'shots');
   assert.equal(shots.grade, 'D'); assert.deepEqual([...shots.ids], [3948]); assert.match(shots.label, /Благосл/);
   env.rt.weapons = [{ name: 'Staff of Life', g: 'D', where: 'надето' }]; env.cfg.nShots = ''; env.combatProfileKind = () => 'mage_summoner';

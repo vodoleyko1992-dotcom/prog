@@ -164,7 +164,10 @@ async function applyBaseProfile(why) {
     if (empty(cur.cfg)) { set.cfg = { ...base.cfg }; done.push('настройки'); }
     const curChar = String(cur.rt?.char || '').trim();
     for (const n of nicks) {
-      const R = base.chars[n]?.rt; if (empty(R)) continue;
+      let R = base.chars[n]?.rt; if (empty(R)) continue;
+      // 7.2 (лог 10.10 20:08): снаряжение и панель из базового профиля устаревают (там было «надето: Посох життя D» — куплены D-заряды
+      // при посохе C). Не переносим: бот сам прочитает инвентарь и панель до закупки
+      R = Object.fromEntries(Object.entries(R).filter(([k]) => !['weapons', 'weaponRec', 'weaponEq', 'weaponNow', 'weaponsT', 'panel', 'panelSig'].includes(k)));
       if (empty(cur.rt) || (curChar === n && !cur.rt.skills)) {          // нет текущей памяти (или она пустая у этого же героя)
         set.rt = { ...(cur.rt || {}), ...R, char: n }; done.push('память ' + n);
       } else if (curChar !== n && empty(cur['rt@' + n])) {               // герой сейчас другой — его память ждёт в rt@Ник

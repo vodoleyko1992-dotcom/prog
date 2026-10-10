@@ -1040,7 +1040,10 @@ async function battle() {
       }
     }
     // v4.42: лечащий скилл (роль «Лечение») — раньше банки: бесплатно. Хватает MP — лечимся им
-    if (me && me.pct <= env.cfg.hpPotAt) {
+    // 7.2: у мага Vampiric Touch (≈665 урона + ≈266 HP) выгоднее лечащего хода (Corpse Life Drain 178 HP без урона мага, Heal ≈430):
+    // вампирик готов и HP не критичное — лечащий скилл пропускаем, ниже сработает вампиризм
+    const drainFirst = mageCombat() && me && me.pct > (env.cfg.stopHp || 25) + 10 && !!drainPick(ctx, mp);
+    if (me && me.pct <= env.cfg.hpPotAt && !drainFirst) {
       const hs = env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) && (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10));
       if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); continue; }
     }

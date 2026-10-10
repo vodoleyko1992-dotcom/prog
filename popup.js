@@ -1237,7 +1237,7 @@ async function exportLog(rows, title, markNew) {
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
-    + `# Скиллы (по наблюдениям): ${Object.values(rt.skills || {}).map(p => `${p.name}: исп ${p.uses || 0} (ваших ${p.usesU || 0})`
+    + `# Скиллы (по наблюдениям): ${Object.entries(rt.skills || {}).filter(([, p]) => p.uses || p.dmgN).map(([k, p]) => ({ ...p, name: p.name || k })).map(p => `${p.name}: исп ${p.uses || 0} (ваших ${p.usesU || 0})`
         + (p.dmgN ? `, урон≈${Math.round(p.dmg / p.dmgN)}` : '') + (p.mpN ? `, MP≈${Math.round(p.mp / p.mpN)}` : '')
         + (p.cd ? `, КД ${p.cd}с` : '') + (p.buffSec ? `, бафф ${p.buffSec}с` : '') + (p.stun ? `, стан×${p.stun}` : '')
         + (p.heal ? `, HP+${p.heal}` : '') + (p.mpGain ? `, MP+${p.mpGain}` : '')).join(' | ')}\n`
