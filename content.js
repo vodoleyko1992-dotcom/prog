@@ -2413,7 +2413,7 @@ function dock() {
 }
 addEventListener('resize', scheduleDock);
 // страница баффера Fast Aden (зашёл бот или игрок) — запоминаем список баффов, цены и баланс FA
-setTimeout(() => { try { faCatalogNote(); } catch (e) {} }, 2500);
+setTimeout(() => { try { faCatalogNote(); L2V7Modules.buffs.tbLevelsNote(); } catch (e) {} }, 2500);   // 7.2.2: и уровни городских наборов
 addEventListener('click', e => { if (e.target.closest?.('.l2-fa-buy')) setTimeout(() => { try { faCatalogNote(); } catch (er) {} }, 1500); }, true);
 // Игровые блоки могут появиться после document_idle.
 addEventListener('load', scheduleDock, { once: true });
@@ -3154,7 +3154,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get $q() { return $q; }, set $q(value)
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },

@@ -1062,6 +1062,9 @@ async function battle() {
           env.rec('B', 'питомец', `кота нет (умер или не призван) — призываю первым действием: ${env.cleanTitle(sb.title)}`);
           const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`);
           if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } await env.setRt({ petBornT: Date.now() }); }   // 7.1.31
+          // 7.2.2 (лог 10.10 23:18:59): клик призыва не ушёл в игру (сразу после включения зарядов) — раньше следующая попытка через 15 с,
+          // и игрок призвал кота сам. Теперь повтор через ≈2 с
+          else await env.setRt({ petSummonT: Date.now() - 13000 });
           continue;
         }
       }
@@ -1397,6 +1400,7 @@ async function battle() {
       heroMaxHp: env.meHp()?.max || d0.heroMaxHp || 0,
       note: `убит за ${env.fmtT(fightS)}` });
     console.log(env.TAG, `РБ ${ctx.name} убит за ${env.fmtT((Date.now() - t0) / 1000)}`);
+    if (env.rt.rbWound?.[ctx.rb.id]) { const W = { ...env.rt.rbWound }; delete W[ctx.rb.id]; await env.setRt({ rbWound: W }); }   // 7.2.2
   }
   if (env.cfg.campaign) {
     // условия главы: строки «★ Квест · <цель> N / M · осталось K» в логе боя → модель целей

@@ -165,6 +165,33 @@ function hudBuffs() {                              // skillId → истекае
   return m;
 }
 
+// 7.2.2 (игрок 10.10 23:18: «автобафф снёс мне более качественный бафф за FA»): у баффера FA и в платных наборах есть те же баффы,
+// что в городском, но выше уровнем (Щит Lv.3, Кмітливість Lv.3…). Городской набор, наложенный поверх, понижает их до своих уровней
+// (и ставит 24 ч). Теперь: набор не берём, если он понизит хоть один активный бафф (уровень — из подсказки «· Lv.N» на панели игры,
+// уровни набора — со страницы баффера, «Щит — lvl 2»; заводские — по снимку 10.10)
+const TB_LVL_DEF = { basic: { 1036: 1, 1040: 2, 1045: 5, 1048: 5, 1059: 2, 1062: 1, 1068: 2, 1077: 2, 1085: 2, 1086: 1, 1240: 2, 1242: 2, 1268: 3 } };
+function hudLevels() {                             // skillId → уровень (из подсказки «… · Lv.3»)
+  const m = {};
+  env.$q('#l2-hud-active-buffs')?.querySelectorAll('.l2-hud-active-buff[data-skill-id]').forEach(b => { const l = (b.getAttribute('title') || '').match(/Lv\.?\s*(\d+)/i); if (l) m[+b.dataset.skillId] = +l[1]; });
+  return m;
+}
+function tbLevelsNote() {                          // страница городского баффера: уровни баффов каждого набора
+  if (!/\/town-buffer\.html/.test(location.pathname)) return 0;
+  const out = {};
+  for (const btn of document.querySelectorAll('.l2-town-buffer-set-apply[data-set-id]')) {
+    const card = btn.closest('section, article, li, [class*="set-card"], [class*="town-buffer-set"]') || btn.parentElement;
+    const L = {};
+    card?.querySelectorAll('img[src*="skill-icon/"]').forEach(img => { const id = +(img.getAttribute('src').match(/skill-icon\/(\d+)/) || [])[1], l = (img.getAttribute('title') || '').match(/lvl\s*(\d+)/i); if (id && l) L[id] = +l[1]; });
+    if (Object.keys(L).length) out[btn.dataset.setId] = L;
+  }
+  if (Object.keys(out).length && JSON.stringify(out) !== JSON.stringify(env.rt.tbLvl || {})) env.setRt({ tbLvl: out });
+  return Object.keys(out).length;
+}
+function tbDowngrade(set, H) {                     // какие активные баффы набор понизит: [{ id, have, give }]
+  const L = env.rt.tbLvl?.[set] || TB_LVL_DEF[set] || {}, lv = hudLevels(), now = Date.now();
+  return Object.entries(L).map(([id, give]) => ({ id: +id, have: lv[id], give })).filter(x => H[x.id] && H[x.id] - now > 30 * 60000 && x.have > x.give);
+}
+let tbDownLogT = 0;
 function townBuffNeed() {                          // что взять: { set, fa: [id…] } или null
   const set = env.cfg.townBuffSet || 'basic';
   const H = hudBuffs();
@@ -181,7 +208,12 @@ function townBuffNeed() {                          // что взять: { set, 
   for (const k of Object.keys(L)) if (L[k] < now - 3600000) { delete L[k]; ch = true; }
   if (ch) env.setRt({ hudLong: L });
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000);
-  const needSet = set !== 'off' && (ids.some(soon) || lost.length > 0);
+  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0);
+  const down = needSet ? tbDowngrade(set, H) : [];
+  if (down.length) {                                 // 7.2.2: набор понизил бы баффы — не берём
+    needSet = false;
+    if (Date.now() - tbDownLogT > 1800000) { tbDownLogT = Date.now(); env.rec('B', 'бафф', `городской набор «${set}» не беру — он понизит ваши баффы: ${down.map(x => `${env.FA_KNOWN?.[x.id]?.[0] || env.rt.faCat?.[x.id]?.name || 'skill ' + x.id} Lv.${x.have}→${x.give}`).join(', ')}`); }
+  }
   const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < 60000);
   return needSet || fa.length ? { set: needSet ? set : null, fa } : null;
 }
@@ -292,6 +324,9 @@ async function townBuffStep() {
     const btn = await env.waitX(() => env.$q(`#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="${st.set}"]`), 10000, 200);
     if (!btn) return done(`баффер не открылся (${env.shown(env.$q('#town-buffer-load-err')) ? env.$q('#town-buffer-load-err').textContent.trim().slice(0, 80) : 'нет кнопки'})`);
     if (st.set !== 'basic' && !['warrior', 'mage'].includes(env.cfg.townBuffSet)) return done('платный бафф не выбран в меню — пропускаю');
+    tbLevelsNote();
+    const dn = tbDowngrade(st.set, hudBuffs() || {});
+    if (dn.length) return done(`городской набор «${st.set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
     const H0 = hudBuffs() || {};
     await env.pause(); env.fire(btn);
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
@@ -345,6 +380,6 @@ async function townBuffStep() {
   }
   await env.setRt({ tbuff: null });
 }
- return { faIdsOf, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep };
+ return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep };
  };
 })(globalThis);

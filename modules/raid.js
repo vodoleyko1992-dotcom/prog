@@ -297,7 +297,10 @@ function rbListPick() {
   const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now(), tried = env.rt.rbGoTried || {};
   if (env.cfg.rbValueTour && now - (env.rt.rbListT || 0) > 10 * 60000) return null;
   const base = Object.entries(env.rt.rbList || {}).filter(([id, x]) => x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi
-    && !rbVerdictBlocks(id) && env.rt.rbDb?.[id]?.verdict !== 'no' && id !== env.rt.rbCur && !rbTeleportCheck(id, x));
+    && !rbVerdictBlocks(id) && env.rt.rbDb?.[id]?.verdict !== 'no' && (id !== env.rt.rbCur || rbWounded(id)) && !rbTeleportCheck(id, x));
+  // 7.2.2: недобитый нами РБ (HP с прошлого захода, не «не по силам») — первым, сначала тот, у кого меньше HP
+  const wd = base.filter(([id]) => rbWounded(id)).sort((a, b) => env.rt.rbWound[a[0]].cur / env.rt.rbWound[a[0]].max - env.rt.rbWound[b[0]].cur / env.rt.rbWound[b[0]].max);
+  if (wd[0]) return { id: wd[0][0], ...wd[0][1], wounded: env.rt.rbWound[wd[0][0]] };
   const dir = env.cfg.rbOrder === 'down' ? -1 : 1;
   const ord = env.cfg.rbValueTour
     ? (a, b) => rbValueScore(b[0],b[1]) - rbValueScore(a[0],a[1])
@@ -508,11 +511,22 @@ async function rbHuntStep() {
     env.setStatus(`Тур РБ: HP ${me.pct | 0}% — лечусь на мобах до ${env.cfg.rbRestHp}%, потом ${p.name}`);
     return env.map();
   }
-  env.rec('B', 'тур РБ', `цель: ${p.name} (${p.lvl})${env.rt.rbDb?.[p.id]?.verdict === 'ok' ? ' ✅ уже убивали' : ''} · стр. ${p.page}`);
+  env.rec('B', 'тур РБ', `цель: ${p.name} (${p.lvl})${p.wounded ? ` · недобит: у него ${Math.round(p.wounded.cur / p.wounded.max * 100)}% — добиваю` : ''}${env.rt.rbDb?.[p.id]?.verdict === 'ok' ? ' ✅ уже убивали' : ''} · стр. ${p.page}`);
   await huntSet({ step: 'go', id: p.id, name: p.name, lvl: p.lvl, page: p.page, price: p.price });
 }
 
+// 7.2.2 (игрок 10.10 23:18: «не продолжил добивать РБ, которого я протупил на паузе»): HP РБ на сервере сохраняется между заходами,
+// а бот помнил его только при своём отходе. Теперь в бою раз в 8 с запоминаем HP (rt.rbWound); недобитый РБ в туре — первым
+function rbWoundNote(ctx) {
+  const S = ctx.rb, mob = env.mobHp?.(); if (!S?.id || !mob?.max || !(mob.cur > 0) || Date.now() - (S.woundT || 0) < 8000) return;
+  S.woundT = Date.now();
+  const W = Object.fromEntries(Object.entries(env.rt.rbWound || {}).filter(([, w]) => Date.now() - (w.t || 0) < 3600000));
+  W[S.id] = { cur: mob.cur, max: mob.max, t: Date.now(), name: ctx.name };
+  env.setRt({ rbWound: W });
+}
+const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.95 && env.rt.rbDb?.[id]?.verdict !== 'no'; };
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
+  try { rbWoundNote(ctx); } catch (e) {}
   const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
   S.lp = lines;
   const nm = (ctx.name || '').toLowerCase(), ogre = env.activeBuffs().some(x => x.id === 109 && (!x.exp || x.exp > Date.now()));
@@ -715,6 +729,6 @@ async function rbShopFirst(label) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
