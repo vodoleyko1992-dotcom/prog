@@ -1,0 +1,124 @@
+/* L2wap Control Center 7.1.5 — iOS-inspired light, accessible-contrast skin.
+   Overrides presentation only; no existing IDs, fields or DOM handlers changed. */
+:root {
+  color-scheme:light;
+  --bg:#f2f3f7; --panel:#f8f9fc; --card:#fff; --card2:#fff;
+  --inset:#f2f4f8; --line:#ccd3df; --line2:#aeb9c9;
+  --txt:#121a29; --dim:#35465d; --mute:#4c5f77;
+  --gold:#075ec8; --gold2:#064fa9; --goldbg:#e8f1ff;
+  --ok:#116946; --okbg:#e3f5eb; --bad:#a82031; --badbg:#ffedef;
+  --warn:#81520d; --r:16px; --r2:12px;
+  --sh:0 5px 16px rgba(17,32,56,.07);
+}
+html, body,.app-shell,.workarea{background:var(--bg);color:var(--txt)}
+html{scrollbar-color:#9eaabd #f1f3f7}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.5;letter-spacing:0}
+header{background:#fff;box-shadow:0 2px 12px rgba(25,40,70,.09);border-bottom:1px solid #c9d3e2}
+.brandmark{background:#0a62ca;color:#fff;box-shadow:none;border-radius:8px}
+.brandmark span{color:#fff}.brandcopy strong{color:#16243a}.brandcopy strong span{color:#075fc6}
+.brandcopy small,.edition{color:#40536d}
+#heroLine .hero{color:#142438}
+#heroLine .ver{color:#40546f;background:#edf2fa;border-color:#c7d3e1}
+#heroLine .state.off{color:#405169;background:#e9edf4;border-color:#bec9d9}
+#heroLine .state.on{color:#095637;background:#d7f2e4;border-color:#7dcb9f}
+#status{background:#eef3f9;border:1px solid #b9c8da;border-radius:12px;min-height:36px;max-height:62px;overflow:auto}
+#status .st{color:#243955;font-size:11px}
+#status .chip{background:#fff;color:#364c65;border:1px solid #c5d2e1}
+#status .chip b{color:#142843}
+#status .health{color:#81520d}
+button{background:#fff;color:#153453;border:1px solid #a8b9cd;border-radius:12px;box-shadow:0 1px 2px rgba(23,42,65,.045);font-weight:610;transition:background .14s,border-color .14s,box-shadow .14s}
+button:hover{background:#eaf2ff;color:#063d83;border-color:#2675d0}
+button:active{background:#dceaff;transform:scale(.99)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #0a64ca;outline-offset:2px}
+button:disabled{opacity:.51}
+#start,#start.running{background:#075ec8;color:#fff;border-color:#075ec8;box-shadow:0 2px 7px rgba(7,94,200,.17)}
+#start:hover,#start.running:hover{background:#034b9e}
+#stop{background:#fff;color:#a82031;border:1px solid #d3a6ab}
+#stop:hover{background:#ffecef;border-color:#b92b42}
+#shopNowTop,#reset{background:#fff;color:#194066;border-color:#aebccc}
+.mode-heading strong,.worktitle strong{color:#14263d;font-weight:780}
+.mode-heading span,.worktitle small{color:#435773}
+.modes button{background:#f8fafc;color:#263f5d;border-color:#bac9da;border-radius:11px;font-weight:650}
+.modes button:hover{background:#eaf3ff;color:#075bb9;border-color:#4c8ad5}
+.modes button.on,#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on,#rbOrderUp.on,#rbOrderDown.on{background:#d9eaff;border:1.5px solid #0b63cc;color:#064c9e;box-shadow:inset 0 0 0 1px rgba(7,94,200,.06);font-weight:800}
+nav{background:#fff;border-bottom:1px solid #cad4e2;gap:6px}
+nav button{background:#f4f6fa;color:#2b425e;border:1px solid #bfcada;border-radius:11px;font-size:10.5px;min-height:43px;line-height:1.25;font-weight:650}
+nav button .ic{color:#305a8b;font-size:15px}
+nav button:hover{background:#e8f1ff;color:#084c9b;border-color:#4080d0}
+nav button.act{background:#095fbf;color:#fff;border:1.5px solid #095fbf;box-shadow:0 3px 7px rgba(9,95,191,.16);font-weight:800}
+nav button.act .ic{color:#fff}
+.workarea{background:#f2f3f7}
+.work-v{color:#425672;border-color:#c6d2e0;background:#fff}
+.worktop{padding-top:12px;padding-bottom:8px}
+.worktitle strong{font-size:19px;letter-spacing:-.025em}
+#uiSearchWrap{background:transparent}
+#uiSearch{background:#fff!important;border:1px solid #b1c1d4!important;color:#152a45!important;border-radius:12px;font-size:12px}
+#uiSearch::placeholder{color:#596b81}
+#uiResults{background:#fff;border-color:#a9b9cc;box-shadow:0 12px 30px rgba(20,38,60,.16)}
+#uiResults small{color:#445670}
+section{background:transparent}
+.card{border:1px solid #cbd4e0;background:#fff;border-radius:16px;box-shadow:0 3px 10px rgba(14,30,50,.055);overflow:hidden;margin-bottom:11px}
+.card>.ch,.card>.ch:hover{background:#f7f9fc}
+.card>.ch{padding:12px 14px;min-height:43px;border-bottom:0}
+.card>.ch h4,h4{color:#1a487c;font-size:12.5px;font-weight:800}
+.card>.ch .chev{color:#475f7e}
+.card>.cb{border-top:1px solid #d3dce8;padding:12px 13px 14px}
+label{color:#172b43;font-size:12px;line-height:1.55;border-color:transparent;min-height:43px}
+label:hover{background:#eff5ff;border-color:#d0e0f7}
+label:has(input:disabled){opacity:.70}
+input,textarea,select{background:#fff;color:#172b43;border:1px solid #a3b5ca;border-radius:11px;padding:8px 10px;font-size:12px}
+input:hover,textarea:hover,select:hover{border-color:#4f84c2}
+input:focus,textarea:focus,select:focus{border-color:#0a60c6;outline:2px solid #80b5fa;outline-offset:1px}
+input[type=checkbox]{background:#bac7d6;border-color:#7f91a9;min-width:39px;width:39px;height:23px;border-radius:16px}
+input[type=checkbox]:checked{background:#0c6bcc;border-color:#0c6bcc}
+input[type=checkbox]::before{background:#fff}
+.hint{color:#42556e;font-size:11.5px;line-height:1.62}
+.hint b{color:#1c3450}
+.box,.zbox,.camp{color:#20364f;background:#f6f8fc;border:1px solid #c7d3e0;border-radius:12px}
+details.help{background:#f4f7fc;border-color:#c5d3e3;border-radius:12px}
+details.help summary,details:not(.help) summary{color:#0759b5;font-weight:710}
+.inline-info{background:#e7f0ff;color:#0753a8;border-color:#8cb2e2}
+.inline-info:hover,.inline-info[aria-expanded=true]{background:#075ec8;color:#fff}
+.field-help{background:#eaf3ff;border-color:#b6cfe9;border-left-color:#075ec8;color:#223d5e}
+.intro-callout{background:#eaf2ff;color:#153452;border-color:#b6cfe9;border-radius:15px}
+.intro-callout b{color:#094f9d}
+.intro-callout p{color:#334c69}
+.overview-stat>div,.module-tile,.help-steps>div{background:#fff;border:1px solid #c4d0de;border-radius:14px}
+.overview-stat span,.module-tile small,.help-steps span{color:#44566f}
+.overview-stat strong,.module-tile strong,.help-steps strong{color:#162b45}
+.module-tile:hover{background:#eef5ff;border-color:#5c95da}
+.tile-icon{background:#e6f0ff;border-color:#b2cff0;color:#0b5ebd}
+.module-tile em{color:#0a56a8}
+.important-note{background:#fff7e7;border-color:#dbbe80;color:#6e4a0b}
+.important-note b{color:#633e07}
+.rb-summary,.fishing-services{background:#fff;border:1px solid #bfcddd;border-radius:16px;box-shadow:0 2px 8px rgba(14,30,50,.04)}
+.rb-summary strong,.fishing-services strong{color:#134778}
+.rb-summary p{color:#435973}
+.rb-forecast{background:#f5f7fa;color:#28405c;border:1px solid #c0ccdb}
+.rb-forecast[data-status=likely]{background:#e1f4ea;color:#095b3a;border-color:#75c8a0}
+.rb-forecast[data-status=risk]{background:#fff0ed;color:#913323;border-color:#e0a095}
+.rb-forecast[data-status=measuring]{background:#fff7e6;color:#75500c;border-color:#d4b06b}
+#goalProof,#goalItems{min-height:40px;background:#fff;border:1.5px solid #9badc2;color:#203a5a}
+#goalProof.on,#goalItems.on{background:#0a5fca;border:1.5px solid #0a5fca;color:#fff;box-shadow:0 2px 8px rgba(10,95,202,.20);font-weight:790}
+#goalGrid button.sel{background:#e2f0ff;border-color:#176dd1;color:#084a95}
+#goalGrid button.own{background:#e4f7ed;border-color:#63b58b;color:#126044}
+#goalGrid button i{background:#0b65c4;color:#fff}
+#goalQueue{border:1px solid #c6d3e1;background:#f5f8fc;border-radius:12px;padding:9px 11px;margin-top:8px;color:#32465f}
+#rodEnchantTo{font-size:15px;font-weight:780;color:#0753ad;background:#edf5ff;border:1.5px solid #357dcf;min-width:64px}
+#fishQuickCut{background:#e9f3ff;border:1px solid #5291db;color:#0755ab;font-weight:740}
+#fishQuickCut:hover{background:#d9ebff}
+footer{background:#fff;color:#526078;border-top:1px solid #cbd6e3}
+#toast{background:#fff;color:#1e3859;border-color:#6296d5;box-shadow:0 6px 20px rgba(12,30,55,.15)}
+::-webkit-scrollbar-thumb{background:#a5b2c4}
+/* Keep complete tiled menu visible at desktop and in the narrow dock. */
+nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}
+html.docked nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
+html.docked nav button{min-height:38px;font-size:9.5px;line-height:1.2}
+html.docked #status{max-height:52px}
+@media(max-width:600px){nav{grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}nav button{font-size:9.5px;min-height:38px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* Explicit primary action for one-click +10 fishing goal */
+button.ios-primary-action{background:#075fc7!important;color:#fff!important;border:1px solid #064b9e!important;box-shadow:0 2px 6px #0c306025!important;font-weight:700!important;min-height:40px;}
+button.ios-primary-action:hover{background:#004ba8!important;}
+button.ios-primary-action:focus-visible{outline:3px solid #ffb32b!important;outline-offset:2px;}

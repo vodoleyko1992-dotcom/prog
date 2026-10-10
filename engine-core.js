@@ -1,0 +1,148 @@
+/* L2wap runtime infrastructure v6.0.0.
+ * This file has no DOM/chrome dependencies and is regression-tested in Node.
+ */
+(function (root) {
+  'use strict';
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function createRecoveryController(clock = () => Date.now()) {
+    const errors = new Map(), fatalSignatures = new Map();
+    // Count failures per route rather than penalizing unrelated subsystems.
+    function failure(route, error) {
+      const now = clock(), key = String(route || 'unknown').slice(0, 128);
+      let series = (errors.get(key) || []).filter(t => now - t < 30 * 60000);
+      series.push(now); errors.set(key, series);
+      const recent = series.filter(t => now - t < 10 * 60000).length;
+      const total = series.length, message = String(error?.message || error || '').slice(0, 180);
+      const network = /(?:failed to fetch|networkerror|network request failed|net::err_|fetch failed|timeout|background_timeout|502|503|504)/i.test(message);
+      const programming = !network && (
+        error instanceof ReferenceError || error instanceof SyntaxError || error instanceof TypeError ||
+        /(?:cannot read properties|cannot set properties|is not (?:a )?function|is not defined|illegal invocation|undefined.*\.test)/i.test(message));
+      // The same programming exception twice cannot be repaired by sleeping or reloading.
+      let fatalRepeats = 0;
+      if (programming) {
+        const previous = fatalSignatures.get(key);
+        fatalRepeats = previous?.message === message && now - previous.at < 10 * 60000 ? previous.count + 1 : 1;
+        fatalSignatures.set(key, { message, count: fatalRepeats, at: now });
+      }
+      const delayMs = clamp(Math.round(1500 * Math.pow(1.7, Math.min(recent - 1, 8))), 1500, 30000);
+      // 7.1.14-fix: «Cannot read properties of null/undefined» — обычно гонка с загрузкой страницы: 2-я подряд — перезагрузка,
+      // стоп только на 4-й без прогресса. Настоящие ошибки кода («is not a function») — стоп со 2-го раза, как было
+      const domRace = programming && /cannot (?:read|set) properties of (?:null|undefined)/i.test(message);
+      const action = programming ? (domRace ? (fatalRepeats >= 4 ? 'halt' : fatalRepeats >= 2 ? 'reload' : 'retry') : fatalRepeats >= 2 ? 'halt' : 'retry') :
+        total >= 18 ? 'halt' : recent >= 6 ? 'cooldown' :
+        recent >= 3 && recent % 3 === 0 ? 'reload' : 'retry';
+      return { route: key, action, delayMs: programming ? 1500 : delayMs, recent, total,
+        error: message, programming, fatalRepeats, times: series.slice(-30) };
+    }
+    function restore(route, timestamps) {
+      const key = String(route || 'unknown').slice(0, 128), now = clock();
+      errors.set(key, (Array.isArray(timestamps) ? timestamps : []).filter(t => Number.isFinite(t) && t <= now && now - t < 30 * 60000).slice(-30));
+    }
+    function progress(route) { const k = String(route || 'unknown').slice(0, 128); errors.delete(k); fatalSignatures.delete(k); }
+    function count(route) { return (errors.get(String(route || 'unknown').slice(0, 128)) || []).length; }
+    return { failure, progress, count, restore };
+  }
+
+  function createTransitionMonitor(clock = () => Date.now()) {
+    const pending = new Map();
+    function expect(key, fromPage, timeoutMs = 20000) {
+      pending.set(String(key), { fromPage, at: clock(), timeoutMs: clamp(timeoutMs, 1000, 120000) });
+    }
+    function check(key, page) {
+      const k = String(key), p = pending.get(k);
+      if (!p) return 'none';
+      if (page !== p.fromPage) { pending.delete(k); return 'complete'; }
+      if (clock() - p.at >= p.timeoutMs) { pending.delete(k); return 'timeout'; }
+      return 'pending';
+    }
+    function clear(key) { pending.delete(String(key)); }
+    return { expect, check, clear };
+  }
+
+  // Prevent background IPC from indefinitely freezing a navigation or state write.
+  // Browser native timers require their Window receiver in some contexts.
+  // Exposing them as bare object methods (timers.set = setTimeout) causes
+  // TypeError: Illegal invocation in Chromium when called as timers.set(...).
+  function withTimeout(promise, ms, timers = {
+    set: (fn, delay) => setTimeout(fn, delay),
+    clear: id => clearTimeout(id)
+  }) {
+    return new Promise((resolve, reject) => {
+      const id = timers.set(() => reject(new Error('background_timeout')), ms);
+      Promise.resolve(promise).then(
+        v => { timers.clear(id); resolve(v); },
+        e => { timers.clear(id); reject(e); }
+      );
+    });
+  }
+
+  // Detect a "live" loop with no observable progress. Unlike a heartbeat,
+  // this requires a changing page, battle HP, objective or job state.
+  function createProgressMonitor(clock = () => Date.now()) {
+    let signature = null, changedAt = clock(), lastAlarm = 0;
+    function tick(next, active, timeoutMs = 9 * 60000) {
+      if (!active) { signature = null; changedAt = clock(); return 'idle'; }
+      const s = String(next);
+      if (signature !== s) { signature = s; changedAt = clock(); return 'progress'; }
+      const now = clock();
+      if (now - changedAt >= timeoutMs && now - lastAlarm >= timeoutMs) {
+        lastAlarm = now; return 'stalled';
+      }
+      return 'waiting';
+    }
+    function snapshot() { return { signature, changedAt, lastAlarm }; }
+    return { tick, snapshot };
+  }
+
+  // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
+  // combat remain higher-priority interrupts in the content-script dispatcher.
+  function chooseMode({ epic = false, raid = false, fish = false, cat = false, campaign = false } = {}) {
+    if (epic) return 'epic';
+    if (raid) return 'raid';
+    if (fish) return 'fish';
+    if (cat && !campaign) return 'cat';
+    if (campaign) return 'campaign';
+    return 'farm';
+  }
+
+  // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
+  // Serial execution and retry preserve update ordering even if storage is down.
+  function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
+    let pending = {}, inflight = {}, flushing = null, retryAt = 0;
+    async function drain() {
+      while (Object.keys(pending).length) {
+        if (!canWrite()) return { ok: false, reason: 'inactive' };
+        const batch = pending; pending = {}; inflight = batch;
+        try {
+          const response = await send(batch);
+          if (!response?.ok) throw new Error(response?.reason || 'storage_patch_failed');
+          retryAt = 0; inflight = {};
+        } catch (e) {
+          // Newer updates take precedence over the failed older batch.
+          pending = { ...batch, ...pending }; inflight = {};
+          retryAt = clock() + 3000;
+          onError(e);
+          return { ok: false, reason: 'write_failed' };
+        }
+      }
+      return { ok: true };
+    }
+    function enqueue(patch) {
+      if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
+      Object.assign(pending, patch);
+      if (retryAt > clock()) return Promise.resolve({ ok: false, reason: 'backoff' });
+      if (!flushing) {
+        flushing = Promise.resolve().then(drain).finally(() => { flushing = null; });
+      }
+      return flushing;
+    }
+    function peek() { return { ...inflight, ...pending }; }
+    function recover() { return flushing || (!Object.keys(pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
+    function clear() { pending = {}; retryAt = 0; }
+    return { enqueue, peek, recover, clear };
+  }
+
+  root.L2EngineCore = { createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
+})(typeof globalThis !== 'undefined' ? globalThis : this);

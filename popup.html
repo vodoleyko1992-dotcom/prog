@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<style>
+  /* ===== L2wap Bot v5 — дизайн-система ===== */
+  :root{
+    --bg:#14100d;--panel:#1b1612;--card:#231d17;--card2:#2b241c;--inset:#120e0b;
+    --line:#3a2f24;--line2:#56452f;--txt:#efe6d6;--dim:#a39280;--mute:#7d6e5e;
+    --gold:#d4a856;--gold2:#f0cf86;--goldbg:rgba(212,168,86,.12);
+    --ok:#5cc27a;--okbg:rgba(92,194,122,.14);--bad:#e06352;--badbg:rgba(224,99,82,.14);--warn:#e3b04b;
+    --r:10px;--r2:7px;--sh:0 6px 20px rgba(0,0,0,.35)
+  }
+  *{box-sizing:border-box}
+  html{scrollbar-color:var(--line2) transparent;scrollbar-width:thin}
+  body{font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;width:360px;margin:0;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
+  html.docked body{width:auto}
+  html.docked section{min-height:0}
+  html.docked header{padding-left:36px}
+  html.docked .zbox{overflow-x:auto}
+  html.docked #lootBox td:last-child{white-space:normal;overflow-wrap:anywhere}
+
+  /* ---- шапка ---- */
+  header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#1d1712,#16120e);padding:10px 10px 8px;border-bottom:1px solid var(--line);max-height:48vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  #heroLine{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:20px}
+  #heroLine .hero{font-weight:700;color:var(--gold2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #heroLine .ver{font-size:10.5px;color:var(--mute);border:1px solid var(--line);border-radius:20px;padding:0 7px}
+  #heroLine .state{margin-left:auto;font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px;white-space:nowrap}
+  #heroLine .state.on{background:var(--okbg);color:var(--ok);border:1px solid rgba(92,194,122,.45)}
+  #heroLine .state.off{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid var(--line)}
+  #heroLine .state.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px;animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .modes button{text-align:left;padding:7px 9px;font-size:12px;border-radius:var(--r2)}
+  #status{margin-top:8px;max-height:120px;overflow:auto;background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:7px 9px}
+  #status .st{font-weight:600;font-size:12.5px;color:var(--txt);white-space:pre-line}
+  #status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+  #status .chip{font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+  #status .chip b{color:var(--txt);font-weight:600}
+  #status .health{font-size:11px;color:var(--warn);margin-top:5px;white-space:pre-line}
+  #questBox{font-size:11px;color:var(--dim);margin-top:8px;max-height:210px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+  #questBox:empty{display:none}
+  #questBox .qt{color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.02em}
+  #questBox .qchips{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  #questBox .qchips span{color:var(--dim);margin-right:2px}
+  #questBox .qchips em{font-style:normal;color:var(--gold2);background:var(--goldbg);border:1px solid rgba(212,168,86,.45);border-radius:10px;padding:0 7px;line-height:17px}
+  #questBox .qc{background:linear-gradient(90deg,rgba(212,168,86,.15),rgba(212,168,86,.03));border:1px solid rgba(212,168,86,.35);border-left:3px solid var(--gold);border-radius:var(--r2);padding:4px 8px 5px}
+  #questBox .qh{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+  #questBox .qn{color:#f6e7c8;font-weight:700;font-size:12px}
+  #questBox .qv{color:var(--gold2);font-weight:700;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  #questBox .qv i{font-style:normal;color:var(--dim);font-weight:400}
+  #questBox .qbar{height:4px;background:var(--inset);border-radius:3px;margin:3px 0 1px;overflow:hidden}
+  #questBox .qbar b{display:block;height:100%;background:linear-gradient(90deg,#a57e36,var(--gold2));border-radius:3px}
+  #questBox .qs{color:var(--dim);font-size:10.5px}
+  #questBox .qc.ok{opacity:.7;border-left-color:var(--ok)}
+  #questBox .qloc{color:var(--dim);font-weight:400;font-size:10.5px}
+  #questBox .qdone{color:var(--ok);font-size:10.5px}
+
+  /* ---- кнопки ---- */
+  .row{display:flex;gap:6px;margin-top:7px;align-items:center}
+  .row>*{min-width:0} .row>input:not([type=checkbox]),.row>select{flex-shrink:1}
+  button{flex:1;padding:7px 6px;cursor:pointer;background:linear-gradient(180deg,#2e261e,#261f18);color:var(--txt);border:1px solid var(--line2);border-radius:var(--r2);font:inherit;transition:border-color .12s,background .12s,transform .05s}
+  button:hover{border-color:var(--gold);background:linear-gradient(180deg,#352b21,#2b231b)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+  button:disabled{opacity:.45;cursor:default}
+  button.main{font-weight:700}
+  #start,#stop{padding:10px 6px;font-size:14px;border-radius:var(--r)}
+  #start{background:linear-gradient(180deg,#2f5233,#244028);border-color:#4f8a55}
+  #stop{background:linear-gradient(180deg,#4f302b,#3e2521);border-color:#80504a}
+  #reset,#shopNowTop{flex:0 0 40px;font-size:15px;border-radius:var(--r)}
+  #start.running{background:linear-gradient(180deg,#38a24c,#2a7e3a);border-color:#7fe58e;color:#fff;animation:runPulse 1.6s ease-in-out infinite}
+  #stop.idle{opacity:.5}
+  #pause{padding:10px 6px;font-size:14px;border-radius:var(--r)}
+  #pause.paused{background:linear-gradient(180deg,#5a4a1f,#463a18);border-color:#a08a3a}
+  #pause.idle{opacity:.5}
+  @keyframes runPulse{0%,100%{box-shadow:0 0 0 0 rgba(111,224,127,.5)}50%{box-shadow:0 0 12px 3px rgba(111,224,127,.5)}}
+  @media (prefers-reduced-motion:reduce){#start.running,#heroLine .state.on::before{animation:none}#start.running{box-shadow:0 0 6px 2px rgba(111,224,127,.5)}}
+  #rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#rbOrderUp.on,#rbOrderDown.on{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#20180f;font-weight:700;border-color:var(--gold2);box-shadow:0 0 0 1px rgba(240,207,134,.25),0 2px 8px rgba(212,168,86,.25)}
+
+  /* ---- вкладки ---- */
+  nav{display:flex;gap:2px;padding:6px 6px 0;background:var(--bg);position:sticky;top:0;z-index:4}
+  nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:var(--r2) var(--r2) 0 0;border:1px solid transparent;border-bottom:none;padding:5px 1px 5px;font-size:10.5px;color:var(--mute);background:transparent;line-height:1.15}
+  nav button .ic{font-size:15px;line-height:1.1}
+  nav button:hover{color:var(--txt);background:rgba(255,255,255,.03);border-color:transparent}
+  nav button.act{background:var(--panel);color:var(--gold2);border-color:var(--line);box-shadow:inset 0 2px 0 var(--gold)}
+  #uiSearchWrap{position:relative;padding:8px 10px 0;background:var(--panel)}
+  #uiSearch{width:100%;padding:6px 10px 6px 28px;border-radius:20px;background:var(--inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a39280' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 9px 50%}
+  #uiResults{position:absolute;left:10px;right:10px;top:40px;z-index:6;background:var(--card2);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--sh);max-height:260px;overflow:auto;display:none}
+  #uiResults.show{display:block}
+  #uiResults div{padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--line);font-size:12px}
+  #uiResults div:last-child{border-bottom:none}
+  #uiResults div:hover,#uiResults div.sel{background:var(--goldbg)}
+  #uiResults small{color:var(--mute);margin-left:6px}
+  section{display:none;padding:2px 10px 16px;background:var(--panel);min-height:300px}
+  section.act{display:block;animation:fadeIn .14s ease-out}
+  @keyframes fadeIn{from{opacity:.4;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+  /* ---- карточки разделов ---- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin:10px 0 0;overflow:hidden}
+  .card>.ch{display:flex;align-items:center;gap:6px;padding:9px 11px;cursor:pointer;user-select:none;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent)}
+  .card>.ch:hover{background:rgba(212,168,86,.06)}
+  .card>.ch h4{margin:0;flex:1}
+  .card>.ch .chev{color:var(--mute);font-size:11px;transition:transform .15s}
+  .card.closed>.ch .chev{transform:rotate(-90deg)}
+  .card>.cb{padding:2px 11px 11px;border-top:1px solid var(--line)}
+  .card.closed>.cb{display:none}
+  .card.hit{box-shadow:0 0 0 2px var(--gold)}
+  .flash{animation:flash 1.6s ease-out}
+  @keyframes flash{0%,30%{background:rgba(212,168,86,.28)}100%{background:transparent}}
+  h4{margin:12px 0 4px;color:var(--gold);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+
+  /* ---- поля ---- */
+  label{display:flex;justify-content:space-between;align-items:center;margin:2px -6px;padding:5px 6px;gap:10px;border-radius:var(--r2)}
+  label:hover{background:rgba(255,255,255,.025)}
+  input,textarea,select{background:var(--inset);color:var(--txt);border:1px solid var(--line2);border-radius:var(--r2);padding:4px 7px;font:inherit;transition:border-color .12s}
+  input:hover,select:hover,textarea:hover{border-color:#6b5638}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none}
+  input[type=number]{width:68px;text-align:right;font-variant-numeric:tabular-nums}
+  input.sm{width:90px;text-align:center}
+  input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:0 0 36px;width:36px;height:20px;border-radius:20px;background:#3a3027;border:1px solid var(--line2);position:relative;cursor:pointer;padding:0;transition:background .15s,border-color .15s}
+  input[type=checkbox]::before{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#bfae95;transition:transform .15s,background .15s}
+  input[type=checkbox]:checked{background:linear-gradient(180deg,#4fb768,#3a9152);border-color:#7fe58e}
+  input[type=checkbox]:checked::before{transform:translateX(16px);background:#fff}
+  input[type=checkbox]:disabled{opacity:.4}
+  .nm{width:160px} select.nm{width:190px} .wide{width:100%;margin-top:5px}
+  .hint{font-size:11px;color:var(--dim);margin:3px 0 7px;line-height:1.45}
+  details.help{margin:2px 0 6px} details.help>summary{font-size:11px;color:var(--mute);list-style:none;display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:1px 0}
+  details.help>summary::-webkit-details-marker{display:none}
+  details.help>summary::before{content:'ⓘ';color:var(--gold);font-size:12px}
+  details.help[open]>summary{color:var(--dim)}
+  details.help>.hint{background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:6px 8px;margin-top:4px}
+  details{margin-top:8px} summary{cursor:pointer;color:var(--dim);font-size:12px}
+  .camp{background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:8px 9px;font-size:12px;white-space:pre-line;line-height:1.5}
+  .box{font-size:12px;white-space:pre-line;color:var(--txt);margin-top:6px;line-height:1.5}
+
+  /* ---- таблицы ---- */
+  .zbox table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px;font-variant-numeric:tabular-nums}
+  .zbox td,.zbox th{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .zbox tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  .zbox tr:hover td{background:var(--goldbg)}
+  .zbox td:first-child,.zbox th:first-child{text-align:left;white-space:normal}
+  .zbox th{color:var(--mute);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+  .zbox tr.cur td{color:var(--gold2)}
+  .zbox tr.best td:first-child::after{content:' ★';color:var(--ok)}
+  .zbox button{padding:2px 7px;font-size:11px;flex:0}
+  .zbox .rec{font-size:12px;margin-top:6px;white-space:pre-line}
+
+  /* ---- Proof-цели ---- */
+  .ggrid[hidden]{display:none}
+  .ggrid{display:grid;grid-template-columns:62px repeat(5,1fr);gap:4px;margin-top:7px;font-size:11px}
+  .ggrid .gh{text-align:center;color:var(--dim);align-self:end}
+  .ggrid .gk{align-self:center}
+  .ggrid button{padding:5px 0;font-size:11px;position:relative;min-width:0}
+  .ggrid button.sel{background:#3a5a2c;border-color:#7fbf4f;color:#fff}
+  .ggrid button.own{background:#2c3a4a;border-color:#4f7fbf;color:#cde}
+  .ggrid button i{position:absolute;top:-6px;right:-3px;background:#7fbf4f;color:#111;border-radius:8px;font-style:normal;font-size:9px;padding:0 4px;font-weight:700}
+  #goalProof.on,#goalItems.on{background:#3a5a2c;border-color:#7fbf4f}
+
+  /* ---- приоритет целей ---- */
+  #prioList{display:flex;flex-direction:column;gap:5px;margin:6px 0}
+  .rule{display:flex;align-items:center;gap:4px;background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:4px 6px}
+  .rule .n{flex:0 0 18px;color:var(--mute);font-size:11px}
+  .rule .t{flex:1;font-size:12px}
+  .rule.neg .t{color:var(--bad);text-decoration:line-through}
+  .rule button{flex:0 0 26px;padding:2px 0;font-size:12px}
+  .add button{font-size:12px}
+  .cb-pop{position:fixed;z-index:9999;overflow:auto;background:var(--card);border:1px solid var(--line2);border-radius:var(--r2);box-shadow:var(--sh);padding:3px}
+  .cb-it{padding:5px 8px;border-radius:5px;cursor:pointer;line-height:1.25}
+  .cb-it b{display:block;font-weight:600;color:var(--txt)}
+  .cb-it span{display:block;font-size:11px;color:var(--dim)}
+  .cb-it:hover,.cb-it.on{background:var(--goldbg)}
+  .cb-it.on b{color:var(--gold2)}
+  .cb-empty{padding:6px 8px;color:var(--mute);font-size:12px}
+  /* ---- база РБ ---- */
+  .rb{display:flex;gap:6px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
+  .rb b{font-weight:600} .rb .m{flex:0 0 18px;font-size:14px} .rb .d{color:var(--dim);font-size:11px}
+
+  /* ---- уведомление ---- */
+  #toast{position:fixed;left:50%;bottom:14px;transform:translate(-50%,20px);opacity:0;background:var(--card2);color:var(--txt);border:1px solid var(--line2);border-left:3px solid var(--ok);border-radius:var(--r);padding:7px 14px;font-size:12px;box-shadow:var(--sh);pointer-events:none;transition:opacity .18s,transform .18s;z-index:20;white-space:nowrap}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .kbd{font:10px ui-monospace,monospace;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 4px;color:var(--dim)}
+  footer{padding:8px 10px 12px;color:var(--mute);font-size:10.5px;text-align:center;background:var(--panel)}
+</style>
+<link rel="stylesheet" href="ui-v7.css">
+<link rel="stylesheet" href="ui-game.css">
+</head><body>
+<header>
+  <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
+  <div id="heroLine"></div>
+  <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Сбросить счётчики боёв, опыта и добычи">↺</button></div>
+  <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="false" title="Показать или скрыть быстрые переключатели">
+    <span class="mode-toggle-title">◫ Быстрые режимы</span><span id="modeSummary">Настроить режимы</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
+  </button>
+  <div id="quickModeGrid" class="modes" hidden>
+    <button id="campToggle" title="Сюжетная кампания: главы, цели, сдача этапов">📜 Кампания: ВЫКЛ</button>
+    <button id="rbToggle" title="Бить РБ в текущей локации между мобами">👑 Фарм РБ: ВЫКЛ</button>
+    <button id="epicToggle" title="Отдельный режим: бот летает к эпик-боссам по списку и добивает их заходами (смерть → хил → снова)">🐉 Эпики: ВЫКЛ</button>
+    <button id="huntToggle" title="Отдельный режим: бот летает по списку РБ игры и бьёт их по очереди, без фарма между ними">🧭 Тур по РБ: ВЫКЛ</button>
+    <button id="autoFarmToggle" title="Автофарм: бот сам подбирает локацию для кача (при старте сразу проверяет зоны). Выкл — стоит на месте">🗺 Автофарм: ВЫКЛ</button>
+    <button id="fishToggle" title="Рыбалка: заброс, вываживание, разделка и обмен на Proof">🎣 Рыбалка: ВЫКЛ</button>
+  </div>
+  <div id="status"></div>
+  <div id="questBox"></div>
+</header>
+<div class="app-shell nav-collapsed">
+<button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
+  <span class="nav-toggle-icon" aria-hidden="true">▦</span>
+  <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
+  <span class="nav-toggle-right">Все 14 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+</button>
+<nav id="moduleNav" aria-label="Разделы управления">
+  <div class="nav-heading">НАВИГАЦИЯ</div>
+  <button data-tab="overview" class="act" title="Состояние и обзор подсистем"><span class="ic">◈</span>Обзор</button>
+  <div class="nav-group">ИГРОВЫЕ РЕЖИМЫ</div>
+  <button data-tab="hunt" title="Фарм мобов, кампания, приоритет целей"><span class="ic">◎</span>Фарм мобов</button>
+  <button data-tab="autofarm" title="Автоподбор локации для кача"><span class="ic">🗺</span>Автофарм</button>
+  <button data-tab="loc" title="Ресурсы и рецепты"><span class="ic">⌁</span>Локации</button>
+  <button data-tab="rb" title="Обычные рейд-боссы и тур"><span class="ic">♛</span>Рейд-боссы</button>
+  <button data-tab="epic" title="Самостоятельный режим эпических боссов"><span class="ic">✦</span>Эпик-боссы</button>
+  <button data-tab="dungeon" title="Катакомбы и некрополи"><span class="ic">▥</span>Катакомбы</button>
+  <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
+  <div class="nav-group">ОБЩИЕ СИСТЕМЫ</div>
+  <button data-tab="panel" title="Боевые скиллы и ротация"><span class="ic">✳</span>Боевой движок</button>
+  <button data-tab="fight" title="Выживание, TvT, оружие, баффер"><span class="ic">⚔</span>Тактика / герой</button>
+  <button data-tab="supply" title="Банки, снабжение и экономика"><span class="ic">◈</span>Расходники</button>
+  <button data-tab="loot" title="Учёт добычи"><span class="ic">▣</span>Добыча</button>
+  <div class="nav-group">СИСТЕМА</div>
+  <button data-tab="log" title="Диагностика, события, автообучение"><span class="ic">≋</span>Диагностика</button>
+  <button data-tab="svc" title="Память, резервное копирование, сервис"><span class="ic">⚙</span>Сервис</button>
+</nav>
+<div class="workarea">
+<div class="worktop"><div class="worktitle"><strong id="currentSectionTitle">Обзор</strong><small id="currentSectionDesc">Состояние систем и быстрые переходы</small></div><span class="work-v">v7.1.11</span></div>
+<div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div>
+
+<section id="tab-overview" class="act">
+  <h4>Система под контролем</h4>
+  <div class="intro-callout"><b>Один бот — независимые режимы.</b><p>Включите нужные режимы в верхней панели. Ядро само выбирает приоритетную задачу. Для подробной настройки перейдите в соответствующий модуль слева.</p></div>
+  <div class="overview-stat" aria-label="Статистика текущей сессии">
+    <div><span>БОЁВ</span><strong id="overviewKills">0</strong></div><div><span>ОПЫТ</span><strong id="overviewExp">0</strong></div><div><span>АДЕНА</span><strong id="overviewAdena">0</strong></div><div><span>СОСТОЯНИЕ</span><strong id="overviewState">Ожидание</strong></div>
+  </div>
+  <h4>Игровые модули</h4>
+  <div class="overview-modules">
+    <button type="button" class="module-tile" data-goto="hunt"><span class="tile-icon">◎</span><span><strong>Фарм мобов</strong><small>Поиск целей, чемпионы, кампания</small></span><em>Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="rb"><span class="tile-icon">♛</span><span><strong>Рейд-боссы</strong><small>Локальный фарм и тур по РБ</small></span><em id="modeRbState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="epic"><span class="tile-icon">✦</span><span><strong>Эпические боссы</strong><small>Выбор, оценка, попытки и лимиты</small></span><em id="modeEpicState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="dungeon"><span class="tile-icon">▥</span><span><strong>Катакомбы</strong><small>Выбор подземелья и автофарм</small></span><em id="modeCatState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="fish"><span class="tile-icon">◉</span><span><strong>Рыбалка</strong><small>Заброс, улов, разделка, Proof</small></span><em id="modeFishState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">✳</span><span><strong>Боевая система</strong><small>Общий движок для всех боевых режимов</small></span><em>Открыть ↗</em></button>
+  </div>
+  <h4>Как пользоваться</h4>
+  <div class="help-steps"><div><b>01</b><span><strong>Выбери режим</strong>Верхняя панель переключает отдельные игровые задачи.</span></div><div><b>02</b><span><strong>Настрой условия</strong>Открой модуль слева. Значок «?» объясняет конкретную настройку.</span></div><div><b>03</b><span><strong>Запусти бот</strong>Кнопка «Старт» включает выполнение. Текущие действия и результаты видны в статусе.</span></div><div><b>04</b><span><strong>Следи за качеством</strong>Диагностика позволяет выгрузить журнал и отчёт автообучения.</span></div></div>
+  <div class="important-note"><b>Приоритеты:</b> включение нескольких режимов не означает их одновременное выполнение. Управление действиями остаётся за ядром бота.</div>
+</section>
+
+<!-- 🎯 ЦЕЛИ -->
+<section id="tab-hunt">
+  <h4>📜 Сюжетная кампания</h4>
+  <div class="hint">Включите «Кампания» вверху — бот сам: Персонаж → Мои квесты → глава → телепорт «К мобам» → фарм целей → «К NPC» → «Завершить этап». Почта — только запасной путь. Стартует с любой страницы.</div>
+  <div id="campBox" class="camp">Ещё не проверялась</div>
+  <label>Проверять кампанию каждые N боёв <input id="campaignEvery" type="number" min="5"></label>
+  <div class="row"><button id="campNow">🔄 Проверить кампанию сейчас</button></div>
+  <h4>Режим охоты</h4>
+  <label>🔁 Цепочкой («Охотиться дальше») <input id="chain" type="checkbox"></label>
+  <label>★ Искать квестовых по локации <input id="searchQuest" type="checkbox"></label>
+  <div class="hint">При включённой «Кампании» цели главы ищутся всегда, независимо от этой галочки.</div>
+  <label>⚔ Искать чемпионов по локации <input id="searchChamp" type="checkbox"></label>
+  <div class="hint">Чемпионов бот видит только на карте — пока галочка стоит, проверяет карту не реже раза в 20 боёв (даже если ниже указано больше).</div>
+  <label>Проверять карту каждые N боёв (0 = всегда) <input id="deepEvery" type="number" min="0"></label>
+  <label>⏹ Стоп, когда квест выполнен <input id="questStop" type="checkbox"></label>
+
+  <h4>📦 Квесты на ресурсы</h4>
+  <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
+  <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
+  <textarea id="resQuests" hidden></textarea>
+  <div id="resBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="bagCheck">🎒 Пересчитать в сумке</button></div>
+  <div class="hint">Список — предметы из сумки, из добычи, из базы «Фарм ресурсов» и из главы. Число в строке цели можно поправить, ✕ — убрать. Прогресс = в сумке на последней проверке + выпало после. Если ресурс есть в базе «Фарм ресурсов», бот сам полетит к лучшему источнику дропа. Ресурсы главы («Нужно сдать») считаются сами — их сюда писать не нужно.</div>
+  <h4>Приоритет целей (сверху — главнее)</h4>
+  <div id="prioList"></div>
+  <div class="hint">Бот бьёт моба, подходящего под самое верхнее правило; среди равных — ближайшего. Кнопки ниже добавляют правило в конец списка (если его ещё нет).</div>
+  <div class="row add"><button id="addQuest" title="Квестовые мобы: ★ на карте и цели главы Кампании. Работает при галочке «Искать квестовых» или включённой Кампании">+ ★ Квест</button><button id="addChamp" title="Любые чемпионы на локации. Работает при галочке «Искать чемпионов»">+ ⚔ Чемп</button><button id="addAll" title="Все обычные мобы в диапазоне уровней «от / до» (поле ниже)">+ Все по ур.</button></div>
+  <div class="row add"><input id="addName" list="mobNames" placeholder="Имя моба" style="flex:1"><datalist id="mobNames"></datalist><button id="addMob" style="flex:0 0 70px">+ Моб</button></div>
+  <div class="hint">★ Квест — мобы со ★ и цели главы · ⚔ Чемп — любые чемпионы · Все по ур. — любые мобы в диапазоне «от / до» · «+ Моб» — конкретный моб по имени<br>▲▼ — порядок · 🚫 — исключить (не бить) · ⚔ у моба — только его чемпион · ✕ — удалить</div>
+  <textarea id="priority" hidden></textarea>
+  <label>Уровень для «Все по ур.»: от / до <span><input id="lvlMin" type="number"> <input id="lvlMax" type="number"></span></label>
+
+  <details><summary>Дополнительно</summary>
+    <label>Выбор рядом, страниц <input id="maxPages" type="number" min="1"></label>
+    <label>Чемпион в цепочке: HP ≥ × обычного <input id="champHpMult" type="number" step="0.1"></label>
+    <input id="champMark" class="wide" placeholder="Признак чемпиона в имени">
+    <input id="bossMark" class="wide" placeholder="Признак босса (не трогать вне режима РБ)">
+  </details>
+</section>
+
+<!-- 🗺 ЛОКАЦИИ -->
+<section id="tab-loc">
+  <h4>🌾 Фарм ресурса (форум, только дроп)</h4>
+  <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
+  <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
+  <div id="farmBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
+  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего роняют ресурс (шанс × количество), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми. Ресурс главы («Нужно сдать») берётся сам, если включена Кампания.</div>
+  <h4>📜 Охота на рецепты (форум)</h4>
+  <label>Рецепт <input id="recipeRes" class="nm" list="recipeResList" placeholder="напр. Recipe: Bonebreaker"><datalist id="recipeResList"></datalist></label>
+  <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
+  <label>⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
+  <div id="recipeBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
+  <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
+  <div class="hint">Подбор зон для кача — в разделе «🗺 Автофарм».</div>
+</section>
+
+<!-- 🗺 АВТОФАРМ -->
+<section id="tab-autofarm">
+  <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации (список зон «Телепорта» и накопленный EXP/ч) и летит в подходящую, дальше пробует зоны и держится лучшей.</p></div>
+  <h4>🗺 Локации для кача</h4>
+  <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="0" style="width:52px"></label>
+  <label>… до героя + (99 — без ограничения) <input id="lvlAbove" type="number" min="0" max="99" style="width:52px"></label>
+  <div id="lvlWin" class="hint"></div>
+  <div id="zoneBox" class="zbox"><div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.</div></div>
+  <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
+  <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
+  <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
+  <div class="hint">Подходящие зоны — те, где уровни мобов из «Телепорта» попадают в желаемое окно. Бот бьёт только мобов этого окна (квестовые — до +10 и выше окна); если на карте таких нет — сам летит в подходящую зону. Бот пробует каждую (N боёв), потом летит в лучшую по EXP/ч, если она лучше текущей на 15 %+. Не работает в Кампании, РБ и Рыбалке. Телепорт платный — резерв адены из «Закупки».</div>
+</section>
+
+<!-- 👑 РБ -->
+<section id="tab-rb">
+  <div class="rb-summary">
+    <strong>Рейд-боссы · Центр управления</strong>
+    <p>Включи тур — обычный фарм РБ активируется автоматически. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
+    <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
+    <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
+  </div>
+  <h4>Как бот работает с РБ</h4>
+  <div class="hint">HP неполное → бьёт мобов и лечится вампириком · HP полное → пробует РБ · по ходу боя оценивает «хватит ли сил» и записывает результат в базу. «Не по силам» не трогает до роста уровня.</div>
+  <label>Пробовать РБ при HP ≥ % <input id="rbRestHp" type="number"></label>
+  <label>Отход с РБ при HP ≤ % — не используется <input id="rbRetreatHp" type="number" disabled></label>
+  <div class="hint">Из боя в игре уйти нельзя — бой идёт до конца. Поэтому бот не отступает: при нехватке сил бьётся на банках (резерв тоже тратит, когда HP ≤ 35 %). Главное решение — до боя: «не по силам» (кто убил героя или бьёт на 30 %+ HP за удар) больше не трогает.</div>
+  <label>РБ не выше героя на, ур. <input id="rbMaxAbove" type="number" min="0"></label>
+  <label>РБ не ниже героя на, ур. (0 — без ограничения) <input id="rbMaxBelow" type="number" min="0"></label>
+  <label>🧪 Считать банки HP («убьём ли с банками?») <input id="rbUsePots" type="checkbox"></label>
+  <label>Резерв банок (не тратить на РБ), шт. <input id="rbPotReserve" type="number" min="0"></label>
+  <label>💧 Банки MP на РБ (при MP &lt; 80) <input id="rbMpPots" type="checkbox"></label>
+  <label>⚡ Быстрая реакция на РБ (100–220 мс) <input id="rbFast" type="checkbox"></label>
+  <div class="hint">Модель 100 000 боёв: бафф Bear −20 % времени, банки MP ещё −34 % (≈1,5 банки на РБ), быстрая реакция −7 %; Soul Breaker и Burning Fist в силовых −16 %. Станы на РБ бесполезны (HP и так держится вампириком). Без банок бот бережёт ману: по откату — удары с лучшим уроном на 1 MP (Force Blaster, Soul Breaker), дорогие — только из излишка.</div>
+  <div class="hint">Бот меряет урон по РБ и потерю HP. Без банок не успеваем — считает, сколько банок нужно на всё убийство (с запасом 25 %) и хватит ли их за вычетом резерва и с учётом скорости питья. Хватит — бьёт и пьёт; не хватит — «не по силам».</div>
+  <h4>🧭 Тур по РБ</h4>
+  <div class="row"><button id="huntToggle2">🧭 Тур по РБ: ВЫКЛ</button></div>
+  <div class="hint">Включение тура автоматически включает фарм РБ. Отключение фарма РБ выключает тур.  По шагам: список РБ игры (Меню → Рейдовые боссы) → выбор: живой, игра разрешает, уровень не дальше ±15 от героя (и в пределах настроек выше), не «не по силам», не пробовали 30 мин; сначала самые слабые (ниже уровнем) → полное HP/MP у баффера → «Телепорт» к РБ → поиск на карте → бой с оценкой «хватит ли сил» → следующий. Мобов между РБ не фармит. Подходящих нет — ждёт 10 с и перечитывает список. «Фарм РБ» — отдельно: бьёт РБ только в текущей локации.</div>
+  <div class="row"><button id="rbOrderUp" title="Сначала самые слабые по уровню — начало списка «Рейдовые боссы»">⬆ С самых слабых (начало списка)</button><button id="rbOrderDown" title="Сначала самые сильные по уровню — конец списка">⬇ С самых сильных (конец списка)</button></div>
+  <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
+  <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
+  <label>Тур по выгоде (экспериментально) <input id="rbValueTour" type="checkbox"></label>
+  <div class="hint">Сравнивает РБ по вероятности победы, ожидаемой награде, длительности боя, стоимости телепорта и лечению. После победы запоминает реальные адену, EXP и длительность боя для этого РБ. Убыточных пропускает; список старше 10 мин обновляет. Оценка EXP в аденах условна. По умолчанию выключено.</div>
+  <div id="rbTourBox" class="hint" style="white-space:pre-line"></div>
+  <h4>База РБ (все локации)</h4>
+  <div id="rbList"><div class="hint">Пусто — включите «Фарм РБ» и зайдите на карту</div></div>
+  <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
+</section>
+
+<!-- ⚔ БОЙ -->
+<section id="tab-fight">
+  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
+  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
+  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), сначала стан (если цель не в стане), потом сверхсильные, удары за энергию и силовые, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <h4>Безопасность</h4>
+  <label>💀 После смерти — в город и продолжать <input id="autoRevive" type="checkbox"></label>
+  <div class="hint">Не больше 3 смертей за 30 мин, иначе бот остановится.</div>
+
+  <h4>✨ Городской баффер</h4>
+  <label>Набор <select id="townBuffSet"><option value="basic">Звичайний баф — бесплатно</option><option value="warrior">Повний баф воїна — 15 Coin of Luck</option><option value="mage">Повний баф мага — 15 Coin of Luck</option><option value="off">Не брать</option></select></label>
+  <div class="hint" style="margin:8px 0 2px;color:var(--txt)">💎 Баффы за Fast Aden (3 ч) — берутся по порядку списка</div>
+  <div class="row add" style="margin-top:2px"><select id="faPick" style="flex:1" aria-label="Бафф за Fast Aden"></select><button id="faAdd" title="Добавить бафф в список" style="flex:0 0 38px">+</button></div>
+  <div id="faList" style="display:flex;flex-direction:column;gap:4px;margin:6px 0"></div>
+  <input id="faBuffs" hidden>
+  <div id="faNote" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="faScanBtn" title="Бот откроет баффер Fast Aden, перепишет список баффов, цены и ваш баланс FA">📋 Обновить список и баланс FA</button></div>
+  <div class="hint">Бафф 24 ч слетает при смерти — бот видит это по шапке и сам идёт к бафферу (не чаще раза в 10 мин). Платный набор — только если выбран здесь. Баффы Fast Aden: выберите в списке и нажмите «+»; ▲▼ — порядок (при нехватке FA берутся по порядку, что по карману), ✕ — убрать. Если FA не хватает ни на один — бот к бафферу FA не ходит 60 мин или пока баланс не вырастет; бафф, которого нет у баффера, пропускается 6 ч.</div>
+  <h4>📈 Эффективность и добыча</h4>
+  <div id="effBox" class="box"></div>
+  <h4>Темп</h4>
+  <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
+  <h4>Оружие</h4>
+  <div id="weapBox" class="camp">Инвентарь ещё не проверялся</div>
+  <label>🗡 Основное <select id="nWeaponMain" class="nm"></select></label>
+  <label>👊 Для баффов (кастеты) <select id="nWeaponBuff" class="nm"></select></label>
+  <div class="row"><button id="weapScan">🔍 Проверить инвентарь</button><button id="weapClass">⭐ Поставить «в класс»</button></div>
+  <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
+  <label>Менять оружие ради баффа <input id="weaponSwap" type="checkbox"></label>
+  <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Для смены прямо в бою оружие должно лежать на панели навыков.</div>
+</section>
+
+<!-- ✨ СКИЛЛЫ -->
+<section id="tab-panel">
+  <div class="row"><button id="check">🔍 Проверить</button><button id="suggest">🤖 Распознать</button></div>
+  <div class="row" id="applyRow" hidden><button id="apply">✅ Применить предложенное</button></div>
+  <div id="slots" class="box"></div>
+  <label>🤖 Автоназначение ролей <input id="autoRoles" type="checkbox"></label>
+  <h4>⚔ Атака и удары (название из подсказки)</h4>
+  <label>Атака <input id="nAttack" class="nm"></label>
+  <label>Силовые, по приоритету <input id="nPower" class="nm"></label>
+  <label>Станы (чемп/РБ) <input id="nStun" class="nm"></label>
+  <label>Лечение (скиллы) <input id="nHeal" class="nm" placeholder="Heal, Battle Roar…"></label>
+  <h4>📚 Магистр</h4>
+  <label>Сам ходить к магистру учить скиллы (каждые 2 ур.) <input id="autoMagister" type="checkbox"></label>
+  <div class="hint">По умолчанию выключено — скиллы учишь сам.</div>
+  <h4>🧿 Дебаффы (маг)</h4>
+  <label>Вешать дебаффы <input id="debuffAuto" type="checkbox"></label>
+  <label>Какие, по приоритету <input id="nDebuff" class="nm" placeholder="пусто — все с панели: Surrender to Fire, Curse Weakness…"></label>
+  <label>Когда <select id="debuffMode"><option value="auto">Долгий бой, чемпионы и РБ</option><option value="boss">Только РБ и чемпионы</option><option value="always">Каждый моб (один раз)</option></select></label>
+  <div class="hint">Пустой список — бот сам: Surrender to Fire первым, если в ротации огонь; Curse Weakness — на чемпионах/РБ или когда тебя бьют; Curse Chaos/Gloom/Poison — только РБ. Каждый дебафф — раз на цель, только при запасе MP. Если дебафф проходит реже 30 % (6+ попыток) — бот выключает его на час. Статистика — в логе «дебафф».</div>
+  <h4>⚡ Энергия силы</h4>
+  <label>Копит энергию <input id="nCharge" class="nm"></label>
+  <label>Тратят («Имя=цена») <input id="nForce" class="nm"></label>
+  <div class="hint">Focused Force: +1 энергия за нажатие (предел бот узнаёт из лога, сейчас 2). Hurricane Assault тратит 2, Force Blaster — 1.</div>
+  <h4>💥 Сверхсильные скиллы</h4>
+  <label>Сверхсильные <input id="nUltra" class="nm" placeholder="Punch of Doom, Crush of Doom, Ice Vortex…"></label>
+  <label>Когда <select id="ultMode"><option value="big">РБ, чемпионы и «толстые» мобы</option><option value="boss">Только РБ и чемпионы</option><option value="always">Сразу, как откатится</option></select></label>
+  <div class="hint">Удары с долгим откатом и огромной силой (Punch of Doom у Тирана, Crush of Doom у Дестроера, Vortex-ы магов). Бот не тратит их на моба, который и так умрёт от обычного удара: в режиме «толстые» — только если у моба HP не меньше ~70 % урона этого удара (и минимум 4 обычные атаки) и моб ещё не добит до 30 %. Скиллы, которые стоят HP (… of Doom), — не при HP ниже 40 %. В обычную ротацию «Силовых» они не попадают.</div>
+  <h4>🩸 Вампиризм (маги)</h4>
+  <label>Скиллы с поглощением HP <input id="nDrain" class="nm" placeholder="Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex"></label>
+  <label>Включать вампиризм при HP ≤, % <input id="drainHp" type="number" min="10" max="100"></label>
+  <div class="hint">Когда HP падает до порога, бот сначала бьёт скиллом с поглощением HP — он и бьёт, и лечит, а банки остаются целы. Банку HP пьёт, только если вампирик на откате, не хватает MP или HP уже опасно низкое (стоп-HP + 10 %). Выше порога вампирики не мешают обычной ротации (их можно держать и в «Силовых»). Скиллы «по трупу» (Life Scavenge, Corpse Life Drain) бот пропускает.</div>
+  <h4>⚙ Настройки скиллов</h4>
+  <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии и панели</option><option value="mage_summoner">Маг → Warlock (кошка)</option><option value="fighter">Воин — прежняя тактика</option></select></label>
+  <div class="hint">Профиль Warlock: магические атаки, приоритет MP, исключение призыва и умений питомца из атакующей ротации. Команды кошке включаются только после проверки серверной разметки питомца.</div>
+  <label>Логика боя с мобами <select id="fightMode"><option value="dps">⚡ ДПС — быстрее всего</option><option value="kpd">💧 КПД — экономнее (меньше MP и банок)</option></select></label>
+  <div class="hint">Симуляция 1 008 000 боёв Тирана с мобами (цепочкой): <b>ДПС</b> — 1719 мобов/ч, 50 MP на моба, 76 банок MP на 1000 мобов (текущая логика: добивание самым дешёвым скиллом, энергия под Force Blaster). <b>КПД</b> — 1516 мобов/ч (−12 %), 32 MP на моба (−36 %), 36 банок MP на 1000 (−53 %): моба, которого добьёт одна атака, бьёт атакой, энергию не копит. На РБ и в TvT логика своя — режим не влияет.</div>
+  <label>MP на скилл, мин. (ед.) <input id="skillMpMin" type="number"></label>
+  <label>Стан на чемпе/РБ не чаще, с <input id="stunEvery" type="number"></label>
+  <label>Бафф каждые, с (если бафф не виден у шапки) <input id="buffSec" type="number"></label>
+  <h4>✨ Баффы</h4>
+  <label>Баффы <input id="nBuffs" class="nm"></label>
+  <div id="buffAudit" class="hint" style="white-space:pre-line"></div>
+  <h4>🔥 Важные баффы</h4>
+  <label>Важные баффы <input id="nKeyBuffs" class="nm" placeholder="Frenzy, Guts, Zealot, War Cry…"></label>
+  <label>Без условия по HP — только с РБ и чемпионами <input id="keyBuffBoss" type="checkbox"></label>
+  <label>🪓 Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
+  <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из вкладки «Банки». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
+  <div class="hint">Аварийные (действуют только при HP ≤ 30 %: Frenzy, Guts, Zealot, Angelic Icon) бот жмёт, как только HP упало до 30 % — раньше банки HP, чтобы банка не «перескочила» порог. Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → остальные → Zealot. Zealot режет получаемое лечение вдвое — в бою с РБ (где живём на банках) только на добивании, когда у РБ ≤ 15 %. Остальные важные (War Cry, Battle Roar и т.п.) — в начале боя с РБ/чемпионом (или в каждом бою, если галочку снять).</div>
+  <h4>🔁 Постоянные баффы (тогглы)</h4>
+  <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
+  <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
+  <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
+  <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
+  <h4>⛏ Спойл</h4>
+  <label>Спойл <input id="nSpoil" class="nm" placeholder="Spoil Crush, Spoil"></label>
+  <label>🎉 Масс-спойл <input id="nSpoilMass" class="nm" placeholder="Spoil Festival"></label>
+  <div class="hint">Масс-спойл (Spoil Festival) — когда в бою 2+ моба: одним нажатием метит всех рядом. Один моб — обычный Spoil (дешевле по мане). Не прошёл по главному — бот дожимает обычным Spoil.</div>
+  <label>Сбор спойла <input id="nSweep" class="nm" placeholder="Sweeper"></label>
+  <label>Спойлить и РБ <input id="spoilRb" type="checkbox"></label>
+  <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. После победы — Sweeper, собрать спойл. Что отвечает игра, пишется в журнал «спойл». Пустое поле — спойл выключен.</div>
+  <h4>📊 Расчёт ДПС и стратегия</h4>
+  <div id="dpsBox" class="box"></div>
+</section>
+
+<!-- 🧪 БАНКИ И РАСХОДНИКИ -->
+<section id="tab-supply">
+  <h4>🧪 Когда пить банки</h4>
+  <label>Аварийные банки при HP ≤ % (подряд, без паузы) <input id="stopHp" type="number"></label>
+  <label>Банка HP при HP ≤ % <input id="hpPotAt" type="number"></label>
+  <label>Банка MP при MP &lt; (ед.) <input id="mpPotAt" type="number"></label>
+  <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
+  <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
+  <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
+  <label>Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
+  <div class="hint">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
+  <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
+  <label>Экспериментально: отступать с обычного РБ <input id="rbChipRetreat" type="checkbox"></label>
+  <label>Макс. попыток захода на одного РБ за час <input id="rbChipMaxAttempts" type="number" min="1" max="10"></label>
+  <div class="hint">Отступление с обычного РБ по умолчанию выключено. Включайте только для проверки: успех выхода зависит от сервера и должен подтверждаться. Повторный заход не гарантируется.</div>
+  <div class="hint">РБ: при автоматической полосе начинаем лечение не ниже 80 % HP, при известном сильном спецударе — ещё раньше. Банки не имеют отдельного 10-секундного отката: учитывается серверный общий КД. Предварительный прогноз РБ ориентировочный, не гарантия победы.</div>
+  <h4>🎒 Слоты расходников (название из подсказки)</h4>
+  <label>Соски <input id="nShots" class="nm"></label>
+  <label>Банка MP <input id="nMpPot" class="nm"></label>
+  <label>Банка HP <input id="nHpPot" class="nm"></label>
+<div class="hint">Какие слоты панели боя — банки и заряды. «Распознать» на вкладке «Скиллы» заполняет их сам.</div>
+  <h4>🧪 Зелья (бот изучает сам)</h4>
+  <div id="potBox" class="zbox"><div class="hint">Пока пусто — бот запишет банки с панели в начале боя, а сколько лечит каждая — после первого глотка.</div></div>
+  <h4>🛒 Закупка расходников (Магазин вещей)</h4>
+  <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
+  <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
+  <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
+  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="20/100"></label>
+  <label>✨ Соски <input id="shopShots" class="sm" placeholder="500/3000"></label>
+  <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
+  <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
+  <label>🪱 Наживка <input id="shopBait" class="sm" placeholder="0/0"></label>
+  <label>Не тратить ниже, аден <input id="shopReserve" class="sm" type="number" min="0"></label>
+  <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm" type="number" min="0"></label>
+  <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
+  <div id="shopBox" class="hint" style="white-space:pre-line"></div>
+</section>
+
+<!-- 🎣 РЫБАЛКА -->
+<section id="tab-fish">
+  <h4>Как бот рыбачит</h4>
+  <div class="hint">Включите «🎣 Рыбалка» вверху: бот идёт к рыбаку (Город → Рыбак), выбирает наживку, включает рыболовные заряды, забрасывает удочку и вываживает рыбу — перед каждым нажатием читает подсказку «Рыба замерла → Pumping» / «Рыба сопротивляется → Reeling». Бой и охота в этом режиме не ведутся.</div>
+  <div id="fishBox" class="camp">Ещё не рыбачил</div>
+  <div class="row"><button id="fishReset">↺ Обнулить статистику рыбалки</button></div>
+  <h4>🎯 Цель рыбалки</h4>
+  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select><input id="fishTgtN" type="number" min="1" placeholder="Сколько" style="width:80px;flex:0 0 80px"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
+  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
+  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
+  <div class="hint">Счёт — с момента постановки цели. Достигнута — бот останавливается. «Рыбы»: перед остановкой разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
+  <h4>Снаряжение</h4>
+  <div class="row"><button id="fishBest" title="Обычная наживка · заряды вкл · докупка вкл · 100 пакетов наживки, заряды под наживку (≈75 пакетов) · без лимита забросов · разделка каждые 100 · Old Box открывать">⚙ Рекомендуемые настройки рыбалки</button></div>
+  <label>Наживка <select id="fishBait"><option value="basic">Обычная (Fishing Lure)</option><option value="good">Хорошая (Good Fishing Lure)</option></select></label>
+  <label>Рыболовные заряды (Soulshot) <input id="fishShots" type="checkbox"></label>
+  <label>Докупать наживку и заряды за аден <input id="fishAutoBuy" type="checkbox"></label>
+  <label>Наживки за раз, пакетов по 10 (1 000 аден) <input id="fishBuyPacks" type="number" min="1"></label>
+  <label title="Бот считает расход наживки и зарядов на рыбу и покупает зарядов столько, чтобы они кончились вместе с наживкой (≈75 пакетов на 100 пакетов наживки)">Заряды под наживку (авто-соотношение) <input id="fishShotAuto" type="checkbox"></label>
+  <label>Зарядов за раз, пакетов по 50 (5 000 аден), если авто выкл. <input id="fishShotPacks" type="number" min="1"></label>
+  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
+  <div class="hint">Хорошая наживка покупается только в «Рыболовном магазине» за Proof of Catching a Fish — бот её не докупает.</div>
+  <h4>Оплаченное время рыбалки</h4>
+  <label>Автоматически докупать время <input id="fishTimeAuto" type="checkbox"></label>
+  <label>Пакет <select id="fishTimePack"><option value="1h">+1 час · 3 млн аден</option><option value="2h">+2 часа · 5,5 млн</option><option value="3h">+3 часа · 7,5 млн</option><option value="6h">+6 часов · 14 млн</option></select></label>
+  <label>Покупать при остатке менее N минут <input id="fishTimeMin" type="number" min="0" max="60" value="5"></label>
+  <div class="hint">По умолчанию автопокупка выключена. Покупается только один выбранный пакет за раз, с проверкой аден, резерва магазина и фактического увеличения оплаченного времени. При ошибке повтор с паузой.</div>
+  <h4>Разделка и Proof</h4>
+  <div class="fishing-services">
+    <strong>Быстрые действия и удочка</strong>
+    <label>Заточка удочки до +N (0 — не точить; максимум +10) <input id="rodEnchantTo" type="number" min="0" max="10" value="10"></label>
+    <div class="row"><button id="fishRodGoal10" type="button" class="ios-primary-action">Цель: заточить удочку до +10</button></div>
+    <div id="fishRodGoalStatus" class="hint" role="status">Проверка фактического уровня удочки — после запуска</div>
+    <div class="hint">Цель по умолчанию — удочка +10: повышает шанс получения сундуков с ценным дропом. Для заточки бот отдельно расходует Proof на свитки, даже если ниже выбрано «Просто копить Proof». При неизвестном уровне удочки покупка не запускается. 0 — отключить заточку.</div>
+    <div class="row"><button id="fishQuickCut" type="button">Разделать всю рыбу сейчас → Proof</button></div>
+    <div class="hint">Разовое действие: обработает улов, обменяет материалы на Proof и вернётся к прежнему режиму. Если бот был остановлен — после разделки остановится снова.</div>
+  </div>
+  <label>Разделывать улов и менять на Proof <input id="fishProcess" type="checkbox"></label>
+  <label>Каждые N пойманных рыб <input id="fishProcessEvery" type="number" min="10"></label>
+  <label>Открывать Old Box <input id="fishOpenBoxes" type="checkbox"></label>
+  <h4>Proof: накопление и покупки</h4>
+  <div class="row ios-goal-switch"><button id="goalProof" class="on" aria-pressed="true">Просто копим Proof</button><button id="goalItems" aria-pressed="false">Покупать вещи</button></div>
+  <div class="hint">По умолчанию Proof на экипировку не тратим. <b>Исключение:</b> включённая заточка удочки до +10 — свитки оплачиваются за Proof.</div>
+  <div id="goalGrid" class="ggrid"></div>
+  <div id="goalQueue" class="hint" style="white-space:pre-line"></div>
+  <input id="fishGoal" hidden>
+  <div class="hint">Инвентарь → «Рибалка» → рыба: MAX → «Разрезать», Old Box: MAX → «Открыть». Затем «Рыболовный магазин» → «Обмен материалов»: всё, чего хватает на Proof (Fish Oil 25→1, Fish Scale 5→1, Fish Gem 4→1…). Расходники за аден — «Магазин» на странице рыбалки; за Proof — «Рыболовный магазин» → «Товары».</div>
+</section>
+
+<!-- 🎒 ДОБЫЧА -->
+<section id="tab-loot">
+  <h4>🎒 Статистика добычи</h4>
+  <div class="hint">Что выпало, сколько, в час и с какого моба выгоднее всего (шт. за бой — по всем боям с этим мобом, включая пустые).</div>
+  <div id="lootBox" class="zbox"></div>
+  <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
+  <h4>⭐ Особая добыча и ценность</h4>
+  <div id="lootExtra" class="box"></div>
+</section>
+
+<!-- 📝 ЖУРНАЛ -->
+<section id="tab-log">
+  <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
+  <label>🪟 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
+  <label>Записывать клики и действия бота <input id="rec" type="checkbox"></label>
+  <label>📸 Снимки новых состояний страниц <input id="autoSnap" type="checkbox"></label>
+  <div id="recCount" class="hint"></div>
+  <h4>🧠 Автообучение и расширенный журнал</h4>
+  <label>🧠 Следить за изменениями игры <input id="autoLearn" type="checkbox"></label>
+  <label>🌐 Записывать запросы игры к серверу (API) <input id="netLog" type="checkbox"></label>
+  <label>💬 Записывать сообщения игры (тосты, ошибки) <input id="gameMsgLog" type="checkbox"></label>
+  <label>📷 Скриншоты при изменениях <input id="learnShots" type="checkbox"></label>
+  <div id="learnBox" class="camp">Данных ещё нет — бот учится по ходу игры.</div>
+  <div class="row"><button id="learnReport" class="main" title="HTML-отчёт: изменения игры, проблемные селекторы, запросы API и их поля, скриншоты">⬇ Отчёт автообучения</button><button id="learnReset" title="Стереть базу автообучения (бот начнёт учиться заново)">↺ Сбросить</button></div>
+  <div class="hint">Бот запоминает, на какие элементы страниц он опирается и как устроены ответы сервера игры. Если элемент перестал находиться, страница поменялась или у запроса пропали поля — это фиксируется как «изменение игры» (в журнале [L]) со снимком страницы, а в отчёте видно, что именно сломалось — по нему делается патч. Запросы к серверу пишутся в журнал [N] с ответами (пароли, токены и сессии вымарываются), сообщения игры — [G]. Скриншоты требуют разрешения браузера «доступ ко всем сайтам» (Chrome спросит при включении) и снимаются, только когда вкладка игры на экране.</div>
+  <h4>Выгрузка для анализа</h4>
+  <div class="row"><button id="exNew" class="main">⬇ Новое</button><button id="exToday">⬇ Сегодня</button></div>
+  <div class="row"><button id="exLast">⬇ Последние</button><input id="recN" type="number" min="50" max="20000" value="20000" style="width:82px;flex:0 0 82px"><button id="exJson" title="Последние N событий в формате JSON Lines — для глубокого анализа (по одному событию на строку, с ответами сервера)" style="flex:0 0 74px">⬇ JSON</button></div>
+  <div class="hint">В начале текстового журнала — сводка: события по типам, запросы к серверу игры (сколько, среднее время, ошибки), частые сообщения игры, ошибки и замеченные изменения игры.</div>
+  <h4>Снимки страниц</h4>
+  <div class="row"><button id="snapNew" class="main">⬇ Новые</button><button id="snapAll">⬇ Все</button><button id="recDom">📸 Эта стр.</button></div>
+  <details><summary>Очистка</summary><div class="row"><button id="recClear">🧹 Удалить журнал и снимки</button></div></details>
+</section>
+
+<!-- ⚙ СЕРВИС -->
+<section id="tab-svc">
+  <h4>🔐 Автовход (если выбило из игры)</h4>
+  <label>Логин (ник) <input id="authLogin" class="nm" autocomplete="off" spellcheck="false"></label>
+  <label>Пароль <input id="authPass" class="nm" type="password" autocomplete="new-password"></label>
+  <div class="row"><button id="authSave">💾 Сохранить</button><button id="authClear">✕ Стереть</button></div>
+  <div id="authNote" class="hint">Хранится только в этом браузере (не в журнале, не в снимках и не в выгрузке настроек). Бот входит сам, если увидит форму «Нік / Пароль» — не чаще 3 попыток за 10 мин.</div>
+  <h4>⚙ Настройки: экспорт / импорт</h4>
+  <div class="row"><button id="cfgExport" class="main" title="Сохранить все настройки меню в файл (без логина и пароля, без базы РБ и статистики)">⬇ Экспорт настроек</button><button id="cfgImport" title="Загрузить настройки из файла (подойдёт и файл «Памяти бота»)">⬆ Импорт настроек</button><input id="cfgFile" type="file" accept=".json,application/json" hidden></div>
+  <div id="cfgNote" class="hint">Только настройки меню (режимы, уровни, закупка, рыбалка, баффы, приоритеты, роли слотов…) — один файл, чтобы не выставлять всё заново. Логин и пароль не сохраняются. База РБ, скиллы и статистика — в «Памяти бота» ниже.</div>
+  <h4>💾 Память бота (перед обновлением)</h4>
+  <div class="row"><button id="memSave" class="main">💾 Сохранить память</button><button id="memLoad">📂 Загрузить память</button><input id="memFile" type="file" accept=".json,application/json" hidden></div>
+  <div id="memNote" class="hint">База РБ («не по силам», убитые), выученные скиллы и КД, тотемы, зоны, добыча, рыбалка и все настройки — в один файл. Chrome стирает память, если расширение удалить или загрузить заново из другой папки. Обновляйтесь так: распакуйте новую версию поверх старой папки → «Обновить» на chrome://extensions. Если ставите заново — сначала «Сохранить память», после установки «Загрузить память». Логин и пароль в файл не попадают.</div>
+</section>
+
+<section id="tab-epic">
+  <h4>🐉 Фарм эпиков</h4>
+  <div class="row"><button id="epicToggle2">🐉 Эпики: ВЫКЛ</button></div>
+  <div class="hint">Бот летает к выбранным эпикам по порядку (Меню → «Эпик боссы» → «Телепорт», иначе — в логово) и бьётся до конца: за один заход эпика обычно не убить, а HP он не восстанавливает. Погиб — город → статуя → бафф → «Восстановить» (хил) → докупка банок → снова к нему, пока не добьёт. Мешают миньоны зоны — бьёт их. Мёртвых по списку игры пропускает. Опыт за смерти теряется — следите за лимитом.</div>
+  <label>Королева Муравьёв (АК) <input type="checkbox" class="epicChk" data-epic="ak"></label><label>Ядро <input type="checkbox" class="epicChk" data-epic="core"></label><label>Орфен <input type="checkbox" class="epicChk" data-epic="orfen"></label><label>Баюм <input type="checkbox" class="epicChk" data-epic="baium"></label><label>Валакас <input type="checkbox" class="epicChk" data-epic="valakas"></label><label>Антарас <input type="checkbox" class="epicChk" data-epic="antharas"></label><label>Фринтеза <input type="checkbox" class="epicChk" data-epic="frintezza"></label><label>Закен <input type="checkbox" class="epicChk" data-epic="zaken"></label>
+  <input id="epicList" hidden>
+  <label>Смертей на одного эпика, потом следующий <input id="epicMaxDeaths" type="number" min="1"></label>
+  <label>Оценивать до боя (не лезть к неподъёмным) <input id="epicCheck" type="checkbox"></label>
+  <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
+  <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
+  <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
+  <label>Лимит Coin of Luck на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
+  <label>Лимит аден на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicAdenaDailyMax" type="number" min="0" step="1"></label>
+  <div class="hint">Ограничения касаются телепортов со страницы эпиков. Считаются попытки, а не только успешные платежи: при ошибке сервера резерв может быть завышен. Для телепортов через обычные локации стоимость не отслеживается. Если выбран лимит, а цена неизвестна — платный переход со страницы не выполняется.</div>
+  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится у баффера, докупает банки и возвращается — HP эпика сохраняется, смертей и потери опыта нет. Каждый заход пишется в журнал (снял, %, урон/с) — по ним будем настраивать бой под каждого эпика. Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас и Фринтеза 85 (уточняются по игре).</div>
+  <div class="hint">Эпика откладывает при бесперспективном уроне (в том числе после одной смерти) или если HP восстанавливается между заходами. Общий стоп — 20 смертей за час.</div>
+  <div id="epicBox" class="camp" style="white-space:pre-line">Режим не запускался</div>
+
+</section>
+<section id="tab-dungeon">
+  <h4>🏛 Фарм катакомб и некрополей</h4>
+  <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
+  <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
+  <div id="catBox" class="hint" style="white-space:pre-line"></div>
+  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов», но не выше героя +8 (в подземельях мобы злее). После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). РБ внутри — только при включённом «Фарм РБ». Пока галочка стоит, обычная охота на карте не идёт (Кампания и Тур РБ — главнее).</div>
+
+  <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включение производится только переключателем «Фармить в подземелье».</div>
+</section>
+</div><!-- /.workarea -->
+</div><!-- /.app-shell -->
+<footer>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Ctrl+K</span> поиск</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="popup.js"></script>
+<script src="ui-v7.js"></script>
+</body></html>

@@ -1,0 +1,653 @@
+/* L2wap v7: isolated raid feature module. Dependencies are injected lazily.
+   All game actions remain under the central lease and dispatcher in content.js. */
+(function (root) {
+ 'use strict';
+ root.L2V7Factories = root.L2V7Factories || Object.create(null);
+ root.L2V7Factories.raid = function create_raid(env) {
+const rbDue = () => env.cfg.rbMode && ((env.rt.rbPending && (env.meHp()?.pct ?? 0) >= env.cfg.rbRestHp) || (env.rt.sinceRb ?? 999) >= 20
+  || (env.cfg.rbTour !== false && !env.campActive() && Date.now() >= (env.rt.rbTourNext || 0)));
+
+function raidList() {                          // метки РБ на карте: title «Око Белефа · ур. 35 · рейд-босс»
+  const ids = env.aroundSig().ids;
+  return [...document.querySelectorAll('.l2-map-mob-pin--raid[data-spawn-id]')].map(b => {
+    const t = b.getAttribute('title') || b.getAttribute('aria-label') || '', m = t.match(env.LV_RE);
+    return { id: b.dataset.spawnId, name: m ? m[2].trim() : t, lvl: m ? +m[3] : 0, idx: ids.indexOf(b.dataset.spawnId) };
+  });
+}
+
+function rbVerdictBlocks(id) {
+  const d = env.rt.rbDb?.[id];
+  return !!d && d.verdict === 'no' && d.heroLvl >= env.heroLvl();
+}
+
+const rbLo = h => h - Math.min(env.cfg.rbMaxBelow > 0 ? env.cfg.rbMaxBelow : env.RB_WIN, env.RB_WIN);
+
+const rbHi = h => h + Math.min(env.cfg.rbMaxAbove ?? env.RB_WIN, env.RB_WIN);
+
+const farmRbOn = () => !!env.rt.farmRb && Date.now() - (env.rt.farmRb.t || 0) < 15 * 60000;
+
+function rbCandidates() {                      // окно уровня: ниже героя на rbMaxBelow (0 = любые), выше — на rbMaxAbove
+  const h = env.heroLvl();
+  const want = env.rt.rbWant && raidList().find(r => r.id === env.rt.rbWant);   // прилетели к нему по списку РБ — он первый (v4.30: и без места в списке — через метку)
+  if (!env.cfg.rbMode) return farmRbOn() && want && want.id === env.rt.farmRb.id && !rbVerdictBlocks(want.id) ? [want] : [];   // v5.6: фарм ресурса с РБ — только этот РБ
+  // v5.6: «мало банок» (rbPreSkip) тоже пропускаем 30 мин — раньше такой РБ выбирался снова и снова, и бот не фармил мобов
+  const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000 || Date.now() - (env.rt.rbPreSkip?.[id] || 0) < 30 * 60000;
+  if (want && !rbVerdictBlocks(want.id) && !skip(want.id)) return [want];
+  return raidList().filter(r => r.lvl >= rbLo(h) && r.lvl <= rbHi(h) && !rbVerdictBlocks(r.id) && !skip(r.id))
+    .sort((a, b) => (b.id === env.rt.rbCur) - (a.id === env.rt.rbCur)
+      || (env.cfg.rbOrder === 'down' ? b.lvl - a.lvl : a.lvl - b.lvl)                      // v4.39: сначала самые слабые; v4.45 — или сильные
+      || (env.rt.rbDb?.[b.id]?.verdict === 'ok') - (env.rt.rbDb?.[a.id]?.verdict === 'ok')   // при равном уровне — проверенные «по силам»
+      || (b.idx >= 0) - (a.idx >= 0) || a.idx - b.idx);
+}
+
+async function rbPinAttack(r, label) {
+  const pin = env.$q(`.l2-map-mob-pin[data-spawn-id="${CSS.escape(r.id)}"]`);   // v5.5: и метка эпика
+  if (!pin || !env.on) return false;
+  env.setStatus(label);
+  env.rec('B', 'РБ', `${r.name} (${r.lvl}): в списке мобов нет — через метку на карте`);
+  env.fire(pin);
+  const go = await env.waitFor(() => { const a = env.$q('#map-mob-modal-battle'); return env.shown(a) ? a : null; }, 3000, 100);
+  await env.setRt({ target: { name: r.name, champ: true, quest: false, rb: true }, mobClickAt: Date.now(), via: 'map' });
+  if (go) env.fire(go); else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
+  await env.waitFor(env.isBattle, 10000);
+  return true;
+}
+
+function rbModalStats() {
+  const o = {};
+  document.querySelectorAll('#map-mob-modal-stats dt[data-stat]').forEach(dt => { const v = +(dt.nextElementSibling?.textContent || '').replace(/\D/g, ''); if (v) o[dt.dataset.stat] = v; });
+  return o.hp ? o : null;
+}
+
+function rbPreCheck(id, st, slack = 1) {
+  const me = env.meHp(), maxHp = me?.max || 6000;
+  const historical = env.rt.rbDb?.[id] || {};
+  const k = env.rt.rbK || 0.109, base = Math.max(0, st.patk || 0) * k;
+  const curHp = Math.min(st.hp || 0, env.rt.rb?.[id]?.hpAfter || st.hp || 0);
+  const dps = Math.max(1, env.rt.rbDps || 1150), t = curHp / dps;
+  const pot = env.potModel(), pool = pot?.pool || 0;
+  const p90 = historical.hitP90 || historical.p90 || Math.max(150, base * 1.65);
+  // An observed special is authoritative; otherwise use a deliberately conservative estimate.
+  const sp = historical.sp > 0 ? historical.sp : base * 4 * 1.7;
+  const measured = historical.sp > 0;
+  const loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  const need = loss * t;
+  const potRate = pot?.rate || 0;
+  const info = `спецудар ${Math.round(sp)} HP${measured ? ' (из боёв)' : ' (оценка)'}, обычный ≈${Math.round(base)}, ` +
+    `потеря ≈${Math.round(loss)} HP/с, РБ HP ${env.fmtK(curHp)} ≈${env.fmtT(t)}, ` +
+    `банки ≈${env.fmtK(need)} из ${env.fmtK(pool)}`;
+  if (sp >= maxHp * 0.45) return { ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}` };
+  if (sp + 2 * p90 >= maxHp * 0.60) return { ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}` };
+  if (loss > potRate * 0.8 * slack && loss > 0) return { ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}` };
+  if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}` };
+  return { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}` };
+}
+
+async function rbScout(r) {
+  const pin = env.$q(`.l2-map-mob-pin[data-spawn-id="${CSS.escape(r.id)}"]`);   // v5.5: и метка эпика
+  if (!pin) return null;
+  env.fire(pin);
+  const st = await env.waitFor(rbModalStats, 3000, 100);
+  if (!st) return null;
+  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: { ...st, t: Date.now() } } });
+  return rbPreCheck(r.id, st);
+}
+
+const closeMobModal = () => { const c = env.$q('#map-mob-modal-close'); if (env.shown(c)) env.fire(c); };
+
+async function rbEngage(r, label, opt = {}) {
+  let chk = await rbScout(r);
+  // v5.5: эпик бьём заходами (смерть → хил → снова) — оценку «не по силам» не применяем, если её не включили
+  if (opt.epic && chk && !chk.ok && !env.cfg.epicCheck && chk.kind !== 'strong') { env.rec('B', 'эпики', `${r.name}: предупреждение «${chk.why}» — разрешаю пробный заход`); chk = { ok: true, why: 'эпик: пробный заход' }; }
+  if (chk && !chk.ok) {
+    closeMobModal();
+    // v5.2: «мало банок» — не приговор РБ: закупим банки — снова можно. Такой РБ пропускаем 30 мин, «не по силам» не пишем
+    if (chk.kind === 'pots') await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: Date.now() } });
+    else await rbNote(r.id, { verdict: 'no', name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
+    env.rec('B', 'РБ', `${r.name} (${r.lvl}): не полезу — ${chk.why}`);
+    return 'skip';
+  }
+  if (chk) env.rec('B', 'РБ', `${r.name} (${r.lvl}): иду — ${chk.why}`);
+  await env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });
+  const go = env.$q('#map-mob-modal-battle');
+  if (chk && env.shown(go)) {
+    env.setStatus(label);
+    await env.setRt({ target: { name: r.name, champ: true, quest: false, rb: true }, mobClickAt: Date.now(), via: 'map' });
+    await env.pause(); env.fire(go);
+    if (await env.waitFor(env.isBattle, 10000)) return true;
+  }
+  closeMobModal();
+  if (r.idx >= 0 && await env.attackSpawn({ ...r, rb: true, champ: true, rank: 0 }, () => label)) return true;
+  return rbPinAttack(r, label);
+}
+
+async function rbNote(id, patch) {
+  const prev = env.rt.rbDb?.[id] || { tries: 0, kills: 0 };
+  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, t: Date.now(), heroLvl: env.heroLvl(), zone: env.rt.zone || prev.zone || null } } });
+}
+
+function rbTourPick() {
+  const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now();
+  const visit = env.rt.rbZoneVisit || {}, cat = env.rt.zoneCat || {}, cur = env.rt.zone;
+  const recent = z => now - (visit[z] || 0) < 40 * 60000;
+  const out = [];
+  const known = {};
+  for (const [id, s] of Object.entries({ ...(env.rt.rbSeen || {}) })) {
+    const d = env.rt.rbDb?.[id] || {}, z = d.zone || s.zone, lvl = d.lvl || s.lvl;
+    if (!z || z === cur || /^out:/.test(z) || !lvl || lvl < lo || lvl > hi || rbVerdictBlocks(id) || recent(z)) continue;
+    (known[z] ||= []).push(`${d.name || s.name} (${lvl})${d.verdict === 'ok' ? ' ✅' : ''}`);
+    out.push({ id: z, score: d.verdict === 'ok' ? 0 : 1, why: `знакомые РБ: ${known[z].join(', ')}` });
+  }
+  for (const f of Object.values(env.rt.rbForum || {})) {
+    if (!f.tp || f.tp === cur || !f.lvl || f.lvl < lo || f.lvl > hi || recent(f.tp)) continue;
+    if (Object.values(env.rt.rbDb || {}).some(d => d.verdict === 'no' && d.heroLvl >= L && env.nameLike(d.name || '', f.name))) continue;
+    out.push({ id: f.tp, url: f.url, score: 2, why: `по форуму: ${f.name} (${f.lvl})` });
+  }
+  for (const [id, c] of Object.entries(cat)) {
+    if (id === cur || /^out:/.test(id) || c.town || !c.lo || c.hi < lo || c.lo > hi + 5 || recent(id)) continue;
+    const scouted = Object.values(env.rt.rbSeen || {}).some(s => s.zone === id);  // уже была: РБ там есть, но тогда не по силам/убит — ниже в очереди
+    out.push({ id, score: (scouted ? 4 : 3) + Math.abs((c.lo + c.hi) / 2 - L) / 100 + (c.price || 0) / 1e7, why: `${scouted ? 'повторная проверка' : 'разведка'} (мобы ${c.lo}-${c.hi}${c.price ? ', ' + c.price.toLocaleString('ru') + ' аден' : ''})` });
+  }
+  out.sort((a, b) => a.score - b.score);
+  return out[0] || null;
+}
+
+const isRbPage = () => /\/rb-bosses\.html/i.test(location.pathname);
+
+const rbPageNow = () => +((env.$q('#rb-pager-ind')?.textContent || '').match(/^\s*(\d+)\s*\//)?.[1] || new URLSearchParams(location.search).get('page') || 1);
+
+function rbRowsParse() {
+  const page = rbPageNow();
+  const out = {};
+  let i = 0;
+  for (const r of document.querySelectorAll('#rb-list .l2-rb-row')) {
+    const b = r.querySelector('.l2-rb-row__tp[data-spawn-id]'); if (!b) continue;
+    const ord = page * 1000 + i++;                 // порядок в списке игры — тур идёт строго по нему
+    const st = r.querySelector('.l2-rb-row__status');
+    const hint = (r.querySelector('.l2-rb-row__attack-hint')?.textContent || '').trim();
+    out[b.dataset.spawnId] = {
+      name: (r.querySelector('.l2-rb-row__label')?.textContent || '').trim(),
+      lvl: +((r.querySelector('.l2-rb-row__level')?.textContent || '').match(/\d+/) || [0])[0],
+      alive: !!st && /--alive/.test(st.className), status: (st?.textContent || '').replace(/^\s*·\s*/, '').trim().slice(0, 40),
+      price: +((r.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\D/g, '') || 0),
+      deny: /недоступ|unavailable/i.test(hint) ? hint.replace(/^Недоступно:\s*/i, '').slice(0, 60) : '', page, ord, t: Date.now(),
+    };
+  }
+  return out;
+}
+
+async function rbListScan() {                     // все страницы списка (≈14), бесплатно
+  env.setStatus('РБ: читаю список рейд-боссов (Меню → Рейдовые боссы)');
+  await env.waitX(() => env.$q('#rb-list .l2-rb-row'), 10000, 200);
+  let all = {};
+  for (let i = 0; i < 25 && env.on; i++) {
+    all = { ...all, ...rbRowsParse() };
+    const nx = env.$q('#rb-pager-next');
+    if (!nx || nx.disabled) break;
+    const sig = env.$q('#rb-pager-ind')?.textContent;
+    env.fire(nx);
+    if (!(await env.waitX(() => env.$q('#rb-pager-ind')?.textContent !== sig && env.$q('#rb-list .l2-rb-row'), 5000, 150))) break;
+    await env.sleep(env.rnd(150, 300));
+  }
+  const L = env.heroLvl(), n = Object.values(all), ok = n.filter(x => x.alive && !x.deny);
+  if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
+    env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
+    await env.setRt({ rbScan: null, rbListT: Date.now() - 12 * 60000 });
+    location.href = '/map.html'; await env.sleep(3000); return;
+  }
+  await env.setRt({ rbList: all, rbListT: Date.now(), rbScan: null });
+  env.rec('B', 'РБ', `список игры: ${n.length} РБ · живых ${n.filter(x => x.alive).length} · доступно мне ${ok.length}`
+    + (ok.length ? ` (${ok.sort((a, b) => Math.abs(a.lvl - L) - Math.abs(b.lvl - L)).slice(0, 6).map(x => `${x.name} ${x.lvl}`).join(', ')}…)` : ''));
+}
+
+function rbStatsGuess(id, lvl) {
+  const S = env.rt.rbStats || {};
+  if (S[id]?.patk && S[id]?.hp) return { ...S[id], est: false };
+  const pts = Object.entries(S).map(([k, v]) => ({ ...v, lvl: env.rt.rbList?.[k]?.lvl || env.rt.rbDb?.[k]?.lvl || 0 })).filter(x => x.lvl && x.patk && x.hp);
+  if (!pts.length || !lvl) return null;
+  // v5.2.2: медиана по всем замерам, а не ближайший по уровню: один «выброс» (Король Тарлк 48 ур.: P.Atk 5043 при обычных
+  // 1100–1450) делал «мало банок» для всех РБ 47–50 ур. — лог 08.10 13:42: 47 РБ отброшены при 198 банках
+  const med = a => { a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; }, c3 = l => Math.pow(lvl / l, 3);
+  return { hp: Math.round(med(pts.map(x => x.hp * c3(x.lvl)))), patk: Math.round(med(pts.map(x => x.patk * c3(x.lvl)))), est: true, n: pts.length };
+}
+
+const rbSkipNotices = new Map();
+function rbTeleportCheck(id, x) {                 // → null (можно лететь) или причина «не полетим»
+  const whySkip = rbVerdictBlocks(id) ? 'ранее не по силам при этом уровне' :
+    now_() - ((env.rt.rbPreSkip || {})[id] || 0) < 30 * 60000 ? 'мало банок (недавно)' : '';
+  if (whySkip) { noteRbSkip(id, whySkip); return whySkip; }
+  // История действительно измеренного спецудара имеет приоритет даже если статистика P.Atk ещё отсутствует.
+  const maxHp = env.meHp()?.max || 0;
+  const knownSp = env.rt.rbDb?.[id]?.sp || 0;
+  if (maxHp > 0 && knownSp >= maxHp * 0.45) {
+    const why = `известный спецудар ${Math.round(knownSp / maxHp * 100)}% HP`;
+    noteRbSkip(id, why);
+    return why;
+  }
+  const st = rbStatsGuess(id, x?.lvl || env.rt.rbList?.[id]?.lvl || 0);
+  if (!st) return null;                            // ни одного замера — оценим на месте (как раньше)
+  const chk = rbPreCheck(id, st, st.est ? 1.6 : 1);   // по прикидке (РБ не видели) — отсеиваем только явно неподъёмных
+  const why = chk.ok ? null : (chk.kind === 'pots' ? 'мало банок' : 'не по силам (оценка)');
+  if (why) noteRbSkip(id, why + ': ' + chk.why);
+  return why;
+}
+function noteRbSkip(id, reason) {
+  if (Date.now() - (rbSkipNotices.get(id) || 0) > 1800000) {
+    rbSkipNotices.set(id, Date.now());
+    env.rec('B', 'РБ-тур', `не полетел к ${env.rt.rbList?.[id]?.name || id}: ${reason}`);
+  }
+}
+
+const now_ = () => Date.now();
+
+function rbValueScore(id, x) {
+  const stats = env.rt.rbDb?.[id] || {};
+  const heroHp = env.meHp()?.max || 0;
+  const special = stats.sp || 0;
+  const rate = special && heroHp ? special / heroHp : null;
+  if (rate != null && rate >= .45) return -Infinity;
+  // Lasting history of failure must not be hidden by an earlier successful kill.
+  const win = rate == null ? (stats.verdict === 'ok' && stats.kills ? .90 : .65) :
+    rate < .30 ? .97 : Math.max(.15, .97 - (rate - .30) / .15 * .82);
+  const bossHp = env.rt.rbStats?.[id]?.hp || stats.maxHp || 0;
+  const dps = env.rt.rbDps || 1150;
+  const tFight = stats.fightS > 0 ? stats.fightS : bossHp > 0 ? bossHp / Math.max(1,dps) : 420;
+  const travel = 90;
+  // Valuations are configurable economic assumptions, not server-provided exchange rates.
+  const adena = Math.max(0, stats.adenaPerKill ?? stats.adena ?? 196000);
+  const exp = Math.max(0, stats.expPerKill ?? stats.xp ?? 637000);
+  const reward = adena + exp * Math.max(0, env.cfg.rbExpValue ?? .20);
+  const teleport = Math.max(0, x.price || 100000);
+  const healing = Math.max(0, (tFight / 10) * (env.cfg.rbPotCost ?? 500));
+  const risk = Math.max(0, 1-win) * Math.max(0, env.cfg.rbDeathPenalty || 0);
+  const net = reward*win - teleport - healing - risk;
+  return net <= 0 ? -Infinity : net/(tFight+travel);
+}
+
+function rbListPick() {
+  const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now(), tried = env.rt.rbGoTried || {};
+  if (env.cfg.rbValueTour && now - (env.rt.rbListT || 0) > 10 * 60000) return null;
+  const base = Object.entries(env.rt.rbList || {}).filter(([id, x]) => x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi
+    && !rbVerdictBlocks(id) && env.rt.rbDb?.[id]?.verdict !== 'no' && id !== env.rt.rbCur && !rbTeleportCheck(id, x));
+  const dir = env.cfg.rbOrder === 'down' ? -1 : 1;
+  const ord = env.cfg.rbValueTour
+    ? (a, b) => rbValueScore(b[0],b[1]) - rbValueScore(a[0],a[1])
+    : (a, b) => dir * (a[1].lvl - b[1].lvl) || dir * ((a[1].ord ?? 1e9) - (b[1].ord ?? 1e9));
+  const candidates = env.cfg.rbValueTour ? base.filter(([id,x]) => rbValueScore(id,x) > 0) : base;
+  const fresh = candidates.filter(([id]) => now - (tried[id] || 0) > env.RB_TRY_MS).sort(ord);
+  if (fresh[0]) return { id: fresh[0][0], ...fresh[0][1] };
+  const hourN = id => ((env.rt.rbGoCnt || {})[id] || []).filter(t => now - t < 3600000).length;   // не больше 3 телепортов к одному РБ в час (они платные)
+  const again = candidates.filter(([id]) => now - (tried[id] || 0) > env.RB_RETRY_MS && hourN(id) < 3).sort(ord);    // все недавно пробованы — по кругу
+  return again[0] ? { id: again[0][0], ...again[0][1], retry: true } : null;
+}
+
+function rbListWhy() {
+  const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now(), tried = env.rt.rbGoTried || {};
+  const all = Object.entries(env.rt.rbList || {});
+  const win = all.filter(([, x]) => x.lvl >= lo && x.lvl <= hi);
+  const c = { below: all.filter(([, x]) => x.lvl < lo).length, above: all.filter(([, x]) => x.lvl > hi).length, dead: 0, deny: 0, no: 0, tried: 0 };
+  let soon = Infinity;
+  for (const [id, x] of win) {
+    let skipReason;
+    if (!x.alive) c.dead++;
+    else if (x.deny) c.deny++;
+    else if (rbVerdictBlocks(id) || env.rt.rbDb?.[id]?.verdict === 'no') c.no++;
+    else if ((skipReason = rbTeleportCheck(id, x))) { if (/банок/.test(skipReason)) c.pots = (c.pots || 0) + 1; else c.no++; }
+    else if (now - (tried[id] || 0) <= env.RB_RETRY_MS) { c.tried++; soon = Math.min(soon, env.RB_RETRY_MS - (now - tried[id])); }
+  }
+  const pm = env.potModel();
+  const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`,
+    c.pots && `мало банок HP ${c.pots} (сверх резерва ${env.cfg.rbPotReserve || 0}: ${pm ? pm.n + ' шт.' : 'нет'})`, c.tried && `только что пробовал ${c.tried}`].filter(Boolean);
+  return `в окне ${lo}–${hi} ур. ${win.length} РБ${parts.length ? ': ' + parts.join(', ') : ''}${c.below ? ` · слабее окна ${c.below}` : ''}${c.above ? ` · сильнее ${c.above}` : ''}`;
+}
+
+async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)
+  const g = env.rt.rbGo;
+  if (env.cfg.rbValueTour && now_() - (env.rt.rbListT || 0) > 10 * 60000) {
+    env.rec('B', 'РБ-тур', `${g.name}: данные списка старше 10 мин — обновляю перед платным телепортом`);
+    await env.setRt({ rbGo: null, rbListT: 0 }); return;
+  }
+  if (rbVerdictBlocks(g.id) || rbTeleportCheck(g.id, g)) {
+    await env.setRt({ rbGo: null, rbWant: null });
+    return;
+  }
+  if (!isRbPage() && await env.townBuffStart(`перед РБ ${g.name}`, true)) { await env.setRt({ rbGo: { ...g, t: Date.now() } }); return; }   // v5.3
+  // страховка (v4.30): к этому РБ уже нажимали «Телепорт» меньше 2 мин назад — не платим второй раз, идём на карту искать его
+  // (лог 08.10 00:53: «телепорт к Баріон · 100 000 аден» ×5 за 8 с — бот возвращался в список после каждого перелёта)
+  if (Date.now() - (env.rt.rbGoTried?.[g.id] || 0) < 120000) {
+    env.rec('B', 'РБ-тур', `${g.name}: телепорт уже был — ищу на карте`);
+    await env.setRt({ rbGo: null, rbWant: g.id });
+    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); }
+    return;
+  }
+  if (!isRbPage() || !(await env.waitX(() => rbPageNow() === g.page, 4000, 200))) { env.setStatus(`РБ: лечу к ${g.name} (${g.lvl})`); location.href = `/rb-bosses.html?page=${g.page}`; await env.sleep(4000); return; }
+  const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${g.id}"]`), 8000, 200);
+  const cnt = [...((env.rt.rbGoCnt || {})[g.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // платные телепорты к этому РБ за час
+  if (b) await env.setRt({ rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now() });   // v5.6: только если кнопка есть (телепорт будет)
+  if (!b) { env.rec('B', 'РБ-тур', `${g.name}: на странице ${g.page} нет — обновлю список`); await env.setRt({ rbGo: null, rbListT: 0 }); return; }
+  const row = rbRowsParse()[g.id];
+  if (row && (!row.alive || row.deny)) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
+  env.rec('B', 'РБ-тур', `телепорт к ${g.name} (${g.lvl})${g.price ? ' · ' + g.price.toLocaleString('ru') + ' аден' : ''}`);
+  // v4.30: rbGo снимаем ДО нажатия: телепорт уводит со страницы и скрипт умирает, не дойдя до «rbGo: null» внизу.
+  // Раньше бот на новой странице видел rbGo, возвращался в список и телепортировался снова — 90 с подряд, за аден.
+  // zonePend «rb:<id>» больше не ставим: он создавал мусорную зону, зона определится по мобам на карте
+  await env.setRt({ rbWant: g.id, rbGo: null });
+  await env.pause(); env.fire(b);
+  await env.waitX(() => !isRbPage(), 6000, 200);
+  if (isRbPage()) {
+    const msg = (env.$q('#rb-load-err')?.textContent || env.$q('.l2-rb-row__attack-hint, [role="alert"], [class*="toast"]')?.textContent || '').trim().slice(0, 80);
+    env.rec('B', 'РБ-тур', `${g.name}: не улетели${msg ? ' — ' + msg : ''}`);
+    location.href = '/map.html'; await env.sleep(3000);
+  }
+  await env.setRt({ rbGo: null });
+}
+
+const huntOn = () => !!env.cfg.rbHuntMode;
+
+async function huntSet(p) { await env.setRt({ rbHunt: { ...(env.rt.rbHunt || {}), ...p, t: Date.now() } }); }
+
+async function huntDone(id, why) {                 // с этим РБ закончили (убит / отошли / не нашли) — 30 мин его не выбираем
+  if (id) await env.setRt({ rbGoTried: { ...(env.rt.rbGoTried || {}), [id]: Date.now() }, rbWant: null, rbCur: null });
+  env.rec('B', 'тур РБ', why);
+  await huntSet({ step: 'pick', id: null, last: why });
+}
+
+async function rbHuntStep() {
+  const H = env.rt.rbHunt || { step: 'pick' };
+  if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
+    const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
+    return huntDone(H.id, `${H.name}: ${d.verdict === 'no' ? '❌ не по силам' : w ? `отошёл, у него ${w.hpAfter}/${w.max}` : d.kills ? `✅ убит (всего ${d.kills}×)` : 'бой окончен'} → следующий`);
+  }
+  if (H.step === 'go') {
+    const g = env.rt.rbList?.[H.id] || H;
+    const reason = rbTeleportCheck(H.id, g);
+    if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {
+      await env.setRt({ rbListT: 0 });
+      return huntDone(H.id, `${H.name}: перед телепортом ${reason || 'список устарел'} — проверю повторно`);
+    }
+    if (!isRbPage() || !(await env.waitX(() => rbPageNow() === H.page, 4000, 200))) {
+      env.setStatus(`Тур РБ: к ${H.name} (${H.lvl}) — список, стр. ${H.page}`);
+      location.href = `/rb-bosses.html?page=${H.page}`; await env.sleep(4000); return;
+    }
+    const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
+    if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`); }
+    const row = rbRowsParse()[H.id];
+    if (row && (!row.alive || row.deny)) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`); }
+    // шаг «прилёт» записываем ДО нажатия: телепорт уводит со страницы, и скрипт обрывается на полуслове
+    await huntSet({ step: 'arrive', at: Date.now() });
+    const cntH = [...((env.rt.rbGoCnt || {})[H.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // v5.6: платные телепорты тура — в общий счётчик «≤3 в час»
+    await env.setRt({ rbWant: H.id, zoneGoT: Date.now(), rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } });
+    env.rec('B', 'тур РБ', `телепорт к ${H.name} (${H.lvl})${H.price ? ' · ' + H.price.toLocaleString('ru') + ' аден' : ''}`);
+    await env.pause(); env.fire(b);
+    if (await env.waitX(() => !isRbPage(), 8000, 200)) return;
+    const msg = (env.$q('#rb-load-err')?.textContent || '').trim().slice(0, 80);
+    return huntDone(H.id, `${H.name}: телепорт не сработал${msg ? ' — ' + msg : ''}`);
+  }
+  if (H.step === 'arrive') {
+    if (!env.isMap()) {
+      if (Date.now() - (H.at || 0) > 60000) return huntDone(H.id, `${H.name}: после телепорта не попал на карту`);
+      location.href = '/map.html'; await env.sleep(3000); return;
+    }
+    await env.mapReady(15000, `Тур РБ: ищу ${H.name} на карте`);
+    const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
+    if (!r) {
+      if (Date.now() - (H.at || 0) < 25000) { await env.sleep(1500); return; }   // карта ещё догружается
+      if (env.rt.rbList?.[H.id]) await env.setRt({ rbList: { ...env.rt.rbList, [H.id]: { ...env.rt.rbList[H.id], alive: false } } });   // v5.6: до перечитки списка — мёртв
+      return huntDone(H.id, `${H.name}: на карте нет (убит другими?)`);
+    }
+    if (rbVerdictBlocks(r.id)) return huntDone(H.id, `${H.name}: в базе «не по силам» — пропускаю`);
+    const bw = env.buffWaitBeforeRb();                  // v4.41: тотем на откате ≤60 с — ждём, бой с РБ начинаем с баффом
+    if (bw) { env.setRt({ status: `Тур РБ: жду откат «${bw.who}» ${bw.s} с, потом ${H.name}` }); env.draw(); await env.sleep(Math.min(bw.s, 10) * 1000); await huntSet({ at: Date.now() }); return; }
+    if (await env.townBuffStart(`перед РБ ${H.name}`, true)) { await huntSet({ at: Date.now() + 30000 }); return; }   // v5.3: бафф слетел — сначала баффер
+    await huntSet({ step: 'fight' });
+    await env.setRt({ rbCur: r.id });
+    const res = await rbEngage(r, `Тур РБ: бой с ${r.name} (${r.lvl})`);
+    if (res === 'skip') return huntDone(H.id, `${H.name}: ❌ оценка до боя — не по силам`);
+    if (res) return;
+    return huntDone(H.id, `${H.name}: бой не открылся`);
+  }
+  // step 'pick' (и всё непонятное): свежий список → выбор → HP/MP → полёт
+  // v5.2.2: подходящих РБ не было — фармим мобов, пока не придёт время перечитать список (раньше: карта ↔ список РБ
+  // каждые 20 с без единого боя, лог 08.10 13:41–13:44 — «петля туда-сюда»)
+  if ((env.rt.rbHuntIdle || 0) > Date.now()) {
+    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
+    env.setStatus(`Тур РБ: ${String(H.last || 'подходящих РБ нет').slice(0, 140)} — фармлю мобов, список перечитаю через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`);
+    return env.map();
+  }
+  if (env.rt.rbHuntIdle) await env.setRt({ rbHuntIdle: 0, rbListT: 0 });
+  if (!env.rt.rbListT || Date.now() - env.rt.rbListT > (env.cfg.rbValueTour ? 10 : 15) * 60000) {
+    if (!isRbPage()) { env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return; }
+    return rbListScan();
+  }
+  const p = rbListPick();
+  if (!p) {
+    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
+    const why = `подходящих РБ нет — ${rbListWhy()}`;
+    // v5.2.2: не стоим и не гоняем список по кругу — 90 с фармим мобов здесь, потом перечитываем список РБ
+    // (в журнал пишем только смену причины)
+    if (/мало банок/.test(why) && await rbShopFirst('')) return;   // РБ отсеяны из-за банок — сначала магазин
+    if (H.last !== why) { await huntSet({ last: why }); env.recBot(`Тур РБ: ${why} — фармлю мобов, список перечитаю через 90 с`); }
+    await env.setRt({ rbHuntIdle: Date.now() + 90000 });
+    return env.map();
+  }
+  if (await rbShopFirst(p.name)) return;             // v5.2.2: сначала банки (минимум «Банки HP»), потом РБ
+  if (await env.townBuffStart(`перед РБ ${p.name}`, true)) return;   // v5.3: все баффы на месте — перед РБ это важнее всего
+  const me = env.meHp(), mp = env.meMp();                    // перед вылетом — полное HP/MP (баффер «Восстановить»)
+  if (me && (me.pct < env.cfg.rbRestHp || (mp && mp.cur < mp.max * 0.6)) && await env.restoreVitals(`перед РБ ${p.name}: HP ${me.pct | 0}%`)) return;
+  // v4.34: восстановиться не вышло — к РБ с неполным HP не летим (так погибали), лечимся на обычных мобах: вампирик + банки
+  if (me && me.pct < env.cfg.rbRestHp) {
+    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
+    if (H.last !== 'лечусь на мобах') { env.rec('B', 'тур РБ', `HP ${me.pct | 0}% < ${env.cfg.rbRestHp}% — лечусь на мобах, потом ${p.name}`); await huntSet({ last: 'лечусь на мобах' }); }
+    env.setStatus(`Тур РБ: HP ${me.pct | 0}% — лечусь на мобах до ${env.cfg.rbRestHp}%, потом ${p.name}`);
+    return env.map();
+  }
+  env.rec('B', 'тур РБ', `цель: ${p.name} (${p.lvl})${env.rt.rbDb?.[p.id]?.verdict === 'ok' ? ' ✅ уже убивали' : ''} · стр. ${p.page}`);
+  await huntSet({ step: 'go', id: p.id, name: p.name, lvl: p.lvl, page: p.page, price: p.price });
+}
+
+function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
+  const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
+  S.lp = lines;
+  const nm = (ctx.name || '').toLowerCase(), ogre = env.activeBuffs().some(x => x.id === 109 && (!x.exp || x.exp > Date.now()));
+  for (const line of fresh) {
+    const l = String(line).trim();
+    const m = l.match(/^\[(.+?)\] ударив тебе (?:\(крит!\)\s*)?[−-](\d+) HP/i);
+    if (m && m[1].trim().toLowerCase() === nm) {
+      (S.hits ||= []).push(Math.round(+m[2] * (ogre ? 1.3 : 1)));
+      if (S.hits.length > 120) S.hits.splice(0, S.hits.length - 120);
+    }
+    const sp = l.match(/^(.+?)\s*·\s*(.+?)\s+(\d+)\s*(?:HP|урона|шкоди)?\s*$/i);
+    if (sp && sp[1].trim().toLowerCase() === nm && !/^(?:ударив|ударил)$/i.test(sp[2].trim())) {
+      const spike = Math.round(+sp[3] * (ogre ? 1.3 : 1));
+      if (spike > (S.sp || 0)) {
+        S.sp = spike; S.spName = sp[2].trim();
+        if (spike > (env.rt.rbDb?.[S.id]?.sp || 0))
+          env.rec('B', 'РБ', `спецудар ${ctx.name}: ${S.spName} ${spike} HP`);
+      }
+    }
+  }
+  const p90 = S.hits?.length >= 3 ? [...S.hits].sort((a,b)=>a-b)[Math.min(S.hits.length-1,Math.floor(S.hits.length*.9))] : 0;
+  const db = env.rt.rbDb?.[S.id] || {};
+  if ((S.sp || 0) > (db.sp || 0) || p90 > (db.hitP90 || 0)) {
+    env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90) });
+  }
+  const st = env.rt.rbStats?.[S.id];
+  if (st?.patk && (S.hits?.length || 0) >= 12 && !S.kDone) {
+    S.kDone = 1;
+    const h = [...S.hits].sort((a, b) => a - b)[S.hits.length >> 1], k = h / st.patk;
+    env.setRt({ rbK: +(env.rt.rbK ? env.rt.rbK * 0.6 + k * 0.4 : k).toFixed(4) });
+    env.rec('B', 'РБ', `сила РБ: удар ≈${Math.round(h)} при P.Atk ${st.patk} → k ${k.toFixed(3)} (для оценки до боя)`);
+  }
+}
+
+function rbAssess(ctx, me, mob) {
+  const S = ctx.rb, now = Date.now();
+  S.t0 ||= now;
+  if (!env.rbLive || env.rbLive.name !== ctx.name || env.rbLive.t0 !== S.t0 || now - env.rbLive.t > 60000) env.rbLive = { name: ctx.name, cur: mob.cur, max: mob.max, t0: S.t0, t: now, verdict: 'measuring', win: false };
+  else Object.assign(env.rbLive, { cur: mob.cur, max: mob.max, t: now });
+  try { rbLearn(ctx); } catch (e) {}
+  if (!S.last || now - S.last >= 1000) {
+    S.samples.push({ t: now, me: me.cur, mob: mob.cur });
+    S.last = now;
+    S.samples = S.samples.filter(x => now - x.t <= 30000);
+  }
+  const a = S.samples[0], b = S.samples[S.samples.length - 1];
+  const dt = (b.t - a.t) / 1000;
+  // смертельный удар (Церберон 55 ур. снял 4200 из 5060 одним ударом — смерть за 4 с): один шаг ≥ 30 % макс. HP —
+  // уходим сразу, не дожидаясь оценки, и помечаем «не по силам» (v4.24)
+  const p = S.samples[S.samples.length - 2];
+  if (p && p.me - b.me >= me.max * 0.30) {
+    S.lethal = Math.round(p.me - b.me);
+    return { abort: true, lethal: true, why: `удар на ${S.lethal} HP (${Math.round(S.lethal / me.max * 100)} % моего HP) — смертельно опасен` };
+  }
+  if (dt < 8) {                                   // мало данных — только жёсткий порог
+    S.note = 'оценка…';
+    return { retreat: me.pct <= env.cfg.rbRetreatHp, why: `HP ${me.pct | 0}% до оценки — отход` };   // отдых и новый заход
+  }
+  const dealt = Math.max(0, a.mob - b.mob);
+  const dps  = Math.max(0, dealt / dt);                    // урон по РБ, HP/с
+  // Не объявляем победу по 1–2 случайным значениям HP или кратковременному лечению персонажа.
+  // Для эпика прежний аварийный выход по нулевому урону продолжает действовать.
+  const reliable = dt >= 15 && S.samples.length >= 5 && dealt >= Math.max(1, mob.max * 0.001);
+  if (!reliable) {
+    S.note = `замер: ${Math.round(dps)} HP/с, ${(100 * dealt / Math.max(1, mob.max)).toFixed(2)}% за ${Math.round(dt)} с`;
+    if (env.epicOn() && env.epicById(S.id) && dt >= 8 && (dps <= 0 || mob.cur / dps > 1800))
+      return { abort: true, hopeless: true, why: `эпик: недостаточный урон, прогноз >30 мин (≈${Math.round(dps)} HP/с)` };
+    return { retreat: me.pct <= env.cfg.rbRetreatHp, why: 'данных для достоверного прогноза победы ещё недостаточно' };
+  }
+  if (dt >= 20 && dps > 0 && now - (S.dpsT || 0) > 30000) { S.dpsT = now; env.setRt({ rbDps: Math.round(env.rt.rbDps ? env.rt.rbDps * 0.8 + dps * 0.2 : dps) }); }   // v4.46: наш ДПС по РБ — для оценки до боя
+  // чистая потеря HP героя без банок: банки, выпитые в окне, возвращаем в расчёт (их лечение не «держится» само)
+  const pm = env.potModel();
+  const potsIn = (S.potT || []).filter(t => t >= a.t).length;
+  const loss = (a.me - b.me) / dt + (pm ? potsIn * pm.H / dt : 0);   // HP/с (≤0 — держимся без банок)
+  // v5.3: настоящая потеря HP (HP/с с учётом выпитого) на единицу P.Atk РБ — для оценки ДО боя. Лог 08.10 14:13–14:16:
+  // оценка брала удар ×0,876 (≈220 HP/с у Берун 50 ур.), а реально с критами и спецударами уходило 300–600 HP/с — две смерти
+  const stL = env.rt.rbStats?.[S.id];
+  if (dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
+    S.lossT = now; const k = loss / stL.patk;
+    env.setRt({ rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss ? stL.loss * 0.6 + loss * 0.4 : loss) } } });
+  }
+  const tKill = dps > 0 ? mob.cur / dps : Infinity;
+  const B = me.cur - me.max * env.cfg.stopHp / 100;              // запас HP до аварийного порога
+  const tDie0 = loss > 0 ? B / loss : Infinity;              // без банок
+  // с банками: лечение pm.H раз в pm.C с, пока не кончатся (резерв не трогаем)
+  let tDie = tDie0, need = 0;
+  if (pm && pm.n > 0 && loss > 0) {
+    // v4.47: банки пьются по мере потери HP. Если пить успеваем (потеря ≤ скорости лечения), их хватит на (запас + HP) / потеря.
+    // Раньше считалось «пьём без перерыва» — 212k банок «кончались» за 110 с, и бот писал «не успею пить» при 1923 против 77 HP/с
+    const hr = pm.rate || pm.H / pm.C, pool = pm.pool || pm.n * pm.H;
+    if (loss <= hr) tDie = (B + pool) / loss;
+    else { const tp = pool / hr, tDrain = B / (loss - hr); tDie = tDrain <= tp ? tDrain : tp + (B - (loss - hr) * tp) / loss; }
+    need = Math.max(0, Math.ceil((loss * tKill * 1.25 - B) / pm.H));   // банок на всё убийство с запасом 25 %
+  }
+  const win0 = tKill < tDie0 * 0.8;                          // без банок, запас 20 %
+  const potsOk = !pm || need <= pm.n && need * pm.C <= tKill + pm.C;  // хватит и по количеству, и по скорости питья
+  const speedOk = !!pm && tKill < tDie * 0.8;                // лечение банками успевает за потерей HP
+  const epicBoss = env.epicOn() && !!env.epicById(S.id);
+  const unrealisticEpic = epicBoss && (tKill > 1800 || !Number.isFinite(tKill));
+  // v7.1.2: прогноз победы нельзя подтверждать без наблюдения ударов босса,
+  // включая критические. Даже долгий период с полным HP не означает отсутствие урона.
+  const hitCount = (S.hits || []).length;
+  const worstHit = Math.max(0, ...(S.hits || []));
+  const observedDamageTicks = S.samples.slice(1).filter((v, i) => S.samples[i].me - v.me >= me.max * 0.02).length;
+  const enoughCombatData = dt >= 25 && S.samples.length >= 12 && dealt >= mob.max * 0.01
+    && (hitCount >= 3 || observedDamageTicks >= 4);
+  const historicalSpike = env.rt.rbDb?.[S.id]?.sp || S.sp || 0;
+  const spikeRisk = worstHit >= me.max * 0.35 || worstHit >= me.cur * 0.65 ||
+    historicalSpike >= me.max * 0.33;
+  // Реальное лечение должно быть измерено: оценка расхода неизвестной банки не подтверждает победу.
+  const potReliable = win0 || !pm || (!pm.est && pm.items.every(x => !x.est));
+  const enoughReserve = win0 || !pm || need <= pm.n * 0.75;
+  const enduranceMargin = win0 ? tKill * 1.35 < tDie0 : tKill * 1.35 < tDie;
+  const candidateWin = !unrealisticEpic && (win0 || (speedOk && potsOk));
+  const win = candidateWin && enoughCombatData && !spikeRisk && potReliable && enoughReserve
+    && enduranceMargin && (loss > 0 || hitCount >= 4);
+  const pending = candidateWin && !win && !spikeRisk && enoughReserve;
+  // v4.31: лечение банки ещё не измерено (300 HP — догадка) — не сдаёмся, пока не выпьем банку и не узнаем, сколько она лечит
+  // (лог 08.10 00:55, Карте 49: «нужно ≈73, есть 75 → хватит», а бот ушёл через 24 с, не выпив ни одной)
+  const probePot = !unrealisticEpic && !win && !!pm && pm.est && pm.n > 0 && need <= pm.n && me.pct > env.cfg.rbRetreatHp;
+  S.usePots = !win0 && (candidateWin || probePot); // не прекращаем лечение во время сбора данных
+  const verdict = win ? 'likely' : pending || probePot ? 'measuring' : 'risk';
+  const verdictLabel = win ? '✅ победа вероятна' : pending || probePot ? '🧪 данных недостаточно' : '⚠ победа не подтверждена';
+  const risk = spikeRisk ? `крупный удар ≈${Math.round(worstHit)} HP` : !enoughCombatData
+    ? `замер ${Math.round(dt)} с, ударов ${hitCount}, снято ${(100 * dealt / Math.max(1, mob.max)).toFixed(1)}%`
+    : !potReliable ? 'лечение банок не измерено' : !enoughReserve ? 'малый резерв банок'
+    : !enduranceMargin ? 'недостаточный запас выживаемости' : 'ожидаю подтверждения устойчивости';
+  S.note = `${verdictLabel} · РБ ≈${env.fmtT(tKill)} при текущем DPS, до опасного HP ≈${env.fmtT(tDie0)}`
+    + (loss > 0 && pm ? ` · банки: нужно ≈${need}, доступно ${pm.n}` : '')
+    + (!win ? ` · ${risk}` : ' · измерения подтверждены');
+  S.stat = `урон ${Math.round(dps)}/с, потеря ${Math.round(loss)} HP/с, ударов ${hitCount}, макс. удар ${Math.round(worstHit)} HP`;
+  env.rbLive = { name: ctx.name, cur: mob.cur, max: mob.max, dps, tKill, tDie0, tDie, loss, win, verdict,
+    reason: risk, hits: hitCount, worstHit, samples: S.samples.length, duration: dt,
+    potsOk, need: pm ? Math.round(need * pm.H) : 0, pool: pm?.pool || 0, t0: S.t0, t: now };
+  // Отдельное краткое состояние доступно в Control Center и переживает переход между вкладками.
+  if (!S.forecastAt || now - S.forecastAt > 6000 || S.forecastVerdict !== verdict) {
+    S.forecastAt = now; S.forecastVerdict = verdict;
+    env.setRt({ rbForecast: { id: S.id, name: ctx.name, t: now, status: verdict,
+      note: S.note, dps: Math.round(dps), tKill: Number.isFinite(tKill) ? Math.round(tKill) : null,
+      hpPct: Math.round(mob.cur / Math.max(1, mob.max) * 100), samples: S.samples.length, hits: hitCount,
+      worstHit: Math.round(worstHit), loss: Math.round(loss) } });
+  }
+  // ясно, что не убьём (прогноз «❌» держится 5 с подряд) — бросаем этого РБ
+  S.badSince = win || pending || probePot ? 0 : (S.badSince || now);
+  // При реальном уроне << HP эпика бесполезно ждать смертельной серии ударов.
+  // Решение опирается только на измеренный DPS, а не на статистику обычных мобов.
+  if (unrealisticEpic && dt >= 8 && a.mob - b.mob < mob.max * 0.01) {
+    return { abort: true, hopeless: true, why: `эпик: урон ≈${dps.toFixed(1)} HP/с, убийство ≈${env.fmtT(tKill)} (>30 мин)` };
+  }
+  // РБ не лечится между заходами (или лечится медленнее, чем мы бьём) — убиваем заходами: бьём до порога, отходим,
+  // лечимся на мобах (вампирик), возвращаемся. Банки на РБ в этом режиме бережём.
+  const chip = !win && S.persist && dps > 0 && (S.regen == null || S.regen < dps * 0.1);
+  if (chip) {
+    const lossPer = loss > 0 ? me.max * Math.max(10, env.cfg.rbRestHp - env.cfg.rbRetreatHp) / 100 / loss : Infinity;   // длительность полного захода (от «пробую» до «отход»), с
+    const perTry = Math.min(lossPer, 1800) * dps;                                          // урон за заход
+    S.chip = true; S.usePots = false;
+    S.note = `⚠ заходами: снимем ≈${Math.round(perTry / 1000)}k за заход, нужно ≈${Math.max(1, Math.ceil(mob.cur / Math.max(perTry, 1)))} заход(а)`;
+    if (me.pct <= env.cfg.rbRetreatHp) return { retreat: true, why: 'конец захода — лечусь на мобах и вернусь' };
+    return { retreat: false };
+  }
+  if (!win && !pending && !probePot && S.badSince && now - S.badSince >= 5000) return { abort: true, why: `не убить: ${S.note}` };
+  if (me.pct <= env.cfg.rbRetreatHp && !win && !pending) return { abort: true, why: `HP ${me.pct | 0}% и сил не хватит` };
+  return { retreat: false };
+}
+
+async function rbRetreat(ctx, mob, why) {
+  const prev = env.rt.rb?.[ctx.rb.id] || { attempts: 0 };
+  const rec = { ...prev, name: ctx.name, max: mob.max, hpAfter: mob.cur, chip: ctx.rb.start - mob.cur,
+                attempts: prev.attempts + 1, t: Date.now() };
+  await env.setRt({ rb: { ...(env.rt.rb || {}), [ctx.rb.id]: rec }, target: null, rbPending: true });
+  await rbNote(ctx.rb.id, { verdict: env.rt.rbDb?.[ctx.rb.id]?.verdict === 'ok' ? 'ok' : 'chip',
+                            note: `отход: снято ${rec.chip}, у него ${mob.cur}/${mob.max}${ctx.rb.stat ? ' · ' + ctx.rb.stat : ''}` });
+  env.setStatus(`РБ ${ctx.name}: ${why} · снято ${rec.chip}, у него ${mob.cur}/${mob.max}`);
+  console.log(env.TAG, `РБ ${ctx.name}: ${why}`, rec);
+  await env.sleep(env.rnd(300, 700));
+  await env.toOutskirts();                            // дальше — мобы (лечение вампириком) и новый заход при полном HP
+}
+
+async function rbAbort(ctx, mob, why) {
+  // первый неудачный заход: ещё неизвестно, сохраняется ли HP РБ — отходим «пробно» и проверим при следующем заходе
+  const d0 = env.rt.rbDb?.[ctx.rb.id] || {};
+  if (!ctx.rb.lethal && !ctx.rb.persist && d0.regen == null && !d0.probed) {   // смертельный удар — без «пробного захода»
+    await rbNote(ctx.rb.id, { probed: true });
+    return rbRetreat(ctx, mob, `${why} · пробный заход: проверю, сохранится ли HP РБ`);
+  }
+  const rb = { ...(env.rt.rb || {}) }; delete rb[ctx.rb.id];
+  await env.setRt({ rb, rbCur: null, target: null, sinceRb: 0 });
+  await rbNote(ctx.rb.id, { verdict: 'no', note: `${why}${ctx.rb.stat ? ' · ' + ctx.rb.stat : ''} · у него ${mob.cur}/${mob.max}` });
+  env.setStatus(`РБ ${ctx.name}: ❌ ${why} → выход, в базу «не по силам»`);
+  console.info(env.TAG, `РБ ${ctx.name} не по силам: ${why}`, `HP РБ ${mob.cur}/${mob.max}`);
+  await env.sleep(env.rnd(300, 700));
+  await env.toOutskirts();
+}
+
+async function rbShopFirst(label) {
+  if (!env.cfg.shopAuto) return false;
+  const [mn] = env.pair(env.cfg.shopHp, '300/1000'), n = env.hpPotStock();
+  if (!mn || n == null || n >= mn || env.rt.shop || Date.now() - (env.rt.shopT || 0) < 600000) return false;
+  await env.shopStart(`перед РБ${label ? ' ' + label : ''}: банок HP ${n} < ${mn}`);
+  location.href = '/char.html'; await env.sleep(4000);
+  return true;
+}
+ return { rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ };
+})(globalThis);

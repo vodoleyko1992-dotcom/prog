@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('fs');const path=require('path');
+const root=path.join(__dirname,'..');
+const s=fs.readFileSync(path.join(root,'content.js'),'utf8');
+assert.match(s,/running = true;\s*try \{[\s\S]*?\} finally \{ running = false; \}/);
+assert.match(s,/await halt\('Автономный режим не продвигается после 3 восстановлений за 30 мин', true\); break;/);
+assert.match(s,/return halt\(reason, true\)/);
+assert.match(s,/engineRecoveryEpoch: '7\.1\.13'/);
+console.log('PASS: dispatcher releases running on all exits; hard halt; old fault history reset');

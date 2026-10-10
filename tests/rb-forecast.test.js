@@ -1,0 +1,34 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const src=fs.readFileSync(path.resolve(__dirname,'../modules/raid.js'),'utf8');
+let now=1000000;
+const win={now:()=>now};
+const ctx=vm.createContext({globalThis:{},Date:{now:()=>now},Math,Number,console});
+ctx.globalThis=ctx;
+vm.runInContext(src,ctx);
+function fixture(hits,loss,potModel=null,meCur=6000){
+ now+=100000;
+ const me={cur:meCur,max:8000,pct:meCur/80},mob={cur:30000,max:100000};
+ const s={id:'rb-100',start:60000,t0:now-29000,samples:[{t:now-29000,me:me.cur+loss*29,mob:60000}],hits:[...hits]};
+ const env={cfg:{rbRetreatHp:20,stopHp:25,rbRestHp:95},rt:{rbStats:{}},logLines:()=>[],newLines:()=>[],activeBuffs:()=>[],potModel:()=>potModel,epicOn:()=>false,epicById:()=>null,fmtT:t=>''+Math.round(t),fmtK:x=>''+x,setRt:r=>Object.assign(env.rt,r),rbLive:null};
+ const mod=ctx.L2V7Factories.raid(env);
+ for(let i=1;i<29;i++)s.samples.push({t:now-29000+i*1000,me:me.cur+loss*(29-i),mob:60000-(30000*i/29)});
+ let out=mod.rbAssess({rb:s,name:'Cerberon'},me,mob);
+ return {out,s,env};
+}
+let r=fixture([],0);
+assert.equal(r.env.rbLive.win,false,'No observed boss attacks MUST NOT produce a win verdict');
+assert.equal(r.env.rbLive.verdict,'measuring');
+r=fixture([150,180,200,230],25);
+assert.equal(r.env.rbLive.win,true,'Low but measured incoming damage with sufficient kill rate may be likely');
+r=fixture([2900,3000,3100,2950],25);
+assert.equal(r.env.rbLive.win,false,'Heavy boss hits must prohibit optimistic predictions');
+assert.equal(r.env.rbLive.verdict,'risk');
+r=fixture([180,200,230],70,{n:300,H:600,C:1.2,pool:180000,rate:500,est:true,items:[{est:true,heal:600,n:300,name:'Potion'}]},3000);
+assert.equal(r.env.rbLive.win,false,'Estimated healing cannot confirm a win');
+assert.equal(r.env.rbLive.verdict,'measuring');
+assert(src.includes("confidence: measured ? 'observed' : 'estimated'"),'Preflight estimates are explicitly marked');
+assert(fs.readFileSync(path.resolve(__dirname,'../background.js'),'utf8').includes('MAX_EV = 20000'),'Journal must keep 20k events');
+assert(fs.readFileSync(path.resolve(__dirname,'../popup.js'),'utf8').includes('rodEnchantTo'),'Popup must have rod enchant setting');
+assert(fs.readFileSync(path.resolve(__dirname,'../popup.html'),'utf8').includes('id="fishQuickCut"'),'Quick cut control must be present');
+console.log('PASS: RB forecast confidence, no-hit optimism, lethal spikes, estimated potions, conservative precheck');

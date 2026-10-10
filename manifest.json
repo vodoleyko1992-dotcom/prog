@@ -1,0 +1,110 @@
+{
+  "manifest_version": 3,
+  "name": "L2wap Bot",
+  "version": "7.1.30",
+  "description": "L2wap Bot 7.1.30 — маг+кот, магистр, базовый профиль игрока",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://l2wap.com/*",
+    "https://*.l2wap.com/*"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "L2wap Bot",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "notranslate.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "skills-il.js",
+        "battle-cooldown.js",
+        "engine-core.js",
+        "modules/fishing.js",
+        "modules/epics.js",
+        "modules/raid.js",
+        "modules/combat.js",
+        "modules/dungeons.js",
+        "modules/tvt.js",
+        "modules/mobfarm.js",
+        "modules/quests.js",
+        "modules/navigation.js",
+        "modules/buffs.js",
+        "modules/equipment.js",
+        "modules/economy.js",
+        "modules/resources.js",
+        "modules/loot.js",
+        "modules/survival.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-bot": {
+      "suggested_key": {
+        "default": "Alt+Shift+B"
+      },
+      "description": "Старт/стоп бота"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html",
+        "popup.js",
+        "icons/*",
+        "items-il.json"
+      ],
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ]
+    }
+  ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
+  "minimum_chrome_version": "116",
+  "version_name": "7.1.30"
+}
