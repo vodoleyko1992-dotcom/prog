@@ -61,6 +61,7 @@ async function showWakeResult() {
   return result;
 }
 async function activateMode(rtPatch, cfgPatch) {
+  await chrome.storage.local.set({ paused: null });   // 8.0: выбран режим — пауза снята (иначе после остановки меню предлагало «Продолжить»)
   await menuPatch({ ...rtPatch, manualKickAt: Date.now() }, { cfgPatch, on: true });
   return showWakeResult();
 }
@@ -87,7 +88,7 @@ function confirmClick(id, fn) {
   const b = $(id); let t = null;
   b.onclick = async () => {
     if (!t) {
-      b.dataset.txt = b.textContent; b.textContent = '⚠ Нажмите ещё раз — подтвердить';
+      b.dataset.txt = b.textContent; b.textContent = b.offsetWidth && b.offsetWidth < 70 ? '⚠?' : '⚠ Нажмите ещё раз — подтвердить';   // 8.0: иконка-кнопка — короткая метка
       t = setTimeout(() => { t = null; b.textContent = b.dataset.txt; }, 4000);
       return;
     }
@@ -123,6 +124,7 @@ async function load() {
     Date.now() - (+rt.health.updatedAt || 0) < 45000;
   const runningLabel = !on && paused ? '⏸ Пауза' : !on ? '○ Остановлен' : failing ? 'Ошибка · восстановление' :
     heartbeatValid ? 'Движок активен' : booting ? 'Запускается' : 'Нет сигнала движка';
+  if ($('workVer')) $('workVer').textContent = 'v' + ver;   // 8.0: версия из манифеста (было зашито «v7.1.11»)
   $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span><span class="ver">v${esc(ver)}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
   $('status').innerHTML = `<div class="st">${esc(rt.status || '—')}</div><div class="chips">`
@@ -986,7 +988,7 @@ function renderRb(rt) {
   const F = Object.values(rt.rbForum || {}), V = Object.entries(rt.rbZoneVisit || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const ok = Object.values(db).filter(d => d.verdict === 'ok').length, no = Object.values(db).filter(d => d.verdict === 'no').length;
   const RL = Object.values(rt.rbList || {}), L = rt.lvl || 0;
-  const rlLine = RL.length ? `Список РБ игры: ${RL.length} · живых ${RL.filter(x => x.alive).length} · разрешено мне ${RL.filter(x => x.alive && !x.deny).length} (обновлён ${new Date(rt.rbListT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })})${rt.rbGo ? ` · ✈ лечу к ${rt.rbGo.name}` : ''}\n` : 'Список РБ игры ещё не читал — прочитаю при включении «Фарм РБ»\n';
+  const rlLine = RL.length ? `Список РБ игры: ${RL.length} · живых ${RL.filter(x => x.alive).length} · разрешено мне ${RL.filter(x => x.alive && !x.deny).length} (${rt.rbListT ? 'обновлён ' + new Date(rt.rbListT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : 'перечитаю при запуске тура'})${rt.rbGo ? ` · ✈ лечу к ${rt.rbGo.name}` : ''}\n` : 'Список РБ игры ещё не читал — прочитаю при включении «Фарм РБ»\n';
   $('rbTourBox').textContent = rlLine + `Можем: ${ok} · не можем: ${no} · РБ с форума: ${F.length}${F.length ? ' (' + F.slice(0, 5).map(f => `${f.name} ${f.lvl}`).join(', ') + (F.length > 5 ? '…' : '') + ')' : ''}`
     + (V.length ? `\nЗоны без РБ по силам (не летим 40 мин): ${V.map(([z, t]) => `${rt.zoneCat?.[z]?.name || z} ${new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`).join(', ')}` : '');
 }
@@ -1180,11 +1182,11 @@ $('farmReset').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ farmGot: {} });
 };
-$('petStatReset').onclick = async () => {
-  if (!confirm('Сбросить статистику котов?')) return;
+// 8.0: confirm() во встроенном меню Chrome молча блокирует — подтверждение вторым нажатием
+confirmClick('petStatReset', async () => {
   await menuPatch({ petStat: {}, petAdvice: null });
   $('status').textContent = '🐱 Статистика котов сброшена';
-};
+});
 $('zoneScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
   await menuPatch({ zoneScan: true });
@@ -1222,7 +1224,7 @@ async function shopNowGo() {
   if (typeof toast === 'function') toast(on ? '🛒 Закупка — иду сейчас' : '🛒 Закупка — после ▶ Старт', 'var(--gold)');
 }
 $('shopNow').onclick = shopNowGo;
-if ($('shopNowTop')) $('shopNowTop').onclick = shopNowGo;
+if ($('shopNowTop')) confirmClick('shopNowTop', shopNowGo);   // 8.0: бросает моба/РБ/рыбалку — вторым нажатием
 $('campNow').onclick = async () => {
   const { rt = {}, cfg = {}, on = false } = await chrome.storage.local.get(['rt', 'cfg', 'on']);
   // Кампания выключена — разовая проверка (campOnce): бот прочитает главу и вернётся к охоте, без телепортов
@@ -1243,10 +1245,10 @@ $('pause').onclick = async () => {
   if (on) { await chrome.storage.local.set({ on: false, paused: { t: Date.now() }, stopMeta: { source: 'popup-pause', reason: 'Пауза', t: Date.now() } }); toast('⏸ Пауза — состояние сохранено'); }
   else if (paused) { await chrome.storage.local.set({ paused: null }); await menuPatch({ manualKickAt: Date.now() }, { on: true }); toast('▶ Продолжаю с того же места'); }
 };
-$('reset').onclick = async () => {
-  const { rt = {} } = await chrome.storage.local.get('rt');
-  await menuPatch({ kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, quests: {}, rb: {}, rbBad: {}, rbKills: 0, loot: {}, lootSpecial: {}, lootValue: 0 });
-};
+// 8.0: ↺ стирает статистику, раны РБ и добычу — только вторым нажатием (рядом 🛒 и Стоп, легко промахнуться)
+confirmClick('reset', async () => {
+  await menuPatch({ kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, quests: {}, rb: {}, rbBad: {}, rbKills: 0, loot: {}, lootSpecial: {}, lootValue: 0, sessT0: Date.now() });
+});
 
 // ---------- журнал: IndexedDB расширения (пишет фоновый скрипт, читает попап) ----------
 const pad = (n, w = 2) => String(n).padStart(w, '0');

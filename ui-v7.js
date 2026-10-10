@@ -206,9 +206,9 @@
   async function overview() {
     if (document.hidden) return;
     try {
-      const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']);
+      const {cfg={},rt={},on=false,paused=null}=await chrome.storage.local.get(['cfg','rt','on','paused']);
       set('overviewKills',integer(rt.kills));set('overviewExp',integer(rt.exp));set('overviewAdena',integer(rt.adena));
-      set('overviewState',on?'В работе':'Остановлен');
+      set('overviewState',on?'В работе':paused?'⏸ Пауза':'Остановлен');
       const state=(id,enabled)=>{const el=document.getElementById(id);if(el){el.textContent=enabled?'● Включён':'Открыть ↗';el.style.color=enabled?'#7be9be':'';}};
       state('modeRbState',cfg.rbMode||cfg.rbHuntMode);
       state('modeEpicState',cfg.epicMode);

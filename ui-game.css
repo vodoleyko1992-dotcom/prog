@@ -200,12 +200,18 @@ html.docked .overview-modules{grid-template-columns:1fr}
 
 /* 7.1.10 — compact game controls (without changing the classic palette) */
 #start,#stop{flex:0 1 142px;max-width:150px;min-width:100px;min-height:33px;padding:5px 10px;border-radius:6px;font-size:13px}
+/* 8.0 (аудит меню): на узкой панели (375 px) «Пауза» сжималась до 14 px («Па») — три кнопки делят ряд поровну */
+#start,#pause,#stop{flex:1 1 0;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 8.0: атрибут hidden всегда прячет (раньше .row{display:flex} перебивал его — «Применить предложенное» висела без дела) */
+[hidden]{display:none!important}
+/* 8.0: суммы в аденах не обрезаются (2 000 000 выглядело как 200000) */
+input.money{width:128px}
 #shopNowTop,#reset{flex:0 0 34px;min-height:33px;font-size:14px}
 #modeToggle{min-height:33px;padding:5px 10px;margin-top:7px}
 #navToggle{min-height:35px;padding:5px 10px}
 .modes button{min-height:33px;padding:5px;font-size:12px}
 .app-shell nav button{min-height:36px;padding:5px 7px}
-html.docked #start,html.docked #stop{min-height:33px;max-width:138px;padding:5px 8px;font-size:13px}
+html.docked #start,html.docked #stop,html.docked #pause{min-height:33px;max-width:none;padding:5px 6px;font-size:13px}
 html.docked #modeToggle{min-height:33px}
 html.docked #navToggle{min-height:35px}
 html.docked .modes button{min-height:33px}
