@@ -13,6 +13,7 @@ async function fishSoft(msg) {
   env.rec('B', 'рыбалка: пауза', `${msg} — повтор через ${wait / 1000} с (попытка ${n})`);
   await env.idle(wait, `⏸ ${msg} — повтор`);
   if (!env.on) return;
+  await commit();
   location.href = '/fishing.html';
   await env.sleep(6000);
 }
@@ -67,18 +68,27 @@ async function fishTimeTopUp() {
   if (ms == null || ms > Math.min(60, Math.max(0, +env.cfg.fishTimeMin || 0)) * 60000) return false;
   const now = Date.now();
   if (now - (env.rt.fishTimeBuyAt || 0) < 180000 || now - (env.rt.fishTimeFailAt || 0) < 300000) return false;
-  const pack = ['1h','2h','3h','6h'].includes(env.cfg.fishTimePack) ? env.cfg.fishTimePack : '1h';
+  // 8.0 (аудит рыбалки): пакет по умолчанию — 6 ч (2,33 млн/ч против 3 млн/ч у 1 ч, на 22 % дешевле)
+  const ORDER = ['1h','2h','3h','6h'];
+  let pack = ORDER.includes(env.cfg.fishTimePack) ? env.cfg.fishTimePack : '6h';
   const prices = {'1h':3000000,'2h':5500000,'3h':7500000,'6h':14000000};
-  const button = env.$q(`[data-fishing-time-package="${pack}"]`);
   const moneyText = env.$q('#fishing-time-adena')?.textContent;
-  if (!button || button.disabled || !moneyText || !/\d/.test(moneyText)) return false;
+  if (!moneyText || !/\d/.test(moneyText)) return false;
   const adena = +(moneyText.replace(/[^\d]/g, '') || 0);
   const reserve = Math.max(0, +env.cfg.shopReserve || 0);
   if (adena - reserve < prices[pack]) {
-    env.rec('B','рыбалка: время', `не покупаю ${pack}: ${adena} аден, резерв ${reserve}, цена ${prices[pack]}`);
-    await env.setRt({ fishTimeFailAt: now });
-    return false;
+    // 8.0: на выбранный пакет аден не хватает — берём самый большой из меньших, который по карману (иначе время кончится и рыбалка встанет)
+    const alt = ORDER.slice(0, ORDER.indexOf(pack)).reverse().find(k => adena - reserve >= prices[k] && env.$q(`[data-fishing-time-package="${k}"]`));
+    if (!alt) {
+      env.rec('B','рыбалка: время', `не покупаю ${pack}: ${adena} аден, резерв ${reserve}, цена ${prices[pack]}`);
+      await env.setRt({ fishTimeFailAt: now });
+      return false;
+    }
+    env.rec('B','рыбалка: время', `на ${pack} не хватает (${adena} аден, резерв ${reserve}) — беру ${alt}`);
+    pack = alt;
   }
+  const button = env.$q(`[data-fishing-time-package="${pack}"]`);
+  if (!button || button.disabled) return false;
   await env.setRt({ fishTimeBuyAt: now });  // persist before click: guards reloads and races
   env.setStatus(`Рыбалка: докупаю время (${pack})`);
   env.fire(button);
@@ -93,13 +103,28 @@ async function fishTimeTopUp() {
 
 // 7.2.1 (лог 10.10 18:32–19:35): учёт после поимки — три записи в память подряд (≈0,2 с на рыбу перед следующим забросом).
 // Память в вкладке меняется сразу, запись в хранилище идёт фоном (очередь патчей) — заброс её не ждёт
+// 8.0 (аудит рыбалки, тот же лог): ≈8 записей на рыбу (заброс, поклёвка, наживка ×2–3, улов, сессия, урон, откат). Теперь счётчики
+// меняются только в памяти вкладки (statPut), а в хранилище уходят ОДНОЙ записью на исход заброса: поймана / сорвалась / не клюнула
+let statDirty = {};
+const statPut = (k, v) => { env.rt[k] = v; statDirty[k] = v; };
+function statTake(extra) {                         // накопленное + extra → один патч; очередь очищается
+  const p = {};
+  // меню могло сбросить статистику (rt из хранилища заменил память) — старое значение не возвращаем
+  for (const [k, v] of Object.entries(statDirty)) if (env.rt[k] === v) p[k] = v;
+  statDirty = {};
+  return { ...p, ...(extra || {}) };
+}
+function statFlush() { const p = statTake(); return Object.keys(p).length ? bg(env.setRt(p)) : undefined; }
 function fishStat(patch, fishName) {
   const F = { casts: 0, bites: 0, nobite: 0, caught: 0, lost: 0, byFish: {}, t0: Date.now(), ...(env.rt.fish || {}) };
   for (const [k, v] of Object.entries(patch)) F[k] = (F[k] || 0) + v;
   if (fishName) F.byFish = { ...F.byFish, [fishName]: (F.byFish[fishName] || 0) + 1 };
-  return bg(env.setRt({ fish: F }));
+  statPut('fish', F);
 }
 const bg = p => { try { p?.catch?.(e => console.warn(env.TAG, 'рыбалка: запись', e)); } catch (e) {} return p; };
+// 8.0 (аудит рыбалки, лог 10.10 18:48:52–57 и 19:21:25–30): перед переходом на другую страницу — дождаться, что запись дошла до
+// хранилища (иначе новая страница читает старое fishService и уводит обратно: fishing ↔ char по кругу)
+async function commit() { statFlush(); try { if (env.rtCommit) await env.rtCommit(); } catch (e) {} }
 
 // ---------- 7.2.1: экономика рыбалки ----------
 // Proof с рыбы по видам: из итогов разделки («Вы разрезали Black Fish ×110. Получено: Fish Oil ×327, …») и курсов обмена магазина рыбака
@@ -133,7 +158,7 @@ const curBait = () => fSlot('goodBait')?.className.includes('toggle-on') ? 'good
 function baitNote(kind, patch) {
   const S = { ...(env.rt.fishBaitStat || {}) }, o = { casts: 0, bites: 0, caught: 0, ms: 0, proof: 0, ...(S[kind] || {}) };
   for (const [k, v] of Object.entries(patch)) o[k] = +((o[k] || 0) + v).toFixed(3);
-  S[kind] = o; bg(env.setRt({ fishBaitStat: S }));
+  S[kind] = o; statPut('fishBaitStat', S);           // 8.0: в хранилище — вместе с исходом заброса
 }
 const baitPph = o => o?.ms > 60000 ? o.proof / o.ms * 3600000 : 0;   // Proof в час
 // «Якісна наживка» (Good Fishing Lure ×10 = 3 Proof, т.е. 0,3 Proof за заброс; бесплатно — из Old Box). В игре описания нет —
@@ -169,7 +194,10 @@ function fishWatch() {
 
 const fishTop = () => fishLog()[0] || null;
 
-const fishCdLen = () => Math.min(1.8, Math.max(1.12, env.rt.fishCdLen || 1.22)) * 1000;
+// 8.0 (аудит рыбалки, лог 10.10 18:32–19:35): сервер принимал то же умение через 1,03–1,09 с (отказ «action_cooldown» — один за
+// 1,5 ч, и тот из-за лага 2,9 с). Нижняя граница пробы отката — 1,05 с (было 1,12); отказ по-прежнему отодвигает откат
+const FCD_MIN = 1.05;
+const fishCdLen = () => Math.min(1.8, Math.max(FCD_MIN, env.rt.fishCdLen || 1.22)) * 1000;
 
 const fishCdLeft = name => Math.max(0, (env.FCD[name] || 0) + fishCdLen() - Date.now());
 
@@ -204,29 +232,27 @@ async function fishAct(name) {                   // нажать рыболов�
   }
   if (stuck && env.on) {
     const f = fishState(); env.rec('B', 'рыбалка', `${name}: сервер ответил, а экран не обновился 2,5 с${f ? ` (рыба ${f.cur}/${f.max})` : ''} — перезагружаю страницу`);
-    location.reload(); await env.sleep(6000); const L = []; L.rej = false; L.tmo = true; return L;
+    statFlush(); location.reload(); await env.sleep(6000); const L = []; L.rej = false; L.tmo = true; return L;
   }
   if (!got && env.on) { tmo = true; env.rec('B', 'рыбалка', `нет ответа на ${name} 15 с (лаг сервера) — жму снова`); }
-  const lines = rej ? [] : (await env.sleep(60), fishNewLines(before));
+  // 8.0 (аудит рыбалки): журнал перерисовывается вместе с ответом — 20 мс вместо 60 (поздний улов ловит fishFight по fishLastPre)
+  const lines = rej ? [] : (await env.sleep(20), fishNewLines(before));
   if (!rej && lines.some(l => env.CD_RE.test(l.t))) rej = true;
   const lag = Date.now() - t0;
-  if (!rej && got) {
-    env.rt.fishLag = Math.round((env.rt.fishLag || lag) * 0.9 + lag * 0.1);
-    if (Math.random() < 0.1) env.setRt({ fishLag: env.rt.fishLag });
-  }
+  if (!rej && got) statPut('fishLag', Math.round((env.rt.fishLag || lag) * 0.9 + lag * 0.1));
   if (name === 'pumping' || name === 'reeling') {
     const gap = t0 - (env.FCD[name] || 0);
-    const F = env.rt.fishCdStat || { ok: 0, rej: 0 };
+    const F = { ok: 0, rej: 0, ...(env.rt.fishCdStat || {}) };
+    // 8.0: запись — с исходом заброса (statPut), нажатия её не ждут; откат в памяти меняется сразу
     if (rej) {                                   // откат длиннее, чем думали — запоминаем с запасом
       F.rej++;
-      if (gap < 3000) await env.setRt({ fishCdLen: Math.min(1.8, Math.max(fishCdLen(), gap + 40) / 1000 + 0.02), fishCdStat: F });
-      else await env.setRt({ fishCdStat: F });
+      if (gap < 3000) statPut('fishCdLen', +Math.min(1.8, Math.max(fishCdLen(), gap + 40) / 1000 + 0.02).toFixed(3));
     } else {
       env.FCD[name] = t0; F.ok++;
-      // каждые 40 чистых нажатий пробуем откат на 10 мс короче (до 1,12 с)
-      if (F.ok % 40 === 0 && fishCdLen() > 1130) await env.setRt({ fishCdLen: fishCdLen() / 1000 - 0.01, fishCdStat: F });
-      else { env.rt.fishCdStat = F; if (F.ok % 20 === 0) env.setRt({ fishCdStat: F }); }
+      // каждые 40 чистых нажатий пробуем откат на 10 мс короче (до 1,05 с)
+      if (F.ok % 40 === 0 && fishCdLen() > FCD_MIN * 1000 + 5) statPut('fishCdLen', +Math.max(FCD_MIN, fishCdLen() / 1000 - 0.01).toFixed(3));
     }
+    statPut('fishCdStat', F);
   }
   lines.rej = rej; lines.tmo = tmo;
   return lines;
@@ -395,6 +421,20 @@ async function fishRod() {
   return true;
 }
 
+// 8.0 (аудит рыбалки, снимки 10.10: строка снаряжения «Вудка +1», «Вудка +2», без «+» — заточки нет): уровень заточки удочки —
+// прямо на рыбалке. Раньше ради него шли в инвентарь (лишний круг fishing ↔ char перед покупкой свитков). Только по устоявшейся
+// странице (в строке снаряжения уже числа) и только по точному виду «Вудка [+N]» — иначе null (тогда, как раньше, — инвентарь)
+function rodLvlGear() {
+  const loaded = [...document.querySelectorAll('#fishing-gear-row .l2-fishing-gear-item')].some(e => /\d/.test(e.textContent));
+  const t = rodText();
+  if (!loaded || !t || env.ROD_NONE_RE.test(t)) return null;
+  const m = t.match(/^(?:вудка|удочка|fishing rod|rod)\s*(?:\+\s*(\d{1,2}))?$/i);
+  if (!m) return null;
+  const n = m[1] == null ? 0 : +m[1];
+  return n >= 0 && n <= 10 ? n : null;
+}
+
+let shotBuyT = 0;                               // 8.0: время последней удачной покупки зарядов (страховка от повторов)
 async function fishPrepare() {                  // удочка, наживка выбрана и есть, заряды включены
   if (!(await fishRod())) return false;
   const want = baitWant();
@@ -404,6 +444,7 @@ async function fishPrepare() {                  // удочка, наживка 
   }
   // сразу после загрузки страницы счётчики ещё пусты — ждём, пока панель/строка снаряжения покажет число
   await env.waitFor(() => fishQty(want) != null, 8000, 150);
+  { const rl = rodLvlGear(); if (rl != null && rl !== env.rt.rodLvl) bg(env.setRt({ rodLvl: rl })); }   // 8.0: заточка удочки — из строки снаряжения
   // журнал 08.10 07:00–07:04: «Купити» молча не срабатывала ни у бота, ни у игрока (ни сообщения, ни списания аден),
   // пока персонаж оставался в бою (HP/MP 3 мин не восстанавливались); в 07:04 те же покупки прошли («Придбано ×10»).
   // Поэтому неудачу повторяем скоро — 30 с → 1 → 2 → 5 мин, а если не прошла покупка N пакетов — сразу пробуем 1 пакет.
@@ -422,12 +463,11 @@ async function fishPrepare() {                  // удочка, наживка 
     if (!ok) env.rec('B', 'рыбалка: покупка', `${what}: магазин не ответил — возможно, персонаж ещё в бою; повтор через ${[30, 60, 120, 300][Math.min((f?.n || 0), 3)]} с`);
     return ok;
   };
-  let nb = fishQty(want);
   // 7.1.30 (лог 10.10 17:26): кончилась «Якісна наживка» (выбрана игрой из Old Box), а обычной в сумке 1094 — бот читал счётчик
   // невыбранной наживки как 0, пытался купить и вставал на паузу. Теперь: нужная наживка не выбрана — сначала выбираем её
   // и перечитываем счётчик; нужной нет, а другая есть — ловим на другой, а не стоим
   // 7.1.30: счётчик НЕвыбранной наживки читается как 0 — поэтому сначала выбираем, ждём, пока игра переключит (toggle-on),
-  // и только потом читаем количество. Нужной нет — пробуем другую тем же способом; нет и её — возвращаем нужную (для покупки)
+  // и только потом читаем количество
   const isOn = kind => !!fSlot(kind)?.className.includes('toggle-on');
   const pick = async kind => {
     const sl = fSlot(kind); if (!sl) return false;
@@ -438,48 +478,59 @@ async function fishPrepare() {                  // удочка, наживка 
     await env.sleep(env.rnd(300, 500));
     return !!ok;
   };
+  // 8.0 (аудит рыбалки): решаем, на какой наживке ловить, ПО НАЛИЧИЮ. Раньше «Авто» (меньше 60 забросов на хорошей) просил хорошую,
+  // а её 0 — fishPrepare выходил досрочно (в окне «30 мин на другой» и сразу после перехода на обычную), и блок зарядов не
+  // выполнялся вовсе: заряды не докупались и не включались, «⚠ заряды кончились» не писалось. Обычная докупалась, только если
+  // нужной была обычная — при «Авто»/«хорошая» и пустой обычной бот вставал на паузу. Теперь: хорошая — только если есть,
+  // иначе обычная; кончилась обычная — покупаем обычную (хорошую — никогда, она за Proof); блок зарядов выполняется всегда.
+  // Счётчик не прочитан (null) — как раньше, считаем «есть» и не покупаем: отказ игры в забросе разберёт ветка 'gear'
+  const avail = async kind => { if (!fSlot(kind) || !(await pick(kind))) return false; const n = fishQty(kind); return n == null || n > 0; };
+  const RU = k => k === 'basicBait' ? 'обычной' : 'хорошей';
+  let use = null, bought = false;
+  const buyBasic = async () => {                   // одна попытка за подготовку; повторы — по лесенке buyOk
+    if (bought || !env.cfg.fishAutoBuy || !buyOk('bait')) return false;
+    bought = true;
+    env.setStatus('Рыбалка: обычная наживка кончилась — покупаю');
+    await buy('bait', 'bait_x10', env.cfg.fishBuyPacks || 1000, 'Fishing Lure ×10');
+    return env.on && avail('basicBait');
+  };
   // уже перешли на другую наживку — 30 мин ловим на ней, не переключая туда-сюда перед каждым забросом
   const sw = env.rt.baitSwapTo;
-  if (sw && sw !== want && Date.now() - (env.rt.baitSwapT || 0) < 1800000 && isOn(sw) && (fishQty(sw) || 0) > 0) return true;
-  if (!nb && await pick(want)) nb = fishQty(want);
-  if (nb === 0) {
+  if (sw && sw !== want && Date.now() - (env.rt.baitSwapT || 0) < 1800000 && isOn(sw) && (fishQty(sw) || 0) > 0) use = sw;
+  if (!use && await avail(want)) use = want;
+  if (!use && want === 'basicBait' && await buyBasic()) use = 'basicBait';   // нужна обычная — сперва докупить её, хорошую не тратить
+  if (!use) {
     const other = want === 'basicBait' ? 'goodBait' : 'basicBait';
-    if (fSlot(other) && await pick(other)) {
-      const no = fishQty(other);
-      if (no > 0) {
-        await env.setRt({ baitSwapTo: other, baitSwapT: Date.now() });
-        if (Date.now() - (env.rt.baitSwapLogT || 0) > 600000) { env.rt.baitSwapLogT = Date.now(); env.rec('B', 'рыбалка', `${want === 'basicBait' ? 'обычной' : 'хорошей'} наживки нет — ловлю на ${other === 'basicBait' ? 'обычной' : 'хорошей'} (${no} шт.)`); }
-        if (want === 'goodBait' || !env.cfg.fishAutoBuy) return true;   // хорошая только за Proof — дальше на обычной
-      } else await pick(want);                                             // другой тоже нет — вернуть нужную, дальше покупка
+    if (await avail(other)) {
+      use = other;
+      bg(env.setRt({ baitSwapTo: other, baitSwapT: Date.now() }));
+      if (Date.now() - (env.rt.baitSwapLogT || 0) > 600000) { env.rt.baitSwapLogT = Date.now(); env.rec('B', 'рыбалка', `${RU(want)} наживки нет — ловлю на ${RU(other)} (${fishQty(other) ?? '?'} шт.)`); }
     }
   }
-  if (nb === 0 && env.cfg.fishAutoBuy && want === 'basicBait' && buyOk('bait')) {   // хорошая наживка — только за Proof, её не покупаем
-    env.setStatus('Рыбалка: наживка кончилась — покупаю');
-    await buy('bait', want === 'goodBait' ? 'good_bait_x10' : 'bait_x10', env.cfg.fishBuyPacks || 1000, want === 'goodBait' ? 'Good Fishing Lure ×10' : 'Fishing Lure ×10');
-    nb = fishQty(want);
-  }
-  if (nb === 0) { await fishSoft(env.cfg.fishAutoBuy ? 'Рыбалка: наживка кончилась, купить не вышло (хватает ли аден?)' : 'Рыбалка: кончилась наживка (включите «докупать» или купите в магазине рыбака)'); return false; }
-  const bait = fSlot(want);
-  if (bait && !bait.className.includes('toggle-on') && fOk(bait)) { env.fire(bait); await env.sleep(env.rnd(300, 500)); }
+  if (!use && await buyBasic()) use = 'basicBait';  // нет ни хорошей, ни обычной — покупаем обычную
+  if (!use) { if (env.on) await fishSoft(env.cfg.fishAutoBuy ? 'Рыбалка: наживка кончилась, купить не вышло (хватает ли аден?)' : 'Рыбалка: кончилась наживка (включите «докупать» или купите в магазине рыбака)'); return false; }
   const ss = fSlot('soulshot');
   if (ss && env.cfg.fishShots) {
-    if (fishQty('soulshot') === 0 && env.cfg.fishAutoBuy && buyOk('shot')) {
-      env.setStatus('Рыбалка: кончились заряды — покупаю');
+    // 8.0 (аудит рыбалки): заряды докупаем заранее — при ≤ 20 (раньше ровно при 0: забросы до покупки шли без зарядов, урон ≈35
+    // вместо ≈70). Не чаще раза в 2 мин после удачной покупки (страховка от неверно прочитанного счётчика) и не во время лесенки неудач
+    const sq = fishQty('soulshot');
+    if (sq != null && sq <= 20 && env.cfg.fishAutoBuy && buyOk('shot') && Date.now() - shotBuyT > 120000) {
+      env.setStatus(sq ? `Рыбалка: зарядов ${sq} — докупаю` : 'Рыбалка: кончились заряды — покупаю');
       // v4.56: соотношение — зарядов столько, чтобы кончились вместе с наживкой (по замеру расхода: наживки и зарядов на рыбу)
       let sp = env.cfg.fishShotPacks || 750, why = '';
       if (env.cfg.fishShotAuto !== false) {
         const F = env.rt.fish || {}, S = env.rt.fishSess || {};
         const baitPerFish = F.caught >= 30 ? Math.min(3, Math.max(1.1, F.casts / F.caught)) : 1.47;
         const shotPerFish = S.n >= 30 && S.shots ? Math.min(12, Math.max(3, S.shots / S.n)) : 5.5;
-        const baitNow = fishQty(want) || 0;
+        const baitNow = fishQty(use) || 0;
         const fishLeft = baitNow / baitPerFish;
         sp = Math.max(5, Math.min(1000, Math.ceil(fishLeft * shotPerFish / 50)));   // 7.2.4: до 1000 пак. — под 1000 пакетов наживки (было 400)
         why = ` (под наживку: ${baitNow} шт. ≈ ${Math.round(fishLeft)} рыб × ${shotPerFish.toFixed(1)} заряда)`;
       }
-      await buy('shot', 'soulshot_x50', sp, 'Fishing Soulshot ×50' + why);
+      if (await buy('shot', 'soulshot_x50', sp, 'Fishing Soulshot ×50' + why)) shotBuyT = Date.now();
     }
     const s2 = fSlot('soulshot'), n2 = fishQty('soulshot');
-    if (n2 > 0 && !/soulshot-on|toggle-on/.test(s2.className)) { env.fire(s2); await env.sleep(env.rnd(300, 500)); }
+    if (s2 && n2 > 0 && !/soulshot-on|toggle-on/.test(s2.className)) { env.fire(s2); await env.sleep(env.rnd(300, 500)); }
     // журнал 08.10: заряды кончились в 06:13 — бот не видел (пустой счётчик) и ловил без них: урон 35 вместо 70, ≈340 рыб/ч вместо ≈540
     const noShots = n2 === 0;
     if (noShots !== !!env.rt.fishNoShots) {
@@ -496,19 +547,18 @@ function fishDmgNote(lines) {
     if (!m) continue;
     const k = m[2] ? 'shot' : 'plain', D = env.rt.fishDmg || {};
     const o = D[k] || { n: 0, sum: 0 };
-    env.rt.fishDmg = { ...D, [k]: { n: o.n + 1, sum: o.sum + +m[3] } };
-    if ((o.n + 1) % 20 === 0) env.setRt({ fishDmg: env.rt.fishDmg });
+    statPut('fishDmg', { ...D, [k]: { n: o.n + 1, sum: o.sum + +m[3] } });   // 8.0: в хранилище — с исходом заброса
     if (k === 'shot') env.fishShotsSess++;
   }
 }
 
 async function fishCaught(name) {
-  const F = env.rt.fish || {};
   const old = env.rt.fishSess, sess = old && Date.now() - (old.last || 0) < 15 * 60000 ? { ...old } : { t0: Date.now() - 6000, n: 0 };   // пауза > 15 мин — новая сессия
   sess.n++; sess.last = Date.now(); sess.shots = (sess.shots || 0) + env.fishShotsSess; env.fishShotsSess = 0;
-  fishStat({ caught: 1 }, name);
-  bg(env.setRt({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess, fishDmg: env.rt.fishDmg, fishCdStat: env.rt.fishCdStat }));
   if (env.fishCast) { baitNote(env.fishCast.bait, { caught: 1, ms: Date.now() - env.fishCast.t, proof: fishValOf(name) }); env.fishCast = null; }
+  // 8.0: весь учёт рыбы (заброс, поклёвка, наживка, улов, сессия, урон, откат, лаг) — одной записью, без ожидания
+  fishStat({ caught: 1 }, name);
+  bg(env.setRt(statTake({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess })));
   const tg = env.rt.fishTgt; if (tg && !tg.done && tg.type === 'fish') await fishTgtAdd('fish', 1);   // цель «N рыб» — может остановить бота, это ждём
   env.rec('B', 'рыбалка', `поймана ${name} · ${fishRateTxt()}`);
 }
@@ -533,10 +583,12 @@ async function fishStallCheck(f) {
   if (rl.length >= 3) { if (Date.now() - fishProgT > 60000) { fishProgT = Date.now(); env.rec('B', 'рыбалка', 'экран рыбалки снова завис — 3 перезагрузки за 10 мин, жду'); } return false; }
   try { sessionStorage.setItem('l2bot.fishReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
   env.rec('B', 'рыбалка', `экран завис: ${f.name} ${f.cur}/${f.max}, кнопка «${f.need || '—'}» недоступна 8 с — перезагружаю страницу`);
-  fishProgT = Date.now(); location.reload(); await env.sleep(6000); return true;
+  fishProgT = Date.now(); statFlush(); location.reload(); await env.sleep(6000); return true;
 }
 
-async function fishFight() {
+// 8.0: учёт вываживания уходит в хранилище одной записью в конце (поймана — уже в fishCaught; сорвалась / скрылась / прервали — здесь)
+async function fishFight() { try { return await fishFightLoop(); } finally { statFlush(); } }
+async function fishFightLoop() {
   let fishName = fishState()?.name || '';
   let lastNeed = null, needT = Date.now();       // «реакция» отсчитывается от момента, когда подсказка стала известна
   const react = () => env.rnd(env.cfg.reactMin * 0.3, env.cfg.reactMax * 0.3);
@@ -650,7 +702,8 @@ async function fishing() {
   if (!fOk(fb)) { await env.sleep(300); return; }
   if (env.cfg.fishMaxCasts && (env.rt.fish?.casts || 0) >= env.cfg.fishMaxCasts) return env.halt(`Рыбалка: сделано ${env.rt.fish.casts} забросов — лимит`, true);
   env.setStatus('Рыбалка: заброс');
-  await env.sleep(env.rnd(env.cfg.reactMin * 0.33, env.cfg.reactMax * 0.33));
+  // 8.0 (аудит рыбалки, лог 10.10: ≈0,4 с накладных на заброс): «реакция» перед забросом 20–60 мс (было 50–150 мс)
+  await env.sleep(env.rnd(20, 60));
   // снимок журнала и счётчика ДО нажатия: быстрый «Рыба не клюнула» может прийти вместе с забросом
   fishWatch();
   const pre = fishLog(), m0 = env.fishMut, castT = Date.now();
@@ -674,14 +727,19 @@ async function fishing() {
     if (bait0 > 0 && env.qty(baitSlot()) < bait0) castSeen = true;
     // повторяющийся журнал: текстом новое не отличить, но журнал перерисовался и сверху «не клюнула»
     if (changed && env.isNoBite(top) && (castSeen || !env.isNoBite(preTop) || Date.now() - castT > 1000)) return 'none';
-    // запасной признак: поклёвки нет 3,5 с, «Fishing» снова доступен, рыбы нет
-    if (Date.now() - castT > 3500 && fOk(fSlot('fishing')) && !fishState() && !env.isCast(top)) return 'none';
-    if (Date.now() - castT > 9000 && fOk(fSlot('fishing')) && !fishState()) return 'none';
+    // запасной признак: поклёвки нет 3,5 с, «Fishing» снова доступен, рыбы нет.
+    // 8.0 (аудит рыбалки, лог 10.10 19:00:04.677 → 19:00:08.440): под лагом ответ на заброс пришёл через 3,9 с, а бот уже через 3,5 с
+    // решил «не клюнула» и забросил снова, не узнав исход. Теперь запасной признак — только когда ответ на заброс уже пришёл (сеть)
+    // и экран успел обновиться (300 мс); без ответа — жёсткий предел 8 с
+    const nf = env.NET_FISH || {}, castResp = nf.t > castT && (!nf.act || nf.act === 'cast') && Date.now() - nf.t > 300;
+    if (Date.now() - castT > 3500 && castResp && fOk(fSlot('fishing')) && !fishState() && !env.isCast(top)) return 'none';
+    if (Date.now() - castT > 8000 && fOk(fSlot('fishing')) && !fishState()) return 'none';
     return null;
-  }, 25000, 60);
+  }, 25000, 40);
   if (res === 'gear') {                           // игра отказала в забросе: удочка / наживка
     fishStat({ casts: -1 }); env.fishCast = null;
     env.rec('B', 'рыбалка', `заброс отклонён: «${gearMsg.slice(0, 100)}» — ${env.ROD_RE.test(gearMsg) ? 'выбираю удочку' : 'проверяю наживку'}`);
+    statFlush();
     if (env.ROD_RE.test(gearMsg)) await env.setRt({ fishRodForce: gearMsg.slice(0, 60) });
     else if (env.cfg.fishAutoBuy) await env.setRt({ fishBuyFail: { ...(env.rt.fishBuyFail || {}), bait: 0 } });
     if (++env.fishGearN >= 4) { env.fishGearN = 0; return fishSoft(`Рыбалка: игра не даёт забросить — «${gearMsg.slice(0, 60)}»`); }
@@ -689,18 +747,20 @@ async function fishing() {
     return;
   }
   env.fishGearN = 0;
-  if (res) { env.fishNoResp = 0; if (env.rt.fishSoftN) await env.setRt({ fishSoftN: 0 }); }   // заброс прошёл — лесенка пауз заново с 5 с
+  if (res) { env.fishNoResp = 0; if (env.rt.fishSoftN) statPut('fishSoftN', 0); }   // заброс прошёл — лесенка пауз заново с 5 с (8.0: без ожидания записи)
   if (res === 'bite' || res === 'none') baitNote(bait, { casts: 1, ...(res === 'bite' ? { bites: 1 } : {}) });
   if (res === 'bite') { fishStat({ bites: 1 }); return fishFight(); }
   if (res === 'none') {
     fishStat({ nobite: 1 });
     if (env.fishCast) { baitNote(bait, { ms: Date.now() - env.fishCast.t }); env.fishCast = null; }
+    statFlush();                                   // 8.0: учёт заброса — одной записью
     env.setStatus('Рыбалка: не клюнула — перезабрасываю');
     // 7.2.1: сразу, как только удочка доступна; «реакция» и так есть перед самим забросом (раньше — ещё 50–150 мс сверху)
     await env.waitFor(() => fOk(fSlot('fishing')) || fishState(), 3000, 30);
     return;
   }
   // заброс без ответа 25 с: лаг, нет наживки или страница «уснула» — после 3 подряд перезагружаем рыбалку
+  statFlush();
   if (++env.fishNoResp >= 3) { env.fishNoResp = 0; return fishSoft('Рыбалка: 3 заброса подряд без ответа (нет наживки? лаг?)'); }
   await env.sleep(300);
 }
@@ -755,11 +815,11 @@ async function fishExchange() {
   if (!(await env.waitFor(loaded, 10000, 200))) {
     if (!env.on) return;
     const n = (env.rt.fishShopRetry || 0) + 1;
-    if (n <= 2) { await env.setRt({ fishShopRetry: n }); env.rec('B', 'рыбалка: обмен', `магазин не загрузился — обновляю страницу (${n}/2)`); location.reload(); await env.sleep(5000); return; }
+    if (n <= 2) { await env.setRt({ fishShopRetry: n }); await commit(); env.rec('B', 'рыбалка: обмен', `магазин не загрузился — обновляю страницу (${n}/2)`); location.reload(); await env.sleep(5000); return; }
     env.rec('B', 'рыбалка: обмен', 'магазин не загрузился 3 раза — обмен пропущен, вернусь позже');
     await env.setRt({ fishService: null, fishShopRetry: 0 });
     if (await fishSvcDone('магазин не загрузился')) return;
-    location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); return;
+    await commit(); location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); return;
   }
   if (env.rt.fishShopRetry) await env.setRt({ fishShopRetry: 0 });
   await env.sleep(env.rnd(300, 500));
@@ -775,15 +835,23 @@ async function fishExchange() {
     const owned = +(row.querySelector('.l2-fshop-row__owned-qty')?.textContent.replace(/\D/g, '') || 0);
     const need = +((row.querySelector('.l2-fshop-row__rate')?.textContent.match(/(\d+)\s*→/) || [])[1] || 1);
     if (owned < need) continue;
-    env.fire(row.querySelector('.l2-fshop-max-btn')); await env.sleep(env.rnd(300, 500));
-    const btn = env.$q(`#fishing-shop-exchange .l2-fshop-exchange-btn[data-exchange="${k}"]`);
+    // 8.0 (аудит рыбалки, лог 10.10 18:48:31–42, 19:21:09–20): ≈1,6 с на материал из-за постоянных пауз. Теперь ждём ответ игры:
+    // после «макс» — пока поле заполнится и «Обменять» станет активной, после обмена — сообщение игры, и короткая пауза
+    // (следующий запрос несёт expectedRevision — страница должна успеть принять новое состояние)
+    const btnQ = () => env.$q(`#fishing-shop-exchange .l2-fshop-exchange-btn[data-exchange="${k}"]`);
+    const inpQ = () => env.$q(`#fishing-shop-exchange .l2-fshop-qty-input[data-exchange="${k}"]`);
+    env.fire(row.querySelector('.l2-fshop-max-btn'));
+    await env.waitFor(() => { const b = btnQ(), i = inpQ(); return !!b && !b.disabled && (!i || +i.value > 0); }, 1500, 40);
+    await env.sleep(env.rnd(60, 120));
+    const btn = btnQ();
     if (!btn || btn.disabled) continue;
     const before = env.$q('#fishing-shop-success')?.textContent || '';
     env.fire(btn);
-    await env.waitFor(() => (env.$q('#fishing-shop-success')?.textContent || '') !== before, 4000, 150);
+    await env.waitFor(() => (env.$q('#fishing-shop-success')?.textContent || '') !== before, 4000, 50);
     made.push(`${row.querySelector('.l2-fshop-row__name')?.textContent.trim() || k} ×${owned - owned % need}`);
-    await env.sleep(env.rnd(600, 1000));
+    await env.sleep(env.rnd(200, 300));
   }
+  if (made.length) await env.waitFor(() => proof() !== p0, 1500, 50);   // 8.0: пауз меньше — число Proof дождаться явно
   let p1 = proof();
   env.rec('B', 'рыбалка: обмен', `${made.join(', ') || 'нечего менять'} → Proof ${p0} → ${p1}`);
   // учёт: сколько Proof даёт одна рыба (для прогноза до цели)
@@ -814,12 +882,12 @@ async function fishExchange() {
     // Do not buy scrolls using a guessed +0 level. Inspect the actual rod first.
     env.rec('B', 'удочка', 'уровень заточки неизвестен — проверяю удочку в инвентаре до покупки свитков');
     await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] });
-    location.href = '/char.html'; await env.sleep(4000); return;
+    await commit(); location.href = '/char.html'; await env.sleep(4000); return;
   }
   if (env.on && rodTo > (env.rt.rodLvl ?? 0)) {
     const r = await env.rodScrollsBuy(rodTo, proof);
     p1 = proof();
-    if (r.have > 0 || r.bought > 0) { await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] }); location.href = '/char.html'; await env.sleep(4000); return; }
+    if (r.have > 0 || r.bought > 0) { await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] }); await commit(); location.href = '/char.html'; await env.sleep(4000); return; }
   }
   await env.setRt({ fishService: null, fishProof: p1, fishGearBought: [...bought], rodGoalWaitingProof: !!env.rt.rodGoalActive && rodTo > (env.rt.rodLvl ?? 0) });
   if (await fishSvcDone(`Proof ${p1} (+${Math.max(0, p1 - p0)})`)) return;
@@ -828,7 +896,7 @@ async function fishExchange() {
   if (env.rt.fishTgt?.done && !env.on) return;
   env.setStatus(`Рыбалка: Proof ${p1} (+${Math.max(0, p1 - p0)}) — ${fishNow() ? 'возвращаюсь рыбачить' : 'возвращаюсь к охоте'}`);
   await env.sleep(env.rnd(800, 1200));
-  if (env.on) { location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); }
+  if (env.on) { await commit(); location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); }
 }
 
 async function fishSvcDone(why) {
@@ -869,6 +937,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
+ return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
  };
 })(globalThis);
