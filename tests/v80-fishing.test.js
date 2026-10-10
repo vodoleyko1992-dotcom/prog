@@ -74,6 +74,14 @@ function world(o = {}) {
     assert.equal(W.env.rt.fishBuyFail?.bait?.n, 1, `${fishBait}: обычная наживка — попытка покупки`);
     assert.match(W.halted || '', /наживка кончилась, купить не вышло/);
   }
+  // ---------- лог 10.10 23:52–06:23 (v7.2.3, ночь): «Авто» выбрала хорошую (00:23), она кончилась → обычная (501 шт.), в 01:05 кончилась
+  // и обычная — 5 ч «наживка кончилась, купить не вышло» ×68 без ЕДИНОЙ попытки покупки. Состояние той ночи: решение «Авто» = хорошая,
+  // переход на обычную 42 мин назад, обеих 0 → в 8.0 бот обязан пытаться купить обычную ----------
+  { const W = world({ cfg: { fishBait: 'auto' }, good: 0, basic: 0, basicOn: true,
+      rt: { baitAutoWant: 'goodBait', baitSwapTo: 'basicBait', baitSwapT: clock.t - 42 * 60000, fishBaitStat: { goodBait: { casts: 65, proof: 20 }, basicBait: { casts: 379, proof: 110 } } } });
+    assert.equal(await W.F.fishPrepare(), false);
+    assert.equal(W.env.rt.fishBuyFail?.bait?.n, 1, 'ночной сценарий: попытка купить обычную наживку есть');
+  }
   // ---------- A1: нужна обычная, её 0, есть хорошая → сперва покупка обычной, не вышло — ловим на хорошей ----------
   { const W = world({ cfg: { fishBait: 'basic' }, basic: 0, good: 300 });
     assert.equal(await W.F.fishPrepare(), true);
