@@ -46,6 +46,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .modes button{padding:8px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;font-weight:700;border:1px solid #35506a;background:#192c41;border-radius:9px;min-width:0}
 .modes button:hover{background:#233e56;border-color:#73cfcb}
 .modes button.on,#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on{background:linear-gradient(145deg,#164f57,#17504e);border-color:#46bba9;color:#b7ffea;font-weight:800}
+#rbToggle.on.susp{opacity:.55;border-style:dashed}
 #status{margin-top:8px;padding:7px 10px;min-height:35px;max-height:79px;overflow:auto;background:rgba(6,17,30,.52);border:1px solid #2c435a;border-radius:10px}
 #status .st{font-size:11px;color:#dae8f6;font-weight:650;line-height:1.35;white-space:pre-line}
 #status .chips{gap:6px;margin-top:4px}

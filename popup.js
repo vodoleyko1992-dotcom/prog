@@ -178,8 +178,7 @@ async function load() {
   showCounts(reccount, snapcount);
 
   // режим РБ
-  $('rbToggle').classList.toggle('on', !!d.rbBetween);   // 8.0.3: подсветка — выбор игрока, не внутренний флаг тура
-  $('rbToggle').dataset.on = d.rbBetween ? '1' : '0';
+  paintRbToggle(d);
   $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
   paintModes(d, on);
   paintCls(d, rt);
@@ -234,8 +233,8 @@ async function load() {
   renderLoot(rt);
   // 🩺 v5.2: самопроверка баффов (пишет бот в бою раз в 15 с)
   if ($('buffAudit')) { const A = rt.buffAudit, ic = { ok: '✅', info: 'ℹ️', wait: '⏳', miss: '⚠️', bad: '❌' };
-    $('buffAudit').textContent = A?.list?.length ? `🩺 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
-      + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🩺 Проверка баффов — появится в первом бою' : ''); }
+    $('buffAudit').textContent = A?.list?.length ? `🔍 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
+      + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🔍 Проверка баффов — появится в первом бою' : ''); }
   renderCat(rt, d);
   // 8.0 (аудит меню): базы «Фарм ресурсов»/«Рецепты» (мегабайты) — только когда открыт раздел «Охота»
   if (huntOpen()) renderHuntDb(rt, d);
@@ -436,7 +435,7 @@ function baitLine(rt) {
   const pph = o => o.ms > 60000 ? o.proof / o.ms * 3600000 : 0, row = (nm, o) => `${nm}: ${o.casts || 0} забр. · клёв ${o.casts ? Math.round((o.bites || 0) / o.casts * 100) : 0}% · ${pph(o) ? pph(o).toFixed(1) + ' Proof/ч' : '—'}`;
   if (!b.casts && !g.casts) return '';
   const done = (b.casts || 0) >= 60 && (g.casts || 0) >= 60, per = done ? g.proof / g.casts - b.proof / b.casts : 0;
-  return `\n🪱 ${row('обычная', b)}\n🪱 ${row('хорошая', g)}` + (done ? `\n🪱 хорошая на заброс ${per >= 0 ? '+' : ''}${per.toFixed(2)} Proof → ${per > 0.3 ? 'выгодно даже покупать за Proof (0,3 шт.)' : pph(g) > pph(b) * 1.03 ? 'ловить на бесплатных (Old Box), не покупать' : 'не нужна — только обычная'}` : `\n🪱 замер: по 60 забросов на каждой`);
+  return `\n🐛 ${row('обычная', b)}\n🐛 ${row('хорошая', g)}` + (done ? `\n🐛 хорошая на заброс ${per >= 0 ? '+' : ''}${per.toFixed(2)} Proof → ${per > 0.3 ? 'выгодно даже покупать за Proof (0,3 шт.)' : pph(g) > pph(b) * 1.03 ? 'ловить на бесплатных (Old Box), не покупать' : 'не нужна — только обычная'}` : `\n🐛 замер: по 60 забросов на каждой`);
 }
 function fishSessLine(rt, F) {
   const S = rt.fishSess; if (!S?.n) return '';
@@ -930,11 +929,21 @@ function petLineOf(rt) {
     + `${s.dealt ? ` · ${Math.round(s.dmg / s.dealt * 100)} % урона` : ''} · гибель ${s.deaths || 0}`;
 }
 // ==== /8.0 сводка «Обзора» ====
+// 8.0.3: «РБ между мобами» — как в ядре (content.rbEff): тур по РБ, или выбор игрока rbBetween, пока не рыбалка/эпики/кампания.
+// Хранимый rbMode больше не источник правды — сводки и подсветка не расходятся с тем, что делает бот
+const rbEff = d => !!(d.rbHuntMode || (d.rbBetween && !d.fishMode && !d.epicMode && !d.campaign));
+function paintRbToggle(d) {
+  const b = $('rbToggle'); if (!b) return;
+  const susp = !!d.rbBetween && !rbEff(d);
+  b.classList.toggle('on', !!d.rbBetween); b.classList.toggle('susp', susp); b.dataset.on = d.rbBetween ? '1' : '0';
+  b.title = susp ? 'Включено, но сейчас ждёт: вернётся само после ' + (d.fishMode ? 'рыбалки' : d.epicMode ? 'эпиков' : 'кампании')
+    : 'Бить РБ в текущей локации между мобами (по умолчанию выкл)';
+}
 const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 function renderDash(rt, d, st) {
   if (!$('dash')) return;
   const now = Date.now(), m = currentMode(d), S = sessInfo(rt, now);
-  const mods = [d.rbMode && m !== 'rb' && 'РБ между мобами', d.tvtOn && 'TvT'].filter(Boolean);
+  const mods = [rbEff(d) && m !== 'rb' && 'РБ между мобами', d.tvtOn && 'TvT'].filter(Boolean);
   $('dashMode').textContent = MODE_NAME[m] + (mods.length ? ' + ' + mods.join(', ') : '');
   const [stTxt, stCls] = !st.on ? (st.paused ? ['⏸ пауза', 'pause'] : ['○ остановлен', 'off']) : st.failing ? ['⚠ сбой · восстановление', 'warn']
     : st.heartbeatValid ? ['● работает', 'on'] : st.booting ? ['… запуск', 'warn'] : ['⚠ нет сигнала', 'warn'];
@@ -954,7 +963,7 @@ function renderDash(rt, d, st) {
   $('dashLines').innerHTML = L.map(x => `<div>${x}</div>`).join('');
   // плитки разделов: где сейчас работает бот
   const tile = (id, v) => { const el = $(id); if (el) { el.textContent = v ? '● Включён' : 'Открыть ↗'; el.classList.toggle('on', !!v); } };
-  tile('modeHuntState', m === 'farm' || m === 'auto'); tile('modeRbState', m === 'rb' || !!d.rbMode); tile('modeEpicState', m === 'epic');
+  tile('modeHuntState', m === 'farm' || m === 'auto'); tile('modeRbState', m === 'rb' || rbEff(d)); tile('modeEpicState', m === 'epic');
   tile('modeCatState', m === 'cat'); tile('modeFishState', m === 'fish');
 }
 
@@ -1235,9 +1244,8 @@ $('rbSessStop').onclick = async () => {
   toast('РБ-сессия остановлена — автофарм');
 };
 document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
-  $('campToggle').classList.toggle('on', !!d.campaign); $('rbToggle').classList.toggle('on', !!d.rbBetween); $('tvtToggle').classList.toggle('on', !!d.tvtOn);
-  $('rbToggle').dataset.on = d.rbBetween ? '1' : '0';
-  const mods = [d.campaign && '📜 кампания', d.rbMode && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
+  $('campToggle').classList.toggle('on', !!d.campaign); $('tvtToggle').classList.toggle('on', !!d.tvtOn); paintRbToggle(d);
+  const mods = [d.campaign && '📜 кампания', rbEff(d) && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
   const ms = $('modeSummary'); if (ms) ms.textContent = `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
@@ -1275,7 +1283,7 @@ async function setMode(m) {
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
   const leave = { ...leaveEpic, ...leaveHunt };
   // 8.0.3: «РБ между мобами» вне тура — только по выбору игрока (rbBetween, по умолчанию выкл). Раньше тур включал rbMode, а переход на
-  // фарм/автофарм/катакомбы его не выключал: бот продолжал бегать к РБ, и автофарм не летал по зонам (он ждёт !rbMode)
+  // фарм/автофарм/катакомбы его не выключал: бот продолжал бегать к РБ, и автофарм не летал по зонам. С 8.0.3 rbMode вычисляется в ядре (rbEff), здесь — только для совместимости хранилища
   const rbB = !!cfg.rbBetween;
   if (m === 'farm') await activateMode({ ...leave, zoneAutoKick: null, zoneGo: null }, { ...MODES_OFF, zoneAuto: false, rbMode: rbB });
   // с автофармом включаем и цепочку «Охотиться дальше»: ≈5,4 с на моба против ≈11,4 с через карту

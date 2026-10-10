@@ -340,7 +340,7 @@
 <section id="tab-rb">
   <div class="rb-summary">
     <strong>Рейд-боссы · Центр управления</strong>
-    <p>Включи тур — «РБ между мобами» включится сам. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
+    <p>Тур по РБ бьёт боссов сам; «👑 РБ между мобами» (бить РБ в текущей локации) — отдельное дополнение, по умолчанию выкл. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
     <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
     <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
   </div>
@@ -365,7 +365,7 @@
   <div class="hint">Бот меряет урон по РБ и потерю HP. Без банок не успеваем — считает, сколько банок нужно на всё убийство (с запасом 25 %) и хватит ли их за вычетом резерва и с учётом скорости питья. Хватит — бьёт и пьёт; не хватит — «не по силам».</div>
   <h4>🧭 Тур по РБ</h4>
   <div class="row"><button id="huntToggle2">🧭 Тур по РБ: ВЫКЛ</button></div>
-  <div class="hint">Включение тура включает и «👑 РБ между мобами»; выключение «РБ между мобами» выключает тур. По шагам: список РБ игры (Меню → Рейдовые боссы) → выбор: живой, игра разрешает, уровень не дальше ±15 от героя (и в пределах настроек выше), не «не по силам», не пробовали 30 мин; сначала самые слабые (ниже уровнем) → полное HP/MP у баффера → «Телепорт» к РБ → поиск на карте → бой с оценкой «хватит ли сил» → следующий. Мобов между РБ не фармит. Подходящих нет — ждёт 10 с и перечитывает список. «👑 РБ между мобами» — отдельно: бьёт РБ только в текущей локации.</div>
+  <div class="hint">Тур и «👑 РБ между мобами» независимы: кнопка дополнения тур не выключает, конец тура возвращает дополнение как было. По шагам: список РБ игры (Меню → Рейдовые боссы) → выбор: живой, игра разрешает, уровень не дальше ±15 от героя (и в пределах настроек выше), не «не по силам», не пробовали 30 мин; сначала самые слабые (ниже уровнем) → полное HP/MP у баффера → «Телепорт» к РБ → поиск на карте → бой с оценкой «хватит ли сил» → следующий. Мобов между РБ не фармит. Подходящих нет — ждёт 10 с и перечитывает список. «👑 РБ между мобами» — отдельно (по умолчанию выкл): бьёт РБ только в текущей локации, на время рыбалки/эпиков/кампании ждёт и потом включается само; автофарму менять локацию не мешает, пока здесь не ждёт РБ.</div>
   <div class="row"><button id="rbOrderUp" title="Сначала самые слабые по уровню — начало списка «Рейдовые боссы»">⬆ С самых слабых (начало списка)</button><button id="rbOrderDown" title="Сначала самые сильные по уровню — конец списка">⬇ С самых сильных (конец списка)</button></div>
   <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
   <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
@@ -428,7 +428,7 @@
   <label>Сверхсильные <input id="nUltra" class="nm" placeholder="Punch of Doom, Crush of Doom, Ice Vortex…"></label>
   <label>Когда <select id="ultMode"><option value="big">РБ, чемпионы и «толстые» мобы</option><option value="boss">Только РБ и чемпионы</option><option value="always">Сразу, как откатится</option></select></label>
   <div class="hint">Удары с долгим откатом и огромной силой (Punch of Doom у Тирана, Crush of Doom у Дестроера, Vortex-ы магов). Бот не тратит их на моба, который и так умрёт от обычного удара: в режиме «толстые» — только если у моба HP не меньше ~70 % урона этого удара (и минимум 4 обычные атаки) и моб ещё не добит до 30 %. Скиллы, которые стоят HP (… of Doom), — не при HP ниже 40 %. В обычную ротацию «Силовых» они не попадают.</div>
-  <h4>🩸 Вампиризм (маги)</h4>
+  <h4>💉 Вампиризм (маги)</h4>
   <label>Скиллы с поглощением HP <input id="nDrain" class="nm" placeholder="Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex"></label>
   <label>Включать вампиризм при HP ≤, % <input id="drainHp" type="number" min="10" max="100"></label>
   <div class="hint">Когда HP падает до порога, бот сначала бьёт скиллом с поглощением HP — он и бьёт, и лечит, а банки остаются целы. Банку HP пьёт, только если вампирик на откате, не хватает MP или HP уже опасно низкое (стоп-HP + 10 %). Выше порога вампирики не мешают обычной ротации (их можно держать и в «Силовых»). Скиллы «по трупу» (Life Scavenge, Corpse Life Drain) бот пропускает.</div>
@@ -446,7 +446,7 @@
   <h4 data-cls="fighter">🔥 Важные баффы</h4>
   <label>Важные баффы <input id="nKeyBuffs" class="nm" placeholder="Frenzy, Guts, Zealot, War Cry…"></label>
   <label>Без условия по HP — только с РБ и чемпионами <input id="keyBuffBoss" type="checkbox"></label>
-  <label>🪓 Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
+  <label>⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
   <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <div class="hint">Аварийные (действуют только при HP ≤ 30 %: Frenzy, Guts, Zealot, Angelic Icon) бот жмёт, как только HP упало до 30 % — раньше банки HP, чтобы банка не «перескочила» порог. Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → остальные → Zealot. Zealot режет получаемое лечение вдвое — в бою с РБ (где живём на банках) только на добивании, когда у РБ ≤ 15 %. Остальные важные (War Cry, Battle Roar и т.п.) — в начале боя с РБ/чемпионом (или в каждом бою, если галочку снять).</div>
   <h4>🔁 Постоянные баффы (тогглы)</h4>
@@ -547,7 +547,7 @@
   <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
   <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
   <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
-  <label>🪱 Наживка <input id="shopBait" class="sm" placeholder="0/0"></label>
+  <label>🐛 Наживка <input id="shopBait" class="sm" placeholder="0/0"></label>
   <label>Не тратить ниже, аден <input id="shopReserve" class="sm money" type="number" min="0"></label>
   <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
   <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
@@ -631,7 +631,7 @@
 
   <div class="subsec-title"><span id="tab-log" class="tab-anchor"></span>≋ Диагностика</div>
   <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
-  <label>🪟 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
+  <label>🖥 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
   <label>Записывать клики и действия бота <input id="rec" type="checkbox"></label>
   <label>📸 Снимки новых состояний страниц <input id="autoSnap" type="checkbox"></label>
   <div id="recCount" class="hint"></div>

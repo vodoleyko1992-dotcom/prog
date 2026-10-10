@@ -22,7 +22,21 @@ const freshCfg = { champ803: 1, fishPack80: 1, searchChamp: true };             
 assert.equal(migApplied(deferred, freshCfg, {}), true, 'stale deferred cfg patch is detected');
 assert.equal(migApplied(deferred, {}, { champ803: 1 }), true, 'flag stored in rt also counts');
 assert.equal(migApplied(deferred, { searchChamp: true }, {}), false, 'not applied yet — the patch is still written');
-assert.match(content, /if \(Object\.keys\(deferredMigrations\.cfg\)\.length && migApplied\(deferredMigrations\.cfg, cfg, rt\)\) deferredMigrations\.cfg = \{\};/);
+// 8.0.3 (вторая проверка): устаревание пакета настроек считается ДО записи rt и только по свежим cfg — иначе флаги, которые эта же
+// вкладка только что записала в rt (setRt сразу кладёт их в память), выбрасывали ещё не применённые правки настроек
+const cfgStaleAt = content.indexOf('const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, cfg);');
+const rtWriteAt = content.indexOf('const result = await setRt(patch);', cfgStaleAt);
+assert.ok(cfgStaleAt > 0 && rtWriteAt > cfgStaleAt, 'staleness of the cfg batch is computed before the rt batch is written');
+assert.match(content, /if \(cfgStale\) deferredMigrations\.cfg = \{\};/);
+assert.doesNotMatch(content, /migApplied\(deferredMigrations\.cfg, cfg, rt\)/, 'no rt look-up for the cfg batch');
+{ // сценарий: ждавшая вкладка получила замок первой — её rt-пакет пишется, флаг попадает в rt, но cfg-пакет ещё не применён
+  const rtMem = {}, cfgFresh = {};
+  const defRt = { champ803: 1 }, defCfg = { champ803: 1, searchChamp: false };
+  const stale = migApplied(defCfg, cfgFresh);          // как в main(): до записи rt
+  Object.assign(rtMem, defRt);                         // setRt(patch)
+  assert.equal(stale, false, 'cfg batch survives');
+  assert.equal(migApplied(defCfg, cfgFresh, rtMem), true, 'the old check (after the rt write, with rt) would have dropped it');
+}
 assert.match(content, /if \(migApplied\(deferredMigrations\.rt, rt\)\) deferredMigrations\.rt = \{\};/);
 // меню: подсказка «Фарм на месте» не обещает чемпионов; правило [чемп] серое, пока галочка выключена
 assert.match(html, /title="Стоять там, где оставили: ★ цели квестов и мобы этой локации \(чемпионы — если включено «Искать чемпионов» в «Охоте»\)"/);

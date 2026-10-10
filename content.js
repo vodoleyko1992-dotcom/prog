@@ -41,7 +41,12 @@ let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
 let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
-const mergeCfg = c => ({ ...DEF_CFG, ...(c || {}) });
+// 8.0.3 (игрок 11.10: «РБ между мобами по умолчанию выкл, с возможностью включения»; проверка правки): rbMode больше не хранимый
+// флаг, который каждый режим должен держать в согласии (выход из эпиков/кампании, импорт старых настроек, миграции его теряли), а
+// ВЫЧИСЛЯЕМЫЙ: тур по РБ — да; иначе выбор игрока rbBetween (по умолчанию выкл), если не мешает рыбалка/эпики/кампания
+const rbEff = c => !!(c.rbHuntMode || (c.rbBetween && !c.fishMode && !c.epicMode && !c.campaign));
+const withRb = c => ({ ...c, rbMode: rbEff(c) });
+const mergeCfg = c => withRb({ ...DEF_CFG, ...(c || {}) });
 
 // ---------- утилиты ----------
 // v5.1 автообучение: каждый поиск элемента запоминается — «на этой странице нашёлся / нет» (за заход на страницу).
@@ -125,7 +130,7 @@ async function setCfg(patch) {
   const response = await ipc({ cmd: 'statePatch', patch: {}, cfgPatch: patch,
     src: TAB_ID, epoch: leaseEpoch });
   if (!response?.ok) throw new Error('settings_patch_failed: ' + (response?.reason || 'unknown'));
-  cfg = { ...cfg, ...patch };
+  cfg = withRb({ ...cfg, ...patch });
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -2046,6 +2051,9 @@ async function main() {
       }
       // Migrations calculated during page initialization must not write without a lease.
       // Apply to the saved current character before switching to a new one.
+      // 8.0.3 (проверка правки): устаревание пакета настроек — ДО записи rt и только по свежим настройкам: раньше проверка видела
+      // флаг, который эта же вкладка строкой выше записала в rt, и выбрасывала ещё не применённые правки настроек
+      const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, cfg);
       if (Object.keys(deferredMigrations.rt).length) {
         // 7.1.30: пока ждали замок, хозяин мог уже применить эти миграции — снимок не затирает свежие данные
         if (migApplied(deferredMigrations.rt, rt)) deferredMigrations.rt = {};
@@ -2055,7 +2063,7 @@ async function main() {
       }
       // 8.0.3 (проверка правок по чемпионам): и для настроек — иначе вкладка, ждавшая замок, позже записывала свой старый пакет
       // разовых миграций вслепую: игрок включил «Искать чемпионов», вкладка перехватила управление — и галочка молча выключилась
-      if (Object.keys(deferredMigrations.cfg).length && migApplied(deferredMigrations.cfg, cfg, rt)) deferredMigrations.cfg = {};
+      if (cfgStale) deferredMigrations.cfg = {};
       if (Object.keys(deferredMigrations.cfg).length) {
         const patch = deferredMigrations.cfg; deferredMigrations.cfg = {};
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
@@ -2149,7 +2157,7 @@ async function main() {
       if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); continue; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
       if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
       if (rt.invScan) await setRt({ invScan: null });
-      if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !cfg.rbMode && !huntOn()) { await invScanStart(); continue; }
+      if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); continue; }   // 8.0.3: дополнение «РБ между мобами» не отменяет чтение сумки
       // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
       if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
       else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(5000); } }
@@ -2523,6 +2531,9 @@ const ui = document.createElement('div');
 ui.id = 'l2bot-ind';
 // v5: оформление индикатора — тёмная «стеклянная» панель, цветная точка состояния, статус крупнее, история — приглушённо
 const uiCss = document.createElement('style');
+// 8.0.3 (игрок 11.10: «бывает полоска с перемоткой, она раздражает»): крупное окно было overflow:auto — когда 30 строк истории не
+// влезали по высоте, появлялась полоса прокрутки, хотя окно не кликается (pointer-events:none) и прокрутить её нельзя. Теперь окно
+// не прокручивается: сверху статус и бой целиком, история (новые строки сверху) обрезается снизу с плавным затуханием
 uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line}
 #l2bot-ind .h{display:flex;align-items:center;gap:7px;font-weight:700;color:#f0cf86;font-size:11.5px;letter-spacing:.02em}
 #l2bot-ind .h i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 6px currentColor}
@@ -2532,7 +2543,8 @@ uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:21474
 #l2bot-ind .s.old{color:#a39280;font-weight:400;font-size:12px}
 #l2bot-ind .t{color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind.wide .s.old{font-size:15px}
-#l2bot-ind.wide{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:auto;font-size:16px;line-height:1.5;padding:14px 18px 16px}
+#l2bot-ind.wide{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:hidden;font-size:16px;line-height:1.5;padding:14px 18px 16px;display:flex;flex-direction:column}
+#l2bot-ind.wide .r{flex:1 1 auto;min-height:0;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 48px),transparent);mask-image:linear-gradient(#000 calc(100% - 48px),transparent)}
 #l2bot-ind.wide .h{font-size:15px}
 #l2bot-ind.wide .h i{width:11px;height:11px;flex-basis:11px}
 #l2bot-ind.wide .s{font-size:18px;margin:8px 0 6px}
@@ -2587,7 +2599,7 @@ function draw() {
     if (R.dps > 0) L.push(`⏱ Расчётное время: ≈${fmtT(R.tKill)} · DPS ${Math.round(R.dps)}/с (это НЕ прогноз победы)`);
     else L.push('⏱ Сбор данных о фактическом уроне…');
     L.push(`${R.win ? '✅ Победа вероятна' : R.verdict === 'measuring' ? '🧪 Оценка не подтверждена' : '⚠ Высокий риск'} · ${R.reason || 'идут измерения'}`);
-    if (R.loss != null) L.push(`🩸 Изменение HP ${Math.round(R.loss)} HP/с${R.pool ? ` · запас лечения ${fmtK(R.pool)} HP` : ''} · ударов ${R.hits || 0}`);
+    if (R.loss != null) L.push(`📉 Изменение HP ${Math.round(R.loss)} HP/с${R.pool ? ` · запас лечения ${fmtK(R.pool)} HP` : ''} · ударов ${R.hits || 0}`);
   } else if (huntOn() && rt.rbPlan && now - rt.rbPlan.t < 10 * 60000) {
     L.push(`👑 ${rt.rbPlan.ok === false ? '❌' : '➡'} ${rt.rbPlan.name}: ${rt.rbPlan.why}`);
   }
@@ -3971,10 +3983,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 8.0 (аудит боя): устаревшие «нижние границы» отката (Aura Burn 3,4 с при 1,1 с, VT 3,9 с) тормозили лучшие заклинания — стереть
   once('cdFloor80', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cdFloor || p.cdFloorAt)) { S[k] = { ...p, cdFloor: 0, cdFloorAt: 0 }; sk = true; } });
   once('fish724', () => { Object.assign(cf, { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 }); });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
-  once('champ803', () => { cf.searchChamp = false; });
-  // 8.0.3 (игрок 11.10: «РБ между мобами по умолчанию выкл, с возможностью включения»): выбор игрока — отдельно (rbBetween);
-  // тур по РБ держит rbMode для своей работы, вне тура rbMode = выбор игрока (по умолчанию выкл)
-  once('rbBetween803', () => { cf.rbBetween = false; if (!C('rbHuntMode')) cf.rbMode = false; });   // 8.0.3 (игрок 11.10): «поиск чемпионов по умолчанию откл., с возможностью вкл»
+  once('champ803', () => { cf.searchChamp = false; });   // 8.0.3 (игрок 11.10): «поиск чемпионов по умолчанию откл., с возможностью вкл»   // 8.0.3 (игрок 11.10): «поиск чемпионов по умолчанию откл., с возможностью вкл»
   once('fishPack80', () => { if (C('fishTimePack') === '1h') cf.fishTimePack = '6h'; });   // 8.0 (аудит рыбалки): время рыбалки пакетом 6 ч — на 22 % дешевле часа (2,33 млн/ч против 3 млн/ч)
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
     const S = { ...(rt.rbStats || {}) }, sig = {};
@@ -4001,7 +4010,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
   if (sk) rf.skills = S;
   if (Object.keys(cf).length) {
-    Object.assign(cfg, cf);
+    cfg = withRb({ ...cfg, ...cf });
     if (on && !tabOwner) deferredMigrations.cfg = { ...deferredMigrations.cfg, ...cf };
     else setCfg(cf).catch(() => {});
   }

@@ -1131,7 +1131,7 @@ async function battle() {
     // 8.0 (аудит боя, лог 13-30: 18 из 105 банок на РБ выпиты при HP > 85 %): на РБ, пока включена «полоса банок», вампирик готов —
     // он раньше банки при любом HP (лечит почти столько же и бьёт ≈1400); банка — когда он на откате или HP опасно низкое
     const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) && me.pct > (env.cfg.stopHp || 25) + 10 ? drainPick(ctx, mp) : null;
-    if (drainB) { ctx.block['drain:' + drainB.title] = Date.now() + 1500; ctx.seq.push('🩸'); await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); continue; }
+    if (drainB) { ctx.block['drain:' + drainB.title] = Date.now() + 1500; ctx.seq.push('💉'); await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); continue; }
     // банка HP (если задана)
     // v4.46: на РБ — при HP ≤ 45 % и по недостаче (≥1500 — большая); на мобах как было
     // v5.3: на РБ держим HP около 80 % (по просьбе игрока): начинаем пить при HP ≤ «с» (75 %) и пьём, пока не поднимется до «до» (80 %) —

@@ -33,6 +33,6 @@ assert.match(combat, /в памяти были чужие цифры/);
 assert.match(content, /once\('rbFix721'/);
 assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'base-profile.json'), 'utf8')).chars.Warlock.rt.debuffImmune.rb > 0, true);
 // 5. информационное окно: по левому краю на всю высоту, шрифт крупнее
-assert.match(content, /#l2bot-ind\.wide\{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:auto;font-size:16px/);
+assert.match(content, /#l2bot-ind\.wide\{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:hidden;font-size:16px/);
 assert.match(content, /ui\.classList\.toggle\('wide', free >= 300\)/);
 console.log('PASS: RB — modal must show this RB, measured special multiplier, estimate-only RBs not rejected, no permanent verdict from estimates, debuff immunity, stale stats self-check; wide info window');
