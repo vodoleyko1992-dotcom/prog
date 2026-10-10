@@ -1123,7 +1123,9 @@ async function battle() {
     // v5.3: 🩸 вампиризм (Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex…): HP ≤ «вампиризм при» —
     // сначала скилл с поглощением HP (лечит и бьёт, банка не тратится); банка — если вампирик на откате, нет MP
     // или HP уже опасно низкое (≤ стоп-HP + 10 %)
-    const drainB = me && me.pct <= (env.cfg.drainHp ?? 85) && me.pct > (env.cfg.stopHp || 25) + 10 ? drainPick(ctx, mp) : null;
+    // 8.0 (аудит боя, лог 13-30: 18 из 105 банок на РБ выпиты при HP > 85 %): на РБ, пока включена «полоса банок», вампирик готов —
+    // он раньше банки при любом HP (лечит почти столько же и бьёт ≈1400); банка — когда он на откате или HP опасно низкое
+    const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) && me.pct > (env.cfg.stopHp || 25) + 10 ? drainPick(ctx, mp) : null;
     if (drainB) { ctx.block['drain:' + drainB.title] = Date.now() + 1500; ctx.seq.push('🩸'); await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); continue; }
     // банка HP (если задана)
     // v4.46: на РБ — при HP ≤ 45 % и по недостаче (≥1500 — большая); на мобах как было

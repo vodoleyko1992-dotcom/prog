@@ -46,6 +46,8 @@ async function lockCommand(m, sender) {
     await chrome.storage.local.set({ lock: { k: key, epoch, t: now,
       url: String(m.page || '').slice(0, 120), vis: m.vis === true, tab } });
     if (changed) await noteAlive(tab, m.page || '');
+    // 8.0 (аудит ядра): режим экономии памяти Chrome может выгрузить фоновую вкладку — вкладку бота не выгружать
+    if (changed) try { await chrome.tabs.update(tab, { autoDiscardable: false }); } catch (e) {}
     return { ok: true, key, epoch, changed };
   });
 }
@@ -92,10 +94,12 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
-    const change = { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } };
+    // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.
+    // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
+    const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
     if (typeof m.on === 'boolean') { change.on = m.on; if (!m.on) change.stopMeta = { source: 'popup-menu', reason: 'Команда остановки из панели', t: Date.now() }; }
-    await chrome.storage.local.set(change);
+    if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
   });
 }
@@ -142,7 +146,7 @@ chrome.storage.onChanged.addListener(ch => {
   paint(ch.on.newValue);
   if (ch.on.newValue) chrome.storage.local.get('hbBg').then(({ hbBg }) => {   // старт — отсчёт сторожа заново
     const h = hbMem || hbBg; if (!h) return;
-    hbMem = { ...h, t: Date.now() }; chrome.storage.local.set({ hbBg: { ...hbMem }, wdog: [] }).then(() => { hbPersistedAt = Date.now(); }).catch(() => {});   // ручной старт — счёт перезагрузок с нуля
+    hbMem = { ...h, t: Date.now() }; chrome.storage.local.set({ hbBg: { ...hbMem }, wdog: [], wdDown: null })   // 8.0: старая метка простоя сервера — не после нового старта.then(() => { hbPersistedAt = Date.now(); }).catch(() => {});   // ручной старт — счёт перезагрузок с нуля
   }).catch(() => {});
 });
 
@@ -376,7 +380,7 @@ function wdPlan(o) {
 }
 async function srvProbe(origin) {
   const c = new AbortController(), tm = setTimeout(() => c.abort(), 8000);
-  try { const r = await fetch(origin + '/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return r.status < 500 ? 'up' : 'down'; }
+  try { const r = await fetch(origin + '/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return r.status < 500 && !(r.status === 200 && !/json/i.test(r.headers.get('content-type') || '')) ? 'up' : 'down'; }   // 8.0: 200 + HTML = страница техработ
   catch (e) { return 'down'; } finally { clearTimeout(tm); }
 }
 chrome.runtime.onStartup.addListener(() => { void ensureWatchdogAlarm(); });
@@ -467,6 +471,9 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
       const valid = !!on && _s?.tab && _s.frameId === 0 && lock?.k === 'tab' + _s.tab.id &&
         !!m.epoch && m.epoch === lock.epoch && Date.now() - lock.t < LOCK_TTL;
       if (valid) await noteAlive(_s.tab.id, m.page);
+      // 8.0 (аудит ядра): во вкладке в фоне таймер продления замка срабатывает раз в минуту — долгий бой с РБ/рыбалка могли не успеть
+      // продлить замок до 90 с. Сигнал «жив» от хозяина продлевает замок сам (не чаще раза в 20 с)
+      if (valid && Date.now() - lock.t > 20000) await chrome.storage.local.set({ lock: { ...lock, t: Date.now() } });
       return { ok: !!valid };
     }).then(reply).catch(() => reply({ ok: false }));
     return true;

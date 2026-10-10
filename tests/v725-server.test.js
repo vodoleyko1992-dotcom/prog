@@ -18,10 +18,10 @@ assert.equal(wdPlan({ quiet: 200000, recent: [now - 6 * 60000, now - 7 * 60000, 
 assert.match(bg, /const plan = wdPlan\(\{ quiet, recent, fish: !!cfg\.fishMode, srv: await srvProbe\(origin\), downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now \}\);/);
 assert.match(bg, /if \(plan\.down\) \{[\s\S]{0,900}chrome\.tabs\.reload\(hb\.tab\)[\s\S]{0,40}return;\s+\}\s+if \(plan\.back\)/);
 assert.match(bg, /if \(quiet < 150000\) \{ if \(wdDown\) await chrome\.storage\.local\.set\(\{ wdDown: null \}\); return; \}/);
-assert.match(bg, /fetch\(origin \+ '\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500 \? 'up' : 'down';/);
+assert.match(bg, /fetch\(origin \+ '\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500 && !\(r\.status === 200 && !\/json\/i\.test/);   // 8.0: 200 + HTML = техработы
 // 2. вкладка: раз в 10 с спрашивает сервер и перезагружается сразу, как он ответил
 assert.match(content, /if \(Date\.now\(\) - probeT >= 10000\) \{ probeT = Date\.now\(\); if \(await srvUp\(\)\) \{ rec\('S', 'сервер', `сервер снова отвечает/);
-assert.match(content, /async function srvUp\(\) \{[\s\S]{0,200}fetch\('\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500; \}/);
+assert.match(content, /async function srvUp\(\) \{[\s\S]{0,300}fetch\('\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return srvAnswer\(r\.status, r\.headers\.get\('content-type'\)\); \}/);   // 8.0
 // 3. простой сервера не превращается в остановку: ни «нет прогресса 9 мин ×3», ни «сбой повторился»
 assert.match(content, /=== 'stalled' && !serverDown\(\)\) \{\s+if \(!\(await srvUp\(\)\)\) \{[^\n]*await serverWait\(\); continue; \}/);
 assert.match(content, /if \(d\.action === 'halt' && !d\.programming && !\(await srvUp\(\)\)\) \{[\s\S]{0,300}return serverWait\(\);/);

@@ -41,7 +41,15 @@
     }
     function progress(route) { const k = String(route || 'unknown').slice(0, 128); errors.delete(k); fatalSignatures.delete(k); }
     function count(route) { return (errors.get(String(route || 'unknown').slice(0, 128)) || []).length; }
-    return { failure, progress, count, restore };
+    // 8.0 (аудит ядра): счётчик повторов ошибки кода жил только в памяти страницы — после перезагрузки снова «1-й раз»,
+    // и «Cannot read properties of undefined» перезагружал страницу бесконечно (раз в ≈7 с). Теперь его можно сохранить и вернуть
+    function exportFatal(route) { const v = fatalSignatures.get(String(route || 'unknown').slice(0, 128)); return v ? { ...v } : null; }
+    function restoreFatal(route, v) {
+      const now = clock();
+      if (v && typeof v.message === 'string' && Number.isFinite(v.count) && Number.isFinite(v.at) && v.at <= now && now - v.at < 10 * 60000)
+        fatalSignatures.set(String(route || 'unknown').slice(0, 128), { message: v.message, count: v.count, at: v.at });
+    }
+    return { failure, progress, count, restore, exportFatal, restoreFatal };
   }
 
   function createTransitionMonitor(clock = () => Date.now()) {

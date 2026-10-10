@@ -5,7 +5,7 @@
 (() => {
   if (window.__l2botHook) return;
   window.__l2botHook = 1;
-  const SECRET = /pass|token|auth|session|sid\b|cookie|secret|csrf|sign|captcha|email|phone|login|user(?!.?id)|nick|account/i;   // v5.6: + логин/ник/аккаунт
+  const SECRET = /pass|token|auth|session|sid\b|cookie|secret|csrf|sign|captcha|email|phone|login|user(?!.?id)|nick|account|jwt|bearer|ticket|api.?key|refresh/i;   // v5.6: + логин/ник/аккаунт; 8.0: + jwt/bearer/ticket/apikey/refresh
   const SKIP = /\.(png|jpe?g|gif|webp|svg|css|js|mjs|map|woff2?|ttf|ico|mp3|ogg|wav)(\?|$)/i;
   // v5.6: секреты и в адресе (?sid=…&sign=…) — значения таких параметров вымарываем
   const cleanUrl = u => { try { const q = new URLSearchParams(u.search); for (const k of [...q.keys()]) if (SECRET.test(k)) q.set(k, '***'); const t = q.toString(); return u.pathname + (t ? '?' + t : ''); } catch (e) { return u.pathname; } };

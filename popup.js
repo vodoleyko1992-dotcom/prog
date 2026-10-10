@@ -1438,7 +1438,7 @@ $('recDom').onclick = async () => {
   } catch { $('status').textContent = '⚠ Откройте вкладку l2wap.com'; }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog']);   // логин/пароль и служебное — не сохраняем
+const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
   const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k)));

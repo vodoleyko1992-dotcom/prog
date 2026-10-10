@@ -904,6 +904,9 @@ function setStatus(s) {
 async function halt(msg, hard) {
   console.warn(TAG, 'СТОП:', msg);
   if (fishNow() && !hard && on) return fishSoft(msg);
+  // 8.0 (аудит ядра): «список мобов не грузится 15 мин», «клик по мобу 3 раза» и т. п. при частичном простое сервера — не остановка:
+  // сервер не отвечает — ждём его. Настоящие остановки (hard: Esc ×2, цель выполнена, ошибка кода) — как раньше
+  if (!hard && on && !(await srvUp())) { rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, бота не останавливаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
   rec('B', 'СТОП', msg);                         // причина остановки — всегда в журнал (раньше была видна только в статусе)
   on = false;
   await chrome.storage.local.set({ on: false, stopMeta: { source: 'content-halt', reason: String(msg).slice(0, 240), t: Date.now() } });
@@ -2275,11 +2278,19 @@ function serverDown() {
 // лёгкая проверка, отвечает ли сервер игры (Cloudflare 5xx или нет ответа — «нет»). Запрос из скрипта расширения hook.js не видит
 async function srvUp() {
   const c = new AbortController(), tm = setTimeout(() => c.abort(), 8000);
-  try { const r = await fetch('/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return r.status < 500; }
+  // 8.0 (аудит ядра): страница техработ/Cloudflare с кодом 200 и HTML вместо JSON — сервер игры ещё не отвечает
+  try { const r = await fetch('/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return srvAnswer(r.status, r.headers.get('content-type')); }
   catch (e) { return false; } finally { clearTimeout(tm); }
 }
+const srvAnswer = (status, ct) => status < 500 && !(status === 200 && !/json/i.test(ct || ''));
 async function serverWait() {
   // по просьбе игрока: рестарт сервера — перезагружаем страницу каждые 10 с (раньше 30 с → … → 5 мин), пока игра не ответит
+  // 8.0 (аудит ядра): короткая серия ошибок API при живой игре на экране — через 3 с спрашиваем сервер; отвечает — работаем
+  // дальше без перезагрузки страницы (раньше три 5xx за 30 с всегда вели к перезагрузке)
+  if (netOutage.since && !rt.downT && $q('#l2-hud-legacy-name, #l2-nav-bottom')) {
+    setStatus('Сбой ответов сервера — проверяю, отвечает ли игра'); await sleep(3000);
+    if (await srvUp()) { netOutage.since = 0; netOutage.failures = []; rec('S', 'сервер', 'короткий сбой ответов сервера — игра отвечает, продолжаю без перезагрузки'); return; }
+  }
   const now = Date.now(), n = (rt.downN || 0) + 1, wait = Math.min(120000, 10000 * Math.pow(2, Math.min(4, n - 1)));
   const code = netOutage.since ? 'API 5xx' : (((document.title || '') + ' ' + (document.body?.innerText || '').slice(0, 300)).match(/\b5\d\d\b/)?.[0] || '5xx');
   if (!rt.downT) rec('S', 'сервер', `игра недоступна (${code}) на ${location.pathname} — жду и пробую снова`);
@@ -2287,7 +2298,7 @@ async function serverWait() {
   const t0 = Date.now();                          // свой отсчёт, без записи в журнал на каждой попытке
   let probeT = t0;                                // 7.2.5: раз в 10 с спрашиваем сервер — ответил, значит перезагружаем сразу, не ждём до 2 мин
   while (on && Date.now() - t0 < wait) {
-    setRt({ status: `Сервер игры недоступен (${code}) — попытка ${n}, проверяю каждые 10 с, перезагрузка не позже чем через ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с` }); draw();
+    setStatus(`Сервер игры недоступен (${code}) — попытка ${n}, проверяю каждые 10 с, перезагрузка не позже чем через ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с`);   // 8.0: не чаще раза в 2,5 с в хранилище
     if (Date.now() - probeT >= 10000) { probeT = Date.now(); if (await srvUp()) { rec('S', 'сервер', `сервер снова отвечает — перезагружаю страницу и продолжаю (${autonomyMode()})`); break; } }
     await sleep(1000);
   }
@@ -2306,7 +2317,11 @@ async function serverBack() {
 async function softError(e) {
   const route = [location.pathname, rt.epic?.step || '', rt.rbGo ? 'raid' : '', rt.fishService || ''].join(':');
   if (!recovery.count(route) && rt.engineFailures?.[route]?.length) recovery.restore(route, rt.engineFailures[route]);
+  // 8.0: повторы ошибки кода переживают перезагрузку страницы (sessionStorage вкладки) — иначе вечный круг «повтор → перезагрузка»
+  let fatalAll = {}; try { fatalAll = JSON.parse(sessionStorage.getItem('l2bot-fatal') || '{}') || {}; } catch (x) {}
+  if (fatalAll[route]) recovery.restoreFatal(route, fatalAll[route]);
   const d = recovery.failure(route, e);
+  try { const f = recovery.exportFatal(route); if (f) fatalAll[route] = f; else delete fatalAll[route]; sessionStorage.setItem('l2bot-fatal', JSON.stringify(fatalAll)); } catch (x) {}
   const keep = Object.fromEntries(Object.entries(rt.engineFailures || {})
     .filter(([, t]) => Array.isArray(t) && t.some(x => Date.now() - x < 30 * 60000)).slice(-12));
   keep[route] = d.times;
@@ -2318,6 +2333,20 @@ async function softError(e) {
     rec('S', 'сервер', 'сбои повторяются, а сервер игры не отвечает — это простой сервера, жду его, бота не останавливаю');
     netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now();
     return serverWait();
+  }
+  // 8.0: «Cannot read properties of null/undefined» бывает и от недогруженной страницы при сбое сервера — сначала проверка сервера
+  if (d.action === 'halt' && d.programming && /cannot (?:read|set) properties of (?:null|undefined)/i.test(d.error) && !(await srvUp())) {
+    rec('S', 'сервер', 'ошибка страницы повторяется, а сервер игры не отвечает — жду сервер, бота не останавливаю');
+    netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now();
+    return serverWait();
+  }
+  // 8.0: 3-й повтор той же ошибки страницы — не ещё одна перезагрузка, а уход на карту (другая страница, другое состояние)
+  if (d.action === 'reload' && d.programming && d.fatalRepeats === 3 && !/\/map\.html/.test(location.pathname)) {
+    setStatus('Восстановление: ошибка страницы повторилась — перехожу на карту');
+    rec('S', 'восстановление', `${d.error.slice(0, 80)} — 3-й раз подряд, перехожу на карту (4-й — остановка с сообщением)`);
+    await sleep(2000);
+    if (on && tabOwner) location.href = '/map.html';
+    return;
   }
   if (d.action === 'halt') {
     const reason = d.programming ? `Ошибка программы повторилась: ${d.error}. Требуется исправление расширения` :
@@ -3770,7 +3799,7 @@ chrome.storage.onChanged.addListener(ch => {
   // Обновление справочников из меню должно быть видно без перезагрузки страницы.
   if (ch.farmDb) FARM = ch.farmDb.newValue || null;
   if (ch.recipeDb) RECIPES = ch.recipeDb.newValue || null;
-  if (ch.lock && on && tabOwner && (ch.lock.newValue?.k !== TAB_KEY || ch.lock.newValue?.epoch !== leaseEpoch)) {
+  if (ch.lock && on && tabOwner && ch.lock.newValue?.epoch !== leaseEpoch) {
     // Передача замка другой вкладке: прекращаем работу немедленно, не ждём очередные 5 с.
     tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0;
   }
