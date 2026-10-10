@@ -1038,26 +1038,29 @@ async function farmDb() {
   return farmLoading;
 }
 const isFarmPage = () => location.pathname === FARM_URL;
-function farmRowParse(row) {                      // одна раскрытая строка ресурса → { name, n, drop: [[моб, ур, %, мин, макс, tp, локация]], spoil }
+function farmRowParse(row) {                      // одна раскрытая строка ресурса → { name, n, drop: [[моб, ур, %, мин, макс, tp, локация]], spoil, sp }
   const name = (row.querySelector('.l2-farm-row__name')?.textContent || '').trim();
   const src = row.querySelectorAll('.l2-farm-source');
   // v5.1: «Шмот с РБ» и часть «Кейматов» — не мобы, а «Падает с РБ: • Матріарх Лангк Рашкос · ур. 24 · 4%» (li.l2-farm-boss)
   const bosses = [...row.querySelectorAll('.l2-farm-boss')].map(li => (li.textContent || '').replace(/^\s*•\s*/, '').trim().match(/^(.+?)\s*·\s*ур\.?\s*(\d+)\s*·\s*([\d.,]+)\s*%/i))
     .filter(Boolean).map(m => [m[1].trim(), +m[2], +m[3].replace(',', '.')]);
   if (!name || (!src.length && !bosses.length)) return null;
-  const drop = []; let spoil = 0;
+  const drop = [], sp = []; let spoil = 0;
   for (const el of src) {
     const kind = el.querySelector('.l2-farm-source__kind');
     if (!kind) continue;
-    if (/spoil/.test(kind.className) || /спойл/i.test(kind.textContent)) { spoil++; continue; }
+    // 7.2 (игрок играет и спойлером — «спойлить ресурсы на крафт»): источники спойла раньше только считались. Теперь — как дроп
+    // (моб · ур. · шанс · ×кол-во · телепорт), в sp. Разметку спойл-строки форума бот не видел — не разобралась, остаётся только счётчик
+    const isSpoil = /spoil/.test(kind.className) || /спойл/i.test(kind.textContent);
+    if (isSpoil) spoil++;
     const t = (kind.nextElementSibling?.textContent || '').replace(/^\s*•\s*/, '').trim();
     const m = t.match(/^(.+?)\s*·\s*ур\.?\s*(\d+)\s*·\s*([\d.,]+)\s*%\s*(?:·\s*×\s*(\d+)(?:\s*[–-]\s*(\d+))?)?/i);
     const b = el.querySelector('[data-teleport-id]');
     if (!m || !b) continue;
-    drop.push([m[1].trim(), +m[2], +m[3].replace(',', '.'), +(m[4] || 1), +(m[5] || m[4] || 1), b.dataset.teleportId,
+    (isSpoil ? sp : drop).push([m[1].trim(), +m[2], +m[3].replace(',', '.'), +(m[4] || 1), +(m[5] || m[4] || 1), b.dataset.teleportId,
                (el.querySelector('.l2-farm-source__location')?.textContent || '').trim()]);
   }
-  return { name, n: +((row.querySelector('.l2-farm-row__hint')?.textContent || '').match(/\d+/) || [0])[0], drop, spoil, bosses };
+  return { name, n: +((row.querySelector('.l2-farm-row__hint')?.textContent || '').match(/\d+/) || [0])[0], drop, spoil, sp, bosses };
 }
 async function farmSave(list) {
   if (!list.length) return;
@@ -1138,13 +1141,15 @@ function farmGoal() {
 }
 // зоны-источники: «шт. за бой» = средний (шанс × среднее кол-во) по мобам зоны в окне уровня;
 // оценка = это × близость уровня (свой ±3 — лучше: и опыт, и бой быстрый) × (1 + 0,1 за каждый вид моба, до 5 — проще найти цель)
-function farmZones(drop, L, above) {
+// 7.2: sp — источники спойла (тот же формат) с множителем spK (успех спойла); с одного моба дроп и спойл складываются
+function farmZones(drop, L, above, sp = [], spK = 0.8) {
   const fit = l => l >= L - 3 && l <= L + 3 ? 1 : l < L - 3 ? Math.max(0.5, 1 - (L - 3 - l) * 0.07) : Math.max(0.5, 1 - (l - L - 3) * 0.1);
   const by = {};
-  for (const [mob, lvl, ch, a, b, tp, loc] of drop) {
+  for (const [src, k] of [[drop, 1], [sp, spK]]) for (const [mob, lvl, ch, a, b, tp, loc] of src || []) {
     if (lvl > L + above || lvl < L - 10) continue;
-    const e = ch / 100 * (a + b) / 2, z = (by[tp] ||= { tp, loc, mobs: {} });
-    if (!z.mobs[mob] || z.mobs[mob].e < e) z.mobs[mob] = { lvl, e, ch };
+    const e = ch / 100 * (a + b) / 2 * k, z = (by[tp] ||= { tp, loc, mobs: {} }), kind = k === 1 ? 'd' : 's';
+    const x = (z.mobs[mob] ||= { lvl, e: 0, ch: 0, d: 0, s: 0 });
+    if (x[kind] < e) { x.e += e - x[kind]; x[kind] = e; if (kind === 'd') x.ch = Math.max(x.ch, ch); else x.spCh = Math.max(x.spCh || 0, ch); }
   }
   return Object.values(by).map(z => {
     const m = Object.values(z.mobs);
@@ -1156,9 +1161,23 @@ function farmZones(drop, L, above) {
 function farmPick(goal) {
   const r = FARM?.res?.[goal.key], L = heroLvl();
   if (!r || !L) return null;
-  const zones = farmZones(r.drop, L, cfg.lvlAbove ?? 6);
+  // 7.2: спойлер (есть спойл на панели / гном) — считаем и спойл. Шанс пометить моба — по замеру (rt.spoilStat ok/fail за нажатие,
+  // до 3 попыток на моба: 1 − (1 − p)³), без замера 80 %
+  const st = rt.spoilStat || {}, tries = (st.ok || 0) + (st.fail || 0);
+  const spK = tries >= 10 ? Math.max(0.2, 1 - Math.pow(1 - (st.ok || 0) / tries, 3)) : 0.8;
+  const zones = farmZones(r.drop, L, cfg.lvlAbove ?? 6, canSpoil() ? r.sp || [] : [], spK);
   const best = zones[0];
   return best ? { ...best, names: Object.keys(best.mobs) } : null;
+}
+// 7.2: персонаж умеет спойлить — спойл в роли «Спойл» или профессия гнома-спойлера
+const canSpoil = () => !!names(cfg.nSpoil || '').length || /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i.test(String(rt.prof || ''));
+// 7.2: активная цель «фарм ресурса» / «охота на рецепт» с подходящей зоной. Пока она есть, автофарм не уводит с её локации
+// (раньше: прилетел за ресурсом → через 10 мин автофарм улетал в «лучшую по опыту» зону → через 3 мин фарм тянул обратно — по кругу)
+function lootGoal() {
+  const g = FARM && farmGoal(), r0 = g && FARM.res[g.key], p = r0 && (r0.drop?.length || r0.sp?.length) ? farmPick(g) : null;
+  if (p) return { kind: 'farm', name: g.name, zone: p.tp };
+  const rg = RECIPES && recipeGoal(), q = rg && recipePick(rg);
+  return q?.zid ? { kind: 'recipe', name: rg.name, zone: q.zid } : null;
 }
 function farmRules() {                            // мобы-источники ресурса — в приоритет, пока мы в нужной зоне
   const g = FARM && farmGoal(), p = g && farmPick(g);
@@ -1194,9 +1213,9 @@ async function farmStep() {                       // после боя: пора
     await setRt({ rbGo: { id: b.id, name: b.name, lvl: b.lvl, page: b.page, price: b.price, t: Date.now() }, farmRb: { id: b.id, name: b.name, t: Date.now() }, farmWhy: '' });
     return true;
   }
-  const p = farmPick(g); if (!p) { if (rt.farmWhy !== 'none:' + g.key) { rec('B', 'фарм', `${g.name}: нет источников дропа для ур. ${heroLvl()}`); await setRt({ farmWhy: 'none:' + g.key }); } return false; }
+  const p = farmPick(g); if (!p) { if (rt.farmWhy !== 'none:' + g.key) { rec('B', 'фарм', `${g.name}: нет источников ${canSpoil() ? 'дропа и спойла' : 'дропа'} для ур. ${heroLvl()}`); await setRt({ farmWhy: 'none:' + g.key }); } return false; }
   if (rt.zone === p.tp || Date.now() - (rt.zoneGoT || 0) < 180000) return false;
-  const why = `${g.name} (${g.why}${isFinite(g.left) ? `, ещё ${g.left}` : ''}): ${p.loc} — ${p.names.slice(0, 3).map(n => `${n} ${p.mobs[n].lvl} ур. ${p.mobs[n].ch}%`).join(', ')} · ≈${p.e.toFixed(2)} шт./бой`;
+  const why = `${g.name} (${g.why}${isFinite(g.left) ? `, ещё ${g.left}` : ''}): ${p.loc} — ${p.names.slice(0, 3).map(n => `${n} ${p.mobs[n].lvl} ур. ${p.mobs[n].ch ? p.mobs[n].ch + '%' : ''}${p.mobs[n].spCh ? ' спойл ' + p.mobs[n].spCh + '%' : ''}`).join(', ')} · ≈${p.e.toFixed(2)} шт./бой`;
   rec('B', 'фарм', `лечу за ресурсом → ${why}`);
   await setRt({ zoneGo: { id: p.tp, url: FARM_URL, forum: true, res: g.name, t: Date.now(), why: 'фарм: ' + why }, zoneGoT: 0 });
   location.href = FARM_URL; await sleep(4000);
@@ -1256,7 +1275,7 @@ function recipePick(goal) {
   const lo = L - (cfg.lvlBelow ?? 3) - 7, hi = L + Math.min(cfg.lvlAbove ?? 15, 15);
   const fit = l => l >= L - 3 && l <= L + 3 ? 1 : l < L - 3 ? Math.max(0.5, 1 - (L - 3 - l) * 0.07) : Math.max(0.5, 1 - (l - L - 3) * 0.1);
   const by = {};
-  for (const [kind, list] of [['дроп', r.drop], ...(cfg.recipeSpoil ? [['спойл', r.spoil]] : [])])
+  for (const [kind, list] of [['дроп', r.drop], ...(cfg.recipeSpoil || canSpoil() ? [['спойл', r.spoil]] : [])])   // 7.2: спойлер — спойл сам
     for (const [mob, lvl, ch, loc] of list || []) {
       if (lvl < lo || lvl > hi) continue;
       const z = (by[loc] ||= { loc, zid: zoneByLoc(loc), mobs: {} });
@@ -3287,7 +3306,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },

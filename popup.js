@@ -999,13 +999,16 @@ function heroCls(d, rt) {
   return rt.prof ? (MAGE_PROF.test(String(rt.prof)) ? 'mage' : 'fighter') : '';
 }
 let showAllCls = (() => { try { return localStorage.getItem('showAllCls') === '1'; } catch (e) { return false; } })();
+// 7.2: спойлер (гном: Dwarven Fighter/Scavenger/Bounty Hunter/Fortune Seeker или спойл в роли «Спойл») — блок «Спойл» виден только ему
+const SPOIL_PROF = /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i;
 function paintCls(d, rt) {
-  const cls = heroCls(d, rt), root = document.documentElement;
-  root.classList.toggle('cls-mage', cls === 'mage'); root.classList.toggle('cls-fighter', cls === 'fighter'); root.classList.toggle('show-all', showAllCls);
+  const cls = heroCls(d, rt), root = document.documentElement, spoil = SPOIL_PROF.test(String(rt.prof || '')) || !!String(d.nSpoil || '').trim();
+  root.classList.toggle('cls-mage', cls === 'mage'); root.classList.toggle('cls-fighter', cls === 'fighter'); root.classList.toggle('cls-spoil', spoil); root.classList.toggle('show-all', showAllCls);
   const b = $('showAllCls'); if (b) b.textContent = showAllCls ? '🙈 Только настройки моего класса' : '👁 Показать настройки всех классов';
   const n = $('clsNote'); if (n) n.textContent = !cls ? '' : showAllCls ? 'Показаны настройки всех классов.' : cls === 'mage'
     ? `Класс: маг (${rt.prof || 'профиль'}) — скрыты воинские настройки: энергия силы, сверхсильные скиллы, важные баффы, спойл, станы, кастеты.`
-    : `Класс: воин (${rt.prof || 'профиль'}) — скрыты «Слуга» и дебаффы мага.`;
+    : spoil ? `Класс: спойлер (${rt.prof || 'профиль'}) — скрыты «Слуга» и дебаффы мага; «Спойл» на виду.`
+    : `Класс: воин (${rt.prof || 'профиль'}) — скрыты «Слуга», дебаффы мага и спойл.`;
 }
 $('showAllCls').onclick = async () => {
   showAllCls = !showAllCls; try { localStorage.setItem('showAllCls', showAllCls ? '1' : '0'); } catch (e) {}

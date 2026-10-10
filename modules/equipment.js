@@ -70,7 +70,7 @@ function suggestRoles() {
     nDrain: skills.filter(s => !isPetOnly(s) && il(s)?.t === 'DRAIN' && !/труп моба/.test(il(s)?.L || '')).map(s => s.name).join(', '),
     nSpoil: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && !(il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
     nSpoilMass: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && (il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
-    nSweep: skills.filter(s => il(s)?.t === 'SWEEP' || /^sweep/i.test(s.name)).map(s => s.name).join(', '),
+    nSweep: '',   // 7.2: свип в игре автоматический — роль не назначаем
     nToggles: skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
     // v4.42: лечащие скиллы (маг/клерик: Heal, Battle Heal; Дестроер: Battle Roar) — раньше банок, они бесплатны
     // 7.1.31: баффы на кота (Servitor Haste/Magic Shield/Physical Shield…, когда появятся) — роль «Баффы кота»

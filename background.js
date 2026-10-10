@@ -122,6 +122,8 @@ async function switchCharacter(m, sender) {
       nextCfg = { ...previousCfg };
       for (const k of (Array.isArray(m.roles) ? m.roles : []))
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
+      // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
+      nextCfg.combatProfile = 'auto';
     }
     const nextRt = { ...(m.defRt || {}), ...(current['rt@' + nick] || {}),
       char: nick, status: `Персонаж: ${nick}`, campaignDue: !!nextCfg.campaign, _src: m.src };

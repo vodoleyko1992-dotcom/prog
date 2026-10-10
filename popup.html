@@ -304,16 +304,16 @@
   <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
   <div class="hint">Подходящие зоны — те, где уровни мобов из «Телепорта» попадают в желаемое окно. Бот бьёт только мобов этого окна (квестовые — до +10 и выше окна); если на карте таких нет — сам летит в подходящую зону. Бот пробует каждую (N боёв), потом летит в лучшую по EXP/ч, если она лучше текущей на 15 %+. Не работает в Кампании, РБ и Рыбалке. Телепорт платный — резерв адены из «Закупки».</div>
 
-  <h4>🌾 Фарм ресурса (форум, только дроп)</h4>
+  <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
   <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
   <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
   <div id="farmBox" class="hint" style="white-space:pre-line"></div>
   <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
-  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего роняют ресурс (шанс × количество), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми. Ресурс главы («Нужно сдать») берётся сам, если включена Кампания.</div>
+  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми. Ресурс главы («Нужно сдать») берётся сам, если включена Кампания.</div>
   <h4>📜 Охота на рецепты (форум)</h4>
   <label>Рецепт <input id="recipeRes" class="nm" list="recipeResList" placeholder="напр. Recipe: Bonebreaker"><datalist id="recipeResList"></datalist></label>
   <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
-  <label>⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
+  <label data-cls="spoil">⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
   <div id="recipeBox" class="hint" style="white-space:pre-line"></div>
   <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
   <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
@@ -442,13 +442,13 @@
   <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
   <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
   <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
-  <h4 data-cls="fighter">⛏ Спойл</h4>
+  <h4 data-cls="spoil">⛏ Спойл</h4>
   <label>Спойл <input id="nSpoil" class="nm" placeholder="Spoil Crush, Spoil"></label>
   <label>🎉 Масс-спойл <input id="nSpoilMass" class="nm" placeholder="Spoil Festival"></label>
   <div class="hint">Масс-спойл (Spoil Festival) — когда в бою 2+ моба: одним нажатием метит всех рядом. Один моб — обычный Spoil (дешевле по мане). Не прошёл по главному — бот дожимает обычным Spoil.</div>
-  <label>Сбор спойла <input id="nSweep" class="nm" placeholder="Sweeper"></label>
+  <input id="nSweep" class="nm" hidden>
   <label>Спойлить и РБ <input id="spoilRb" type="checkbox"></label>
-  <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. После победы — Sweeper, собрать спойл. Что отвечает игра, пишется в журнал «спойл». Пустое поле — спойл выключен.</div>
+  <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. Добычу спойла игра собирает сама (Sweeper бот не жмёт) — бот только считает её: строки «Спойл: Coal ×5» идут в «Фарм ресурса», квесты на ресурсы и цели главы.</div>
   <h4>📊 Расчёт ДПС и стратегия</h4>
   <div id="dpsBox" class="box"></div>
 

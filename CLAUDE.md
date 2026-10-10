@@ -4,7 +4,8 @@
 
 ## Игрок и его правила (обязательно соблюдать)
 
-- Персонаж: **Warlock** (Human Wizard → Warlock, 2-я профессия взята 10.10), ~50 ур., маг с котом-слугой (Mew/Kai the Cat). Второй персонаж West (воин) — редко.
+- Персонажи: **Warlock** (Human Wizard → Warlock, 2-я профессия взята 10.10), ~50 ур., маг с котом-слугой (Mew/Kai the Cat) — основной. **Спойлер** (гном: Scavenger/Bounty Hunter) — «спойлить ресурсы на крафт». West (воин) — редко.
+- Спойл: **Sweeper не нужен** — игра собирает спойл сама; бот только считает «Спойл: X ×N» как ресурс X. Фарм ресурса/рецепта — по базе форума (дроп + спойл у спойлера): телепорт к лучшей точке, источники — цели при любом уровне, автофарм с точки не уводит.
 - **Никогда не собирать zip без явной команды «сборка»**. Правки делать сразу, сборку — только по команде. Каждая сборка — **две** версии: `l2wap-bot-v<версия>.zip` (Chrome) и `l2wap-bot-v<версия>-firefox.zip` (игрок 10.10: «пока без Firefox» — пока только Chrome). В имени никаких суффиксов вроде «fix chrome». Нумерация последовательная: после 7.1.31 — **7.2** (по просьбе игрока), дальше 7.2.1, 7.2.2…
 - Рабочий цикл: игрок **просто присылает логи** (`l2bot-log-*.txt`, `l2wap-pages-*.html` — снимки страниц, `l2bot-learn-*.html`, иногда `l2bot-memory-*.json` / `l2bot-settings-*.json`). Задача — самому найти ошибки и повторы багов и исправить. Каждую находку в ответе объяснять простым языком: что было в логе (со временем), почему, что исправлено, что проверено, что НЕ проверено в живой игре.
 - **TvT по умолчанию всегда ВКЛ.** «Проверять карту каждые 0 боёв» = никогда не проверять карту (только цепочка «Охотиться дальше»).
@@ -30,10 +31,10 @@ battle-cooldown.js     модель откатов: серверный GCD + и�
 modules/*.js           фабрики L2V7Factories.<name>(env) → L2V7Modules.<name>; зависимости только через env.X
 popup.html/js, ui-v7.* меню: 7 разделов (overview, hunt, rb, fish, panel, supply, svc; бывшие — подразделы с меткой
                        #tab-<старый>, TAB_GROUP в popup.js), «Чем занят бот» (setMode/paintModes — ровно один режим),
-                       скрытие по классу (data-cls="fighter|mage" + html.cls-mage/cls-fighter, «показать всё»)
+                       скрытие по классу (data-cls="fighter|mage|spoil" + html.cls-mage/cls-fighter/cls-spoil, «показать всё»)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (62 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (63 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -80,7 +81,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 62 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 63 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -102,6 +103,7 @@ Firefox ставится как временное дополнение (`about:
 - 7.1.28: кнопка «⏸ Пауза / ▶ Продолжить»; раздел и быстрый режим «🗺 Автофарм» (по умолчанию ВЫКЛ; при ВКЛ сразу проверяет зоны, включает цепочку); zonePick по соседним уровням со сглаживанием (симуляция: ≈6,1 M вместо ≈3,1 M EXP/ч); оружие: грейд важнее цифр, никогда не даунгрейд, надевание видно по сети.
 - 7.1.29: смена наживки, покупка удочки, заточка раз в 100 рыб, сторож зависания рыбалки.
 - 7.1.30: глубокий аудит (4 ревью, 27 правок) — см. CHANGELOG-7.1.30.md.
+- 7.2: спойлер — свип убран, «Спойл: X ×N» = ресурс X, фарм ресурса по дроп + спойл (farmRowParse → r.sp, farmZones sp/spK, canSpoil), lootGoal держит на точке фарма (автофарм не уводит), источники вне окна уровней (farmT в candidates), профиль боя «Авто» у нового героя.
 - 7.2 (было 7.1.32): меню — один режим «Чем занят бот» (6 режимов + дополнения Кампания/РБ между мобами/TvT), 15 разделов → 7, настройки под класс; TvT по умолчанию ВКЛ; «Проверять карту каждые 0 боёв» = НИКОГДА (только цепочка; mapOff в content.js).
 - 7.1.31: раздел «🐱 Слуга» (`tab-pet`), статистика котов `rt.petStat` (hits/hitDmg/crits/misses/acts/deaths/summons) + `rt.petAdvice` (после 30 боёв), добивание с учётом удара кота (`petExpect` в magePlan; только при MP < petFinishMp 80 %), баффы кота (`nPetBuffs`, `rt.petBuffAt`, `rt.petBornT`), `noEffect` по `rt.skillDb[..].desc` (Body To Mind больше не жмётся), Corpse Life Drain не удар; по логу 10.10: zoneForLevel → сразу лучшая замеренная зона, дебаффы по окупаемости, спам «Обнаружен питомец», тотем воина у мага.
 

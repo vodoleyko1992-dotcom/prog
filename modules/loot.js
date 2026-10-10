@@ -84,17 +84,9 @@ async function sweepStep(ctx) {                   // после победы: с
     env.rec('B', 'спойл', `${ctx.name}: добыча спойла — ${sl.map(m => `${m[1]} ×${m[2]}`).join(', ')}`);
     return;
   }
-  if (!env.cfg.nSweep) { if (/не спрацю|не сработ/i.test(env.$q('#battle-victory-inline, #battle-victory-root')?.textContent || '')) env.rec('B', 'спойл', `${ctx.name}: игра пишет «спойл не сработал» — добычи нет`); return; }
-  for (let i = 0; i < 2 && env.on; i++) {
-    const b = env.slotsBy(env.cfg.nSweep).find(x => env.shown(x)) || env.slotsBy(env.cfg.nSweep)[0];
-    if (!b || !env.shown(b)) { env.rec('B', 'спойл', `${ctx.name}: после победы «${env.cfg.nSweep}» на экране нет — собрать не получилось (пришлите снимок экрана победы)`); return; }
-    const before = env.logLines(), nb = env.noticeText();
-    env.fire(b); await env.sleep(env.rnd(700, 1000));
-    const fresh = env.newLines(before, env.logLines()), msg = fresh.find(l => env.SWEEP_OK.test(l)) || (env.noticeText() !== nb ? env.noticeText() : '');
-    const S = { ...(env.rt.spoilStat || {}) }; S.sweeps = (S.sweeps || 0) + 1; await env.setRt({ spoilStat: S });
-    env.rec('B', 'спойл', `${ctx.name}: Sweeper${msg ? ' → ' + msg.slice(0, 120) : ''}${fresh.length && !msg ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
-    if (msg || fresh.length) return;
-  }
+  // 7.2 (игрок): «свип нам не нужен, это делается автоматом в игре» — Sweeper не жмём никогда (раньше без строки «Спойл: …» жал его
+  // до 2 раз по ~1 с после каждой победы). Только отметка в журнале, если игра пишет, что спойл не сработал
+  if (/не спрацю|не сработ/i.test(env.$q('#battle-victory-inline, #battle-victory-root')?.textContent || '')) env.rec('B', 'спойл', `${ctx.name}: игра пишет «спойл не сработал»`);
 }
 
 function resQuests() {
@@ -121,6 +113,8 @@ async function trackLoot(lines, mob) {
     let m = l.match(env.SPECIAL_RE);
     if (m) { S[m[1].trim()] = (S[m[1].trim()] || 0) + +m[2]; got++; env.rec('B', 'особая добыча', `${m[1].trim()} +${m[2]}`); continue; }
     m = l.match(env.LOOT_RE);
+    // 7.2: «Спойл: Coal ×5» — это Coal (раньше считался предмет «Спойл: Coal» — спойл не шёл в фарм ресурса, квесты и главу)
+    if (m) m = [m[0], m[1].replace(/^\s*(?:Спойл|Spoil)\s*:?\s*/i, ''), m[2]];
     if (m && m[1].length < 64) {                   // v5.1: 40 → 64 — «Recipe: Elven Long Sword (100%)» и длинные кейматы
       L[m[1].trim()] = (L[m[1].trim()] || 0) + +m[2]; got++;
       const fk = m[1].trim().toLowerCase(), q = +m[2];

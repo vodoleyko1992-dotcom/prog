@@ -158,7 +158,7 @@ async function nextFight(ctx) {
   if ((env.cfg.farmRes || env.cfg.campaign || env.resQuests().length) && !env.cfg.rbMode && !ctx?.rb && !env.campMobOpen().length && await env.farmStep()) return;
   if (env.cfg.recipeRes && !env.cfg.rbMode && !ctx?.rb && !env.campMobOpen().length && await env.recipeStep()) return;   // охота на рецепт
   // сам подбирает локацию для кача (не в кампании/РБ/рыбалке): проба новых подходящих зон, затем лучшая по EXP/ч
-  if (env.cfg.zoneAuto && !env.cfg.campaign && !env.cfg.rbMode && !ctx?.rb && Date.now() - (env.rt.zoneGoT || 0) > 600000) {
+  if (env.cfg.zoneAuto && !env.cfg.campaign && !env.cfg.rbMode && !ctx?.rb && !env.lootGoal?.() && Date.now() - (env.rt.zoneGoT || 0) > 600000) {   // 7.2: цель ресурса/рецепта держит на месте
     if ((!env.rt.zoneCatT || env.zoneCatThin() || Date.now() - env.rt.zoneCatT > 24 * 3600000) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) { await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return; }
     const pick = env.zonePick();
     if (pick) { await env.setRt({ zoneGo: { ...pick, t: Date.now() }, zoneGoT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return; }
@@ -254,7 +254,9 @@ function candidates(rules, sig, types, limitIdx) {
     const hl = env.heroLvl();
     // v5.6: чемпион открытой главы — цель квеста: окно «не ниже героя на N» и «не по зубам» к нему не применяем
     // (глава «Champions · Lv.24» при герое 31 — все чемпионы 24–27 отсекались окном lvlBelow 3)
-    const qLike = r.quest || (champ && env.campActive() && env.campChampOpen());
+    // 7.2: моб-источник ресурса/рецепта (правило farm) — как цель квеста: зона выбрана под него (до −10 ур.), окно уровней не отсекает
+    const farmT = !!name && rules.some(x => x.farm && x.name === name.toLowerCase());
+    const qLike = r.quest || farmT || (champ && env.campActive() && env.campChampOpen());
     // v4.58: «мягкое окно» — улететь в зону своего уровня не вышло, а тут все выше: 20 мин бьём самых слабых из тех, что есть
     const relax = env.rt.lvlRelax && Date.now() - env.rt.lvlRelax.t < 20 * 60000 ? env.rt.lvlRelax.up : 0;
     if (hl && lvl && lvl > hl + Math.max(qLike ? 10 : 0, env.cfg.lvlAbove ?? 15, relax)) return;
@@ -416,7 +418,13 @@ async function map() {
   if (!rules.some(x => !x.neg)) return env.halt('Список приоритетов пуст');
   // 7.1.30: «Автофарм» включили / нажали «Старт» с ним — сразу проверяем локации, не дожидаясь 10 мин после боя:
   // каталог зон «Телепорта» (устарел — перечитать), мобов своего уровня тут нет — в зону своего уровня, иначе — лучшая/пробная зона
-  if (env.cfg.zoneAuto && env.rt.zoneAutoKick && !env.campActive() && !env.cfg.rbMode && !env.cfg.fishMode) {
+  // 7.2: есть цель «ресурс»/«рецепт» — при старте сразу к её источнику (раньше — сначала в зону для опыта, потом обратно)
+  const lg = !env.campActive() && !env.cfg.rbMode && !env.cfg.fishMode ? env.lootGoal?.() : null;
+  if (lg && env.rt.zone !== lg.zone) {
+    if (env.rt.zoneAutoKick) await env.setRt({ zoneAutoKick: null });
+    if (lg.kind === 'farm' ? await env.farmStep() : await env.recipeStep()) return;
+  }
+  if (env.cfg.zoneAuto && env.rt.zoneAutoKick && !lg && !env.campActive() && !env.cfg.rbMode && !env.cfg.fishMode) {
     if ((!env.rt.zoneCatT || env.zoneCatThin() || Date.now() - env.rt.zoneCatT > 24 * 3600000) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) {
       env.rec('B', 'локации', 'автофарм: при старте читаю список зон «Телепорта»');
       await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return;   // kick остаётся — после чтения выбор зоны
@@ -502,7 +510,7 @@ async function map() {
   }
   // 7.1.30: «Сам подбирать локацию» выключен — с локации НЕ улетаем никогда (лог 14:12: бот улетел из Sea of Spores в Enchanted Valley).
   // Мобы тут ниже окна уровня — бьём их (окно снизу снимается на 20 мин, продлевается)
-  if (!cands.length && !env.campActive() && env.cfg.zoneAuto && await env.zoneForLevel()) return;
+  if (!cands.length && !env.campActive() && env.cfg.zoneAuto && !(env.lootGoal?.()?.zone === env.rt.zone) && await env.zoneForLevel()) return;
   if (!cands.length && !env.campActive()) {   // 7.1.30: автофарм включён, а улететь некуда — тоже бьём, что есть, а не «Целей нет» до остановки
     const hl = env.heroLvl(), lv = pageItems().filter(i => !i.champ && !i.boss && i.lvl).map(i => i.lvl);
     const downOn = env.rt.lvlRelaxDown && Date.now() - env.rt.lvlRelaxDown.t < 20 * 60000;
