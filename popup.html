@@ -304,6 +304,8 @@
   <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
   <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
   <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
+  <label>Мобы-источники: от −N до +M ур. от героя <span><input id="farmLvlBelow" type="number" min="0" max="40"> <input id="farmLvlAbove" type="number" min="0" max="40"></span></label>
+  <div class="hint">Бот старается фармить там, где источники в этом диапазоне (по умолчанию −3…+5; в списке ниже они отмечены 🎯 и стоят сверху). Таких нет — берёт ближайшие по уровню. Работает и для рецептов.</div>
   <div id="farmBox" class="hint" style="white-space:pre-line"></div>
   <input id="farmSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе ресурсов (как на форуме)" autocomplete="off">
   <div id="farmTree" class="ftree" data-kind="farm"></div>

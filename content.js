@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '500/3000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
@@ -1172,11 +1172,19 @@ function farmGoal() {
 // зоны-источники: «шт. за бой» = средний (шанс × среднее кол-во) по мобам зоны в окне уровня;
 // оценка = это × близость уровня (свой ±3 — лучше: и опыт, и бой быстрый) × (1 + 0,1 за каждый вид моба, до 5 — проще найти цель)
 // 7.2: sp — источники спойла (тот же формат) с множителем spK (успех спойла); с одного моба дроп и спойл складываются
+// 7.2.1 (игрок 10.10: «чтобы старался выбирать −3…+5 ур. от героя, но с возможностью коррекции»): предпочтительный диапазон уровней
+// мобов-источников — cfg.farmLvlBelow / farmLvlAbove (меню «Фарм ресурса»). Точки, где есть источники в диапазоне, — в первую очередь
+// (inWin), среди них — по шансу; нет таких — лучшая из остальных, чем дальше уровень от диапазона, тем ниже оценка
+const farmWin = L => ({ lo: L - (cfg.farmLvlBelow ?? 3), hi: L + (cfg.farmLvlAbove ?? 5) });
+function farmFit(l, L) {
+  const w = farmWin(L);
+  return l >= w.lo && l <= w.hi ? 1 : l < w.lo ? Math.max(0.15, 1 - (w.lo - l) * 0.12) : Math.max(0.1, 1 - (l - w.hi) * 0.18);
+}
 function farmZones(drop, L, above, sp = [], spK = 0.8) {
-  const fit = l => l >= L - 3 && l <= L + 3 ? 1 : l < L - 3 ? Math.max(0.5, 1 - (L - 3 - l) * 0.07) : Math.max(0.5, 1 - (l - L - 3) * 0.1);
+  const fit = l => farmFit(l, L), w = farmWin(L);
   const by = {};
   for (const [src, k] of [[drop, 1], [sp, spK]]) for (const [mob, lvl, ch, a, b, tp, loc] of src || []) {
-    if (lvl > L + above || lvl < L - 10) continue;
+    if (lvl > Math.max(L + above, w.hi) || lvl < Math.min(L - 10, w.lo)) continue;
     const e = ch / 100 * (a + b) / 2 * k, z = (by[tp] ||= { tp, loc, mobs: {} }), kind = k === 1 ? 'd' : 's';
     const x = (z.mobs[mob] ||= { lvl, e: 0, ch: 0, d: 0, s: 0 });
     if (x[kind] < e) { x.e += e - x[kind]; x[kind] = e; if (kind === 'd') x.ch = Math.max(x.ch, ch); else x.spCh = Math.max(x.spCh || 0, ch); }
@@ -1185,8 +1193,9 @@ function farmZones(drop, L, above, sp = [], spK = 0.8) {
     const m = Object.values(z.mobs);
     z.e = m.reduce((s, x) => s + x.e, 0) / m.length;
     z.score = m.reduce((s, x) => s + x.e * fit(x.lvl), 0) / m.length * (1 + 0.1 * Math.min(m.length, 5));
+    z.inWin = m.some(x => x.lvl >= w.lo && x.lvl <= w.hi);
     return z;
-  }).sort((x, y) => y.score - x.score);
+  }).sort((x, y) => (y.inWin - x.inWin) || y.score - x.score);
 }
 function farmPick(goal) {
   const r = FARM?.res?.[goal.key], L = heroLvl();
@@ -1302,8 +1311,8 @@ function recipeGoal() {
 function recipePick(goal) {
   const r = RECIPES?.rec?.[goal.key], L = heroLvl();
   if (!r || !L) return null;
-  const lo = L - (cfg.lvlBelow ?? 3) - 7, hi = L + Math.min(cfg.lvlAbove ?? 15, 15);
-  const fit = l => l >= L - 3 && l <= L + 3 ? 1 : l < L - 3 ? Math.max(0.5, 1 - (L - 3 - l) * 0.07) : Math.max(0.5, 1 - (l - L - 3) * 0.1);
+  const w = farmWin(L), lo = Math.min(L - (cfg.lvlBelow ?? 3) - 7, w.lo), hi = Math.max(L + Math.min(cfg.lvlAbove ?? 15, 15), w.hi);
+  const fit = l => farmFit(l, L);   // 7.2.1: тот же предпочтительный диапазон, что у ресурсов
   const by = {};
   for (const [kind, list] of [['дроп', r.drop], ...(cfg.recipeSpoil || canSpoil() ? [['спойл', r.spoil]] : [])])   // 7.2: спойлер — спойл сам
     for (const [mob, lvl, ch, loc] of list || []) {
@@ -1311,8 +1320,8 @@ function recipePick(goal) {
       const z = (by[loc] ||= { loc, zid: zoneByLoc(loc), mobs: {} });
       if (!z.mobs[mob] || z.mobs[mob].ch < ch) z.mobs[mob] = { lvl, ch, kind };
     }
-  const zones = Object.values(by).map(z => { const m = Object.values(z.mobs); z.e = m.reduce((s, x) => s + x.ch / 100, 0) / m.length; z.score = m.reduce((s, x) => s + x.ch / 100 * fit(x.lvl), 0) / m.length * (1 + 0.1 * Math.min(m.length, 5)); return z; })
-    .sort((a, b) => (!!b.zid - !!a.zid) || b.score - a.score);
+  const zones = Object.values(by).map(z => { const m = Object.values(z.mobs); z.e = m.reduce((s, x) => s + x.ch / 100, 0) / m.length; z.score = m.reduce((s, x) => s + x.ch / 100 * fit(x.lvl), 0) / m.length * (1 + 0.1 * Math.min(m.length, 5)); z.inWin = m.some(x => x.lvl >= w.lo && x.lvl <= w.hi); return z; })
+    .sort((a, b) => (!!b.zid - !!a.zid) || (b.inWin - a.inWin) || b.score - a.score);
   return zones[0] ? { ...zones[0], names: Object.keys(zones[0].mobs), all: zones } : null;
 }
 function recipeRules() {                          // мобы-источники рецепта — в приоритет, пока мы в нужной зоне

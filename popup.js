@@ -65,12 +65,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
 const BOOL = ['rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const DEF = { farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: true, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -557,8 +557,8 @@ const treeSig = {}, treeOpen = { farm: new Set(), recipe: new Set() };
 const treePath = (kind, r) => kind === 'farm' ? String(r.cat || 'Прочее').split(/\s*›\s*/) : [r.grade || 'Без грейда', r.group || 'Прочее'];
 const treeKey = (kind, n) => kind === 'farm' ? String(n || '').trim().toLowerCase() : String(n || '').toLowerCase().replace(/\s*\(\d+%\)\s*$/, '').trim();
 function treeSources(kind, r, L, d) {
-  const fit = l => !L || (l >= L - 10 && l <= L + Math.min(d.lvlAbove ?? 15, 20));
-  const line = (tag, cls, txt, l) => `<div class="fs ${cls}${l != null && !fit(l) ? ' far' : ''}"><b>${tag}</b> ${esc(txt)}</div>`;
+  const w = farmWinP(d, L), fit = l => !L || (l >= w.lo && l <= w.hi);   // 7.2.1: 🎯 — в предпочтительном диапазоне (−3…+5 ур.)
+  const line = (tag, cls, txt, l) => `<div class="fs ${cls}"><b>${tag}</b> ${l != null && fit(l) && L ? '🎯 ' : ''}${esc(txt)}</div>`;
   const out = [];
   if (kind === 'farm') {
     for (const [m, l, c, a, b, , loc] of r.drop || []) out.push([l, line('ДРОП', 'drop', `${m} · ур. ${l} · ${c}% · ×${a}–${b} · ${loc || ''}`, l)]);
@@ -586,7 +586,7 @@ async function renderTree(kind, rt, d) {
   const db = await dbGet(T.db, { [T.items]: {} }), all = db[T.items] || {}, keys = Object.keys(all);
   const q = ($(T.search)?.value || '').trim().toLowerCase(), cur = treeKey(kind, d[T.input]), L = rt.lvl || 0;
   const gotMap = kind === 'farm' ? rt.farmGot || {} : rt.recipeGot || {};
-  const sig = [keys.length, db.t, q, cur, L, [...treeOpen[kind]].join('|'), gotMap[cur] || 0].join('#');
+  const sig = [keys.length, db.t, q, cur, L, d.farmLvlBelow, d.farmLvlAbove, [...treeOpen[kind]].join('|'), gotMap[cur] || 0].join('#');
   if (treeSig[kind] === sig) return;
   treeSig[kind] = sig;
   if (!keys.length) { box.innerHTML = '<div class="hint">База пуста — нажмите «Обновить базу» ниже.</div>'; return; }
@@ -655,6 +655,9 @@ $('recipeReset').onclick = async () => {
   await menuPatch({ recipeGot: { ...(rt.recipeGot || {}), [k]: 0 } });
   toast?.('↺ Счётчик рецепта обнулён');
 };
+// 7.2.1: предпочтительный диапазон уровней мобов-источников (как в боте: farmWin/farmFit в content.js)
+const farmWinP = (d, L) => ({ lo: L - (d.farmLvlBelow ?? 3), hi: L + (d.farmLvlAbove ?? 5) });
+function farmFitP(d, l, L) { const w = farmWinP(d, L); return l >= w.lo && l <= w.hi ? 1 : l < w.lo ? Math.max(0.15, 1 - (w.lo - l) * 0.12) : Math.max(0.1, 1 - (l - w.hi) * 0.18); }
 async function renderFarm(rt, d) {
   const db = await dbGet('farmDb', { res: {} });
   const keys = Object.keys(db.res || {});
@@ -664,15 +667,15 @@ async function renderFarm(rt, d) {
   if (k && !r) txt += `\n⚠ «${d.farmRes}» нет в базе`;
   if (r?.bosses?.length) txt += `\n${r.name}: падает с РБ — ${r.bosses.slice(0, 6).map(([n, l, c]) => `${n} ${l} ур. ${c}%`).join(' · ')}${r.drop?.length ? '' : ' (бот полетит к живому РБ из списка, если включён «👑 Фарм РБ»)'}`;
   if (r && L) {
-    const above = d.lvlAbove ?? 30, fit = l => l >= L - 3 && l <= L + 3 ? 1 : l < L - 3 ? Math.max(0.5, 1 - (L - 3 - l) * 0.07) : Math.max(0.5, 1 - (l - L - 3) * 0.1);
+    const above = d.lvlAbove ?? 30, w = farmWinP(d, L), fit = l => farmFitP(d, l, L);   // 7.2.1: тот же диапазон −3…+5, что у бота
     const by = {};
     for (const [mob, lvl, ch, a, b, tp, loc] of r.drop) {
-      if (lvl > L + above || lvl < L - 10) continue;
+      if (lvl > Math.max(L + above, w.hi) || lvl < Math.min(L - 10, w.lo)) continue;
       const e = ch / 100 * (a + b) / 2, z = (by[tp] ||= { loc, mobs: {} });
       if (!z.mobs[mob] || z.mobs[mob].e < e) z.mobs[mob] = { lvl, e, ch };
     }
-    for (const z of Object.values(by)) { const m = Object.values(z.mobs); z.e = m.reduce((s, x) => s + x.e, 0) / m.length; z.score = m.reduce((s, x) => s + x.e * fit(x.lvl), 0) / m.length * (1 + 0.1 * Math.min(m.length, 5)); }
-    const top = Object.entries(by).sort((x, y) => y[1].score - x[1].score).slice(0, 3);
+    for (const z of Object.values(by)) { const m = Object.values(z.mobs); z.e = m.reduce((s, x) => s + x.e, 0) / m.length; z.score = m.reduce((s, x) => s + x.e * fit(x.lvl), 0) / m.length * (1 + 0.1 * Math.min(m.length, 5)); z.inWin = m.some(x => x.lvl >= w.lo && x.lvl <= w.hi); }
+    const top = Object.entries(by).sort((x, y) => (y[1].inWin - x[1].inWin) || y[1].score - x[1].score).slice(0, 3);
     const got = rt.farmGot?.[k] || 0;
     txt += `\n${r.name}: источников дропа ${r.drop.length} (спойл ${r.spoil} — не наш) · собрано ${got}${d.farmNeed ? '/' + d.farmNeed : ''}`
       + (top.length ? top.map(([tp, z], i) => `\n${i ? '  ' : '➤ '}${z.loc}${tp === rt.zone ? ' 📍' : ''}: ≈${z.e.toFixed(2)} шт./бой — ${Object.entries(z.mobs).sort((a, b) => b[1].e - a[1].e).slice(0, 3).map(([n, m]) => `${n} ${m.lvl} ур. ${m.ch}%`).join(', ')}`).join('')
