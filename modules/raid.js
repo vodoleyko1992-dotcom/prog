@@ -426,7 +426,9 @@ async function rbHuntStep() {
   const H = env.rt.rbHunt || { step: 'pick' };
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
     const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
-    return huntDone(H.id, `${H.name}: ${d.verdict === 'no' ? '❌ не по силам' : w ? `отошёл, у него ${w.hpAfter}/${w.max}` : d.kills ? `✅ убит (всего ${d.kills}×)` : 'бой окончен'} → следующий`);
+    // 7.2.3: недобитый РБ (пауза/отход/магазин) — не «следующий»: rbListPick вернёт к нему первым
+    const wd = rbWounded(H.id) ? env.rt.rbWound[H.id] : null, pct = wd ? Math.round(wd.cur / wd.max * 100) : 0;
+    return huntDone(H.id, `${H.name}: ${d.verdict === 'no' ? '❌ не по силам → следующий' : w ? `отошёл, у него ${w.hpAfter}/${w.max}${wd ? ' — вернусь добить' : ' → следующий'}` : wd ? `бой прерван, у него ${pct}% — возвращаюсь добить` : d.kills ? `✅ убит (всего ${d.kills}×) → следующий` : 'бой окончен → следующий'}`);
   }
   if (H.step === 'go') {
     const g = env.rt.rbList?.[H.id] || H;
@@ -702,6 +704,7 @@ async function rbRetreat(ctx, mob, why) {
   env.setStatus(`РБ ${ctx.name}: ${why} · снято ${rec.chip}, у него ${mob.cur}/${mob.max}`);
   console.log(env.TAG, `РБ ${ctx.name}: ${why}`, rec);
   await env.sleep(env.rnd(300, 700));
+  if (await rbShopFirst(ctx.name, true)) return;      // 7.2.3: расходники на исходе — магазин сейчас, потом к этому же РБ
   await env.toOutskirts();                            // дальше — мобы (лечение вампириком) и новый заход при полном HP
 }
 
@@ -721,11 +724,16 @@ async function rbAbort(ctx, mob, why) {
   await env.toOutskirts();
 }
 
-async function rbShopFirst(label) {
-  if (!env.cfg.shopAuto) return false;
+// 7.2.3 (игрок 10.10: «не срываться посреди РБ докупать соски — покупать после убийства РБ или сходить купить все нужные
+// расходники и бить дальше того же РБ»): в бою закупки нет никогда. Проверка — только между боями: перед следующим РБ
+// и при отходе от РБ; раз уж идём в магазин — докупаем всё до максимума (force), недобитый РБ после магазина — первым (rbWounded)
+async function rbShopFirst(label, retreat) {
+  if (!env.cfg.shopAuto || env.rt.shop || Date.now() - (env.rt.shopT || 0) < 600000) return false;
   const [mn] = env.pair(env.cfg.shopHp, '300/1000'), n = env.hpPotStock();
-  if (!mn || n == null || n >= mn || env.rt.shop || Date.now() - (env.rt.shopT || 0) < 600000) return false;
-  await env.shopStart(`перед РБ${label ? ' ' + label : ''}: банок HP ${n} < ${mn}`);
+  const low = (env.shopNeedByPanel?.() || '').split(', ').filter(Boolean);
+  if (mn && n != null && n < mn && !low.some(x => /^банки HP/.test(x))) low.unshift(`банки HP ${n} < ${mn}`);
+  if (!low.length) return false;
+  await env.shopStart(`${retreat ? 'отход от РБ' : 'перед РБ'}${label ? ' ' + label : ''}: ${low.join(', ')} — докупаю всё${retreat ? ', потом обратно к нему' : ''}`, true);
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }

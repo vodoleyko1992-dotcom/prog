@@ -126,7 +126,7 @@ async function nextFight(ctx) {
   await env.sleep(env.rnd(40, 120));                      // после победы — сразу дальше (v5.4: было 150–350 мс)
   if (!env.on) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
-  if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(low0); location.href = '/char.html'; await env.sleep(4000); return; } }
+  if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now())) return env.toMap();
   if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
   // расходники на исходе (по панели) или пора проверить руду (раз в час) — сначала в магазин

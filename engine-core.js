@@ -143,6 +143,16 @@
     return { enqueue, peek, recover, clear };
   }
 
-  root.L2EngineCore = { createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры
+  // мерится по видимым элементам, а они на разных экранах (бой, победа, карта, загрузка) разные. Запоминаем самое широкое поле
+  // для этой ширины окна браузера и не сужаем окно, пока ширина браузера та же (новая ширина — мерим заново)
+  function stickyFree(stick, free, viewport) {
+    const cap = Math.max(0, Math.floor(viewport / 2) - 16);   // игра по центру: поле слева не шире половины экрана
+    const f = Math.min(Math.max(0, free | 0), cap);
+    const s = stick && stick.vw === viewport ? stick : { vw: viewport, free: 0 };
+    return f > s.free ? { vw: viewport, free: f } : s;
+  }
+
+  root.L2EngineCore = { stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
