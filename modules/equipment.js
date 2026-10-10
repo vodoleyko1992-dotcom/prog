@@ -112,6 +112,9 @@ async function autoRoles() {
     const names = env.names(env.cfg[k] || '').map(n => n.split('=')[0].trim());
     if (names.length && names.every(n => /^(?:focused force|hurricane assault|force blaster|stunning fist|iron punch)$/i.test(n))) fix[k] = '';
   }
+  // 7.1.31 (лог 10.10 19:35: «проверка баффов totem spirit bear: нет на панели боя»): тотемы воина в «Баффах» мага — заводское
+  // значение, у мага их нет. Только если ВСЕ баффы в списке — тотемы и ни одного нет на панели (свои настройки игрока не трогаем)
+  if (mage && !fix.nBuffs) { const bs = env.names(env.cfg.nBuffs || ''); if (bs.length && bs.every(n => /^totem\b/i.test(n) && !env.slotsBy(n).length)) fix.nBuffs = sug.nBuffs || ''; }
   for (const [k, v] of Object.entries(sug)) {
     if (!v) continue;
     const cur = env.cfg[k] || '';

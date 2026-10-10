@@ -65,12 +65,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
 const TXT  = ['petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
 const BOOL = ['petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: false, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const DEF = { debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: false, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: true, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -271,11 +271,12 @@ function renderPet(rt) {
   const box = $('petBox');
   if (box) {
     const S = Object.entries(rt.petStat || {}).sort((a, b) => (b[1].fights || 0) - (a[1].fights || 0));
-    const info = rt.skillInfo || {}, rank = k => { const i = info['summon ' + k.replace(/_/g, ' ')]; return i ? ` · ранг призыва ${i.r}/${i.m}` : ''; };
+    const db = rt.skillDb || {}, rank = k => { const i = db['summon ' + k.replace(/_/g, ' ')]; return i?.rank ? ` · ранг призыва ${i.rank}` : ''; };
     box.textContent = S.length ? S.map(([k, s]) => {
-      const hit = s.hits ? s.dmg / s.hits : 0, rate = s.acts ? s.hits / s.acts : 0, per = s.acts ? s.dmg / s.acts : 0;
+      const sw = (s.hits || 0) + (s.crits || 0) + (s.misses || 0), hit = s.hits ? (s.hitDmg || s.dmg) / s.hits : 0, rate = s.acts ? sw / s.acts : 0, per = s.acts ? s.dmg / s.acts : 0;
       return `• ${s.name || k}: ${s.fights} боёв${s.lvMin ? ` (${s.lvMin === s.lvMax ? s.lvMin : s.lvMin + '–' + s.lvMax} ур.)` : ''}${rank(k)}\n`
-        + `   удар ≈${Math.round(hit)} · бьёт на ${Math.round(rate * 100)} % твоих действий · ≈${Math.round(per)} урона за действие`
+        + `   удар ≈${Math.round(hit)}${s.crits ? ` · критов ${Math.round(s.crits / sw * 100)} %` : ''} · промахов ${sw ? Math.round((s.misses || 0) / sw * 100) : 0} %\n`
+        + `   бьёт на ${Math.round(rate * 100)} % твоих действий · ≈${Math.round(per)} урона за действие`
         + `${s.dealt ? ` · ${Math.round(s.dmg / s.dealt * 100)} % всего урона` : ''}\n`
         + `   гибель ${s.deaths || 0} (${s.fights ? Math.round((s.deaths || 0) / s.fights * 100) : 0} на 100 боёв) · призывов ${s.summons || 0} · перепризывов ${s.resummons || 0}`;
     }).join('\n') + `\n\n💡 ${rt.petAdvice?.text || 'рекомендация появится после 30 боёв с котом'}`
@@ -283,8 +284,8 @@ function renderPet(rt) {
   }
   const nb = $('noEffBox');
   if (nb) {
-    const off = Object.entries(rt.skillInfo || {}).filter(([, v]) => v.ne).map(([k]) => k);
-    nb.textContent = off.length ? `«В бою эффекта нет» (прочитано у магистра): ${off.join(', ')}` : 'Список «в бою эффекта нет» пополнится сам, когда откроешь у магистра список изученных навыков.';
+    const off = Object.values(rt.skillDb || {}).filter(v => /в бою эффекта нет|у бою ефекту немає/i.test(v.desc || '')).map(v => v.name);
+    nb.textContent = off.length ? `«В бою эффекта нет» (по описанию магистра): ${off.join(', ')}` : 'Список «в бою эффекта нет» пополнится сам, когда откроешь у магистра «Умения» (Персонаж → Умения).';
   }
 }
 

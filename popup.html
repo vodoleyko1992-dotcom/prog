@@ -409,8 +409,10 @@
   <h4>🧿 Дебаффы (маг)</h4>
   <label>Вешать дебаффы <input id="debuffAuto" type="checkbox"></label>
   <label>Какие, по приоритету <input id="nDebuff" class="nm" placeholder="пусто — все с панели: Surrender to Fire, Curse Weakness…"></label>
-  <label>Когда <select id="debuffMode"><option value="auto">Долгий бой, чемпионы и РБ</option><option value="boss">Только РБ и чемпионы</option><option value="always">Каждый моб (один раз)</option></select></label>
-  <div class="hint">Пустой список — бот сам: Surrender to Fire первым, если в ротации огонь; Curse Weakness — на чемпионах/РБ или когда тебя бьют; Curse Chaos/Gloom/Poison — только РБ. Каждый дебафф — раз на цель, только при запасе MP. Если дебафф проходит реже 30 % (6+ попыток) — бот выключает его на час. Статистика — в логе «дебафф».</div>
+  <label>Когда <select id="debuffMode"><option value="auto">Авто — когда окупится (долгий бой, РБ)</option><option value="boss">Только РБ и чемпионы</option><option value="always">Каждый моб (один раз)</option></select></label>
+  <label>«Авто»: бою осталось действий не меньше <input id="debuffMinActs" type="number" min="2" max="50"></label>
+  <div class="hint">На L2WAP Surrender to Fire и Curse Chaos режут M.Def на 10 %, то есть это +11 % только к твоим заклинаниям (кот бьёт физикой). Ход на дебафф окупается примерно 9 заклинаниями после него, поэтому в «Авто» бот вешает дебафф, только если по HP моба (с учётом удара кота) бою ещё 10+ действий. Чемпиону с 5 000 HP хватает 2–3 ходов: дебаффы только удлиняли бой (лог 10.10: «✦→✦→B→B→B» за 7 с).</div>
+  <div class="hint">Пустой список — бот сам: Surrender to Fire первым, если в ротации огонь; Curse Weakness — на РБ или когда тебя бьют (HP < 70 %); Curse Chaos/Gloom/Poison — только РБ. Каждый дебафф — раз на цель, только при запасе MP. Если дебафф проходит реже 30 % (6+ попыток) — бот выключает его на час. Статистика — в логе «дебафф».</div>
   <h4>⚡ Энергия силы</h4>
   <label>Копит энергию <input id="nCharge" class="nm"></label>
   <label>Тратят («Имя=цена») <input id="nForce" class="nm"></label>
@@ -469,7 +471,8 @@
   <div class="hint">Перепризыв даёт коту полное HP за один ход. Если сервер не обновит HP при перепризыве, бот это запомнит и будет лечить кота Servitor Heal.</div>
   <h4>🎯 Добивание</h4>
   <label>Учитывать удар кота при добивании <input id="petFinish" type="checkbox"></label>
-  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие. Не на РБ.</div>
+  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
+  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а кот иногда промахивается (≈16 %), и тогда ход пропадает. Не на РБ.</div>
   <h4>✨ Баффы кота</h4>
   <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
   <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>

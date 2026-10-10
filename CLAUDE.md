@@ -29,7 +29,7 @@ modules/*.js           фабрики L2V7Factories.<name>(env) → L2V7Modules.
 popup.html/js, ui-v7.* меню (вкладки, «Быстрые режимы», Пауза/Старт/Стоп, экспорт/импорт)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (61 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (62 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -62,8 +62,8 @@ ID предметов: BSPS (blessed spiritshot) NG 3947, D 3948, C 3949, B 3950
 ## Скиллы Warlock на L2WAP (скрин магистра 10.10 — описания отличаются от Interlude!)
 
 - Ударные заклинания все на максимуме ранга и дальше не растут: Blaze 8/8 (Power 44), Aura Burn 8/8 (36), Energy Bolt 4/4 (22), Wind Strike 5/5 (21), Flame Strike 3/3 (19), Ice Bolt 6/6 (16, MP 20, замедление), Vampiric Touch 6/6 (18, вампиризм 40 %). Урон мага растёт только от M.Atk.
-- Коты: P.Atk кота = +X % от **M.Atk хозяина** — Kat +15 % (7/18), Mew +20 % (7/18), **Kai +25 % «основний DD-слуга»** (3/14). Кот «автоматично атакує разом із власником». Кристаллы на призыв на этом сервере не нужны.
-- **«В бою эффекта нет»**: Servitor Wind Walk 2/2, Body To Mind 2/5 → бот не жмёт (`noEffect`, `NO_EFFECT_DEF` + `rt.skillInfo` со страницы магистра).
+- Коты: P.Atk кота = +X % от **M.Atk хозяина** — Kat +15 % (7/18), Mew +20 % (7/18), **Kai +25 % «основний DD-слуга»** (3/14). Кот «автоматично атакує разом із власником». Кристаллы на призыв на этом сервере не нужны. Лог кота: «Слуга [Kai the Cat] атакує [моб] 1 409 урону.» / «… завдає критичного удару [моб] 5 721 урону.» / «… промахнувся» (Kai Lv.3: удар ≈1500, промах 16 %, крит 2 %).
+- **«В бою эффекта нет»**: Servitor Wind Walk 2/2 (иконка skill1144 = в IL «Fast Servitor»!), Body To Mind 2/5 → бот не жмёт (`noEffect`: `NO_EFFECT_DEF` + описание из `rt.skillDb`, страница «Умения» = `/magister.html?mode=learned`).
 - Дебаффы: Surrender to Fire = M.Def −10 % (не огонь!); Curse Chaos = P.Atk −12 % и M.Def −10 % (не точность); Curse Weakness −20 % P.Atk на 10 с, 80 % шанс; Curse Poison −12 % P.Atk; Slow — скорость ×0,7 (бесполезно); Poisonous Cloud — 120 × 6 тиков по 5 с (на обычном мобе ≈1 тик).
 - Лечение: Heal = Power×4 + уровень×3 + ранг×5 (Power 67 → ≈430 HP на 50); Corpse Life Drain — та же формула, Power 0 (≈175 HP, урона нет); Self Heal 42 HP.
 - Пассивы робы: Spellcraft — в полной Robe скорость каста ×2, без Robe −50 %; Mana Recovery — реген MP +20 % только в Robe; Magician's Movement. Броню бот пока не проверяет.
@@ -76,7 +76,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 61 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 62 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -98,13 +98,14 @@ Firefox ставится как временное дополнение (`about:
 - 7.1.28: кнопка «⏸ Пауза / ▶ Продолжить»; раздел и быстрый режим «🗺 Автофарм» (по умолчанию ВЫКЛ; при ВКЛ сразу проверяет зоны, включает цепочку); zonePick по соседним уровням со сглаживанием (симуляция: ≈6,1 M вместо ≈3,1 M EXP/ч); оружие: грейд важнее цифр, никогда не даунгрейд, надевание видно по сети.
 - 7.1.29: смена наживки, покупка удочки, заточка раз в 100 рыб, сторож зависания рыбалки.
 - 7.1.30: глубокий аудит (4 ревью, 27 правок) — см. CHANGELOG-7.1.30.md.
-- 7.1.31: раздел «🐱 Слуга» (`tab-pet`), статистика котов `rt.petStat` + `rt.petAdvice` (рекомендация после 30 боёв), добивание с учётом удара кота (`petExpect` в magePlan: бесплатная атака / дешёвое заклинание), баффы кота (`nPetBuffs`, `rt.petBuffAt`, `rt.petBornT`), `noEffect` (Body To Mind больше не жмётся), Corpse Life Drain не удар.
+- 7.1.31: раздел «🐱 Слуга» (`tab-pet`), статистика котов `rt.petStat` (hits/hitDmg/crits/misses/acts/deaths/summons) + `rt.petAdvice` (после 30 боёв), добивание с учётом удара кота (`petExpect` в magePlan; только при MP < petFinishMp 80 %), баффы кота (`nPetBuffs`, `rt.petBuffAt`, `rt.petBornT`), `noEffect` по `rt.skillDb[..].desc` (Body To Mind больше не жмётся), Corpse Life Drain не удар; по логу 10.10: zoneForLevel → сразу лучшая замеренная зона, дебаффы по окупаемости, спам «Обнаружен питомец», тотем воина у мага.
 
 ## Известные ограничения / что дальше
 
 - Память `rt` — один блок ~180 КБ, переписывается целиком при каждом обновлении статуса; срезание по возрасту есть, раздельное хранение (`spawns` отдельным ключом) — задача на будущее.
 - Состояние подбора зон размазано по меткам `zoneGoT/zoneLvlT/zoneTrialT/zoneExploreT/zoneTried/zoneBad` — кандидат на один маленький стейт-машин.
 - Кубики — встроить, когда появятся у Warlock. Баффы кота уже есть (роль «Баффы кота»), ставятся только в бою.
-- Дебаффы мага: приоритеты в debuffPlan по справочнику Interlude (Surrender = огонь, Chaos = точность), на L2WAP оба режут M.Def −10 % — пересмотреть (окупаемость хода ≈9 заклинаний после дебаффа).
+- Дебаффы мага: с 7.1.31 в «авто» — только при ≥ debuffMinActs (10) действиях до конца боя (с учётом кота) / РБ / HP героя < 70 %. Приоритеты внутри debuffPlan всё ещё по справочнику Interlude (Surrender = огонь, Chaos = точность); на L2WAP Chaos = −12 % P.Atk и −10 % M.Def — для РБ, возможно, лучше Chaos первым (стакается ли с Surrender — неизвестно).
+- Чемпионы очень выгодны (лог 10.10: ≈46–49 тыс. EXP + 47–73 тыс. аден за ≈6–10 с против ≈4 тыс. EXP у обычного моба).
 - Этап квеста профессии с чемпионами («Резонанс 1/3») виден только на странице NPC — бот его не ведёт.
 - Ничего из 7.1.29–7.1.30 ещё не подтверждено живым логом — первым делом попросить лог за 1–2 часа и проверить: смену наживки, выбор зоны при автофарме, отсутствие повторных перезагрузок.

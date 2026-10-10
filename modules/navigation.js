@@ -126,9 +126,17 @@ async function zoneForLevel() {
   const fit = Object.entries(env.rt.zoneCat || {}).filter(([id, c]) => id !== env.rt.zone && !/^out:|^rb:/.test(id) && c.lo && c.hi >= lo && c.lo <= hi && Date.now() - (bad[id] || 0) > 6 * 3600000)   // 7.1.30: не телепорт в ту же зону
     .sort((a, b) => (inWin(b[1]) >= 0.5) - (inWin(a[1]) >= 0.5) || Math.abs((a[1].lo + a[1].hi) / 2 - mid) - Math.abs((b[1].lo + b[1].hi) / 2 - mid) || (a[1].price || 0) - (b[1].price || 0));
   if (!fit.length) { env.rec('B', 'локации', `зон для ${lo}–${hi} ур. в «Телепорте» нет (в каталоге ${Object.keys(env.rt.zoneCat || {}).length}) — бью что есть`); return false; }
-  const [id, c] = fit[0];
-  env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} → лечу в «${c.name || id}» (${c.lo}–${c.hi})`);
-  await env.setRt({ zoneGo: { id, t: Date.now(), why: `зона своего уровня (${c.lo}–${c.hi})` }, zoneGoT: 0 });
+  // 7.1.31 (лог 10.10 19:35–19:39): мобы тут 15–35 ур. → улетал в ближайшую по уровню Enchanted Valley (≈1,6 M EXP/ч), а через 4 мин
+  // автофарм перелетал в Blazing Swamp (≈5,8 M) — два платных телепорта и 4 мин в худшей зоне. Есть замеренная зона своего уровня —
+  // сразу в лучшую по опыту (та же оценка, что у автофарма); замеров нет — как раньше, ближайшая по уровню
+  const trial = Math.max(15, env.cfg.zoneTrial || 20);
+  const rated = fit.map(([zid, zc]) => [zid, zc, zoneRate(zid, L)]).filter(x => x[2]?.exp && x[2].n >= trial);
+  const prior = rated.length ? rated.map(x => x[2].exp).sort((a, b) => a - b)[Math.floor(rated.length / 2)] : 0;
+  rated.sort((a, b) => zoneScore(b[2], prior) - zoneScore(a[2], prior));
+  const [id, c, rate] = rated[0] || fit[0];
+  const why = rate ? `лучшая по опыту для своего уровня: ≈${Math.round(rate.exp).toLocaleString('ru')} EXP/ч (${rate.n} боёв)` : `зона своего уровня (${c.lo}–${c.hi})`;
+  env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} → лечу в «${c.name || id}» (${c.lo}–${c.hi}) · ${why}`);
+  await env.setRt({ zoneGo: { id, t: Date.now(), why }, zoneGoT: 0 });
   location.href = '/teleport.html'; await env.sleep(4000);
   return true;
 }

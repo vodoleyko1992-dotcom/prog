@@ -130,37 +130,50 @@ function nonOffenseSkill(b) {
 const petNote = { name: '', t: 0 }, emptyPanel = { since: 0, last: 0, logT: 0 };
 
 // ---------- 7.1.31: кот Warlock — замер урона, статистика по котам, добивание с учётом кота, баффы кота ----------
-// Удар слуги в логе боя: «Слуга [Mew the Cat] атакує [Unicorn] 1 061 урону.» (база игрока 10.10). Кот бьёт «разом із власником» —
-// на каждое действие хозяина (в т. ч. на бесплатную «Атаку»; лог: строка удара кота сразу после атаки мага)
-const PET_HIT_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*атаку[єе]\s*\[[^\]]*\][^\d]*?(\d[\d\s  ]*)\s*урон/i;
+// Удары слуги в логе боя (лог 10.10 19:35–19:45, Kai the Cat Lv.3: 150 ударов ≈1300–1670, 4 крита, 30 промахов из 184):
+//   «Слуга [Kai the Cat] атакує [Unicorn] 1 409 урону.» · «Слуга [Kai the Cat] завдає критичного удару [Valley Treant Elder] 5 721 урону.»
+//   «Слуга [Kai the Cat] промахнувся…». Кот бьёт «разом із власником» — на каждое действие хозяина (в т. ч. на бесплатную «Атаку»)
+const PET_HIT_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*(атаку[єе]|завда[єе]\s+критичн\S*\s+удар\S*|наносит\s+критическ\S*\s+удар\S*)\s*\[[^\]]*\][^\d]*?(\d[\d\s  ]*)\s*урон/i;
+const PET_MISS_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*промахну/i;
 const petKeyOf = n => String(n || '').trim().toLowerCase().replace(/\s+/g, '_');
 function petHits(lines) {
-  return (lines || []).map(l => String(l).match(PET_HIT_RE)).filter(Boolean)
-    .map(m => ({ name: m[1].trim(), dmg: +m[2].replace(/\D/g, '') || 0 })).filter(h => h.dmg > 0);
+  return (lines || []).map(l => {
+    const t = String(l), m = t.match(PET_HIT_RE);
+    if (m) return { name: m[1].trim(), dmg: +m[3].replace(/\D/g, '') || 0, crit: /критич/i.test(m[2]), miss: false };
+    const x = t.match(PET_MISS_RE);
+    return x ? { name: x[1].trim(), dmg: 0, crit: false, miss: true } : null;
+  }).filter(h => h && (h.miss || h.dmg > 0));
 }
-// новые удары кота в логе с прошлого вызова — в счётчик текущего боя
+// новые удары кота в логе с прошлого вызова — в счётчик текущего боя (обычные удары, криты, промахи — раздельно)
 function petTick(ctx) {
   if (!ctx.pet) return;
   const cur = env.logLines(), fresh = env.newLines(ctx.petLines || ctx.logStart || [], cur);
   ctx.petLines = cur;
-  for (const h of petHits(fresh)) { ctx.pet.hits++; ctx.pet.dmg += h.dmg; ctx.pet.name = h.name; ctx.pet.key = petKeyOf(h.name); }
+  for (const h of petHits(fresh)) {
+    const p = ctx.pet; p.name = h.name; p.key = petKeyOf(h.name);
+    if (h.miss) p.misses = (p.misses || 0) + 1;
+    else if (h.crit) { p.crits = (p.crits || 0) + 1; p.dmg += h.dmg; }
+    else { p.hits++; p.dmg += h.dmg; p.hitDmg = (p.hitDmg || 0) + h.dmg; }
+  }
 }
-// сколько кот снимет за следующее действие хозяина: средний удар (текущего боя, если уже ≥ 2 удара — ранг/мобы те же) × 0,85.
-// Только если кот бьёт почти на каждое действие (≥ 80 %) и замеров ≥ 5 — иначе 0 (на кота не рассчитываем)
-// кот жив: свежий ответ сервера (activeSummon), иначе шапка «Активний слуга» (#l2-hud-companion: «Mew the CatLv.1HP479/750…»)
+// кот жив: свежий ответ сервера (activeSummon), иначе шапка «Активний слуга» (#l2-hud-companion: «Kai the CatLv.3HP1 880/1 880…»)
 function petAlive() {
   const P = env.petState?.();
   if (P && Date.now() - (P.t || 0) < 20000) return !!P.has && !(P.maxHp && P.hp <= 0);
   const box = env.$q('#l2-hud-companion'), m = box && env.shown(box) ? box.textContent.replace(/\s+/g, '').match(/HP(\d+)\/(\d+)/i) : null;
   return !!m && +m[1] > 0;
 }
+// сколько кот снимет за следующее действие хозяина: средний ОБЫЧНЫЙ удар (криты — случайность, не в счёт; текущего боя, если уже
+// ≥ 2 удара) × 0,85 (самый слабый удар в логе ≈0,87 среднего). Только если кот действует почти на каждое действие хозяина (≥ 80 %),
+// промахивается не чаще 25 % (в логе 16 %) и замеров ≥ 5 — иначе 0 (на кота не рассчитываем)
 function petExpect(ctx) {
-  const P = env.petState?.();
   if (!petAlive()) return 0;
-  const k = P.key || ctx?.pet?.key || '', S = env.rt.petStat?.[k] || {}, c = ctx?.pet || {};
-  const hits = (S.hits || 0) + (c.hits || 0), dmg = (S.dmg || 0) + (c.dmg || 0), acts = (S.acts || 0) + (c.acts || 0);
-  if (hits < 5 || acts < 5 || hits / acts < 0.8) return 0;
-  return (c.hits >= 2 ? c.dmg / c.hits : dmg / hits) * 0.85;
+  const P = env.petState?.(), k = P?.key || ctx?.pet?.key || '', S = env.rt.petStat?.[k] || {}, c = ctx?.pet || {};
+  const sum = f => (S[f] || 0) + (c[f] || 0);
+  const hits = sum('hits'), acts = sum('acts'), swings = hits + sum('crits') + sum('misses');
+  if (hits < 5 || acts < 5 || swings / acts < 0.8 || sum('misses') / swings > 0.25) return 0;
+  const avg = c.hits >= 2 ? (c.hitDmg || 0) / c.hits : sum('hitDmg') / hits;
+  return avg > 0 ? avg * 0.85 : 0;
 }
 // рекомендация «какого кота держать»: урон кота за действие хозяина с поправкой на ходы, потраченные на призыв/перепризыв.
 // Сравниваем только котов с ≥ 30 боями; разница < 10 % — «почти равны». Уровни героя показываем: кот сильнее с M.Atk хозяина
@@ -185,14 +198,15 @@ function petAdvice(S) {
 // итог боя → rt.petStat[кот]. Больше 2000 боёв — счётчики пополам (свежие замеры весят больше: ранг кота и M.Atk растут)
 async function petFlush(ctx, dealt) {
   const p = ctx.pet;
-  if (!p || (!p.hits && !p.deaths && !p.summons && !p.resummons)) return;
+  if (!p || (!p.hits && !p.crits && !p.misses && !p.deaths && !p.summons && !p.resummons)) return;
   const k = p.key || env.petState?.()?.key || ''; if (!k) return;
   const S = { ...(env.rt.petStat || {}) };
-  let s = { name: '', fights: 0, hits: 0, dmg: 0, acts: 0, dealt: 0, deaths: 0, summons: 0, resummons: 0, ...(S[k] || {}) };
-  if (s.fights >= 2000) for (const f of ['fights', 'hits', 'dmg', 'acts', 'dealt', 'deaths', 'summons', 'resummons']) s[f] = Math.round((s[f] || 0) / 2);
-  const lv = env.heroLvl?.() || 0;
-  s = { ...s, name: p.name || s.name || k.replace(/_/g, ' '), fights: s.fights + 1, hits: s.hits + p.hits, dmg: s.dmg + p.dmg, acts: s.acts + p.acts,
-    dealt: s.dealt + (p.hits && dealt > 0 ? dealt : 0), deaths: s.deaths + p.deaths, summons: s.summons + p.summons, resummons: s.resummons + p.resummons, t: Date.now(),
+  const F = ['fights', 'hits', 'hitDmg', 'crits', 'misses', 'dmg', 'acts', 'dealt', 'deaths', 'summons', 'resummons'];
+  let s = { name: '', ...Object.fromEntries(F.map(f => [f, 0])), ...(S[k] || {}) };
+  if (s.fights >= 2000) for (const f of F) s[f] = Math.round((s[f] || 0) / 2);
+  const lv = env.heroLvl?.() || 0, swung = (p.hits || 0) + (p.crits || 0) + (p.misses || 0);
+  s = { ...s, ...Object.fromEntries(F.filter(f => f !== 'fights' && f !== 'dealt').map(f => [f, (s[f] || 0) + (p[f] || 0)])),
+    name: p.name || s.name || k.replace(/_/g, ' '), fights: s.fights + 1, dealt: s.dealt + (swung && dealt > 0 ? dealt : 0), t: Date.now(),
     ...(lv ? { lvMin: Math.min(s.lvMin || lv, lv), lvMax: Math.max(s.lvMax || 0, lv) } : {}) };
   S[k] = s;
   await env.setRt({ petStat: S, petAdvice: petAdvice(S) });
@@ -255,12 +269,18 @@ function mageCombat() { return env.combatProfileKind?.() === 'mage_summoner'; }
 // Порядок: Surrender to Fire — если в ротации огонь (Blaze/Flame Strike: +урон всех следующих ударов); Curse Weakness — РБ/чемпион
 // или герой теряет HP (−P.Atk моба); Curse Chaos/Gloom — только РБ. Бот учит «проходимость» по логу («Ефект пройшов (72%)»):
 // если из 6+ попыток прошло < 30 % — этот дебафф на час выключается. Выключить всё: debuffAuto: false
+// 7.1.31 (лог 10.10 19:39–19:44): на L2WAP Surrender to Fire = M.Def −10 % (не огонь) — это +11 % только к заклинаниям мага (кот бьёт
+// физикой). Ход на дебафф окупается лишь ≈9 заклинаниями после него, а чемпион 5 000 HP умирает за 2–3 хода (Blaze + удар кота ≈1500):
+// «✦→✦→B→B→B» — 7 с вместо ≈4–5. Режим «авто»: атакующий дебафф — только если бой продлится ≥ debuffMinActs (10) действий
+// с учётом кота (РБ — всегда); Curse Weakness (−P.Atk моба) — РБ или когда героя реально бьют (HP < 70 %). Режимы «РБ и чемпионы»/«каждый моб» — как были
 function debuffPlan(ctx, mp, me) {
   if (env.cfg.debuffAuto === false) return null;
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
-  const avg = spellAvg();
-  const longFight = mob.cur >= avg * 4, boss = !!(ctx.rb || ctx.champ), mode = env.cfg.debuffMode || 'auto';
-  if (mode === 'boss' ? !boss : mode !== 'always' && !longFight && !boss) return null;
+  const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto';
+  const actsLeft = mob.cur / Math.max(1, avg + petExpect(ctx));
+  const longFight = actsLeft >= (env.cfg.debuffMinActs ?? 10), boss = !!(ctx.rb || ctx.champ), hurt = !!me && me.pct < 70;
+  const offOk = longFight || !!ctx.rb || mode !== 'auto';
+  if (mode === 'boss' ? !boss : mode !== 'always' && !offOk && !hurt) return null;
   const list = env.names(env.cfg.nDebuff || '');            // 7.1.30: свой список в «Скиллы → Дебаффы»: только они, в этом порядке
   const fire = mageSpellSlots().some(b => /^(?:blaze|flame strike|aura flare|prominence)/i.test(env.cleanTitle(b.title)));
   const stat = env.rt.debuffStat || {}, now = Date.now();
@@ -268,8 +288,8 @@ function debuffPlan(ctx, mp, me) {
     const il = env.ilOf(b), n = env.cleanTitle(b.title), k = n.toLowerCase(), s = stat[k] || {};
     let pr = 0;
     if (list.length) pr = list.includes(k) ? 100 - list.indexOf(k) : 0;
-    else if (il.st === 'FireAtr') pr = fire ? 90 : 0;
-    else if (il.st === 'pAtkDown') pr = boss || (me && me.pct < 85) ? 60 : 0;
+    else if (il.st === 'FireAtr') pr = fire && offOk ? 90 : 0;
+    else if (il.st === 'pAtkDown') pr = ctx.rb || hurt || (mode !== 'auto' && boss) ? 60 : 0;
     else if (il.t === 'POISON') pr = ctx.rb ? 30 : 0;
     else pr = ctx.rb ? 40 : 0;                                   // accuracyDown, matkdebuff и прочие — только РБ
     if (s.offUntil > now || (ctx.block['debuff:' + k] || 0) > now) pr = 0;
@@ -314,9 +334,12 @@ function magePlan(ctx, mp) {
   const aS = env.rt.skills?.['атака'], atkD = aS?.dmgN >= 3 ? aS.dmg / aS.dmgN : 0;
   if (atk && mob && mob.cur > 0 && atkD > 0 && mob.cur <= atkD * 0.8 && !ctx.rb)
     return { key: 'attack', name: 'атака', b: atk, dmg: atkD, why: `магия: добиваю атакой (${mob.cur} HP ≤ атака ≈${Math.round(atkD)})` };
-  // 7.1.31 (просьба игрока): кот бьёт вместе с хозяином ≈1100 за удар. Моб умрёт от удара кота — жмём бесплатную «Атаку»
-  // (кот ударит с ней), заклинание за 22 MP не тратим. Атака на откате — ниже «добивание» само возьмёт самое дешёвое заклинание
-  const petN = env.cfg.petFinish !== false && !ctx.rb ? petExpect(ctx) : 0;
+  // 7.1.31 (просьба игрока): кот бьёт вместе с хозяином (Kai Lv.3 ≈1500). Моб умрёт от удара кота — жмём бесплатную «Атаку»
+  // (кот ударит с ней), заклинание за 22 MP не тратим. Атака на откате — ниже «добивание» само возьмёт самое дешёвое заклинание.
+  // Только когда мана тратится (MP < petFinishMp, 80 %): кот промахивается ≈16 % (лог 10.10 19:35–19:45) — при полной мане
+  // сэкономленные MP всё равно сгорят на регене, а промах кота стоил бы лишнего хода
+  const mpLow = !mp?.max || mp.cur / mp.max * 100 < (env.cfg.petFinishMp ?? 80);
+  const petN = env.cfg.petFinish !== false && !ctx.rb && mpLow ? petExpect(ctx) : 0;
   if (atk && mob && mob.cur > 0 && petN > 0 && mob.cur <= petN)
     return { key: 'attack', name: 'атака', b: atk, dmg: petN, pet: true, why: `кот добьёт (${mob.cur} HP ≤ удар кота ≈${Math.round(petN)}) — бесплатная атака` };
   // 7.1.30 (ночь 09→10.10): 75 % времени боя маг сидел почти без MP (банки на панели не было) и бил атакой по 1 урону.
@@ -599,7 +622,9 @@ async function battle() {
     const pet = env.$q('#l2-hud-companion');
     const pn = pet && env.shown(pet) ? pet.textContent.trim().replace(/HP.*$/, '') : '';
     // 7.1.16-fix: раньше — запись в журнал каждый бой (95 строк за 15 мин); теперь при смене слуги или раз в 10 мин
-    if (pn && (petNote.name !== pn || Date.now() - petNote.t > 600000)) { petNote.name = pn; petNote.t = Date.now(); env.rec('B', 'питомец', 'Обнаружен питомец: ' + pet.textContent.trim().slice(0, 120)); }
+    // 7.1.31 (лог 10.10 19:35–19:45: 29 записей за 10 мин): каждый бой — новая страница, память модуля обнулялась. Помним во вкладке
+    try { const s = JSON.parse(sessionStorage.getItem('l2bot.petNote') || 'null'); if (s && !petNote.t) Object.assign(petNote, s); } catch (e) {}
+    if (pn && (petNote.name !== pn || Date.now() - petNote.t > 600000)) { petNote.name = pn; petNote.t = Date.now(); try { sessionStorage.setItem('l2bot.petNote', JSON.stringify(petNote)); } catch (e) {} env.rec('B', 'питомец', 'Обнаружен питомец: ' + pet.textContent.trim().slice(0, 120)); }
   }
   // 7.1.30: банка кончилась — игра убирает её слот с панели (ночь 10.10: мала банка кончилась ≈02:08, велика ≈02:58), а докупленные
   // лежат в сумке. Бот сам ставит банку обратно: пустой слот → «Розхідники» → банка (как вручную, лог 07:38). Не вышло — предупреждение
@@ -661,7 +686,7 @@ async function battle() {
   const ctx = { lastStun: 0, block: blockW, killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: (same && t.champ) || env.isChamp(title) || hpChamp,
                 name: mobName(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
-  if (mageCombat()) { ctx.pet = { hits: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // 7.1.31: замер кота
+  if (mageCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // 7.1.31: замер кота
   if (nm && mob0 && !(same && t.champ))
     await env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');

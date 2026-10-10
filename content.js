@@ -26,7 +26,8 @@ const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,anthar
   // энергия силы: кто копит и кто тратит («Имя=цена»)
   nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1',
   // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
-  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
+  debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
+  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
 };
 const DEF_RT = { status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
@@ -160,38 +161,16 @@ let PET = null;                                  // 7.1.16-fix: последни
 const petState = () => PET;
 // 7.1.31 (скрин магистра 10.10): на L2WAP у части скиллов в описании «В бою эффекта нет: 0 изменения HP и статов, только трата MP
 // и откат» — Servitor Wind Walk, Body To Mind. Бот их никогда не жмёт (раньше Body To Mind жался при нехватке MP — ход впустую).
-// Список пополняется сам: страница магистра со списком изученных навыков читается при каждом открытии (rt.skillInfo)
+// Кроме встроенного списка — описание со страницы магистра (learnSkillDb → rt.skillDb[имя].desc; «Умения» = /magister.html?mode=learned).
+// Важно: иконка Servitor Wind Walk — skill1144, а в справочнике Interlude 1144 = Fast Servitor (бафф кота) — без этой проверки попал бы в баффы кота
 const NO_EFFECT_DEF = 'Servitor Wind Walk, Body To Mind';
 const NO_EFFECT_RE = /в бою эффекта нет|у бою ефекту немає/i;
 const noEffect = x => {
   const n = (typeof x === 'string' ? x : cleanTitle(x?.title || '')).trim().toLowerCase();
   if (!n) return false;
-  const v = rt.skillInfo?.[n]?.ne;
-  return v != null ? !!v : names(NO_EFFECT_DEF).includes(n);
+  const d = rt.skillDb?.[n]?.desc;
+  return d ? NO_EFFECT_RE.test(d) : names(NO_EFFECT_DEF).includes(n);
 };
-// карточки навыков у магистра: имя, «Ранг: 3/14», описание. Разметку списка изученных навыков бот ещё не видел — ищем по тексту
-function skillInfoScan() {
-  if (isBattle()) return 0;
-  const cards = [...document.querySelectorAll('li, article, [class*="skill-card"], [class*="skill-row"], [class*="skill-item"]')]
-    .filter(el => /Ранг:?\s*\d+\s*\/\s*\d+/i.test(el.textContent || '') && (el.textContent || '').length < 700);
-  const info = { ...(rt.skillInfo || {}) }; let n = 0;
-  for (const el of cards) {
-    if (cards.some(c => c !== el && el.contains(c))) continue;          // берём самую внутреннюю карточку
-    const nmEl = el.querySelector('[class*="__name"], [class*="-name"], h3, h4, strong, b');
-    const name = ((nmEl?.textContent || (el.innerText || el.textContent || '').split('\n')[0]) || '').trim();
-    if (!/^[A-Za-z][A-Za-z' ’-]{2,40}$/.test(name)) continue;
-    const m = (el.textContent || '').match(/Ранг:?\s*(\d+)\s*\/\s*(\d+)/i);
-    const k = name.toLowerCase(), ne = NO_EFFECT_RE.test(el.textContent || ''), was = info[k];
-    const next = { r: +m[1], m: +m[2], ne, t: Date.now() };
-    if (!was || was.r !== next.r || was.m !== next.m || was.ne !== next.ne) { info[k] = next; n++; }
-  }
-  if (n) {
-    setRt({ skillInfo: info });
-    const off = Object.entries(info).filter(([, v]) => v.ne).map(([k]) => k);
-    rec('S', 'магистр', `навыки прочитаны (${n} изменений)${off.length ? ' · «в бою эффекта нет» — не жму: ' + off.join(', ') : ''}`);
-  }
-  return n;
-}
 const battleSpawn = () => new URLSearchParams(location.search).get('spawnId') || '';
 const memLeft = b => {
   const id = slotAction(b), spawn = battleSpawn();
@@ -3787,7 +3766,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   }
   try { dock(); } catch (e) {}
   if (isBattle()) setTimeout(() => hotbarRows3().catch(() => {}), 800);   // и при выключенном боте — 3 ряда открыты всегда
-  if (/magister|skill/i.test(location.pathname)) [2500, 6000].forEach(ms => setTimeout(() => { try { skillInfoScan(); } catch (e) {} }, ms));   // 7.1.31: навыки у магистра
+  if (/magister/i.test(location.pathname)) [2500, 6000].forEach(ms => setTimeout(() => { try { learnSkillDb(); } catch (e) {} }, ms));   // 7.1.31: ранги/описания навыков — и при выключенном боте
   draw(); main();
   if (!on && rt.invScan) invScanDrive();
 }));
