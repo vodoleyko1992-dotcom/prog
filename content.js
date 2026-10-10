@@ -719,6 +719,10 @@ async function trackEfficiency(exp, ctx) {
   setRt({ lastWinT: now });
   const pct = expPctGain();                       // прирост полоски опыта, % (с учётом нового уровня)
   if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, долгий перерыв или РБ — не считаем
+  // 8.0 (аудит фарма B1): ценность вида моба (EXP/с) для выбора цели на карте — без ожидания записи. Приход через карту дольше
+  // цепочки на одну и ту же величину для любого моба — вычитаем её, чтобы виды, добытые цепочкой и картой, сравнивались честно
+  { const E0 = rt.eff || {}, mapX = via0 === 'chain' ? 0 : Math.max(0, (E0.map?.sec || 0) - (E0.chain?.sec || 0));
+    try { L2V7Modules.mobfarm.mobValNote(ctx?.name, !!ctx?.champ, exp, Math.max(dt * 0.5, dt - mapX))?.catch?.(e => console.warn(TAG, 'ценность моба', e)); } catch (e) { console.warn(TAG, 'ценность моба', e); } }
   await zoneTrack(exp, dt, pct);
   const via = via0 === 'chain' ? 'chain' : 'map';
   const E = { ...(rt.eff || {}) }, e = E[via] || { n: 0, rate: 0 };
@@ -800,7 +804,14 @@ async function noteBag(cnt) {
   } else rec('B', 'сумка', `пересчитана: ${Object.keys(all).length} видов предметов`);
   await setRt(patch);
 }
-const searchActive = rules => rules.some(x => !x.neg && (x.quest || x.champ || x.name));
+// 8.0 (аудит фарма; настройки игрока 10.10 22:10–23:30: «каждые 10 боёв», «Искать чемпионов» выкл.): правило [квест] в приоритете
+// есть всегда («[квест] [чемп] [все]»), поэтому карта проверялась раз в 10 боёв и без единой ★ цели на локации — по аудиту ≈20 походов
+// на 201 бой (≈7 % времени впустую).
+// Теперь плановая проверка — только если есть зачем: ★ цель квеста на ЭТОЙ локации (та же проверка, что «за ★ целью» в nextFight),
+// точка фарма ресурса/рецепта, кампания, охота на чемпионов (правило [чемп] при «Искать чемпионов») или правило с именем моба этой локации
+const questHere = (...args) => L2V7Modules.mobfarm.questHere(...args);
+const searchActive = rules => campActive() || campMobOpen().length > 0 || campChampDue() || farmMapOn()
+  || rules.some(x => !x.neg && ((x.quest && questHere()) || x.champ || (!!x.name && L2V7Modules.mobfarm.nameHere(x.name))));
 const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: решение «фармлю здесь» держится 3 мин — между проверками цепочка
 // проверка карты каждые N боёв; пока глава ждёт чемпионов — не реже чем раз в 5 боёв (чемпионы появляются и пропадают)
 // v4.30: ищем чемпионов (правило «Чемп» в приоритете) — не реже раза в 20 боёв: при «раз в 100» бот их почти не заставал
@@ -3489,7 +3500,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },

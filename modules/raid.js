@@ -463,6 +463,7 @@ async function rbSessEnd(why) {
   return true;
 }
 
+const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
   if (await rbSessTick()) return;                   // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм
   const H = env.rt.rbHunt || { step: 'pick' };
@@ -525,10 +526,18 @@ async function rbHuntStep() {
   // каждые 20 с без единого боя, лог 08.10 13:41–13:44 — «петля туда-сюда»)
   if ((env.rt.rbHuntIdle || 0) > Date.now()) {
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
-    env.setStatus(`Тур РБ: ${String(H.last || 'подходящих РБ нет').slice(0, 140)} — фармлю мобов, список перечитаю через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`);
+    env.setStatus(`Тур РБ: ${String(H.last || 'подходящих РБ нет').slice(0, 140)} — фармлю мобов, проверю снова через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`);
     return env.map();
   }
-  if (env.rt.rbHuntIdle) await env.setRt({ rbHuntIdle: 0, rbListT: 0 });
+  // 8.0 (аудит фарма A5, лог 10.10 21:39–21:46): конец простоя сбрасывал rbListT — список (≈14 страниц) перечитывался каждые ≈105 с,
+  // цепочка стояла ≈18–20 с на каждое чтение (21:41:09 → 21:41:29 вместо ≈3 с между боями), а в окне — те же мёртвые / «не по силам». Теперь список живёт свои 15 мин (простой — 5 мин);
+  // раньше перечитываем, только если вырос уровень героя (окно и «не по силам» меняются) или прибавилось банок / был магазин
+  // (РБ могли отсеиваться из-за нехватки банок)
+  if (env.rt.rbHuntIdle) {
+    const m = env.rt.rbIdleMark || {}, L = env.heroLvl();
+    const early = (!!m.lvl && !!L && L !== m.lvl) || (env.potModel()?.n || 0) > (m.pots || 0) || (env.rt.shopT || 0) > (m.t || 0);
+    await env.setRt({ rbHuntIdle: 0, rbIdleMark: null, ...(early ? { rbListT: 0 } : {}) });
+  }
   if (!env.rt.rbListT || Date.now() - env.rt.rbListT > (env.cfg.rbValueTour ? 10 : 15) * 60000) {
     if (!isRbPage()) { env.setStatus('Тур РБ: открываю список рейд-боссов'); location.href = '/rb-bosses.html'; await env.sleep(4000); return; }
     return rbListScan();
@@ -537,11 +546,11 @@ async function rbHuntStep() {
   if (!p) {
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
     const why = `подходящих РБ нет — ${rbListWhy()}`;
-    // v5.2.2: не стоим и не гоняем список по кругу — 90 с фармим мобов здесь, потом перечитываем список РБ
+    // v5.2.2: не стоим и не гоняем список по кругу — фармим мобов здесь (8.0: 5 мин, список — из кэша, если не устарел), потом снова выбор
     // (в журнал пишем только смену причины)
     if (/мало банок/.test(why) && await rbShopFirst('')) return;   // РБ отсеяны из-за банок — сначала магазин
-    if (H.last !== why) { await huntSet({ last: why }); env.recBot(`Тур РБ: ${why} — фармлю мобов, список перечитаю через 90 с`); }
-    await env.setRt({ rbHuntIdle: Date.now() + 90000 });
+    if (H.last !== why) { await huntSet({ last: why }); env.recBot(`Тур РБ: ${why} — фармлю мобов, проверю снова через 5 мин`); }
+    await env.setRt({ rbHuntIdle: Date.now() + RB_IDLE_MS, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now() } });
     return env.map();
   }
   if (await rbShopFirst(p.name)) return;             // v5.2.2: сначала банки (минимум «Банки HP»), потом РБ
