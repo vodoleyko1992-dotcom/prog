@@ -266,5 +266,5 @@ html.cls-mage:not(.show-all) [data-cls="spoil"],html.cls-fighter:not(.cls-spoil)
 .ftree .fr-src{margin:4px 0 2px 14px;display:flex;flex-direction:column;gap:2px;font-size:11.5px}
 .ftree .fs b{display:inline-block;min-width:44px;font-size:10px;letter-spacing:.03em}
 .ftree .fs.drop b{color:#7fc97f}.ftree .fs.spoil b{color:#d4a856}.ftree .fs.boss b{color:#e07a6a}
-.ftree .fs.far{opacity:.45}
+/* игрок 10.10: неподходящие по уровню не глушить — видно весь выбор (подходящие просто стоят сверху) */
 .ftree .fpath{margin:6px 6px 0;color:var(--mute,#a39280);font-size:10.5px}

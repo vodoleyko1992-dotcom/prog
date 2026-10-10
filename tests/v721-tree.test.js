@@ -7,5 +7,5 @@ for (const id of ['farmSearch', 'farmTree', 'recipeSearch', 'recipeTree']) asser
 assert.match(js, /if \(g\.open === treeOpen\[kind\]\.has\(id\)\) return;/, 're-render of an open group fires «toggle» — must not loop');
 assert.match(js, /renderTree\('farm', rt, d\); renderTree\('recipe', rt, d\);/);
 assert.match(js, /\$\(T\.input\)\.value = r\.name; await save\(\{ target: \$\(T\.input\) \}\);/, '«farm this» sets the goal through the normal save path');
-assert.match(fs.readFileSync(path.join(root, 'ui-v7.css'), 'utf8'), /\.ftree \.fs\.far\{opacity:\.45\}/);
+assert.ok(!/\.fs\.far\{[^}]*opacity/.test(fs.readFileSync(path.join(root, 'ui-v7.css'), 'utf8')), 'out-of-level sources are not dimmed (player 10.10)');
 console.log('PASS: forum-like farm/recipe list wired (markup, goal via save, no toggle loop)');
