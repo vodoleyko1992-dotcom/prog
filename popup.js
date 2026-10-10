@@ -226,6 +226,7 @@ async function load() {
 
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderPet(rt);
+  paintRbOne(rt, on, paused);
   renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
   renderEff(rt);
   renderFa(rt, d); renderPots(rt, d); renderRbSess(rt, d);
@@ -1277,7 +1278,8 @@ const MODES_OFF = { epicMode: false, rbHuntMode: false, fishMode: false, catMode
 async function setMode(m) {
   await save();
   { const { rt = {} } = await chrome.storage.local.get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
-    if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } }); }
+    if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } });
+    if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } }); }   // 8.0.3: режим выбран руками — «🎯 по одному РБ» выключен (тур — без остановок)
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
@@ -1717,7 +1719,7 @@ async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
   const v = !cfg.rbHuntMode;
   // включение: с начала — свежий список РБ; рыбалку выключаем (тур её заменяет)
-  const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0 } : {}) };
+  const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0 } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
   const mode = { rbHuntMode: v, ...(v ? { fishMode: false, rbMode: true, epicMode: false, catMode: false, campaign: false } : { rbMode: !!cfg.rbBetween }) };   // 8.0.3: тур выключен — rbMode по выбору игрока
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
@@ -1734,6 +1736,30 @@ document.querySelectorAll('.epicChk').forEach(c => c.addEventListener('change', 
   save({ target: $('epicList') });
 }));
 $('huntToggle2').onclick = huntToggle;
+// 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды, после команды убить ещё РБ, и так каждый раз; это когда я не могу
+// 24/7 смотреть за ботом, а даю ему по 1 РБ за раз»): тур по РБ до первого убийства, потом пауза (raid.rbOnePause). Следующее нажатие
+// (или «▶ Продолжить») — ещё один РБ. Тур уже шёл — список РБ не перечитываем заново (≈14 страниц), продолжаем с выбора
+$('rbOneBtn').onclick = async () => {
+  await save();
+  const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  if (on && cfg.rbHuntMode && rt.rbOne?.on) return toast('🎯 Уже иду за РБ — после убийства встану на паузу и буду ждать команды');
+  const now = Date.now(), tour = !!cfg.rbHuntMode;
+  const leaveEpic = cfg.epicMode ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
+  const one = { ...(rt.rbOne || {}), on: true, k0: rt.rbKills || 0, t: now };
+  await activateMode({ ...leaveEpic, rbOne: one, ...(tour ? {} : { rbHunt: { step: 'pick', t: now, last: 'один РБ по команде' }, rbGo: null, rbWant: null, rbListT: 0 }) },
+    { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
+  toast('🎯 Иду за одним РБ — после убийства встану на паузу и буду ждать команды');
+};
+function paintRbOne(rt, on, paused) {
+  const b = $('rbOneBtn'), inf = $('rbOneInfo'); if (!b) return;
+  const o = rt?.rbOne?.on ? rt.rbOne : null, waiting = !!o && !on && !!paused && !!o.last;
+  b.textContent = !o ? '🎯 Убить один РБ и ждать команды' : on ? '🎯 Один РБ: в работе…' : '🎯 Ещё один РБ';
+  b.classList.toggle('on', !!o);
+  if (inf) inf.textContent = !o ? 'Бот найдёт и убьёт одного РБ (как тур: выбор, банки, телепорт), потом встанет на паузу и будет ждать твоей команды.'
+    : waiting ? `⏸ Ждёт команды · последний: ${o.lastName || 'РБ'} в ${new Date(o.last).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} · по команде убито ${o.n || 0}`
+    : on ? `Ищу и бью РБ — после убийства пауза.${o.n ? ` По команде убито ${o.n}.` : ''} Обычный «🧭 Тур по РБ» — без остановок.`
+    : 'Бот стоит. «🎯 Ещё один РБ» — продолжить по одному.';
+}
 $('rbToggle').onclick = async () => {
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
   const v = !cfg.rbBetween;   // 8.0.3: кнопка — выбор игрока (rbBetween); тур по РБ ею не выключается

@@ -463,15 +463,28 @@ async function rbSessEnd(why) {
   return true;
 }
 
+// 8.0.3 (игрок 11.10: «убить одного РБ и ждать команды, после команды убить ещё РБ, и так каждый раз»): режим «🎯 По одному РБ».
+// rt.rbOne = { on, k0 } — k0 = счётчик убитых РБ на момент команды. Тур работает как обычно (выбор, телепорт, банки, недобитый —
+// первым), но как только убитых стало больше k0 — бот встаёт на паузу и ждёт: «🎯 Ещё один РБ» или «▶ Продолжить» = ещё один РБ
+const rbOneHit = () => { const o = env.rt.rbOne; return !!o?.on && o.k0 != null && (env.rt.rbKills || 0) > o.k0; };
+async function rbOnePause(name) {
+  const o = env.rt.rbOne || {}, n = (o.n || 0) + 1;
+  await env.setRt({ rbOne: { ...o, k0: env.rt.rbKills || 0, n, last: Date.now(), lastName: name || '' }, rbHunt: { step: 'pick', t: Date.now(), last: 'один РБ убит — жду команды' } });
+  return env.pauseBot(`🎯 По одному РБ: ${name ? name + ' убит' : 'РБ убит'} (${n}-й по команде) — жду команды: «🎯 Ещё один РБ» или «▶ Продолжить»`);
+}
+
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
   if (await rbSessTick()) return;                   // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм
   const H = env.rt.rbHunt || { step: 'pick' };
+  if (rbOneHit() && H.step !== 'fight') return rbOnePause(H.name);   // 8.0.3: РБ убит по команде «один РБ» (и вне шага боя)
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
     const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
     // 7.2.3: недобитый РБ (пауза/отход/магазин) — не «следующий»: rbListPick вернёт к нему первым
     const wd = rbWounded(H.id) ? env.rt.rbWound[H.id] : null, pct = wd ? Math.round(wd.cur / wd.max * 100) : 0;
-    return huntDone(H.id, `${H.name}: ${d.verdict === 'no' ? '❌ не по силам → следующий' : w ? `отошёл, у него ${w.hpAfter}/${w.max}${wd ? ' — вернусь добить' : ' → следующий'}` : wd ? `бой прерван, у него ${pct}% — возвращаюсь добить` : d.kills ? `✅ убит (всего ${d.kills}×) → следующий` : 'бой окончен → следующий'}`);
+    const res = await huntDone(H.id, `${H.name}: ${d.verdict === 'no' ? '❌ не по силам → следующий' : w ? `отошёл, у него ${w.hpAfter}/${w.max}${wd ? ' — вернусь добить' : ' → следующий'}` : wd ? `бой прерван, у него ${pct}% — возвращаюсь добить` : d.kills ? `✅ убит (всего ${d.kills}×) → следующий` : 'бой окончен → следующий'}`);
+    if (rbOneHit()) return rbOnePause(H.name);       // 8.0.3: «один РБ» — убит, ждём команды
+    return res;
   }
   if (H.step === 'go') {
     const g = env.rt.rbList?.[H.id] || H;

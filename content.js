@@ -930,6 +930,14 @@ async function halt(msg, hard) {
   await chrome.storage.local.set({ on: false, stopMeta: { source: 'content-halt', reason: String(msg).slice(0, 240), t: Date.now() } });
   await setRt({ status: msg });
 }
+// 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
+// как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
+async function pauseBot(msg) {
+  rec('B', 'пауза', msg);
+  on = false;
+  await chrome.storage.local.set({ on: false, paused: { t: Date.now(), why: String(msg).slice(0, 160) }, stopMeta: { source: 'content-pause', reason: String(msg).slice(0, 240), t: Date.now() } });
+  await setRt({ status: msg });
+}
 
 // ---------- переходы ----------
 async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
@@ -2566,7 +2574,7 @@ function draw() {
   // «автофарма» и TvT, а при паузе индикатор писал «остановлен»
   let am = 'farm'; try { am = autonomyMode(); } catch (e) {}
   const modeTxt = ({ epic: '🐉 эпики', raid: '👑 тур по РБ', fish: '🎣 рыбалка', cat: '🏛 катакомбы', campaign: '📜 кампания' })[am] || (cfg.zoneAuto ? '🗺 автофарм' : '⚔ фарм на месте');
-  const adds = [cfg.rbMode && am !== 'raid' && 'РБ между мобами', cfg.tvtOn && 'TvT'].filter(Boolean);
+  const adds = [am === 'raid' && rt.rbOne?.on && '🎯 по одному РБ', cfg.rbMode && am !== 'raid' && 'РБ между мобами', cfg.tvtOn && 'TvT'].filter(Boolean);
   const pz = !on && !!indPaused, stTxt = on ? 'работает' : pz ? '⏸ пауза' : 'остановлен';
   L.push(`L2wap Bot · ${stTxt} · ${modeTxt}${adds.length ? ' + ' + adds.join(', ') : ''}${cfg.rec ? ' · ⏺' : ''}${fz}`);
   L.push(on ? `▶ ${rt.status || '—'}` : `последнее: ${rt.status || '—'}`);
@@ -3303,7 +3311,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get $q() { return $q; }, set $q(value)
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },

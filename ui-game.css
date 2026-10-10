@@ -48,7 +48,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .modes button{min-height:39px;padding:6px 7px;white-space:normal;font-size:12px;text-align:center;
  background:#372a1e;border:1px solid #775b3d;color:#e7d4ba;border-radius:7px}
-.modes button.on,#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on{
+.modes button.on,#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on,#rbOneBtn.on{
  background:linear-gradient(#896526,#664519);color:#fff5d8;border-color:#dfb46a;box-shadow:inset 0 1px #f4d7a655}
 #status{margin-top:8px;max-height:73px;min-height:0;padding:8px 10px;overflow-y:auto;background:#160f0b;border:1px solid #614c34;border-radius:7px}
 #status:empty{display:none}
@@ -154,6 +154,7 @@ details.help summary,details:not(.help) summary{color:#f0cb85;font-size:12.5px;f
 .rb-summary,.fishing-services{background:#2b2017;border:1px solid #7e6040;border-radius:9px}
 .rb-summary strong,.fishing-services strong{color:#f2d29b}
 .rb-summary p{color:#d7c1a2}
+.rb-one .hint{color:#d7c1a2}
 .rb-forecast{background:#302719;color:#f0d8b4;border:1px solid #7e6246}
 .rb-forecast[data-status=likely]{background:#1c3725;color:#b9efc2;border-color:#468e56}
 .rb-forecast[data-status=risk]{background:#50271d;color:#ffd0bb;border-color:#b36552}

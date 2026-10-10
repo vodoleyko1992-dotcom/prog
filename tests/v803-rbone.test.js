@@ -1,0 +1,53 @@
+'use strict';
+// 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды, после команды убить ещё РБ и так каждый раз;
+// это когда я не могу 24/7 сидеть смотреть за ботом, а даю ему по 1 РБ за раз»)
+const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
+const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
+const load = f => { const sb = { console, Date, Math, JSON, CSS: { escape: s => s }, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/map.html', href: '' } };
+  sb.globalThis = sb; vm.runInNewContext(read(f), sb); return sb; };
+const mk = rt => {
+  const log = { pauses: [], done: [] };
+  const env = { cfg: { rbHuntMode: true, rbMode: true, rbMaxBelow: 15, rbMaxAbove: 15, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0,
+    setRt: async p => Object.assign(env.rt, p), rec: (...a) => log.done.push(a.join(' ')), recBot: () => {}, setStatus: () => {},
+    pauseBot: async msg => { log.pauses.push(msg); }, isMap: () => false, sleep: async () => {}, map: async () => {} };
+  return { env, log, R: load('modules/raid.js').L2V7Factories.raid(env) };
+};
+(async () => {
+  // 1. бой закончен убийством — пауза с понятным текстом, счётчик «по команде» +1, тур — снова с выбора
+  { const { env, log, R } = mk({ rbKills: 19, rbOne: { on: true, k0: 18 }, rbHunt: { step: 'fight', id: 'l2dop_rb_1', name: 'Залізний Гігантський Тотем' }, rbDb: { l2dop_rb_1: { kills: 1, verdict: 'ok' } } });
+    await R.rbHuntStep();
+    assert.equal(log.pauses.length, 1, 'paused after the kill');
+    assert.match(log.pauses[0], /По одному РБ: Залізний Гігантський Тотем убит \(1-й по команде\) — жду команды/);
+    assert.equal(env.rt.rbOne.k0, 19, 'next command counts from the current kills');
+    assert.equal(env.rt.rbOne.n, 1); assert.equal(env.rt.rbOne.on, true, '«▶ Продолжить» = one more RB');
+    assert.equal(env.rt.rbHunt.step, 'pick');
+    assert.ok(env.rt.rbGoTried.l2dop_rb_1, 'the killed boss is marked as tried (30 min)'); }
+  // 2. отошёл / не по силам — не пауза: «один РБ» = пока не убьёт одного
+  { const { log, R } = mk({ rbKills: 18, rbOne: { on: true, k0: 18 }, rbHunt: { step: 'fight', id: 'x', name: 'X' }, rbDb: { x: { verdict: 'no', heroLvl: 54 } } });
+    await R.rbHuntStep();
+    assert.equal(log.pauses.length, 0, 'no kill — keep going'); }
+  // 3. РБ убит вне шага боя (на карте между делом) — тоже пауза
+  { const { log, R } = mk({ rbKills: 21, rbOne: { on: true, k0: 20 }, rbHunt: { step: 'pick' }, rbListT: Date.now() });
+    await R.rbHuntStep();
+    assert.equal(log.pauses.length, 1); }
+  // 4. обычный тур (без «по одному») — без остановок
+  { const { log, R } = mk({ rbKills: 30, rbHunt: { step: 'fight', id: 'y', name: 'Y' }, rbDb: { y: { kills: 3 } } });
+    await R.rbHuntStep();
+    assert.equal(log.pauses.length, 0, 'plain tour never pauses'); }
+  // ядро: пауза = как кнопка «⏸ Пауза» (on:false + paused), геттер модуля есть
+  const content = read('content.js');
+  assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  on = false;\n  await chrome\.storage\.local\.set\(\{ on: false, paused: \{ t: Date\.now\(\), why:/);
+  assert.match(content, /L2V7Modules\.raid = L2V7Factories\.raid\(\{ get pauseBot\(\) \{ return pauseBot; \},/);
+  assert.match(content, /am === 'raid' && rt\.rbOne\?\.on && '🎯 по одному РБ'/, 'indicator shows the mode');
+  // меню: кнопка в «Центре управления» РБ; повторное нажатие во время работы не сбивает; выбор режима руками — обычный тур
+  const html = read('popup.html'), popup = read('popup.js');
+  const box = html.slice(html.indexOf('<div class="rb-summary">'), html.indexOf('<div class="rb-primary">'));
+  assert.match(box, /<button id="rbOneBtn" type="button"[^>]*>🎯 Убить один РБ и ждать команды<\/button><div id="rbOneInfo" class="hint"><\/div>/);
+  assert.match(popup, /if \(on && cfg\.rbHuntMode && rt\.rbOne\?\.on\) return toast\(/);
+  assert.match(popup, /const one = \{ \.\.\.\(rt\.rbOne \|\| \{\}\), on: true, k0: rt\.rbKills \|\| 0, t: now \};/);
+  assert.match(popup, /\.\.\.\(tour \? \{\} : \{ rbHunt: \{ step: 'pick', t: now, last: 'один РБ по команде' \}, rbGo: null, rbWant: null, rbListT: 0 \}\)/, 'tour already running — no list rescan');
+  assert.match(popup, /if \(rt\.rbOne\?\.on\) await menuPatch\(\{ rbOne: \{ \.\.\.rt\.rbOne, on: false \} \}\); \}   \/\/ 8\.0\.3: режим выбран руками/);
+  assert.match(popup, /\.\.\.\(rt\.rbOne\?\.on \? \{ rbOne: \{ \.\.\.rt\.rbOne, on: false \} \} : \{\}\) \};\n  const mode = \{ rbHuntMode: v,/, 'tour toggle = plain tour');
+  assert.match(popup, /paintRbOne\(rt, on, paused\);/);
+  console.log('PASS: 8.0.3 «🎯 Один РБ и ждать команды» — pause after one kill, «Ещё один РБ»/«Продолжить» = one more, plain tour unaffected');
+})().catch(e => { console.error(e); process.exit(1); });
