@@ -360,20 +360,58 @@ async function ensureWatchdogAlarm() {
   } catch (e) { console.warn('[L2bot] watchdog alarm:', e); }
 }
 void ensureWatchdogAlarm();
+// 7.2.5 (игрок 10.10, скрин 502: «сервер уходит в перезагрузку — бот должен восстанавливаться и продолжать задачу»):
+// при долгом простое браузер может показать свою страницу ошибки — там скрипт бота не работает, вкладка «молчит», и сторож
+// после 3 перезагрузок за 20 мин ВЫКЛЮЧАЛ бота. Теперь сторож сначала спрашивает сервер: лежит — перезагружает вкладку раз
+// в 2 мин и не считает это попыткой (бота не выключает никогда); сервер снова ответил — перезагружает сразу, задача продолжается
+// (вкладка открывается на той же странице, состояние задачи в памяти бота)
+function wdPlan(o) {
+  const { quiet, recent = [], fish, srv, downLast = 0, wasDown, now } = o;
+  if (quiet < 150000) return { act: 'none' };
+  if (srv === 'down') return now - downLast >= 120000 ? { act: 'reload', down: true } : { act: 'none', down: true };
+  if (wasDown) return { act: 'reload', back: true };                                   // сервер ожил — сразу на страницу задачи
+  if (recent.length >= 3 && fish) return now - Math.max(...recent) < 5 * 60000 ? { act: 'none' } : { act: 'fishReload', count: true };
+  if (recent.length >= 3) return { act: 'stop' };
+  return { act: 'reload', count: true };
+}
+async function srvProbe(origin) {
+  const c = new AbortController(), tm = setTimeout(() => c.abort(), 8000);
+  try { const r = await fetch(origin + '/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return r.status < 500 ? 'up' : 'down'; }
+  catch (e) { return 'down'; } finally { clearTimeout(tm); }
+}
 chrome.runtime.onStartup.addListener(() => { void ensureWatchdogAlarm(); });
 chrome.alarms?.onAlarm.addListener(async a => {
   if (a.name !== 'l2watch') return;
-  const { on = false, hbBg, wdog = [], cfg = {}, lock } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock']);
+  const { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']);
   const hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
   // Не перезагружать вкладку-ожидателя: сторож следит только за владельцем замка.
   if (!on || !Number.isInteger(hb?.tab) || lock?.k !== 'tab' + hb.tab) return;
   const now = Date.now(), quiet = now - hb.t;
-  if (quiet < 150000) return;
+  if (quiet < 150000) { if (wdDown) await chrome.storage.local.set({ wdDown: null }); return; }   // 7.2.5: вкладка ожила сама — простой окончен
   const recent = wdog.filter(t => now - t < 20 * 60000);
   let tab = null;
   try { tab = await chrome.tabs.get(hb.tab); } catch (e) {}
   if (!tab || !/l2wap\.com/.test(tab.url || tab.pendingUrl || '')) return;     // вкладку закрыли или ушли с сайта — не трогаем
   const ev = { t: now, src: 'S', kind: 'сторож', what: '', st: '' };
+  const origin = new URL(tab.url || tab.pendingUrl).origin;
+  const plan = wdPlan({ quiet, recent, fish: !!cfg.fishMode, srv: await srvProbe(origin), downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
+  if (plan.down) {                                     // сервер лежит: не попытка, не остановка
+    if (plan.act !== 'reload') return;
+    ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), сервер игры не отвечает — перезагружаю вкладку раз в 2 мин, бота не останавливаю`;
+    if (!wdDown) { buf.push(ev); flush(); }            // в журнал — только начало простоя
+    hbMem = { tab: hb.tab, t: now - 60000, page: hb.page };
+    await chrome.storage.local.set({ wdDown: { since: wdDown?.since || now, last: now }, hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
+    try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+    return;
+  }
+  if (plan.back) {
+    ev.what = `сервер игры снова отвечает (простой ${Math.round((now - (wdDown.since || now)) / 60000)} мин) — перезагружаю вкладку, бот продолжает задачу`;
+    buf.push(ev); flush();
+    hbMem = { tab: hb.tab, t: now, page: hb.page };
+    await chrome.storage.local.set({ wdDown: null, hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
+    try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+    return;
+  }
   // рыбалка (v4.49): не останавливаем никогда — после 3 перезагрузок за 20 мин просто перезагружаем реже (раз в 5 мин)
   if (recent.length >= 3 && cfg.fishMode) {
     if (now - Math.max(...recent) < 5 * 60000) return;

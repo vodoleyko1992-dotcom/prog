@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "7.2.4",
-  "description": "L2wap Bot 7.2.4 — рыбалка: настройки игрока по умолчанию",
+  "version": "7.2.5",
+  "description": "L2wap Bot 7.2.5 — восстановление после перезагрузки сервера игры",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "7.2.4"
+  "version_name": "7.2.5"
 }

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v7.2.4 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v7.2.5 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -2037,6 +2037,7 @@ async function main() {
         rt.rbHunt?.step || '', rt.shop?.step || '', rt.tbuff?.step || '',
         meHp()?.cur ?? '', mobHp()?.cur ?? ''].join('|');
       if (progressMonitor.tick(sig, activeJob) === 'stalled' && !serverDown()) {
+        if (!(await srvUp())) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); continue; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
         const history = (rt.stallRecoveries || []).filter(t => Date.now() - t < 30 * 60000);
         rec('S', 'восстановление', `нет прогресса 9 мин: ${location.pathname}, режим ${autonomyMode()}, попытка ${history.length + 1}/3`);
         if (history.length >= 3) { await halt('Автономный режим не продвигается после 3 восстановлений за 30 мин', true); break; }
@@ -2256,7 +2257,17 @@ function serverDown() {
   if ($q('#cf-error-details, #cf-wrapper .cf-error-source')) return true;
   if ($q('#l2-hud-legacy-name, #l2-nav-bottom')) return false;   // игра на месте — текст страницы не читаем (дорого на больших страницах)
   const t = (document.title || '') + ' ' + (document.body?.innerText || '').slice(0, 300);
-  return /\b(5\d\d)\b[^\n]{0,40}(bad gateway|gateway time|service unavailable|origin|web server|timed out|error)|Error code 5\d\d|Bad gateway|Service Unavailable|Gateway Time-?out/i.test(t);
+  if (/\b(5\d\d)\b[^\n]{0,40}(bad gateway|gateway time|service unavailable|origin|web server|timed out|error)|Error code 5\d\d|Bad gateway|Service Unavailable|Gateway Time-?out/i.test(t)) return true;
+  // 7.2.5: перезапуск сервера может отдавать не 5xx, а страницу техработ — тоже простой (не страница входа: там поле пароля)
+  return /технічн\S* (?:робот|перерв)|техническ\S* (?:работ|перерыв)|maintenance|перезапуск сервер|оновлення сервер|обновление сервер/i.test(t)
+    && !document.querySelector('input[type="password"]');
+}
+// 7.2.5 (игрок 10.10, скрин 502 Bad gateway: «сервер уходит в перезагрузку — бот должен восстанавливаться и продолжать задачу»):
+// лёгкая проверка, отвечает ли сервер игры (Cloudflare 5xx или нет ответа — «нет»). Запрос из скрипта расширения hook.js не видит
+async function srvUp() {
+  const c = new AbortController(), tm = setTimeout(() => c.abort(), 8000);
+  try { const r = await fetch('/game/time', { cache: 'no-store', credentials: 'include', signal: c.signal }); return r.status < 500; }
+  catch (e) { return false; } finally { clearTimeout(tm); }
 }
 async function serverWait() {
   // по просьбе игрока: рестарт сервера — перезагружаем страницу каждые 10 с (раньше 30 с → … → 5 мин), пока игра не ответит
@@ -2265,7 +2276,12 @@ async function serverWait() {
   if (!rt.downT) rec('S', 'сервер', `игра недоступна (${code}) на ${location.pathname} — жду и пробую снова`);
   await setRt({ downT: rt.downT || now, downN: n });
   const t0 = Date.now();                          // свой отсчёт, без записи в журнал на каждой попытке
-  while (on && Date.now() - t0 < wait) { setRt({ status: `Сервер игры недоступен (${code}) — попытка ${n}, перезагрузка через ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с` }); draw(); await sleep(1000); }
+  let probeT = t0;                                // 7.2.5: раз в 10 с спрашиваем сервер — ответил, значит перезагружаем сразу, не ждём до 2 мин
+  while (on && Date.now() - t0 < wait) {
+    setRt({ status: `Сервер игры недоступен (${code}) — попытка ${n}, проверяю каждые 10 с, перезагрузка не позже чем через ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с` }); draw();
+    if (Date.now() - probeT >= 10000) { probeT = Date.now(); if (await srvUp()) { rec('S', 'сервер', `сервер снова отвечает — перезагружаю страницу и продолжаю (${autonomyMode()})`); break; } }
+    await sleep(1000);
+  }
   if (!on) return;
   location.reload();   // сохраняем URL боя/локации и состояние пользователя
   await sleep(8000);
@@ -2289,6 +2305,11 @@ async function softError(e) {
   await setRt({ errs, engineFailures: keep,
     health: { route, action: d.action, failures10m: d.recent, updatedAt: now } });
   rec('S', 'ошибка', `${d.error} @ ${route}: ${d.action} (${d.recent} за 10 мин)`);
+  if (d.action === 'halt' && !d.programming && !(await srvUp())) {   // 7.2.5: сбои из-за лежащего сервера — ждём сервер, бота не останавливаем
+    rec('S', 'сервер', 'сбои повторяются, а сервер игры не отвечает — это простой сервера, жду его, бота не останавливаю');
+    netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now();
+    return serverWait();
+  }
   if (d.action === 'halt') {
     const reason = d.programming ? `Ошибка программы повторилась: ${d.error}. Требуется исправление расширения` :
       `Сбой повторился ${d.total} раз за 30 мин: ${d.error}`;
