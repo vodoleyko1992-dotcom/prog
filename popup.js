@@ -6,6 +6,22 @@ async function menuPatch(rtPatch, extra = {}) {
   if (!response?.ok) throw new Error('Не удалось сохранить изменение: ' + (response?.reason || 'фон недоступен'));
 }
 
+// 8.0 (аудит меню): неудачный запуск — постоянная строка под кнопками, а не тост на 1,4 с и не текст в #status,
+// который следующая перерисовка тут же стирала. Строка живёт, пока бот включён и движок не подал сигнал (localStorage —
+// переживает закрытие всплывающего меню); пропадает при сигнале движка, «Стопе» или успешном запуске
+const WAKE_KEY = 'l2bot-wakeWarn', WAKE_NOTAB = 'Бот включён, но вкладка игры не отвечает — откройте l2wap.com';
+function wakeWarnGet() { try { return JSON.parse(localStorage.getItem(WAKE_KEY) || 'null'); } catch (e) { return null; } }
+function wakeWarnSet(v) { try { v ? localStorage.setItem(WAKE_KEY, JSON.stringify(v)) : localStorage.removeItem(WAKE_KEY); } catch (e) {} }
+// текст строки: нет вкладки / вкладка молчит — одна понятная фраза; иначе — причина от движка
+function wakeWarnText(reason) {
+  return /Откройте вкладку|Не удалось найти вкладку|не получено подтверждение|Не удалось запустить вкладку/i.test(reason || '')
+    ? WAKE_NOTAB : `Бот включён, но игра не подтвердила запуск: ${reason}`;
+}
+function paintWakeWarn(show, text) {
+  const el = $('wakeWarn'); if (!el) return;
+  el.hidden = !show;
+  if (show) el.textContent = '⚠ ' + text;
+}
 // Запуск режимов централизован: запись on=true НЕ доказывает, что игра исполняет цикл.
 async function wakeGame() {
   let tabs = [];
@@ -54,9 +70,11 @@ async function wakeGame() {
 async function showWakeResult() {
   const result = await wakeGame();
   if (!result.ok) {
-    $('status').textContent = '⚠ ' + result.reason;
-    if (typeof toast === 'function') toast('⚠ ' + result.reason);
-  }
+    const text = wakeWarnText(result.reason);
+    wakeWarnSet({ text, reason: result.reason, t: Date.now() });
+    paintWakeWarn(true, text);
+    if (typeof toast === 'function') toast('⚠ ' + text);
+  } else { wakeWarnSet(null); paintWakeWarn(false); }
   if (result.ok && typeof toast === 'function') toast('▶ ' + result.status);
   return result;
 }
@@ -99,7 +117,10 @@ function confirmClick(id, fn) {
 // Запись rt из меню помечается _src: 'menu'. Без метки меню копировало _src вкладки с ботом,
 // бот принимал запись за своё эхо, игнорировал её и следующим сохранением возвращал старые данные
 // меню встроено в страницу игры (панель справа): растягиваем на всю высоту панели
-if (/dock=1/.test(location.search)) {
+// 8.0 (аудит меню): состояние для экономной перерисовки встроенного меню (см. loadSoon)
+const DOCKED = /dock=1/.test(location.search);
+let dockMin = false, recN = 0, snapN = 0;
+if (DOCKED) {
   document.documentElement.classList.add('docked');
   // v5.2: «я жива» для страницы игры раз в 3 с — если панель упадёт (грустный листок), бот перезапустит её сам
   const hb = () => { try { parent.postMessage({ __l2dock: 'hb' }, '*'); } catch (e) {} };
@@ -115,8 +136,9 @@ async function load() {
     NUM.forEach(k => $(k).value = d[k]);
     BOOL.forEach(k => $(k).checked = !!d[k]);
   }
+  recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
-  const ver = chrome.runtime.getManifest().version, eh = expHour(rt).replace(/^\s*·\s*/, ''), hl = healthLine(rt, wdog).trim();
+  const ver = chrome.runtime.getManifest().version, hl = healthLine(rt, wdog).trim(), S = sessInfo(rt);
   const chip = (ic, v, t) => `<span class="chip" title="${t}">${ic} <b>${v}</b></span>`;
   const heartbeatValid = !!on && !!lock?.tab && !!hbBg?.tab && lock.tab === hbBg.tab && Date.now() - (+lock.t || 0) < 85000 && Date.now() - (+hbBg.t || 0) < 70000;
   const booting = !!on && Date.now() - (+rt.manualKickAt || 0) < 15000;
@@ -124,12 +146,20 @@ async function load() {
     Date.now() - (+rt.health.updatedAt || 0) < 45000;
   const runningLabel = !on && paused ? '⏸ Пауза' : !on ? '○ Остановлен' : failing ? 'Ошибка · восстановление' :
     heartbeatValid ? 'Движок активен' : booting ? 'Запускается' : 'Нет сигнала движка';
+  // 8.0 (аудит меню): бот включён, а движок молчит — постоянная строка (причина от запуска, если была)
+  { const w = wakeWarnGet();
+    if (!on || heartbeatValid) { if (w) wakeWarnSet(null); paintWakeWarn(false); }
+    else if (w) paintWakeWarn(true, w.text);
+    else paintWakeWarn(!booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000, WAKE_NOTAB); }
   if ($('workVer')) $('workVer').textContent = 'v' + ver;   // 8.0: версия из манифеста (было зашито «v7.1.11»)
   $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span><span class="ver">v${esc(ver)}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
+  // 8.0 (аудит меню): ⏱ — EXP/ч за сессию (с ↺), как в «Обзоре». Раньше — средний темп за всё время (rt.eff):
+  // «≈3,5 млн EXP/ч» при 0 боёв
   $('status').innerHTML = `<div class="st">${esc(rt.status || '—')}</div><div class="chips">`
     + chip('⚔', rt.kills || 0, 'Боёв за сессию') + chip('✨', '+' + fmt(rt.exp), 'Опыт за сессию') + chip('📘', '+' + fmt(rt.sp), 'SP за сессию')
-    + chip('💰', '+' + fmt(rt.adena), 'Адена за сессию') + (rt.rbKills ? chip('👑', rt.rbKills, 'РБ убито') : '') + (eh ? chip('⏱', esc(eh), 'Темп опыта') : '')
+    + chip('💰', '+' + fmt(rt.adena), 'Адена за сессию') + (rt.rbKills ? chip('👑', rt.rbKills, 'РБ убито') : '')
+    + (S.exp != null && rt.exp > 0 ? chip('⏱', fmtBig(S.exp) + ' EXP/ч', 'EXP в час за сессию (с нажатия ↺)') : '')
     + `</div>${hl ? `<div class="health">${esc(hl)}</div>` : ''}`;
   if ($('footVer')) $('footVer').textContent = 'v' + ver;
   // v4.53: кнопка «Старт» показывает, что бот работает: «● Работает» с пульсирующей зелёной подсветкой
@@ -141,8 +171,10 @@ async function load() {
   $('pause').classList.toggle('paused', !!paused && !on);
   $('pause').classList.toggle('idle', !on && !paused);
   if (document.activeElement?.id !== 'addName') renderPrio($('priority').value);
-  $('mobNames').innerHTML = [...new Set(Object.values(rt.spawns || {}).map(x => x[0]))].sort()
-    .map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
+  // 8.0 (аудит меню): список имён мобов (все спавны — тысячи строк) пересобирается, только когда спавнов стало больше/меньше
+  { const sp = rt.spawns || {}, sig = Object.keys(sp).length;
+    if (dlSig.mob !== sig) { dlSig.mob = sig; $('mobNames').innerHTML = [...new Set(Object.values(sp).map(x => x[0]))].sort()
+      .map(n => `<option value="${String(n ?? '').replace(/"/g, '&quot;')}">`).join(''); } }
   showCounts(reccount, snapcount);
 
   // режим РБ
@@ -193,8 +225,9 @@ async function load() {
     + `\nпроверено ${new Date(C.t).toLocaleTimeString('ru')}${C.live ? ' · по логу боя ' + new Date(C.live).toLocaleTimeString('ru') : ''}${rt.campaignDue ? ' · ⏳ скоро проверка' : ''}`
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
-  renderDps(rt);
+  renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderPet(rt);
+  renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
   renderEff(rt);
   renderFa(rt, d); renderPots(rt, d); renderRbSess(rt, d);
   renderZones(rt, d);
@@ -203,8 +236,9 @@ async function load() {
   if ($('buffAudit')) { const A = rt.buffAudit, ic = { ok: '✅', info: 'ℹ️', wait: '⏳', miss: '⚠️', bad: '❌' };
     $('buffAudit').textContent = A?.list?.length ? `🩺 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
       + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🩺 Проверка баффов — появится в первом бою' : ''); }
-  renderRes(rt, d);
-  renderFarm(rt, d); renderRecipes(rt, d); renderCat(rt, d); renderTree('farm', rt, d); renderTree('recipe', rt, d);
+  renderCat(rt, d);
+  // 8.0 (аудит меню): базы «Фарм ресурсов»/«Рецепты» (мегабайты) — только когда открыт раздел «Охота»
+  if (huntOpen()) renderHuntDb(rt, d);
   $('shopBox').textContent = rt.shop ? `⏳ Сейчас закупаюсь (${rt.shop.step === 'count' ? 'считаю сумку' : 'покупаю'})…`
     : rt.shopLast ? `Последняя закупка ${new Date(rt.shopLast.t).toLocaleString('ru')}: ${rt.shopLast.text}` : '';
 
@@ -214,7 +248,7 @@ async function load() {
   const campNames = cfg?.campaign && rt.campaign?.targets?.length ? rt.campaign.targets.filter(t => !t.objective).map(t => (t.name || '').toLowerCase()) : null;
   const inCamp = mob => !campNames || campNames.some(n => n.includes(mob.toLowerCase()) || mob.toLowerCase().includes(n));
   const qs = Object.entries(rt.quests || {}).filter(([mob, q]) => q.total && inCamp(mob));
-  // «На локации» — только когда бот ищет квестовых (галочка или Кампания); защита от мусора в старых данных
+  // «На локации» — только когда бот ищет квестовых (галочка; кампания убрана в 7.2.1); защита от мусора в старых данных
   const qt = d.searchQuest || d.campaign ? (rt.questTargets || []).filter(x => x.length < 60 && !/:\d/.test(x)) : [];
   renderQuestBox(rt, qt, qs, campNames ? rt.campaign : null, rate);
 }
@@ -242,9 +276,11 @@ function renderQuestBox(rt, qt, qs, camp, rate) {
 }
 
 // расчёт ДПС: по каждому удару — средний урон, КД, урон в секунду КД, MP на 1000 урона, цена в энергии
-function renderDps(rt) {
+// 8.0 (аудит меню): у мага (cls 'mage') — без энергии силы и воинской стратегии (магу они не относятся)
+function renderDps(rt, cls = '') {
   const box = $('dpsBox');
   if (!box) return;
+  const mage = cls === 'mage';
   const turn = (rt.turnMs || 1000) / 1000, P = rt.skills || {}, DB = rt.skillDb || {};
   const rows = Object.entries(P).filter(([, p]) => p.dmgN).map(([k, p]) => {
     const dmg = p.dmg / p.dmgN, cd = p.cd || DB[k]?.cd || 0, mp = p.mpN ? p.mp / p.mpN : (DB[k]?.mp || 0);
@@ -257,12 +293,14 @@ function renderDps(rt) {
   rows.forEach(r => { r.mpEff = r.mp && atk ? (r.dmg - atk * (1 + r.force)) / r.mp : null; });
   const d = rt.dps;
   box.textContent = (d?.n ? `Бои: ${d.n} · средний ДПС ${d.dps} · время убийства ≈${d.ttk} с · последний: ${d.last} ДПС за ${d.lastTtk} с\n` : 'Боёв с расчётом ещё нет\n')
-    + `Ход ≈${turn.toFixed(2)} с · энергия ⚡${rt.force?.n ?? 0}${rt.force?.max ? '/' + rt.force.max : ''}\n`
+    + `Ход ≈${turn.toFixed(2)} с${mage ? '' : ` · энергия ⚡${rt.force?.n ?? 0}${rt.force?.max ? '/' + rt.force.max : ''}`}\n`
     + (rows.length ? rows.map(r => `• ${r.name}: ≈${Math.round(r.dmg)} урона${r.cd ? ` · КД ${r.cd} с` : ''} · ${Math.round(r.per)}/с`
-      + `${r.mp ? ` · MP ${Math.round(r.mp)}` : ''}${r.mpEff != null ? ` · ${r.mpEff > 0 ? '+' + Math.round(r.mpEff) : Math.round(r.mpEff)} урона/MP сверх атаки${r.mpEff < 20 ? ' ⚠ невыгодно при нехватке MP' : ''}` : ''}${r.force ? ` · −${r.force} эн. → ${Math.round(r.eff)} за ход` : ''}`).join('\n')
+      + `${r.mp ? ` · MP ${Math.round(r.mp)}` : ''}${r.mpEff != null ? ` · ${r.mpEff > 0 ? '+' + Math.round(r.mpEff) : Math.round(r.mpEff)} урона/MP сверх атаки${r.mpEff < 20 ? ' ⚠ невыгодно при нехватке MP' : ''}` : ''}${r.force && !mage ? ` · −${r.force} эн. → ${Math.round(r.eff)} за ход` : ''}`).join('\n')
       : 'Удары ещё не изучены — бот выучит их в бою')
-    + totemLines(rt)
-    + '\nСтратегия: добивание самым дешёвым ударом → иначе самый сильный готовый → в паузах КД копит энергию → мощный удар, как только хватает энергии. MP < 35 % и банки нет — только скиллы с лучшей отдачей на 1 MP. Урон считается по текущему бою (против сильного моба атака почти 0 — тогда заряд ценнее атаки). Мобов выше героя больше чем на N ур. не выбирает.';
+    + (mage ? '' : totemLines(rt))
+    + (mage
+      ? '\nСтратегия мага: добивание — самым дешёвым заклинанием, которое добьёт моба → иначе самое сильное готовое по замеру урона; новое заклинание сначала замеряется на «толстом» мобе. Кот бьёт на каждое твоё действие. MP не экономим (банки MP); экономия (урон на 1 MP) — только когда банки MP нет и MP < 30 %.'
+      : '\nСтратегия: добивание самым дешёвым ударом → иначе самый сильный готовый → в паузах КД копит энергию → мощный удар, как только хватает энергии. MP < 35 % и банки нет — только скиллы с лучшей отдачей на 1 MP. Урон считается по текущему бою (против сильного моба атака почти 0 — тогда заряд ценнее атаки). Мобов выше героя больше чем на N ур. не выбирает.');
 }
 
 // 7.1.31: 🐱 статистика котов (rt.petStat[кот] = { fights, hits, dmg, acts, dealt, deaths, summons, resummons, lvMin, lvMax })
@@ -349,12 +387,12 @@ const GEAR_INFO = {
 const goalList = v => String(v || '').split(',').map(x => x.trim().toLowerCase()).filter(x => GEAR_INFO[x]);
 let goalItemsMode = null;                         // «Покупать вещи» нажато, но вещи ещё не выбраны
 function renderRodGoal(rt, d) {
-  const lvl = Number.isFinite(rt.rodLvl) ? `+${rt.rodLvl}` : 'пока неизвестен';
+  const known = Number.isFinite(rt.rodLvl), lvl = known ? `+${rt.rodLvl}` : 'пока неизвестен';
   const active = !!rt.rodGoalActive && (rt.rodLvl == null || rt.rodLvl < 10);
   $('fishRodGoalStatus').textContent = active
     ? `Цель +10: текущий уровень ${lvl}. ${rt.rodGoalWaitingProof ? 'Накапливаю Proof для следующего свитка.' : 'Заточка продолжится автоматически.'}`
     : rt.rodLvl >= 10 ? 'Удочка +10: цель достигнута. Рыбалка и накопление Proof продолжаются.'
-    : `Удочка ${lvl}. Для запуска полной цепочки нажмите кнопку.`;
+    : `${known ? `Удочка ${lvl}` : 'Заточка удочки пока неизвестна'}. Для запуска полной цепочки нажмите кнопку.`;   // 8.0: было «Удочка пока неизвестен»
   $('fishRodGoal10').textContent = active ? 'Цель +10 активна' : 'Цель: заточить удочку до +10';
 }
 function renderGoals(rt) {
@@ -400,11 +438,11 @@ function baitLine(rt) {
 }
 function fishSessLine(rt, F) {
   const S = rt.fishSess; if (!S?.n) return '';
-  const h = Math.max(1, (S.last || Date.now()) - S.t0) / 3600000;
+  const R = fishRate(rt);                          // 8.0: тот же темп, что в «Обзоре»
   const C = rt.fishCdStat || {}, D = rt.fishDmg || {};
   const avg = k => D[k]?.n ? Math.round(D[k].sum / D[k].n) : null;
   const bait = F.caught ? F.casts / F.caught : 0, shots = (S.shots || 0) / S.n;
-  return `\nСессия: ${S.n} рыб · ${Math.round(S.n / h)}/ч · откат ${(rt.fishCdLen || 1.22).toFixed(2)} с${C.rej ? ` · отказов ${C.rej}/${(C.ok || 0) + C.rej}` : ''}`
+  return `\nСессия: ${S.n} рыб · ${Math.round(R.perH)}/ч${R.proofH != null ? ` · ≈${Math.round(R.proofH)} Proof/ч` : ''} · откат ${(rt.fishCdLen || 1.22).toFixed(2)} с${C.rej ? ` · отказов ${C.rej}/${(C.ok || 0) + C.rej}` : ''}`
     + (rt.fishNoShots ? `\n⚠ Заряды кончились — ловлю без них (≈в 1,6 раза медленнее). Включите «докупать» или купите заряды` : '')
     + `\nУрон: с зарядом ${avg('shot') ?? '—'} · без ${avg('plain') ?? '—'} · расход ≈${Math.round(bait * 100 + shots * 100)} аден/рыба`;
 }
@@ -608,6 +646,15 @@ async function renderTree(kind, rt, d) {
   }).join('');
   box.innerHTML = (cur && all[cur] ? `<div class="fpath">Текущая цель</div>${treeRow(kind, cur, all[cur], cur, gotMap[cur], L, d)}` : '') + html(tree, '');
 }
+// 8.0 (аудит меню): всё, что читает большие базы (farmDb/recipeDb) и строит по ним списки, — только при открытой «Охоте».
+// Раньше меню грузило farmDb (у Stem 1044 источника) при каждом открытии и перерисовке, даже на «Обзоре»
+const huntOpen = () => !!document.getElementById('tab-hunt')?.classList.contains('act');
+function renderHuntDb(rt, d) { renderRes(rt, d); renderFarm(rt, d); renderRecipes(rt, d); renderTree('farm', rt, d); renderTree('recipe', rt, d); }
+document.addEventListener('l2:tabchange', async e => {
+  if (e.detail?.tab !== 'hunt') return;
+  const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']);
+  renderHuntDb(rt, { ...DEF, ...cfg });
+});
 async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
 for (const kind of Object.keys(TREE)) {
   const T = TREE[kind], box = $(T.box); if (!box) continue;
@@ -667,7 +714,7 @@ async function renderFarm(rt, d) {
   const L = rt.lvl || 0, k = (d.farmRes || '').trim().toLowerCase(), r = db.res[k];
   let txt = keys.length ? `В базе ресурсов: ${keys.length} (обновлено ${new Date(db.t).toLocaleString('ru')})` : 'База пуста — нажмите «Обновить базу ресурсов» (бот откроет форум и раскроет строки по одной).';
   if (k && !r) txt += `\n⚠ «${d.farmRes}» нет в базе`;
-  if (r?.bosses?.length) txt += `\n${r.name}: падает с РБ — ${r.bosses.slice(0, 6).map(([n, l, c]) => `${n} ${l} ур. ${c}%`).join(' · ')}${r.drop?.length ? '' : ' (бот полетит к живому РБ из списка, если включён «👑 Фарм РБ»)'}`;
+  if (r?.bosses?.length) txt += `\n${r.name}: падает с РБ — ${r.bosses.slice(0, 6).map(([n, l, c]) => `${n} ${l} ур. ${c}%`).join(' · ')}${r.drop?.length ? '' : ' (бот полетит к живому РБ из списка, если включён «👑 РБ между мобами»)'}`;
   if (r && L) {
     const above = d.lvlAbove ?? 30, w = farmWinP(d, L), fit = l => farmFitP(d, l, L);   // 7.2.1: тот же диапазон −3…+5, что у бота
     const by = {};
@@ -828,6 +875,87 @@ function healthLine(rt, wdog) {
   return e || w ? `\n🛡 ${e ? `сбоев за 10 мин: ${e} (бот продолжает)` : ''}${e && w ? ' · ' : ''}${w ? `сторож перезагрузил вкладку: ${w}` : ''}` : '';
 }
 
+// ==== 8.0 (аудит меню): сводка «Обзора» — чистые функции (тест v80-ui.test.js) ====
+// Сессия — с нажатия ↺ (rt.sessT0). Нет отметки — «в час» не считаем (показываем итоги): иначе делили бы на неизвестное время
+const fmtBig = n => { n = Math.round(+n || 0); const a = Math.abs(n); return a >= 1e6 ? (n / 1e6).toFixed(a >= 1e8 ? 0 : 1).replace('.', ',') + ' млн' : a >= 1e4 ? Math.round(n / 1e3) + ' тыс.' : n.toLocaleString('ru'); };
+const fmtDur = ms => { const m = Math.max(0, Math.round((+ms || 0) / 60000)); return m < 60 ? `${m} мин` : `${Math.floor(m / 60)} ч ${String(m % 60).padStart(2, '0')} мин`; };
+function sessInfo(rt, now = Date.now()) {
+  const t0 = +rt?.sessT0 || 0, ms = t0 && now > t0 ? now - t0 : 0, h = ms / 3600000;
+  const per = v => h >= 1 / 30 ? (+v || 0) / h : null;          // первые 2 мин темп скачет — не показываем
+  return { t0, ms, h, exp: per(rt?.exp), adena: per(rt?.adena), kills: per(rt?.kills) };
+}
+// рыбалка: рыб/ч — как в «Рыбалке» (fishSessLine), Proof на рыбу — по обменам (fishProofGain/fishProofFish), иначе по разделке (fishVal)
+function fishRate(rt, now = Date.now()) {
+  const S = rt?.fishSess; if (!S?.n) return null;
+  const perH = S.n / (Math.max(1, (S.last || now) - S.t0) / 3600000);
+  const V = Object.values(rt.fishVal || {}), vn = V.reduce((a, v) => a + (+v.n || 0), 0);
+  const perFish = rt.fishProofFish ? (rt.fishProofGain || 0) / rt.fishProofFish : vn ? V.reduce((a, v) => a + (+v.proof || 0), 0) / vn : 0;
+  return { n: S.n, perH, perFish, proofH: perFish ? perH * perFish : null, fresh: now - (S.last || 0) < 15 * 60000 };
+}
+// запасы: банки — по панели боя (rt.pots, обновляется в начале боя), заряды — по сумке (rt.bagAll) под роль «Соски»
+function suppliesOf(rt, d) {
+  const P = Object.values(rt?.pots || {}).filter(x => x && x.n != null);
+  const of = k => P.filter(x => x.kind === k), sum = k => of(k).length ? of(k).reduce((a, x) => a + (+x.n || 0), 0) : null;
+  const names = String(d?.nShots || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+  const hit = Object.entries(rt?.bagAll?.n || {}).filter(([k]) => names.some(n => k.toLowerCase().startsWith(n)));
+  const min = v => +(String(v || '').match(/^\s*(\d+)\s*\//)?.[1] || 0);
+  return { hp: sum('hp'), mp: sum('mp'), potT: Math.max(0, ...P.map(x => +x.t || 0)),
+    shots: hit.length ? hit.reduce((a, [, v]) => a + (+v || 0), 0) : null, shotsT: hit.length ? +rt.bagAll.t || 0 : 0,
+    hpMin: min(d?.shopHp), mpMin: min(d?.shopMp), shotsMin: min(d?.shopShots) };
+}
+// тур по РБ: одинаковые причины пропуска — одной строкой со счётом
+function skipGroups(list, max = 4) {
+  const G = new Map();
+  for (const x of list) { const g = G.get(x.why) || []; g.push(x); G.set(x.why, g); }
+  return [...G].slice(0, 8).map(([why, xs]) => xs.length === 1 ? `• ${xs[0].name} ${xs[0].lvl} — ${why}`
+    : `• ${why} (${xs.length}): ${xs.slice(0, max).map(x => `${x.name} ${x.lvl}`).join(', ')}${xs.length > max ? ` … ещё ${xs.length - max}` : ''}`);
+}
+function rbLineOf(rt, d, now = Date.now()) {
+  const H = rt?.rbHunt || {}, tour = !!d?.rbHuntMode, sess = rt?.rbSess?.on ? rt.rbSess : null;
+  const W = Object.values(rt?.rbWound || {}).filter(w => w?.max && now - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.95);
+  if (!tour && !rt?.rbKills && !W.length && !sess) return '';
+  const STEP = { pick: 'выбираю', go: 'лечу', arrive: 'ищу на карте', fight: 'бой' };
+  let t = `👑 ${tour ? 'Тур' : 'РБ'}${tour && H.step ? ': ' + (STEP[H.step] || H.step) : ''}${tour && H.name && H.step !== 'pick' ? ` · ${H.name}${H.lvl ? ` (${H.lvl})` : ''}` : ''} · убито ${rt.rbKills || 0}`;
+  if (W.length) { const w = W.sort((a, b) => a.cur / a.max - b.cur / b.max)[0]; t += ` · недобит: ${w.name || 'РБ'} ${Math.round(w.cur / w.max * 100)} %`; }
+  if (sess) t += sess.until ? ` · 🔥 сессия ещё ${fmtDur(sess.until - now)}` : ' · 🔥 сессия: беру баффы';
+  return t;
+}
+function petLineOf(rt) {
+  const s = Object.values(rt?.petStat || {}).filter(x => x && (x.fights || x.hits)).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  if (!s) return '';
+  const sw = (s.hits || 0) + (s.crits || 0) + (s.misses || 0), hit = s.hits ? (s.hitDmg || s.dmg || 0) / s.hits : 0;
+  return `🐱 ${s.name || 'кот'} · боёв ${s.fights || 0}${hit ? ` · удар ≈${Math.round(hit).toLocaleString('ru')}` : ''}${sw ? ` · промахов ${Math.round((s.misses || 0) / sw * 100)} %` : ''}`
+    + `${s.dealt ? ` · ${Math.round(s.dmg / s.dealt * 100)} % урона` : ''} · гибель ${s.deaths || 0}`;
+}
+// ==== /8.0 сводка «Обзора» ====
+const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+function renderDash(rt, d, st) {
+  if (!$('dash')) return;
+  const now = Date.now(), m = currentMode(d), S = sessInfo(rt, now);
+  const mods = [d.rbMode && m !== 'rb' && 'РБ между мобами', d.tvtOn && 'TvT'].filter(Boolean);
+  $('dashMode').textContent = MODE_NAME[m] + (mods.length ? ' + ' + mods.join(', ') : '');
+  const [stTxt, stCls] = !st.on ? (st.paused ? ['⏸ пауза', 'pause'] : ['○ остановлен', 'off']) : st.failing ? ['⚠ сбой · восстановление', 'warn']
+    : st.heartbeatValid ? ['● работает', 'on'] : st.booting ? ['… запуск', 'warn'] : ['⚠ нет сигнала', 'warn'];
+  $('dashState').textContent = stTxt; $('dashState').dataset.st = stCls;
+  const zn = rt.zone && m !== 'fish' ? (rt.zoneCat?.[rt.zone]?.name || String(rt.zone).replace(/^out:/, 'Окрестности: ')) : '';
+  $('dashSub').textContent = [zn && '📍 ' + zn, S.t0 ? `⏱ сессия ${fmtDur(S.ms)} (с ${hhmm(S.t0)})` : '⏱ сессия не отмечена — ↺ обнулит счётчики и начнёт отсчёт «в час»'].filter(Boolean).join(' · ');
+  const kpi = (lbl, per, tot, totTxt) => `<div class="kpi"><span>${lbl}${per != null ? '/ч' : ''}</span><b>${per != null ? fmtBig(per) : fmtBig(tot)}</b><small>${per != null ? totTxt : 'всего'}</small></div>`;
+  $('dashKpi').innerHTML = kpi('EXP', S.exp, rt.exp, '+' + fmtBig(rt.exp)) + kpi('Адена', S.adena, rt.adena, '+' + fmtBig(rt.adena)) + kpi('Боёв', S.kills, rt.kills, fmt(rt.kills) + ' всего');
+  const L = [], rb = rbLineOf(rt, d, now); if (rb) L.push(esc(rb));
+  const F = fishRate(rt, now);
+  if (m === 'fish' || F?.fresh) L.push(esc(F ? `🎣 ${fmt(Math.round(F.perH))} рыб/ч · ${F.proofH != null ? `≈${fmt(Math.round(F.proofH))} Proof/ч` : 'Proof/ч — после первого обмена'}${rt.fishProof != null ? ` · Proof ${fmt(rt.fishProof)}` : ''} · ${fmt(F.n)} рыб за сессию` : '🎣 Рыбалка: сессия ещё не началась'));
+  const U = suppliesOf(rt, d), low = (v, mn) => v != null && mn > 0 && v < mn ? ' class="low"' : '';
+  const sup = [U.hp != null && `🧪 HP <b${low(U.hp, U.hpMin)}>${fmt(U.hp)}</b>`, U.mp != null && `💧 MP <b${low(U.mp, U.mpMin)}>${fmt(U.mp)}</b>`,
+    U.shots != null && `✨ <b${low(U.shots, U.shotsMin)}>${fmt(U.shots)}</b>${now - U.shotsT > 30 * 60000 ? ` <i>(сумка ${hhmm(U.shotsT)})</i>` : ''}`].filter(Boolean);
+  if (sup.length) L.push(`<span title="Банки — по панели боя${U.potT ? ' (' + hhmm(U.potT) + ')' : ''}; заряды — по сумке${U.shotsT ? ' (' + hhmm(U.shotsT) + ')' : ''}. Красным — меньше минимума закупки">${sup.join(' · ')}</span>`);
+  const pet = (heroCls(d, rt) === 'mage' || rt.petStat) ? petLineOf(rt) : ''; if (pet) L.push(esc(pet));
+  $('dashLines').innerHTML = L.map(x => `<div>${x}</div>`).join('');
+  // плитки разделов: где сейчас работает бот
+  const tile = (id, v) => { const el = $(id); if (el) { el.textContent = v ? '● Включён' : 'Открыть ↗'; el.classList.toggle('on', !!v); } };
+  tile('modeHuntState', m === 'farm' || m === 'auto'); tile('modeRbState', m === 'rb' || !!d.rbMode); tile('modeEpicState', m === 'epic');
+  tile('modeCatState', m === 'cat'); tile('modeFishState', m === 'fish');
+}
+
 // ---------- оружие: список из инвентаря, ⭐ «в класс», ✓ надето ----------
 const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 function fillWeapons(rt, d) {
@@ -984,11 +1112,11 @@ function renderRb(rt) {
     return `<div class="rb"><span class="m">${m[0]}</span><div><b>${(d.name || s.name || id).replace(/</g, '&lt;')}</b> (${d.lvl || s.lvl || '?'}) — ${m[1]}`
       + `<div class="d">${zn ? '📍 ' + zn.replace(/</g, '&lt;') + (z === rt.zone ? ' (здесь)' : '') + ' · ' : ''}${s.seenT ? 'видел ' + new Date(s.seenT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) + ' · ' : ''}${d.tries ? `попыток ${d.tries}` : ''}${d.kills ? ` · убит ${d.kills}×` : ''}${d.heroLvl ? ` · проверен на ур. ${d.heroLvl}` : ''}${chipNow}`
       + `${d.note ? '<br>' + d.note.replace(/</g, '&lt;') : ''}</div></div></div>`;
-  }).join('') : '<div class="hint">Пусто — включите «Фарм РБ» и зайдите на карту</div>';
+  }).join('') : '<div class="hint">Пусто — включите «👑 Тур по РБ» или «РБ между мобами» и зайдите на карту</div>';
   const F = Object.values(rt.rbForum || {}), V = Object.entries(rt.rbZoneVisit || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const ok = Object.values(db).filter(d => d.verdict === 'ok').length, no = Object.values(db).filter(d => d.verdict === 'no').length;
   const RL = Object.values(rt.rbList || {}), L = rt.lvl || 0;
-  const rlLine = RL.length ? `Список РБ игры: ${RL.length} · живых ${RL.filter(x => x.alive).length} · разрешено мне ${RL.filter(x => x.alive && !x.deny).length} (${rt.rbListT ? 'обновлён ' + new Date(rt.rbListT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : 'перечитаю при запуске тура'})${rt.rbGo ? ` · ✈ лечу к ${rt.rbGo.name}` : ''}\n` : 'Список РБ игры ещё не читал — прочитаю при включении «Фарм РБ»\n';
+  const rlLine = RL.length ? `Список РБ игры: ${RL.length} · живых ${RL.filter(x => x.alive).length} · разрешено мне ${RL.filter(x => x.alive && !x.deny).length} (${rt.rbListT ? 'обновлён ' + new Date(rt.rbListT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : 'перечитаю при запуске тура'})${rt.rbGo ? ` · ✈ лечу к ${rt.rbGo.name}` : ''}\n` : 'Список РБ игры ещё не читал — прочитаю при запуске тура по РБ\n';
   $('rbTourBox').textContent = rlLine + `Можем: ${ok} · не можем: ${no} · РБ с форума: ${F.length}${F.length ? ' (' + F.slice(0, 5).map(f => `${f.name} ${f.lvl}`).join(', ') + (F.length > 5 ? '…' : '') + ')' : ''}`
     + (V.length ? `\nЗоны без РБ по силам (не летим 40 мин): ${V.map(([z, t]) => `${rt.zoneCat?.[z]?.name || z} ${new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`).join(', ')}` : '');
 }
@@ -1002,9 +1130,10 @@ function renderHuntQueue(rt, d) {
   const why = (id, x) => !x.alive ? 'мёртв' : x.deny ? 'игра не даёт: ' + x.deny.toLowerCase() : x.lvl < lo ? 'слишком слабый для окна' : x.lvl > hi ? 'слишком сильный' : db[id]?.verdict === 'no' ? '❌ не по силам' : now - (tried[id] || 0) < 30 * 60000 ? `пробовал, ещё ${Math.ceil((30 * 60000 - (now - tried[id])) / 60000)} мин` : '';
   const dir = d.rbOrder === 'down' ? -1 : 1;
   const all = RL.map(([id, x]) => ({ id, ...x, why: why(id, x) })).sort((a, b) => dir * (a.lvl - b.lvl));
-  const ok = all.filter(x => !x.why), skip = all.filter(x => x.why && x.lvl >= L - 20 && x.lvl <= hi).slice(0, 8);
+  const ok = all.filter(x => !x.why), skip = all.filter(x => x.why && x.lvl >= L - 20 && x.lvl <= hi);
+  // 8.0 (аудит меню): одинаковые причины («игра не даёт: …» ×10) — одной строкой со счётом
   $('huntQueue').textContent = `Очередь (${d.rbOrder === 'down' ? 'с сильных' : 'со слабых'}, окно ${lo}–${hi}): ` + (ok.length ? ok.slice(0, 6).map(x => `${x.name} ${x.lvl}${db[x.id]?.verdict === 'ok' ? ' ✅' : ''}`).join(' → ') + (ok.length > 6 ? ` … ещё ${ok.length - 6}` : '') : 'подходящих нет')
-    + (skip.length ? `\nПропускаю: ` + skip.map(x => `${x.name} ${x.lvl} — ${x.why}`).join(' · ') : '');
+    + (skip.length ? `\nПропускаю:\n` + skipGroups(skip).join('\n') : '');
 }
 async function setRbOrder(v) {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
@@ -1167,7 +1296,7 @@ $('bagCheck').onclick = async () => {
   await save();
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
   await menuPatch({ bagCheck: true });
-  $('status').textContent = on ? '🎒 Бот пересчитает сумку после боя' : '🎒 Пересчёт после ▶ Старт';
+  toast(on ? '🎒 Бот пересчитает сумку после боя' : '🎒 Пересчёт после ▶ Старт');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 confirmClick('lootReset', async () => {               // обнулить статистику добычи
   const { rt = {} } = await chrome.storage.local.get('rt');
@@ -1176,7 +1305,7 @@ confirmClick('lootReset', async () => {               // обнулить ста
 $('farmScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
   await menuPatch({ farmScan: true });
-  $('status').textContent = on ? 'База ресурсов: бот откроет форум после боя' : 'База обновится после ▶ Старт (или раскройте строки на странице «Фарм ресурсов» сами — они сохранятся)';
+  toast(on ? 'База ресурсов: бот откроет форум после боя' : 'База обновится после ▶ Старт (или раскройте строки на странице «Фарм ресурсов» сами — они сохранятся)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('farmReset').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
@@ -1185,19 +1314,19 @@ $('farmReset').onclick = async () => {
 // 8.0: confirm() во встроенном меню Chrome молча блокирует — подтверждение вторым нажатием
 confirmClick('petStatReset', async () => {
   await menuPatch({ petStat: {}, petAdvice: null });
-  $('status').textContent = '🐱 Статистика котов сброшена';
+  toast('🐱 Статистика котов сброшена');   // 8.0: в #status текст стирала ближайшая перерисовка
 });
 $('zoneScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
   await menuPatch({ zoneScan: true });
-  $('status').textContent = on ? 'Список зон: бот откроет «Телепорт» после боя' : 'Список зон обновится после ▶ Старт (или откройте «Телепорт» — зоны читаются сами)';
+  toast(on ? 'Список зон: бот откроет «Телепорт» после боя' : 'Список зон обновится после ▶ Старт (или откройте «Телепорт» — зоны читаются сами)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('zoneBox').onclick = async e => {
   const b = e.target.closest('[data-zone]');
   if (!b) return;
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
   await menuPatch({ zoneGo: { id: b.dataset.zone, t: Date.now(), why: 'вручную' }, zoneGoT: 0 });
-  $('status').textContent = on ? `✈ Лечу: ${rt.zoneCat?.[b.dataset.zone]?.name || b.dataset.zone}` : '✈ Полёт начнётся после ▶ Старт';
+  toast(on ? `✈ Лечу: ${rt.zoneCat?.[b.dataset.zone]?.name || b.dataset.zone}` : '✈ Полёт начнётся после ▶ Старт');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 // ⚙ рекомендуемые (базовые) настройки рыбалки — выбраны игроком (v4.52): обычная наживка, заряды, докупка,
 // 100 пакетов наживки (1000 шт. ≈ 680 рыб) и заряды под наживку (≈75 пакетов, кончаются вместе) — v4.56, без лимита, разделка каждые 100, Old Box
@@ -1348,8 +1477,8 @@ async function showCounts0(reccount, snapcount) {
     + ` · снимков: ${snapcount} (новых: ${sNew}, до 1000)`;
 }
 
-async function exportLog(rows, title, markNew) {
-  if (!rows.length) { $('recCount').textContent = `${title}: событий нет`; return; }
+async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, если файл скачан (для «📤 Логи для разбора»)
+  if (!rows.length) { $('recCount').textContent = `${title}: событий нет`; return false; }
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
   const head = `# L2wap Bot v${chrome.runtime.getManifest().version} — журнал: ${title} · ${rows.length} событий · ${new Date(rows[0][1].t).toLocaleString('ru')} — ${new Date(rows.at(-1)[1].t).toLocaleString('ru')}\n`
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
@@ -1375,6 +1504,7 @@ async function exportLog(rows, title, markNew) {
   if (f.cut && typeof toast === 'function') toast(`Журнал урезан до 20 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
   if (markNew) await chrome.storage.local.set({ exLogKey: rows.at(-1)[0] });
   load();
+  return true;
 }
 // сводка для анализа: события по типам, запросы к серверу (число, среднее время, ошибки), сообщения игры, изменения
 function logSummary(rows) {
@@ -1420,13 +1550,14 @@ $('exLast').onclick = async () => {
 };
 
 async function exportSnaps(list, title) {
-  if (!list.length) { $('recCount').textContent = `${title}: нет — походите по разделам игры с включённой записью`; return; }
+  if (!list.length) { $('recCount').textContent = `${title}: нет — походите по разделам игры с включённой записью`; return false; }
   list.sort((a, b) => a.t - b.t);
   const f = fitTail(list.map(x => `\n<!-- ===== ${x.state || x.key} · ${new Date(x.t).toLocaleString('ru')} · ${x.key} ===== -->\n${x.html}`), EXPORT_MAX - 200000);
   const inc = list.slice(f.cut);
   download(`l2wap-pages-${stamp()}.html`, [`<!-- L2wap: ${title}, ${inc.length} шт.${f.cut ? ` (ещё ${f.cut} старых не вошли — лимит 20 МБ)` : ''}:\n${inc.map(x => '  ' + (x.state || x.key)).join('\n')}\n-->\n`, f.keep.join('\n')], 'text/html');
   await chrome.storage.local.set({ exSnapT: Math.max(...list.map(x => x.t)) });
   load();
+  return true;
 }
 $('snapNew').onclick = async () => { const { exSnapT = 0 } = await chrome.storage.local.get('exSnapT'); exportSnaps(await readSnaps(exSnapT), 'новые снимки'); };
 $('snapAll').onclick = async () => exportSnaps(await readSnaps(0), 'все снимки');
@@ -1435,7 +1566,7 @@ $('recDom').onclick = async () => {
   try {
     const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'dom' });
     download(`l2wap-${r.page}-${stamp()}.html`, r.html, 'text/html');
-  } catch { $('status').textContent = '⚠ Откройте вкладку l2wap.com'; }
+  } catch { toast('⚠ Откройте вкладку l2wap.com'); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
 const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog']);   // логин/пароль и служебное — не сохраняем
@@ -1474,7 +1605,7 @@ const readShots = async () => {
   try { const db = await idb(); return await new Promise(res => { const out = []; const c = db.transaction('shots').objectStore('shots').openCursor(null, 'prev');
     c.onsuccess = e => { const cur = e.target.result; if (!cur || out.length >= 60) return res(out); out.push(cur.value); cur.continue(); }; c.onerror = () => res(out); }); } catch (e) { return []; }
 };
-$('learnReport').onclick = async () => {
+async function learnReportDl() {
   const { learn = {}, cfg = {}, rt = {} } = await chrome.storage.local.get(['learn', 'cfg', 'rt']);
   const shots = await readShots();
   const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -1497,7 +1628,29 @@ $('learnReport').onclick = async () => {
     + `<h2>Настройки</h2><pre class="dim" style="white-space:pre-wrap">${h(JSON.stringify(cfg, null, 1))}</pre></body></html>`;
   download(`l2bot-learn-${stamp()}.html`, html, 'text/html');
   toast?.('⬇ Отчёт автообучения сохранён');
-};
+}
+$('learnReport').onclick = learnReportDl;
+// 8.0 (аудит меню): «📤 Логи для разбора» — то, что игрок присылает на разбор, одним нажатием и по очереди:
+// журнал (новое с прошлой выгрузки; нового нет — за сегодня), новые снимки страниц, отчёт автообучения
+async function exportAll() {
+  const btn = $('logsAll'), note = $('logsNote'); if (!btn || btn.disabled) return;
+  const label = btn.textContent, done = [], gap = () => new Promise(r => setTimeout(r, 800));   // пауза: Chrome принимает файлы по одному
+  btn.disabled = true; btn.textContent = '⏳ Собираю логи…';
+  try {
+    const { exLogKey = null, exSnapT = 0 } = await chrome.storage.local.get(['exLogKey', 'exSnapT']);
+    let rows = await readLog({ after: exLogKey }), title = 'новое с прошлой выгрузки';
+    if (!rows.length) { const t0 = new Date(); t0.setHours(0, 0, 0, 0); rows = await readLog({ since: t0.getTime() }); title = 'сегодня'; }
+    done.push(await exportLog(rows, title, true) ? `журнал (${fmt(rows.length)} событий, ${title})` : 'журнал: событий нет');
+    await gap();
+    const snaps = await readSnaps(exSnapT);
+    done.push(await exportSnaps(snaps, 'новые снимки') ? `снимки страниц (${snaps.length})` : 'новых снимков нет');
+    await gap();
+    await learnReportDl(); done.push('отчёт автообучения');
+    note.textContent = `⬇ ${done.join(' · ')} — в «Загрузках». Если Chrome спросит «Скачать несколько файлов?» — нажмите «Разрешить».`;
+  } catch (e) { note.textContent = '⚠ Выгрузка прервалась: ' + String(e?.message || e) + (done.length ? ` (успело: ${done.join(', ')})` : ''); }
+  finally { note.hidden = false; btn.disabled = false; btn.textContent = label; }
+}
+if ($('logsAll')) $('logsAll').onclick = exportAll;
 // ⚙ экспорт / импорт только настроек (cfg и настройки по персонажам cfg@ник)
 $('cfgExport').onclick = async () => {
   const all = await chrome.storage.local.get(null);
@@ -1579,13 +1732,23 @@ $('rbToggle').onclick = async () => {
 // а полная перерисовка панели на каждую запись тормозила вкладку игры
 let loadT = 0, loadTimer = null, loadPending = false;
 function loadSoon() {
-  if (document.hidden) { loadPending = true; return; }   // перерисуем, когда меню снова покажут
+  // 8.0 (аудит меню): свёрнутое встроенное меню (◀, cfg.dockMin) тоже не перерисовываем — его не видно, а бот пишет rt часто
+  if (document.hidden || dockMin) { loadPending = true; return; }   // перерисуем, когда меню снова покажут
   loadPending = false;
   const wait = Math.max(0, 350 - (Date.now() - loadT));
   if (loadTimer) return;
   loadTimer = setTimeout(() => { loadTimer = null; loadT = Date.now(); load(); }, wait);
 }
-chrome.storage.onChanged.addListener(ch => { if (ch.cfg || ch.rt || ch.on || ch.paused || ch.reccount || ch.snapcount || ch.wdog) loadSoon(); });
+chrome.storage.onChanged.addListener(ch => {
+  if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
+  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog) return loadSoon();
+  // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
+  if (ch.reccount || ch.snapcount) {
+    if (ch.reccount) recN = ch.reccount.newValue || 0;
+    if (ch.snapcount) snapN = ch.snapcount.newValue || 0;
+    if (!dockMin && !document.hidden) showCounts(recN, snapN);
+  }
+});
 document.addEventListener('visibilitychange', () => { if (!document.hidden && loadPending) loadSoon(); });
 load();
 
@@ -1618,6 +1781,10 @@ function cardify() {
       head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
     };
     for (const n of kids) {
+      // 8.0 (аудит меню): .no-card (сводка «Обзора», «📤 Логи») — всегда на виду, вне сворачиваемых карточек;
+      // скрытые служебные поля в начале раздела не создают пустую карточку «⚙ Основное» (было вверху «Охоты»)
+      if (n.nodeType === 1 && n.classList?.contains('no-card')) { sec.appendChild(n); card = null; continue; }
+      if (!card && n.nodeType === 1 && n.hidden) { sec.appendChild(n); continue; }
       // 7.1.31: подзаголовок бывшего раздела внутри объединённого (Охота: Автофарм, Катакомбы…) — вне карточек
       if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { sec.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
       if (n.nodeType === 1 && n.tagName === 'H4') { start(n); continue; }
@@ -1634,7 +1801,8 @@ function foldHints() {
   document.querySelectorAll('section .hint').forEach(h => {
     if (h.id || h.closest('details') || h.textContent.trim().length < 150) return;   // с id — живые блоки (пишет код)
     const prev = h.previousElementSibling;
-    if (prev?.matches('details.help')) { prev.appendChild(h); return; }   // подряд идущие пояснения — под одним «ⓘ»
+    // подряд идущие пояснения — под одним «ⓘ»; 8.0: только одного класса — иначе общее пояснение пряталось вместе с воинским
+    if (prev?.matches('details.help') && (prev.dataset.cls || '') === (h.dataset.cls || '')) { prev.appendChild(h); return; }
     const d = document.createElement('details'); d.className = 'help'; if (h.dataset.cls) d.dataset.cls = h.dataset.cls;
     const s = document.createElement('summary'); s.textContent = 'Как это работает';
     h.replaceWith(d); d.append(s, h);
@@ -1642,10 +1810,13 @@ function foldHints() {
 }
 // уведомление внизу
 let toastT = null;
+// 8.0 (аудит меню): предупреждения (⚠, красный/жёлтый) держатся ~4 с — за 1,4 с их не успевали прочитать; текст переносится (CSS)
+const toastMs = (msg, color) => /^\s*⚠/.test(String(msg)) || /--(bad|warn)\b/.test(String(color || '')) ? 4000 : String(msg).length > 50 ? 3000 : 1400;
 function toast(msg, color) {
   const t = $('toast'); if (!t) return;
-  t.textContent = msg; t.style.borderLeftColor = color || 'var(--ok)'; t.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1400);
+  const warn = toastMs(msg, color) > 1400;
+  t.textContent = msg; t.style.borderLeftColor = color || (warn ? 'var(--warn)' : 'var(--ok)'); t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), toastMs(msg, color));
 }
 document.addEventListener('change', e => {
   const el = e.target;

@@ -2467,6 +2467,9 @@ uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:21474
 #l2bot-ind .s{font-weight:600;font-size:13px;margin:4px 0 3px;color:#fff}
 #l2bot-ind .r{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#a39280;font-size:11px}
 #l2bot-ind .k{color:#a39280}
+#l2bot-ind .s.old{color:#a39280;font-weight:400;font-size:12px}
+#l2bot-ind .t{color:#d8c39a;font-variant-numeric:tabular-nums}
+#l2bot-ind.wide .s.old{font-size:15px}
 #l2bot-ind.wide{box-sizing:border-box;top:8px;bottom:8px;max-height:none;overflow:auto;font-size:16px;line-height:1.5;padding:14px 18px 16px}
 #l2bot-ind.wide .h{font-size:15px}
 #l2bot-ind.wide .h i{width:11px;height:11px;flex-basis:11px}
@@ -2475,14 +2478,38 @@ uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:21474
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+// 8.0 (аудит меню): пауза — отдельный ключ хранилища (кнопка «⏸ Пауза» в меню): индикатор пишет «⏸ пауза», а не «остановлен»
+let indPaused = null;
+chrome.storage.local.get('paused').then(s => { indPaused = s.paused || null; try { draw(); } catch (e) {} }).catch(() => {});
+chrome.storage.onChanged.addListener(ch => { if (ch.paused) { indPaused = ch.paused.newValue || null; try { draw(); } catch (e) {} } });
+const indBig = n => { n = Math.round(+n || 0); return n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' млн' : n >= 1e4 ? Math.round(n / 1e3) + ' тыс.' : n.toLocaleString('ru'); };
+const indDur = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m < 60 ? `${m} мин` : `${Math.floor(m / 60)} ч ${String(m % 60).padStart(2, '0')} мин`; };
+const IND_HEALTH = { retry: 'повтор действия', reload: 'перезагрузка страницы', cooldown: 'пережидаю серию сбоев', halt: 'остановка из-за сбоев' };
 function draw() {
   const L = [], now = Date.now();
   const fz = forceNow() || forceMax() ? ` · ⚡${forceNow()}${forceMax() ? '/' + forceMax() : ''}` : '';
-  const modes = [epicOn() && '🐉 эпики', huntOn() && '🧭 тур РБ', cfg.rbMode && '👑 фарм РБ', cfg.campaign && '📜 кампания', cfg.fishMode && '🎣 рыбалка', cfg.catMode && '🏛 катакомбы'].filter(Boolean).join(' · ');
-  L.push(`🤖 ${on ? 'ON' : 'OFF'}${cfg.rec ? ' · ⏺ запись' : ''}${fz}${modes ? ' · ' + modes : ''}`);
-  L.push(`▶ ${rt.status || '—'}`);
-  if (rt.health?.action && now - (rt.health.updatedAt || 0) < 10 * 60000)
-    L.push(`Восстановление: ${rt.health.action}, сбоев за 10 мин: ${rt.health.failures10m || 0}`);
+  // 8.0 (аудит меню): настоящий текущий режим (как выбирает движок, autonomyMode) — раньше в списке не было «фарма на месте»,
+  // «автофарма» и TvT, а при паузе индикатор писал «остановлен»
+  let am = 'farm'; try { am = autonomyMode(); } catch (e) {}
+  const modeTxt = ({ epic: '🐉 эпики', raid: '👑 тур по РБ', fish: '🎣 рыбалка', cat: '🏛 катакомбы', campaign: '📜 кампания' })[am] || (cfg.zoneAuto ? '🗺 автофарм' : '⚔ фарм на месте');
+  const adds = [cfg.rbMode && am !== 'raid' && 'РБ между мобами', cfg.tvtOn && 'TvT'].filter(Boolean);
+  const pz = !on && !!indPaused, stTxt = on ? 'работает' : pz ? '⏸ пауза' : 'остановлен';
+  L.push(`L2wap Bot · ${stTxt} · ${modeTxt}${adds.length ? ' + ' + adds.join(', ') : ''}${cfg.rec ? ' · ⏺' : ''}${fz}`);
+  L.push(on ? `▶ ${rt.status || '—'}` : `последнее: ${rt.status || '—'}`);
+  // темп за сессию (с ↺ в меню — rt.sessT0, как в «Обзоре») + банки MP и заряды (в бою — с панели, иначе — что помнит бот)
+  const sm = rt.sessT0 ? now - rt.sessT0 : 0, sh = sm / 3600000;
+  let mpN = null, shN = null;
+  try {
+    if (isBattle()) { const mb = mpPotSlot(); if (mb) mpN = potBag(mb); const sb = slotsBy(cfg.nShots || '')[0]; if (sb) shN = qty(sb); }
+    if (mpN == null) { const P = Object.values(rt.pots || {}).filter(x => x.kind === 'mp' && x.n != null); if (P.length) mpN = P.reduce((a, x) => a + (+x.n || 0), 0); }
+    if (shN == null && rt.bagAll?.n) { const nm = names(cfg.nShots); const hit = Object.entries(rt.bagAll.n).filter(([k]) => nm.some(n => k.toLowerCase().startsWith(n)));
+      if (hit.length) shN = hit.reduce((a, [, v]) => a + (+v || 0), 0); }
+  } catch (e) {}
+  const sess = [sh >= 1 / 30 ? `⏱ ${indDur(sm)} · EXP ${indBig((rt.exp || 0) / sh)}/ч · адена ${indBig((rt.adena || 0) / sh)}/ч` : '',
+    mpN != null ? `💧 банок MP ${mpN.toLocaleString('ru')}` : '', shN != null ? `✨ зарядов ${shN.toLocaleString('ru')}` : ''].filter(Boolean).join(' · ');
+  if (sess) L.push(sess);
+  if (on && rt.health?.action && now - (rt.health.updatedAt || 0) < 10 * 60000)   // 8.0: у выключенного бота старый сбой не показываем
+    L.push(`🛠 Сбой — ${IND_HEALTH[rt.health.action] || rt.health.action} · сбоев за 10 мин: ${rt.health.failures10m || 0}`);
   const me = meHp(), mp = meMp();
   if (me) {
     const og = activeBuffs().find(x => x.id === 109), ogL = og?.exp ? Math.round((og.exp - now) / 1000) : null;
@@ -2516,13 +2543,15 @@ function draw() {
   if (mode === 'off') { ui.style.display = 'none'; return; }
   ui.style.display = '';
   const lines = mode === 'mini' ? L.slice(0, 3) : L;
+  const dot = on ? '#5cc27a' : pz ? '#e3b04b' : '#7f8c8d';
   ui.innerHTML = lines.map((t, i) => {
-    if (i === 0) return `<div class="h"><i style="background:${on ? '#5cc27a' : '#7f8c8d'};color:${on ? '#5cc27a' : 'transparent'}"></i>${escH(t.replace(/^🤖 (ON|OFF)/, on ? 'L2wap Bot · работает' : 'L2wap Bot · остановлен'))}</div>`;
-    if (i === 1) return `<div class="s">${escH(t)}</div>`;
+    if (i === 0) return `<div class="h"><i style="background:${dot};color:${on || pz ? dot : 'transparent'}"></i>${escH(t)}</div>`;
+    if (i === 1) return `<div class="s${on ? '' : ' old'}">${escH(t)}</div>`;
+    if (t === sess) return `<div class="t">${escH(t)}</div>`;
     if (t.startsWith('— последние действия —')) return `<div class="r">${escH(t.replace(/^— последние действия —\n/, ''))}</div>`;
     return `<div>${escH(t)}</div>`;
   }).join('');
-  ui.style.borderColor = on ? 'rgba(92,194,122,.55)' : 'rgba(212,168,86,.3)';
+  ui.style.borderColor = on ? 'rgba(92,194,122,.55)' : pz ? 'rgba(227,176,75,.55)' : 'rgba(212,168,86,.3)';
 }
 
 // стоп с клавиатуры — двойной Esc за 0,6 с: одиночный Esc закрывает окна игры и раньше нечаянно останавливал бота

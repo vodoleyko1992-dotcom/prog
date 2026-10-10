@@ -2,11 +2,10 @@
 (() => {
   'use strict';
   const HELP = {
-    campaignEvery:'Через указанное количество боёв бот проверяет прогресс текущей сюжетной главы. Минимум — 5.',
     chain:'После завершения боя по возможности продолжать охоту без возврата к выбору новой цели на карте.',
-    searchQuest:'Искать на карте квестовых противников и цели сюжетной кампании.',
+    searchQuest:'Искать на карте квестовых мобов (★) и цели квеста профессии — бот бьёт их первыми там, где стоит.',
     searchChamp:'Искать чемпионов на карте. Для обнаружения требуется периодически открывать карту.',
-    deepEvery:'Раз в сколько боёв заходить на карту за целями (★ квесты, чемпионы). 0 — никогда: бот бьёт только тех, кого даёт цепочка «Охотиться дальше». Исключения: на точке фарма ресурса/рецепта карта раз в 5 боёв (не реже раза в 10 при большом числе); цели главы при «Кампании» и РБ-режимы.',
+    deepEvery:'Раз в сколько боёв заходить на карту за целями (★ квесты, чемпионы). 0 — никогда: бот бьёт только тех, кого даёт цепочка «Охотиться дальше». Исключения: на точке фарма ресурса/рецепта карта раз в 5 боёв (не реже раза в 10 при большом числе) и РБ-режимы.',
     questStop:'Прекратить автоматическую охоту после выполнения поставленной квестовой цели.',
     lvlMin:'Минимальный уровень мобов для правила «Все по уровню» в приоритетах охоты.',
     lvlMax:'Максимальный уровень мобов для правила «Все по уровню» в приоритетах охоты.',
@@ -111,8 +110,8 @@
     learnShots:'Сохранять скриншоты при обнаружении изменений страниц при наличии разрешения браузера.'
   };
   const titles = {
-    overview:['Обзор','Состояние, режимы и быстрые переходы'],
-    hunt:['Охота','Фарм, кампания, TvT, локации и автофарм, катакомбы'],
+    overview:['Обзор','Сводка сессии: темп, РБ, рыбалка, запасы, кот'],
+    hunt:['Охота','Фарм на месте, TvT, локации и автофарм, катакомбы'],
     autofarm:['Автофарм','Автоподбор локации для кача'],
     loc:['Локации','Ресурсы и рецепты'],
     rb:['РБ и эпики','Обычные РБ, тур по РБ, эпик-боссы'],
@@ -201,26 +200,6 @@
       box.classList.toggle('open',open);tip.setAttribute('aria-expanded',String(open));
     });
   }
-  const set=(id,value)=>{const e=document.getElementById(id); if (e)e.textContent=value;};
-  const integer=n=>Number(n||0).toLocaleString('ru-RU');
-  async function overview() {
-    if (document.hidden) return;
-    try {
-      const {cfg={},rt={},on=false,paused=null}=await chrome.storage.local.get(['cfg','rt','on','paused']);
-      set('overviewKills',integer(rt.kills));set('overviewExp',integer(rt.exp));set('overviewAdena',integer(rt.adena));
-      set('overviewState',on?'В работе':paused?'⏸ Пауза':'Остановлен');
-      const state=(id,enabled)=>{const el=document.getElementById(id);if(el){el.textContent=enabled?'● Включён':'Открыть ↗';el.style.color=enabled?'#7be9be':'';}};
-      state('modeRbState',cfg.rbMode||cfg.rbHuntMode);
-      state('modeEpicState',cfg.epicMode);
-      state('modeCatState',cfg.catMode);
-      state('modeFishState',cfg.fishMode);
-    } catch(e) { /* The normal popup controller reports backend failures. */ }
-  }
-  overview();
-  let scheduled=false;
-  chrome.storage.onChanged.addListener(ch=>{
-    if (!(ch.cfg||ch.rt||ch.on)||scheduled) return;
-    scheduled=true;
-    setTimeout(()=>{scheduled=false;overview();},300);
-  });
+  // 8.0 (аудит меню): плитки «Обзора» и сводку рисует popup.js (renderDash) в общем цикле перерисовки —
+  // здесь был второй опрос хранилища на каждую запись бота (и плитки-дубли счётчиков шапки)
 })();
