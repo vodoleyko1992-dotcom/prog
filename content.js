@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
@@ -1573,6 +1573,20 @@ async function fishExchange(...args) { return L2V7Modules.fishing.fishExchange(.
 // Свитки: «Рыболовный магазин» → «Ресурсы» → «Товары» → «Fishing Rod Enchant Scroll x1» (100 Proof), button[data-offer="rod_enchant_scroll_x1"].
 // Точим только вне вываживания рыбы (служебный шаг между рыбалками).
 const ROD_RE2 = /fishing rod|вудк|удочк/i;
+// 8.0 (аудит рыбалки, лог 10.10 18:48:52–57 и 19:21:25–30): после заточки бот 3 раза подряд прыгал fishing.html ↔ char.html
+// («удочка +1/+10, свитков нет» ×3): результат setRt перед переходом не проверялся — запись «отложена» (повтор через 3 с /
+// вкладка ещё не хозяин), а новая страница читала из хранилища старое fishService:'rod' и уводила обратно в инвентарь.
+// Теперь перед переходом ждём, пока очередь записей реально дошла до хранилища (до 5 с, потом — переход как раньше)
+async function rtCommit(maxMs = 5000) {
+  const t0 = Date.now();
+  let r = await rtWriter.recover().catch(e => ({ ok: false, reason: String(e) }));
+  while (!r?.ok && on && Date.now() - t0 < maxMs) {
+    await sleep(400);
+    r = await rtWriter.recover().catch(e => ({ ok: false, reason: String(e) }));
+  }
+  if (!r?.ok) console.warn(TAG, 'состояние не записано перед переходом', r);
+  return !!r?.ok;
+}
 const rodLvlOf = t => { const m = String(t || '').match(/\+\s*(\d{1,2})\b/); return m ? +m[1] : null; };
 async function rodScrollsBuy(rodTo, proof) {
   const top = $q('#fishing-shop-tab-resources');
@@ -1616,10 +1630,11 @@ async function rodEnchant() {
     if (why) rec('B','удочка',why);
     fire($q('#char-bag-modal-close')); await sleep(200);
     await setRt({ fishService: next, rodGoalWaitingProof: !!rt.rodGoalActive && !next });
+    await rtCommit();                              // 8.0: без этого новая страница видела старое fishService:'rod' (круги fishing ↔ char)
     if (next === 'exchange') { location.href = '/fishing-shop.html'; await sleep(3500); return; }
     if (next === 'rod') { location.href = '/char.html'; await sleep(3500); return; }
     if (await fishSvcDone(why)) return;
-    if (on) { location.href = fishNow() ? '/fishing.html' : '/map.html'; await sleep(3500); }
+    if (on) { await rtCommit(); location.href = fishNow() ? '/fishing.html' : '/map.html'; await sleep(3500); }
   };
   if (!row) return finish('удочки в сумке не найдено: никаких покупок');
   const item = itemJson(row);
@@ -2107,9 +2122,9 @@ async function main() {
       if (rt.fishSvc && !isBattle() && !(isFishing() && fishState())) {
         if (Date.now() - (rt.fishSvc.t || 0) > 15 * 60000) { await setRt({ fishSvc: null, fishService: null }); continue; }
         const svc = rt.fishService || 'cut';
-        if (svc === 'cut') { if (isChar()) await fishCut(); else { setStatus('Разделка рыбы: иду в инвентарь'); location.href = '/char.html'; await sleep(4000); } }
-        else if (svc === 'exchange') { if (isFishShop()) await fishExchange(); else { location.href = '/fishing-shop.html'; await sleep(4000); } }
-        else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { location.href = '/char.html'; await sleep(4000); } }
+        if (svc === 'cut') { if (isChar()) await fishCut(); else { setStatus('Разделка рыбы: иду в инвентарь'); await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
+        else if (svc === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(4000); } }
+        else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
         await sleep(200); continue;
       }
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
@@ -2117,10 +2132,13 @@ async function main() {
       if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
       if (rt.invScan) await setRt({ invScan: null });
       if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !cfg.rbMode && !huntOn()) { await invScanStart(); continue; }
-      if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { location.href = '/char.html'; await sleep(5000); } }
-      else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { location.href = '/fishing-shop.html'; await sleep(5000); } }
-      else if (fishNow() && rt.fishService === 'rod') { if (isChar()) await rodEnchant(); else { location.href = '/char.html'; await sleep(5000); } }
-      else if (fishNow() && isFishing()) await fishing();
+      // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
+      if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
+      else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(5000); } }
+      else if (fishNow() && rt.fishService === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
+      // 8.0 (аудит рыбалки, лог 10.10: ≈0,4 с накладных на заброс): после шага рыбалки — 30 мс вместо общих 200 мс. Проверки стопа /
+      // паузы (on) / «Закупить сейчас» / TvT / сервера — в начале каждого круга, как и раньше
+      else if (fishNow() && isFishing()) { await fishing(); await sleep(30); continue; }
       else if (isBattle()) await battle();
       else if (fishNow()) await goFishing();
       else if (autonomyMode() === 'cat') await catGo();         // 🏛 фарм катакомб: телепорт → «Войти в подземелье» → мобы
@@ -3120,7 +3138,7 @@ function panelReport() {
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtCommit(){return rtCommit}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -3878,6 +3896,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 8.0 (аудит боя): устаревшие «нижние границы» отката (Aura Burn 3,4 с при 1,1 с, VT 3,9 с) тормозили лучшие заклинания — стереть
   once('cdFloor80', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cdFloor || p.cdFloorAt)) { S[k] = { ...p, cdFloor: 0, cdFloorAt: 0 }; sk = true; } });
   once('fish724', () => { Object.assign(cf, { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 }); });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
+  once('fishPack80', () => { if (C('fishTimePack') === '1h') cf.fishTimePack = '6h'; });   // 8.0 (аудит рыбалки): время рыбалки пакетом 6 ч — на 22 % дешевле часа (2,33 млн/ч против 3 млн/ч)
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
     const S = { ...(rt.rbStats || {}) }, sig = {};
     for (const [id, v] of Object.entries(S)) (sig[`${v.hp}|${v.patk}`] ||= []).push(id);
