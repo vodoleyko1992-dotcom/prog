@@ -19,3 +19,20 @@ env.rt.cdUse.blaze = now - 2700;
 assert.equal(C.ready(blaze), true, 'after 85 % of the measured cooldown → ready');
 serverWait = 500; assert.equal(C.ready(blaze), false, 'server wait still counts');
 console.log('PASS: own press cooldown is not overridden by a stale server «ready» (RB log 22:19)');
+// 7.2.2 (лог 22:31–23:07): клик не ушёл в игру — это заклинание 0,7 с «занято», бот бьёт другим
+{
+  const sb2 = { console, Date, Math, document: { querySelectorAll: () => [], querySelector: () => null } }; sb2.globalThis = sb2;
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), sb2);
+  const env2 = { ...env, rt: { cdUse: {}, skills: {}, cdUntil: {} }, combatCooldown: { skillKnown: () => false, skillWait: () => 0, globalWait: () => 0 } };
+  const C2 = sb2.L2V7Factories.combat(env2), vt = btn('Vampiric Touch', 'l2_1147');
+  assert.equal(C2.ready(vt), true);
+  C2.lostUntil.set('vampiric touch', Date.now() + 700);
+  assert.equal(C2.ready(vt), false, 'lost click → not ready for 0.7 s (also without server cooldown info)');
+  C2.lostUntil.set('vampiric touch', Date.now() - 1);
+  assert.equal(C2.ready(vt), true);
+  assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /if \(lost && env\.skKey\(b\)\) lostUntil\.set\(env\.skKey\(b\), Date\.now\(\) \+ 700\);/);
+  console.log('PASS: lost click marks the spell busy for 0.7 s (RB log 22:31)');
+}
+// 7.2.2 (лог 22:38): итог боя с раненым РБ — снятое HP от входа, а не полное (было «ДПС 18026» при 87 359 HP на входе)
+assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /const base = ctx\.rb && ctx\.hp0 > 0 \? Math\.min\(ctx\.max, ctx\.hp0\) : ctx\.max;/);
+console.log('PASS: wounded RB fight summary counts HP from entry');

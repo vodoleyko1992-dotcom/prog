@@ -50,17 +50,21 @@ function cdBusy(b) {
 // 7.2.1 (лог 10.10 22:19, РБ Гниле Дерево Репіро): сервер считал Blaze готовым через 1,4 с после нажатия, игра на экране клик
 // отклоняла («ещё на КД — жду 0.0 с») — 11 раз за бой, по ≈1 с. Свой откат по нажатию (последние 5 с) тоже учитываем: берём больший
 // (серверные откаты переписывают rt.cdUntil, поэтому свой — от нажатия: 85 % замеренного отката; Blaze 3,1 → 2,6 с — столько сервер и принял)
+// 7.2.2 (лог 10.10 22:31–23:07, РБ под «Даром Серафима»): 53 клика не ушли в игру (Blaze 18, Vampiric Touch 18, Aura Burn 15) — игра
+// считала заклинание на откате, а бот после потерянного клика жал его же снова. Потерянный клик — заклинание «занято» 0,7 с, бьём другим
+const lostUntil = new Map();
 const ownLeft = b => {
-  const k = env.skKey(b), u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
-  if (!k || !u || Date.now() - u > 5000 || env.slotKind(b) !== 'скилл') return 0;
+  const k = env.skKey(b), lost = Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000;
+  const u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
+  if (!k || !u || Date.now() - u > 5000 || env.slotKind(b) !== 'скилл') return lost;
   const cd = (S.cdNet || Math.max(S.cd || 0, S.cdFloor || 0)) * 1000 * 0.85;
-  return Math.max(0, u + cd - Date.now()) / 1000;
+  return Math.max(lost, Math.max(0, u + cd - Date.now()) / 1000);
 };
 function localCdLeft(b) {
   const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
   if (action && env.combatCooldown.skillKnown?.(action, spawn)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, ownLeft(b));
-  if (overlayReadySeen.has(b)) return 0; // observed busy -> ready; an absent overlay alone is not evidence
-  return env.memLeft(b);
+  if (overlayReadySeen.has(b)) return ownLeft(b); // observed busy -> ready; an absent overlay alone is not evidence
+  return Math.max(env.memLeft(b), ownLeft(b));
 }
 
 const uiReady = b => !!b && !b.disabled && b.getAttribute('aria-disabled') !== 'true' && !cdBusy(b);
@@ -826,6 +830,7 @@ async function battle() {
     // Теперь: ход ушёл и сервер ответил 2xx на это действие — нажатие засчитано; запрос не ушёл (а хук работает) — без секундного ожидания
     const netOk = sent && env.actNet().ok && (!exact || env.actNet().action === exact);
     const lost = !!env.actNet && net0 > 0 && !sent && !victory() && !defeat();
+    if (lost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:
     // удар Soul Breaker → «итог боя» через 1,7 с, хотя моб умирал с первого удара; на цепочке это ~1,2 с лишних на моба)
     const dead = () => victory() || (mobHp()?.cur ?? 1) === 0;
@@ -1346,11 +1351,14 @@ async function battle() {
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду
     const ttk = (Date.now() - t0) / 1000;
-    const dealt = Math.max(ctx.max, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0));   // победа — главный добит (соседи живы — их остаток не наш)
+    // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
+    // у раненого РБ снято не полное HP, а то, что было на входе
+    const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.max;
+    const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0));   // победа — главный добит (соседи живы — их остаток не наш)
     const dps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
     const d = env.rt.dps || { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     await env.setRt({ dps: { n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
-    env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt})` : ''} · ${ctx.seq.join('→')}`);
+    env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${base < ctx.max ? `${base} из ${ctx.max}` : ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt})` : ''} · ${ctx.seq.join('→')}`);
     if (ctx.tot) await env.totemNote(ctx, dps);
     if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
@@ -1449,6 +1457,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { lostUntil, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
