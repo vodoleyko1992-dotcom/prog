@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "7.2.2",
-  "description": "L2wap Bot 7.2.2 — РБ-сессия с баффом FA, фарм как на форуме",
+  "version": "7.2.3",
+  "description": "L2wap Bot 7.2.3 — докупка расходников между боями РБ, недобитый РБ первым",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "7.2.2"
+  "version_name": "7.2.3"
 }
