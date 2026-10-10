@@ -46,7 +46,9 @@ function suggestRoles() {
   const isForce = s => !isCharge(s) && (il(s) ? !!il(s).charges : env.isForceName(s.name));
   const isIdle = s => ['PASSIVE', 'TOGGLE', 'CHANCE'].includes(il(s)?.o);
   const isUltra = s => { const v = il(s); const p = Array.isArray(v?.pow) ? v.pow[v.pow.length - 1] : v?.pow || 0; return !!v && /атака/.test(v.c) && ((v.reuse || 0) >= 25000 && (p >= 3000 || /vortex/i.test(v.n)) || /of doom/i.test(v.n)); };   // пассив/тоггл/проц — не «силовой»
-  const buffsAll = skills.filter(isBuff);
+  // 7.1.31: «в бою эффекта нет» (L2WAP: Servitor Wind Walk, Body To Mind) — ни в одну роль; труп-цель (Corpse Life Drain) — не удар
+  const live = s => !env.noEffect?.(s.name);
+  const buffsAll = skills.filter(isBuff).filter(live);
   const buffsMine = buffsAll.filter(s => pr(s.name).usesU > 0);
   const items = inv.filter(s => s.kind === 'предмет');
   const out = {
@@ -60,7 +62,7 @@ function suggestRoles() {
     nStun:   skills.filter(s => !isPetOnly(s) && !isSummon(s) && isStun(s)).map(s => s.name).join(', '),
     nCharge: skills.filter(isCharge).map(s => s.name).join(', '),
     nForce:  skills.filter(isForce).map(s => `${s.name}=${(il(s) && env.ilNum(il(s).charges)) || env.skillCost(s.name)}`).join(', '),
-    nPower:  skills.filter(s => mage ? (il(s)?.c === 'Маг. атака' || il(s)?.t === 'MDAM' || (!il(s)?.c && pr(s.name).dmgN >= 2 && !isPetOnly(s) && !isSummon(s))) : (!isPetOnly(s) && !isSummon(s) && !isUltra(s) && !isBuff(s) && (!isStun(s) || strongStun(s)) && !isCharge(s) && !isForce(s) && !isIdle(s) && !env.rt.skillDb?.[s.name.toLowerCase()]?.passive && (!il(s) || /атака/.test(il(s).c) || strongStun(s)))).sort((a,b)=> avg(pr(b.name))-avg(pr(a.name))).map(s=>s.name).join(', '),
+    nPower:  skills.filter(live).filter(s => il(s)?.target !== 'CORPSE_MOB').filter(s => mage ? (il(s)?.c === 'Маг. атака' || il(s)?.t === 'MDAM' || (!il(s)?.c && pr(s.name).dmgN >= 2 && !isPetOnly(s) && !isSummon(s))) : (!isPetOnly(s) && !isSummon(s) && !isUltra(s) && !isBuff(s) && (!isStun(s) || strongStun(s)) && !isCharge(s) && !isForce(s) && !isIdle(s) && !env.rt.skillDb?.[s.name.toLowerCase()]?.passive && (!il(s) || /атака/.test(il(s).c) || strongStun(s)))).sort((a,b)=> avg(pr(b.name))-avg(pr(a.name))).map(s=>s.name).join(', '),
     nBuffs:  (buffsMine.length ? buffsMine : buffsAll).filter(s => !il(s)?.pc?.hp).map(s => s.name).join(', '),
     // v5.3: важные (аварийные HP ≤ 30 %: Frenzy, Guts, Zealot…) и постоянные (тогглы) — отдельными ролями
     nKeyBuffs: buffsAll.filter(s => !isPetOnly(s) && il(s)?.pc?.hp).map(s => s.name).join(', '),
@@ -69,13 +71,15 @@ function suggestRoles() {
     nSpoil: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && !(il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
     nSpoilMass: skills.filter(s => (il(s)?.t === 'SPOIL' || /^spoil/i.test(s.name)) && (il(s)?.target === 'AREA' || /festival/i.test(s.name))).map(s => s.name).join(', '),
     nSweep: skills.filter(s => il(s)?.t === 'SWEEP' || /^sweep/i.test(s.name)).map(s => s.name).join(', '),
-    nToggles: skills.filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
+    nToggles: skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
     // v4.42: лечащие скиллы (маг/клерик: Heal, Battle Heal; Дестроер: Battle Roar) — раньше банок, они бесплатны
-    nHeal:   skills.filter(s => !isPetOnly(s) && il(s)?.c === 'Лечение' && /^(HEAL|HEAL_PERCENT|HOT|HEAL_STATIC)$/.test(il(s).t || '')).map(s => s.name).join(', '),
+    // 7.1.31: баффы на кота (Servitor Haste/Magic Shield/Physical Shield…, когда появятся) — роль «Баффы кота»
+    nPetBuffs: skills.filter(live).filter(s => isPetOnly(s) && (il(s) ? il(s).c === 'Бафф' : /^(?:servitor|fast servitor)\s/i.test(s.name) && !/heal|recharge|cure|bless|ultimate/i.test(s.name))).map(s => s.name).join(', '),
+    nHeal:   skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.c === 'Лечение' && /^(HEAL|HEAL_PERCENT|HOT|HEAL_STATIC)$/.test(il(s).t || '')).map(s => s.name).join(', '),
     nWeaponBuff: inv.find(s => s.kind === 'снаряжение' && /кастет|джамадх|jamadh|fist|knuckle|кулак|claw|cestus|baghnakh|багнак|tiger|кулачн/i.test(s.name + ' ' + s.img))?.name || '',
     nWeaponMain: weaponMainSuggest(inv)
   };
-  for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain'])
+  for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
     out[k] = [...new Set((out[k] || '').split(',').map(x => x.trim()).filter(Boolean))].join(', ');
   const why = skills.map(s => { const p = pr(s.name);
     return `• ${s.name} (слот ${s.idx}): ${isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
@@ -119,7 +123,7 @@ async function autoRoles() {
       : k === 'nWeaponMain' || k === 'nWeaponBuff' ? (!!equipBy(cur) || inInv(cur) || (!!cur && !!env.cfg.weaponManual))
       // v5.2: список баффов игрока НЕ заменяем никогда (раньше один бафф, не найденный на панели — например, ряд панели
       // не успел открыться, — и весь список подменялся «распознанным»: назначенные баффы пропадали). Пустой — заполняем.
-      : k === 'nBuffs' || k === 'nKeyBuffs' || k === 'nToggles' || k === 'nSpoil' || k === 'nSpoilMass' || k === 'nSweep' || k === 'nUltra' || k === 'nDrain' ? env.names(cur).length > 0
+      : k === 'nBuffs' || k === 'nKeyBuffs' || k === 'nToggles' || k === 'nSpoil' || k === 'nSpoilMass' || k === 'nSweep' || k === 'nUltra' || k === 'nDrain' || k === 'nPetBuffs' ? env.names(cur).length > 0
       : k === 'nPower' || k === 'nStun' || k === 'nCharge' || k === 'nHeal'
       ? env.names(cur).length && env.names(cur).every(n => env.slotsBy(n).length)
       // v5.6: список «тратит энергию» игрока не перезаписываем, пока его скиллы есть на панели (раньше подменялся каждый бой)
@@ -136,7 +140,7 @@ async function autoRoles() {
   const panelNames = env.panelInventory().filter(x => x.kind === 'скилл').map(x => x.name.toLowerCase());
   if (Array.isArray(env.rt.panelKnown)) {
     const fresh = panelNames.filter(n => !env.rt.panelKnown.includes(n));
-    for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nHeal', 'nKeyBuffs', 'nToggles']) {
+    for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nHeal', 'nKeyBuffs', 'nToggles', 'nPetBuffs']) {
       if (fix[k]) continue;
       const add = env.names(sug[k] || '').filter(n => fresh.includes(n) && !env.names(env.cfg[k] || '').includes(n));
       if (add.length) fix[k] = [env.cfg[k], ...add.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');

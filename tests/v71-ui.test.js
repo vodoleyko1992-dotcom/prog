@@ -9,11 +9,11 @@ const css=fs.readFileSync(path.join(root,'ui-v7.css'),'utf8');
 const mf=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
 const base=JSON.parse(fs.readFileSync(path.join(__dirname,'v71-baseline-ids.json'),'utf8'));
-assert.equal(mf.version,'7.1.30');
+assert.equal(mf.version,'7.1.31');
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 for(const id of base) assert(ids.includes(id),`Legacy control lost: ${id}`);
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,14);   // 7.1.30: + «Автофарм»
+assert.equal(tabs.length,15);   // 7.1.31: + «Слуга»
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);
 assert(html.includes('<section id="tab-epic">')&&html.includes('<section id="tab-dungeon">'));

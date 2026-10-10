@@ -1,4 +1,4 @@
-// ===== L2wap Bot v7.1.30 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v7.1.31 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -24,7 +24,9 @@ const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,anthar
   nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
   nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
   // энергия силы: кто копит и кто тратит («Имя=цена»)
-  nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1'
+  nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1',
+  // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
+  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
 };
 const DEF_RT = { status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
@@ -156,6 +158,40 @@ const combatCooldown = L2BattleCooldown.createBattleCooldown();
 const slotAction = b => b?.getAttribute('data-slot-cd') || b?.querySelector('[data-slot-cd]')?.getAttribute('data-slot-cd') || '';
 let PET = null;                                  // 7.1.16-fix: последний известный слуга (activeSummon из ответа боя)
 const petState = () => PET;
+// 7.1.31 (скрин магистра 10.10): на L2WAP у части скиллов в описании «В бою эффекта нет: 0 изменения HP и статов, только трата MP
+// и откат» — Servitor Wind Walk, Body To Mind. Бот их никогда не жмёт (раньше Body To Mind жался при нехватке MP — ход впустую).
+// Список пополняется сам: страница магистра со списком изученных навыков читается при каждом открытии (rt.skillInfo)
+const NO_EFFECT_DEF = 'Servitor Wind Walk, Body To Mind';
+const NO_EFFECT_RE = /в бою эффекта нет|у бою ефекту немає/i;
+const noEffect = x => {
+  const n = (typeof x === 'string' ? x : cleanTitle(x?.title || '')).trim().toLowerCase();
+  if (!n) return false;
+  const v = rt.skillInfo?.[n]?.ne;
+  return v != null ? !!v : names(NO_EFFECT_DEF).includes(n);
+};
+// карточки навыков у магистра: имя, «Ранг: 3/14», описание. Разметку списка изученных навыков бот ещё не видел — ищем по тексту
+function skillInfoScan() {
+  if (isBattle()) return 0;
+  const cards = [...document.querySelectorAll('li, article, [class*="skill-card"], [class*="skill-row"], [class*="skill-item"]')]
+    .filter(el => /Ранг:?\s*\d+\s*\/\s*\d+/i.test(el.textContent || '') && (el.textContent || '').length < 700);
+  const info = { ...(rt.skillInfo || {}) }; let n = 0;
+  for (const el of cards) {
+    if (cards.some(c => c !== el && el.contains(c))) continue;          // берём самую внутреннюю карточку
+    const nmEl = el.querySelector('[class*="__name"], [class*="-name"], h3, h4, strong, b');
+    const name = ((nmEl?.textContent || (el.innerText || el.textContent || '').split('\n')[0]) || '').trim();
+    if (!/^[A-Za-z][A-Za-z' ’-]{2,40}$/.test(name)) continue;
+    const m = (el.textContent || '').match(/Ранг:?\s*(\d+)\s*\/\s*(\d+)/i);
+    const k = name.toLowerCase(), ne = NO_EFFECT_RE.test(el.textContent || ''), was = info[k];
+    const next = { r: +m[1], m: +m[2], ne, t: Date.now() };
+    if (!was || was.r !== next.r || was.m !== next.m || was.ne !== next.ne) { info[k] = next; n++; }
+  }
+  if (n) {
+    setRt({ skillInfo: info });
+    const off = Object.entries(info).filter(([, v]) => v.ne).map(([k]) => k);
+    rec('S', 'магистр', `навыки прочитаны (${n} изменений)${off.length ? ' · «в бою эффекта нет» — не жму: ' + off.join(', ') : ''}`);
+  }
+  return n;
+}
 const battleSpawn = () => new URLSearchParams(location.search).get('spawnId') || '';
 const memLeft = b => {
   const id = slotAction(b), spawn = battleSpawn();
@@ -1580,7 +1616,7 @@ async function goFishing(...args) { return L2V7Modules.fishing.goFishing(...args
 // ---------- персонажи: у каждого своё состояние (кампания, квесты, РБ, профили скиллов) и свои роли панели ----------
 const heroNick = () => (($q('#l2-hud-legacy-name .l2-player-identity__nick')?.childNodes[0]?.textContent)
   || $q('#l2-hud-legacy-name')?.textContent || '').trim();
-const ROLE_KEYS = ['nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain'];
+const ROLE_KEYS = ['nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'nPetBuffs'];
 // страница переведена браузером (Google Translate): текст искажён — ник «Teddy» превращается в «Тедди»
 const pageTranslated = () => /translated-(ltr|rtl)/.test(document.documentElement.className) || !!$q('font[style*="vertical-align"]');
 async function switchChar() {
@@ -3102,7 +3138,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get rbNote() { return rbNote; }, get $q(
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get actNet() { return actNet; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get noEffect() { return noEffect; }, get actNet() { return actNet; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -3422,7 +3458,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get autonomyMode() { return autonomyMo
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get toggleState() { return toggleState; }, set toggleState(value) { toggleState = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.equipment = L2V7Factories.equipment({ get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.equipment = L2V7Factories.equipment({ get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CLASS_W() { return CLASS_W; }, set CLASS_W(value) { CLASS_W = value; },
   get EQUIP_OK() { return EQUIP_OK; }, set EQUIP_OK(value) { EQUIP_OK = value; },
   get FREE_HIT() { return FREE_HIT; }, set FREE_HIT(value) { FREE_HIT = value; },
@@ -3751,6 +3787,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   }
   try { dock(); } catch (e) {}
   if (isBattle()) setTimeout(() => hotbarRows3().catch(() => {}), 800);   // и при выключенном боте — 3 ряда открыты всегда
+  if (/magister|skill/i.test(location.pathname)) [2500, 6000].forEach(ms => setTimeout(() => { try { skillInfoScan(); } catch (e) {} }, ms));   // 7.1.31: навыки у магистра
   draw(); main();
   if (!on && rt.invScan) invScanDrive();
 }));

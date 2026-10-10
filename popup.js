@@ -65,12 +65,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
-const TXT  = ['priority', 'champMark', 'bossMark',
+const TXT  = ['petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
-const BOOL = ['autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: false, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
+const DEF = { petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: true, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: false, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: true, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -195,6 +195,7 @@ async function load() {
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
   renderDps(rt);
+  renderPet(rt);
   renderEff(rt);
   renderFa(rt, d); renderPots(rt, d);
   renderZones(rt, d);
@@ -263,6 +264,28 @@ function renderDps(rt) {
       : 'Удары ещё не изучены — бот выучит их в бою')
     + totemLines(rt)
     + '\nСтратегия: добивание самым дешёвым ударом → иначе самый сильный готовый → в паузах КД копит энергию → мощный удар, как только хватает энергии. MP < 35 % и банки нет — только скиллы с лучшей отдачей на 1 MP. Урон считается по текущему бою (против сильного моба атака почти 0 — тогда заряд ценнее атаки). Мобов выше героя больше чем на N ур. не выбирает.';
+}
+
+// 7.1.31: 🐱 статистика котов (rt.petStat[кот] = { fights, hits, dmg, acts, dealt, deaths, summons, resummons, lvMin, lvMax })
+function renderPet(rt) {
+  const box = $('petBox');
+  if (box) {
+    const S = Object.entries(rt.petStat || {}).sort((a, b) => (b[1].fights || 0) - (a[1].fights || 0));
+    const info = rt.skillInfo || {}, rank = k => { const i = info['summon ' + k.replace(/_/g, ' ')]; return i ? ` · ранг призыва ${i.r}/${i.m}` : ''; };
+    box.textContent = S.length ? S.map(([k, s]) => {
+      const hit = s.hits ? s.dmg / s.hits : 0, rate = s.acts ? s.hits / s.acts : 0, per = s.acts ? s.dmg / s.acts : 0;
+      return `• ${s.name || k}: ${s.fights} боёв${s.lvMin ? ` (${s.lvMin === s.lvMax ? s.lvMin : s.lvMin + '–' + s.lvMax} ур.)` : ''}${rank(k)}\n`
+        + `   удар ≈${Math.round(hit)} · бьёт на ${Math.round(rate * 100)} % твоих действий · ≈${Math.round(per)} урона за действие`
+        + `${s.dealt ? ` · ${Math.round(s.dmg / s.dealt * 100)} % всего урона` : ''}\n`
+        + `   гибель ${s.deaths || 0} (${s.fights ? Math.round((s.deaths || 0) / s.fights * 100) : 0} на 100 боёв) · призывов ${s.summons || 0} · перепризывов ${s.resummons || 0}`;
+    }).join('\n') + `\n\n💡 ${rt.petAdvice?.text || 'рекомендация появится после 30 боёв с котом'}`
+      : 'Пока нет данных — бот считает удары кота в каждом бою (строки «Слуга [Mew the Cat] атакує … урону»).';
+  }
+  const nb = $('noEffBox');
+  if (nb) {
+    const off = Object.entries(rt.skillInfo || {}).filter(([, v]) => v.ne).map(([k]) => k);
+    nb.textContent = off.length ? `«В бою эффекта нет» (прочитано у магистра): ${off.join(', ')}` : 'Список «в бою эффекта нет» пополнится сам, когда откроешь у магистра список изученных навыков.';
+  }
 }
 
 // тотемы: одновременно висит один — бот меряет скорость убийства с каждым на одних и тех же мобах (15 боёв на замер)
@@ -1006,6 +1029,11 @@ $('farmScan').onclick = async () => {
 $('farmReset').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ farmGot: {} });
+};
+$('petStatReset').onclick = async () => {
+  if (!confirm('Сбросить статистику котов?')) return;
+  await menuPatch({ petStat: {}, petAdvice: null });
+  $('status').textContent = '🐱 Статистика котов сброшена';
 };
 $('zoneScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);

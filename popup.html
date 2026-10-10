@@ -206,7 +206,7 @@
 <button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
   <span class="nav-toggle-icon" aria-hidden="true">▦</span>
   <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 14 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+  <span class="nav-toggle-right">Все 15 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
 </button>
 <nav id="moduleNav" aria-label="Разделы управления">
   <div class="nav-heading">НАВИГАЦИЯ</div>
@@ -221,6 +221,7 @@
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <div class="nav-group">ОБЩИЕ СИСТЕМЫ</div>
   <button data-tab="panel" title="Боевые скиллы и ротация"><span class="ic">✳</span>Боевой движок</button>
+  <button data-tab="pet" title="Кот Warlock: призыв, лечение, баффы, статистика"><span class="ic">🐱</span>Слуга</button>
   <button data-tab="fight" title="Выживание, TvT, оружие, баффер"><span class="ic">⚔</span>Тактика / герой</button>
   <button data-tab="supply" title="Банки, снабжение и экономика"><span class="ic">◈</span>Расходники</button>
   <button data-tab="loot" title="Учёт добычи"><span class="ic">▣</span>Добыча</button>
@@ -453,6 +454,31 @@
   <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. После победы — Sweeper, собрать спойл. Что отвечает игра, пишется в журнал «спойл». Пустое поле — спойл выключен.</div>
   <h4>📊 Расчёт ДПС и стратегия</h4>
   <div id="dpsBox" class="box"></div>
+</section>
+
+<!-- 🐱 СЛУГА (7.1.31) -->
+<section id="tab-pet">
+  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот бьёт вместе с тобой на каждое твоё действие (≈35–40 % всего урона). Бот призывает кота первым действием боя, если его нет, держит его HP, ставит баффы кота и считает, сколько урона даёт каждый кот.</p></div>
+  <h4>🐱 Кот</h4>
+  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
+  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе первого на панели)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option></select></label>
+  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
+  <label>Лечить кота перепризывом (полное HP) <input id="petResummon" type="checkbox"></label>
+  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
+  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
+  <div class="hint">Перепризыв даёт коту полное HP за один ход. Если сервер не обновит HP при перепризыве, бот это запомнит и будет лечить кота Servitor Heal.</div>
+  <h4>🎯 Добивание</h4>
+  <label>Учитывать удар кота при добивании <input id="petFinish" type="checkbox"></label>
+  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие. Не на РБ.</div>
+  <h4>✨ Баффы кота</h4>
+  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
+  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
+  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
+  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Повторно бафф ставится, когда истечёт его время или кота призовут заново. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
+  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
+  <h4>📊 Статистика котов</h4>
+  <div id="petBox" class="box"></div>
+  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
 </section>
 
 <!-- 🧪 БАНКИ И РАСХОДНИКИ -->
