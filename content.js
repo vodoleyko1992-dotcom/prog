@@ -2675,8 +2675,10 @@ const apiPath = u => u.split('?')[0].replace(/\/\d+(?=\/|$)/g, '/:n').replace(/[
 function respKeys(r) {
   if (!r || typeof r !== 'object' || Array.isArray(r)) return [];
   const k = Object.keys(r);
-  const d = r.data && typeof r.data === 'object' && !Array.isArray(r.data) ? Object.keys(r.data).map(x => 'data.' + x) : [];
-  return [...k, ...d].slice(0, 60);
+  // 8.0 (аудит боя/рыбалки): и поля вложенных battle/delta/fishing — ходы в бою приходят «delta»-ответами (5144 из 8830), а что
+  // в них лежит (откаты? кот?), бот не знал: отчёт обучения покажет поля, по ним следующей версией научим бота их читать
+  const d = ['data', 'battle', 'delta', 'fishing'].flatMap(n => r[n] && typeof r[n] === 'object' && !Array.isArray(r[n]) ? Object.keys(r[n]).map(x => n + '.' + x) : []);
+  return [...k, ...d].slice(0, 100);
 }
 function learnApi(key, d) {
   const A = LEARN.api, x = A[key], keys = respKeys(d.res), total = Object.values(A).reduce((a, y) => a + y.n, 0);
