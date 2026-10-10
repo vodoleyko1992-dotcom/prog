@@ -25,7 +25,7 @@ assert.equal(cd.skillWait('l2_1177','mob-2'),0,'new battle does not inherit prev
 const combat=fs.readFileSync(path.join(root,'modules/combat.js'),'utf8');
 const content=fs.readFileSync(path.join(root,'content.js'),'utf8');
 const equip=fs.readFileSync(path.join(root,'modules/equipment.js'),'utf8');
-assert.match(content,/combatCooldown\.observeSync\(d\.res, battleSpawn\(\)\)/);
+assert.match(content,/combatCooldown\.observeSync\(d\.res, cdSpawn\(\)\)/);   // 7.2.1: id боя — тот, что шлёт игра (в цепочке ≠ адрес)
 assert.match(combat,/function nonOffenseSkill/);
 assert.doesNotMatch(combat,/return env\.halt\('На панели нет атаки/);
 assert.match(combat,/await env\.waitX\(hasDamageSlot/);

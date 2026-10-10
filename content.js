@@ -1,4 +1,4 @@
-// ===== L2wap Bot v7.2 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v7.2.1 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -172,8 +172,14 @@ const noEffect = x => {
   return d ? NO_EFFECT_RE.test(d) : names(NO_EFFECT_DEF).includes(n);
 };
 const battleSpawn = () => new URLSearchParams(location.search).get('spawnId') || '';
+// 7.2.1 (лог 10.10 21:08–21:14): в цепочке «Охотиться дальше» адрес страницы меняется (spawnId нового моба), а игра в /game/battle/action
+// шлёт battleSpawnId ПЕРВОГО боя цепочки (url=dense_30865, req=dense_30844). Модель откатов сверяла ответ с адресом и выбрасывала его —
+// в цепочке (≈85 % боёв) бот не знал серверных откатов, жал заклинание на КД («Aura Burn: урон 0», «ещё на КД — бью другим»: +2–3 с на бой).
+// Откаты — по тому id, который шлёт сама игра на этой странице (новая страница — заново)
+let GAME_SPAWN = '';
+const cdSpawn = () => GAME_SPAWN || battleSpawn();
 const memLeft = b => {
-  const id = slotAction(b), spawn = battleSpawn();
+  const id = slotAction(b), spawn = cdSpawn();
   if (id && combatCooldown.skillKnown(id, spawn)) return combatCooldown.skillWait(id, spawn) / 1000;
   return Math.max(0, ((rt.cdUntil || {})[skKey(b)] || 0) - Date.now()) / 1000;
 };
@@ -445,8 +451,14 @@ function ilOf(x) {                               // x: кнопка слота, 
 // 7.2: скиллы, которые на L2WAP работают иначе, чем в справочнике Interlude.
 // Corpse Life Drain (лог 10.10 20:52–20:53, игрок поставил вместо Heal): лечит себя в бою по живой цели («Витяг життя з трупа»,
 // HP = уровень×3 + ранг×5 = 178 на 51 ур./ранге 5, MP 0, повтор через ≈2 с; кот бьёт и на этот ход). В Interlude — «маг. атака по трупу»
+// 7.2.1 (скрин магистра 10.10): дебаффы L2WAP — не как в Interlude. mDefDown — +урон заклинаний мага (кот бьёт физикой, ему не помогает),
+// pAtkDown — защита (моб бьёт слабее). Curse Poison в справочнике — «Яд», на L2WAP это −12 % P.Atk
 const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
-  L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' } };
+  L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
+  1083: { st: 'mDefDown', L: 'Дебафф · L2WAP: M.Def цели −10 %' },
+  1222: { st: 'mDefDown', st2: 'pAtkDown', L: 'Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %' },
+  1164: { st: 'pAtkDown', dur: 10, L: 'Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %' },
+  1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -638,6 +650,10 @@ function observeSlot(b, src) {
                 ...(rt.skills?.[key] || {}) };
     p.uses++; if (src === 'U') p.usesU++;
     if (dmg > 0) { p.dmg += dmg; p.dmgN++; }
+    // 7.2.1 (лог 10.10 21:08): Sprite's Staff (B) вместо Demon's Staff (C) — Blaze бьёт ≈1800, а среднее из 5 373 старых замеров
+    // показывало ≈900 (по нему считаются добивание, окупаемость дебаффов, ДПС-план). Среднее — по последним ≈40–60 замерам
+    if (p.dmgN > 60) { p.dmg = Math.round(p.dmg / p.dmgN * 40); p.dmgN = 40; }
+    if (dmg > 0 && slotKind(b) === 'скилл' && BUFF_CTX) try { L2V7Modules.combat.spellSample(BUFF_CTX, key, dmg); } catch (e) {}   // 7.2.1: выгода дебаффов
     if (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0) fightNote(key, dmg);   // промахи атаки тоже считаем
     // массовые удары: урон по соседям («… поруч: Моб −N») — отдельно, для выбора удара, когда рядом 2–3 моба
     if (slotKind(b) === 'скилл' && dmg > 0) { const spl = splashDmg(added); p.spl = (p.spl || 0) + spl; p.splN = (p.splN || 0) + 1; if (spl) p.aoe = 1; }
@@ -1146,8 +1162,7 @@ function farmGoal() {
     const t = campOpen().find(x => x.res && FARM?.res?.[x.name.toLowerCase()]);
     if (t) return { key: t.name.toLowerCase(), name: t.name, left: t.total - t.done, why: 'глава кампании' };
   }
-  const rq = resQuests().find(r => resHave(r.key) < r.need && FARM?.res?.[r.key]);   // квест на ресурс — фармим сам
-  if (rq) return { key: rq.key, name: FARM.res[rq.key].name, left: rq.need - resHave(rq.key), why: 'квест на ресурс' };
+  // 7.2.1 (игрок: «на точку квеста летаю сам и квесты выполняю сам»): «Квесты на ресурсы» — только счётчик, бот к источнику не летит
   const k = (cfg.farmRes || '').trim().toLowerCase();
   if (!k || !FARM?.res?.[k]) return null;
   const got = rt.farmGot?.[k] || 0, need = cfg.farmNeed || 0;
@@ -2611,7 +2626,7 @@ function alignServerSkillCooldowns() {
   const old = rt.cdUntil || {}, next = { ...old }, now = Date.now();
   let changed = false;
   for (const [id, end] of Object.entries(deadlines)) {
-    if (!combatCooldown.skillKnown(id, battleSpawn())) continue;
+    if (!combatCooldown.skillKnown(id, cdSpawn())) continue;
     const el = document.querySelector(`[data-slot-cd="${CSS.escape(id)}"]`);
     const b = el?.closest(SLOT) || el?.closest('button');
     const key = b && skKey(b);
@@ -2725,7 +2740,7 @@ function profQuestNote(st) {
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
-  if (path === '/game/battle/action') ACT_NET.done++;
+  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
   logCooldownApi(d, path);
@@ -2744,13 +2759,14 @@ addEventListener('message', e => {
   // v5.6.4: серверный GCD + индивидуальные откаты учитываются раздельно.
   // Отказ blockedBy=global НИКОГДА не обучает память КД конкретного скилла.
   if (path === '/game/battle/action' && d.res && d.req?.action) {
-    combatCooldown.observe(d.req, d.res, d.status, battleSpawn());
+    if (d.req.battleSpawnId) GAME_SPAWN = String(d.req.battleSpawnId);
+    combatCooldown.observe(d.req, d.res, d.status, cdSpawn());
   }
   // Mage rotations must respect server GCD from background battle sync.
   // The page hotbar often reports a spell ready while globalCooldownUntilMs
   // still prohibits every action (observed Wind Strike HTTP 400).
   if ((path === '/game/battle/sync' || path === '/game/battle') && d.res && !d.res.error) {
-    combatCooldown.observeSync(d.res, battleSpawn());
+    combatCooldown.observeSync(d.res, cdSpawn());
   }
   if (/^\/game\/battle(?:\/(?:sync|action))?$/.test(path) && d.res) alignServerSkillCooldowns();
   // 7.1.16-fix: слуга мага — из ответа сервера (activeSummon: {key, hp, maxHp…} или null). Только явное поле, без догадок по разметке
@@ -3171,7 +3187,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get noEffect() { return noEffect; },
   get antibotState() { return antibotState; }, set antibotState(value) { antibotState = value; },
   get applyQuestLog() { return applyQuestLog; }, set applyQuestLog(value) { applyQuestLog = value; },
   get autoRoles() { return autoRoles; }, set autoRoles(value) { autoRoles = value; },
-  get battleSpawn() { return battleSpawn; }, set battleSpawn(value) { battleSpawn = value; },
+  get battleSpawn() { return battleSpawn; }, set battleSpawn(value) { battleSpawn = value; }, get cdSpawn() { return cdSpawn; },
   get buffActive() { return buffActive; }, set buffActive(value) { buffActive = value; },
   get buffAuditStep() { return buffAuditStep; }, set buffAuditStep(value) { buffAuditStep = value; },
   get buffList() { return buffList; }, set buffList(value) { buffList = value; },
@@ -3553,6 +3569,7 @@ L2V7Modules.economy = L2V7Factories.economy({ get shopBuyNet(){return () => SHOP
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_POT_RE; }, set HP_POT_RE(value) { HP_POT_RE = value; },
+  get shotGrade() { return (...a) => L2V7Modules.economy.shotGrade(...a); }, get $q() { return $q; }, get shown() { return shown; },
   get MP_REGEN() { return MP_REGEN; }, set MP_REGEN(value) { MP_REGEN = value; },
   get POT_LAST() { return POT_LAST; }, set POT_LAST(value) { POT_LAST = value; },
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
@@ -3781,6 +3798,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('trial7128', () => { if (!(C('zoneTrial') >= 15)) cf.zoneTrial = 20; });   // 7.1.30: проба зоны < 15 боёв — шум, а не замер (было 5)   // 7.1.30: автофарм (подбор локации) по умолчанию выключен — включается в «Быстрых режимах»
   once('weap7128', () => { Object.assign(rf, { weaponsT: 0 }); });   // 7.1.30: перечитать оружие (в памяти могла остаться кукла NG как «надето»)
   once('mag7125', () => { cf.autoMagister = false; Object.assign(rf, { magister: null }); });   // 7.1.30: магистр — только руками
+  once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
+  once('camp721', () => { cf.campaign = false; Object.assign(rf, { campOnce: false, campaignDue: false }); });   // 7.2.1: кампания убрана — квесты игрок ведёт сам
   once('deep10_7123', () => { cf.deepEvery = 10; });                                   // 7.1.30: карта раз в 10 боёв (просьба игрока)
   once('aliasFix7121', () => {    // 7.1.30: выкинуть выученные алиасы, совпавшие с именем чужого заклинания
     const A = { ...(rt.logAlias || {}) }; let n = 0;

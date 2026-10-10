@@ -60,7 +60,7 @@ function potInventory() {                        // банки на панели
 }
 
 function hpPots() {
-  const own = env.slotsBy(env.cfg.nHpPot || '');
+  const own = env.slotsBy(env.cfg.nHpPot || '').filter(b => !/ман|mana|\bmp\b/i.test(b.title || ''));   // 7.2.1: банку маны как лечебную не пьём
   const auto = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'предмет' && env.HP_POT_RE.test(b.title || '') && !/ман|mana|\bmp\b/i.test(b.title || ''));
   return [...new Set([...own, ...auto])].filter(b => env.qty(b) !== 0).map(b => {
     const P = env.rt.pots?.[env.potKey(b)], p = env.rt.skills?.[env.skKey(b)] || {};
@@ -116,8 +116,64 @@ async function rest(toPct, why) {   // (не используется в реж�
   return false;
 }
 
+// 7.2.1 (лог 10.10 21:07–21:08): оружие сменилось C → B (Sprite's Staff), бот купил 3000 B-зарядов, а на панели остались C-заряды
+// (то же имя «Благословенний заряд духу», ×3886) — игра их не включает, бот жал слот каждые 5 с впустую; игрок переставил руками.
+// Грейд слота: «#3950 — …» в подписи или цвет иконки (white NG, blue D, green C, red B, silver A, gold S — снимок 10.10: C green, B red)
+const SHOT_ID_G = { 3947: 'NG', 3948: 'D', 3949: 'C', 3950: 'B', 3951: 'A', 3952: 'S', 2509: 'NG', 2510: 'D', 2511: 'C', 2512: 'B', 2513: 'A', 2514: 'S',
+  1835: 'NG', 1463: 'D', 1464: 'C', 1465: 'B', 1466: 'A', 1467: 'S' };
+const SHOT_COLOR = { white: 'NG', blue: 'D', green: 'C', red: 'B', silver: 'A', gold: 'S' };
+function shotGradeOf(el) {
+  const id = String(el?.title || '').match(/^#(\d+)/)?.[1];
+  if (id && SHOT_ID_G[id]) return SHOT_ID_G[id];
+  const src = el?.querySelector?.('img')?.getAttribute('src') || '';
+  const m = src.match(/(?:shot|bullet)_(white|blue|green|red|silver|gold)\b|_(white|blue|green|red|silver|gold)_i\d/i);
+  return m ? SHOT_COLOR[(m[1] || m[2]).toLowerCase()] : null;
+}
+const shotQty = b => +((b.title || '').match(/×\s*([\d\s]+)$/)?.[1] || '0').replace(/\D/g, '');
+// слот зарядов не того грейда → «Прибрати» старый, на свободный слот — заряды нужного грейда из «Розхідники» (раз в 2 мин)
+async function shotSlotSwap(b) {
+  const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null, have = shotGradeOf(b);
+  if (!want || !have || want === have || shotSlots().some(x => shotGradeOf(x) === want)) return false;
+  const now = Date.now();
+  if (now - (env.rt.shotSwapT || 0) < 120000) return false;
+  env.rt.shotSwapT = now; env.setRt({ shotSwapT: now });
+  const name = String(b.title || '').replace(/^#\d+\s*[—–-]\s*/, '').split(/\s+[—–-]\s+|:/)[0].trim().toLowerCase();
+  const close = async () => { const c = env.$q('#l2-bh-modal-close'); if (c && env.shown(c)) { env.fire(c); await env.sleep(300); } };
+  const openTab = async key => {
+    const empty = [...document.querySelectorAll('.l2-battle-hotbar-slot--empty')].find(x => env.shown(x));
+    if (!empty) return false;
+    env.fire(empty);
+    if (!(await env.waitFor(() => env.$q('.l2-battle-hotbar-modal #l2-bh-modal-tabs') ? 1 : null, 3000, 100))) return false;
+    const tab = env.$q(`.l2-battle-hotbar-tab[data-tab-key="${key}"]`);
+    if (!tab) return false;
+    if (!tab.classList.contains('l2-battle-hotbar-tab--on')) { env.fire(tab); await env.sleep(400); }
+    return !!(await env.waitFor(() => document.querySelector('.l2-battle-hotbar-pick') ? 1 : null, 2000, 100));
+  };
+  const picks = () => [...document.querySelectorAll('.l2-battle-hotbar-pick')].filter(x => env.shown(x));
+  // 1) нужный грейд в сумке есть?
+  if (!(await openTab('consumable'))) { await close(); env.rec('B', 'внимание', `заряды на панели ${have}-грейда, а оружие ${want} — свободного слота нет, переставь вручную`); return false; }
+  const good = picks().find(x => shotGradeOf(x) === want && shotQty(x) > 0 && (!name || String(x.title).toLowerCase().startsWith(name.slice(0, 12))));
+  if (!good) { await close(); return false; }    // ещё не куплены — докупит магазин, потом поставим
+  const gq = shotQty(good);
+  env.fire(good);
+  await env.waitFor(() => !env.shown(env.$q('.l2-battle-hotbar-modal__panel')) ? 1 : null, 3000, 100);
+  await close();
+  // 2) старые убрать с панели («Прибрати»), чтобы бот не жал их
+  let removed = false;
+  if (await openTab('remove')) {
+    const old = picks().find(x => shotGradeOf(x) === have);
+    if (old) { env.fire(old); removed = !!(await env.waitFor(() => !b.isConnected || !env.shown(env.$q('.l2-battle-hotbar-modal__panel')) ? 1 : null, 3000, 100)); }
+  }
+  await close();
+  env.rec('B', 'панель', `оружие ${want}-грейда, а на панели заряды ${have} — поставил заряды ${want} (×${gq})${removed ? ', старые убрал' : ' (старые убери с панели вручную)'}`);
+  return true;
+}
+
+const shotSlots = () => [...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
 async function keepShots() {
-  const b = env.shotSlot();
+  const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null, pick = () => (want && shotSlots().find(x => shotGradeOf(x) === want)) || env.shotSlot();
+  let b = pick();
+  if (b && !env.shotsOn(b) && await shotSlotSwap(b)) b = pick();
   if (!b || env.shotsOn(b) || env.qty(b) === 0 || Date.now() - env.lastShotTry < 5000) return;
   env.lastShotTry = Date.now();
   console.log(env.TAG, 'соски выключены → включаю');
@@ -125,6 +181,6 @@ async function keepShots() {
   if (await env.waitFor(() => env.shotsOn(b), 2000, 100)) env.setStatus('Соски включены');
   else console.info(env.TAG, 'соски не включились');
 }
- return { bar, meHp, meMp, potWatch, potInventory, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, rest, keepShots };
+ return { bar, meHp, meMp, potWatch, potInventory, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, rest, keepShots, shotGradeOf, shotSlotSwap };
  };
 })(globalThis);

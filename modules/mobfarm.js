@@ -240,6 +240,7 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
   }, timeout, 250);
 }
 
+let farRecT = 0;
 function candidates(rules, sig, types, limitIdx) {
   const out = [];
   sig.ids.forEach((id, idx) => {
@@ -492,7 +493,17 @@ async function map() {
     if (here && env.rt.wrongLoc) await env.setRt({ wrongLoc: 0 });
   }
 
-  const cands = candidates(rules, sig, markerTypes(), limitIdx);
+  let cands = candidates(rules, sig, markerTypes(), limitIdx);
+  // 7.2.1 (лог 10.10 21:17:34): после города «В Окрестности» ближе всего — мобы 69–78 ур., и бот улетел в Pavel Ruins (≈2,6 M EXP/ч),
+  // хотя в этой же локации дальше по списку — мобы 54–63 ур. (замер тут ≈4,45 M EXP/ч на 52 ур.). Ближние страницы без своих —
+  // сперва свои по всей локации (имена из кэша спавнов), телепорт — только если их нет нигде
+  if (!cands.length && !deep && limitIdx < sig.ids.length) {
+    const far = candidates(rules, sig, markerTypes(), sig.ids.length);
+    if (far.length) {
+      if (Date.now() - farRecT > 600000) { farRecT = Date.now(); env.rec('B', 'локации', `рядом мобов своего уровня нет — иду к ${far[0].name || '?'} (${far[0].lvl || '?'}) на стр. ${Math.floor(far[0].idx / env.PAGE_SIZE) + 1} этой же локации, без телепорта`); }
+      cands = far;
+    }
+  }
   if (env.campActive() && env.campChampOpen()) {          // сколько чемпионов главы сейчас на локации — в журнал при изменении
     const ch = cands.filter(c => c.champ), key = ch.length + ':' + (ch[0]?.id || '');
     if (env.rt.champSeen !== key) {

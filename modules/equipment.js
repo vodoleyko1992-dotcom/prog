@@ -27,6 +27,7 @@ async function equip(w) {
 
 const canSwap = () => env.cfg.weaponSwap && !!equipBy(env.cfg.nWeaponMain) && !!equipBy(env.cfg.nWeaponBuff);
 
+const POT_MP = /мани|маны|mana|\bmp\b/i, POT_HP = /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i;
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
   const P = env.rt.skills || {}, pr = n => P[n.toLowerCase()] || {};
@@ -57,8 +58,10 @@ function suggestRoles() {
       const mage = shotsForMageWeapon();     // 7.1.16-fix: тип зарядов — по надетому оружию (маг. оружие → духа, физ. → души)
       const want = mage ? /благослов|blessed.*spiritshot|spiritshot|заряд\S* дух/i : /заряд\S* душ|soulshot/i;
       return shots.find(s => want.test(s.name))?.name || shots[0]?.name || ''; })(),
-    nMpPot:  items.find(s => /мани|маны|mana/i.test(s.title) || pr(s.name).mpGain)?.name || '',
-    nHpPot:  items.find(s => /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i.test(s.title + ' ' + s.img) || pr(s.name).heal)?.name || '',
+    // 7.2.1 (скрин игрока): в «Банка HP» попала «Зілля мани» — у банки маны в замере было «HP +136» (реген в момент глотка).
+    // Сначала — по названию; по замеру — только если банка явно HP (лечит больше, чем даёт MP) и в названии нет «мана»
+    nMpPot:  (items.find(s => /мани|маны|mana/i.test(s.title)) || items.find(s => !POT_HP.test(s.title + ' ' + s.img) && (pr(s.name).mpGain || 0) > (pr(s.name).heal || 0) * 2))?.name || '',
+    nHpPot:  (items.find(s => POT_HP.test(s.title + ' ' + s.img) && !POT_MP.test(s.title)) || items.find(s => !POT_MP.test(s.title) && (pr(s.name).heal || 0) > (pr(s.name).mpGain || 0) * 2))?.name || '',
     nStun:   skills.filter(s => !isPetOnly(s) && !isSummon(s) && isStun(s)).map(s => s.name).join(', '),
     nCharge: skills.filter(isCharge).map(s => s.name).join(', '),
     nForce:  skills.filter(isForce).map(s => `${s.name}=${(il(s) && env.ilNum(il(s).charges)) || env.skillCost(s.name)}`).join(', '),
@@ -74,7 +77,8 @@ function suggestRoles() {
     nToggles: skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.o === 'TOGGLE' && !/fake death|silent move|relax|chameleon|^quest/i.test(s.name)).map(s => s.name).join(', '),
     // v4.42: лечащие скиллы (маг/клерик: Heal, Battle Heal; Дестроер: Battle Roar) — раньше банок, они бесплатны
     // 7.1.31: баффы на кота (Servitor Haste/Magic Shield/Physical Shield…, когда появятся) — роль «Баффы кота»
-    nPetBuffs: skills.filter(live).filter(s => isPetOnly(s) && (il(s) ? il(s).c === 'Бафф' : /^(?:servitor|fast servitor)\s/i.test(s.name) && !/heal|recharge|cure|bless|ultimate/i.test(s.name))).map(s => s.name).join(', '),
+    // 7.2.1 (лог 10.10 21:17:42): Servitor Ultimate Defense — «слуга нерухомий ~30 с», откат 30 мин: аварийная защита, не бафф на каждый бой
+    nPetBuffs: skills.filter(live).filter(s => isPetOnly(s) && il(s)?.eff !== 'ImobilePetBuff' && !/ultimate defen/i.test(s.name) && (il(s) ? il(s).c === 'Бафф' : /^(?:servitor|fast servitor)\s/i.test(s.name) && !/heal|recharge|cure|bless|ultimate/i.test(s.name))).map(s => s.name).join(', '),
     nHeal:   skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.c === 'Лечение' && /^(HEAL|HEAL_PERCENT|HOT|HEAL_STATIC)$/.test(il(s).t || '')).map(s => s.name).join(', '),
     nWeaponBuff: inv.find(s => s.kind === 'снаряжение' && /кастет|джамадх|jamadh|fist|knuckle|кулак|claw|cestus|baghnakh|багнак|tiger|кулачн/i.test(s.name + ' ' + s.img))?.name || '',
     nWeaponMain: weaponMainSuggest(inv)
@@ -112,6 +116,10 @@ async function autoRoles() {
     const names = env.names(env.cfg[k] || '').map(n => n.split('=')[0].trim());
     if (names.length && names.every(n => /^(?:focused force|hurricane assault|force blaster|stunning fist|iron punch)$/i.test(n))) fix[k] = '';
   }
+  // 7.2.1 (скрин игрока): «Банка HP» = «Зілля мани» — роль с банкой маны заменяем (и наоборот)
+  { const hp = env.names(env.cfg.nHpPot || ''), mpn = env.names(env.cfg.nMpPot || '');
+    if (hp.length && hp.every(n => POT_MP.test(n))) fix.nHpPot = sug.nHpPot && !POT_MP.test(sug.nHpPot) ? sug.nHpPot : '';
+    if (mpn.length && mpn.every(n => POT_HP.test(n) && !POT_MP.test(n))) fix.nMpPot = sug.nMpPot || ''; }
   // 7.1.31 (лог 10.10 19:35: «проверка баффов totem spirit bear: нет на панели боя»): тотемы воина в «Баффах» мага — заводское
   // значение, у мага их нет. Только если ВСЕ баффы в списке — тотемы и ни одного нет на панели (свои настройки игрока не трогаем)
   if (mage && !fix.nBuffs) { const bs = env.names(env.cfg.nBuffs || ''); if (bs.length && bs.every(n => /^totem\b/i.test(n) && !env.slotsBy(n).length)) fix.nBuffs = sug.nBuffs || ''; }

@@ -38,7 +38,7 @@ function slotsBy(str) {                       // кнопки панели, че
 
 let overlayBusySeen = new WeakMap(), overlayReadySeen = new WeakSet(), overlaySpawn = '';
 function cdBusy(b) {
-  const spawn = env.battleSpawn();
+  const spawn = (env.cdSpawn || env.battleSpawn)();
   if (overlaySpawn !== spawn) { overlaySpawn = spawn; overlayBusySeen = new WeakMap(); overlayReadySeen = new WeakSet(); }
   const cd = env.slotCd(b);
   const t = parseFloat((cd?.querySelector('.l2-battle-hotbar-slot-cd__timer')?.textContent || '').replace(',', '.'));
@@ -48,7 +48,7 @@ function cdBusy(b) {
   return busy;
 }
 function localCdLeft(b) {
-  const action = env.slotAction(b), spawn = env.battleSpawn();
+  const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
   if (action && env.combatCooldown.skillKnown?.(action, spawn)) return env.combatCooldown.skillWait(action, spawn) / 1000;
   if (overlayReadySeen.has(b)) return 0; // observed busy -> ready; an absent overlay alone is not evidence
   return env.memLeft(b);
@@ -61,12 +61,12 @@ const potionSlot = b => !!b && env.slotKind(b) === 'предмет' &&
   /зілля|зелье|potion|elixir|еліксир|эликсир/i.test(b.title || '') &&
   (env.HP_POT_RE.test(b.title || '') || /ман[аиы]|mana|\bmp\b|elixir|еліксир|эликсир/i.test(b.title || ''));
 const ready  = b => uiReady(b) && (potionSlot(b) || localCdLeft(b) <= 0) &&
-  (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), env.battleSpawn()) <= 0);
+  (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) <= 0);
 
 function cdLeft(b) {
   if (ready(b)) return 0;
   const v = uiReady(b) ? NaN : env.uiTimer(b);
-  return Math.max(isNaN(v) ? 0 : v, potionSlot(b) ? 0 : localCdLeft(b), (env.slotAction(b) ? env.combatCooldown.skillWait(env.slotAction(b), env.battleSpawn()) / 1000 : 0)) || 99;
+  return Math.max(isNaN(v) ? 0 : v, potionSlot(b) ? 0 : localCdLeft(b), (env.slotAction(b) ? env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) / 1000 : 0)) || 99;
 }
 
 async function rememberCd(b, how) {             // how: 'used' — нажат и ушёл в КД; 'cd' — игра сказала «на перезарядке»
@@ -264,37 +264,70 @@ async function potSlotRestore(kind) {
 
 function mageCombat() { return env.combatProfileKind?.() === 'mage_summoner'; }
 
-// 7.1.30: дебаффы мага (Surrender to Fire, Curse Weakness, Curse Chaos, Curse Gloom…). Вешаем только там, где окупятся:
-// «долгий» бой (у моба ≥ 4 обычных заклинаний HP), чемпион или РБ. Каждый — один раз на цель (повтор после 15 с только на РБ/долгом бою).
-// Порядок: Surrender to Fire — если в ротации огонь (Blaze/Flame Strike: +урон всех следующих ударов); Curse Weakness — РБ/чемпион
-// или герой теряет HP (−P.Atk моба); Curse Chaos/Gloom — только РБ. Бот учит «проходимость» по логу («Ефект пройшов (72%)»):
-// если из 6+ попыток прошло < 30 % — этот дебафф на час выключается. Выключить всё: debuffAuto: false
-// 7.1.31 (лог 10.10 19:39–19:44): на L2WAP Surrender to Fire = M.Def −10 % (не огонь) — это +11 % только к заклинаниям мага (кот бьёт
-// физикой). Ход на дебафф окупается лишь ≈9 заклинаниями после него, а чемпион 5 000 HP умирает за 2–3 хода (Blaze + удар кота ≈1500):
-// «✦→✦→B→B→B» — 7 с вместо ≈4–5. Режим «авто»: атакующий дебафф — только если бой продлится ≥ debuffMinActs (10) действий
-// с учётом кота (РБ — всегда); Curse Weakness (−P.Atk моба) — РБ или когда героя реально бьют (HP < 70 %). Режимы «РБ и чемпионы»/«каждый моб» — как были
+// ---------- дебаффы мага: по механике L2WAP и по ЗАМЕРУ выгоды (7.2.1) ----------
+// L2WAP (скрин магистра 10.10): Surrender to Fire = M.Def −10 %, Curse Chaos = M.Def −10 % и P.Atk −12 %, Curse Weakness = P.Atk −20 % на 10 с,
+// Curse Poison = P.Atk −12 %. Атакующие (M.Def) прибавляют урон только заклинаниям мага (кот бьёт физикой), защитные (P.Atk) — моб бьёт слабее.
+// Логи 10.10: чемпионы с 2 дебаффами — 6,5 с и ДПС 832, без дебаффов — 4,6 с и ДПС 1268 (Blaze по чемпиону под дебаффами 1447, без — 1535):
+// на коротком бою ход на дебафф только теряется. Поэтому:
+//  • атакующий — если по HP моба (с ударом кота) бою осталось ≥ N действий, N = 1 / (прибавка − 1) по замеру (без замера — debuffMinActs, 10); РБ — всегда;
+//  • бот САМ меряет прибавку: в долгом бою сперва 2 заклинания без дебаффа, потом дебафф — урон тех же заклинаний по той же цели до/после
+//    (rt.debuffGain — последние 30 отношений). Замер показал < +3 % — атакующие дебаффы выключены (кроме режима «каждый моб»);
+//  • защитный — на РБ или когда героя реально бьют (HP < 70 %), с обновлением по длительности (Weakness — 10 с);
+//  • не прошёл («опір», «не пройшов») — цель не считается обработанной; из 6+ попыток прошло < 30 % — дебафф на час выключен.
+const dbfIl = b => { const il = env.ilOf(b) || {}; return { ...il, off: il.st === 'mDefDown', def: il.st === 'pAtkDown' || il.st2 === 'pAtkDown' }; };
+function dbfOn(ctx) {                                      // атакующий дебафф (M.Def) сейчас висит на цели
+  const now = Date.now();
+  return Object.entries(ctx?.debuffed || {}).some(([k, t]) => { const il = dbfIl(k); return il.off && now - t < (il.dur || 15) * 1000; });
+}
+// урон заклинания в этом бою — с M.Def-дебаффом и без (зовётся из observeSlot ядра)
+function spellSample(ctx, key, dmg) {
+  if (!ctx || !(dmg > 0) || !key) return;
+  const s = ((ctx.spellDmg ||= {})[key] ||= { off: [0, 0], on: [0, 0] }), w = dbfOn(ctx) ? s.on : s.off;
+  w[0] += dmg; w[1]++;
+}
+// итог боя: отношение «под дебаффом / без» по каждому заклинанию, где есть оба замера → rt.debuffGain
+async function debuffGainFlush(ctx) {
+  const r = Object.values(ctx?.spellDmg || {}).filter(s => s.off[1] && s.on[1]).map(s => (s.on[0] / s.on[1]) / (s.off[0] / s.off[1]));
+  if (!r.length) return;
+  const all = [...(env.rt.debuffGain || []), ...r.map(x => Math.round(x * 1000) / 1000)].slice(-30);
+  await env.setRt({ debuffGain: all });
+  const g = debuffGain();
+  if (g) env.rec('B', 'дебафф', `замер выгоды: урон заклинаний под M.Def-дебаффом ×${g.ratio.toFixed(2)} (${g.n} замеров) → ${g.ratio < 1.03 ? 'прибавки нет — атакующие дебаффы выключены' : 'окупается, если бою ещё ≥ ' + g.minActs + ' действий'}`);
+}
+function debuffGain() {                                   // медиана отношений; null — замеров меньше 6
+  const a = [...(env.rt.debuffGain || [])].filter(x => x > 0).sort((x, y) => x - y);
+  if (a.length < 6) return null;
+  const ratio = a[a.length >> 1];
+  return { ratio, n: a.length, minActs: ratio > 1.001 ? Math.ceil(1 / (ratio - 1)) + 1 : Infinity };
+}
 function debuffPlan(ctx, mp, me) {
   if (env.cfg.debuffAuto === false) return null;
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
-  const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto';
+  const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto', g = debuffGain();
   const actsLeft = mob.cur / Math.max(1, avg + petExpect(ctx));
-  const longFight = actsLeft >= (env.cfg.debuffMinActs ?? 10), boss = !!(ctx.rb || ctx.champ), hurt = !!me && me.pct < 70;
-  const offOk = longFight || !!ctx.rb || mode !== 'auto';
-  if (mode === 'boss' ? !boss : mode !== 'always' && !offOk && !hurt) return null;
-  const list = env.names(env.cfg.nDebuff || '');            // 7.1.30: свой список в «Скиллы → Дебаффы»: только они, в этом порядке
-  const fire = mageSpellSlots().some(b => /^(?:blaze|flame strike|aura flare|prominence)/i.test(env.cleanTitle(b.title)));
+  const needActs = g ? g.minActs : (env.cfg.debuffMinActs ?? 10);
+  const noGain = !!g && g.ratio < 1.03 && mode !== 'always';                 // замер: прибавки нет
+  const longFight = actsLeft >= needActs, boss = !!(ctx.rb || ctx.champ), hurt = !!me && me.pct < 70;
+  // на РБ без замера — сперва 2 заклинания без дебаффа (чтобы было с чем сравнить), потом дебафф
+  const offSamples = Object.values(ctx.spellDmg || {}).reduce((s, x) => s + x.off[1], 0);
+  const learnWait = !g && !!ctx.rb && offSamples < 2;
+  const offOk = !noGain && !learnWait && (mode !== 'auto' || longFight || !!ctx.rb);
+  if (mode === 'boss' ? !boss : !offOk && !hurt && !ctx.rb) return null;
+  const list = env.names(env.cfg.nDebuff || '');            // свой список в «Бой → Дебаффы»: только они, в этом порядке
   const stat = env.rt.debuffStat || {}, now = Date.now();
   const opts = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && env.ilOf(b)?.c === 'Дебафф' && ready(b)).map(b => {
-    const il = env.ilOf(b), n = env.cleanTitle(b.title), k = n.toLowerCase(), s = stat[k] || {};
+    const il = dbfIl(b), n = env.cleanTitle(b.title), k = n.toLowerCase(), s = stat[k] || {};
+    const defOk = !!ctx.rb || hurt || (mode !== 'auto' && boss);
     let pr = 0;
-    if (list.length) pr = list.includes(k) ? 100 - list.indexOf(k) : 0;
-    else if (il.st === 'FireAtr') pr = fire && offOk ? 90 : 0;
-    else if (il.st === 'pAtkDown') pr = ctx.rb || hurt || (mode !== 'auto' && boss) ? 60 : 0;
+    if (il.off && il.def) pr = offOk ? 95 : defOk ? 70 : 0;      // Curse Chaos: и урон, и защита
+    else if (il.off) pr = offOk ? 90 : 0;                       // Surrender to Fire
+    else if (il.def) pr = defOk ? (/weakness/i.test(k) ? 75 : 60) : 0;   // Curse Weakness (−20 %) раньше Poison (−12 %)
     else if (il.t === 'POISON') pr = ctx.rb ? 30 : 0;
-    else pr = ctx.rb ? 40 : 0;                                   // accuracyDown, matkdebuff и прочие — только РБ
+    else pr = ctx.rb && !/^slow\b/i.test(k) ? 20 : 0;          // прочие — только РБ; Slow (скорость) в пошаговом бою не нужен
+    if (list.length) pr = list.includes(k) && (pr > 0 || mode === 'always') ? 100 - list.indexOf(k) : 0;
     if (s.offUntil > now || (ctx.block['debuff:' + k] || 0) > now) pr = 0;
     const last = (ctx.debuffed || {})[k] || 0, dur = (il.dur || 15) * 1000;
-    if (last && !(ctx.rb || mob.cur >= avg * 6) ) pr = 0;          // обычный моб — один раз
+    if (last && !(ctx.rb || mob.cur >= avg * 6)) pr = 0;          // обычный моб — один раз
     if (last && now - last < dur) pr = 0;
     if (mp && mp.cur < (env.skillMp(n) || 10) + 30) pr = 0;       // мана — сначала на урон
     return { b, n, k, pr };
@@ -757,7 +790,7 @@ async function battle() {
     }
     if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
     const exact = env.slotAction(b);
-    if (exact && env.combatCooldown.skillWait(exact, env.battleSpawn()) > 0) return 'cd';
+    if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
     env.observeSlot(b, 'B');
     const before = noticeText();
     const firedAt = Date.now();
@@ -766,15 +799,21 @@ async function battle() {
     lastAct = Date.now();
     if (ctx.pet && env.petState?.()?.has !== false) ctx.pet.acts++;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
     // 7.1.17: ждём, пока игра отправит ход (до 0,6 с) и получит ответ сервера (до 6 с) — иначе следующий клик теряется
-    if (env.actNet && await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 600, 40))
-      await env.waitFor(() => env.actNet().done >= env.actNet().start || victory() || defeat() ? 1 : null, 6000, 40);
+    const sent = !!env.actNet && !!(await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 600, 40));
+    if (sent) await env.waitFor(() => env.actNet().done >= env.actNet().start || victory() || defeat() ? 1 : null, 6000, 40);
     env.setStatus(status);
+    // 7.2.1 (лог 10.10 21:07–21:14, 9 из 44 боёв): 1) первый клик сразу после «Охотиться дальше» игра не принимает (запрос не уходит),
+    // а бот ещё секунду ждал, не уйдёт ли кнопка в КД; 2) ход принят сервером, но игра перерисовала панель (ответ «full») — кнопка
+    // не показала откат, бот счёл ход несработавшим и жал то же заклинание снова («Blaze: урон 0», «ещё на КД — бью другим», +2–3 с).
+    // Теперь: ход ушёл и сервер ответил 2xx на это действие — нажатие засчитано; запрос не ушёл (а хук работает) — без секундного ожидания
+    const netOk = sent && env.actNet().ok && (!exact || env.actNet().action === exact);
+    const lost = !!env.actNet && net0 > 0 && !sent && !victory() && !defeat();
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:
     // удар Soul Breaker → «итог боя» через 1,7 с, хотя моб умирал с первого удара; на цепочке это ~1,2 с лишних на моба)
     const dead = () => victory() || (mobHp()?.cur ?? 1) === 0;
-    let done = env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead(), 1000, 40)) : true;
+    let done = lost ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
     // ответ игры: «скилл недоступен» (оружие) или «Скіл на перезарядці»
-    const ans = dead() ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : 600, 50);
+    const ans = dead() ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost ? 300 : 600, 50);
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
     if (turnSamples.length >= 10) { const avg = turnSamples.reduce((x, y) => x + y, 0) / turnSamples.length; turnSamples.length = 0;
@@ -1171,6 +1210,7 @@ async function battle() {
         await env.sleep(500);
         const added = env.newLines(before, env.logLines()).join(' ⏎ ');
         const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|сопротивл|resist|не подіяв|не подействовал/i.test(added);
+        if (fail && !ok && ctx.debuffed) delete ctx.debuffed[dbf.k];   // 7.2.1: не прошёл — цель не под дебаффом (иначе замер выгоды врёт)
         if (ok || fail) {
           const S = { ...(env.rt.debuffStat || {}) }, s = { ok: 0, fail: 0, ...(S[dbf.k] || {}) };
           if (ok) s.ok++; else s.fail++;
@@ -1235,7 +1275,7 @@ async function battle() {
       const gcdMs = env.combatCooldown.globalWait();
       const reasons = mageSpellSlots().map(b => {
         const name = env.cleanTitle(b.title), id = env.slotAction(b);
-        const serverMs = id ? env.combatCooldown.skillWait(id, env.battleSpawn()) : 0;
+        const serverMs = id ? env.combatCooldown.skillWait(id, (env.cdSpawn || env.battleSpawn)()) : 0;
         const key = 'power:' + b.title;
         const blockMs = Math.max(0, (ctx.block[key] || 0) - Date.now());
         const localMs = localCdLeft(b) * 1000;
@@ -1255,7 +1295,7 @@ async function battle() {
     // атака, если её кнопка свободна; если сервер КД не держит, а кнопка «занята» — интерфейс завис, обновляем страницу сразу
     if (mageCombat() && Date.now() - lastAct > 6000 && env.combatCooldown.globalWait() <= 0) {
       const atkB = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака');
-      const act0 = atkB && env.slotAction(atkB), srvBusy = act0 && env.combatCooldown.skillWait(act0, env.battleSpawn()) > 0;
+      const act0 = atkB && env.slotAction(atkB), srvBusy = act0 && env.combatCooldown.skillWait(act0, (env.cdSpawn || env.battleSpawn)()) > 0;
       if (atkB && uiReady(atkB) && !srvBusy) { console.info(env.TAG, 'маг: 6 с без действий — атака'); ctx.block.attack = 0; await act(atkB, 'Атака (простой мага)'); continue; }
       let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
       if (atkB && !srvBusy && Date.now() - lastAct > 9000 && Date.now() - progT > 9000 && rl.length < 2) {   // 7.1.30: только если бой стоит, не чаще 2 раз за 10 мин
@@ -1291,6 +1331,7 @@ async function battle() {
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
     }
   }
+  try { await debuffGainFlush(ctx); } catch (e) { console.warn(env.TAG, 'выгода дебаффов', e); }   // 7.2.1
   if (ctx.pet) { try { petTick(ctx); await petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   await env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx);
@@ -1382,6 +1423,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

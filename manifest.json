@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "7.2",
-  "description": "L2wap Bot 7.2 — один режим, меню под класс, 7 разделов",
+  "version": "7.2.1",
+  "description": "L2wap Bot 7.2.1 — дебаффы по замеру, откаты в цепочке, квесты вручную",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "7.2"
+  "version_name": "7.2.1"
 }
