@@ -714,12 +714,13 @@ function champRuleOn(...args) { return L2V7Modules.mobfarm.champRuleOn(...args);
 // эффективность: опыт в минуту за «цепочку» и за «поиск по карте» (включая время на карту и листание)
 function chainBetter(...args) { return L2V7Modules.mobfarm.chainBetter(...args); }
 async function trackEfficiency(exp, ctx) {
-  const now = Date.now(), dt = rt.lastWinT ? (now - rt.lastWinT) / 1000 : 0;
-  await setRt({ lastWinT: now });
+  // 8.0: вызывается без ожидания — способ прихода к этому мобу (цепочка/карта) берём сразу, пока nextFight не записал новый
+  const now = Date.now(), dt = rt.lastWinT ? (now - rt.lastWinT) / 1000 : 0, via0 = rt.via;
+  setRt({ lastWinT: now });
   const pct = expPctGain();                       // прирост полоски опыта, % (с учётом нового уровня)
   if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, долгий перерыв или РБ — не считаем
   await zoneTrack(exp, dt, pct);
-  const via = rt.via === 'chain' ? 'chain' : 'map';
+  const via = via0 === 'chain' ? 'chain' : 'map';
   const E = { ...(rt.eff || {}) }, e = E[via] || { n: 0, rate: 0 };
   const rate = exp / dt * 60, k = e.n < 20 ? 1 / (e.n + 1) : 0.05;
   E[via] = { n: e.n + 1, rate: Math.round(e.rate ? e.rate * (1 - k) + rate * k : rate), sec: +((e.sec || dt) * (1 - k) + dt * k).toFixed(1) };
@@ -846,6 +847,14 @@ const rtWriter = L2EngineCore.createPatchQueue(
     }, 3100);
   }
 );
+// 8.0 (аудит ядра/боя): часть записей в бою больше не ждём (память вкладки обновлена сразу). Чтобы при уходе со страницы
+// (location.href, перезагрузка) недописанное не пропало — отправляем остаток очереди сразу, без ожидания ответа
+addEventListener('pagehide', () => {
+  try {
+    const p = rtWriter.peek();
+    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch }, () => void chrome.runtime.lastError);
+  } catch (e) {}
+});
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };
@@ -1229,7 +1238,7 @@ function farmBossPick(goal) {
   if (!r?.bosses?.length || !L) return null;
   const lo = rbLo(L), hi = rbHi(L), list = Object.entries(rt.rbList || {});
   const c = r.bosses.map(([nm, lvl, ch]) => { const e = list.find(([, x]) => x.name.toLowerCase() === nm.toLowerCase()); return e && { id: e[0], ...e[1], ch }; })
-    .filter(x => x && x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi && rt.rbDb?.[x.id]?.verdict !== 'no' && Date.now() - ((rt.rbGoTried || {})[x.id] || 0) > 10 * 60000 && !rbTeleportCheck(x.id, x))
+    .filter(x => x && x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi && !rbVerdictBlocks(x.id) && Date.now() - ((rt.rbGoTried || {})[x.id] || 0) > 10 * 60000 && !rbTeleportCheck(x.id, x))
     .sort((a, b) => b.ch - a.ch || a.lvl - b.lvl);
   return c[0] || null;
 }
@@ -3866,6 +3875,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('shots723', () => { cf.shopShots = '1000/5000'; });
   // 7.2.4: настройки рыбалки игрока (скрин 10.10) — базовые: наживка «Авто», заряды вкл., докупать вкл., 1000 пакетов наживки,
   // заряды под наживку (авто), 750 пакетов, если авто выкл., без лимита забросов
+  // 8.0 (аудит боя): устаревшие «нижние границы» отката (Aura Burn 3,4 с при 1,1 с, VT 3,9 с) тормозили лучшие заклинания — стереть
+  once('cdFloor80', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cdFloor || p.cdFloorAt)) { S[k] = { ...p, cdFloor: 0, cdFloorAt: 0 }; sk = true; } });
   once('fish724', () => { Object.assign(cf, { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 }); });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
     const S = { ...(rt.rbStats || {}) }, sig = {};

@@ -171,7 +171,7 @@ async function nextFight(ctx) {
   const tgt = !!ctx && (env.isQuestName(ctx.name) || ctx.killed.some(n => env.isQuestName(n)) || (!!ctx.champ && rules.some(x => x.champ && !x.neg))
     || rules.some(x => x.farm && x.name === String(ctx.name || '').toLowerCase()));
   const camp = !!ctx && env.campMobOpen().length > 0;
-  if (ctx && (camp || env.searchActive(rules)) && env.rt.via === 'chain') await env.setRt({ chainQ: [...(env.rt.chainQ || []), tgt ? 1 : 0].slice(-12) });
+  if (ctx && (camp || env.searchActive(rules)) && env.rt.via === 'chain') env.setRt({ chainQ: [...(env.rt.chainQ || []), tgt ? 1 : 0].slice(-12) });
   let offQuest = false;
   if (camp && !tgt) {
     const q = env.rt.chainQ || [], share = (q.reduce((a, b) => a + b, 0) + 1) / (q.length + 2);

@@ -226,7 +226,12 @@ function faWanted() {
   // За 5 мин до конца сессии её баффы не нужны (иначе бот докупил бы их на новые 3 ч)
   const S = env.rt.rbSess, sess = S?.on && !(S.until && now > S.until - 5 * 60000) ? faIdsOf(env.cfg.rbSessBuffs) : [];
   const sessWant = S?.bought ? sess.filter(id => id === 1323 && env.cfg.rbSessNob !== false) : sess;
-  let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
+  // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
+  // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
+  let H = {}; if (env.cfg.rbMode || env.cfg.rbHuntMode) try { H = hudBuffs() || {}; } catch (e) {}
+  const paidUp = Object.keys(H).some(id => +id !== 1323 && (env.FA_KNOWN?.[id]?.[1] || 0) >= 5 && H[id] - now > 10 * 60000);
+  const nob = paidUp && (env.cfg.rbMode || env.cfg.rbHuntMode) && env.cfg.rbSessNob !== false ? [1323] : [];
+  let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
   if (bal != null && ids.length && bal < Math.min(...ids.map(env.faCost))) return [];   // FA точно не хватит ни на один — не ходим
   return ids;

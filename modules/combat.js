@@ -57,7 +57,12 @@ const ownLeft = b => {
   const k = env.skKey(b), lost = Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000;
   const u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
   if (!k || !u || Date.now() - u > 5000 || env.slotKind(b) !== 'скилл') return lost;
-  const cd = (S.cdNet || Math.max(S.cd || 0, S.cdFloor || 0)) * 1000 * 0.85;
+  // 8.0 (аудит боя, лог 13-30): «нижняя граница» cdFloor жила в памяти вечно (Aura Burn 3,4 с при настоящих 1,1 с; Vampiric Touch
+  // 3,9 с) — свой откат держал Aura Burn 3,75 с, VT ≥ 4,1 с, на Селяне треть ходов уходила на банки. Теперь граница — только свежая
+  // (≤ 30 с, как в rememberCd), откат — по ПОСЛЕДНЕМУ замеру с экрана (баффы вроде «Дара Серафима» его сокращают)
+  const floor = Date.now() - (S.cdFloorAt || 0) < 30000 ? S.cdFloor || 0 : 0;
+  const last = Array.isArray(S.cdS) && S.cdS.length ? S.cdS[S.cdS.length - 1] : 0;
+  const cd = (S.cdNet || Math.max(last || S.cd || 0, floor)) * 1000 * 0.85;
   return Math.max(lost, Math.max(0, u + cd - Date.now()) / 1000);
 };
 function localCdLeft(b) {
@@ -113,7 +118,7 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
   const meas = (env.rt.skills?.[k]?.cd || 0) * 1000, net = (env.rt.skills?.[k]?.cdNet || 0) * 1000;
   // v5.5.5: откат, который назвал сервер (cdNet), важнее справочника Interlude (Spoil: справочник 10 с, в игре отката нет)
   const learned = net || Math.max(meas, floor * 1000); // observed game only; Interlude reuse is not authoritative
-  if (env.SK_NET[k] && now - env.SK_NET[k] < 2500) { if (how === 'used') { use[k] = now; await env.setRt({ cdUse: use }); } return; }   // сервер только что сказал точное время
+  if (env.SK_NET[k] && now - env.SK_NET[k] < 2500) { if (how === 'used') { use[k] = now; env.setRt({ cdUse: use }); } return; }   // сервер только что сказал точное время
   if (how === 'used') {
     overlayReadySeen.delete(b);
     const tv = uiReady(b) ? NaN : env.uiTimer(b);
@@ -125,7 +130,7 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
     until[k] = Math.max(fromLast, now + Math.max(250, learned ? learned * 0.2 : 500));
   }
   for (const x in until) if (until[x] < now - 60000) delete until[x];
-  await env.setRt({ cdUse: use, cdUntil: until });
+  env.setRt({ cdUse: use, cdUntil: until });   // 8.0: без ожидания записи (≈0,1 с на каждом ходе; память вкладки обновлена сразу)
 }
 
 // Mage/summoner profile is opt-in until profession metadata is available.
@@ -657,7 +662,7 @@ async function battle() {
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
   if (st === 'win') return env.nextFight();                     // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
-  if (env.rt.bounce || env.rt.mobClickAt) await env.setRt({ bounce: 0, mobClickAt: 0 });   // бой открылся — счётчик петли сброшен
+  if (env.rt.bounce || env.rt.mobClickAt) env.setRt({ bounce: 0, mobClickAt: 0 });   // 8.0: без ожидания записи   // бой открылся — счётчик петли сброшен
 
   // панель: инвентаризация (в журнал — при изменении) и автоназначение ролей
   const inv = env.panelInventory(), invSig = inv.map(x => x.idx + ':' + x.name).join('|');
@@ -683,7 +688,7 @@ async function battle() {
   try { env.potInventory(); } catch (e) {}
   const hf = env.hudForce();                           // энергия силы сохраняется между боями: берём точное число из шапки
   if (hf != null && hf !== env.forceNow()) await env.forceSet(hf, Math.max(hf, env.forceMax()), 'по шапке');
-  else if (hf != null) await env.setRt({ force: { ...(env.rt.force || {}), hud: hf, t: Date.now() } });
+  else if (hf != null) env.setRt({ force: { ...(env.rt.force || {}), hud: hf, t: Date.now() } });
   env.trySnap(300);                                    // снимок боя — когда панель уже отрисована
   const hasDamageSlot = () => mageCombat() ? mageSpellSlots().length > 0 :
     (slotsBy(env.cfg.nAttack).length > 0 || env.names(env.cfg.nPower).some(n => slotsBy(n).some(b => !nonOffenseSkill(b))));
@@ -736,7 +741,7 @@ async function battle() {
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
   if (mageCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // 7.1.31: замер кота
   if (nm && mob0 && !(same && t.champ))
-    await env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
+    env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
@@ -836,11 +841,12 @@ async function battle() {
     const dead = () => victory() || (mobHp()?.cur ?? 1) === 0;
     let done = lost ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
     // ответ игры: «скилл недоступен» (оружие) или «Скіл на перезарядці»
-    const ans = dead() ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost ? 300 : 600, 50);
+    // 8.0: сервер принял именно этот ход (2xx) — «на перезарядке»/«недоступен» к нему не относится, 250 мс не ждём
+    const ans = dead() || (done === true && netOk) ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost ? 300 : 600, 50);
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
     if (turnSamples.length >= 10) { const avg = turnSamples.reduce((x, y) => x + y, 0) / turnSamples.length; turnSamples.length = 0;
-      await env.setRt({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }
+      env.setRt({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }
     if (ans) done = ans;
     if (env.combatCooldown.recentlyGlobalRejected(firedAt)) done = 'cd';
     if (done === true) await rememberCd(b, 'used');
@@ -997,7 +1003,9 @@ async function battle() {
       if ((v.abort || v.retreat) && !ctx.rb.allIn) {
         ctx.rb.allIn = true;
         env.rec('B', 'РБ', `${ctx.name}: ${v.why} — ${ep ? 'выход не подтверждён, бой продолжается' : 'из боя уйти нельзя, бьюсь до конца на банках (резерв тоже)'}`);
-        if (v.lethal) await env.rbNote(ctx.rb.id, { verdict: 'no', note: v.why });
+        // 8.0 (аудит РБ: Госмос 21:33/22:38, Селян 23:19 получили «не по силам» посреди боя и потом были убиты): смертельный удар
+        // сам по себе не приговор — его величина уже в базе (rbLearn), до боя проверку сделает rbPreCheck; приговор даёт смерть героя
+        if (v.lethal) await env.rbNote(ctx.rb.id, { note: v.why });
       }
     } else {
       // v5.5.1: урон не пробивает (лог 08.10: после «Бонуса новачка» 1–3 урона за удар, моб 1044 HP) — за 15 с видно, что бой
@@ -1134,8 +1142,12 @@ async function battle() {
       // The revised RB tactic uses an 80% floor, with a 20 pp reserve over the
       // estimated lethal combination. Manual thresholds remain available.
       const adaptive = env.cfg.rbBandAuto !== false;
+      // 8.0 (аудит РБ: Селян 23:19 — 105 из 322 ходов на банки, 33 %): спецудар этого РБ замерен и обычных ударов ≥ 12 — запас
+      // 15 п.п. над опасной комбинацией (спецудар + 2 удара), не ниже 60 %; незнакомый РБ — как раньше, от 80 %
+      const known = d.sp > 0 && (d.hitP90 || ctx.rb.hits?.length >= 12);
       const from = adaptive
-        ? Math.min(95, Math.max(80, env.cfg.rbPotAt ?? 75, emergencyFloor / me.max * 100 + 20))
+        ? (known ? Math.min(95, Math.max(60, emergencyFloor / me.max * 100 + 15))
+                 : Math.min(95, Math.max(80, env.cfg.rbPotAt ?? 75, emergencyFloor / me.max * 100 + 20)))
         : Math.min(96, Math.max(1, env.cfg.rbPotAt ?? 75));
       const to = adaptive
         ? Math.min(98, Math.max(from + 3, env.cfg.rbPotTo ?? 80, from + 10))
@@ -1360,7 +1372,9 @@ async function battle() {
     const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0));   // победа — главный добит (соседи живы — их остаток не наш)
     const dps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
     const d = env.rt.dps || { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
-    await env.setRt({ dps: { n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
+    // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
+    // записи; память вкладки обновлена сразу, очередь сохраняет порядок, при уходе со страницы недописанное уходит по pagehide
+    env.setRt({ dps: { n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
     env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${base < ctx.max ? `${base} из ${ctx.max}` : ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt})` : ''} · ${ctx.seq.join('→')}`);
     if (ctx.tot) await env.totemNote(ctx, dps);
     if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
@@ -1368,12 +1382,12 @@ async function battle() {
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
     }
   }
-  try { await debuffGainFlush(ctx); } catch (e) { console.warn(env.TAG, 'выгода дебаффов', e); }   // 7.2.1
-  if (ctx.pet) { try { petTick(ctx); await petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
+  debuffGainFlush(ctx).catch(e => console.warn(env.TAG, 'выгода дебаффов', e));   // 7.2.1
+  if (ctx.pet) { try { petTick(ctx); petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))).catch(e => console.warn(env.TAG, 'статистика кота', e)); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
-  await env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx);
-  await env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name);
-  await env.setRt({
+  env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
+  env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name)?.catch?.(e => console.warn(env.TAG, 'добыча', e));
+  env.setRt({
     kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
     adena: env.rt.adena + pick(/([\d\s.,]+)\s*аден/i), exp: env.rt.exp + pick(/([\d\s.,]+)\s*EXP/i), sp: env.rt.sp + pick(/([\d\s.,]+)\s*SP/i)
   });
@@ -1391,7 +1405,8 @@ async function battle() {
     // when the victory screen has no readable reward line.
     const d0 = env.rt.rbDb?.[ctx.rb.id] || {}, kills = (d0.kills || 0) + 1;
     const adena = pick(/([\d\s.,]+)\s*аден/i), exp = pick(/([\d\s.,]+)\s*EXP/i);
-    const fightS = (Date.now() - t0) / 1000;
+    // 8.0: РБ был ранен (HP с прошлого захода) — время пересчитываем на полный бой (Госмос: 33 с за 87k из 577k записывались как полный)
+    const fightS = (Date.now() - t0) / 1000 * (ctx.hp0 > 0 && ctx.max > ctx.hp0 ? Math.min(20, ctx.max / ctx.hp0) : 1);
     const avg = (old, next) => old > 0 ? Math.round(old * .6 + next * .4) : next;
     await env.rbNote(ctx.rb.id, { verdict: 'ok', kills,
       ...(adena > 0 ? { adenaPerKill: avg(d0.adenaPerKill, adena) } : {}),

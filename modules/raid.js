@@ -31,7 +31,7 @@ function rbCandidates() {                      // окно уровня: ниж�
   const want = env.rt.rbWant && raidList().find(r => r.id === env.rt.rbWant);   // прилетели к нему по списку РБ — он первый (v4.30: и без места в списке — через метку)
   if (!env.cfg.rbMode) return farmRbOn() && want && want.id === env.rt.farmRb.id && !rbVerdictBlocks(want.id) ? [want] : [];   // v5.6: фарм ресурса с РБ — только этот РБ
   // v5.6: «мало банок» (rbPreSkip) тоже пропускаем 30 мин — раньше такой РБ выбирался снова и снова, и бот не фармил мобов
-  const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000 || Date.now() - (env.rt.rbPreSkip?.[id] || 0) < 30 * 60000;
+  const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000 || Date.now() - preSkip(id).t < 30 * 60000;
   if (want && !rbVerdictBlocks(want.id) && !skip(want.id)) return [want];
   return raidList().filter(r => r.lvl >= rbLo(h) && r.lvl <= rbHi(h) && !rbVerdictBlocks(r.id) && !skip(r.id))
     .sort((a, b) => (b.id === env.rt.rbCur) - (a.id === env.rt.rbCur)
@@ -67,6 +67,15 @@ function rbSpK() {
   const r = Object.entries(env.rt.rbDb || {}).map(([id, d]) => d.sp > 0 && S[id]?.patk ? d.sp / (S[id].patk * k) : 0).filter(x => x > 1 && x < 20).sort((a, b) => a - b);
   return r.length ? Math.min(6.8, Math.max(3, r[r.length >> 1] * 1.15)) : 5.5;
 }
+// 8.0 (аудит РБ, логи 10.10 21:31–23:30): спецудар РБ — магический, считать его от P.Atk было ошибкой. Замеры: спецудар / M.Atk
+// РБ = 0,71–0,90 у 11 РБ (Верфа 2600 при M.Atk 3110, Селян 1853 при 2217), а от P.Atk — разброс 2,2–7,2. Оценка «на глаз»
+// давала Верфе 1055 (реально 2600 — 60 % HP героя), Голему ≈24 % при M.Atk 4204. Множитель — по своим боям (p75 × 1,15), нет — 1,05
+function rbSpM() {
+  const S = env.rt.rbStats || {};
+  const r = Object.entries(env.rt.rbDb || {}).map(([id, d]) => d.sp > 0 && S[id]?.matk > 0 ? d.sp / S[id].matk : 0).filter(x => x > 0.2 && x < 3).sort((a, b) => a - b);
+  if (r.length < 3) return 1.05;
+  return Math.min(1.4, Math.max(0.9, r[Math.floor(r.length * 0.75)] * 1.15, r[r.length >> 1] * 1.25));
+}
 function rbPreCheck(id, st, slack = 1) {
   const me = env.meHp(), maxHp = me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {};
@@ -76,7 +85,7 @@ function rbPreCheck(id, st, slack = 1) {
   const pot = env.potModel(), pool = pot?.pool || 0;
   const p90 = historical.hitP90 || historical.p90 || Math.max(150, base * 1.65);
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
-  const sp = historical.sp > 0 ? historical.sp : base * rbSpK();
+  const sp = historical.sp > 0 ? historical.sp : Math.max(base * rbSpK(), (st.matk || 0) * rbSpM());
   const measured = historical.sp > 0;
   const loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
   const need = loss * t;
@@ -112,8 +121,10 @@ async function rbScout(r) {
   env.fire(pin);
   const st = await env.waitFor(() => rbModalIs(r) ? rbModalStats() : null, 4000, 100);
   if (!st) return null;
-  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: { ...st, t: Date.now() } } });
-  return rbPreCheck(r.id, st);
+  // 8.0: сливаем с прошлой записью — раньше повторный осмотр стирал замер потерь HP по этому РБ (loss)
+  const merged = { ...(env.rt.rbStats?.[r.id] || {}), ...st, t: Date.now() };
+  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: merged } });
+  return rbPreCheck(r.id, merged);
 }
 
 const closeMobModal = () => { const c = env.$q('#map-mob-modal-close'); if (env.shown(c)) env.fire(c); };
@@ -127,7 +138,7 @@ async function rbEngage(r, label, opt = {}) {
     // v5.2: «мало банок» — не приговор РБ: закупим банки — снова можно. Такой РБ пропускаем 30 мин, «не по силам» не пишем
     // 7.2.1: «не по силам» по ОЦЕНКЕ — не вечный приговор (оценка бывает по чужим цифрам: лог 21:32 — окно карты от другого РБ);
     // пропуск на 30 мин, цифры РБ сохранены — следующая проверка до телепорта увидит их сама. Вечный «не по силам» — только по бою
-    await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: Date.now() } });
+    await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: { t: Date.now(), kind: chk.kind === 'pots' ? 'pots' : 'strong' } } });   // 8.0: с видом — «сильный» больше не пишется как «мало банок»
     if (chk.kind !== 'pots') await rbNote(r.id, { name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
     env.rec('B', 'РБ', `${r.name} (${r.lvl}): не полезу — ${chk.why}`);
     return 'skip';
@@ -144,6 +155,29 @@ async function rbEngage(r, label, opt = {}) {
   closeMobModal();
   if (r.idx >= 0 && await env.attackSpawn({ ...r, rb: true, champ: true, rank: 0 }, () => label)) return true;
   return rbPinAttack(r, label);
+}
+
+// 8.0 (аудит РБ C1: 3 из 18 телепортов по 100 000 аден впустую — «не полезу» уже после прилёта): цифры РБ (HP, P.Atk, M.Atk,
+// адена) отдаёт GET /game/spawn/<id>/info — тот же запрос, что игра шлёт при нажатии на РБ на карте. Спрашиваем ДО телепорта,
+// раз на РБ (цифры РБ постоянные); не ответил — 6 ч не спрашиваем, решаем как раньше (на месте)
+async function rbInfo(id) {
+  const have = env.rt.rbStats?.[id];
+  if (have?.matk > 0 && have?.hp > 0) return have;
+  if (Date.now() - ((env.rt.rbInfoFail || {})[id] || 0) < 6 * 3600000) return have || null;
+  try {
+    const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
+    const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(tm));
+    const j = r.ok ? await r.json() : null, s = j?.stats;
+    if (!(s?.maxHp > 0)) throw new Error('нет stats');
+    const ad = (j.drops || []).find(d => d?.kind === 'adena');
+    const st = { ...(have || {}), hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api',
+      ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}) };
+    await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });
+    return st;
+  } catch (e) {
+    await env.setRt({ rbInfoFail: { ...(env.rt.rbInfoFail || {}), [id]: Date.now() } });
+    return have || null;
+  }
 }
 
 async function rbNote(id, patch) {
@@ -233,13 +267,17 @@ function rbStatsGuess(id, lvl) {
   // v5.2.2: медиана по всем замерам, а не ближайший по уровню: один «выброс» (Король Тарлк 48 ур.: P.Atk 5043 при обычных
   // 1100–1450) делал «мало банок» для всех РБ 47–50 ур. — лог 08.10 13:42: 47 РБ отброшены при 198 банках
   const med = a => { a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; }, c3 = l => Math.pow(lvl / l, 3);
-  return { hp: Math.round(med(pts.map(x => x.hp * c3(x.lvl)))), patk: Math.round(med(pts.map(x => x.patk * c3(x.lvl)))), est: true, n: pts.length };
+  const pm = pts.filter(x => x.matk > 0);   // 8.0: и M.Atk — от него спецудар
+  return { hp: Math.round(med(pts.map(x => x.hp * c3(x.lvl)))), patk: Math.round(med(pts.map(x => x.patk * c3(x.lvl)))),
+    ...(pm.length ? { matk: Math.round(med(pm.map(x => x.matk * c3(x.lvl)))) } : {}), est: true, n: pts.length };
 }
 
 const rbSkipNotices = new Map();
+const preSkip = id => { const v = env.rt.rbPreSkip?.[id]; return typeof v === 'number' ? { t: v, kind: '' } : v && v.t ? v : { t: 0, kind: '' }; };   // 8.0: старый формат — число
 function rbTeleportCheck(id, x) {                 // → null (можно лететь) или причина «не полетим»
+  const ps = preSkip(id);
   const whySkip = rbVerdictBlocks(id) ? 'ранее не по силам при этом уровне' :
-    now_() - ((env.rt.rbPreSkip || {})[id] || 0) < 30 * 60000 ? 'мало банок (недавно)' : '';
+    now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : 'пропуск после осмотра (недавно)') : '';
   if (whySkip) { noteRbSkip(id, whySkip); return whySkip; }
   // История действительно измеренного спецудара имеет приоритет даже если статистика P.Atk ещё отсутствует.
   const maxHp = env.meHp()?.max || 0;
@@ -293,11 +331,15 @@ function rbValueScore(id, x) {
   return net <= 0 ? -Infinity : net/(tFight+travel);
 }
 
+function rbEligible() {                           // живые РБ в окне уровней, которых можно бить сейчас
+  const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L);
+  return Object.entries(env.rt.rbList || {}).filter(([id, x]) => x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi
+    && !rbVerdictBlocks(id) && (id !== env.rt.rbCur || rbWounded(id)) && !rbTeleportCheck(id, x));   // 8.0: «не по силам» — только до нового уровня (rbVerdictBlocks)
+}
 function rbListPick() {
   const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now(), tried = env.rt.rbGoTried || {};
   if (env.cfg.rbValueTour && now - (env.rt.rbListT || 0) > 10 * 60000) return null;
-  const base = Object.entries(env.rt.rbList || {}).filter(([id, x]) => x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi
-    && !rbVerdictBlocks(id) && env.rt.rbDb?.[id]?.verdict !== 'no' && (id !== env.rt.rbCur || rbWounded(id)) && !rbTeleportCheck(id, x));
+  const base = rbEligible();
   // 7.2.2: недобитый нами РБ (HP с прошлого захода, не «не по силам») — первым, сначала тот, у кого меньше HP
   const wd = base.filter(([id]) => rbWounded(id)).sort((a, b) => env.rt.rbWound[a[0]].cur / env.rt.rbWound[a[0]].max - env.rt.rbWound[b[0]].cur / env.rt.rbWound[b[0]].max);
   if (wd[0]) return { id: wd[0][0], ...wd[0][1], wounded: env.rt.rbWound[wd[0][0]] };
@@ -323,7 +365,7 @@ function rbListWhy() {
     let skipReason;
     if (!x.alive) c.dead++;
     else if (x.deny) c.deny++;
-    else if (rbVerdictBlocks(id) || env.rt.rbDb?.[id]?.verdict === 'no') c.no++;
+    else if (rbVerdictBlocks(id)) c.no++;
     else if ((skipReason = rbTeleportCheck(id, x))) { if (/банок/.test(skipReason)) c.pots = (c.pots || 0) + 1; else c.no++; }
     else if (now - (tried[id] || 0) <= env.RB_RETRY_MS) { c.tried++; soon = Math.min(soon, env.RB_RETRY_MS - (now - tried[id])); }
   }
@@ -513,6 +555,30 @@ async function rbHuntStep() {
     env.setStatus(`Тур РБ: HP ${me.pct | 0}% — лечусь на мобах до ${env.cfg.rbRestHp}%, потом ${p.name}`);
     return env.map();
   }
+  // 8.0 (аудит РБ B1): РБ на ЭТОЙ карте (бесплатное восстановление не уводит с карты) — бьём без телепорта за 100 000:
+  // 22:31 Злий Дух Сиріон стоял на карте Келбара, бот через 3 мин летел к нему за деньги
+  if (env.isMap()) {
+    const ok = new Set(rbEligible().map(([id]) => id)), tried = env.rt.rbGoTried || {};
+    const here = raidList().filter(r => ok.has(r.id) && (Date.now() - (tried[r.id] || 0) > env.RB_TRY_MS || rbWounded(r.id)));
+    const h = here.find(r => r.id === p.id) || here.find(r => rbWounded(r.id)) || here[0];
+    if (h) {
+      env.rec('B', 'тур РБ', `цель: ${h.name} (${h.lvl}) — он здесь, на этой карте: без телепорта`);
+      await env.setRt({ rbWant: h.id });
+      await huntSet({ step: 'arrive', id: h.id, name: h.name, lvl: h.lvl, page: env.rt.rbList?.[h.id]?.page || 0, at: Date.now() });
+      return;
+    }
+  }
+  // 8.0 (C1): до платного телепорта — настоящие цифры РБ; не по силам — пропуск без полёта
+  if (!p.wounded) {
+    const st = await rbInfo(p.id);
+    if (st?.src === 'api' && !rbVerdictBlocks(p.id)) {
+      const chk = rbPreCheck(p.id, { ...st, est: false });
+      if (!chk.ok) {
+        await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [p.id]: { t: Date.now(), kind: chk.kind === 'pots' ? 'pots' : 'strong' } } });
+        return huntDone(p.id, `${p.name} (${p.lvl}): до телепорта по цифрам игры — не полезу: ${chk.why}`);
+      }
+    }
+  }
   env.rec('B', 'тур РБ', `цель: ${p.name} (${p.lvl})${p.wounded ? ` · недобит: у него ${Math.round(p.wounded.cur / p.wounded.max * 100)}% — добиваю` : ''}${env.rt.rbDb?.[p.id]?.verdict === 'ok' ? ' ✅ уже убивали' : ''} · стр. ${p.page}`);
   await huntSet({ step: 'go', id: p.id, name: p.name, lvl: p.lvl, page: p.page, price: p.price });
 }
@@ -526,7 +592,7 @@ function rbWoundNote(ctx) {
   W[S.id] = { cur: mob.cur, max: mob.max, t: Date.now(), name: ctx.name };
   env.setRt({ rbWound: W });
 }
-const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.95 && env.rt.rbDb?.[id]?.verdict !== 'no'; };
+const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.95 && !rbVerdictBlocks(id); };
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
   try { rbWoundNote(ctx); } catch (e) {}
   const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
@@ -737,6 +803,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbInfo, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
