@@ -785,10 +785,16 @@ const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.ne
 // Остаётся только необходимое: цели главы при включённой «Кампании», РБ-режимы, нет кнопки «Охотиться дальше», старт с карты
 const mapOff = () => (+cfg.deepEvery || 0) <= 0;
 const campChampDue = () => campActive() && campChampOpen();
+// 7.2 (игрок: «активная цель „ресурс“ или „рецепт“ сама включает карту, даже при 0»): на точке фарма мобов-источников бот выбирает
+// с карты — раз в 5 боёв при «0», не реже раза в 10 при большем числе (99999 — иначе фарм ресурса бьёт кого попало). Если цепочка
+// сама приносит источники в ≥ 50 % боёв — карта откладывается (chainCarries), как для ★ целей
+const FARM_EVERY = 5;
+const farmMapOn = () => { const lg = lootGoal(); return !!lg && !!rt.zone && rt.zone === lg.zone; };
 const deepN = () => campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
+  : farmMapOn() ? Math.min(+cfg.deepEvery > 0 ? +cfg.deepEvery : FARM_EVERY, FARM_EVERY * 2)
   : mapOff() ? Infinity : champHunt() ? Math.min(cfg.deepEvery, CHAMP_EVERY) : cfg.deepEvery;
 const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) || (searchActive(rules) &&
-  (campChampDue() || !mapOff()) && (rt.deepHot || rt.sinceDeep >= deepN()));
+  (campChampDue() || !mapOff() || farmMapOn()) && (rt.deepHot || rt.sinceDeep >= deepN()));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 
@@ -3306,7 +3312,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },

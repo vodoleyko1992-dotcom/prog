@@ -65,6 +65,15 @@ assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 500, deepHot:
 assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 25 }), true, 'champions on: map at least every 20 fights');
 assert.equal(due({ deepEvery: 99999, searchChamp: false }, { sinceDeep: 25 }), false, 'champions off: 99999 respected');
 assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10 }), true, 'every 10 fights');
+// 7.2: активная цель «ресурс» на её точке — карта и при 0 (раз в 5 боёв), при 99999 — не реже раза в 10
+vm.runInContext(`FARM = { res: { coal: { name: 'Coal', drop: [['Goblin', 50, 20, 1, 3, 'z1', 'Zone 1']], sp: [] } } };`, ctx);
+const q0 = ctx.document.querySelector; ctx.document.querySelector = s => s === '#l2-hud-legacy-lvl' ? { textContent: '50' } : q0.call(ctx.document, s);   // уровень героя 50
+assert.equal(due({ deepEvery: 0, farmRes: 'Coal', searchChamp: false }, { zone: 'z1', sinceDeep: 5 }), true, 'farm goal here: map at 0 (every 5)');
+assert.equal(due({ deepEvery: 0, farmRes: 'Coal', searchChamp: false }, { zone: 'z1', sinceDeep: 4 }), false);
+assert.equal(due({ deepEvery: 99999, farmRes: 'Coal', searchChamp: false }, { zone: 'z1', sinceDeep: 10 }), true, 'farm goal here: at least every 10');
+assert.equal(due({ deepEvery: 0, farmRes: 'Coal', searchChamp: false }, { zone: 'other', sinceDeep: 50 }), false, 'not at the farm spot: 0 = never');
+assert.equal(due({ deepEvery: 0, farmRes: '', searchChamp: false }, { zone: 'z1', sinceDeep: 50 }), false, 'no goal: 0 = never');
+ctx.document.querySelector = q0;
 // Every env.foo access in source modules needs a corresponding lazy binding.
 for (const modName of required) {
   const source=fs.readFileSync(path.join(root,'modules',modName+'.js'),'utf8');
