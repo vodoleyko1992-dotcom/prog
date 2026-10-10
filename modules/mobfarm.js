@@ -260,6 +260,9 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
 let farRecT = 0;
 function candidates(rules, sig, types, limitIdx) {
   const out = [];
+  // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): пока «Искать чемпионов» выключено (и глава не просит чемпионов),
+  // чемпион — обычный моб: без окна до −8 ур. и без особой ценности (бот не тянется к ним сам)
+  const champOn = champRuleOn();
   sig.ids.forEach((id, idx) => {
     if (idx >= limitIdx || env.isRaidId(id) || types[id] === 'raid' || types[id] === 'epic_guard') return;
     const c = env.rt.spawns?.[id];
@@ -285,7 +288,7 @@ function candidates(rules, sig, types, limitIdx) {
     // 8.0 (аудит фарма A4, лог 10.10 20:08:57: чемпион «Probe Golem Prodigy IV (46)» в Pavel Ruins при герое 51 окно −3 отсекало):
     // чемпион даёт в 5–10 раз больше опыта обычного моба (≈29 тыс. против ≈3,5–6 тыс., лог 20:20–20:30) — для чемпионов нижняя
     // граница не −lvlBelow, а −8 (если игрок не поставил шире)
-    const below = champ ? Math.max(env.cfg.lvlBelow ?? 3, CHAMP_BELOW) : (env.cfg.lvlBelow ?? 3);
+    const below = champ && champOn ? Math.max(env.cfg.lvlBelow ?? 3, CHAMP_BELOW) : (env.cfg.lvlBelow ?? 3);
     if (hl && lvl && !qLike && !relaxDown && env.cfg.lvlBelow !== 0 && lvl < hl - below) return;
     // «не по зубам» по опыту: бой с этим видом шёл дольше 45 с (или урон ≈0) — пропускаем 2 часа (v4.23)
     const hard = env.rt.hardMobs?.[(name || '').toLowerCase()];
@@ -293,7 +296,7 @@ function candidates(rules, sig, types, limitIdx) {
     const k = rank(r, rules);
     if (k >= 0) out.push({ ...r, rank: k, ql: qLike });
   });
-  return mobValRank(out);
+  return mobValRank(out, champOn);
 }
 
 // 8.0 (аудит фарма B1): среди целей одного приоритета — самая выгодная, а не ближайшая. Раньше в строке «[все]» бот брал первого
@@ -310,7 +313,7 @@ function mobEps(name, champ) {                   // EXP/с вида моба п�
   const v = name ? env.rt.mobVal?.[mobKey(name, champ)] : null;
   return v && v.n >= (champ ? 1 : 3) && v.sec > 0 && v.exp > 0 ? v.exp / v.sec : null;
 }
-function mobValRank(out) {
+function mobValRank(out, champOn = champRuleOn()) {
   const hl = env.heroLvl() || 0, V = env.rt.mobVal || {};
   const zMed = medOf((env.rt.zoneMobs?.[env.rt.zone] || []).map(n => mobEps(n, false) || 0));
   const zn = (env.rt.zoneMobs?.[env.rt.zone] || []).filter(n => mobEps(n, false)).length;
@@ -318,11 +321,12 @@ function mobValRank(out) {
   const chMed = medOf(Object.entries(V).filter(([k, v]) => k.startsWith('ч:') && v.sec > 0).map(([, v]) => v.exp / v.sec));
   const sk = medOf(Object.values(V).filter(v => v.n >= 3 && v.sec > 0).map(v => v.sec / v.n)) || 4;   // типичное время на моба, с
   for (const c of out) {
-    const raw = mobEps(c.name, c.champ), pg = Math.floor(c.idx / env.PAGE_SIZE);
-    const v = raw ?? (c.champ ? chMed || med * 3 : med);
+    const ch = c.champ && champOn;                 // 8.0.3: особая ценность чемпиона — только при включённом поиске чемпионов
+    const raw = mobEps(c.name, ch), pg = Math.floor(c.idx / env.PAGE_SIZE);
+    const v = raw ?? (ch ? chMed || med * 3 : med);
     c.eps = raw;
     c.val = v > 0 ? v * sk / (sk + PAGE_S * pg) : 0;   // с учётом листания до его страницы
-    c.low = zn >= 3 && raw != null && !c.champ && !c.ql && raw < 0.7 * zMed;
+    c.low = zn >= 3 && raw != null && !ch && !c.ql && raw < 0.7 * zMed;
   }
   const keep = out.filter(c => !c.low);
   const list = keep.length ? keep : out;

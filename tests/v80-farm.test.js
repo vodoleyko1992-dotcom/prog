@@ -92,7 +92,7 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   // ---------- A4 + B1: цели на карте ----------
   const mf = loadMod('mobfarm');
   const menv = {
-    cfg: { lvlBelow: 3, lvlAbove: 20, lvlMin: 1, lvlMax: 99 }, PAGE_SIZE: 15,
+    cfg: { lvlBelow: 3, lvlAbove: 20, lvlMin: 1, lvlMax: 99, searchChamp: true }, PAGE_SIZE: 15,   // 8.0.3: проверки A4/B1 — при ВКЛ поиске чемпионов
     rt: { zone: 'z', hardMobs: {}, zoneMobs: { z: ['Near Weak', 'Far Strong', 'Mid', 'Low'] }, mobVal: {},
       spawns: { s1: ['Near Weak', 52], s3: ['Mid', 52], s4: ['Low', 52], s2: ['Far Strong', 53], q1: ['Quest Mob', 52], c1: ['Probe Golem Prodigy IV', 46], c2: ['Old Champ', 43], m6: ['Lowbie', 46] } },
     heroLvl: () => 52, isRaidId: id => /^l2dop_/.test(id), campChampMin: () => 0, isBoss: () => false, campActive: () => false, campChampOpen: () => false,
@@ -120,6 +120,16 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   assert.equal(c[2], 's2', 'the most rewarding mob, though a page further');
   assert.equal(c[3], 's3');
   assert.ok(!c.includes('s1') && !c.includes('s4'), 'measured mobs below 0.7× zone median are skipped');
+  // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): выключено — чемпион как обычный моб: окно −3, без ×3 к ценности
+  menv.cfg.searchChamp = false;
+  menv.rt.spawns.c3 = ['Near Champ', 52]; idsAt.c3 = 8; ids[8] = 'c3'; types.c3 = 'champion';
+  const sigOff = { ids: ids.map((x, i) => x || 'gap' + i), quest: ['Quest Mob'] };
+  c = Array.from(M.candidates(rules, sigOff, types, 99), x => x.id);
+  assert.ok(!c.includes('c1'), 'search off: champion at hero−6 is out of the window, like a normal mob');
+  assert.ok(c.includes('c3'), 'search off: champion inside the window is still a normal target');
+  assert.ok(c.indexOf('c3') > c.indexOf('s3'), 'search off: unmeasured champion gets the zone median, not 3× — no rush to champions');
+  menv.cfg.searchChamp = true;
+  delete menv.rt.spawns.c3; delete idsAt.c3; ids[8] = undefined; delete types.c3;
   // все ниже 0,7 медианы — всё равно бьём (лучше, чем стоять)
   const only = Array.from(M.candidates([rules[1]], { ids: ['s1', 's4'], quest: [] }, {}, 99), x => x.id);
   assert.deepEqual(only, ['s1', 's4'], 'nothing else left: low-value mobs are still targets');
