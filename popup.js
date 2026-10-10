@@ -202,7 +202,7 @@ async function load() {
     $('buffAudit').textContent = A?.list?.length ? `🩺 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
       + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🩺 Проверка баффов — появится в первом бою' : ''); }
   renderRes(rt, d);
-  renderFarm(rt, d); renderRecipes(rt, d); renderCat(rt, d);
+  renderFarm(rt, d); renderRecipes(rt, d); renderCat(rt, d); renderTree('farm', rt, d); renderTree('recipe', rt, d);
   $('shopBox').textContent = rt.shop ? `⏳ Сейчас закупаюсь (${rt.shop.step === 'count' ? 'считаю сумку' : 'покупаю'})…`
     : rt.shopLast ? `Последняя закупка ${new Date(rt.shopLast.t).toLocaleString('ru')}: ${rt.shopLast.text}` : '';
 
@@ -548,6 +548,81 @@ function renderCat(rt, d) {
   const seen = Object.keys(CAT_NM).filter(id => rt.catLv?.[id]);
   $('catBox').textContent = (d.catMode ? `${rt.catIn ? '🏛 Внутри: ' : cur ? '➜ Цель: ' : '⏳ Цель выберу по уровню героя'}${cur ? CAT_NM[cur]?.[0] + ' · ' + lv(cur) : ''}` : 'Выключено')
     + (seen.length ? `\nУвиденные подземелья: ${seen.map(id => `${CAT_NM[id][0]} ${lv(id).replace(/ \(.*\)/, '')}${now - (rt.catBad?.[id] || 0) < 3600000 ? ' (пропускаю)' : ''}`).join(' · ')}` : '');
+}
+// ---------- 7.2.1 (просьба игрока): список «что фармить» как на форуме — разделы раскрываются, предмет раскрывается
+// в источники (дроп / спойл / РБ), «🌾 Фармить» ставит цель одним нажатием, поиск по названию ----------
+const TREE = { farm: { db: 'farmDb', items: 'res', input: 'farmRes', search: 'farmSearch', box: 'farmTree' },
+  recipe: { db: 'recipeDb', items: 'rec', input: 'recipeRes', search: 'recipeSearch', box: 'recipeTree' } };
+const treeSig = {}, treeOpen = { farm: new Set(), recipe: new Set() };
+const treePath = (kind, r) => kind === 'farm' ? String(r.cat || 'Прочее').split(/\s*›\s*/) : [r.grade || 'Без грейда', r.group || 'Прочее'];
+const treeKey = (kind, n) => kind === 'farm' ? String(n || '').trim().toLowerCase() : String(n || '').toLowerCase().replace(/\s*\(\d+%\)\s*$/, '').trim();
+function treeSources(kind, r, L, d) {
+  const fit = l => !L || (l >= L - 10 && l <= L + Math.min(d.lvlAbove ?? 15, 20));
+  const line = (tag, cls, txt, l) => `<div class="fs ${cls}${l != null && !fit(l) ? ' far' : ''}"><b>${tag}</b> ${esc(txt)}</div>`;
+  const out = [];
+  if (kind === 'farm') {
+    for (const [m, l, c, a, b, , loc] of r.drop || []) out.push([l, line('ДРОП', 'drop', `${m} · ур. ${l} · ${c}% · ×${a}–${b} · ${loc || ''}`, l)]);
+    for (const [m, l, c, a, b, , loc] of r.sp || []) out.push([l, line('СПОЙЛ', 'spoil', `${m} · ур. ${l} · ${c}% · ×${a}–${b} · ${loc || ''}`, l)]);
+    for (const [n, l, c] of r.bosses || []) out.push([l, line('РБ', 'boss', `${n} · ур. ${l} · ${c}%`, l)]);
+  } else {
+    for (const [m, l, c, loc] of r.drop || []) out.push([l, line('ДРОП', 'drop', `${m} · ур. ${l} · ${c}% · ${loc || ''}`, l)]);
+    for (const [m, l, c, loc] of r.spoil || []) out.push([l, line('СПОЙЛ', 'spoil', `${m} · ур. ${l} · ${c}% · ${loc || ''}`, l)]);
+  }
+  // подходящие по уровню — сверху
+  out.sort((x, y) => (fit(y[0]) - fit(x[0])) || Math.abs(x[0] - L) - Math.abs(y[0] - L));
+  return out.map(x => x[1]).join('') || '<div class="fs far">источников в базе нет</div>';
+}
+function treeRow(kind, k, r, cur, got, L, d) {
+  const n = kind === 'farm' ? `дроп ${(r.drop || []).length}${(r.sp || []).length || r.spoil ? ` · спойл ${(r.sp || []).length || r.spoil}` : ''}${(r.bosses || []).length ? ` · РБ ${r.bosses.length}` : ''}`
+    : `дроп ${(r.drop || []).length}${(r.spoil || []).length ? ` · спойл ${r.spoil.length}` : ''}`;
+  const on = k === cur, open = treeOpen[kind].has('i:' + k);
+  return `<div class="frow${on ? ' cur' : ''}" data-k="${esc(k)}"><div class="fr-h"><button class="fr-name" data-tree-item="${esc(k)}" aria-expanded="${open}">${open ? '▾' : '▸'} ${esc(r.name)}</button>`
+    + `<span class="fr-hint">${n}${on ? ` · ✓ цель${got ? ` · собрано ${got}` : ''}` : ''}</span>`
+    + `<button class="fr-go" data-tree-go="${esc(k)}" title="Фармить это">${on ? '✓' : '🌾'}</button></div>`
+    + (open ? `<div class="fr-src">${treeSources(kind, r, L, d)}</div>` : '') + '</div>';
+}
+async function renderTree(kind, rt, d) {
+  const T = TREE[kind], box = $(T.box); if (!box) return;
+  const db = await dbGet(T.db, { [T.items]: {} }), all = db[T.items] || {}, keys = Object.keys(all);
+  const q = ($(T.search)?.value || '').trim().toLowerCase(), cur = treeKey(kind, d[T.input]), L = rt.lvl || 0;
+  const gotMap = kind === 'farm' ? rt.farmGot || {} : rt.recipeGot || {};
+  const sig = [keys.length, db.t, q, cur, L, [...treeOpen[kind]].join('|'), gotMap[cur] || 0].join('#');
+  if (treeSig[kind] === sig) return;
+  treeSig[kind] = sig;
+  if (!keys.length) { box.innerHTML = '<div class="hint">База пуста — нажмите «Обновить базу» ниже.</div>'; return; }
+  if (q.length >= 2) {                                         // поиск — плоский список совпадений с путём раздела
+    const hit = keys.filter(k => all[k].name?.toLowerCase().includes(q)).slice(0, 80);
+    box.innerHTML = hit.length ? hit.map(k => `<div class="fpath">${esc(treePath(kind, all[k]).join(' › '))}</div>` + treeRow(kind, k, all[k], cur, gotMap[k], L, d)).join('')
+      : '<div class="hint">Ничего не найдено</div>';
+    return;
+  }
+  const tree = {};                                             // разделы → подразделы → предметы
+  for (const k of keys) { let node = tree; for (const p of treePath(kind, all[k])) node = (node[p] ||= { _items: [] }); node._items.push(k); }
+  const count = node => node._items.length + Object.entries(node).filter(([p]) => p !== '_items').reduce((s, [, v]) => s + count(v), 0);
+  const html = (node, path) => Object.entries(node).filter(([p]) => p !== '_items').sort(([a], [b]) => a.localeCompare(b)).map(([p, v]) => {
+    const id = path + '›' + p, open = treeOpen[kind].has('g:' + id);
+    return `<details class="fgrp" data-tree-grp="${esc(id)}"${open ? ' open' : ''}><summary>${esc(p)} <span class="fr-hint">${count(v)}</span></summary>`
+      + (open ? html(v, id) + v._items.sort((a, b) => all[a].name.localeCompare(all[b].name)).map(k => treeRow(kind, k, all[k], cur, gotMap[k], L, d)).join('') : '') + '</details>';
+  }).join('');
+  box.innerHTML = (cur && all[cur] ? `<div class="fpath">Текущая цель</div>${treeRow(kind, cur, all[cur], cur, gotMap[cur], L, d)}` : '') + html(tree, '');
+}
+async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
+for (const kind of Object.keys(TREE)) {
+  const T = TREE[kind], box = $(T.box); if (!box) continue;
+  box.addEventListener('toggle', e => { const g = e.target.closest?.('[data-tree-grp]'); if (!g) return; const id = 'g:' + g.dataset.treeGrp;
+    if (g.open === treeOpen[kind].has(id)) return;              // перерисовка открытого раздела тоже шлёт «toggle» — это не клик
+    if (g.open) treeOpen[kind].add(id); else treeOpen[kind].delete(id); treeRefresh(kind); }, true);
+  box.addEventListener('click', async e => {
+    const it = e.target.closest('[data-tree-item]'), go = e.target.closest('[data-tree-go]');
+    if (it) { const id = 'i:' + it.dataset.treeItem; if (treeOpen[kind].has(id)) treeOpen[kind].delete(id); else treeOpen[kind].add(id); return treeRefresh(kind); }
+    if (go) {
+      const db = await dbGet(T.db, { [T.items]: {} }), r = db[T.items]?.[go.dataset.treeGo]; if (!r) return;
+      $(T.input).value = r.name; await save({ target: $(T.input) });
+      toast?.(`${kind === 'farm' ? '🌾 Фарм ресурса' : '📜 Охота на рецепт'}: ${r.name}`);
+      treeRefresh(kind);
+    }
+  });
+  $(T.search)?.addEventListener('input', () => treeRefresh(kind));
 }
 async function renderRecipes(rt, d) {
   if (!$('recipeBox')) return;

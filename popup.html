@@ -305,6 +305,8 @@
   <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
   <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
   <div id="farmBox" class="hint" style="white-space:pre-line"></div>
+  <input id="farmSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе ресурсов (как на форуме)" autocomplete="off">
+  <div id="farmTree" class="ftree" data-kind="farm"></div>
   <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
   <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми. Ресурс главы («Нужно сдать») берётся сам, если включена Кампания.</div>
   <h4>📜 Охота на рецепты (форум)</h4>
@@ -312,6 +314,8 @@
   <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
   <label data-cls="spoil">⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
   <div id="recipeBox" class="hint" style="white-space:pre-line"></div>
+  <input id="recipeSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе рецептов" autocomplete="off">
+  <div id="recipeTree" class="ftree" data-kind="recipe"></div>
   <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
   <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
 
