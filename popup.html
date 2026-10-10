@@ -335,6 +335,12 @@
     <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
     <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
   </div>
+  <h4>🔥 РБ-сессия с баффом за FA (3 ч)</h4>
+  <div class="hint">Одна кнопка: бот берёт у баффера Fast Aden баффы из списка (на 3 ч) и бьёт РБ, пока они действуют. Погиб — слетает только Noblesse Blessing (если он в списке), бот сразу берёт его снова. Баффы слетели совсем — сессия окончена. За 2 мин до конца баффа — итог в журнал и режим «Автофарм».</div>
+  <div id="rbSessBox" class="camp" style="white-space:pre-line">—</div>
+  <label>Баффы сессии (номера через запятую, как у баффера) <input id="rbSessBuffs"></label>
+  <label>Погиб — сразу снова взять Noblesse Blessing (5 FA) <input id="rbSessNob" type="checkbox"></label>
+  <div class="row"><button id="rbSessStart">🔥 Начать РБ-сессию</button><button id="rbSessStop">⏹ Закончить</button></div>
   <h4>Как бот работает с РБ</h4>
   <div class="hint">HP неполное → бьёт мобов и лечится вампириком · HP полное → пробует РБ · по ходу боя оценивает «хватит ли сил» и записывает результат в базу. «Не по силам» не трогает до роста уровня.</div>
   <label>Пробовать РБ при HP ≥ % <input id="rbRestHp" type="number"></label>

@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '500/3000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
@@ -1348,7 +1348,9 @@ function townBuffNeed(...args) { return L2V7Modules.buffs.townBuffNeed(...args);
 // Защита от «глюков» при нехватке FA: известный баланс меньше самого дешёвого нужного баффа — к бафферу не ходим
 // (до 60 мин или пока не увидим баланс больше); бафф, которого нет в списке игры, пропускаем 6 ч; покупаем по порядку списка,
 // не хватает на один — берём следующие, что по карману; ничего не купили из-за баланса — пауза 60 мин.
-const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 1], 1357: ['Prophecy of Wind', 1], 1355: ['Prophecy of Water', 1], 1413: ["Magnus' Chant", 1], 1414: ["Victories of Pa'agrio", 1], 1323: ['Noblesse Blessing', 5] };
+// 7.2.1 (снимок баффера 10.10 22:27): Greater — по 5 FA, обычные — 1 FA, всё на 3 ч; номера Prophecy были перепутаны (1357 — Water, 1355 — Wind)
+const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 5], 1357: ['Prophecy of Water', 5], 1355: ['Prophecy of Wind', 5], 1413: ["Magnus' Chant", 5], 1414: ["Victories of Pa'agrio", 5], 1323: ['Noblesse Blessing', 5],
+  4703: ['Дар Серафима (откат −30 %)', 1], 273: ['Dance of Mystic', 1], 365: ['Dance of Siren', 1], 1303: ['Wild Magic', 1], 264: ['Song of Earth', 1], 267: ['Song of Warding', 1], 1389: ['Великий щит', 1], 1059: ['M.Atk ↑', 1], 1085: ['Cast.Spd ↑', 1], 276: ['Dance of Concentration', 1] };
 const faCost = id => rt.faCat?.[id]?.cost || FA_KNOWN[id]?.[1] || 1;
 function faWanted(...args) { return L2V7Modules.buffs.faWanted(...args); }
 function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args); }
@@ -2456,6 +2458,8 @@ function draw() {
   } else if (huntOn() && rt.rbPlan && now - rt.rbPlan.t < 10 * 60000) {
     L.push(`👑 ${rt.rbPlan.ok === false ? '❌' : '➡'} ${rt.rbPlan.name}: ${rt.rbPlan.why}`);
   }
+  if (rt.rbSess?.on) { const S = rt.rbSess, left = S.until ? Math.max(0, S.until - now) / 1000 : null;   // 7.2.1: РБ-сессия
+    L.push(S.bought ? `🔥 РБ-сессия: осталось ${fmtT(left)} · РБ +${(rt.rbKills || 0) - (S.k0 || 0)} · EXP +${((rt.exp || 0) - (S.e0 || 0)).toLocaleString('ru')}` : '🔥 РБ-сессия: беру баффы за FA'); }
   const dz = rt.dps?.n ? ` · ДПС ${rt.dps.dps} (≈${rt.dps.ttk} с/моб)` : '';
   L.push(`Бои: ${rt.kills} · EXP +${(rt.exp || 0).toLocaleString('ru')}${rt.rbKills ? ` · РБ убито: ${rt.rbKills}` : ''}${dz}`);
   const F = rt.fish;
@@ -3141,7 +3145,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get $q() { return $q; }, set $q(value)
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },

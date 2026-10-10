@@ -186,10 +186,15 @@ function townBuffNeed() {                          // что взять: { set, 
   return needSet || fa.length ? { set: needSet ? set : null, fa } : null;
 }
 
+const faIdsOf = v => String(v || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
   if (env.rt.faSkipUntil && now < env.rt.faSkipUntil) return [];
-  let ids = (env.cfg.faBuffs || '').split(/[,\s]+/).map(x => +x).filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
+  // 7.2.1: РБ-сессия — её баффы покупаются один раз в начале; потом (после смерти) — только Noblesse Blessing (остальное он сохранил).
+  // За 5 мин до конца сессии её баффы не нужны (иначе бот докупил бы их на новые 3 ч)
+  const S = env.rt.rbSess, sess = S?.on && !(S.until && now > S.until - 5 * 60000) ? faIdsOf(env.cfg.rbSessBuffs) : [];
+  const sessWant = S?.bought ? sess.filter(id => id === 1323 && env.cfg.rbSessNob !== false) : sess;
+  let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
   if (bal != null && ids.length && bal < Math.min(...ids.map(env.faCost))) return [];   // FA точно не хватит ни на один — не ходим
   return ids;
@@ -340,6 +345,6 @@ async function townBuffStep() {
   }
   await env.setRt({ tbuff: null });
 }
- return { activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep };
+ return { faIdsOf, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep };
  };
 })(globalThis);

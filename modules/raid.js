@@ -381,7 +381,45 @@ async function huntDone(id, why) {                 // с этим РБ зако�
   await huntSet({ step: 'pick', id: null, last: why });
 }
 
+// ---------- 7.2.1: РБ-сессия с баффом за FA (игрок 10.10: «бафф работает 3 часа — за это время можно ништяк РБ нафармить») ----------
+// Снимок баффера 22:27: обычный бафф 1 FA, Greater 5 FA, всё на 3 ч (и «Дар Серафима» — откат −30 % — тоже 3 ч). FA падает с мобов.
+// Старт (кнопка в меню): баффер → баффы сессии (rbSessBuffs) → тур по РБ. Смерть снимает баффы, если нет Noblesse Blessing; с ним
+// слетает только он — бот сразу покупает его снова (5 FA). Баффы слетели совсем — сессия окончена (не тратим FA по новой).
+// Бафф кончается (за 2 мин) — итог в журнал, режим «Автофарм», ждём игрока
+const sessIds = () => env.faIdsOf ? env.faIdsOf(env.cfg.rbSessBuffs) : String(env.cfg.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
+const sessTime = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+async function rbSessTick() {
+  const S = env.rt.rbSess; if (!S?.on) return false;
+  const now = Date.now(), H = env.hudBuffs?.() || null, gone = env.rt.faGone || {};
+  const need = sessIds().filter(id => !(gone[id] && now - gone[id] < 6 * 3600000));   // чего у баффера нет — не ждём
+  if (!S.bought) {
+    const have = H ? need.filter(id => H[id] && H[id] - now > 30 * 60000) : [];
+    if (need.length && have.length === need.length) {
+      const until = Math.min(...need.map(id => H[id]));
+      await env.setRt({ rbSess: { ...S, bought: true, until, t0: now, k0: env.rt.rbKills || 0, e0: env.rt.exp || 0, a0: env.rt.adena || 0, d0: (env.rt.deaths || []).length, fa: env.rt.faBal?.v ?? null } });
+      env.rec('B', 'РБ-сессия', `баффы на месте (${need.length}) — до ${sessTime(until)} бью РБ${env.rt.faBal ? ` · FA осталось ${env.rt.faBal.v}` : ''}`);
+      return false;
+    }
+    if (now - (S.start || now) > 15 * 60000) return rbSessEnd(`баффы так и не купились за 15 мин (есть ${have.length} из ${need.length}) — FA хватает?`);
+    return !!(await env.townBuffStart('РБ-сессия: баффы за FA', true));   // к бафферу (тот же путь, что баффы перед РБ)
+  }
+  if (now >= S.until - 120000) return rbSessEnd('бафф заканчивается');
+  if (H && need.filter(id => id !== 1323).length && need.filter(id => id !== 1323).every(id => !H[id])) return rbSessEnd('баффы слетели (смерть без Noblesse Blessing)');
+  return false;
+}
+async function rbSessEnd(why) {
+  const S = env.rt.rbSess || {}, min = S.t0 ? Math.round((Date.now() - S.t0) / 60000) : 0;
+  const kills = (env.rt.rbKills || 0) - (S.k0 || 0), exp = (env.rt.exp || 0) - (S.e0 || 0), ad = (env.rt.adena || 0) - (S.a0 || 0), deaths = (env.rt.deaths || []).length - (S.d0 || 0);
+  const sum = { kills, exp, adena: ad, deaths, min, why, faLeft: env.rt.faBal?.v ?? null };
+  await env.setRt({ rbSess: { ...S, on: false, end: Date.now(), sum }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ-сессия окончена' }, rbGo: null });
+  await env.setCfg({ rbHuntMode: false, rbMode: false, epicMode: false, fishMode: false, catMode: false, zoneAuto: true, chain: true });
+  env.rec('B', 'РБ-сессия', `окончена: ${why} · ${min} мин · РБ убито ${kills} · EXP +${exp.toLocaleString('ru')} · аден ${ad >= 0 ? '+' : ''}${ad.toLocaleString('ru')}${deaths ? ` · смертей ${deaths}` : ''}${sum.faLeft != null ? ` · FA осталось ${sum.faLeft}` : ''} → режим «Автофарм», жду игрока`);
+  env.setStatus('РБ-сессия окончена — автофарм');
+  return true;
+}
+
 async function rbHuntStep() {
+  if (await rbSessTick()) return;                   // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм
   const H = env.rt.rbHunt || { step: 'pick' };
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
     const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
@@ -677,6 +715,6 @@ async function rbShopFirst(label) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

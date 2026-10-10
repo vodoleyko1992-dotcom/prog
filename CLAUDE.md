@@ -35,7 +35,7 @@ popup.html/js, ui-v7.* меню: 7 разделов (overview, hunt, rb, fish, p
                        скрытие по классу (data-cls="fighter|mage|spoil" + html.cls-mage/cls-fighter/cls-spoil, «показать всё»)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (68 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (70 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -82,7 +82,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 68 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 70 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -98,7 +98,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- 7.2.1 (логи 10.10 21:05–21:31): дебаффы по L2WAP (IL_FIX 1083/1222/1164/1168: mDefDown/pAtkDown) + замер выгоды `rt.debuffGain` (spellSample из observeSlot через BUFF_CTX); банка маны не попадает в «Банку HP»; **цепочка: игра шлёт battleSpawnId первого боя, а URL меняется** — откаты по `cdSpawn()`/`GAME_SPAWN`, принятый сервером ход (ACT_NET.ok) засчитывается, потерянный клик без ожидания; средний урон — последние ≈40–60 замеров; кампания убрана (квесты игрок ведёт сам, once camp721), «Квесты на ресурсы» только счётчик; нет своих рядом — свои дальше по локации до телепорта; слот зарядов не того грейда заменяется (shotSlotSwap: «#id»/цвет иконки); Servitor Ultimate Defense не бафф кота. РБ: окно карты должно показать этого РБ (rbModalIs: NPC из spawnId), спецудар ×rbSpK() по боям, «не по силам» по оценке — только пропуск 30 мин, РБ невосприимчивы к дебаффам (rt.debuffImmune), индикатор `#l2bot-ind.wide` по левому краю. Рыбалка: учёт после поимки фоном (fishStat/bg), наживка «Авто» по замеру Proof/ч (rt.fishBaitStat, rt.fishVal по разделке, rt.fishRates из магазина; хорошая за Proof — только если +0,3 Proof/заброс). Заточка удочки — только шанс Old Box +1 %/ур., урон не растёт.
+- 7.2.1 (логи 10.10 21:05–21:31): дебаффы по L2WAP (IL_FIX 1083/1222/1164/1168: mDefDown/pAtkDown) + замер выгоды `rt.debuffGain` (spellSample из observeSlot через BUFF_CTX); банка маны не попадает в «Банку HP»; **цепочка: игра шлёт battleSpawnId первого боя, а URL меняется** — откаты по `cdSpawn()`/`GAME_SPAWN`, принятый сервером ход (ACT_NET.ok) засчитывается, потерянный клик без ожидания; средний урон — последние ≈40–60 замеров; кампания убрана (квесты игрок ведёт сам, once camp721), «Квесты на ресурсы» только счётчик; нет своих рядом — свои дальше по локации до телепорта; слот зарядов не того грейда заменяется (shotSlotSwap: «#id»/цвет иконки); Servitor Ultimate Defense не бафф кота. РБ: окно карты должно показать этого РБ (rbModalIs: NPC из spawnId), спецудар ×rbSpK() по боям, «не по силам» по оценке — только пропуск 30 мин, РБ невосприимчивы к дебаффам (rt.debuffImmune), индикатор `#l2bot-ind.wide` по левому краю. Рыбалка: учёт после поимки фоном (fishStat/bg), наживка «Авто» по замеру Proof/ч (rt.fishBaitStat, rt.fishVal по разделке, rt.fishRates из магазина; хорошая за Proof — только если +0,3 Proof/заброс). Заточка удочки — только шанс Old Box +1 %/ур., урон не растёт. РБ-сессия (rt.rbSess, cfg.rbSessBuffs/rbSessNob, raid.rbSessTick/rbSessEnd): баффы FA по 1/5 FA на 3 ч, покупка один раз, после смерти только Noblesse (1323), конец → автофарм. FA с мобов, Coin of Luck донатная. Свой откат по нажатию (combat.ownLeft) не перекрывается серверным «готов».
 - 7.1.21–7.1.23: авто-настройка рыбалки на новом персонаже; экономия MP; простой на 0 MP; раздел «Дебаффы»; охрана эпика не цель; квест профессии как ★-цели; карта раз в 10 боёв.
 - 7.1.24–7.1.26: базовый профиль из экспортов; магистр вручную; выполненные ★ пропускаются; с локации не улетать; заряды по надетому оружию + проверка грейда в магазине; банка сама возвращается на панель.
 - 7.1.27: 15 багов после 2 ревью (перезагрузки по кругу, кот, спам журнала, TvT ↔ рыбалка, рыбалка-настройка).

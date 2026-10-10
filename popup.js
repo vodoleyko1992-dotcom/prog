@@ -67,10 +67,10 @@ async function activateMode(rtPatch, cfgPatch) {
 
 const NUM  = ['debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
-const TXT  = ['petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
+const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
-const BOOL = ['petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
+const DEF = { rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: true, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -194,7 +194,7 @@ async function load() {
   renderDps(rt);
   renderPet(rt);
   renderEff(rt);
-  renderFa(rt, d); renderPots(rt, d);
+  renderFa(rt, d); renderPots(rt, d); renderRbSess(rt, d);
   renderZones(rt, d);
   renderLoot(rt);
   // 🩺 v5.2: самопроверка баффов (пишет бот в бою раз в 15 с)
@@ -649,10 +649,25 @@ function renderZones(rt, d) {
 }
 
 // 💎 баффы за Fast Aden: выбор из списка «+», порядок ▲▼, ✕; баланс и стоимость круга
-const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 1], 1357: ['Prophecy of Wind', 1], 1355: ['Prophecy of Water', 1], 1413: ["Magnus' Chant", 1], 1414: ["Victories of Pa'agrio", 1], 1323: ['Noblesse Blessing', 5] };
+// 7.2.1 (снимок баффера 10.10 22:27): Greater — по 5 FA, обычные — 1 FA, всё на 3 ч; номера Prophecy были перепутаны (1357 — Water, 1355 — Wind)
+const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 5], 1357: ['Prophecy of Water', 5], 1355: ['Prophecy of Wind', 5], 1413: ["Magnus' Chant", 5], 1414: ["Victories of Pa'agrio", 5], 1323: ['Noblesse Blessing', 5],
+  4703: ['Дар Серафима (откат −30 %)', 1], 273: ['Dance of Mystic', 1], 365: ['Dance of Siren', 1], 1303: ['Wild Magic', 1], 264: ['Song of Earth', 1], 267: ['Song of Warding', 1], 1389: ['Великий щит', 1], 1059: ['M.Atk ↑', 1], 1085: ['Cast.Spd ↑', 1], 276: ['Dance of Concentration', 1] };
 const faIds = () => ($('faBuffs').value || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
 const faSet = async ids => { $('faBuffs').value = [...new Set(ids)].join(', '); await save({ target: $('faBuffs') }); };
 function faInfo(rt, id) { const c = rt.faCat?.[id]; return { name: c?.name || FA_KNOWN[id]?.[0] || 'skill ' + id, cost: c?.cost || FA_KNOWN[id]?.[1] || 1, known: !!c } }
+// 7.2.1: 🔥 РБ-сессия с баффом за FA — состав, цена, баланс, ход сессии
+function renderRbSess(rt, d) {
+  if (!$('rbSessBox')) return;
+  const ids = String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0), S = rt.rbSess, now = Date.now();
+  const sum = ids.reduce((a, id) => a + faInfo(rt, id).cost, 0), bal = rt.faBal?.v;
+  const L = [`Баффы: ${ids.map(id => faInfo(rt, id).name).join(', ') || '—'}`, `Стоимость: ${sum} FA на 3 ч${bal != null ? ` · баланс ${bal} FA${bal < sum ? ' ⚠ не хватает' : ` (хватит на ${Math.floor(bal / Math.max(1, sum))})`}` : ' · баланс FA ещё не видел'}`];
+  if (S?.on && !S.bought) L.push('⏳ Сессия начинается: иду к бафферу за баффами');
+  else if (S?.on) { const left = Math.max(0, S.until - now) / 60000, k = (rt.rbKills || 0) - (S.k0 || 0), e = (rt.exp || 0) - (S.e0 || 0);
+    L.push(`🔥 Идёт: осталось ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} · РБ убито ${k} · EXP +${e.toLocaleString('ru')}`); }
+  else if (S?.sum) L.push(`Прошлая сессия: ${S.sum.min} мин · РБ ${S.sum.kills} · EXP +${(S.sum.exp || 0).toLocaleString('ru')} · аден ${(S.sum.adena || 0).toLocaleString('ru')}${S.sum.deaths ? ` · смертей ${S.sum.deaths}` : ''} — ${S.sum.why}`);
+  $('rbSessBox').textContent = L.join('\n');
+  $('rbSessStart').disabled = !!S?.on; $('rbSessStop').disabled = !S?.on;
+}
 function renderFa(rt, d) {
   if (!$('faList')) return;
   const ids = (d.faBuffs || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
@@ -993,7 +1008,19 @@ function currentMode(d) {
 const MODE_NAME = { farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы' };
 function paintModes(d, on) {
   const m = currentMode(d);
-  document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
+  $('rbSessStart').onclick = async () => {
+  await save();
+  await menuPatch({ rbSess: { on: true, start: Date.now(), bought: false } });   // сначала сессия, потом режим (запуск ждёт ответа игры)
+  await setMode('rb');
+  toast('🔥 РБ-сессия: бот идёт к бафферу за баффами, потом — тур по РБ');
+};
+$('rbSessStop').onclick = async () => {
+  const { rt = {} } = await chrome.storage.local.get('rt');
+  await menuPatch({ rbSess: { ...(rt.rbSess || {}), on: false, end: Date.now(), sum: rt.rbSess?.sum || null } });
+  await setMode('auto');
+  toast('РБ-сессия остановлена — автофарм');
+};
+document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
   $('campToggle').classList.toggle('on', !!d.campaign); $('rbToggle').classList.toggle('on', !!d.rbMode); $('tvtToggle').classList.toggle('on', !!d.tvtOn);
   $('rbToggle').dataset.on = d.rbMode ? '1' : '0';
   const mods = [d.campaign && '📜 кампания', d.rbMode && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
@@ -1027,6 +1054,8 @@ $('showAllCls').onclick = async () => {
 const MODES_OFF = { epicMode: false, rbHuntMode: false, fishMode: false, catMode: false };
 async function setMode(m) {
   await save();
+  { const { rt = {} } = await chrome.storage.local.get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
+    if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } }); }
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
