@@ -64,7 +64,11 @@ const due = (c, r) => vm.runInContext(`cfg = mergeCfg(${JSON.stringify(c)}); rt 
 assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 500, deepHot: true }), false, '0 = never: no planned/champion/hot map');
 assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 25 }), true, 'champions on: map at least every 20 fights');
 assert.equal(due({ deepEvery: 99999, searchChamp: false }, { sinceDeep: 25 }), false, 'champions off: 99999 respected');
-assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10 }), true, 'every 10 fights');
+// 8.0 (аудит фарма A3): «каждые 10 боёв» — только когда есть зачем: ★ цель квеста на этой локации (правило [квест] само по себе — не повод)
+assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10 }), false, 'no reason (no ★ target here, champions off): no planned map');
+assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10, zone: 'z', zoneMobs: { z: ['Giant Fungus', 'Dire Wyrm'] }, questTargets: ['Giant Fungus'] }), true, 'every 10 fights while a ★ target is here');
+assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10, zone: 'z', zoneMobs: { z: ['Dire Wyrm'] }, questTargets: ['Giant Fungus'] }), false, '★ target of another location: no planned map');
+assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 9, zone: 'z', zoneMobs: { z: ['Giant Fungus'] }, questTargets: ['Giant Fungus'] }), false);
 // 7.2: активная цель «ресурс» на её точке — карта и при 0 (раз в 5 боёв), при 99999 — не реже раза в 10
 vm.runInContext(`FARM = { res: { coal: { name: 'Coal', drop: [['Goblin', 50, 20, 1, 3, 'z1', 'Zone 1']], sp: [] } } };`, ctx);
 const q0 = ctx.document.querySelector; ctx.document.querySelector = s => s === '#l2-hud-legacy-lvl' ? { textContent: '50' } : q0.call(ctx.document, s);   // уровень героя 50

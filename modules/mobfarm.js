@@ -115,6 +115,20 @@ function ruleMatch(x, r) {
   return true;
 }
 
+// открытая ★ цель квеста есть на ЭТОЙ локации (квест профессии — только свежий ≤ 1 ч; ★ из подписи карты/списка — только мобы этой зоны,
+// мобы зоны ещё не известны — любая). Та же проверка решает «за ★ целью на карту» в nextFight и «есть зачем проверять карту» (searchActive)
+function questHere() {
+  const zM = (env.rt.zoneMobs?.[env.rt.zone] || []).map(n => n.toLowerCase());
+  const pqFresh = Date.now() - (env.rt.profQuest?.t || 0) < 3600000;   // 7.1.30: квест профессии — только свежий (≤ 1 ч)
+  const qNames = [...(pqFresh ? env.rt.profQuest?.open || [] : []), ...(env.rt.questTargets || []).map(n => n.toLowerCase())].filter(n => env.isQuestName(n));
+  return qNames.some(n => !zM.length || zM.includes(n));
+}
+// моб из правила с именем есть на этой локации (как ruleMatch: имя правила — часть имени моба); мобы зоны не известны — да
+function nameHere(name) {
+  const zM = (env.rt.zoneMobs?.[env.rt.zone] || []).map(n => n.toLowerCase());
+  return !zM.length || zM.some(n => n.includes(String(name || '').toLowerCase()));
+}
+
 function rank(r, rules) {
   if (r.boss) return -1;
   if (rules.some(x => x.neg && ruleMatch(x, r))) return -1;
@@ -137,7 +151,13 @@ async function nextFight(ctx) {
   if (!ctx?.rb && await env.townBuffStart('баффы кончились')) return;            // городской бафф слетел (смерть/24 ч)
   const since = Date.now() - (env.rt.shopT || 0);
   const low = since > 600000 ? env.shopNeedByPanel() : '';
-  const oreDue = env.cfg.shopAuto && env.shopPlan().some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > 3600000;
+  const plan = env.cfg.shopAuto ? env.shopPlan() : [];
+  let oreDue = env.cfg.shopAuto && plan.some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > 3600000;
+  // 8.0 (аудит фарма B4): сумка из ответов сервера свежая (< 5 мин, env.invQty) и всё из плана закупки не ниже минимума —
+  // плановый поход в инвентарь (≈10–15 с раз в час) ничего не купит, пропускаем. Не пропускаем, если идут «Квесты на ресурсы»
+  // (прогресс берётся из пересчёта сумки) или полный пересчёт сумки старше 5 ч (по нему оценивается запас банок перед РБ)
+  if (oreDue && !env.resQuests().length && Date.now() - (env.rt.bagAll?.t || 0) < 5 * 3600000
+      && plan.every(x => x.ids?.length && x.ids.every(id => env.invQty?.(id) != null) && x.ids.reduce((a, id) => a + env.invQty(id), 0) >= x.mm[0])) oreDue = false;
   if (low || (oreDue && !ctx?.rb)) { await env.shopStart(low || 'плановая проверка запасов'); location.href = '/char.html'; await env.sleep(4000); return; }
   if (env.autonomyMode() === 'fish') return env.goFishing();
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
@@ -184,13 +204,10 @@ async function nextFight(ctx) {
   // 7.1.30 (10.10 14:01): ★ квестовые мобы на локации (квест профессии: Giant Fungus/Dire Wyrm), а «Охотиться дальше» дал чужого —
   // цепочка 10 боёв била кого попало до плановой проверки карты. Есть открытые ★ цели и этот моб не цель — сразу на карту за целью
   // только если такая цель есть на ЭТОЙ локации (подпись карты «q…» перечисляет цели квеста на любой локации)
-  const zM = (env.rt.zoneMobs?.[env.rt.zone] || []).map(n => n.toLowerCase());
-  const pqFresh = Date.now() - (env.rt.profQuest?.t || 0) < 3600000;   // 7.1.30: квест профессии — только свежий (≤ 1 ч)
-  const qNames = [...(pqFresh ? env.rt.profQuest?.open || [] : []), ...(env.rt.questTargets || []).map(n => n.toLowerCase())].filter(n => env.isQuestName(n));
   // и только если правило [квест] вообще может выбрать цель (иначе карта после каждого боя ни к чему)
   const qRule = rules.some(x => x.quest && !x.neg);
   // 7.1.31: «Проверять карту каждые 0 боёв» = никогда — за ★ целью на карту тоже не ходим (бьём то, что даёт цепочка)
-  const qOpen = qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && qNames.some(n => !zM.length || zM.includes(n));
+  const qOpen = qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && questHere();
   if (ctx && qOpen && !tgt && !ctx.rb) {
     offQuest = true;
     if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); await env.setRt({ chainWhy: 'qmap' }); }
@@ -265,14 +282,62 @@ function candidates(rules, sig, types, limitIdx) {
     if (hl && lvl && lvl > hl + Math.max(qLike ? 10 : 0, env.cfg.lvlAbove ?? 15, relax)) return;
     // v4.44: и не ниже героя больше чем на lvlBelow (по умолчанию 5): после смерти бот бил пауков 15 ур. героем 49
     const relaxDown = env.rt.lvlRelaxDown && Date.now() - env.rt.lvlRelaxDown.t < 20 * 60000;   // 7.1.30: и при автофарме, если улететь не вышло
-    if (hl && lvl && !qLike && !relaxDown && env.cfg.lvlBelow !== 0 && lvl < hl - (env.cfg.lvlBelow ?? 3)) return;
+    // 8.0 (аудит фарма A4, лог 10.10 20:08:57: чемпион «Probe Golem Prodigy IV (46)» в Pavel Ruins при герое 51 окно −3 отсекало):
+    // чемпион даёт в 5–10 раз больше опыта обычного моба (≈29 тыс. против ≈3,5–6 тыс., лог 20:20–20:30) — для чемпионов нижняя
+    // граница не −lvlBelow, а −8 (если игрок не поставил шире)
+    const below = champ ? Math.max(env.cfg.lvlBelow ?? 3, CHAMP_BELOW) : (env.cfg.lvlBelow ?? 3);
+    if (hl && lvl && !qLike && !relaxDown && env.cfg.lvlBelow !== 0 && lvl < hl - below) return;
     // «не по зубам» по опыту: бой с этим видом шёл дольше 45 с (или урон ≈0) — пропускаем 2 часа (v4.23)
     const hard = env.rt.hardMobs?.[(name || '').toLowerCase()];
     if (hard && Date.now() - hard.t < 7200000 && !qLike) return;
     const k = rank(r, rules);
-    if (k >= 0) out.push({ ...r, rank: k });
+    if (k >= 0) out.push({ ...r, rank: k, ql: qLike });
   });
-  return out.sort((a, b) => a.rank - b.rank || a.idx - b.idx);   // приоритет, затем ближе
+  return mobValRank(out);
+}
+
+// 8.0 (аудит фарма B1): среди целей одного приоритета — самая выгодная, а не ближайшая. Раньше в строке «[все]» бот брал первого
+// в списке карты, а виды одной зоны различаются в 2–2,5 раза (лог 10.10 20:09–20:20, Pavel Ruins, время между победами):
+// Deadly Ginzu Golem ≈4,5 тыс. EXP за ≈3,6 с (≈1260 EXP/с) против Horrifying Jackhammer Golem ≈2,2 тыс. за ≈4,6 с (≈490 EXP/с).
+// Ценность вида — EXP за секунду (rt.mobVal: замеры после каждой победы, время приведено к цепочке), листание страницы ≈0,6 с;
+// без замера — медиана зоны (чемпион — ×3: Blazing Swamp 20:20–20:30 — ≈29 тыс. EXP за ≈11 с против ≈870 EXP/с у зоны), при равенстве — выше уровнем
+// (до героя +5; кто ещё выше — тем позже: без замеров к ним не тянемся), ближе — только последним. Вид с замером (≥3 боя) ниже 0,7 медианы зоны — не цель,
+// если есть другие (★ цели квеста и источники ресурса не отсекаются)
+const CHAMP_BELOW = 8, PAGE_S = 0.6, MOBVAL_MAX = 150, MOBVAL_N = 30;
+const mobKey = (name, champ) => (champ ? 'ч:' : '') + String(name || '').toLowerCase();
+const medOf = xs => { const a = xs.filter(v => v > 0).sort((p, q) => p - q), m = a.length >> 1; return !a.length ? 0 : a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+function mobEps(name, champ) {                   // EXP/с вида моба по замерам (обычный — от 3 боёв, чемпион — от 1) или null
+  const v = name ? env.rt.mobVal?.[mobKey(name, champ)] : null;
+  return v && v.n >= (champ ? 1 : 3) && v.sec > 0 && v.exp > 0 ? v.exp / v.sec : null;
+}
+function mobValRank(out) {
+  const hl = env.heroLvl() || 0, V = env.rt.mobVal || {};
+  const zMed = medOf((env.rt.zoneMobs?.[env.rt.zone] || []).map(n => mobEps(n, false) || 0));
+  const zn = (env.rt.zoneMobs?.[env.rt.zone] || []).filter(n => mobEps(n, false)).length;
+  const med = zn >= 3 ? zMed : medOf(out.filter(c => !c.champ).map(c => mobEps(c.name, false) || 0));
+  const chMed = medOf(Object.entries(V).filter(([k, v]) => k.startsWith('ч:') && v.sec > 0).map(([, v]) => v.exp / v.sec));
+  const sk = medOf(Object.values(V).filter(v => v.n >= 3 && v.sec > 0).map(v => v.sec / v.n)) || 4;   // типичное время на моба, с
+  for (const c of out) {
+    const raw = mobEps(c.name, c.champ), pg = Math.floor(c.idx / env.PAGE_SIZE);
+    const v = raw ?? (c.champ ? chMed || med * 3 : med);
+    c.eps = raw;
+    c.val = v > 0 ? v * sk / (sk + PAGE_S * pg) : 0;   // с учётом листания до его страницы
+    c.low = zn >= 3 && raw != null && !c.champ && !c.ql && raw < 0.7 * zMed;
+  }
+  const keep = out.filter(c => !c.low);
+  const list = keep.length ? keep : out;
+  const cap = hl ? hl + 5 : 999, lv = c => (c.lvl || 0) <= cap ? c.lvl || 0 : 2 * cap - c.lvl;   // выше героя +5 — чем выше, тем позже
+  return list.sort((a, b) => a.rank - b.rank || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, выгода, уровень, ближе
+}
+// после победы (из trackEfficiency, без ожидания): EXP и время на этот вид — скользящее по ≈30 последним боям
+function mobValNote(name, champ, exp, sec) {
+  if (!name || !(exp > 0) || !(sec > 0)) return;
+  const V = { ...(env.rt.mobVal || {}) }, k = mobKey(name, champ), o = V[k] || { n: 0, exp: 0, sec: 0 };
+  const f = o.n >= MOBVAL_N ? (MOBVAL_N - 1) / MOBVAL_N : 1;
+  V[k] = { n: Math.min(MOBVAL_N, o.n + 1), exp: Math.round(o.exp * f + exp), sec: +(o.sec * f + sec).toFixed(1), t: Date.now() };
+  const ks = Object.keys(V);
+  if (ks.length > MOBVAL_MAX) ks.sort((a, b) => (V[a].t || 0) - (V[b].t || 0)).slice(0, ks.length - MOBVAL_MAX).forEach(x => delete V[x]);
+  return env.setRt({ mobVal: V });
 }
 
 async function attackSpawn(c, label) {
@@ -561,6 +626,6 @@ async function map() {
   env.setStatus('Цели исчезли из списка, ищу заново');
   await env.sleep(1500);
 }
- return { pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, rank, nextFight, mapReady, candidates, attackSpawn, map };
+ return { pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
  };
 })(globalThis);
