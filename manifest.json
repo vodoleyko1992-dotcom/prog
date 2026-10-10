@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "7.2.5",
-  "description": "L2wap Bot 7.2.5 — восстановление после перезагрузки сервера игры",
+  "version": "8.0",
+  "description": "L2wap Bot 8.0 — глубокое обновление: бой, РБ, рыбалка, фарм, надёжность, меню",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "7.2.5"
+  "version_name": "8.0"
 }

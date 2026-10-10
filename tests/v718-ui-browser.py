@@ -25,7 +25,7 @@ with sync_playwright() as p:
   page.locator('#navToggle').click()
   page.wait_for_timeout(80)
   menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==13,menu
+  assert menu['tabs']==7,menu   # 7.2+: 7 разделов
   assert menu['grid']==(2 if mode=='dock' else 4),menu
   assert menu['visible']=='grid',menu
   page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-menu.png')))
@@ -42,7 +42,7 @@ with sync_playwright() as p:
   page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-fishing.png')))
   page.locator('#modeToggle').click()
   assert page.locator('#quickModeGrid').is_visible()
-  assert page.locator('#quickModeGrid button').count()==5
+  assert page.locator('#quickModeGrid button[data-mode]').count()==6   # 7.2+: 6 режимов «Чем занят бот»
   page.close()
  browser.close()
 print('PASS: Classic in-game layout, 13-module navigation, 375px dock, +10 setting, zero console errors')
