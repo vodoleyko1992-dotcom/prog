@@ -47,27 +47,23 @@ with sync_playwright() as p:
                    ['epicMode', 'rbMode', 'rbHuntMode', 'catMode', 'campaign']), st
         assert st['cfg']['rodEnchantTo'] == 10, st
         assert not st['rt'].get('rodGoalActive', False), st
-        assert 'ВКЛ' in page.locator('#fishToggle').inner_text()
-        page.locator('#fishToggle').click()
+        # 7.2: меню «один режим» — выбранный подсвечен (.on); выключить рыбалку = выбрать другой режим, бот остаётся ON
+        page.evaluate('load()')
+        page.wait_for_function('document.querySelector("#fishToggle").classList.contains("on")')
+        page.locator('#farmToggle').click()
         page.wait_for_function('window.__mockState.cfg.fishMode === false')
         assert page.evaluate('window.__mockState.on') is True, 'Turning off fishing stopped entire bot'
-        assert 'ВЫКЛ' in page.locator('#fishToggle').inner_text()
-        # A retained fishMode flag while globally stopped must offer Start.
-        page.evaluate('''() => { __mockState.cfg.fishMode = true; __mockState.on = false; }''')
         page.evaluate('load()')
-        page.wait_for_function('document.querySelector("#fishToggle").textContent.includes("ЗАПУСТИТЬ")')
-        page.locator('#fishToggle').click()
-        page.wait_for_function('window.__mockState.on === true && window.__mockState.cfg.fishMode === true')
-        page.wait_for_function('__wakeChecks.kicks >= 2')
-        assert page.evaluate('__wakeChecks.reloads') == 0
-        # Every mode uses the same wake path, even if global on was already true.
-        for button_id, flag in [('rbToggle', 'rbMode'), ('epicToggle', 'epicMode'),
-                                ('huntToggle', 'rbHuntMode'), ('campToggle', 'campaign')]:
+        page.wait_for_function('!document.querySelector("#fishToggle").classList.contains("on")')
+        # Every mode uses the same wake path, even if global on was already false.
+        for button_id, flag in [('fishToggle', 'fishMode'), ('epicToggle', 'epicMode'), ('huntToggle', 'rbHuntMode')]:
             page.evaluate('''(k) => { __mockState.cfg[k] = false; __mockState.on = false; }''', flag)
             before = page.evaluate('__wakeChecks.kicks')
             page.locator('#' + button_id).click()
             page.wait_for_function('''k => __mockState.on === true && __mockState.cfg[k] === true''', arg=flag)
             page.wait_for_function('''n => __wakeChecks.kicks > n''', arg=before)
+        assert page.evaluate('__wakeChecks.reloads') == 0
+        assert page.locator('#campToggle').is_hidden(), '7.2.1: campaign removed from the menu'
         # A stale extension script must be reloaded, not silently declared active.
         page.evaluate('chrome.tabs.sendMessage = async () => null')
         page.locator('#start').click()

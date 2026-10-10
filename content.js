@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'basic', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '500/3000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
@@ -1535,7 +1535,7 @@ async function fishCaught(...args) { return L2V7Modules.fishing.fishCaught(...ar
 function fishRateTxt(...args) { return L2V7Modules.fishing.fishRateTxt(...args); }
 async function fishFight(...args) { return L2V7Modules.fishing.fishFight(...args); }
 async function fishing(...args) { return L2V7Modules.fishing.fishing(...args); }
-let fishNoResp = 0, fishGearN = 0;
+let fishNoResp = 0, fishGearN = 0, fishCast = null;   // 7.2.1: fishCast — текущий заброс {bait, t} для замера наживки
 
 // ---------- цикл рыбака: разделка улова в инвентаре → обмен продуктов на Proof ----------
 // Инвентарь (/char.html), вкладка «Рибалка»: строка предмета → значок → окно: «MAX» → «Разрезать» (рыба) или «Открыть» (Old Box).
@@ -3078,7 +3078,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get $q(
   get fire() { return fire; }, set fire(value) { fire = value; },
   get fishCdMsg() { return fishCdMsg; }, set fishCdMsg(value) { fishCdMsg = value; },
   get fishGearMsg() { return fishGearMsg; }, set fishGearMsg(value) { fishGearMsg = value; },
-  get fishGearN() { return fishGearN; }, set fishGearN(value) { fishGearN = value; },
+  get fishGearN() { return fishGearN; }, set fishGearN(value) { fishGearN = value; }, get fishCast() { return fishCast; }, set fishCast(value) { fishCast = value; }, get TAG() { return TAG; },
   get fishLastPre() { return fishLastPre; }, set fishLastPre(value) { fishLastPre = value; },
   get fishMut() { return fishMut; }, set fishMut(value) { fishMut = value; },
   get fishNoResp() { return fishNoResp; }, set fishNoResp(value) { fishNoResp = value; },
@@ -3824,6 +3824,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     Object.assign(rf, { rbStats: S, rbDb: D, rbPreSkip: {}, debuffImmune: { ...(rt.debuffImmune || {}), rb: Date.now() } });   // лог 21:32: «Raid Boss має імунітет до негативних ефектів»
   });
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
+  once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)
   once('camp721', () => { cf.campaign = false; Object.assign(rf, { campOnce: false, campaignDue: false }); });   // 7.2.1: кампания убрана — квесты игрок ведёт сам
   once('deep10_7123', () => { cf.deepEvery = 10; });                                   // 7.1.30: карта раз в 10 боёв (просьба игрока)
   once('aliasFix7121', () => {    // 7.1.30: выкинуть выученные алиасы, совпавшие с именем чужого заклинания

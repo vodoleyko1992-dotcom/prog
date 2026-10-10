@@ -78,7 +78,7 @@ const DEF = { debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true
               nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
-              fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'basic', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
+              fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
               shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '500/3000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0 };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
@@ -180,6 +180,7 @@ async function load() {
       + Object.entries(F.byFish || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ×${v}`).join(' · ')
       + `\nДо разделки: ${rt.fishSinceProc || 0} / ${d.fishProcessEvery || 100}${rt.fishProof != null ? ` · Proof: ${rt.fishProof}` : ''}${rt.fishService ? ` · сейчас: ${rt.fishService === 'cut' ? 'разделка' : 'обмен на Proof'}` : ''}`
       + fishSessLine(rt, F)
+      + baitLine(rt)
       + goalLine(d, rt);
   } else $('fishBox').textContent = 'Ещё не рыбачил';
   if (!document.activeElement?.closest?.('#goalGrid')) renderGoals(rt);
@@ -387,6 +388,14 @@ async function setGoals(list) {
   renderGoals(rt);
 }
 // сессия рыбалки: темп, откат Pumping/Reeling (учится по отказам), урон, расход аден на рыбу (наживка 100, заряд 100)
+// 7.2.1: замер наживки — Proof в час на обычной и хорошей (оценка Proof по видам рыбы из разделки)
+function baitLine(rt) {
+  const S = rt.fishBaitStat || {}, b = S.basic || {}, g = S.good || {};
+  const pph = o => o.ms > 60000 ? o.proof / o.ms * 3600000 : 0, row = (nm, o) => `${nm}: ${o.casts || 0} забр. · клёв ${o.casts ? Math.round((o.bites || 0) / o.casts * 100) : 0}% · ${pph(o) ? pph(o).toFixed(1) + ' Proof/ч' : '—'}`;
+  if (!b.casts && !g.casts) return '';
+  const done = (b.casts || 0) >= 60 && (g.casts || 0) >= 60, per = done ? g.proof / g.casts - b.proof / b.casts : 0;
+  return `\n🪱 ${row('обычная', b)}\n🪱 ${row('хорошая', g)}` + (done ? `\n🪱 хорошая на заброс ${per >= 0 ? '+' : ''}${per.toFixed(2)} Proof → ${per > 0.3 ? 'выгодно даже покупать за Proof (0,3 шт.)' : pph(g) > pph(b) * 1.03 ? 'ловить на бесплатных (Old Box), не покупать' : 'не нужна — только обычная'}` : `\n🪱 замер: по 60 забросов на каждой`);
+}
 function fishSessLine(rt, F) {
   const S = rt.fishSess; if (!S?.n) return '';
   const h = Math.max(1, (S.last || Date.now()) - S.t0) / 3600000;
@@ -1085,7 +1094,7 @@ $('zoneBox').onclick = async e => {
 // 100 пакетов наживки (1000 шт. ≈ 680 рыб) и заряды под наживку (≈75 пакетов, кончаются вместе) — v4.56, без лимита, разделка каждые 100, Old Box
 $('fishBest').onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  await menuPatch({}, { cfgPatch: { fishBait: 'basic', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true } });
+  await menuPatch({}, { cfgPatch: { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true } });
   load();
 };
 $('fishReset').onclick = async () => {

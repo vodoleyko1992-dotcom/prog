@@ -91,11 +91,66 @@ async function fishTimeTopUp() {
   return ok;
 }
 
-async function fishStat(patch, fishName) {
+// 7.2.1 (лог 10.10 18:32–19:35): учёт после поимки — три записи в память подряд (≈0,2 с на рыбу перед следующим забросом).
+// Память в вкладке меняется сразу, запись в хранилище идёт фоном (очередь патчей) — заброс её не ждёт
+function fishStat(patch, fishName) {
   const F = { casts: 0, bites: 0, nobite: 0, caught: 0, lost: 0, byFish: {}, t0: Date.now(), ...(env.rt.fish || {}) };
   for (const [k, v] of Object.entries(patch)) F[k] = (F[k] || 0) + v;
   if (fishName) F.byFish = { ...F.byFish, [fishName]: (F.byFish[fishName] || 0) + 1 };
-  await env.setRt({ fish: F });
+  return bg(env.setRt({ fish: F }));
+}
+const bg = p => { try { p?.catch?.(e => console.warn(env.TAG, 'рыбалка: запись', e)); } catch (e) {} return p; };
+
+// ---------- 7.2.1: экономика рыбалки ----------
+// Proof с рыбы по видам: из итогов разделки («Вы разрезали Black Fish ×110. Получено: Fish Oil ×327, …») и курсов обмена магазина рыбака
+// (снимок 10.10: Fish Oil 25 → 1, Fish Gem 4 → 1, Fish Scale 5 → 1, Greater Fish Oil 2 → 1, Thin Fish Bone 4 → 1, Shiny Gem/Scale и Thick Bone 1 → 2,
+// Premium Fish Oil 1 → 5). Лог 18:48/19:21: White Fish ≈0,36 Proof (≈3,6 подсечки), Black ≈0,28 (≈5,7), Fat ≈0,30 (≈9,3)
+const FISH_RATE_DEF = { fish_oil: [25, 1], fish_gem: [4, 1], fish_scale: [5, 1], greater_fish_oil: [2, 1], thin_fish_bone: [4, 1],
+  shiny_fish_gem: [1, 2], shiny_fish_scale: [1, 2], thick_fish_bone: [1, 2], premium_fish_oil: [1, 5] };
+const matKey = n => String(n || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+function fishCutValue(res) {                       // → { name, n, proof } или null
+  const m = String(res).match(/(?:разрезали|розрізали)\s+(.+?)\s*×\s*(\d+)\.?\s*(?:Получено|Отримано):\s*(.+)$/i);
+  if (!m) return null;
+  const R = { ...FISH_RATE_DEF, ...(env.rt.fishRates || {}) };
+  let proof = 0;
+  for (const it of m[3].split(',')) {
+    const x = it.match(/(.+?)\s*×\s*(\d+)/); if (!x) continue;
+    const r = R[matKey(x[1])]; if (r) proof += +x[2] / r[0] * r[1];
+  }
+  return { name: m[1].trim(), n: +m[2], proof };
+}
+async function fishValNote(res) {
+  const v = fishCutValue(res); if (!v || !(v.n > 0)) return;
+  const V = { ...(env.rt.fishVal || {}) }, o = V[v.name] || { n: 0, proof: 0 };
+  const k = o.n > 2000 ? 0.5 : 1;                  // свежие разделки весят больше
+  V[v.name] = { n: Math.round(o.n * k) + v.n, proof: +(o.proof * k + v.proof).toFixed(2) };
+  await env.setRt({ fishVal: V });
+}
+const fishValOf = name => { const V = env.rt.fishVal || {}, v = V[name]; if (v?.n) return v.proof / v.n;
+  const all = Object.values(V).reduce((a, x) => [a[0] + x.proof, a[1] + x.n], [0, 0]); return all[1] ? all[0] / all[1] : 0.33; };
+// замер по наживке: забросы, поклёвки, пойманные, время (от заброса до конца вываживания) и Proof по видам
+const curBait = () => fSlot('goodBait')?.className.includes('toggle-on') ? 'good' : 'basic';
+function baitNote(kind, patch) {
+  const S = { ...(env.rt.fishBaitStat || {}) }, o = { casts: 0, bites: 0, caught: 0, ms: 0, proof: 0, ...(S[kind] || {}) };
+  for (const [k, v] of Object.entries(patch)) o[k] = +((o[k] || 0) + v).toFixed(3);
+  S[kind] = o; bg(env.setRt({ fishBaitStat: S }));
+}
+const baitPph = o => o?.ms > 60000 ? o.proof / o.ms * 3600000 : 0;   // Proof в час
+// «Якісна наживка» (Good Fishing Lure ×10 = 3 Proof, т.е. 0,3 Proof за заброс; бесплатно — из Old Box). В игре описания нет —
+// решаем по замеру: по 60+ забросов на каждой, сравниваем Proof/ч. Хорошая лучше ≥ 3 % — ловим на ней, пока есть (бесплатные из Old Box);
+// покупать её за Proof выгодно, только если прибавка на заброс больше 0,3 Proof (пишем в журнал, сами не покупаем)
+function baitAuto() {
+  const S = env.rt.fishBaitStat || {}, g = S.good || {}, b = S.basic || {};
+  if ((g.casts || 0) < 60) return 'goodBait';        // нет хорошей — fishPrepare сам перейдёт на обычную (и вернётся через 30 мин)
+  if ((b.casts || 0) < 60) return 'basicBait';
+  return baitPph(g) > baitPph(b) * 1.03 ? 'goodBait' : 'basicBait';
+}
+const baitWant = () => env.cfg.fishBait === 'good' ? 'goodBait' : env.cfg.fishBait === 'auto' ? baitAuto() : 'basicBait';
+function baitVerdict() {                            // текст для журнала/меню
+  const S = env.rt.fishBaitStat || {}, g = S.good || {}, b = S.basic || {};
+  if ((g.casts || 0) < 60 || (b.casts || 0) < 60) return `замер наживки: обычная ${b.casts || 0}/60, хорошая ${g.casts || 0}/60 забросов`;
+  const pg = baitPph(g), pb = baitPph(b), perCast = (g.proof / g.casts) - (b.proof / b.casts);
+  return `хорошая ${pg.toFixed(1)} Proof/ч против ${pb.toFixed(1)} у обычной (${pg > pb * 1.03 ? 'лучше' : 'не лучше'}); на заброс ${perCast >= 0 ? '+' : ''}${perCast.toFixed(2)} Proof — покупать за Proof (0,3 за шт.) ${perCast > 0.3 ? 'выгодно' : 'невыгодно'}`;
 }
 
 function fishWatch() {
@@ -342,7 +397,11 @@ async function fishRod() {
 
 async function fishPrepare() {                  // удочка, наживка выбрана и есть, заряды включены
   if (!(await fishRod())) return false;
-  const want = env.cfg.fishBait === 'good' ? 'goodBait' : 'basicBait';
+  const want = baitWant();
+  if (env.cfg.fishBait === 'auto' && want !== env.rt.baitAutoWant) {   // 7.2.1: смена решения «Авто» — в журнал с причиной
+    await env.setRt({ baitAutoWant: want, baitSwapTo: null });
+    env.rec('B', 'рыбалка', `наживка «Авто»: ${want === 'goodBait' ? 'хорошая' : 'обычная'} — ${baitVerdict()}`);
+  }
   // сразу после загрузки страницы счётчики ещё пусты — ждём, пока панель/строка снаряжения покажет число
   await env.waitFor(() => fishQty(want) != null, 8000, 150);
   // журнал 08.10 07:00–07:04: «Купити» молча не срабатывала ни у бота, ни у игрока (ни сообщения, ни списания аден),
@@ -447,9 +506,10 @@ async function fishCaught(name) {
   const F = env.rt.fish || {};
   const old = env.rt.fishSess, sess = old && Date.now() - (old.last || 0) < 15 * 60000 ? { ...old } : { t0: Date.now() - 6000, n: 0 };   // пауза > 15 мин — новая сессия
   sess.n++; sess.last = Date.now(); sess.shots = (sess.shots || 0) + env.fishShotsSess; env.fishShotsSess = 0;
-  await fishStat({ caught: 1 }, name);
-  await env.setRt({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess, fishDmg: env.rt.fishDmg, fishCdStat: env.rt.fishCdStat });
-  await fishTgtAdd('fish', 1);
+  fishStat({ caught: 1 }, name);
+  bg(env.setRt({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess, fishDmg: env.rt.fishDmg, fishCdStat: env.rt.fishCdStat }));
+  if (env.fishCast) { baitNote(env.fishCast.bait, { caught: 1, ms: Date.now() - env.fishCast.t, proof: fishValOf(name) }); env.fishCast = null; }
+  const tg = env.rt.fishTgt; if (tg && !tg.done && tg.type === 'fish') await fishTgtAdd('fish', 1);   // цель «N рыб» — может остановить бота, это ждём
   env.rec('B', 'рыбалка', `поймана ${name} · ${fishRateTxt()}`);
 }
 
@@ -510,7 +570,8 @@ async function fishFight() {
     const caught = lines.find(l => /catch/.test(l.cls) || /Вы вытащили|Ви витягли/i.test(l.t));
     if (caught) { await fishCaught(caught.fish || fishName); return; }
     if (/сорвалась|зірвалась/i.test(txt)) {
-      await fishStat({ lost: 1 });
+      fishStat({ lost: 1 });
+      if (env.fishCast) { baitNote(env.fishCast.bait, { ms: Date.now() - env.fishCast.t }); env.fishCast = null; }
       env.rec('B', 'рыбалка', `сорвалась ${fishName}: «${f2.st}» → нажат ${f2.need} · ${txt.slice(0, 120)}`);
       return;
     }
@@ -594,11 +655,12 @@ async function fishing() {
   fishWatch();
   const pre = fishLog(), m0 = env.fishMut, castT = Date.now();
   const preTop = pre[0];
-  const baitSlot = () => fSlot(env.cfg.fishBait === 'good' ? 'goodBait' : 'basicBait');
+  const bait = curBait(), baitSlot = () => fSlot(bait + 'Bait');   // 7.2.1: та наживка, что выбрана в игре (а не в настройках)
   const bait0 = env.qty(baitSlot());                 // наживка тратится на заброс — надёжный признак, что заброс принят
   env.fire(fb);
   let castSeen = false, gearMsg = '';
-  await fishStat({ casts: 1 });
+  fishStat({ casts: 1 });
+  env.fishCast = { bait, t: castT };
   const res = await env.waitFor(() => {
     if (fishState()) return 'bite';
     const changed = env.fishMut !== m0;
@@ -618,7 +680,7 @@ async function fishing() {
     return null;
   }, 25000, 60);
   if (res === 'gear') {                           // игра отказала в забросе: удочка / наживка
-    await fishStat({ casts: -1 });
+    fishStat({ casts: -1 }); env.fishCast = null;
     env.rec('B', 'рыбалка', `заброс отклонён: «${gearMsg.slice(0, 100)}» — ${env.ROD_RE.test(gearMsg) ? 'выбираю удочку' : 'проверяю наживку'}`);
     if (env.ROD_RE.test(gearMsg)) await env.setRt({ fishRodForce: gearMsg.slice(0, 60) });
     else if (env.cfg.fishAutoBuy) await env.setRt({ fishBuyFail: { ...(env.rt.fishBuyFail || {}), bait: 0 } });
@@ -628,12 +690,14 @@ async function fishing() {
   }
   env.fishGearN = 0;
   if (res) { env.fishNoResp = 0; if (env.rt.fishSoftN) await env.setRt({ fishSoftN: 0 }); }   // заброс прошёл — лесенка пауз заново с 5 с
-  if (res === 'bite') { await fishStat({ bites: 1 }); return fishFight(); }
+  if (res === 'bite' || res === 'none') baitNote(bait, { casts: 1, ...(res === 'bite' ? { bites: 1 } : {}) });
+  if (res === 'bite') { fishStat({ bites: 1 }); return fishFight(); }
   if (res === 'none') {
-    await fishStat({ nobite: 1 });
+    fishStat({ nobite: 1 });
+    if (env.fishCast) { baitNote(bait, { ms: Date.now() - env.fishCast.t }); env.fishCast = null; }
     env.setStatus('Рыбалка: не клюнула — перезабрасываю');
-    await env.waitFor(() => fOk(fSlot('fishing')) || fishState(), 3000, 50);   // сразу, как только удочка доступна
-    await env.sleep(env.rnd(50, 150));
+    // 7.2.1: сразу, как только удочка доступна; «реакция» и так есть перед самим забросом (раньше — ещё 50–150 мс сверху)
+    await env.waitFor(() => fOk(fSlot('fishing')) || fishState(), 3000, 30);
     return;
   }
   // заброс без ответа 25 с: лаг, нет наживки или страница «уснула» — после 3 подряд перезагружаем рыбалку
@@ -668,6 +732,7 @@ async function fishCut() {
         const res = (env.$q('#char-bag-modal-overlay')?.textContent || '').replace(/\s+/g, ' ').match(/(Вы|Ви)\s+(разрезали|розрізали|открыли|відкрили)[^]*?(?=Информация|Закрыть|$)/i)?.[0] || '';
         got.push(`${name}: ${res.slice(0, 140)}`);
         env.rec('B', 'рыбалка: разделка', `${name} ×${j.qty || '?'} → ${res.slice(0, 160)}`);
+        try { await fishValNote(res); } catch (e) {}   // 7.2.1: Proof с рыбы по видам — для замера наживки
       }
     }
     env.fire(env.$q('#char-bag-modal-close')); await env.sleep(env.rnd(500, 800));
@@ -699,6 +764,9 @@ async function fishExchange() {
   if (env.rt.fishShopRetry) await env.setRt({ fishShopRetry: 0 });
   await env.sleep(env.rnd(300, 500));
   const p0 = proof(), keys = [...document.querySelectorAll('#fishing-shop-exchange .l2-fshop-row--exchange')].map(r => r.dataset.exchange);
+  { const R = {};   // 7.2.1: курсы обмена «N → Proof M» — для оценки Proof с рыбы
+    for (const r of document.querySelectorAll('#fishing-shop-exchange .l2-fshop-row--exchange')) { const m = (r.querySelector('.l2-fshop-row__rate')?.textContent || r.textContent).match(/(\d+)\s*→\s*Proof\s*(\d+)/i); if (m && r.dataset.exchange) R[r.dataset.exchange] = [+m[1], +m[2]]; }
+    if (Object.keys(R).length && JSON.stringify(R) !== JSON.stringify(env.rt.fishRates || {})) await env.setRt({ fishRates: R }); }
   const made = [];
   for (const k of keys) {
     if (!env.on) return;
@@ -801,6 +869,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
+ return { fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
  };
 })(globalThis);
