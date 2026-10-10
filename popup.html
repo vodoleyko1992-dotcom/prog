@@ -187,7 +187,8 @@
 <header>
   <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
   <div id="heroLine"></div>
-  <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Сбросить счётчики боёв, опыта и добычи">↺</button></div>
+  <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
+  <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
   <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="false" title="Показать или скрыть быстрые переключатели">
     <span class="mode-toggle-title">◫ Быстрые режимы</span><span id="modeSummary">Настроить режимы</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
   </button>
@@ -217,7 +218,7 @@
   <div class="nav-heading">НАВИГАЦИЯ</div>
   <button data-tab="overview" class="act" title="Состояние и обзор подсистем"><span class="ic">◈</span>Обзор</button>
   <div class="nav-group">РЕЖИМЫ</div>
-  <button data-tab="hunt" title="Фарм, автофарм, кампания, катакомбы, TvT, ресурсы"><span class="ic">◎</span>Охота</button>
+  <button data-tab="hunt" title="Фарм на месте, автофарм, катакомбы, TvT, ресурсы"><span class="ic">◎</span>Охота</button>
   <button data-tab="rb" title="Рейд-боссы, тур по РБ, эпик-боссы"><span class="ic">♛</span>РБ и эпики</button>
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <div class="nav-group">ОБЩЕЕ</div>
@@ -230,33 +231,34 @@
 <div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div>
 
 <section id="tab-overview" class="act">
-  <h4>Система под контролем</h4>
-  <div class="intro-callout"><b>Бот выполняет один режим за раз.</b><p>Выбери его в «Быстрых режимах» сверху: фарм на месте, автофарм, тур по РБ, эпики, рыбалка или катакомбы. Кампания, «РБ между мобами» и TvT — дополнения к фарму. Подробные настройки — в разделах ниже.</p></div>
-  <div class="overview-stat" aria-label="Статистика текущей сессии">
-    <div><span>БОЁВ</span><strong id="overviewKills">0</strong></div><div><span>ОПЫТ</span><strong id="overviewExp">0</strong></div><div><span>АДЕНА</span><strong id="overviewAdena">0</strong></div><div><span>СОСТОЯНИЕ</span><strong id="overviewState">Ожидание</strong></div>
+  <!-- 8.0 (аудит меню): «Обзор» — живая сводка вместо статичного текста и плиток-дублей шапки -->
+  <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
+  <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
+  <div id="dash" class="dash no-card" aria-label="Сводка текущей сессии">
+    <div class="dash-head"><strong id="dashMode">—</strong><span id="dashState" class="dash-state">—</span></div>
+    <div id="dashSub" class="dash-sub"></div>
+    <div id="dashKpi" class="dash-kpi"></div>
+    <div id="dashLines" class="dash-lines"></div>
   </div>
-  <h4>Игровые модули</h4>
+  <h4>Быстрые переходы</h4>
   <div class="overview-modules">
-    <button type="button" class="module-tile" data-goto="hunt"><span class="tile-icon">◎</span><span><strong>Охота</strong><small>Фарм, приоритеты, кампания, TvT, локации и автофарм</small></span><em>Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="rb"><span class="tile-icon">♛</span><span><strong>Рейд-боссы</strong><small>РБ между мобами и тур по РБ</small></span><em id="modeRbState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="hunt"><span class="tile-icon">◎</span><span><strong>Охота</strong><small>Фарм на месте, приоритеты, TvT, локации и автофарм</small></span><em id="modeHuntState">Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="rb"><span class="tile-icon">♛</span><span><strong>Рейд-боссы</strong><small>Тур по РБ, РБ между мобами, РБ-сессия</small></span><em id="modeRbState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="epic"><span class="tile-icon">✦</span><span><strong>Эпические боссы</strong><small>Выбор, оценка, попытки и лимиты</small></span><em id="modeEpicState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="dungeon"><span class="tile-icon">▥</span><span><strong>Катакомбы</strong><small>Выбор подземелья</small></span><em id="modeCatState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="fish"><span class="tile-icon">◉</span><span><strong>Рыбалка</strong><small>Заброс, улов, разделка, Proof</small></span><em id="modeFishState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">⚔</span><span><strong>Бой и кот</strong><small>Умения, кот, дебаффы, баффы, оружие</small></span><em>Открыть ↗</em></button>
   </div>
-  <h4>Как пользоваться</h4>
-  <div class="help-steps"><div><b>01</b><span><strong>Выбери режим</strong>«Быстрые режимы» сверху — ровно один из шести.</span></div><div><b>02</b><span><strong>Настрой условия</strong>Открой модуль слева. Значок «?» объясняет конкретную настройку.</span></div><div><b>03</b><span><strong>Запусти бот</strong>Кнопка «Старт» включает выполнение. Текущие действия и результаты видны в статусе.</span></div><div><b>04</b><span><strong>Следи за качеством</strong>Диагностика позволяет выгрузить журнал и отчёт автообучения.</span></div></div>
-  <div class="important-note"><b>Режим всегда один:</b> выбор нового режима выключает предыдущий и запускает бота. TvT прерывает любой режим на время события.</div>
+  <div class="hint">Режим выбирается в «◫ Быстрых режимах» сверху — включён ровно один; «РБ между мобами» и TvT — дополнения к фарму. TvT прерывает любой режим на время события. ↺ — новая сессия: темп «в час» считается с этого нажатия.</div>
 </section>
 
 <!-- 🎯 ЦЕЛИ -->
 <section id="tab-hunt">
   <div hidden><div id="campBox" class="camp"></div><input id="campaignEvery" type="number" min="5"><button id="campNow"></button></div>
-  <h4>📜 Квесты</h4>
-  <div class="hint">Квесты ведёте вы: сами летите на точку квеста и сами сдаёте. Бот там, где стоит, бьёт мобов квеста (★ на карте и цели квеста профессии) первыми — правило «★ Квест» в приоритетах ниже.</div>
   <h4>Режим охоты</h4>
   <label>🔁 Цепочкой («Охотиться дальше») <input id="chain" type="checkbox"></label>
   <label>★ Искать квестовых по локации <input id="searchQuest" type="checkbox"></label>
+  <div class="hint">Квесты ведёте вы (сами летите и сдаёте). Бот там, где стоит, первыми бьёт мобов квеста: ★ на карте и цели квеста профессии.</div>
   <label>⚔ Искать чемпионов по локации <input id="searchChamp" type="checkbox"></label>
   <div class="hint">Чемпионов бот видит только на карте — пока галочка стоит, проверяет карту не реже раза в 20 боёв (даже если ниже указано больше). При «0» ниже — карту не проверяет совсем, чемпионы — только те, что даст цепочка. Исключение: на точке «Фарма ресурса» / «Охоты на рецепт» карта открывается сама (раз в 5 боёв), чтобы бить мобов-источников.</div>
   <label>Проверять карту каждые N боёв (0 = никогда, только цепочка) <input id="deepEvery" type="number" min="0"></label>
@@ -287,7 +289,8 @@
 
   <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
   <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
-  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), сначала стан (если цель не в стане), потом сверхсильные, удары за энергию и силовые, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
 
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
   <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации (список зон «Телепорта» и накопленный EXP/ч) и летит в подходящую, дальше пробует зоны и держится лучшей.</p></div>
@@ -299,7 +302,7 @@
   <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
   <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
   <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
-  <div class="hint">Подходящие зоны — те, где уровни мобов из «Телепорта» попадают в желаемое окно. Бот бьёт только мобов этого окна (квестовые — до +10 и выше окна); если на карте таких нет — сам летит в подходящую зону. Бот пробует каждую (N боёв), потом летит в лучшую по EXP/ч, если она лучше текущей на 15 %+. Не работает в Кампании, РБ и Рыбалке. Телепорт платный — резерв адены из «Закупки».</div>
+  <div class="hint">Подходящие зоны — те, где уровни мобов из «Телепорта» попадают в желаемое окно. Бот бьёт только мобов этого окна (квестовые — до +10 и выше окна); если на карте таких нет — сам летит в подходящую зону. Бот пробует каждую (N боёв), потом летит в лучшую по EXP/ч, если она лучше текущей на 15 %+. Не работает в туре по РБ, эпиках, рыбалке и катакомбах. Телепорт платный — резерв адены из «Закупки».</div>
 
   <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
   <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
@@ -310,7 +313,7 @@
   <input id="farmSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе ресурсов (как на форуме)" autocomplete="off">
   <div id="farmTree" class="ftree" data-kind="farm"></div>
   <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
-  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми. Ресурс главы («Нужно сдать») берётся сам, если включена Кампания.</div>
+  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми.</div>
   <h4>📜 Охота на рецепты (форум)</h4>
   <label>Рецепт <input id="recipeRes" class="nm" list="recipeResList" placeholder="напр. Recipe: Bonebreaker"><datalist id="recipeResList"></datalist></label>
   <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
@@ -326,7 +329,7 @@
   <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
   <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
   <div id="catBox" class="hint" style="white-space:pre-line"></div>
-  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов», но не выше героя +8 (в подземельях мобы злее). После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). РБ внутри — только при включённом «Фарм РБ». Пока галочка стоит, обычная охота на карте не идёт (Кампания и Тур РБ — главнее).</div>
+  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов», но не выше героя +8 (в подземельях мобы злее). После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). РБ внутри — только при включённом «👑 РБ между мобами». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
 
   <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включение производится только переключателем «Фармить в подземелье».</div>
 </section>
@@ -337,7 +340,7 @@
 <section id="tab-rb">
   <div class="rb-summary">
     <strong>Рейд-боссы · Центр управления</strong>
-    <p>Включи тур — обычный фарм РБ активируется автоматически. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
+    <p>Включи тур — «РБ между мобами» включится сам. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
     <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
     <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
   </div>
@@ -358,11 +361,11 @@
   <label>Резерв банок (не тратить на РБ), шт. <input id="rbPotReserve" type="number" min="0"></label>
   <label>💧 Банки MP на РБ (при MP &lt; 80) <input id="rbMpPots" type="checkbox"></label>
   <label>⚡ Быстрая реакция на РБ (100–220 мс) <input id="rbFast" type="checkbox"></label>
-  <div class="hint">Модель 100 000 боёв: бафф Bear −20 % времени, банки MP ещё −34 % (≈1,5 банки на РБ), быстрая реакция −7 %; Soul Breaker и Burning Fist в силовых −16 %. Станы на РБ бесполезны (HP и так держится вампириком). Без банок бот бережёт ману: по откату — удары с лучшим уроном на 1 MP (Force Blaster, Soul Breaker), дорогие — только из излишка.</div>
+  <div class="hint" data-cls="fighter">Модель 100 000 боёв (воин): бафф Bear −20 % времени, банки MP ещё −34 % (≈1,5 банки на РБ), быстрая реакция −7 %; Soul Breaker и Burning Fist в силовых −16 %. Станы на РБ бесполезны (HP и так держится вампириком). Без банок бот бережёт ману: по откату — удары с лучшим уроном на 1 MP (Force Blaster, Soul Breaker), дорогие — только из излишка.</div>
   <div class="hint">Бот меряет урон по РБ и потерю HP. Без банок не успеваем — считает, сколько банок нужно на всё убийство (с запасом 25 %) и хватит ли их за вычетом резерва и с учётом скорости питья. Хватит — бьёт и пьёт; не хватит — «не по силам».</div>
   <h4>🧭 Тур по РБ</h4>
   <div class="row"><button id="huntToggle2">🧭 Тур по РБ: ВЫКЛ</button></div>
-  <div class="hint">Включение тура автоматически включает фарм РБ. Отключение фарма РБ выключает тур.  По шагам: список РБ игры (Меню → Рейдовые боссы) → выбор: живой, игра разрешает, уровень не дальше ±15 от героя (и в пределах настроек выше), не «не по силам», не пробовали 30 мин; сначала самые слабые (ниже уровнем) → полное HP/MP у баффера → «Телепорт» к РБ → поиск на карте → бой с оценкой «хватит ли сил» → следующий. Мобов между РБ не фармит. Подходящих нет — ждёт 10 с и перечитывает список. «Фарм РБ» — отдельно: бьёт РБ только в текущей локации.</div>
+  <div class="hint">Включение тура включает и «👑 РБ между мобами»; выключение «РБ между мобами» выключает тур. По шагам: список РБ игры (Меню → Рейдовые боссы) → выбор: живой, игра разрешает, уровень не дальше ±15 от героя (и в пределах настроек выше), не «не по силам», не пробовали 30 мин; сначала самые слабые (ниже уровнем) → полное HP/MP у баффера → «Телепорт» к РБ → поиск на карте → бой с оценкой «хватит ли сил» → следующий. Мобов между РБ не фармит. Подходящих нет — ждёт 10 с и перечитывает список. «👑 РБ между мобами» — отдельно: бьёт РБ только в текущей локации.</div>
   <div class="row"><button id="rbOrderUp" title="Сначала самые слабые по уровню — начало списка «Рейдовые боссы»">⬆ С самых слабых (начало списка)</button><button id="rbOrderDown" title="Сначала самые сильные по уровню — конец списка">⬇ С самых сильных (конец списка)</button></div>
   <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
   <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
@@ -370,7 +373,7 @@
   <div class="hint">Сравнивает РБ по вероятности победы, ожидаемой награде, длительности боя, стоимости телепорта и лечению. После победы запоминает реальные адену, EXP и длительность боя для этого РБ. Убыточных пропускает; список старше 10 мин обновляет. Оценка EXP в аденах условна. По умолчанию выключено.</div>
   <div id="rbTourBox" class="hint" style="white-space:pre-line"></div>
   <h4>База РБ (все локации)</h4>
-  <div id="rbList"><div class="hint">Пусто — включите «Фарм РБ» и зайдите на карту</div></div>
+  <div id="rbList"><div class="hint">Пусто — включите «👑 Тур по РБ» или «РБ между мобами» и зайдите на карту</div></div>
   <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
 
   <div class="subsec-title"><span id="tab-epic" class="tab-anchor"></span>🐉 Эпик-боссы</div>
@@ -394,7 +397,7 @@
 </section>
 
 
-<!-- ✨ СКИЛЛЫ -->
+<!-- ⚔ БОЙ И КОТ -->
 <section id="tab-panel">
   <div class="row"><button id="check">🔍 Проверить</button><button id="suggest">🤖 Распознать</button></div>
   <div class="row" id="applyRow" hidden><button id="apply">✅ Применить предложенное</button></div>
@@ -444,7 +447,7 @@
   <label>Важные баффы <input id="nKeyBuffs" class="nm" placeholder="Frenzy, Guts, Zealot, War Cry…"></label>
   <label>Без условия по HP — только с РБ и чемпионами <input id="keyBuffBoss" type="checkbox"></label>
   <label>🪓 Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
-  <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из вкладки «Банки». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
+  <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <div class="hint">Аварийные (действуют только при HP ≤ 30 %: Frenzy, Guts, Zealot, Angelic Icon) бот жмёт, как только HP упало до 30 % — раньше банки HP, чтобы банка не «перескочила» порог. Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → остальные → Zealot. Zealot режет получаемое лечение вдвое — в бою с РБ (где живём на банках) только на добивании, когда у РБ ≤ 15 %. Остальные важные (War Cry, Battle Roar и т.п.) — в начале боя с РБ/чемпионом (или в каждом бою, если галочку снять).</div>
   <h4>🔁 Постоянные баффы (тогглы)</h4>
   <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
@@ -522,8 +525,8 @@
   <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
   <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
   <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
-  <label>Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
-  <div class="hint">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
+  <label data-cls="fighter">Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
+  <div class="hint" data-cls="fighter">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
   <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
   <label>Экспериментально: отступать с обычного РБ <input id="rbChipRetreat" type="checkbox"></label>
   <label>Макс. попыток захода на одного РБ за час <input id="rbChipMaxAttempts" type="number" min="1" max="10"></label>
@@ -533,7 +536,7 @@
   <label>Соски <input id="nShots" class="nm"></label>
   <label>Банка MP <input id="nMpPot" class="nm"></label>
   <label>Банка HP <input id="nHpPot" class="nm"></label>
-<div class="hint">Какие слоты панели боя — банки и заряды. «Распознать» на вкладке «Скиллы» заполняет их сам.</div>
+<div class="hint">Какие слоты панели боя — банки и заряды. «🤖 Распознать» в разделе «Бой и кот» заполняет их сам.</div>
   <h4>🧪 Зелья (бот изучает сам)</h4>
   <div id="potBox" class="zbox"><div class="hint">Пока пусто — бот запишет банки с панели в начале боя, а сколько лечит каждая — после первого глотка.</div></div>
   <h4>🛒 Закупка расходников (Магазин вещей)</h4>
@@ -641,6 +644,7 @@
   <div class="row"><button id="learnReport" class="main" title="HTML-отчёт: изменения игры, проблемные селекторы, запросы API и их поля, скриншоты">⬇ Отчёт автообучения</button><button id="learnReset" title="Стереть базу автообучения (бот начнёт учиться заново)">↺ Сбросить</button></div>
   <div class="hint">Бот запоминает, на какие элементы страниц он опирается и как устроены ответы сервера игры. Если элемент перестал находиться, страница поменялась или у запроса пропали поля — это фиксируется как «изменение игры» (в журнале [L]) со снимком страницы, а в отчёте видно, что именно сломалось — по нему делается патч. Запросы к серверу пишутся в журнал [N] с ответами (пароли, токены и сессии вымарываются), сообщения игры — [G]. Скриншоты требуют разрешения браузера «доступ ко всем сайтам» (Chrome спросит при включении) и снимаются, только когда вкладка игры на экране.</div>
   <h4>Выгрузка для анализа</h4>
+  <div class="hint">Всё сразу (журнал + снимки + отчёт автообучения) — кнопка «📤 Логи для разбора» в «Обзоре».</div>
   <div class="row"><button id="exNew" class="main">⬇ Новое</button><button id="exToday">⬇ Сегодня</button></div>
   <div class="row"><button id="exLast">⬇ Последние</button><input id="recN" type="number" min="50" max="20000" value="20000" style="width:82px;flex:0 0 82px"><button id="exJson" title="Последние N событий в формате JSON Lines — для глубокого анализа (по одному событию на строку, с ответами сервера)" style="flex:0 0 74px">⬇ JSON</button></div>
   <div class="hint">В начале текстового журнала — сводка: события по типам, запросы к серверу игры (сколько, среднее время, ошибки), частые сообщения игры, ошибки и замеченные изменения игры.</div>

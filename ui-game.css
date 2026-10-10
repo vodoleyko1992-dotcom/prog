@@ -233,3 +233,38 @@ input[type=checkbox]::before{top:2px!important;left:2px!important;width:14px!imp
   background:#d6c3a5!important;box-shadow:none!important}
 input[type=checkbox]:checked::before{transform:translateX(14px)!important;background:#f6f2e6!important}
 label{column-gap:5px!important}
+
+/* 8.0 (аудит меню): живая сводка «Обзора», кнопка «📤 Логи для разбора», постоянная строка «вкладка не отвечает»,
+   тосты с переносом (на 375 px длинный текст обрезался nowrap) */
+.wake-warn{margin-top:7px;padding:7px 10px;border:1px solid #c2703f;border-left:3px solid #f0a35e;border-radius:7px;background:#4a2618;color:#ffd9bf;font-size:12.5px;font-weight:650;line-height:1.4}
+.dash-actions{margin:6px 0 8px}
+.logs-btn{width:100%;min-height:40px;font-size:14px;font-weight:780;background:linear-gradient(#5a4224,#3f2e19);border-color:#d6a95e;color:#fff1d2}
+.logs-btn:disabled{opacity:.7;cursor:progress}
+.logs-note{margin:-2px 2px 8px}
+.dash{background:#2a2017;border:1px solid #7b5f3d;border-radius:10px;padding:10px 12px;margin:0 0 11px;box-shadow:0 3px 8px #0003}
+.dash-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dash-head strong{flex:1 1 auto;min-width:0;font-size:14.5px;color:#f4d39a;font-weight:800;line-height:1.3}
+.dash-state{font-size:11.5px;font-weight:750;border-radius:20px;padding:2px 9px;border:1px solid #685440;background:#352b24;color:#d8c8b1;white-space:nowrap}
+.dash-state[data-st=on]{color:#a3ecc0;background:#203728;border-color:#478657}
+.dash-state[data-st=pause]{color:#ffe2a8;background:#4b371d;border-color:#b38a49}
+.dash-state[data-st=warn]{color:#ffd0bb;background:#50271d;border-color:#b36552}
+.dash-sub{margin-top:4px;font-size:12px;color:#cdb79a;line-height:1.45}
+.dash-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:9px 0 4px}
+.dash-kpi .kpi{display:flex;flex-direction:column;gap:1px;padding:7px 8px;background:#1d1610;border:1px solid #5f4a33;border-radius:8px;min-width:0}
+.dash-kpi .kpi span{font-size:10.5px;letter-spacing:.04em;color:#c8ac83;font-weight:750}
+.dash-kpi .kpi b{font-size:17px;line-height:1.25;color:#fff0ce;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-kpi .kpi small{font-size:11px;color:#b9a58a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-lines{display:flex;flex-direction:column;gap:3px;margin-top:6px;font-size:12.5px;line-height:1.45;color:#ead9c1}
+.dash-lines:empty{display:none}
+.dash-lines b{font-weight:700;color:#fff0ce;font-variant-numeric:tabular-nums}
+.dash-lines b.low{color:#ff9b85}
+.dash-lines i{font-style:normal;color:#ae987a;font-size:11.5px}
+.module-tile em.on{color:#a3ecc0}
+html.docked .overview-modules{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+html.docked .module-tile{min-height:44px;padding:7px 8px;gap:7px}
+html.docked .module-tile small,html.docked .module-tile em:not(.on){display:none}
+html.docked .module-tile .tile-icon{width:26px;height:26px;flex-basis:26px;font-size:14px}
+html.docked .module-tile strong{font-size:12.5px;white-space:normal}
+html.docked .module-tile em.on{font-size:0}
+html.docked .module-tile em.on::before{content:'●';font-size:12px}
+#toast{white-space:normal;width:max-content;max-width:calc(100vw - 24px);text-align:left;overflow-wrap:anywhere;line-height:1.4}
