@@ -39,6 +39,8 @@ const QUEST = /[★☆⭐✩✪✫✭✮✯]/;
 
 let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
 let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ownership
+// флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
+const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
 const mergeCfg = c => ({ ...DEF_CFG, ...(c || {}) });
 
 // ---------- утилиты ----------
@@ -2046,12 +2048,14 @@ async function main() {
       // Apply to the saved current character before switching to a new one.
       if (Object.keys(deferredMigrations.rt).length) {
         // 7.1.30: пока ждали замок, хозяин мог уже применить эти миграции — снимок не затирает свежие данные
-        const flags = Object.keys(deferredMigrations.rt).filter(k => deferredMigrations.rt[k] === 1 && rt[k]);
-        if (flags.length) deferredMigrations.rt = {};
+        if (migApplied(deferredMigrations.rt, rt)) deferredMigrations.rt = {};
         const patch = deferredMigrations.rt; deferredMigrations.rt = {};
         const result = await setRt(patch);
         if (!result?.ok) deferredMigrations.rt = { ...patch, ...deferredMigrations.rt };
       }
+      // 8.0.3 (проверка правок по чемпионам): и для настроек — иначе вкладка, ждавшая замок, позже записывала свой старый пакет
+      // разовых миграций вслепую: игрок включил «Искать чемпионов», вкладка перехватила управление — и галочка молча выключилась
+      if (Object.keys(deferredMigrations.cfg).length && migApplied(deferredMigrations.cfg, cfg, rt)) deferredMigrations.cfg = {};
       if (Object.keys(deferredMigrations.cfg).length) {
         const patch = deferredMigrations.cfg; deferredMigrations.cfg = {};
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }

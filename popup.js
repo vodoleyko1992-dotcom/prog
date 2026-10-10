@@ -1074,15 +1074,18 @@ const lineOf = r => (r.neg ? '-' : '') + [r.name, r.quest ? '[квест]' : '',
 const labelOf = r => r.name ? `${r.name}${r.champ ? ' — только чемпион' : ''}${r.quest ? ' — только квестовый' : ''}`
   : r.quest && r.champ ? '★ Квестовые чемпионы' : r.quest ? '★ Квестовые мобы' : r.champ ? '⚔ Чемпионы' : r.all ? '◎ Все в диапазоне уровней' : '?';
 let prio = [];
+// 8.0.3: правило выключено своей галочкой — бот его не применяет (mobfarm.parseRules), в списке оно серое с пояснением
+const ruleOff = r => !r.neg && ((r.champ && !$('searchChamp')?.checked) || (r.quest && !$('searchQuest')?.checked));
 function renderPrio(text) {
   prio = text.split('\n').map(s => s.trim()).filter(Boolean).map(parseLine);
   $('prioList').innerHTML = prio.length ? prio.map((r, i) => `
-    <div class="rule${r.neg ? ' neg' : ''}"><span class="n">${r.neg ? '🚫' : i + 1}</span><span class="t">${labelOf(r).replace(/</g, '&lt;')}</span>
+    <div class="rule${r.neg ? ' neg' : ''}"${ruleOff(r) ? ' style="opacity:.5"' : ''}><span class="n">${r.neg ? '🚫' : i + 1}</span><span class="t">${labelOf(r).replace(/</g, '&lt;')}${ruleOff(r) ? ` <small>(выкл. — галочка «${r.champ ? 'Искать чемпионов' : 'Искать квестовых'}»)</small>` : ''}</span>
       <button data-a="up" data-i="${i}" title="Выше">▲</button><button data-a="down" data-i="${i}" title="Ниже">▼</button>
       ${r.name ? `<button data-a="champ" data-i="${i}" title="Только чемпион этого вида">⚔</button>` : ''}
       <button data-a="neg" data-i="${i}" title="Исключить / вернуть">🚫</button><button data-a="del" data-i="${i}" title="Удалить">✕</button></div>`).join('')
     : '<div class="hint">Пусто — бот не будет выбирать цели на карте</div>';
 }
+for (const id of ['searchChamp', 'searchQuest']) $(id)?.addEventListener('change', () => renderPrio($('priority').value));   // 8.0.3
 async function commitPrio() { $('priority').value = prio.map(lineOf).join('\n'); renderPrio($('priority').value); await save({ target: $('priority') }); }
 $('prioList').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
