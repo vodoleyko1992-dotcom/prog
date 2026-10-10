@@ -1,4 +1,4 @@
-// ===== L2wap Bot v7.1.31 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v7.2 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: false, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '1h', fishTimeMin: 5, fishBait: 'basic', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 75, fishShotAuto: true, fishMaxCasts: 0,
@@ -780,10 +780,15 @@ const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: реш�
 // v4.30: ищем чемпионов (правило «Чемп» в приоритете) — не реже раза в 20 боёв: при «раз в 100» бот их почти не заставал
 const CHAMP_EVERY = 20;
 const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.neg);
-const deepN = () => campActive() && campChampOpen() ? Math.min(cfg.deepEvery || 5, 5)
-  : cfg.deepEvery && champHunt() ? Math.min(cfg.deepEvery, CHAMP_EVERY) : cfg.deepEvery;
+// 7.1.31 (просьба игрока: «поставил 99999, а он всё равно проверяет карту»): 0 — карту по плану НЕ проверять никогда, только цепочка
+// «Охотиться дальше» (было «0 = каждый бой»). Выключает и «не реже раза в 20 боёв» ради чемпионов, и «горячую» карту, и уход за ★ целью.
+// Остаётся только необходимое: цели главы при включённой «Кампании», РБ-режимы, нет кнопки «Охотиться дальше», старт с карты
+const mapOff = () => (+cfg.deepEvery || 0) <= 0;
+const campChampDue = () => campActive() && campChampOpen();
+const deepN = () => campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
+  : mapOff() ? Infinity : champHunt() ? Math.min(cfg.deepEvery, CHAMP_EVERY) : cfg.deepEvery;
 const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) || (searchActive(rules) &&
-  (cfg.deepEvery === 0 || rt.deepHot || rt.sinceDeep >= deepN()));
+  (campChampDue() || !mapOff()) && (rt.deepHot || rt.sinceDeep >= deepN()));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 

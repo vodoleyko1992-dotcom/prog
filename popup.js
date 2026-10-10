@@ -70,7 +70,7 @@ const NUM  = ['debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'pet
 const TXT  = ['petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
 const BOOL = ['petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: false, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const DEF = { debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: true, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -146,7 +146,9 @@ async function load() {
   // режим РБ
   $('rbToggle').classList.toggle('on', !!d.rbMode);
   $('rbToggle').dataset.on = d.rbMode ? '1' : '0';
-  for (const id of ['epicToggle', 'epicToggle2']) { $(id).textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $(id).classList.toggle('on', !!d.epicMode); }
+  $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
+  paintModes(d, on);
+  paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   { const E = rt.epic || {}, db = rt.epicDb || {}, NM = { ak: 'АК', core: 'Ядро', orfen: 'Орфен', baium: 'Баюм', valakas: 'Валакас', antharas: 'Антарас', frintezza: 'Фринтеза', zaken: 'Закен' };
     const ST = { pick: 'выбор цели', prep: 'банки, бафф, хил', go: 'полёт', arrive: 'ищу на карте', fight: 'бой' };
@@ -154,7 +156,7 @@ async function load() {
     $('epicBox').textContent = (d.epicMode ? '▶ Идёт' : '■ Выключено') + (E.step ? ' · ' + (ST[E.step] || E.step) : '') + (E.name && E.step !== 'pick' ? `: ${E.name}` : '')
       + (E.deaths ? ` · смертей ${E.deaths}` : '') + (last?.max ? ` · у него ${Math.round(last.cur / last.max * 1000) / 10} %` : '') + (E.last ? `\n${E.last}` : '')
       + (Object.keys(db).length ? '\n' + Object.entries(db).map(([k, x]) => `${NM[k] || k}: ${x.skipT > Date.now() ? '⏸ ' + (x.why || 'отложен') : x.alive === false ? '💀 ' + (x.status || '') : '✅ жив'}${x.kills ? ' · убит ' + x.kills + '×' : ''}`).join('\n') : ''); }
-  for (const id of ['huntToggle', 'huntToggle2']) { $(id).textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $(id).classList.toggle('on', !!d.rbHuntMode); }
+  $('huntToggle2').textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', !!d.rbHuntMode);
   renderHunt(rt, d);
   renderRb(rt);
   const forecast=$('rbForecastBox'), RF=rt.rbForecast;
@@ -170,8 +172,6 @@ async function load() {
     }
   }
   // кампания
-  $('fishToggle').textContent = `🎣 Рыбалка: ${d.fishMode ? (on ? 'ВКЛ' : 'ЗАПУСТИТЬ') : 'ВЫКЛ'}`;
-  $('fishToggle').classList.toggle('on', !!d.fishMode && !!on);
   const F = rt.fish;
   if (F?.casts) {
     const h = Math.max(1 / 60, (Date.now() - (F.t0 || Date.now())) / 3600000);
@@ -185,10 +185,6 @@ async function load() {
   if (!document.activeElement?.closest?.('#goalGrid')) renderGoals(rt);
   renderFishTgt(rt, d);
   renderRodGoal(rt, d);
-  $('autoFarmToggle').textContent = `🗺 Автофарм: ${d.zoneAuto ? 'ВКЛ' : 'ВЫКЛ'}`;
-  $('autoFarmToggle').classList.toggle('on', !!d.zoneAuto);
-  $('campToggle').textContent = `📜 Кампания: ${d.campaign ? 'ВКЛ' : 'ВЫКЛ'}`;
-  $('campToggle').classList.toggle('on', !!d.campaign);
   const C = rt.campaign;
   $('campBox').textContent = C ? `${C.title}\n` + C.targets.map(t => `${t.ok ? '✅' : '★'} ${t.name}${t.lvl ? ' (' + t.lvl + ')' : ''}: ${t.est ? '≈' : ''}${t.done}/${t.total}${t.ok ? '' : ' · осталось ' + (t.total - t.done)}${t.loc && !t.ok ? ' · ' + t.loc : ''}`).join('\n')
     + `\nпроверено ${new Date(C.t).toLocaleTimeString('ru')}${C.live ? ' · по логу боя ' + new Date(C.live).toLocaleTimeString('ru') : ''}${rt.campaignDue ? ' · ⏳ скоро проверка' : ''}`
@@ -819,11 +815,17 @@ async function save(e) {
 }
 
 // ---------- вкладки ----------
+// 7.1.31: 15 разделов сведены в 7. Бывшие разделы — подразделы (метка #tab-<старый> внутри нового), переходы на них работают
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', pet: 'panel', fight: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
 function showTab(t) {
+  const sub = TAB_GROUP[t] ? t : '';
+  t = TAB_GROUP[t] || t;
+  if (!document.getElementById('tab-' + t)) t = 'overview';
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('act', b.dataset.tab === t));
   document.querySelectorAll('section').forEach(sec => sec.classList.toggle('act', sec.id === 'tab-' + t));
   try { localStorage.setItem('tab', t); } catch (e) {}
   document.dispatchEvent(new CustomEvent('l2:tabchange', { detail: { tab: t } }));
+  if (sub) setTimeout(() => document.getElementById('tab-' + sub)?.parentElement?.scrollIntoView({ block: 'start' }), 30);
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 try { showTab(localStorage.getItem('tab') || 'overview'); } catch (e) {}
@@ -867,7 +869,6 @@ $('addName').onkeydown = e => { if (e.key === 'Enter') $('addMob').click(); };
 
 // ---------- база РБ ----------
 function renderRb(rt) {
-  $('rbToggle').textContent = `👑 Фарм РБ: ${$('rbToggle').dataset.on === '1' ? 'ВКЛ' : 'ВЫКЛ'}`;
   const db = rt.rbDb || {}, seen = rt.rbSeen || {};
   const order = id => ({ ok: 0, chip: 1, no: 3 })[db[id]?.verdict] ?? (seen[id]?.inRange === false ? 4 : 2);
   const ids = [...new Set([...Object.keys(seen), ...Object.keys(db)])].sort((a, b) => order(a) - order(b));
@@ -975,34 +976,63 @@ $('apply').onclick = async () => {
   $('applyRow').hidden = true; $('slots').textContent = '✅ Роли применены';
   load();
 };
-// 7.1.30: быстрый переключатель «Автофарм» (= «сам подбирать локацию»). Включили — при ближайшем проходе карты бот сразу проверяет зоны
-$('autoFarmToggle').onclick = async () => {
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
-  const v = !cfg.zoneAuto;
-  // с автофармом включаем и цепочку «Охотиться дальше»: по замерам ≈5,4 с на моба против ≈11,4 с через карту (симуляция: ×2,2 мобов в час)
-  await menuPatch(v ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : { zoneAutoKick: null, zoneGo: null }, { cfgPatch: v ? { zoneAuto: true, chain: true } : { zoneAuto: false } });
-  toast(v ? '🗺 Автофарм ВКЛ — проверяю локации' : '🗺 Автофарм ВЫКЛ — стою на месте');
+// ---------- 7.1.31: «Чем занят бот» — ровно один режим (движок и так исполняет один: эпики → тур РБ → рыбалка → катакомбы → кампания → фарм) ----------
+// Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания, «РБ между мобами», TvT — дополнения
+function currentMode(d) {
+  return d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.zoneAuto ? 'auto' : 'farm';
+}
+const MODE_NAME = { farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы' };
+function paintModes(d, on) {
+  const m = currentMode(d);
+  document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
+  $('campToggle').classList.toggle('on', !!d.campaign); $('rbToggle').classList.toggle('on', !!d.rbMode); $('tvtToggle').classList.toggle('on', !!d.tvtOn);
+  $('rbToggle').dataset.on = d.rbMode ? '1' : '0';
+  const mods = [d.campaign && '📜 кампания', d.rbMode && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
+  const ms = $('modeSummary'); if (ms) ms.textContent = `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
+}
+// 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
+// Класс — как у движка (combatProfileKind): профиль из «Боя» или профессия героя. «👁 Показать настройки всех классов» — всё сразу
+const MAGE_PROF = /\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/i;
+function heroCls(d, rt) {
+  if (d.combatProfile === 'fighter') return 'fighter';
+  if (d.combatProfile === 'mage_summoner') return 'mage';
+  return rt.prof ? (MAGE_PROF.test(String(rt.prof)) ? 'mage' : 'fighter') : '';
+}
+let showAllCls = (() => { try { return localStorage.getItem('showAllCls') === '1'; } catch (e) { return false; } })();
+function paintCls(d, rt) {
+  const cls = heroCls(d, rt), root = document.documentElement;
+  root.classList.toggle('cls-mage', cls === 'mage'); root.classList.toggle('cls-fighter', cls === 'fighter'); root.classList.toggle('show-all', showAllCls);
+  const b = $('showAllCls'); if (b) b.textContent = showAllCls ? '🙈 Только настройки моего класса' : '👁 Показать настройки всех классов';
+  const n = $('clsNote'); if (n) n.textContent = !cls ? '' : showAllCls ? 'Показаны настройки всех классов.' : cls === 'mage'
+    ? `Класс: маг (${rt.prof || 'профиль'}) — скрыты воинские настройки: энергия силы, сверхсильные скиллы, важные баффы, спойл, станы, кастеты.`
+    : `Класс: воин (${rt.prof || 'профиль'}) — скрыты «Слуга» и дебаффы мага.`;
+}
+$('showAllCls').onclick = async () => {
+  showAllCls = !showAllCls; try { localStorage.setItem('showAllCls', showAllCls ? '1' : '0'); } catch (e) {}
+  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, rt);
 };
-$('fishToggle').onclick = async () => {
+// выбор режима запускает бота (как и прежние кнопки) и выключает остальные режимы; дополнения не трогаем
+const MODES_OFF = { epicMode: false, rbHuntMode: false, fishMode: false, catMode: false };
+async function setMode(m) {
   await save();
-  const { cfg = {}, on = false } = await chrome.storage.local.get(['cfg', 'on']);
-  // An enabled but globally stopped fishing mode needs a Start, not an OFF.
-  const enable = !cfg.fishMode || !on;
-  if (enable) {
-    // A mode switch must ACTIVATE the bot and take ownership of navigation.
-    // The rod +10 shortcut already did this, but the ordinary fishing toggle
-    // previously changed only fishMode. That left fishing idle while the bot
-    // was stopped or a higher-priority mode (epics/raid) was selected.
-    await activateMode({ fishTgt: null }, {
-      fishMode: true, epicMode: false, rbMode: false, rbHuntMode: false,
-      catMode: false, campaign: false
-    });
-  } else {
-    // Disabling fishing is not a global Stop; let the bot resume its normal
-    // scheduler. Do not cancel a separately requested rod +10 goal.
-    await menuPatch({}, { cfgPatch: { fishMode: false } });
-  }
-  await load();
+  const { cfg = {} } = await chrome.storage.local.get('cfg');
+  const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
+  const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
+  const leave = { ...leaveEpic, ...leaveHunt };
+  if (m === 'farm') await activateMode({ ...leave, zoneAutoKick: null, zoneGo: null }, { ...MODES_OFF, zoneAuto: false });
+  // с автофармом включаем и цепочку «Охотиться дальше»: ≈5,4 с на моба против ≈11,4 с через карту
+  else if (m === 'auto') await activateMode({ ...leave, zoneAutoKick: now, zoneGoT: 0, zoneLvlT: 0 }, { ...MODES_OFF, zoneAuto: true, chain: true });
+  else if (m === 'rb') await activateMode({ ...leaveEpic, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
+  else if (m === 'epic') await activateMode({ ...leaveHunt, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
+  else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
+  else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false });
+  toast(`Режим: ${MODE_NAME[m]}`);
+}
+document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.onclick = () => setMode(b.dataset.mode).catch(e => toast(String(e?.message || e))); });
+$('tvtToggle').onclick = async () => {
+  const { cfg = {} } = await chrome.storage.local.get('cfg');
+  await menuPatch({}, { cfgPatch: { tvtOn: !cfg.tvtOn } });
+  toast(cfg.tvtOn ? '⚔ TvT выключен' : '⚔ TvT включён');
 };
 $('goalProof').onclick = () => { goalItemsMode = false; setGoals([]); };
 $('goalItems').onclick = async () => { goalItemsMode = true; const { rt = {} } = await chrome.storage.local.get('rt'); renderGoals(rt); };
@@ -1309,8 +1339,8 @@ async function renderLearn() {
     + (ch.length ? `Изменения игры (${ch.length}):\n` + ch.slice(0, 5).map(c => `• ${ago(c.t)} · ${c.kind}: ${c.what}`.slice(0, 160)).join('\n') : 'Изменений игры пока не замечено');
 }
 let learnT = null;
-chrome.storage.onChanged.addListener(ch => { if (ch.learn && !learnT) learnT = setTimeout(() => { learnT = null; if (document.querySelector('#tab-log.act')) renderLearn(); }, 2000); });
-document.querySelector('nav button[data-tab="log"]')?.addEventListener('click', () => renderLearn());
+chrome.storage.onChanged.addListener(ch => { if (ch.learn && !learnT) learnT = setTimeout(() => { learnT = null; if (document.querySelector('#tab-svc.act')) renderLearn(); }, 2000); });
+document.querySelector('nav button[data-tab="svc"]')?.addEventListener('click', () => renderLearn());
 renderLearn();
 $('learnShots').addEventListener('change', async e => {
   if (!e.target.checked) return;
@@ -1408,13 +1438,11 @@ async function epicToggle() {
   const mode = { epicMode: v, ...(v ? { fishMode: false, rbHuntMode: false, rbMode: false, catMode: false, campaign: false } : {}) };
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
-$('epicToggle').onclick = epicToggle;
 $('epicToggle2').onclick = epicToggle;
 document.querySelectorAll('.epicChk').forEach(c => c.addEventListener('change', () => {
   $('epicList').value = [...document.querySelectorAll('.epicChk')].filter(x => x.checked).map(x => x.dataset.epic).join(',');
   save({ target: $('epicList') });
 }));
-$('huntToggle').onclick = huntToggle;
 $('huntToggle2').onclick = huntToggle;
 $('rbToggle').onclick = async () => {
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
@@ -1451,13 +1479,15 @@ uiState.closed ||= {};
 function cardify() {
   document.querySelectorAll('section').forEach(sec => {
     const kids = [...sec.childNodes];
-    let card = null, body = null, idx = 0;
+    let card = null, body = null, idx = 0, subTitle = '', subCls = '';
     const start = (h) => {
       const c = card = document.createElement('div'); c.className = 'card';
       const head = document.createElement('div'); head.className = 'ch'; head.tabIndex = 0; head.setAttribute('role', 'button');
       const key = sec.id + ':' + (h ? h.textContent.trim() : '#' + idx); idx++;
       card.dataset.key = key;
-      if (h) head.appendChild(h); else { const t = document.createElement('h4'); t.textContent = '⚙ Основное'; head.appendChild(t); }
+      if (h) head.appendChild(h); else { const t = document.createElement('h4'); t.textContent = subTitle ? subTitle.replace(/^\S+\s*/, '') + ' — основное' : '⚙ Основное'; head.appendChild(t); }
+      // 7.1.31: блок только для воина/мага (data-cls на h4 или на подзаголовке объединённого раздела) — скрывается по классу
+      const cls = h?.dataset.cls || subCls; if (cls) c.dataset.cls = cls;
       const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▼'; head.appendChild(chev);
       body = document.createElement('div'); body.className = 'cb';
       card.append(head, body); sec.appendChild(card);
@@ -1467,8 +1497,11 @@ function cardify() {
       head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
     };
     for (const n of kids) {
+      // 7.1.31: подзаголовок бывшего раздела внутри объединённого (Охота: Автофарм, Катакомбы…) — вне карточек
+      if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { sec.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
       if (n.nodeType === 1 && n.tagName === 'H4') { start(n); continue; }
       if (n.nodeType === 3 && !n.textContent.trim()) { n.remove(); continue; }
+      if (!card && subTitle && n.nodeType === 1 && n.classList?.contains('intro-callout')) { n.classList.add('subsec-lead'); if (subCls) n.dataset.cls = subCls; sec.appendChild(n); continue; }
       if (n.nodeType === 8) continue;
       if (!card) start(null);
       body.appendChild(n);
@@ -1481,7 +1514,7 @@ function foldHints() {
     if (h.id || h.closest('details') || h.textContent.trim().length < 150) return;   // с id — живые блоки (пишет код)
     const prev = h.previousElementSibling;
     if (prev?.matches('details.help')) { prev.appendChild(h); return; }   // подряд идущие пояснения — под одним «ⓘ»
-    const d = document.createElement('details'); d.className = 'help';
+    const d = document.createElement('details'); d.className = 'help'; if (h.dataset.cls) d.dataset.cls = h.dataset.cls;
     const s = document.createElement('summary'); s.textContent = 'Как это работает';
     h.replaceWith(d); d.append(s, h);
   });

@@ -10,7 +10,7 @@ const modules = featurePaths.filter(x=>x.startsWith('modules/'));
 const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival'];
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
-assert.match(mf.version, /^7\.(?:0\.[01]|1\.[0-9]+)$/);
+assert.match(mf.version, /^7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)$/);
 for (const s of featurePaths) assert(fs.existsSync(path.join(root,s)), `Missing module ${s}`);
 const ctx = vm.createContext({
   addEventListener(){}, removeEventListener(){},
@@ -59,6 +59,12 @@ assert.equal(vm.runInContext(`L2V7Modules.combat.ready({
   querySelector:(sel)=>sel==='.l2-battle-hotbar-slot-uqty'?{textContent:'12'}:null
 })`,ctx),true,'Potion readiness must not throw or use local skill cooldown');
 assert.equal(vm.runInContext('typeof autonomyMode',ctx),'function');
+// 7.1.31 (игрок: «поставил 99999, а он всё равно проверяет карту»): 0 = карту по плану не проверять никогда (было «каждый бой»)
+const due = (c, r) => vm.runInContext(`cfg = mergeCfg(${JSON.stringify(c)}); rt = { ...DEF_RT, ...${JSON.stringify(r)} }; mapDue(parseRules())`, ctx);
+assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 500, deepHot: true }), false, '0 = never: no planned/champion/hot map');
+assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 25 }), true, 'champions on: map at least every 20 fights');
+assert.equal(due({ deepEvery: 99999, searchChamp: false }, { sinceDeep: 25 }), false, 'champions off: 99999 respected');
+assert.equal(due({ deepEvery: 10, searchChamp: false }, { sinceDeep: 10 }), true, 'every 10 fights');
 // Every env.foo access in source modules needs a corresponding lazy binding.
 for (const modName of required) {
   const source=fs.readFileSync(path.join(root,'modules',modName+'.js'),'utf8');

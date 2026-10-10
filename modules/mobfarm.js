@@ -101,7 +101,7 @@ function chainBetter() {
 
 function chainCarries() {
   const q = env.rt.chainQ || [];
-  if (q.length < 6 || env.cfg.deepEvery === 0) return false;   // v4.28: deepHot больше не отключает цепочку — решает доля целей
+  if (q.length < 6 || !(+env.cfg.deepEvery > 0)) return false;   // 7.1.31: 0 = карту не проверять — откладывать нечего   // v4.28: deepHot больше не отключает цепочку — решает доля целей
   if (env.campActive() && env.campChampOpen() && !env.rt.champSeen?.startsWith('0:')) return false;   // чемпионы главы видны на карте — не откладываем
   return q.reduce((a, b) => a + b, 0) / q.length >= 0.5 && (env.rt.sinceDeep || 0) < env.deepN() * 3;
 }
@@ -187,7 +187,8 @@ async function nextFight(ctx) {
   const qNames = [...(pqFresh ? env.rt.profQuest?.open || [] : []), ...(env.rt.questTargets || []).map(n => n.toLowerCase())].filter(n => env.isQuestName(n));
   // и только если правило [квест] вообще может выбрать цель (иначе карта после каждого боя ни к чему)
   const qRule = rules.some(x => x.quest && !x.neg);
-  const qOpen = qRule && env.cfg.searchQuest !== false && !camp && qNames.some(n => !zM.length || zM.includes(n));
+  // 7.1.31: «Проверять карту каждые 0 боёв» = никогда — за ★ целью на карту тоже не ходим (бьём то, что даёт цепочка)
+  const qOpen = qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && qNames.some(n => !zM.length || zM.includes(n));
   if (ctx && qOpen && !tgt && !ctx.rb) {
     offQuest = true;
     if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); await env.setRt({ chainWhy: 'qmap' }); }
@@ -195,7 +196,7 @@ async function nextFight(ctx) {
   let due = env.mapDue(rules);
   // v4.28: цель далеко по списку карты (deepHot), но цепочка только что дала цель (★/чемпион) — соседи такие же, продолжаем
   // цепочку. Так было: Leto Lizardman Archer на 8-й странице → после КАЖДОГО боя карта (+5–8 с на бой)
-  if (due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && !(env.cfg.deepEvery === 0)) {
+  if (due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && +env.cfg.deepEvery > 0) {
     if (env.rt.chainWhy !== 'hot') env.rec('B', 'цепочка', `${ctx.name} — цель; цепочка приносит цели, карту не проверяю`);
     await env.setRt({ chainWhy: 'hot', sinceDeep: Math.min(env.rt.sinceDeep || 0, env.deepN() - 1) });
     due = false;

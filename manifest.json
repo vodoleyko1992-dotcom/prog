@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "7.1.31",
-  "description": "L2wap Bot 7.1.31 — маг+кот, раздел «Слуга», базовый профиль игрока",
+  "version": "7.2",
+  "description": "L2wap Bot 7.2 — один режим, меню под класс, 7 разделов",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "7.1.31"
+  "version_name": "7.2"
 }

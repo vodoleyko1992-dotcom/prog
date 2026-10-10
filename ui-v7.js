@@ -6,7 +6,7 @@
     chain:'После завершения боя по возможности продолжать охоту без возврата к выбору новой цели на карте.',
     searchQuest:'Искать на карте квестовых противников и цели сюжетной кампании.',
     searchChamp:'Искать чемпионов на карте. Для обнаружения требуется периодически открывать карту.',
-    deepEvery:'Интервал проверки карты в боях. Ноль — проверять при каждой возможности.',
+    deepEvery:'Раз в сколько боёв заходить на карту за целями (★ квесты, чемпионы). 0 — никогда: бот бьёт только тех, кого даёт цепочка «Охотиться дальше». Цели главы при включённой «Кампании» и РБ-режимы карту всё равно используют.',
     questStop:'Прекратить автоматическую охоту после выполнения поставленной квестовой цели.',
     lvlMin:'Минимальный уровень мобов для правила «Все по уровню» в приоритетах охоты.',
     lvlMax:'Максимальный уровень мобов для правила «Все по уровню» в приоритетах охоты.',
@@ -112,27 +112,28 @@
   };
   const titles = {
     overview:['Обзор','Состояние, режимы и быстрые переходы'],
-    hunt:['Фарм мобов','Приоритеты целей, кампания и охота'],
+    hunt:['Охота','Фарм, кампания, TvT, локации и автофарм, катакомбы'],
     autofarm:['Автофарм','Автоподбор локации для кача'],
     loc:['Локации','Ресурсы и рецепты'],
-    rb:['Рейд-боссы','Обычные РБ, тур и оценка силы'],
+    rb:['РБ и эпики','Обычные РБ, тур по РБ, эпик-боссы'],
     epic:['Эпические боссы','Отдельная стратегия, ресурсы и ограничения'],
     dungeon:['Катакомбы','Автоматический фарм внутри подземелий'],
     fish:['Рыбалка','Оснастка, улов, обработка и Proof'],
-    panel:['Боевой движок','Умения, приоритеты, баффы и откаты'],
+    panel:['Бой и кот','Умения, кот, дебаффы, баффы, оружие, безопасность'],
     pet:['Слуга','Кот Warlock: призыв, лечение, баффы, статистика'],
     fight:['Тактика и герой','Безопасность, оборудование и городские сервисы'],
-    supply:['Расходники','Лечение, закупка и финансовые лимиты'],
+    supply:['Снабжение','Банки, закупка, добыча, эффективность'],
     loot:['Добыча','Учет и эффективность предметов'],
     log:['Диагностика','Журналы, API, снимки и автообучение'],
-    svc:['Сервис','Память, настройки и восстановление']
+    svc:['Сервис','Автовход, память, настройки, журнал и диагностика']
   };
-  // Large, discoverable tile menu: all 15 sections appear at once, no sideways scrolling.
+  // Large, discoverable tile menu: all 7 sections appear at once, no sideways scrolling.
   // Collapse after selection, preserving room for module settings in a 375px dock.
   const modeToggle = document.getElementById('modeToggle');
   const quickModes = document.getElementById('quickModeGrid');
   const modeSummary = document.getElementById('modeSummary');
   const updateModeSummary = () => {
+    if (typeof paintModes === 'function') return;   // 7.1.31: сводку «режим · дополнения» пишет popup.js (paintModes)
     const active = [...(quickModes?.querySelectorAll('button.on') || [])]
       .map(b => (b.textContent || '').split(':')[0].replace(/^[^\wА-Яа-яЁё]+/u,'').trim())
       .filter(Boolean);
@@ -175,6 +176,8 @@
   updateTab(document.querySelector('nav button.act')?.dataset.tab || 'overview');
   document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => {
     const tab = b.dataset.goto;
+    // 7.1.31: бывшие разделы (epic, dungeon…) — подразделы новых; showTab сам найдёт раздел и прокрутит к подразделу
+    if (typeof showTab === 'function') { showTab(tab); document.documentElement.querySelector('.app-shell')?.classList.add('nav-collapsed'); return; }
     const nav = document.querySelector('nav button[data-tab="'+tab+'"]');
     if (nav) nav.click();
   }));
