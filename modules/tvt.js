@@ -17,6 +17,13 @@ function tvtState() {
 
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
 
+// 9.2 (лог 11.10 03:00): убитый враг остаётся в списке команды как живой, пока открыта панель боя — игра перерисовывает
+// список только после «← Вернуться на TvT» (POST /game/tvt/target/clear). Бот 20 с жал на xdesx: POST /game/tvt/target → 400
+// tvt_target_dead, Blaze «Скилл сейчас недоступен». Павших помним по ответам сервера (action.targetDead, target → tvt_target_dead).
+const DEAD_MS = 45000, tvtDead = new Map();       // id врага → когда пал (на случай воскрешения — забываем через 45 с)
+function tvtDeadNote(id) { if (id != null && id !== '') tvtDead.set(String(id), Date.now()); }
+const isDead = id => { const t = tvtDead.get(String(id)); return !!t && Date.now() - t < DEAD_MS; };
+
 function tvtSoon() {                                // пора на арену: записаны и бой вот-вот / идёт
   if (!env.cfg.tvtOn) return false;
   const S = tvtState(); if (!S || !S.reg) return false;
@@ -65,13 +72,13 @@ function tvtEnemies() {                             // живые враги: и
   const els = [...document.querySelectorAll('.l2-tvt-nick[data-target-kind="enemy"][data-character-id]')];
   const R = (env.TVT?.combatRoster || []).filter(x => x && typeof x === 'object');
   return els.map(e => { const id = e.dataset.characterId, r = R.find(x => String(x.characterId) === String(id)) || {};   // v5.6: id из API может быть числом
-    return { e, id, name: e.textContent.trim(), lvl: +((e.title || '').match(/\d+/)?.[0] || 0), hp: r.hp ?? null, cp: r.cp ?? 0, alive: r.alive !== false && !e.className.includes('dead') }; })
+    return { e, id, name: e.textContent.trim(), lvl: +((e.title || '').match(/\d+/)?.[0] || 0), hp: r.hp ?? null, cp: r.cp ?? 0, alive: r.alive !== false && !e.className.includes('dead') && !isDead(id) }; })
     .filter(x => x.alive);
 }
 
 async function tvtFight() {
   if (!env.rt.tvtIn) { await env.setRt({ tvtIn: tvtState()?.id || 1 }); env.rec('B', 'TvT', 'на арене — жду старт'); }
-  let lastPot = 0, lastTgt = 0;
+  let lastPot = 0, lastTgt = 0, lastBack = 0;
   const t0 = Date.now();
   while (env.on && env.tabOwner && isArena() && Date.now() - t0 < 12 * 60000) {
     const S = tvtState() || {};
@@ -88,12 +95,19 @@ async function tvtFight() {
     const domCur = dn && dn !== '—' && env.shown(env.$q('#tvt-battle-target-block')) ? { name: dn, characterId: en.find(x => x.name === dn)?.id, hp: dh ? +dh[1] : null, maxHp: dh ? +dh[2] : null, alive: !(dh && +dh[1] === 0) } : null;
     const cur = C.selectedTarget && Date.now() - (C.t || 0) < 15000 ? C.selectedTarget : domCur;
     const best = en.sort((a, b) => ((a.hp ?? 1e9) + a.cp) - ((b.hp ?? 1e9) + b.cp) || a.lvl - b.lvl)[0];
+    if (cur && (cur.alive === false || cur.hp === 0) && cur.characterId) tvtDeadNote(cur.characterId);
     const curDead = !cur || cur.alive === false || cur.hp === 0 || !en.some(x => x.id === cur.characterId);
     const better = best && cur && best.hp != null && cur.hp != null && best.id !== cur.characterId && best.hp + best.cp < (cur.hp + (cur.cp || 0)) * 0.5;
+    // цель пала, а на экране ещё панель боя с ней: «← Вернуться на TvT» — игра снимает цель и перерисовывает список врагов
+    // (как сделал игрок в 03:00:26), затем выбираем следующего. Не чаще раза в 4 с — если кнопка не помогла, жмём врага напрямую
+    const back = env.$q('#tvt-back-roster-btn');
+    if (curDead && cur && domCur && env.shown(back) && Date.now() - lastBack > 4000) {
+      lastBack = Date.now(); env.rec('B', 'TvT', `${cur.name || 'цель'} повержен — назад к списку врагов`); env.fire(back); await env.sleep(env.rnd(350, 550)); continue;
+    }
     if (best && (curDead || better) && Date.now() - lastTgt > 1500) {
       lastTgt = Date.now(); env.setStatus(`TvT: цель ${best.name}${best.hp != null ? ` (HP ${best.hp})` : ''}`); env.fire(best.e); await env.sleep(env.rnd(350, 550)); continue;
     }
-    if (!best && curDead) { env.setStatus('TvT: живых врагов нет — жду'); await env.sleep(800); continue; }
+    if (curDead) { env.setStatus(best ? `TvT: выбираю цель — ${best.name}` : 'TvT: живых врагов нет — жду'); await env.sleep(best ? 300 : 800); continue; }   // 9.2: по павшей цели скиллы не жмём
     const me = env.meHp();
     // банка HP: на арене — с 60 %, не чаще раза в 1,1 с
     if (me && me.pct <= 60 && Date.now() - lastPot > 1100) { const pot = env.hpPotPick(me.pct <= 35); if (pot) { lastPot = Date.now(); env.fire(pot); await env.sleep(env.rnd(150, 250)); continue; } }
@@ -112,6 +126,6 @@ async function tvtFight() {
   }
   return tvtLeave();
 }
- return { tvtNow, tvtMs, tvtState, isArena, tvtSoon, tvtStep, tvtLeave, tvtEnemies, tvtFight };
+ return { tvtNow, tvtMs, tvtState, isArena, tvtSoon, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote };
  };
 })(globalThis);
