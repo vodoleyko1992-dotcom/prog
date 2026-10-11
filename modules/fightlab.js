@@ -205,7 +205,7 @@ function flush() {
   dirty = false; flushT = Date.now();
   const out = { ...cache };
   cache.__src = out;
-  try { env.setRt({ fightMem: out })?.catch?.(() => {}); } catch (e) {}
+  try { env.setRt({ fightMem: out, fightLast: lastFight })?.catch?.(() => {}); } catch (e) {}   // 9.2: последний бой — в меню «Память боя"
 }
 
 // ---------- подсказки бою ----------

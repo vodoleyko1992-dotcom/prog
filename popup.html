@@ -224,7 +224,7 @@
   <button data-tab="rb" title="Рейд-боссы, тур по РБ, эпик-боссы"><span class="ic">♛</span>РБ и эпики</button>
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <div class="nav-group">ОБЩЕЕ</div>
-  <button data-tab="panel" title="Умения, кот, дебаффы, баффы, оружие, безопасность"><span class="ic">⚔</span>Бой и кот</button>
+  <button data-tab="panel" title="Анализ боя, общие правила, подразделы классов (Warlock и кот, маг, спойлер, воин), герой"><span class="ic">⚔</span>Бой</button>
   <button data-tab="supply" title="Банки, закупка, добыча, эффективность"><span class="ic">🧪</span>Снабжение</button>
   <button data-tab="mammon" title="Заказы торговца Маммона, кузнец, накопление на улучшение"><span class="ic">🏺</span>Маммон</button>
   <button data-tab="svc" title="Журнал, диагностика, автовход, память"><span class="ic">⚙</span>Сервис</button>
@@ -250,7 +250,7 @@
     <button type="button" class="module-tile" data-goto="epic"><span class="tile-icon">✦</span><span><strong>Эпические боссы</strong><small>Выбор, оценка, попытки и лимиты</small></span><em id="modeEpicState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="dungeon"><span class="tile-icon">▥</span><span><strong>Катакомбы</strong><small>Выбор подземелья</small></span><em id="modeCatState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="fish"><span class="tile-icon">◉</span><span><strong>Рыбалка</strong><small>Заброс, улов, разделка, Proof</small></span><em id="modeFishState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">⚔</span><span><strong>Бой и кот</strong><small>Умения, кот, дебаффы, баффы, оружие</small></span><em>Открыть ↗</em></button>
+    <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">⚔</span><span><strong>Бой</strong><small>Анализ боя, общие правила, Warlock и кот, маг, спойлер, воин</small></span><em>Открыть ↗</em></button>
   </div>
   <div class="hint">Режим выбирается в «◫ Быстрых режимах» сверху — включён ровно один; «РБ между мобами» и TvT — дополнения к фарму. TvT прерывает любой режим на время события. ↺ — новая сессия: темп «в час» считается с этого нажатия.</div>
 </section>
@@ -421,22 +421,72 @@
 </section>
 
 
-<!-- ⚔ БОЙ И КОТ -->
+<!-- ⚔ БОЙ -->
 <section id="tab-panel">
+  <div class="subsec-title"><span id="tab-analyze" class="tab-anchor"></span>🧠 Анализ боя</div>
+  <div class="intro-callout"><b>Бот сам разбирает каждый бой.</b><p>Каждый ход берётся из ответа сервера: кто сколько снял, кто ударил тебя, спецудары, банки. На каждую цель (РБ, чемпион, вид моба) копится своя память: урон каждого скилла именно по ней, ДПС, удары, ритм спецудара. Следующий бой с той же целью начинается с этих цифр. У каждого класса и саба память своя.</p></div>
+  <h4>🧬 Класс и профиль боя</h4>
+  <div id="clsBox" class="camp">Класс ещё не определён — запусти бота на странице боя</div>
+  <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии, ветке и панели</option><option value="mage_summoner">Маг — заклинания (Warlock: с котом)</option><option value="fighter">Воин — удары, энергия, станы</option></select></label>
+  <div class="hint">«Авто»: бот узнаёт профессию из ответов игры (и смену саба), по ней выбирает профиль. Незнакомая профессия — по ветке класса (mystic → маг, fighter → воин), а если и она неизвестна — по панели: заклинания «Маг. атака» → маг. Дальше бот сам распознаёт роли скиллов на панели (удары, баффы, лечение, спойл, призыв), каждый новый удар сначала пробует на «толстом» мобе и замеряет, а потом ставит в ротацию по замеру. Так подхватывается любой класс: спойлер, Дестр, Sorcerer, SH.</div>
+  <h4>📒 Память боя</h4>
+  <div id="fightBox" class="box">Боёв с анализом ещё нет</div>
+  <div class="row"><button id="fightMemReset">🧹 Забыть память боя этого класса</button></div>
+  <h4>📊 Расчёт ДПС и стратегия</h4>
+  <div id="dpsBox" class="box"></div>
+
+  <div class="subsec-title"><span id="tab-roles" class="tab-anchor"></span>⚔ Общие правила боя</div>
   <div class="row"><button id="check">🔍 Проверить</button><button id="suggest">🤖 Распознать</button></div>
   <div class="row" id="applyRow" hidden><button id="apply">✅ Применить предложенное</button></div>
-  <div class="row"><button id="showAllCls" type="button" title="Показать и настройки другого класса (воин/маг)">👁 Показать настройки всех классов</button></div>
+  <div class="row"><button id="showAllCls" type="button" title="Показать и настройки других классов">👁 Показать настройки всех классов</button></div>
   <div id="clsNote" class="hint"></div>
   <div id="slots" class="box"></div>
   <label>🤖 Автоназначение ролей <input id="autoRoles" type="checkbox"></label>
-  <h4>⚔ Атака и удары (название из подсказки)</h4>
-  <label data-cls="fighter">Атака <input id="nAttack" class="nm"></label>
+  <h4>⚔ Удары и лечение (название из подсказки)</h4>
   <label>Силовые, по приоритету <input id="nPower" class="nm"></label>
-  <label data-cls="fighter">Станы (чемп/РБ) <input id="nStun" class="nm"></label>
   <label>Лечение (скиллы) <input id="nHeal" class="nm" placeholder="Heal, Battle Roar…"></label>
+  <label>MP на скилл, мин. (ед.) <input id="skillMpMin" type="number"></label>
+  <label>Бафф каждые, с (если бафф не виден у шапки) <input id="buffSec" type="number"></label>
+  <h4>✨ Баффы</h4>
+  <label>Баффы <input id="nBuffs" class="nm"></label>
+  <div id="buffAudit" class="hint" style="white-space:pre-line"></div>
+  <h4>🔁 Постоянные баффы (тогглы)</h4>
+  <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
+  <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
+  <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
+  <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
   <h4>📚 Магистр</h4>
   <label>Сам ходить к магистру учить скиллы (каждые 2 ур.) <input id="autoMagister" type="checkbox"></label>
   <div class="hint">По умолчанию выключено — скиллы учишь сам.</div>
+
+  <div class="subsec-title" data-cls="summoner"><span id="tab-pet" class="tab-anchor"></span>🐱 Warlock — маг с котом</div>
+  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот бьёт вместе с тобой на каждое твоё действие (≈35–40 % всего урона). Бот призывает кота первым действием боя, если его нет, держит его HP, ставит баффы кота и считает, сколько урона даёт каждый кот. Заклинания, дебаффы и вампиризм — в блоке «Маг» ниже.</p></div>
+  <h4 data-cls="summoner">🐱 Кот</h4>
+  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
+  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: Kai → Mew → Kat → Feline Queen)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option><option value="Summon Feline Queen">Feline Queen (+10 % от M.Atk, бафф физ. крита)</option></select></label>
+  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
+  <label>Лечить кота перепризывом (полное HP) <input id="petResummon" type="checkbox"></label>
+  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
+  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
+  <div class="hint">Перепризыв даёт коту полное HP за один ход. Если сервер не обновит HP при перепризыве, бот это запомнит и будет лечить кота Servitor Heal.</div>
+  <h4 data-cls="summoner">🎯 Добивание</h4>
+  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
+  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но кот промахивается ≈16 %, и тогда ход пропадает. Включай, только если банок нет.</div>
+  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
+  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а кот иногда промахивается (≈16 %), и тогда ход пропадает. Не на РБ.</div>
+  <h4 data-cls="summoner">✨ Баффы кота</h4>
+  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
+  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
+  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
+  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Повторно бафф ставится, когда истечёт его время или кота призовут заново. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
+  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
+  <h4 data-cls="summoner">📊 Статистика котов</h4>
+  <div id="petBox" class="box"></div>
+  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
+
+
+  <div class="subsec-title" data-cls="mage"><span id="tab-mage" class="tab-anchor"></span>🔮 Маг — заклинания (Warlock, Sorcerer, SH…)</div>
+  <div class="intro-callout"><b>Маг.</b><p>Ротация — по замеру урона каждого заклинания по этой цели: добивание самым дешёвым, которое добьёт наверняка, иначе самое сильное готовое. MP не экономим (банки MP). Новое заклинание сначала замеряется на «толстом» мобе.</p></div>
   <h4 data-cls="mage">🧿 Дебаффы (маг)</h4>
   <label>Вешать дебаффы <input id="debuffAuto" type="checkbox"></label>
   <label>Какие, по приоритету <input id="nDebuff" class="nm" placeholder="пусто — все с панели: Surrender to Fire, Curse Weakness…"></label>
@@ -444,6 +494,29 @@
   <label>«Авто»: бою осталось действий не меньше <input id="debuffMinActs" type="number" min="2" max="50"></label>
   <div class="hint">На L2WAP Surrender to Fire и Curse Chaos режут M.Def на 10 %, то есть это +11 % только к твоим заклинаниям (кот бьёт физикой). Ход на дебафф окупается примерно 9 заклинаниями после него, поэтому в «Авто» бот вешает дебафф, только если по HP моба (с учётом удара кота) бою ещё 10+ действий. Чемпиону с 5 000 HP хватает 2–3 ходов: дебаффы только удлиняли бой (лог 10.10: «✦→✦→B→B→B» за 7 с).</div>
   <div class="hint">Пустой список — бот сам: Surrender to Fire первым, если в ротации огонь; Curse Weakness — на РБ или когда тебя бьют (HP < 70 %); Curse Chaos/Gloom/Poison — только РБ. Каждый дебафф — раз на цель, только при запасе MP. Если дебафф проходит реже 30 % (6+ попыток) — бот выключает его на час. Статистика — в логе «дебафф».</div>
+  <h4 data-cls="mage">💉 Вампиризм</h4>
+  <label>Скиллы с поглощением HP <input id="nDrain" class="nm" placeholder="Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex"></label>
+  <label>Включать вампиризм при HP ≤, % <input id="drainHp" type="number" min="10" max="100"></label>
+  <div class="hint">Когда HP падает до порога, бот сначала бьёт скиллом с поглощением HP — он и бьёт, и лечит, а банки остаются целы. Банку HP пьёт, только если вампирик на откате, не хватает MP или HP уже опасно низкое (стоп-HP + 10 %). Выше порога вампирики не мешают обычной ротации (их можно держать и в «Силовых»). Скиллы «по трупу» (Life Scavenge, Corpse Life Drain) бот пропускает.</div>
+
+  <div class="subsec-title" data-cls="spoil"><span id="tab-spoil" class="tab-anchor"></span>⛏ Спойлер (гном)</div>
+  <div class="intro-callout"><b>Спойлер.</b><p>В начале боя — спойл (до 3 попыток), дальше бой как у воина: удары, станы, энергия — в блоке «Воин» ниже. Добычу спойла игра собирает сама, бот считает «Спойл: X ×N» как ресурс.</p></div>
+  <h4 data-cls="spoil">⛏ Спойл</h4>
+  <label>Спойл <input id="nSpoil" class="nm" placeholder="Spoil Crush, Spoil"></label>
+  <label>🎉 Масс-спойл <input id="nSpoilMass" class="nm" placeholder="Spoil Festival"></label>
+  <div class="hint">Масс-спойл (Spoil Festival) — когда в бою 2+ моба: одним нажатием метит всех рядом. Один моб — обычный Spoil (дешевле по мане). Не прошёл по главному — бот дожимает обычным Spoil.</div>
+  <input id="nSweep" class="nm" hidden>
+  <label>Спойлить и РБ <input id="spoilRb" type="checkbox"></label>
+  <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. Добычу спойла игра собирает сама (Sweeper бот не жмёт) — бот только считает её: строки «Спойл: Coal ×5» идут в «Фарм ресурса», квесты на ресурсы и цели главы.</div>
+
+  <div class="subsec-title" data-cls="fighter"><span id="tab-fighter" class="tab-anchor"></span>🗡 Воин (Дестр, Тиран, гном, гладиатор…)</div>
+  <div class="intro-callout"><b>Воин.</b><p>Добивание самым дешёвым ударом → иначе самый сильный готовый по замеру по этой цели → в паузах КД копит энергию → мощный удар, как только хватает. Новый удар сначала пробуется на «толстом» мобе. Frenzy/Guts/Zealot — аварийные при HP ≤ 30 %.</p></div>
+  <h4 data-cls="fighter">⚔ Атака и станы</h4>
+  <label data-cls="fighter">Атака <input id="nAttack" class="nm"></label>
+  <label data-cls="fighter">Станы (чемп/РБ) <input id="nStun" class="nm"></label>
+  <label data-cls="fighter">Стан на чемпе/РБ не чаще, с <input id="stunEvery" type="number"></label>
+  <label data-cls="fighter">Логика боя с мобами <select id="fightMode"><option value="dps">⚡ ДПС — быстрее всего</option><option value="kpd">💧 КПД — экономнее (меньше MP и банок)</option></select></label>
+  <div class="hint" data-cls="fighter">Симуляция 1 008 000 боёв Тирана с мобами (цепочкой): <b>ДПС</b> — 1719 мобов/ч, 50 MP на моба, 76 банок MP на 1000 мобов (текущая логика: добивание самым дешёвым скиллом, энергия под Force Blaster). <b>КПД</b> — 1516 мобов/ч (−12 %), 32 MP на моба (−36 %), 36 банок MP на 1000 (−53 %): моба, которого добьёт одна атака, бьёт атакой, энергию не копит. На РБ и в TvT логика своя — режим не влияет.</div>
   <h4 data-cls="fighter">⚡ Энергия силы</h4>
   <label>Копит энергию <input id="nCharge" class="nm"></label>
   <label>Тратят («Имя=цена») <input id="nForce" class="nm"></label>
@@ -452,66 +525,12 @@
   <label>Сверхсильные <input id="nUltra" class="nm" placeholder="Punch of Doom, Crush of Doom, Ice Vortex…"></label>
   <label>Когда <select id="ultMode"><option value="big">РБ, чемпионы и «толстые» мобы</option><option value="boss">Только РБ и чемпионы</option><option value="always">Сразу, как откатится</option></select></label>
   <div class="hint">Удары с долгим откатом и огромной силой (Punch of Doom у Тирана, Crush of Doom у Дестроера, Vortex-ы магов). Бот не тратит их на моба, который и так умрёт от обычного удара: в режиме «толстые» — только если у моба HP не меньше ~70 % урона этого удара (и минимум 4 обычные атаки) и моб ещё не добит до 30 %. Скиллы, которые стоят HP (… of Doom), — не при HP ниже 40 %. В обычную ротацию «Силовых» они не попадают.</div>
-  <h4>💉 Вампиризм (маги)</h4>
-  <label>Скиллы с поглощением HP <input id="nDrain" class="nm" placeholder="Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex"></label>
-  <label>Включать вампиризм при HP ≤, % <input id="drainHp" type="number" min="10" max="100"></label>
-  <div class="hint">Когда HP падает до порога, бот сначала бьёт скиллом с поглощением HP — он и бьёт, и лечит, а банки остаются целы. Банку HP пьёт, только если вампирик на откате, не хватает MP или HP уже опасно низкое (стоп-HP + 10 %). Выше порога вампирики не мешают обычной ротации (их можно держать и в «Силовых»). Скиллы «по трупу» (Life Scavenge, Corpse Life Drain) бот пропускает.</div>
-  <h4>⚙ Настройки скиллов</h4>
-  <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии и панели</option><option value="mage_summoner">Маг → Warlock (кошка)</option><option value="fighter">Воин — прежняя тактика</option></select></label>
-  <div class="hint">Профиль Warlock: магические атаки, приоритет MP, исключение призыва и умений питомца из атакующей ротации. Команды кошке включаются только после проверки серверной разметки питомца.</div>
-  <label data-cls="fighter">Логика боя с мобами <select id="fightMode"><option value="dps">⚡ ДПС — быстрее всего</option><option value="kpd">💧 КПД — экономнее (меньше MP и банок)</option></select></label>
-  <div class="hint" data-cls="fighter">Симуляция 1 008 000 боёв Тирана с мобами (цепочкой): <b>ДПС</b> — 1719 мобов/ч, 50 MP на моба, 76 банок MP на 1000 мобов (текущая логика: добивание самым дешёвым скиллом, энергия под Force Blaster). <b>КПД</b> — 1516 мобов/ч (−12 %), 32 MP на моба (−36 %), 36 банок MP на 1000 (−53 %): моба, которого добьёт одна атака, бьёт атакой, энергию не копит. На РБ и в TvT логика своя — режим не влияет.</div>
-  <label>MP на скилл, мин. (ед.) <input id="skillMpMin" type="number"></label>
-  <label data-cls="fighter">Стан на чемпе/РБ не чаще, с <input id="stunEvery" type="number"></label>
-  <label>Бафф каждые, с (если бафф не виден у шапки) <input id="buffSec" type="number"></label>
-  <h4>✨ Баффы</h4>
-  <label>Баффы <input id="nBuffs" class="nm"></label>
-  <div id="buffAudit" class="hint" style="white-space:pre-line"></div>
   <h4 data-cls="fighter">🔥 Важные баффы</h4>
   <label>Важные баффы <input id="nKeyBuffs" class="nm" placeholder="Frenzy, Guts, Zealot, War Cry…"></label>
   <label>Без условия по HP — только с РБ и чемпионами <input id="keyBuffBoss" type="checkbox"></label>
   <label>⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
   <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <div class="hint">Аварийные (действуют только при HP ≤ 30 %: Frenzy, Guts, Zealot, Angelic Icon) бот жмёт, как только HP упало до 30 % — раньше банки HP, чтобы банка не «перескочила» порог. Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → остальные → Zealot. Zealot режет получаемое лечение вдвое — в бою с РБ (где живём на банках) только на добивании, когда у РБ ≤ 15 %. Остальные важные (War Cry, Battle Roar и т.п.) — в начале боя с РБ/чемпионом (или в каждом бою, если галочку снять).</div>
-  <h4>🔁 Постоянные баффы (тогглы)</h4>
-  <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
-  <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
-  <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
-  <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
-  <h4 data-cls="spoil">⛏ Спойл</h4>
-  <label>Спойл <input id="nSpoil" class="nm" placeholder="Spoil Crush, Spoil"></label>
-  <label>🎉 Масс-спойл <input id="nSpoilMass" class="nm" placeholder="Spoil Festival"></label>
-  <div class="hint">Масс-спойл (Spoil Festival) — когда в бою 2+ моба: одним нажатием метит всех рядом. Один моб — обычный Spoil (дешевле по мане). Не прошёл по главному — бот дожимает обычным Spoil.</div>
-  <input id="nSweep" class="nm" hidden>
-  <label>Спойлить и РБ <input id="spoilRb" type="checkbox"></label>
-  <div class="hint">В начале боя бот помечает моба спойлом (до 3 попыток — спойл может не пройти): сначала Spoil Crush (удар + спойл, только с дубиной; без дубины бот это поймёт и перейдёт на Spoil), потом Spoil, Spoil Festival. Добычу спойла игра собирает сама (Sweeper бот не жмёт) — бот только считает её: строки «Спойл: Coal ×5» идут в «Фарм ресурса», квесты на ресурсы и цели главы.</div>
-  <h4>📊 Расчёт ДПС и стратегия</h4>
-  <div id="dpsBox" class="box"></div>
-
-  <div class="subsec-title" data-cls="mage"><span id="tab-pet" class="tab-anchor"></span>🐱 Слуга (кот)</div>
-  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот бьёт вместе с тобой на каждое твоё действие (≈35–40 % всего урона). Бот призывает кота первым действием боя, если его нет, держит его HP, ставит баффы кота и считает, сколько урона даёт каждый кот.</p></div>
-  <h4 data-cls="mage">🐱 Кот</h4>
-  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
-  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: Kai → Mew → Kat → Feline Queen)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option><option value="Summon Feline Queen">Feline Queen (+10 % от M.Atk, бафф физ. крита)</option></select></label>
-  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
-  <label>Лечить кота перепризывом (полное HP) <input id="petResummon" type="checkbox"></label>
-  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
-  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
-  <div class="hint">Перепризыв даёт коту полное HP за один ход. Если сервер не обновит HP при перепризыве, бот это запомнит и будет лечить кота Servitor Heal.</div>
-  <h4 data-cls="mage">🎯 Добивание</h4>
-  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
-  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но кот промахивается ≈16 %, и тогда ход пропадает. Включай, только если банок нет.</div>
-  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
-  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а кот иногда промахивается (≈16 %), и тогда ход пропадает. Не на РБ.</div>
-  <h4 data-cls="mage">✨ Баффы кота</h4>
-  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
-  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
-  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
-  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Повторно бафф ставится, когда истечёт его время или кота призовут заново. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
-  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
-  <h4 data-cls="mage">📊 Статистика котов</h4>
-  <div id="petBox" class="box"></div>
-  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
 
   <div class="subsec-title"><span id="tab-fight" class="tab-anchor"></span>🛡 Герой: безопасность, баффер, оружие</div>
   <h4>Безопасность</h4>
@@ -539,7 +558,6 @@
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Для смены прямо в бою оружие должно лежать на панели навыков.</div>
 </section>
 
-
 <!-- 🧪 БАНКИ И РАСХОДНИКИ -->
 <section id="tab-supply">
   <h4>🧪 Когда пить банки</h4>
@@ -562,7 +580,7 @@
   <label>Соски <input id="nShots" class="nm"></label>
   <label>Банка MP <input id="nMpPot" class="nm"></label>
   <label>Банка HP <input id="nHpPot" class="nm"></label>
-<div class="hint">Какие слоты панели боя — банки и заряды. «🤖 Распознать» в разделе «Бой и кот» заполняет их сам.</div>
+<div class="hint">Какие слоты панели боя — банки и заряды. «🤖 Распознать» в разделе «Бой» заполняет их сам.</div>
   <h4>🧪 Зелья (бот изучает сам)</h4>
   <div id="potBox" class="zbox"><div class="hint">Пока пусто — бот запишет банки с панели в начале боя, а сколько лечит каждая — после первого глотка.</div></div>
   <h4>🛒 Закупка расходников (Магазин вещей)</h4>
@@ -707,6 +725,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="zone-db.js"></script>
 <script src="zone-kpd.js"></script>
+<script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>

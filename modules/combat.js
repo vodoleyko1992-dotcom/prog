@@ -553,6 +553,14 @@ function dpsPlan(ctx, mp) {
     const aD = env.expDmg('атака');
     if (aD && aD * 0.85 >= hp) { const a0 = opts.find(o => o.key === 'attack'); if (a0) return { ...a0, why: `КПД: добиваю атакой (${hp} HP)` }; return null; }
   }
+  // 9.2 (незнакомый класс/новый удар): удар с < 3 замерами урона сначала пробуем на «толстом» мобе (HP заметно больше любого
+  // известного удара), как у мага (mageProbe) — иначе новый удар стоял бы в ротации с уроном «по справочнику» или не жался вовсе
+  if (env.cfg.mageProbe !== false && !ctx.rb && hp > 0) {
+    const meas = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.dmgN || 0;
+    const known = opts.filter(o => o.key !== 'attack' && !o.charge && meas(o) >= 3), maxKnown = Math.max(env.expDmg('атака') || 0, ...known.map(o => o.dmg));
+    const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3).sort((a, b) => meas(a) - meas(b))[0];
+    if (probe && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
+  }
   // 1) добивание
   // 9.2: по этой цели есть замеры — «добьёт» = добивало в ≥ 85 % ударов (анализатор боя), иначе — как раньше, 85 % среднего
   const killOk = o => { const p = o.key === 'charge' ? null : env.fightKillP?.(o.name.replace(/\s*\(.*$/, ''), hp); return p != null ? p >= 0.85 : o.dmg * 0.85 >= hp; };

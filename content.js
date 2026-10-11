@@ -1,4 +1,4 @@
-// ===== L2wap Bot v9.0.1 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v9.2 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -1846,7 +1846,19 @@ function combatProfileKind() {
   const normalized = normalizeProfession(rt.prof);
   if ((CLASS_W[normalized] || [])[0] === MAGE) return 'mage_summoner';
   if (CLASS_W[normalized]) return 'fighter';
-  return /\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/.test(normalized) ? 'mage_summoner' : null;
+  if (/\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/.test(normalized)) return 'mage_summoner';
+  // 9.2 (игрок: «научить универсальности — незнакомый герой или профессия»): профессии нет в списке — по ветке класса из ответов игры
+  // (character.classBranch: mystic/fighter), а без неё — по панели боя: ≥ 2 заклинания «Маг. атака» и ни одного удара воина → маг
+  if (normalized && /\b(?:fighter|warrior|knight|rogue|archer|scout|raider|monk|artisan|smith|dancer|singer)\b/.test(normalized)) return 'fighter';
+  if (rt.classBranch === 'mystic') return 'mage_summoner';
+  if (rt.classBranch === 'fighter') return 'fighter';
+  if (isBattle()) {
+    const sk = panelInventory().filter(x => x.kind === 'скилл').map(x => ilOf(x.name) || {});
+    const mag = sk.filter(il => il.c === 'Маг. атака' || il.t === 'MDAM' || il.t === 'MDAMDOT').length, phys = sk.filter(il => il.c === 'Физ. атака' || il.t === 'PDAM').length;
+    if (mag >= 2 && !phys) return 'mage_summoner';
+    if (phys >= 1 && !mag) return 'fighter';
+  }
+  return null;
 }
 function classWeaponTypes(...args) { return L2V7Modules.equipment.classWeaponTypes(...args); }
 function weaponOf(...args) { return L2V7Modules.equipment.weaponOf(...args); }

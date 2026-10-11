@@ -152,9 +152,53 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.match(content, /L2V7Modules\.fightlab\?\.onNet\(path, d\)/);
   assert.match(content, /const ex = L2V7Modules\.fightlab\?\.turnFor\(key, before\.t\);/);
   assert.match(content, /get fightDmgOn\(\) \{ return fightDmgOn; \}, get fightKillP\(\) \{ return fightKillP; \}, get fightSpikeEta\(\) \{ return fightSpikeEta; \}/);
-  assert.match(story, /'profQuest', 'fightMem'\]/);
+  assert.match(story, /'profQuest', 'fightMem', 'fightLast'\]/);
   assert.match(combat, /env\.fightDmgOn\?\.\(n\)\?\.mean \|\| env\.expDmg\(k\)/);
   assert.match(combat, /по этой цели добивает в/);
   assert.match(combat, /spike: spikeFar \? 0 : spike/);
 }
-console.log('PASS: 9.2 fight analyzer — server turn log (own/pet/incoming/spike/potion), exact numbers for skill stats, per-target memory across fights, kill chance per target, RB spike rhythm, class roles, hook battle field, wiring');
+
+// 8. универсальность (игрок: «научить брать и адаптировать систему боя незнакомого героя или профессии»)
+{
+  const content = read('content.js');
+  const fn = content.slice(content.indexOf('function combatProfileKind()'), content.indexOf('function classWeaponTypes('));
+  const mk = (rt, panel = []) => {
+    const sb = { rt, cfg: { combatProfile: 'auto' }, CLASS_W: { 'human warlock': ['маг'], 'orc tyrant': ['кастеты'] }, MAGE: 'маг', normalizeProfession: n => String(n || '').trim().replace(/[_\s-]+/g, ' ').toLowerCase(),
+      isBattle: () => panel.length > 0, panelInventory: () => panel.map(n => ({ kind: 'скилл', name: n })), ilOf: n => ({ 'Wind Strike': { c: 'Маг. атака' }, 'Ice Bolt': { t: 'MDAM' }, 'Power Strike': { c: 'Физ. атака' }, 'Heal': { c: 'Лечение' } })[n] || {} };
+    return vm.runInNewContext(`${fn}; combatProfileKind()`, sb);
+  };
+  assert.equal(mk({ prof: 'Human Warlock' }), 'mage_summoner'); assert.equal(mk({ prof: 'Orc Tyrant' }), 'fighter');
+  assert.equal(mk({ prof: 'Kamael Soul Breaker', classBranch: 'fighter' }), 'fighter', 'unknown profession → by class branch');
+  assert.equal(mk({ prof: 'Kamael Something', classBranch: 'mystic' }), 'mage_summoner');
+  assert.equal(mk({ prof: 'Newclass' }, ['Wind Strike', 'Ice Bolt', 'Heal']), 'mage_summoner', 'no branch → ≥ 2 magic attacks on the bar');
+  assert.equal(mk({ prof: 'Newclass' }, ['Power Strike', 'Heal']), 'fighter', 'physical strike on the bar');
+  assert.equal(mk({}, []), null, 'nothing known yet');
+  // ветка класса пишется из ответов игры (story.charNote)
+  const story = read('modules/story.js'); assert.match(story, /if \(ch\.classBranch && String\(ch\.classBranch\) !== env\.rt\.classBranch\) env\.setRt\(\{ classBranch: /);
+  // воин: новый удар (< 3 замеров) пробуется на «толстом» мобе, как у мага
+  const combat = read('modules/combat.js');
+  assert.match(combat, /if \(probe && hp > Math\.max\(maxKnown, 300\) \* 1\.3\) return \{ \.\.\.probe, probe: true, why: `пробую новый удар/);
+  assert.ok(combat.indexOf('пробую новый удар') < combat.indexOf('// 1) добивание'), 'probe before the kill rule in dpsPlan');
+}
+
+// 9. меню «⚔ Бой»: анализ боя, общие правила, подразделы классов, кот — подраздел Warlock
+{
+  const html = read('popup.html'), js = read('popup.js'), css = read('ui-v7.css'), ui = read('ui-v7.js');
+  const sec = html.slice(html.indexOf('<section id="tab-panel">'), html.indexOf('</section>', html.indexOf('<section id="tab-panel">')));
+  const order = ['tab-analyze', 'tab-roles', 'tab-pet', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => sec.indexOf(`id="${id}"`));
+  assert.ok(order.every((x, i) => x >= 0 && (i === 0 || x > order[i - 1])), 'subsections in order: ' + order.join(','));
+  assert.match(sec, /<div class="subsec-title" data-cls="summoner"><span id="tab-pet" class="tab-anchor"><\/span>🐱 Warlock — маг с котом<\/div>/);
+  assert.match(sec, /<div class="subsec-title" data-cls="mage"><span id="tab-mage"/); assert.match(sec, /<div class="subsec-title" data-cls="spoil"><span id="tab-spoil"/); assert.match(sec, /<div class="subsec-title" data-cls="fighter"><span id="tab-fighter"/);
+  for (const id of ['clsBox', 'fightBox', 'fightMemReset', 'dpsBox', 'combatProfile', 'petAuto', 'nDebuff', 'nDrain', 'nSpoil', 'nAttack', 'nStun', 'nCharge', 'nUltra', 'nKeyBuffs', 'fightMode', 'nPower', 'nHeal', 'nBuffs', 'nToggles', 'autoMagister', 'autoRevive', 'nWeaponMain']) assert.match(sec, new RegExp(`id="${id}"`), id);
+  assert.match(sec, /<h4 data-cls="summoner">🐱 Кот<\/h4>/); assert.ok(!/<h4 data-cls="mage">🐱 Кот<\/h4>/.test(sec));
+  assert.ok(sec.indexOf('id="petAuto"') > sec.indexOf('id="tab-pet"') && sec.indexOf('id="petAuto"') < sec.indexOf('id="tab-mage"'), 'cat settings inside the Warlock subsection');
+  assert.ok(sec.indexOf('id="nSpoil"') > sec.indexOf('id="tab-spoil"') && sec.indexOf('id="nSpoil"') < sec.indexOf('id="tab-fighter"'));
+  assert.ok(sec.indexOf('id="nAttack"') > sec.indexOf('id="tab-fighter"') && sec.indexOf('id="nAttack"') < sec.indexOf('id="tab-fight"'));
+  assert.match(html, /<span class="ic">⚔<\/span>Бой<\/button>/); assert.ok(!/Бой и кот/.test(html + ui));
+  assert.match(html, /<script src="modules\/fightlab\.js"><\/script>\n<script src="popup\.js"><\/script>/);
+  assert.match(css, /html:not\(\.cls-summoner\):not\(\.show-all\)\.cls-mage \[data-cls="summoner"\],html\.cls-fighter:not\(\.show-all\) \[data-cls="summoner"\]\{display:none!important\}/);
+  assert.match(js, /analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel'/);
+  assert.match(js, /root\.classList\.toggle\('cls-summoner', summoner\)/); assert.match(js, /function renderFight\(rt\)/); assert.match(js, /confirmClick\('fightMemReset'/);
+  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]); assert.equal(new Set(ids).size, ids.length, 'duplicate ids');
+}
+console.log('PASS: 9.2 fight analyzer — server turn log (own/pet/incoming/spike/potion), exact numbers for skill stats, per-target memory across fights, kill chance per target, RB spike rhythm, class roles, hook battle field, wiring; unknown class by branch/hotbar, fighter strike probe; «⚔ Бой» menu: analysis, common rules, class subsections (cat under Warlock)');
