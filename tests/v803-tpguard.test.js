@@ -43,3 +43,11 @@ const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
   assert.equal(base.rbStats.l2dop_rb_25158.matk, 7287); assert.equal(base.rbStats.l2dop_rb_25158.src, 'api');
   console.log('PASS: 8.0.3 teleport guard — built-in RB numbers (Tarlk, RB 55–66, epics) survive reinstall and refuse before paying; failed stats request logged and retried in 10 min; blind paid teleport only for a known RB or once per 30 min; two on-site refusals pause the tour');
 })().catch(e => { console.error(e); process.exit(1); });
+{ // 8.0.3 (ревью): обычный РБ из диапазона 290xx — не эпик
+  const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), assert = require('node:assert/strict');
+  const sb = { console, Date, Math, JSON, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/', href: '' } }; sb.globalThis = sb;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'modules/raid.js'), 'utf8'), sb);
+  const R = sb.L2V7Factories.raid({ rt: {}, cfg: {} });
+  assert.equal(R.isEpicId('l2dop_rb_29014'), true); assert.equal(R.isEpicId('l2dop_rb_29030'), false); assert.equal(R.isEpicId('l2dop_rb_25158'), false);
+  console.log('PASS: 8.0.3 epic ids — only the 8 game epics');
+}

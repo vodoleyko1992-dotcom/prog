@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "8.0.3",
-  "description": "L2wap Bot 8.0.3 — темп боя ×2, без платных телепортов вслепую, Coin of Luck под замком",
+  "version": "8.0.4",
+  "description": "L2wap Bot 8.0.4 — отход от смертельного босса, Noblesse после смерти, рыбалка без раздувания отката",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "8.0.3"
+  "version_name": "8.0.4"
 }

@@ -79,7 +79,9 @@ function rbSpM() {
 // 8.0.3 (эпики): dpsOver — свой ДПС по этому боссу (эпики: осторожная оценка до первого замера), hpOver — макс. HP героя, известное
 // вызывающему (у эпиков без него вердикт «неизвестно» — запасные 6000 HP решать не должны: на 6000 Королева «по силам»)
 // 8.0.3 (лог 11.10 11:42–11:44, Орфен): эпик — l2dop_rb_290xx, есть в списке эпиков / epicDb или игра назвала его kind 'epic'
-const isEpicId = id => /^l2dop_rb_290\d\d$/i.test(String(id || '')) || !!env.epicById?.(id) || env.rt.rbStats?.[id]?.kind === 'epic'
+// 8.0.3 (ревью): в 290xx есть и обычные РБ тура — эпики только по списку эпиков игры (8 штук) и kind 'epic'
+const EPIC_IDS = new Set(['29001', '29006', '29014', '29019', '29020', '29022', '29028', '29045']);
+const isEpicId = id => EPIC_IDS.has(String(id || '').replace(/^l2dop_rb_/i, '')) || !!env.epicById?.(id) || env.rt.rbStats?.[id]?.kind === 'epic'
   || Object.values(env.rt.epicDb || {}).some(e => e && e.id === id);
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
