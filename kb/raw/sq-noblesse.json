@@ -1,0 +1,32 @@
+{
+ "_path": "/game/story-quests/noblesse",
+ "_status": 200,
+ "_note": "11.10.2026 14:30 UTC, Warlock 60 без сабкласса; поле character вырезано",
+ "data": {
+  "quest": {
+   "questId": "noblesse_possessor_precious_soul",
+   "titleUk": "Possessor of a Precious Soul",
+   "titleRu": "Possessor of a Precious Soul",
+   "part": 0,
+   "totalParts": 4,
+   "completed": false,
+   "active": false,
+   "subclassLevel": null,
+   "npc": {
+    "id": "noblesse_virgil",
+    "name": "Virgil",
+    "worldX": 44528,
+    "worldY": -51290,
+    "teleportId": "rune"
+   },
+   "atNpc": false,
+   "minLevel": 50,
+   "objectiveUk": "Знайди Virgil у Rune Township, маючи сабклас 50 рівня.",
+   "objectiveRu": "Найди Virgil в Rune Township с сабклассом 50 уровня.",
+   "actions": {
+    "canAccept": false,
+    "canAdvance": false
+   }
+  }
+ }
+}
