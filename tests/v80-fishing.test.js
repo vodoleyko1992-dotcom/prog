@@ -166,10 +166,11 @@ function world(o = {}) {
     W.env.rt.fishCdStat = { ok: 79, rej: 0 }; await W.F.fishAct('pumping');
     assert.equal(W.env.rt.fishCdLen, 1.05, 'ниже 1,05 с не идём');
     assert.equal(W.setRt.length, 0, 'нажатие не пишет в хранилище — запись с исходом заброса');
-    W.env.FCD.pumping = clock.t - 1000;
+    // 8.0.3: учится только ЧИСТЫЙ отказ — нажали ровно по своему откату (1,05 с) без лага → +30 мс (раньше gap+60 мс от любого отказа)
+    W.env.FCD.pumping = clock.t - 1050;
     const fire = W.env.fire; W.env.fire = el => { fire(el); W.env.fishCdMsg++; };   // «Навичка ще перезаряджається»
     await W.F.fishAct('pumping');
-    assert.ok(Math.abs(W.env.rt.fishCdLen - 1.07) < 1e-9, `отказ — откат с запасом (${W.env.rt.fishCdLen})`);
+    assert.ok(Math.abs(W.env.rt.fishCdLen - 1.08) < 1e-9, `отказ — откат с запасом (${W.env.rt.fishCdLen})`);
     assert.equal(W.env.rt.fishCdStat?.rej, 1);
   }
   // ---------- B4: пакет времени 6 ч; не хватает аден — самый большой из меньших ----------

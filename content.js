@@ -1643,7 +1643,8 @@ async function rodScrollsBuy(rodTo, proof) {
   fire(btn);
   const ok = await waitFor(() => owned() > q0 || proof() < p0 || ($q('#fishing-shop-success')?.textContent || '') !== before, 6000, 150);
   if (!ok) { rec('B','удочка','покупка свитка не подтверждена, повтор позже'); return {have:0,bought:0}; }
-  rec('B','удочка',`куплен один свиток за 100 Proof: +${lvl} → +${rodTo}`);
+  // 8.0.3 (лог 11.10 10:54:50): «куплен один свиток …: +4 → +10» читалось как заточка до +10 — это уровень сейчас и цель игрока
+  rec('B','удочка',`куплен свиток заточки за 100 Proof (удочка сейчас +${lvl}, цель +${rodTo})`);
   return {have: owned(), bought: 1};
 }
 async function rodEnchant() {
@@ -2020,6 +2021,12 @@ var SK_NET = {};                                    // v5.5.5: когда сер
 // v5.6: в замке — видна ли вкладка (vis). Замок держит скрытая вкладка, а игрок смотрит на эту — забираем: бот должен работать
 // там, где игрок (лог 09.10: «работает в другой вкладке» час подряд из невидимой копии). Отобрали замок — сразу пауза
 const tabVis = () => document.visibilityState === 'visible';
+// 8.0.3 (лог 11.10 11:01:56–11:37): рыбалка в фоновой вкладке — игра снимает «disabled» с кнопок умений только на своём секундном тике,
+// 88 нажатий опоздали (≈48 с за час). Жать недоступную кнопку нельзя (игра отклонит или засчитает неверное нажатие) — пишем в журнал
+document.addEventListener('visibilitychange', () => {
+  if (!on || !tabOwner || !/\/fishing\.html/i.test(location.pathname)) return;
+  rec('S', 'вкладка', document.hidden ? 'рыбалка ушла в фон — кнопки игры оживают раз в 1 с, темп ниже (держите окно рыбалки видимым)' : 'рыбалка снова на экране');
+});
 let lockMine = 0;
 async function tabLock() {
   await TAB_KEY_READY;
@@ -3027,7 +3034,13 @@ addEventListener('message', e => {
   // Надевание оружия видно по запросу к серверу — сразу обновляем «надетое» по базе предметов (грейд, тип, P/M.Atk)
   if (path === '/character/equip' && d.method === 'POST' && d.req && !d.error && /^2/.test(String(d.status)) && !d.res?.error) try { weaponEquipNote(d.req); } catch (er) {}
   if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
-  if (/\/game\/fishing\/action$/.test(path)) NET_FISH = { t: Date.now(), ok: !d.error && /^2/.test(String(d.status)), act: d.req?.action || '' };   // v5.3: для сторожа рыбалки
+  // v5.3: для сторожа рыбалки. 8.0.3 (лог 11.10): + обрыв запроса (err — fishAct сразу жмёт снова, а не ждёт 15 с), отметка сервера
+  // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
+  if (/\/game\/fishing\/action$/.test(path)) {
+    const fz = d.res?.fishing && typeof d.res.fishing === 'object' ? d.res.fishing : null;
+    NET_FISH = { t: Date.now(), ok: !d.error && /^2/.test(String(d.status)), act: d.req?.action || '', err: d.error ? String(d.error) : '', code: String(d.res?.error || ''), srv: +fz?.serverNowMs || 0, ms: +d.ms || 0, cds: fz?.cooldowns };
+    try { L2V7Modules.fishing.fishNet(NET_FISH); } catch (er) {}
+  }
   // 7.1.30: квест профессии (Алхімік Орфеус: «★ Giant Fungus ×100 і ★ Dire Wyrm ×15»). Сервер отдаёт счётчики убийств —
   // делаем этих мобов целями квеста: уровень-окно к ним не применяется, бот не улетает «в зону своего уровня» (лог 10.10 13:22)
   if (/\/character\/profession-quest\/[\w-]+\/status$/.test(path) && d.res?.status && !d.res.error) try { profQuestNote(d.res.status); } catch (er) {}
@@ -4048,6 +4061,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 8.0.3 (разбор RU/UA 11.10): в украинском интерфейсе метка «· чемпіон» — чемпионы шли как обычные мобы
   once('champMark803', () => { if (C('champMark') === 'чемпион') cf.champMark = 'чемпион, чемпіон'; });
   once('fishBait803', () => { if (C('fishBuyPacks') === 1000) cf.fishBuyPacks = 100; });
+  // 8.0.3 (лог 11.10 10:44–11:45): откат рыбалки, раздутый отказами из-за лага сервера (1,69–1,80 с, в памяти 1,61 с), — обратно к 1,22 с
+  once('fishCd803', () => { if (+rt.fishCdLen > 1.22) rf.fishCdLen = 1.22; });
   // 8.0.3 (эпики): «Coin of Luck на эпиков» 0 теперь значит «НЕ тратить» (было «без лимита») — значение игрока не трогаем, только строка в журнал
   once('epicCol803', () => { const n = +C('epicCoinDailyMax') || 0; setTimeout(() => { try { rec('B', 'эпики', `Coin of Luck на эпиков: 0 теперь значит НЕ тратить (раньше — без лимита); ${n ? `ваш лимит ${n} за 24 ч сохранён` : 'сейчас стоит 0 — бот их не тратит'}`); } catch (e) {} }, 3000); });
   once('epicDeaths803', () => { if (+C('epicMaxDeaths') === 10) cf.epicMaxDeaths = 3; });   // 8.0.3: смертей на эпика 10 → 3 (только заводские 10)
