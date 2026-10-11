@@ -1,5 +1,5 @@
 'use strict';
-// 8.0.9 (база знаний kb/, снято с игры 11.10): встроенные цифры RB_KNOWN — все 197 РБ из kb/data/game-raid-bosses.json (было 33),
+// 9.0 (база знаний kb/, снято с игры 11.10): встроенные цифры RB_KNOWN — все 197 РБ из kb/data/game-raid-bosses.json (было 33),
 // 5 неточных записей 8.0.3 (РБ 60–66) заменены ответами игры; эпики, кроме Ядра и Орфена, по-прежнему спрашиваются у игры
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -23,5 +23,5 @@ const kb = JSON.parse(read('kb/data/game-raid-bosses.json'));
   assert.equal(JSON.stringify([st.hp, st.matk, calls.length]), JSON.stringify([175392, 62, 0]));
   // 4. эпики: Ядро и Орфен встроены, Закен — нет (его цифры бот спрашивает сам)
   assert.ok(R.rbKnown('l2dop_rb_29006') && R.rbKnown('l2dop_rb_29014')); assert.equal(R.rbKnown('l2dop_rb_29022'), null);
-  console.log('PASS: 8.0.9 built-in RB numbers — all 197 RBs from the knowledge base (was 33), 5 inaccurate 60–66 entries fixed from game answers, no request for a known RB, epics unchanged');
+  console.log('PASS: 9.0 built-in RB numbers — all 197 RBs from the knowledge base (was 33), 5 inaccurate 60–66 entries fixed from game answers, no request for a known RB, epics unchanged');
 })().catch(e => { console.error(e); process.exit(1); });

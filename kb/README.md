@@ -24,7 +24,7 @@
 1. `GET /game/spawn/<id>/info` отдаёт цифры любого моба и РБ (HP, атака, EXP, адена, дроп, спойл) до боя. Можно выбирать зону и цель по таблице, без пробных боёв.
 2. У чемпионов всегда 2× HP и P.Atk, но 10× EXP и адены (проверено на 40 парах). Это аргумент включить поиск чемпионов.
 3. Лучшие обычные мобы на 60 ур. по EXP на единицу HP: Past Knight 64 (Ancient Battleground), Requiem Lord 68, затем Bone Maker 66 и Bone Collector 67 (Den of Evil), Bloody Lord 68.
-4. `RB_KNOWN` в `modules/raid.js` расширен с 33 до 197 РБ из `game-raid-bosses.json` (8.0.9). Время респа РБ API не отдаёт, только у эпиков.
+4. `RB_KNOWN` в `modules/raid.js` расширен с 33 до 197 РБ из `game-raid-bosses.json` (9.0). Время респа РБ API не отдаёт, только у эпиков.
 5. Бесплатен только базовый набор баффера. Полные наборы стоят Coin of Luck, бот их не берёт.
 6. В `/character` есть поля, которые бот пока не читает: `learnedBattleSkillsDetail`, `battleHotbarSlots`, `activeBuffs[].expiresAt`, `activeSummon.pAtk`, `armorSetBonus`, `weaponGradeMatchesArmor`, `skillMpCostMul`, `currentZoneId`.
 7. Откаты рыбалки видны в `/game/fishing/state.cooldowns`: `pumpingMs:500`, `reelingMs:700` и время окончания в мс сервера.
