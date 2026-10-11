@@ -1,0 +1,118 @@
+{
+ "_path": "/game/achievements",
+ "_status": 200,
+ "data": {
+  "character": {
+   "id": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+   "name": "Warlock",
+   "level": 60
+  },
+  "globalStage": 0,
+  "rank": null,
+  "earnedRank": {
+   "stage": 2,
+   "uk": "Віконт",
+   "ru": "Виконт",
+   "en": "Viscount"
+  },
+  "categories": [
+   {
+    "key": "level",
+    "value": "60",
+    "stage": 2,
+    "thresholds": [
+     "40",
+     "55",
+     "65",
+     "76",
+     "80"
+    ]
+   },
+   {
+    "key": "raidBoss",
+    "value": "31",
+    "stage": 0,
+    "thresholds": [
+     "100",
+     "300",
+     "750",
+     "1500",
+     "2500"
+    ]
+   },
+   {
+    "key": "epicBoss",
+    "value": "1",
+    "stage": 0,
+    "thresholds": [
+     "3",
+     "10",
+     "25",
+     "50",
+     "100"
+    ]
+   },
+   {
+    "key": "mobs",
+    "value": "14889",
+    "stage": 1,
+    "thresholds": [
+     "10000",
+     "50000",
+     "150000",
+     "350000",
+     "1000000"
+    ]
+   },
+   {
+    "key": "fishing",
+    "value": "1164",
+    "stage": 1,
+    "thresholds": [
+     "1000",
+     "5000",
+     "15000",
+     "35000",
+     "75000"
+    ]
+   },
+   {
+    "key": "adena",
+    "value": "93920000",
+    "stage": 2,
+    "thresholds": [
+     "10000000",
+     "50000000",
+     "150000000",
+     "400000000",
+     "1000000000"
+    ]
+   },
+   {
+    "key": "quiz",
+    "value": "0",
+    "stage": 0,
+    "thresholds": [
+     "25",
+     "100",
+     "300",
+     "700",
+     "1500"
+    ]
+   },
+   {
+    "key": "sevenSeals",
+    "value": "0",
+    "stage": 0,
+    "thresholds": [
+     "10000",
+     "50000",
+     "150000",
+     "400000",
+     "1000000"
+    ]
+   }
+  ],
+  "rebirthUnlocked": false
+ }
+}

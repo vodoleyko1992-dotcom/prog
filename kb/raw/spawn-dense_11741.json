@@ -1,0 +1,192 @@
+{
+ "_path": "/game/spawn/dense_11741/info",
+ "_status": 200,
+ "data": {
+  "spawnId": "dense_11741",
+  "name": "Bloody Lord",
+  "level": 68,
+  "kind": "passive",
+  "aggressive": false,
+  "templateId": "l2dop_dense_11741",
+  "npcId": 20963,
+  "icon": "/mobs/261.png",
+  "stats": {
+   "maxHp": 3444,
+   "pAtk": 758,
+   "pDef": 559,
+   "mAtk": 618,
+   "mDef": 488
+  },
+  "drops": [
+   {
+    "id": "synthetic_adena",
+    "kind": "adena",
+    "chance": 0.7,
+    "min": 8436,
+    "max": 11029,
+    "displayName": "Adena",
+    "chancePerMillion": 700000,
+    "l2ItemId": 57,
+    "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_adamantite_nugget",
+    "kind": "resource",
+    "chance": 0.04,
+    "min": 1,
+    "max": 3,
+    "displayName": "Adamantite Nugget",
+    "l2ItemId": 1877,
+    "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_animal_bone",
+    "kind": "resource",
+    "chance": 0.16,
+    "min": 1,
+    "max": 3,
+    "displayName": "Animal Bone",
+    "l2ItemId": 1872,
+    "iconUrl": "/icons/resources/basic/animal_bone.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_coal",
+    "kind": "resource",
+    "chance": 0.16,
+    "min": 1,
+    "max": 3,
+    "displayName": "Coal",
+    "l2ItemId": 1870,
+    "iconUrl": "/icons/resources/basic/coal.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_iron_ore",
+    "kind": "resource",
+    "chance": 0.16,
+    "min": 1,
+    "max": 3,
+    "displayName": "Iron Ore",
+    "l2ItemId": 1869,
+    "iconUrl": "/icons/resources/basic/iron_ore.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_mithril_ore",
+    "kind": "resource",
+    "chance": 0.07,
+    "min": 1,
+    "max": 3,
+    "displayName": "Mithril Ore",
+    "l2ItemId": 1876,
+    "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_oriharukon_ore",
+    "kind": "resource",
+    "chance": 0.04,
+    "min": 1,
+    "max": 3,
+    "displayName": "Oriharukon Ore",
+    "l2ItemId": 1874,
+    "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+   },
+   {
+    "id": "basic_res_normal_20963_68_dense_11741_stone_of_purity",
+    "kind": "resource",
+    "chance": 0.07,
+    "min": 1,
+    "max": 3,
+    "displayName": "Stone of Purity",
+    "l2ItemId": 1875,
+    "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+   },
+   {
+    "id": "grade_piece_normal_20963_68_dense_11741_jewelry_accessory_gemstone_a",
+    "kind": "resource",
+    "chance": 0.05,
+    "min": 1,
+    "max": 1,
+    "displayName": "Accessory Gemstone A",
+    "l2ItemId": 920012,
+    "iconUrl": "/icons/resources/grade_pieces/accessory_gemstone_a.jpg"
+   },
+   {
+    "id": "enria_normal_20963",
+    "kind": "resource",
+    "chance": 0.09,
+    "min": 1,
+    "max": 3,
+    "displayName": "Enria",
+    "chancePerMillion": 90000,
+    "l2ItemId": 4042,
+    "iconUrl": "/icons/resources/rare/enria.jpg"
+   },
+   {
+    "id": "a_equip_recipe_normal_20963_ancient_battleground_922047",
+    "kind": "other",
+    "chance": 0.01036,
+    "min": 1,
+    "max": 1,
+    "displayName": "Recipe: Dark Crystal Boots [Heavy Armor] (100%)",
+    "l2ItemId": 922047,
+    "iconUrl": "/icons/recipes/a_grade/recipe_armor_a.jpg"
+   }
+  ],
+  "spoil": [
+   {
+    "id": "recipe_spoil_preview_20963_5435",
+    "kind": "other",
+    "chance": 0.012,
+    "min": 1,
+    "max": 1,
+    "displayName": "Recipe: Dragon Slayer (100%)",
+    "l2ItemId": 5435,
+    "iconUrl": "/icons/recipes/a_grade/recipe_weapon_a.jpg"
+   },
+   {
+    "id": "basic_res_spoil_preview_20963_68_dense_11741_oriharukon_ore",
+    "kind": "resource",
+    "chance": 0.36,
+    "min": 1,
+    "max": 3,
+    "displayName": "Oriharukon Ore",
+    "l2ItemId": 1874,
+    "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+   },
+   {
+    "id": "basic_res_spoil_preview_20963_68_dense_11741_adamantite_nugget",
+    "kind": "resource",
+    "chance": 0.36,
+    "min": 1,
+    "max": 3,
+    "displayName": "Adamantite Nugget",
+    "l2ItemId": 1877,
+    "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+   },
+   {
+    "id": "basic_res_spoil_preview_20963_68_dense_11741_mithril_ore",
+    "kind": "resource",
+    "chance": 0.42,
+    "min": 1,
+    "max": 3,
+    "displayName": "Mithril Ore",
+    "l2ItemId": 1876,
+    "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+   },
+   {
+    "id": "grade_piece_spoil_preview_20963_68_dense_11741_accessory_gemstone_a",
+    "kind": "resource",
+    "chance": 0.09,
+    "min": 1,
+    "max": 2,
+    "displayName": "Accessory Gemstone A",
+    "l2ItemId": 920012,
+    "iconUrl": "/icons/resources/grade_pieces/accessory_gemstone_a.jpg"
+   }
+  ],
+  "viewerMaySeeSpoil": false,
+  "rewardExp": 9382,
+  "rewardSp": 1812,
+  "rewardExpSynthetic": false,
+  "dropsSynthetic": false
+ }
+}

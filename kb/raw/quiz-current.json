@@ -1,0 +1,37 @@
+{
+ "_path": "/game/quiz/current",
+ "_status": 200,
+ "data": {
+  "roundId": "29862090",
+  "startsAt": "2026-10-11T13:30:00.000Z",
+  "endsAt": "2026-10-11T13:31:00.000Z",
+  "questionId": "adena_currency",
+  "question": {
+   "uk": "Яка базова валюта Lineage 2?",
+   "ru": "Какая базовая валюта Lineage 2?"
+  },
+  "options": [
+   {
+    "index": 0,
+    "uk": "Adena",
+    "ru": "Adena"
+   },
+   {
+    "index": 1,
+    "uk": "SP",
+    "ru": "SP"
+   },
+   {
+    "index": 2,
+    "uk": "CP",
+    "ru": "CP"
+   }
+  ],
+  "answered": false,
+  "roundClosed": false,
+  "selectedIndex": null,
+  "isCorrect": null,
+  "correctIndex": null,
+  "reward": null
+ }
+}

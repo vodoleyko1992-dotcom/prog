@@ -1,0 +1,2774 @@
+{
+  "meta": {
+    "title": "Рейд-боссы и эпики",
+    "generated_by": "kb/tools/build_all.py (python3 -I)",
+    "sources": [
+      "modules/raid.js RB_KNOWN (33 шт.: [HP, P.Atk, P.Def, M.Atk, M.Def] из /game/spawn/<id>/info), EPIC_IDS",
+      "content.js EPICS (ключ, уровень, логово, id), popup.js LAIR",
+      "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3): rt.rbList (197 РБ: имя UA, ур., цена телепорта, статус), rt.rbStats, rt.rbDb (бои бота), rt.rbK, rt.rbLossK, rt.rbDps",
+      "tests/fixtures-epic-bosses-803.json (ответ GET /game/epic-bosses 11.10 09:03)",
+      "CHANGELOG-7.2.1…8.0.4, skill l2-game-facts"
+    ],
+    "note": "specialHitFactor_mAtk = rt.rbDb[id].sp (замеренный спецудар, HP) / M.Atk. ВНИМАНИЕ: rt.rbStats[id].sp — это SP-награда, а rt.rbDb[id].sp — спецудар (одно имя поля, разный смысл). heroHpLossPerSec_measured = rt.rbStats[id].loss (потеря HP героя в секунду с учётом банок). rbK — обычный удар РБ ≈ P.Atk × rbK.",
+    "repo_version": "8.0.8"
+  },
+  "global": {
+    "rbK_normalHitPerPAtk": 0.1085,
+    "rbLossK_hpLossPerPAtk": 0.0134,
+    "rbDps_measured": 2783,
+    "specialHitFactor_mAtk_range": [0.713, 0.899],
+    "raid_js_defaults": {
+      "rbK_default": 0.109,
+      "spK_without_data": 1.05,
+      "spK_clamp": [0.9, 1.4],
+      "RB_WIN_levels": 15,
+      "RB_IDLE_MS": 300000,
+      "rbInfo_retry_after_error_min": 10,
+      "blind_pay_once_per_min": 30,
+      "refuse_2_in_10min_farm_min": 5
+    },
+    "flee_rules_8_0_4": "удар ≥45 % макс. HP и HP < 2 ударов → выход + «не по силам» до нового уровня; ≥35 % и следующий убьёт → выход + пропуск 30 мин; босс ≤5 % — добиваем",
+    "doc_notes": [
+      {
+        "note": "спецудар РБ = 0,71–0,90 × M.Atk у 11 РБ; от P.Atk разброс 2,2–7,2 (спецудар магический)",
+        "src": "CHANGELOG-8.0; skill l2-game-facts"
+      },
+      {
+        "note": "урон по РБ ≈3 100–3 400/с под FA-баффами против ≈1 650–1 700/с без; РБ 44–45 ур. дают ≈575–810 тыс. EXP и ≈185–240 тыс. аден",
+        "src": "CHANGELOG-7.2.2"
+      },
+      {"note": "8 РБ за 37 мин (10.10 22:30–23:07) без смертей", "src": "CHANGELOG-7.2.2"},
+      {
+        "note": "телепорт к РБ 100 000 аден: POST /game/raid-boss/teleport {spawnId, expectedRevision, expectedAdenaCost}",
+        "src": "skill l2-game-facts"
+      },
+      {
+        "note": "РБ невосприимчивы к дебаффам: «Raid Boss має імунітет до негативних ефектів» (rt.debuffImmune.rb)",
+        "src": "CHANGELOG-7.2.1"
+      },
+      {"note": "HP РБ сохраняется на сервере между заходами (недобитый РБ первым в туре)", "src": "CHANGELOG-7.2.3"},
+      {
+        "note": "8.0 до 8.0.3: 3 из 18 телепортов впустую; 10 боёв с РБ на 8.0: 1302 потерянных нажатия на 1689 ходов, ДПС 1436–1606 вместо 3100–3350",
+        "src": "CHANGELOG-8.0, 8.0.3"
+      },
+      {
+        "note": "сервер пускает к эпикам/РБ не ниже «герой − 9» (minRaidBossLevel); «Raid Boss нижче дозволеного рівня.» — отказ",
+        "src": "tests/fixtures-epic-bosses-803.json; rbList"
+      }
+    ]
+  },
+  "epicApiMeta_811_0903": {
+    "page": 1,
+    "pageSize": 15,
+    "total": 8,
+    "totalPages": 1,
+    "baseAdenaCost": 0,
+    "adenaCost": 0,
+    "vipFreeApplied": false,
+    "baseCoinOfLuckCost": 1,
+    "coinOfLuckCost": 1,
+    "characterLevel": 54,
+    "minRaidBossLevel": 45
+  },
+  "counts": {"bosses": 208, "with_stats": 33, "epics": 11, "fought_by_bot": 11, "RB_KNOWN": 33},
+  "bosses": [
+    {
+      "npcId": 25001,
+      "spawnId": "l2dop_rb_25001",
+      "name_uk": "Кутус Сірий Кіготь",
+      "level": 23,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25004,
+      "spawnId": "l2dop_rb_25004",
+      "name_uk": "Головар Найманців Турек",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25007,
+      "spawnId": "l2dop_rb_25007",
+      "name_uk": "Паук Клету",
+      "level": 42,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25010,
+      "spawnId": "l2dop_rb_25010",
+      "name_uk": "Лютий Тілес",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25013,
+      "spawnId": "l2dop_rb_25013",
+      "stats": {
+        "hp": 507285,
+        "pAtk": 2894,
+        "pDef": 833,
+        "mAtk": 2217,
+        "mDef": 904,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 230000},
+      "name_uk": "Привид Головаря Селян",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"},
+      "doc_notes": [
+        {
+          "note": "спецудар 1853 при M.Atk 2217; 10.10 23:23:16 HP героя 4037 → 1866 (спецудар 1853 + удар ≈318), бой выигран 23:25:06",
+          "src": "CHANGELOG-8.0; tests/v803-rbflee-single.test.js"
+        },
+        {"note": "получал «не по силам» посреди боя, потом был убит", "src": "CHANGELOG-8.0"}
+      ]
+    },
+    {
+      "npcId": 25016,
+      "spawnId": "l2dop_rb_25016",
+      "name_uk": "Третій Підводний Стражник",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25019,
+      "spawnId": "l2dop_rb_25019",
+      "name_uk": "Пан Дриад",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25020,
+      "spawnId": "l2dop_rb_25020",
+      "name_uk": "Чаклун Брека Пасту",
+      "level": 34,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25023,
+      "spawnId": "l2dop_rb_25023",
+      "name_uk": "Королева Стакато Зирна",
+      "level": 34,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25026,
+      "spawnId": "l2dop_rb_25026",
+      "name_uk": "Кату, Голова Авангарду Атуї",
+      "level": 49,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25029,
+      "spawnId": "l2dop_rb_25029",
+      "name_uk": "Атрайбан",
+      "level": 53,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25032,
+      "spawnId": "l2dop_rb_25032",
+      "name_uk": "Хранитель Еви Міллену",
+      "level": 58,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25035,
+      "spawnId": "l2dop_rb_25035",
+      "name_uk": "Посланець Шіллен Кабріо",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25038,
+      "spawnId": "l2dop_rb_25038",
+      "name_uk": "Тирак",
+      "level": 28,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25041,
+      "spawnId": "l2dop_rb_25041",
+      "name_uk": "Реммель",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25044,
+      "spawnId": "l2dop_rb_25044",
+      "name_uk": "Баріон",
+      "level": 47,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25047,
+      "spawnId": "l2dop_rb_25047",
+      "stats": {
+        "hp": 352421,
+        "pAtk": 1445,
+        "pDef": 808,
+        "mAtk": 568,
+        "mDef": 876,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 225666},
+      "name_uk": "Карте",
+      "level": 49,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25050,
+      "spawnId": "l2dop_rb_25050",
+      "stats": {
+        "hp": 771340,
+        "pAtk": 3310,
+        "pDef": 859,
+        "mAtk": 3110,
+        "mDef": 929,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 234334},
+      "name_uk": "Верфа",
+      "level": 51,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"},
+      "doc_notes": [
+        {
+          "note": "спецудар 2600 при M.Atk 3110 (≈60 % HP героя); оценка «на глаз» давала 1055",
+          "src": "CHANGELOG-8.0"
+        }
+      ]
+    },
+    {
+      "npcId": 25051,
+      "spawnId": "l2dop_rb_25051",
+      "name_uk": "Рахха",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25054,
+      "spawnId": "l2dop_rb_25054",
+      "name_uk": "Кернон",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25057,
+      "spawnId": "l2dop_rb_25057",
+      "stats": {
+        "hp": 288415,
+        "pAtk": 1084,
+        "pDef": 714,
+        "mAtk": 368,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 679197, "sp_api": 342564},
+      "heroHpLossPerSec_measured": 17,
+      "name_uk": "Птицезмей",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 171,
+        "hitP90": 285,
+        "heroLvl": 52,
+        "heroMaxHp": 4022,
+        "expPerKill": 692780,
+        "adenaPerKill": 214817,
+        "zone": "pavel_ruins",
+        "note": "убит за 2:51",
+        "specialHit": 331
+      },
+      "specialHitFactor_mAtk": 0.899
+    },
+    {
+      "npcId": 25060,
+      "spawnId": "l2dop_rb_25060",
+      "name_uk": "Відкинута Каель",
+      "level": 24,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25063,
+      "spawnId": "l2dop_rb_25063",
+      "name_uk": "Чертуба Великий Дух",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25064,
+      "spawnId": "l2dop_rb_25064",
+      "name_uk": "Маг Бурі Терук",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25067,
+      "spawnId": "l2dop_rb_25067",
+      "name_uk": "Головар Червоного Прапора Шака",
+      "level": 52,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25070,
+      "spawnId": "l2dop_rb_25070",
+      "name_uk": "Захисник Зачарованого Лісу Руель",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25073,
+      "spawnId": "l2dop_rb_25073",
+      "name_uk": "Кривавий Жрець Рудельто",
+      "level": 69,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25076,
+      "spawnId": "l2dop_rb_25076",
+      "name_uk": "Принцеса Молранг",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25079,
+      "spawnId": "l2dop_rb_25079",
+      "name_uk": "Бандит Котячий Око",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25082,
+      "spawnId": "l2dop_rb_25082",
+      "name_uk": "Предводитель Кошачої Банди",
+      "level": 39,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25085,
+      "spawnId": "l2dop_rb_25085",
+      "stats": {
+        "hp": 371721,
+        "pAtk": 1884,
+        "pDef": 691,
+        "mAtk": 1170,
+        "mDef": 747,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 1176091, "sp_api": 524350},
+      "name_uk": "Голова Рейнджерів Орків Тімак",
+      "level": 44,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 5, "t": "2026-10-10T12:34:26Z"},
+      "fights_bot": {"kills": 0, "tries": 1, "heroLvl": 52, "zone": "pavel_ruins"}
+    },
+    {
+      "npcId": 25088,
+      "spawnId": "l2dop_rb_25088",
+      "stats": {
+        "hp": 702418,
+        "pAtk": 3493,
+        "pDef": 669,
+        "mAtk": 4204,
+        "mDef": 723,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 1246318, "sp_api": 546206},
+      "name_uk": "Сумасшедший Механічний Голем",
+      "level": 43,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      },
+      "fights_bot": {
+        "kills": 0,
+        "tries": 0,
+        "heroLvl": 52,
+        "zone": "pavel_ruins",
+        "note": "оценка до боя: спецудар 52% HP героя · спецудар 2094 HP (оценка), обычный ≈381, потеря ≈244 HP/с, РБ HP 702k ≈10:11, банки ≈149k из 645k"
+      },
+      "doc_notes": [
+        {
+          "note": "M.Atk 4204 → бот отклоняет (8.0); один лишний телепорт 10.10 22:18 после чистки замеров",
+          "src": "CHANGELOG-8.0, 7.2.2"
+        }
+      ]
+    },
+    {
+      "npcId": 25089,
+      "spawnId": "l2dop_rb_25089",
+      "name_uk": "Бездушний Дикий Кабан",
+      "level": 59,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25092,
+      "spawnId": "l2dop_rb_25092",
+      "name_uk": "Корим",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25095,
+      "spawnId": "l2dop_rb_25095",
+      "name_uk": "Ельф Реноа",
+      "level": 29,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25098,
+      "spawnId": "l2dop_rb_25098",
+      "name_uk": "Слуга Седжара",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25099,
+      "spawnId": "l2dop_rb_25099",
+      "stats": {
+        "hp": 273375,
+        "pAtk": 1008,
+        "pDef": 691,
+        "mAtk": 331,
+        "mDef": 747,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 672055, "sp_api": 335228},
+      "heroHpLossPerSec_measured": 11,
+      "name_uk": "Гниле Дерево Репіро",
+      "level": 44,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 5, "t": "2026-10-10T12:34:26Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 167,
+        "hitP90": 303,
+        "heroLvl": 52,
+        "heroMaxHp": 4022,
+        "expPerKill": 685496,
+        "adenaPerKill": 185933,
+        "zone": "pavel_ruins",
+        "note": "убит за 2:47",
+        "specialHit": 297
+      },
+      "specialHitFactor_mAtk": 0.897,
+      "doc_notes": [
+        {
+          "note": "10.10 22:10–22:23: убит за 2:46 (+685 тыс. EXP, +186 тыс. аден, +335 тыс. SP)",
+          "src": "CHANGELOG-7.2.2"
+        }
+      ]
+    },
+    {
+      "npcId": 25102,
+      "spawnId": "l2dop_rb_25102",
+      "name_uk": "Шакрам",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25103,
+      "spawnId": "l2dop_rb_25103",
+      "name_uk": "Шаман Ісірр",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25106,
+      "spawnId": "l2dop_rb_25106",
+      "name_uk": "Лідія, Примара Джерела",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25109,
+      "spawnId": "l2dop_rb_25109",
+      "name_uk": "Жриця Антараса Кло",
+      "level": 74,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25112,
+      "spawnId": "l2dop_rb_25112",
+      "name_uk": "Емісар Белефа Міна",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25115,
+      "spawnId": "l2dop_rb_25115",
+      "name_uk": "Ікарова Істота I",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25118,
+      "spawnId": "l2dop_rb_25118",
+      "name_uk": "Наглядач Земель Страти Гільотин",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25119,
+      "spawnId": "l2dop_rb_25119",
+      "stats": {
+        "hp": 507285,
+        "pAtk": 2894,
+        "pDef": 833,
+        "mAtk": 2217,
+        "mDef": 904,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 230000},
+      "name_uk": "Вісник Королеви Фей Берун",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25122,
+      "spawnId": "l2dop_rb_25122",
+      "stats": {
+        "hp": 728846,
+        "pAtk": 2945,
+        "pDef": 2818,
+        "mAtk": 1600,
+        "mDef": 3510,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 256000},
+      "name_uk": "Втрачений Надією Біженець Лео",
+      "level": 56,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25125,
+      "spawnId": "l2dop_rb_25125",
+      "name_uk": "Лютий Король Тигрів",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25126,
+      "spawnId": "l2dop_rb_25126",
+      "name_uk": "Довгорогий Голконда",
+      "level": 79,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25127,
+      "spawnId": "l2dop_rb_25127",
+      "name_uk": "Матріарх Лангк Рашкос",
+      "level": 24,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25128,
+      "spawnId": "l2dop_rb_25128",
+      "name_uk": "Великий Провидець Вуку Гармаш",
+      "level": 33,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25131,
+      "spawnId": "l2dop_rb_25131",
+      "name_uk": "Кровавий Монарх Гато",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25134,
+      "spawnId": "l2dop_rb_25134",
+      "name_uk": "Вождь Літо Талкін",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25137,
+      "spawnId": "l2dop_rb_25137",
+      "name_uk": "Відьма Белефа Сефія",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25140,
+      "spawnId": "l2dop_rb_25140",
+      "stats": {
+        "hp": 1384041,
+        "pAtk": 8830,
+        "pDef": 5780,
+        "mAtk": 10941,
+        "mDef": 5256,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 295000},
+      "name_uk": "Гекатон Прайм",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25143,
+      "spawnId": "l2dop_rb_25143",
+      "name_uk": "Шуріель Полум’я Гніву",
+      "level": 78,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25146,
+      "spawnId": "l2dop_rb_25146",
+      "name_uk": "Змієдемон Біфронс",
+      "level": 21,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25149,
+      "spawnId": "l2dop_rb_25149",
+      "name_uk": "Повелитель Зомбі Кроул",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25152,
+      "spawnId": "l2dop_rb_25152",
+      "name_uk": "Повелитель Полум’я Шадар",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25155,
+      "spawnId": "l2dop_rb_25155",
+      "name_uk": "Король Шаманів Селу",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25158,
+      "spawnId": "l2dop_rb_25158",
+      "stats": {
+        "hp": 920790,
+        "pAtk": 5043,
+        "pDef": 785,
+        "mAtk": 7287,
+        "mDef": 848,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 221334},
+      "name_uk": "Король Тарлк",
+      "level": 48,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "doc_notes": [
+        {
+          "note": "M.Atk 7287, спецудар ≈108 % HP героя; 10.10 21:33:04 героя с полных 4022 HP убили одним ударом (бот прочёл окно другого РБ)",
+          "src": "CHANGELOG-7.2.1, 8.0.3"
+        },
+        {
+          "note": "трижды стоил 100 000 аден телепорта «вслепую» после переустановки (логи 10–11.10)",
+          "src": "CHANGELOG-8.0.3"
+        }
+      ]
+    },
+    {
+      "npcId": 25159,
+      "spawnId": "l2dop_rb_25159",
+      "name_uk": "Єдинорог Паніель",
+      "level": 54,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25162,
+      "spawnId": "l2dop_rb_25162",
+      "name_uk": "Гігант Марпанак",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25163,
+      "spawnId": "l2dop_rb_25163",
+      "name_uk": "Ревучий Налетчик",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25166,
+      "spawnId": "l2dop_rb_25166",
+      "name_uk": "Ікунтай",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25169,
+      "spawnId": "l2dop_rb_25169",
+      "name_uk": "Раграмэн",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25170,
+      "spawnId": "l2dop_rb_25170",
+      "name_uk": "Голова Ящерів Хеліон",
+      "level": 38,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25173,
+      "spawnId": "l2dop_rb_25173",
+      "stats": {
+        "hp": 288415,
+        "pAtk": 1084,
+        "pDef": 714,
+        "mAtk": 368,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 795938, "sp_api": 461982},
+      "heroHpLossPerSec_measured": 6,
+      "name_uk": "Король Тигрів Карута",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 93,
+        "hitP90": 236,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 811856,
+        "adenaPerKill": 239264,
+        "zone": "pavel_ruins",
+        "note": "убит за 1:33",
+        "specialHit": 263
+      },
+      "specialHitFactor_mAtk": 0.715,
+      "doc_notes": [{"note": "РБ-сессия под FA: убит за ≈90 с", "src": "CHANGELOG-7.2.2"}]
+    },
+    {
+      "npcId": 25176,
+      "spawnId": "l2dop_rb_25176",
+      "name_uk": "Чорна Лілія",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25179,
+      "spawnId": "l2dop_rb_25179",
+      "name_uk": "Хранитель Статуї Гіганта Карум",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25182,
+      "spawnId": "l2dop_rb_25182",
+      "name_uk": "Демон Курікупс",
+      "level": 59,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25185,
+      "spawnId": "l2dop_rb_25185",
+      "name_uk": "Олена, Вожд Тасаба",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25188,
+      "spawnId": "l2dop_rb_25188",
+      "name_uk": "Апепі",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25189,
+      "spawnId": "l2dop_rb_25189",
+      "name_uk": "Слуга Кроноса Маму",
+      "level": 34,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25192,
+      "spawnId": "l2dop_rb_25192",
+      "name_uk": "Панатен Захисник Землі",
+      "level": 43,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25198,
+      "spawnId": "l2dop_rb_25198",
+      "name_uk": "Посланник Фафуріона Локнес",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25199,
+      "spawnId": "l2dop_rb_25199",
+      "name_uk": "Провидец Фафуріона Шешарк",
+      "level": 72,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25202,
+      "spawnId": "l2dop_rb_25202",
+      "name_uk": "Падишах Кроков Собекк",
+      "level": 74,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25205,
+      "spawnId": "l2dop_rb_25205",
+      "name_uk": "Ашакіель Океан Полум’я",
+      "level": 76,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25208,
+      "spawnId": "l2dop_rb_25208",
+      "name_uk": "Водяний Змій Атека",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25211,
+      "spawnId": "l2dop_rb_25211",
+      "name_uk": "Себек",
+      "level": 36,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25214,
+      "spawnId": "l2dop_rb_25214",
+      "name_uk": "Сіка Паж Фафуріона",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25217,
+      "spawnId": "l2dop_rb_25217",
+      "name_uk": "Проклята Клара",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25220,
+      "spawnId": "l2dop_rb_25220",
+      "name_uk": "Лорд Смерті Халлет",
+      "level": 73,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25223,
+      "spawnId": "l2dop_rb_25223",
+      "name_uk": "Збирач Душ Ашерон",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25226,
+      "spawnId": "l2dop_rb_25226",
+      "stats": {
+        "hp": 1298827,
+        "pAtk": 7660,
+        "pDef": 4550,
+        "mAtk": 9339,
+        "mDef": 4550,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 282000},
+      "name_uk": "Ревучий Монарх Кастор",
+      "level": 62,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25229,
+      "spawnId": "l2dop_rb_25229",
+      "name_uk": "Нага Буреносець",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25230,
+      "spawnId": "l2dop_rb_25230",
+      "stats": {
+        "hp": 784307,
+        "pAtk": 3127,
+        "pDef": 4143,
+        "mAtk": 1736,
+        "mDef": 3510,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 260334},
+      "name_uk": "Провидець Тимака Рагот",
+      "level": 57,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25233,
+      "spawnId": "l2dop_rb_25233",
+      "name_uk": "Дух Андраса, Зрадника",
+      "level": 69,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25234,
+      "spawnId": "l2dop_rb_25234",
+      "stats": {
+        "hp": 1710209,
+        "pAtk": 7389,
+        "pDef": 4190,
+        "mAtk": 9025,
+        "mDef": 4287,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 273334},
+      "name_uk": "Древній Астральний Дрейк",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25235,
+      "spawnId": "l2dop_rb_25235",
+      "name_uk": "Голова Ванор Кандра",
+      "level": 72,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25238,
+      "spawnId": "l2dop_rb_25238",
+      "name_uk": "Крило Безодні",
+      "level": 59,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25241,
+      "spawnId": "l2dop_rb_25241",
+      "name_uk": "Герой Харит Тамаш",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25244,
+      "spawnId": "l2dop_rb_25244",
+      "name_uk": "Останній Молодший Гігант Олкут",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25245,
+      "spawnId": "l2dop_rb_25245",
+      "name_uk": "Останній Молодший Гігант Глакі",
+      "level": 78,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25248,
+      "spawnId": "l2dop_rb_25248",
+      "name_uk": "Клинок Судьби Танатос",
+      "level": 72,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25249,
+      "spawnId": "l2dop_rb_25249",
+      "name_uk": "Палатанос Жахливої Могутності",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25252,
+      "spawnId": "l2dop_rb_25252",
+      "name_uk": "Королева Фалібаті Теміс",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25255,
+      "spawnId": "l2dop_rb_25255",
+      "name_uk": "Лорд Гаргульй Тифон",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25256,
+      "spawnId": "l2dop_rb_25256",
+      "name_uk": "Понтифік Тайк Арак",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25259,
+      "spawnId": "l2dop_rb_25259",
+      "name_uk": "М'ясник Закена Кранц",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25260,
+      "spawnId": "l2dop_rb_25260",
+      "stats": {
+        "hp": 392985,
+        "pAtk": 2028,
+        "pDef": 714,
+        "mAtk": 1293,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 208334},
+      "name_uk": "Залізний Гігантський Тотем",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25263,
+      "spawnId": "l2dop_rb_25263",
+      "name_uk": "Вірний Слуга Кернона Келон",
+      "level": 67,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25266,
+      "spawnId": "l2dop_rb_25266",
+      "name_uk": "Кровава Імператриця Декарбія",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25269,
+      "spawnId": "l2dop_rb_25269",
+      "name_uk": "Лорд Звірів Бегемот",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25272,
+      "spawnId": "l2dop_rb_25272",
+      "name_uk": "Воєначальник Партизан Талакин",
+      "level": 28,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25273,
+      "spawnId": "l2dop_rb_25273",
+      "stats": {
+        "hp": 507285,
+        "pAtk": 2894,
+        "pDef": 833,
+        "mAtk": 2217,
+        "mDef": 904,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 230000},
+      "name_uk": "Карнамакос",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25276,
+      "spawnId": "l2dop_rb_25276",
+      "name_uk": "Лорд Смерті Іпос",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25277,
+      "spawnId": "l2dop_rb_25277",
+      "stats": {
+        "hp": 507285,
+        "pAtk": 2894,
+        "pDef": 708,
+        "mAtk": 2217,
+        "mDef": 904,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 230000},
+      "name_uk": "Маріліон Відьма Ліліт",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"},
+      "doc_notes": [
+        {
+          "note": "недобита: оставалось 156 417 из 507 285 HP; герой погиб с 4 619 HP на первом действии (10.10 23:18:38)",
+          "src": "CHANGELOG-7.2.3"
+        }
+      ]
+    },
+    {
+      "npcId": 25280,
+      "spawnId": "l2dop_rb_25280",
+      "name_uk": "Язичницький Наглядач Церберон",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25281,
+      "spawnId": "l2dop_rb_25281",
+      "name_uk": "Закарон, Ворог Анаким",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25282,
+      "spawnId": "l2dop_rb_25282",
+      "name_uk": "Лорд Смерті Шакс",
+      "level": 75,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25283,
+      "spawnId": "l2dop_rb_25283",
+      "name_uk": "Ліліт",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25286,
+      "spawnId": "l2dop_rb_25286",
+      "name_uk": "Анаким",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25290,
+      "spawnId": "l2dop_rb_25290",
+      "name_uk": "Білоокий Даймон",
+      "level": 78,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25293,
+      "spawnId": "l2dop_rb_25293",
+      "name_uk": "Божественний Хранитель Гарячих Джерел Гестія",
+      "level": 78,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25296,
+      "spawnId": "l2dop_rb_25296",
+      "name_uk": "Крижаний Імператор Бамбаламп",
+      "level": 74,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25299,
+      "spawnId": "l2dop_rb_25299",
+      "name_uk": "Герой Кетри Гекатон",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25302,
+      "spawnId": "l2dop_rb_25302",
+      "name_uk": "Воєначальник Кетри Тайр",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25305,
+      "spawnId": "l2dop_rb_25305",
+      "name_uk": "Вождь Кетри Браккі",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25306,
+      "spawnId": "l2dop_rb_25306",
+      "name_uk": "Дух Вогню Настрон",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25309,
+      "spawnId": "l2dop_rb_25309",
+      "name_uk": "Герой Варка Шадіт",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25312,
+      "spawnId": "l2dop_rb_25312",
+      "name_uk": "Воєначальник Варка Мос",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25315,
+      "spawnId": "l2dop_rb_25315",
+      "name_uk": "Вождь Варка Хорус",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25316,
+      "spawnId": "l2dop_rb_25316",
+      "name_uk": "Дух Води Ашутар",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25319,
+      "spawnId": "l2dop_rb_25319",
+      "name_uk": "Ембер",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25322,
+      "spawnId": "l2dop_rb_25322",
+      "stats": {
+        "hp": 1409850,
+        "pAtk": 9229,
+        "pDef": 5924,
+        "mAtk": 11413,
+        "mDef": 5517,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 299334},
+      "name_uk": "Агент Демона Фальстон",
+      "level": 66,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"},
+      "doc_notes": [
+        {
+          "note": "11.10 10:32: после смерти 4 × 100 000 аден за РБ 60–66 за 20 с, каждый «не по силам» уже на месте",
+          "src": "CHANGELOG-8.0.3"
+        }
+      ]
+    },
+    {
+      "npcId": 25325,
+      "spawnId": "l2dop_rb_25325",
+      "name_uk": "Баракиель",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25328,
+      "spawnId": "l2dop_rb_25328",
+      "name_uk": "Айнхальдер фон Хельманн",
+      "level": 71,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25352,
+      "spawnId": "l2dop_rb_25352",
+      "name_uk": "Гігантський Василиск Пустоші",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25354,
+      "spawnId": "l2dop_rb_25354",
+      "name_uk": "Лорд Горгульй Сірокко",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25357,
+      "spawnId": "l2dop_rb_25357",
+      "name_uk": "Ватажок Боягузливих Щуролюдів",
+      "level": 21,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25360,
+      "spawnId": "l2dop_rb_25360",
+      "name_uk": "Тигровий Шершень",
+      "level": 26,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25362,
+      "spawnId": "l2dop_rb_25362",
+      "name_uk": "Ватажок Слідопитів Шарук",
+      "level": 23,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25365,
+      "spawnId": "l2dop_rb_25365",
+      "name_uk": "Патріарх Куроборос",
+      "level": 26,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25366,
+      "spawnId": "l2dop_rb_25366",
+      "name_uk": "Жрець Куробороса",
+      "level": 23,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25369,
+      "spawnId": "l2dop_rb_25369",
+      "name_uk": "Збирач Душ",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25372,
+      "spawnId": "l2dop_rb_25372",
+      "name_uk": "Відкинутий Страж",
+      "level": 20,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25373,
+      "spawnId": "l2dop_rb_25373",
+      "name_uk": "Герольд Дагоніеля Малекс",
+      "level": 21,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25375,
+      "spawnId": "l2dop_rb_25375",
+      "name_uk": "Повелитель Зомбі Фаракелсус",
+      "level": 20,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25378,
+      "spawnId": "l2dop_rb_25378",
+      "name_uk": "Звір Безумства",
+      "level": 20,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25380,
+      "spawnId": "l2dop_rb_25380",
+      "name_uk": "Герольд Ікара Кайша",
+      "level": 21,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25383,
+      "spawnId": "l2dop_rb_25383",
+      "name_uk": "Привид Сера Калібуса",
+      "level": 34,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25385,
+      "spawnId": "l2dop_rb_25385",
+      "name_uk": "Неспокійний Злий Дух",
+      "level": 36,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25388,
+      "spawnId": "l2dop_rb_25388",
+      "name_uk": "Червоноокий Головар Тракія",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25391,
+      "spawnId": "l2dop_rb_25391",
+      "name_uk": "Емісар Нурки",
+      "level": 33,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25392,
+      "spawnId": "l2dop_rb_25392",
+      "name_uk": "Капітан Королівської Гвардії",
+      "level": 32,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25394,
+      "spawnId": "l2dop_rb_25394",
+      "name_uk": "Премо Прайм",
+      "level": 38,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25395,
+      "spawnId": "l2dop_rb_25395",
+      "name_uk": "Сусцептор Архонт",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25398,
+      "spawnId": "l2dop_rb_25398",
+      "name_uk": "Око Белефа",
+      "level": 35,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25401,
+      "spawnId": "l2dop_rb_25401",
+      "name_uk": "Скайла",
+      "level": 32,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25404,
+      "spawnId": "l2dop_rb_25404",
+      "name_uk": "Капітан Корсарів Кілон",
+      "level": 33,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 3,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25407,
+      "spawnId": "l2dop_rb_25407",
+      "name_uk": "Лорд Ішка",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 25410,
+      "spawnId": "l2dop_rb_25410",
+      "name_uk": "Предводитель Придорожних Падальщиків",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25412,
+      "spawnId": "l2dop_rb_25412",
+      "name_uk": "Гвардеець Некростраж",
+      "level": 47,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25415,
+      "spawnId": "l2dop_rb_25415",
+      "name_uk": "Накондас",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25418,
+      "spawnId": "l2dop_rb_25418",
+      "stats": {
+        "hp": 273375,
+        "pAtk": 1008,
+        "pDef": 691,
+        "mAtk": 331,
+        "mDef": 747,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 563546, "sp_api": 254320},
+      "heroHpLossPerSec_measured": 9,
+      "name_uk": "Грозний Мститель Крейвен",
+      "level": 44,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 5, "t": "2026-10-10T12:34:26Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 84,
+        "hitP90": 222,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 574816,
+        "adenaPerKill": 223652,
+        "zone": "pavel_ruins",
+        "note": "убит за 1:24",
+        "specialHit": 236
+      },
+      "specialHitFactor_mAtk": 0.713,
+      "doc_notes": [{"note": "РБ-сессия под FA 10.10 22:30–23:07: убит за ≈82 с", "src": "CHANGELOG-7.2.2"}]
+    },
+    {
+      "npcId": 25420,
+      "spawnId": "l2dop_rb_25420",
+      "name_uk": "Служанка Орфена",
+      "level": 48,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25423,
+      "spawnId": "l2dop_rb_25423",
+      "stats": {
+        "hp": 877023,
+        "pAtk": 3895,
+        "pDef": 4195,
+        "mAtk": 2569,
+        "mDef": 4550,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 277666},
+      "name_uk": "Королева Фей Тимініель",
+      "level": 61,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"},
+      "doc_notes": [
+        {
+          "note": "смерть в туре РБ (лог 11.10 00:37); 11.10 09:59:55 клик аварийной банки потерян в окне занятости игры",
+          "src": "CHANGELOG-8.0.4; tests/v803-lockretry.test.js"
+        }
+      ]
+    },
+    {
+      "npcId": 25426,
+      "spawnId": "l2dop_rb_25426",
+      "name_uk": "Зрадник Уруту Фреки",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 1,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25429,
+      "spawnId": "l2dop_rb_25429",
+      "name_uk": "Колекціонер Маммона Талос",
+      "level": 25,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25431,
+      "spawnId": "l2dop_rb_25431",
+      "stats": {
+        "hp": 273375,
+        "pAtk": 1008,
+        "pDef": 691,
+        "mAtk": 331,
+        "mDef": 747,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 563546, "sp_api": 254320},
+      "heroHpLossPerSec_measured": 11,
+      "name_uk": "Розпалений Голем",
+      "level": 44,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 5, "t": "2026-10-10T12:34:26Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 82,
+        "hitP90": 223,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 574816,
+        "adenaPerKill": 185623,
+        "zone": "pavel_ruins",
+        "note": "убит за 1:22",
+        "specialHit": 236
+      },
+      "specialHitFactor_mAtk": 0.713,
+      "doc_notes": [
+        {
+          "note": "РБ-сессия под FA: убит за ≈82 с; 10.10 21:33 его окно (HP 273375) бот принял за окно Тарлка",
+          "src": "CHANGELOG-7.2.2, 7.2.1"
+        }
+      ]
+    },
+    {
+      "npcId": 25434,
+      "spawnId": "l2dop_rb_25434",
+      "stats": {
+        "hp": 704170,
+        "pAtk": 2774,
+        "pDef": 3375,
+        "mAtk": 1468,
+        "mDef": 3279,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 251666},
+      "name_uk": "Барда, Предводитель Банди",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"},
+      "doc_notes": [
+        {
+          "note": "11.10 10:31:48–10:32:18: ответ на ход висел 28,6 с (409), бот жал вслепую 20 с, смерть; РБ оставался на 71 %; был ошибочно заблокирован до 57 ур.",
+          "src": "CHANGELOG-8.0.4; tests/v803-death.test.js"
+        }
+      ]
+    },
+    {
+      "npcId": 25437,
+      "spawnId": "l2dop_rb_25437",
+      "stats": {
+        "hp": 576831,
+        "pAtk": 2171,
+        "pDef": 714,
+        "mAtk": 1493,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 569542, "sp_api": 259882},
+      "heroHpLossPerSec_measured": 5,
+      "name_uk": "Орк Тимак Госмос",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 33,
+        "hitP90": 240,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 580932,
+        "adenaPerKill": 237880,
+        "zone": "pavel_ruins",
+        "note": "убит за 0:33",
+        "persist": true,
+        "specialHit": 1071
+      },
+      "specialHitFactor_mAtk": 0.717,
+      "doc_notes": [
+        {"note": "реальный спецудар ×4,3 обычного (1344 при ≈313) — модель давала ×6,8", "src": "CHANGELOG-7.2.1"},
+        {
+          "note": "итог «576 831 HP за 32 с · ДПС 18 026» ложный: у него оставалось 87 359 HP с прошлого захода",
+          "src": "CHANGELOG-7.2.2"
+        },
+        {"note": "смерть 10.10 21:39:12 после 6 мин боя (банка HP пила «Зілля мани»)", "src": "CHANGELOG-7.2.1"}
+      ]
+    },
+    {
+      "npcId": 25438,
+      "spawnId": "l2dop_rb_25438",
+      "stats": {
+        "hp": 273375,
+        "pAtk": 1008,
+        "pDef": 691,
+        "mAtk": 331,
+        "mDef": 747,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 563546, "sp_api": 254320},
+      "heroHpLossPerSec_measured": 15,
+      "name_uk": "Злодій Келбар",
+      "level": 44,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 5, "t": "2026-10-10T12:34:26Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 84,
+        "hitP90": 223,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 574816,
+        "adenaPerKill": 208656,
+        "zone": "pavel_ruins",
+        "note": "убит за 1:24",
+        "specialHit": 236
+      },
+      "specialHitFactor_mAtk": 0.713,
+      "doc_notes": [{"note": "РБ-сессия под FA: убит за ≈82 с", "src": "CHANGELOG-7.2.2"}]
+    },
+    {
+      "npcId": 25441,
+      "spawnId": "l2dop_rb_25441",
+      "stats": {
+        "hp": 288415,
+        "pAtk": 1084,
+        "pDef": 714,
+        "mAtk": 368,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 569542, "sp_api": 259882},
+      "heroHpLossPerSec_measured": 13,
+      "name_uk": "Злий Дух Сиріон",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "fights_bot": {
+        "kills": 1,
+        "tries": 1,
+        "verdict": "ok",
+        "fightS": 89,
+        "hitP90": 232,
+        "heroLvl": 53,
+        "heroMaxHp": 4113,
+        "expPerKill": 580932,
+        "adenaPerKill": 224503,
+        "zone": "pavel_ruins",
+        "note": "убит за 1:29",
+        "specialHit": 263
+      },
+      "specialHitFactor_mAtk": 0.715,
+      "doc_notes": [{"note": "РБ-сессия под FA: убит за ≈90 с", "src": "CHANGELOG-7.2.2"}]
+    },
+    {
+      "npcId": 25444,
+      "spawnId": "l2dop_rb_25444",
+      "name_uk": "Ворожий Примар Рамдал",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25447,
+      "spawnId": "l2dop_rb_25447",
+      "name_uk": "Безсмертний Спаситель Мадріл",
+      "level": 71,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25450,
+      "spawnId": "l2dop_rb_25450",
+      "name_uk": "Херувим Галаксія",
+      "level": 79,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25453,
+      "spawnId": "l2dop_rb_25453",
+      "name_uk": "Меанас Анор",
+      "level": 70,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25456,
+      "spawnId": "l2dop_rb_25456",
+      "stats": {
+        "hp": 352421,
+        "pAtk": 1445,
+        "pDef": 808,
+        "mAtk": 568,
+        "mDef": 876,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 225666},
+      "name_uk": "Дзеркало Забвения",
+      "level": 49,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"}
+    },
+    {
+      "npcId": 25460,
+      "spawnId": "l2dop_rb_25460",
+      "stats": {
+        "hp": 385670,
+        "pAtk": 1653,
+        "pDef": 859,
+        "mAtk": 769,
+        "mDef": 929,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 234334},
+      "name_uk": "Ерів Вісник",
+      "level": 51,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25463,
+      "spawnId": "l2dop_rb_25463",
+      "name_uk": "Хранитель Харита Гаранки",
+      "level": 56,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25467,
+      "spawnId": "l2dop_rb_25467",
+      "name_uk": "Горголос",
+      "level": 64,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25470,
+      "spawnId": "l2dop_rb_25470",
+      "name_uk": "Останній Гігант Утенус",
+      "level": 66,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25473,
+      "spawnId": "l2dop_rb_25473",
+      "name_uk": "Грабар Могил Кім",
+      "level": 52,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25475,
+      "spawnId": "l2dop_rb_25475",
+      "stats": {
+        "hp": 704170,
+        "pAtk": 2774,
+        "pDef": 2707,
+        "mAtk": 1468,
+        "mDef": 3279,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 251666},
+      "name_uk": "Привид Лицар Кабед",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25478,
+      "spawnId": "l2dop_rb_25478",
+      "name_uk": "Хісілром, Жрець Шіллен",
+      "level": 65,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 10, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25481,
+      "spawnId": "l2dop_rb_25481",
+      "name_uk": "Чаклун Кениші",
+      "level": 53,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25484,
+      "spawnId": "l2dop_rb_25484",
+      "stats": {
+        "hp": 369009,
+        "pAtk": 1546,
+        "pDef": 833,
+        "mAtk": 633,
+        "mDef": 904,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 230000},
+      "name_uk": "Тіліон Перший Помічник Закена",
+      "level": 50,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"},
+      "doc_notes": [
+        {
+          "note": "10.10 23:19–23:30: бой начинался при 139 B-зарядах (минимум был 500) — закупки не было",
+          "src": "CHANGELOG-7.2.3"
+        }
+      ]
+    },
+    {
+      "npcId": 25487,
+      "spawnId": "l2dop_rb_25487",
+      "name_uk": "Дух Води Ліан",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 5,
+        "t": "2026-10-10T12:34:26Z"
+      }
+    },
+    {
+      "npcId": 25490,
+      "spawnId": "l2dop_rb_25490",
+      "name_uk": "Гвіндорр",
+      "level": 40,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Убит",
+        "alive": false,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25493,
+      "spawnId": "l2dop_rb_25493",
+      "name_uk": "Нініель, Дух Еви",
+      "level": 55,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 8, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25496,
+      "spawnId": "l2dop_rb_25496",
+      "name_uk": "Вісник Фафуріона Пінголпін",
+      "level": 52,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25498,
+      "spawnId": "l2dop_rb_25498",
+      "stats": {
+        "hp": 288415,
+        "pAtk": 1084,
+        "pDef": 714,
+        "mAtk": 368,
+        "mDef": 773,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"exp_api": 569542, "sp_api": 259882},
+      "heroHpLossPerSec_measured": 21,
+      "name_uk": "Оруженосець Фафуріона Істарі",
+      "level": 45,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 6, "t": "2026-10-10T12:34:27Z"},
+      "fights_bot": {"kills": 0, "tries": 1, "hitP90": 241, "heroLvl": 53, "zone": "pavel_ruins", "specialHit": 263},
+      "specialHitFactor_mAtk": 0.715
+    },
+    {
+      "npcId": 25501,
+      "spawnId": "l2dop_rb_25501",
+      "name_uk": "Головар Грабарів Могил Аката",
+      "level": 30,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 2,
+        "t": "2026-10-10T12:34:24Z"
+      }
+    },
+    {
+      "npcId": 25504,
+      "spawnId": "l2dop_rb_25504",
+      "name_uk": "Мстительний Дух Неллі",
+      "level": 39,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25506,
+      "spawnId": "l2dop_rb_25506",
+      "name_uk": "Налетчик Райто",
+      "level": 37,
+      "teleportPrice": 100000,
+      "listSnapshot": {
+        "status": "Живой",
+        "alive": true,
+        "deny": "Raid Boss нижче дозволеного рівня.",
+        "page": 4,
+        "t": "2026-10-10T12:34:25Z"
+      }
+    },
+    {
+      "npcId": 25509,
+      "spawnId": "l2dop_rb_25509",
+      "name_uk": "Темний Шаман Фарангі",
+      "level": 53,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25512,
+      "spawnId": "l2dop_rb_25512",
+      "name_uk": "Гігантський Голем Хаосу",
+      "level": 52,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 7, "t": "2026-10-10T12:34:28Z"}
+    },
+    {
+      "npcId": 25514,
+      "spawnId": "l2dop_rb_25514",
+      "name_uk": "Королева Шіїд",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    },
+    {
+      "npcId": 25517,
+      "spawnId": "l2dop_rb_25517",
+      "name_uk": "Master Anays",
+      "level": 87,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 14, "t": "2026-10-10T12:34:33Z"}
+    },
+    {
+      "npcId": 25523,
+      "spawnId": "l2dop_rb_25523",
+      "name_uk": "Чумний Голем",
+      "level": 73,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 11, "t": "2026-10-10T12:34:30Z"}
+    },
+    {
+      "npcId": 25524,
+      "spawnId": "l2dop_rb_25524",
+      "name_uk": "Гігант із Палаючого Каменю",
+      "level": 76,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 12, "t": "2026-10-10T12:34:31Z"}
+    },
+    {
+      "npcId": 25527,
+      "spawnId": "l2dop_rb_25527",
+      "name_uk": "Урука",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 14, "t": "2026-10-10T12:34:33Z"}
+    },
+    {
+      "npcId": 29001,
+      "spawnId": "l2dop_rb_29001",
+      "epic": {"key": "ak", "name_ru": "Королева Муравьёв (АК)", "level": 40, "lair": "ant_nest", "inEPIC_IDS": true},
+      "level": 40,
+      "epicApi_811_0903": {
+        "name": "Королева Муравьев",
+        "level": 40,
+        "isAlive": false,
+        "canAttack": false,
+        "attackBlockedReasonUk": "Недоступно: Epic Boss нижче дозволеного рівня.",
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 12,
+        "icon": "/l2dop-mob/289.png"
+      },
+      "name_ru": "Королева Муравьев"
+    },
+    {
+      "npcId": 29006,
+      "spawnId": "l2dop_rb_29006",
+      "stats": {
+        "hp": 876883,
+        "pAtk": 3920,
+        "pDef": 2001,
+        "mAtk": 3192,
+        "mDef": 2124,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 200000},
+      "epic": {"key": "core", "name_ru": "Ядро (Core)", "level": 50, "lair": "cruma_tower", "inEPIC_IDS": true},
+      "level": 50,
+      "epicApi_811_0903": {
+        "name": "Ядро",
+        "level": 50,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 12,
+        "icon": "/l2dop-mob/291.png"
+      },
+      "name_ru": "Ядро",
+      "doc_notes": [
+        {
+          "note": "11.10 01:45: старый бот потратил CoL на телепорт; 11.10 11:43 «Ядро(50)=?@bee_hive» — зона писалась из прежней",
+          "src": "CHANGELOG-8.0.3; modules/raid.js"
+        }
+      ]
+    },
+    {
+      "npcId": 29014,
+      "spawnId": "l2dop_rb_29014",
+      "stats": {
+        "hp": 487686,
+        "pAtk": 3920,
+        "pDef": 1601,
+        "mAtk": 3192,
+        "mDef": 1924,
+        "src": "modules/raid.js RB_KNOWN (ответы /game/spawn/<id>/info)"
+      },
+      "reward": {"adena_api": 200000},
+      "epic": {"key": "orfen", "name_ru": "Орфен", "level": 50, "lair": "sea_of_spores", "inEPIC_IDS": true},
+      "level": 50,
+      "epicApi_811_0903": {
+        "name": "Орфен",
+        "level": 50,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 12,
+        "icon": "/l2dop-mob/290.png"
+      },
+      "name_ru": "Орфен",
+      "doc_notes": [
+        {
+          "note": "Орфен бил КАЖДЫМ ударом 2508–2885 = 0,64–0,74 × P.Atk 3920 (крит почти не больше), = 40–57 % HP героя 56 ур.",
+          "src": "modules/raid.js (комментарий 8.0.3); CHANGELOG-8.0.4"
+        },
+        {
+          "note": "в навыке l2-game-facts тот же удар записан как 0,79–0,90 × M.Atk (3192) — два способа выразить одно и то же; оценка бота до замера: 0,7 × max(P.Atk, M.Atk)",
+          "src": ".claude/skills/l2-game-facts; CHANGELOG-8.0.4"
+        },
+        {
+          "note": "11.10 01:45 старая версия бота сама потратила Coin of Luck на телепорт к Орфену и Ядру (2 CoL)",
+          "src": "CHANGELOG-8.0.3"
+        }
+      ]
+    },
+    {
+      "npcId": 29019,
+      "spawnId": "l2dop_rb_29019",
+      "epic": {"key": "antharas", "name_ru": "Антарас", "level": 79, "lair": "antharas_lair", "inEPIC_IDS": true},
+      "level": 79,
+      "epicApi_811_0903": {
+        "name": "Антарас",
+        "level": 79,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 72,
+        "icon": "/l2dop-mob/292.png"
+      },
+      "name_ru": "Антарас"
+    },
+    {
+      "npcId": 29020,
+      "spawnId": "l2dop_rb_29020",
+      "epic": {"key": "baium", "name_ru": "Баюм", "level": 75, "lair": "tower_of_insolence", "inEPIC_IDS": true},
+      "level": 75,
+      "epicApi_811_0903": {
+        "name": "Баюм",
+        "level": 75,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 60,
+        "icon": "/l2dop-mob/286.png"
+      },
+      "name_ru": "Баюм"
+    },
+    {
+      "npcId": 29022,
+      "spawnId": "l2dop_rb_29022",
+      "epic": {"key": "zaken", "name_ru": "Закен", "level": 60, "lair": "devils_isle", "inEPIC_IDS": true},
+      "level": 60,
+      "epicApi_811_0903": {
+        "name": "Закен",
+        "level": 60,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 36,
+        "icon": "/l2dop-mob/293.png"
+      },
+      "name_ru": "Закен"
+    },
+    {
+      "npcId": 29028,
+      "spawnId": "l2dop_rb_29028",
+      "epic": {"key": "valakas", "name_ru": "Валакас", "level": 85, "lair": null, "inEPIC_IDS": true},
+      "level": 85,
+      "epicApi_811_0903": {
+        "name": "Валакас",
+        "level": 85,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 240,
+        "icon": "/l2dop-mob/294.png"
+      },
+      "name_ru": "Валакас"
+    },
+    {
+      "npcId": 29045,
+      "spawnId": "l2dop_rb_29045",
+      "epic": {"key": "frintezza", "name_ru": "Фринтеза", "level": 90, "lair": null, "inEPIC_IDS": true},
+      "level": 90,
+      "epicApi_811_0903": {
+        "name": "Фринтеза",
+        "level": 90,
+        "isAlive": false,
+        "canAttack": true,
+        "attackBlockedReasonUk": null,
+        "coinOfLuckCost": 1,
+        "adenaCost": 0,
+        "respawnHours": 60,
+        "icon": "/l2dop-mob/295.png"
+      },
+      "name_ru": "Фринтеза"
+    },
+    {
+      "npcId": 29056,
+      "spawnId": "l2dop_rb_29056",
+      "name_uk": "Крижана Фея Сірра",
+      "level": 60,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 29060,
+      "spawnId": "l2dop_rb_29060",
+      "name_uk": "Префект Королівської Гвардії Снігової Королеви",
+      "level": 59,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Живой", "alive": true, "deny": null, "page": 9, "t": "2026-10-10T12:34:29Z"}
+    },
+    {
+      "npcId": 29066,
+      "spawnId": "l2dop_rb_29066",
+      "epic": {"key": "antharas", "name_ru": "Антарас", "level": 79, "lair": "antharas_lair", "inEPIC_IDS": false},
+      "level": 79
+    },
+    {
+      "npcId": 29067,
+      "spawnId": "l2dop_rb_29067",
+      "epic": {"key": "antharas", "name_ru": "Антарас", "level": 79, "lair": "antharas_lair", "inEPIC_IDS": false},
+      "level": 79
+    },
+    {
+      "npcId": 29068,
+      "spawnId": "l2dop_rb_29068",
+      "epic": {"key": "antharas", "name_ru": "Антарас", "level": 79, "lair": "antharas_lair", "inEPIC_IDS": false},
+      "level": 79
+    },
+    {
+      "npcId": 29095,
+      "spawnId": "l2dop_rb_29095",
+      "name_uk": "Гордон",
+      "level": 80,
+      "teleportPrice": 100000,
+      "listSnapshot": {"status": "Убит", "alive": false, "deny": null, "page": 13, "t": "2026-10-10T12:34:32Z"}
+    }
+  ]
+}

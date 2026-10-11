@@ -1,0 +1,104 @@
+{
+ "_path": "/character/bonuses",
+ "_status": 200,
+ "data": {
+  "bonuses": {
+   "raceBranchLabelUk": "Людина (маг)",
+   "professionLabelUk": "Warlock",
+   "professionLabelRu": "Warlock",
+   "passiveBonusesTitleUk": "Пасивні бонуси",
+   "passiveBonusesTitleRu": "Пассивные бонусы",
+   "soulshotSpiritshotLineUk": "P.Atk 693, M.Atk 8256",
+   "soulshotSpiritshotLineRu": "P.Atk 693, M.Atk 8256",
+   "clanBonusLinesUk": [
+    "Досвід +2%",
+    "Adena +3%",
+    "Макс. HP +3%",
+    "Макс. CP +3%",
+    "Фіз. захист +3%",
+    "Маг. захист +3%",
+    "Швидкість бігу +2"
+   ],
+   "clanBonusLinesRu": [
+    "Опыт +2%",
+    "Adena +3%",
+    "Макс. HP +3%",
+    "Макс. CP +3%",
+    "Физ. защита +3%",
+    "Маг. защита +3%",
+    "Скорость бега +2"
+   ],
+   "passiveSkillsTitleUk": "Пасивні навички",
+   "passiveSkillsIntroUk": "Бонуси від вивчених пасивних навичок:",
+   "passiveWeaponRows": [
+    {
+     "labelUk": "Книги",
+     "valueUk": "+ 66.8 M.Atk"
+    }
+   ],
+   "armorBonusesTitleUk": "Бонуси від екіпіровки",
+   "armorBonusRows": [
+    {
+     "labelUk": "P.Atk",
+     "valueUk": "+ 685"
+    },
+    {
+     "labelUk": "M.Atk",
+     "valueUk": "+ 2644"
+    },
+    {
+     "labelUk": "P.Def",
+     "valueUk": "+ 725"
+    },
+    {
+     "labelUk": "M.Def",
+     "valueUk": "+ 752"
+    },
+    {
+     "labelUk": "Макс. HP",
+     "valueUk": "+ 1806"
+    },
+    {
+     "labelUk": "Макс. CP",
+     "valueUk": "+ 1295"
+    },
+    {
+     "labelUk": "Швидкість бігу",
+     "valueUk": "+ 24"
+    }
+   ],
+   "armorSetLinesUk": [
+    "Poison Resistance +60%",
+    "Bleed Resistance +60%",
+    "Max HP +3%",
+    "Max HP +950",
+    "Max MP +13%",
+    "Max MP +1250",
+    "P.Def +7%",
+    "Max CP +1295",
+    "Speed +11",
+    "M.Atk +12%",
+    "Casting Speed +10%",
+    "Magic Critical Damage +9%"
+   ],
+   "armorSetLinesRu": [
+    "Poison Resistance +60%",
+    "Bleed Resistance +60%",
+    "Max HP +3%",
+    "Max HP +950",
+    "Max MP +13%",
+    "Max MP +1250",
+    "P.Def +7%",
+    "Max CP +1295",
+    "Speed +11",
+    "M.Atk +12%",
+    "Casting Speed +10%",
+    "Magic Critical Damage +9%"
+   ],
+   "raceBranchLabelRu": "Человек (маг)",
+   "passiveSkillsTitleRu": "Пассивные навыки",
+   "passiveSkillsIntroRu": "Бонусы от изученных пассивных навыков:",
+   "armorBonusesTitleRu": "Бонусы от экипировки"
+  }
+ }
+}

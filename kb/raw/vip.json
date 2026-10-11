@@ -1,0 +1,20 @@
+{
+ "_path": "/game/vip",
+ "_status": 200,
+ "data": {
+  "active": false,
+  "vipUntil": null,
+  "serverNow": "2026-10-11T13:29:41.411Z",
+  "durationDays": 30,
+  "benefits": {
+   "freeTeleport": true,
+   "freeTownBuffs": true,
+   "premiumDiscountPercent": 50
+  },
+  "price": {
+   "currency": "coin_of_luck",
+   "amount": 350,
+   "itemId": 4037
+  }
+ }
+}

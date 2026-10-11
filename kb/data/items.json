@@ -1,0 +1,1401 @@
+{
+  "meta": {
+    "title": "Предметы: заряды, банки, валюты, рыбалка, снаряжение, ресурсы в сумке, ключи магазинов",
+    "generated_by": "kb/tools/build_all.py (python3 -I)",
+    "sources": [
+      "content.js SHOT_IDS/BSPS_IDS/GRADE_LV",
+      "modules/resources.js SHOT_ID_G/SHOT_COLOR",
+      "popup.js GEAR_INFO/GEAR_COST/GEAR_ADENA",
+      "modules/fishing.js FISH_RATE_DEF",
+      "modules/economy.js",
+      "items-il.json (справочник Interlude: pr — цена NPC Interlude, НЕ цена L2WAP)",
+      "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3): rt.bagAll (сумка 10.10 22:10), rt.pots, rt.lootStat, rt.loot, rt.lootValue",
+      "CLAUDE.md, CHANGELOG-7.1.21…8.0.3"
+    ],
+    "note": "Цены L2WAP — в pricesL2WAP (из логов/кода); interlude.pr — справочная цена Interlude.",
+    "repo_version": "8.0.8"
+  },
+  "counts": {"shots": 24, "potions": 6, "bag_items": 74, "loot_items": 50, "fishing_gear": 15, "special": 12, "prices": 17},
+  "gradeByHeroLevel_GRADE_LV": {"NG": 0, "D": 20, "C": 40, "B": 52, "A": 61, "S": 76},
+  "shotGradeByIconColor": {"white": "NG", "blue": "D", "green": "C", "red": "B", "silver": "A", "gold": "S"},
+  "shotRule": "заряды строго под НАДЕТОЕ оружие: грейд оружия → грейд зарядов; маг. оружие → «Благословенний заряд духу», физ. → «Заряд душі воїна»; маг. оружие по базе Interlude: M.Atk/P.Atk одноручное ≥0,7, посохи ≥0,6 (CHANGELOG-7.1.17); слот зарядов не того грейда — «#3950» в подписи или цвет иконки (7.2.1)",
+  "shots": [
+    {
+      "grade": "NG",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1835,
+      "interlude": {"n": "Soulshot: No Grade", "k": "E", "et": "заряд", "pr": 7, "ef": "Заряд души · на себя"}
+    },
+    {
+      "grade": "D",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1463,
+      "interlude": {"n": "Soulshot: D-grade", "k": "E", "g": "D", "et": "заряд", "pr": 10}
+    },
+    {
+      "grade": "C",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1464,
+      "interlude": {"n": "Soulshot: C-grade", "k": "E", "g": "C", "et": "заряд", "pr": 15}
+    },
+    {
+      "grade": "B",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1465,
+      "interlude": {"n": "Soulshot: B-grade", "k": "E", "g": "B", "et": "заряд", "pr": 50}
+    },
+    {
+      "grade": "A",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1466,
+      "interlude": {"n": "Soulshot: A-grade", "k": "E", "g": "A", "et": "заряд", "pr": 80}
+    },
+    {
+      "grade": "S",
+      "type": "soulshot (Заряд душі воїна) — физ. оружие",
+      "id": 1467,
+      "interlude": {"n": "Soulshot: S-grade", "k": "E", "g": "S", "et": "заряд", "pr": 100}
+    },
+    {
+      "grade": "NG",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3947,
+      "interlude": {"n": "Blessed Spiritshot: No Grade", "k": "E", "et": "заряд", "pr": 35, "ef": "Заряд духа · на себя"},
+      "shopKey": "consumable/blessed_spiritshot_ng (? не видели)"
+    },
+    {
+      "grade": "D",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3948,
+      "interlude": {"n": "Blessed Spiritshot: D-Grade", "k": "E", "g": "D", "et": "заряд", "pr": 45},
+      "shopKey": "consumable/blessed_spiritshot_d"
+    },
+    {
+      "grade": "C",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3949,
+      "interlude": {"n": "Blessed Spiritshot: C-Grade", "k": "E", "g": "C", "et": "заряд", "pr": 90},
+      "shopKey": "consumable/blessed_spiritshot_c"
+    },
+    {
+      "grade": "B",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3950,
+      "interlude": {"n": "Blessed Spiritshot: B-Grade", "k": "E", "g": "B", "et": "заряд", "pr": 245},
+      "shopKey": "consumable/blessed_spiritshot_b"
+    },
+    {
+      "grade": "A",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3951,
+      "interlude": {"n": "Blessed Spiritshot: A-Grade", "k": "E", "g": "A", "et": "заряд", "pr": 290},
+      "shopKey": "consumable/blessed_spiritshot_a"
+    },
+    {
+      "grade": "S",
+      "type": "blessed spiritshot (Благословенний заряд духу) — маг. оружие",
+      "id": 3952,
+      "interlude": {
+        "n": "Blessed Spiritshot: S Grade",
+        "k": "E",
+        "g": "S",
+        "et": "заряд",
+        "pr": 350,
+        "ef": "Заряд души · на себя · тратит предмет #3942 ×1"
+      },
+      "shopKey": "consumable/blessed_spiritshot_s"
+    },
+    {
+      "grade": "NG",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2509,
+      "interlude": {"n": "Spiritshot: No Grade", "k": "E", "et": "заряд", "pr": 15, "ef": "Заряд духа · на себя"}
+    },
+    {
+      "grade": "D",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2510,
+      "interlude": {"n": "Spiritshot: D-grade", "k": "E", "g": "D", "et": "заряд", "pr": 18}
+    },
+    {
+      "grade": "C",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2511,
+      "interlude": {"n": "Spiritshot: C-grade", "k": "E", "g": "C", "et": "заряд", "pr": 35}
+    },
+    {
+      "grade": "B",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2512,
+      "interlude": {"n": "Spiritshot: B-grade", "k": "E", "g": "B", "et": "заряд", "pr": 100}
+    },
+    {
+      "grade": "A",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2513,
+      "interlude": {"n": "Spiritshot: A-grade", "k": "E", "g": "A", "et": "заряд", "pr": 120}
+    },
+    {
+      "grade": "S",
+      "type": "spiritshot (обычный, распознаётся по #id на панели)",
+      "id": 2514,
+      "interlude": {"n": "Spiritshot: S-grade", "k": "E", "g": "S", "et": "заряд", "pr": 150}
+    },
+    {
+      "grade": "NG",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6535,
+      "interlude": {"n": "Fishing Shot: non-grade", "k": "E", "et": "заряд", "pr": 3}
+    },
+    {
+      "grade": "D",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6536,
+      "interlude": {"n": "Fishing Shot: D-grade", "k": "E", "g": "D", "et": "заряд", "pr": 5}
+    },
+    {
+      "grade": "C",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6537,
+      "interlude": {"n": "Fishing Shot: C-grade", "k": "E", "g": "C", "et": "заряд", "pr": 7}
+    },
+    {
+      "grade": "B",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6538,
+      "interlude": {"n": "Fishing Shot: B-grade", "k": "E", "g": "B", "et": "заряд", "pr": 25}
+    },
+    {
+      "grade": "A",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6539,
+      "interlude": {"n": "Fishing Shot: A-grade", "k": "E", "g": "A", "et": "заряд", "pr": 40}
+    },
+    {
+      "grade": "S",
+      "type": "fishing shot (Рибальський заряд душі; IL id — справочно)",
+      "id": 6540,
+      "interlude": {"n": "Fishing Shot: S-grade", "k": "E", "g": "S", "et": "заряд", "pr": 50}
+    }
+  ],
+  "potions": [
+    {
+      "name_uk": "Зілля зцілення",
+      "kind": "hp",
+      "pulseHp_or_Mp": 600,
+      "everySec": 1,
+      "inBag": 1085,
+      "usesMeasured": 2,
+      "t": "2026-10-10T12:39:34Z"
+    },
+    {
+      "name_uk": "Зілля мани (велика банка)",
+      "kind": "mp",
+      "pulseHp_or_Mp": 500,
+      "everySec": 1,
+      "inBag": 983,
+      "usesMeasured": 173,
+      "t": "2026-10-10T12:10:18Z"
+    },
+    {
+      "name_uk": "Зілля мани (мала банка)",
+      "kind": "mp",
+      "pulseHp_or_Mp": 200,
+      "everySec": 1,
+      "inBag": 1,
+      "usesMeasured": 81,
+      "t": "2026-10-09T16:07:43Z"
+    },
+    {
+      "name_uk": "Зілля слабкого зцілення",
+      "kind": "hp",
+      "pulseHp_or_Mp": null,
+      "everySec": null,
+      "inBag": 49,
+      "usesMeasured": null,
+      "t": "2026-10-09T14:50:21Z"
+    },
+    {
+      "name_uk": "Велике зілля HP",
+      "note": "импульсами по 2500 HP каждые 1 с («Велике зілля HP: відновлення імпульсами по 2500 HP кожні 1 с.»)",
+      "src": "content.js (комментарий v4.40)"
+    },
+    {"name_uk": "Велике зілля MP", "inBag": 71, "src": "rt.bagAll"}
+  ],
+  "special": {
+    "Adena": {"id": 57, "note": "валюта; тратить можно (игрок 11.10: «адена пофиг»), но без платных телепортов вслепую"},
+    "Coin of Luck": {
+      "id": 4037,
+      "note": "донатная/ценная; НИКОГДА без явного положительного лимита (cfg.epicCoinDailyMax 0 = никогда); в сумке 53 (10.10)",
+      "interlude": {"n": "Coin of Luck", "k": "E", "et": "прочее", "pr": 1}
+    },
+    "Fast Aden (FA)": {
+      "id": null,
+      "note": "валюта баффера FA, падает с мобов (rt.loot «Fast Aden» 18); баланс 82 FA (10.10 22:27); не тратить без команды"
+    },
+    "Shil Coins": {"id": null, "note": "награда TvT (2 за победу); в сумке 6"},
+    "Proof of Catching a Fish": {
+      "id": 7609,
+      "note": "валюта рыбака; 92 в сумке (10.10)",
+      "interlude": {"n": "Proof of Catching a Fish", "k": "E", "et": "прочее", "pr": 500}
+    },
+    "Old Box": {
+      "id": 8547,
+      "note": "≈9 «якісних» наживок + 0,7 Coin of Luck; шанс +1 %/ур. заточки удочки",
+      "interlude": {"n": "Old Box", "k": "E", "et": "квест", "pr": 1500}
+    },
+    "Fishing Lure (обычная наживка)": {"id": null, "offerKey": "bait_x10", "note": "1 пакет = 10 шт. = 1000 аден; иконка /bait_basic/"},
+    "Якісна наживка (Good Fishing Lure)": {
+      "id": null,
+      "offerKey": "good_bait_x10",
+      "note": "10 шт. = 3 Proof или из Old Box; бот за Proof не покупает; иконка /bait_good/"
+    },
+    "Fishing Rod (Starter Rod)": {
+      "id": null,
+      "offerKey": "starter_rod",
+      "note": "удочки можно случайно продать — бот покупает одну (fishRodBuy); иконка /fishing_rod/"
+    },
+    "Fishing Rod Enchant Scroll x1": {
+      "id": null,
+      "offerKey": "rod_enchant_scroll_x1",
+      "note": "100 Proof; заточка даёт только +1 % к шансу Old Box за уровень, урон не растёт"
+    },
+    "Рибальський заряд душі": {
+      "id": null,
+      "offerKey": "soulshot_x50",
+      "note": "пакет 50 шт. = 5000 аден; урон рыбе 70 вместо 35; в сумке 7203 (10.10)"
+    },
+    "Noblesse Blessing (бафф 1323)": {"id": null, "note": "5 FA; сохраняет баффы при смерти и уходит сам"}
+  },
+  "pricesL2WAP": [
+    {
+      "what": "Телепорт к РБ (тур)",
+      "price": 100000,
+      "currency": "адена",
+      "src": "rt.rbList.price; skill l2-game-facts"
+    },
+    {
+      "what": "Телепорт к эпику",
+      "price": 1,
+      "currency": "Coin of Luck",
+      "src": "tests/fixtures-epic-bosses-803.json (coinOfLuckCost 1, adenaCost 0)"
+    },
+    {
+      "what": "Благословенний заряд духу D ×3000",
+      "price": 114000,
+      "currency": "адена (≈38 за шт.)",
+      "src": "CHANGELOG-7.2 (покупка 10.10 20:08:34)"
+    },
+    {
+      "what": "Наживка Fishing Lure: пакет bait_x10 (10 шт.)",
+      "price": 1000,
+      "currency": "адена (≈100 за шт.)",
+      "src": "CHANGELOG-7.2.4, 8.0.3; skill l2-game-facts"
+    },
+    {
+      "what": "Рыболовные заряды: пакет soulshot_x50",
+      "price": 5000,
+      "currency": "адена (≈100 за шт.; 750 пак. = 3,75 млн)",
+      "src": "CHANGELOG-7.2.4; 7.2.1 (≈540 аден на 5,4 шт.)"
+    },
+    {
+      "what": "Время рыбалки 1 ч / 2 ч / 3 ч / 6 ч",
+      "price": "3 000 000 / 5 500 000 / 7 500 000 / 14 000 000",
+      "currency": "адена",
+      "src": "modules/fishing.js fishTimeTopUp prices"
+    },
+    {
+      "what": "Рыболовное место (#fishing-spot-buy), один раз",
+      "price": 10000000,
+      "currency": "адена",
+      "src": "CHANGELOG-7.1.21"
+    },
+    {
+      "what": "Навыки Fishing / Pumping / Reeling у рыбака",
+      "price": 100000,
+      "currency": "SP каждый",
+      "src": "CHANGELOG-7.1.21"
+    },
+    {
+      "what": "Свиток заточки удочки «Fishing Rod Enchant Scroll x1»",
+      "price": 100,
+      "currency": "Proof",
+      "src": "modules/fishing.js; заточка до +10 = 1000 Proof (CHANGELOG-7.2.1)"
+    },
+    {
+      "what": "«Якісна наживка» (Good Fishing Lure) ×10",
+      "price": 3,
+      "currency": "Proof",
+      "src": "CHANGELOG-7.2.1; modules/fishing.js"
+    },
+    {
+      "what": "Бафф Fast Aden обычный / Greater (Magnus' Chant, Noblesse, Prophecy…)",
+      "price": "1 / 5",
+      "currency": "FA, на 3 ч",
+      "src": "CHANGELOG-7.2.2; rt.faCat"
+    },
+    {
+      "what": "Городской «Звичайний баф»",
+      "price": 0,
+      "currency": "бесплатно, 24 ч (23 ч по панели)",
+      "src": "content.js (комментарий); CHANGELOG-7.2.2"
+    },
+    {
+      "what": "Городской «Повний баф воїна/мага»",
+      "price": 15,
+      "currency": "Coin of Luck",
+      "src": "content.js (комментарий городского баффера)"
+    },
+    {"what": "Набор игрока для РБ-сессии (9 баффов)", "price": 17, "currency": "FA", "src": "CHANGELOG-7.2.2"},
+    {
+      "what": "Награда TvT за победу",
+      "price": "500 000 аден + Coin of Luck + 2 Shil Coins",
+      "currency": "—",
+      "src": "content.js (комментарий v5.4 TvT)"
+    },
+    {
+      "what": "Плащ/тату/пояс рыбака D/C/B/A/S",
+      "price": "500/1500/3500/5000/8000 Proof + 0,5/1,5/5/15/50 млн аден",
+      "currency": "Proof + адена",
+      "src": "popup.js GEAR_COST/GEAR_ADENA"
+    },
+    {
+      "what": "Один Proof по себестоимости рыбалки",
+      "price": "≈14 000 (7.2.1) / ≈15–18 тыс. (7.2.4)",
+      "currency": "адена",
+      "src": "CHANGELOG-7.2.1, 7.2.4"
+    }
+  ],
+  "shopKeys": {
+    "drops_shop_buy_body": "{shopKey: \"consumable/blessed_spiritshot_<grade>\", qty}",
+    "seen_shopKeys": ["consumable/blessed_spiritshot_c", "consumable/blessed_spiritshot_d"],
+    "shopKey_pattern_inferred": [
+      "consumable/blessed_spiritshot_<ng|d|c|b|a|s>",
+      "consumable/soulshot_<grade> (не видели в логе — выведено по аналогии)"
+    ],
+    "consumablesub_by_need (economy.js SUB)": {"hp": "vials", "mp": "vials", "shots": "charges", "spirit": "resources", "soul": "resources"},
+    "gm_shop_tabs": ".l2-drops-shop-tab[data-category|data-grade|data-consumablesub]; строки .l2-gm-shop-row--grade-<g>; цена .l2-gm-shop-price--adena / --coin",
+    "fishing_buy_starter_offerKeys": [
+      "starter_rod",
+      "bait_x10",
+      "soulshot_x50",
+      "good_bait_x10 (только иконка/имя в коде)",
+      "rod_enchant_scroll_x1 (кнопка data-offer)"
+    ],
+    "fishing_buy_starter_body": "{offerKey, amount}"
+  },
+  "weapons_warlock": [
+    {
+      "name": "Voodoo Doll (Лялька вуду)",
+      "il_id": 100,
+      "grade": "NG",
+      "when": "до 10.10 15:38; бот ошибочно надевал её вместо посоха D (7.1.28)",
+      "src": "CHANGELOG-7.1.17, 7.1.28",
+      "interlude": {"n": "Voodoo Doll", "k": "W", "wt": "прочее", "pa": 25, "ma": 28, "pr": 244000}
+    },
+    {
+      "name": "Staff of Life (Посох життя)",
+      "il_id": 189,
+      "grade": "D",
+      "when": "10.10 00:50 (M.Atk 72); базовый профиль 7.1.26",
+      "src": "CHANGELOG-7.1.17, 7.1.26",
+      "interlude": {"n": "Staff of Life", "k": "W", "g": "D", "wt": "дубина", "pa": 74, "ma": 72, "pr": 1800000}
+    },
+    {
+      "name": "Demon's Staff",
+      "il_id": 206,
+      "grade": "C",
+      "when": "игрок надел 10.10 15:43 (бот узнал по POST /character/equip)",
+      "src": "CHANGELOG-7.1.28, content.js weaponEquipNote",
+      "interlude": {"n": "Demon's Staff", "k": "W", "g": "C", "wt": "двуруч. дубина", "pa": 152, "ma": 111, "pr": 6130000}
+    },
+    {
+      "name": "Sprite's Staff (Посох спрайта B-grade. Дворучна магічна зброя.)",
+      "il_id": 92,
+      "grade": "B",
+      "when": "с 10.10 21:07 (текущее по CLAUDE.md)",
+      "src": "CLAUDE.md; CHANGELOG-7.2.1; cfg.nWeaponMain",
+      "interlude": {"n": "Sprite's Staff", "k": "W", "g": "B", "wt": "двуруч. дубина", "pa": 170, "ma": 122, "pr": 8680000}
+    }
+  ],
+  "armor_avadon_set": {
+    "pieces": ["Avadon Circlet (2415)", "Avadon Gloves (2464)", "Avadon Boots (600)"],
+    "type": "мантия (Robe) — важна для Spellcraft/Mana Recovery",
+    "setBonus": "M.Atk +12 %, скорость каста +10 %, урон маг. крита +9 %, Max HP +3 % и +950, Max MP +13 % и +1250, Max CP +1295, P.Def +7 %, скорость +11, сопротивление ядам и кровотечению +60 %",
+    "src": "CHANGELOG-7.2.3"
+  },
+  "belts_8_0_1": "пояса: сила физ./маг. крита D 2 %, C 3 %, B 5 %, A 7 %, S 10 %, +25 % базы за ур. заточки (S +5 = 22,5 %); плащи — бонусы HP/P.Def/M.Def растут от баффов (CHANGELOG-8.0.1)",
+  "fishingGear": [
+    {
+      "key": "cloak_d",
+      "slot": "cloak",
+      "grade": "D",
+      "name_uk": "Плащ рибалки",
+      "stats": "HP +250 · P.Def +70 · M.Def +70 (усиливается баффами)",
+      "costProof": 500,
+      "costAdenaMln": 0.5
+    },
+    {
+      "key": "cloak_c",
+      "slot": "cloak",
+      "grade": "C",
+      "name_uk": "Плащ мисливця моря",
+      "stats": "HP +450 · P.Def +110 · M.Def +110 (усиливается баффами)",
+      "costProof": 1500,
+      "costAdenaMln": 1.5
+    },
+    {
+      "key": "cloak_b",
+      "slot": "cloak",
+      "grade": "B",
+      "name_uk": "Плащ глибокого моря",
+      "stats": "HP +700 · P.Def +170 · M.Def +170 (усиливается баффами)",
+      "costProof": 3500,
+      "costAdenaMln": 5
+    },
+    {
+      "key": "cloak_a",
+      "slot": "cloak",
+      "grade": "A",
+      "name_uk": "Плащ стража океану",
+      "stats": "HP +1000 · P.Def +240 · M.Def +240 (усиливается баффами)",
+      "costProof": 5000,
+      "costAdenaMln": 15
+    },
+    {
+      "key": "cloak_s",
+      "slot": "cloak",
+      "grade": "S",
+      "name_uk": "Плащ Левіафан",
+      "stats": "HP +1400 · P.Def +320 · M.Def +320 (усиливается баффами)",
+      "costProof": 8000,
+      "costAdenaMln": 50
+    },
+    {
+      "key": "tattoo_d",
+      "slot": "tattoo",
+      "grade": "D",
+      "name_uk": "Татуювання річки",
+      "stats": "P.Atk/M.Atk +150 · скорость атаки/каста +1%",
+      "costProof": 500,
+      "costAdenaMln": 0.5
+    },
+    {
+      "key": "tattoo_c",
+      "slot": "tattoo",
+      "grade": "C",
+      "name_uk": "Татуювання озера",
+      "stats": "P.Atk/M.Atk +250 · скорость +2%",
+      "costProof": 1500,
+      "costAdenaMln": 1.5
+    },
+    {
+      "key": "tattoo_b",
+      "slot": "tattoo",
+      "grade": "B",
+      "name_uk": "Татуювання моря",
+      "stats": "P.Atk/M.Atk +400 · скорость +3%",
+      "costProof": 3500,
+      "costAdenaMln": 5
+    },
+    {
+      "key": "tattoo_a",
+      "slot": "tattoo",
+      "grade": "A",
+      "name_uk": "Татуювання глибокого моря",
+      "stats": "P.Atk/M.Atk +700 · скорость +4%",
+      "costProof": 5000,
+      "costAdenaMln": 15
+    },
+    {
+      "key": "tattoo_s",
+      "slot": "tattoo",
+      "grade": "S",
+      "name_uk": "Татуювання Левіафан",
+      "stats": "P.Atk/M.Atk +1000 · скорость +5%",
+      "costProof": 8000,
+      "costAdenaMln": 50
+    },
+    {
+      "key": "belt_d",
+      "slot": "belt",
+      "grade": "D",
+      "name_uk": "Пояс рибалки",
+      "stats": "HP +250 · бег +3 · сила крита +2%",
+      "costProof": 500,
+      "costAdenaMln": 0.5
+    },
+    {
+      "key": "belt_c",
+      "slot": "belt",
+      "grade": "C",
+      "name_uk": "Пояс досвідченого рибалки",
+      "stats": "HP +450 · бег +5 · сила крита +3%",
+      "costProof": 1500,
+      "costAdenaMln": 1.5
+    },
+    {
+      "key": "belt_b",
+      "slot": "belt",
+      "grade": "B",
+      "name_uk": "Пояс ветерана рибалки",
+      "stats": "HP +700 · бег +7 · сила крита +5%",
+      "costProof": 3500,
+      "costAdenaMln": 5
+    },
+    {
+      "key": "belt_a",
+      "slot": "belt",
+      "grade": "A",
+      "name_uk": "Пояс майстра рибалки",
+      "stats": "HP +1000 · бег +9 · сила крита +7%",
+      "costProof": 5000,
+      "costAdenaMln": 15
+    },
+    {
+      "key": "belt_s",
+      "slot": "belt",
+      "grade": "S",
+      "name_uk": "Пояс Левіафан",
+      "stats": "HP +1400 · бег +12 · сила крита +10%",
+      "costProof": 8000,
+      "costAdenaMln": 50
+    }
+  ],
+  "fishMaterialExchange_FISH_RATE_DEF": {
+    "fish_oil": {"give": 25, "getProof": 1},
+    "fish_gem": {"give": 4, "getProof": 1},
+    "fish_scale": {"give": 5, "getProof": 1},
+    "greater_fish_oil": {"give": 2, "getProof": 1},
+    "thin_fish_bone": {"give": 4, "getProof": 1},
+    "shiny_fish_gem": {"give": 1, "getProof": 2},
+    "shiny_fish_scale": {"give": 1, "getProof": 2},
+    "thick_fish_bone": {"give": 1, "getProof": 2},
+    "premium_fish_oil": {"give": 1, "getProof": 5}
+  },
+  "uk_names": {
+    "Благословенний заряд духу": "Blessed Spiritshot (грейд — по оружию; 10.10 — B #3950)",
+    "Заряд душі воїна": "Soulshot",
+    "Рибальський заряд душі": "Fishing Shot (рыболовные заряды)",
+    "Зілля мани (велика банка)": "банка MP, импульс 500 MP",
+    "Зілля мани (мала банка)": "банка MP, импульс 200 MP",
+    "Велике зілля MP": "большая банка MP (L2WAP)",
+    "Зілля зцілення": "банка HP, импульс 600 HP/с",
+    "Зілля слабкого зцілення": "слабая банка HP",
+    "Велике зілля HP": "банка HP, импульсы по 2500 HP/с",
+    "Якісна наживка": "Good Fishing Lure",
+    "Вудка": "удочка (Fishing Rod), «+2 Вудка» — заточка +2",
+    "Енрія": "Enria (4042)",
+    "Мисливська шкура": "особая добыча (rt.lootSpecial)",
+    "Кубок": "особая добыча (rt.lootSpecial)",
+    "Посох спрайта": "Sprite's Staff (B)",
+    "Посох життя": "Staff of Life (D)",
+    "Лялька вуду": "Voodoo Doll (NG)"
+  },
+  "potion_cooldown_note": "у банок в L2WAP своего отката нет (только общий ≈0,2 с; лог 08.10 14:14 — v5.3); локальные откаты Interlude убраны в 7.1.4",
+  "bag_10_10": [
+    {"name": "+2 Вудка", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Accessory Gemstone A", "qty": 7, "il_id": null, "interlude": null},
+    {"name": "Accessory Gemstone B", "qty": 20, "il_id": null, "interlude": null},
+    {"name": "Accessory Gemstone C", "qty": 25, "il_id": null, "interlude": null},
+    {"name": "Accessory Gemstone D", "qty": 38, "il_id": null, "interlude": null},
+    {"name": "Accessory Gemstone S", "qty": 5, "il_id": null, "interlude": null},
+    {
+      "name": "Adamantite Nugget",
+      "qty": 85,
+      "il_id": 1877,
+      "interlude": {"n": "Adamantite Nugget", "k": "E", "et": "материал", "pr": 5000}
+    },
+    {
+      "name": "Animal Bone",
+      "qty": 1674,
+      "il_id": 1872,
+      "interlude": {"n": "Animal Bone", "k": "E", "et": "материал", "pr": 150}
+    },
+    {
+      "name": "Animal Skin",
+      "qty": 1024,
+      "il_id": 1867,
+      "interlude": {"n": "Animal Skin", "k": "E", "et": "материал", "pr": 150}
+    },
+    {"name": "Armor Piece A", "qty": 6, "il_id": null, "interlude": null},
+    {"name": "Armor Piece B", "qty": 58, "il_id": null, "interlude": null},
+    {"name": "Armor Piece C", "qty": 179, "il_id": null, "interlude": null},
+    {"name": "Armor Piece D", "qty": 109, "il_id": null, "interlude": null},
+    {"name": "Armor Piece S", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Asofe", "qty": 357, "il_id": 4043, "interlude": {"n": "Asofe", "k": "E", "et": "материал", "pr": 6000}},
+    {"name": "Black Fish", "qty": 22, "il_id": null, "interlude": null},
+    {
+      "name": "Charcoal",
+      "qty": 1290,
+      "il_id": 1871,
+      "interlude": {"n": "Charcoal", "k": "E", "et": "материал", "pr": 200}
+    },
+    {"name": "Coal", "qty": 1755, "il_id": 1870, "interlude": {"n": "Coal", "k": "E", "et": "материал", "pr": 200}},
+    {
+      "name": "Coin of Luck",
+      "qty": 53,
+      "il_id": 4037,
+      "interlude": {"n": "Coin of Luck", "k": "E", "et": "прочее", "pr": 1}
+    },
+    {"name": "Fast Aden", "qty": 82, "il_id": null, "interlude": null},
+    {"name": "Fat Fish", "qty": 12, "il_id": null, "interlude": null},
+    {
+      "name": "Fish Gem",
+      "qty": 2,
+      "il_id": 6913,
+      "interlude": {"n": "Fish Gem", "k": "E", "et": "материал", "pr": 500}
+    },
+    {
+      "name": "Fish Oil",
+      "qty": 8,
+      "il_id": 6908,
+      "interlude": {"n": "Fish Oil", "k": "E", "et": "материал", "pr": 50}
+    },
+    {"name": "Fishing Lure", "qty": 878, "il_id": null, "interlude": null},
+    {
+      "name": "Greater Fish Oil",
+      "qty": 1,
+      "il_id": 6909,
+      "interlude": {"n": "Greater Fish Oil", "k": "E", "et": "материал", "pr": 250}
+    },
+    {
+      "name": "Iron Ore",
+      "qty": 1508,
+      "il_id": 1869,
+      "interlude": {"n": "Iron Ore", "k": "E", "et": "материал", "pr": 200}
+    },
+    {
+      "name": "Mithril Ore",
+      "qty": 1059,
+      "il_id": 1876,
+      "interlude": {"n": "Mithril Ore", "k": "E", "et": "материал", "pr": 1000}
+    },
+    {"name": "Old Box", "qty": 2, "il_id": 8547, "interlude": {"n": "Old Box", "k": "E", "et": "квест", "pr": 1500}},
+    {
+      "name": "Oriharukon Ore",
+      "qty": 267,
+      "il_id": 1874,
+      "interlude": {"n": "Oriharukon Ore", "k": "E", "et": "материал", "pr": 3000}
+    },
+    {
+      "name": "Proof of Catching a Fish",
+      "qty": 92,
+      "il_id": 7609,
+      "interlude": {"n": "Proof of Catching a Fish", "k": "E", "et": "прочее", "pr": 500}
+    },
+    {"name": "Recipe: Enchanted Necklace (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Recipe: Necklace of Protection (100%)", "qty": 6, "il_id": null, "interlude": null},
+    {"name": "Shil Coins", "qty": 6, "il_id": null, "interlude": null},
+    {
+      "name": "Silver Nugget",
+      "qty": 1365,
+      "il_id": 1873,
+      "interlude": {"n": "Silver Nugget", "k": "E", "et": "материал", "pr": 500}
+    },
+    {
+      "name": "Soul Ore",
+      "qty": 1000,
+      "il_id": 1785,
+      "interlude": {"n": "Soul Ore", "k": "E", "et": "материал", "pr": 250}
+    },
+    {
+      "name": "Spirit Ore",
+      "qty": 1971,
+      "il_id": 3031,
+      "interlude": {"n": "Spirit Ore", "k": "E", "et": "материал", "pr": 400}
+    },
+    {"name": "Stem", "qty": 1343, "il_id": 1864, "interlude": {"n": "Stem", "k": "E", "et": "материал", "pr": 100}},
+    {
+      "name": "Stone of Purity",
+      "qty": 969,
+      "il_id": 1875,
+      "interlude": {"n": "Stone of Purity", "k": "E", "et": "материал", "pr": 3000}
+    },
+    {"name": "Suede", "qty": 1410, "il_id": 1866, "interlude": {"n": "Suede", "k": "E", "et": "материал", "pr": 300}},
+    {
+      "name": "Thin Fish Bone",
+      "qty": 1,
+      "il_id": 6915,
+      "interlude": {"n": "Thin Fish Bone", "k": "E", "et": "материал", "pr": 300}
+    },
+    {
+      "name": "Thread",
+      "qty": 1622,
+      "il_id": 1868,
+      "interlude": {"n": "Thread", "k": "E", "et": "материал", "pr": 100}
+    },
+    {
+      "name": "Varnish",
+      "qty": 835,
+      "il_id": 1865,
+      "interlude": {"n": "Varnish", "k": "E", "et": "материал", "pr": 200}
+    },
+    {"name": "Weapon Piece A", "qty": 10, "il_id": null, "interlude": null},
+    {"name": "Weapon Piece B", "qty": 6, "il_id": null, "interlude": null},
+    {"name": "Weapon Piece C", "qty": 12, "il_id": null, "interlude": null},
+    {"name": "Weapon Piece D", "qty": 19, "il_id": null, "interlude": null},
+    {"name": "White Fish", "qty": 24, "il_id": null, "interlude": null},
+    {"name": "Благословенний заряд духу", "qty": 11596, "il_id": null, "interlude": null},
+    {"name": "Велике зілля MP", "qty": 71, "il_id": null, "interlude": null},
+    {"name": "Енрія", "qty": 8, "il_id": null, "interlude": null},
+    {"name": "Зілля зцілення", "qty": 1085, "il_id": null, "interlude": null},
+    {"name": "Зілля мани (велика банка)", "qty": 983, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Avadon Gloves (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Blue Wolf Boots (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Blue Wolf Helmet (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Dark Crystal Gaiters (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Deadman's Glory (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Demon's Gloves (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Demon's Helmet (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Demon's Stockings (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Doom Gloves (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Doom Shield (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Draconic Leather Boots (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Heaven's Divider (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Hoplon (100%)", "qty": 4, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Karmian Stockings (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Plated Leather (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Plated Leather Gloves (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Sprite's Staff (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Sword of Damascus (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Sword of Ipos (100%)", "qty": 2, "il_id": null, "interlude": null},
+    {"name": "Рецепт: Sword of Miracles (100%)", "qty": 1, "il_id": null, "interlude": null},
+    {"name": "Рибальський заряд душі", "qty": 7203, "il_id": null, "interlude": null},
+    {"name": "Якісна наживка", "qty": 65, "il_id": null, "interlude": null}
+  ],
+  "loot_observed": [
+    {
+      "item": "Coal",
+      "dropsSeen": 414,
+      "qty": 1013,
+      "killers": {
+        "Basilisk": 23,
+        "Delu Lizardman Warrior": 27,
+        "Doll Master": 13,
+        "Giant Crimson Ant": 11,
+        "Kadif Werewolf": 25,
+        "Mirror Trial Champion": 12,
+        "Monster Eye Destroyer": 39,
+        "Neer Crawler": 17,
+        "Ol Mahum Marksman": 8,
+        "Ol Mahum Sergeant": 20,
+        "Tumran Bugbear": 10,
+        "Zaken's Elite Pikeman": 13
+      },
+      "il_id": 1870
+    },
+    {
+      "item": "Suede",
+      "dropsSeen": 408,
+      "qty": 1004,
+      "killers": {
+        "Delu Lizardman Warrior": 23,
+        "Dire Wyrm": 10,
+        "Giant Crimson Ant": 8,
+        "Giant Fungus": 8,
+        "Kadif Werewolf": 22,
+        "Neer Crawler": 10,
+        "Ol Mahum Sergeant": 14,
+        "Pirate Zombie": 13,
+        "Porta": 14,
+        "Tumran Bugbear": 19,
+        "Unpleasant Shout": 8,
+        "Zaken's Seer": 8
+      },
+      "il_id": 1866
+    },
+    {
+      "item": "Thread",
+      "dropsSeen": 401,
+      "qty": 987,
+      "killers": {
+        "Basilisk": 18,
+        "Delu Lizardman Warrior": 25,
+        "Giant Fungus": 12,
+        "Kadif Werewolf": 11,
+        "Monster Eye Destroyer": 39,
+        "Neer Crawler": 19,
+        "Ol Mahum Guerilla": 9,
+        "Ol Mahum Marksman": 9,
+        "Ol Mahum Sergeant": 14,
+        "Tanor Silenos": 11,
+        "Tumran Bugbear": 15,
+        "Unpleasant Shout": 10
+      },
+      "il_id": 1868
+    },
+    {
+      "item": "Animal Bone",
+      "dropsSeen": 387,
+      "qty": 934,
+      "killers": {
+        "Basilisk": 24,
+        "Delu Lizardman Warrior": 28,
+        "Headless Knight": 7,
+        "Neer Crawler": 11,
+        "Ol Mahum Guerilla": 11,
+        "Ol Mahum Marksman": 15,
+        "Ol Mahum Raider": 9,
+        "Ol Mahum Sergeant": 10,
+        "Ricenseo": 7,
+        "Tumran Bugbear": 11,
+        "Zaken's Archer": 7,
+        "Zaken's Seer": 9
+      },
+      "il_id": 1872
+    },
+    {
+      "item": "Silver Nugget",
+      "dropsSeen": 352,
+      "qty": 863,
+      "killers": {
+        "Basilisk": 7,
+        "Delu Lizardman": 15,
+        "Eva's Light Spirit": 18,
+        "Giant Monstereye": 10,
+        "Kadif Werewolf": 11,
+        "Leto Lizardman Warrior": 14,
+        "Marsh Stakato Drone": 10,
+        "Monster Eye Destroyer": 27,
+        "Ol Mahum Ranger": 7,
+        "Ol Mahum Sergeant": 12,
+        "Unpleasant Shout": 10,
+        "Zaken's Pikeman": 14
+      },
+      "il_id": 1873
+    },
+    {
+      "item": "Iron Ore",
+      "dropsSeen": 351,
+      "qty": 840,
+      "killers": {
+        "Basilisk": 23,
+        "Cave Servant Captain": 8,
+        "Delu Lizardman": 18,
+        "Delu Lizardman Scout": 7,
+        "Kadif Werewolf": 21,
+        "Manashen Gargoyle": 23,
+        "Neer Crawler": 15,
+        "Ol Mahum Guerilla": 7,
+        "Ol Mahum Legionnaire": 8,
+        "Ol Mahum Ranger": 8,
+        "Tumran Bugbear": 12,
+        "Unpleasant Shout": 8
+      },
+      "il_id": 1869
+    },
+    {
+      "item": "Stem",
+      "dropsSeen": 333,
+      "qty": 818,
+      "killers": {
+        "Basilisk": 16,
+        "Delu Lizardman": 11,
+        "Farcran": 10,
+        "Kadif Werewolf": 19,
+        "Marsh Stakato Worker": 10,
+        "Monster Eye Destroyer": 36,
+        "Neer Crawler": 10,
+        "Ol Mahum Guerilla": 19,
+        "Ol Mahum Legionnaire": 15,
+        "Ol Mahum Marksman": 7,
+        "Ol Mahum Sergeant": 11,
+        "Tumran Bugbear": 8
+      },
+      "il_id": 1864
+    },
+    {
+      "item": "Charcoal",
+      "dropsSeen": 287,
+      "qty": 765,
+      "killers": {
+        "Basilisk": 27,
+        "Crokian Lad": 14,
+        "Eva's Purity Guardian": 10,
+        "Giant Fungus": 7,
+        "Kadif Werewolf": 32,
+        "Monster Eye Destroyer": 24,
+        "Neer Crawler": 13,
+        "Ol Mahum Legionnaire": 8,
+        "Ol Mahum Marksman": 10,
+        "Ol Mahum Ranger": 7,
+        "Ol Mahum Sergeant": 18,
+        "Pirate Zombie": 8
+      },
+      "il_id": 1871
+    },
+    {
+      "item": "Mithril Ore",
+      "dropsSeen": 314,
+      "qty": 737,
+      "killers": {
+        "Alligator": 20,
+        "Crokian Lad": 8,
+        "Dragon Bearer Chief": 9,
+        "Eva's Light Spirit": 6,
+        "Giant Fungus": 7,
+        "Leto Lizardman Shaman": 16,
+        "Leto Lizardman Soldier": 19,
+        "Nos Lad": 8,
+        "Royal Cave Servant": 8,
+        "Steel Trial Champion": 10,
+        "Tanor Silenos": 8,
+        "Unpleasant Shout": 10
+      },
+      "il_id": 1876
+    },
+    {
+      "item": "Stone of Purity",
+      "dropsSeen": 306,
+      "qty": 700,
+      "killers": {
+        "Cave Servant Captain": 11,
+        "Dragon Bearer Chief": 7,
+        "Eva's Purity Guardian": 6,
+        "Eva's Water Spirit": 10,
+        "Flame Crucible Guardian": 10,
+        "Grave Priest": 6,
+        "Leto Lizardman Archer": 10,
+        "Leto Lizardman Soldier": 9,
+        "Manashen Gargoyle": 26,
+        "Nightmare Lord": 14,
+        "Tanor Silenos": 5,
+        "Tanor Silenos Chieftain": 7
+      },
+      "il_id": 1875
+    },
+    {
+      "item": "Animal Skin",
+      "dropsSeen": 249,
+      "qty": 621,
+      "killers": {
+        "Basilisk": 18,
+        "Crokian Lad": 19,
+        "Delu Lizardman": 9,
+        "Delu Lizardman Scout": 10,
+        "Eva's Purity Guardian": 6,
+        "Leto Lizardman Shaman": 12,
+        "Monster Eye Destroyer": 30,
+        "Neer Crawler": 7,
+        "Nightmare Lord": 8,
+        "Ol Mahum Raider": 8,
+        "Satyr": 28,
+        "Zaken's Elite Pikeman": 7
+      },
+      "il_id": 1867
+    },
+    {
+      "item": "Varnish",
+      "dropsSeen": 219,
+      "qty": 589,
+      "killers": {
+        "Basilisk": 13,
+        "Delu Lizardman": 25,
+        "Delu Lizardman Scout": 13,
+        "Delu Lizardman Warrior": 18,
+        "Grave Priest": 6,
+        "Kadif Werewolf": 13,
+        "Monster Eye Destroyer": 7,
+        "Neer Crawler": 12,
+        "Ol Mahum Legionnaire": 13,
+        "Pirate Zombie": 8,
+        "Stinger Wasp": 10,
+        "Unpleasant Humming": 7
+      },
+      "il_id": 1865
+    },
+    {
+      "item": "Asofe",
+      "dropsSeen": 79,
+      "qty": 167,
+      "killers": {
+        "Bloody Lady": 20,
+        "Cannibalistic Stakato Leader": 2,
+        "Cave Howler": 12,
+        "Cave Maiden": 73,
+        "Farcran": 6,
+        "Harit Lizardman Archer": 6,
+        "Harit Lizardman Warrior": 14,
+        "Liele Elder": 16,
+        "Taik Orc Supply Leader": 18
+      },
+      "il_id": 4043
+    },
+    {
+      "item": "Oriharukon Ore",
+      "dropsSeen": 81,
+      "qty": 162,
+      "killers": {
+        "Bloodthirsty Ginzu Golem VII": 4,
+        "Deadly Ginzu Golem V": 18,
+        "Doll Blader": 5,
+        "Elder Tarlk Basilisk": 5,
+        "Eva's Light Spirit": 4,
+        "Eva's Valor Guardian": 8,
+        "Horrifying Excavator Golem III": 19,
+        "Horrifying Jackhammer Golem": 17,
+        "Hunter Gargoyle": 6,
+        "Oel Mahum": 5,
+        "Oel Mahum Warrior": 4,
+        "Plando": 6
+      },
+      "il_id": 1874
+    },
+    {
+      "item": "Armor Piece C",
+      "dropsSeen": 115,
+      "qty": 136,
+      "killers": {
+        "Alligator": 2,
+        "Cave Servant": 4,
+        "Cave Servant Archer": 2,
+        "Crokian Lad": 2,
+        "Giant Fungus": 4,
+        "Great White Shark": 10,
+        "Headless Knight": 4,
+        "Nightmare Lord": 2,
+        "Nos Lad": 4,
+        "Tanor Silenos": 2,
+        "Unpleasant Humming": 2,
+        "Zaken's Archer": 4
+      },
+      "il_id": null
+    },
+    {
+      "item": "Accessory Gemstone C",
+      "dropsSeen": 108,
+      "qty": 116,
+      "killers": {
+        "Farhite Lad": 5,
+        "Forest Runner": 5,
+        "Garden Guard Leader": 5,
+        "Manashen Gargoyle": 8,
+        "Ol Mahum Transcender": 2,
+        "Ricenseo": 2,
+        "Satyr": 6,
+        "Tanor Silenos": 2,
+        "Tanor Silenos Chieftain": 2,
+        "Unicorn": 3,
+        "Zaken's Archer": 6,
+        "Zaken's Seer": 2
+      },
+      "il_id": null
+    },
+    {
+      "item": "Weapon Piece C",
+      "dropsSeen": 76,
+      "qty": 90,
+      "killers": {
+        "Crokian Lad": 6,
+        "Doll Master": 6,
+        "Eva's Seeker": 3,
+        "Liele": 6,
+        "Nightmare Lord": 4,
+        "Nos Lad": 7,
+        "Porta": 2,
+        "Royal Cave Servant": 4,
+        "Tanor Silenos Chieftain": 2,
+        "Unpleasant Shout": 2,
+        "Zaken's Elite Archer": 4,
+        "Zaken's Elite Pikeman": 2
+      },
+      "il_id": null
+    },
+    {
+      "item": "Accessory Gemstone D",
+      "dropsSeen": 40,
+      "qty": 77,
+      "killers": {
+        "Basilisk": 4,
+        "Crokian Warrior": 2,
+        "Delu Lizardman": 4,
+        "Delu Lizardman Warrior": 18,
+        "Kadif Werewolf": 12,
+        "Leto Lizardman Shaman": 10,
+        "Leto Lizardman Soldier": 2,
+        "Leto Lizardman Warrior": 8,
+        "Ol Mahum Legionnaire": 8,
+        "Ol Mahum Marksman": 2,
+        "Ol Mahum Sergeant": 2,
+        "Tumran Bugbear": 4
+      },
+      "il_id": null
+    },
+    {
+      "item": "Weapon Piece D",
+      "dropsSeen": 36,
+      "qty": 70,
+      "killers": {
+        "Basilisk": 4,
+        "Delu Lizardman": 8,
+        "Giant Crimson Ant": 4,
+        "Kadif Werewolf": 12,
+        "Leto Lizardman Shaman": 6,
+        "Leto Lizardman Soldier": 2,
+        "Monster Eye Destroyer": 10,
+        "Neer Crawler": 6,
+        "Ol Mahum Raider": 6,
+        "Ol Mahum Ranger": 2,
+        "Stinger Wasp": 2,
+        "Tumran Bugbear": 2
+      },
+      "il_id": null
+    },
+    {
+      "item": "Armor Piece D",
+      "dropsSeen": 32,
+      "qty": 56,
+      "killers": {
+        "Basilisk": 10,
+        "Delu Lizardman Scout": 2,
+        "Delu Lizardman Warrior": 4,
+        "Farhite": 1,
+        "Leto Lizardman Shaman": 6,
+        "Leto Lizardman Soldier": 2,
+        "Leto Lizardman Warrior": 6,
+        "Monster Eye Destroyer": 8,
+        "Neer Crawler": 2,
+        "Ol Mahum Guerilla": 6,
+        "Ol Mahum Raider": 2,
+        "Ol Mahum Sergeant": 4
+      },
+      "il_id": null
+    },
+    {
+      "item": "Fast Aden",
+      "dropsSeen": 45,
+      "qty": 45,
+      "killers": {
+        "Alligator": 2,
+        "Bloodthirsty Ginzu Golem VII": 1,
+        "Bloody Lady": 2,
+        "Cave Howler": 1,
+        "Cave Maiden": 1,
+        "Cruel Vice Golem": 1,
+        "Deadly Ginzu Golem V": 2,
+        "Doll Master": 2,
+        "Epic Cannon Golem": 3,
+        "Forest of Mirrors Ghost": 1,
+        "Liele Elder": 1,
+        "Spelunking Spider": 2
+      },
+      "il_id": null
+    },
+    {
+      "item": "Armor Piece B",
+      "dropsSeen": 39,
+      "qty": 39,
+      "killers": {
+        "Deadly Ginzu Golem V": 17,
+        "Doll Blader": 2,
+        "Harit Lizardman Archer": 2,
+        "Harit Lizardman Matriarch": 1,
+        "Horrifying Cannon Golem": 7,
+        "Horrifying Jackhammer Golem": 3,
+        "Hunter Gargoyle": 3,
+        "Liele Elder": 3,
+        "Oel Mahum Warrior": 1
+      },
+      "il_id": null
+    },
+    {
+      "item": "Weapon Piece B",
+      "dropsSeen": 37,
+      "qty": 38,
+      "killers": {
+        "Bloody Lady": 7,
+        "Cave Maiden": 7,
+        "Epic Cannon Golem": 1,
+        "Eva's Light Spirit": 3,
+        "Ginzu Golem Prodigy X": 1,
+        "Harit Lizardman Matriarch": 1,
+        "Harit Lizardman Warrior": 1,
+        "Horrifying Cannon Golem": 14,
+        "Hunter Gargoyle": 2,
+        "Valley Treant Elder": 1
+      },
+      "il_id": null
+    },
+    {
+      "item": "Accessory Gemstone B",
+      "dropsSeen": 37,
+      "qty": 37,
+      "killers": {
+        "Cave Maiden": 7,
+        "Epic Cannon Golem": 10,
+        "Eva's Valor Guardian": 1,
+        "Farcran": 3,
+        "Horrifying Jackhammer Golem": 9,
+        "Liele Elder": 2,
+        "Mirror Soul Guardian": 1,
+        "Oel Mahum": 2,
+        "Oel Mahum Witch Doctor": 1,
+        "Taik Orc Supply Leader": 1
+      },
+      "il_id": null
+    },
+    {
+      "item": "Adamantite Nugget",
+      "dropsSeen": 7,
+      "qty": 16,
+      "killers": {"Cave Beast": 3, "Cave Howler": 8, "Malruk Knight": 4, "Malruk Soldier": 1},
+      "il_id": 1877
+    },
+    {"item": "Enria", "dropsSeen": 4, "qty": 4, "killers": {"Death Wave": 1, "Malruk Knight": 3}, "il_id": 4042},
+    {
+      "item": "Recipe: Necklace of Protection (100%)",
+      "dropsSeen": 4,
+      "qty": 4,
+      "killers": {"Probe Golem Champion I": 4},
+      "il_id": null
+    },
+    {
+      "item": "Сувій заточення броні C-grade",
+      "dropsSeen": 2,
+      "qty": 4,
+      "killers": {"Грозний Мститель Крейвен": 2, "Злий Дух Сиріон": 2},
+      "il_id": null
+    },
+    {
+      "item": "Accessory Gemstone A",
+      "dropsSeen": 3,
+      "qty": 3,
+      "killers": {"Cave Howler": 2, "Malruk Knight": 1},
+      "il_id": null
+    },
+    {"item": "Weapon Piece A", "dropsSeen": 3, "qty": 3, "killers": {"Cave Beast": 1, "Plando": 2}, "il_id": null},
+    {
+      "item": "Armor Piece A",
+      "dropsSeen": 2,
+      "qty": 2,
+      "killers": {"Death Wave": 1, "Malruk Soldier": 1},
+      "il_id": null
+    },
+    {"item": "Recipe: Demon's Gloves (100%)", "dropsSeen": 1, "qty": 2, "killers": {"Cave Servant": 2}, "il_id": null},
+    {
+      "item": "Recipe: Demon's Stockings (100%)",
+      "dropsSeen": 1,
+      "qty": 2,
+      "killers": {"Dragon Bearer Chief": 2},
+      "il_id": null
+    },
+    {
+      "item": "Recipe: Enchanted Necklace (100%)",
+      "dropsSeen": 2,
+      "qty": 2,
+      "killers": {"Crokian Warrior": 2},
+      "il_id": null
+    },
+    {"item": "Recipe: Hoplon (100%)", "dropsSeen": 1, "qty": 2, "killers": {"Neer Crawler": 2}, "il_id": null},
+    {"item": "Recipe: Karmian Stockings (100%)", "dropsSeen": 2, "qty": 2, "killers": {"Satyr": 2}, "il_id": null},
+    {
+      "item": "Recipe: Plated Leather (100%)",
+      "dropsSeen": 1,
+      "qty": 2,
+      "killers": {"Zaken's Elite Pikeman": 2},
+      "il_id": null
+    },
+    {
+      "item": "Recipe: Plated Leather Gloves (100%)",
+      "dropsSeen": 2,
+      "qty": 2,
+      "killers": {"Bloodthirsty Ginzu Golem VII": 2},
+      "il_id": null
+    },
+    {
+      "item": "Recipe: Sword of Damascus (100%)",
+      "dropsSeen": 2,
+      "qty": 2,
+      "killers": {"Bloody Lady": 2},
+      "il_id": null
+    },
+    {
+      "item": "Crystal Dagger Blade",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Грозний Мститель Крейвен": 1},
+      "il_id": 2119
+    },
+    {"item": "Recipe: Avadon Gloves (100%)", "dropsSeen": 1, "qty": 1, "killers": {"Farcran": 1}, "il_id": null},
+    {
+      "item": "Recipe: Blue Wolf Boots (100%)",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Hunter Gargoyle": 1},
+      "il_id": null
+    },
+    {
+      "item": "Recipe: Dark Crystal Gaiters (100%)",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Cannibalistic Stakato Leader": 1},
+      "il_id": null
+    },
+    {
+      "item": "Recipe: Deadman's Glory (100%)",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Deadly Ginzu Golem V": 1},
+      "il_id": null
+    },
+    {"item": "Recipe: Doom Gloves (100%)", "dropsSeen": 1, "qty": 1, "killers": {"Doll Blader": 1}, "il_id": null},
+    {"item": "Recipe: Doom Shield (100%)", "dropsSeen": 1, "qty": 1, "killers": {"Oel Mahum": 1}, "il_id": null},
+    {"item": "Shield C", "dropsSeen": 1, "qty": 1, "killers": {"Птицезмей": 1}, "il_id": null},
+    {"item": "War Axe", "dropsSeen": 1, "qty": 1, "killers": {"Орк Тимак Госмос": 1}, "il_id": 162},
+    {
+      "item": "Благословенний сувій заточення броні C-grade",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Гниле Дерево Репіро": 1},
+      "il_id": null
+    },
+    {
+      "item": "Сувій заточення зброї C-grade",
+      "dropsSeen": 1,
+      "qty": 1,
+      "killers": {"Розпалений Голем": 1},
+      "il_id": null
+    }
+  ],
+  "loot_totals": {
+    "Accessory Gemstone A": 1,
+    "Accessory Gemstone B": 29,
+    "Accessory Gemstone C": 48,
+    "Adamantite Nugget": 3,
+    "Animal Bone": 414,
+    "Animal Skin": 233,
+    "Armor Piece B": 28,
+    "Armor Piece C": 47,
+    "Asofe": 106,
+    "Charcoal": 234,
+    "Coal": 352,
+    "Crystal Dagger Blade": 1,
+    "Enria": 1,
+    "Fast Aden": 18,
+    "Iron Ore": 286,
+    "Mithril Ore": 310,
+    "Oriharukon Ore": 97,
+    "Recipe: Dark Crystal Gaiters (100%)": 1,
+    "Recipe: Deadman's Glory (100%)": 1,
+    "Recipe: Necklace of Protection (100%)": 4,
+    "Recipe: Plated Leather Gloves (100%)": 2,
+    "Recipe: Sword of Damascus (100%)": 2,
+    "Shield C": 1,
+    "Silver Nugget": 249,
+    "Stem": 270,
+    "Stone of Purity": 259,
+    "Suede": 291,
+    "Thread": 367,
+    "Varnish": 159,
+    "War Axe": 1,
+    "Weapon Piece B": 32,
+    "Weapon Piece C": 19,
+    "Благословенний сувій заточення броні C-grade": 1,
+    "Сувій заточення броні C-grade": 4,
+    "Сувій заточення зброї C-grade": 1
+  },
+  "lootSpecial": {"кубок": 208, "мисливська шкура": 213},
+  "lootValue_adena": 2175018,
+  "lootStat_since": "2026-10-09T14:50:37Z"
+}

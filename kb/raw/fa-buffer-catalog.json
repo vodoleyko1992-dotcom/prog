@@ -1,0 +1,663 @@
+{
+ "_path": "/character/town/fast-aden-buffer/catalog",
+ "_status": 200,
+ "data": {
+  "fastAdenItemId": 920048,
+  "fastAdenBalance": 133,
+  "sets": [
+   {
+    "id": "warrior",
+    "titleUk": "Бафи воїна",
+    "durationHintUk": "Тривалість: 3 години",
+    "costFastAden": 1,
+    "skills": [
+     {
+      "skillId": 1068,
+      "nameUk": "Сила",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Atk ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1040,
+      "nameUk": "Щит",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1036,
+      "nameUk": "Магічний бар’єр",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "M.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1045,
+      "nameUk": "Благословення тіла",
+      "level": 6,
+      "durationSec": 10800,
+      "descriptionUk": "Max HP ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1048,
+      "nameUk": "Благословення душі",
+      "level": 6,
+      "durationSec": 10800,
+      "descriptionUk": "Max MP ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1062,
+      "nameUk": "Дух берсерка",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Атака і швидкості ↑, захист ↓",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1077,
+      "nameUk": "Фокус",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Шанс фіз. крита ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1086,
+      "nameUk": "Поспіх",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Atk.Spd ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1240,
+      "nameUk": "Настанова",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Точність ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1204,
+      "nameUk": "Крок вітру",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Швидкість бігу ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1388,
+      "nameUk": "Велика сила",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Atk ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1389,
+      "nameUk": "Великий щит",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 271,
+      "nameUk": "Dance of Warrior",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "P.Atk групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 275,
+      "nameUk": "Dance of Fury",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Atk.Spd групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 272,
+      "nameUk": "Dance of Inspiration",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Точність групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 264,
+      "nameUk": "Song of Earth",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 269,
+      "nameUk": "Song of Hunter",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Шанс фіз. крита групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 267,
+      "nameUk": "Song of Warding",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "M.Def групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 268,
+      "nameUk": "Song of Wind",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Швидкість групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 304,
+      "nameUk": "Song of Vitality",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Max HP групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1268,
+      "nameUk": "Vampiric Rage",
+      "level": 4,
+      "durationSec": 10800,
+      "descriptionUk": "Вампіризм від звичайних фіз. атак",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 4703,
+      "iconSkillId": 1332,
+      "nameUk": "Дар Серафима",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Зменшує відкат бойових фізичних і магічних скілів на 30%. Діє 20 хвилин на власника Серафима та всіх поточних членів Party.",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 4699,
+      "iconSkillId": 1331,
+      "nameUk": "Благословення Королеви",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Фіз. Crit Rate +30% і урон фіз. крита +25%.",
+      "costFastAden": 1
+     }
+    ]
+   },
+   {
+    "id": "mage",
+    "titleUk": "Бафи мага",
+    "durationHintUk": "Тривалість: 3 години",
+    "costFastAden": 1,
+    "skills": [
+     {
+      "skillId": 1040,
+      "nameUk": "Щит",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1036,
+      "nameUk": "Магічний бар’єр",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "M.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1045,
+      "nameUk": "Благословення тіла",
+      "level": 6,
+      "durationSec": 10800,
+      "descriptionUk": "Max HP ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1048,
+      "nameUk": "Благословення душі",
+      "level": 6,
+      "durationSec": 10800,
+      "descriptionUk": "Max MP ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1062,
+      "nameUk": "Дух берсерка",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Атака і швидкості ↑, захист ↓",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1059,
+      "nameUk": "Тимчасово увеличивает M",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "M.Atk ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1085,
+      "nameUk": "Кмітливість",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Cast.Spd ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1204,
+      "nameUk": "Крок вітру",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Швидкість бігу ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1389,
+      "nameUk": "Великий щит",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 273,
+      "nameUk": "Dance of Mystic",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "M.Atk групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 276,
+      "nameUk": "Dance of Concentration",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Cast.Spd групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1303,
+      "nameUk": "Тимчасово увеличивает шанс нанесения Крит",
+      "level": 2,
+      "durationSec": 10800,
+      "descriptionUk": "Шанс маг. крита ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 365,
+      "nameUk": "Dance of Siren",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Магічний крит групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 264,
+      "nameUk": "Song of Earth",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "P.Def групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 267,
+      "nameUk": "Song of Warding",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "M.Def групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 268,
+      "nameUk": "Song of Wind",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Швидкість групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 304,
+      "nameUk": "Song of Vitality",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Max HP групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 266,
+      "nameUk": "Song of Water",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Уклонення групи ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1268,
+      "nameUk": "Vampiric Rage",
+      "level": 4,
+      "durationSec": 10800,
+      "descriptionUk": "Вампіризм від звичайних фіз. атак",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 4703,
+      "iconSkillId": 1332,
+      "nameUk": "Дар Серафима",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Зменшує відкат бойових фізичних і магічних скілів на 30%. Діє 20 хвилин на власника Серафима та всіх поточних членів Party.",
+      "costFastAden": 1
+     }
+    ]
+   },
+   {
+    "id": "resists",
+    "titleUk": "Резісти",
+    "durationHintUk": "Тривалість: 3 години",
+    "costFastAden": 1,
+    "skills": [
+     {
+      "skillId": 1033,
+      "nameUk": "Стійкість до отрути",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Опір отруті ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1182,
+      "nameUk": "Стійкість до води",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Опір воді ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1189,
+      "nameUk": "Стійкість до вітру",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Опір вітру ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1191,
+      "nameUk": "Стійкість до вогню",
+      "level": 3,
+      "durationSec": 10800,
+      "descriptionUk": "Опір вогню ↑",
+      "costFastAden": 1
+     },
+     {
+      "skillId": 1352,
+      "nameUk": "Стихійний захист",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Опір стихіям ↑",
+      "costFastAden": 1
+     }
+    ]
+   },
+   {
+    "id": "greater",
+    "titleUk": "Greater Buffs",
+    "durationHintUk": "Тривалість: 3 години",
+    "costFastAden": 5,
+    "skills": [
+     {
+      "skillId": 1356,
+      "nameUk": "Prophecy of Fire",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "HP, P.Atk, захист, Atk.Spd і крит ↑; Speed ↓",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1357,
+      "nameUk": "Prophecy of Water",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "M.Atk, M.Def, Cast.Spd, MP Regen і маг. крит ↑; Speed ↓",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1355,
+      "nameUk": "Prophecy of Wind",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Atk.Spd, Accuracy, Evasion, вампіризм і крит зі спини ↑",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1363,
+      "nameUk": "Chant of Victory",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "HP, атака, захист, швидкості й крит ↑; Speed ↓",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1413,
+      "nameUk": "Magnus' Chant",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Max MP, M.Atk, M.Def, Cast.Spd, MP Regen і резисти ↑",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1414,
+      "nameUk": "Victories of Pa'agrio",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "HP, атака, захист, швидкості, крит і резисти ↑; Speed ↓",
+      "costFastAden": 5
+     },
+     {
+      "skillId": 1323,
+      "nameUk": "Noblesse Blessing",
+      "level": 1,
+      "durationSec": 10800,
+      "descriptionUk": "Зберігає активні бафи після однієї смерті",
+      "costFastAden": 5
+     }
+    ]
+   }
+  ],
+  "consumables": [
+   {
+    "itemId": 920044,
+    "nameUk": "Велике зілля HP",
+    "nameRu": "Большое зелье HP",
+    "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_.jpg",
+    "restoreChannel": "hp",
+    "restoreAmount": 2500,
+    "costFastAden": 1,
+    "quantity": 5
+   },
+   {
+    "itemId": 920045,
+    "nameUk": "Велике зілля MP",
+    "nameRu": "Большое зелье MP",
+    "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_juice.jpg",
+    "restoreChannel": "mp",
+    "restoreAmount": 2500,
+    "costFastAden": 1,
+    "quantity": 5
+   },
+   {
+    "itemId": 920046,
+    "nameUk": "Велике зілля CP",
+    "nameRu": "Большое зелье CP",
+    "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_juice_glass_.jpg",
+    "restoreChannel": "cp",
+    "restoreAmount": 2500,
+    "costFastAden": 1,
+    "quantity": 5
+   }
+  ],
+  "dyes": [
+   {
+    "itemId": 923148,
+    "dyeKey": "str_con",
+    "nameUk": "Dye: STR +5 / CON -0",
+    "iconUrl": "/icons/drops/resours/str.png",
+    "plusStat": "STR",
+    "plusValue": 5,
+    "minusStat": "CON",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923149,
+    "dyeKey": "str_dex",
+    "nameUk": "Dye: STR +5 / DEX -0",
+    "iconUrl": "/icons/drops/resours/str.png",
+    "plusStat": "STR",
+    "plusValue": 5,
+    "minusStat": "DEX",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923150,
+    "dyeKey": "dex_str",
+    "nameUk": "Dye: DEX +5 / STR -0",
+    "iconUrl": "/icons/drops/resours/dex.png",
+    "plusStat": "DEX",
+    "plusValue": 5,
+    "minusStat": "STR",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923151,
+    "dyeKey": "dex_con",
+    "nameUk": "Dye: DEX +5 / CON -0",
+    "iconUrl": "/icons/drops/resours/dex.png",
+    "plusStat": "DEX",
+    "plusValue": 5,
+    "minusStat": "CON",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923152,
+    "dyeKey": "con_str",
+    "nameUk": "Dye: CON +5 / STR -0",
+    "iconUrl": "/icons/drops/resours/dye_con.png",
+    "plusStat": "CON",
+    "plusValue": 5,
+    "minusStat": "STR",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923153,
+    "dyeKey": "con_dex",
+    "nameUk": "Dye: CON +5 / DEX -0",
+    "iconUrl": "/icons/drops/resours/dye_con.png",
+    "plusStat": "CON",
+    "plusValue": 5,
+    "minusStat": "DEX",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923154,
+    "dyeKey": "int_men",
+    "nameUk": "Dye: INT +5 / MEN -0",
+    "iconUrl": "/icons/drops/resours/int.png",
+    "plusStat": "INT",
+    "plusValue": 5,
+    "minusStat": "MEN",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923155,
+    "dyeKey": "int_wit",
+    "nameUk": "Dye: INT +5 / WIT -0",
+    "iconUrl": "/icons/drops/resours/int.png",
+    "plusStat": "INT",
+    "plusValue": 5,
+    "minusStat": "WIT",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923156,
+    "dyeKey": "wit_int",
+    "nameUk": "Dye: WIT +5 / INT -0",
+    "iconUrl": "/icons/drops/resours/wit.png",
+    "plusStat": "WIT",
+    "plusValue": 5,
+    "minusStat": "INT",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923157,
+    "dyeKey": "wit_men",
+    "nameUk": "Dye: WIT +5 / MEN -0",
+    "iconUrl": "/icons/drops/resours/wit.png",
+    "plusStat": "WIT",
+    "plusValue": 5,
+    "minusStat": "MEN",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923158,
+    "dyeKey": "men_int",
+    "nameUk": "Dye: MEN +5 / INT -0",
+    "iconUrl": "/icons/drops/resours/men.png",
+    "plusStat": "MEN",
+    "plusValue": 5,
+    "minusStat": "INT",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   },
+   {
+    "itemId": 923159,
+    "dyeKey": "men_wit",
+    "nameUk": "Dye: MEN +5 / WIT -0",
+    "iconUrl": "/icons/drops/resours/men.png",
+    "plusStat": "MEN",
+    "plusValue": 5,
+    "minusStat": "WIT",
+    "minusValue": 0,
+    "costFastAden": 150,
+    "quantity": 1
+   }
+  ]
+ }
+}

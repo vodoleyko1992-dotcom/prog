@@ -1,0 +1,122 @@
+{
+ "_path": "/game/spawn/l2dop_rb_25051/info",
+ "_status": 200,
+ "data": {
+  "spawnId": "l2dop_rb_25051",
+  "name": "Rahha",
+  "level": 65,
+  "kind": "raid",
+  "aggressive": true,
+  "templateId": "l2dop_rb_25051",
+  "npcId": 25051,
+  "icon": "/mobs/193.png",
+  "stats": {
+   "maxHp": 2384041,
+   "pAtk": 8830,
+   "pDef": 5780,
+   "mAtk": 5941,
+   "mDef": 5256
+  },
+  "drops": [
+   {
+    "id": "regular_raid_boss_adena",
+    "kind": "adena",
+    "chance": 1,
+    "min": 260000,
+    "max": 330000,
+    "displayName": "Adena",
+    "chancePerMillion": 1000000,
+    "l2ItemId": 57,
+    "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+   },
+   {
+    "id": "rb25051_269",
+    "kind": "equipment",
+    "chance": 0.025,
+    "min": 1,
+    "max": 1,
+    "displayName": "Blood Tornado",
+    "l2ItemId": 269,
+    "iconUrl": "/icons/drops/weapon_a/blood_tornado.jpg"
+   },
+   {
+    "id": "rb25051_7864",
+    "kind": "equipment",
+    "chance": 0.045,
+    "min": 1,
+    "max": 1,
+    "displayName": "Apella Brigandine",
+    "l2ItemId": 7864,
+    "iconUrl": "/icons/drops/arrom_а/apella_brigandine.jpg"
+   },
+   {
+    "id": "rb25051_7866",
+    "kind": "equipment",
+    "chance": 0.065,
+    "min": 1,
+    "max": 1,
+    "displayName": "Apella Boots",
+    "l2ItemId": 7866,
+    "iconUrl": "/icons/drops/arrom_а/apella_boots.jpg"
+   },
+   {
+    "id": "rb25051_868",
+    "kind": "equipment",
+    "chance": 0.045,
+    "min": 1,
+    "max": 1,
+    "displayName": "Accessary Earing Of Phantom I00",
+    "l2ItemId": 868,
+    "iconUrl": "/icons/drops/earring_a/accessary_earing_of_phantom_i00.png"
+   },
+   {
+    "id": "rb25051_910516",
+    "kind": "resource",
+    "chance": 0.13,
+    "min": 1,
+    "max": 2,
+    "displayName": "Сувій заточення броні A-grade",
+    "l2ItemId": 910516,
+    "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png"
+   },
+   {
+    "id": "rb25051_910517",
+    "kind": "resource",
+    "chance": 0.06,
+    "min": 1,
+    "max": 2,
+    "displayName": "Сувій заточення зброї A-grade",
+    "l2ItemId": 910517,
+    "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_a.png"
+   },
+   {
+    "id": "rb25051_rb25051_blessed_a_910526",
+    "kind": "resource",
+    "chance": 0.01,
+    "min": 1,
+    "max": 1,
+    "displayName": "Благословенний сувій заточення броні A-grade",
+    "l2ItemId": 910526,
+    "iconUrl": "/icons/drops/resours/bless_armor_a.png"
+   },
+   {
+    "id": "rb25051_rb25051_blessed_a_910527",
+    "kind": "resource",
+    "chance": 0.01,
+    "min": 1,
+    "max": 1,
+    "displayName": "Благословенний сувій заточення зброї A-grade",
+    "l2ItemId": 910527,
+    "iconUrl": "/icons/drops/resours/bless_weapon_a.png"
+   }
+  ],
+  "spoil": [],
+  "viewerMaySeeSpoil": false,
+  "rewardExp": "1 837 252",
+  "rewardSp": "1 358 686",
+  "rewardExpSynthetic": false,
+  "dropsSynthetic": true,
+  "canAttackRaidBoss": true,
+  "minRaidBossLevelForAttack": 51
+ }
+}

@@ -1,0 +1,1029 @@
+{
+ "_path": "/game/recipes/sources?grade=C",
+ "_status": 200,
+ "data": {
+  "grade": "C",
+  "recipes": [
+   {
+    "itemId": 922001,
+    "recipeCode": "homunkulus_sword_100",
+    "recipeName": "Recipe: Homunkulus's Sword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Elder Tarlk Basilisk",
+      "mobLevel": 51,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.024
+     },
+     {
+      "mobName": "Fline",
+      "mobLevel": 45,
+      "teleportId": "enchanted_valley_south",
+      "locationUk": "Зачарована долина (південь)",
+      "locationEn": "Enchanted Valley - Southern Region",
+      "chance": 0.024
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Grave Wanderer",
+      "mobLevel": 45,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.008
+     }
+    ]
+   },
+   {
+    "itemId": 922002,
+    "recipeCode": "yaksa_mace_100",
+    "recipeName": "Recipe: Yaksa Mace (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Nos",
+      "mobLevel": 40,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.02476
+     },
+     {
+      "mobName": "Unpleasant Shout",
+      "mobLevel": 46,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.02476
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fline Elder",
+      "mobLevel": 51,
+      "teleportId": "enchanted_valley_north",
+      "locationUk": "Зачарована долина (північ)",
+      "locationEn": "Enchanted Valley - Northern Region",
+      "chance": 0.00855
+     }
+    ]
+   },
+   {
+    "itemId": 922003,
+    "recipeCode": "dwarven_hammer_100",
+    "recipeName": "Recipe: Dwarven Hammer (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Ricenseo",
+      "mobLevel": 43,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.02552
+     },
+     {
+      "mobName": "Krator",
+      "mobLevel": 44,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.02552
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Karul Bugbear",
+      "mobLevel": 40,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.0091
+     }
+    ]
+   },
+   {
+    "itemId": 922004,
+    "recipeCode": "samurai_longsword_100",
+    "recipeName": "Recipe: Samurai Longsword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Vagabond of the Ruins",
+      "mobLevel": 40,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.02628
+     },
+     {
+      "mobName": "Spelunking Spider",
+      "mobLevel": 47,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.02628
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Royal Cave Servant",
+      "mobLevel": 51,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.00966
+     }
+    ]
+   },
+   {
+    "itemId": 922005,
+    "recipeCode": "berserker_blade_100",
+    "recipeName": "Recipe: Berserker Blade (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Grave Wanderer",
+      "mobLevel": 45,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.02703
+     },
+     {
+      "mobName": "Forest of Mirrors Ghost",
+      "mobLevel": 46,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.02703
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Zaken's Seer",
+      "mobLevel": 45,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.01021
+     }
+    ]
+   },
+   {
+    "itemId": 922006,
+    "recipeCode": "crystal_dagger_100",
+    "recipeName": "Recipe: Crystal Dagger (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Bloodthirsty Ginzu Golem VII",
+      "mobLevel": 51,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.02779
+     },
+     {
+      "mobName": "Horrifying Excavator Golem III",
+      "mobLevel": 51,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.02779
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Zaken's Elite Archer",
+      "mobLevel": 44,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.01076
+     }
+    ]
+   },
+   {
+    "itemId": 922007,
+    "recipeCode": "eminence_bow_100",
+    "recipeName": "Recipe: Eminence Bow (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Manashen Gargoyle",
+      "mobLevel": 40,
+      "teleportId": "ivory_tower",
+      "locationUk": "Вежа Слонової Кістки",
+      "locationEn": "Ivory Tower",
+      "chance": 0.02855
+     },
+     {
+      "mobName": "Enchanted Monstereye",
+      "mobLevel": 41,
+      "teleportId": "ivory_tower",
+      "locationUk": "Вежа Слонової Кістки",
+      "locationEn": "Ivory Tower",
+      "chance": 0.02855
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Garden Guard Leader",
+      "mobLevel": 50,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.01131
+     }
+    ]
+   },
+   {
+    "itemId": 922008,
+    "recipeCode": "great_pata_100",
+    "recipeName": "Recipe: Great Pata (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Ol Mahum Transcender",
+      "mobLevel": 50,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.02931
+     },
+     {
+      "mobName": "Zaken's Archer",
+      "mobLevel": 44,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.02931
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Tamlin Orc",
+      "mobLevel": 41,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.01186
+     }
+    ]
+   },
+   {
+    "itemId": 922009,
+    "recipeCode": "ecliptic_sword_100",
+    "recipeName": "Recipe: Ecliptic Sword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Zaken's Elite Pikeman",
+      "mobLevel": 43,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.03007
+     },
+     {
+      "mobName": "Tarlk Basilisk",
+      "mobLevel": 50,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.03007
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Crokian Lad",
+      "mobLevel": 41,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.01241
+     }
+    ]
+   },
+   {
+    "itemId": 922010,
+    "recipeCode": "orcish_poleaxe_100",
+    "recipeName": "Recipe: Orcish Poleaxe (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Harit Lizardman",
+      "mobLevel": 50,
+      "teleportId": "coliseum",
+      "locationUk": "Колізей",
+      "locationEn": "Coliseum",
+      "chance": 0.03083
+     },
+     {
+      "mobName": "Zaken's Elite Archer",
+      "mobLevel": 44,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.03083
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Taik Orc Archer",
+      "mobLevel": 41,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.01297
+     }
+    ]
+   },
+   {
+    "itemId": 922011,
+    "recipeCode": "plated_leather_chest_100",
+    "recipeName": "Recipe: Plated Leather (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Eva's Seeker",
+      "mobLevel": 47,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.03159
+     },
+     {
+      "mobName": "Pirate Zombie",
+      "mobLevel": 44,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.03159
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Zaken's Elite Pikeman",
+      "mobLevel": 43,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.01352
+     }
+    ]
+   },
+   {
+    "itemId": 922012,
+    "recipeCode": "plated_leather_gaiters_100",
+    "recipeName": "Recipe: Plated Leather Gaiters (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Grave Priest",
+      "mobLevel": 47,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.03234
+     },
+     {
+      "mobName": "Grave Overlord",
+      "mobLevel": 45,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.03234
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Catherok",
+      "mobLevel": 42,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.01407
+     }
+    ]
+   },
+   {
+    "itemId": 922013,
+    "recipeCode": "plated_leather_gloves_100",
+    "recipeName": "Recipe: Plated Leather Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Nightmare Lord",
+      "mobLevel": 47,
+      "teleportId": "tanor_canyon",
+      "locationUk": "Каньйон Танор",
+      "locationEn": "Tanor Canyon",
+      "chance": 0.0331
+     },
+     {
+      "mobName": "Horrifying Excavator Golem III",
+      "mobLevel": 51,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.0331
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Bloodthirsty Ginzu Golem VII",
+      "mobLevel": 51,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.01462
+     }
+    ]
+   },
+   {
+    "itemId": 922014,
+    "recipeCode": "plated_leather_boots_100",
+    "recipeName": "Recipe: Plated Leather Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Nos",
+      "mobLevel": 40,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.03386
+     },
+     {
+      "mobName": "Nos Lad",
+      "mobLevel": 45,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.03386
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Eva's Seeker",
+      "mobLevel": 47,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.01517
+     }
+    ]
+   },
+   {
+    "itemId": 922015,
+    "recipeCode": "plated_leather_helmet_100",
+    "recipeName": "Recipe: Plated Leather Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Rotting Golem",
+      "mobLevel": 44,
+      "teleportId": "eastern_mining_zone",
+      "locationUk": "Східна гірнича зона",
+      "locationEn": "Eastern Mining Zone",
+      "chance": 0.03462
+     },
+     {
+      "mobName": "Vanor Silenos",
+      "mobLevel": 45,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.03462
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Grave Overlord",
+      "mobLevel": 45,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.01572
+     }
+    ]
+   },
+   {
+    "itemId": 922016,
+    "recipeCode": "demons_tunic_100",
+    "recipeName": "Recipe: Demon's Tunic (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Vagabond of the Ruins",
+      "mobLevel": 40,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.03538
+     },
+     {
+      "mobName": "Spelunking Spider",
+      "mobLevel": 47,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03538
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Mordeo",
+      "mobLevel": 42,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.01628
+     }
+    ]
+   },
+   {
+    "itemId": 922017,
+    "recipeCode": "demons_stockings_100",
+    "recipeName": "Recipe: Demon's Stockings (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Premo",
+      "mobLevel": 45,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.03614
+     },
+     {
+      "mobName": "Validus",
+      "mobLevel": 46,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.03614
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Dragon Bearer Chief",
+      "mobLevel": 49,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.01683
+     }
+    ]
+   },
+   {
+    "itemId": 922018,
+    "recipeCode": "demons_helmet_100",
+    "recipeName": "Recipe: Demon's Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Validus",
+      "mobLevel": 46,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.0369
+     },
+     {
+      "mobName": "Premo",
+      "mobLevel": 45,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.0369
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Rotting Golem",
+      "mobLevel": 44,
+      "teleportId": "eastern_mining_zone",
+      "locationUk": "Східна гірнича зона",
+      "locationEn": "Eastern Mining Zone",
+      "chance": 0.01738
+     }
+    ]
+   },
+   {
+    "itemId": 922019,
+    "recipeCode": "demons_gloves_100",
+    "recipeName": "Recipe: Demon's Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Dragon Bearer Chief",
+      "mobLevel": 49,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.03766
+     },
+     {
+      "mobName": "Alligator",
+      "mobLevel": 40,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.03766
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Cave Servant",
+      "mobLevel": 46,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.01793
+     }
+    ]
+   },
+   {
+    "itemId": 922020,
+    "recipeCode": "demons_boots_100",
+    "recipeName": "Recipe: Demon's Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Tanor Silenos Chieftain",
+      "mobLevel": 50,
+      "teleportId": "tanor_canyon",
+      "locationUk": "Каньйон Танор",
+      "locationEn": "Tanor Canyon",
+      "chance": 0.03841
+     },
+     {
+      "mobName": "Torfe",
+      "mobLevel": 49,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.03841
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Catherok",
+      "mobLevel": 42,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.01848
+     }
+    ]
+   },
+   {
+    "itemId": 922021,
+    "recipeCode": "karmian_tunic_100",
+    "recipeName": "Recipe: Karmian Tunic (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Lakin",
+      "mobLevel": 44,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.03917
+     },
+     {
+      "mobName": "Weird Drake",
+      "mobLevel": 45,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.03917
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Great White Shark",
+      "mobLevel": 42,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.01903
+     }
+    ]
+   },
+   {
+    "itemId": 922022,
+    "recipeCode": "karmian_stockings_100",
+    "recipeName": "Recipe: Karmian Stockings (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Hatar Hanishee",
+      "mobLevel": 49,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.03993
+     },
+     {
+      "mobName": "Hatar Ratman Boss",
+      "mobLevel": 48,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.03993
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Satyr",
+      "mobLevel": 48,
+      "teleportId": "enchanted_valley_south",
+      "locationUk": "Зачарована долина (південь)",
+      "locationEn": "Enchanted Valley - Southern Region",
+      "chance": 0.01959
+     }
+    ]
+   },
+   {
+    "itemId": 922023,
+    "recipeCode": "karmian_helmet_100",
+    "recipeName": "Recipe: Karmian Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Vanor Silenos Shaman",
+      "mobLevel": 49,
+      "teleportId": "coliseum",
+      "locationUk": "Колізей",
+      "locationEn": "Coliseum",
+      "chance": 0.04069
+     },
+     {
+      "mobName": "Hatar Ratman Boss",
+      "mobLevel": 48,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.04069
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Porta",
+      "mobLevel": 40,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.02014
+     }
+    ]
+   },
+   {
+    "itemId": 922024,
+    "recipeCode": "karmian_gloves_100",
+    "recipeName": "Recipe: Karmian Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Manashen Gargoyle",
+      "mobLevel": 40,
+      "teleportId": "ivory_tower",
+      "locationUk": "Вежа Слонової Кістки",
+      "locationEn": "Ivory Tower",
+      "chance": 0.04145
+     },
+     {
+      "mobName": "Tarlk Basilisk",
+      "mobLevel": 50,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.04145
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Nightmare Lord",
+      "mobLevel": 47,
+      "teleportId": "tanor_canyon",
+      "locationUk": "Каньйон Танор",
+      "locationEn": "Tanor Canyon",
+      "chance": 0.02069
+     }
+    ]
+   },
+   {
+    "itemId": 922025,
+    "recipeCode": "karmian_boots_100",
+    "recipeName": "Recipe: Karmian Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ricenseo",
+      "mobLevel": 43,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.04221
+     },
+     {
+      "mobName": "Enchanted Stone Golem",
+      "mobLevel": 42,
+      "teleportId": "ivory_tower",
+      "locationUk": "Вежа Слонової Кістки",
+      "locationEn": "Ivory Tower",
+      "chance": 0.04221
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Elder Tarlk Basilisk",
+      "mobLevel": 51,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.02124
+     }
+    ]
+   },
+   {
+    "itemId": 922068,
+    "recipeCode": "composite_shield_100",
+    "recipeName": "Recipe: Composite Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Great White Shark",
+      "mobLevel": 42,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.04297
+     },
+     {
+      "mobName": "Enchanted Monstereye",
+      "mobLevel": 41,
+      "teleportId": "ivory_tower",
+      "locationUk": "Вежа Слонової Кістки",
+      "locationEn": "Ivory Tower",
+      "chance": 0.04297
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Vanor Silenos Grunt",
+      "mobLevel": 46,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.02179
+     }
+    ]
+   },
+   {
+    "itemId": 922069,
+    "recipeCode": "full_plate_shield_100",
+    "recipeName": "Recipe: Full Plate Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Kaim Vanul",
+      "mobLevel": 51,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.04372
+     },
+     {
+      "mobName": "Royal Cave Servant",
+      "mobLevel": 51,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.04372
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Pirate Zombie",
+      "mobLevel": 44,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.02234
+     }
+    ]
+   },
+   {
+    "itemId": 922079,
+    "recipeCode": "necklace_of_protection_100",
+    "recipeName": "Recipe: Necklace of Protection (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Perum",
+      "mobLevel": 48,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.04448
+     },
+     {
+      "mobName": "Dicor",
+      "mobLevel": 47,
+      "teleportId": "cruma_tower",
+      "locationUk": "Вежа Круми",
+      "locationEn": "Cruma Tower",
+      "chance": 0.04448
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Probe Golem Champion I",
+      "mobLevel": 49,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.0229
+     }
+    ]
+   },
+   {
+    "itemId": 922080,
+    "recipeCode": "earring_of_protection_100",
+    "recipeName": "Recipe: Earring of Protection (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Hatar Hanishee",
+      "mobLevel": 49,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.04524
+     },
+     {
+      "mobName": "Taik Orc Supply",
+      "mobLevel": 51,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.04524
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Vanor Silenos Chieftain",
+      "mobLevel": 50,
+      "teleportId": "coliseum",
+      "locationUk": "Колізей",
+      "locationEn": "Coliseum",
+      "chance": 0.02345
+     }
+    ]
+   },
+   {
+    "itemId": 922081,
+    "recipeCode": "ring_of_protection_100",
+    "recipeName": "Recipe: Ring of Protection (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Unpleasant Shout",
+      "mobLevel": 46,
+      "teleportId": "devils_isle",
+      "locationUk": "Острів Диявола",
+      "locationEn": "Devil's Isle",
+      "chance": 0.046
+     },
+     {
+      "mobName": "Taik Orc Warrior",
+      "mobLevel": 42,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.046
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Tanor Silenos Chieftain",
+      "mobLevel": 50,
+      "teleportId": "tanor_canyon",
+      "locationUk": "Каньйон Танор",
+      "locationEn": "Tanor Canyon",
+      "chance": 0.024
+     }
+    ]
+   }
+  ]
+ }
+}

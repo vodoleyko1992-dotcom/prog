@@ -1,0 +1,63 @@
+{
+ "_path": "/game/dragon-dungeon",
+ "_status": 200,
+ "data": {
+  "clan": {
+   "id": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+   "name": "BlackLotus",
+   "diamonds": 6,
+   "canManageClan": false
+  },
+  "noClanMessageUk": null,
+  "activeDungeon": null,
+  "bosses": [
+   {
+    "id": "green",
+    "nameUk": "Зелений дракон",
+    "nameEn": "Green Dragon",
+    "titleEn": "Dragon of Venom",
+    "imageUrl": "/assets/Green_Dragon.jpg",
+    "unlockCostDiamonds": 35,
+    "reward": {
+     "adena": 10000000,
+     "coinOfLuck": 10,
+     "clanReputation": 50
+    },
+    "canUnlock": false,
+    "lockedReason": "clan_leader_required"
+   },
+   {
+    "id": "blue",
+    "nameUk": "Синій дракон",
+    "nameEn": "Blue Dragon",
+    "titleEn": "Dragon of Storms",
+    "imageUrl": "/assets/Blue_Dragon.jpg",
+    "unlockCostDiamonds": 75,
+    "reward": {
+     "adena": 15000000,
+     "coinOfLuck": 25,
+     "clanReputation": 100
+    },
+    "canUnlock": false,
+    "lockedReason": "clan_leader_required"
+   },
+   {
+    "id": "red",
+    "nameUk": "Червоний дракон",
+    "nameEn": "Red Dragon",
+    "titleEn": "Dragon of Flame",
+    "imageUrl": "/assets/Red_Dragon.jpg",
+    "unlockCostDiamonds": 120,
+    "reward": {
+     "adena": 20000000,
+     "coinOfLuck": 40,
+     "clanReputation": 150
+    },
+    "canUnlock": false,
+    "lockedReason": "clan_leader_required"
+   }
+  ],
+  "myContribution": null,
+  "contributions": []
+ }
+}

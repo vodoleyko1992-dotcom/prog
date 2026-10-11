@@ -1,0 +1,1873 @@
+{
+  "meta": {
+    "title": "API игры l2wap.com, которое видит или использует бот",
+    "generated_by": "kb/tools/build_all.py (python3 -I)",
+    "sources": [
+      "base-profile.json learn.api (автообучение: 86 путей, n запросов, статусы, ключи ответа верхнего уровня; 09.10 07:10 – 10.10 12:40 UTC)",
+      "код: content.js, hook.js, background.js, popup.js, battle-cooldown.js, engine-core.js, ui-v7.js, modules/buffs.js, modules/combat.js, modules/dungeons.js, modules/economy.js, modules/epics.js, modules/equipment.js, modules/fishing.js, modules/loot.js, modules/mobfarm.js, modules/navigation.js, modules/quests.js, modules/raid.js, modules/resources.js, modules/survival.js, modules/tvt.js",
+      "документация: CLAUDE.md, CHANGELOG-*.md, .claude/skills/*/SKILL.md, tests/*",
+      "API_DOC в kb/tools/build_code_refs.py — поля, выписанные из кода/документов"
+    ],
+    "note": "Бот почти всё делает кликами по странице и ЧИТАЕТ ответы игры через hook.js (MAIN world: fetch/XHR → postMessage net/netStart; пароли/токены вырезаны; массивы > 8 обрезаны, кроме inv/sp/eb). Свои запросы бот шлёт только: GET /game/spawn/<id>/info, GET /game/epic-bosses?page=1, GET /game/time (botFetchesItself). Путь нормализован: l2dop_rb_N → <spawnId>, профессия → <class>, замок → <castle>, ник → <name>. noise — фоновые опросы игры.",
+    "repo_version": "8.0.8"
+  },
+  "hook": {
+    "TRACK_for_click_gate": "^/(character|game/battle/(action|start|hunt-continue))$",
+    "secret_keys_redacted": "pass|token|auth|session|sid|cookie|secret|csrf|sign|captcha|email|phone|login|user|nick|account|jwt|bearer|ticket|apikey|refresh",
+    "full_arrays": {
+      "inv": "character.inventory.stacks → [itemId, qty]",
+      "sp": "/game/map/spawns nearbySpawns → [id, kind, name, level, distance] (≤3000)",
+      "eb": "/game/epic-bosses bosses"
+    },
+    "journal_truncation": "ответ в журнале ≤800 знаков; GET 2xx одного пути — не чаще раза в 3 с; шумные — раз в минуту"
+  },
+  "counts": {"endpoints": 79, "observed": 73, "with_code_refs": 25, "with_field_notes": 24, "bot_fetches_itself": 3},
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "observed": {
+        "requests": 18,
+        "statuses": {"err": 18},
+        "responseTopKeys": [],
+        "responseForms": ["error:network"],
+        "pages": ["index"],
+        "first": "2026-10-09T23:25:04Z",
+        "last": "2026-10-10T02:16:44Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "bot": "автовход; тело и ответ скрыты в журнале («(скрыто)»), пароль никогда не пишется",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character",
+      "observed": {
+        "requests": 5218,
+        "statuses": {"200": 5218},
+        "responseTopKeys": ["catalogVersion", "character", "pvpIncoming"],
+        "responseForms": ["success"],
+        "pages": ["battle"],
+        "first": "2026-10-09T23:32:21Z",
+        "last": "2026-10-10T12:24:57Z"
+      },
+      "code_refs": [
+        "background.js:55",
+        "content.js:1803",
+        "content.js:1812",
+        "content.js:2977",
+        "content.js:2978",
+        "content.js:2984",
+        "hook.js:44",
+        "hook.js:56",
+        "modules/combat.js:7",
+        "modules/combat.js:845",
+        "modules/combat.js:847",
+        "modules/equipment.js:326",
+        "modules/quests.js:128",
+        "modules/quests.js:142",
+        "modules/quests.js:193"
+      ],
+      "doc_refs": [
+        "CLAUDE.md:114",
+        "CHANGELOG-8.0.3.md:7",
+        "CHANGELOG-8.0.3.md:12",
+        ".claude/skills/l2-game-facts/SKILL.md:10",
+        ".claude/skills/l2-log-review/SKILL.md:21",
+        ".claude/skills/l2-log-review/SKILL.md:29",
+        "content.js:2977",
+        "content.js:2978",
+        "content.js:2984",
+        "hook.js:44",
+        "hook.js:56",
+        "modules/combat.js:7"
+      ],
+      "botFetchesItself": false,
+      "response_used": ["character (огромный объект: инвентарь, статы)", "character.inventory.stacks", "catalogVersion", "pvpIncoming"],
+      "timing": "игра шлёт сама после каждого хода; пока в полёте — клики теряются (8.0.3)",
+      "usedByFiles": ["background.js", "combat.js", "content.js", "equipment.js", "hook.js", "quests.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-version",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["catalogVersion"],
+        "responseForms": ["success"],
+        "pages": ["battle"],
+        "first": "2026-10-10T09:45:09Z",
+        "last": "2026-10-10T11:07:22Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/character/equip",
+      "observed": {
+        "requests": 5,
+        "statuses": {"200": 5},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-09T23:32:09Z",
+        "last": "2026-10-10T11:07:40Z"
+      },
+      "code_refs": ["content.js:3119"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "request": {
+        "action": "'equip' | 'unequip'",
+        "itemId": "id предмета (items-il.json)",
+        "enchant": "заточка",
+        "enchantPAtkBonus": "бонус P.Atk",
+        "targetInstanceId": "экземпляр",
+        "slot": "при unequip (weapon/rhand/lrhand)"
+      },
+      "response_used": ["character"],
+      "bot": "content.weaponEquipNote — надетое оружие → грейд зарядов (7.1.28)",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character/magister",
+      "observed": {
+        "requests": 46,
+        "statuses": {"200": 46},
+        "responseTopKeys": ["characterSp", "noteUk", "npc", "profession", "skills"],
+        "responseForms": ["success"],
+        "pages": ["magister"],
+        "first": "2026-10-09T23:31:34Z",
+        "last": "2026-10-10T11:16:33Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character/profession-quest/<class>-second/status",
+      "observed": {
+        "requests": 2328,
+        "statuses": {"200": 2095, "err": 233},
+        "responseTopKeys": ["status"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:32:14Z",
+        "last": "2026-10-10T12:24:52Z",
+        "rawPaths": [
+          "/character/profession-quest/dark-elf-fighter-second/status",
+          "/character/profession-quest/dwarf-fighter-second/status",
+          "/character/profession-quest/human-fighter-second/status",
+          "/character/profession-quest/human-mystic-second/status",
+          "/character/profession-quest/light-elf-fighter-second/status",
+          "/character/profession-quest/light-elf-mystic-second/status",
+          "/character/profession-quest/orc-fighter-second/status",
+          "/character/profession-quest/orc-mystic-second/status"
+        ]
+      },
+      "code_refs": ["content.js:3130"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": [
+        "status.accepted",
+        "status.kills[{name, need, have}]",
+        "status.stage",
+        "status.completed",
+        "status.titleUk",
+        "status.instructionUk"
+      ],
+      "bot": "content.profQuestNote → ★-цели квеста профессии (7.1.23)",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/profession-quest/human-mystic-second/orpheus",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["character", "status"],
+        "responseForms": ["success"],
+        "pages": ["human-mystic-second-profession-npc"],
+        "first": "2026-10-10T02:17:56Z",
+        "last": "2026-10-10T02:17:56Z"
+      },
+      "code_refs": ["content.js:3130"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/skills/learn",
+      "observed": {
+        "requests": 46,
+        "statuses": {"200": 46},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["magister"],
+        "first": "2026-10-09T23:31:34Z",
+        "last": "2026-10-10T11:16:32Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/town/buffer",
+      "observed": null,
+      "code_refs": [],
+      "doc_refs": [".claude/skills/l2-game-facts/SKILL.md:18"],
+      "botFetchesItself": false,
+      "bot": "новый городской баффер (11.10); кнопка .l2-town-buffer-set-apply[data-set-id]",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character/town/buffer/catalog",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["sets"],
+        "responseForms": ["success"],
+        "pages": ["town-buffer"],
+        "first": "2026-10-10T11:33:16Z",
+        "last": "2026-10-10T11:33:16Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/town/fast-aden-buffer/apply",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["buffsApplied", "character", "costFastAden", "fastAdenBalance", "set", "skillId"],
+        "responseForms": ["success"],
+        "pages": ["fast-aden-buffer"],
+        "first": "2026-10-10T12:27:29Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "request": {"set": "набор", "skillId": "id баффа", "expectedCostFastAden": "1 | 5"},
+      "response_used": ["buffsApplied", "costFastAden", "fastAdenBalance", "character"],
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/character/town/fast-aden-buffer/catalog",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["consumables", "dyes", "fastAdenBalance", "fastAdenItemId", "sets"],
+        "responseForms": ["success"],
+        "pages": ["fast-aden-buffer"],
+        "first": "2026-10-10T12:27:29Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/town/restore-vitals",
+      "observed": {
+        "requests": 4,
+        "statuses": {"200": 4},
+        "responseTopKeys": ["character", "feeAdena"],
+        "responseForms": ["success"],
+        "pages": ["town-buffer"],
+        "first": "2026-10-10T11:33:18Z",
+        "last": "2026-10-10T12:24:46Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/character/warehouse/deposit",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-10T11:07:43Z",
+        "last": "2026-10-10T11:07:43Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/achievements",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["categories", "character", "earnedRank", "globalStage", "rank", "rebirthUnlocked"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-10T11:07:22Z",
+        "last": "2026-10-10T11:07:22Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/battle",
+      "observed": {
+        "requests": 3706,
+        "statuses": {"200": 3703, "err": 3},
+        "responseTopKeys": ["battle", "character", "pvpIncoming"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["battle"],
+        "first": "2026-10-09T23:33:21Z",
+        "last": "2026-10-10T12:24:41Z"
+      },
+      "code_refs": ["content.js:2910", "content.js:3032", "content.js:3088", "content.js:3091", "content.js:3093"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": ["battle.activeSummon", "globalCooldownUntilMs", "serverNowMs"],
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/action",
+      "observed": {
+        "requests": 8830,
+        "statuses": {"200": 8815, "400": 14, "409": 1},
+        "responseTopKeys": [
+          "battle",
+          "character",
+          "characterId",
+          "code",
+          "defeat",
+          "delta",
+          "error",
+          "kind",
+          "lethalMeta",
+          "message",
+          "messageRu",
+          "messageUk",
+          "revision",
+          "serverNowMs",
+          "serverRevision",
+          "victory"
+        ],
+        "responseForms": ["battle-end", "delta", "error:mystic_spiritshot_grade_mismatch", "error:revision_conflict"],
+        "pages": ["battle"],
+        "first": "2026-10-09T23:32:21Z",
+        "last": "2026-10-10T12:24:56Z"
+      },
+      "code_refs": [
+        "content.js:184",
+        "content.js:2858",
+        "content.js:2910",
+        "content.js:2983",
+        "content.js:2984",
+        "content.js:3033",
+        "content.js:3034",
+        "content.js:3036",
+        "content.js:3081",
+        "content.js:3101"
+      ],
+      "doc_refs": [
+        ".claude/skills/l2-game-facts/SKILL.md:9",
+        ".claude/skills/l2-log-review/SKILL.md:23",
+        "content.js:3034",
+        "tests/stage1.test.js:76"
+      ],
+      "botFetchesItself": false,
+      "request": {
+        "battleSpawnId": "spawnId боя (в цепочке «Охотиться дальше» игра шлёт id ПЕРВОГО боя цепочки, URL меняется — 7.2.1)",
+        "action": "'l2_<skillId>' | 'attack' | 'battle_potion_use' (банка)"
+      },
+      "response_used": [
+        "kind: delta | battle-end (5144 из 8830 ответов — delta, 8.0)",
+        "delta.serverNowMs",
+        "delta.skillCooldowns {l2_<id>: untilMs} — откат ЭТОГО нажатия (8.0.3)",
+        "delta.mysticSkillCdUntil (смысл не ясен, пишется в «КД сервера»)",
+        "delta.characterHp/characterMaxHp",
+        "delta.activeSummon {key, hp, maxHp, nameUk}",
+        "battle / victory / defeat / lethalMeta (итог)",
+        "character.inventory.stacks[{itemId, qty}] (сумка — hook.js отдаёт целиком полем inv)",
+        "старый формат: globalCooldownUntilMs, cooldownUntilMs, readyAtMs, skillRemainingMs, normalizedSkillId (игра больше не шлёт globalCooldownUntilMs — 11.10)",
+        "attack: nextPhysicalAttackAt, attackIntervalMs, requestedAction, remainingMs/readyAtMs при отказе"
+      ],
+      "errors": [
+        "400 skill_cooldown {blockedBy: global|skill, globalCooldownUntilMs, globalRemainingMs, serverNowMs}",
+        "400 mystic_spiritshot_grade_mismatch (заряды не того грейда, 14 раз)",
+        "409 revision_conflict {serverRevision}",
+        "pve_farm_blocked {blockedUntil, remainingSeconds, messageRu/Uk}",
+        "battle_too_far (v5.3.1)"
+      ],
+      "timing": "ответ ≈0,6–1,1 с после клика; после ответа игра шлёт GET /character (≈8 мс, идёт 0,25–0,56 с) — клик в это окно теряется (8.0.3); ответ > 8 с = сервер висит (8.0.4)",
+      "bot": "клик по слоту панели; hook.js netStart/конец с rid; combat.gameFree; battle-cooldown.observe",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/hotbar",
+      "observed": {
+        "requests": 10,
+        "statuses": {"200": 10},
+        "responseTopKeys": ["battleHotbarSlots", "ok"],
+        "responseForms": ["success"],
+        "pages": ["battle"],
+        "first": "2026-10-10T10:01:14Z",
+        "last": "2026-10-10T11:36:14Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/hunt-continue",
+      "observed": {
+        "requests": 3303,
+        "statuses": {"200": 3302, "502": 1},
+        "responseTopKeys": ["battle", "character"],
+        "responseForms": ["error:502", "success"],
+        "pages": ["battle"],
+        "first": "2026-10-09T23:33:56Z",
+        "last": "2026-10-10T12:10:33Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": ["battle", "character", "activeSummon"],
+      "bot": "кнопка #battle-victory-hunt «Охотиться дальше» — цепочка ≈5,4 с/моб против ≈11,4 с через карту",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/leave",
+      "observed": {
+        "requests": 106,
+        "statuses": {"200": 100, "err": 6},
+        "responseTopKeys": ["character"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["battle"],
+        "first": "2026-10-10T01:05:28Z",
+        "last": "2026-10-10T12:24:59Z"
+      },
+      "code_refs": ["content.js:3048", "modules/combat.js:1030", "modules/combat.js:1078", "modules/raid.js:884"],
+      "doc_refs": ["modules/combat.js:1030", "modules/combat.js:1078", "modules/raid.js:884", "tests/v803-rbflee.test.js:3"],
+      "botFetchesItself": false,
+      "request": {"battleSpawnId": "бой, из которого выходим"},
+      "response_used": ["character"],
+      "bot": "#battle-back-map «Назад на карту» — работает и посреди боя с РБ (аварийный выход 8.0.4, отход с эпика)",
+      "usedByFiles": ["combat.js", "content.js", "raid.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/return-to-town",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["battle"],
+        "first": "2026-10-10T11:33:12Z",
+        "last": "2026-10-10T11:39:15Z"
+      },
+      "code_refs": ["content.js:3038", "modules/survival.js:78"],
+      "doc_refs": ["modules/survival.js:78"],
+      "botFetchesItself": false,
+      "bot": "«Вернуться в город» после смерти; метка sessionStorage l2bot.toTown; сбрасывает rt.zone (8.0.3)",
+      "usedByFiles": ["content.js", "survival.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/battle/start",
+      "observed": {
+        "requests": 541,
+        "statuses": {"200": 539, "err": 2},
+        "responseTopKeys": ["battle", "character"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:32:15Z",
+        "last": "2026-10-10T12:24:52Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": ["battle", "character", "activeSummon"],
+      "bot": "клик «В бой» в окне моба на карте",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/battle/sync",
+      "observed": {
+        "requests": 1812,
+        "statuses": {"200": 1812},
+        "responseTopKeys": [
+          "activeSummon",
+          "battleEnded",
+          "battleVersion",
+          "changed",
+          "characterDead",
+          "characterHp",
+          "characterMaxHp",
+          "characterMaxMp",
+          "characterMp",
+          "inBattle",
+          "logSeq",
+          "logTail",
+          "mysticSkillCdUntil",
+          "outcome",
+          "revision",
+          "serverNowMs",
+          "skillCooldowns"
+        ],
+        "responseForms": ["success"],
+        "pages": ["battle"],
+        "first": "2026-10-09T23:32:19Z",
+        "last": "2026-10-10T12:24:57Z"
+      },
+      "code_refs": ["content.js:2910", "content.js:3088"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": [
+        "serverNowMs",
+        "skillCooldowns",
+        "mysticSkillCdUntil",
+        "activeSummon",
+        "characterHp/Mp/MaxHp/MaxMp",
+        "battleEnded",
+        "outcome",
+        "logTail",
+        "globalCooldownUntilMs (до 11.10)"
+      ],
+      "bot": "battle-cooldown.observeSync (запасной путь отката, 7.1.14)",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/chat/replies/unread-count",
+      "observed": {
+        "requests": 8564,
+        "statuses": {"200": 8540, "err": 24},
+        "responseTopKeys": ["characterId", "count", "readWatermark", "serverTime", "version"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:53Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/chat/social-unread",
+      "observed": {
+        "requests": 10010,
+        "statuses": {"200": 9949, "502": 1, "err": 60},
+        "responseTopKeys": ["characterId", "clanUnread", "partyUnread"],
+        "responseForms": ["error:502", "error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:53Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/clans/invite/accept",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 1, "400": 1},
+        "responseTopKeys": ["character", "error", "messageRu", "messageUk"],
+        "responseForms": ["error:clan_invite_in_battle", "success"],
+        "pages": ["battle"],
+        "first": "2026-10-10T09:35:53Z",
+        "last": "2026-10-10T09:35:58Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/clans/invite/decline",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["ok"],
+        "responseForms": ["success"],
+        "pages": ["fishing"],
+        "first": "2026-10-10T09:24:52Z",
+        "last": "2026-10-10T09:24:52Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/clans/warehouse",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["canManageClan", "items", "openForMembers", "viewerCanViewWarehouse"],
+        "responseForms": ["success"],
+        "pages": ["clan-warehouse"],
+        "first": "2026-10-10T11:07:10Z",
+        "last": "2026-10-10T11:07:10Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/clans/warehouse/items/withdraw",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["clan-warehouse"],
+        "first": "2026-10-10T11:07:10Z",
+        "last": "2026-10-10T11:07:10Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/drops-shop",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["grades"],
+        "responseForms": ["success"],
+        "pages": ["gm-shop"],
+        "first": "2026-10-10T01:33:53Z",
+        "last": "2026-10-10T01:33:53Z"
+      },
+      "code_refs": ["modules/economy.js:128"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "bot": "магазин /gm-shop.html",
+      "usedByFiles": ["economy.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/drops-shop/buy",
+      "observed": {
+        "requests": 6,
+        "statuses": {"200": 6},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["gm-shop"],
+        "first": "2026-10-10T01:34:02Z",
+        "last": "2026-10-10T11:08:18Z"
+      },
+      "code_refs": ["content.js:3120"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "request": {"shopKey": "\"consumable/blessed_spiritshot_d\" и т. п.", "qty": "количество (3000)"},
+      "response_used": ["character"],
+      "bot": "economy: сверка ключа товара (грейд/тип) после покупки — «⚠ куплено не то» → сутки не докупать (7.1.26)",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/epic-boss/teleport",
+      "observed": null,
+      "code_refs": [],
+      "doc_refs": [
+        "CLAUDE.md:114 {spawnId, expectedCoinOfLuckCost}",
+        "CHANGELOG-8.0.3.md:45 {spawnId, expectedRevision, expectedCoinOfLuckCost}",
+        ".claude/skills/l2-game-facts/SKILL.md:24 {spawnId, expectedRevision, expectedCoinOfLuckCost:1}"
+      ],
+      "botFetchesItself": false,
+      "request": {"spawnId": "l2dop_rb_290xx", "expectedRevision": "ревизия", "expectedCoinOfLuckCost": "1"},
+      "response_used": ["200 + {character} (явного ok нет)"],
+      "bot": "только через epicPayGate при положительном лимите CoL (по умолчанию 0 = никогда)",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/epic-bosses",
+      "observed": null,
+      "code_refs": [
+        "content.js:1932",
+        "content.js:3022",
+        "hook.js:24",
+        "hook.js:26",
+        "modules/epics.js:173",
+        "modules/epics.js:209",
+        "modules/epics.js:222",
+        "popup.js:803"
+      ],
+      "doc_refs": [".claude/skills/l2-game-facts/SKILL.md:24", "content.js:1932", "modules/epics.js:173"],
+      "botFetchesItself": true,
+      "request": {"?page": "1"},
+      "response_used": [
+        "bosses[{spawnId, name, level, bossType, isAlive, canAttack, attackBlockedReasonUk, coinOfLuckCost, adenaCost, respawnHours, icon}]",
+        "total",
+        "characterLevel",
+        "minRaidBossLevel (= герой − 9)",
+        "baseCoinOfLuckCost",
+        "vipFreeApplied"
+      ],
+      "bot": "СВОЙ fetch бота (epics) + пассивно со страницы /epic-bosses.html; hook.js отдаёт bosses целиком полем eb",
+      "usedByFiles": ["content.js", "epics.js", "hook.js", "popup.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/farm-guide",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["keyMaterials", "raidEquipment", "resourceTeleportAdenaCost", "resources"],
+        "responseForms": ["success"],
+        "pages": ["forum-farm-resources"],
+        "first": "2026-10-09T23:40:33Z",
+        "last": "2026-10-10T01:49:14Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": ["resources", "keyMaterials", "raidEquipment", "resourceTeleportAdenaCost"],
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/farm-guide/resource-teleport",
+      "observed": {
+        "requests": 6,
+        "statuses": {"200": 6},
+        "responseTopKeys": ["adenaCost", "character"],
+        "responseForms": ["success"],
+        "pages": ["forum-farm-resources"],
+        "first": "2026-10-09T23:40:35Z",
+        "last": "2026-10-10T02:02:26Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "bot": "телепорт со страницы «Фарм ресурсов» (кнопка страницы)",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/action",
+      "observed": {
+        "requests": 5429,
+        "statuses": {"200": 5428, "400": 1},
+        "responseTopKeys": ["character", "error", "fishing", "messageRu", "messageUk", "revision"],
+        "responseForms": ["error:action_cooldown", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:52Z",
+        "last": "2026-10-10T10:00:54Z"
+      },
+      "code_refs": ["content.js:3123", "modules/fishing.js:212"],
+      "doc_refs": [".claude/skills/l2-game-facts/SKILL.md:36", "modules/fishing.js:212"],
+      "botFetchesItself": false,
+      "request": {
+        "action": "cast | pumping | reeling | selectBait | selectRod | buyFishingSpot | buyFishingTime",
+        "expectedRevision": "ревизия (следующий запрос её несёт)"
+      },
+      "response_used": ["fishing.serverNowMs", "fishing.cooldowns (структура неизвестна)", "character", "revision"],
+      "errors": ["400 action_cooldown {messageRu, messageUk} — ложные при лаге сервера"],
+      "timing": "откат действия ≥≈0,9–1,05 с; считать от времени сервера (8.0.4)",
+      "usedByFiles": ["content.js", "fishing.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/buy-special",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["character", "fishing", "revision"],
+        "responseForms": ["success"],
+        "pages": ["fishing-shop"],
+        "first": "2026-10-10T08:48:50Z",
+        "last": "2026-10-10T09:21:22Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/buy-starter",
+      "observed": {
+        "requests": 7,
+        "statuses": {"200": 7},
+        "responseTopKeys": ["character", "fishing", "revision"],
+        "responseForms": ["success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:11:04Z",
+        "last": "2026-10-10T09:53:34Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "request": {"offerKey": "starter_rod | bait_x10 | soulshot_x50", "amount": "пакетов"},
+      "response_used": ["character", "fishing", "revision"],
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/cut",
+      "observed": {
+        "requests": 7,
+        "statuses": {"200": 7},
+        "responseTopKeys": ["character", "result", "revision"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-10T08:48:25Z",
+        "last": "2026-10-10T09:51:44Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/exchange-material",
+      "observed": {
+        "requests": 20,
+        "statuses": {"200": 20},
+        "responseTopKeys": ["character", "fishing", "revision"],
+        "responseForms": ["success"],
+        "pages": ["fishing-shop"],
+        "first": "2026-10-10T08:48:32Z",
+        "last": "2026-10-10T09:51:58Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/fishing/open-old-box",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["character", "result", "revision"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-10T09:21:06Z",
+        "last": "2026-10-10T09:51:45Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/fishing/state",
+      "observed": {
+        "requests": 20,
+        "statuses": {"200": 20},
+        "responseTopKeys": [
+          "bait",
+          "basicBait",
+          "cooldowns",
+          "economy",
+          "fishingSoulshot",
+          "fishingSpot",
+          "fishingTime",
+          "goodBait",
+          "learnedCount",
+          "learnedSkills",
+          "logTail",
+          "revision",
+          "rod",
+          "rods",
+          "serverNowMs",
+          "skillTotal",
+          "starterShop",
+          "target",
+          "training",
+          "unlocked"
+        ],
+        "responseForms": ["success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:58Z",
+        "last": "2026-10-10T10:00:40Z"
+      },
+      "code_refs": ["modules/fishing.js:276"],
+      "doc_refs": ["modules/fishing.js:276"],
+      "botFetchesItself": false,
+      "response_used": [
+        "bait",
+        "basicBait",
+        "goodBait",
+        "cooldowns",
+        "economy",
+        "fishingSoulshot",
+        "fishingSpot",
+        "fishingTime",
+        "learnedSkills",
+        "rod",
+        "rods",
+        "starterShop",
+        "target",
+        "training",
+        "unlocked",
+        "serverNowMs"
+      ],
+      "usedByFiles": ["fishing.js"],
+      "noise": false
+    },
+    {
+      "method": "ANY",
+      "path": "/game/item-icon/<id>",
+      "observed": null,
+      "code_refs": ["content.js:1161"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/item-transfer/candidates",
+      "observed": {
+        "requests": 13,
+        "statuses": {"200": 13},
+        "responseTopKeys": ["candidates", "category", "categoryCounts", "page", "pageSize", "total", "totalPages"],
+        "responseForms": ["success"],
+        "pages": ["item-transfer"],
+        "first": "2026-10-10T02:14:41Z",
+        "last": "2026-10-10T11:07:22Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/item-transfer/claim",
+      "observed": {
+        "requests": 9,
+        "statuses": {"200": 8, "500": 1},
+        "responseTopKeys": ["attachmentId", "character", "duplicate", "error", "message", "statusCode"],
+        "responseForms": ["error:Internal Server Error", "success"],
+        "pages": ["mail"],
+        "first": "2026-10-10T02:16:54Z",
+        "last": "2026-10-10T02:17:10Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/item-transfer/received",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["attachments", "page", "pageSize", "total", "totalPages"],
+        "responseForms": ["success"],
+        "pages": ["mail"],
+        "first": "2026-10-10T02:14:25Z",
+        "last": "2026-10-10T02:14:25Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/item-transfer/send",
+      "observed": {
+        "requests": 8,
+        "statuses": {"200": 8},
+        "responseTopKeys": ["character", "transfer"],
+        "responseForms": ["success"],
+        "pages": ["item-transfer"],
+        "first": "2026-10-10T02:15:03Z",
+        "last": "2026-10-10T02:16:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/latest-news-notice",
+      "observed": {
+        "requests": 260,
+        "statuses": {"200": 260},
+        "responseTopKeys": ["label", "newsId", "visible"],
+        "responseForms": ["success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:11:49Z",
+        "last": "2026-10-10T12:23:50Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/mail",
+      "observed": {
+        "requests": 13,
+        "statuses": {"200": 13},
+        "responseTopKeys": ["messages", "page", "pageSize", "total", "totalPages", "unreadCount"],
+        "responseForms": ["success"],
+        "pages": ["mail"],
+        "first": "2026-10-10T02:14:27Z",
+        "last": "2026-10-10T02:17:20Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/mail/delete",
+      "observed": {
+        "requests": 12,
+        "statuses": {"200": 12},
+        "responseTopKeys": ["ok"],
+        "responseForms": ["success"],
+        "pages": ["mail"],
+        "first": "2026-10-10T02:16:56Z",
+        "last": "2026-10-10T02:17:20Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/mail/send",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["duplicate", "messageId", "ok"],
+        "responseForms": ["success"],
+        "pages": ["mail-compose"],
+        "first": "2026-10-10T02:14:13Z",
+        "last": "2026-10-10T02:14:13Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/mail/unread-count",
+      "observed": {
+        "requests": 5539,
+        "statuses": {"200": 5487, "502": 2, "err": 50},
+        "responseTopKeys": ["characterId", "count", "version"],
+        "responseForms": ["error:502", "error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:53Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/map/spawns",
+      "observed": null,
+      "code_refs": ["content.js:716", "hook.js:39", "modules/mobfarm.js:39"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": [
+        "nearbySpawns[{id, kind, name, level, distance}] — hook.js отдаёт до 3000 строк полем sp (метки карты тип моба больше не несут)"
+      ],
+      "bot": "content.netSpawns → rt.spawns (spawnId → [имя, ур.])",
+      "usedByFiles": ["content.js", "hook.js", "mobfarm.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/map/sync",
+      "observed": {
+        "requests": 39,
+        "statuses": {"200": 38, "err": 1},
+        "responseTopKeys": [
+          "around",
+          "changed",
+          "dungeonEntrance",
+          "mammonBlacksmith",
+          "mammonMerchant",
+          "mammonRotationSig",
+          "mapCatalogVersion",
+          "mapRadii",
+          "mapState",
+          "personalMapSig",
+          "pveDefeat",
+          "pvpDefeat",
+          "pvpIncoming",
+          "revision",
+          "spawns",
+          "worldMapNpcAnchors"
+        ],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-10T00:36:05Z",
+        "last": "2026-10-10T09:49:03Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/move",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["map"],
+        "first": "2026-10-10T02:23:41Z",
+        "last": "2026-10-10T02:23:41Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/online",
+      "observed": {
+        "requests": 20,
+        "statuses": {"200": 20},
+        "responseTopKeys": ["count", "gameDayKey", "nextDailyResetAt", "players", "serverNowMs", "timeZone"],
+        "responseForms": ["success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:40:39Z",
+        "last": "2026-10-10T11:07:22Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/party/hud",
+      "observed": {
+        "requests": 576,
+        "statuses": {"200": 569, "502": 1, "err": 6},
+        "responseTopKeys": ["characterRevision", "extraInviteCount", "invite", "party"],
+        "responseForms": ["error:502", "error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:11:09Z",
+        "last": "2026-10-10T12:27:27Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/player/by-name/<name>/profile",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["profile"],
+        "responseForms": ["success"],
+        "pages": ["mail-compose"],
+        "first": "2026-10-10T02:14:13Z",
+        "last": "2026-10-10T02:14:13Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/public-stats",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["onlineCount", "totalCount"],
+        "responseForms": ["success"],
+        "pages": ["index"],
+        "first": "2026-10-09T23:25:22Z",
+        "last": "2026-10-09T23:25:52Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/raid-boss/teleport",
+      "observed": null,
+      "code_refs": ["content.js:3064"],
+      "doc_refs": [".claude/skills/l2-game-facts/SKILL.md:23 {spawnId, expectedRevision, expectedAdenaCost}", "content.js:3064"],
+      "botFetchesItself": false,
+      "request": {"spawnId": "l2dop_rb_<npcId>", "expectedRevision": "ревизия персонажа", "expectedAdenaCost": "100000"},
+      "bot": "кнопка .l2-rb-row__tp[data-spawn-id]; только после проверки сил по цифрам (raid.rbInfo / RB_KNOWN); сбрасывает rt.zone",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/raid-bosses",
+      "observed": {
+        "requests": 216,
+        "statuses": {"200": 216},
+        "responseTopKeys": [
+          "adenaCost",
+          "baseAdenaCost",
+          "bosses",
+          "characterLevel",
+          "minRaidBossLevel",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages",
+          "vipFreeApplied"
+        ],
+        "responseForms": ["success"],
+        "pages": ["rb-bosses"],
+        "first": "2026-10-10T11:32:35Z",
+        "last": "2026-10-10T12:18:33Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": [
+        "bosses[]",
+        "page",
+        "pageSize",
+        "total",
+        "totalPages",
+        "adenaCost",
+        "baseAdenaCost",
+        "vipFreeApplied",
+        "characterLevel",
+        "minRaidBossLevel"
+      ],
+      "bot": "список РБ /rb-bosses.html (пагинация #rb-pager-*); частичный список дописывается (8.0.3)",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/server-news/unread",
+      "observed": {
+        "requests": 10013,
+        "statuses": {"200": 9943, "502": 1, "err": 69},
+        "responseTopKeys": ["characterId", "newsUnread"],
+        "responseForms": ["error:502", "error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:53Z",
+        "last": "2026-10-10T12:27:29Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/siege/<castle>/state",
+      "observed": {
+        "requests": 7,
+        "statuses": {"200": 7},
+        "responseTopKeys": [
+          "canAttackWall",
+          "canStartSiegePvp",
+          "cityId",
+          "cityName",
+          "endsAt",
+          "finishReason",
+          "incomingDamageNotice",
+          "ownerClan",
+          "pvpBlockReason",
+          "rewardPoints",
+          "serverTime",
+          "startsAt",
+          "state",
+          "timeZone",
+          "topClans",
+          "version",
+          "viewerCharacterDamage",
+          "viewerCharacterId",
+          "viewerClan",
+          "viewerClanDamage",
+          "viewerEliminated",
+          "viewerPvpDefeat",
+          "wallAttackBlockReason",
+          "wallHp",
+          "wallMaxHp",
+          "winnerClan"
+        ],
+        "responseForms": ["success"],
+        "pages": ["city"],
+        "first": "2026-10-09T23:26:15Z",
+        "last": "2026-10-10T11:48:11Z",
+        "rawPaths": ["/game/siege/l2dop_aden/state", "/game/siege/l2dop_oren/state", "/game/siege/l2dop_schuttgart/state"]
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/spawn/<spawnId>/info",
+      "observed": {
+        "requests": 6,
+        "statuses": {"200": 6},
+        "responseTopKeys": [
+          "aggressive",
+          "canAttackRaidBoss",
+          "drops",
+          "dropsSynthetic",
+          "icon",
+          "kind",
+          "level",
+          "minRaidBossLevelForAttack",
+          "name",
+          "npcId",
+          "rewardExp",
+          "rewardExpSynthetic",
+          "rewardSp",
+          "spawnId",
+          "spoil",
+          "stats",
+          "templateId",
+          "viewerMaySeeSpoil"
+        ],
+        "responseForms": ["success"],
+        "pages": ["map"],
+        "first": "2026-10-10T11:32:52Z",
+        "last": "2026-10-10T12:21:48Z",
+        "rawPaths": [
+          "/game/spawn/l2dop_rb_25057/info",
+          "/game/spawn/l2dop_rb_25088/info",
+          "/game/spawn/l2dop_rb_25099/info",
+          "/game/spawn/l2dop_rb_25158/info",
+          "/game/spawn/l2dop_rb_25431/info"
+        ]
+      },
+      "code_refs": [
+        "content.js:1933",
+        "content.js:3062",
+        "modules/epics.js:267",
+        "modules/epics.js:690",
+        "modules/raid.js:174",
+        "modules/raid.js:193",
+        "modules/raid.js:196",
+        "modules/raid.js:219"
+      ],
+      "doc_refs": [
+        "CLAUDE.md:117",
+        "CHANGELOG-8.0.md:19",
+        ".claude/skills/l2-game-facts/SKILL.md:21",
+        "content.js:1933",
+        "modules/epics.js:267",
+        "modules/epics.js:690",
+        "modules/raid.js:174",
+        "modules/raid.js:193",
+        "tests/v80-rb.test.js:38"
+      ],
+      "botFetchesItself": true,
+      "response_used": ["stats {maxHp, pAtk, pDef, mAtk, mDef}", "drops", "rewardExp", "rewardSp", "адена награды"],
+      "bot": "СВОЙ fetch бота (raid.rbInfo, таймаут 6 с) + пассивно, когда игра запрашивает при нажатии на РБ на карте; журнал сети свой запрос бота не видит",
+      "usedByFiles": ["content.js", "epics.js", "raid.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/story-quests/dion-campaign",
+      "observed": {
+        "requests": 172,
+        "statuses": {"200": 156, "err": 16},
+        "responseTopKeys": ["character", "quest"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:32:15Z",
+        "last": "2026-10-10T12:21:49Z"
+      },
+      "code_refs": ["content.js:1006"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": ["content.js"],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/story-quests/giran-campaign",
+      "observed": {
+        "requests": 127,
+        "statuses": {"200": 99, "err": 28},
+        "responseTopKeys": ["character", "quest"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:32:15Z",
+        "last": "2026-10-10T12:21:50Z"
+      },
+      "code_refs": ["content.js:1006"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": ["content.js"],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/story-quests/goddard-ocean-flame",
+      "observed": {
+        "requests": 87,
+        "statuses": {"200": 51, "err": 36},
+        "responseTopKeys": ["character", "quest"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["map"],
+        "first": "2026-10-09T23:32:16Z",
+        "last": "2026-10-10T12:05:34Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": true
+    },
+    {
+      "method": "GET",
+      "path": "/game/story-quests/starter-saga",
+      "observed": {
+        "requests": 299,
+        "statuses": {"200": 188, "err": 111},
+        "responseTopKeys": ["character", "quest"],
+        "responseForms": ["error:network", "success"],
+        "pages": ["city"],
+        "first": "2026-10-09T23:26:15Z",
+        "last": "2026-10-10T12:21:49Z"
+      },
+      "code_refs": ["content.js:1006"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": ["content.js"],
+      "noise": true
+    },
+    {
+      "method": "POST",
+      "path": "/game/teleport",
+      "observed": {
+        "requests": 22,
+        "statuses": {"200": 21, "409": 1},
+        "responseTopKeys": ["character", "code", "error", "message", "messageRu", "messageUk", "serverRevision"],
+        "responseForms": ["error:revision_conflict", "success"],
+        "pages": ["teleport"],
+        "first": "2026-10-09T23:37:15Z",
+        "last": "2026-10-10T11:39:44Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "errors": ["409 revision_conflict"],
+      "bot": "кнопки «Телепорта» [data-teleport-id] (Окрестности городов)",
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/time",
+      "observed": {
+        "requests": 148,
+        "statuses": {"200": 147, "502": 1},
+        "responseTopKeys": ["gameDayKey", "nextDailyResetAt", "serverNowMs", "timeZone"],
+        "responseForms": ["success"],
+        "pages": ["char"],
+        "first": "2026-10-09T07:19:02Z",
+        "last": "2026-10-10T12:27:06Z"
+      },
+      "code_refs": ["background.js:385", "content.js:2402", "modules/combat.js:957"],
+      "doc_refs": [],
+      "botFetchesItself": true,
+      "bot": "СВОЙ лёгкий запрос: проба сервера раз в 10 с, пока сервер лежит (content.srvUp, 7.2.5); background.srvProbe; 200+HTML = сервер не отвечает (8.0)",
+      "usedByFiles": ["background.js", "combat.js", "content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/tvt",
+      "observed": {
+        "requests": 4650,
+        "statuses": {"200": 4530, "502": 62, "err": 58},
+        "responseTopKeys": [
+          "cancelReason",
+          "combatRoster",
+          "endsAt",
+          "eventId",
+          "finishedAt",
+          "isRegistered",
+          "maxPlayers",
+          "minPlayers",
+          "myResult",
+          "myTeam",
+          "phase",
+          "registeredCount",
+          "registrants",
+          "registrationEndsAt",
+          "resultEndsAt",
+          "schedule",
+          "score",
+          "selfCombat",
+          "serverNow",
+          "startsAt",
+          "team1",
+          "team2",
+          "winnerTeam"
+        ],
+        "responseForms": ["error:502", "error:network", "success"],
+        "pages": ["fishing"],
+        "first": "2026-10-09T07:10:54Z",
+        "last": "2026-10-10T12:27:30Z"
+      },
+      "code_refs": ["content.js:1912", "content.js:1919", "content.js:3073", "content.js:3075"],
+      "doc_refs": ["content.js:1912"],
+      "botFetchesItself": false,
+      "response_used": [
+        "phase (REGISTRATION/…/ACTIVE/FINISHED)",
+        "isRegistered",
+        "myTeam",
+        "schedule.next {registrationOpensAt, preparationStartsAt, battleStartsAt}",
+        "serverNow",
+        "eventId",
+        "startsAt"
+      ],
+      "bot": "TvT: слоты 08:00, 15:00, 20:00 (игровое время), запись за 10 мин; окно #l2-tvt-registration-prompt",
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/tvt/action",
+      "observed": {
+        "requests": 6,
+        "statuses": {"200": 4, "400": 2},
+        "responseTopKeys": [
+          "action",
+          "combatLogTail",
+          "combatVersion",
+          "cpDamage",
+          "damage",
+          "error",
+          "hpDamage",
+          "killAwarded",
+          "killsAwarded",
+          "messageRu",
+          "messageUk",
+          "mpSpent",
+          "outcome",
+          "score",
+          "selfCp",
+          "selfHp",
+          "selfMaxCp",
+          "selfMaxHp",
+          "selfMaxMp",
+          "selfMp",
+          "serverNow",
+          "skillId",
+          "skillLevel",
+          "skillLine",
+          "skillReadyAt",
+          "targetCharacterId",
+          "targetCp",
+          "targetDead",
+          "targetHp",
+          "targetMaxCp",
+          "targetMaxHp",
+          "victimsHit"
+        ],
+        "responseForms": ["error:tvt_skill_cooldown", "success"],
+        "pages": ["tvt-arena"],
+        "first": "2026-10-10T12:00:06Z",
+        "last": "2026-10-10T12:00:12Z"
+      },
+      "code_refs": ["content.js:3076"],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "response_used": ["targetHp", "targetCp", "targetDead"],
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/tvt/combat/sync",
+      "observed": {
+        "requests": 7,
+        "statuses": {"200": 7},
+        "responseTopKeys": [
+          "changed",
+          "combatLogTail",
+          "combatVersion",
+          "eventId",
+          "myTeam",
+          "nextBasicAttackAt",
+          "phase",
+          "score",
+          "selectedAllyCharacterId",
+          "selectedAllyTarget",
+          "selectedTarget",
+          "selectedTargetCharacterId",
+          "self",
+          "selfSummon",
+          "serverNow",
+          "skillCooldowns"
+        ],
+        "responseForms": ["success"],
+        "pages": ["tvt-arena"],
+        "first": "2026-10-10T12:00:04Z",
+        "last": "2026-10-10T12:00:10Z"
+      },
+      "code_refs": ["content.js:1913", "content.js:1919"],
+      "doc_refs": ["content.js:1913"],
+      "botFetchesItself": false,
+      "response_used": ["self", "selectedTarget {hp, cp, alive, stunnedUntil}"],
+      "usedByFiles": ["content.js"],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/tvt/presence",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 1, "400": 1},
+        "responseTopKeys": ["error", "messageRu", "messageUk", "serverNow"],
+        "responseForms": ["error:tvt_combat_not_active", "success"],
+        "pages": ["tvt-arena"],
+        "first": "2026-10-10T12:00:04Z",
+        "last": "2026-10-10T12:00:20Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/tvt/register",
+      "observed": {
+        "requests": 1,
+        "statuses": {"err": 1},
+        "responseTopKeys": [],
+        "responseForms": ["error:network"],
+        "pages": ["rb-bosses"],
+        "first": "2026-10-10T11:50:13Z",
+        "last": "2026-10-10T11:50:13Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "GET",
+      "path": "/game/tvt/skills",
+      "observed": {
+        "requests": 2,
+        "statuses": {"200": 2},
+        "responseTopKeys": ["skills"],
+        "responseForms": ["success"],
+        "pages": ["tvt-arena"],
+        "first": "2026-10-10T12:00:05Z",
+        "last": "2026-10-10T12:00:11Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/tvt/target",
+      "observed": {
+        "requests": 10,
+        "statuses": {"200": 2, "400": 8},
+        "responseTopKeys": [
+          "changed",
+          "combatLogTail",
+          "combatVersion",
+          "error",
+          "eventId",
+          "messageRu",
+          "messageUk",
+          "myTeam",
+          "nextBasicAttackAt",
+          "phase",
+          "score",
+          "selectedAllyCharacterId",
+          "selectedAllyTarget",
+          "selectedTarget",
+          "selectedTargetCharacterId",
+          "self",
+          "selfSummon",
+          "serverNow",
+          "skillCooldowns"
+        ],
+        "responseForms": ["error:tvt_combat_not_active", "error:tvt_target_dead", "success"],
+        "pages": ["tvt-arena"],
+        "first": "2026-10-10T12:00:05Z",
+        "last": "2026-10-10T12:00:21Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/world/enter-city",
+      "observed": {
+        "requests": 3,
+        "statuses": {"200": 3},
+        "responseTopKeys": ["character"],
+        "responseForms": ["success"],
+        "pages": ["city"],
+        "first": "2026-10-09T23:26:15Z",
+        "last": "2026-10-10T02:13:32Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    },
+    {
+      "method": "POST",
+      "path": "/game/world/enter-map",
+      "observed": {
+        "requests": 1,
+        "statuses": {"200": 1},
+        "responseTopKeys": ["ok"],
+        "responseForms": ["success"],
+        "pages": ["map"],
+        "first": "2026-10-10T03:35:03Z",
+        "last": "2026-10-10T03:35:03Z"
+      },
+      "code_refs": [],
+      "doc_refs": [],
+      "botFetchesItself": false,
+      "usedByFiles": [],
+      "noise": false
+    }
+  ]
+}

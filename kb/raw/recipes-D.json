@@ -1,0 +1,995 @@
+{
+ "_path": "/game/recipes/sources?grade=D",
+ "_status": 200,
+ "data": {
+  "grade": "D",
+  "recipes": [
+   {
+    "itemId": 921001,
+    "recipeCode": "bonebreaker_100",
+    "recipeName": "Recipe: Bonebreaker (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Stinger Wasp",
+      "mobLevel": 30,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.032
+     },
+     {
+      "mobName": "Dire Wolf",
+      "mobLevel": 24,
+      "teleportId": "immortal_plateau",
+      "locationUk": "Безсмертне плато",
+      "locationEn": "The Immortal Plateau",
+      "chance": 0.032
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Leto Lizardman Shaman",
+      "mobLevel": 39,
+      "teleportId": "plains_of_the_lizardman",
+      "locationUk": "Рівнини ящеролюдів",
+      "locationEn": "Plains of the Lizardman",
+      "chance": 0.0106
+     }
+    ]
+   },
+   {
+    "itemId": 921002,
+    "recipeCode": "claymore_100",
+    "recipeName": "Recipe: Claymore (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Wyrm",
+      "mobLevel": 35,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.03277
+     },
+     {
+      "mobName": "Two-Headed Giant",
+      "mobLevel": 35,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.03277
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Raging Spartoi",
+      "mobLevel": 22,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.01136
+     }
+    ]
+   },
+   {
+    "itemId": 921003,
+    "recipeCode": "elven_long_sword_100",
+    "recipeName": "Recipe: Elven Long Sword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Breka Orc Warrior",
+      "mobLevel": 33,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.03355
+     },
+     {
+      "mobName": "Breka Orc Overlord",
+      "mobLevel": 35,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.03355
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Marsh Stakato",
+      "mobLevel": 29,
+      "teleportId": "swampland",
+      "locationUk": "Болото",
+      "locationEn": "Swampland",
+      "chance": 0.01213
+     }
+    ]
+   },
+   {
+    "itemId": 921004,
+    "recipeCode": "glaive_100",
+    "recipeName": "Recipe: Glaive (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Crokian Warrior",
+      "mobLevel": 38,
+      "teleportId": "field_of_silence",
+      "locationUk": "Поле безмови",
+      "locationEn": "Field of Silence",
+      "chance": 0.03432
+     },
+     {
+      "mobName": "Farhite",
+      "mobLevel": 39,
+      "teleportId": "heine",
+      "locationUk": "Гейне",
+      "locationEn": "Heine",
+      "chance": 0.03432
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Hungry Eye",
+      "mobLevel": 22,
+      "teleportId": "gludio",
+      "locationUk": "Місто Глудіо",
+      "locationEn": "Town of Gludio",
+      "chance": 0.01289
+     }
+    ]
+   },
+   {
+    "itemId": 921005,
+    "recipeCode": "light_crossbow_100",
+    "recipeName": "Recipe: Light Crossbow (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Langk Lizardman Shaman",
+      "mobLevel": 24,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.03509
+     },
+     {
+      "mobName": "Leto Lizardman Archer",
+      "mobLevel": 36,
+      "teleportId": "wastelands",
+      "locationUk": "Пустелі",
+      "locationEn": "Wastelands",
+      "chance": 0.03509
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Langk Lizardman Leader",
+      "mobLevel": 25,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.01366
+     }
+    ]
+   },
+   {
+    "itemId": 921006,
+    "recipeCode": "mithril_dagger_100",
+    "recipeName": "Recipe: Mithril Dagger (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Marsh Stakato Worker",
+      "mobLevel": 31,
+      "teleportId": "swampland",
+      "locationUk": "Болото",
+      "locationEn": "Swampland",
+      "chance": 0.03587
+     },
+     {
+      "mobName": "Marsh Stakato Soldier",
+      "mobLevel": 33,
+      "teleportId": "swampland",
+      "locationUk": "Болото",
+      "locationEn": "Swampland",
+      "chance": 0.03587
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ol Mahum Guard",
+      "mobLevel": 22,
+      "teleportId": "windmill_hill",
+      "locationUk": "Пагорб Вітряків",
+      "locationEn": "Windmill Hill",
+      "chance": 0.01442
+     }
+    ]
+   },
+   {
+    "itemId": 921007,
+    "recipeCode": "scallop_jamadhr_100",
+    "recipeName": "Recipe: Scallop Jamadhr (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Troll",
+      "mobLevel": 33,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.03664
+     },
+     {
+      "mobName": "Neer Crawler",
+      "mobLevel": 28,
+      "teleportId": "dion",
+      "locationUk": "Місто Діон",
+      "locationEn": "Town of Dion",
+      "chance": 0.03664
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Langk Lizardman Lieutenant",
+      "mobLevel": 22,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.01519
+     }
+    ]
+   },
+   {
+    "itemId": 921008,
+    "recipeCode": "staff_of_life_100",
+    "recipeName": "Recipe: Staff of Life (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Young Araneid",
+      "mobLevel": 23,
+      "teleportId": "spider_nest",
+      "locationUk": "Гніздо павуків",
+      "locationEn": "Spider Nest",
+      "chance": 0.03742
+     },
+     {
+      "mobName": "Ant Patrol",
+      "mobLevel": 34,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.03742
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Skeleton Bowman",
+      "mobLevel": 20,
+      "teleportId": "elven_fortress",
+      "locationUk": "Фортеця ельфів",
+      "locationEn": "Elven Fortress",
+      "chance": 0.01595
+     }
+    ]
+   },
+   {
+    "itemId": 921009,
+    "recipeCode": "mithril_helmet_100",
+    "recipeName": "Recipe: Mithril Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Watchman of the Plains",
+      "mobLevel": 30,
+      "teleportId": "plains_of_dion",
+      "locationUk": "Рівнини Діона",
+      "locationEn": "Plains of Dion",
+      "chance": 0.03819
+     },
+     {
+      "mobName": "Roughly Hewn Rock Golem",
+      "mobLevel": 31,
+      "teleportId": "windmill_hill",
+      "locationUk": "Пагорб Вітряків",
+      "locationEn": "Windmill Hill",
+      "chance": 0.03819
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Troll",
+      "mobLevel": 33,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.01671
+     }
+    ]
+   },
+   {
+    "itemId": 921010,
+    "recipeCode": "mithril_gloves_100",
+    "recipeName": "Recipe: Mithril Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Raging Spartoi",
+      "mobLevel": 22,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.03896
+     },
+     {
+      "mobName": "Ant Patrol",
+      "mobLevel": 34,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.03896
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ol Mahum Van Leader",
+      "mobLevel": 34,
+      "teleportId": "orc_barracks",
+      "locationUk": "Оркський табір",
+      "locationEn": "Orc Barracks",
+      "chance": 0.01748
+     }
+    ]
+   },
+   {
+    "itemId": 921011,
+    "recipeCode": "mithril_boots_100",
+    "recipeName": "Recipe: Mithril Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ol Mahum Patrol",
+      "mobLevel": 21,
+      "teleportId": "windmill_hill",
+      "locationUk": "Пагорб Вітряків",
+      "locationEn": "Windmill Hill",
+      "chance": 0.03974
+     },
+     {
+      "mobName": "Ruin Spartoi",
+      "mobLevel": 21,
+      "teleportId": "elven_fortress",
+      "locationUk": "Фортеця ельфів",
+      "locationEn": "Elven Fortress",
+      "chance": 0.03974
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Crokian",
+      "mobLevel": 36,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.01824
+     }
+    ]
+   },
+   {
+    "itemId": 921012,
+    "recipeCode": "mithril_breastplate_100",
+    "recipeName": "Recipe: Mithril Breastplate (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ant Warrior Captain",
+      "mobLevel": 36,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.04051
+     },
+     {
+      "mobName": "Noble Ant",
+      "mobLevel": 37,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.04051
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Wasp Leader",
+      "mobLevel": 37,
+      "teleportId": "bee_hive",
+      "locationUk": "Бджолине гніздо",
+      "locationEn": "Bee Hive",
+      "chance": 0.01901
+     }
+    ]
+   },
+   {
+    "itemId": 921013,
+    "recipeCode": "mithril_gaiters_100",
+    "recipeName": "Recipe: Mithril Gaiters (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ant",
+      "mobLevel": 30,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.04128
+     },
+     {
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "teleportId": "giran_harbor",
+      "locationUk": "Гавань Гірана",
+      "locationEn": "Giran Harbor",
+      "chance": 0.04128
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Turek Orc Warlord",
+      "mobLevel": 30,
+      "teleportId": "oren",
+      "locationUk": "Місто Орен",
+      "locationEn": "Town of Oren",
+      "chance": 0.01977
+     }
+    ]
+   },
+   {
+    "itemId": 921014,
+    "recipeCode": "reinforced_helmet_100",
+    "recipeName": "Recipe: Reinforced Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ol Mahum Reserve",
+      "mobLevel": 23,
+      "teleportId": "windawood_manor",
+      "locationUk": "Особняк Віндавуд",
+      "locationEn": "Windawood Manor",
+      "chance": 0.04206
+     },
+     {
+      "mobName": "Leto Lizardman",
+      "mobLevel": 35,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.04206
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fettered Soul",
+      "mobLevel": 38,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.02054
+     }
+    ]
+   },
+   {
+    "itemId": 921015,
+    "recipeCode": "reinforced_gloves_100",
+    "recipeName": "Recipe: Reinforced Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ant Captain",
+      "mobLevel": 31,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.04283
+     },
+     {
+      "mobName": "Ant Soldier",
+      "mobLevel": 35,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.04283
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Leto Lizardman Soldier",
+      "mobLevel": 37,
+      "teleportId": "wastelands",
+      "locationUk": "Пустелі",
+      "locationEn": "Wastelands",
+      "chance": 0.0213
+     }
+    ]
+   },
+   {
+    "itemId": 921016,
+    "recipeCode": "reinforced_boots_100",
+    "recipeName": "Recipe: Reinforced Leather Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Dwarf Ghost",
+      "mobLevel": 20,
+      "teleportId": "dwarf_village",
+      "locationUk": "Селище гномів",
+      "locationEn": "Dwarven Village",
+      "chance": 0.0436
+     },
+     {
+      "mobName": "Langk Lizardman Leader",
+      "mobLevel": 25,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.0436
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Medusa",
+      "mobLevel": 34,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.02206
+     }
+    ]
+   },
+   {
+    "itemId": 921017,
+    "recipeCode": "reinforced_shirt_100",
+    "recipeName": "Recipe: Reinforced Leather Shirt (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ol Mahum Van Archer",
+      "mobLevel": 32,
+      "teleportId": "orc_barracks",
+      "locationUk": "Оркський табір",
+      "locationEn": "Orc Barracks",
+      "chance": 0.04438
+     },
+     {
+      "mobName": "Ol Mahum Patrol",
+      "mobLevel": 21,
+      "teleportId": "windmill_hill",
+      "locationUk": "Пагорб Вітряків",
+      "locationEn": "Windmill Hill",
+      "chance": 0.04438
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Noble Ant",
+      "mobLevel": 37,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.02283
+     }
+    ]
+   },
+   {
+    "itemId": 921018,
+    "recipeCode": "reinforced_gaiters_100",
+    "recipeName": "Recipe: Reinforced Leather Gaiters (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ruin Imp Elder",
+      "mobLevel": 21,
+      "teleportId": "ruins_of_despair",
+      "locationUk": "Руїни Відчаю",
+      "locationEn": "Ruins of Despair",
+      "chance": 0.04515
+     },
+     {
+      "mobName": "Skeleton Pikeman",
+      "mobLevel": 27,
+      "teleportId": "ruins_of_despair",
+      "locationUk": "Руїни Відчаю",
+      "locationEn": "Ruins of Despair",
+      "chance": 0.04515
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ol Mahum Deserter",
+      "mobLevel": 23,
+      "teleportId": "gludio",
+      "locationUk": "Місто Глудіо",
+      "locationEn": "Town of Gludio",
+      "chance": 0.02359
+     }
+    ]
+   },
+   {
+    "itemId": 921019,
+    "recipeCode": "knowledge_helmet_100",
+    "recipeName": "Recipe: Knowledge Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Marsh Stakato Drone",
+      "mobLevel": 35,
+      "teleportId": "swampland",
+      "locationUk": "Болото",
+      "locationEn": "Swampland",
+      "chance": 0.04592
+     },
+     {
+      "mobName": "Stinger Wasp",
+      "mobLevel": 30,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.04592
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Lesser Basilisk",
+      "mobLevel": 27,
+      "teleportId": "gludin",
+      "locationUk": "Селище Глудін",
+      "locationEn": "Gludin Village",
+      "chance": 0.02436
+     }
+    ]
+   },
+   {
+    "itemId": 921020,
+    "recipeCode": "knowledge_gloves_100",
+    "recipeName": "Recipe: Gloves of Knowledge (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Monster Eye Destroyer",
+      "mobLevel": 26,
+      "teleportId": "giran_harbor",
+      "locationUk": "Гавань Гірана",
+      "locationEn": "Giran Harbor",
+      "chance": 0.0467
+     },
+     {
+      "mobName": "Ant",
+      "mobLevel": 30,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.0467
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Monster Eye Watcher",
+      "mobLevel": 25,
+      "teleportId": "gludio",
+      "locationUk": "Місто Глудіо",
+      "locationEn": "Town of Gludio",
+      "chance": 0.02512
+     }
+    ]
+   },
+   {
+    "itemId": 921021,
+    "recipeCode": "knowledge_boots_100",
+    "recipeName": "Recipe: Boots of Knowledge (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Ol Mahum Ranger",
+      "mobLevel": 22,
+      "teleportId": "dion",
+      "locationUk": "Місто Діон",
+      "locationEn": "Town of Dion",
+      "chance": 0.04747
+     },
+     {
+      "mobName": "Giant Crimson Ant",
+      "mobLevel": 28,
+      "teleportId": "dion",
+      "locationUk": "Місто Діон",
+      "locationEn": "Town of Dion",
+      "chance": 0.04747
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Tumran Bugbear",
+      "mobLevel": 23,
+      "teleportId": "orc_barracks",
+      "locationUk": "Оркський табір",
+      "locationEn": "Orc Barracks",
+      "chance": 0.02589
+     }
+    ]
+   },
+   {
+    "itemId": 921022,
+    "recipeCode": "knowledge_tunic_100",
+    "recipeName": "Recipe: Tunic of Knowledge (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Langk Lizardman Lieutenant",
+      "mobLevel": 22,
+      "teleportId": "langk_lizardman_dwelling",
+      "locationUk": "Житло ящерів Лангк",
+      "locationEn": "Langk Lizardman Dwelling",
+      "chance": 0.04825
+     },
+     {
+      "mobName": "Tumran Bugbear",
+      "mobLevel": 23,
+      "teleportId": "orc_barracks",
+      "locationUk": "Оркський табір",
+      "locationEn": "Orc Barracks",
+      "chance": 0.04825
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ant Warrior Captain",
+      "mobLevel": 36,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.02665
+     }
+    ]
+   },
+   {
+    "itemId": 921023,
+    "recipeCode": "knowledge_stockings_100",
+    "recipeName": "Recipe: Stockings of Knowledge (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Two-Headed Giant",
+      "mobLevel": 35,
+      "teleportId": "ruins_of_agony",
+      "locationUk": "Руїни Скорботи",
+      "locationEn": "Ruins of Agony",
+      "chance": 0.04902
+     },
+     {
+      "mobName": "Wyrm",
+      "mobLevel": 35,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.04902
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Wasp Leader",
+      "mobLevel": 37,
+      "teleportId": "bee_hive",
+      "locationUk": "Бджолине гніздо",
+      "locationEn": "Bee Hive",
+      "chance": 0.02741
+     }
+    ]
+   },
+   {
+    "itemId": 922065,
+    "recipeCode": "bronze_shield_100",
+    "recipeName": "Recipe: Bronze Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Giant Crimson Ant",
+      "mobLevel": 28,
+      "teleportId": "dion",
+      "locationUk": "Місто Діон",
+      "locationEn": "Town of Dion",
+      "chance": 0.04979
+     },
+     {
+      "mobName": "Turek Orc Warlord",
+      "mobLevel": 30,
+      "teleportId": "oren",
+      "locationUk": "Місто Орен",
+      "locationEn": "Town of Oren",
+      "chance": 0.04979
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Breka Orc",
+      "mobLevel": 31,
+      "teleportId": "giran",
+      "locationUk": "Місто Гіран",
+      "locationEn": "Town of Giran",
+      "chance": 0.02818
+     }
+    ]
+   },
+   {
+    "itemId": 922066,
+    "recipeCode": "hoplon_100",
+    "recipeName": "Recipe: Hoplon (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Monster Eye Watcher",
+      "mobLevel": 25,
+      "teleportId": "gludio",
+      "locationUk": "Місто Глудіо",
+      "locationEn": "Town of Gludio",
+      "chance": 0.05057
+     },
+     {
+      "mobName": "Tumran Bugbear Warrior",
+      "mobLevel": 24,
+      "teleportId": "orc_barracks",
+      "locationUk": "Оркський табір",
+      "locationEn": "Orc Barracks",
+      "chance": 0.05057
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Neer Crawler",
+      "mobLevel": 28,
+      "teleportId": "dion",
+      "locationUk": "Місто Діон",
+      "locationEn": "Town of Dion",
+      "chance": 0.02894
+     }
+    ]
+   },
+   {
+    "itemId": 922067,
+    "recipeCode": "plate_shield_100",
+    "recipeName": "Recipe: Plate Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Crokian",
+      "mobLevel": 36,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.05134
+     },
+     {
+      "mobName": "Elf Ghost",
+      "mobLevel": 20,
+      "teleportId": "neutral_zone",
+      "locationUk": "Нейтральна зона",
+      "locationEn": "Neutral Zone",
+      "chance": 0.05134
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Akaste Succubus",
+      "mobLevel": 20,
+      "teleportId": "school_of_dark_arts",
+      "locationUk": "Школа темних мистецтв",
+      "locationEn": "School of Dark Arts",
+      "chance": 0.02971
+     }
+    ]
+   },
+   {
+    "itemId": 922076,
+    "recipeCode": "enchanted_necklace_100",
+    "recipeName": "Recipe: Enchanted Necklace (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Leto Lizardman Shaman",
+      "mobLevel": 39,
+      "teleportId": "plains_of_the_lizardman",
+      "locationUk": "Рівнини ящеролюдів",
+      "locationEn": "Plains of the Lizardman",
+      "chance": 0.05211
+     },
+     {
+      "mobName": "Young Araneid",
+      "mobLevel": 23,
+      "teleportId": "spider_nest",
+      "locationUk": "Гніздо павуків",
+      "locationEn": "Spider Nest",
+      "chance": 0.05211
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Crokian Warrior",
+      "mobLevel": 38,
+      "teleportId": "field_of_silence",
+      "locationUk": "Поле безмови",
+      "locationEn": "Field of Silence",
+      "chance": 0.03047
+     }
+    ]
+   },
+   {
+    "itemId": 922077,
+    "recipeCode": "enchanted_earring_100",
+    "recipeName": "Recipe: Enchanted Earring (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Wandering Eye",
+      "mobLevel": 21,
+      "teleportId": "gludio",
+      "locationUk": "Місто Глудіо",
+      "locationEn": "Town of Gludio",
+      "chance": 0.05289
+     },
+     {
+      "mobName": "Ruin Spartoi",
+      "mobLevel": 21,
+      "teleportId": "elven_fortress",
+      "locationUk": "Фортеця ельфів",
+      "locationEn": "Elven Fortress",
+      "chance": 0.05289
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ant Captain",
+      "mobLevel": 31,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.03124
+     }
+    ]
+   },
+   {
+    "itemId": 922078,
+    "recipeCode": "ring_of_devotion_100",
+    "recipeName": "Recipe: Ring of Devotion (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Ant Overseer",
+      "mobLevel": 32,
+      "teleportId": "ant_nest",
+      "locationUk": "Муравине гніздо",
+      "locationEn": "The Ant Nest",
+      "chance": 0.05366
+     },
+     {
+      "mobName": "Granite Golem",
+      "mobLevel": 33,
+      "teleportId": "dwarf_village",
+      "locationUk": "Селище гномів",
+      "locationEn": "Dwarven Village",
+      "chance": 0.05366
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Akaste Succubus",
+      "mobLevel": 20,
+      "teleportId": "school_of_dark_arts",
+      "locationUk": "Школа темних мистецтв",
+      "locationEn": "School of Dark Arts",
+      "chance": 0.032
+     }
+    ]
+   }
+  ]
+ }
+}

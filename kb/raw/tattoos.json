@@ -1,0 +1,51 @@
+{
+ "_path": "/game/tattoos",
+ "_status": 200,
+ "data": {
+  "availableSlots": 3,
+  "canUseDyes": true,
+  "minLevel": 40,
+  "slotsLocked": false,
+  "canEngraveGlobally": false,
+  "canRemoveGlobally": false,
+  "freeSlot": 1,
+  "engraveCost": 10,
+  "removeRefund": 5,
+  "blockers": [
+   {
+    "code": "not_in_city",
+    "messageUk": "Щоб нанести татуювання, персонаж повинен знаходитися в місті.",
+    "messageRu": "Щоб нанести татуювання, персонаж повинен знаходитися в городе."
+   }
+  ],
+  "tattoos": [
+   {
+    "slot": 1,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   },
+   {
+    "slot": 2,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   },
+   {
+    "slot": 3,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   }
+  ],
+  "modifiers": {
+   "STR": 0,
+   "DEX": 0,
+   "CON": 0,
+   "INT": 0,
+   "WIT": 0,
+   "MEN": 0
+  },
+  "dyes": []
+ }
+}

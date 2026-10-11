@@ -1,0 +1,64 @@
+{
+ "_path": "/character/profession-quest/human-mystic-second/status",
+ "_status": 200,
+ "data": {
+  "status": {
+   "titleUk": "Еліксир Трьох Сил",
+   "eligible": false,
+   "accepted": true,
+   "stage": "completed",
+   "completed": true,
+   "instructionUk": "Еліксир Пробудження готовий. Повернися у Гільдію та обери другу професію.",
+   "npc": {
+    "id": "alchemist_orpheus",
+    "nameUk": "Алхімік Орфеус",
+    "nameEn": "Alchemist Orpheus",
+    "iconUrl": "/nps/32.png",
+    "href": "/human-mystic-second-profession-npc.html",
+    "locationUk": "Ivory Tower",
+    "nearby": false
+   },
+   "resource": {
+    "itemId": 1874,
+    "nameUk": "Руда оріхарукону",
+    "nameEn": "Oriharukon Ore",
+    "need": 280,
+    "have": 764
+   },
+   "kills": [
+    {
+     "name": "Giant Fungus",
+     "level": 40,
+     "need": 100,
+     "have": 0
+    },
+    {
+     "name": "Dire Wyrm",
+     "level": 42,
+     "need": 15,
+     "have": 0
+    }
+   ],
+   "huntComplete": false,
+   "champion": null,
+   "flask": {
+    "itemId": 920107,
+    "nameUk": "Алхімічний флакон",
+    "nameEn": "Alchemical Flask",
+    "iconUrl": "/items/profession-quest-items/human.jpg",
+    "have": 0
+   },
+   "rewardItem": {
+    "itemId": 920108,
+    "nameUk": "Еліксир Пробудження",
+    "nameEn": "Elixir of Awakening",
+    "iconUrl": "/items/profession-quest-items/human.jpg",
+    "have": 0
+   },
+   "mapMarkers": {
+    "mobNames": [],
+    "spawnIds": []
+   }
+  }
+ }
+}

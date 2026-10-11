@@ -1,0 +1,137 @@
+{
+ "_path": "/game/catacombs",
+ "_status": 200,
+ "data": {
+  "baseAdenaCost": 1,
+  "adenaCost": 1,
+  "vipFreeApplied": false,
+  "dungeons": [
+   {
+    "dungeonId": "necropolis_of_sacrifice",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Sacrifice",
+    "labelUk": "Некрополь жертвопринесень",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "pilgrims_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Pilgrim's Necropolis",
+    "labelUk": "Некрополь паломників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_worship",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Worship",
+    "labelUk": "Некрополь поклоніння",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "patriots_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Patriot's Necropolis",
+    "labelUk": "Некрополь патріотів",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_devotion",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Devotion",
+    "labelUk": "Некрополь відданості",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_martyrdom",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Martyrdom",
+    "labelUk": "Некрополь мучеників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "saints_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Saint's Necropolis",
+    "labelUk": "Некрополь святих",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "disciples_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Disciple's Necropolis",
+    "labelUk": "Некрополь учнів",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_heretic",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Heretic",
+    "labelUk": "Катакомби єретиків",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_branded",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Branded",
+    "labelUk": "Катакомби клеймених",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_apostate",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Apostate",
+    "labelUk": "Катакомби відступників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_witch",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Witch",
+    "labelUk": "Катакомби відьми",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_dark_omens",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of Dark Omens",
+    "labelUk": "Катакомби темних знамен",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_forbidden_path",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Forbidden Path",
+    "labelUk": "Катакомби забороненого шляху",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   }
+  ]
+ }
+}

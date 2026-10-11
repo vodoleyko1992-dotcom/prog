@@ -1,0 +1,247 @@
+{
+ "_path": "/game/brave-hunter",
+ "_status": 200,
+ "data": {
+  "phase": "break",
+  "weekKey": "2026-10-05",
+  "startsAt": "2026-10-04T21:00:00.000Z",
+  "endsAt": "2026-10-10T21:00:00.000Z",
+  "nextPhaseAt": "2026-10-11T21:00:00.000Z",
+  "score": 745,
+  "rank": 5,
+  "totalParticipants": 45,
+  "top": [
+   {
+    "rank": 1,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 2480
+   },
+   {
+    "rank": 2,
+    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+    "name": "Teddy",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 2315
+   },
+   {
+    "rank": 3,
+    "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+    "name": "★_3oJloTo_★",
+    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
+    "clanEmblemId": 25,
+    "nickColor": "#8A2BE2",
+    "score": 2311
+   },
+   {
+    "rank": 4,
+    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
+    "name": "ErGe",
+    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
+    "clanEmblemId": 38,
+    "nickColor": "#ffdf8c",
+    "score": 2142
+   },
+   {
+    "rank": 5,
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 745
+   },
+   {
+    "rank": 6,
+    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "name": "Freed0m",
+    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
+    "clanEmblemId": 25,
+    "nickColor": "#ffdf8c",
+    "score": 640
+   },
+   {
+    "rank": 7,
+    "characterId": "f949c929-8a49-46c6-8dbb-16e46a7b772d",
+    "name": "West",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 607
+   },
+   {
+    "rank": 8,
+    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+    "name": "Dremia",
+    "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
+    "clanEmblemId": 76,
+    "nickColor": "#ffdf8c",
+    "score": 574
+   },
+   {
+    "rank": 9,
+    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+    "name": "УМиРАЙ",
+    "clanId": "164085e1-0bdd-42a5-a1ce-23f21f93d318",
+    "clanEmblemId": 44,
+    "nickColor": "#ffdf8c",
+    "score": 525
+   },
+   {
+    "rank": 10,
+    "characterId": "344b1832-4672-4a7e-a1e0-40a2f6a33be4",
+    "name": "luk",
+    "clanId": "349c6602-4fe7-4966-b930-d7045d2daa33",
+    "clanEmblemId": 5,
+    "nickColor": "#ffdf8c",
+    "score": 210
+   }
+  ],
+  "rewards": [
+   {
+    "rank": 1,
+    "coinOfLuck": 6,
+    "adena": "9000000",
+    "expPercent": 0.007,
+    "sp": 1100000,
+    "resources": [
+     {
+      "itemId": 1877,
+      "qty": 800,
+      "nameUk": "Адамантитовий самородок",
+      "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+     },
+     {
+      "itemId": 1874,
+      "qty": 800,
+      "nameUk": "Руда оріхарукону",
+      "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+     },
+     {
+      "itemId": 1876,
+      "qty": 800,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 2,
+    "coinOfLuck": 12,
+    "adena": "7000000",
+    "expPercent": 0.006,
+    "sp": 900000,
+    "resources": [
+     {
+      "itemId": 1874,
+      "qty": 700,
+      "nameUk": "Руда оріхарукону",
+      "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+     },
+     {
+      "itemId": 1876,
+      "qty": 700,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     },
+     {
+      "itemId": 1875,
+      "qty": 700,
+      "nameUk": "Камінь чистоти",
+      "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 3,
+    "coinOfLuck": 10,
+    "adena": "5500000",
+    "expPercent": 0.005,
+    "sp": 750000,
+    "resources": [
+     {
+      "itemId": 1876,
+      "qty": 650,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     },
+     {
+      "itemId": 1875,
+      "qty": 650,
+      "nameUk": "Камінь чистоти",
+      "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+     },
+     {
+      "itemId": 1873,
+      "qty": 650,
+      "nameUk": "Срібний самородок",
+      "iconUrl": "/icons/resources/basic/silver_nugget.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 4,
+    "coinOfLuck": 8,
+    "adena": "4000000",
+    "expPercent": 0.004,
+    "sp": 600000,
+    "resources": [
+     {
+      "itemId": 1873,
+      "qty": 550,
+      "nameUk": "Срібний самородок",
+      "iconUrl": "/icons/resources/basic/silver_nugget.jpg"
+     },
+     {
+      "itemId": 1866,
+      "qty": 550,
+      "nameUk": "Замша",
+      "iconUrl": "/icons/resources/basic/suede.jpg"
+     },
+     {
+      "itemId": 1869,
+      "qty": 550,
+      "nameUk": "Залізна руда",
+      "iconUrl": "/icons/resources/basic/iron_ore.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 5,
+    "coinOfLuck": 5,
+    "adena": "3000000",
+    "expPercent": 0.003,
+    "sp": 450000,
+    "resources": [
+     {
+      "itemId": 1867,
+      "qty": 500,
+      "nameUk": "Шкура тварини",
+      "iconUrl": "/icons/resources/basic/animal_skin.jpg"
+     },
+     {
+      "itemId": 1865,
+      "qty": 500,
+      "nameUk": "Лак",
+      "iconUrl": "/icons/resources/basic/varnish.jpg"
+     },
+     {
+      "itemId": 1868,
+      "qty": 500,
+      "nameUk": "Нитка",
+      "iconUrl": "/icons/resources/basic/thread.jpg"
+     }
+    ]
+   }
+  ],
+  "rules": {
+   "dropChancePct": 10,
+   "minMobLevelOffset": -15
+  }
+ }
+}

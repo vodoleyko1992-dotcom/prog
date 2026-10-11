@@ -1,0 +1,9 @@
+{
+ "_path": "/game/client-config",
+ "_status": 200,
+ "data": {
+  "devSelfBoost": false,
+  "craftTestShop": true,
+  "maintenanceEnabled": false
+ }
+}
