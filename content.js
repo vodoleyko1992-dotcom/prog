@@ -598,7 +598,9 @@ function fightDmg(key) {
 // КД скилла — по последним замерам (медиана), со сверкой по справочнику Interlude: выброс не портит расчёт
 async function learnCd(key, name, sec, b) {
   const il = b && ilOf(b), ref = il?.reuse ? il.reuse / 1000 : 0;
-  if (ref && (sec > ref * 1.6 + 1 || sec < ref * 0.5)) return;     // заметно дольше/короче справочного — помеха, не КД
+  // 8.0.3 (лог 11.10: Blaze навсегда «КД 3,1 с», у Vampiric Touch откат не замерялся): под баффами откат бывает втрое короче справочного —
+  // короче отбрасываем только явную помеху (< 0,4 с)
+  if (ref && (sec > ref * 1.6 + 1 || sec < 0.4)) return;          // заметно дольше справочного — помеха, не КД
   if (!ref && slotKind(b) === 'атака' && sec > 4) return;         // атака: ход ≈2 с, дольше — замер через смену боя
   const p = { ...(rt.skills?.[key] || {}) };
   const S = [...(p.cdS || []), Math.round(sec * 10) / 10].slice(-7);
@@ -2822,7 +2824,7 @@ const netSeen = new Map();
 const cooldownDiagSeen = new Map();
 function logCooldownApi(d, path) {
   if (!['/game/battle/action', '/game/battle/sync', '/game/battle'].includes(path) || !d.res || typeof d.res !== 'object') return;
-  const r = d.res, inner = r.battle && typeof r.battle === 'object' ? r.battle : {};
+  const r = d.res, inner = r.battle && typeof r.battle === 'object' ? r.battle : r.delta && typeof r.delta === 'object' ? r.delta : {};   // 8.0.3: и delta
   const sc = r.skillCooldowns ?? inner.skillCooldowns;
   const fields = {
     action: d.req?.action ?? r.requestedAction ?? null,
@@ -2835,6 +2837,7 @@ function logCooldownApi(d, path) {
     skillRemainingMs: r.skillRemainingMs ?? null,
     globalRemainingMs: r.globalRemainingMs ?? null,
     skillCooldowns: sc && typeof sc === 'object' ? Object.entries(sc).slice(0, 15) : null,
+    mysticSkillCdUntil: r.mysticSkillCdUntil ?? inner.mysticSkillCdUntil ?? null,   // 8.0.3: смысл поля ещё не ясен — пишем для разбора
     receivedAt: Date.now()
   };
   if (fields.blockedBy == null && fields.globalCooldownUntilMs == null && fields.cooldownUntilMs == null && fields.skillCooldowns == null) return;
@@ -2923,6 +2926,9 @@ function profQuestNote(st) {
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
+  // 8.0.3 (логи 11.10 09:11–09:35): ≈0,3 с после ответа на ход (и после начала боя / «Охотиться дальше») игра молча отбрасывает нажатия —
+  // время ответа нужно бою (combat.act ждёт окно блокировки)
+  if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
@@ -3994,6 +4000,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('champ803', () => { cf.searchChamp = false; });   // 8.0.3 (игрок 11.10): «поиск чемпионов по умолчанию откл., с возможностью вкл»
   // 8.0.3 (игрок 11.10: «купил почему-то сразу 9999 крючков» — 1000 пакетов × 10 = 10 000 наживки за 1 000 000 аден одной суммой;
   // выбор игрока: «покупать по 100 пакетов — кончилась, бот докупит»): 100 пакетов = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч рыбалки
+  // 8.0.3: замеры отката до правки learnCd (Blaze «3,1 с» при настоящих ≈0,8 с под баффами) — стереть, переучатся за пару боёв
+  once('cdS803', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cd || p.cdS)) { S[k] = { ...p, cd: 0, cdS: [] }; sk = true; } });
   once('fishBait803', () => { if (C('fishBuyPacks') === 1000) cf.fishBuyPacks = 100; });
   once('fishPack80', () => { if (C('fishTimePack') === '1h') cf.fishTimePack = '6h'; });   // 8.0 (аудит рыбалки): время рыбалки пакетом 6 ч — на 22 % дешевле часа (2,33 млн/ч против 3 млн/ч)
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке

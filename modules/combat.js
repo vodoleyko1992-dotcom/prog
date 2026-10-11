@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.combat = function create_combat(env) {
+const CLICK_LOCK_MIN = 300, CLICK_LOCK_MAX = 600, CLICK_LOCK_DEF = 360;   // 8.0.3: окно блокировки нажатий после ответа сервера, мс
 function mobHp() {
   const m = (env.$q('#battle-mob-hp-val')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/);
   return m ? { cur: +m[1], max: +m[2], pct: +m[2] ? 100 * m[1] / m[2] : 0 } : null;
@@ -812,6 +813,12 @@ async function battle() {
   };
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   const turnSamples = [];
+  // 8.0.3 (логи 11.10 09:11–09:35, бой с Тотемом: 130 нажатий из 268 не дошли до игры, ДПС 1606 против ≈3300 в тех же баффах на 7.2.1):
+  // ≈0,3 с после ответа сервера на ход игра молча отбрасывает нажатие (раньше 250 мс — 0 из 83 принято, 250–300 — 7 из 44, от 320 — почти
+  // все). 8.0 убрал паузу 250 мс после принятого хода — бот жал через 0,1–0,3 с. Теперь перед нажатием ждём «окно блокировки» от ответа
+  // на прошлый ход (и от начала боя / «Охотиться дальше»); окно подстраивается: нажатие в окне потерялось → +40 мс, принято → −2 мс
+  let clickLock = Math.min(CLICK_LOCK_MAX, Math.max(CLICK_LOCK_MIN, +env.rt.clickLockMs || CLICK_LOCK_DEF));
+  const lockSave = () => { if (Math.abs(clickLock - (+env.rt.clickLockMs || CLICK_LOCK_DEF)) >= 20) env.setRt({ clickLockMs: clickLock })?.catch?.(() => {}); };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
   const act = async (b, status) => {
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
@@ -823,15 +830,21 @@ async function battle() {
     if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
     const exact = env.slotAction(b);
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
+    const doneT = env.actNet?.().doneT || 0;
+    if (doneT && Date.now() - doneT < clickLock) {
+      await env.sleep(clickLock - (Date.now() - doneT));
+      if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
+    }
     env.observeSlot(b, 'B');
     const before = noticeText();
-    const firedAt = Date.now();
+    const firedAt = Date.now(), gap = doneT ? firedAt - doneT : 1e9;
     const net0 = env.actNet?.().start || 0;
     if (!env.fire(b)) return false;
     lastAct = Date.now();
     if (ctx.pet && env.petState?.()?.has !== false) ctx.pet.acts++;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
     // 7.1.17: ждём, пока игра отправит ход (до 0,6 с) и получит ответ сервера (до 6 с) — иначе следующий клик теряется
-    const sent = !!env.actNet && !!(await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 600, 40));
+    // 8.0.3: запрос уходит сразу после клика — ждём 400 мс (было 600: потерянный клик стоил лишние 0,2 с)
+    const sent = !!env.actNet && !!(await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 400, 40));
     if (sent) await env.waitFor(() => env.actNet().done >= env.actNet().start || victory() || defeat() ? 1 : null, 6000, 40);
     env.setStatus(status);
     // 7.2.1 (лог 10.10 21:07–21:14, 9 из 44 боёв): 1) первый клик сразу после «Охотиться дальше» игра не принимает (запрос не уходит),
@@ -840,7 +853,13 @@ async function battle() {
     // Теперь: ход ушёл и сервер ответил 2xx на это действие — нажатие засчитано; запрос не ушёл (а хук работает) — без секундного ожидания
     const netOk = sent && env.actNet().ok && (!exact || env.actNet().action === exact);
     const lost = !!env.actNet && net0 > 0 && !sent && !victory() && !defeat();
-    if (lost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
+    // 8.0.3: потерян в окне блокировки (≤ окно + 0,25 с после ответа) — окно шире, а сам скилл не «занят»: его же жмём снова (так
+    // Vampiric Touch прошёл 4 раза из 60 — после потери он блокировался, и бот пил банки); принят быстро — окно уже
+    const lockLost = lost && gap < clickLock + 250;
+    if (lockLost) { clickLock = Math.min(CLICK_LOCK_MAX, clickLock + 40); lockSave(); }
+    else if (sent && gap < clickLock + 60) { clickLock = Math.max(CLICK_LOCK_MIN, clickLock - 2); lockSave(); }   // −2/+40: на границе теряется ≈5 % нажатий
+    if (lost && !lockLost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
+    if (lockLost) return 'lock';
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:
     // удар Soul Breaker → «итог боя» через 1,7 с, хотя моб умирал с первого удара; на цепочке это ~1,2 с лишних на моба)
     const dead = () => victory() || (mobHp()?.cur ?? 1) === 0;
@@ -1131,7 +1150,9 @@ async function battle() {
     // 8.0 (аудит боя, лог 13-30: 18 из 105 банок на РБ выпиты при HP > 85 %): на РБ, пока включена «полоса банок», вампирик готов —
     // он раньше банки при любом HP (лечит почти столько же и бьёт ≈1400); банка — когда он на откате или HP опасно низкое
     const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) && me.pct > (env.cfg.stopHp || 25) + 10 ? drainPick(ctx, mp) : null;
-    if (drainB) { ctx.block['drain:' + drainB.title] = Date.now() + 1500; ctx.seq.push('💉'); await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); continue; }
+    // 8.0.3 (лог 11.10 09:13–09:16: VT ушёл 4 раза из 60 решений, 17 банок сериями): блок 1,5 с — только по результату; клик, потерянный
+    // в окне блокировки ('lock'), повторяется сразу (после окна), а не уступает банке
+    if (drainB) { ctx.seq.push('💉'); const r = await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); if (r !== 'lock') ctx.block['drain:' + drainB.title] = Date.now() + 1500; continue; }
     // банка HP (если задана)
     // v4.46: на РБ — при HP ≤ 45 % и по недостаче (≥1500 — большая); на мобах как было
     // v5.3: на РБ держим HP около 80 % (по просьбе игрока): начинаем пить при HP ≤ «с» (75 %) и пьём, пока не поднимется до «до» (80 %) —
@@ -1250,7 +1271,7 @@ async function battle() {
       if (dbf) {
         const before = env.logLines();
         const dr = await act(dbf.b, `Бой${tc}: дебафф ${dbf.n} · моб ${mob.pct | 0}%`);
-        if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else ctx.block['debuff:' + dbf.k] = Date.now() + 3000;   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
+        if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else if (dr !== 'lock') ctx.block['debuff:' + dbf.k] = Date.now() + 3000;   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
         ctx.seq.push('✦');
         await env.sleep(500);
         const added = env.newLines(before, env.logLines()).join(' ⏎ ');

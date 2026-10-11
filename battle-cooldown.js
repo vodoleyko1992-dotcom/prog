@@ -40,12 +40,13 @@
       // Delayed response from a previous opponent must not reset the new fight.
       if (activeSpawn && req.battleSpawnId && String(activeSpawn) !== String(req.battleSpawnId)) return;
       chooseSpawn(activeSpawn || req.battleSpawnId);
-      const now = clock(), src = res.battle && typeof res.battle === 'object' ? res.battle : {};
+      // 8.0.3 (лог 11.10 09:11:56): ответ на ход переехал в delta (delta.serverNowMs, delta.skillCooldowns) — без этого откаты сервера не читались
+      const now = clock(), src = res.battle && typeof res.battle === 'object' ? res.battle : res.delta && typeof res.delta === 'object' ? res.delta : {};
       const server = num(res.serverNowMs ?? res.nowMs ?? src.serverNowMs), failure = +status < 200 || +status >= 300;
       const blockedBy = String(res.blockedBy || '');
       if (server !== null && server < newestServerMs) return; // late response from this battle
       if (server !== null) newestServerMs = server;
-      if (server !== null && has(res, 'globalCooldownUntilMs')) updateGlobal(res.globalCooldownUntilMs, server, now);
+      if (server !== null && (has(res, 'globalCooldownUntilMs') || has(src, 'globalCooldownUntilMs'))) updateGlobal(res.globalCooldownUntilMs ?? src.globalCooldownUntilMs, server, now);
       if (failure && blockedBy === 'global') {
         globalRejectAt = now;
         if (!has(res, 'globalCooldownUntilMs') && server !== null && num(res.globalRemainingMs ?? res.remainingMs) !== null)
@@ -65,7 +66,7 @@
     function observeSync(res = {}, id = '') {
       if (!res || typeof res !== 'object') return;
       if (id) chooseSpawn(id);
-      const src = res.battle && typeof res.battle === 'object' ? res.battle : res;
+      const src = res.battle && typeof res.battle === 'object' ? res.battle : res.delta && typeof res.delta === 'object' ? res.delta : res;
       const server = num(src.serverNowMs ?? res.serverNowMs ?? src.nowMs);
       if (server === null || server < newestServerMs) return;
       newestServerMs = server;
