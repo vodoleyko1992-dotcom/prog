@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "9.2.1",
-  "description": "L2wap Bot 9.2.1 — анализатор боя по ответам сервера, раздел «Бой» по классам, лист врагов, Маммон: ресурсы наперёд",
+  "version": "9.2.2",
+  "description": "L2wap Bot 9.2.2 — бафф кота Blessing of Queen на 20 мин, без зацикливания на «не по зубам» цели, лист врагов, Маммон",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -113,5 +113,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "9.2.1"
+  "version_name": "9.2.2"
 }
