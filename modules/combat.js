@@ -267,15 +267,13 @@ function petBuffPick(ctx, me, mp, mob) {
   const now = Date.now();
   if (!petAlive()) return null;
   if (me && me.pct <= (env.cfg.hpPotAt ?? 50)) return null;
-  // осталось < 2 ходов — бафф в следующем бою. 9.2: короткий бафф (≤ 5 мин: Blessing of Queen — +20 % крит-урона кота на 2 мин) по расчёту
-  // (логи 10–12.10: крит кота ≈3 % ударов, крит ≈3,9 обычного) даёт коту ≈+2 %, всему урону ≈+0,8 % — ход на него окупается только в долгом
-  // бою: на РБ и «толстом» мобе; на мобе-однохитке (цепочка) кот и так добивает, бафф там — потерянный ход. Длинные баффы — как раньше
-  const shortFight = mob && !ctx.rb && mob.cur < 2 * (spellAvg() + petExpect(ctx));
+  // 9.2.2 (ответ админа 11.10 21:21): Blessing of Queen теперь +30 % шанса крита и +25 % урона крита кота на 20 мин (было +20 % крит-урона
+  // на 2 мин). По замерам (крит кота ≈3 % ударов, ≈3,9 обычного) кот бьёт в среднем ≈×2,1 → весь урон ≈+40 % за один ход раз в 20 мин —
+  // ставим всегда, как только истёк, и в цепочке тоже (прежнее правило 9.2 «только на РБ и толстых мобах» — для баффа на 2 мин — снято)
   for (const n of list) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
-    if (shortFight) continue;
     if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     const reserve = mp?.max ? mp.max * (env.cfg.mageMpPct ?? 25) / 100 : 0;
     if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0) + reserve) continue;

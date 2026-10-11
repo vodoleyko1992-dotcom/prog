@@ -89,7 +89,7 @@ env.rt.petBuffAt = { 'servitor haste': Date.now() - 60000 }; env.rt.petBornT = D
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big), null, 'бафф висит — не трогаем');
 env.rt.petBornT = Date.now() - 1000;
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big)?.n, 'servitor haste', 'кота призвали заново — бафф снова');
-assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, { cur: 1500, max: 5000, pct: 30 }), null, 'моб при смерти — бафф потом');
+assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, { cur: 1500, max: 5000, pct: 30 })?.n, 'servitor haste', '9.2.2: моб при смерти — бафф всё равно (кот бьёт и на этот ход, бафф на 20 мин)');
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, { cur: 200, max: 1000 }, big), null, 'мало MP — мана на урон');
 PET = { ...PET, has: false };
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big), null, 'кота нет — некому');
