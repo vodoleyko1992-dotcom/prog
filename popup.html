@@ -635,11 +635,12 @@
   <label>До уровня <select id="mmGoalLvl"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3">Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select></label>
   <label title="Недостающий материал, у которого есть источник в базе «Фарм ресурсов», бот добывает сам: по одному, по порядку (как цель «Фарм ресурса»)">Добывать недостающее самому <input id="mmGoalFarm" type="checkbox"></label>
   <label title="Цены следующего уровня кузнец показывает только рядом с собой: бот слетает к нему (телепорт по лимиту выше), прочитает и вернётся. Не чаще раза в 6 ч">Узнавать цены у кузнеца сам <input id="mmSmithAuto" type="checkbox"></label>
+  <label title="Разрешено игроком 12.10. Когда для следующего уровня вещи-цели всё собрано (материалы, адена, Coin of Luck), бот летит к кузнецу и жмёт «Покращити» — по одному уровню, только эту вещь и только до уровня цели. Coin of Luck тратится только здесь">Улучшать вещь-цель у кузнеца сам (тратит Coin of Luck) <input id="mmUpgrade" type="checkbox"></label>
   <div id="mmGoalBox" class="camp">Цели нет</div>
   <div id="mmPlanBox" class="hint mm-plan"></div>
   <div class="row"><button id="mmSmith">⚒ Узнать цены у кузнеца</button></div>
   <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
-  <div class="important-note">Само улучшение стоит Coin of Luck — бот его не нажимает никогда. Когда всё собрано, бот пишет об этом в журнал, а «Покращити» жмёшь ты у кузнеца.</div>
+  <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
 </section>
 
 <!-- 🎣 РЫБАЛКА -->
