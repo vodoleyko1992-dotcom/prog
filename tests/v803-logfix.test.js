@@ -29,3 +29,11 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   assert.match(content, /if \(m0 !== m1 && tabOwner\) try \{ rec\('U', 'меню', `режим: \$\{m0\} → \$\{m1\}`\); \} catch \(e\) \{\}/);
   console.log('PASS: 8.0.3 log fixes — partial RB list merged and rescanned in 3 min, zone reset after a tour teleport, no band potions when the forecast says none needed, FA buffs not tracked as town buffs, weapons read in the tour, mode changes logged');
 })().catch(e => { console.error(e); process.exit(1); });
+// 8.0.3 (лог 11.10 09:24:09): автообучение не считает страницу Cloudflare 502 заходом и снимает тревогу, когда селектор снова находится
+{
+  const content = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'content.js'), 'utf8');
+  const f = content.slice(content.indexOf('function learnSelectors() {'), content.indexOf('// структура страницы: id и классы l2-*'));
+  require('node:assert/strict').match(f, /^function learnSelectors\(\) \{\n[^\n]*\n  if \(serverDown\(\)\) return;/);
+  require('node:assert/strict').match(f, /if \(!c\) \{ x\.v\+\+; if \(hit\) \{ x\.h\+\+; x\.ms = 0; if \(x\.alert\) \{ x\.alert = 0;/);
+  console.log('PASS: 8.0.3 autolearn ignores 502 pages and clears the alert on the first hit of a new visit');
+}

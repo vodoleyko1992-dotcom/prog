@@ -2727,10 +2727,12 @@ function learnChange(kind, what, opts = {}) {
 const normSel = sel => sel.replace(/"[^"]*"/g, '"*"').replace(/\b\d{2,}\b/g, 'N').slice(0, 160);
 const selCounted = new Map();
 function learnSelectors() {
+  // 8.0.3 (лог 11.10 09:24:09: 10 ложных «пропал элемент» — это были страницы Cloudflare 502): страница ошибки сервера — не заход
+  if (serverDown()) return;
   const pk = learnPk(), P = (LEARN.sel[pk] ||= {});
   for (const [raw, hit] of SELV) {
     const k = normSel(raw), x = (P[k] ||= { v: 0, h: 0, ms: 0 }), c = selCounted.get(k);
-    if (!c) { x.v++; if (hit) { x.h++; x.ms = 0; } else x.ms++; selCounted.set(k, { hit }); learnDirty = true; }
+    if (!c) { x.v++; if (hit) { x.h++; x.ms = 0; if (x.alert) { x.alert = 0; rec('L', 'обучение', `селектор снова находится на «${pk}»: ${k}`); } } else x.ms++; selCounted.set(k, { hit }); learnDirty = true; }
     else if (hit && !c.hit) { x.h++; x.ms = 0; c.hit = true; learnDirty = true; if (x.alert) { x.alert = 0; rec('L', 'обучение', `селектор снова находится на «${pk}»: ${k}`); } }
     const base = (x.h) / Math.max(1, x.v - x.ms);
     if (!x.alert && x.ms >= 3 && x.v - x.ms >= 6 && base >= 0.85) { x.alert = Date.now(); learnChange('пропал элемент', `«${pk}»: ${k} — раньше находился в ${Math.round(base * 100)} % заходов, теперь ${x.ms} захода подряд нет`); }
