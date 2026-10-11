@@ -163,9 +163,23 @@ const petNote = { name: '', t: 0 }, emptyPanel = { since: 0, last: 0, logT: 0 };
 // Удары слуги в логе боя (лог 10.10 19:35–19:45, Kai the Cat Lv.3: 150 ударов ≈1300–1670, 4 крита, 30 промахов из 184):
 //   «Слуга [Kai the Cat] атакує [Unicorn] 1 409 урону.» · «Слуга [Kai the Cat] завдає критичного удару [Valley Treant Elder] 5 721 урону.»
 //   «Слуга [Kai the Cat] промахнувся…». Кот бьёт «разом із власником» — на каждое действие хозяина (в т. ч. на бесплатную «Атаку»)
-const PET_HIT_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*(атаку[єе]|завда[єе]\s+критичн\S*\s+удар\S*|наносит\s+критическ\S*\s+удар\S*)\s*\[[^\]]*\][^\d]*?(\d[\d\s  ]*)\s*урон/i;
+const PET_HIT_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*(атаку(?:ет|[єе])|завда[єе]\s+критичн\S*\s+удар\S*|наносит\s+критическ\S*\s+удар\S*)\s*\[[^\]]*\][^\d]*?(\d[\d\s  ]*)\s*урон/i;
 const PET_MISS_RE = /^(?:Слуга|Servitor)\s*\[([^\]]+)\]\s*промахну/i;
 const petKeyOf = n => String(n || '').trim().toLowerCase().replace(/\s+/g, '_');
+// 8.0.3 (лог 11.10 10:40: выучена Summon Feline Queen, слот #4 — раньше Kai #24): кота, которого не знаем (новая страница, телепорт,
+// смерть, перезагрузка), бот брал первым на панели — теперь это королева. Порядок: выбор в меню → кот этой страницы → последний живой
+// кот (rt.petLast — в т. ч. призванный игроком руками) → лучший по замерам (petAdvice) → множитель магистра L2WAP «+N % от M.Atk хозяина»
+const PET_MUL = { kai_the_cat: 25, mew_the_cat: 20, kat_the_cat: 15, feline_queen: 10 };
+const summonKey = b => petKeyOf(env.cleanTitle(b?.title || '').replace(/^summon\s+/i, ''));
+function petMul(k) {
+  const d = env.rt.skillDb?.['summon ' + String(k || '').replace(/_/g, ' ')]?.desc || '';
+  const m = d.match(/\+\s*(\d+)\s*%\s*(?:від|от)\s+(?:поточного\s+|текущего\s+)?M\.?\s*Atk/i);
+  return m ? +m[1] : PET_MUL[k] || 0;
+}
+function petPick(sums, curKey) {
+  const by = k => k && sums.find(b => summonKey(b) === k);
+  return by(curKey) || by(env.rt.petLast) || by(env.rt.petAdvice?.best) || [...sums].sort((a, b) => petMul(summonKey(b)) - petMul(summonKey(a)))[0] || null;
+}
 function petHits(lines) {
   return (lines || []).map(l => {
     const t = String(l), m = t.match(PET_HIT_RE);
@@ -1107,9 +1121,8 @@ async function battle() {
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
       if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000) {
-        const want = (P.key || '').replace(/_/g, ' ');
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && /^summon\b/i.test(env.cleanTitle(b.title)));
-        const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || sums.find(b => want && env.cleanTitle(b.title).toLowerCase().includes(want)) || sums[0];
+        const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10)) {
           await env.setRt({ petSummonT: Date.now() });
           env.rec('B', 'питомец', `кота нет (умер или не призван) — призываю первым действием: ${env.cleanTitle(sb.title)}`);
@@ -1299,7 +1312,7 @@ async function battle() {
         ctx.seq.push('✦');
         await env.sleep(500);
         const added = env.newLines(before, env.logLines()).join(' ⏎ ');
-        const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|сопротивл|resist|не подіяв|не подействовал/i.test(added);
+        const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|опира|сопротивл|resist|не подіяв|не подействовал/i.test(added);   // 8.0.3: и «Ціль опирається ефекту» (34 строки 10.10, fail = 0)
         if (fail && !ok && ctx.debuffed) delete ctx.debuffed[dbf.k];   // 7.2.1: не прошёл — цель не под дебаффом (иначе замер выгоды врёт)
         // 7.2.1 (лог 10.10 21:32–21:39): «Raid Boss має імунітет до негативних ефектів» — 3 хода на каждый заход к РБ (и Surrender снова
         // каждые 15 с) впустую. Запоминаем: на этот вид целей дебаффы не вешаем (rt.debuffImmune.rb / .champ / .mob)
@@ -1528,6 +1541,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { lostUntil, pressAt, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

@@ -17,7 +17,7 @@ const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,anthar
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
   chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3,
-  champMark: 'чемпион', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
+  champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35,
   // слоты панели — по названию (атрибут title), через запятую — альтернативные написания
@@ -2999,7 +2999,8 @@ addEventListener('message', e => {
   // 7.1.16-fix: слуга мага — из ответа сервера (activeSummon: {key, hp, maxHp…} или null). Только явное поле, без догадок по разметке
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
     const src = d.res.battle && typeof d.res.battle === 'object' && 'activeSummon' in d.res.battle ? d.res.battle : d.res;
-    if ('activeSummon' in src) { const s = src.activeSummon; PET = { t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 }; }
+    if ('activeSummon' in src) { const s = src.activeSummon; PET = { t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 };
+      if (s?.key && rt.petLast !== s.key && tabOwner) setRt({ petLast: s.key }).catch(() => {}); }   // 8.0.3: последний живой кот — переживает перезагрузку (combat.petPick)
   } catch (er) {}
   // v5.5.1: темп обычной атаки — от сервера. С луком (лог 08.10 19:32) интервал атаки длиннее, кнопка «готова» раньше, игра
   // отвечала «ещё на перезарядке», а бот из-за ошибки памяти КД ждал 5–6 с между выстрелами. Сервер в ответе на удар пишет,
@@ -4040,6 +4041,10 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('cdS803', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cd || p.cdS)) { S[k] = { ...p, cd: 0, cdS: [] }; sk = true; } });
   // 8.0.3 (игрок 11.10: «купил почему-то сразу 9999 крючков» — 1000 пакетов × 10 = 10 000 наживки за 1 000 000 аден одной суммой;
   // выбор игрока: «покупать по 100 пакетов — кончилась, бот докупит»): 100 пакетов = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч рыбалки
+  // 8.0.3: выгода дебаффов набрана, когда провал «Ціль опирається ефекту» засчитывался как успех — замер заново
+  once('dbfGain803', () => { if (rt.debuffGain) rf.debuffGain = {}; });
+  // 8.0.3 (разбор RU/UA 11.10): в украинском интерфейсе метка «· чемпіон» — чемпионы шли как обычные мобы
+  once('champMark803', () => { if (C('champMark') === 'чемпион') cf.champMark = 'чемпион, чемпіон'; });
   once('fishBait803', () => { if (C('fishBuyPacks') === 1000) cf.fishBuyPacks = 100; });
   // 8.0.3 (эпики): «Coin of Luck на эпиков» 0 теперь значит «НЕ тратить» (было «без лимита») — значение игрока не трогаем, только строка в журнал
   once('epicCol803', () => { const n = +C('epicCoinDailyMax') || 0; setTimeout(() => { try { rec('B', 'эпики', `Coin of Luck на эпиков: 0 теперь значит НЕ тратить (раньше — без лимита); ${n ? `ваш лимит ${n} за 24 ч сохранён` : 'сейчас стоит 0 — бот их не тратит'}`); } catch (e) {} }, 3000); });
