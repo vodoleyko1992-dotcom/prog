@@ -11,6 +11,20 @@ function mobHp() {
   return m ? { cur: +m[1], max: +m[2], pct: +m[2] ? 100 * m[1] / m[2] : 0 } : null;
 }
 
+// 9.2.4 (снимок боя 12.10 21:29, спойлер с Glaive): урон героя по строкам журнала боя — «Ты нанёс [ X ] 22 урона.», «Древко розсікло
+// ворогів поруч: A −1, B −35.», «Дикий розмах: power 191 597». Цель удара бывает не тем мобом, чьё HP показано вверху (бой с соседями:
+// вверху Guardian Basilisk 1789/1908, а «Ты нанёс [ Breka Orc Shaman ]»), — по HP одного моба урон занижался в разы
+const dmgNum = s => +String(s || '').replace(/[^\d]/g, '') || 0;
+function logDmg(lines) {
+  let sum = 0;
+  for (const raw of lines || []) {
+    const l = String(raw || ''); let m;
+    if ((m = l.match(/(?:Ты|Ти|Вы)\s+(?:нан[её]с(?:ли)?|завда(?:в|ли))\s*\[[^\]]*\]\s*([\d\s\u00a0\u202f]+?)\s*урон/i))) sum += dmgNum(m[1]);
+    if ((m = l.match(/розсікло ворогів поруч\s*:\s*(.+)$/i))) for (const x of m[1].matchAll(/[−-]\s*(\d[\d\u00a0\u202f]*)/g)) sum += dmgNum(x[1]);
+    if ((m = l.match(/^\s*(?:Дикий розмах|Wild Sweep)\s*:\s*power\s+\d+\s+([\d\s\u00a0\u202f]+)$/i))) sum += dmgNum(m[1]);
+  }
+  return sum;
+}
 function extraMobs() {
   const box = env.$q('#battle-whirlwind-extras');
   if (!env.shown(box)) return [];
@@ -1182,9 +1196,14 @@ async function battle() {
       // v5.5.1: урон не пробивает (лог 08.10: после «Бонуса новачка» 1–3 урона за удар, моб 1044 HP) — за 15 с видно, что бой
       // не выиграть: прогноз > 90 с, а HP героя уходит. Уходим, вид моба — «не по зубам» на 2 ч, дальше — восстановление
       const nmNow = mobName().toLowerCase();
-      if (nmNow !== ctx.hp0N) { ctx.hp0N = nmNow; ctx.hp0 = mob.cur; ctx.hp0T = Date.now(); ctx.me0 = me?.cur; }
+      // 9.2.4 (игрок 12.10: «чар убивает моба, он явно ему ПО СИЛАМ»; лог 07:2x — Guardian Basilisk «урон ≈4.6/с, убить ≈402 с»):
+      // урон считался только по HP главного моба. Спойлер бьёт Wild Sweep по всем мобам боя (главный + «рядом») — урон расходится
+      // по соседям, HP главного падает медленно, и вид получал «не по зубам». Теперь — весь урон боя (ctx.dealt, главный + соседи)
+      // против HP всех живых мобов боя; и урон по строкам журнала (logDmg) — удар по мобу, чьё HP вверху не показано
+      if (nmNow !== ctx.hp0N) { ctx.hp0N = nmNow; ctx.hp0 = mob.cur; ctx.hp0T = Date.now(); ctx.me0 = me?.cur; ctx.dealt0 = ctx.dealt || 0; ctx.logAt = env.logLines(); }
       ctx.me0 ??= me?.cur;
-      const el = (Date.now() - ctx.hp0T) / 1000, dmg = ctx.hp0 - mob.cur, dps = el > 0 ? dmg / el : 0, ttk = dps > 0 ? mob.cur / dps : Infinity;
+      const left = mob.cur + extraMobs().reduce((a, x) => a + x.cur, 0);
+      const el = (Date.now() - ctx.hp0T) / 1000, dmg = Math.max(ctx.hp0 - mob.cur, (ctx.dealt || 0) - (ctx.dealt0 || 0), logDmg(env.newLines(ctx.logAt || ctx.logStart || [], env.logLines()))), dps = el > 0 ? dmg / el : 0, ttk = dps > 0 ? left / dps : Infinity;
       const losing = me && ctx.me0 != null && me.cur < ctx.me0 && me.cur - (ctx.me0 - me.cur) / el * ttk < 0;   // HP кончится раньше моба
       const hopeless = el >= 15 && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
       if (hopeless || Date.now() - t0 > 180000) {
@@ -1665,6 +1684,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { logDmg, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
