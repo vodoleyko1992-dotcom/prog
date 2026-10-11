@@ -442,7 +442,8 @@ function magePlan(ctx, mp) {
     .map(b => {
       const n = env.cleanTitle(b.title), il = env.ilOf(b) || {}, k = env.skKey(b);
       const mpCost = env.skillMp(n) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
-      const dmg = env.expDmg(k) || env.expDmg(n) || 0;
+      // 9.2: урон по ЭТОЙ цели (анализатор боя: прошлые бои с ней + этот бой) важнее общего среднего по всем мобам
+      const dmg = env.fightDmgOn?.(n)?.mean || env.expDmg(k) || env.expDmg(n) || 0;
       const base = Array.isArray(il.pow) ? il.pow[0] : il.pow || 0;
       return { key:'power:' + b.title, name:n, b, dmg:dmg || base, mpCost,
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
@@ -461,6 +462,22 @@ function magePlan(ctx, mp) {
   // Cheap finishing move > observed damage per cast > configured order.
   // 7.1.31: удар кота в этом же ходу — часть добивания: заклинанию нужно снять только остаток (Energy Bolt 8 MP вместо Blaze 22 MP)
   const hpK = Math.max(1, hp - petN);
+  // 9.2: добивание по замерам урона по этой цели — доля ударов, которых хватило бы (а не «среднее ≥ HP × 1,08»): самое дешёвое из
+  // надёжных (≥ 85 %). Надёжного среди готовых нет, а надёжное откатится раньше, чем через полхода, — ждём его, а не тратим ход на
+  // удар, который не добьёт (лог 12.10 01:42:30: Energy Bolt 2940 по Banshee 3060 → 120 HP, ещё ход на Vampiric Touch)
+  if (mob && mob.cur > 0 && env.fightKillP) {
+    const sure = opts.map(o => ({ o, p: env.fightKillP(o.name, hpK) })).filter(x => x.p != null && x.p >= 0.85)
+      .sort((a, b) => a.o.mpCost - b.o.mpCost || b.p - a.p)[0];
+    if (sure) return { ...sure.o, why: `магия: добивание (${hp} HP) · по этой цели добивает в ${Math.round(sure.p * 100)} % ударов` };
+    const wk = mob.max + '/' + mobTitle();
+    if (ctx.waitKillMob !== wk) { ctx.waitKillMob = wk; ctx.waitKillT = 0; }   // новый моб (цепочка) — заново
+    const expired = !!ctx.waitKillT && Date.now() - ctx.waitKillT > 1500;
+    const soon = expired ? null : mageSpellSlots().filter(b => !ready(b) && cdLeft(b) > 0 && cdLeft(b) <= env.turnSec() * 0.5 && (!mp || (env.skillMp(env.cleanTitle(b.title)) || 0) <= mp.cur - 1))
+      .map(b => ({ n: env.cleanTitle(b.title), p: env.fightKillP(env.cleanTitle(b.title), hpK) })).filter(x => x.p != null && x.p >= 0.85)[0];
+    const nowKill = opts.some(o => { const p = env.fightKillP(o.name, hpK); return p != null ? p >= 0.5 : o.dmg >= hpK * 1.08; });
+    if (soon && !nowKill && !ctx.rb) { ctx.waitKillT ||= Date.now(); ctx.waitWhy = `жду ${soon.n}: откатится через полхода и добьёт (${Math.round(soon.p * 100)} %)`; return null; }
+    if (!expired) ctx.waitKillT = 0;               // ждём не дольше 1,5 с на моба — дальше бьём тем, что готово
+  }
   const kill = (known.length ? known : opts).filter(o => o.dmg && o.dmg >= hpK * 1.08)
     .sort((a,b)=>a.mpCost-b.mpCost || b.dmg-a.dmg)[0];
   if (kill) return { ...kill, why: petN > 0 && hpK < hp ? `магия: добивание вместе с котом (${hp} HP, кот ≈${Math.round(petN)})` : `магия: добивание (${hp} HP)` };
@@ -487,7 +504,7 @@ function dpsPlan(ctx, mp) {
       const il = b && env.ilOf(b);
       if (nonOffenseSkill(b)) continue;
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
-      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
+      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
@@ -537,7 +554,9 @@ function dpsPlan(ctx, mp) {
     if (aD && aD * 0.85 >= hp) { const a0 = opts.find(o => o.key === 'attack'); if (a0) return { ...a0, why: `КПД: добиваю атакой (${hp} HP)` }; return null; }
   }
   // 1) добивание
-  const kill = opts.filter(o => o.dmg * 0.85 >= hp).sort((a, b) => env.actCost(a) - env.actCost(b) || b.dmg - a.dmg)[0];
+  // 9.2: по этой цели есть замеры — «добьёт» = добивало в ≥ 85 % ударов (анализатор боя), иначе — как раньше, 85 % среднего
+  const killOk = o => { const p = o.key === 'charge' ? null : env.fightKillP?.(o.name.replace(/\s*\(.*$/, ''), hp); return p != null ? p >= 0.85 : o.dmg * 0.85 >= hp; };
+  const kill = opts.filter(killOk).sort((a, b) => env.actCost(a) - env.actCost(b) || b.dmg - a.dmg)[0];
   if (kill) return { ...kill, why: `добивание (${hp} HP)` };
   if (ctx.rb) {
     const atkD = env.expDmg('атака'), me = env.meHp();
@@ -1298,7 +1317,12 @@ async function battle() {
       const to = adaptive
         ? Math.min(98, Math.max(from + 3, env.cfg.rbPotTo ?? 80, from + 10))
         : Math.min(98, Math.max(from + 1, env.cfg.rbPotTo ?? 80));
-      const price = adaptive && known && env.cfg.rbTurnPrice !== false && me ? rbTurnHeal({ cur: me.cur, max: me.max, spike, p90: ordinaryP90, stopPct: env.cfg.stopHp }) : null;
+      // 9.2 (анализатор боя, повторные бои с тем же РБ): спецудар приходит ровным ритмом (≥ 3 пауз, разброс ≤ 30 %) и до следующего ещё
+      // > 3 ходов — в цене хода его не держим (лечимся только от обычных ударов и аварийно); подходит — снова «спецудар + 3 удара»
+      const sEta = adaptive && known && env.cfg.rbSpikeRhythm !== false ? env.fightSpikeEta?.() : null;
+      const spikeFar = !!sEta && sEta.eta > 3 * env.turnSec() + 1;
+      if (sEta && !ctx.rb.rhythmNote) { ctx.rb.rhythmNote = 1; env.rec('B', 'РБ', `ритм спецудара: раз в ≈${sEta.gap} с — банки между спецударами только от обычных ударов, перед спецударом — запас`); }
+      const price = adaptive && known && env.cfg.rbTurnPrice !== false && me ? rbTurnHeal({ cur: me.cur, max: me.max, spike: spikeFar ? 0 : spike, p90: ordinaryP90, stopPct: env.cfg.stopHp }) : null;
       if (price) {                                // 9.0: знакомый РБ — «цена хода» вместо полосы from…to
         ctx.rb.potOn = price.need;
         if (!ctx.rb.priceNote) { ctx.rb.priceNote = 1; env.rec('B', 'РБ', `цена хода: банка/лечение только при HP < ${price.at} = спецудар ${Math.round(spike)} + 3 обычных удара по ≈${Math.round(ordinaryP90)}), иначе бью`); }

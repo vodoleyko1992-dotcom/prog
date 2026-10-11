@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 const mf = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 const featurePaths = mf.content_scripts.find(x => x.js.includes('content.js')).js;
 const modules = featurePaths.filter(x=>x.startsWith('modules/'));
-const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon','story'];   // 9.0: + Маммон, + квесты сабкласса/Noblesse
+const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon','story','fightlab'];   // 9.0: + Маммон, + квесты сабкласса/Noblesse
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
 assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|[89]\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая

@@ -648,14 +648,18 @@ function observeSlot(b, src) {
     const solo = lastObserve === before.t, petHit = added.some(l => /^Слуга\s*\[|Servitor\s*\[/i.test(l));
     const support = /^(?:(?:mass )?summon|servitor|transfer pain|heal\b|battle heal|cubic)/i.test(name) || ['Призыв', 'Дебафф', 'Бафф', 'Лечение'].includes(ilOf(b)?.c);
     let dmg = buff || support || isChargeName(name) || slotKind(b) === 'предмет' ? 0 : dmgFromLog(name, added, solo);
+    // 9.2: ответ сервера на этот ход уже разобран анализатором боя — его цифры точные (окно 0,9 с захватывает соседние ходы:
+    // лог 11.10 00:49:23 «Blaze: урон 3062 · HP +420» — это банка; 09.10 «Summon Kat» получил урон Vampiric Touch)
+    const ex = L2V7Modules.fightlab?.turnFor(key, before.t);
+    if (ex && !buff && !support && slotKind(b) !== 'предмет') dmg = ex.own;
     // запасной способ — падение HP моба, только если в окне не было других нажатий
     if (!dmg && !buff && !support && solo && !petHit && before.mob && mob && before.mob.cur > mob.cur) dmg = before.mob.cur - mob.cur;
     // мусорное число в логе («Force Burst: сила 1713488» при 2580 HP у моба) — урон не может быть больше ~1,5 HP моба:
     // берём реально снятые HP (v4.23)
     // v4.27: только явный мусор (>3× HP моба и >100 тыс.) — добивающий удар 4620 по мобу с 2388 HP настоящий
     if (dmg > 100000 && before.mob?.max && dmg > before.mob.max * 3) dmg = Math.max(0, before.mob.cur - (mob?.cur ?? before.mob.cur));
-    const mpd = before.mp && mp ? before.mp.cur - mp.cur : 0;
-    const hpd = before.me && me ? me.cur - before.me.cur : 0;
+    const mpd = ex && ex.mpd != null ? ex.mpd : before.mp && mp ? before.mp.cur - mp.cur : 0;
+    const hpd = ex ? ex.selfHeal : before.me && me ? me.cur - before.me.cur : 0;
     const stun = /оглуш|приголомш|stun/i.test(txt);
     const p = { name, uses: 0, usesU: 0, dmg: 0, dmgN: 0, mp: 0, mpN: 0, heal: 0, mpGain: 0, buffSec: 0, stun: 0,
                 ...(rt.skills?.[key] || {}) };
@@ -668,7 +672,7 @@ function observeSlot(b, src) {
     if (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0) fightNote(key, dmg);   // промахи атаки тоже считаем
     // массовые удары: урон по соседям («… поруч: Моб −N») — отдельно, для выбора удара, когда рядом 2–3 моба
     if (slotKind(b) === 'скилл' && dmg > 0) { const spl = splashDmg(added); p.spl = (p.spl || 0) + spl; p.splN = (p.splN || 0) + 1; if (spl) p.aoe = 1; }
-    if (solo && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
+    if ((solo || ex) && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
     if (mpd < -15) p.mpGain = Math.max(p.mpGain, -mpd);
     if (hpd > 15) p.heal = Math.max(p.heal, hpd);
     if (buff) p.buffSec = +buff[1];
@@ -3076,6 +3080,8 @@ addEventListener('message', e => {
   else if (path === '/game/battle/action' && (d.res?.error === 'battle_none' || d.res?.reason === 'not_in_battle')) ACT_NET.gone = { t: Date.now(), spawn: d.req?.battleSpawnId || '' };
   // 8.0.3 (лог 11.10 10:32:17: «POST /game/battle/action → 409 · 28586 мс», через 1 с — смерть у Барды): ответ на ход дольше 8 с — сервер
   // висел; отметка во вкладке (переживает перезагрузку) — смерть в ближайшие 60 с не «не по силам» (survival.onDeath)
+  // 9.2: анализатор боя — ход за ходом из ответа сервера (hook.js bt): урон по цели, удары по нам, спецудары, итог боя → rt.fightMem
+  if (d.bt && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path)) try { L2V7Modules.fightlab?.onNet(path, d); } catch (e) { console.warn(TAG, 'fightlab', e); }
   if (path === '/game/battle/action' && +d.ms > 8000) srvHangMark(`ответ на ход ${Math.round(d.ms / 1000)} с`);
   // 8.0.3 (лог 11.10 11:44:46): «Вернуться в город» нажато (ботом или игроком, и при остановленном боте) — герой воскрешён (survival.reviveStep)
   if (path === '/game/battle/return-to-town' && d.status >= 200 && d.status < 300) try { sessionStorage.setItem('l2bot.toTown', String(Date.now())); } catch (e) {}
@@ -3565,7 +3571,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -4068,6 +4074,13 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() 
 L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
+// 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
+const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
+  const b = /^l2_\d+$/.test(a) ? document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) : null;
+  return b ? cleanTitle(b.title || '').toLowerCase() : a; };
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
+  get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
+const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
 const awayFree = () => L2V7Modules.mammon.modeFree();
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
