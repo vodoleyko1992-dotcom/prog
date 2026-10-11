@@ -1,4 +1,4 @@
-// ===== L2wap Bot v8.0.6 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v8.0.7 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -2546,12 +2546,21 @@ function layoutInd(bounds) {
     ui.style.width = free >= 300 ? `${Math.min(free, 760)}px` : '';
   } catch (e) {}   // индикатор ещё не создан
 }
+let dockOver = false;
+const dockOverOpen = () => { try { return localStorage.getItem('l2bot-dockOpen') === '1'; } catch (e) { return false; } };
 function dock() {
   if (window.top !== window) return;
   if (!cfg.dock) try { layoutInd(dockGameBounds(document.documentElement.clientWidth || innerWidth)); } catch (e) {}
   let wrap = document.getElementById('l2bot-dock');
-  if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; return; }
-  const min = !!cfg.dockMin;
+  if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; try { ui.classList.remove('over', 'hid'); } catch (e) {} return; }
+  const viewport = document.documentElement.clientWidth || innerWidth;
+  const bounds = dockGameBounds(viewport), available = viewport - bounds.right - 8;
+  // 8.0.7 (игрок 11.10, планшет с Firefox для Android: «всё немного криво косо»): рядом с игрой места нет (портрет планшета,
+  // телефон, узкое окно) — меню стояло поверх правой половины игры, индикатор налезал на меню и кнопки игры. Теперь в таком
+  // случае меню свёрнуто, пока его не откроют язычком (своё для этого устройства — localStorage, cfg.dockMin общий с ПК не трогаем),
+  // язычок крупнее под палец, открытое меню шире, индикатор — 3 строки и прячется, пока меню открыто поверх игры
+  dockOver = !(bounds.right > 0 && available >= 300);
+  const min = dockOver ? !dockOverOpen() : !!cfg.dockMin;
   if (!wrap) {
     wrap = document.createElement('div');
     wrap.id = 'l2bot-dock';
@@ -2564,21 +2573,21 @@ function dock() {
     tg.style.cssText = 'position:absolute;top:10px;width:26px;height:46px;z-index:2;border:1px solid #56452f;background:linear-gradient(180deg,#2e261e,#231d17);color:#f0cf86;font:13px system-ui;cursor:pointer;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.4)';
     tg.addEventListener('click', async e => {
       e.stopPropagation();
-      const { cfg: c = {} } = await chrome.storage.local.get('cfg');
+      if (dockOver) { try { localStorage.setItem('l2bot-dockOpen', dockOverOpen() ? '0' : '1'); } catch (er) {} dock(); return; }
       await setCfg({ dockMin: !cfg.dockMin });
     });
     wrap.append(tg, fr);
     document.documentElement.appendChild(wrap);
   }
-  const viewport = document.documentElement.clientWidth || innerWidth;
-  const bounds = dockGameBounds(viewport), available = viewport - bounds.right - 8;
   layoutInd(bounds);
-  // Если рядом места нет (узкое окно или ещё не загрузилась игра), оставляем компактную панель.
-  const w = bounds.right > 0 && available >= 300 ? available : Math.min(380, Math.max(0, viewport - 16));
+  try { ui.classList.toggle('over', dockOver); ui.classList.toggle('hid', dockOver && !min); draw(); } catch (e) {}   // индикатор ещё не создан
+  // Если рядом места нет (узкое окно или ещё не загрузилась игра) — панель поверх игры (8.0.7: до 460 px, было 380)
+  const w = !dockOver ? available : Math.min(460, Math.max(0, viewport - 16));
   wrap.style.cssText = `position:fixed;top:8px;right:${min ? -w : 8}px;bottom:8px;width:${w}px;z-index:2147483646;`
     + 'box-sizing:border-box;border:1px solid #56452f;border-radius:12px;background:#14100d;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:right .2s';
-  const toggle = wrap.querySelector('#l2bot-dock-toggle');
-  toggle.style.left = min ? '-26px' : '0';
+  const toggle = wrap.querySelector('#l2bot-dock-toggle'), tw = dockOver ? 36 : 26;
+  toggle.style.width = tw + 'px'; toggle.style.height = (dockOver ? 64 : 46) + 'px'; toggle.style.fontSize = (dockOver ? 17 : 13) + 'px';
+  toggle.style.left = min ? -tw + 'px' : '0';
   toggle.style.borderRadius = min ? '8px 0 0 8px' : '0 6px 6px 0';
   toggle.textContent = min ? '◀' : '▶';
   toggle.title = min ? 'Показать меню бота' : 'Свернуть меню бота';
@@ -2613,7 +2622,7 @@ const uiCss = document.createElement('style');
 // 8.0.3 (игрок 11.10: «бывает полоска с перемоткой, она раздражает»): крупное окно было overflow:auto — когда 30 строк истории не
 // влезали по высоте, появлялась полоса прокрутки, хотя окно не кликается (pointer-events:none) и прокрутить её нельзя. Теперь окно
 // не прокручивается: сверху статус и бой целиком, история (новые строки сверху) обрезается снизу с плавным затуханием
-uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line}
+uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line}
 #l2bot-ind .h{display:flex;align-items:center;gap:7px;font-weight:700;color:#f0cf86;font-size:11.5px;letter-spacing:.02em}
 #l2bot-ind .h i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 6px currentColor}
 #l2bot-ind .s{font-weight:600;font-size:13px;margin:4px 0 3px;color:#fff}
@@ -2627,7 +2636,9 @@ uiCss.textContent = `#l2bot-ind{position:fixed;left:8px;bottom:8px;z-index:21474
 #l2bot-ind.wide .h{font-size:15px}
 #l2bot-ind.wide .h i{width:11px;height:11px;flex-basis:11px}
 #l2bot-ind.wide .s{font-size:18px;margin:8px 0 6px}
-#l2bot-ind.wide .r{font-size:14.5px;margin-top:10px;padding-top:9px}`;
+#l2bot-ind.wide .r{font-size:14.5px;margin-top:10px;padding-top:9px}
+#l2bot-ind.over{max-width:min(380px,calc(100vw - 60px));opacity:.92}
+#l2bot-ind.hid{display:none!important}`;
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
@@ -2695,7 +2706,7 @@ function draw() {
   const mode = cfg.indMode || 'full';
   if (mode === 'off') { ui.style.display = 'none'; return; }
   ui.style.display = '';
-  const lines = mode === 'mini' ? L.slice(0, 3) : L;
+  const lines = mode === 'mini' || ui.classList.contains('over') ? L.slice(0, 3) : L;   // 8.0.7: поверх игры (планшет) — 3 строки
   const dot = on ? '#5cc27a' : pz ? '#e3b04b' : '#7f8c8d';
   ui.innerHTML = lines.map((t, i) => {
     if (i === 0) return `<div class="h"><i style="background:${dot};color:${on || pz ? dot : 'transparent'}"></i>${escH(t)}</div>`;

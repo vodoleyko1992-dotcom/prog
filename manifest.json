@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "8.0.6",
-  "description": "L2wap Bot 8.0.6 — пакет для Firefox (ПК и Android)",
+  "version": "8.0.7",
+  "description": "L2wap Bot 8.0.7 — планшет и Android: меню не закрывает игру, меню вкладкой на весь экран",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "8.0.6"
+  "version_name": "8.0.7"
 }

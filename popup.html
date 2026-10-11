@@ -1,5 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
+<!-- 8.0.7 (Firefox для Android): меню открывается отдельной вкладкой — без этой строки оно рисовалось мелко на «экране 980 px» -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   /* ===== L2wap Bot v5 — дизайн-система ===== */
   :root{
@@ -10,7 +12,7 @@
     --r:10px;--r2:7px;--sh:0 6px 20px rgba(0,0,0,.35)
   }
   *{box-sizing:border-box}
-  html{scrollbar-color:var(--line2) transparent;scrollbar-width:thin}
+  html{scrollbar-color:var(--line2) transparent;scrollbar-width:thin;-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none}
   body{font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;width:360px;margin:0;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased}
   ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
   html.docked body{width:auto}

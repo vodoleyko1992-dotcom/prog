@@ -172,6 +172,8 @@ details.help summary,details:not(.help) summary{color:#f0cb85;font-size:12.5px;f
 footer{flex:0 0 auto;padding:5px 12px;background:#17110d;color:#bba383;border-top:1px solid #655039;font-size:10.5px}
 #toast{background:#332417;color:#fff1d6;border:1px solid #a67e47;box-shadow:0 5px 20px #0008;font-size:12px}
 html.docked body{width:100%;height:100vh;min-height:0;max-height:none}
+html.tabbed body{max-width:960px;margin:0 auto;border-left:1px solid #56452f;border-right:1px solid #56452f}   /* 8.0.7: меню отдельной вкладкой (Firefox для Android) */
+html.tabbed .brandbar{margin-left:0}
 html.docked header{padding:8px 10px 9px;max-height:37vh}
 html.docked .brandbar{height:24px}
 html.docked .edition{display:none}

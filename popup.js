@@ -127,6 +127,10 @@ if (DOCKED) {
   hb(); setInterval(hb, 3000);
 }
 
+// 8.0.7 (игрок 11.10, планшет с Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — было окошко
+// 738×600 в углу и пустота ниже. Во вкладке (на ПК тоже) — раскладка встроенной панели на всю высоту; в окне значка getCurrent() пуст
+if (!DOCKED) chrome.tabs?.getCurrent?.()?.then(t => { if (t) document.documentElement.classList.add('docked', 'tabbed'); }).catch(() => {});
+
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
   const d = { ...DEF, ...cfg };

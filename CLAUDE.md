@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **8.0.6**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **8.0.7**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 ## Навыки проекта (`.claude/skills/`)
 
@@ -43,7 +43,7 @@ popup.html/js, ui-v7.* меню: 7 разделов (overview, hunt, rb, fish, p
                        скрытие по классу (data-cls="fighter|mage|spoil" + html.cls-mage/cls-fighter/cls-spoil, «показать всё»)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (151 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (152 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -90,7 +90,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 151 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 152 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -106,6 +106,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
+- **8.0.7** (игрок: «на планшете с Firefox для Android криво-косо», CHANGELOG-8.0.7.md): content.dock — нет места рядом с игрой (dockOver: bounds.right=0 или <300 px справа) → меню свёрнуто, открывается язычком 36×64 (localStorage l2bot-dockOpen на устройстве, cfg.dockMin не трогаем), ширина до 460; индикатор `.over` — 3 строки, `.hid` пока меню открыто; popup — viewport meta, text-size-adjust:none, во вкладке (tabs.getCurrent) классы docked+tabbed (ui-game.css html.tabbed). Смоук tests/v807-tablet-browser.cjs. Для отладки вёрстки: стили игры с l2wap.com + тела из снимков pages → копия страницы в Firefox (scratchpad tabshot.cjs, кеширующий https-прокси на 127.0.0.1:443).
 - **8.0.6** (просьба игрока, CHANGELOG-8.0.6.md): пакет Firefox для ПК и Android — tests/tools/firefox-build.cjs (background.scripts, gecko id l2wap-bot@local + gecko_android 128+), tests/tools/firefox-smoke.cjs (настоящий Firefox headless, подставная https://l2wap.com через network.dns.localDomains + самоподписанный сертификат, `--android` убирает API Android); background.js: `chrome.commands?.`, значок/уведомления/captureVisibleTab под защитой (на Android commands нет → фон падал целиком); popup.activeTab — меню отдельной вкладкой (Android) ищет вкладку игры.
 - **8.0.5** (просьба игрока, CHANGELOG-8.0.5.md): меню «Фарм ресурсов» — разделы как в игре (TREE_ORDER: Ресурсы → Кейматы → Шмот с РБ, «Прочее» в конце), картинка предмета (content.farmIconOf → farmDb.res[].icon, только пути игры /icons|/game/item-icon|/assets; farmIcons() без перечитывания базы; у базовых ресурсов запасной путь /icons/resources/basic/<имя>.jpg; нет картинки → пустой квадрат через capture-слушатель error), подпись под именем; строка, раскрытая игроком, больше не стирает раздел/иконку (Oriharukon Ore был в «Прочем»).
 - **8.0.4** (логи 11.10 00:37/01:45, CHANGELOG-8.0.4.md): raid.rbFlee — аварийный выход из боя с боссом (удар ≥45 % макс. HP и HP < 2 ударов, или ≥35 % и следующий убьёт; босс ≤5 % — добиваем; и в бою игрока); эпики — удар до замера 0,7 × max(P.Atk, M.Atk), удары эпика не портят rbK (EPIC_IDS — только 8 эпиков); Noblesse докупается после смерти, если платные FA ≥ 5 FA, потеря баффов на смерти в журнал; ход без ответа > 8 с — не жмём вслепую, проба сервера, метка l2bot.srvHang → смерть при зависании не = «не по силам»; 'lock' повторяется во всех ветках (банки, лечение, кот, баффы); rt.deathLog; после смерти не возвращаемся на бой с убийцей, zone=null; fmtT; рыбалка — откат считается от времени сервера (fishNet, сдвиг на опоздание запроса), обрыв запроса → повтор сразу, once fishCd803; зона — по полосе уровней и нескольким мобам (pavelZone803), ★-цели при неполной карте, hook держит весь массив bosses.
