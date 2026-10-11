@@ -1,0 +1,1335 @@
+{
+ "_path": "/game/recipes/sources?grade=B",
+ "_status": 200,
+ "data": {
+  "grade": "B",
+  "recipes": [
+   {
+    "itemId": 4182,
+    "recipeCode": "great_sword_100",
+    "recipeName": "Recipe: Great Sword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc Shaman",
+      "mobLevel": 58,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.018
+     },
+     {
+      "mobName": "Bloody Lady",
+      "mobLevel": 60,
+      "teleportId": "antharas_lair",
+      "locationUk": "Лігво Антараса",
+      "locationEn": "Antharas' Lair",
+      "chance": 0.018
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Frost Tarantula",
+      "mobLevel": 58,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.006
+     }
+    ]
+   },
+   {
+    "itemId": 4184,
+    "recipeCode": "sprites_staff_100",
+    "recipeName": "Recipe: Sprite's Staff (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Tomb Archon",
+      "mobLevel": 55,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.01853
+     },
+     {
+      "mobName": "Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.01853
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Hunter Gargoyle",
+      "mobLevel": 52,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.00632
+     }
+    ]
+   },
+   {
+    "itemId": 4186,
+    "recipeCode": "sword_of_valhalla_100",
+    "recipeName": "Recipe: Sword of Valhalla (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Horrifying Jackhammer Golem",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.01905
+     },
+     {
+      "mobName": "Epic Cannon Golem",
+      "mobLevel": 53,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.01905
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.00663
+     }
+    ]
+   },
+   {
+    "itemId": 4187,
+    "recipeCode": "kris_100",
+    "recipeName": "Recipe: Kris (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Harit Lizardman Matriarch",
+      "mobLevel": 55,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.01958
+     },
+     {
+      "mobName": "Harit Lizardman Shaman",
+      "mobLevel": 54,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.01958
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.00695
+     }
+    ]
+   },
+   {
+    "itemId": 4188,
+    "recipeCode": "hell_knife_100",
+    "recipeName": "Recipe: Hell Knife (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Liele Elder",
+      "mobLevel": 52,
+      "teleportId": "enchanted_valley_north",
+      "locationUk": "Зачарована долина (північ)",
+      "locationEn": "Enchanted Valley - Northern Region",
+      "chance": 0.02011
+     },
+     {
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "teleportId": "enchanted_valley_north",
+      "locationUk": "Зачарована долина (північ)",
+      "locationEn": "Enchanted Valley - Northern Region",
+      "chance": 0.02011
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Oel Mahum Warrior",
+      "mobLevel": 54,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.00726
+     }
+    ]
+   },
+   {
+    "itemId": 4189,
+    "recipeCode": "arthro_nail_100",
+    "recipeName": "Recipe: Arthro Nail (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Cave Maiden",
+      "mobLevel": 59,
+      "teleportId": "antharas_lair",
+      "locationUk": "Лігво Антараса",
+      "locationEn": "Antharas' Lair",
+      "chance": 0.02063
+     },
+     {
+      "mobName": "Crimson Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.02063
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Shaman",
+      "mobLevel": 58,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.00758
+     }
+    ]
+   },
+   {
+    "itemId": 4190,
+    "recipeCode": "dark_elven_long_bow_100",
+    "recipeName": "Recipe: Dark Elven Long Bow (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Ghost of the Tower",
+      "mobLevel": 60,
+      "teleportId": "tower_of_insolence",
+      "locationUk": "Вежа Зухвалості",
+      "locationEn": "Tower of Insolence",
+      "chance": 0.02116
+     },
+     {
+      "mobName": "Seer of Hallate",
+      "mobLevel": 60,
+      "teleportId": "tower_of_insolence",
+      "locationUk": "Вежа Зухвалості",
+      "locationEn": "Tower of Insolence",
+      "chance": 0.02116
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Banshee",
+      "mobLevel": 60,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.00789
+     }
+    ]
+   },
+   {
+    "itemId": 4191,
+    "recipeCode": "great_axe_100",
+    "recipeName": "Recipe: Great Axe (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.02168
+     },
+     {
+      "mobName": "Freya's Gardener",
+      "mobLevel": 58,
+      "teleportId": "garden_of_eva",
+      "locationUk": "Сади Єви",
+      "locationEn": "Garden of Eva",
+      "chance": 0.02168
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "plunderous_plains",
+      "locationUk": "Розграблені рівнини",
+      "locationEn": "Plunderous Plains",
+      "chance": 0.00821
+     }
+    ]
+   },
+   {
+    "itemId": 4192,
+    "recipeCode": "sword_of_damascus_100",
+    "recipeName": "Recipe: Sword of Damascus (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Tomb Inquisitor",
+      "mobLevel": 57,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.02221
+     },
+     {
+      "mobName": "Dismal Pole",
+      "mobLevel": 58,
+      "teleportId": "fields_of_massacre",
+      "locationUk": "Поля різанини",
+      "locationEn": "Fields of Massacre",
+      "chance": 0.02221
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Bloody Lady",
+      "mobLevel": 60,
+      "teleportId": "antharas_lair",
+      "locationUk": "Лігво Антараса",
+      "locationEn": "Antharas' Lair",
+      "chance": 0.00853
+     }
+    ]
+   },
+   {
+    "itemId": 4193,
+    "recipeCode": "lance_100",
+    "recipeName": "Recipe: Lance (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Marsh Stalker",
+      "mobLevel": 54,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.02274
+     },
+     {
+      "mobName": "Fallen Orc",
+      "mobLevel": 55,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.02274
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Ice Tarantula",
+      "mobLevel": 57,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.00884
+     }
+    ]
+   },
+   {
+    "itemId": 4194,
+    "recipeCode": "deadmans_glory_100",
+    "recipeName": "Recipe: Deadman's Glory (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc Archer",
+      "mobLevel": 57,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.02326
+     },
+     {
+      "mobName": "Soul of Ruins",
+      "mobLevel": 54,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.02326
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Deadly Ginzu Golem V",
+      "mobLevel": 53,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.00916
+     }
+    ]
+   },
+   {
+    "itemId": 4195,
+    "recipeCode": "art_of_battle_axe_100",
+    "recipeName": "Recipe: Art of Battle Axe (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Hunter Gargoyle",
+      "mobLevel": 52,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.02379
+     },
+     {
+      "mobName": "Connabi",
+      "mobLevel": 54,
+      "teleportId": "skyshadow_meadow",
+      "locationUk": "Луг Небесної Тіні",
+      "locationEn": "Skyshadow Meadow",
+      "chance": 0.02379
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Freya's Gardener",
+      "mobLevel": 58,
+      "teleportId": "garden_of_eva",
+      "locationUk": "Сади Єви",
+      "locationEn": "Garden of Eva",
+      "chance": 0.00947
+     }
+    ]
+   },
+   {
+    "itemId": 4196,
+    "recipeCode": "staff_of_evil_spirits_100",
+    "recipeName": "Recipe: Staff of Evil Spirits (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "coliseum",
+      "locationUk": "Колізей",
+      "locationEn": "Coliseum",
+      "chance": 0.02432
+     },
+     {
+      "mobName": "Harit Lizardman Archer",
+      "mobLevel": 52,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.02432
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Shaman",
+      "mobLevel": 54,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.00979
+     }
+    ]
+   },
+   {
+    "itemId": 4198,
+    "recipeCode": "bellion_cestus_100",
+    "recipeName": "Recipe: Bellion Cestus (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Taik Orc Supply Leader",
+      "mobLevel": 55,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.02484
+     },
+     {
+      "mobName": "Farcran",
+      "mobLevel": 53,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.02484
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Matriarch",
+      "mobLevel": 55,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.01011
+     }
+    ]
+   },
+   {
+    "itemId": 4199,
+    "recipeCode": "bow_of_peril_100",
+    "recipeName": "Recipe: Bow of Peril (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Horrifying Cannon Golem",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.02537
+     },
+     {
+      "mobName": "Ginzu Golem Prodigy X",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.02537
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Crimson Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "field_of_whispers",
+      "locationUk": "Шепотливі поля",
+      "locationEn": "Field of Whispers",
+      "chance": 0.01042
+     }
+    ]
+   },
+   {
+    "itemId": 8297,
+    "recipeCode": "guardian_sword_100",
+    "recipeName": "Recipe: Guardian Sword (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Banshee",
+      "mobLevel": 60,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.02589
+     },
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.02589
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "plunderous_plains",
+      "locationUk": "Розграблені рівнини",
+      "locationEn": "Plunderous Plains",
+      "chance": 0.01074
+     }
+    ]
+   },
+   {
+    "itemId": 8309,
+    "recipeCode": "spell_breaker_100",
+    "recipeName": "Recipe: Spell Breaker (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Massive Maze Bandersnatch",
+      "mobLevel": 54,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.02642
+     },
+     {
+      "mobName": "Oel Mahum Warrior",
+      "mobLevel": 54,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.02642
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Oel Mahum Witch Doctor",
+      "mobLevel": 55,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.01105
+     }
+    ]
+   },
+   {
+    "itemId": 8311,
+    "recipeCode": "kaim_vanuls_bones_100",
+    "recipeName": "Recipe: Kaim Vanul's Bones (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Frost Iron Golem",
+      "mobLevel": 59,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.02695
+     },
+     {
+      "mobName": "Frost Tarantula",
+      "mobLevel": 58,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.02695
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Oel Mahum Witch Doctor",
+      "mobLevel": 55,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.01137
+     }
+    ]
+   },
+   {
+    "itemId": 8321,
+    "recipeCode": "ice_storm_hammer_100",
+    "recipeName": "Recipe: Ice Storm Hammer (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Oel Mahum Witch Doctor",
+      "mobLevel": 55,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.02747
+     },
+     {
+      "mobName": "Oel Mahum",
+      "mobLevel": 53,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.02747
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc",
+      "mobLevel": 55,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.01168
+     }
+    ]
+   },
+   {
+    "itemId": 8323,
+    "recipeCode": "star_buster_100",
+    "recipeName": "Recipe: Star Buster (100%)",
+    "category": "weapon",
+    "spoil": [
+     {
+      "mobName": "Deadly Ginzu Golem V",
+      "mobLevel": 53,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.028
+     },
+     {
+      "mobName": "Horrifying Ginzu Golem VIII",
+      "mobLevel": 54,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.028
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Tomb Inquisitor",
+      "mobLevel": 57,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.012
+     }
+    ]
+   },
+   {
+    "itemId": 922026,
+    "recipeCode": "avadon_robe_100",
+    "recipeName": "Recipe: Avadon Robe (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Soul of Ruins",
+      "mobLevel": 54,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.02853
+     },
+     {
+      "mobName": "Massive Maze Bandersnatch",
+      "mobLevel": 54,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.02853
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Archer",
+      "mobLevel": 52,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.01232
+     }
+    ]
+   },
+   {
+    "itemId": 922027,
+    "recipeCode": "avadon_circlet_100",
+    "recipeName": "Recipe: Avadon Circlet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Marsh Stalker",
+      "mobLevel": 54,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.02905
+     },
+     {
+      "mobName": "Ice Tarantula",
+      "mobLevel": 57,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.02905
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Frost Tarantula",
+      "mobLevel": 58,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.01263
+     }
+    ]
+   },
+   {
+    "itemId": 922028,
+    "recipeCode": "avadon_gloves_100",
+    "recipeName": "Recipe: Avadon Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Cave Maiden",
+      "mobLevel": 59,
+      "teleportId": "antharas_lair",
+      "locationUk": "Лігво Антараса",
+      "locationEn": "Antharas' Lair",
+      "chance": 0.02958
+     },
+     {
+      "mobName": "Ghost of the Tower",
+      "mobLevel": 60,
+      "teleportId": "tower_of_insolence",
+      "locationUk": "Вежа Зухвалості",
+      "locationEn": "Tower of Insolence",
+      "chance": 0.02958
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Farcran",
+      "mobLevel": 53,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.01295
+     }
+    ]
+   },
+   {
+    "itemId": 922029,
+    "recipeCode": "avadon_boots_100",
+    "recipeName": "Recipe: Avadon Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Frost Tarantula",
+      "mobLevel": 58,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.03011
+     },
+     {
+      "mobName": "Frost Iron Golem",
+      "mobLevel": 59,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.03011
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.01326
+     }
+    ]
+   },
+   {
+    "itemId": 922030,
+    "recipeCode": "blue_wolf_breastplate_100",
+    "recipeName": "Recipe: Blue Wolf Breastplate (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Harit Lizardman Matriarch",
+      "mobLevel": 55,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.03063
+     },
+     {
+      "mobName": "Harit Lizardman Shaman",
+      "mobLevel": 54,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.03063
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "coliseum",
+      "locationUk": "Колізей",
+      "locationEn": "Coliseum",
+      "chance": 0.01358
+     }
+    ]
+   },
+   {
+    "itemId": 922031,
+    "recipeCode": "blue_wolf_gaiters_100",
+    "recipeName": "Recipe: Blue Wolf Gaiters (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Dismal Pole",
+      "mobLevel": 58,
+      "teleportId": "fields_of_massacre",
+      "locationUk": "Поля різанини",
+      "locationEn": "Fields of Massacre",
+      "chance": 0.03116
+     },
+     {
+      "mobName": "Epic Cannon Golem",
+      "mobLevel": 53,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03116
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Marsh Stalker",
+      "mobLevel": 54,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01389
+     }
+    ]
+   },
+   {
+    "itemId": 922032,
+    "recipeCode": "blue_wolf_helmet_100",
+    "recipeName": "Recipe: Blue Wolf Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc Shaman",
+      "mobLevel": 58,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03168
+     },
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03168
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Taik Orc Supply Leader",
+      "mobLevel": 55,
+      "teleportId": "blazing_swamp",
+      "locationUk": "Полум'яні болота",
+      "locationEn": "Blazing Swamp",
+      "chance": 0.01421
+     }
+    ]
+   },
+   {
+    "itemId": 922033,
+    "recipeCode": "blue_wolf_gloves_100",
+    "recipeName": "Recipe: Blue Wolf Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03221
+     },
+     {
+      "mobName": "Frost Iron Golem",
+      "mobLevel": 59,
+      "teleportId": "frozen_labyrinth",
+      "locationUk": "Крижаний лабіринт",
+      "locationEn": "Frozen Labyrinth",
+      "chance": 0.03221
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Captain",
+      "mobLevel": 60,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01453
+     }
+    ]
+   },
+   {
+    "itemId": 922034,
+    "recipeCode": "blue_wolf_boots_100",
+    "recipeName": "Recipe: Blue Wolf Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Connabi",
+      "mobLevel": 54,
+      "teleportId": "skyshadow_meadow",
+      "locationUk": "Луг Небесної Тіні",
+      "locationEn": "Skyshadow Meadow",
+      "chance": 0.03274
+     },
+     {
+      "mobName": "Tomb Archon",
+      "mobLevel": 55,
+      "teleportId": "ancient_tomb_fields",
+      "locationUk": "Поля стародавніх могил",
+      "locationEn": "Ancient Tomb Fields",
+      "chance": 0.03274
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Hunter Gargoyle",
+      "mobLevel": 52,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.01484
+     }
+    ]
+   },
+   {
+    "itemId": 922035,
+    "recipeCode": "leather_armor_of_doom_100",
+    "recipeName": "Recipe: Leather Armor of Doom (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc Archer",
+      "mobLevel": 57,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.03326
+     },
+     {
+      "mobName": "Seer of Hallate",
+      "mobLevel": 60,
+      "teleportId": "tower_of_insolence",
+      "locationUk": "Вежа Зухвалості",
+      "locationEn": "Tower of Insolence",
+      "chance": 0.03326
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc",
+      "mobLevel": 55,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01516
+     }
+    ]
+   },
+   {
+    "itemId": 922036,
+    "recipeCode": "doom_helmet_100",
+    "recipeName": "Recipe: Doom Helmet (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "garden_of_eva",
+      "locationUk": "Сади Єви",
+      "locationEn": "Garden of Eva",
+      "chance": 0.03379
+     },
+     {
+      "mobName": "Marsh Stalker",
+      "mobLevel": 54,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03379
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Archer",
+      "mobLevel": 57,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01547
+     }
+    ]
+   },
+   {
+    "itemId": 922037,
+    "recipeCode": "doom_gloves_100",
+    "recipeName": "Recipe: Doom Gloves (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Horrifying Ginzu Golem VIII",
+      "mobLevel": 54,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03432
+     },
+     {
+      "mobName": "Harit Lizardman Matriarch",
+      "mobLevel": 55,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.03432
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Doll Blader",
+      "mobLevel": 53,
+      "teleportId": "garden_of_eva",
+      "locationUk": "Сади Єви",
+      "locationEn": "Garden of Eva",
+      "chance": 0.01579
+     }
+    ]
+   },
+   {
+    "itemId": 922038,
+    "recipeCode": "doom_boots_100",
+    "recipeName": "Recipe: Doom Boots (100%)",
+    "category": "armor",
+    "spoil": [
+     {
+      "mobName": "Hunter Gargoyle",
+      "mobLevel": 52,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.03484
+     },
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03484
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Archer",
+      "mobLevel": 57,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01611
+     }
+    ]
+   },
+   {
+    "itemId": 922070,
+    "recipeCode": "avadon_shield_100",
+    "recipeName": "Recipe: Avadon Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Ginzu Golem Prodigy X",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03537
+     },
+     {
+      "mobName": "Horrifying Jackhammer Golem",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03537
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.01642
+     }
+    ]
+   },
+   {
+    "itemId": 922071,
+    "recipeCode": "doom_shield_100",
+    "recipeName": "Recipe: Doom Shield (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Liele Elder",
+      "mobLevel": 52,
+      "teleportId": "enchanted_valley_north",
+      "locationUk": "Зачарована долина (північ)",
+      "locationEn": "Enchanted Valley - Northern Region",
+      "chance": 0.03589
+     },
+     {
+      "mobName": "Valley Treant Elder",
+      "mobLevel": 53,
+      "teleportId": "enchanted_valley_north",
+      "locationUk": "Зачарована долина (північ)",
+      "locationEn": "Enchanted Valley - Northern Region",
+      "chance": 0.03589
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Oel Mahum",
+      "mobLevel": 53,
+      "teleportId": "outlaw_forest",
+      "locationUk": "Ліс розбійників",
+      "locationEn": "Outlaw Forest",
+      "chance": 0.01674
+     }
+    ]
+   },
+   {
+    "itemId": 922072,
+    "recipeCode": "shield_of_pledge_100",
+    "recipeName": "Recipe: Shield of Pledge (100%)",
+    "category": "shield",
+    "spoil": [
+     {
+      "mobName": "Fallen Orc",
+      "mobLevel": 55,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.03642
+     },
+     {
+      "mobName": "Horrifying Cannon Golem",
+      "mobLevel": 52,
+      "teleportId": "pavel_ruins",
+      "locationUk": "Руїни Павла",
+      "locationEn": "Pavel Ruins",
+      "chance": 0.03642
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Fallen Orc Shaman",
+      "mobLevel": 58,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01705
+     }
+    ]
+   },
+   {
+    "itemId": 922082,
+    "recipeCode": "necklace_of_mana_100",
+    "recipeName": "Recipe: Necklace of Mana (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Frost Iron Golem",
+      "mobLevel": 59,
+      "teleportId": "rune",
+      "locationUk": "Рун",
+      "locationEn": "Rune Township",
+      "chance": 0.03695
+     },
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.03695
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Harit Lizardman Shaman",
+      "mobLevel": 54,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.01737
+     }
+    ]
+   },
+   {
+    "itemId": 922083,
+    "recipeCode": "earring_of_mana_100",
+    "recipeName": "Recipe: Earring of Mana (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "forest_of_mirrors",
+      "locationUk": "Ліс Дзеркал",
+      "locationEn": "Forest of Mirrors",
+      "chance": 0.03747
+     },
+     {
+      "mobName": "Harit Lizardman Warrior",
+      "mobLevel": 53,
+      "teleportId": "hunters",
+      "locationUk": "Селище мисливців",
+      "locationEn": "Hunter's Village",
+      "chance": 0.03747
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "forsaken_plains",
+      "locationUk": "Запустілі рівнини",
+      "locationEn": "Forsaken Plains",
+      "chance": 0.01768
+     }
+    ]
+   },
+   {
+    "itemId": 922084,
+    "recipeCode": "ring_of_mana_100",
+    "recipeName": "Recipe: Ring of Mana (100%)",
+    "category": "jewelry",
+    "spoil": [
+     {
+      "mobName": "Hunter Gargoyle",
+      "mobLevel": 52,
+      "teleportId": "dragon_valley",
+      "locationUk": "Долина Драконів",
+      "locationEn": "Dragon Valley",
+      "chance": 0.038
+     },
+     {
+      "mobName": "Banshee",
+      "mobLevel": 60,
+      "teleportId": "forest_of_the_dead",
+      "locationUk": "Ліс мертвих",
+      "locationEn": "Forest of the Dead",
+      "chance": 0.038
+     }
+    ],
+    "drop": [
+     {
+      "mobName": "Marsh Drake",
+      "mobLevel": 55,
+      "teleportId": "aden",
+      "locationUk": "Місто Аден",
+      "locationEn": "Town of Aden",
+      "chance": 0.018
+     }
+    ]
+   }
+  ]
+ }
+}

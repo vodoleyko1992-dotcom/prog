@@ -1,0 +1,21 @@
+{
+ "_path": "/character/town",
+ "_status": 200,
+ "data": {
+  "cityId": "l2dop_aden",
+  "npcs": [
+   {
+    "l2NpcId": 30344,
+    "titleUk": "Магістр",
+    "nameUk": "Наставник умінь",
+    "nameEn": "Skill Trainer",
+    "actions": [
+     {
+      "labelUk": "Вивчити навички",
+      "href": "/magister.html?npcId=30344"
+     }
+    ]
+   }
+  ]
+ }
+}

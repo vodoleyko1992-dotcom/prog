@@ -1,0 +1,8 @@
+{
+ "_path": "/game/public-stats",
+ "_status": 200,
+ "data": {
+  "onlineCount": 14,
+  "totalCount": 71
+ }
+}

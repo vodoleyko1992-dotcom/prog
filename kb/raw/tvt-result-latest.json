@@ -1,0 +1,27 @@
+{
+ "_path": "/game/tvt/result/latest",
+ "_status": 200,
+ "data": {
+  "eventId": "tvt-scheduled-20261011:0800",
+  "outcome": "WIN",
+  "myTeam": 2,
+  "winnerTeam": 2,
+  "score": {
+   "team1": 0,
+   "team2": 2
+  },
+  "kills": 2,
+  "deaths": 0,
+  "reward": {
+   "granted": true,
+   "pending": false,
+   "adena": "500000",
+   "coinOfLuck": 1,
+   "shilCoins": 2
+  },
+  "rewardEligible": true,
+  "ineligibleReason": null,
+  "endedAt": 1791694824833,
+  "cancelReason": null
+ }
+}

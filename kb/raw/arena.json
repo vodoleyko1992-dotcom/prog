@@ -1,0 +1,183 @@
+{
+ "_path": "/game/arena",
+ "_status": 200,
+ "data": {
+  "me": {
+   "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+   "name": "Warlock",
+   "level": 60,
+   "nicknameColor": null,
+   "wins": 0,
+   "losses": 0
+  },
+  "pvpDefeat": null,
+  "onlineCount": 0,
+  "players": [],
+  "leaders": {
+   "wins": [
+    {
+     "characterId": "1a675899-686b-4303-8970-89d10c67090e",
+     "name": "Existence",
+     "level": 40,
+     "nicknameColor": null,
+     "wins": 22,
+     "losses": 9
+    },
+    {
+     "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+     "name": "★_3oJloTo_★",
+     "level": 76,
+     "nicknameColor": "#8A2BE2",
+     "wins": 9,
+     "losses": 22
+    },
+    {
+     "characterId": "68bb3e7b-0c1a-455c-85d0-c980cdf1411d",
+     "name": "Connor",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 2,
+     "losses": 0
+    },
+    {
+     "characterId": "c4302819-afd4-46be-b10e-8ab47a77b82b",
+     "name": "($-$)",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "ab69a02b-c9dc-4ca0-9936-c2aece44cff2",
+     "name": "(•_•)",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "7b6da257-1772-40fe-901e-bcf890b3fdaf",
+     "name": "19CM",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "b9221f32-9874-4478-b112-202256e707e7",
+     "name": "24525",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "6f8d5a2c-6558-4087-9f54-03a5f787f816",
+     "name": "26",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "e302e25d-64fe-40d1-956d-68f27b8bfb88",
+     "name": "2724274",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "a96acc62-5649-449b-b4b6-5b6f051a8e57",
+     "name": "28",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    }
+   ],
+   "losses": [
+    {
+     "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+     "name": "★_3oJloTo_★",
+     "level": 76,
+     "nicknameColor": "#8A2BE2",
+     "wins": 9,
+     "losses": 22
+    },
+    {
+     "characterId": "1a675899-686b-4303-8970-89d10c67090e",
+     "name": "Existence",
+     "level": 40,
+     "nicknameColor": null,
+     "wins": 22,
+     "losses": 9
+    },
+    {
+     "characterId": "489c651a-165d-4182-9544-c377f6086be4",
+     "name": "Sky",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 1
+    },
+    {
+     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+     "name": "Teddy",
+     "level": 79,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 1
+    },
+    {
+     "characterId": "68bb3e7b-0c1a-455c-85d0-c980cdf1411d",
+     "name": "Connor",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 2,
+     "losses": 0
+    },
+    {
+     "characterId": "c4302819-afd4-46be-b10e-8ab47a77b82b",
+     "name": "($-$)",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "ab69a02b-c9dc-4ca0-9936-c2aece44cff2",
+     "name": "(•_•)",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "7b6da257-1772-40fe-901e-bcf890b3fdaf",
+     "name": "19CM",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "b9221f32-9874-4478-b112-202256e707e7",
+     "name": "24525",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    },
+    {
+     "characterId": "6f8d5a2c-6558-4087-9f54-03a5f787f816",
+     "name": "26",
+     "level": 1,
+     "nicknameColor": null,
+     "wins": 0,
+     "losses": 0
+    }
+   ]
+  }
+ }
+}

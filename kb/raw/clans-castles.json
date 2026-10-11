@@ -1,0 +1,18 @@
+{
+ "_path": "/game/clans/castles",
+ "_status": 200,
+ "data": {
+  "castles": [
+   {
+    "cityId": "l2dop_schuttgart",
+    "cityLabelUk": "Місто Штутгарт",
+    "capturedAt": "2026-10-10T17:31:48.478Z",
+    "pendingTaxAdena": "0",
+    "canWithdraw": false
+   }
+  ],
+  "totalPendingTaxAdena": "0",
+  "canManageClan": false,
+  "clanTreasuryAdena": "1000000000"
+ }
+}

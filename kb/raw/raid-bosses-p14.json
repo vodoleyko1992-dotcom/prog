@@ -1,0 +1,43 @@
+{
+ "_path": "/game/raid-bosses?page=14",
+ "_status": 200,
+ "data": {
+  "page": 14,
+  "pageSize": 15,
+  "total": 197,
+  "totalPages": 14,
+  "baseAdenaCost": 100000,
+  "adenaCost": 100000,
+  "vipFreeApplied": false,
+  "characterLevel": 60,
+  "minRaidBossLevel": 51,
+  "bosses": [
+   {
+    "spawnId": "l2dop_rb_25309",
+    "name": "Varka's Hero Shadith",
+    "level": 80,
+    "bossType": "raid",
+    "isAlive": false,
+    "baseAdenaCost": 100000,
+    "adenaCost": 100000,
+    "vipFreeApplied": false,
+    "icon": "/mobs/175.png",
+    "canAttack": true,
+    "attackBlockedReasonUk": null
+   },
+   {
+    "spawnId": "l2dop_rb_25517",
+    "name": "Master Anays",
+    "level": 87,
+    "bossType": "raid",
+    "isAlive": true,
+    "baseAdenaCost": 100000,
+    "adenaCost": 100000,
+    "vipFreeApplied": false,
+    "icon": "/mobs/70.png",
+    "canAttack": true,
+    "attackBlockedReasonUk": null
+   }
+  ]
+ }
+}

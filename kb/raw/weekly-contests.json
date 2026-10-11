@@ -1,0 +1,26 @@
+{
+ "_path": "/game/forum/world/weekly-contests",
+ "_status": 200,
+ "data": {
+  "reports": [
+   {
+    "weekKey": "2026-10-05",
+    "title": "Підсумки конкурсів 05.10–11.10.2026",
+    "periodLabel": "05.10.2026 — 11.10.2026",
+    "settledAt": "2026-10-10T21:01:28.682Z",
+    "hasSevenSeals": true,
+    "hasBraveHunter": true,
+    "hasQuizSmart": true
+   },
+   {
+    "weekKey": "2026-09-28",
+    "title": "Підсумки конкурсів 28.09–04.10.2026",
+    "periodLabel": "28.09.2026 — 04.10.2026",
+    "settledAt": "2026-10-03T21:00:26.549Z",
+    "hasSevenSeals": true,
+    "hasBraveHunter": true,
+    "hasQuizSmart": true
+   }
+  ]
+ }
+}

@@ -1,0 +1,47 @@
+{
+ "_path": "/game/tvt",
+ "_status": 200,
+ "data": {
+  "phase": "IDLE",
+  "serverNow": 1791725370123,
+  "eventId": null,
+  "registrationEndsAt": null,
+  "startsAt": null,
+  "endsAt": null,
+  "finishedAt": null,
+  "resultEndsAt": null,
+  "score": {
+   "team1": 0,
+   "team2": 0
+  },
+  "team1": [],
+  "team2": [],
+  "myTeam": null,
+  "isRegistered": false,
+  "registeredCount": 0,
+  "minPlayers": 2,
+  "maxPlayers": 20,
+  "winnerTeam": null,
+  "registrants": [],
+  "cancelReason": null,
+  "combatRoster": [],
+  "selfCombat": null,
+  "myResult": null,
+  "schedule": {
+   "enabled": true,
+   "slots": [
+    "08:00",
+    "15:00",
+    "20:00"
+   ],
+   "next": {
+    "slotKey": "20261011:2000",
+    "registrationOpensAt": 1791737400000,
+    "preparationStartsAt": 1791737970000,
+    "battleStartsAt": 1791738000000,
+    "startGameTime": "20:00",
+    "registrationGameTime": "19:50"
+   }
+  }
+ }
+}

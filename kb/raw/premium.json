@@ -1,0 +1,83 @@
+{
+ "_path": "/game/premium",
+ "_status": 200,
+ "data": {
+  "active": false,
+  "premiumUntil": null,
+  "tierId": null,
+  "tierLabelUk": null,
+  "bonusPercent": 0,
+  "multiplier": 1,
+  "serverNow": "2026-10-11T13:29:40.843Z",
+  "vipActive": false,
+  "vipDiscountPercent": 0,
+  "coinTiers": [
+   {
+    "id": "bronze",
+    "labelUk": "Бронзовий акаунт",
+    "coinCost": 8,
+    "baseCoinCost": 8,
+    "bonusPercent": 50,
+    "multiplier": 1.5,
+    "basicResourceMultiplier": 1.5,
+    "durationHours": 24
+   },
+   {
+    "id": "silver",
+    "labelUk": "Срібний акаунт",
+    "coinCost": 24,
+    "baseCoinCost": 24,
+    "bonusPercent": 100,
+    "multiplier": 2,
+    "basicResourceMultiplier": 1.6666666666666667,
+    "durationHours": 24
+   },
+   {
+    "id": "gold",
+    "labelUk": "Золотий акаунт",
+    "coinCost": 32,
+    "baseCoinCost": 32,
+    "bonusPercent": 150,
+    "multiplier": 2.5,
+    "basicResourceMultiplier": 1.8333333333333333,
+    "durationHours": 24
+   },
+   {
+    "id": "premium",
+    "labelUk": "Преміум акаунт",
+    "coinCost": 46,
+    "baseCoinCost": 46,
+    "bonusPercent": 200,
+    "multiplier": 3,
+    "basicResourceMultiplier": 2,
+    "durationHours": 24
+   }
+  ],
+  "adenaPlans": [
+   {
+    "id": "premium_3h",
+    "hours": 3,
+    "priceAdena": 3,
+    "basePriceAdena": 3
+   },
+   {
+    "id": "premium_6h",
+    "hours": 6,
+    "priceAdena": 5,
+    "basePriceAdena": 5
+   },
+   {
+    "id": "premium_12h",
+    "hours": 12,
+    "priceAdena": 10,
+    "basePriceAdena": 10
+   },
+   {
+    "id": "premium_24h",
+    "hours": 24,
+    "priceAdena": 18,
+    "basePriceAdena": 18
+   }
+  ]
+ }
+}

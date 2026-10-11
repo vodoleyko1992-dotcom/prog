@@ -1,0 +1,230 @@
+{
+ "_path": "/game/forum/news",
+ "_status": 200,
+ "data": {
+  "posts": [
+   {
+    "id": "e8f292a8-616b-4963-9f40-ee4c7c8ea476",
+    "title": "⚔️ ОБНОВЛЕНИЕ L2WAP — СИСТЕМА САБКЛАССОВ! ⚔️",
+    "publishedAt": "2026-10-11T13:19:53.430Z",
+    "canDelete": false
+   },
+   {
+    "id": "7165a0e3-00fd-4e66-a8a1-267f7b49d476",
+    "title": "⚔️ Обновление сервера",
+    "publishedAt": "2026-10-06T12:37:03.251Z",
+    "canDelete": false
+   },
+   {
+    "id": "1443d4bc-108c-4d32-abda-b96087fa8266",
+    "title": "Обновление тату и поясов",
+    "publishedAt": "2026-10-05T10:06:17.254Z",
+    "canDelete": false
+   },
+   {
+    "id": "5f7d9239-0cda-497e-b93c-5d9ef8bb5054",
+    "title": "Рестарт",
+    "publishedAt": "2026-10-04T20:29:38.888Z",
+    "canDelete": false
+   },
+   {
+    "id": "c2c3b959-649c-496c-acdd-029379ef11cd",
+    "title": "Оновлення L2WAP",
+    "publishedAt": "2026-10-04T08:48:44.867Z",
+    "canDelete": false
+   },
+   {
+    "id": "f07821f7-d6d6-403e-93e9-237aa7c766ed",
+    "title": "🔥 Важные исправления и стартовый бонус",
+    "publishedAt": "2026-10-03T19:24:02.076Z",
+    "canDelete": false
+   },
+   {
+    "id": "4ffd1f09-48c4-4763-9c5c-357a0fbb3eb2",
+    "title": "🔥 Внимание, игроки!",
+    "publishedAt": "2026-10-03T17:08:47.694Z",
+    "canDelete": false
+   },
+   {
+    "id": "be93c3f7-a16f-4b27-9d0e-fe5907ed30f2",
+    "title": "🔥 L2WAP официально открыт!",
+    "publishedAt": "2026-10-03T16:44:17.503Z",
+    "canDelete": false
+   },
+   {
+    "id": "2f1ea962-1422-455d-8843-388fc452ec93",
+    "title": "🔥 Оновлення дропу сувоїв заточення",
+    "publishedAt": "2026-10-02T16:55:19.485Z",
+    "canDelete": false
+   },
+   {
+    "id": "60f49c66-0151-4be7-b853-b64fd7812f5d",
+    "title": "⚒️ Велике оновлення крафту та екіпіровки",
+    "publishedAt": "2026-10-02T11:01:43.341Z",
+    "canDelete": false
+   },
+   {
+    "id": "b8462716-6985-471a-abca-a26f9372d058",
+    "title": "🔥 Оновлення кланів — бонуси за рівень!",
+    "publishedAt": "2026-09-12T21:59:13.644Z",
+    "canDelete": false
+   },
+   {
+    "id": "88705d94-d565-4699-98b2-bd119d9b5e4b",
+    "title": "⚔️ Оновлення заточки броні та щитів",
+    "publishedAt": "2026-09-12T19:28:59.892Z",
+    "canDelete": false
+   },
+   {
+    "id": "f81b93f7-d0d8-410f-9733-6d3b071afb56",
+    "title": "⚔️ Оновлення системи заточки",
+    "publishedAt": "2026-09-11T19:51:57.441Z",
+    "canDelete": false
+   },
+   {
+    "id": "5afc51cf-5843-4df7-b448-79106dd299da",
+    "title": "💎 Додано магазин за кристали",
+    "publishedAt": "2026-09-09T09:16:18.600Z",
+    "canDelete": false
+   },
+   {
+    "id": "a804bb05-c840-402d-acea-71805ee767e0",
+    "title": "⚒️ Система заточки спорядження",
+    "publishedAt": "2026-09-09T06:43:27.184Z",
+    "canDelete": false
+   },
+   {
+    "id": "c4932317-8a7d-4233-8f45-03018986c827",
+    "title": "Епічні боси — стало зручніше!",
+    "publishedAt": "2026-09-08T21:24:09.422Z",
+    "canDelete": false
+   },
+   {
+    "id": "6df74e2e-1f96-480b-bae0-c0954e37452d",
+    "title": "⚔️ Нова функція — керування досвідом",
+    "publishedAt": "2026-09-08T07:19:25.233Z",
+    "canDelete": false
+   },
+   {
+    "id": "9ad82763-dc61-4899-a6b0-f012622cf9bd",
+    "title": "Прем акаунт",
+    "publishedAt": "2026-09-07T07:16:53.035Z",
+    "canDelete": false
+   },
+   {
+    "id": "456de1c2-720f-4491-b49e-b984f3289aa5",
+    "title": "⚔️ Новий скіл — Battle Trance",
+    "publishedAt": "2026-09-06T10:53:28.170Z",
+    "canDelete": false
+   },
+   {
+    "id": "6c2d084d-ab64-4227-b32a-2a01b740b8eb",
+    "title": "👑 Оновлення Преміум-Акаунта",
+    "publishedAt": "2026-09-04T04:19:21.349Z",
+    "canDelete": false
+   },
+   {
+    "id": "2ddc89bd-a49d-4cff-b454-1048a08cbece",
+    "title": "⚔️ Оновлення системи заточки",
+    "publishedAt": "2026-09-03T19:57:16.453Z",
+    "canDelete": false
+   },
+   {
+    "id": "d193ecfb-2331-4962-bd00-1616ddf978b9",
+    "title": "⚔️ Кланове спорядження вже в грі!",
+    "publishedAt": "2026-08-31T15:25:41.695Z",
+    "canDelete": false
+   },
+   {
+    "id": "bfea922a-769b-4305-a031-410dc1d2654c",
+    "title": "⚔️ Оновлення кланів: спорядження та економіка міст",
+    "publishedAt": "2026-08-30T17:15:47.093Z",
+    "canDelete": false
+   },
+   {
+    "id": "2134cc86-b11c-4c5c-a89f-b6890a42f395",
+    "title": "📦 Передача предметів між гравцями",
+    "publishedAt": "2026-08-22T09:30:53.682Z",
+    "canDelete": false
+   },
+   {
+    "id": "dda25e92-c5e0-4833-91d8-adb494a0e477",
+    "title": "🎣 Нова система рибалки",
+    "publishedAt": "2026-08-21T16:40:29.828Z",
+    "canDelete": false
+   },
+   {
+    "id": "62c80cf0-c975-4fab-a26e-67e9aff328e1",
+    "title": "⚡ Обновление: Татуировки и Магический Крит",
+    "publishedAt": "2026-08-20T16:06:27.607Z",
+    "canDelete": false
+   },
+   {
+    "id": "b40c36e0-b975-477c-a29b-cbd5a781067c",
+    "title": "🦌 Стартував щотижневий івент «Відважний мисливець»!",
+    "publishedAt": "2026-08-20T12:12:50.610Z",
+    "canDelete": false
+   },
+   {
+    "id": "af95f92d-193e-4c5a-b2e4-cd6d89685af5",
+    "title": "🏆 Стартував щотижневий івент «7 Печатей»!",
+    "publishedAt": "2026-08-20T11:06:13.520Z",
+    "canDelete": false
+   },
+   {
+    "id": "a7c7ae81-19bc-479c-a9ce-ae2e0970b453",
+    "title": "⚔️ Оновлення Raid Boss та Катакомб",
+    "publishedAt": "2026-08-19T20:50:56.013Z",
+    "canDelete": false
+   },
+   {
+    "id": "092a94d3-d5d0-479c-ab8f-1692e9aa8a7a",
+    "title": "🛠️ Додано крафт броні та щитів",
+    "publishedAt": "2026-08-17T20:38:03.676Z",
+    "canDelete": false
+   },
+   {
+    "id": "7316b6fe-684d-4906-a9c0-b9bcea05b4b5",
+    "title": "🛡️ Оновлення сетів броні",
+    "publishedAt": "2026-08-13T12:38:21.688Z",
+    "canDelete": false
+   },
+   {
+    "id": "ce186af8-7b27-470b-951d-df4fddd0e9ef",
+    "title": "🔥 Оновлення заточки предметів",
+    "publishedAt": "2026-08-11T17:41:33.728Z",
+    "canDelete": false
+   },
+   {
+    "id": "93bd4cbe-2d0d-488a-9373-0b68521d40b3",
+    "title": "Міський бафер отримав нові набори бафів.",
+    "publishedAt": "2026-08-09T09:04:01.335Z",
+    "canDelete": false
+   },
+   {
+    "id": "5e111fc8-178b-448f-80f8-63de77c5f5c8",
+    "title": "Нова подія — Замовлення Торговця Маммона",
+    "publishedAt": "2026-08-08T21:00:31.144Z",
+    "canDelete": false
+   },
+   {
+    "id": "526c41d5-2e0c-4920-80fe-415f547c57f2",
+    "title": "Оновлення бойової системи — нова швидкість атаки воїнів",
+    "publishedAt": "2026-08-08T18:41:40.584Z",
+    "canDelete": false
+   },
+   {
+    "id": "d6dd8a91-2958-4e74-9804-f5fc3d9e382c",
+    "title": "Додано зміну кольору нікнейма",
+    "publishedAt": "2026-08-06T19:26:35.373Z",
+    "canDelete": false
+   },
+   {
+    "id": "0fc0f98a-de26-400d-8ae8-8c17d05a37d6",
+    "title": "На форумі відкрито розклад захоплення міст!",
+    "publishedAt": "2026-08-04T19:58:26.662Z",
+    "canDelete": false
+   }
+  ]
+ }
+}

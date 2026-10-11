@@ -1,0 +1,953 @@
+{
+ "_path": "/game/gm-premium-shop",
+ "_status": 200,
+ "data": {
+  "categories": [
+   {
+    "key": "enchant",
+    "label": "Заточки",
+    "subcategories": [
+     {
+      "key": "ordinary",
+      "label": "Звичайні",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "enchant/ordinary/armor_d",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910510,
+        "name": "Сувій заточення броні D-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 3,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_d",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910511,
+        "name": "Сувій заточення зброї D-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 3,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_c",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910512,
+        "name": "Сувій заточення броні C-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_c",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910513,
+        "name": "Сувій заточення зброї C-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_b",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910514,
+        "name": "Сувій заточення броні B-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 9,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_b",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910515,
+        "name": "Сувій заточення зброї B-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 9,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_a",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910516,
+        "name": "Сувій заточення броні A-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 12,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_a",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910517,
+        "name": "Сувій заточення зброї A-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 12,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_s",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910518,
+        "name": "Сувій заточення броні S-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 15,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_s",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910519,
+        "name": "Сувій заточення зброї S-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 15,
+        "maxQtyPerPurchase": 9999
+       }
+      ]
+     },
+     {
+      "key": "blessed",
+      "label": "Blessed",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "enchant/blessed/armor_d",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910520,
+        "name": "Благословенний сувій заточення броні D-grade",
+        "icon": "/icons/drops/resours/bless_armor_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_d",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910521,
+        "name": "Благословенний сувій заточення зброї D-grade",
+        "icon": "/icons/drops/resours/bless_weapon_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_c",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910522,
+        "name": "Благословенний сувій заточення броні C-grade",
+        "icon": "/icons/drops/resours/bless_armor_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_c",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910523,
+        "name": "Благословенний сувій заточення зброї C-grade",
+        "icon": "/icons/drops/resours/bless_weapon_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_b",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910524,
+        "name": "Благословенний сувій заточення броні B-grade",
+        "icon": "/icons/drops/resours/bless_armor_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 30,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_b",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910525,
+        "name": "Благословенний сувій заточення зброї B-grade",
+        "icon": "/icons/drops/resours/bless_weapon_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 30,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_a",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910526,
+        "name": "Благословенний сувій заточення броні A-grade",
+        "icon": "/icons/drops/resours/bless_armor_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 40,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_a",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910527,
+        "name": "Благословенний сувій заточення зброї A-grade",
+        "icon": "/icons/drops/resours/bless_weapon_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 40,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_s",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910528,
+        "name": "Благословенний сувій заточення броні S-grade",
+        "icon": "/icons/drops/resours/bless_armor_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_s",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910529,
+        "name": "Благословенний сувій заточення зброї S-grade",
+        "icon": "/icons/drops/resours/bless_weapon_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 9999
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "consumable",
+    "label": "Розхідники",
+    "subcategories": [
+     {
+      "key": "crystals",
+      "label": "Кристали",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "consumable/crystals/d",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1458,
+        "name": "Crystal D",
+        "icon": "/icons/resources/crystals/crystal_d_grade.jpg",
+        "grade": "D",
+        "priceCoinOfLuck": 2,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/c",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1459,
+        "name": "Crystal C",
+        "icon": "/icons/resources/crystals/crystal_c_grade.png",
+        "grade": "C",
+        "priceCoinOfLuck": 4,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/b",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1460,
+        "name": "Crystal B",
+        "icon": "/icons/resources/crystals/crystal_b_grade.png",
+        "grade": "B",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/a",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1461,
+        "name": "Crystal A",
+        "icon": "/icons/resources/crystals/crystal_a_grade.png",
+        "grade": "A",
+        "priceCoinOfLuck": 8,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/s",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1462,
+        "name": "Crystal S",
+        "icon": "/icons/resources/crystals/crystal_s_grade.png",
+        "grade": "S",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "clan",
+    "label": "Клан",
+    "subcategories": [
+     {
+      "key": "reputation",
+      "label": "Репутація",
+      "grades": [],
+      "items": [
+       {
+        "key": "clan/reputation/500",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +500",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 500
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       },
+       {
+        "key": "clan/reputation/2500",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +2 500",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 45,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 2500
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       },
+       {
+        "key": "clan/reputation/5000",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +5 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 80,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 5000
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       }
+      ]
+     },
+     {
+      "key": "clan_points",
+      "label": "Очки клану",
+      "grades": [],
+      "items": [
+       {
+        "key": "clan/clan_points/10000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +10 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 10000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       },
+       {
+        "key": "clan/clan_points/50000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +50 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 45,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 50000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       },
+       {
+        "key": "clan/clan_points/100000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +100 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 80,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 100000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "fishing",
+    "label": "Рибалка",
+    "subcategories": [
+     {
+      "key": "cloak",
+      "label": "Плащ",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/cloak/d",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910618,
+        "name": "Плащ рибалки",
+        "icon": "/icons/drops/item/fishing_cloak_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+70"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+70"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/c",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910619,
+        "name": "Плащ мисливця моря",
+        "icon": "/icons/drops/item/fishing_cloak_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+450"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+110"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+110"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/b",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910620,
+        "name": "Плащ глибокого моря",
+        "icon": "/icons/drops/item/fishing_cloak_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+170"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+170"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/a",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910621,
+        "name": "Плащ стража океану",
+        "icon": "/icons/drops/item/fishing_cloak_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+240"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+240"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/s",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910622,
+        "name": "Плащ Левіафан",
+        "icon": "/icons/drops/item/fishing_cloak_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1400"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+320"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+320"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "key": "belt",
+      "label": "Пояс",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/belt/d",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910628,
+        "name": "Пояс рибалки",
+        "icon": "/icons/drops/item/fishing_belt_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+3"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+2%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+2%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/c",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910629,
+        "name": "Пояс досвідченого рибалки",
+        "icon": "/icons/drops/item/fishing_belt_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+450"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+5"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+3%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+3%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/b",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910630,
+        "name": "Пояс ветерана рибалки",
+        "icon": "/icons/drops/item/fishing_belt_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+7"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+5%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+5%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/a",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910631,
+        "name": "Пояс майстра рибалки",
+        "icon": "/icons/drops/item/fishing_belt_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+9"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+7%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+7%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/s",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910632,
+        "name": "Пояс Левіафан",
+        "icon": "/icons/drops/item/fishing_belt_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1400"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+12"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+10%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+10%"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "key": "tattoo",
+      "label": "Тату",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/tattoo/d",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910623,
+        "name": "Татуювання річки",
+        "icon": "/icons/drops/item/fishing_tattoo_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+150"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+173"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+1%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+1%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/c",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910624,
+        "name": "Татуювання озера",
+        "icon": "/icons/drops/item/fishing_tattoo_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+288"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+2%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+2%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/b",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910625,
+        "name": "Татуювання моря",
+        "icon": "/icons/drops/item/fishing_tattoo_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+400"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+460"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+3%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+3%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/a",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910626,
+        "name": "Татуювання глибокого моря",
+        "icon": "/icons/drops/item/fishing_tattoo_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+805"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+4%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+4%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/s",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910627,
+        "name": "Татуювання Левіафан",
+        "icon": "/icons/drops/item/fishing_tattoo_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+1150"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+5%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+5%"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

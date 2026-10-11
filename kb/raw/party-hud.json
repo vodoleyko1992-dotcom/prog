@@ -1,0 +1,10 @@
+{
+ "_path": "/game/party/hud",
+ "_status": 200,
+ "data": {
+  "party": null,
+  "invite": null,
+  "extraInviteCount": 0,
+  "characterRevision": 86381
+ }
+}

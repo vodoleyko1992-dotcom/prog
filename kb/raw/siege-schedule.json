@@ -1,0 +1,79 @@
+{
+ "_path": "/game/siege/schedule",
+ "_status": 200,
+ "data": {
+  "serverNowMs": 1791725378402,
+  "timeZone": "Europe/Kyiv",
+  "gameDayKey": "20261011",
+  "nextDailyResetAt": 1791752400000,
+  "durationMinutes": 20,
+  "activeCityId": null,
+  "nextCityId": "l2dop_oren",
+  "slots": [
+   {
+    "cityId": "l2dop_oren",
+    "labelUk": "Місто Орен",
+    "startHour": 18,
+    "startMinute": 0,
+    "endHour": 18,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_giran",
+    "labelUk": "Місто Гіран",
+    "startHour": 18,
+    "startMinute": 20,
+    "endHour": 18,
+    "endMinute": 40
+   },
+   {
+    "cityId": "l2dop_aden",
+    "labelUk": "Місто Аден",
+    "startHour": 18,
+    "startMinute": 40,
+    "endHour": 19,
+    "endMinute": 0
+   },
+   {
+    "cityId": "l2dop_goddard",
+    "labelUk": "Місто Годдарт",
+    "startHour": 19,
+    "startMinute": 0,
+    "endHour": 19,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_rune",
+    "labelUk": "Рун",
+    "startHour": 19,
+    "startMinute": 20,
+    "endHour": 19,
+    "endMinute": 40
+   },
+   {
+    "cityId": "l2dop_gludio",
+    "labelUk": "Місто Глудіо",
+    "startHour": 19,
+    "startMinute": 40,
+    "endHour": 20,
+    "endMinute": 0
+   },
+   {
+    "cityId": "l2dop_dion",
+    "labelUk": "Місто Діон",
+    "startHour": 20,
+    "startMinute": 0,
+    "endHour": 20,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_schuttgart",
+    "labelUk": "Місто Штутгарт",
+    "startHour": 20,
+    "startMinute": 20,
+    "endHour": 20,
+    "endMinute": 40
+   }
+  ]
+ }
+}

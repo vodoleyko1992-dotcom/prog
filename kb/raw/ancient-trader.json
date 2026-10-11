@@ -1,0 +1,29 @@
+{
+ "_path": "/game/ancient-trader/offers",
+ "_status": 200,
+ "data": {
+  "offers": [
+   {
+    "stone": "green",
+    "stoneItemId": 6360,
+    "rateAa": 5,
+    "ownedQty": 0,
+    "maxAa": 0
+   },
+   {
+    "stone": "blue",
+    "stoneItemId": 6361,
+    "rateAa": 3,
+    "ownedQty": 0,
+    "maxAa": 0
+   },
+   {
+    "stone": "red",
+    "stoneItemId": 6362,
+    "rateAa": 10,
+    "ownedQty": 0,
+    "maxAa": 0
+   }
+  ]
+ }
+}

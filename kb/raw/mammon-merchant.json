@@ -1,0 +1,33 @@
+{
+ "_path": "/game/mammon/merchant",
+ "_status": 200,
+ "data": {
+  "mammonMerchant": {
+   "npcId": 31113,
+   "nameEn": "Merchant of Mammon",
+   "nameUk": "Торговець Маммона",
+   "iconUrl": "/mobs/247.png",
+   "rotationMs": 14400000,
+   "rotatesAtMs": 1791734400000,
+   "slotIndex": 1,
+   "current": {
+    "id": "pilgrims_necropolis",
+    "labelEn": "The Pilgrim's Necropolis",
+    "labelUk": "Некрополь паломників",
+    "worldX": 45600,
+    "worldY": 126944,
+    "slotIndex": 1
+   },
+   "next": {
+    "id": "necropolis_of_worship",
+    "labelEn": "Necropolis of Worship",
+    "labelUk": "Некрополь поклоніння"
+   }
+  },
+  "teleport": {
+   "baseAdenaCost": 500000,
+   "adenaCost": 500000,
+   "vipFreeApplied": false
+  }
+ }
+}

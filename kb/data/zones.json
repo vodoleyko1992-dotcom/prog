@@ -1,0 +1,3180 @@
+{
+  "meta": {
+    "title": "Зоны (локации) L2WAP: полосы уровней, телепорт, EXP/ч по уровням героя, мобы",
+    "generated_by": "kb/tools/build_all.py (python3 -I)",
+    "sources": [
+      "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3): rt.zoneCat (каталог «Телепорта»: город, цена, lo/hi), rt.zoneStat (уровень героя → n боёв, exp, sec, pct), rt.zoneMobs, rt.zoneBad",
+      "tests/fixtures-zones-7128.json (замеры 40–49 ур. на 7.1.28)",
+      "farmDb (мобы форума по локациям)",
+      "content.js CAT_LIST (катакомбы/некрополи, стартовые уровни Interlude)",
+      "popup.js LAIR (логова эпиков)",
+      "CLAUDE.md, CHANGELOG-*"
+    ],
+    "note": "expPerHour = exp / sec × 3600 (как navigation.zoneRate). Замеры на одном уровне героя зависят от оружия/баффов на тот момент (Pavel Ruins ≈2,6 M с Demon's Staff C vs ≈4,58 M с Sprite's Staff B). levelBand — из каталога телепорта игры; pavel_ruins hi=80 — точка у Фальстона (75–80) входит в ту же полосу. Ключ out:… — зона, не найденная в каталоге.",
+    "repo_version": "8.0.8"
+  },
+  "counts": {"zones": 105, "with_exp_stat": 23},
+  "bestByHeroLevel_baseProfile": {
+    "27": [{"zone": "sea_of_spores", "expPerHour": 1945801, "kills": 21}],
+    "30": [{"zone": "bee_hive", "expPerHour": 2891803, "kills": 100}],
+    "31": [
+      {"zone": "devils_isle", "expPerHour": 5831892, "kills": 21},
+      {"zone": "bee_hive", "expPerHour": 4019546, "kills": 58}
+    ],
+    "32": [{"zone": "devils_isle", "expPerHour": 4268356, "kills": 72}],
+    "33": [
+      {"zone": "giran_harbor", "expPerHour": 3096443, "kills": 163},
+      {"zone": "devils_isle", "expPerHour": 2446442, "kills": 20}
+    ],
+    "34": [
+      {"zone": "tanor_canyon", "expPerHour": 9053704, "kills": 31},
+      {"zone": "cruma_tower", "expPerHour": 5209952, "kills": 25}
+    ],
+    "35": [{"zone": "tanor_canyon", "expPerHour": 9526380, "kills": 48}],
+    "36": [
+      {"zone": "tanor_canyon", "expPerHour": 8704293, "kills": 27},
+      {"zone": "alligator_island", "expPerHour": 6735997, "kills": 48}
+    ],
+    "37": [{"zone": "alligator_island", "expPerHour": 8175366, "kills": 96}],
+    "38": [{"zone": "dragon_valley", "expPerHour": 9804568, "kills": 68}],
+    "39": [
+      {"zone": "dragon_valley", "expPerHour": 8726898, "kills": 54},
+      {"zone": "plains_of_the_lizardman", "expPerHour": 4854401, "kills": 76}
+    ],
+    "40": [
+      {"zone": "field_of_whispers", "expPerHour": 3891834, "kills": 120},
+      {"zone": "garden_of_eva", "expPerHour": 3362518, "kills": 93},
+      {"zone": "plains_of_the_lizardman", "expPerHour": 2694448, "kills": 34},
+      {"zone": "enchanted_valley_south", "expPerHour": 2002324, "kills": 67}
+    ],
+    "41": [
+      {"zone": "forest_of_mirrors", "expPerHour": 2444983, "kills": 74},
+      {"zone": "garden_of_eva", "expPerHour": 2174525, "kills": 64},
+      {"zone": "field_of_whispers", "expPerHour": 1986499, "kills": 62},
+      {"zone": "ivory_tower", "expPerHour": 1932439, "kills": 74},
+      {"zone": "enchanted_valley_south", "expPerHour": 1878708, "kills": 69}
+    ],
+    "42": [
+      {"zone": "field_of_silence", "expPerHour": 3460833, "kills": 38},
+      {"zone": "outlaw_forest", "expPerHour": 2786677, "kills": 57},
+      {"zone": "forest_of_mirrors", "expPerHour": 2206317, "kills": 63},
+      {"zone": "field_of_whispers", "expPerHour": 2099382, "kills": 16},
+      {"zone": "enchanted_valley_south", "expPerHour": 1860379, "kills": 60}
+    ],
+    "43": [
+      {"zone": "field_of_silence", "expPerHour": 3624694, "kills": 41},
+      {"zone": "field_of_whispers", "expPerHour": 2379838, "kills": 54},
+      {"zone": "outlaw_forest", "expPerHour": 2181090, "kills": 46},
+      {"zone": "forest_of_mirrors", "expPerHour": 2078876, "kills": 63},
+      {"zone": "enchanted_valley_south", "expPerHour": 1930266, "kills": 64}
+    ],
+    "44": [
+      {"zone": "blazing_swamp", "expPerHour": 4604201, "kills": 46},
+      {"zone": "forest_of_mirrors", "expPerHour": 2412248, "kills": 66},
+      {"zone": "field_of_silence", "expPerHour": 2383358, "kills": 73},
+      {"zone": "enchanted_valley_south", "expPerHour": 2030874, "kills": 69},
+      {"zone": "ivory_tower", "expPerHour": 1980756, "kills": 80}
+    ],
+    "45": [
+      {"zone": "blazing_swamp", "expPerHour": 4791865, "kills": 29},
+      {"zone": "antharas_lair", "expPerHour": 2809462, "kills": 61}
+    ],
+    "46": [{"zone": "blazing_swamp", "expPerHour": 4073709, "kills": 21}],
+    "47": [
+      {"zone": "blazing_swamp", "expPerHour": 4929106, "kills": 38},
+      {"zone": "antharas_lair", "expPerHour": 3298364, "kills": 55},
+      {"zone": "pavel_ruins", "expPerHour": 2316599, "kills": 219}
+    ],
+    "48": [{"zone": "pavel_ruins", "expPerHour": 2929116, "kills": 900}],
+    "49": [
+      {"zone": "blazing_swamp", "expPerHour": 6803975, "kills": 18},
+      {"zone": "forest_of_mirrors", "expPerHour": 4105337, "kills": 30},
+      {"zone": "field_of_silence", "expPerHour": 3645010, "kills": 28},
+      {"zone": "enchanted_valley_south", "expPerHour": 3349174, "kills": 31},
+      {"zone": "pavel_ruins", "expPerHour": 2618424, "kills": 598}
+    ],
+    "50": [
+      {"zone": "blazing_swamp", "expPerHour": 5825574, "kills": 37},
+      {"zone": "pavel_ruins", "expPerHour": 2189785, "kills": 24},
+      {"zone": "enchanted_valley_north", "expPerHour": 1638025, "kills": 150},
+      {"zone": "antharas_lair", "expPerHour": 1459239, "kills": 248}
+    ],
+    "51": [
+      {"zone": "den_of_evil", "expPerHour": 6524198, "kills": 294},
+      {"zone": "blazing_swamp", "expPerHour": 4318447, "kills": 130},
+      {"zone": "pavel_ruins", "expPerHour": 3859874, "kills": 201}
+    ],
+    "52": [{"zone": "pavel_ruins", "expPerHour": 3737930, "kills": 426}]
+  },
+  "zones": [
+    {
+      "key": "abandoned_camp",
+      "name": "Abandon Camp",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [15, 32],
+      "town": false,
+      "mobsForum": [
+        {"name": "Ol Mahum Patrol", "lvl": 21},
+        {"name": "Ol Mahum Guard", "lvl": 22},
+        {"name": "Tumran Bugbear", "lvl": 23},
+        {"name": "Tumran Bugbear Warrior", "lvl": 24},
+        {"name": "Ol Mahum Sergeant", "lvl": 29},
+        {"name": "Ol Mahum Captain", "lvl": 30},
+        {"name": "Ol Mahum Van Grunt", "lvl": 30},
+        {"name": "Ol Mahum Van Archer", "lvl": 32}
+      ],
+      "forumMobLevelRange": [21, 32]
+    },
+    {
+      "key": "abandoned_coal_mines",
+      "name": "Abandoned Coal Mines",
+      "city": "dwarf_village",
+      "teleportPrice": 0,
+      "levelBand": [5, 13],
+      "town": false,
+      "mobsForum": [
+        {"name": "Goblin Grave Robber", "lvl": 5},
+        {"name": "Goblin Lookout", "lvl": 8},
+        {"name": "Goblin Scout", "lvl": 8},
+        {"name": "Utuku Orc Archer", "lvl": 8},
+        {"name": "Dungeon Skeleton", "lvl": 12},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Greystone Golem", "lvl": 13},
+        {"name": "Stone Golem", "lvl": 13}
+      ],
+      "forumMobLevelRange": [5, 13]
+    },
+    {
+      "key": "aden",
+      "name": "Town of Aden",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Vanor Silenos", "lvl": 45},
+        {"name": "Vanor Silenos Grunt", "lvl": 46},
+        {"name": "Vanor Silenos Scout", "lvl": 47},
+        {"name": "Vanor Silenos Warrior", "lvl": 48},
+        {"name": "Vanor Silenos Shaman", "lvl": 49},
+        {"name": "Vanor Silenos Chieftain", "lvl": 50},
+        {"name": "Marsh Stalker", "lvl": 54},
+        {"name": "Marsh Drake", "lvl": 55}
+      ],
+      "forumMobLevelRange": [45, 55]
+    },
+    {
+      "key": "alligator_island",
+      "name": "Alligator Island",
+      "city": "heine",
+      "teleportPrice": 0,
+      "levelBand": [40, 45],
+      "town": false,
+      "expStat_baseProfile": {
+        "36": {
+          "kills": 48,
+          "exp": 462806,
+          "sec": 247.3,
+          "pctLevel": 57.09,
+          "expPerHour": 6735997,
+          "secPerKill": 5.15,
+          "killsPerHour": 699
+        },
+        "37": {
+          "kills": 96,
+          "exp": 902842,
+          "sec": 397.6,
+          "pctLevel": 102.17,
+          "expPerHour": 8175366,
+          "secPerKill": 4.14,
+          "killsPerHour": 869
+        }
+      },
+      "mobsSeenOnMap": ["Farhite Lad", "Alligator", "Great White Shark", "Swamp Alligator", "Crokian Lad", "Nos Lad"],
+      "mobsForum": [
+        {"name": "Alligator", "lvl": 40},
+        {"name": "Crokian Lad", "lvl": 41},
+        {"name": "Great White Shark", "lvl": 42},
+        {"name": "Farhite Lad", "lvl": 44},
+        {"name": "Nos Lad", "lvl": 45}
+      ],
+      "forumMobLevelRange": [40, 45]
+    },
+    {
+      "key": "ancient_battleground",
+      "name": "Ancient Battleground",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [60, 70],
+      "town": false,
+      "mobsForum": [{"name": "Past Knight", "lvl": 64}, {"name": "Bloody Lord", "lvl": 68}, {"name": "Dark Guard", "lvl": 70}],
+      "forumMobLevelRange": [64, 70]
+    },
+    {
+      "key": "ancient_tomb_fields",
+      "name": "Ancient Tomb Fields",
+      "city": null,
+      "teleportPrice": null,
+      "levelBand": null,
+      "town": false,
+      "forumUrl": "/forum-farm-resources.html",
+      "mobsForum": [
+        {"name": "Vagabond of the Ruins", "lvl": 40},
+        {"name": "Grave Overlord", "lvl": 45},
+        {"name": "Grave Wanderer", "lvl": 45},
+        {"name": "Grave Priest", "lvl": 47},
+        {"name": "Spiteful Ghost of Ruins", "lvl": 50},
+        {"name": "Soul of Ruins", "lvl": 54},
+        {"name": "Tomb Archon", "lvl": 55},
+        {"name": "Tomb Inquisitor", "lvl": 57}
+      ],
+      "forumMobLevelRange": [40, 57]
+    },
+    {
+      "key": "ant_nest",
+      "name": "The Ant Nest",
+      "city": "gludio",
+      "teleportPrice": 0,
+      "levelBand": [15, 37],
+      "town": false,
+      "mobsForum": [
+        {"name": "Ant", "lvl": 30},
+        {"name": "Ant Captain", "lvl": 31},
+        {"name": "Ant Overseer", "lvl": 32},
+        {"name": "Ant Recruit", "lvl": 33},
+        {"name": "Ant Patrol", "lvl": 34},
+        {"name": "Ant Guard", "lvl": 35},
+        {"name": "Ant Soldier", "lvl": 35},
+        {"name": "Ant Warrior Captain", "lvl": 36},
+        {"name": "Noble Ant", "lvl": 37}
+      ],
+      "forumMobLevelRange": [30, 37],
+      "epicLair": ["ak"]
+    },
+    {
+      "key": "antharas_lair",
+      "name": "Antharas' Lair",
+      "city": "giran",
+      "teleportPrice": 8000,
+      "levelBand": [40, 66],
+      "town": false,
+      "expStat_baseProfile": {
+        "45": {
+          "kills": 61,
+          "exp": 475784,
+          "sec": 609.7,
+          "pctLevel": 18.91,
+          "expPerHour": 2809462,
+          "secPerKill": 9.99,
+          "killsPerHour": 360
+        },
+        "46": {
+          "kills": 13,
+          "exp": 104625,
+          "sec": 168.0,
+          "pctLevel": 3.85,
+          "expPerHour": 2242044,
+          "secPerKill": 12.92,
+          "killsPerHour": 279
+        },
+        "47": {
+          "kills": 55,
+          "exp": 405642,
+          "sec": 442.7,
+          "pctLevel": 13.95,
+          "expPerHour": 3298364,
+          "secPerKill": 8.05,
+          "killsPerHour": 447
+        },
+        "49": {
+          "kills": 21,
+          "exp": 167968,
+          "sec": 290.8,
+          "pctLevel": 5.02,
+          "expPerHour": 2079512,
+          "secPerKill": 13.85,
+          "killsPerHour": 260
+        },
+        "50": {
+          "kills": 248,
+          "exp": 1234944,
+          "sec": 3046.7,
+          "pctLevel": 22.99,
+          "expPerHour": 1459239,
+          "secPerKill": 12.28,
+          "killsPerHour": 293
+        }
+      },
+      "expStat_fixture7128": {
+        "45": {
+          "kills": 61,
+          "exp": 475784,
+          "sec": 609.7,
+          "pctLevel": 18.91,
+          "expPerHour": 2809462,
+          "secPerKill": 9.99,
+          "killsPerHour": 360
+        },
+        "46": {
+          "kills": 13,
+          "exp": 104625,
+          "sec": 168.0,
+          "pctLevel": 3.85,
+          "expPerHour": 2242044,
+          "secPerKill": 12.92,
+          "killsPerHour": 279
+        },
+        "47": {
+          "kills": 55,
+          "exp": 405642,
+          "sec": 442.7,
+          "pctLevel": 13.95,
+          "expPerHour": 3298364,
+          "secPerKill": 8.05,
+          "killsPerHour": 447
+        },
+        "49": {
+          "kills": 21,
+          "exp": 167968,
+          "sec": 290.8,
+          "pctLevel": 5.02,
+          "expPerHour": 2079512,
+          "secPerKill": 13.85,
+          "killsPerHour": 260
+        },
+        "50": {
+          "kills": 248,
+          "exp": 1234944,
+          "sec": 3046.7,
+          "pctLevel": 22.99,
+          "expPerHour": 1459239,
+          "secPerKill": 12.28,
+          "killsPerHour": 293
+        }
+      },
+      "mobsSeenOnMap": [
+        "Death Wave",
+        "Malruk Knight",
+        "Cave Maiden",
+        "Bloody Lady",
+        "Plando",
+        "Cave Beast",
+        "Cave Howler",
+        "Malruk Soldier"
+      ],
+      "mobsForum": [
+        {"name": "Cave Maiden", "lvl": 59},
+        {"name": "Bloody Lady", "lvl": 60},
+        {"name": "Cave Beast", "lvl": 61},
+        {"name": "Death Wave", "lvl": 62},
+        {"name": "Malruk Soldier", "lvl": 63},
+        {"name": "Plando", "lvl": 64},
+        {"name": "Cave Howler", "lvl": 65},
+        {"name": "Malruk Knight", "lvl": 66}
+      ],
+      "forumMobLevelRange": [59, 66],
+      "epicLair": ["antharas"],
+      "doc_notes": [
+        {
+          "note": "≈1,46 M EXP/ч — выбиралась на 53 ур. после переустановки без замеров (баг, исправлен)",
+          "src": "CHANGELOG-8.0"
+        }
+      ]
+    },
+    {
+      "key": "bee_hive",
+      "name": "Bee Hive",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [20, 51],
+      "town": false,
+      "expStat_baseProfile": {
+        "30": {
+          "kills": 100,
+          "exp": 328998,
+          "sec": 409.6,
+          "pctLevel": 73.06,
+          "expPerHour": 2891803,
+          "secPerKill": 4.1,
+          "killsPerHour": 879
+        },
+        "31": {
+          "kills": 58,
+          "exp": 215700,
+          "sec": 193.2,
+          "pctLevel": 55.24,
+          "expPerHour": 4019546,
+          "secPerKill": 3.33,
+          "killsPerHour": 1081
+        }
+      },
+      "mobsSeenOnMap": [
+        "Giant Crimson Ant",
+        "Wasp Leader",
+        "Stinger Wasp",
+        "Wasp Worker",
+        "Hatu Weird Bee",
+        "Ol Mahum Guerilla",
+        "Neer Crawler",
+        "Ol Mahum Ranger",
+        "Ol Mahum Sergeant",
+        "Ol Mahum Captain",
+        "Tumran Bugbear",
+        "Ol Mahum Legionnaire",
+        "Ol Mahum Marksman",
+        "Basilisk",
+        "Ol Mahum Raider",
+        "Marsh Stakato Worker",
+        "Marsh Stakato Drone",
+        "Marsh Stakato Soldier"
+      ],
+      "mobsForum": [
+        {"name": "Giant Crimson Ant", "lvl": 28},
+        {"name": "Stinger Wasp", "lvl": 30},
+        {"name": "Wasp Leader", "lvl": 37}
+      ],
+      "forumMobLevelRange": [28, 37]
+    },
+    {
+      "key": "blazing_swamp",
+      "name": "Blazing Swamp",
+      "city": "aden",
+      "teleportPrice": 7000,
+      "levelBand": [48, 57],
+      "town": false,
+      "expStat_baseProfile": {
+        "44": {
+          "kills": 46,
+          "exp": 777945,
+          "sec": 608.3,
+          "pctLevel": 33.18,
+          "expPerHour": 4604201,
+          "secPerKill": 13.22,
+          "killsPerHour": 272
+        },
+        "45": {
+          "kills": 29,
+          "exp": 453176,
+          "sec": 340.5,
+          "pctLevel": 17.95,
+          "expPerHour": 4791865,
+          "secPerKill": 11.74,
+          "killsPerHour": 307
+        },
+        "46": {
+          "kills": 21,
+          "exp": 306868,
+          "sec": 271.2,
+          "pctLevel": 10.02,
+          "expPerHour": 4073709,
+          "secPerKill": 12.91,
+          "killsPerHour": 279
+        },
+        "47": {
+          "kills": 38,
+          "exp": 576359,
+          "sec": 420.9,
+          "pctLevel": 19.77,
+          "expPerHour": 4929106,
+          "secPerKill": 11.08,
+          "killsPerHour": 325
+        },
+        "49": {
+          "kills": 18,
+          "exp": 356774,
+          "sec": 188.8,
+          "pctLevel": 10.66,
+          "expPerHour": 6803975,
+          "secPerKill": 10.49,
+          "killsPerHour": 343
+        },
+        "50": {
+          "kills": 37,
+          "exp": 389671,
+          "sec": 240.8,
+          "pctLevel": 7.26,
+          "expPerHour": 5825574,
+          "secPerKill": 6.51,
+          "killsPerHour": 553
+        },
+        "51": {
+          "kills": 130,
+          "exp": 717342,
+          "sec": 598,
+          "pctLevel": 12.51,
+          "expPerHour": 4318447,
+          "secPerKill": 4.6,
+          "killsPerHour": 783
+        }
+      },
+      "expStat_fixture7128": {
+        "44": {
+          "kills": 46,
+          "exp": 777945,
+          "sec": 608.3,
+          "pctLevel": 33.18,
+          "expPerHour": 4604201,
+          "secPerKill": 13.22,
+          "killsPerHour": 272
+        },
+        "45": {
+          "kills": 29,
+          "exp": 453176,
+          "sec": 340.5,
+          "pctLevel": 17.95,
+          "expPerHour": 4791865,
+          "secPerKill": 11.74,
+          "killsPerHour": 307
+        },
+        "46": {
+          "kills": 21,
+          "exp": 306868,
+          "sec": 271.2,
+          "pctLevel": 10.02,
+          "expPerHour": 4073709,
+          "secPerKill": 12.91,
+          "killsPerHour": 279
+        },
+        "47": {
+          "kills": 38,
+          "exp": 576359,
+          "sec": 420.9,
+          "pctLevel": 19.77,
+          "expPerHour": 4929106,
+          "secPerKill": 11.08,
+          "killsPerHour": 325
+        },
+        "49": {
+          "kills": 18,
+          "exp": 356774,
+          "sec": 188.8,
+          "pctLevel": 10.66,
+          "expPerHour": 6803975,
+          "secPerKill": 10.49,
+          "killsPerHour": 343
+        }
+      },
+      "mobsSeenOnMap": ["Taik Orc Supply Leader", "Hatar Ratman Boss", "Taik Orc Supply", "Hatar Hanishee", "Deprive", "Farcran"],
+      "mobsForum": [
+        {"name": "Hatar Ratman Boss", "lvl": 48},
+        {"name": "Hatar Hanishee", "lvl": 49},
+        {"name": "Deprive", "lvl": 50},
+        {"name": "Taik Orc Supply", "lvl": 51},
+        {"name": "Farcran", "lvl": 53},
+        {"name": "Taik Orc Supply Leader", "lvl": 55},
+        {"name": "Flame Crucible Guardian", "lvl": 56},
+        {"name": "Flame Trial Champion", "lvl": 57}
+      ],
+      "forumMobLevelRange": [48, 57],
+      "zoneBad_t": "2026-10-09T20:55:04Z",
+      "doc_notes": [
+        {"note": "≈6,8 M EXP/ч на 49–50 ур.", "src": "CLAUDE.md «Замеры»"},
+        {"note": "≈4,6–6,8 M EXP/ч", "src": "CHANGELOG-7.1.28 (симуляция по замерам)"},
+        {"note": "≈5,8 M EXP/ч (куда автофарм перекинул 10.10 19:39)", "src": "CHANGELOG-7.1.31"},
+        {
+          "note": "зона помечена «плохой» (rt.zoneBad, время метки — в zoneBad_t)",
+          "src": "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3)"
+        }
+      ]
+    },
+    {
+      "key": "brekas_stronghold",
+      "name": "Breka's Stronghold",
+      "city": "giran",
+      "teleportPrice": 0,
+      "levelBand": [31, 52],
+      "town": false,
+      "mobsForum": [
+        {"name": "Breka Orc", "lvl": 31},
+        {"name": "Breka Orc Archer", "lvl": 32},
+        {"name": "Breka Orc Warrior", "lvl": 33},
+        {"name": "Breka Orc Shaman", "lvl": 34},
+        {"name": "Breka Orc Overlord", "lvl": 35},
+        {"name": "Wyrm", "lvl": 35},
+        {"name": "Guardian Basilisk", "lvl": 36},
+        {"name": "Road Scavenger", "lvl": 37},
+        {"name": "Fettered Soul", "lvl": 38},
+        {"name": "Windsus", "lvl": 39}
+      ],
+      "forumMobLevelRange": [31, 39]
+    },
+    {
+      "key": "catacomb_of_dark_omens",
+      "name": "Catacomb of Dark Omens",
+      "dungeon": true,
+      "levelBand_start": [70, 80],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "catacomb_of_the_apostate",
+      "name": "Catacomb of the Apostate",
+      "dungeon": true,
+      "levelBand_start": [50, 51],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "catacomb_of_the_branded",
+      "name": "Catacomb of the Branded",
+      "dungeon": true,
+      "levelBand_start": [40, 50],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "catacomb_of_the_forbidden_path",
+      "name": "Catacomb of the Forbidden Path",
+      "dungeon": true,
+      "levelBand_start": [75, 76],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "catacomb_of_the_heretic",
+      "name": "Catacomb of the Heretic",
+      "dungeon": true,
+      "levelBand_start": [30, 40],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "catacomb_of_the_witch",
+      "name": "Catacomb of the Witch",
+      "dungeon": true,
+      "levelBand_start": [60, 70],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "cave_of_trials",
+      "name": "Cave of Trials",
+      "city": "orc_village",
+      "teleportPrice": 0,
+      "levelBand": [4, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Kaboo Orc Fighter", "lvl": 10},
+        {"name": "Kaboo Orc Fighter Lieutenant", "lvl": 11},
+        {"name": "Kaboo Orc Fighter Leader", "lvl": 12},
+        {"name": "Batur Orc", "lvl": 31},
+        {"name": "Batur Orc Warrior", "lvl": 33},
+        {"name": "Marsh Stakato Soldier", "lvl": 33},
+        {"name": "Batur Orc Shaman", "lvl": 34},
+        {"name": "Marsh Stakato Drone", "lvl": 35}
+      ],
+      "forumMobLevelRange": [10, 35]
+    },
+    {
+      "key": "cedrics_training_hall",
+      "name": "Cedric's Training Hall",
+      "city": "talking_island",
+      "teleportPrice": 0,
+      "levelBand": [4, 17],
+      "town": false,
+      "mobsForum": [
+        {"name": "Wolf", "lvl": 4},
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Imp", "lvl": 6},
+        {"name": "Orc Grunt", "lvl": 7}
+      ],
+      "forumMobLevelRange": [4, 7]
+    },
+    {
+      "key": "coliseum",
+      "name": "Coliseum",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [44, 79],
+      "town": false,
+      "mobsForum": [
+        {"name": "Taik Orc Captain", "lvl": 44},
+        {"name": "Vanor Silenos Warrior", "lvl": 48},
+        {"name": "Vanor Silenos Shaman", "lvl": 49},
+        {"name": "Harit Lizardman", "lvl": 50},
+        {"name": "Vanor Silenos Chieftain", "lvl": 50},
+        {"name": "Harit Lizardman Warrior", "lvl": 53}
+      ],
+      "forumMobLevelRange": [44, 53]
+    },
+    {
+      "key": "cruma_marshlands",
+      "name": "Cruma Marshlands",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [5, 49],
+      "town": false,
+      "mobsForum": [
+        {"name": "Neer Crawler", "lvl": 28},
+        {"name": "Marsh Stakato", "lvl": 29},
+        {"name": "Marsh Stakato Worker", "lvl": 31},
+        {"name": "Marsh Stakato Soldier", "lvl": 33},
+        {"name": "Marsh Stakato Drone", "lvl": 35}
+      ],
+      "forumMobLevelRange": [28, 35]
+    },
+    {
+      "key": "cruma_tower",
+      "name": "Cruma Tower",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [28, 49],
+      "town": false,
+      "expStat_baseProfile": {
+        "33": {
+          "kills": 6,
+          "exp": 73718,
+          "sec": 40.3,
+          "pctLevel": 12.06,
+          "expPerHour": 6580495,
+          "secPerKill": 6.72,
+          "killsPerHour": 536
+        },
+        "34": {
+          "kills": 25,
+          "exp": 183632,
+          "sec": 126.9,
+          "pctLevel": 27.26,
+          "expPerHour": 5209952,
+          "secPerKill": 5.08,
+          "killsPerHour": 709
+        }
+      },
+      "mobsSeenOnMap": ["Krator", "Validus", "Porta", "Mordeo", "Ricenseo", "Perum", "Dicor", "Catherok", "Premo", "Excuro"],
+      "mobsForum": [
+        {"name": "Porta", "lvl": 40},
+        {"name": "Excuro", "lvl": 41},
+        {"name": "Catherok", "lvl": 42},
+        {"name": "Mordeo", "lvl": 42},
+        {"name": "Ricenseo", "lvl": 43},
+        {"name": "Krator", "lvl": 44},
+        {"name": "Premo", "lvl": 45},
+        {"name": "Validus", "lvl": 46},
+        {"name": "Dicor", "lvl": 47},
+        {"name": "Perum", "lvl": 48},
+        {"name": "Torfe", "lvl": 49}
+      ],
+      "forumMobLevelRange": [40, 49],
+      "epicLair": ["core"]
+    },
+    {
+      "key": "crypts_of_disgrace",
+      "name": "Crypts of Disgrace",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": [66, 80],
+      "town": false,
+      "mobsForum": [
+        {"name": "Bone Caster", "lvl": 71},
+        {"name": "Bone Puppeteer", "lvl": 71},
+        {"name": "Grave Scarab", "lvl": 73},
+        {"name": "Grave Ant", "lvl": 74},
+        {"name": "Tomb Guard", "lvl": 75},
+        {"name": "Tomb Preacher", "lvl": 77},
+        {"name": "Spiked Stakato Captain", "lvl": 78},
+        {"name": "Spiked Stakato Nurse", "lvl": 79},
+        {"name": "Spiked Stakato Shaman", "lvl": 80}
+      ],
+      "forumMobLevelRange": [71, 80]
+    },
+    {
+      "key": "dark_elf_village",
+      "name": "Dark Elven Village",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Imp", "lvl": 6},
+        {"name": "Imp Elder", "lvl": 7},
+        {"name": "Orc Grunt", "lvl": 7},
+        {"name": "Green Dryad", "lvl": 8},
+        {"name": "Werewolf", "lvl": 9}
+      ],
+      "forumMobLevelRange": [5, 9]
+    },
+    {
+      "key": "dark_elven_forest",
+      "name": "Dark Elven Forest",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": [5, 20],
+      "town": false,
+      "mobsForum": [
+        {"name": "Green Dryad", "lvl": 8},
+        {"name": "Dryad", "lvl": 13},
+        {"name": "Lesser Dark Horror", "lvl": 15},
+        {"name": "Dark Horror", "lvl": 16},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Venomous Spider", "lvl": 18},
+        {"name": "Arachnid Tracker", "lvl": 19},
+        {"name": "Arachnid Predator", "lvl": 20}
+      ],
+      "forumMobLevelRange": [8, 20]
+    },
+    {
+      "key": "den_of_evil",
+      "name": "Den of Evil",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": [46, 80],
+      "town": false,
+      "expStat_baseProfile": {
+        "51": {
+          "kills": 294,
+          "exp": 2522690,
+          "sec": 1392,
+          "pctLevel": 43.96,
+          "expPerHour": 6524198,
+          "secPerKill": 4.73,
+          "killsPerHour": 760
+        }
+      },
+      "mobsForum": [
+        {"name": "Bone Maker", "lvl": 66},
+        {"name": "Bone Snatcher", "lvl": 66},
+        {"name": "Bone Collector", "lvl": 67},
+        {"name": "Bloody Banshee", "lvl": 74},
+        {"name": "Cannibalistic Stakato Follower", "lvl": 74},
+        {"name": "Cannibalistic Stakato Leader", "lvl": 75},
+        {"name": "Spiked Stakato Soldier", "lvl": 76},
+        {"name": "Spiked Stakato Captain", "lvl": 78},
+        {"name": "Spiked Stakato Shaman", "lvl": 80}
+      ],
+      "forumMobLevelRange": [66, 80],
+      "doc_notes": [{"note": "≈6,52 M EXP/ч на 51 ур. (зоны 51–52 из шапок журналов 10.10 18:17–21:46)", "src": "CHANGELOG-8.0"}]
+    },
+    {
+      "key": "devils_isle",
+      "name": "Devil's Isle",
+      "city": "giran",
+      "teleportPrice": 0,
+      "levelBand": [25, 51],
+      "town": false,
+      "expStat_baseProfile": {
+        "31": {
+          "kills": 21,
+          "exp": 229992,
+          "sec": 142.0,
+          "pctLevel": 45.98,
+          "expPerHour": 5831892,
+          "secPerKill": 6.76,
+          "killsPerHour": 532
+        },
+        "32": {
+          "kills": 72,
+          "exp": 549322,
+          "sec": 463.3,
+          "pctLevel": 99.17,
+          "expPerHour": 4268356,
+          "secPerKill": 6.43,
+          "killsPerHour": 559
+        },
+        "33": {
+          "kills": 20,
+          "exp": 45232,
+          "sec": 66.6,
+          "pctLevel": 7.39,
+          "expPerHour": 2446442,
+          "secPerKill": 3.33,
+          "killsPerHour": 1082
+        }
+      },
+      "mobsSeenOnMap": [
+        "Zaken's Elite Archer",
+        "Zaken's Archer",
+        "Unpleasant Shout",
+        "Kaim Vanul",
+        "Unpleasant Humming",
+        "Zaken's Pikeman",
+        "Zaken's Elite Pikeman",
+        "Pirate Zombie",
+        "Zaken's Seer",
+        "Giant Crimson Ant"
+      ],
+      "mobsForum": [
+        {"name": "Zaken's Elite Pikeman", "lvl": 43},
+        {"name": "Zaken's Pikeman", "lvl": 43},
+        {"name": "Pirate Zombie", "lvl": 44},
+        {"name": "Zaken's Archer", "lvl": 44},
+        {"name": "Zaken's Elite Archer", "lvl": 44},
+        {"name": "Zaken's Seer", "lvl": 45},
+        {"name": "Unpleasant Humming", "lvl": 46},
+        {"name": "Unpleasant Shout", "lvl": 46},
+        {"name": "Kaim Vanul", "lvl": 51}
+      ],
+      "forumMobLevelRange": [43, 51],
+      "epicLair": ["zaken"]
+    },
+    {
+      "key": "dion",
+      "name": "Town of Dion",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Ol Mahum Ranger", "lvl": 22},
+        {"name": "Tumran Bugbear", "lvl": 23},
+        {"name": "Ol Mahum Guerilla", "lvl": 26},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Basilisk", "lvl": 28},
+        {"name": "Giant Crimson Ant", "lvl": 28},
+        {"name": "Neer Crawler", "lvl": 28},
+        {"name": "Ol Mahum Legionnaire", "lvl": 28},
+        {"name": "Ol Mahum Marksman", "lvl": 28},
+        {"name": "Ol Mahum Sergeant", "lvl": 29},
+        {"name": "Ol Mahum Captain", "lvl": 30}
+      ],
+      "forumMobLevelRange": [22, 30]
+    },
+    {
+      "key": "disciples_necropolis",
+      "name": "The Disciple's Necropolis",
+      "dungeon": true,
+      "levelBand_start": [70, 80],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "dragon_valley",
+      "name": "Dragon Valley",
+      "city": "giran",
+      "teleportPrice": 0,
+      "levelBand": [31, 55],
+      "town": false,
+      "expStat_baseProfile": {
+        "38": {
+          "kills": 68,
+          "exp": 973994,
+          "sec": 357.6,
+          "pctLevel": 100.86,
+          "expPerHour": 9804568,
+          "secPerKill": 5.26,
+          "killsPerHour": 685
+        },
+        "39": {
+          "kills": 54,
+          "exp": 601676,
+          "sec": 248.2,
+          "pctLevel": 57.22,
+          "expPerHour": 8726898,
+          "secPerKill": 4.6,
+          "killsPerHour": 783
+        }
+      },
+      "mobsSeenOnMap": [
+        "Dragon Bearer Archer",
+        "Cave Servant",
+        "Dragon Bearer Chief",
+        "Royal Cave Servant",
+        "Headless Knight",
+        "Hunter Gargoyle",
+        "Cave Servant Captain",
+        "Dragon Bearer Warrior",
+        "Cave Servant Warrior",
+        "Cave Servant Archer"
+      ],
+      "mobsForum": [
+        {"name": "Cave Servant", "lvl": 46},
+        {"name": "Cave Servant Archer", "lvl": 47},
+        {"name": "Cave Servant Warrior", "lvl": 48},
+        {"name": "Cave Servant Captain", "lvl": 49},
+        {"name": "Dragon Bearer Chief", "lvl": 49},
+        {"name": "Headless Knight", "lvl": 50},
+        {"name": "Royal Cave Servant", "lvl": 51},
+        {"name": "Steel Trial Champion", "lvl": 51},
+        {"name": "Hunter Gargoyle", "lvl": 52}
+      ],
+      "forumMobLevelRange": [46, 52]
+    },
+    {
+      "key": "dwarf_village",
+      "name": "Dwarven Village",
+      "city": "dwarf_village",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Imp", "lvl": 6},
+        {"name": "Utuku Orc Grunt", "lvl": 7},
+        {"name": "Darkstone Golem", "lvl": 13},
+        {"name": "Greystone Golem", "lvl": 13},
+        {"name": "Stone Golem", "lvl": 13},
+        {"name": "Pitchstone Golem", "lvl": 19},
+        {"name": "Dwarf Ghost", "lvl": 20},
+        {"name": "Granite Golem", "lvl": 33}
+      ],
+      "forumMobLevelRange": [5, 33]
+    },
+    {
+      "key": "eastern_mining_zone",
+      "name": "Eastern Mining Zone",
+      "city": "dwarf_village",
+      "teleportPrice": 0,
+      "levelBand": [7, 61],
+      "town": false,
+      "mobsForum": [
+        {"name": "Greystone Golem", "lvl": 13},
+        {"name": "Stone Golem", "lvl": 13},
+        {"name": "Whinstone Golem", "lvl": 14},
+        {"name": "Obsidian Golem", "lvl": 15},
+        {"name": "Pitchstone Golem", "lvl": 19},
+        {"name": "Granite Golem", "lvl": 33},
+        {"name": "Rotting Golem", "lvl": 44},
+        {"name": "Lesser Giant", "lvl": 61}
+      ],
+      "forumMobLevelRange": [13, 61]
+    },
+    {
+      "key": "elf_village",
+      "name": "Elven Village",
+      "city": "elf_village",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Elder Red Keltir", "lvl": 3},
+        {"name": "Wolf", "lvl": 4},
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Green Dryad", "lvl": 8},
+        {"name": "Werewolf", "lvl": 9},
+        {"name": "Dryad", "lvl": 13},
+        {"name": "Giant Spider", "lvl": 15},
+        {"name": "Hook Spider", "lvl": 16}
+      ],
+      "forumMobLevelRange": [3, 16]
+    },
+    {
+      "key": "elven_forest",
+      "name": "Elven Forest",
+      "city": "elf_village",
+      "teleportPrice": 0,
+      "levelBand": [3, 21],
+      "town": false,
+      "mobsForum": [
+        {"name": "Green Dryad", "lvl": 8},
+        {"name": "Dryad", "lvl": 13},
+        {"name": "Giant Spider", "lvl": 15},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Lirein", "lvl": 18},
+        {"name": "Venomous Spider", "lvl": 18},
+        {"name": "Lirein Elder", "lvl": 19},
+        {"name": "Arachnid Predator", "lvl": 20}
+      ],
+      "forumMobLevelRange": [8, 20]
+    },
+    {
+      "key": "elven_fortress",
+      "name": "Elven Fortress",
+      "city": "elf_village",
+      "teleportPrice": 0,
+      "levelBand": [8, 21],
+      "town": false,
+      "mobsForum": [
+        {"name": "Akaste Bone Soldier", "lvl": 12},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Akaste Bone Archer", "lvl": 14},
+        {"name": "Spartoi", "lvl": 15},
+        {"name": "Tracker Skeleton", "lvl": 17},
+        {"name": "Skeleton Scout", "lvl": 19},
+        {"name": "Skeleton Bowman", "lvl": 20},
+        {"name": "Ruin Spartoi", "lvl": 21}
+      ],
+      "forumMobLevelRange": [12, 21]
+    },
+    {
+      "key": "elven_ruins",
+      "name": "Elven Ruins",
+      "city": "talking_island",
+      "teleportPrice": 0,
+      "levelBand": [12, 21],
+      "town": false,
+      "mobsForum": [
+        {"name": "Dungeon Skeleton", "lvl": 12},
+        {"name": "Skeleton", "lvl": 12},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Skeleton Archer", "lvl": 13},
+        {"name": "Tracker Skeleton", "lvl": 17},
+        {"name": "Tracker Skeleton Leader", "lvl": 18},
+        {"name": "Skeleton Scout", "lvl": 19},
+        {"name": "Skeleton Bowman", "lvl": 20},
+        {"name": "Ruin Spartoi", "lvl": 21}
+      ],
+      "forumMobLevelRange": [12, 21]
+    },
+    {
+      "key": "enchanted_valley_north",
+      "name": "Enchanted Valley - Northern Region",
+      "city": "hunters",
+      "teleportPrice": 7000,
+      "levelBand": [48, 62],
+      "town": false,
+      "expStat_baseProfile": {
+        "50": {
+          "kills": 150,
+          "exp": 780403,
+          "sec": 1715.1,
+          "pctLevel": 14.53,
+          "expPerHour": 1638025,
+          "secPerKill": 11.43,
+          "killsPerHour": 315
+        }
+      },
+      "expStat_fixture7128": {
+        "50": {
+          "kills": 132,
+          "exp": 594493,
+          "sec": 1509.3,
+          "pctLevel": 11.07,
+          "expPerHour": 1417965,
+          "secPerKill": 11.43,
+          "killsPerHour": 315
+        }
+      },
+      "mobsSeenOnMap": ["Unicorn", "Valley Treant Elder", "Liele Elder", "Fline Elder", "Satyr", "Forest Runner"],
+      "mobsForum": [
+        {"name": "Satyr", "lvl": 48},
+        {"name": "Unicorn", "lvl": 49},
+        {"name": "Forest Runner", "lvl": 50},
+        {"name": "Fline Elder", "lvl": 51},
+        {"name": "Liele Elder", "lvl": 52},
+        {"name": "Eva's Grove Guardian", "lvl": 53},
+        {"name": "Valley Treant Elder", "lvl": 53}
+      ],
+      "forumMobLevelRange": [48, 53],
+      "doc_notes": [
+        {
+          "note": "≈1,6 M EXP/ч — ближайшая по уровню зона, куда бот улетел 10.10 19:35 (лишний телепорт)",
+          "src": "CHANGELOG-7.1.31"
+        }
+      ]
+    },
+    {
+      "key": "enchanted_valley_south",
+      "name": "Enchanted Valley - Southern Region",
+      "city": "hunters",
+      "teleportPrice": 5500,
+      "levelBand": [40, 55],
+      "town": false,
+      "expStat_baseProfile": {
+        "40": {
+          "kills": 67,
+          "exp": 337385,
+          "sec": 606.6,
+          "pctLevel": 19.68,
+          "expPerHour": 2002324,
+          "secPerKill": 9.05,
+          "killsPerHour": 398
+        },
+        "41": {
+          "kills": 69,
+          "exp": 316411,
+          "sec": 606.3,
+          "pctLevel": 17.03,
+          "expPerHour": 1878708,
+          "secPerKill": 8.79,
+          "killsPerHour": 410
+        },
+        "42": {
+          "kills": 60,
+          "exp": 312815,
+          "sec": 605.3,
+          "pctLevel": 15.55,
+          "expPerHour": 1860379,
+          "secPerKill": 10.09,
+          "killsPerHour": 357
+        },
+        "43": {
+          "kills": 64,
+          "exp": 325993,
+          "sec": 608.0,
+          "pctLevel": 14.99,
+          "expPerHour": 1930266,
+          "secPerKill": 9.5,
+          "killsPerHour": 379
+        },
+        "44": {
+          "kills": 69,
+          "exp": 340863,
+          "sec": 604.2,
+          "pctLevel": 14.54,
+          "expPerHour": 2030874,
+          "secPerKill": 8.76,
+          "killsPerHour": 411
+        },
+        "49": {
+          "kills": 31,
+          "exp": 172702,
+          "sec": 185.6,
+          "pctLevel": 5.16,
+          "expPerHour": 3349174,
+          "secPerKill": 5.99,
+          "killsPerHour": 601
+        }
+      },
+      "expStat_fixture7128": {
+        "40": {
+          "kills": 67,
+          "exp": 337385,
+          "sec": 606.6,
+          "pctLevel": 19.68,
+          "expPerHour": 2002324,
+          "secPerKill": 9.05,
+          "killsPerHour": 398
+        },
+        "41": {
+          "kills": 69,
+          "exp": 316411,
+          "sec": 606.3,
+          "pctLevel": 17.03,
+          "expPerHour": 1878708,
+          "secPerKill": 8.79,
+          "killsPerHour": 410
+        },
+        "42": {
+          "kills": 60,
+          "exp": 312815,
+          "sec": 605.3,
+          "pctLevel": 15.55,
+          "expPerHour": 1860379,
+          "secPerKill": 10.09,
+          "killsPerHour": 357
+        },
+        "43": {
+          "kills": 64,
+          "exp": 325993,
+          "sec": 608.0,
+          "pctLevel": 14.99,
+          "expPerHour": 1930266,
+          "secPerKill": 9.5,
+          "killsPerHour": 379
+        },
+        "44": {
+          "kills": 69,
+          "exp": 340863,
+          "sec": 604.2,
+          "pctLevel": 14.54,
+          "expPerHour": 2030874,
+          "secPerKill": 8.76,
+          "killsPerHour": 411
+        },
+        "49": {
+          "kills": 31,
+          "exp": 172702,
+          "sec": 185.6,
+          "pctLevel": 5.16,
+          "expPerHour": 3349174,
+          "secPerKill": 5.99,
+          "killsPerHour": 601
+        }
+      },
+      "mobsSeenOnMap": ["Unicorn", "Satyr", "Liele", "Forest Runner", "Valley Treant", "Fline"],
+      "mobsForum": [
+        {"name": "Fline", "lvl": 45},
+        {"name": "Liele", "lvl": 46},
+        {"name": "Valley Treant", "lvl": 47},
+        {"name": "Satyr", "lvl": 48},
+        {"name": "Unicorn", "lvl": 49},
+        {"name": "Forest Runner", "lvl": 50},
+        {"name": "Eva's Windblade Guardian", "lvl": 51}
+      ],
+      "forumMobLevelRange": [45, 51],
+      "zoneBad_t": "2026-10-09T17:42:05Z",
+      "doc_notes": [
+        {
+          "note": "зона «плохая» (zoneBad) по метке 10.10",
+          "src": "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3)"
+        }
+      ]
+    },
+    {
+      "key": "fellmere_hunting_grounds",
+      "name": "Fellmere Hunting Grounds",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [14, 34],
+      "town": false,
+      "mobsForum": [
+        {"name": "Felim Lizardman", "lvl": 14},
+        {"name": "Felim Lizardman Scout", "lvl": 15},
+        {"name": "Ruin Zombie", "lvl": 15},
+        {"name": "Brown Bear", "lvl": 16},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Felim Lizardman Warrior", "lvl": 17},
+        {"name": "Grizzly Bear", "lvl": 17},
+        {"name": "Tracker Skeleton", "lvl": 17},
+        {"name": "Venomous Spider", "lvl": 18}
+      ],
+      "forumMobLevelRange": [14, 18]
+    },
+    {
+      "key": "field_of_silence",
+      "name": "Field of Silence",
+      "city": "heine",
+      "teleportPrice": 6000,
+      "levelBand": [38, 59],
+      "town": false,
+      "expStat_baseProfile": {
+        "42": {
+          "kills": 38,
+          "exp": 591514,
+          "sec": 615.3,
+          "pctLevel": 29.41,
+          "expPerHour": 3460833,
+          "secPerKill": 16.19,
+          "killsPerHour": 222
+        },
+        "43": {
+          "kills": 41,
+          "exp": 606818,
+          "sec": 602.7,
+          "pctLevel": 27.93,
+          "expPerHour": 3624694,
+          "secPerKill": 14.7,
+          "killsPerHour": 245
+        },
+        "44": {
+          "kills": 73,
+          "exp": 425334,
+          "sec": 642.5,
+          "pctLevel": 18.15,
+          "expPerHour": 2383358,
+          "secPerKill": 8.8,
+          "killsPerHour": 409
+        },
+        "47": {
+          "kills": 13,
+          "exp": 373000,
+          "sec": 199.5,
+          "pctLevel": 12.79,
+          "expPerHour": 6731333,
+          "secPerKill": 15.35,
+          "killsPerHour": 235
+        },
+        "49": {
+          "kills": 28,
+          "exp": 187393,
+          "sec": 185.1,
+          "pctLevel": 5.6,
+          "expPerHour": 3645010,
+          "secPerKill": 6.61,
+          "killsPerHour": 545
+        }
+      },
+      "expStat_fixture7128": {
+        "42": {
+          "kills": 38,
+          "exp": 591514,
+          "sec": 615.3,
+          "pctLevel": 29.41,
+          "expPerHour": 3460833,
+          "secPerKill": 16.19,
+          "killsPerHour": 222
+        },
+        "43": {
+          "kills": 41,
+          "exp": 606818,
+          "sec": 602.7,
+          "pctLevel": 27.93,
+          "expPerHour": 3624694,
+          "secPerKill": 14.7,
+          "killsPerHour": 245
+        },
+        "44": {
+          "kills": 73,
+          "exp": 425334,
+          "sec": 642.5,
+          "pctLevel": 18.15,
+          "expPerHour": 2383358,
+          "secPerKill": 8.8,
+          "killsPerHour": 409
+        },
+        "47": {
+          "kills": 13,
+          "exp": 373000,
+          "sec": 199.5,
+          "pctLevel": 12.79,
+          "expPerHour": 6731333,
+          "secPerKill": 15.35,
+          "killsPerHour": 235
+        },
+        "49": {
+          "kills": 28,
+          "exp": 187393,
+          "sec": 185.1,
+          "pctLevel": 5.6,
+          "expPerHour": 3645010,
+          "secPerKill": 6.61,
+          "killsPerHour": 545
+        }
+      },
+      "mobsSeenOnMap": [
+        "Nos",
+        "Farhite",
+        "Nos Lad",
+        "Crokian Lad Warrior",
+        "Garden Guard",
+        "Crokian Lad",
+        "Swamp Alligator",
+        "Crokian Warrior"
+      ],
+      "mobsForum": [
+        {"name": "Crokian Warrior", "lvl": 38},
+        {"name": "Farhite", "lvl": 39},
+        {"name": "Nos", "lvl": 40},
+        {"name": "Crokian Lad", "lvl": 41},
+        {"name": "Crokian Lad Warrior", "lvl": 43},
+        {"name": "Nos Lad", "lvl": 45},
+        {"name": "Eva's Light Spirit", "lvl": 56},
+        {"name": "Eva's Valor Guardian", "lvl": 59}
+      ],
+      "forumMobLevelRange": [38, 59],
+      "doc_notes": [{"note": "≈3,65 M EXP/ч на 49–50", "src": "CLAUDE.md «Замеры»"}]
+    },
+    {
+      "key": "field_of_whispers",
+      "name": "Field of Whispers",
+      "city": "heine",
+      "teleportPrice": 6500,
+      "levelBand": [36, 58],
+      "town": false,
+      "expStat_baseProfile": {
+        "40": {
+          "kills": 120,
+          "exp": 654226,
+          "sec": 605.2,
+          "pctLevel": 38.17,
+          "expPerHour": 3891834,
+          "secPerKill": 5.04,
+          "killsPerHour": 714
+        },
+        "41": {
+          "kills": 62,
+          "exp": 335593,
+          "sec": 608.2,
+          "pctLevel": 18.05,
+          "expPerHour": 1986499,
+          "secPerKill": 9.81,
+          "killsPerHour": 367
+        },
+        "42": {
+          "kills": 16,
+          "exp": 116153,
+          "sec": 199.2,
+          "pctLevel": 5.78,
+          "expPerHour": 2099382,
+          "secPerKill": 12.45,
+          "killsPerHour": 289
+        },
+        "43": {
+          "kills": 54,
+          "exp": 266284,
+          "sec": 402.8,
+          "pctLevel": 12.26,
+          "expPerHour": 2379838,
+          "secPerKill": 7.46,
+          "killsPerHour": 483
+        }
+      },
+      "mobsSeenOnMap": [
+        "Crokian",
+        "Doll Master",
+        "Garden Guard",
+        "Crimson Doll Blader",
+        "Farhite Lad",
+        "Doll Blader",
+        "Garden Guard Leader",
+        "Eva's Seeker"
+      ],
+      "mobsForum": [
+        {"name": "Crokian", "lvl": 36},
+        {"name": "Farhite Lad", "lvl": 44},
+        {"name": "Eva's Seeker", "lvl": 47},
+        {"name": "Doll Master", "lvl": 50},
+        {"name": "Garden Guard Leader", "lvl": 50},
+        {"name": "Crimson Doll Blader", "lvl": 53},
+        {"name": "Doll Blader", "lvl": 53},
+        {"name": "Eva's Wind Spirit", "lvl": 54}
+      ],
+      "forumMobLevelRange": [36, 54]
+    },
+    {
+      "key": "fields_of_massacre",
+      "name": "Fields of Massacre",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [58, 65],
+      "town": false,
+      "mobsForum": [
+        {"name": "Dismal Pole", "lvl": 58},
+        {"name": "Massacre Trial Champion", "lvl": 59},
+        {"name": "Doom Trooper", "lvl": 63},
+        {"name": "Doom Warrior", "lvl": 64},
+        {"name": "Doom Knight", "lvl": 65}
+      ],
+      "forumMobLevelRange": [58, 65]
+    },
+    {
+      "key": "forest_of_mirrors",
+      "name": "Forest of Mirrors",
+      "city": "hunters",
+      "teleportPrice": 6500,
+      "levelBand": [40, 55],
+      "town": false,
+      "expStat_baseProfile": {
+        "41": {
+          "kills": 74,
+          "exp": 415040,
+          "sec": 611.1,
+          "pctLevel": 22.44,
+          "expPerHour": 2444983,
+          "secPerKill": 8.26,
+          "killsPerHour": 436
+        },
+        "42": {
+          "kills": 63,
+          "exp": 373774,
+          "sec": 609.9,
+          "pctLevel": 18.58,
+          "expPerHour": 2206317,
+          "secPerKill": 9.68,
+          "killsPerHour": 372
+        },
+        "43": {
+          "kills": 63,
+          "exp": 349406,
+          "sec": 605.1,
+          "pctLevel": 16.08,
+          "expPerHour": 2078876,
+          "secPerKill": 9.6,
+          "killsPerHour": 375
+        },
+        "44": {
+          "kills": 66,
+          "exp": 403870,
+          "sec": 602.7,
+          "pctLevel": 17.23,
+          "expPerHour": 2412248,
+          "secPerKill": 9.13,
+          "killsPerHour": 394
+        },
+        "49": {
+          "kills": 30,
+          "exp": 212084,
+          "sec": 186.0,
+          "pctLevel": 6.34,
+          "expPerHour": 4105337,
+          "secPerKill": 6.2,
+          "killsPerHour": 581
+        }
+      },
+      "expStat_fixture7128": {
+        "41": {
+          "kills": 74,
+          "exp": 415040,
+          "sec": 611.1,
+          "pctLevel": 22.44,
+          "expPerHour": 2444983,
+          "secPerKill": 8.26,
+          "killsPerHour": 436
+        },
+        "42": {
+          "kills": 63,
+          "exp": 373774,
+          "sec": 609.9,
+          "pctLevel": 18.58,
+          "expPerHour": 2206317,
+          "secPerKill": 9.68,
+          "killsPerHour": 372
+        },
+        "43": {
+          "kills": 63,
+          "exp": 349406,
+          "sec": 605.1,
+          "pctLevel": 16.08,
+          "expPerHour": 2078876,
+          "secPerKill": 9.6,
+          "killsPerHour": 375
+        },
+        "44": {
+          "kills": 66,
+          "exp": 403870,
+          "sec": 602.7,
+          "pctLevel": 17.23,
+          "expPerHour": 2412248,
+          "secPerKill": 9.13,
+          "killsPerHour": 394
+        },
+        "49": {
+          "kills": 30,
+          "exp": 212084,
+          "sec": 186.0,
+          "pctLevel": 6.34,
+          "expPerHour": 4105337,
+          "secPerKill": 6.2,
+          "killsPerHour": 581
+        }
+      },
+      "mobsSeenOnMap": [
+        "Harit Lizardman",
+        "Harit Lizardman Grunt",
+        "Taik Orc",
+        "Harit Lizardman Warrior",
+        "Taik Orc Archer",
+        "Harit Lizardman Matriarch",
+        "Harit Lizardman Shaman",
+        "Taik Orc Warrior",
+        "Harit Lizardman Archer",
+        "Forest of Mirrors Ghost",
+        "Taik Orc Captain"
+      ],
+      "mobsForum": [
+        {"name": "Taik Orc", "lvl": 40},
+        {"name": "Taik Orc Archer", "lvl": 41},
+        {"name": "Taik Orc Warrior", "lvl": 42},
+        {"name": "Taik Orc Captain", "lvl": 44},
+        {"name": "Forest of Mirrors Ghost", "lvl": 46},
+        {"name": "Harit Lizardman", "lvl": 50},
+        {"name": "Harit Lizardman Grunt", "lvl": 51},
+        {"name": "Harit Lizardman Archer", "lvl": 52},
+        {"name": "Harit Lizardman Warrior", "lvl": 53},
+        {"name": "Mirror Trial Champion", "lvl": 53},
+        {"name": "Harit Lizardman Shaman", "lvl": 54},
+        {"name": "Mirror Soul Guardian", "lvl": 54},
+        {"name": "Eva's Mirror Guardian", "lvl": 55},
+        {"name": "Harit Lizardman Matriarch", "lvl": 55}
+      ],
+      "forumMobLevelRange": [40, 55],
+      "doc_notes": [{"note": "≈4,1 M EXP/ч на 49–50", "src": "CLAUDE.md «Замеры»"}]
+    },
+    {
+      "key": "forest_of_the_dead",
+      "name": "Forest of the Dead",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": [55, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Fallen Orc", "lvl": 55},
+        {"name": "Fallen Orc Archer", "lvl": 57},
+        {"name": "Fallen Orc Shaman", "lvl": 58},
+        {"name": "Banshee", "lvl": 60},
+        {"name": "Fallen Orc Captain", "lvl": 60},
+        {"name": "Bone Snatcher", "lvl": 66},
+        {"name": "Requiem Lord", "lvl": 68},
+        {"name": "Ghost of Rebellion Soldier", "lvl": 69},
+        {"name": "Vampire Soldier", "lvl": 71}
+      ],
+      "forumMobLevelRange": [55, 71]
+    },
+    {
+      "key": "forgotten_temple",
+      "name": "Forgotten Temple",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [12, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Dungeon Skeleton", "lvl": 12},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Akaste Bone Archer", "lvl": 14},
+        {"name": "Ruin Zombie", "lvl": 15},
+        {"name": "Akaste Bone Warlord", "lvl": 17},
+        {"name": "Tracker Skeleton", "lvl": 17},
+        {"name": "Tracker Skeleton Leader", "lvl": 18},
+        {"name": "Skeleton Scout", "lvl": 19},
+        {"name": "Skeleton Bowman", "lvl": 20},
+        {"name": "Ruin Spartoi", "lvl": 21}
+      ],
+      "forumMobLevelRange": [12, 21]
+    },
+    {
+      "key": "forsaken_plains",
+      "name": "Forsaken Plains",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [44, 79],
+      "town": false,
+      "mobsForum": [
+        {"name": "Marsh Stalker", "lvl": 54},
+        {"name": "Fallen Orc", "lvl": 55},
+        {"name": "Marsh Drake", "lvl": 55},
+        {"name": "Fallen Orc Archer", "lvl": 57},
+        {"name": "Fallen Orc Shaman", "lvl": 58},
+        {"name": "Fallen Orc Captain", "lvl": 60}
+      ],
+      "forumMobLevelRange": [54, 60]
+    },
+    {
+      "key": "fortress_of_resistance",
+      "name": "Fortress of Resistance",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [23, 30],
+      "town": false,
+      "expStat_baseProfile": {
+        "26": {
+          "kills": 5,
+          "exp": 31998,
+          "sec": 128.4,
+          "pctLevel": 11.93,
+          "expPerHour": 897112,
+          "secPerKill": 25.68,
+          "killsPerHour": 140
+        }
+      },
+      "mobsSeenOnMap": [
+        "Ol Mahum Shooter",
+        "Ol Mahum Marksman",
+        "Ol Mahum Captain",
+        "Ol Mahum Guerilla",
+        "Ol Mahum Raider",
+        "Ol Mahum Sergeant",
+        "Ol Mahum Reserve"
+      ],
+      "mobsForum": [
+        {"name": "Ol Mahum Reserve", "lvl": 23},
+        {"name": "Ol Mahum Shooter", "lvl": 24},
+        {"name": "Ol Mahum Guerilla", "lvl": 26},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Ol Mahum Marksman", "lvl": 28},
+        {"name": "Ol Mahum Sergeant", "lvl": 29},
+        {"name": "Ol Mahum Captain", "lvl": 30}
+      ],
+      "forumMobLevelRange": [23, 30]
+    },
+    {
+      "key": "frozen_labyrinth",
+      "name": "Frozen Labyrinth",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": [46, 80],
+      "town": false,
+      "mobsForum": [
+        {"name": "Massive Maze Bandersnatch", "lvl": 54},
+        {"name": "Frost Tarantula", "lvl": 58},
+        {"name": "Frost Iron Golem", "lvl": 59},
+        {"name": "Frost Buffalo", "lvl": 61},
+        {"name": "Lost Yeti", "lvl": 62},
+        {"name": "Ursus", "lvl": 62},
+        {"name": "Frost Yeti", "lvl": 63}
+      ],
+      "forumMobLevelRange": [54, 63]
+    },
+    {
+      "key": "frozen_waterfall",
+      "name": "Frozen Waterfall",
+      "city": "orc_village",
+      "teleportPrice": 0,
+      "levelBand": [6, 24],
+      "town": false,
+      "mobsForum": [
+        {"name": "Black Timber Wolf", "lvl": 6},
+        {"name": "Kaboo Orc Archer", "lvl": 8},
+        {"name": "Kaboo Orc Fighter", "lvl": 10},
+        {"name": "Brown Bear", "lvl": 16},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Grizzly Bear", "lvl": 17},
+        {"name": "Orc Shaman", "lvl": 17},
+        {"name": "Dire Wolf", "lvl": 24}
+      ],
+      "forumMobLevelRange": [6, 24]
+    },
+    {
+      "key": "garden_of_eva",
+      "name": "Garden of Eva",
+      "city": "heine",
+      "teleportPrice": 9500,
+      "levelBand": [36, 58],
+      "town": false,
+      "expStat_baseProfile": {
+        "40": {
+          "kills": 93,
+          "exp": 589271,
+          "sec": 630.9,
+          "pctLevel": 34.38,
+          "expPerHour": 3362518,
+          "secPerKill": 6.78,
+          "killsPerHour": 531
+        },
+        "41": {
+          "kills": 64,
+          "exp": 367398,
+          "sec": 608.2,
+          "pctLevel": 19.77,
+          "expPerHour": 2174525,
+          "secPerKill": 9.5,
+          "killsPerHour": 379
+        }
+      },
+      "mobsSeenOnMap": [
+        "Garden Guard Leader",
+        "Garden Guard",
+        "Nos Lad",
+        "Farhite Lad",
+        "Freya's Gardener",
+        "Eva's Seeker",
+        "Doll Master",
+        "Doll Blader"
+      ],
+      "mobsForum": [
+        {"name": "Farhite Lad", "lvl": 44},
+        {"name": "Nos Lad", "lvl": 45},
+        {"name": "Eva's Seeker", "lvl": 47},
+        {"name": "Doll Master", "lvl": 50},
+        {"name": "Garden Guard Leader", "lvl": 50},
+        {"name": "Eva's Water Spirit", "lvl": 52},
+        {"name": "Doll Blader", "lvl": 53},
+        {"name": "Freya's Gardener", "lvl": 58}
+      ],
+      "forumMobLevelRange": [44, 58]
+    },
+    {
+      "key": "giran",
+      "name": "Giran Castle Town",
+      "city": "giran",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Breka Orc", "lvl": 31},
+        {"name": "Breka Orc Archer", "lvl": 32},
+        {"name": "Breka Orc Warrior", "lvl": 33},
+        {"name": "Breka Orc Shaman", "lvl": 34},
+        {"name": "Breka Orc Overlord", "lvl": 35},
+        {"name": "Wyrm", "lvl": 35},
+        {"name": "Guardian Basilisk", "lvl": 36},
+        {"name": "Road Scavenger", "lvl": 37},
+        {"name": "Fettered Soul", "lvl": 38},
+        {"name": "Windsus", "lvl": 39}
+      ],
+      "forumMobLevelRange": [31, 39]
+    },
+    {
+      "key": "giran_harbor",
+      "name": "Giran Harbor",
+      "city": "giran",
+      "teleportPrice": 0,
+      "levelBand": [25, 51],
+      "town": false,
+      "expStat_baseProfile": {
+        "33": {
+          "kills": 163,
+          "exp": 461954,
+          "sec": 537.1,
+          "pctLevel": 75.61,
+          "expPerHour": 3096443,
+          "secPerKill": 3.29,
+          "killsPerHour": 1093
+        }
+      },
+      "mobsSeenOnMap": ["Delu Lizardman", "Delu Lizardman Scout", "Delu Lizardman Warrior", "Kadif Werewolf", "Monster Eye Destroyer"],
+      "mobsForum": [
+        {"name": "Kadif Werewolf", "lvl": 25},
+        {"name": "Monster Eye Destroyer", "lvl": 26},
+        {"name": "Delu Lizardman", "lvl": 28},
+        {"name": "Delu Lizardman Scout", "lvl": 29},
+        {"name": "Delu Lizardman Warrior", "lvl": 30}
+      ],
+      "forumMobLevelRange": [25, 30]
+    },
+    {
+      "key": "gludin",
+      "name": "Gludin Village",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Goblin Raider", "lvl": 5},
+        {"name": "Rakeclaw Imp", "lvl": 6},
+        {"name": "Imp Elder", "lvl": 7},
+        {"name": "Goblin Brigand", "lvl": 8},
+        {"name": "Goblin Scout", "lvl": 8},
+        {"name": "Vuku Orc", "lvl": 14},
+        {"name": "Vuku Orc Archer", "lvl": 15},
+        {"name": "Lesser Basilisk", "lvl": 27},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Basilisk", "lvl": 28}
+      ],
+      "forumMobLevelRange": [5, 28]
+    },
+    {
+      "key": "gludio",
+      "name": "Town of Gludio",
+      "city": "gludio",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Grizzly Bear", "lvl": 17},
+        {"name": "Arachnid Predator", "lvl": 20},
+        {"name": "Ol Mahum Patrol", "lvl": 21},
+        {"name": "Wandering Eye", "lvl": 21},
+        {"name": "Hungry Eye", "lvl": 22},
+        {"name": "Ol Mahum Guard", "lvl": 22},
+        {"name": "Ol Mahum Deserter", "lvl": 23},
+        {"name": "Monster Eye Watcher", "lvl": 25}
+      ],
+      "forumMobLevelRange": [5, 25]
+    },
+    {
+      "key": "goddard",
+      "name": "Town of Goddard",
+      "city": "goddard",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Buffalo Slave", "lvl": 72},
+        {"name": "Hot Springs Buffalo", "lvl": 73},
+        {"name": "Hot Springs Antelope", "lvl": 74},
+        {"name": "Hot Springs Flava", "lvl": 74},
+        {"name": "Hot Springs Nepenthes", "lvl": 75},
+        {"name": "Hot Springs Yeti", "lvl": 75},
+        {"name": "Hot Springs Atrox", "lvl": 76},
+        {"name": "Hot Springs Bandersnatch", "lvl": 76},
+        {"name": "Grazing Antelope", "lvl": 77},
+        {"name": "Ketra Orc Footman", "lvl": 77}
+      ],
+      "forumMobLevelRange": [72, 77]
+    },
+    {
+      "key": "heine",
+      "name": "Heine",
+      "city": "heine",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Farhite", "lvl": 39},
+        {"name": "Alligator", "lvl": 40},
+        {"name": "Nos", "lvl": 40},
+        {"name": "Crokian Lad", "lvl": 41},
+        {"name": "Great White Shark", "lvl": 42},
+        {"name": "Crokian Lad Warrior", "lvl": 43},
+        {"name": "Nos Lad", "lvl": 45}
+      ],
+      "forumMobLevelRange": [39, 45]
+    },
+    {
+      "key": "hot_springs",
+      "name": "Hot Springs",
+      "city": "goddard",
+      "teleportPrice": 0,
+      "levelBand": [73, 76],
+      "town": false,
+      "mobsForum": [
+        {"name": "Hot Springs Bandersnatchling", "lvl": 73},
+        {"name": "Hot Springs Buffalo", "lvl": 73},
+        {"name": "Hot Springs Antelope", "lvl": 74},
+        {"name": "Hot Springs Atroxspawn", "lvl": 74},
+        {"name": "Hot Springs Flava", "lvl": 74},
+        {"name": "Hot Springs Nepenthes", "lvl": 75},
+        {"name": "Hot Springs Yeti", "lvl": 75},
+        {"name": "Hot Springs Atrox", "lvl": 76},
+        {"name": "Hot Springs Bandersnatch", "lvl": 76},
+        {"name": "Hot Springs Grendel", "lvl": 76}
+      ],
+      "forumMobLevelRange": [73, 76]
+    },
+    {
+      "key": "hunters",
+      "name": "Hunters Village",
+      "city": "hunters",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Karul Bugbear", "lvl": 40},
+        {"name": "Tamlin Orc", "lvl": 41},
+        {"name": "Tamlin Orc Archer", "lvl": 42},
+        {"name": "Kronbe Spider", "lvl": 43},
+        {"name": "Lakin", "lvl": 44},
+        {"name": "Taik Orc Captain", "lvl": 44},
+        {"name": "Weird Drake", "lvl": 45},
+        {"name": "Forest of Mirrors Ghost", "lvl": 46},
+        {"name": "Harit Lizardman", "lvl": 50},
+        {"name": "Harit Lizardman Warrior", "lvl": 53},
+        {"name": "Harit Lizardman Shaman", "lvl": 54},
+        {"name": "Harit Lizardman Matriarch", "lvl": 55}
+      ],
+      "forumMobLevelRange": [40, 55]
+    },
+    {
+      "key": "immortal_plateau",
+      "name": "The Immortal Plateau",
+      "city": "orc_village",
+      "teleportPrice": 0,
+      "levelBand": [4, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Black Wolf", "lvl": 4},
+        {"name": "Black Timber Wolf", "lvl": 6},
+        {"name": "Orc Grunt", "lvl": 7},
+        {"name": "Utuku Orc Archer", "lvl": 8},
+        {"name": "Kaboo Orc Fighter", "lvl": 10},
+        {"name": "Orc Fighter", "lvl": 10},
+        {"name": "Grizzly", "lvl": 12},
+        {"name": "Dire Wolf", "lvl": 24}
+      ],
+      "forumMobLevelRange": [4, 24]
+    },
+    {
+      "key": "immortal_plateau_southern",
+      "name": "Immortal Plateau, Southern Region",
+      "city": "orc_village",
+      "teleportPrice": 0,
+      "levelBand": [8, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Kaboo Orc Archer", "lvl": 8},
+        {"name": "Kaboo Orc Fighter", "lvl": 10},
+        {"name": "Kaboo Orc Fighter Leader", "lvl": 12},
+        {"name": "Marsh Stakato", "lvl": 29},
+        {"name": "Marsh Stakato Worker", "lvl": 31},
+        {"name": "Batur Orc Archer", "lvl": 32},
+        {"name": "Batur Orc Warrior", "lvl": 33},
+        {"name": "Batur Orc Shaman", "lvl": 34},
+        {"name": "Batur Orc Overlord", "lvl": 35}
+      ],
+      "forumMobLevelRange": [8, 35]
+    },
+    {
+      "key": "ivory_tower",
+      "name": "Ivory Tower",
+      "city": "oren",
+      "teleportPrice": 5000,
+      "levelBand": [40, 55],
+      "town": false,
+      "expStat_baseProfile": {
+        "41": {
+          "kills": 74,
+          "exp": 324288,
+          "sec": 604.1,
+          "pctLevel": 17.44,
+          "expPerHour": 1932439,
+          "secPerKill": 8.16,
+          "killsPerHour": 441
+        },
+        "42": {
+          "kills": 70,
+          "exp": 277689,
+          "sec": 611.1,
+          "pctLevel": 13.8,
+          "expPerHour": 1635828,
+          "secPerKill": 8.73,
+          "killsPerHour": 412
+        },
+        "43": {
+          "kills": 69,
+          "exp": 309861,
+          "sec": 611.4,
+          "pctLevel": 14.26,
+          "expPerHour": 1824623,
+          "secPerKill": 8.86,
+          "killsPerHour": 406
+        },
+        "44": {
+          "kills": 80,
+          "exp": 336240,
+          "sec": 611.1,
+          "pctLevel": 14.34,
+          "expPerHour": 1980756,
+          "secPerKill": 7.64,
+          "killsPerHour": 471
+        }
+      },
+      "expStat_fixture7128": {
+        "41": {
+          "kills": 74,
+          "exp": 324288,
+          "sec": 604.1,
+          "pctLevel": 17.44,
+          "expPerHour": 1932439,
+          "secPerKill": 8.16,
+          "killsPerHour": 441
+        },
+        "42": {
+          "kills": 70,
+          "exp": 277689,
+          "sec": 611.1,
+          "pctLevel": 13.8,
+          "expPerHour": 1635828,
+          "secPerKill": 8.73,
+          "killsPerHour": 412
+        },
+        "43": {
+          "kills": 69,
+          "exp": 309861,
+          "sec": 611.4,
+          "pctLevel": 14.26,
+          "expPerHour": 1824623,
+          "secPerKill": 8.86,
+          "killsPerHour": 406
+        },
+        "44": {
+          "kills": 80,
+          "exp": 336240,
+          "sec": 611.1,
+          "pctLevel": 14.34,
+          "expPerHour": 1980756,
+          "secPerKill": 7.64,
+          "killsPerHour": 471
+        }
+      },
+      "mobsSeenOnMap": ["Enchanted Monstereye", "Manashen Gargoyle", "Enchanted Stone Golem"],
+      "mobsForum": [
+        {"name": "Manashen Gargoyle", "lvl": 40},
+        {"name": "Enchanted Monstereye", "lvl": 41},
+        {"name": "Enchanted Stone Golem", "lvl": 42}
+      ],
+      "forumMobLevelRange": [40, 42]
+    },
+    {
+      "key": "ketra_orc_outpost",
+      "name": "Ketra Orc Outpost",
+      "city": "goddard",
+      "teleportPrice": 0,
+      "levelBand": [72, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Grazing Kookaburra", "lvl": 77},
+        {"name": "Ketra Orc Footman", "lvl": 77},
+        {"name": "Ketra's War Hound", "lvl": 77},
+        {"name": "Ketra Orc Lieutenant", "lvl": 78},
+        {"name": "Ketra Orc Raider", "lvl": 78},
+        {"name": "Ketra Orc Scout", "lvl": 78},
+        {"name": "Ketra Orc Shaman", "lvl": 78},
+        {"name": "Ketra Orc Warrior", "lvl": 78}
+      ],
+      "forumMobLevelRange": [77, 78]
+    },
+    {
+      "key": "langk_lizardman_dwelling",
+      "name": "Langk Lizardman Dwelling",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [12, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Langk Lizardman", "lvl": 15},
+        {"name": "Langk Lizardman Warrior", "lvl": 15},
+        {"name": "Langk Lizardman Scout", "lvl": 16},
+        {"name": "Langk Lizardman Sentinel", "lvl": 19},
+        {"name": "Langk Lizardman Lieutenant", "lvl": 22},
+        {"name": "Langk Lizardman Shaman", "lvl": 24},
+        {"name": "Langk Lizardman Leader", "lvl": 25},
+        {"name": "Leto Lizardman", "lvl": 35}
+      ],
+      "forumMobLevelRange": [15, 35]
+    },
+    {
+      "key": "mithril_mines",
+      "name": "Mithril Mines",
+      "city": "dwarf_village",
+      "teleportPrice": 0,
+      "levelBand": [6, 61],
+      "town": false,
+      "mobsForum": [
+        {"name": "Utuku Orc", "lvl": 6},
+        {"name": "Utuku Orc Grunt", "lvl": 7},
+        {"name": "Dungeon Skeleton", "lvl": 12},
+        {"name": "Darkstone Golem", "lvl": 13},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Greystone Golem", "lvl": 13},
+        {"name": "Stone Golem", "lvl": 13},
+        {"name": "Pitchstone Golem", "lvl": 19},
+        {"name": "Granite Golem", "lvl": 33}
+      ],
+      "forumMobLevelRange": [6, 33]
+    },
+    {
+      "key": "monastery_of_silence",
+      "name": "Monastery of Silence",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": [53, 80],
+      "town": false,
+      "mobsForum": [
+        {"name": "Tomb Guard", "lvl": 75},
+        {"name": "Forgotten Ancient People", "lvl": 77},
+        {"name": "Tomb Preacher", "lvl": 77},
+        {"name": "Forgotten Victim", "lvl": 78},
+        {"name": "Monastery Guardian", "lvl": 78},
+        {"name": "Spiked Stakato Captain", "lvl": 78},
+        {"name": "Spiked Stakato Nurse", "lvl": 79},
+        {"name": "Spiked Stakato Shaman", "lvl": 80}
+      ],
+      "forumMobLevelRange": [75, 80]
+    },
+    {
+      "key": "necropolis_of_devotion",
+      "name": "Necropolis of Devotion",
+      "dungeon": true,
+      "levelBand_start": [60, 70],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "necropolis_of_martyrdom",
+      "name": "Necropolis of Martyrdom",
+      "dungeon": true,
+      "levelBand_start": [60, 70],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "necropolis_of_sacrifice",
+      "name": "Necropolis of Sacrifice",
+      "dungeon": true,
+      "levelBand_start": [20, 30],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "necropolis_of_worship",
+      "name": "Necropolis of Worship",
+      "dungeon": true,
+      "levelBand_start": [42, 43],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "neutral_zone",
+      "name": "Neutral Zone",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": [5, 20],
+      "town": false,
+      "mobsForum": [
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Goblin Brigand", "lvl": 8},
+        {"name": "Goblin Scout", "lvl": 8},
+        {"name": "Green Dryad", "lvl": 8},
+        {"name": "Dryad", "lvl": 13},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Venomous Spider", "lvl": 18},
+        {"name": "Elf Ghost", "lvl": 20}
+      ],
+      "forumMobLevelRange": [5, 20]
+    },
+    {
+      "key": "orc_barracks",
+      "name": "Orc Barracks",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [14, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Tumran Bugbear", "lvl": 23},
+        {"name": "Tumran Bugbear Warrior", "lvl": 24},
+        {"name": "Ol Mahum Van Grunt", "lvl": 30},
+        {"name": "Breka Orc", "lvl": 31},
+        {"name": "Breka Orc Archer", "lvl": 32},
+        {"name": "Ol Mahum Van Archer", "lvl": 32},
+        {"name": "Breka Orc Warrior", "lvl": 33},
+        {"name": "Ol Mahum Van Leader", "lvl": 34}
+      ],
+      "forumMobLevelRange": [23, 34]
+    },
+    {
+      "key": "orc_village",
+      "name": "Orc Village",
+      "city": "orc_village",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Wolf", "lvl": 4},
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Imp", "lvl": 6},
+        {"name": "Kaboo Orc", "lvl": 6},
+        {"name": "Utuku Orc", "lvl": 6},
+        {"name": "Kaboo Orc Grunt", "lvl": 7},
+        {"name": "Orc Grunt", "lvl": 7},
+        {"name": "Utuku Orc Grunt", "lvl": 7}
+      ],
+      "forumMobLevelRange": [4, 7]
+    },
+    {
+      "key": "oren",
+      "name": "Town of Oren",
+      "city": "oren",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Crimson Spider", "lvl": 15},
+        {"name": "Lesser Dark Horror", "lvl": 15},
+        {"name": "Dark Horror", "lvl": 16},
+        {"name": "Pincer Spider", "lvl": 17},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Ant Larva", "lvl": 29},
+        {"name": "Turek Orc Warlord", "lvl": 30},
+        {"name": "Ant Captain", "lvl": 31},
+        {"name": "Marsh Stakato Soldier", "lvl": 33},
+        {"name": "Ant Soldier", "lvl": 35},
+        {"name": "Marsh Stakato Drone", "lvl": 35}
+      ],
+      "forumMobLevelRange": [15, 35]
+    },
+    {
+      "key": "out:Pitchstone Golem / Rotting Golem",
+      "name": "Окрестности: Pitchstone Golem / Rotting Golem",
+      "city": null,
+      "teleportPrice": null,
+      "levelBand": [13, 44],
+      "town": false,
+      "expStat_baseProfile": {
+        "30": {
+          "kills": 1,
+          "exp": 81160,
+          "sec": 38.2,
+          "pctLevel": 18.03,
+          "expPerHour": 7645784,
+          "secPerKill": 38.21,
+          "killsPerHour": 94
+        }
+      },
+      "mobsSeenOnMap": ["Pitchstone Golem", "Rotting Golem", "Granite Golem", "Obsidian Golem", "Greystone Golem", "Stone Golem"]
+    },
+    {
+      "key": "outlaw_forest",
+      "name": "Outlaw Forest",
+      "city": "oren",
+      "teleportPrice": 4500,
+      "levelBand": [40, 55],
+      "town": false,
+      "expStat_baseProfile": {
+        "41": {
+          "kills": 14,
+          "exp": 122310,
+          "sec": 178.5,
+          "pctLevel": 6.59,
+          "expPerHour": 2466936,
+          "secPerKill": 12.75,
+          "killsPerHour": 282
+        },
+        "42": {
+          "kills": 57,
+          "exp": 337328,
+          "sec": 435.8,
+          "pctLevel": 16.77,
+          "expPerHour": 2786677,
+          "secPerKill": 7.65,
+          "killsPerHour": 471
+        },
+        "43": {
+          "kills": 46,
+          "exp": 315554,
+          "sec": 520.8,
+          "pctLevel": 14.52,
+          "expPerHour": 2181090,
+          "secPerKill": 11.32,
+          "killsPerHour": 318
+        },
+        "44": {
+          "kills": 10,
+          "exp": 41606,
+          "sec": 83.3,
+          "pctLevel": 1.78,
+          "expPerHour": 1797192,
+          "secPerKill": 8.33,
+          "killsPerHour": 432
+        }
+      },
+      "mobsSeenOnMap": [
+        "Tarlk Basilisk",
+        "Ol Mahum Transcender",
+        "Oel Mahum",
+        "Hunter Gargoyle",
+        "Oel Mahum Warrior",
+        "Oel Mahum Witch Doctor",
+        "Elder Tarlk Basilisk"
+      ],
+      "mobsForum": [
+        {"name": "Shillien Dark Executioner", "lvl": 49},
+        {"name": "Ol Mahum Transcender", "lvl": 50},
+        {"name": "Tarlk Basilisk", "lvl": 50},
+        {"name": "Elder Tarlk Basilisk", "lvl": 51},
+        {"name": "Hunter Gargoyle", "lvl": 52},
+        {"name": "Oel Mahum", "lvl": 53},
+        {"name": "Oel Mahum Warrior", "lvl": 54},
+        {"name": "Oel Mahum Witch Doctor", "lvl": 55},
+        {"name": "Outlaw Trial Champion", "lvl": 55}
+      ],
+      "forumMobLevelRange": [49, 55]
+    },
+    {
+      "key": "patriots_necropolis",
+      "name": "The Patriot's Necropolis",
+      "dungeon": true,
+      "levelBand_start": [54, 54],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "pavel_ruins",
+      "name": "Pavel Ruins",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": [46, 80],
+      "town": false,
+      "expStat_baseProfile": {
+        "47": {
+          "kills": 219,
+          "exp": 909930,
+          "sec": 1414.0,
+          "pctLevel": 33.81,
+          "expPerHour": 2316599,
+          "secPerKill": 6.46,
+          "killsPerHour": 558
+        },
+        "48": {
+          "kills": 900,
+          "exp": 3099704,
+          "sec": 3809.7,
+          "pctLevel": 100.01,
+          "expPerHour": 2929116,
+          "secPerKill": 4.23,
+          "killsPerHour": 850
+        },
+        "49": {
+          "kills": 598,
+          "exp": 2240338,
+          "sec": 3080.2,
+          "pctLevel": 67.26,
+          "expPerHour": 2618424,
+          "secPerKill": 5.15,
+          "killsPerHour": 699
+        },
+        "50": {
+          "kills": 24,
+          "exp": 82564,
+          "sec": 135.7,
+          "pctLevel": 1.54,
+          "expPerHour": 2189785,
+          "secPerKill": 5.66,
+          "killsPerHour": 637
+        },
+        "51": {
+          "kills": 201,
+          "exp": 709788,
+          "sec": 662,
+          "pctLevel": 12.38,
+          "expPerHour": 3859874,
+          "secPerKill": 3.29,
+          "killsPerHour": 1093
+        },
+        "52": {
+          "kills": 426,
+          "exp": 1800806,
+          "sec": 1734.4,
+          "pctLevel": 29.53,
+          "expPerHour": 3737930,
+          "secPerKill": 4.07,
+          "killsPerHour": 884
+        }
+      },
+      "expStat_fixture7128": {
+        "47": {
+          "kills": 219,
+          "exp": 909930,
+          "sec": 1414.0,
+          "pctLevel": 33.81,
+          "expPerHour": 2316599,
+          "secPerKill": 6.46,
+          "killsPerHour": 558
+        },
+        "48": {
+          "kills": 900,
+          "exp": 3099704,
+          "sec": 3809.7,
+          "pctLevel": 100.01,
+          "expPerHour": 2929116,
+          "secPerKill": 4.23,
+          "killsPerHour": 850
+        },
+        "49": {
+          "kills": 598,
+          "exp": 2240338,
+          "sec": 3080.2,
+          "pctLevel": 67.26,
+          "expPerHour": 2618424,
+          "secPerKill": 5.15,
+          "killsPerHour": 699
+        },
+        "50": {
+          "kills": 24,
+          "exp": 82564,
+          "sec": 135.7,
+          "pctLevel": 1.54,
+          "expPerHour": 2189785,
+          "secPerKill": 5.66,
+          "killsPerHour": 637
+        }
+      },
+      "mobsSeenOnMap": [
+        "Epic Cannon Golem",
+        "Ginzu Golem Prodigy X",
+        "Horrifying Cannon Golem I",
+        "Spelunking Spider",
+        "Cannibalistic Stakato Follower",
+        "Bone Maker",
+        "Spiked Stakato Shaman",
+        "Spiked Stakato Soldier",
+        "Bone Collector",
+        "Bloody Banshee",
+        "Bone Snatcher",
+        "Cannibalistic Stakato Leader",
+        "Probe Golem Prodigy IV",
+        "Cruel Vice Golem",
+        "Bloodthirsty Ginzu Golem VII",
+        "Menacing Jackhammer Golem",
+        "Horrifying Jackhammer Golem",
+        "Deadly Ginzu Golem V",
+        "Horrifying Excavator Golem III",
+        "Probe Golem Champion I",
+        "Spelunking Ant",
+        "Eye of Watchman",
+        "Necromancer of Destruction",
+        "Bandersnatch",
+        "Grendel",
+        "Homunculus",
+        "Buffalo",
+        "Buffalo Slave",
+        "Horrifying Cannon Golem",
+        "Horrifying Ginzu Golem VIII",
+        "Spiked Stakato Captain"
+      ],
+      "mobsForum": [
+        {"name": "Probe Golem Prodigy IV", "lvl": 46},
+        {"name": "Menacing Jackhammer Golem", "lvl": 47},
+        {"name": "Spelunking Spider", "lvl": 47},
+        {"name": "Horrifying Cannon Golem I", "lvl": 48},
+        {"name": "Cruel Vice Golem", "lvl": 49},
+        {"name": "Probe Golem Champion I", "lvl": 49},
+        {"name": "Spelunking Ant", "lvl": 50},
+        {"name": "Bloodthirsty Ginzu Golem VII", "lvl": 51},
+        {"name": "Horrifying Excavator Golem III", "lvl": 51},
+        {"name": "Ginzu Golem Prodigy X", "lvl": 52},
+        {"name": "Horrifying Cannon Golem", "lvl": 52},
+        {"name": "Horrifying Jackhammer Golem", "lvl": 52},
+        {"name": "Deadly Ginzu Golem V", "lvl": 53},
+        {"name": "Epic Cannon Golem", "lvl": 53},
+        {"name": "Horrifying Ginzu Golem VIII", "lvl": 54}
+      ],
+      "forumMobLevelRange": [46, 54],
+      "doc_notes": [
+        {"note": "≈2,6 M EXP/ч на 49–50 (замер с Demon's Staff C)", "src": "CLAUDE.md; CHANGELOG-7.2.1"},
+        {"note": "≈2,2–2,9 M EXP/ч — бот «месяцами» сидел здесь до 7.1.28", "src": "CHANGELOG-7.1.28"},
+        {
+          "note": "≈4,58 M EXP/ч на 52 ур. с Sprite's Staff B, 299 боёв, бой ≈1,25 с (лог 10.10 21:18–21:31)",
+          "src": "CHANGELOG-7.2.1"
+        },
+        {
+          "note": "точка у Фальстона (мобы 75–80) ошибочно писалась как Pavel Ruins; замеры ≥55 ур. удалены миграцией",
+          "src": "CHANGELOG-8.0.4; content.js:781"
+        }
+      ]
+    },
+    {
+      "key": "pilgrims_necropolis",
+      "name": "The Pilgrim's Necropolis",
+      "dungeon": true,
+      "levelBand_start": [30, 40],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "plains_of_dion",
+      "name": "Plains of Dion",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [20, 37],
+      "town": false,
+      "mobsForum": [
+        {"name": "Enku Orc Shaman", "lvl": 20},
+        {"name": "Enku Orc Champion", "lvl": 21},
+        {"name": "Ol Mahum Ranger", "lvl": 22},
+        {"name": "Tumran Bugbear", "lvl": 23},
+        {"name": "Watchman of the Plains", "lvl": 30},
+        {"name": "Roughly Hewn Rock Golem", "lvl": 31}
+      ],
+      "forumMobLevelRange": [20, 31]
+    },
+    {
+      "key": "plains_of_the_lizardman",
+      "name": "Plains of the Lizardman",
+      "city": "oren",
+      "teleportPrice": 0,
+      "levelBand": [35, 54],
+      "town": false,
+      "expStat_baseProfile": {
+        "39": {
+          "kills": 76,
+          "exp": 450746,
+          "sec": 334.3,
+          "pctLevel": 42.84,
+          "expPerHour": 4854401,
+          "secPerKill": 4.4,
+          "killsPerHour": 818
+        },
+        "40": {
+          "kills": 34,
+          "exp": 108962,
+          "sec": 145.6,
+          "pctLevel": 6.42,
+          "expPerHour": 2694448,
+          "secPerKill": 4.28,
+          "killsPerHour": 841
+        }
+      },
+      "mobsSeenOnMap": [
+        "Leto Lizardman Soldier",
+        "Leto Lizardman Archer",
+        "Leto Lizardman Warrior",
+        "Leto Lizardman Shaman",
+        "Leto Lizardman"
+      ],
+      "mobsForum": [
+        {"name": "Leto Lizardman", "lvl": 35},
+        {"name": "Leto Lizardman Archer", "lvl": 36},
+        {"name": "Leto Lizardman Soldier", "lvl": 37},
+        {"name": "Leto Lizardman Warrior", "lvl": 38},
+        {"name": "Leto Lizardman Shaman", "lvl": 39}
+      ],
+      "forumMobLevelRange": [35, 39]
+    },
+    {
+      "key": "plunderous_plains",
+      "name": "Plunderous Plains",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": [5, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Fallen Orc Captain", "lvl": 60},
+        {"name": "Raider of Pastureland", "lvl": 63},
+        {"name": "Alpine Bandersnatch", "lvl": 64},
+        {"name": "Requiem Behemoth", "lvl": 67},
+        {"name": "Alpine Grendel", "lvl": 68},
+        {"name": "Canyon Antelope", "lvl": 68},
+        {"name": "Requiem Lord", "lvl": 68},
+        {"name": "Bandersnatch", "lvl": 69},
+        {"name": "Buffalo", "lvl": 70}
+      ],
+      "forumMobLevelRange": [60, 70]
+    },
+    {
+      "key": "ruins_of_agony",
+      "name": "Ruins of Agony",
+      "city": "gludio",
+      "teleportPrice": 0,
+      "levelBand": [15, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Ruin Zombie", "lvl": 15},
+        {"name": "Ruin Zombie Leader", "lvl": 16},
+        {"name": "Tracker Skeleton", "lvl": 17},
+        {"name": "Tracker Skeleton Leader", "lvl": 18},
+        {"name": "Ratman Warrior", "lvl": 19},
+        {"name": "Skeleton Scout", "lvl": 19},
+        {"name": "Skeleton Bowman", "lvl": 20},
+        {"name": "Ruin Spartoi", "lvl": 21},
+        {"name": "Raging Spartoi", "lvl": 22},
+        {"name": "Stinger Wasp", "lvl": 30},
+        {"name": "Troll", "lvl": 33},
+        {"name": "Dead Seeker", "lvl": 34},
+        {"name": "Medusa", "lvl": 34},
+        {"name": "Two-Headed Giant", "lvl": 35}
+      ],
+      "forumMobLevelRange": [15, 35]
+    },
+    {
+      "key": "ruins_of_despair",
+      "name": "Ruins of Despair",
+      "city": "gludio",
+      "teleportPrice": 0,
+      "levelBand": [5, 32],
+      "town": false,
+      "mobsForum": [
+        {"name": "Shield Skeleton", "lvl": 15},
+        {"name": "Skeleton Infantryman", "lvl": 16},
+        {"name": "Ruin Imp", "lvl": 17},
+        {"name": "Scavenger Bat", "lvl": 18},
+        {"name": "Ruin Bat", "lvl": 20},
+        {"name": "Ruin Imp Elder", "lvl": 21},
+        {"name": "Ruin Spartoi", "lvl": 21},
+        {"name": "Raging Spartoi", "lvl": 22},
+        {"name": "Skeleton Pikeman", "lvl": 27},
+        {"name": "Skeleton Knight", "lvl": 32}
+      ],
+      "forumMobLevelRange": [15, 32]
+    },
+    {
+      "key": "rune",
+      "name": "Rune Township",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Ice Tarantula", "lvl": 57},
+        {"name": "Frost Tarantula", "lvl": 58},
+        {"name": "Frost Iron Golem", "lvl": 59},
+        {"name": "Frost Buffalo", "lvl": 61},
+        {"name": "Lost Yeti", "lvl": 62},
+        {"name": "Ursus", "lvl": 62},
+        {"name": "Frost Yeti", "lvl": 63}
+      ],
+      "forumMobLevelRange": [57, 63]
+    },
+    {
+      "key": "saints_necropolis",
+      "name": "The Saint's Necropolis",
+      "dungeon": true,
+      "levelBand_start": [70, 80],
+      "url": "/catacombs.html"
+    },
+    {
+      "key": "school_of_dark_arts",
+      "name": "School of Dark Arts",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": [12, 23],
+      "town": false,
+      "mobsForum": [
+        {"name": "Skeleton", "lvl": 12},
+        {"name": "Dungeon Skeleton Archer", "lvl": 13},
+        {"name": "Skeleton Marksman", "lvl": 14},
+        {"name": "Crypt Horror", "lvl": 15},
+        {"name": "Lesser Dark Horror", "lvl": 15},
+        {"name": "Dark Horror", "lvl": 16},
+        {"name": "Akaste Succubus", "lvl": 20},
+        {"name": "Akaste Succubus Turen", "lvl": 21}
+      ],
+      "forumMobLevelRange": [12, 21]
+    },
+    {
+      "key": "schuttgart",
+      "name": "Town of Schuttgart",
+      "city": "schuttgart",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Bandersnatch", "lvl": 69},
+        {"name": "Buffalo", "lvl": 70},
+        {"name": "Grendel", "lvl": 71},
+        {"name": "Buffalo Slave", "lvl": 72},
+        {"name": "Eye of Watchman", "lvl": 73},
+        {"name": "Homunculus", "lvl": 73},
+        {"name": "Bloody Banshee", "lvl": 74},
+        {"name": "Cannibalistic Stakato Leader", "lvl": 75},
+        {"name": "Necromancer of Destruction", "lvl": 78}
+      ],
+      "forumMobLevelRange": [69, 78]
+    },
+    {
+      "key": "sea_of_spores",
+      "name": "Sea of Spores",
+      "city": "oren",
+      "teleportPrice": 6000,
+      "levelBand": [5, 57],
+      "town": false,
+      "expStat_baseProfile": {
+        "27": {
+          "kills": 21,
+          "exp": 330918,
+          "sec": 612.2,
+          "pctLevel": 103.55,
+          "expPerHour": 1945801,
+          "secPerKill": 29.15,
+          "killsPerHour": 123
+        },
+        "50": {
+          "kills": 8,
+          "exp": 168680,
+          "sec": 227.0,
+          "pctLevel": 3.13,
+          "expPerHour": 2675644,
+          "secPerKill": 28.37,
+          "killsPerHour": 127
+        }
+      },
+      "expStat_fixture7128": {
+        "27": {
+          "kills": 21,
+          "exp": 330918,
+          "sec": 612.2,
+          "pctLevel": 103.55,
+          "expPerHour": 1945801,
+          "secPerKill": 29.15,
+          "killsPerHour": 123
+        },
+        "50": {
+          "kills": 8,
+          "exp": 168680,
+          "sec": 227.0,
+          "pctLevel": 3.13,
+          "expPerHour": 2675644,
+          "secPerKill": 28.37,
+          "killsPerHour": 127
+        }
+      },
+      "mobsSeenOnMap": [
+        "Dire Wyrm",
+        "Giant Monstereye",
+        "Giant Fungus",
+        "Риба",
+        "Райкель",
+        "Райкель Леос",
+        "Риба Ирен",
+        "Goblin",
+        "Enchanted Monstereye",
+        "Dryad",
+        "Enchanted Stone Golem",
+        "Werewolf",
+        "Green Dryad"
+      ],
+      "mobsForum": [
+        {"name": "Giant Fungus", "lvl": 40},
+        {"name": "Giant Monstereye", "lvl": 41},
+        {"name": "Dire Wyrm", "lvl": 42},
+        {"name": "Spore Essence Guardian", "lvl": 52},
+        {"name": "Eva's Purity Guardian", "lvl": 57}
+      ],
+      "forumMobLevelRange": [40, 57],
+      "epicLair": ["orfen"]
+    },
+    {
+      "key": "silent_valley",
+      "name": "Silent Valley",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [44, 79],
+      "town": false,
+      "mobsForum": [
+        {"name": "Changed Creation", "lvl": 74},
+        {"name": "Forgotten Ancient People", "lvl": 77},
+        {"name": "Giant's Shadow", "lvl": 79}
+      ],
+      "forumMobLevelRange": [74, 79]
+    },
+    {
+      "key": "skyshadow_meadow",
+      "name": "Skyshadow Meadow",
+      "city": "oren",
+      "teleportPrice": 0,
+      "levelBand": [15, 54],
+      "town": false,
+      "mobsForum": [{"name": "Connabi", "lvl": 54}],
+      "forumMobLevelRange": [54, 54]
+    },
+    {
+      "key": "spider_nest",
+      "name": "Spider Nest",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": [12, 23],
+      "town": false,
+      "mobsForum": [
+        {"name": "Crimson Spider", "lvl": 15},
+        {"name": "Giant Spider", "lvl": 15},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Talon Spider", "lvl": 16},
+        {"name": "Blade Spider", "lvl": 17},
+        {"name": "Pincer Spider", "lvl": 17},
+        {"name": "Venomous Spider", "lvl": 18},
+        {"name": "Young Araneid", "lvl": 23}
+      ],
+      "forumMobLevelRange": [15, 23]
+    },
+    {
+      "key": "swamp_of_screams",
+      "name": "Swamp of Screams",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": [55, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Frenzy Stakato Soldier", "lvl": 68},
+        {"name": "Ghost of Rebellion Leader", "lvl": 71},
+        {"name": "Vampire Soldier", "lvl": 71},
+        {"name": "Vampire Warrior", "lvl": 72},
+        {"name": "Cannibalistic Stakato Follower", "lvl": 74},
+        {"name": "Spiked Stakato Soldier", "lvl": 76},
+        {"name": "Spiked Stakato Drone", "lvl": 77},
+        {"name": "Spiked Stakato Captain", "lvl": 78}
+      ],
+      "forumMobLevelRange": [68, 78]
+    },
+    {
+      "key": "swampland",
+      "name": "Swampland",
+      "city": "dark_elf_village",
+      "teleportPrice": 0,
+      "levelBand": [15, 40],
+      "town": false,
+      "mobsForum": [
+        {"name": "Lesser Dark Horror", "lvl": 15},
+        {"name": "Dark Horror", "lvl": 16},
+        {"name": "Marsh Stakato", "lvl": 29},
+        {"name": "Marsh Stakato Worker", "lvl": 31},
+        {"name": "Marsh Stakato Soldier", "lvl": 33},
+        {"name": "Marsh Spider", "lvl": 34},
+        {"name": "Marsh Stakato Drone", "lvl": 35},
+        {"name": "Giant Fungus", "lvl": 40}
+      ],
+      "forumMobLevelRange": [15, 40]
+    },
+    {
+      "key": "talking_island",
+      "name": "Talking Island Village",
+      "city": "talking_island",
+      "teleportPrice": 0,
+      "levelBand": null,
+      "town": true,
+      "mobsForum": [
+        {"name": "Wolf", "lvl": 4},
+        {"name": "Goblin", "lvl": 5},
+        {"name": "Imp", "lvl": 6},
+        {"name": "Zombie", "lvl": 6},
+        {"name": "Orc Grunt", "lvl": 7}
+      ],
+      "forumMobLevelRange": [4, 7]
+    },
+    {
+      "key": "talking_island_harbor",
+      "name": "Talking Island Harbor",
+      "city": "talking_island",
+      "teleportPrice": 0,
+      "levelBand": [4, 17],
+      "town": false,
+      "mobsForum": [
+        {"name": "Felim Lizardman", "lvl": 14},
+        {"name": "Vuku Orc", "lvl": 14},
+        {"name": "Felim Lizardman Scout", "lvl": 15},
+        {"name": "Vuku Orc Archer", "lvl": 15},
+        {"name": "Hook Spider", "lvl": 16},
+        {"name": "Felim Lizardman Warrior", "lvl": 17},
+        {"name": "Grizzly Bear", "lvl": 17},
+        {"name": "Vuku Orc Fighter", "lvl": 17}
+      ],
+      "forumMobLevelRange": [14, 17]
+    },
+    {
+      "key": "tanor_canyon",
+      "name": "Tanor Canyon",
+      "city": "dion",
+      "teleportPrice": 0,
+      "levelBand": [31, 50],
+      "town": false,
+      "expStat_baseProfile": {
+        "34": {
+          "kills": 31,
+          "exp": 477266,
+          "sec": 189.8,
+          "pctLevel": 70.86,
+          "expPerHour": 9053704,
+          "secPerKill": 6.12,
+          "killsPerHour": 588
+        },
+        "35": {
+          "kills": 48,
+          "exp": 739824,
+          "sec": 279.6,
+          "pctLevel": 100.08,
+          "expPerHour": 9526380,
+          "secPerKill": 5.82,
+          "killsPerHour": 618
+        },
+        "36": {
+          "kills": 27,
+          "exp": 327794,
+          "sec": 135.6,
+          "pctLevel": 40.52,
+          "expPerHour": 8704293,
+          "secPerKill": 5.02,
+          "killsPerHour": 717
+        }
+      },
+      "mobsSeenOnMap": [
+        "Tanor Silenos Scout",
+        "Tanor Silenos Warrior",
+        "Tanor Silenos Grunt",
+        "Nightmare Lord",
+        "Tanor Silenos Chieftain",
+        "Tanor Silenos"
+      ],
+      "mobsForum": [
+        {"name": "Tanor Silenos", "lvl": 40},
+        {"name": "Nightmare Lord", "lvl": 47},
+        {"name": "Tanor Silenos Chieftain", "lvl": 50}
+      ],
+      "forumMobLevelRange": [40, 50]
+    },
+    {
+      "key": "tower_of_insolence",
+      "name": "Tower of Insolence",
+      "city": "aden",
+      "teleportPrice": 0,
+      "levelBand": [48, 70],
+      "town": false,
+      "mobsForum": [
+        {"name": "Ghost of the Tower", "lvl": 60},
+        {"name": "Seer of Hallate", "lvl": 60},
+        {"name": "Ghastly Warrior", "lvl": 61},
+        {"name": "Blader of Despair", "lvl": 62}
+      ],
+      "forumMobLevelRange": [60, 62],
+      "epicLair": ["baium"]
+    },
+    {
+      "key": "valley_of_saints",
+      "name": "Valley of Saints",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": [55, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Kookaburra", "lvl": 67},
+        {"name": "Requiem Behemoth", "lvl": 67},
+        {"name": "Antelope", "lvl": 68},
+        {"name": "Requiem Lord", "lvl": 68},
+        {"name": "Bandersnatch", "lvl": 69},
+        {"name": "Buffalo", "lvl": 70},
+        {"name": "Eye of Restrainer", "lvl": 71},
+        {"name": "Grendel", "lvl": 71},
+        {"name": "Requiem Priest", "lvl": 71},
+        {"name": "Eye of Guide", "lvl": 72}
+      ],
+      "forumMobLevelRange": [67, 72]
+    },
+    {
+      "key": "varka_silenos_stronghold",
+      "name": "Varka Silenos Stronghold",
+      "city": "goddard",
+      "teleportPrice": 0,
+      "levelBand": [75, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Varka Silenos Footman", "lvl": 77},
+        {"name": "Varka Silenos Recruit", "lvl": 77},
+        {"name": "Varka Silenos Hunter", "lvl": 78},
+        {"name": "Varka Silenos Magus", "lvl": 78},
+        {"name": "Varka Silenos Priest", "lvl": 78},
+        {"name": "Varka Silenos Scout", "lvl": 78},
+        {"name": "Varka Silenos Shaman", "lvl": 78},
+        {"name": "Varka Silenos Warrior", "lvl": 78}
+      ],
+      "forumMobLevelRange": [77, 78]
+    },
+    {
+      "key": "wall_of_argos",
+      "name": "Wall of Argos",
+      "city": "goddard",
+      "teleportPrice": 0,
+      "levelBand": [71, 78],
+      "town": false,
+      "mobsForum": [
+        {"name": "Eye of Restrainer", "lvl": 71},
+        {"name": "Eye of Guide", "lvl": 72},
+        {"name": "Eye of Watchman", "lvl": 73},
+        {"name": "Eye of Pilgrim", "lvl": 74},
+        {"name": "Eye of Ruler", "lvl": 74},
+        {"name": "Lavasaurus", "lvl": 78},
+        {"name": "Lavastone Golem", "lvl": 78},
+        {"name": "Magma Golem", "lvl": 78}
+      ],
+      "forumMobLevelRange": [71, 78]
+    },
+    {
+      "key": "wastelands",
+      "name": "Wastelands",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [15, 37],
+      "town": false,
+      "mobsForum": [
+        {"name": "Langk Lizardman Warrior", "lvl": 15},
+        {"name": "Langk Lizardman Scout", "lvl": 16},
+        {"name": "Langk Lizardman Leader", "lvl": 25},
+        {"name": "Lesser Basilisk", "lvl": 27},
+        {"name": "Basilisk", "lvl": 28},
+        {"name": "Leto Lizardman", "lvl": 35},
+        {"name": "Leto Lizardman Archer", "lvl": 36},
+        {"name": "Leto Lizardman Soldier", "lvl": 37}
+      ],
+      "forumMobLevelRange": [15, 37]
+    },
+    {
+      "key": "wild_beast_pastures",
+      "name": "Wild Beast Pastures",
+      "city": "rune",
+      "teleportPrice": 0,
+      "levelBand": [63, 72],
+      "town": false,
+      "mobsForum": [
+        {"name": "Raider of Pastureland", "lvl": 63},
+        {"name": "Kookaburra", "lvl": 67},
+        {"name": "Antelope", "lvl": 68},
+        {"name": "Canyon Antelope", "lvl": 68},
+        {"name": "Bandersnatch", "lvl": 69},
+        {"name": "Canyon Antelope Slave", "lvl": 69},
+        {"name": "Buffalo", "lvl": 70},
+        {"name": "Canyon Bandersnatch", "lvl": 70}
+      ],
+      "forumMobLevelRange": [63, 70]
+    },
+    {
+      "key": "windawood_manor",
+      "name": "Windawood Manor",
+      "city": "gludio",
+      "teleportPrice": 0,
+      "levelBand": [15, 37],
+      "town": false,
+      "mobsForum": [
+        {"name": "Hungry Eye", "lvl": 22},
+        {"name": "Ol Mahum Guard", "lvl": 22},
+        {"name": "Ol Mahum Reserve", "lvl": 23},
+        {"name": "Ol Mahum Officer", "lvl": 24},
+        {"name": "Ol Mahum Shooter", "lvl": 24},
+        {"name": "Ol Mahum Patrolman", "lvl": 25}
+      ],
+      "forumMobLevelRange": [22, 25]
+    },
+    {
+      "key": "windmill_hill",
+      "name": "Windmill Hill",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [5, 32],
+      "town": false,
+      "mobsForum": [
+        {"name": "Ol Mahum Patrol", "lvl": 21},
+        {"name": "Ol Mahum Guard", "lvl": 22},
+        {"name": "Ol Mahum", "lvl": 23},
+        {"name": "Ol Mahum Officer", "lvl": 24},
+        {"name": "Ol Mahum Shooter", "lvl": 24},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Ol Mahum Marksman", "lvl": 28},
+        {"name": "Roughly Hewn Rock Golem", "lvl": 31}
+      ],
+      "forumMobLevelRange": [21, 31]
+    },
+    {
+      "key": "windy_hill",
+      "name": "Windy Hill",
+      "city": "gludin",
+      "teleportPrice": 0,
+      "levelBand": [15, 35],
+      "town": false,
+      "mobsForum": [
+        {"name": "Langk Lizardman Warrior", "lvl": 15},
+        {"name": "Langk Lizardman Scout", "lvl": 16},
+        {"name": "Ol Mahum Patrol", "lvl": 21},
+        {"name": "Langk Lizardman Leader", "lvl": 25},
+        {"name": "Lesser Basilisk", "lvl": 27},
+        {"name": "Ol Mahum Raider", "lvl": 27},
+        {"name": "Basilisk", "lvl": 28},
+        {"name": "Leto Lizardman", "lvl": 35}
+      ],
+      "forumMobLevelRange": [15, 35]
+    }
+  ]
+}

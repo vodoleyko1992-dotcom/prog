@@ -1,0 +1,142 @@
+{
+ "_path": "/game/olympiad/crystal-shop",
+ "_status": 200,
+ "data": {
+  "myCrystals": 0,
+  "crystalCost": 7000,
+  "categoryTitleUk": "Заточки",
+  "grades": [
+   {
+    "grade": "D",
+    "gradeLabelUk": "D-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_d",
+      "itemId": 910510,
+      "nameUk": "Сувій заточення броні D-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_d.png",
+      "grade": "D",
+      "target": "armor",
+      "crystalCost": 3000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_d",
+      "itemId": 910511,
+      "nameUk": "Сувій заточення зброї D-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_d.png",
+      "grade": "D",
+      "target": "weapon",
+      "crystalCost": 3000
+     }
+    ]
+   },
+   {
+    "grade": "C",
+    "gradeLabelUk": "C-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_c",
+      "itemId": 910512,
+      "nameUk": "Сувій заточення броні C-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_c.png",
+      "grade": "C",
+      "target": "armor",
+      "crystalCost": 4000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_c",
+      "itemId": 910513,
+      "nameUk": "Сувій заточення зброї C-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_c.png",
+      "grade": "C",
+      "target": "weapon",
+      "crystalCost": 4000
+     }
+    ]
+   },
+   {
+    "grade": "B",
+    "gradeLabelUk": "B-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_b",
+      "itemId": 910514,
+      "nameUk": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png",
+      "grade": "B",
+      "target": "armor",
+      "crystalCost": 5000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_b",
+      "itemId": 910515,
+      "nameUk": "Сувій заточення зброї B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_b.png",
+      "grade": "B",
+      "target": "weapon",
+      "crystalCost": 5000
+     }
+    ]
+   },
+   {
+    "grade": "A",
+    "gradeLabelUk": "A-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_a",
+      "itemId": 910516,
+      "nameUk": "Сувій заточення броні A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png",
+      "grade": "A",
+      "target": "armor",
+      "crystalCost": 6000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_a",
+      "itemId": 910517,
+      "nameUk": "Сувій заточення зброї A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_a.png",
+      "grade": "A",
+      "target": "weapon",
+      "crystalCost": 6000
+     }
+    ]
+   },
+   {
+    "grade": "S",
+    "gradeLabelUk": "S-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_s",
+      "itemId": 910518,
+      "nameUk": "Сувій заточення броні S-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png",
+      "grade": "S",
+      "target": "armor",
+      "crystalCost": 7000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_s",
+      "itemId": 910519,
+      "nameUk": "Сувій заточення зброї S-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png",
+      "grade": "S",
+      "target": "weapon",
+      "crystalCost": 7000
+     }
+    ]
+   }
+  ],
+  "exchangerCategoryTitleUk": "Обмінник",
+  "exchangerItems": [
+   {
+    "shopKey": "exchanger/adena_2m",
+    "itemId": 0,
+    "nameUk": "2 000 000 аден",
+    "iconUrl": "/assets/l2dop/etc_adena_i00.png",
+    "crystalCost": 3000,
+    "rewardLabelUk": "2 000 000 аден"
+   }
+  ]
+ }
+}

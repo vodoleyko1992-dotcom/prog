@@ -1,0 +1,1693 @@
+{
+ "_path": "/character",
+ "_status": 200,
+ "data": {
+  "character": {
+   "id": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+   "name": "Warlock",
+   "level": 60,
+   "hp": 5417,
+   "maxHp": 5417,
+   "cp": 2683,
+   "maxCp": 2683,
+   "mp": 4298,
+   "maxMp": 4298,
+   "cityId": "l2dop_aden",
+   "race": "Human",
+   "classBranch": "mystic",
+   "gender": "male",
+   "l2Profession": "human_warlock",
+   "portraitRace": "Human",
+   "portraitClassBranch": "mystic",
+   "portraitProfession": "human_warlock",
+   "classSlots": {
+    "activeSlot": 0,
+    "slots": [
+     {
+      "slot": 0,
+      "owned": true,
+      "active": true,
+      "profession": "human_warlock",
+      "race": "Human",
+      "level": 60
+     },
+     {
+      "slot": 1,
+      "owned": false,
+      "active": false,
+      "profession": null,
+      "race": null,
+      "level": null
+     },
+     {
+      "slot": 2,
+      "owned": false,
+      "active": false,
+      "profession": null,
+      "race": null,
+      "level": null
+     },
+     {
+      "slot": 3,
+      "owned": false,
+      "active": false,
+      "profession": null,
+      "race": null,
+      "level": null
+     }
+    ],
+    "secondAndThirdUnlocked": false
+   },
+   "adena": "66358189",
+   "exp": "138090384",
+   "expBarCur": "17000331",
+   "expBarMax": "19798551",
+   "expBarPct": 85.87,
+   "sp": 23007946,
+   "mobsKilled": 14918,
+   "profileStatus": null,
+   "expGainEnabled": true,
+   "karma": 0,
+   "pk": 0,
+   "recommendations": 0,
+   "recommendationsLeft": 0,
+   "pvpWins": 0,
+   "pvpLosses": 0,
+   "revision": 86381,
+   "lastUpdate": "2026-10-11T13:26:51.757Z",
+   "activeDungeonId": null,
+   "inventory": {
+    "v": 1,
+    "_sk": 9,
+    "stacks": [
+     {
+      "itemId": 1870,
+      "qty": 2791
+     },
+     {
+      "itemId": 1868,
+      "qty": 2963
+     },
+     {
+      "itemId": 1869,
+      "qty": 2446
+     },
+     {
+      "itemId": 1865,
+      "qty": 2007
+     },
+     {
+      "itemId": 1872,
+      "qty": 2735
+     },
+     {
+      "itemId": 1867,
+      "qty": 2139
+     },
+     {
+      "itemId": 1871,
+      "qty": 2459
+     },
+     {
+      "itemId": 1864,
+      "qty": 2299
+     },
+     {
+      "itemId": 1866,
+      "qty": 2299
+     },
+     {
+      "itemId": 3031,
+      "qty": 1971
+     },
+     {
+      "itemId": 1061,
+      "qty": 448
+     },
+     {
+      "itemId": 920002,
+      "qty": 120
+     },
+     {
+      "itemId": 1873,
+      "qty": 2371
+     },
+     {
+      "itemId": 922066,
+      "qty": 4
+     },
+     {
+      "itemId": 4037,
+      "qty": 55
+     },
+     {
+      "itemId": 920048,
+      "qty": 133
+     },
+     {
+      "itemId": 1876,
+      "qty": 2011
+     },
+     {
+      "itemId": 1875,
+      "qty": 1724
+     },
+     {
+      "itemId": 920005,
+      "qty": 192
+     },
+     {
+      "itemId": 1877,
+      "qty": 472
+     },
+     {
+      "itemId": 922018,
+      "qty": 2
+     },
+     {
+      "itemId": 4043,
+      "qty": 1337
+     },
+     {
+      "itemId": 922011,
+      "qty": 2
+     },
+     {
+      "itemId": 922017,
+      "qty": 2
+     },
+     {
+      "itemId": 922019,
+      "qty": 2
+     },
+     {
+      "itemId": 4184,
+      "qty": 2
+     },
+     {
+      "itemId": 920008,
+      "qty": 84
+     },
+     {
+      "itemId": 922037,
+      "qty": 1
+     },
+     {
+      "itemId": 728,
+      "qty": 1024
+     },
+     {
+      "itemId": 1874,
+      "qty": 764
+     },
+     {
+      "itemId": 922022,
+      "qty": 2
+     },
+     {
+      "itemId": 922071,
+      "qty": 1
+     },
+     {
+      "itemId": 922034,
+      "qty": 1
+     },
+     {
+      "itemId": 922076,
+      "qty": 2
+     },
+     {
+      "itemId": 922028,
+      "qty": 1
+     },
+     {
+      "itemId": 920011,
+      "qty": 79
+     },
+     {
+      "itemId": 4042,
+      "qty": 350
+     },
+     {
+      "itemId": 910607,
+      "qty": 18
+     },
+     {
+      "itemId": 910616,
+      "qty": 239
+     },
+     {
+      "itemId": 922044,
+      "qty": 1
+     },
+     {
+      "itemId": 922079,
+      "qty": 6
+     },
+     {
+      "itemId": 922013,
+      "qty": 2
+     },
+     {
+      "itemId": 4194,
+      "qty": 1
+     },
+     {
+      "itemId": 4192,
+      "qty": 2
+     },
+     {
+      "itemId": 920030,
+      "qty": 11
+     },
+     {
+      "itemId": 920045,
+      "qty": 77
+     },
+     {
+      "itemId": 1785,
+      "qty": 1000
+     },
+     {
+      "itemId": 920009,
+      "qty": 52
+     },
+     {
+      "itemId": 920007,
+      "qty": 31
+     },
+     {
+      "itemId": 920004,
+      "qty": 21
+     },
+     {
+      "itemId": 910601,
+      "qty": 38321
+     },
+     {
+      "itemId": 922032,
+      "qty": 1
+     },
+     {
+      "itemId": 920015,
+      "qty": 9
+     },
+     {
+      "itemId": 920012,
+      "qty": 105
+     },
+     {
+      "itemId": 920010,
+      "qty": 82
+     },
+     {
+      "itemId": 922064,
+      "qty": 2
+     },
+     {
+      "itemId": 920014,
+      "qty": 5
+     },
+     {
+      "itemId": 3950,
+      "qty": 1608
+     },
+     {
+      "itemId": 5467,
+      "qty": 1
+     },
+     {
+      "itemId": 6897,
+      "qty": 1
+     },
+     {
+      "itemId": 8693,
+      "qty": 2
+     },
+     {
+      "itemId": 910522,
+      "qty": 1
+     },
+     {
+      "itemId": 2975,
+      "qty": 1
+     },
+     {
+      "itemId": 910512,
+      "qty": 12
+     },
+     {
+      "itemId": 910513,
+      "qty": 5
+     },
+     {
+      "itemId": 4104,
+      "qty": 1
+     },
+     {
+      "itemId": 922084,
+      "qty": 1
+     },
+     {
+      "itemId": 194,
+      "qty": 1,
+      "enchantPAtkBonus": 0,
+      "enchantMAtkBonus": 0
+     },
+     {
+      "itemId": 2957,
+      "qty": 1
+     },
+     {
+      "itemId": 910515,
+      "qty": 1
+     },
+     {
+      "itemId": 4116,
+      "qty": 1
+     },
+     {
+      "itemId": 4114,
+      "qty": 1
+     },
+     {
+      "itemId": 2122,
+      "qty": 1
+     },
+     {
+      "itemId": 2121,
+      "qty": 1
+     },
+     {
+      "itemId": 2969,
+      "qty": 1
+     },
+     {
+      "itemId": 2416,
+      "qty": 1
+     },
+     {
+      "itemId": 4106,
+      "qty": 1
+     },
+     {
+      "itemId": 20003,
+      "qty": 1
+     },
+     {
+      "itemId": 920013,
+      "qty": 2
+     },
+     {
+      "itemId": 6519,
+      "qty": 7432
+     },
+     {
+      "itemId": 910610,
+      "qty": 1
+     },
+     {
+      "itemId": 920044,
+      "qty": 9
+     },
+     {
+      "itemId": 920006,
+      "qty": 9
+     },
+     {
+      "itemId": 920001,
+      "qty": 18
+     },
+     {
+      "itemId": 920003,
+      "qty": 20
+     },
+     {
+      "itemId": 922083,
+      "qty": 3
+     },
+     {
+      "itemId": 922072,
+      "qty": 1
+     },
+     {
+      "itemId": 922033,
+      "qty": 1
+     },
+     {
+      "itemId": 922036,
+      "qty": 3
+     },
+     {
+      "itemId": 922035,
+      "qty": 1
+     },
+     {
+      "itemId": 922031,
+      "qty": 2
+     },
+     {
+      "itemId": 922038,
+      "qty": 1
+     },
+     {
+      "itemId": 5435,
+      "qty": 1
+     },
+     {
+      "itemId": 5447,
+      "qty": 2
+     },
+     {
+      "itemId": 910602,
+      "qty": 342
+     },
+     {
+      "itemId": 910600,
+      "qty": 1,
+      "enchant": 10
+     },
+     {
+      "itemId": 910603,
+      "qty": 99
+     },
+     {
+      "itemId": 910604,
+      "qty": 52
+     },
+     {
+      "itemId": 910605,
+      "qty": 28
+     },
+     {
+      "itemId": 910606,
+      "qty": 20
+     },
+     {
+      "itemId": 922047,
+      "qty": 6
+     },
+     {
+      "itemId": 4190,
+      "qty": 2
+     },
+     {
+      "itemId": 8321,
+      "qty": 1
+     },
+     {
+      "itemId": 4189,
+      "qty": 1
+     }
+    ],
+    "eq": {
+     "l1": 92,
+     "l3": {
+      "itemId": 30002,
+      "enchant": 3
+     },
+     "lf": {
+      "itemId": 30004,
+      "enchant": 1
+     },
+     "lg": {
+      "itemId": 30003,
+      "enchant": 1
+     },
+     "lh": 30001,
+     "le1": 860,
+     "le2": 855,
+     "lr1": 891,
+     "lr2": 884,
+     "belt": 920018,
+     "neck": 935,
+     "cloak": 920019,
+     "tattoo": 910623
+    },
+    "_invCanon": 2,
+    "_mysticRobePatch": 1
+   },
+   "inventoryCapacity": {
+    "usedSlots": 104,
+    "maxSlots": 200
+   },
+   "warehouse": {
+    "stacks": [
+     {
+      "itemId": 206,
+      "qty": 1,
+      "enchantPAtkBonus": 0,
+      "enchantMAtkBonus": 0
+     }
+    ],
+    "usedSlots": 1,
+    "maxSlots": 100
+   },
+   "pAtk": 1193,
+   "pDef": 1114,
+   "mAtk": 3252,
+   "mDef": 1180,
+   "str": 22,
+   "int": 41,
+   "dex": 21,
+   "wit": 20,
+   "con": 27,
+   "men": 39,
+   "accuracy": 96,
+   "evasion": 88,
+   "critRate": 56,
+   "pAtkSpd": 5000,
+   "runSpeed": 282,
+   "castSpd": 3500,
+   "shieldPDef": 0,
+   "mCritPct": 1,
+   "equipmentPhysicalAttackFlat": 150,
+   "equipmentMagicalAttackFlat": 173,
+   "equipmentPhysicalAttackPct": 0,
+   "equipmentMagicalAttackPct": 0,
+   "outgoingPhysicalDamagePct": 0,
+   "outgoingMagicalDamagePct": 0,
+   "outgoingPhysicalSkillDamagePct": 0,
+   "outgoingMagicalSkillDamagePct": 0,
+   "magicCritDmgMul": 1.5478,
+   "magicCritPowerPct": 2,
+   "magicCritDamageMultiplier": 1.924689,
+   "critDmgMul": 1.48512,
+   "stunResistPct": 7,
+   "paralyzeResistPct": 0,
+   "debuffResistPct": 19,
+   "skillMpCostMul": 1,
+   "addDebuffLandChancePct": 0,
+   "statsRenderKey": "22:21:27:41:20:39:693:764:2752:830:88:56:5417:4298:2683:5000:282:3500:1:150:173:0:0:0:0:0:0:ss:5:500:350",
+   "sevenSealsBonus": {
+    "rank": 5,
+    "activeFrom": "2026-10-10T21:01:28.681Z",
+    "activeUntil": "2026-10-18T21:00:00.000Z",
+    "pAtk": 500,
+    "mAtk": 500,
+    "pDef": 350,
+    "mDef": 350
+   },
+   "newPlayerStarterBonus": null,
+   "armorSetBonus": {
+    "id": "b_avadon_robe",
+    "nameUk": "Avadon Robe Set (B)",
+    "linesUk": [
+     "Poison Resistance +60%",
+     "Bleed Resistance +60%",
+     "Max HP +3%",
+     "Max HP +950",
+     "Max MP +13%",
+     "Max MP +1250",
+     "P.Def +7%",
+     "Max CP +1295",
+     "Speed +11",
+     "M.Atk +12%",
+     "Casting Speed +10%",
+     "Magic Critical Damage +9%"
+    ],
+    "nameRu": "Avadon Robe Set (B)",
+    "linesRu": [
+     "Poison Resistance +60%",
+     "Bleed Resistance +60%",
+     "Max HP +3%",
+     "Max HP +950",
+     "Max MP +13%",
+     "Max MP +1250",
+     "P.Def +7%",
+     "Max CP +1295",
+     "Speed +11",
+     "M.Atk +12%",
+     "Casting Speed +10%",
+     "Magic Critical Damage +9%"
+    ]
+   },
+   "addCritDmg": 0,
+   "addCritDisplay": "48%+0",
+   "weaponGradeMatchesArmor": true,
+   "vampiricPct": 8,
+   "reflectPct": 0,
+   "regenCp": 13,
+   "regenHp": 14,
+   "regenMp": 253,
+   "worldX": 114736,
+   "worldY": -2316,
+   "targetX": 0,
+   "targetY": 0,
+   "mapMoving": false,
+   "mapAngle": 0,
+   "mapMoveSpeed": 564,
+   "learnedBattleSkills": [
+    "l2_1011",
+    "l2_1083",
+    "l2_1111",
+    "l2_1126",
+    "l2_1127",
+    "l2_1144",
+    "l2_1147",
+    "l2_1151",
+    "l2_1157",
+    "l2_1160",
+    "l2_1164",
+    "l2_1167",
+    "l2_1168",
+    "l2_1172",
+    "l2_1177",
+    "l2_118",
+    "l2_1181",
+    "l2_1184",
+    "l2_1216",
+    "l2_1220",
+    "l2_1222",
+    "l2_1225",
+    "l2_1274",
+    "l2_1276",
+    "l2_1299",
+    "l2_1331",
+    "l2_146",
+    "l2_163",
+    "l2_194",
+    "l2_214",
+    "l2_234",
+    "l2_244",
+    "l2_249",
+    "l2_258",
+    "l2_285"
+   ],
+   "learnedBattleSkillsDetail": [
+    {
+     "battleId": "l2_1011",
+     "level": 3,
+     "nameUk": "Heal",
+     "hintUk": "Лікує HP: Power×4 + рівень×3 + ранг×5. Power 67.",
+     "hintRu": "Лечит HP: Power×4 + уровень×3 + ранг×5. Power 67.",
+     "l2SkillId": 1011,
+     "iconUrl": "/skills/Skill1011_0.jpg",
+     "kind": "battle",
+     "maxSkillLevel": 18
+    },
+    {
+     "battleId": "l2_1083",
+     "level": 10,
+     "nameUk": "Surrender to Fire",
+     "hintUk": "M.Def цілі −10%.",
+     "hintRu": "M.Def цели −10%.",
+     "l2SkillId": 1083,
+     "iconUrl": "/skills/skill1083.gif",
+     "kind": "battle",
+     "maxSkillLevel": 17
+    },
+    {
+     "battleId": "l2_1111",
+     "level": 11,
+     "nameUk": "Summon Kat the Cat",
+     "hintUk": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
+     "hintRu": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
+     "l2SkillId": 1111,
+     "iconUrl": "/skills/skill1111.gif",
+     "kind": "battle",
+     "maxSkillLevel": 18
+    },
+    {
+     "battleId": "l2_1126",
+     "level": 20,
+     "nameUk": "Servitor Recharge",
+     "hintUk": "Відновлює MP викликаного слуги. Сила відновлення зростає з рівнем уміння.",
+     "hintRu": "Восстанавливает MP викликаного слуги. Сила восстановление растёт с уровнем умения.",
+     "l2SkillId": 1126,
+     "iconUrl": "/skills/skill1126.gif",
+     "kind": "battle",
+     "maxSkillLevel": 34
+    },
+    {
+     "battleId": "l2_1127",
+     "level": 31,
+     "nameUk": "Servitor Heal",
+     "hintUk": "Відновлює HP викликаного слуги. Сила лікування зростає з рівнем уміння.",
+     "hintRu": "Восстанавливает HP викликаного слуги. Сила лечение растёт с уровнем умения.",
+     "l2SkillId": 1127,
+     "iconUrl": "/skills/skill1127.gif",
+     "kind": "battle",
+     "maxSkillLevel": 45
+    },
+    {
+     "battleId": "l2_1144",
+     "level": 2,
+     "nameUk": "Servitor Wind Walk",
+     "hintUk": "У бою ефекту немає: 0 зміни HP і статів, лише витрата MP і відкат.",
+     "hintRu": "В бою эффекта нет: 0 изменения HP и статов, только трата MP и откат.",
+     "l2SkillId": 1144,
+     "iconUrl": "/skills/skill1144.gif",
+     "kind": "battle",
+     "maxSkillLevel": 2
+    },
+    {
+     "battleId": "l2_1147",
+     "level": 6,
+     "nameUk": "Vampiric Touch",
+     "hintUk": "Магічна шкода. Power 18. Вампіризм 40% від шкоди.",
+     "hintRu": "Магический урон. Power 18. Вампиризм 40% от урона.",
+     "l2SkillId": 1147,
+     "iconUrl": "/skills/skill1147.gif",
+     "kind": "battle",
+     "maxSkillLevel": 6
+    },
+    {
+     "battleId": "l2_1151",
+     "level": 9,
+     "nameUk": "Corpse Life Drain",
+     "hintUk": "Лікує HP: Power×4 + рівень×3 + ранг×5. Power 0.",
+     "hintRu": "Лечит HP: Power×4 + уровень×3 + ранг×5. Power 0.",
+     "l2SkillId": 1151,
+     "iconUrl": "/skills/skill1151.gif",
+     "kind": "battle",
+     "maxSkillLevel": 16
+    },
+    {
+     "battleId": "l2_1157",
+     "level": 4,
+     "nameUk": "Body To Mind",
+     "hintUk": "У бою ефекту немає: 0 зміни HP і статів, лише витрата MP і відкат.",
+     "hintRu": "В бою эффекта нет: 0 изменения HP и статов, только трата MP и откат.",
+     "l2SkillId": 1157,
+     "iconUrl": "/skills/skill1157.gif",
+     "kind": "battle",
+     "maxSkillLevel": 5
+    },
+    {
+     "battleId": "l2_1160",
+     "level": 8,
+     "nameUk": "Slow",
+     "hintUk": "Speed цілі ×0,7 на 120 с.",
+     "hintRu": "Speed цели ×0,7 на 120 с.",
+     "l2SkillId": 1160,
+     "iconUrl": "/skills/skill1160.gif",
+     "kind": "battle",
+     "maxSkillLevel": 15
+    },
+    {
+     "battleId": "l2_1164",
+     "level": 5,
+     "nameUk": "Curse Weakness",
+     "hintUk": "−20% P.Atk моба, 10 с. MP 15, дальність 600. 80% шанс (WIT цілі), каст 1.5 с, відкат 8 с.",
+     "hintRu": "−20% P.Atk моба, 10 с. MP 15, Дальность 600. 80% шанс (WIT цели), Каст 1.5 с, откат 8 с.",
+     "l2SkillId": 1164,
+     "iconUrl": "/skills/skill1164.gif",
+     "kind": "battle",
+     "maxSkillLevel": 19
+    },
+    {
+     "battleId": "l2_1167",
+     "level": 4,
+     "nameUk": "Poisonous Cloud",
+     "hintUk": "Отрута 120 шкоди × 6 тиків (кожні 5 с).",
+     "hintRu": "Яд 120 урона × 6 тиков (каждые 5 с).",
+     "l2SkillId": 1167,
+     "iconUrl": "/skills/skill1167.gif",
+     "kind": "battle",
+     "maxSkillLevel": 6
+    },
+    {
+     "battleId": "l2_1168",
+     "level": 5,
+     "nameUk": "Curse Poison",
+     "hintUk": "P.Atk цілі −12%. Окремого контролю чи зняття бафів немає.",
+     "hintRu": "P.Atk цели −12%. Окремого контролю чи снятие бафов нет.",
+     "l2SkillId": 1168,
+     "iconUrl": "/skills/skill1168.gif",
+     "kind": "battle",
+     "maxSkillLevel": 7
+    },
+    {
+     "battleId": "l2_1172",
+     "level": 8,
+     "nameUk": "Aura Burn",
+     "hintUk": "Магічна шкода. Power 36.",
+     "hintRu": "Магический урон. Power 36.",
+     "l2SkillId": 1172,
+     "iconUrl": "/skills/skill1172.gif",
+     "kind": "battle",
+     "maxSkillLevel": 8
+    },
+    {
+     "battleId": "l2_1177",
+     "level": 5,
+     "nameUk": "Wind Strike",
+     "hintUk": "Магічна шкода. Power 21.",
+     "hintRu": "Магический урон. Power 21.",
+     "l2SkillId": 1177,
+     "iconUrl": "/skills/Skill1177_0.jpg",
+     "kind": "battle",
+     "maxSkillLevel": 5
+    },
+    {
+     "battleId": "l2_118",
+     "level": 1,
+     "nameUk": "Magician's Movement",
+     "hintUk": "У повній Robe без штрафу Atk.Spd. Без Robe — −20%.",
+     "hintRu": "В полной Robe без штрафу Atk.Spd. Без Robe — −20%.",
+     "l2SkillId": 118,
+     "iconUrl": "/skills/skill0118.gif",
+     "kind": "passive",
+     "maxSkillLevel": 1
+    },
+    {
+     "battleId": "l2_1181",
+     "level": 3,
+     "nameUk": "Flame Strike",
+     "hintUk": "Магічна шкода. Power 19.",
+     "hintRu": "Магический урон. Power 19.",
+     "l2SkillId": 1181,
+     "iconUrl": "/skills/skill1181.gif",
+     "kind": "battle",
+     "maxSkillLevel": 3
+    },
+    {
+     "battleId": "l2_1184",
+     "level": 6,
+     "nameUk": "Ice Bolt",
+     "hintUk": "Power 16, MP 20. Дальність 600. Сповільнення −30% на 120 с. Відкат 8 с.",
+     "hintRu": "Power 16, MP 20. Дальность 600. Замедление −30% на 120 с. Откат 8 с.",
+     "l2SkillId": 1184,
+     "iconUrl": "/skills/skill1184.gif",
+     "kind": "battle",
+     "maxSkillLevel": 6
+    },
+    {
+     "battleId": "l2_1216",
+     "level": 1,
+     "nameUk": "Self Heal",
+     "hintUk": "Лікує себе на 42 HP.",
+     "hintRu": "Лечит себе на 42 HP.",
+     "l2SkillId": 1216,
+     "iconUrl": "/skills/Skill1216_0.jpg",
+     "kind": "battle",
+     "maxSkillLevel": 1
+    },
+    {
+     "battleId": "l2_1220",
+     "level": 8,
+     "nameUk": "Blaze",
+     "hintUk": "Магічна шкода. Power 44.",
+     "hintRu": "Магический урон. Power 44.",
+     "l2SkillId": 1220,
+     "iconUrl": "/skills/skill1220.gif",
+     "kind": "battle",
+     "maxSkillLevel": 8
+    },
+    {
+     "battleId": "l2_1222",
+     "level": 8,
+     "nameUk": "Curse Chaos",
+     "hintUk": "P.Atk цілі −12%, M.Def −10%. Accuracy не змінює.",
+     "hintRu": "P.Atk цели −12%, M.Def −10%. Accuracy не меняет.",
+     "l2SkillId": 1222,
+     "iconUrl": "/skills/skill1222.gif",
+     "kind": "battle",
+     "maxSkillLevel": 15
+    },
+    {
+     "battleId": "l2_1225",
+     "level": 11,
+     "nameUk": "Summon Mew the Cat",
+     "hintUk": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
+     "hintRu": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
+     "l2SkillId": 1225,
+     "iconUrl": "/skills/skill1225.gif",
+     "kind": "battle",
+     "maxSkillLevel": 18
+    },
+    {
+     "battleId": "l2_1274",
+     "level": 4,
+     "nameUk": "Energy Bolt",
+     "hintUk": "Магічна шкода. Power 22.",
+     "hintRu": "Магический урон. Power 22.",
+     "l2SkillId": 1274,
+     "iconUrl": "/skills/skill1274.gif",
+     "kind": "battle",
+     "maxSkillLevel": 4
+    },
+    {
+     "battleId": "l2_1276",
+     "level": 7,
+     "nameUk": "Summon Kai the Cat",
+     "hintUk": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
+     "hintRu": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
+     "l2SkillId": 1276,
+     "iconUrl": "/skills/skill1276.gif",
+     "kind": "battle",
+     "maxSkillLevel": 14
+    },
+    {
+     "battleId": "l2_1299",
+     "level": 1,
+     "nameUk": "Servitor Ultimate Defense",
+     "hintUk": "Слуга: Ultimate Defense — різке підвищення P.Def/M.Def; слуга нерухомий ~30 с.",
+     "hintRu": "Слуга: Ultimate Defense — різке підвищення P.Def/M.Def; слуга нерухомий ~30 с.",
+     "l2SkillId": 1299,
+     "iconUrl": "/skills/skill1299.gif",
+     "kind": "battle",
+     "maxSkillLevel": 2
+    },
+    {
+     "battleId": "l2_1331",
+     "level": 3,
+     "nameUk": "Summon Feline Queen",
+     "hintUk": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
+     "hintRu": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
+     "l2SkillId": 1331,
+     "iconUrl": "/skills/skill1331.gif",
+     "kind": "battle",
+     "maxSkillLevel": 10
+    },
+    {
+     "battleId": "l2_146",
+     "level": 31,
+     "nameUk": "Anti Magic",
+     "hintUk": "Пасивно: +78 M.Def.",
+     "hintRu": "Пассивно: +78 M.Def.",
+     "l2SkillId": 146,
+     "iconUrl": "/skills/skill0146.gif",
+     "kind": "passive",
+     "maxSkillLevel": 45
+    },
+    {
+     "battleId": "l2_163",
+     "level": 1,
+     "nameUk": "Spellcraft",
+     "hintUk": "У повній Robe Casting ×2. Без Robe — −50%.",
+     "hintRu": "В полной Robe Casting ×2. Без Robe — −50%.",
+     "l2SkillId": 163,
+     "iconUrl": "/skills/skill0163.gif",
+     "kind": "passive",
+     "maxSkillLevel": 1
+    },
+    {
+     "battleId": "l2_194",
+     "level": 1,
+     "nameUk": "Lucky",
+     "hintUk": "Пасив у каталозі. Бойовий бонус 0.",
+     "hintRu": "Пассив в каталоге. Боевой бонус 0.",
+     "l2SkillId": 194,
+     "iconUrl": "/skills/skill0194.gif",
+     "kind": "passive",
+     "maxSkillLevel": 1
+    },
+    {
+     "battleId": "l2_214",
+     "level": 1,
+     "nameUk": "Mana Recovery",
+     "hintUk": "У повній Robe реген MP +20%. Без Robe бонус 0.",
+     "hintRu": "В полной Robe реген MP +20%. Без Robe бонус 0.",
+     "l2SkillId": 214,
+     "iconUrl": "/skills/skill0214.gif",
+     "kind": "passive",
+     "maxSkillLevel": 1
+    },
+    {
+     "battleId": "l2_234",
+     "level": 27,
+     "nameUk": "Robe Mastery",
+     "hintUk": "Пасив: P.Def +1,7.",
+     "hintRu": "Пассив: P.Def +1,7.",
+     "l2SkillId": 234,
+     "iconUrl": "/skills/skill0234.gif",
+     "kind": "passive",
+     "maxSkillLevel": 41
+    },
+    {
+     "battleId": "l2_244",
+     "level": 3,
+     "nameUk": "Armor Mastery",
+     "hintUk": "+9.2 P.Def (flat) на рівні 3 скіла.",
+     "hintRu": "+9.2 P.Def (flat) на уровне 3 скила.",
+     "l2SkillId": 244,
+     "iconUrl": "/skills/skill0244.gif",
+     "kind": "passive",
+     "maxSkillLevel": 3
+    },
+    {
+     "battleId": "l2_249",
+     "level": 28,
+     "nameUk": "Weapon Mastery",
+     "hintUk": "Пасив: +66.8 M. Atk (flat) на рівні 28 скіла. MP у бою не витрачається.",
+     "hintRu": "Пассив: +66.8 M. Atk (flat) на уровне 28 скила. MP в бою не тратится.",
+     "l2SkillId": 249,
+     "iconUrl": "/skills/skill0249.gif",
+     "kind": "passive",
+     "maxSkillLevel": 42
+    },
+    {
+     "battleId": "l2_258",
+     "level": 19,
+     "nameUk": "Light Armor Mastery",
+     "hintUk": "Пасив: P.Def +30,5. Cast, Atk.Spd і MP regen ×30,5.",
+     "hintRu": "Пассив: P.Def +30,5. Cast, Atk.Spd и MP regen ×30,5.",
+     "l2SkillId": 258,
+     "iconUrl": "/skills/skill0258.gif",
+     "kind": "passive",
+     "maxSkillLevel": 33
+    },
+    {
+     "battleId": "l2_285",
+     "level": 20,
+     "nameUk": "Higher Mana Gain",
+     "hintUk": "Пасив: +0,6 MP за тик.",
+     "hintRu": "Пассив: +0,6 MP за тик.",
+     "l2SkillId": 285,
+     "iconUrl": "/skills/skill0285.gif",
+     "kind": "passive",
+     "maxSkillLevel": 27
+    }
+   ],
+   "buffHeroicTier": null,
+   "buffZealotStacks": null,
+   "activeBuffs": [
+    {
+     "skillId": 1036,
+     "level": 1,
+     "nameUk": "Магічний барʼєр",
+     "descriptionUk": "M.Def +23%.",
+     "iconUrl": "/skills/skill1036.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1040,
+     "level": 2,
+     "nameUk": "Щит",
+     "descriptionUk": "+8% P.Def, MP 10.",
+     "iconUrl": "/skills/skill1040.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1045,
+     "level": 5,
+     "nameUk": "Благословення тіла",
+     "descriptionUk": "Максимальний HP +10%.",
+     "iconUrl": "/skills/skill1045.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1048,
+     "level": 5,
+     "nameUk": "Благословення душі",
+     "descriptionUk": "Максимальний MP +10%.",
+     "iconUrl": "/skills/skill1048.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1059,
+     "level": 2,
+     "nameUk": "Посилення",
+     "descriptionUk": "Баф: духовний бар’єр знижує отриману шкоду. Тривалість і MP з каталогу.",
+     "iconUrl": "/skills/skill1059.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1062,
+     "level": 1,
+     "nameUk": "Дух берсерка",
+     "descriptionUk": "Berserker: P.Atk +5%, M.Atk +10%, Atk.Spd/Cast.Spd +5%, Speed +5; P.Def −5%, M.Def −10%.",
+     "iconUrl": "/skills/skill1062.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1068,
+     "level": 2,
+     "nameUk": "Сила",
+     "descriptionUk": "+8% P.Atk, MP 10.",
+     "iconUrl": "/skills/skill1068.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1077,
+     "level": 2,
+     "nameUk": "Фокус",
+     "descriptionUk": "Збільшує шанс фізичного критичного удару на 20%.",
+     "iconUrl": "/skills/skill1077.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1085,
+     "level": 2,
+     "nameUk": "Кмітливість",
+     "descriptionUk": "Cast.Spd +15%, MP 0.",
+     "iconUrl": "/skills/skill1085.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1086,
+     "level": 1,
+     "nameUk": "Швидкість",
+     "descriptionUk": "Atk.Spd +15%.",
+     "iconUrl": "/skills/skill1086.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1240,
+     "level": 2,
+     "nameUk": "Наведення",
+     "descriptionUk": "Accuracy +2.",
+     "iconUrl": "/skills/skill1240.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1242,
+     "level": 2,
+     "nameUk": "Death Whisper",
+     "descriptionUk": "Урон фізичного критичного удару +30%.",
+     "iconUrl": "/skills/skill1242.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    },
+    {
+     "skillId": 1268,
+     "level": 3,
+     "nameUk": "Vampiric Rage",
+     "descriptionUk": "На 20 хв вампіризм від фіз. атаки: 6–9% за рангом. Не діє на скіли й стріли. Каст на себе та союзників.",
+     "iconUrl": "/skills/skill1268.gif",
+     "expiresAt": 1791769509915,
+     "remainingSec": 44285
+    }
+   ],
+   "activeSummon": {
+    "kind": "servitor",
+    "key": "kai_the_cat",
+    "summonSkillId": 1276,
+    "summonSkillLevel": 6,
+    "nameUk": "Kai the Cat",
+    "iconUrl": "/skills/skill1276.gif",
+    "hp": 2659,
+    "maxHp": 2659,
+    "mp": 692,
+    "maxMp": 692,
+    "pAtk": 1455,
+    "pDef": 535,
+    "mAtk": 256,
+    "mDef": 500,
+    "pAtkSpd": 310,
+    "castSpd": 363,
+    "accuracy": 118,
+    "critRate": 41,
+    "mCritRate": 23,
+    "critDmgMul": 2,
+    "runSpeed": 100,
+    "debuffResistPct": 0,
+    "activeBuffs": [],
+    "abilities": []
+   },
+   "skillCooldowns": [],
+   "castableSelfBuffs": [
+    {
+     "battleId": "l2_1184",
+     "l2SkillId": 1184,
+     "skillLevel": 6,
+     "nameUk": "Крижана блискавка",
+     "iconUrl": "/skills/skill1184.gif",
+     "mpCost": 16,
+     "durationSec": 120,
+     "cooldownSec": 8,
+     "readyRemainingSec": 0,
+     "active": false,
+     "activeRemainingSec": null
+    },
+    {
+     "battleId": "l2_1167",
+     "l2SkillId": 1167,
+     "skillLevel": 4,
+     "nameUk": "Отруйна хмара",
+     "iconUrl": "/skills/skill1167.gif",
+     "mpCost": 61,
+     "durationSec": 30,
+     "cooldownSec": 20,
+     "readyRemainingSec": 0,
+     "active": false,
+     "activeRemainingSec": null
+    },
+    {
+     "battleId": "l2_1222",
+     "l2SkillId": 1222,
+     "skillLevel": 8,
+     "nameUk": "Прокляття хаосу",
+     "iconUrl": "/skills/skill1222.gif",
+     "mpCost": 44,
+     "durationSec": 10,
+     "cooldownSec": 8,
+     "readyRemainingSec": 0,
+     "active": false,
+     "activeRemainingSec": null
+    },
+    {
+     "battleId": "l2_1160",
+     "l2SkillId": 1160,
+     "skillLevel": 8,
+     "nameUk": "Сповільнення",
+     "iconUrl": "/skills/skill1160.gif",
+     "mpCost": 44,
+     "durationSec": 120,
+     "cooldownSec": 7,
+     "readyRemainingSec": 0,
+     "active": false,
+     "activeRemainingSec": null
+    }
+   ],
+   "panelHotbarSkills": [
+    {
+     "id": "attack",
+     "labelUk": "Атака",
+     "l2SkillId": 1,
+     "iconUrl": "/skills/0001.jpg"
+    },
+    {
+     "id": "l2_1172",
+     "labelUk": "Aura Burn",
+     "l2SkillId": 1172,
+     "iconUrl": "/skills/skill1172.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1220",
+     "labelUk": "Blaze",
+     "l2SkillId": 1220,
+     "iconUrl": "/skills/skill1220.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1157",
+     "labelUk": "Body To Mind",
+     "l2SkillId": 1157,
+     "iconUrl": "/skills/skill1157.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1151",
+     "labelUk": "Corpse Life Drain",
+     "l2SkillId": 1151,
+     "iconUrl": "/skills/skill1151.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1222",
+     "labelUk": "Curse Chaos",
+     "l2SkillId": 1222,
+     "iconUrl": "/skills/skill1222.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1168",
+     "labelUk": "Curse Poison",
+     "l2SkillId": 1168,
+     "iconUrl": "/skills/skill1168.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1164",
+     "labelUk": "Curse Weakness",
+     "l2SkillId": 1164,
+     "iconUrl": "/skills/skill1164.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1274",
+     "labelUk": "Energy Bolt",
+     "l2SkillId": 1274,
+     "iconUrl": "/skills/skill1274.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1181",
+     "labelUk": "Flame Strike",
+     "l2SkillId": 1181,
+     "iconUrl": "/skills/skill1181.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1011",
+     "labelUk": "Heal",
+     "l2SkillId": 1011,
+     "iconUrl": "/skills/Skill1011_0.jpg",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1184",
+     "labelUk": "Ice Bolt",
+     "l2SkillId": 1184,
+     "iconUrl": "/skills/skill1184.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1167",
+     "labelUk": "Poisonous Cloud",
+     "l2SkillId": 1167,
+     "iconUrl": "/skills/skill1167.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1216",
+     "labelUk": "Self Heal",
+     "l2SkillId": 1216,
+     "iconUrl": "/skills/Skill1216_0.jpg",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1127",
+     "labelUk": "Servitor Heal",
+     "l2SkillId": 1127,
+     "iconUrl": "/skills/skill1127.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1126",
+     "labelUk": "Servitor Recharge",
+     "l2SkillId": 1126,
+     "iconUrl": "/skills/skill1126.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1299",
+     "labelUk": "Servitor Ultimate Defense",
+     "l2SkillId": 1299,
+     "iconUrl": "/skills/skill1299.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1144",
+     "labelUk": "Servitor Wind Walk",
+     "l2SkillId": 1144,
+     "iconUrl": "/skills/skill1144.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1160",
+     "labelUk": "Slow",
+     "l2SkillId": 1160,
+     "iconUrl": "/skills/skill1160.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1331",
+     "labelUk": "Summon Feline Queen",
+     "l2SkillId": 1331,
+     "iconUrl": "/skills/skill1331.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1276",
+     "labelUk": "Summon Kai the Cat",
+     "l2SkillId": 1276,
+     "iconUrl": "/skills/skill1276.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1111",
+     "labelUk": "Summon Kat the Cat",
+     "l2SkillId": 1111,
+     "iconUrl": "/skills/skill1111.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1225",
+     "labelUk": "Summon Mew the Cat",
+     "l2SkillId": 1225,
+     "iconUrl": "/skills/skill1225.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1083",
+     "labelUk": "Surrender to Fire",
+     "l2SkillId": 1083,
+     "iconUrl": "/skills/skill1083.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1147",
+     "labelUk": "Vampiric Touch",
+     "l2SkillId": 1147,
+     "iconUrl": "/skills/skill1147.gif",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "l2_1177",
+     "labelUk": "Wind Strike",
+     "l2SkillId": 1177,
+     "iconUrl": "/skills/Skill1177_0.jpg",
+     "cooldownSec": 0.8
+    },
+    {
+     "id": "battle_trance",
+     "labelUk": "Battle Trance",
+     "iconUrl": "/skills/Skill10270.jpg"
+    }
+   ],
+   "toggleStances": [],
+   "battleHotbarSlots": [
+    null,
+    {
+     "k": "u",
+     "id": 728
+    },
+    {
+     "k": "a",
+     "a": "l2_1151"
+    },
+    {
+     "k": "a",
+     "a": "l2_1276"
+    },
+    null,
+    {
+     "k": "a",
+     "a": "l2_1083"
+    },
+    null,
+    {
+     "k": "a",
+     "a": "l2_1147"
+    },
+    {
+     "k": "a",
+     "a": "l2_1220"
+    },
+    {
+     "k": "a",
+     "a": "attack"
+    },
+    null,
+    {
+     "k": "u",
+     "id": 1061
+    },
+    null,
+    null,
+    null,
+    {
+     "k": "a",
+     "a": "l2_1222"
+    },
+    null,
+    null,
+    {
+     "k": "a",
+     "a": "l2_1172"
+    },
+    {
+     "k": "a",
+     "a": "l2_1274"
+    },
+    {
+     "k": "u",
+     "id": 3950
+    },
+    null,
+    null,
+    {
+     "k": "a",
+     "a": "l2_1331"
+    },
+    null,
+    {
+     "k": "a",
+     "a": "l2_1164"
+    },
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "nickColor": "#ffdf8c",
+   "pvpDefeat": null,
+   "pveDefeat": null,
+   "firstProfessionQuest": null,
+   "starterStoryQuest": {
+    "active": false,
+    "completed": true,
+    "stage": "completed",
+    "titleUk": "Шлях початківця: Перші випробування",
+    "titleRu": "Путь новичка: Первые испытания",
+    "objectiveUk": "Перша сюжетна глава завершена.",
+    "objectiveRu": "Первая сюжетная глава завершена.",
+    "ready": true,
+    "href": "/starter-story-quest.html",
+    "targets": []
+   },
+   "dionCampaignQuest": {
+    "active": true,
+    "completed": false,
+    "chapter": 6,
+    "totalChapters": 10,
+    "titleUk": "Тінь над Діоном",
+    "titleRu": "Тень над Дионом",
+    "objectiveUk": "Глава 6/10 · Перша справжня загроза",
+    "objectiveRu": "Глава 6/10 · Первая настоящая угроза",
+    "ready": true,
+    "targets": [
+     {
+      "name": "Ol Mahum Marksman",
+      "nameUk": "Стрілець Ол Махум",
+      "nameRu": "Стрелок Ол Махум",
+      "level": 28,
+      "have": 30,
+      "need": 30
+     },
+     {
+      "name": "Ol Mahum Sergeant",
+      "nameUk": "Сержант Ол Махум",
+      "nameRu": "Сержант Ол Махум",
+      "level": 29,
+      "have": 25,
+      "need": 25
+     },
+     {
+      "name": "Ol Mahum Raider",
+      "nameUk": "Нальотчик Ол Махум",
+      "nameRu": "Налётчик Ол Махум",
+      "level": 27,
+      "have": 30,
+      "need": 30
+     }
+    ],
+    "href": "/dion-campaign.html"
+   },
+   "giranCampaignQuest": null,
+   "subclassQuest": null,
+   "dailyQuests": {
+    "tasks": {
+     "hunt_start_500": {
+      "have": 500,
+      "need": 500,
+      "done": true,
+      "claimed": true
+     },
+     "strong_enemy_20": {
+      "have": 1,
+      "need": 1,
+      "done": true,
+      "claimed": true
+     },
+     "raid_boss_participate": {
+      "have": 1,
+      "need": 1,
+      "done": true,
+      "claimed": true
+     },
+     "skill_master_50": {
+      "have": 50,
+      "need": 50,
+      "done": true,
+      "claimed": true
+     },
+     "daily_playtime_2h": {
+      "have": 7200,
+      "need": 7200,
+      "done": true,
+      "claimed": true
+     },
+     "chat_social_10": {
+      "have": 0,
+      "need": 10,
+      "done": false,
+      "claimed": false
+     },
+     "damage_dealer_500k": {
+      "have": 500000,
+      "need": 500000,
+      "done": true,
+      "claimed": true
+     },
+     "fishing_catch_50": {
+      "have": 50,
+      "need": 50,
+      "done": true,
+      "claimed": true
+     }
+    }
+   },
+   "recipeBook": {
+    "v": 1,
+    "learned": []
+   },
+   "coinOfLuck": 55,
+   "heroPower": 21042,
+   "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+   "clanName": "BlackLotus",
+   "clanEmblemId": 32,
+   "clanRole": "member",
+   "inBattle": false,
+   "battleSpawnId": null,
+   "locationType": "zone",
+   "currentZoneId": "ancient_battleground",
+   "currentZoneNameUk": "Стародавнє поле бою",
+   "currentZoneHref": "/map.html",
+   "currentTownId": "l2dop_aden",
+   "hasActiveMapContext": true,
+   "mapReturnHref": "/map.html",
+   "catalogVersion": "20261009-epic-jewelry-stats-valakas-mcrit30-v1",
+   "snapshotGeneratedAt": 1791725225363,
+   "clientSnapshotVersion": 1791725225363000,
+   "chatUnreadReplyCount": 0,
+   "pendingClanInvite": null,
+   "registeredAt": "2026-10-09T12:06:04.478Z",
+   "premium": {
+    "active": false,
+    "premiumUntil": null,
+    "tierId": null,
+    "tierLabelUk": null,
+    "bonusPercent": 0,
+    "multiplier": 1,
+    "starter": false,
+    "starterUntilLevel": null
+   },
+   "vip": {
+    "active": false,
+    "vipUntil": null
+   },
+   "accountRole": "PLAYER",
+   "nameStyle": "STANDARD"
+  },
+  "catalogVersion": "20261009-epic-jewelry-stats-valakas-mcrit30-v1",
+  "pvpIncoming": []
+ }
+}

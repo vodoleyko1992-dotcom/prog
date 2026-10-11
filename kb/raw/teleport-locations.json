@@ -1,0 +1,908 @@
+{
+ "_path": "/game/teleport/locations",
+ "_status": 200,
+ "data": {
+  "locations": [
+   {
+    "teleportId": "giran",
+    "labelUk": "Місто Гіран",
+    "labelEn": "Town of Giran",
+    "baseAdenaCost": 10000,
+    "adenaCost": 10000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 31,
+    "mobLevelMax": 50
+   },
+   {
+    "teleportId": "giran_harbor",
+    "labelUk": "Гавань Гірана",
+    "labelEn": "Giran Harbor",
+    "baseAdenaCost": 2500,
+    "adenaCost": 2500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 25,
+    "mobLevelMax": 51
+   },
+   {
+    "teleportId": "dragon_valley",
+    "labelUk": "Долина Драконів",
+    "labelEn": "Dragon Valley",
+    "baseAdenaCost": 5000,
+    "adenaCost": 5000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 31,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "antharas_lair",
+    "labelUk": "Лігво Антараса",
+    "labelEn": "Antharas' Lair",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 66
+   },
+   {
+    "teleportId": "devils_isle",
+    "labelUk": "Острів Диявола",
+    "labelEn": "Devil's Isle",
+    "baseAdenaCost": 4500,
+    "adenaCost": 4500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 25,
+    "mobLevelMax": 51
+   },
+   {
+    "teleportId": "brekas_stronghold",
+    "labelUk": "Оплот Бреки",
+    "labelEn": "Breka's Stronghold",
+    "baseAdenaCost": 3500,
+    "adenaCost": 3500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 31,
+    "mobLevelMax": 52
+   },
+   {
+    "teleportId": "gludio",
+    "labelUk": "Місто Глудіо",
+    "labelEn": "Town of Gludio",
+    "baseAdenaCost": 3000,
+    "adenaCost": 3000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "ruins_of_agony",
+    "labelUk": "Руїни Скорботи",
+    "labelEn": "Ruins of Agony",
+    "baseAdenaCost": 900,
+    "adenaCost": 900,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "ruins_of_despair",
+    "labelUk": "Руїни Відчаю",
+    "labelEn": "Ruins of Despair",
+    "baseAdenaCost": 1100,
+    "adenaCost": 1100,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 32
+   },
+   {
+    "teleportId": "ant_nest",
+    "labelUk": "Муравине гніздо",
+    "labelEn": "The Ant Nest",
+    "baseAdenaCost": 1600,
+    "adenaCost": 1600,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 37
+   },
+   {
+    "teleportId": "windawood_manor",
+    "labelUk": "Особняк Віндавуд",
+    "labelEn": "Windawood Manor",
+    "baseAdenaCost": 1300,
+    "adenaCost": 1300,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 37
+   },
+   {
+    "teleportId": "dion",
+    "labelUk": "Місто Діон",
+    "labelEn": "Town of Dion",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 22,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "cruma_marshlands",
+    "labelUk": "Болота Круми",
+    "labelEn": "Cruma Marshlands",
+    "baseAdenaCost": 4500,
+    "adenaCost": 4500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 49
+   },
+   {
+    "teleportId": "cruma_tower",
+    "labelUk": "Вежа Круми",
+    "labelEn": "Cruma Tower",
+    "baseAdenaCost": 6500,
+    "adenaCost": 6500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 28,
+    "mobLevelMax": 49
+   },
+   {
+    "teleportId": "fortress_of_resistance",
+    "labelUk": "Фортеця Опору",
+    "labelEn": "Fortress of Resistance",
+    "baseAdenaCost": 4800,
+    "adenaCost": 4800,
+    "vipFreeApplied": false,
+    "mobLevelMin": 23,
+    "mobLevelMax": 30
+   },
+   {
+    "teleportId": "plains_of_dion",
+    "labelUk": "Рівнини Діона",
+    "labelEn": "Plains of Dion",
+    "baseAdenaCost": 5800,
+    "adenaCost": 5800,
+    "vipFreeApplied": false,
+    "mobLevelMin": 20,
+    "mobLevelMax": 37
+   },
+   {
+    "teleportId": "bee_hive",
+    "labelUk": "Бджолине гніздо",
+    "labelEn": "Bee Hive",
+    "baseAdenaCost": 3200,
+    "adenaCost": 3200,
+    "vipFreeApplied": false,
+    "mobLevelMin": 20,
+    "mobLevelMax": 51
+   },
+   {
+    "teleportId": "tanor_canyon",
+    "labelUk": "Каньйон Танор",
+    "labelEn": "Tanor Canyon",
+    "baseAdenaCost": 2000,
+    "adenaCost": 2000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 31,
+    "mobLevelMax": 50
+   },
+   {
+    "teleportId": "oren",
+    "labelUk": "Місто Орен",
+    "labelEn": "Town of Oren",
+    "baseAdenaCost": 12000,
+    "adenaCost": 12000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 54
+   },
+   {
+    "teleportId": "ivory_tower",
+    "labelUk": "Вежа Слонової Кістки",
+    "labelEn": "Ivory Tower",
+    "baseAdenaCost": 5000,
+    "adenaCost": 5000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "skyshadow_meadow",
+    "labelUk": "Луг Небесної Тіні",
+    "labelEn": "Skyshadow Meadow",
+    "baseAdenaCost": 3500,
+    "adenaCost": 3500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 54
+   },
+   {
+    "teleportId": "plains_of_the_lizardman",
+    "labelUk": "Рівнини ящеролюдів",
+    "labelEn": "Plains of the Lizardman",
+    "baseAdenaCost": 4000,
+    "adenaCost": 4000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 35,
+    "mobLevelMax": 54
+   },
+   {
+    "teleportId": "outlaw_forest",
+    "labelUk": "Ліс розбійників",
+    "labelEn": "Outlaw Forest",
+    "baseAdenaCost": 4500,
+    "adenaCost": 4500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "hunters",
+    "labelUk": "Селище мисливців",
+    "labelEn": "Hunter's Village",
+    "baseAdenaCost": 11000,
+    "adenaCost": 11000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "enchanted_valley_south",
+    "labelUk": "Зачарована долина (південь)",
+    "labelEn": "Enchanted Valley - Southern Region",
+    "baseAdenaCost": 5500,
+    "adenaCost": 5500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "enchanted_valley_north",
+    "labelUk": "Зачарована долина (північ)",
+    "labelEn": "Enchanted Valley - Northern Region",
+    "baseAdenaCost": 7000,
+    "adenaCost": 7000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 48,
+    "mobLevelMax": 62
+   },
+   {
+    "teleportId": "aden",
+    "labelUk": "Місто Аден",
+    "labelEn": "Town of Aden",
+    "baseAdenaCost": 15000,
+    "adenaCost": 15000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 44,
+    "mobLevelMax": 58
+   },
+   {
+    "teleportId": "coliseum",
+    "labelUk": "Колізей",
+    "labelEn": "Coliseum",
+    "baseAdenaCost": 4000,
+    "adenaCost": 4000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 44,
+    "mobLevelMax": 79
+   },
+   {
+    "teleportId": "forsaken_plains",
+    "labelUk": "Запустілі рівнини",
+    "labelEn": "Forsaken Plains",
+    "baseAdenaCost": 5000,
+    "adenaCost": 5000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 44,
+    "mobLevelMax": 79
+   },
+   {
+    "teleportId": "forest_of_mirrors",
+    "labelUk": "Ліс Дзеркал",
+    "labelEn": "Forest of Mirrors",
+    "baseAdenaCost": 6500,
+    "adenaCost": 6500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 55
+   },
+   {
+    "teleportId": "blazing_swamp",
+    "labelUk": "Полум'яні болота",
+    "labelEn": "Blazing Swamp",
+    "baseAdenaCost": 7000,
+    "adenaCost": 7000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 48,
+    "mobLevelMax": 57
+   },
+   {
+    "teleportId": "fields_of_massacre",
+    "labelUk": "Поля різанини",
+    "labelEn": "Fields of Massacre",
+    "baseAdenaCost": 6500,
+    "adenaCost": 6500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 58,
+    "mobLevelMax": 65
+   },
+   {
+    "teleportId": "ancient_battleground",
+    "labelUk": "Стародавнє поле бою",
+    "labelEn": "Ancient Battleground",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 60,
+    "mobLevelMax": 70
+   },
+   {
+    "teleportId": "silent_valley",
+    "labelUk": "Тиха долина",
+    "labelEn": "Silent Valley",
+    "baseAdenaCost": 7500,
+    "adenaCost": 7500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 44,
+    "mobLevelMax": 79
+   },
+   {
+    "teleportId": "tower_of_insolence",
+    "labelUk": "Вежа Зухвалості",
+    "labelEn": "Tower of Insolence",
+    "baseAdenaCost": 10000,
+    "adenaCost": 10000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 48,
+    "mobLevelMax": 70
+   },
+   {
+    "teleportId": "dark_elf_village",
+    "labelUk": "Селище темних ельфів",
+    "labelEn": "Dark Elf Village",
+    "baseAdenaCost": 2000,
+    "adenaCost": 2000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 20
+   },
+   {
+    "teleportId": "dark_elven_forest",
+    "labelUk": "Ліс темних ельфів",
+    "labelEn": "Dark Elven Forest",
+    "baseAdenaCost": 200,
+    "adenaCost": 200,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 20
+   },
+   {
+    "teleportId": "swampland",
+    "labelUk": "Болото",
+    "labelEn": "Swampland",
+    "baseAdenaCost": 500,
+    "adenaCost": 500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 40
+   },
+   {
+    "teleportId": "spider_nest",
+    "labelUk": "Гніздо павуків",
+    "labelEn": "Spider Nest",
+    "baseAdenaCost": 700,
+    "adenaCost": 700,
+    "vipFreeApplied": false,
+    "mobLevelMin": 12,
+    "mobLevelMax": 23
+   },
+   {
+    "teleportId": "school_of_dark_arts",
+    "labelUk": "Школа темних мистецтв",
+    "labelEn": "School of Dark Arts",
+    "baseAdenaCost": 900,
+    "adenaCost": 900,
+    "vipFreeApplied": false,
+    "mobLevelMin": 12,
+    "mobLevelMax": 23
+   },
+   {
+    "teleportId": "dwarf_village",
+    "labelUk": "Селище гномів",
+    "labelEn": "Dwarven Village",
+    "baseAdenaCost": 2500,
+    "adenaCost": 2500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 70
+   },
+   {
+    "teleportId": "mithril_mines",
+    "labelUk": "Мітрілові шахти",
+    "labelEn": "Mithril Mines",
+    "baseAdenaCost": 400,
+    "adenaCost": 400,
+    "vipFreeApplied": false,
+    "mobLevelMin": 6,
+    "mobLevelMax": 61
+   },
+   {
+    "teleportId": "abandoned_coal_mines",
+    "labelUk": "Покинуті вугільні шахти",
+    "labelEn": "Abandoned Coal Mines",
+    "baseAdenaCost": 700,
+    "adenaCost": 700,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 13
+   },
+   {
+    "teleportId": "eastern_mining_zone",
+    "labelUk": "Східна гірнича зона",
+    "labelEn": "Eastern Mining Zone",
+    "baseAdenaCost": 300,
+    "adenaCost": 300,
+    "vipFreeApplied": false,
+    "mobLevelMin": 7,
+    "mobLevelMax": 61
+   },
+   {
+    "teleportId": "elf_village",
+    "labelUk": "Селище ельфів",
+    "labelEn": "Elven Village",
+    "baseAdenaCost": 2000,
+    "adenaCost": 2000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 3,
+    "mobLevelMax": 42
+   },
+   {
+    "teleportId": "elven_forest",
+    "labelUk": "Ліс ельфів",
+    "labelEn": "Elven Forest",
+    "baseAdenaCost": 200,
+    "adenaCost": 200,
+    "vipFreeApplied": false,
+    "mobLevelMin": 3,
+    "mobLevelMax": 21
+   },
+   {
+    "teleportId": "neutral_zone",
+    "labelUk": "Нейтральна зона",
+    "labelEn": "Neutral Zone",
+    "baseAdenaCost": 500,
+    "adenaCost": 500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 20
+   },
+   {
+    "teleportId": "elven_fortress",
+    "labelUk": "Фортеця ельфів",
+    "labelEn": "Elven Fortress",
+    "baseAdenaCost": 800,
+    "adenaCost": 800,
+    "vipFreeApplied": false,
+    "mobLevelMin": 8,
+    "mobLevelMax": 21
+   },
+   {
+    "teleportId": "talking_island",
+    "labelUk": "Говорящий Остров (TI)",
+    "labelEn": "Talking Island Village",
+    "baseAdenaCost": 100,
+    "adenaCost": 100,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 17
+   },
+   {
+    "teleportId": "elven_ruins",
+    "labelUk": "Руїни ельфів",
+    "labelEn": "Elven Ruins",
+    "baseAdenaCost": 500,
+    "adenaCost": 500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 12,
+    "mobLevelMax": 21
+   },
+   {
+    "teleportId": "talking_island_harbor",
+    "labelUk": "Гавань Talking Island",
+    "labelEn": "Talking Island Harbor",
+    "baseAdenaCost": 300,
+    "adenaCost": 300,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 17
+   },
+   {
+    "teleportId": "cedrics_training_hall",
+    "labelUk": "Зал тренувань Cedric",
+    "labelEn": "Cedric's Training Hall",
+    "baseAdenaCost": 200,
+    "adenaCost": 200,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 17
+   },
+   {
+    "teleportId": "gludin",
+    "labelUk": "Селище Глудін",
+    "labelEn": "Gludin Village",
+    "baseAdenaCost": 3500,
+    "adenaCost": 3500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 31
+   },
+   {
+    "teleportId": "langk_lizardman_dwelling",
+    "labelUk": "Житло ящерів Лангк",
+    "labelEn": "Langk Lizardman Dwelling",
+    "baseAdenaCost": 2280,
+    "adenaCost": 2280,
+    "vipFreeApplied": false,
+    "mobLevelMin": 12,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "windmill_hill",
+    "labelUk": "Пагорб Вітряків",
+    "labelEn": "Windmill Hill",
+    "baseAdenaCost": 2300,
+    "adenaCost": 2300,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 32
+   },
+   {
+    "teleportId": "fellmere_hunting_grounds",
+    "labelUk": "Мисливські угіддя Феллмір",
+    "labelEn": "Fellmere Hunting Grounds",
+    "baseAdenaCost": 5000,
+    "adenaCost": 5000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 14,
+    "mobLevelMax": 34
+   },
+   {
+    "teleportId": "forgotten_temple",
+    "labelUk": "Забутий храм",
+    "labelEn": "Forgotten Temple",
+    "baseAdenaCost": 4900,
+    "adenaCost": 4900,
+    "vipFreeApplied": false,
+    "mobLevelMin": 12,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "orc_barracks",
+    "labelUk": "Оркський табір",
+    "labelEn": "Orc Barracks",
+    "baseAdenaCost": 2700,
+    "adenaCost": 2700,
+    "vipFreeApplied": false,
+    "mobLevelMin": 14,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "windy_hill",
+    "labelUk": "Вітряний пагорб",
+    "labelEn": "Windy Hill",
+    "baseAdenaCost": 4400,
+    "adenaCost": 4400,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "abandoned_camp",
+    "labelUk": "Покинутий табір",
+    "labelEn": "Abandon Camp",
+    "baseAdenaCost": 3600,
+    "adenaCost": 3600,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 32
+   },
+   {
+    "teleportId": "wastelands",
+    "labelUk": "Пустелі",
+    "labelEn": "Wastelands",
+    "baseAdenaCost": 1900,
+    "adenaCost": 1900,
+    "vipFreeApplied": false,
+    "mobLevelMin": 15,
+    "mobLevelMax": 37
+   },
+   {
+    "teleportId": "orc_village",
+    "labelUk": "Селище орків",
+    "labelEn": "Orc Village",
+    "baseAdenaCost": 2500,
+    "adenaCost": 2500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 7
+   },
+   {
+    "teleportId": "immortal_plateau_southern",
+    "labelUk": "Безсмертне плато (південь)",
+    "labelEn": "Immortal Plateau, Southern Region",
+    "baseAdenaCost": 200,
+    "adenaCost": 200,
+    "vipFreeApplied": false,
+    "mobLevelMin": 8,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "immortal_plateau",
+    "labelUk": "Безсмертне плато",
+    "labelEn": "The Immortal Plateau",
+    "baseAdenaCost": 500,
+    "adenaCost": 500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "cave_of_trials",
+    "labelUk": "Печера випробувань",
+    "labelEn": "Cave of Trials",
+    "baseAdenaCost": 800,
+    "adenaCost": 800,
+    "vipFreeApplied": false,
+    "mobLevelMin": 4,
+    "mobLevelMax": 35
+   },
+   {
+    "teleportId": "frozen_waterfall",
+    "labelUk": "Крижаний водоспад",
+    "labelEn": "Frozen Waterfall",
+    "baseAdenaCost": 1000,
+    "adenaCost": 1000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 6,
+    "mobLevelMax": 24
+   },
+   {
+    "teleportId": "heine",
+    "labelUk": "Гейне",
+    "labelEn": "Heine",
+    "baseAdenaCost": 14000,
+    "adenaCost": 14000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 39,
+    "mobLevelMax": 45
+   },
+   {
+    "teleportId": "field_of_silence",
+    "labelUk": "Поле безмови",
+    "labelEn": "Field of Silence",
+    "baseAdenaCost": 6000,
+    "adenaCost": 6000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 38,
+    "mobLevelMax": 59
+   },
+   {
+    "teleportId": "field_of_whispers",
+    "labelUk": "Шепотливі поля",
+    "labelEn": "Field of Whispers",
+    "baseAdenaCost": 6500,
+    "adenaCost": 6500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 36,
+    "mobLevelMax": 58
+   },
+   {
+    "teleportId": "alligator_island",
+    "labelUk": "Острів алігаторів",
+    "labelEn": "Alligator Island",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 45
+   },
+   {
+    "teleportId": "garden_of_eva",
+    "labelUk": "Сади Єви",
+    "labelEn": "Garden of Eva",
+    "baseAdenaCost": 9500,
+    "adenaCost": 9500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 36,
+    "mobLevelMax": 58
+   },
+   {
+    "teleportId": "rune",
+    "labelUk": "Рун",
+    "labelEn": "Rune Township",
+    "baseAdenaCost": 20000,
+    "adenaCost": 20000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 55,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "wild_beast_pastures",
+    "labelUk": "Пасовища диких звірів",
+    "labelEn": "Wild Beast Pastures",
+    "baseAdenaCost": 7000,
+    "adenaCost": 7000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 63,
+    "mobLevelMax": 72
+   },
+   {
+    "teleportId": "valley_of_saints",
+    "labelUk": "Долина святих",
+    "labelEn": "Valley of Saints",
+    "baseAdenaCost": 10000,
+    "adenaCost": 10000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 55,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "forest_of_the_dead",
+    "labelUk": "Ліс мертвих",
+    "labelEn": "Forest of the Dead",
+    "baseAdenaCost": 9000,
+    "adenaCost": 9000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 55,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "swamp_of_screams",
+    "labelUk": "Болото криків",
+    "labelEn": "Swamp of Screams",
+    "baseAdenaCost": 8500,
+    "adenaCost": 8500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 55,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "goddard",
+    "labelUk": "Місто Годдарт",
+    "labelEn": "Town of Goddard",
+    "baseAdenaCost": 18000,
+    "adenaCost": 18000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 71,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "varka_silenos_stronghold",
+    "labelUk": "Твердиня варка сіленів",
+    "labelEn": "Varka Silenos Stronghold",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 75,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "ketra_orc_outpost",
+    "labelUk": "Опорний пункт кетра",
+    "labelEn": "Ketra Orc Outpost",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 72,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "hot_springs",
+    "labelUk": "Гарячі джерела",
+    "labelEn": "Hot Springs",
+    "baseAdenaCost": 6000,
+    "adenaCost": 6000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 73,
+    "mobLevelMax": 76
+   },
+   {
+    "teleportId": "wall_of_argos",
+    "labelUk": "Стіна Аргоса",
+    "labelEn": "Wall of Argos",
+    "baseAdenaCost": 9000,
+    "adenaCost": 9000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 71,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "monastery_of_silence",
+    "labelUk": "Монастир Тиші",
+    "labelEn": "Monastery of Silence",
+    "baseAdenaCost": 10000,
+    "adenaCost": 10000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 53,
+    "mobLevelMax": 80
+   },
+   {
+    "teleportId": "schuttgart",
+    "labelUk": "Місто Штутгарт",
+    "labelEn": "Town of Schuttgart",
+    "baseAdenaCost": 22000,
+    "adenaCost": 22000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 60,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "den_of_evil",
+    "labelUk": "Лігво Зла",
+    "labelEn": "Den of Evil",
+    "baseAdenaCost": 9000,
+    "adenaCost": 9000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 46,
+    "mobLevelMax": 80
+   },
+   {
+    "teleportId": "plunderous_plains",
+    "labelUk": "Розграблені рівнини",
+    "labelEn": "Plunderous Plains",
+    "baseAdenaCost": 8000,
+    "adenaCost": 8000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 78
+   },
+   {
+    "teleportId": "frozen_labyrinth",
+    "labelUk": "Крижаний лабіринт",
+    "labelEn": "Frozen Labyrinth",
+    "baseAdenaCost": 10000,
+    "adenaCost": 10000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 46,
+    "mobLevelMax": 80
+   },
+   {
+    "teleportId": "crypts_of_disgrace",
+    "labelUk": "Склеп Ганьби",
+    "labelEn": "Crypts of Disgrace",
+    "baseAdenaCost": 11000,
+    "adenaCost": 11000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 66,
+    "mobLevelMax": 80
+   },
+   {
+    "teleportId": "pavel_ruins",
+    "labelUk": "Руїни Павла",
+    "labelEn": "Pavel Ruins",
+    "baseAdenaCost": 9500,
+    "adenaCost": 9500,
+    "vipFreeApplied": false,
+    "mobLevelMin": 46,
+    "mobLevelMax": 80
+   },
+   {
+    "teleportId": "ancient_tomb_fields",
+    "labelUk": "Поля стародавніх могил",
+    "labelEn": "Ancient Tomb Fields",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false,
+    "mobLevelMin": 40,
+    "mobLevelMax": 66
+   },
+   {
+    "teleportId": "sea_of_spores",
+    "labelUk": "Море спор",
+    "labelEn": "Sea of Spores",
+    "baseAdenaCost": 6000,
+    "adenaCost": 6000,
+    "vipFreeApplied": false,
+    "mobLevelMin": 5,
+    "mobLevelMax": 57
+   }
+  ]
+ }
+}

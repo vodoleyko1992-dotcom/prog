@@ -1,0 +1,184 @@
+{
+ "_path": "/game/tvt/skills",
+ "_status": 200,
+ "data": {
+  "skills": [
+   {
+    "skillId": 1172,
+    "action": "l2_1172",
+    "nameUk": "Aura Burn",
+    "iconUrl": "/skills/skill1172.gif",
+    "level": 8,
+    "mpCost": 24,
+    "targetType": "enemy",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1220,
+    "action": "l2_1220",
+    "nameUk": "Blaze",
+    "iconUrl": "/skills/skill1220.gif",
+    "level": 8,
+    "mpCost": 24,
+    "targetType": "enemy",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1157,
+    "action": "l2_1157",
+    "nameUk": "Body To Mind",
+    "iconUrl": "/skills/skill1157.gif",
+    "level": 4,
+    "mpCost": 0,
+    "targetType": "summon",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1151,
+    "action": "l2_1151",
+    "nameUk": "Corpse Life Drain",
+    "iconUrl": "/skills/skill1151.gif",
+    "level": 9,
+    "mpCost": null,
+    "targetType": "self",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1274,
+    "action": "l2_1274",
+    "nameUk": "Energy Bolt",
+    "iconUrl": "/skills/skill1274.gif",
+    "level": 4,
+    "mpCost": 12,
+    "targetType": "enemy",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1181,
+    "action": "l2_1181",
+    "nameUk": "Flame Strike",
+    "iconUrl": "/skills/skill1181.gif",
+    "level": 3,
+    "mpCost": 32,
+    "targetType": "multi_enemy",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1011,
+    "action": "l2_1011",
+    "nameUk": "Heal",
+    "iconUrl": "/skills/Skill1011_0.jpg",
+    "level": 3,
+    "mpCost": 11,
+    "targetType": "self",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1184,
+    "action": "l2_1184",
+    "nameUk": "Ice Bolt",
+    "iconUrl": "/skills/skill1184.gif",
+    "level": 6,
+    "mpCost": 16,
+    "targetType": "enemy",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1216,
+    "action": "l2_1216",
+    "nameUk": "Self Heal",
+    "iconUrl": "/skills/Skill1216_0.jpg",
+    "level": 1,
+    "mpCost": 7,
+    "targetType": "self",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1127,
+    "action": "l2_1127",
+    "nameUk": "Servitor Heal",
+    "iconUrl": "/skills/skill1127.gif",
+    "level": 31,
+    "mpCost": 78,
+    "targetType": "self",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1144,
+    "action": "l2_1144",
+    "nameUk": "Servitor Wind Walk",
+    "iconUrl": "/skills/skill1144.gif",
+    "level": 2,
+    "mpCost": null,
+    "targetType": "self",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1331,
+    "action": "l2_1331",
+    "nameUk": "Summon Feline Queen",
+    "iconUrl": "/skills/skill1331.gif",
+    "level": 3,
+    "mpCost": null,
+    "targetType": "summon",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1276,
+    "action": "l2_1276",
+    "nameUk": "Summon Kai the Cat",
+    "iconUrl": "/skills/skill1276.gif",
+    "level": 7,
+    "mpCost": null,
+    "targetType": "summon",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1111,
+    "action": "l2_1111",
+    "nameUk": "Summon Kat the Cat",
+    "iconUrl": "/skills/skill1111.gif",
+    "level": 11,
+    "mpCost": null,
+    "targetType": "summon",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1225,
+    "action": "l2_1225",
+    "nameUk": "Summon Mew the Cat",
+    "iconUrl": "/skills/skill1225.gif",
+    "level": 11,
+    "mpCost": null,
+    "targetType": "summon",
+    "readyAt": null,
+    "usable": true
+   },
+   {
+    "skillId": 1177,
+    "action": "l2_1177",
+    "nameUk": "Wind Strike",
+    "iconUrl": "/skills/Skill1177_0.jpg",
+    "level": 5,
+    "mpCost": 12,
+    "targetType": "enemy",
+    "readyAt": null,
+    "usable": true
+   }
+  ]
+ }
+}

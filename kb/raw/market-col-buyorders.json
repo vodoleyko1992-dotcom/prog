@@ -1,0 +1,17 @@
+{
+ "_path": "/game/market/coin-of-luck/buy-orders",
+ "_status": 200,
+ "data": {
+  "orders": [
+   {
+    "id": "f28a298b-75f5-4d96-8a5f-99968e197df4",
+    "buyerCharacterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+    "buyerName": "Cz4",
+    "buyerNickColor": "#ffdf8c",
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "10",
+    "createdAt": "2026-10-03T17:40:07.485Z"
+   }
+  ]
+ }
+}

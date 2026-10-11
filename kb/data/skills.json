@@ -1,0 +1,1855 @@
+{
+  "meta": {
+    "title": "Скиллы Warlock (L2WAP) и баффы",
+    "generated_by": "kb/tools/build_all.py (python3 -I)",
+    "sources": [
+      "skills-il.js (справочник Interlude по id)",
+      "content.js IL_FIX, NAME_ALIAS, NO_EFFECT_DEF, MAG_SKIP_DEF, FA_KNOWN, TB_KEYS",
+      "modules/buffs.js TB_LVL_DEF, modules/combat.js PET_MUL/LOCK_A/LOCK_B",
+      "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3): rt.skills (замеры), rt.panelKnown, rt.logAlias, rt.debuffStat, rt.debuffImmune, rt.faCat, rt.petStat, rt.petAdvice",
+      "CLAUDE.md «Скиллы Warlock на L2WAP» (скрин магистра 10.10)",
+      "CHANGELOG-*"
+    ],
+    "note": "measured.avgDmg_recent = rt.skills.dmg/dmgN — СВЕЖЕЕ окно (последние ≈40–60 замеров, 7.2.1), снято в основном под FA-баффами на РБ 10.10 22:23+ — поэтому выше «Замеров» CLAUDE.md (≈895 Blaze). cd/cdS — экранный замер отката (до 8.0.3; «3,1 с» Blaze — артефакт, сервер принимает через ≈0,66–1,1 с). interlude — справочник Interlude (power/reuse/mp могут не совпадать с L2WAP).",
+    "repo_version": "8.0.8"
+  },
+  "counts": {"warlock_skills": 40, "measured_other": 4, "fa_buffs": 42},
+  "warlock": [
+    {
+      "name": "Blaze",
+      "il_id": 1220,
+      "slot": "l2_1220",
+      "interlude": {
+        "n": "Blaze",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "ONE",
+        "mp": [14, 16, 17, 18, 20, 21, 23, 24],
+        "pow": [23, 26, 29, 32, 35, 38, 42, 44],
+        "reuse": 6000,
+        "L": "Маг. урон · одна цель · сила 23–44 · MP 14–24 (+4–6 в начале) · откат 6 с · каст 4 с · дальность 750"
+      },
+      "l2wap": {"rank": "8/8", "power": 44, "note": "на максимуме ранга; лог: «Полум’я»"},
+      "measured": {
+        "name": "Blaze",
+        "kind": "скилл",
+        "uses": 5726,
+        "usesUnmeasured": 0,
+        "avgDmg_recent": 3419,
+        "dmgSamples": 53,
+        "avgMp": 22.0,
+        "mpSamples": 3577,
+        "cd": 3.1,
+        "cdS": [3.3, 3.1, 3, 3.1, 3.4, 3.3, 3.1],
+        "heal": 541,
+        "mpGain": 1778,
+        "img": "skill1220.gif",
+        "il_id_from_icon": 1220
+      },
+      "logName_uk": "полум’я",
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Aura Burn",
+      "il_id": 1172,
+      "slot": "l2_1172",
+      "interlude": {
+        "n": "Aura Burn",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "ONE",
+        "mp": [14, 16, 17, 18, 20, 21, 23, 24],
+        "pow": [19, 21, 24, 25, 28, 30, 33, 36],
+        "reuse": 2000,
+        "L": "Маг. урон · одна цель · сила 19–36 · MP 14–24 (+4–6 в начале) · откат 2 с · каст 1.5 с · дальность 150"
+      },
+      "l2wap": {"rank": "8/8", "power": 36, "note": "лог: «Опік аури»"},
+      "measured": {
+        "name": "Aura Burn",
+        "kind": "скилл",
+        "uses": 3907,
+        "usesUnmeasured": 0,
+        "avgDmg_recent": 3095,
+        "dmgSamples": 47,
+        "avgMp": 24.7,
+        "mpSamples": 2411,
+        "cd": 1.1,
+        "cdS": [1.1, 1.3, 1.1, 1.1, 1.7, 1.1, 1.1],
+        "heal": 643,
+        "mpGain": 1339,
+        "img": "skill1172.gif",
+        "il_id_from_icon": 1172
+      },
+      "logName_uk": "опік аури",
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Energy Bolt",
+      "il_id": 1274,
+      "slot": "l2_1274",
+      "interlude": {
+        "n": "Energy Bolt",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "ONE",
+        "mp": [8, 9, 11, 12],
+        "pow": [13, 16, 19, 22],
+        "reuse": 3000,
+        "L": "Маг. урон · одна цель · сила 13–22 · MP 8–12 (+2–3 в начале) · откат 3 с · каст 2 с · дальность 400"
+      },
+      "l2wap": {"rank": "4/4", "power": 22, "note": "лучший урон на 1 MP; лог: «Енергетична блискавка»"},
+      "measured": {
+        "name": "Energy Bolt",
+        "kind": "скилл",
+        "uses": 3597,
+        "usesUnmeasured": 0,
+        "avgDmg_recent": 845,
+        "dmgSamples": 43,
+        "avgMp": 7.4,
+        "mpSamples": 2279,
+        "cd": 2.2,
+        "cdS": [2.2, 2.1, 2.2, 2.2, 2.3, 2.1, 2.2],
+        "heal": 502,
+        "mpGain": 2018,
+        "img": "skill1274.gif",
+        "il_id_from_icon": 1274,
+        "lastLogLine": "War Axe ×1 ⏎ Победа! ⏎ Енергетична блискавка 2372"
+      },
+      "logName_uk": "енергетична блискавка",
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Vampiric Touch",
+      "il_id": 1147,
+      "slot": "l2_1147",
+      "interlude": {
+        "n": "Vampiric Touch",
+        "c": "Маг. атака",
+        "t": "DRAIN",
+        "target": "ONE",
+        "mp": [20, 22, 25, 28, 30, 32],
+        "pow": [18, 21, 23, 26, 29, 32],
+        "reuse": 12000,
+        "L": "Маг. урон с поглощением HP · одна цель · сила 18–32 · MP 20–32 (+5–8 в начале) · откат 12 с · каст 4 с · дальность 600"
+      },
+      "l2wap": {"rank": "6/6", "power": 18, "note": "вампиризм 40 %; лог: «Вампірний дотик»"},
+      "measured": {
+        "name": "Vampiric Touch",
+        "kind": "скилл",
+        "uses": 1515,
+        "usesUnmeasured": 0,
+        "avgDmg_recent": 2409,
+        "dmgSamples": 45,
+        "avgMp": 12.6,
+        "mpSamples": 950,
+        "heal": 983,
+        "mpGain": 1438,
+        "img": "skill1147.gif",
+        "il_id_from_icon": 1147
+      },
+      "logName_uk": "вампірний дотик",
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Wind Strike",
+      "il_id": 1177,
+      "slot": "l2_1177",
+      "interlude": {
+        "n": "Wind Strike",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "ONE",
+        "mp": [7, 7, 8, 11, 12],
+        "pow": [12, 13, 15, 18, 21],
+        "reuse": 6000,
+        "L": "Маг. урон · одна цель · сила 12–21 · MP 7–12 (+2–3 в начале) · откат 6 с · каст 4 с · дальность 600"
+      },
+      "l2wap": {"rank": "5/5", "power": 21},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Flame Strike",
+      "il_id": 1181,
+      "slot": "l2_1181",
+      "interlude": {
+        "n": "Flame Strike",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "AREA",
+        "mp": [23, 27, 32],
+        "pow": [13, 14, 14],
+        "reuse": 15000,
+        "L": "Маг. урон · область вокруг цели · сила 13–14 · MP 23–32 (+6–8 в начале) · откат 15 с · каст 4 с · радиус 200 · дальность 500"
+      },
+      "l2wap": {"rank": "3/3", "power": 19, "note": "лог: «Удар полум’я»"},
+      "logName_uk": "удар полум’я",
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Ice Bolt",
+      "il_id": 1184,
+      "slot": "l2_1184",
+      "interlude": {
+        "n": "Ice Bolt",
+        "c": "Маг. атака",
+        "t": "MDAM",
+        "target": "ONE",
+        "mp": [7, 8, 11, 12, 14, 16],
+        "pow": [8, 9, 11, 13, 14, 16],
+        "reuse": 8000,
+        "dur": 120,
+        "L": "Маг. урон · одна цель · сила 8–16 · MP 7–16 (+2–4 в начале) · откат 8 с · каст 3.1 с · бафф 120 с: Скорость бега −30% · сопротивление по MEN · дальность 600"
+      },
+      "l2wap": {"rank": "6/6", "power": 16, "mp": 20, "note": "замедление"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Surrender to Fire",
+      "il_id": 1083,
+      "slot": "l2_1083",
+      "interlude": {
+        "n": "Surrender To Fire",
+        "c": "Дебафф",
+        "t": "DEBUFF",
+        "target": "ONE",
+        "mp": [9, 11, 12, 28, 31, 35, 38, 41, 43, 44, 46, 48, 49, 51, 52, 53, 55],
+        "pow": 80,
+        "reuse": 8000,
+        "dur": 15,
+        "L": "Дебафф · одна цель · сила 80 · MP 9–55 (+3–14 в начале) · откат 8 с · каст 1.5 с · бафф 15 с: Уязв. к огню +25% → +30%, Уязв. к воде −12% → −15% · сопротивление по MEN · дальность 750–900"
+      },
+      "il_fix_l2wap": {"st": "mDefDown", "L": "Дебафф · L2WAP: M.Def цели −10 %"},
+      "l2wap": {"note": "L2WAP: M.Def цели −10 % (не огонь!); лог «Здача вогню»", "il_fix": "mDefDown"},
+      "measured": {
+        "name": "Surrender to Fire",
+        "kind": "скилл",
+        "uses": 120,
+        "usesUnmeasured": 9,
+        "avgMp": 11.8,
+        "mpSamples": 28,
+        "mpGain": 16,
+        "img": "skill1083.gif",
+        "il_id_from_icon": 1083,
+        "lastLogLine": "[Eva's Grove Guardian] — крит по Mew the Cat! −174 HP. ⏎ Слуга [Mew the Cat] атакує [Eva's Grove Guardian] 1 067 урону. ⏎ Здача вогню. Ціль опирається ефекту (5"
+      },
+      "onPanel_10_10": true,
+      "debuffStat": {"fail": 0, "ok": 53}
+    },
+    {
+      "name": "Curse Chaos",
+      "il_id": 1222,
+      "slot": "l2_1222",
+      "interlude": {
+        "n": "Curse Chaos",
+        "c": "Дебафф",
+        "t": "DEBUFF",
+        "target": "ONE",
+        "mp": [12, 28, 31, 35, 38, 41, 43, 44, 46, 48, 49, 51, 52, 53, 55],
+        "pow": 80,
+        "reuse": 8000,
+        "dur": 15,
+        "L": "Дебафф · одна цель · сила 80 · MP 12–55 (+3–14 в начале) · откат 8 с · каст 1.5 с · бафф 15 с: Точность −9 → −12 · сопротивление по MEN · дальность 600"
+      },
+      "il_fix_l2wap": {"st": "mDefDown", "st2": "pAtkDown", "L": "Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %"},
+      "l2wap": {"note": "L2WAP: P.Atk −12 % и M.Def −10 % (не точность); лог «Прокляття хаосу»", "il_fix": "mDefDown+pAtkDown"},
+      "measured": {
+        "name": "Curse Chaos",
+        "kind": "скилл",
+        "uses": 6,
+        "usesUnmeasured": 6,
+        "img": "skill1222.gif",
+        "il_id_from_icon": 1222,
+        "lastLogLine": "[Cannibalistic Stakato Leader] промахнулся по тобі. ⏎ Прокляття хаосу. Ефект пройшов (36%)."
+      },
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Curse Weakness",
+      "il_id": 1164,
+      "slot": "l2_1164",
+      "interlude": {
+        "n": "Curse: Weakness",
+        "c": "Дебафф",
+        "t": "DEBUFF",
+        "target": "ONE",
+        "mp": [2, 8, 9, 11, 12, 28, 31, 35, 38, 41, 43, 44, 46, 48, 49, 51, 52, 53, 55],
+        "pow": 80,
+        "reuse": 8000,
+        "dur": 15,
+        "L": "Дебафф · одна цель · сила 80 · MP 2–55 (+1–14 в начале) · откат 8 с · каст 1.5 с · бафф 15 с: Физ. атака −17% → −23% · сопротивление по MEN · дальность 600"
+      },
+      "il_fix_l2wap": {"st": "pAtkDown", "dur": 10, "L": "Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %"},
+      "l2wap": {"note": "L2WAP: P.Atk −20 % на 10 с, шанс 80 %; лог «Прокляття: слабкість»", "il_fix": "pAtkDown"},
+      "measured": {
+        "name": "Curse Weakness",
+        "kind": "скилл",
+        "uses": 35,
+        "usesUnmeasured": 1,
+        "avgMp": 3.0,
+        "mpSamples": 5,
+        "img": "skill1164.gif",
+        "il_id_from_icon": 1164,
+        "lastLogLine": "[Eva's Grove Guardian] ударив тебе −53 HP. ⏎ Прокляття: слабкість. Ефект пройшов (61%)."
+      },
+      "onPanel_10_10": true,
+      "debuffStat": {"fail": 0, "ok": 24}
+    },
+    {
+      "name": "Curse Poison",
+      "il_id": 1168,
+      "slot": "l2_1168",
+      "interlude": {
+        "n": "Curse: Poison",
+        "c": "Дебафф",
+        "t": "POISON",
+        "target": "ONE",
+        "mp": [8, 16, 21, 31, 38, 46, 53],
+        "pow": [10, 30, 40, 50, 60, 70, 80],
+        "reuse": 12000,
+        "dur": 3,
+        "L": "Яд · одна цель · сила 10–80 · MP 8–53 (+2–14 в начале) · откат 12 с · каст 4 с · урон со временем 3 с · сопротивление по CON · дальность 600"
+      },
+      "il_fix_l2wap": {"c": "Дебафф", "t": "DEBUFF", "st": "pAtkDown", "dur": 15, "L": "Дебафф · L2WAP: P.Atk цели −12 %"},
+      "l2wap": {"note": "L2WAP: P.Atk −12 % (в Interlude — яд)", "il_fix": "pAtkDown"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Curse Gloom",
+      "il_id": 1263,
+      "slot": "l2_1263",
+      "interlude": {
+        "n": "Curse Gloom",
+        "c": "Дебафф",
+        "t": "DEBUFF",
+        "target": "ONE",
+        "mp": [31, 35, 38, 41, 43, 44, 46, 48, 49, 51, 52, 53, 55],
+        "pow": 80,
+        "reuse": 8000,
+        "dur": 15,
+        "L": "Дебафф · одна цель · сила 80 · MP 31–55 (+8–14 в начале) · откат 8 с · каст 1.5 с · бафф 15 с: Маг. защита −23% · сопротивление по MEN · дальность 900"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Slow",
+      "il_id": 1160,
+      "slot": "l2_1160",
+      "interlude": {
+        "n": "Slow",
+        "c": "Дебафф",
+        "t": "DEBUFF",
+        "target": "ONE",
+        "mp": [24, 28, 31, 35, 38, 41, 43, 44, 46, 48, 49, 51, 52, 53, 55],
+        "pow": 80,
+        "reuse": 7000,
+        "dur": 30,
+        "L": "Дебафф · одна цель · сила 80 · MP 24–55 (+6–14 в начале) · откат 7 с · каст 4 с · бафф 30 с: Скорость бега −20% → −30% · сопротивление по MEN · дальность 600"
+      },
+      "l2wap": {"note": "скорость ×0,7 — бесполезно"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Poisonous Cloud",
+      "il_id": 1167,
+      "slot": "l2_1167",
+      "interlude": {
+        "n": "Poisonous Cloud",
+        "c": "Дебафф",
+        "t": "POISON",
+        "target": "AREA",
+        "mp": [27, 36, 52, 61, 71, 82],
+        "pow": [30, 40, 50, 60, 70, 80],
+        "reuse": 20000,
+        "dur": 3,
+        "L": "Яд · область вокруг цели · сила 30–80 · MP 27–82 (+7–21 в начале) · откат 20 с · каст 4 с · урон со временем 3 с · сопротивление по CON · радиус 200 · дальность 500"
+      },
+      "l2wap": {"note": "120 × 6 тиков по 5 с (на обычном мобе ≈1 тик); в magisterSkip по умолчанию"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Corpse Life Drain",
+      "il_id": 1151,
+      "slot": "l2_1151",
+      "interlude": {
+        "n": "Corpse Life Drain",
+        "c": "Маг. атака",
+        "t": "DRAIN",
+        "target": "CORPSE_MOB",
+        "mp": [11, 12, 14, 16, 18, 19, 21, 22, 22, 23, 24, 25, 26, 26, 27, 28],
+        "reuse": 20000,
+        "L": "Маг. урон с поглощением HP · труп моба · MP 11–28 (+3–7 в начале) · откат 20 с · каст 1.5 с · дальность 400"
+      },
+      "il_fix_l2wap": {
+        "c": "Лечение",
+        "t": "HEAL",
+        "target": "SELF",
+        "reuse": 2000,
+        "mp": 0,
+        "pow": 0,
+        "L": "Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с"
+      },
+      "l2wap": {
+        "rank": "р.5 на 51",
+        "note": "L2WAP: лечит себя в бою по ЖИВОЙ цели, HP = уровень×3 + ранг×5 (178 на 51/р.5), MP 0, повтор ≈2 с, кот бьёт и на этот ход; «Витяг життя з трупа»; в Interlude — маг. атака по трупу",
+        "il_fix": "HEAL"
+      },
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Heal",
+      "il_id": 1011,
+      "slot": "l2_1011",
+      "interlude": {
+        "n": "Heal",
+        "c": "Лечение",
+        "t": "HEAL",
+        "target": "ONE",
+        "mp": [8, 10, 11, 13, 15, 17, 19, 21, 24, 26, 28, 29, 33, 35, 35, 38, 40, 41],
+        "pow": [49, 58, 67, 83, 95, 107, 121, 135, 151, 176, 185, 195, 224, 234, 245, 278, 289, 301],
+        "reuse": 10000,
+        "L": "Лечение · одна цель · сила 49–301 · MP 8–41 (+2–11 в начале) · откат 10 с · каст 5 с · дальность 600"
+      },
+      "l2wap": {
+        "note": "Heal = Power×4 + уровень×3 + ранг×5 (Power 67 → ≈430 HP на 50); игрок заменил на Corpse Life Drain 10.10 20:52"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Self Heal",
+      "il_id": 1216,
+      "slot": "l2_1216",
+      "interlude": {
+        "n": "Self Heal",
+        "c": "Лечение",
+        "t": "HEAL",
+        "target": "SELF",
+        "mp": 7,
+        "pow": 42,
+        "reuse": 10000,
+        "L": "Лечение · на себя · сила 42 · MP 7 (+2 в начале) · откат 10 с · каст 5 с"
+      },
+      "l2wap": {"note": "42 HP"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Body To Mind",
+      "il_id": 1157,
+      "slot": "l2_1157",
+      "interlude": {
+        "n": "Body To Mind",
+        "c": "Лечение",
+        "t": "MANAHEAL",
+        "target": "SELF",
+        "pow": [22, 35, 47, 53, 61],
+        "reuse": 20000,
+        "L": "Восст. MP · на себя · сила 22–61 · HP −[131, 209, 280, 318, 366] · откат 20 с · каст 4 с"
+      },
+      "l2wap": {"rank": "2/5", "note": "«В бою эффекта нет» — бот не жмёт (NO_EFFECT_DEF)"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Summon Kat the Cat",
+      "il_id": 1111,
+      "slot": "l2_1111",
+      "interlude": {
+        "n": "Summon Kat the Cat",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [31, 35, 42, 48, 56, 62, 69, 75, 82, 85, 88, 92, 95, 98, 101, 104, 106, 109],
+        "reuse": [
+          21600000,
+          21600000,
+          21600000,
+          21600000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000
+        ],
+        "L": "Призыв · на себя · MP 31–109 (+8–28 в начале) · откат 21600.0–20.0 с · каст 15 с · тратит предмет #1458 ×3–8"
+      },
+      "l2wap": {"rank": "7/18", "note": "P.Atk кота = +15 % от M.Atk хозяина"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Summon Mew the Cat",
+      "il_id": 1225,
+      "slot": "l2_1225",
+      "interlude": {
+        "n": "Summon Mew the Cat",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [31, 35, 42, 48, 56, 62, 69, 75, 82, 85, 88, 92, 95, 98, 101, 104, 106, 109],
+        "reuse": [
+          21600000,
+          21600000,
+          21600000,
+          21600000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000,
+          20000
+        ],
+        "L": "Призыв · на себя · MP 31–109 (+8–28 в начале) · откат 21600.0–20.0 с · каст 15 с · тратит предмет #1458 ×1"
+      },
+      "l2wap": {"rank": "7/18", "note": "+20 % от M.Atk хозяина"},
+      "measured": {
+        "name": "Summon Mew the Cat",
+        "kind": "скилл",
+        "uses": 142,
+        "usesUnmeasured": 5,
+        "avgMp": 43.5,
+        "mpSamples": 105,
+        "cd": 2.2,
+        "cdS": [2.2, 2.2, 2.2, 2.2, 2.1, 2.1, 2.2],
+        "img": "skill1225.gif",
+        "il_id_from_icon": 1225,
+        "lastLogLine": "[Valley Treant Elder] ударив тебе −34 HP. ⏎ Покликання Mew the Cat — слугу призвано."
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Summon Kai the Cat",
+      "il_id": 1276,
+      "slot": "l2_1276",
+      "interlude": {
+        "n": "Summon Kai the Cat",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [56, 62, 69, 75, 82, 85, 88, 92, 95, 98, 101, 104, 106, 109],
+        "reuse": 20000,
+        "L": "Призыв · на себя · MP 56–109 (+14–28 в начале) · откат 20 с · каст 15 с · тратит предмет #1459 ×1–4"
+      },
+      "l2wap": {"rank": "3/14", "note": "+25 % от M.Atk хозяина, «основний DD-слуга»"},
+      "onPanel_10_10": true
+    },
+    {
+      "name": "Summon Feline Queen",
+      "il_id": 1331,
+      "slot": "l2_1331",
+      "interlude": {
+        "n": "Summon Feline Queen",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [56, 92, 69, 75, 82, 85, 88, 92, 95, 98],
+        "reuse": 20000,
+        "L": "Призыв · на себя · MP 56–98 (+14–25 в начале) · откат 20 с · каст 15 с · тратит предмет #1459 ×1–4"
+      },
+      "l2wap": {"note": "с 11.10; support, +10 %, бафф физ. крита «Blessing of Queen» (магу бесполезен)"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Heal",
+      "il_id": 1127,
+      "slot": "l2_1127",
+      "interlude": {
+        "n": "Servitor Heal",
+        "c": "Лечение",
+        "t": "HEAL",
+        "target": "PET",
+        "mp": [
+          19,
+          21,
+          24,
+          26,
+          28,
+          29,
+          33,
+          35,
+          35,
+          38,
+          40,
+          41,
+          46,
+          48,
+          49,
+          51,
+          52,
+          54,
+          57,
+          59,
+          61,
+          64,
+          64,
+          66,
+          69,
+          71,
+          72,
+          74,
+          76,
+          77,
+          78,
+          78,
+          80,
+          81,
+          83,
+          84,
+          86,
+          87,
+          89,
+          90,
+          91,
+          92,
+          93,
+          95,
+          96
+        ],
+        "pow": [
+          145,
+          162,
+          181,
+          212,
+          222,
+          234,
+          269,
+          281,
+          294,
+          333,
+          347,
+          361,
+          404,
+          419,
+          434,
+          465,
+          481,
+          496,
+          528,
+          544,
+          561,
+          593,
+          609,
+          626,
+          658,
+          674,
+          690,
+          706,
+          722,
+          737,
+          753,
+          768,
+          783,
+          798,
+          812,
+          826,
+          840,
+          854,
+          867,
+          879,
+          892,
+          904,
+          915,
+          926,
+          936
+        ],
+        "reuse": 10000,
+        "L": "Лечение · питомец · сила 145–936 · MP 19–96 (+5–24 в начале) · откат 10 с · каст 4 с · дальность 600"
+      },
+      "measured": {
+        "name": "Servitor Heal",
+        "kind": "скилл",
+        "uses": 41,
+        "usesUnmeasured": 0,
+        "avgMp": 49.0,
+        "mpSamples": 1,
+        "img": "skill1127.gif",
+        "il_id_from_icon": 1127,
+        "lastLogLine": "[Probe Golem Prodigy IV] промахнулся по тобі. ⏎ Mew the Cat зцілено на 561 HP. ⏎ Зцілення слуги."
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Recharge",
+      "il_id": 1126,
+      "slot": "l2_1126",
+      "interlude": {
+        "n": "Servitor Recharge",
+        "c": "Лечение",
+        "t": "MANARECHARGE",
+        "target": "PET",
+        "mp": [
+          33,
+          35,
+          39,
+          42,
+          45,
+          48,
+          53,
+          56,
+          59,
+          62,
+          65,
+          69,
+          72,
+          75,
+          78,
+          82,
+          83,
+          85,
+          87,
+          88,
+          90,
+          92,
+          93,
+          95,
+          96,
+          98,
+          99,
+          101,
+          102,
+          104,
+          105,
+          106,
+          108,
+          109
+        ],
+        "pow": [
+          41,
+          44,
+          49,
+          52,
+          57,
+          60,
+          66,
+          70,
+          73,
+          77,
+          81,
+          86,
+          90,
+          94,
+          98,
+          102,
+          104,
+          106,
+          108,
+          110,
+          113,
+          115,
+          116,
+          118,
+          120,
+          122,
+          124,
+          126,
+          128,
+          129,
+          131,
+          133,
+          134,
+          136
+        ],
+        "reuse": 12000,
+        "L": "Восст. MP · питомец · сила 41–136 · MP 33–109 (+9–28 в начале) · откат 12 с · каст 4 с · дальность 400"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Wind Walk",
+      "il_id": 1144,
+      "slot": "l2_1144",
+      "interlude": {
+        "n": "Fast Servitor",
+        "c": "Бафф",
+        "t": "BUFF",
+        "target": "PET",
+        "mp": [24, 36],
+        "reuse": 6000,
+        "dur": 1200,
+        "L": "Бафф · питомец · MP 24–36 (+6–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Скорость бега +20 → +33 · дальность 400"
+      },
+      "l2wap": {"rank": "2/2", "note": "«В бою эффекта нет»; иконка skill1144 = в Interlude «Fast Servitor» (бафф кота)"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Ultimate Defense",
+      "il_id": 1299,
+      "slot": "l2_1299",
+      "interlude": {
+        "n": "Servitor Ultimate Defense",
+        "c": "Бафф",
+        "t": "BUFF",
+        "target": "PET",
+        "mp": [38, 52],
+        "reuse": 1800000,
+        "dur": 30,
+        "L": "Бафф · питомец · MP 38–52 (+10–13 в начале) · откат 1800 с · каст 1 с · дальность 400"
+      },
+      "l2wap": {"note": "с 7.2.1 не бафф кота (вешался 21 раз за 12 мин)"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Haste",
+      "il_id": 1141,
+      "slot": "l2_1141",
+      "interlude": {
+        "n": "Servitor Haste",
+        "c": "Бафф",
+        "t": "BUFF",
+        "target": "PET",
+        "mp": [31, 38],
+        "reuse": 6000,
+        "dur": 1200,
+        "L": "Бафф · питомец · MP 31–38 (+8–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Скор. атаки +15% → +33% · дальность 400"
+      },
+      "l2wap": {"note": "на сервере пока нет"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Magic Shield",
+      "il_id": 1139,
+      "slot": "l2_1139",
+      "interlude": {
+        "n": "Servitor Magic Shield",
+        "c": "Бафф",
+        "t": "BUFF",
+        "target": "PET",
+        "mp": [31, 38],
+        "reuse": 6000,
+        "dur": 1200,
+        "L": "Бафф · питомец · MP 31–38 (+8–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Маг. защита +23% → +30% · дальность 400"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Servitor Physical Shield",
+      "il_id": 1140,
+      "slot": "l2_1140",
+      "interlude": {
+        "n": "Servitor Physical Shield",
+        "c": "Бафф",
+        "t": "BUFF",
+        "target": "PET",
+        "mp": [28, 35, 41],
+        "reuse": 6000,
+        "dur": 1200,
+        "L": "Бафф · питомец · MP 28–41 (+7–11 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Физ. защита +8% → +15% · дальность 400"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Transfer Pain",
+      "il_id": 1262,
+      "slot": "l2_1262",
+      "interlude": {
+        "n": "Transfer Pain",
+        "c": "Тоггл",
+        "t": "CONT",
+        "target": "SELF",
+        "dur": 1,
+        "L": "Тоггл: включить и держать; transDam +10 → +50 · на себя · расход MP со временем 1 с"
+      },
+      "l2wap": {"note": "на сервере пока нет"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Summon Binding Cubic",
+      "il_id": 1279,
+      "slot": "l2_1279",
+      "interlude": {
+        "n": "Summon Binding Cubic",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [28, 31, 35, 38, 41, 44, 48, 51, 53],
+        "pow": 20,
+        "reuse": 20000,
+        "L": "Призыв · на себя · сила 20 · MP 28–53 (+7–14 в начале) · откат 20 с · каст 6 с · тратит предмет #1458 ×5–13"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Summon Storm Cubic",
+      "il_id": 10,
+      "slot": "l2_10",
+      "interlude": {
+        "n": "Summon Storm Cubic",
+        "c": "Призыв",
+        "t": "SUMMON",
+        "target": "SELF",
+        "mp": [28, 33, 38, 43, 46, 49, 52, 55],
+        "pow": [282, 434, 644, 919, 1141, 1394, 1673, 1975],
+        "reuse": 20000,
+        "L": "Призыв · на себя · сила 282–1975 · MP 28–55 (+7–14 в начале) · откат 20 с · каст 6 с · тратит предмет #1458 ×5–14"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Spellcraft",
+      "il_id": 163,
+      "slot": "l2_163",
+      "interlude": {"n": "Spellcraft", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: Скор. каста −50%"},
+      "l2wap": {"note": "пассив: в полной Robe скорость каста ×2, без Robe −50 %"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Mana Recovery",
+      "il_id": 214,
+      "slot": "l2_214",
+      "interlude": {"n": "Mana Recovery", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: Реген MP +20%"},
+      "l2wap": {"note": "пассив: реген MP +20 % только в Robe"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Magician's Movement",
+      "il_id": 118,
+      "slot": "l2_118",
+      "interlude": {"n": "Magician's Movement", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: Скор. атаки −20%"},
+      "l2wap": {"note": "пассив"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Weapon Mastery",
+      "il_id": 250,
+      "slot": "l2_250",
+      "interlude": {
+        "n": "Weapon Mastery",
+        "c": "Пассив",
+        "t": "BUFF",
+        "target": "SELF",
+        "L": "Пассив: Физ. атака +1.5 → +79.4, Маг. атака +1.9 → +99.3, Физ. атака +45%, Маг. атака +17%, Скор. каста −30%, Точность −9"
+      },
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Anti Magic",
+      "il_id": 146,
+      "slot": "l2_146",
+      "interlude": {"n": "Anti Magic", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: Маг. защита +10 → +108"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Robe Mastery",
+      "il_id": 251,
+      "slot": "l2_251",
+      "interlude": {"n": "Robe Mastery", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: Физ. защита +11.6 → +128.8"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Higher Mana Gain",
+      "il_id": 285,
+      "slot": "l2_285",
+      "interlude": {"n": "Higher Mana Gain", "c": "Пассив", "t": "BUFF", "target": "SELF", "L": "Пассив: gainMp +22 → +81"},
+      "onPanel_10_10": false
+    },
+    {
+      "name": "Cubic Mastery",
+      "il_id": 143,
+      "slot": "l2_143",
+      "interlude": {"n": "Cubic Mastery", "c": "Пассив", "t": "COREDONE", "target": "SELF", "L": "Пассив"},
+      "onPanel_10_10": false
+    }
+  ],
+  "measured_other": [
+    {"name": "spoil", "kind": null, "uses": null, "usesUnmeasured": null, "cdNet": 0.3},
+    {
+      "name": "Атака",
+      "kind": "атака",
+      "uses": 3444,
+      "usesUnmeasured": 0,
+      "avgDmg_recent": 1,
+      "dmgSamples": 1131,
+      "cd": 1.6,
+      "cdS": [1.6, 1.4, 1.5, 1.7, 1.8, 1.5, 1.6],
+      "mpGain": 70,
+      "img": "attack.jpg",
+      "lastLogLine": "Charcoal ×2 ⏎ Слуга [Mew the Cat] атакує [Horrifying Jackhammer Golem] 1 189 урону. ⏎ Ты нанёс [ Horrifying Jackhammer Golem ] 1 урона. ⏎ Vamp clan armor +1 HP"
+    },
+    {
+      "name": "Зілля зцілення",
+      "kind": "предмет",
+      "uses": 2,
+      "usesUnmeasured": 0,
+      "heal": 337,
+      "mpGain": 30,
+      "img": "Etc_potion_scarlet_i00_0.jpg",
+      "lastLogLine": "Зілля +600 HP ⏎ Зілля зцілення: відновлення імпульсами по 600 HP кожні 1 с. ⏎ Оруженосець Фафуріона Істарі · Полум’я 263"
+    },
+    {
+      "name": "Зілля мани",
+      "kind": "предмет",
+      "uses": 282,
+      "usesUnmeasured": 0,
+      "heal": 136,
+      "mpGain": 542,
+      "img": "Etc_potion_blue_i00_0.jpg"
+    }
+  ],
+  "doc_measurements": [
+    {"note": "Blaze ≈895 урона / 22 MP / КД 3,1 с (старый замер, Warlock ~50)", "src": "CLAUDE.md «Замеры»"},
+    {"note": "Aura Burn ≈847 / 25 MP / 2,2 с", "src": "CLAUDE.md"},
+    {
+      "note": "Energy Bolt ≈773 / 8 MP / 2,2 с — лучший урон на 1 MP (≈60/MP против Blaze ≈35/MP)",
+      "src": "CLAUDE.md; CHANGELOG-7.1.22"
+    },
+    {"note": "Vampiric Touch ≈657 / 12 MP; ≈665 урона + ≈266 HP", "src": "CLAUDE.md; CHANGELOG-7.2"},
+    {"note": "Атака мага ≈1 урон (бесполезна)", "src": "CLAUDE.md"},
+    {
+      "note": "Ход ≈1,23 с; бой с цепочкой ≈0,7 с, ≈2,5 с на моба (лог 10.10 20:08–20:53)",
+      "src": "CLAUDE.md; CHANGELOG-7.2"
+    },
+    {
+      "note": "С Sprite's Staff B Blaze ≈1800 (среднее из 5373 старых замеров показывало ≈900)",
+      "src": "CHANGELOG-7.2.1"
+    },
+    {
+      "note": "Под FA-баффами Aura Burn 2 400–4 900 (было ≈1 700); Blaze ≈1730 → 2770–3100, крит 0 → 28–43 %",
+      "src": "CHANGELOG-7.2.2, 8.0.3"
+    },
+    {
+      "note": "Откат сервера без FA ≈0,66–0,75 с (Blaze/AB); сервер принимал ход через ≈0,85 с с «Даром Серафима» и ≈1,1 с без — «КД 3,1 с» в старых замерах — артефакт",
+      "src": "CHANGELOG-8.0.3; skill l2-game-facts"
+    },
+    {
+      "note": "Устаревшие «нижние границы»: Aura Burn 3,4 с при настоящих 1,1 с, VT 3,9 с (стерты once cdFloor80)",
+      "src": "CHANGELOG-8.0"
+    },
+    {
+      "note": "Magnus' Chant (1413) +13–18 % к урону заклинаний и кота — выгоднее «Дара Серафима» (4703, −30 % отката)",
+      "src": "CHANGELOG-8.0.3"
+    },
+    {
+      "note": "Дебаффы на чемпионе: с 2 дебаффами бой 6,5 с и ДПС 832, без — 4,6 с и ДПС 1268; Blaze под дебаффами 1447, без — 1535",
+      "src": "CHANGELOG-7.2.1"
+    },
+    {
+      "note": "Surrender to Fire = +11 % только к заклинаниям мага; ход окупается ≈9 заклинаниями",
+      "src": "CHANGELOG-7.1.31"
+    }
+  ],
+  "noEffectInBattle_default": ["Servitor Wind Walk", "Body To Mind"],
+  "magisterSkip_default": ["Curse Weakness", "Poisonous Cloud"],
+  "debuffImmune": {"rb": "2026-10-10T12:10:03Z"},
+  "logAlias_builtin": {
+    "force buster": "force burst",
+    "vampiric touch": "вампірний дотик",
+    "aura burn": "опік аури",
+    "energy bolt": "енергетична блискавка",
+    "blaze": "полум’я",
+    "flame strike": "удар полум’я"
+  },
+  "logAlias_learned": {"aura burn": "опік аури"},
+  "panelKnown_10_10": [
+    "corpse life drain",
+    "surrender to fire",
+    "vampiric touch",
+    "blaze",
+    "curse chaos",
+    "aura burn",
+    "energy bolt",
+    "summon kai the cat",
+    "curse weakness"
+  ],
+  "pets": {
+    "kai_the_cat": {
+      "pAtkPctOfOwnerMAtk": 25,
+      "stat_bot": {
+        "acts": 710,
+        "crits": 4,
+        "dealt": 2550216,
+        "deaths": 0,
+        "dmg": 366093,
+        "fights": 12,
+        "hitDmg": 336165,
+        "hits": 175,
+        "lvMax": 53,
+        "lvMin": 52,
+        "misses": 43,
+        "name": "Kai the Cat",
+        "resummons": 0,
+        "summons": 0,
+        "t": 1791635928177
+      },
+      "doc": [
+        ["Kai Lv.3 (10.10 19:35–19:45): удар ≈1500 (1300–1670), крит 5721 (2 %), промах 16 %", "CHANGELOG-7.1.31"],
+        ["Kai Lv.5: P.Atk ≈1381, удар ≈1870", "skill l2-game-facts"],
+        ["кот ≈35–40 % урона (≈1100 за удар) на ~50 ур.", "CLAUDE.md"],
+        ["перепризыв в бою даёт полное HP: 10.10 19:43:35 HP 444 → 1965", "CHANGELOG-7.1.31"],
+        ["лог: «Слуга [Kai the Cat] атакує [моб] 1 409 урону.» / «… завдає критичного удару [моб] 5 721 урону.» / «… промахнувся»", "CLAUDE.md"]
+      ],
+      "derived": {"avgHit": 1921, "hitRateOfActs": 0.246, "missRate": 0.194, "critRate": 0.018}
+    },
+    "mew_the_cat": {
+      "pAtkPctOfOwnerMAtk": 20,
+      "doc": [
+        ["призыв в бою: MP −19, кот 736/750 (лог 10.10 00:20); перепризыв работает (rt.petResummon.mew_the_cat=true)", "CHANGELOG-7.1.17; base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3)"],
+        ["Servitor Heal лечит Mew на 561 HP (rt.skills.servitor heal.last)", "base-profile.json (экспорт памяти Warlock 10.10.2026 22:40 UTC+10, версия 7.2.1; дополнения 8.0/8.0.3)"]
+      ]
+    },
+    "kat_the_cat": {"pAtkPctOfOwnerMAtk": 15},
+    "feline_queen": {
+      "pAtkPctOfOwnerMAtk": 10,
+      "doc": [
+        ["с 11.10; support; бафф физ. крита «Blessing of Queen» (4699 «Благословення Королеви») — магу бесполезен; с 8.0.3 первой на панели — бот её не выбирает по умолчанию", "CLAUDE.md; skill l2-game-facts; CHANGELOG-8.0.3"]
+      ]
+    }
+  },
+  "petAdvice": {"best": "", "text": "мало данных: Kai the Cat — 12/30 боёв"},
+  "buffs": {
+    "fastAden": [
+      {
+        "id": 264,
+        "name": "Song of Earth",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Song of Earth", 1],
+        "interlude": {
+          "n": "Song of Earth",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · бафф 120 с: Физ. защита +25% · радиус 1000"
+        }
+      },
+      {
+        "id": 266,
+        "name": "Song of Water",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Song of Water",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · бафф 120 с: Уклонение +3 · радиус 1000"
+        }
+      },
+      {
+        "id": 267,
+        "name": "Song of Warding",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Song of Warding", 1],
+        "interlude": {
+          "n": "Song of Warding",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · бафф 120 с: Маг. защита +30% · радиус 1000"
+        }
+      },
+      {
+        "id": 268,
+        "name": "Song of Wind",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Song of Wind", 1],
+        "missing_in_popup_FA_KNOWN": true,
+        "interlude": {
+          "n": "Song of Wind",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · бафф 120 с: Скорость бега +20 · радиус 1000"
+        }
+      },
+      {
+        "id": 269,
+        "name": "Song of Hunter",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Song of Hunter",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · радиус 1000"
+        }
+      },
+      {
+        "id": 271,
+        "name": "Dance of Warrior",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Dance of Warrior",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Физ. атака +12% · радиус 1000"
+        }
+      },
+      {
+        "id": 272,
+        "name": "Dance of Inspiration",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Dance of Inspiration",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Точность +4 · радиус 1000"
+        }
+      },
+      {
+        "id": 273,
+        "name": "Dance of Mystic",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Dance of Mystic", 1],
+        "interlude": {
+          "n": "Dance of the Mystic",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Маг. атака +20% · радиус 1000"
+        }
+      },
+      {
+        "id": 275,
+        "name": "Dance of Fury",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Dance of Fury",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Скор. атаки +15% · радиус 1000"
+        }
+      },
+      {
+        "id": 276,
+        "name": "Dance of Concentration",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Dance of Concentration", 1],
+        "interlude": {
+          "n": "Dance of Concentration",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Скор. каста +30%, cancel −40 · радиус 1000"
+        }
+      },
+      {
+        "id": 304,
+        "name": "Song of Vitality",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Song of Vitality", 1],
+        "missing_in_popup_FA_KNOWN": true,
+        "interlude": {
+          "n": "Song of Vitality",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · бафф 120 с: Макс. HP +30% · радиус 1000"
+        }
+      },
+      {
+        "id": 365,
+        "name": "Dance of Siren",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Dance of Siren", 1],
+        "interlude": {
+          "n": "Siren's Dance",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 60,
+          "reuse": 10000,
+          "dur": 120,
+          "L": "Бафф · группа · MP 60 · откат 10 с · каст 2.5 с · только: парные мечи · бафф 120 с: Маг. крит +200% · радиус 1000"
+        }
+      },
+      {
+        "id": 1033,
+        "name": "Стійкість до отрути",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Resist Poison",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [24, 28, 31],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 24–31 (+6–8 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Уязв. к яду −30% → −50% · дальность 400"
+        }
+      },
+      {
+        "id": 1036,
+        "name": "Магічний бар’єр",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Magic Barrier",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [31, 38],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 31–38 (+8–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Маг. защита +23% → +30% · дальность 400"
+        }
+      },
+      {
+        "id": 1040,
+        "name": "Щит",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Shield",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [8, 18, 31],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 8–31 (+2–8 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Физ. защита +8% → +15% · дальность 400"
+        }
+      },
+      {
+        "id": 1045,
+        "name": "Благословення тіла",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Bless the Body",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [31, 35, 38, 41, 48, 53],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 31–53 (+8–14 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Макс. HP +10% → +35% · дальность 400"
+        }
+      },
+      {
+        "id": 1048,
+        "name": "Благословення душі",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Bless the Soul",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [39, 44, 48, 52, 62, 70],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 39–70 (+8–13 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Макс. MP +10% → +35% · дальность 400"
+        }
+      },
+      {
+        "id": 1059,
+        "name": "Тимчасово увеличивает M",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["M.Atk ↑", 1],
+        "interlude": {
+          "n": "Empower",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [18, 31, 38],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 18–38 (+5–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Маг. атака +55% → +75% · дальность 400"
+        }
+      },
+      {
+        "id": 1062,
+        "name": "Дух берсерка",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Berserker Spirit",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY_MEMBER",
+          "mp": [24, 38],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · PARTY_MEMBER · MP 24–38 (+6–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Маг. атака +10% → +16%, Физ. атака +5% → +8%, Маг. защита −10% → −16%, Физ. защита −5% → −8%, Скор. каста +5% → +8%, Скор. атаки +5% → +8%, Скорость бега +5 → +8, Уклонение −2 → −4 · дальность 400"
+        }
+      },
+      {
+        "id": 1068,
+        "name": "Сила",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Might",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [8, 16, 28],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 8–28 (+2–7 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Физ. атака +8% → +15% · дальность 400"
+        }
+      },
+      {
+        "id": 1077,
+        "name": "Фокус",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Focus",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [18, 31, 38],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 18–38 (+5–10 в начале) · откат 6 с · каст 4 с · дальность 400"
+        }
+      },
+      {
+        "id": 1085,
+        "name": "Кмітливість",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Cast.Spd ↑", 1],
+        "interlude": {
+          "n": "Acumen",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [16, 24, 35],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 16–35 (+4–9 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Скор. каста +15% → +30% · дальность 400"
+        }
+      },
+      {
+        "id": 1086,
+        "name": "Поспіх",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Haste",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [31, 38],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 31–38 (+8–10 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Скор. атаки +15% → +33% · дальность 400"
+        }
+      },
+      {
+        "id": 1182,
+        "name": "Стійкість до води",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Resist Aqua",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [18, 28, 31],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 18–31 (+5–8 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Уязв. к воде −15% → −30% · дальность 400"
+        }
+      },
+      {
+        "id": 1189,
+        "name": "Стійкість до вітру",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Resist Wind",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [24, 28, 31],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 24–31 (+6–8 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Уязв. к ветру −15% → −30% · дальность 400"
+        }
+      },
+      {
+        "id": 1191,
+        "name": "Стійкість до вогню",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Resist Fire",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [21, 28, 31],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 21–31 (+6–8 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Уязв. к огню −15% → −30% · дальность 400"
+        }
+      },
+      {
+        "id": 1204,
+        "name": "Крок вітру",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Wind Walk",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [16, 21],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 16–21 (+4–6 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Скорость бега +20 → +33 · дальность 400"
+        }
+      },
+      {
+        "id": 1240,
+        "name": "Настанова",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Guidance",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [28, 35, 41],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 28–41 (+7–11 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Точность +2 → +4 · дальность 400"
+        }
+      },
+      {
+        "id": 1268,
+        "name": "Vampiric Rage",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Vampiric Rage",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [21, 31, 43, 53],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 21–53 (+6–14 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Вампиризм +6 → +9 · дальность 400"
+        }
+      },
+      {
+        "id": 1303,
+        "name": "Тимчасово увеличивает шанс нанесения Кри",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Wild Magic", 1],
+        "interlude": {
+          "n": "Wild Magic",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [46, 52],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 46–52 (+12–13 в начале) · откат 6 с · каст 4 с · бафф 1200 с: Маг. крит +200% → +300% · дальность 400"
+        }
+      },
+      {
+        "id": 1323,
+        "name": "Noblesse Blessing",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Noblesse Blessing", 5],
+        "interlude": {
+          "n": "Noblesse Blessing",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": 55,
+          "reuse": 6000,
+          "dur": 3600,
+          "L": "Бафф · одна цель · MP 55 (+14 в начале) · откат 6 с · каст 4 с · тратит предмет #3031 ×5 · дальность 400"
+        }
+      },
+      {
+        "id": 1352,
+        "name": "Стихійний захист",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Elemental Protection",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": 56,
+          "reuse": 10000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 56 (+14 в начале) · откат 10 с · каст 4 с · бафф 1200 с: Уязв. к воде −20%, Уязв. к огню −20%, Уязв. к ветру −20%, Уязв. к земле −20% · дальность 400"
+        }
+      },
+      {
+        "id": 1355,
+        "name": "Prophecy of Wind",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Prophecy of Wind", 5],
+        "interlude": {
+          "n": "Prophecy of Water",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": 57,
+          "reuse": 120000,
+          "dur": 300,
+          "L": "Бафф · одна цель · MP 57 (+15 в начале) · откат 120 с · каст 4 с · бафф 300 с: Маг. атака +20%, Маг. защита +20%, Скор. каста +20%, Маг. крит +100%, Реген MP +20%, Скорость бега −20%, Уязв. к дебаффам −10% · тратит предмет #3031 ×5 · дальность 400"
+        }
+      },
+      {
+        "id": 1356,
+        "name": "Prophecy of Fire",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Prophecy of Fire", 5],
+        "interlude": {
+          "n": "Prophecy of Fire",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": 57,
+          "reuse": 120000,
+          "dur": 300,
+          "L": "Бафф · одна цель · MP 57 (+15 в начале) · откат 120 с · каст 4 с · бафф 300 с: Физ. атака +10%, Физ. защита +20%, Точность +4, Скор. атаки +20%, Скорость бега −10%, Макс. HP +20%, Реген HP +20%, Уязв. к дебаффам −10% · тратит предмет #3031 ×5 · дальность 400"
+        }
+      },
+      {
+        "id": 1357,
+        "name": "Prophecy of Water",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Prophecy of Water", 5],
+        "interlude": {
+          "n": "Prophecy of Wind",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": 57,
+          "reuse": 120000,
+          "dur": 300,
+          "L": "Бафф · одна цель · MP 57 (+15 в начале) · откат 120 с · каст 4 с · бафф 300 с: Точность +4, Уклонение +4, Скор. атаки +20%, Вампиризм +5, Сила крита +20%, Шанс крита +20%, Уязв. к дебаффам −10% · тратит предмет #3031 ×5 · дальность 400"
+        }
+      },
+      {
+        "id": 1363,
+        "name": "Chant of Victory",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Chant of Victory", 5],
+        "interlude": {
+          "n": "Chant of Victory",
+          "c": "Лечение",
+          "t": "HEAL_PERCENT",
+          "target": "PARTY",
+          "mp": 227,
+          "pow": 20,
+          "reuse": 1200000,
+          "dur": 300,
+          "L": "Лечение % · группа · сила 20 · MP 227 (+57 в начале) · откат 1200 с · каст 2.5 с · бафф 300 с: Физ. атака +10%, Физ. защита +20%, Точность +4, Скор. атаки +20%, Скор. каста +20%, Сила крита +20%, Маг. атака +20%, Маг. защита +20% · тратит предмет #3031 ×40 · радиус 1000"
+        }
+      },
+      {
+        "id": 1388,
+        "name": "Велика сила",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Greater Might",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [54, 62, 69],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 54–69 · откат 6 с · каст 4 с · бафф 1200 с: Физ. атака +4% → +10% · тратит предмет #3031 ×1–3 · дальность 400"
+        }
+      },
+      {
+        "id": 1389,
+        "name": "Великий щит",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Великий щит", 1],
+        "interlude": {
+          "n": "Greater Shield",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "ONE",
+          "mp": [54, 62, 69],
+          "reuse": 6000,
+          "dur": 1200,
+          "L": "Бафф · одна цель · MP 54–69 · откат 6 с · каст 4 с · бафф 1200 с: Физ. защита +5% → +15% · тратит предмет #3031 ×1–3 · дальность 400"
+        }
+      },
+      {
+        "id": 1413,
+        "name": "Magnus' Chant",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Magnus' Chant", 5],
+        "interlude": {
+          "n": "Magnus' Chant",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": 287,
+          "reuse": 1200000,
+          "dur": 300,
+          "L": "Бафф · группа · MP 287 (+59 в начале) · откат 1200 с · каст 2.5 с · бафф 300 с: Реген MP +50%, Скор. каста +20%, Маг. защита +20%, Маг. атака +30%, Макс. MP +20%, Расход MP (маг.) −20%, Маг. крит +20% · тратит предмет #3031 ×40 · радиус 1000"
+        }
+      },
+      {
+        "id": 1414,
+        "name": "Victories of Pa'agrio",
+        "costFA": 5,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Victories of Pa'agrio", 5],
+        "interlude": {
+          "n": "Victories of Pa'agrio",
+          "c": "Лечение",
+          "t": "HEAL_PERCENT",
+          "target": "ALLY",
+          "mp": 284,
+          "pow": 20,
+          "reuse": 1200000,
+          "dur": 300,
+          "L": "Лечение % · альянс · сила 20 · MP 284 (+57 в начале) · откат 1200 с · каст 2.5 с · бафф 300 с: Физ. атака +10%, Физ. защита +20%, Точность +4, Скор. атаки +20%, Скор. каста +20%, Сила крита +20%, Маг. атака +20%, Маг. защита +20% · тратит предмет #3031 ×40 · радиус 1000"
+        }
+      },
+      {
+        "id": 4699,
+        "name": "Благословення Королеви",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "interlude": {
+          "n": "Blessing of Queen",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "reuse": 8000,
+          "L": "Бафф · группа · откат 8 с · каст 4 с · радиус 1000"
+        }
+      },
+      {
+        "id": 4703,
+        "name": "Дар Серафима",
+        "costFA": 1,
+        "src": "rt.faCat (страница баффера FA 10.10 22:27)",
+        "FA_KNOWN_content": ["Дар Серафима (откат −30 %)", 1],
+        "interlude": {
+          "n": "Gift of Seraphim",
+          "c": "Бафф",
+          "t": "BUFF",
+          "target": "PARTY",
+          "mp": [122, 157, 194, 202, 207, 212, 215, 220, 224, 229, 233, 237, 242],
+          "reuse": 8000,
+          "L": "Бафф · группа · MP 122–242 · откат 8 с · каст 4 с · радиус 1000"
+        }
+      }
+    ],
+    "rbSessionDefault": {
+      "ids": [1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389],
+      "names": [
+        "Magnus' Chant",
+        "Noblesse Blessing",
+        "Дар Серафима",
+        "Dance of Mystic",
+        "Dance of Siren",
+        "Тимчасово увеличивает шанс нанесения Кри",
+        "Song of Earth",
+        "Song of Warding",
+        "Великий щит"
+      ],
+      "costFA_total": 17,
+      "src": "content.js DEF_CFG.rbSessBuffs; CHANGELOG-7.2.2"
+    },
+    "town": {
+      "TB_KEYS": {"basic": [1068, 1268, 1086, 1045], "warrior": [1388, 1268, 271, 1045], "mage": [1059, 1303, 1045]},
+      "TB_LVL_DEF_basic": {
+        "1036": {"level": 1, "name": "Магічний бар’єр"},
+        "1040": {"level": 2, "name": "Щит"},
+        "1045": {"level": 5, "name": "Благословення тіла"},
+        "1048": {"level": 5, "name": "Благословення душі"},
+        "1059": {"level": 2, "name": "Тимчасово увеличивает M"},
+        "1062": {"level": 1, "name": "Дух берсерка"},
+        "1068": {"level": 2, "name": "Сила"},
+        "1077": {"level": 2, "name": "Фокус"},
+        "1085": {"level": 2, "name": "Кмітливість"},
+        "1086": {"level": 1, "name": "Поспіх"},
+        "1240": {"level": 2, "name": "Настанова"},
+        "1242": {"level": 2, "name": "Death Whisper"},
+        "1268": {"level": 3, "name": "Vampiric Rage"}
+      },
+      "note": "городской набор 24 ч (23 ч по панели), слетает при смерти; не берётся, если понизит активный бафф (7.2.3)"
+    },
+    "durations": {
+      "FA_buff_h": 3,
+      "FA_buff_panel_h": 2.96,
+      "town_buff_h": 24,
+      "note": "«Дар Серафима» тоже 3 ч, хотя в описании «20 хв»; Noblesse (1323) сохраняет баффы при смерти и уходит сам"
+    },
+    "cfg_player": {"faBuffs": "", "townBuffSet": "basic", "buffSec": 118, "nBuffs": "", "nKeyBuffs": "", "nPetBuffs": ""}
+  },
+  "clickGate_8_0_3": {
+    "LOCK_A_ms_[min,max,start]": [60, 500, 120],
+    "LOCK_B_ms_[min,max,start]": [30, 200, 50],
+    "note": "запас A после ответа хода, B после конца GET /character игры; клик в полёте GET /character теряется (770 из 770), через 25–200 мс после — доходит в 95 %"
+  },
+  "warrior_force_FORCE_KNOWN": {"hurricane assault": 2, "force blaster": 1, "force storm": 1, "force burst": 1}
+}

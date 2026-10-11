@@ -1,0 +1,9 @@
+{
+ "_path": "/game/mammon/blacksmith/upgrades",
+ "_status": 403,
+ "data": {
+  "error": "mammon_blacksmith_not_nearby",
+  "messageUk": "Коваль Маммона зараз не поруч.",
+  "messageRu": "Коваль Маммона зараз не поруч."
+ }
+}
