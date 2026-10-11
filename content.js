@@ -3067,6 +3067,10 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
+  // 9.0 (лог 12.10 01:08:30, Fairy Queen Timiniel 7 092 из 1,9 млн): ход → 400 «Немає активного бою» (battle_none / not_in_battle) — боя на
+  // сервере уже нет (РБ добили другие), а страница боя осталась. Бот 23 мин жал вслепую. Метка для боя (combat), снимает её любой принятый ход/новый бой
+  if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path) && d.status >= 200 && d.status < 300 && !d.res?.error) ACT_NET.gone = null;
+  else if (path === '/game/battle/action' && (d.res?.error === 'battle_none' || d.res?.reason === 'not_in_battle')) ACT_NET.gone = { t: Date.now(), spawn: d.req?.battleSpawnId || '' };
   // 8.0.3 (лог 11.10 10:32:17: «POST /game/battle/action → 409 · 28586 мс», через 1 с — смерть у Барды): ответ на ход дольше 8 с — сервер
   // висел; отметка во вкладке (переживает перезагрузку) — смерть в ближайшие 60 с не «не по силам» (survival.onDeath)
   if (path === '/game/battle/action' && +d.ms > 8000) srvHangMark(`ответ на ход ${Math.round(d.ms / 1000)} с`);
