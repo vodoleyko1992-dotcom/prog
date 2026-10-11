@@ -76,6 +76,7 @@
         "modules/loot.js",
         "modules/survival.js",
         "modules/mammon.js",
+        "modules/story.js",
         "content.js"
       ],
       "run_at": "document_idle"

@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
@@ -1000,7 +1000,7 @@ async function absorb() {
   }
   // 7.1.30 (лог 14:11:56): строка того же моба БЕЗ ★ (другой спавн) стирала цель — «★ цели: нет», и бот улетел с локации.
   // Снимаем цель, только если на странице этот моб есть и ни одна его строка не со ★, и квест профессии его не требует
-  const open = rt.profQuest?.open || [];
+  const nq = rt.story?.noblesse, open = [...(rt.profQuest?.open || []), ...(nq?.active && !nq.completed ? (nq.targets || []).filter(t => t.have < t.need).map(t => String(t.name).toLowerCase()) : [])];   // 9.0: и цели квеста Noblesse (story.openNames)
   const gone = items => [...new Set(items.filter(i => !i.champ).map(i => i.name.toLowerCase()))]
     .filter(k => qs[k] && !open.includes(k) && !items.some(i => i.quest && i.name.toLowerCase() === k));
   // 8.0.3 (лог 11.10 11:45:50): «★ цели: нет» записалось за 0,2 с до ответов /game/story-quests/* — игра вешает ★ (--quest-target) на строки
@@ -2242,6 +2242,9 @@ async function main() {
       // поход к торговцу/кузнецу — вне боя и туров, с возвратом на точку охоты
       L2V7Modules.mammon.mmTick().catch(() => {});
       if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
+      // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
+      L2V7Modules.story.storyTick().catch(() => {});
+      if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -2987,7 +2990,7 @@ let pageLeaving = false;
 addEventListener('beforeunload', () => { pageLeaving = true; });
 addEventListener('pagehide', () => { pageLeaving = true; });
 addEventListener('pageshow', () => { pageLeaving = false; });
-const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|profession-quest|\/sync$|\/raid-bosses$/;
+const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|profession-quest|story-quests|\/sync$|\/raid-bosses$/;
 // 7.1.17: ходы боя по сети — ушёл / ответ пришёл. Лог 10.10 01:07: ответ на ход шёл 1,1–2,8 с, а бот жал следующее через 1 с —
 // игра такие нажатия не принимала («урон 0 · MP 0» ×6 подряд, бой с чемпионом 33 с). Теперь следующий ход — после ответа
 const ACT_NET = { start: 0, done: 0, t: 0 };
@@ -3089,6 +3092,13 @@ addEventListener('message', e => {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
+  } catch (e) {}
+  // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
+  if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
+    const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
+    if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
+    // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
+    const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch);
   } catch (e) {}
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
@@ -3503,7 +3513,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get gam
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },
@@ -4046,6 +4056,15 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() 
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
+
+// 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
+L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+  get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; },
+  get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
+// 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
+const awayFree = () => L2V7Modules.mammon.modeFree();
+// 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
+const classSwitched = () => { PET = null; };
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'kick') {
