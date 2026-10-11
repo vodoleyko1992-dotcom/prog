@@ -1,4 +1,4 @@
-// ===== L2wap Bot v8.0.8 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v9.0 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3819,7 +3819,10 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
+// 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
+const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
 L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set $q(value) { $q = value; },
+  get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
