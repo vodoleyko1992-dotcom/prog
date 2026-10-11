@@ -24,7 +24,7 @@ async function testItems() {
       return { ok: true, async json() { return { 1: { n: 'Test Sword', wt: 'меч' }, 2: { n: 'Other' } }; } };
     }
   });
-  // 9.2.3: weaponWt убран вместе со сменой оружия ради баффа — конец вырезки по следующему комментарию
+  // 9.2.4: weaponWt убран вместе со сменой оружия ради баффа — конец вырезки по следующему комментарию
   vm.runInContext(chunk(src, 'let ITEMS =', '// баффы с общим слотом эффекта') + '\nthis.itemsDb=itemsDb;this.itemOf=itemOf;this.clear=()=>{ITEMS=null;itemsRetryAt=0;};', c);
   const [a, b] = await Promise.all([c.itemsDb(), c.itemsDb()]);
   assert.equal(n, 1, 'Concurrent item requests should share one fetch');
@@ -97,7 +97,7 @@ async function testRetention() {
   console.log('PASS: sparse ID retention, important state preserved, journal retry buffer');
 }
 (async () => {
-  assert.equal(manifest.version, '9.2.3');
+  assert.equal(manifest.version, '9.2.4');
   await testItems();
   await testKnowledgeCaches();
   await testRetention();

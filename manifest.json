@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "9.2.3",
-  "description": "L2wap Bot 9.2.3 — заряды сами встают на панель, оружие в класс по новой сумке, спойлер без лишней карты, бафф кота Blessing of Queen",
+  "version": "9.2.4",
+  "description": "L2wap Bot 9.2.4 — «не по зубам» по всему урону героя, заряды на панель, оружие в класс, спойлер без лишней карты",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -113,5 +113,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "9.2.3"
+  "version_name": "9.2.4"
 }
