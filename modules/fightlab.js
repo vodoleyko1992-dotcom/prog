@@ -102,6 +102,14 @@ function begin(bt, spawn, now) {
   F.key = keyOf({ spawn, name, champ, kind: rb ? 'raid' : '' });
   return F;
 }
+// новые строки полного лога: прошлый ответ кончался на prev, новый — cur; cur = prev.slice(k) + новое (лог игры растёт, старое уходит)
+function newLines(F, cur) {
+  const prev = F.logPrev || [], c = Array.isArray(cur) ? cur.map(x => String(x ?? '')) : [];
+  let k = 0;
+  for (; k < prev.length; k++) { const n = prev.length - k; if (n <= c.length && prev.slice(k).every((s, i) => s === c[i])) break; }
+  F.logPrev = c.slice(-40);
+  return c.slice(prev.length - k);
+}
 const urlSpawn = () => { try { return new URLSearchParams(location.search).get('spawnId') || ''; } catch (e) { return ''; } };
 // бой открыт со страницы карты (POST /game/battle/start ушёл ещё там) — на странице боя первый ответ придёт только после хода;
 // подсказка нужна до него: бой по заголовку страницы
@@ -128,17 +136,21 @@ function onNet(path, d) {
     begin(bt, spawn, now);
     if (!act) { if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F; }
   }
-  const fresher = bt.seq == null || F.seq == null || bt.seq > F.seq;
-  const L = fresher ? parseLog(bt.log, F.name) : parseLog([], F.name);
+  // 9.2 (лог 12.10 02:31–02:56, 242 хода): игра отвечает на ход почти всегда `kind:'full'` (225 из 242) — там `battle.log` —
+  // ВЕСЬ лог боя с начала (battle-log-session.getActiveLines), а не хвост; `delta.logTail` (17 ответов) — только новые строки.
+  // Полный лог режем по уже виденным строкам (наложение хвоста прошлого ответа на начало нового), иначе каждый ход считался бы заново
+  const lines = bt.full || bt.seq == null ? newLines(F, bt.log) : bt.seq > (F.seq ?? -1) ? bt.log : [];
+  const L = parseLog(lines, F.name);
   if (bt.seq != null) F.seq = Math.max(F.seq ?? -1, bt.seq);
   if (bt.mobMax) F.mobMax = bt.mobMax;
   for (const h of L.hits) { F.hits.push(h.dmg); if (F.hits.length > HITS) F.hits.shift(); }
   for (const s of L.spikes) F.sp.push({ t: now, dmg: s.dmg, name: s.name });
-  if (L.pot) F.pots++;
   F.petDmg += L.pet;
   let turn = null;
   if (act) {
     const action = String(d.req?.action || ''), name = env.actName?.(action) || action;
+    // банка — по нашему же нажатию: строки «Зілля +600 HP» идут импульсами каждую секунду (снимок боя с Verfa 12.10 00:47), это не «ещё банка»
+    if (/^battle_potion/.test(action)) F.pots++;
     const drop = F.mob != null && bt.mob != null ? Math.max(0, F.mob - bt.mob) : 0;
     let own = L.own;
     if (!own && !F.rb && drop > L.pet) own = drop - L.pet;           // строки урона нет (атака) — по HP моба; на РБ бьют и другие игроки
@@ -205,7 +217,7 @@ function flush() {
   dirty = false; flushT = Date.now();
   const out = { ...cache };
   cache.__src = out;
-  try { env.setRt({ fightMem: out })?.catch?.(() => {}); } catch (e) {}
+  try { env.setRt({ fightMem: out, fightLast: lastFight })?.catch?.(() => {}); } catch (e) {}   // 9.2: последний бой — в меню «Память боя"
 }
 
 // ---------- подсказки бою ----------

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v9.0.1 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v9.2 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -467,7 +467,10 @@ const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 
   1083: { st: 'mDefDown', L: 'Дебафф · L2WAP: M.Def цели −10 %' },
   1222: { st: 'mDefDown', st2: 'pAtkDown', L: 'Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %' },
   1164: { st: 'pAtkDown', dur: 10, L: 'Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %' },
-  1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' } };
+  1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' },
+  // 9.2 (игрок 11.10, скрин окна кота + лог 12.10 02:44:49 «Blessing of Queen застосовано до героя та активного слуги»): слот «Summon Feline Queen»
+  // (l2_1331) на L2WAP больше не призывает королеву — это бафф кота Blessing of Queen (+20 % крит-урона слуги, 2 мин, MP 87). Роль «Баффы кота»
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, +20 % крит-урона слуги на 2 мин · MP 87' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -1846,7 +1849,19 @@ function combatProfileKind() {
   const normalized = normalizeProfession(rt.prof);
   if ((CLASS_W[normalized] || [])[0] === MAGE) return 'mage_summoner';
   if (CLASS_W[normalized]) return 'fighter';
-  return /\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/.test(normalized) ? 'mage_summoner' : null;
+  if (/\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/.test(normalized)) return 'mage_summoner';
+  // 9.2 (игрок: «научить универсальности — незнакомый герой или профессия»): профессии нет в списке — по ветке класса из ответов игры
+  // (character.classBranch: mystic/fighter), а без неё — по панели боя: ≥ 2 заклинания «Маг. атака» и ни одного удара воина → маг
+  if (normalized && /\b(?:fighter|warrior|knight|rogue|archer|scout|raider|monk|artisan|smith|dancer|singer)\b/.test(normalized)) return 'fighter';
+  if (rt.classBranch === 'mystic') return 'mage_summoner';
+  if (rt.classBranch === 'fighter') return 'fighter';
+  if (isBattle()) {
+    const sk = panelInventory().filter(x => x.kind === 'скилл').map(x => ilOf(x.name) || {});
+    const mag = sk.filter(il => il.c === 'Маг. атака' || il.t === 'MDAM' || il.t === 'MDAMDOT').length, phys = sk.filter(il => il.c === 'Физ. атака' || il.t === 'PDAM').length;
+    if (mag >= 2 && !phys) return 'mage_summoner';
+    if (phys >= 1 && !mag) return 'fighter';
+  }
+  return null;
 }
 function classWeaponTypes(...args) { return L2V7Modules.equipment.classWeaponTypes(...args); }
 function weaponOf(...args) { return L2V7Modules.equipment.weaponOf(...args); }
@@ -4262,6 +4277,11 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     const D = {};
     for (const [id, d] of Object.entries(rt.rbDb || {})) D[id] = d.verdict === 'no' && /^оценка до боя/.test(d.note || '') ? { ...d, verdict: null } : d;
     Object.assign(rf, { rbStats: S, rbDb: D, rbPreSkip: {}, debuffImmune: { ...(rt.debuffImmune || {}), rb: Date.now() } });   // лог 21:32: «Raid Boss має імунітет до негативних ефектів»
+  });
+  once('queenBuff92', () => {   // 9.2 (игрок 11.10): «Summon Feline Queen» = бафф кота Blessing of Queen → в «Баффы кота», из «какого кота призывать» — убрать
+    const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean);
+    if (!ps.some(n => /^summon feline queen$/i.test(n))) cf.nPetBuffs = [...ps, 'Summon Feline Queen'].join(', ');
+    if (/feline queen/i.test(String(C('petSummon') || ''))) cf.petSummon = '';
   });
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)

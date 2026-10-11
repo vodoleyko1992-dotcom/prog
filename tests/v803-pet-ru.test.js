@@ -9,6 +9,7 @@ const env = { rt: {}, cfg: {}, cleanTitle: s => String(s || '').trim() };
 const C = sb.L2V7Factories.combat(env);
 const slot = t => ({ title: t });
 const panel = [slot('Summon Feline Queen'), slot('Summon Mew the Cat'), slot('Summon Kai the Cat')];   // порядок DOM: #4 королева раньше #24 Kai
+// 9.2: «Summon Feline Queen» — бафф кота (IL_FIX 1331 target PET), не кот: petPick её не выбирает; здесь ilOf не задан — старое поведение (кот) для проверки выбора
 assert.equal(C.petPick(panel, '').title, 'Summon Kai the Cat', 'unknown cat → best by the L2WAP magister multiplier (Kai +25 %), not the first slot');
 assert.equal(C.petPick(panel, 'feline_queen').title, 'Summon Feline Queen', 'the cat of this page is kept');
 env.rt.petLast = 'feline_queen';
@@ -21,7 +22,11 @@ assert.equal(C.petPick(panel, '').title, 'Summon Feline Queen');
 const combat = read('modules/combat.js'), content = read('content.js'), html = read('popup.html');
 assert.doesNotMatch(combat, /\|\| sums\[0\];/, 'no «first summon on the panel» fallback');
 assert.match(content, /if \(s\?\.key && rt\.petLast !== s\.key && tabOwner\) setRt\(\{ petLast: s\.key \}\)/, 'last live cat remembered from activeSummon');
-assert.match(html, /<option value="Summon Feline Queen">Feline Queen \(\+10 % от M\.Atk, бафф физ\. крита\)<\/option>/);
+assert.doesNotMatch(html, /<option value="Summon Feline Queen">/, '9.2: Feline Queen — бафф кота, не вариант призыва');
+{ const env2 = { rt: {}, cfg: {}, cleanTitle: s => String(s || '').trim(), ilOf: b => /feline queen/i.test(b.title) ? { target: 'PET', c: 'Бафф' } : null };
+  const C2 = sb.L2V7Factories.combat(env2);
+  assert.equal(C2.petPick(panel, 'feline_queen').title, 'Summon Kai the Cat', '9.2: слот королевы — бафф кота, кот не из него');
+  assert.equal(C2.petMul('feline_queen'), 0); }
 // дебафф: провал по-украински
 const fail = combat.match(/fail = (\/не пройшов[^;]+?\/i)\.test\(added\)/)[1];
 const re = vm.runInNewContext(fail);

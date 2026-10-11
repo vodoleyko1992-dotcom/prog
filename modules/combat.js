@@ -170,7 +170,9 @@ const petKeyOf = n => String(n || '').trim().toLowerCase().replace(/\s+/g, '_');
 // 8.0.3 (лог 11.10 10:40: выучена Summon Feline Queen, слот #4 — раньше Kai #24): кота, которого не знаем (новая страница, телепорт,
 // смерть, перезагрузка), бот брал первым на панели — теперь это королева. Порядок: выбор в меню → кот этой страницы → последний живой
 // кот (rt.petLast — в т. ч. призванный игроком руками) → лучший по замерам (petAdvice) → множитель магистра L2WAP «+N % от M.Atk хозяина»
-const PET_MUL = { kai_the_cat: 25, mew_the_cat: 20, kat_the_cat: 15, feline_queen: 10 };
+// 9.2 (игрок 11.10): Feline Queen больше не кот — слот «Summon Feline Queen» стал баффом кота Blessing of Queen (IL_FIX 1331, роль «Баффы кота»)
+const PET_MUL = { kai_the_cat: 25, mew_the_cat: 20, kat_the_cat: 15 };
+const isPetBuffSlot = b => env.ilOf?.(b)?.target === 'PET';
 const summonKey = b => petKeyOf(env.cleanTitle(b?.title || '').replace(/^summon\s+/i, ''));
 function petMul(k) {
   const d = env.rt.skillDb?.['summon ' + String(k || '').replace(/_/g, ' ')]?.desc || '';
@@ -178,6 +180,7 @@ function petMul(k) {
   return m ? +m[1] : PET_MUL[k] || 0;
 }
 function petPick(sums, curKey) {
+  sums = sums.filter(b => !isPetBuffSlot(b));
   const by = k => k && sums.find(b => summonKey(b) === k);
   return by(curKey) || by(env.rt.petLast) || by(env.rt.petAdvice?.best) || [...sums].sort((a, b) => petMul(summonKey(b)) - petMul(summonKey(a)))[0] || null;
 }
@@ -264,11 +267,15 @@ function petBuffPick(ctx, me, mp, mob) {
   const now = Date.now();
   if (!petAlive()) return null;
   if (me && me.pct <= (env.cfg.hpPotAt ?? 50)) return null;
-  if (mob && !ctx.rb && mob.cur < 2 * (spellAvg() + petExpect(ctx))) return null;   // осталось < 2 ходов — бафф в следующем бою
+  // осталось < 2 ходов — бафф в следующем бою. 9.2: короткий бафф (≤ 5 мин: Blessing of Queen — +20 % крит-урона кота на 2 мин) по расчёту
+  // (логи 10–12.10: крит кота ≈3 % ударов, крит ≈3,9 обычного) даёт коту ≈+2 %, всему урону ≈+0,8 % — ход на него окупается только в долгом
+  // бою: на РБ и «толстом» мобе; на мобе-однохитке (цепочка) кот и так добивает, бафф там — потерянный ход. Длинные баффы — как раньше
+  const shortFight = mob && !ctx.rb && mob.cur < 2 * (spellAvg() + petExpect(ctx));
   for (const n of list) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
+    if (shortFight) continue;
     if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     const reserve = mp?.max ? mp.max * (env.cfg.mageMpPct ?? 25) / 100 : 0;
     if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0) + reserve) continue;
@@ -552,6 +559,14 @@ function dpsPlan(ctx, mp) {
   if (env.cfg.fightMode === 'kpd' && !ctx.rb) {
     const aD = env.expDmg('атака');
     if (aD && aD * 0.85 >= hp) { const a0 = opts.find(o => o.key === 'attack'); if (a0) return { ...a0, why: `КПД: добиваю атакой (${hp} HP)` }; return null; }
+  }
+  // 9.2 (незнакомый класс/новый удар): удар с < 3 замерами урона сначала пробуем на «толстом» мобе (HP заметно больше любого
+  // известного удара), как у мага (mageProbe) — иначе новый удар стоял бы в ротации с уроном «по справочнику» или не жался вовсе
+  if (env.cfg.mageProbe !== false && !ctx.rb && hp > 0) {
+    const meas = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.dmgN || 0;
+    const known = opts.filter(o => o.key !== 'attack' && !o.charge && meas(o) >= 3), maxKnown = Math.max(env.expDmg('атака') || 0, ...known.map(o => o.dmg));
+    const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3).sort((a, b) => meas(a) - meas(b))[0];
+    if (probe && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
   }
   // 1) добивание
   // 9.2: по этой цели есть замеры — «добьёт» = добивало в ≥ 85 % ударов (анализатор боя), иначе — как раньше, 85 % среднего
@@ -1220,7 +1235,7 @@ async function battle() {
         else if (ctx.pet.alive) { ctx.pet.alive = false; ctx.pet.deaths++; env.setRt({ petBornT: Date.now() }); env.rec('B', 'питомец', `кот погиб в бою (${ctx.name})`); }
       }
       if (fresh && !P.has && Date.now() - (env.rt.petSummonT || 0) > 15000) {
-        const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && /^summon\b/i.test(env.cleanTitle(b.title)));
+        const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && /^summon\b/i.test(env.cleanTitle(b.title)) && !isPetBuffSlot(b));   // 9.2: Feline Queen — бафф, не кот
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10)) {
           await env.setRt({ petSummonT: Date.now() });

@@ -226,6 +226,7 @@ async function load() {
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
+  renderFight(rt);
   renderPet(rt);
   paintRbOne(rt, on, paused);
   renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
@@ -1202,7 +1203,7 @@ function renderStory(rt) {
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
 $('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));
 
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', pet: 'panel', fight: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
@@ -1400,23 +1401,77 @@ document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classLi
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
 // Класс — как у движка (combatProfileKind): профиль из «Боя» или профессия героя. «👁 Показать настройки всех классов» — всё сразу
 const MAGE_PROF = /\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/i;
+// 9.2: профиль класса — как у движка (modules/fightlab.js role(): саммонер/нюкер/лекарь/спойлер/Дестр/Тиран/…); профессия — из ответов
+// игры (rt.classCur.prof, смена саба) или со страницы персонажа (rt.prof); незнакомая — по ветке класса rt.classBranch (mystic/fighter)
+let FL_RT = {};
+const FL = (typeof L2V7Factories !== 'undefined' && L2V7Factories.fightlab) ? L2V7Factories.fightlab({ get rt() { return FL_RT; }, cfg: {}, rec() {}, setRt() { return Promise.resolve(); } }) : null;
+function heroRole(rt) {
+  const prof = rt.classCur?.prof || rt.prof || '';
+  if (!prof) return rt.classBranch ? { id: rt.classBranch === 'mystic' ? 'nuker' : 'fighter', label: rt.classBranch === 'mystic' ? 'маг (по ветке класса)' : 'воин (по ветке класса)', mage: rt.classBranch === 'mystic', pet: false, spoil: false, prof: '' } : null;
+  if (FL) return FL.role(prof);
+  const mage = MAGE_PROF.test(String(prof));
+  return { id: mage ? 'summoner' : 'fighter', label: mage ? 'маг' : 'воин', mage, pet: mage, spoil: SPOIL_PROF.test(String(prof)), prof: String(prof) };
+}
 function heroCls(d, rt) {
   if (d.combatProfile === 'fighter') return 'fighter';
   if (d.combatProfile === 'mage_summoner') return 'mage';
-  return rt.prof ? (MAGE_PROF.test(String(rt.prof)) ? 'mage' : 'fighter') : '';
+  const r = heroRole(rt); return r ? (r.mage ? 'mage' : 'fighter') : '';
 }
 let showAllCls = (() => { try { return localStorage.getItem('showAllCls') === '1'; } catch (e) { return false; } })();
 // 7.2: спойлер (гном: Dwarven Fighter/Scavenger/Bounty Hunter/Fortune Seeker или спойл в роли «Спойл») — блок «Спойл» виден только ему
 const SPOIL_PROF = /\b(?:dwarven fighter|scavenger|bounty hunter|fortune seeker)\b/i;
 function paintCls(d, rt) {
-  const cls = heroCls(d, rt), root = document.documentElement, spoil = SPOIL_PROF.test(String(rt.prof || '')) || !!String(d.nSpoil || '').trim();
-  root.classList.toggle('cls-mage', cls === 'mage'); root.classList.toggle('cls-fighter', cls === 'fighter'); root.classList.toggle('cls-spoil', spoil); root.classList.toggle('show-all', showAllCls);
+  FL_RT = rt;
+  const cls = heroCls(d, rt), root = document.documentElement, role = heroRole(rt);
+  const spoil = !!role?.spoil || SPOIL_PROF.test(String(rt.prof || '')) || !!String(d.nSpoil || '').trim();
+  // кот — подраздел Warlock: профиль «маг» руками или саммонер по профессии; пока профессия неизвестна, у мага кот показан (вдруг он есть)
+  const summoner = cls === 'mage' && (d.combatProfile === 'mage_summoner' || !role || role.pet || !role.prof || !!rt.petStat);
+  root.classList.toggle('cls-mage', cls === 'mage'); root.classList.toggle('cls-fighter', cls === 'fighter'); root.classList.toggle('cls-spoil', spoil);
+  root.classList.toggle('cls-summoner', summoner); root.classList.toggle('show-all', showAllCls);
   const b = $('showAllCls'); if (b) b.textContent = showAllCls ? '🙈 Только настройки моего класса' : '👁 Показать настройки всех классов';
-  const n = $('clsNote'); if (n) n.textContent = !cls ? '' : showAllCls ? 'Показаны настройки всех классов.' : cls === 'mage'
-    ? `Класс: маг (${rt.prof || 'профиль'}) — скрыты воинские настройки: энергия силы, сверхсильные скиллы, важные баффы, спойл, станы, кастеты.`
-    : spoil ? `Класс: спойлер (${rt.prof || 'профиль'}) — скрыты «Слуга» и дебаффы мага; «Спойл» на виду.`
-    : `Класс: воин (${rt.prof || 'профиль'}) — скрыты «Слуга», дебаффы мага и спойл.`;
+  const who = role?.label || (cls === 'mage' ? 'маг' : 'воин'), pf = profLabel(rt);
+  const n = $('clsNote'); if (n) n.textContent = !cls ? 'Класс ещё не определён — показаны все подразделы.' : showAllCls ? 'Показаны настройки всех классов.' : cls === 'mage'
+    ? `Класс: ${who} (${pf}) — показаны «${summoner ? 'Warlock — маг с котом» и «' : ''}Маг»; подразделы спойлера и воина скрыты.`
+    : spoil ? `Класс: спойлер (${pf}) — показаны «Спойлер» и «Воин»; подразделы мага и кота скрыты.`
+    : `Класс: ${who} (${pf}) — показан «Воин»; подразделы мага, кота и спойлера скрыты.`;
+  renderClsBox(d, rt, role, cls);
 }
+const profLabel = rt => String(rt.classCur?.prof || rt.prof || '').replace(/^(human|elf|dark_elf|orc|dwarf|kamael)_/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'профессия неизвестна';
+// 9.2: «Класс и профиль боя» — что бот знает о герое и как под него подстроился
+function renderClsBox(d, rt, role, cls) {
+  const box = $('clsBox'); if (!box) return;
+  const manual = d.combatProfile && d.combatProfile !== 'auto';
+  const skills = Object.values(rt.skills || {}), measured = skills.filter(p => p.dmgN >= 3).length, fresh = skills.filter(p => p.kind === 'скилл' && (p.uses || 0) > 0 && (p.dmgN || 0) < 3 && !p.heal && !p.buffSec).length;
+  const slot = rt.classCur?.slot != null ? (rt.classCur.slot ? ` · саб ${rt.classCur.slot}` : ' · основной класс') : '';
+  const stash = Object.keys(rt.classStash || {}).filter(k => k && k !== rt.classCur?.prof);
+  const lines = [
+    `Профессия: ${profLabel(rt)}${rt.lvl ? ' ' + rt.lvl + ' ур.' : ''}${slot}${rt.classBranch ? ` · ветка ${rt.classBranch === 'mystic' ? 'маг' : 'воин'}` : ''}`,
+    `Профиль боя: ${manual ? (d.combatProfile === 'fighter' ? 'воин (выбран вручную)' : 'маг (выбран вручную)') : role ? `${role.label} (авто)` : cls ? `${cls === 'mage' ? 'маг' : 'воин'} (авто)` : 'ещё не определён'}`
+      + (role?.pet ? ' · кот — основной урон' : '') + (role?.spoil ? ' · спойл в начале боя' : '') + (role?.frenzy ? ' · Frenzy/Guts при низком HP' : '') + (role?.force ? ' · энергия силы' : ''),
+    `Скиллы: замерено ${measured}${fresh ? `, ещё пробуются ${fresh}` : ''}${rt.turnMs ? ` · ход ≈${(rt.turnMs / 1000).toFixed(2)} с` : ''}`,
+    stash.length ? `Память других классов: ${stash.map(k => profLabel({ prof: k })).join(', ')} (вернётся при смене саба)` : '',
+  ].filter(Boolean);
+  box.textContent = lines.join('\n');
+}
+// 9.2: «Память боя» — rt.fightMem (цели этого класса) и последний разобранный бой rt.fightLast
+function renderFight(rt) {
+  const box = $('fightBox'); if (!box) return;
+  FL_RT = rt;
+  const M = rt.fightMem || {}, keys = Object.keys(M), rb = keys.filter(k => k.startsWith('rb:')), ch = keys.filter(k => k.startsWith('ch:')), mob = keys.filter(k => k.startsWith('m:'));
+  const L = rt.fightLast, out = [];
+  if (L) out.push(`Последний бой: ${L.name}${L.rb ? ' (РБ)' : L.champ ? ' (чемпион)' : ''} — ${L.outcome === 'win' ? 'победа' : L.outcome === 'lose' ? 'смерть' : 'бой окончен'} за ${L.sec} с, ходов ${L.turns}, урон ${L.dealt}${L.pet ? ' + кот ' + L.pet : ''}${L.dps ? ` (≈${L.dps}/с)` : ''}${L.pots ? `, банок ${L.pots}` : ''}${L.lost ? `, потерянных ходов ${L.lost}` : ''}`);
+  out.push(`Целей в памяти: ${keys.length} (РБ ${rb.length}, чемпионов ${ch.length}, видов мобов ${mob.length})`);
+  const byT = a => a.sort((x, y) => (M[y].t || 0) - (M[x].t || 0));
+  const line = k => FL ? FL.brief(k) : `${M[k].nm}: боёв ${M[k].n}`;
+  if (rb.length) out.push('РБ:\n' + byT(rb).slice(0, 8).map(k => '• ' + line(k)).join('\n'));
+  if (ch.length) out.push('Чемпионы:\n' + byT(ch).slice(0, 5).map(k => '• ' + line(k)).join('\n'));
+  if (mob.length) out.push('Мобы (последние):\n' + byT(mob).slice(0, 8).map(k => '• ' + line(k)).join('\n'));
+  box.textContent = keys.length || L ? out.join('\n') : 'Боёв с анализом ещё нет — появится после первых боёв на 9.2';
+}
+confirmClick('fightMemReset', async () => {
+  await menuPatch({ fightMem: {}, fightLast: null });
+  toast('Память боя этого класса очищена');
+});
 $('showAllCls').onclick = async () => {
   showAllCls = !showAllCls; try { localStorage.setItem('showAllCls', showAllCls ? '1' : '0'); } catch (e) {}
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']); paintCls({ ...DEF, ...cfg }, rt);
