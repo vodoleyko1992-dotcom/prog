@@ -36,7 +36,8 @@ function suggestRoles() {
   const mage = env.combatProfileKind() === 'mage_summoner';
   const il = s => env.ilOf(s);
   const isPetOnly = s => il(s)?.target === 'PET' || /^(?:(?:servitor|warrior servitor|final servitor)(?:\s|$)|heal servitor)/i.test(s.name);
-  const isSummon = s => il(s)?.c === 'Призыв' || il(s)?.t === 'SUMMON' || /^(?:mass )?summon\b|^feline (?:queen|king)\b/i.test(s.name);
+  // 9.2: «Summon Feline Queen» на L2WAP — бафф кота (IL_FIX 1331: target PET), не призыв
+  const isSummon = s => il(s)?.target !== 'PET' && (il(s)?.c === 'Призыв' || il(s)?.t === 'SUMMON' || /^(?:mass )?summon\b|^feline (?:queen|king)\b/i.test(s.name));
   const isBuff = s => !isPetOnly(s) && !isSummon(s) && (il(s) ? il(s).c === 'Бафф' : pr(s.name).buffSec > 0 || /totem|spirit|might|shield|haste|rage|frenzy|guts|zealot|бафф|аура/i.test(s.name));
   // v4.42: в «станы» — только оглушение/паралич (Sleep снимается первым же ударом, Root не мешает бить в ближнем бою)
   const isStun = s => il(s) ? il(s).c === 'Контроль' && /^(STUN|PARALYZE|PDAM)$/.test(il(s).t || 'STUN') : !isBuff(s) && (pr(s.name).stun > 0 || /stun|оглуш|shock|bash/i.test(s.name));

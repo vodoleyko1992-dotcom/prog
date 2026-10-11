@@ -467,7 +467,10 @@ const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 
   1083: { st: 'mDefDown', L: 'Дебафф · L2WAP: M.Def цели −10 %' },
   1222: { st: 'mDefDown', st2: 'pAtkDown', L: 'Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %' },
   1164: { st: 'pAtkDown', dur: 10, L: 'Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %' },
-  1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' } };
+  1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' },
+  // 9.2 (игрок 11.10, скрин окна кота + лог 12.10 02:44:49 «Blessing of Queen застосовано до героя та активного слуги»): слот «Summon Feline Queen»
+  // (l2_1331) на L2WAP больше не призывает королеву — это бафф кота Blessing of Queen (+20 % крит-урона слуги, 2 мин, MP 87). Роль «Баффы кота»
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, +20 % крит-урона слуги на 2 мин · MP 87' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -4274,6 +4277,11 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     const D = {};
     for (const [id, d] of Object.entries(rt.rbDb || {})) D[id] = d.verdict === 'no' && /^оценка до боя/.test(d.note || '') ? { ...d, verdict: null } : d;
     Object.assign(rf, { rbStats: S, rbDb: D, rbPreSkip: {}, debuffImmune: { ...(rt.debuffImmune || {}), rb: Date.now() } });   // лог 21:32: «Raid Boss має імунітет до негативних ефектів»
+  });
+  once('queenBuff92', () => {   // 9.2 (игрок 11.10): «Summon Feline Queen» = бафф кота Blessing of Queen → в «Баффы кота», из «какого кота призывать» — убрать
+    const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean);
+    if (!ps.some(n => /^summon feline queen$/i.test(n))) cf.nPetBuffs = [...ps, 'Summon Feline Queen'].join(', ');
+    if (/feline queen/i.test(String(C('petSummon') || ''))) cf.petSummon = '';
   });
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)
