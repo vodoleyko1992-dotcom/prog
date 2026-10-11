@@ -297,7 +297,8 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
   }
   // ---------- T9: исходники ----------
   {
-    assert.match(content, /if \(path === '\/game\/epic-bosses' && d\.res && !d\.res\.error && Array\.isArray\(d\.res\.bosses\) && d\.res\.bosses\.every\(b => b && typeof b === 'object'\) && d\.res\.bosses\.length === \+d\.res\.total\)\s+try \{ L2V7Modules\.epics\.epicApiNote\(d\.res, 'page'\)/);
+    // 8.0.3 (fx-farm): полный список — epicNetList (bosses из поля eb hook.js, без обрезки до 8); поведение — в v803-zone.test.js
+    assert.match(content, /\{ const eb = epicNetList\(d, path\);\s+if \(eb\) try \{ L2V7Modules\.epics\.epicApiNote\(eb, 'page'\)/);
     assert.match(content, /const m = path\.match\(\/\^\\\/game\\\/spawn\\\/\(l2dop_rb_\\d\+\)\\\/info\$\/\);\s+if \(m && d\.res\?\.stats\?\.maxHp > 0 && !d\.res\.error\) try \{ L2V7Modules\.raid\.rbInfoNote\(m\[1\], d\.res, 'page'\)/);
     assert.match(content, /d\.method === 'POST' && \/\\\/teleport\(\\\/\|\$\|\\\?\)\/\.test\(path\)/, 'teleport detector matches …/teleport too');
     { const tpRe = vm.runInNewContext(content.match(/d\.method === 'POST' && (\/.+?\/)\.test\(path\)/)[1]);

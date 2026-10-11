@@ -29,7 +29,9 @@ async function onDeath() {
   if (epicD) { const m = env.mobHp(); await env.setRt({ epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: Date.now(), cur: m?.cur ?? null, max: m?.max ?? null }] } });
     await env.epicDbSet(epicD.k, { deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 }); }   // 8.0.3: смерти за это появление эпика
   if (rbId && !epicD) await env.rbNote(rbId, { verdict: 'no', name: env.rt.rbDb?.[rbId]?.name || env.rt.rbSeen?.[rbId]?.name || env.mobName(), lvl: env.rt.rbDb?.[rbId]?.lvl || env.rt.rbSeen?.[rbId]?.lvl || 0, note: `убил героя ${new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` });
-  await env.setRt({ deaths, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {} });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
+  // 8.0.3 (лог 11.10 11:44:43): после смерти герой в городе, дальше — «Окрестности» другого места: прежняя зона и «мягкое окно» уровней
+  // не годятся (автофарм решил «остаюсь здесь» по зоне эпика и бил мобов 15–35 героем 56) — зону определит карта заново
+  await env.setRt({ deaths, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {}, zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
   env.rec('B', 'смерть', `смертей за 30 мин: ${deaths.length}`);
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
   // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат

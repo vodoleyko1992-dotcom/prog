@@ -776,6 +776,18 @@ addEventListener('click', e => {
   }, 1500);
 }, true);
 function zoneHere(...args) { return L2V7Modules.navigation.zoneHere(...args); }
+// 8.0.3: разовая чистка испорченной «Pavel Ruins» (once pavelZone803; r — память, out — патч миграций)
+function pavelFix(r, out) {
+  const ZS = out.zoneStat || r.zoneStat, ZM = out.zoneMobs || r.zoneMobs, zs = ZS?.pavel_ruins, zm = ZM?.pavel_ruins;
+  if (zs && Object.keys(zs).some(l => +l >= 55)) out.zoneStat = { ...ZS, pavel_ruins: Object.fromEntries(Object.entries(zs).filter(([l]) => +l < 55)) };
+  if (Array.isArray(zm)) {
+    const lv = {}; for (const v of Object.values(r.spawns || {})) if (v && v[1]) lv[v[0]] = Math.max(lv[v[0]] || 0, v[1]);
+    const keep = zm.filter(n => !(lv[n] >= 60));
+    if (keep.length !== zm.length) out.zoneMobs = { ...ZM, pavel_ruins: keep };
+  }
+  if (r.zone === 'pavel_ruins') out.zone = null;
+  return out;
+}
 // каталог зон неполный (меньше 5 зон с уровнями — как после сбоя скана v4.56) — считаем непрочитанным
 const zoneCatThin = (...args) => L2V7Modules.navigation.zoneCatThin(...args);   // только зоны из «Телепорта»
 const zoneName = (...args) => L2V7Modules.navigation.zoneName(...args);
@@ -988,9 +1000,19 @@ async function absorb() {
   }
   // 7.1.30 (лог 14:11:56): строка того же моба БЕЗ ★ (другой спавн) стирала цель — «★ цели: нет», и бот улетел с локации.
   // Снимаем цель, только если на странице этот моб есть и ни одна его строка не со ★, и квест профессии его не требует
-  const items = pageItems(), open = rt.profQuest?.open || [];
-  for (const k of new Set(items.filter(i => !i.champ).map(i => i.name.toLowerCase())))
-    if (qs[k] && !open.includes(k) && !items.some(i => i.quest && i.name.toLowerCase() === k)) { delete qs[k]; qch = true; }
+  const open = rt.profQuest?.open || [];
+  const gone = items => [...new Set(items.filter(i => !i.champ).map(i => i.name.toLowerCase()))]
+    .filter(k => qs[k] && !open.includes(k) && !items.some(i => i.quest && i.name.toLowerCase() === k));
+  // 8.0.3 (лог 11.10 11:45:50): «★ цели: нет» записалось за 0,2 с до ответов /game/story-quests/* — игра вешает ★ (--quest-target) на строки
+  // позже самого списка, и бот пошёл бить моба 2-го приоритета (Ant Soldier 35), хотя на снимке 11:45:51 ★ Ol Mahum Raider уже был.
+  // Снимаем цель, только если ★ нет и через ≥2 с после первого взгляда, и не раньше 5 с после открытия страницы
+  let miss = gone(pageItems());
+  if (miss.length) {
+    await waitX(() => !(miss = gone(pageItems())).length, Math.max(2000, 5000 - performance.now()), 250);
+    for (const it of pageItems()) if (it.quest) { const k = it.name.toLowerCase(); if (!qs[k]) qch = true; qs[k] = now; }
+    miss = gone(pageItems());
+  }
+  for (const k of miss) { delete qs[k]; qch = true; }
   for (const [k, t] of Object.entries(qs)) if (now - t > 6 * 3600000) { delete qs[k]; qch = true; }   // старше 6 ч — квест уже не актуален
   if (qch) rec('B', 'квест', `★ цели в списке локации: ${Object.keys(qs).join(', ') || 'нет'}`);
   if (added || qch) await setRt({ spawns: Object.keys(sp).length > 4000 ? {} : sp, questSeen: qs });
@@ -2944,6 +2966,12 @@ function profQuestNote(st) {
   setRt({ profQuest: { sig, t: now, title: st.titleUk || '', stage: st.stage || '', hint: st.instructionUk || '', open: open.map(k => k.name.toLowerCase()) }, questSeen: seen, quests });
   if (prev?.sig !== sig) rec('B', 'квест профессии', `${st.titleUk || '?'}: ${kills.map(k => `${k.name} ${k.have}/${k.need}`).join(', ') || st.stage}${open.length ? ' — бью как цели квеста' : ''}`);
 }
+// 8.0.3: полный список эпиков из ответа игры (bosses — из поля eb hook.js, без обрезки до 8) или null
+const epicNetList = (d, path) => { const j = path === '/game/epic-bosses' && d.res && !d.res.error ? (Array.isArray(d.eb) ? { ...d.res, bosses: d.eb } : d.res) : null;
+  return j && Array.isArray(j.bosses) && j.bosses.length && j.bosses.every(b => b && typeof b === 'object') && j.bosses.length === +j.total ? j : null; };
+// 8.0.3: принятый сервером перенос героя — телепорт к РБ/эпику, «Вернуться в город» после смерти
+const ZONE_MOVE_RE = /^\/game\/(?:raid-boss\/teleport|epic-boss\/teleport|battle\/return-to-town)$/;
+const zoneMoveNet = (d, path) => ZONE_MOVE_RE.test(path) && d.method === 'POST' && d.status >= 200 && d.status < 300 && !d.error && !!d.res && !d.res.error && d.res.ok !== false;
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
@@ -2966,8 +2994,14 @@ addEventListener('message', e => {
   }
   // 8.0.3 (эпики, разбор 11.10): список эпиков и цифры босса — пассивно, когда их запрашивает сама игра (страница «Эпик боссы», нажатие
   // на РБ на карте). Список — только полный (все элементы объекты и их ровно total: hook.js режет массивы длиннее 8)
-  if (path === '/game/epic-bosses' && d.res && !d.res.error && Array.isArray(d.res.bosses) && d.res.bosses.every(b => b && typeof b === 'object') && d.res.bosses.length === +d.res.total)
-    try { L2V7Modules.epics.epicApiNote(d.res, 'page').then(r => r && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {}
+  // 8.0.3 (лог 11.10 11:41–11:44: total 8 — ровно на пределе обрезки): hook.js отдаёт bosses целиком полем eb (как inv/sp) — 9-й эпик
+  // не выключит разбор молча
+  { const eb = epicNetList(d, path);
+    if (eb) try { L2V7Modules.epics.epicApiNote(eb, 'page').then(r => r && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {} }
+  // 8.0.3 (логи 11.10 10:32:50, 11:43:34, 11:44:46): телепорт к РБ/эпику (бот или игрок) и «Вернуться в город» после смерти уносят героя —
+  // прежняя зона больше не та: EXP/ч и «зона РБ» писались в чужую (Ядро@bee_hive), автофарм решал «остаюсь здесь» по ней. Зону и «мягкое
+  // окно» уровней определит карта заново
+  if (zoneMoveNet(d, path) && (rt.zone || rt.zonePend || rt.lvlRelax || rt.lvlRelaxDown)) setRt({ zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null });
   { const m = path.match(/^\/game\/spawn\/(l2dop_rb_\d+)\/info$/);
     if (m && d.res?.stats?.maxHp > 0 && !d.res.error) try { L2V7Modules.raid.rbInfoNote(m[1], d.res, 'page').then(() => epicById(m[1]) && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {} }
   // запрос телепорта к эпику ещё ни разу не видели (у РБ — POST /game/raid-boss/teleport): любой POST «…/teleport» в 10 с после нажатия
@@ -4048,6 +4082,10 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 8.0.3 (разбор RU/UA 11.10): в украинском интерфейсе метка «· чемпіон» — чемпионы шли как обычные мобы
   once('champMark803', () => { if (C('champMark') === 'чемпион') cf.champMark = 'чемпион, чемпіон'; });
   once('fishBait803', () => { if (C('fishBuyPacks') === 1000) cf.fishBuyPacks = 100; });
+  // 8.0.3 (логи 11.10 10:32–10:43): точка у Фальстона (мобы 75–80, Годдард) и Hot Springs записались как Pavel Ruins — «ур56: 141 бой,
+  // 14,2 M EXP/ч» (настоящий Pavel Ruins — мобы 46–54, 2,2–3,9 M): автофарм полетел бы туда. Замеры 55+ ур. — долой, из её списка мобов —
+  // чужие (60+ ур. по кэшу спавнов, иначе по ним зона снова узналась бы на чужой точке); текущую зону определит карта заново
+  once('pavelZone803', () => { pavelFix(rt, rf); });
   // 8.0.3 (эпики): «Coin of Luck на эпиков» 0 теперь значит «НЕ тратить» (было «без лимита») — значение игрока не трогаем, только строка в журнал
   once('epicCol803', () => { const n = +C('epicCoinDailyMax') || 0; setTimeout(() => { try { rec('B', 'эпики', `Coin of Luck на эпиков: 0 теперь значит НЕ тратить (раньше — без лимита); ${n ? `ваш лимит ${n} за 24 ч сохранён` : 'сейчас стоит 0 — бот их не тратит'}`); } catch (e) {} }, 3000); });
   once('epicDeaths803', () => { if (+C('epicMaxDeaths') === 10) cf.epicMaxDeaths = 3; });   // 8.0.3: смертей на эпика 10 → 3 (только заводские 10)
