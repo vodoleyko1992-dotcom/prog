@@ -128,29 +128,99 @@ function goalPlan() {
     return { id: mid, nm: en, uk: nm, need, have, miss: have == null ? need : Math.max(0, need - have), craft: MM_CRAFT[mid] || '' }; });
   return { id, name, lvl, to, a: c.a, col: c.c, mats, ready: mats.every(m => m.have != null && m.miss === 0) };
 }
-// цель фарма для content.farmGoal: первый недостающий материал, который есть в базе фарма форума (дроп/спойл)
+// 9.2 (игрок 11.10: «а если я хочу заранее собрать ВСЕ ресурсы наперёд? … учитывай, что надо собирать ресурсы, из которых крафтятся
+// улучшенные ресурсы, их я передаю крафтеру письмом»): рецепты в разборе — [выход за крафт, [[id, имя, кол-во], …]] (GET /game/craft/materials 11.10)
+const MM_RECIPES = { 1878: [1, [[1864, 'Stem', 5]]], 1879: [1, [[1871, 'Charcoal', 3], [1870, 'Coal', 3]]], 1880: [1, [[1869, 'Iron Ore', 5], [1865, 'Varnish', 5]]],
+  1881: [1, [[1872, 'Animal Bone', 10]]], 1882: [1, [[1867, 'Animal Skin', 6]]], 1884: [20, [[1880, 'Steel', 2], [1868, 'Thread', 25]]],
+  1885: [1, [[1881, 'Coarse Bone Powder', 1], [1866, 'Suede', 3]]], 1887: [1, [[1875, 'Stone of Purity', 1], [1881, 'Coarse Bone Powder', 3], [1865, 'Varnish', 3]]],
+  1888: [1, [[1874, 'Oriharukon Ore', 1], [1879, 'Cokes', 3]]], 1889: [1, [[1878, 'Braided Hemp', 5], [1868, 'Thread', 5]]],
+  1890: [1, [[1876, 'Mithril Ore', 1], [1887, 'Varnish of Purity', 1], [1880, 'Steel', 2]]], 1893: [1, [[1888, 'Synthetic Cokes', 1], [1874, 'Oriharukon Ore', 4], [1873, 'Silver Nugget', 12]]],
+  5549: [1, [[1869, 'Iron Ore', 5], [1868, 'Thread', 10]]], 1883: [1, [[1878, 'Braided Hemp', 5], [1870, 'Coal', 5], [1869, 'Iron Ore', 5]]],
+  1886: [1, [[1878, 'Braided Hemp', 5], [1879, 'Cokes', 5], [1873, 'Silver Nugget', 10]]], 1891: [1, [[1883, 'Steel Mold', 1], [1887, 'Varnish of Purity', 5], [1877, 'Adamantite Nugget', 10]]],
+  1892: [1, [[1886, 'Silver Mold', 1], [1887, 'Varnish of Purity', 5], [1876, 'Mithril Ore', 10]]], 1894: [1, [[1870, 'Coal', 4], [1884, 'Cord', 4], [1882, 'Leather', 4]]],
+  1895: [20, [[1873, 'Silver Nugget', 15], [1884, 'Cord', 20]]], 5550: [1, [[5549, 'Metallic Thread', 5], [1876, 'Mithril Ore', 5]]], 5220: [1, [[1864, 'Stem', 10], [1865, 'Varnish', 10], [1869, 'Iron Ore', 10]]] };
+const MM_RNAME = { 1878: 'Braided Hemp', 1879: 'Cokes', 1880: 'Steel', 1881: 'Coarse Bone Powder', 1882: 'Leather', 1884: 'Cord', 1885: 'High Grade Suede', 1887: 'Varnish of Purity',
+  1888: 'Synthetic Cokes', 1889: 'Compound Braid', 1890: 'Mithril Alloy', 1893: 'Oriharukon', 5549: 'Metallic Thread', 1883: 'Steel Mold', 1886: 'Silver Mold',
+  1891: "Artisan's Frame", 1892: "Blacksmith's Frame", 1894: 'Crafted Leather', 1895: 'Metallic Fiber', 5550: 'Durable Metal Plate', 5220: 'Metal Hardener' };
+// цена уровня L: известная (кузнец/скриншот) или оценка. Цены растут с уровнем линейно: Кристалл D 100 на Lv.0→1 (пояс), 200 на Lv.1→2 (тату,
+// скриншот игрока 11.10) → цена уровня L ≈ цена уровня k × (L+1)/(k+1). Оценка — по ближайшей известной цене этой вещи, иначе той же грейда
+function levelCost(id, L) {
+  const c = costOf(id, L); if (c) return { ...c, est: 0 };
+  const all = { ...MM_KNOWN, ...(env.rt.mmCost || {}) }, g = GEAR?.[id]?.g || (env.rt.mmGear || []).find(x => x.id === id)?.g || '';
+  const pick = ks => ks.sort((x, y) => Math.abs(x[1] - L) - Math.abs(y[1] - L))[0];
+  const keys = Object.keys(all).map(k => k.split(':').map(Number));
+  const best = pick(keys.filter(([i]) => i === id)) || (g && pick(keys.filter(([i]) => (GEAR?.[i]?.g || '') === g)));
+  if (!best) return null;
+  const b = all[best.join(':')], f = (L + 1) / (best[1] + 1);
+  return { a: Math.round(b.a * f), c: b.c, m: b.m.map(([mid, nm, n]) => [mid, nm, Math.ceil(n * f)]), est: best[0] === id ? 1 : 2 };
+}
+// весь план до цели: таблица по уровням, итог наперёд (минус сумка), разбор крафтового до сырья и список «передать крафтеру»
+function goalAll(upTo) {                          // upTo — только до этого уровня (ближайший шаг для фарма)
+  const id = +env.cfg.mmGoalItem || 0; if (!id) return null;
+  const lvl = gearLvl(id), to = upTo || Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), name = GEAR?.[id]?.n || (env.rt.mmGear || []).find(x => x.id === id)?.n || `#${id}`;
+  if (lvl >= to) return { id, name, lvl, to, done: true, lv: [] };
+  const lv = [], tot = new Map(), unk = [];
+  let a = 0, col = 0;
+  for (let L = lvl; L < to; L++) {
+    const c = levelCost(id, L);
+    if (!c) { unk.push(L); lv.push({ L, unk: true }); continue; }
+    a += c.a; col += c.c;
+    lv.push({ L, est: c.est, a: c.a, c: c.c, m: c.m.map(([mid, nm, n]) => [mid, nameEn(mid) || nm, n]) });
+    for (const [mid, nm, n] of c.m) { const t = tot.get(mid) || { id: mid, nm: nameEn(mid) || nm, need: 0, lv: L }; t.need += n; tot.set(mid, t); }
+  }
+  // сумка расходуется один раз на весь план: сначала готовые материалы, затем промежуточные (Сталь в сумке не надо крафтить), затем сырьё
+  const stock = {}, unknownHave = new Set();
+  const take = (mid, n) => { if (!(mid in stock)) { const h = haveOf(mid); if (h == null) unknownHave.add(mid); stock[mid] = h || 0; } const u = Math.min(stock[mid], n); stock[mid] -= u; return n - u; };
+  const raw = new Map(), craft = new Map();
+  const addRaw = (mid, nm, n, gross, L) => { const r = raw.get(mid) || { id: mid, nm: nameEn(mid) || nm, need: 0, miss: 0, lv: L }; r.need += gross; r.miss += n; raw.set(mid, r); };
+  const expand = (mid, nm, n, L, depth = 0) => {           // n — сколько нужно; возвращает недостачу, разложенную до сырья
+    const left = take(mid, n), R = MM_RECIPES[mid];
+    if (!R || depth > 6) { addRaw(mid, nm, left, n, L); return; }
+    if (!left) return;
+    const k = Math.ceil(left / R[0]), cr = craft.get(mid) || { id: mid, nm: MM_RNAME[mid] || nameEn(mid) || nm, qty: 0, runs: 0, rec: R[1].map(x => `${x[2]} ${x[1]}`).join(' + ') + (R[0] > 1 ? ` (выход ${R[0]})` : '') };
+    cr.qty += left; cr.runs += k; craft.set(mid, cr);
+    for (const [iid, inm, q] of R[1]) expand(iid, inm, q * k, L, depth + 1);
+  };
+  const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
+  for (const t of tl) { t.have = haveOf(t.id); t.miss = t.have == null ? t.need : Math.max(0, t.need - t.have); }
+  for (const t of tl) expand(t.id, t.nm, t.need, t.lv);
+  const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id), farm: !!env.FARM?.res?.[r.nm.toLowerCase()] }));
+  return { id, name, lvl, to, a, col, lv, unk, tot: tl, raw: rl, craft: [...craft.values()].reverse(), est: lv.some(x => x.est), ready: !unk.length && tl.every(t => t.have != null && t.miss === 0) };
+}
+// цель фарма для content.farmGoal. 9.2: по всему плану до цели (наперёд), крафтовое — его сырьём; сначала сырьё ближайшего уровня,
+// затем остальное: первое недостающее сырьё, у которого есть источник в базе фарма форума (дроп/спойл)
 function mmFarmGoal() {
   if (env.cfg.mmGoalFarm === false) return null;
-  const p = goalPlan(); if (!p?.mats) return null;
-  for (const m of p.mats) {
-    if (!(m.miss > 0)) continue;
-    const k = m.nm.toLowerCase();
-    if (env.FARM?.res?.[k]) return { key: k, name: env.FARM.res[k].name || m.nm, left: m.miss, why: `Маммон: ${p.name} Lv.${p.lvl + 1}` };
-  }
-  return null;
+  const p = goalAll(); if (!p?.raw) return null;
+  const n = p.lvl + 1 < p.to ? goalAll(p.lvl + 1) : null, rn = n?.raw?.find(x => x.miss > 0 && x.farm);   // сначала то, что нужно на ближайший уровень
+  const r = rn ? p.raw.find(x => x.id === rn.id) : p.raw.find(x => x.miss > 0 && x.farm);
+  return r ? { key: r.nm.toLowerCase(), name: env.FARM.res[r.nm.toLowerCase()].name || r.nm, left: r.miss, why: `Маммон: ${p.name} до Lv.${p.to} (наперёд)` } : null;
 }
-function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt для меню)
-  const p = goalPlan();
+const short = (l, n = 8) => l.slice(0, n).map(m => `${m.nm} ${fmtA(m.miss)}`).join(', ') + (l.length > n ? ` и ещё ${l.length - n}` : '');
+function planOut(P) {                             // компактный план для меню (rt.mmGoalPlan): popup модуль не загружает
+  if (!P || P.done) return null;
+  return { id: P.id, n: P.name, lvl: P.lvl, to: P.to, a: P.a, c: P.col, unk: P.unk,
+    lv: P.lv.map(x => x.unk ? { L: x.L, unk: 1 } : { L: x.L, e: x.est, a: x.a, c: x.c, m: x.m.map(m => [m[1], m[2]]) }),
+    tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0]),
+    cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]) };
+}
+function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt / rt.mmGoalPlan для меню)
+  const p = goalPlan(), P = p && !p.done ? goalAll() : null;
   let st = '';
   if (!p) st = '';
   else if (p.done) st = `✅ ${p.name}: уже Lv.${p.lvl} (цель Lv.${p.to})`;
-  else if (p.noCost) st = p.owned ? `${p.name} Lv.${p.lvl} → Lv.${p.lvl + 1}: цены неизвестны — узнаю у кузнеца` : `${p.name}: у героя этой вещи не вижу — кузнец покажет цены, только когда она будет в сумке или надета`;
-  else if (p.ready) st = `✅ всё собрано на ${p.name} Lv.${p.lvl + 1}: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — улучшение жмёшь сам у кузнеца`;
+  else if (p.noCost && !P?.lv.some(x => !x.unk)) st = p.owned ? `${p.name} Lv.${p.lvl} → Lv.${p.lvl + 1}: цены неизвестны — узнаю у кузнеца` : `${p.name}: у героя этой вещи не вижу — кузнец покажет цены, только когда она будет в сумке или надета`;
   else {
-    const f = mmFarmGoal(), miss = p.mats.filter(m => m.miss > 0);
-    st = `${p.name} Lv.${p.lvl + 1}: не хватает ${miss.map(m => `${m.nm} ${m.miss}`).join(', ')}` + (f ? ` · добываю ${f.name}` : miss.some(m => m.craft) ? ' · крафт только у гнома-ремесленника' : ' · в базе фарма источников нет');
+    const miss = P.raw.filter(r => r.miss > 0), f = mmFarmGoal();
+    const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — улучшение жмёшь сам у кузнеца. ` : '';
+    st = next + (P.ready ? `✅ наперёд до Lv.${P.to} собрано всё: ${fmtA(P.a)} адены + ${P.col} Coin of Luck`
+      : !miss.length ? `${p.name} до Lv.${P.to}: сырьё есть${P.craft.length ? ', осталось скрафтить: ' + P.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') : ''}`
+      : `${p.name} Lv.${p.lvl} → Lv.${P.to}: наперёд не хватает ${short(miss)}` + (f ? ` · добываю ${f.name}` : ' · в базе фарма источников нет'))
+      + (P.est ? ' · ≈ часть цен — оценка' : '') + (P.unk.length ? ` · цены Lv.${P.unk.map(L => L + 1).join(', ')} неизвестны` : '');
   }
-  if (st !== (env.rt.mmGoalSt || '')) { env.setRt({ mmGoalSt: st }); if (st) env.rec('B', 'Маммон', st); }
+  const plan = planOut(P), ps = JSON.stringify(plan);
+  const stNew = st !== (env.rt.mmGoalSt || '');
+  if (stNew || ps !== JSON.stringify(env.rt.mmGoalPlan || null)) { env.setRt({ mmGoalSt: st, mmGoalPlan: plan }); if (stNew && st) env.rec('B', 'Маммон', st); }
   return p;
 }
 // ---- поход к NPC ----
@@ -246,6 +316,6 @@ async function mmStep() {
   env.rec('B', 'Маммон', `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { MM_KNOWN, MM_CRAFT, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

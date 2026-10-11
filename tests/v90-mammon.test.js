@@ -4,7 +4,8 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const src = read('modules/mammon.js');
-const load = (extra = {}) => { const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(src, sb); return sb; };
+const load = (extra = {}) => { const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(src, sb); return sb; };
+const eqJ = (a, b, m) => assert.equal(JSON.stringify(a), JSON.stringify(b), m);
 const GEAR = JSON.parse(read('mammon-gear.json'));
 const mk = (rt = {}, cfg = {}, over = {}) => {
   const recs = [], fired = [], els = over.els || {};
@@ -69,14 +70,39 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
     const { env, M } = mk({ mmEq: { belt: [920018, 0] } }, { mmGoalItem: 920018 }, { inv });
     const p = M.goalPlan(); assert.equal(p.lvl, 0); assert.equal(p.a, 250000); assert.equal(p.col, 1);
     assert.deepEqual(JSON.stringify(p.mats.map(m => [m.nm, m.miss])), JSON.stringify([['Crystal: D-Grade', 100], ['Iron Ore', 0], ['Mithril Ore', 100], ['Steel', 3]]));
-    const f = M.mmFarmGoal(); assert.equal(f.key, 'mithril ore', 'first missing material with a farm source (Crystal D has none)'); assert.equal(f.left, 100);
+    const f = M.mmFarmGoal(); assert.equal(f.key, 'mithril ore', 'first missing material with a farm source (Crystal D has none)'); assert.equal(f.left, 1500, '9.2: all levels ahead (100+200+…+500)');
     assert.ok(p.mats.find(m => m.nm === 'Steel').craft.includes('Iron Ore'), 'Steel recipe hint');
     env.cfg.mmGoalFarm = false; assert.equal(M.mmFarmGoal(), null, 'farming off'); env.cfg.mmGoalFarm = true;
-    inv[1876] = 100; assert.equal(M.mmFarmGoal(), null, 'Mithril done → nothing farmable left');
-    M.goalNote(); assert.ok(/не хватает Crystal: D-Grade 100, Steel 3/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
+    env.cfg.mmGoalLvl = 1; inv[1876] = 100; assert.equal(M.mmFarmGoal(), null, 'target Lv.1: Mithril done → nothing farmable left (Steel → Varnish has no source in this FARM)');
+    M.goalNote(); assert.ok(/наперёд не хватает Crystal: D-Grade 100, Varnish 15/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
     inv[1458] = 100; inv[1880] = 3; assert.equal(M.goalPlan().ready, true); M.goalNote();
     assert.ok(/всё собрано.*Coin of Luck — улучшение жмёшь сам/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
     env.rt.mmEq = { belt: [920018, 5] }; assert.equal(M.goalPlan().done, true); }
+  // 6б. 9.2 (игрок 11.10: «собрать ВСЕ ресурсы наперёд», «ресурсы, из которых крафтятся улучшенные — передаю крафтеру»):
+  // таблица по уровням до цели (неизвестные — оценка ×(L+1)), итог минус сумка, крафтовое разобрано до сырья, список крафтеру
+  { const inv = { 1458: 0, 1869: 908, 1876: 0, 1880: 10, 1865: 0 };
+    const { env, M } = mk({ mmEq: { belt: [920018, 0] } }, { mmGoalItem: 920018, mmGoalLvl: 5 }, { inv, env: { FARM: { res: { 'iron ore': { name: 'Iron Ore' }, 'mithril ore': { name: 'Mithril Ore' }, varnish: { name: 'Varnish' } } } } });
+    const P = M.goalAll();
+    eqJ(P.lv.map(x => [x.L, x.est, x.a, x.m.find(m => m[0] === 1458)[2], x.m.find(m => m[0] === 1880)[2]]), [[0, 0, 250000, 100, 3], [1, 1, 500000, 200, 6], [2, 1, 750000, 300, 9], [3, 1, 1000000, 400, 12], [4, 1, 1250000, 500, 15]]);
+    assert.equal(P.a, 3750000); assert.equal(P.col, 5);
+    const T = Object.fromEntries(P.tot.map(t => [t.nm, [t.need, t.miss]])); eqJ(T, { 'Crystal: D-Grade': [1500, 1500], 'Iron Ore': [1500, 592], 'Mithril Ore': [1500, 1500], Steel: [45, 35] });
+    const R = Object.fromEntries(P.raw.map(r => [r.nm, [r.need, r.miss, r.farm]]));
+    eqJ(R['Iron Ore'], [1675, 767, true], '1500 direct + 35 Steel × 5, minus 908 in the bag'); eqJ(R.Varnish, [175, 175, true]); assert.equal(R['Crystal: D-Grade'][2], false);
+    eqJ(P.craft.map(c => [c.nm, c.qty, c.runs]), [['Steel', 35, 35]], '10 Steel in the bag are not crafted again');
+    // вложенный рецепт: Varnish of Purity → Coarse Bone Powder → Animal Bone; Cord (выход 20) → Steel → руда
+    env.rt.mmCost = { '910623:1': { a: 1, c: 1, m: [[1887, 'Varnish of Purity', 6], [1884, 'Cord', 30]] } }; env.rt.mmEq = { tattoo: [910623, 1] }; env.cfg.mmGoalItem = 910623; env.cfg.mmGoalLvl = 2;
+    const Q = M.goalAll(), RQ = Object.fromEntries(Q.raw.map(r => [r.nm, r.miss]));
+    assert.equal(RQ['Animal Bone'], 180, '6 VoP × 3 CBP × 10 bones'); assert.equal(RQ['Stone of Purity'], 6); assert.equal(RQ.Thread, 50, 'Cord 30 → 2 runs (yield 20) × 25 Thread');
+    assert.equal(RQ.Varnish, 18 + 0, '6 VoP × 3 Varnish; Steel for Cord comes from the bag (10)');
+    assert.ok(Q.craft.findIndex(c => c.nm === 'Coarse Bone Powder') < Q.craft.findIndex(c => c.nm === 'Varnish of Purity'), 'ingredients are crafted first');
+    // неизвестная цена без оценки (нет ни одной цены этой вещи и этого грейда) → «узнаю у кузнеца»
+    env.rt.mmCost = {}; env.cfg.mmGoalItem = 920031; env.rt.mmEq = { wings: [920031, 0] };
+    const U = M.goalAll(); eqJ(U.unk, [0, 1]); assert.equal(U.ready, false);
+    // план для меню: компактный, пишется в rt один раз на изменение
+    env.cfg.mmGoalItem = 920018; env.cfg.mmGoalLvl = 5; env.rt.mmEq = { belt: [920018, 0] }; M.goalNote();
+    const G = env.rt.mmGoalPlan; assert.equal(G.lv.length, 5); assert.equal(G.cr[0][0], 'Steel'); assert.ok(/наперёд не хватает.*· добываю Mithril Ore · ≈ часть цен — оценка/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
+    const n = env.recs.length; M.goalNote(); assert.equal(env.recs.length, n, 'no journal spam');
+    assert.equal(M.mmFarmGoal().left, 1500, 'farm the whole plan ahead'); }
   // 7. цены неизвестны → поход к кузнецу (не чаще раза в 6 ч); список кузнеца запоминает цены и уровни
   { const { env, M } = mk({ mmEq: { tattoo: [910623, 0] } }, { mmGoalItem: 910623 });
     assert.equal(M.goalPlan().noCost, true); assert.equal(M.want().kind, 'smith');
