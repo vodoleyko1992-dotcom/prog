@@ -37,16 +37,19 @@ assert.match(R3.rbTeleportCheck('o', { lvl: 50 }), /пропуск после о
 
 // 4. цифры РБ до телепорта: GET /game/spawn/<id>/info (ответ как в логе 23:30)
 const calls = [];
-const info = { spawnId: 'l2dop_rb_25050', stats: { maxHp: 771340, pAtk: 3310, pDef: 859, mAtk: 3110, mDef: 929 }, drops: [{ kind: 'adena', chance: 1, min: 204000, max: 264667 }] };
+const info = { spawnId: 'l2dop_rb_99050', stats: { maxHp: 771340, pAtk: 3310, pDef: 859, mAtk: 3110, mDef: 929 }, drops: [{ kind: 'adena', chance: 1, min: 204000, max: 264667 }] };
 const fetchOk = async u => { calls.push(u); return { ok: true, json: async () => info }; };
-const { env: e4, R: R4 } = mk({ rbStats: { l2dop_rb_25050: { loss: 77 } }, rbDb: {} }, { sb: { fetch: fetchOk, AbortController, setTimeout, clearTimeout } });
+// 8.0.3: Верфа (25050) теперь среди встроенных цифр (RB_KNOWN) — запрос проверяем на незнакомом id
+const { env: e4, R: R4 } = mk({ rbStats: { l2dop_rb_99050: { loss: 77 }, l2dop_rb_25050: { loss: 55 } }, rbDb: {} }, { sb: { fetch: fetchOk, AbortController, setTimeout, clearTimeout } });
 (async () => {
-  const st = await R4.rbInfo('l2dop_rb_25050');
-  assert.equal(calls[0], '/game/spawn/l2dop_rb_25050/info');
+  const kv = await R4.rbInfo('l2dop_rb_25050');
+  assert.equal(JSON.stringify([kv.hp, kv.matk, kv.loss, kv.src, calls.length]), JSON.stringify([771340, 3110, 55, 'api', 0]), 'built-in numbers, own measured loss kept, no request');
+  const st = await R4.rbInfo('l2dop_rb_99050');
+  assert.equal(calls[0], '/game/spawn/l2dop_rb_99050/info');
   assert.equal(JSON.stringify([st.hp, st.patk, st.matk, st.adena, st.loss, st.src]), JSON.stringify([771340, 3310, 3110, 234334, 77, 'api']), 'stats + adena merged with the measured loss');
-  await R4.rbInfo('l2dop_rb_25050'); assert.equal(calls.length, 1, 'cached');
+  await R4.rbInfo('l2dop_rb_99050'); assert.equal(calls.length, 1, 'cached');
   const { env: e5, R: R5 } = mk({ rbStats: {}, rbDb: {} }, { sb: { fetch: async () => { throw new Error('net'); }, AbortController, setTimeout, clearTimeout } });
-  assert.equal(await R5.rbInfo('z'), null); assert.ok(e5.rt.rbInfoFail.z, 'failure remembered (6 h)');
+  assert.equal(await R5.rbInfo('z'), null); assert.ok(e5.rt.rbInfoFail.z, 'failure remembered (8.0.3: 10 min)');
   // 5. код: РБ на карте без телепорта; проверка до телепорта; слияние осмотра; время раненого боя; полоса банок
   const raid = read('modules/raid.js');
   assert.match(raid, /он здесь, на этой карте: без телепорта[\s\S]{0,200}huntSet\(\{ step: 'arrive'/);

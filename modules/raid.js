@@ -181,19 +181,40 @@ async function rbInfoNote(id, j, from = 'api') {
 // 8.0 (аудит РБ C1: 3 из 18 телепортов по 100 000 аден впустую — «не полезу» уже после прилёта): цифры РБ (HP, P.Atk, M.Atk,
 // адена) отдаёт GET /game/spawn/<id>/info — тот же запрос, что игра шлёт при нажатии на РБ на карте. Спрашиваем ДО телепорта,
 // раз на РБ (цифры РБ постоянные); не ответил — 6 ч не спрашиваем, решаем как раньше (на месте)
+// 8.0.3 (логи 10–11.10: 100 000 аден за Тарлка трижды — после переустановки цифр нет, проверка до телепорта молча пропускалась):
+// цифры РБ/эпиков из ответов /game/spawn/<id>/info (постоянные) — [HP, P.Atk, P.Def, M.Atk, M.Def]; ключ — номер из l2dop_rb_<N>
+const RB_KNOWN = {
+  '25088': [702418, 3493, 669, 4204, 723], '25085': [371721, 1884, 691, 1170, 747], '25099': [273375, 1008, 691, 331, 747],
+  '25418': [273375, 1008, 691, 331, 747], '25431': [273375, 1008, 691, 331, 747], '25438': [273375, 1008, 691, 331, 747],
+  '25057': [288415, 1084, 714, 368, 773], '25173': [288415, 1084, 714, 368, 773], '25260': [392985, 2028, 714, 1293, 773],
+  '25437': [576831, 2171, 714, 1493, 773], '25441': [288415, 1084, 714, 368, 773], '25498': [288415, 1084, 714, 368, 773],
+  '25158': [920790, 5043, 785, 7287, 848], '25047': [352421, 1445, 808, 568, 876], '25456': [352421, 1445, 808, 568, 876],
+  '25013': [507285, 2894, 833, 2217, 904], '25119': [507285, 2894, 833, 2217, 904], '25273': [507285, 2894, 833, 2217, 904],
+  '25277': [507285, 2894, 708, 2217, 904], '25484': [369009, 1546, 833, 633, 904], '29006': [876883, 3920, 2001, 3192, 2124],
+  '29014': [487686, 3920, 1601, 3192, 1924], '25050': [771340, 3310, 859, 3110, 929], '25460': [385670, 1653, 859, 769, 929],
+  '25434': [704170, 2774, 3375, 1468, 3279], '25475': [704170, 2774, 2707, 1468, 3279], '25122': [728846, 2945, 2818, 1600, 3510],
+  '25230': [784307, 3127, 4143, 1736, 3510], '25234': [1710209, 7389, 4190, 9025, 4287], '25423': [877023, 3895, 4195, 2569, 4550],
+  '25226': [1298827, 7660, 4550, 9339, 4550], '25140': [1384041, 8830, 5780, 10941, 5256], '25322': [1409850, 9229, 5924, 11413, 5517] };
+const rbKnown = id => { const k = RB_KNOWN[String(id || '').replace(/^l2dop_rb_/, '')]; return k ? { hp: k[0], patk: k[1], pdef: k[2], matk: k[3], mdef: k[4], src: 'api', from: 'known' } : null; };
+const rbInfoNotes = new Map();
 async function rbInfo(id) {
-  const have = env.rt.rbStats?.[id];
+  const mine = env.rt.rbStats?.[id], kn = rbKnown(id);
+  const have = mine?.hp > 0 ? mine : kn ? { ...(mine || {}), ...kn } : mine;   // 8.0.3: и встроенные цифры (замеры — loss и т. п. — сохраняем)
   if (have?.matk > 0 && have?.hp > 0) return have;
-  if (Date.now() - ((env.rt.rbInfoFail || {})[id] || 0) < 6 * 3600000) return have || null;
+  // 8.0.3: после ошибки — повтор через 10 мин (было 6 ч: весь тур шёл без проверки до телепорта)
+  if (Date.now() - ((env.rt.rbInfoFail || {})[id] || 0) < 10 * 60000) return have || null;
   try {
     const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
     const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(tm));
-    const j = r.ok ? await r.json() : null;
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
     const st = await rbInfoNote(id, j, 'api');
     if (!st) throw new Error('нет stats');
     return st;
   } catch (e) {
     await env.setRt({ rbInfoFail: { ...(env.rt.rbInfoFail || {}), [id]: Date.now() } });
+    // 8.0.3: свой запрос бота журнал сети не видит — причину пишем сами (раз в 30 мин на РБ)
+    if (Date.now() - (rbInfoNotes.get(id) || 0) > 30 * 60000) { rbInfoNotes.set(id, Date.now()); env.rec('B', 'РБ', `цифры ${env.rt.rbList?.[id]?.name || id} у игры не получены: ${String(e?.message || e).slice(0, 80)}`); }
     return have || null;
   }
 }
@@ -293,6 +314,7 @@ async function rbListScan() {                     // все страницы с�
 function rbStatsGuess(id, lvl) {
   const S = env.rt.rbStats || {};
   if (S[id]?.patk && S[id]?.hp) return { ...S[id], est: false };
+  if (rbKnown(id)) return { ...rbKnown(id), est: false };   // 8.0.3: встроенные цифры (переживают переустановку)
   const pts = Object.entries(S).map(([k, v]) => ({ ...v, lvl: env.rt.rbList?.[k]?.lvl || env.rt.rbDb?.[k]?.lvl || 0 })).filter(x => x.lvl && x.patk && x.hp);
   if (!pts.length || !lvl) return null;
   // v5.2.2: медиана по всем замерам, а не ближайший по уровню: один «выброс» (Король Тарлк 48 ур.: P.Atk 5043 при обычных
@@ -309,7 +331,7 @@ function rbTeleportCheck(id, x) {                 // → null (можно лет
   const cw = rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]); if (cw) { noteRbSkip(id, cw); return cw; }   // 8.0.3: только за адену
   const ps = preSkip(id);
   const whySkip = rbVerdictBlocks(id) ? 'ранее не по силам при этом уровне' :
-    now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : 'пропуск после осмотра (недавно)') : '';
+    now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : 'пропуск после осмотра (недавно)') : '';
   if (whySkip) { noteRbSkip(id, whySkip); return whySkip; }
   // История действительно измеренного спецудара имеет приоритет даже если статистика P.Atk ещё отсутствует.
   const maxHp = env.meHp()?.max || 0;
@@ -566,7 +588,15 @@ async function rbHuntStep() {
     await huntSet({ step: 'fight' });
     await env.setRt({ rbCur: r.id });
     const res = await rbEngage(r, `Тур РБ: бой с ${r.name} (${r.lvl})`);
-    if (res === 'skip') return huntDone(H.id, `${H.name}: ❌ оценка до боя — не по силам`);
+    // 8.0.3 (лог 11.10 10:32:30–10:32:53: четыре платных телепорта подряд, каждый — «не по силам» на месте): два отказа на месте подряд за
+    // 10 мин — тур 5 мин фармит мобов здесь, а не платит дальше
+    if (res === 'skip') {
+      const run = Date.now() - (env.rt.rbRefuse?.t || 0) < 10 * 60000 ? (env.rt.rbRefuse?.n || 0) + 1 : 1;
+      await env.setRt({ rbRefuse: { n: run, t: Date.now() }, ...(run >= 2 ? { rbHuntIdle: Date.now() + RB_IDLE_MS, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now() } } : {}) });
+      if (run >= 2) env.rec('B', 'тур РБ', `${run} отказа на месте подряд — 5 мин фармлю мобов здесь, не плачу за телепорты`);
+      return huntDone(H.id, `${H.name}: ❌ оценка до боя — не по силам`);
+    }
+    if (res && env.rt.rbRefuse?.n) await env.setRt({ rbRefuse: null });
     if (res) return;
     return huntDone(H.id, `${H.name}: бой не открылся`);
   }
@@ -627,13 +657,24 @@ async function rbHuntStep() {
     }
   }
   // 8.0 (C1): до платного телепорта — настоящие цифры РБ; не по силам — пропуск без полёта
+  // 8.0.3 (логи 11.10: Тарлк 09:17 и РБ 60–66 в 10:32 — 5 × 100 000 аден, отказ каждый раз уже на месте): цифры из окна карты (без src) —
+  // тоже цифры игры; цифр нет совсем (запрос не удался) — вслепую платим только за знакомого (убивали / «по силам») или не чаще раза в 30 мин
   if (!p.wounded) {
-    const st = await rbInfo(p.id);
-    if (st?.src === 'api' && !rbVerdictBlocks(p.id)) {
+    const st = await rbInfo(p.id), real = !!st && st.hp > 0 && (st.matk > 0 || st.patk > 0) && !st.est;
+    if (real && !rbVerdictBlocks(p.id)) {
       const chk = rbPreCheck(p.id, { ...st, est: false });
       if (!chk.ok) {
         await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [p.id]: { t: Date.now(), kind: chk.kind === 'pots' ? 'pots' : 'strong' } } });
         return huntDone(p.id, `${p.name} (${p.lvl}): до телепорта по цифрам игры — не полезу: ${chk.why}`);
+      }
+    } else if (!real) {
+      const d = env.rt.rbDb?.[p.id];
+      if (!(d?.verdict === 'ok' || d?.kills > 0)) {
+        if (Date.now() - (env.rt.rbBlindT || 0) < 30 * 60000) {
+          await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [p.id]: { t: Date.now(), kind: 'unknown' } } });
+          return huntDone(p.id, `${p.name} (${p.lvl}): цифр игры нет — второй полёт вслепую за 30 мин не делаю`);
+        }
+        await env.setRt({ rbBlindT: Date.now() });
       }
     }
   }
@@ -861,6 +902,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { unitOf, rbPriceWhy, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

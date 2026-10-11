@@ -90,7 +90,9 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     assert.equal(v.v, 'strong', v.why); assert.ok(Math.abs(v.sp - 2306) <= 5, 'special ≈0.9 × M.Atk: ' + v.sp); assert.ok(v.spPct >= 45);
     setHero(54); env.rt.epicDb.ak = { id: 'l2dop_rb_29001', canAttack: false, deny: 'Epic Boss нижче дозволеного рівня.', apiLvl: 54, lvl: 40 };
     assert.equal(E.epicVerdict('ak').v, 'level');
-    assert.equal(E.epicVerdict('orfen').v, 'unknown', 'no stats → unknown (never pay)');
+    assert.equal(E.epicVerdict('zaken').v, 'unknown', 'no stats → unknown (never pay)');
+    // 8.0.3: цифры Орфена встроены (RB_KNOWN, лог 11.10 11:41: HP 487 686, M.Atk 3192) — он «не по силам» и без памяти (игрок умер дважды)
+    assert.equal(E.epicVerdict('orfen').v, 'strong', 'Orfen built-in numbers → strong');
     env.rt.rbStats.l2dop_rb_29014 = { hp: 400000, patk: 1100, matk: 700, mdef: 800, pdef: 700, src: 'api' };
     const ok = E.epicVerdict('orfen'); assert.equal(ok.v, 'ok', ok.why);
     env.rt.rbStats.l2dop_rb_29014 = { hp: 9000000, patk: 1100, matk: 700, mdef: 800, pdef: 700, src: 'api' };
@@ -107,24 +109,25 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     console.log('PASS T4: verdicts — Queen Ant strong (2306 ≈48 %), level, unknown, ok, slow/pots, conservative DPS, unknown hero HP → unknown');
   }
   // ---------- T5: единые ворота epicPayGate ----------
+  // 8.0.3: цифры Орфена теперь встроены (RB_KNOWN) — «незнакомого» эпика проверяем на Закене (29022)
   {
-    const { env, E, calls } = mk({ rt: { epicDb: { orfen: { id: 'l2dop_rb_29014', col: 1, adena: 0, apiT: Date.now(), alive: true, canAttack: true, lvl: 50 } } } });
-    const g0 = await E.epicPayGate('orfen');
+    const { env, E, calls } = mk({ rt: { epicDb: { zaken: { id: 'l2dop_rb_29022', col: 1, adena: 0, apiT: Date.now(), alive: true, canAttack: true, lvl: 60 } } } });
+    const g0 = await E.epicPayGate('zaken');
     assert.equal(g0.ok, false); assert.match(g0.why, /лимит Coin of Luck = 0/); assert.equal(calls.length, 0, 'limit 0: not even asking the server');
     assert.equal((env.rt.epicTpBudget || []).length, 0);
-    const net = u => /epic-bosses/.test(u) ? listAlive('l2dop_rb_29014') : /spawn\/l2dop_rb_29014\/info/.test(u) ? WEAK : null;
-    const m = mk({ cfg: { epicCoinDailyMax: 2 }, net, rt: { epicDb: { orfen: { id: 'l2dop_rb_29014', col: 1, adena: 0, apiT: Date.now() - 3 * MIN, alive: true, canAttack: true, lvl: 50 } } } });
-    const g = await m.E.epicPayGate('orfen');
+    const net = u => /epic-bosses/.test(u) ? listAlive('l2dop_rb_29022') : /spawn\/l2dop_rb_29022\/info/.test(u) ? WEAK : null;
+    const m = mk({ cfg: { epicCoinDailyMax: 2 }, net, rt: { epicDb: { zaken: { id: 'l2dop_rb_29022', col: 1, adena: 0, apiT: Date.now() - 3 * MIN, alive: true, canAttack: true, lvl: 60 } } } });
+    const g = await m.E.epicPayGate('zaken');
     assert.equal(m.calls[0], '/game/epic-bosses?page=1', 'stale list (> 2 min) → fresh list first');
-    assert.equal(m.calls[1], '/game/spawn/l2dop_rb_29014/info', 'no boss numbers → spawn info');
-    assert.equal(g.ok, true, g.why); assert.equal(m.env.rt.rbStats.l2dop_rb_29014.from, 'api');
-    await m.E.epicTpBudgetReserve('orfen', g.price); assert.equal(m.env.rt.epicDb.orfen.paidN, 1); assert.equal(m.env.rt.epicTpBudget.length, 1);
-    const d = mk({ cfg: { epicCoinDailyMax: 2 }, net: u => /epic-bosses/.test(u) ? fx : WEAK, rt: { epicDb: { orfen: { id: 'l2dop_rb_29014', col: 1, apiT: 0, lvl: 50 } } } });
-    const gd = await d.E.epicPayGate('orfen'); assert.equal(gd.ok, false); assert.match(gd.why, /мёртв/);
-    const dd = mk({ cfg: { epicCoinDailyMax: 2 }, net, rt: { deaths1h: [Date.now() - 1000, Date.now() - 2000], epicDb: { orfen: { id: 'l2dop_rb_29014', apiT: 0, lvl: 50 } } } });
-    const g2 = await dd.E.epicPayGate('orfen'); assert.equal(g2.ok, false); assert.match(g2.why, /2 смерти за последний час/);
-    const nf = mk({ cfg: { epicCoinDailyMax: 2 }, net: () => null, rt: { epicDb: { orfen: { id: 'l2dop_rb_29014', apiT: 0, lvl: 50 } } } });
-    assert.match((await nf.E.epicPayGate('orfen')).why, /не получен/, 'no list from the server → no payment');
+    assert.equal(m.calls[1], '/game/spawn/l2dop_rb_29022/info', 'no boss numbers → spawn info');
+    assert.equal(g.ok, true, g.why); assert.equal(m.env.rt.rbStats.l2dop_rb_29022.from, 'api');
+    await m.E.epicTpBudgetReserve('zaken', g.price); assert.equal(m.env.rt.epicDb.zaken.paidN, 1); assert.equal(m.env.rt.epicTpBudget.length, 1);
+    const d = mk({ cfg: { epicCoinDailyMax: 2 }, net: u => /epic-bosses/.test(u) ? fx : WEAK, rt: { epicDb: { zaken: { id: 'l2dop_rb_29022', col: 1, apiT: 0, lvl: 60 } } } });
+    const gd = await d.E.epicPayGate('zaken'); assert.equal(gd.ok, false); assert.match(gd.why, /мёртв/);
+    const dd = mk({ cfg: { epicCoinDailyMax: 2 }, net, rt: { deaths1h: [Date.now() - 1000, Date.now() - 2000], epicDb: { zaken: { id: 'l2dop_rb_29022', apiT: 0, lvl: 60 } } } });
+    const g2 = await dd.E.epicPayGate('zaken'); assert.equal(g2.ok, false); assert.match(g2.why, /2 смерти за последний час/);
+    const nf = mk({ cfg: { epicCoinDailyMax: 2 }, net: () => null, rt: { epicDb: { zaken: { id: 'l2dop_rb_29022', apiT: 0, lvl: 60 } } } });
+    assert.match((await nf.E.epicPayGate('zaken')).why, /не получен/, 'no list from the server → no payment');
     console.log('PASS T5: pay gate — limit 0 without network, fresh list then spawn info, ok → reserve (paidN 1), dead / deaths / no list → refuse');
   }
   // ---------- T6: дорога — эпик на карте, страница, таймаут, отказ сервера, повторная оплата ----------
@@ -339,9 +342,9 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
   {
     const m = mk({ net: u => /epic-bosses/.test(u) ? fx : WEAK, rt: { epicScanReq: Date.now(), rbStats: {} } });
     await m.E.epicScanAll('по кнопке');
-    assert.equal(m.calls.filter(u => /spawn\//.test(u)).length, 8); assert.equal(m.env.rt.epicScanReq, null); assert.ok(m.env.rt.epicScanT);
+    assert.equal(m.calls.filter(u => /spawn\//.test(u)).length, 6, '8.0.3: Орфен и Ядро — встроенные цифры, запрос только за остальными 6'); assert.equal(m.env.rt.epicScanReq, null); assert.ok(m.env.rt.epicScanT);
     assert.ok(Object.values(m.env.rt.epicDb).every(d => d.verdict?.v), 'verdicts for all 8'); assert.ok(m.logs.some(l => /проверка по кнопке: .*игра пускает к боссам от 45 ур\./.test(l)));
-    console.log('PASS: «Проверить эпиков» — 1 list + 8 spawn info GETs, verdicts for all, summary in the log, request cleared');
+    console.log('PASS: «Проверить эпиков» — 1 list + spawn info GETs for the unknown ones (Orfen/Core built in), verdicts for all, summary in the log, request cleared');
   }
   console.log('PASS: all 8.0.3 epic safety tests');
 })().catch(e => { console.error(e); process.exit(1); });
