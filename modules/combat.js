@@ -607,6 +607,16 @@ function ultPick(ctx, mp) {
   return null;
 }
 
+// 9.0 «цена хода» (разбор боя, лог 11.10 00:47–01:40: на РБ 255 банок из 1 283 ходов, 96 из 234 банок HP — при HP ≥ 80 %):
+// банка — целый ход без урона (≈1 500–2 000 у мага). У знакомого РБ (спецудар и удары замерены) пьём, только если после ещё одного
+// ударного хода худший обычный удар (P90) опустит HP ниже «спецудар + 2 удара»; без «долива до верхней границы» полосы.
+// Пересчёт по логу: 156 из 234 банок были не нужны. Аварийный порог (стоп-HP + 10 %) — всегда лечимся
+function rbTurnHeal(o) {                          // o: { cur, max, spike, p90, stopPct } → { need, floor, at }
+  const floor = Math.min(o.max * 0.96, o.spike + 2 * o.p90), at = floor + o.p90;
+  const need = o.cur < at || o.cur / o.max * 100 <= (o.stopPct || 25) + 10;
+  return { need, floor: Math.round(floor), at: Math.round(at) };
+}
+
 function frenzyDive(ctx, me) {                    // «сливаться под Frenzy»: Frenzy на панели, готов, не висит, HP ещё выше порога
   if (!env.cfg.rbFrenzyDive || !ctx.rb || !me) return false;
   const b = slotsBy('Frenzy')[0]; if (!b) return false;
@@ -1245,7 +1255,10 @@ async function battle() {
     // 7.2: у мага Vampiric Touch (≈665 урона + ≈266 HP) выгоднее лечащего хода (Corpse Life Drain 178 HP без урона мага, Heal ≈430):
     // вампирик готов и HP не критичное — лечащий скилл пропускаем, ниже сработает вампиризм
     const drainFirst = mageCombat() && me && me.pct > (env.cfg.stopHp || 25) + 10 && !!drainPick(ctx, mp);
-    if (me && me.pct <= env.cfg.hpPotAt && !drainFirst) {
+    // 9.0 «цена хода» (лог 11.10 01:40, Gigantic Chaos Golem: Corpse Life Drain +225 HP за ход, банка +600): на РБ, пока банка HP есть,
+    // ход лечения отдаём банке — лечащий скилл только без банок
+    const rbPotHas = !!ctx.rb && env.cfg.rbTurnPrice !== false && (() => { const p = env.hpPotPick(false); const q = p ? env.qty(p) : 0; return !!p && q !== 0 && (ctx.rb.allIn || q == null || q > (env.cfg.rbPotReserve || 0)); })();
+    if (me && me.pct <= env.cfg.hpPotAt && !drainFirst && !rbPotHas) {
       const hs = env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) && (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10));
       if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; const r = await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); if (r === 'lock') ctx.block['heal:' + hs.title] = 0; continue; }   // 8.0.3: 'lock' — повтор сразу
     }
@@ -1285,8 +1298,14 @@ async function battle() {
       const to = adaptive
         ? Math.min(98, Math.max(from + 3, env.cfg.rbPotTo ?? 80, from + 10))
         : Math.min(98, Math.max(from + 1, env.cfg.rbPotTo ?? 80));
-      if (me && me.pct <= from) ctx.rb.potOn = true;
-      if (me && me.pct >= to) ctx.rb.potOn = false;
+      const price = adaptive && known && env.cfg.rbTurnPrice !== false && me ? rbTurnHeal({ cur: me.cur, max: me.max, spike, p90: ordinaryP90, stopPct: env.cfg.stopHp }) : null;
+      if (price) {                                // 9.0: знакомый РБ — «цена хода» вместо полосы from…to
+        ctx.rb.potOn = price.need;
+        if (!ctx.rb.priceNote) { ctx.rb.priceNote = 1; env.rec('B', 'РБ', `цена хода: банка/лечение только при HP < ${price.at} = спецудар ${Math.round(spike)} + 3 обычных удара по ≈${Math.round(ordinaryP90)}), иначе бью`); }
+      } else {
+        if (me && me.pct <= from) ctx.rb.potOn = true;
+        if (me && me.pct >= to) ctx.rb.potOn = false;
+      }
       potAt = ctx.rb.potOn ? 100 : -1;
       // 8.0.3 (лог 11.10 09:15:35: прогноз «РБ ≈0:16, банки: нужно ≈0», РБ 6 %, а бот выпил 5 банок подряд — 7 с без урона): прогноз решил,
       // что РБ умрёт раньше опасного HP без банок (usePots=false) — в полосе не пьём, только аварийно (HP ниже спецудар + 2 удара)
@@ -1617,6 +1636,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

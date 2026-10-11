@@ -541,6 +541,8 @@
   <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
   <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
   <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
+  <label>РБ: «цена хода» — лечиться, только когда без этого опасно <input id="rbTurnPrice" type="checkbox"></label>
+  <div class="hint">У знакомого РБ банка или лечение — только если после ещё одного ударного хода HP может упасть ниже «спецудар + 2 удара». Иначе бот бьёт: банка стоит целого хода без урона. Работает вместе с автоматической полосой.</div>
   <label data-cls="fighter">Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
   <div class="hint" data-cls="fighter">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
   <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
