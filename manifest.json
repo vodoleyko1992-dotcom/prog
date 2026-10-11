@@ -80,6 +80,7 @@
         "modules/mammon.js",
         "modules/story.js",
         "modules/fightlab.js",
+        "modules/enemies.js",
         "content.js"
       ],
       "run_at": "document_idle"
