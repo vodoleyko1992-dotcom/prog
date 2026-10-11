@@ -5,7 +5,7 @@ description: Сборка новой версии L2wap Bot — поднять �
 
 # Сборка L2wap Bot
 
-Правило игрока: закончили правки по присланному логу/просьбам → **сразу собрать и выдать zip**, не дожидаясь команды. Посреди незаконченной работы не собирать. Пока только Chrome (игрок: «пока без Firefox»). Нумерация последовательная (8.0.3 → 8.0.4 → …). Если игрок торопится — собрать готовое, остальное вынести в следующую версию и честно сказать.
+Правило игрока: закончили правки по присланному логу/просьбам → **сразу собрать и выдать zip**, не дожидаясь команды. Посреди незаконченной работы не собирать. Две версии: Chrome и Firefox (с 8.0.6 игрок просит Firefox, в т.ч. Android). Нумерация последовательная (8.0.3 → 8.0.4 → …). Если игрок торопится — собрать готовое, остальное вынести в следующую версию и честно сказать.
 
 ## Шаги
 1. **Версия** (строка проверяется тестами!):
@@ -36,5 +36,7 @@ description: Сборка новой версии L2wap Bot — поднять �
 ## Ответ игроку
 Коротко: главное в версии (простыми словами, с цифрами из логов), что проверено (PASS, смоуки, zip в Chromium), что НЕ проверено в живой игре, какой лог прислать дальше.
 
-## Firefox (когда попросит)
-Копия без tests; в manifest: `background: {scripts:["background.js"]}`, убрать `minimum_chrome_version`/`version_name`, добавить `browser_specific_settings.gecko {id:"l2wap-bot@local", strict_min_version:"128.0"}`; zip `-firefox`.
+## Firefox (ПК и Android)
+- `node tests/tools/firefox-build.cjs <папка>` → `l2wap-bot-vX.Y.Z-firefox.zip` (фоновая страница, gecko id `l2wap-bot@local`, gecko + gecko_android 128+, без полей Chrome).
+- Проверка: `npx web-ext lint -s <распакованная папка>` (0 ошибок); смоук в настоящем Firefox — скачать Firefox ESR (download.mozilla.org, product=firefox-esr-latest-ssl) и geckodriver (github mozilla/geckodriver), `npm i selenium-webdriver` в scratchpad, затем `FIREFOX=… GECKODRIVER=… NODE_PATH=… node tests/tools/firefox-smoke.cjs <zip>` и с `--android`.
+- Новый вызов chrome.* в background/popup — проверить, есть ли он в Firefox для Android (нет: commands, notifications, значок action, captureVisibleTab) → `?.` и try.

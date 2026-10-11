@@ -136,9 +136,9 @@ async function switchCharacter(m, sender) {
     return { ok: true, rt: nextRt, cfg: nextCfg, changed: true, old };
   });
 }
+// 8.0.6 (Firefox для Android): значка на панели там нет — вызовы под защитой, иначе фоновый скрипт ловит ошибку
 const paint = on => {
-  chrome.action.setBadgeText({ text: on ? 'ON' : '' });
-  chrome.action.setBadgeBackgroundColor({ color: '#27ae60' });
+  try { chrome.action?.setBadgeText?.({ text: on ? 'ON' : '' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#27ae60' })?.catch?.(() => {}); } catch (e) {}
 };
 chrome.storage.local.get('on').then(s => paint(s.on));
 chrome.storage.onChanged.addListener(ch => {
@@ -226,7 +226,9 @@ chrome.runtime.onInstalled.addListener(async details => {
   } catch (e) {}
 });
 
-chrome.commands.onCommand.addListener(async c => {
+// 8.0.6: в Firefox для Android нет горячих клавиш (chrome.commands === undefined) — без «?.» фоновый скрипт падал здесь,
+// и всё ниже (журнал, замок вкладки, запись памяти) не регистрировалось
+chrome.commands?.onCommand.addListener(async c => {
   if (c !== 'toggle-bot') return;
   const { on = false } = await chrome.storage.local.get('on');
   await chrome.storage.local.set({ on: !on, ...(!on ? {} : { stopMeta: { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: Date.now() } }) });
@@ -321,7 +323,7 @@ function addSnap({ key, state, html }) {
 const MAX_SHOTS = 150;
 function addShot(tab, m) {
   writing = writing.then(async () => {
-    if (!(await chrome.permissions.contains({ origins: ['<all_urls>'] }))) return;
+    if (!chrome.tabs.captureVisibleTab || !(await chrome.permissions.contains({ origins: ['<all_urls>'] }))) return;   // 8.0.6: в Firefox для Android снимка экрана нет
     const [act] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
     if (!act || act.id !== tab.id) return;
     const url = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 55 });
@@ -482,10 +484,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m?.cmd === 'sleep') { setTimeout(() => { try { reply(true); } catch (e) {} }, Math.min(Math.max(+m.ms || 0, 0), 120000)); return true; }
   // v5.5.6: «позвать игрока» — антибот-проверка игры (её решает только человек) / блок PvE-фарма
   if (m?.cmd === 'alert') {
-    try { chrome.notifications.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
-    try { chrome.action.setBadgeText({ text: m.badge || '!' }); chrome.action.setBadgeBackgroundColor({ color: '#c0392b' }); } catch (e) {}
+    try { chrome.notifications?.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
+    try { chrome.action?.setBadgeText?.({ text: m.badge || '!' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#c0392b' })?.catch?.(() => {}); } catch (e) {}
   }
-  if (m?.cmd === 'alertClear') { try { chrome.notifications.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paint(s.on)); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
+  if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paint(s.on)); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
   if (m?.cmd === 'rec') { buf.push(m.ev); if (!timer) timer = setTimeout(flush, 1500); }
   if (m?.cmd === 'snap' && m.key && m.html) addSnap(m);
   if (m?.cmd === 'shot' && _s?.tab) addShot(_s.tab, m);

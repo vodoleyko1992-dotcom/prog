@@ -1234,7 +1234,13 @@ confirmClick('rbReset', async () => {                 // сбросить вер
   await menuPatch({ rbDb: {}, rb: {}, rbPending: true, sinceRb: 999 });
 });
 
-async function activeTab() { const [t] = await chrome.tabs.query({ active: true, currentWindow: true }); return t; }
+// 8.0.6 (Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — активная вкладка там само меню, берём вкладку игры
+async function activeTab() {
+  const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (t && /^https:\/\/([\w-]+\.)?l2wap\.com\//.test(t.url || '')) return t;
+  const g = (await chrome.tabs.query({ url: ['https://l2wap.com/*', 'https://*.l2wap.com/*'] }).catch(() => [])).filter(x => x.id != null);
+  return g.find(x => x.active) || g[0] || t;
+}
 
 document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk')) el.addEventListener('change', save); });
 
