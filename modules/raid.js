@@ -725,8 +725,11 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
   }
   const p90 = S.hits?.length >= 3 ? [...S.hits].sort((a,b)=>a-b)[Math.min(S.hits.length-1,Math.floor(S.hits.length*.9))] : 0;
   const db = env.rt.rbDb?.[S.id] || {};
-  if ((S.sp || 0) > (db.sp || 0) || p90 > (db.hitP90 || 0)) {
-    env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90) });
+  // 8.0.3 (лог 11.10 11:42, Орфен): hitP90 — только от ≥ 3 ударов, и бой после 1–2 ударов (выход, смерть) знание о 57 % ударе терял —
+  // самый сильный одиночный обычный удар помним отдельно (maxHit), по нему аварийный выход в следующем бою с этим боссом
+  const mx = S.hits?.length ? Math.max(...S.hits) : 0;
+  if ((S.sp || 0) > (db.sp || 0) || p90 > (db.hitP90 || 0) || mx > (db.maxHit || 0)) {
+    env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90), maxHit: Math.max(db.maxHit || 0, mx) });
   }
   const st = env.rt.rbStats?.[S.id];
   // 8.0.3: удары эпика (Орфен k ≈0,65 против ≈0,056 у обычных РБ) общий rbK не учат — иначе «обычный удар» всех РБ вырос бы в 3–5 раз
@@ -873,19 +876,26 @@ function rbAssess(ctx, me, mob) {
 
 // 8.0.3 (лог 11.10 11:42–11:44, Орфен — оба боя начал игрок): удар 2508–2885 = 40–57 % HP героя, бот «из боя уйти нельзя, бьюсь до
 // конца» — две смерти за 2 мин (вторая сняла купленный бафф), хотя выход из боя работает (POST /game/battle/leave → 200 в 11:41:53,
-// 11:42:05). Аварийное правило в бою с боссом: замеренный удар (обычный, спецудар или скачок HP за ≈1 с; и из прошлых боёв с ним)
-// ≥ 45 % макс. HP, а HP меньше двух таких — kind 'strong'; ≥ 35 % и следующий удар убьёт (HP ≤ удар × 1,15) — kind 'brink'.
+// 11:42:05). Аварийное правило в бою с боссом: замеренный одиночный удар (обычный или спецудар; и из прошлых боёв с ним)
+// ≥ 45 % макс. HP, а HP меньше двух таких — kind 'strong'; обычный удар ≥ 35 % и следующий убьёт (HP ≤ удар × 1,15) — kind 'brink'.
 // Босс почти добит (≤ 5 % HP) — добиваем. Возвращает { kind, worst, pct, why } или null
+// 8.0.3 (ревью; лог 10.10 23:23 Селян, бой ВЫИГРАН в 23:25:06): спецудар «Крижана блискавка» 1853 + обычный ≈318 в одном шаге замера —
+// S.lethal 2171 (46 % от 4710) давал 'strong' и «не по силам» до нового уровня, а спецудар 1853 при HP 1644 — 'brink'. Скачок HP между
+// замерами (S.lethal) — не одиночный удар (спецудар + удары, конец баффа на макс. HP; аудит 8.0 вердикты по нему уже убирал) — здесь
+// не считается. 'strong' — по одиночным ударам (обычный и спецудар, свои и из прошлых боёв); 'brink' — только по обычному удару:
+// спецудар на откате и следующим ходом не прилетит
 function rbFlee(ctx, me, mob) {
   const S = ctx?.rb; if (!S || !(me?.max > 0) || !(me.cur > 0) || !(mob?.max > 0) || mob.cur <= mob.max * 0.05) return null;
   try { rbLearn(ctx); } catch (e) {}
   const d = env.rt.rbDb?.[S.id] || {};
-  const worst = Math.round(Math.max(0, ...(S.hits || []), S.sp || 0, S.lethal || 0, d.sp || 0, d.hitP90 || 0));
+  const hit = Math.round(Math.max(0, ...(S.hits || []), d.hitP90 || 0, d.maxHit || 0));
+  const worst = Math.max(hit, Math.round(Math.max(S.sp || 0, d.sp || 0)));
   if (!worst) return null;
-  const pct = worst / me.max, strong = pct >= 0.45 && me.cur < 2 * worst, brink = !strong && pct >= 0.35 && me.cur <= worst * 1.15;
+  const pct = worst / me.max, strong = pct >= 0.45 && me.cur < 2 * worst, brink = !strong && hit >= me.max * 0.35 && me.cur <= hit * 1.15;
   if (!strong && !brink) return null;
-  return { kind: strong ? 'strong' : 'brink', worst, pct: Math.round(pct * 100),
-    why: `удар ${worst} HP = ${Math.round(pct * 100)} % моего макс. HP, у меня ${me.cur} — ${strong ? 'двух таких ударов я не переживу' : 'следующий удар убьёт'}` };
+  const w = strong ? worst : hit, wp = Math.round(w / me.max * 100);
+  return { kind: strong ? 'strong' : 'brink', worst: w, pct: wp,
+    why: `удар ${w} HP = ${wp} % моего макс. HP, у меня ${me.cur} — ${strong ? 'двух таких ударов я не переживу' : 'следующий удар убьёт'}` };
 }
 
 // verdict (8.0.3, аварийный выход rbFlee): 'no' — «не по силам» до нового уровня героя, 'skip' — пропуск 30 мин; оба — без возврата

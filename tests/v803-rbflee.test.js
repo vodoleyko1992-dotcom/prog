@@ -27,13 +27,13 @@ const ORF = 'l2dop_rb_29014', orfSt = { hp: 487686, patk: 3920, pdef: 1601, matk
     const f = R.rbFlee(ctx, { max: 5032, cur: 2157, pct: 43 }, { cur: 483262, max: 487686 });
     assert.equal(f?.kind, 'strong', 'Orfen fight 1: 57 % hit → leave at once'); assert.equal(f.worst, 2875); assert.equal(f.pct, 57);
     assert.match(f.why, /удар 2875 HP = 57 %/);
-    // скачок HP за ≈1 с (S.lethal из rbAssess) тоже замер удара
-    assert.equal(R.rbFlee({ name: 'Орфен', rb: { id: ORF, lethal: 2764, samples: [] } }, { max: 5032, cur: 2268, pct: 45 }, { cur: 483262, max: 487686 })?.kind, 'strong');
+    // скачок HP между замерами (S.lethal из rbAssess) — не одиночный удар: выхода по нему нет (см. v803-rbflee-single)
+    assert.equal(mk().R.rbFlee({ name: 'Орфен', rb: { id: ORF, lethal: 2764, samples: [] } }, { max: 5032, cur: 2268, pct: 45 }, { cur: 483262, max: 487686 }), null);
     // бой 2 (6369 HP): 2508 (39 %) при HP 3710 — ещё нет; после крита 2559 HP 2351 ≤ 2559 × 1,15 → «следующий удар убьёт»
-    const c2 = { name: 'Орфен', rb: { id: ORF, hits: [2508], samples: [] } };
-    assert.equal(R.rbFlee(c2, { max: 6369, cur: 3710, pct: 58 }, { cur: 456073, max: 487686 }), null, '39 % hit and 3710 HP — keep fighting');
+    const c2 = { name: 'Орфен', rb: { id: ORF, hits: [2508], samples: [] } }, R2 = mk().R;   // свой env: 2875 из боя 1 уже в rbDb.maxHit
+    assert.equal(R2.rbFlee(c2, { max: 6369, cur: 3710, pct: 58 }, { cur: 456073, max: 487686 }), null, '39 % hit and 3710 HP — keep fighting');
     c2.rb.hits.push(2559);
-    assert.equal(R.rbFlee(c2, { max: 6369, cur: 2351, pct: 37 }, { cur: 456073, max: 487686 })?.kind, 'brink', 'next hit kills → leave (11:44:37.7)');
+    assert.equal(R2.rbFlee(c2, { max: 6369, cur: 2351, pct: 37 }, { cur: 456073, max: 487686 })?.kind, 'brink', 'next hit kills → leave (11:44:37.7)');
     // босс почти добит (≤ 5 %) — добиваем
     assert.equal(R.rbFlee({ name: 'Орфен', rb: { id: ORF, hits: [2875], samples: [] } }, { max: 5032, cur: 2157, pct: 43 }, { cur: 20000, max: 487686 }), null, 'boss at 4 % — finish it');
   }
