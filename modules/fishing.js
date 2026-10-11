@@ -196,8 +196,39 @@ const fishTop = () => fishLog()[0] || null;
 
 // 8.0 (аудит рыбалки, лог 10.10 18:32–19:35): сервер принимал то же умение через 1,03–1,09 с (отказ «action_cooldown» — один за
 // 1,5 ч, и тот из-за лага 2,9 с). Нижняя граница пробы отката — 1,05 с (было 1,12); отказ по-прежнему отодвигает откат
-const FCD_MIN = 1.05;
-const fishCdLen = () => Math.min(1.8, Math.max(FCD_MIN, env.rt.fishCdLen || 1.22)) * 1000;
+// 8.0.3 (лог 11.10 10:44:51 и 11:24:32): откат раздувался от ЛАГА сервера (1,21 → 1,69 → 1,80 с, назад — по 10 мс на 40 нажатий, ≈40 мин,
+// и 1,61 с осталось в памяти). Ответ на reeling шёл 1,4 / 2,5 с: сервер отметил нажатие поздно (serverNowMs), а бот считал откат от своего
+// клика — нажал через 0,13 с после ответа, сервер увидел повтор через 0,2–0,3 с → «action_cooldown», и этот отказ учил откат «gap + 60 мс».
+// Теперь: (1) опоздание нажатия на сервер сверх обычного (отметка serverNowMs ответа в наших часах — сдвиг часов по минимуму
+// «приход ответа − serverNowMs» за последние 64 ответа) сдвигает отсчёт отката этого умения (fishNet); (2) отказ учит откат (+30 мс,
+// потолок 1,5 с) только чистый: жали ровно по своему откату, прошлый ответ этого умения и сам отказ — быстрее 1 с; иначе это лаг —
+// откат не трогаем, повтор через 150 мс; (3) вниз — быстро: −50 мс на 10 чистых нажатий выше 1,3 с, −10 мс ниже (до 1,05 с)
+const FCD_MIN = 1.05, FCD_MAX = 1.5;
+const fishCdLen = () => Math.min(FCD_MAX, Math.max(FCD_MIN, env.rt.fishCdLen || 1.22)) * 1000;
+// sent — время своего клика по умению; over — {t0, over}: на сколько этот клик дошёл до сервера позже обычного; ms — время ответа (DOM)
+// прошлого принятого нажатия умения; off — «приход − serverNowMs» (минимум = сдвиг часов + самая быстрая доставка ответа); lat — обычное
+// «клик → отметка сервера»
+const FNET = { off: [], lat: 0, n: 0, sent: {}, over: {}, ms: {}, cdsLog: false };
+function fishNet(nf) {                           // из сетевого обработчика content.js: ответ на POST /game/fishing/action
+  if (!nf || !nf.ok || !(nf.srv > 0) || !(nf.t > 0)) return;
+  // структура fishing.cooldowns неизвестна (журнал режет ответ на 800 знаков, поле дальше) — первый непустой образец раз за сессию вкладки
+  // в журнал, чтобы по следующему логу брать откат прямо у сервера. Пока откат — своя модель с поправкой по serverNowMs (ниже)
+  if (!FNET.cdsLog && nf.cds != null && JSON.stringify(nf.cds).length > 2) {
+    FNET.cdsLog = true;
+    try { if (!sessionStorage.getItem('l2bot.fishCds')) { sessionStorage.setItem('l2bot.fishCds', '1'); env.rec('B', 'рыбалка', `откаты сервера (fishing.cooldowns, раз за сессию) после ${nf.act}: ${JSON.stringify(nf.cds).slice(0, 300)} · serverNowMs ${nf.srv}`); } } catch (e) {}
+  }
+  const off = nf.t - nf.srv;
+  FNET.off.push(off); if (FNET.off.length > 64) FNET.off.shift();
+  const a = nf.act, sent = FNET.sent[a];
+  if ((a !== 'pumping' && a !== 'reeling') || !(nf.ms > 0) || !sent || nf.t - nf.ms < sent - 150 || FNET.over[a]?.t0 === sent) return;   // не наш клик / уже учтён
+  const up = Math.max(0, nf.ms - Math.max(0, off - Math.min(...FNET.off)));   // клик → отметка сервера (задержка обратного пути сверх обычной вычтена)
+  // обычный разброс доставки (до 80 мс) покрывает запас выученного отката — сдвигаем только на опоздание сверх него
+  // (лог 10:44–11:41: сдвиг у 140 из 2820 нажатий, ≈31 с/ч — почти всё на лагах 1–5 с, где без сдвига был бы отказ)
+  const over = FNET.n ? Math.min(3000, Math.max(0, Math.round(up - FNET.lat - 80))) : 0;
+  FNET.lat = FNET.n++ ? FNET.lat * 0.9 + Math.min(up, FNET.lat + 300) * 0.1 : Math.min(up, 400);
+  FNET.over[a] = { t0: sent, over };
+  if (over && env.FCD[a] === sent) env.FCD[a] = sent + over;   // fishAct уже засчитал нажатие (экран обновился раньше, чем пришла сводка сети)
+}
 
 const fishCdLeft = name => Math.max(0, (env.FCD[name] || 0) + fishCdLen() - Date.now());
 
@@ -206,6 +237,7 @@ async function fishAct(name) {                   // нажать рыболов�
   const before = fishLog(), m0 = env.fishMut, c0 = env.fishCdMsg, hp0 = fishState()?.cur, t0 = Date.now();
   const hint = () => env.$q('.l2-fishing-combat-hint')?.textContent.trim() || '', h0 = hint();
   env.fishLastPre = before;
+  if (name === 'pumping' || name === 'reeling') FNET.sent[name] = t0;   // 8.0.3: по нему fishNet узнаёт ответ на ЭТОТ клик
   env.fire(fSlot(name));
   let rej = false;
   // ответ — только настоящий: у рыбы сменилось HP / рыба пропала / в журнале строка удара, улова, срыва или отказ
@@ -218,7 +250,12 @@ async function fishAct(name) {                   // нажать рыболов�
   // v5.3: сервер ответил (видно по сети), а страница не перерисовалась — лог 08.10 14:26: ответ через 0,3 с, экран стоял 16 с.
   // Ждём перерисовку 2,5 с после ответа, потом перезагружаем страницу рыбалки (она подтянет состояние с сервера)
   let stuck = false;
+  // 8.0.3 (лог 11.10 11:19:44, 11:34:40): игра сама оборвала запрос через ≈9 с («signal is aborted without reason»), а бот ждал ещё 6 с
+  // до своих 15 с. Обрыв ЭТОГО клика (ошибка сети из hook.js, запрос ушёл не раньше клика) — сразу к повтору по свежему состоянию
+  let aborted = false;
   const got = await env.waitFor(() => {
+    const nf = env.NET_FISH;
+    if (nf.t > t0 && nf.err && nf.act === name && !(nf.ms > 0 && nf.t - nf.ms < t0 - 150)) return (aborted = true);
     if (env.NET_FISH.t > t0 && env.NET_FISH.ok && Date.now() - env.NET_FISH.t > 2500) return (stuck = true);
     if (env.fishCdMsg !== c0 || (hint() !== h0 && env.CD_RE.test(hint()))) return (rej = true);
     const f = fishState();
@@ -234,6 +271,12 @@ async function fishAct(name) {                   // нажать рыболов�
     const f = fishState(); env.rec('B', 'рыбалка', `${name}: сервер ответил, а экран не обновился 2,5 с${f ? ` (рыба ${f.cur}/${f.max})` : ''} — перезагружаю страницу`);
     statFlush(); location.reload(); await env.sleep(6000); const L = []; L.rej = false; L.tmo = true; return L;
   }
+  if (aborted) {                                 // откат и счётчик чистых нажатий не трогаем: нажатие, скорее всего, не дошло
+    env.rec('B', 'рыбалка', `${name}: запрос оборвался (${String(env.NET_FISH.err).slice(0, 60)} · ${((Date.now() - t0) / 1000).toFixed(1)} с) — жму снова по свежему состоянию`);
+    // игра сама перечитывает GET /game/fishing/state через 0,7–0,85 с после обрыва — ждём её (до 1,2 с), а не 15 с
+    await env.waitFor(() => { const f = fishState(); return !f || f.cur !== hp0 || hint() !== h0; }, 1200, 50);
+    const L = []; L.rej = false; L.tmo = true; return L;
+  }
   if (!got && env.on) { tmo = true; env.rec('B', 'рыбалка', `нет ответа на ${name} 15 с (лаг сервера) — жму снова`); }
   // 8.0 (аудит рыбалки): журнал перерисовывается вместе с ответом — 20 мс вместо 60 (поздний улов ловит fishFight по fishLastPre)
   const lines = rej ? [] : (await env.sleep(20), fishNewLines(before));
@@ -244,13 +287,18 @@ async function fishAct(name) {                   // нажать рыболов�
     const gap = t0 - (env.FCD[name] || 0);
     const F = { ok: 0, rej: 0, ...(env.rt.fishCdStat || {}) };
     // 8.0: запись — с исходом заброса (statPut), нажатия её не ждут; откат в памяти меняется сразу
-    if (rej) {                                   // откат длиннее, чем думали — запоминаем с запасом
+    if (rej) {
       F.rej++;
-      if (gap < 3000) statPut('fishCdLen', +Math.min(1.8, Math.max(fishCdLen(), gap + 40) / 1000 + 0.02).toFixed(3));
-    } else {
-      env.FCD[name] = t0; F.ok++;
-      // каждые 40 чистых нажатий пробуем откат на 10 мс короче (до 1,05 с)
-      if (F.ok % 40 === 0 && fishCdLen() > FCD_MIN * 1000 + 5) statPut('fishCdLen', +Math.max(FCD_MIN, fishCdLen() / 1000 - 0.01).toFixed(3));
+      // 8.0.3: учим только чистый отказ (жали по своему откату, без лага) — +30 мс; отказ после лага откат не раздувает, повтор через 150 мс
+      const cd = fishCdLen();
+      if (gap >= cd - 30 && gap < 3000 && (FNET.ms[name] || 0) <= 1000 && lag <= 1000) statPut('fishCdLen', +Math.min(FCD_MAX, cd / 1000 + 0.03).toFixed(3));
+      else env.FCD[name] = Math.max(env.FCD[name] || 0, Date.now() + 150 - cd);
+    } else if (got && !tmo) {
+      // 8.0.3: отсчёт отката — с поправкой на опоздание клика на сервер (fishNet; если сводка сети придёт позже — поправит она)
+      const o = FNET.over[name];
+      env.FCD[name] = t0 + (o && o.t0 === t0 ? o.over : 0); F.ok++; FNET.ms[name] = lag;
+      // пробуем откат короче: каждые 10 чистых нажатий −50 мс выше 1,3 с, −10 мс ниже (до 1,05 с); было −10 мс на 40 (≈40 мин с 1,69 с)
+      if (F.ok % 10 === 0 && fishCdLen() > FCD_MIN * 1000 + 5) statPut('fishCdLen', +Math.max(FCD_MIN, fishCdLen() / 1000 - (fishCdLen() > 1300 ? 0.05 : 0.01)).toFixed(3));
     }
     statPut('fishCdStat', F);
   }
@@ -568,7 +616,10 @@ function fishRateTxt() {
   const h = Math.max(1, (S.last || Date.now()) - S.t0) / 3600000;
   const C = env.rt.fishCdStat || {};
   return (env.rt.fishNoShots && env.cfg.fishShots ? '⚠ нет зарядов · ' : '') + `${S.n} рыб · ${Math.round(S.n / h)}/ч · откат ${(fishCdLen() / 1000).toFixed(2)} с` + (C.rej ? ` · отказов ${C.rej}` : '')
-    + (env.rt.fishLag ? ` · ответ ${env.rt.fishLag} мс${env.rt.fishLag > 1000 ? ' ⚠ лаг' : ''}` : '');
+    + (env.rt.fishLag ? ` · ответ ${env.rt.fishLag} мс${env.rt.fishLag > 1000 ? ' ⚠ лаг' : ''}` : '')
+    // 8.0.3 (лог 11.10 11:01:56–11:37): в фоновой вкладке игра снимает «disabled» с кнопок умений только на своём секундном тике
+    // (88 нажатий опоздали, ≈48 с за час) — жать недоступную кнопку нельзя, поэтому только предупреждение: держать окно рыбалки видимым
+    + (typeof document !== 'undefined' && document.hidden ? ' · ⚠ вкладка в фоне — кнопки игры оживают раз в 1 с' : '');
 }
 
 // 7.1.30 (лог 10.10 17:29:37): pumping ушёл, сервер ответил 200, а страница так и не перерисовалась — кнопка осталась «в полёте»
@@ -937,6 +988,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
+ return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
  };
 })(globalThis);
