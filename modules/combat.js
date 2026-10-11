@@ -837,6 +837,9 @@ async function battle() {
     }
   };
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
+  // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
+  const reloadSlot = () => { let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
+    if (rl.length >= 3) return false; try { sessionStorage.setItem('l2bot.mageReload', JSON.stringify([...rl, Date.now()])); } catch (e) {} return true; };
   const turnSamples = [];
   // 8.0.3 (логи 11.10 09:11–10:37, 10 боёв с РБ: 1302 потерянных нажатия на 1689 ходов, ДПС 1436 против ≈3300 в тех же баффах на 7.2.1):
   // после ответа на ход игра шлёт свой GET /character (через ≈8 мс, идёт 0,25–0,56 с) и, пока он в полёте и ≈30 мс после, молча теряет
@@ -949,6 +952,27 @@ async function battle() {
     }
     const me = env.meHp(), mp = env.meMp(), mob = mobHp();
     if (me && me.cur === 0) return env.onDeath();
+    // 8.0.3 (лог 11.10 10:31:48–10:32:17, Барда 55): ход ушёл, а ответа нет 28,6 с — пока игра ждёт ответ, нажатия она не отправляет; бот
+    // 20 с жал вслепую («урон 0» ×12) при «✅ победа вероятна» по замёрзшим HP, потом герой погиб. Теперь ход без ответа > 8 с (до 60 с) —
+    // не жмём, отметка «сервер завис» (смерть сейчас — не «не по силам»), один раз спрашиваем сервер (/game/time): отвечает — завис только
+    // этот запрос, обновляем страницу; не отвечает — ждём, ≥ 20 с без ответа — обновляем (не чаще 3 раз за 10 мин, общий счётчик)
+    { const an = env.actNet?.(), hangMs = an && an.start > an.done && an.t ? Date.now() - an.t : 0;
+      if (hangMs > 8000 && hangMs < 60000) {
+        const hs = Math.round(hangMs / 1000);
+        env.srvHangMark?.(`ход без ответа ${hs} с`);
+        env.setStatus(`Бой: ход висит ${hs} с без ответа сервера — не жму, жду`);
+        if (ctx.hangN !== an.start) {
+          ctx.hangN = an.start;
+          env.rec('B', 'бой', `ход висит ${hs} с без ответа сервера${ctx.rb ? ` (РБ ${ctx.name}, у него ${mob ? Math.round(mob.cur / Math.max(1, mob.max) * 100) : '?'} %)` : ''} — не жму вслепую, проверяю сервер`);
+          const up = env.srvUp ? await env.srvUp() : false;
+          if (!env.on || !env.tabOwner) return;
+          if (env.actNet().done >= env.actNet().start) continue;   // ответ пришёл, пока спрашивали
+          if (up && reloadSlot()) { env.rec('B', 'бой', 'сервер игры отвечает — завис только этот ход: обновляю страницу'); location.reload(); await env.sleep(8000); return; }
+          if (!up) env.rec('B', 'бой', 'сервер игры не отвечает — жду ответа, не жму');
+        }
+        if (hangMs > 20000 && reloadSlot()) { env.rec('B', 'бой', `ход без ответа ${hs} с — обновляю страницу`); location.reload(); await env.sleep(8000); return; }
+        await env.sleep(300); continue;
+      } }
     if (ctx.pet) petTick(ctx);
     // v5.6: урон по ВСЕМ мобам боя (главный + «рядом»): сумма их HP падает — это наш урон. Раньше ДПС и «не по зубам» считались
     // как HP первого моба / время всего боя (с соседями и переключением цели) — Captain «31 с, ДПС 51» при реальных ~150
@@ -997,19 +1021,47 @@ async function battle() {
       if (low) {
         ctx.block['buff:' + low[0]] = Date.now() + 5000;
         const r = await act(low[1], `Аварийный бафф (HP ${me.pct | 0}%): ${low[1].title}`);
+        if (r === 'lock') ctx.block['buff:' + low[0]] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
         if (r === true) await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [low[0]]: Date.now() } });
         continue;
+      }
+    }
+    // 8.0.3 (лог 11.10 11:42–11:44, Орфен — бой начал игрок): удар босса 2508–2885 = 40–57 % HP героя, а бот «из боя уйти нельзя, бьюсь
+    // до конца» — две смерти за 2 мин, вторая сняла купленный бафф. Штатный выход «Назад на карту» (POST /game/battle/leave → 200) в этой
+    // игре бой завершает (11:41:53, 11:42:05). Аварийное правило (raid.rbFlee) — и в бою, начатом игроком: смерть хуже, чем уйти.
+    // Своя эпик-цепочка (rt.epic, шаг «бой») — по своим правилам ниже (epicRetreatHp)
+    if (ctx.rb && me && mob && !ctx.rb.retreated) {
+      const epChain = env.epicOn() && env.epicById(ctx.rb.id) && env.rt.epic?.k === env.epicById(ctx.rb.id).k && env.rt.epic?.step === 'fight';
+      const fl = !epChain && env.rbFlee ? env.rbFlee(ctx, me, mob) : null;
+      if (fl) {
+        const leave = env.$q('#battle-back-map');
+        if (env.shown(leave) && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
+          ctx.rb.retreated = true;
+          // сервер недавно висел (l2bot.srvHang) — скачок HP мог накопиться за простой: без вердикта «не по силам», только пропуск 30 мин
+          let hang = null; try { hang = JSON.parse(sessionStorage.getItem('l2bot.srvHang') || 'null'); } catch (e) {}
+          const verdict = fl.kind === 'strong' && !(hang && Date.now() - (+hang.t || 0) < 60000) ? 'no' : 'skip';
+          env.rec('B', 'РБ', `${ctx.name}: ⚠ ${fl.why} — ухожу из боя${manualRb ? ' (бой начат вами — смерть хуже, чем уйти)' : ''}${verdict === 'no' ? ', «не по силам» до нового уровня' : ', пропуск 30 мин'}`);
+          env.fire(leave);
+          if (await env.waitFor(() => !env.isBattle(), 8000, 150)) { await env.rbRetreat(ctx, mob, fl.why, verdict); return; }
+          await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
+          env.rec('B', 'РБ', `${ctx.name}: выход не подтверждён — бьюсь дальше, повторный выход запрещён на 1 час`);
+        } else if (!ctx.rb.fleeSaid) { ctx.rb.fleeSaid = 1; env.rec('B', 'РБ', `${ctx.name}: ⚠ ${fl.why}, но выйти нельзя (нет кнопки или выход не работал) — бьюсь до конца на банках`); }
       }
     }
     // v4.44: из боя в этой игре уйти нельзя — бой идёт до конца (уход со страницы бой не прекращает: «Во время бою відновлення
     // недоступне», и РБ добивал героя у баффера, лог 01:48). Поэтому мало HP — банки как можно чаще (вкл. резерв), а если
     // банка на откате — бьём дальше (вампирик тоже лечит), а не стоим и не уходим
+    // 8.0.3: уход СО СТРАНИЦЫ бой не прекращает, а штатная кнопка выхода — прекращает (см. выше: аварийный выход от смертельных ударов)
     if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {
       const pot = env.hpPotPick(true);
       if (pot && Date.now() - lastHpPot > 1100) {
-        lastHpPot = Date.now();
+        // 8.0.3 (лог 11.10 09:59:55 и 10:00:06.8, Тимініель: клик аварийной банки потерян в окне занятости игры, повтор — только через
+        // 1,1–1,3 с, за 2,3 с до смерти): потерян в окне ('lock') — отметку банки откатываем, следующий цикл жмёт её снова сразу
+        const prevPot = lastHpPot; lastHpPot = Date.now();
         if (ctx.rb) (ctx.rb.potT ||= []).push(Date.now());
-        await act(pot, `Мало HP (${me.pct | 0}%) — банка: ${env.cleanTitle(pot.title)} (×${(env.qty(pot) ?? 1) - 1})`); continue;
+        const r = await act(pot, `Мало HP (${me.pct | 0}%) — банка: ${env.cleanTitle(pot.title)} (×${(env.qty(pot) ?? 1) - 1})`);
+        if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }
+        continue;
       }
       if (!pot && !ctx.noPotSaid && !env.hpPots().length) { ctx.noPotSaid = 1; env.rec('B', 'мало HP', `HP ${me.pct | 0}%, банок HP нет — из боя уйти нельзя, бьюсь до конца`); }
     }
@@ -1091,9 +1143,8 @@ async function battle() {
     const sig = mob.cur + '|' + (me?.cur ?? '') + '|' + env.logLines().length + '|' + (env.logLines()[0] || '');
     if (sig !== progSig) { progSig = sig; progT = Date.now(); }
     else if (Date.now() - progT > 20000) {
-      let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
-      if (rl.length < 3) {   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик)
-        try { sessionStorage.setItem('l2bot.mageReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
+      env.srvHangMark?.('нет ответа игры 20 с');   // 8.0.3: смерть сразу после — не «не по силам»
+      if (reloadSlot()) {   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик)
         env.rec('B', 'бой', `нет ответа игры 20 с (моб ${mob.cur}/${mob.max}) — обновляю страницу`);
         location.reload(); await env.sleep(8000); return;
       }
@@ -1133,8 +1184,8 @@ async function battle() {
           const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`);
           if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } await env.setRt({ petBornT: Date.now() }); }   // 7.1.31
           // 7.2.2 (лог 10.10 23:18:59): клик призыва не ушёл в игру (сразу после включения зарядов) — раньше следующая попытка через 15 с,
-          // и игрок призвал кота сам. Теперь повтор через ≈2 с
-          else await env.setRt({ petSummonT: Date.now() - 13000 });
+          // и игрок призвал кота сам. Теперь повтор через ≈2 с; 8.0.3 (лог 11.10 10:00:45, 10:33:01): потерян в окне занятости игры ('lock') — сразу
+          else await env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 });
           continue;
         }
       }
@@ -1156,6 +1207,7 @@ async function battle() {
           ctx.block['petheal'] = Date.now() + 3000;
           const hp0 = P.hp, max0 = P.maxHp, t0 = Date.now(), name = env.cleanTitle(pick.title);
           const pr = await act(pick, `${useSummon ? 'Перепризыв' : 'Лечение'} слуги (${hp0}/${max0}): ${name}`);
+          if (pr === 'lock') { ctx.block['petheal'] = 0; continue; }   // 8.0.3: клик потерян в окне занятости игры — повтор сразу, без ожидания слуги 2,5 с
           if (useSummon && pr === true) { if (ctx.pet) ctx.pet.resummons++; await env.setRt({ petBornT: Date.now() }); }   // 7.1.31: новый кот — без баффов
           const P2 = await env.waitFor(() => { const q = env.petState?.(); return q && q.t > t0 && q.has ? q : null; }, 2500, 150);
           if (!P2) ctx.block['petheal'] = Date.now() + 20000;   // 7.1.30: сервер не прислал слугу — не долбим призыв/лечение каждые 3 с
@@ -1180,7 +1232,7 @@ async function battle() {
     const drainFirst = mageCombat() && me && me.pct > (env.cfg.stopHp || 25) + 10 && !!drainPick(ctx, mp);
     if (me && me.pct <= env.cfg.hpPotAt && !drainFirst) {
       const hs = env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) && (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10));
-      if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); continue; }
+      if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; const r = await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); if (r === 'lock') ctx.block['heal:' + hs.title] = 0; continue; }   // 8.0.3: 'lock' — повтор сразу
     }
     // v5.3: 🩸 вампиризм (Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex…): HP ≤ «вампиризм при» —
     // сначала скилл с поглощением HP (лечит и бьёт, банка не тратится); банка — если вампирик на откате, нет MP
@@ -1232,9 +1284,11 @@ async function battle() {
     // v5.3: на РБ банки — чаще: у банки в l2wap нет своего отката (только общий ~0,2 с; лог 08.10 14:14), а пили раз в 2–5 с —
     // 600 HP за глоток против потери 300–600 HP/с у РБ 50 ур. Теперь, пока держим полосу HP, — раз в 1,1 с
     if (hpPot && potLeft !== 0 && !potReserveHit && me && me.pct <= potAt && Date.now() - lastHpPot > (ctx.rb ? 1100 : 2000)) {
-      lastHpPot = Date.now();
+      const prevPot = lastHpPot; lastHpPot = Date.now();
       if (ctx.rb) (ctx.rb.potT ||= []).push(Date.now());    // для оценки «хватит ли банок»
-      await act(hpPot, `Банка HP${ctx.rb ? ` (РБ: осталось ${potLeft - 1}${ctx.rb.usePots ? ', убиваем с банками' : ''})` : ''}`); continue;
+      const r = await act(hpPot, `Банка HP${ctx.rb ? ` (РБ: осталось ${potLeft - 1}${ctx.rb.usePots ? ', убиваем с банками' : ''})` : ''}`);
+      if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }   // 8.0.3: клик потерян в окне занятости игры — банка не выпита, повтор сразу
+      continue;
     }
     // банка MP — когда маны мало для скиллов
     // на РБ (модель 50 000 боёв): банка MP при MP < 80 сокращает бой ≈в 2 раза (≈1,7 банки на РБ); резерв банок не трогаем
@@ -1247,7 +1301,7 @@ async function battle() {
     const mpNeed = Math.max(env.cfg.mpPotAt, rbMpAt, mageMp, isFinite(hitMp) ? Math.round(hitMp * 1.5) : 0);
     const mpPulse = (() => { const p = env.rt.pots?.[env.cleanTitle(mpPot?.title || '').toLowerCase()]; return p && p.pulses > 1 ? Math.max(3000, p.pulses * (p.every || 1) * 1000) : 3000; })();   // 7.1.30: банка «пульсами» — не пить поверх ещё идущей
     if (mpPot && env.qty(mpPot) !== 0 && mp && mp.cur < mpNeed && Date.now() - lastMpPot > mpPulse && ready(mpPot)) {
-      lastMpPot = Date.now(); await act(mpPot, `Банка MP (MP ${mp.cur} < ${mpNeed})`); continue;
+      const prevMp = lastMpPot; lastMpPot = Date.now(); if (await act(mpPot, `Банка MP (MP ${mp.cur} < ${mpNeed})`) === 'lock') lastMpPot = prevMp; continue;   // 8.0.3: 'lock' — повтор сразу
     }
     const b2m = mp && mp.cur < mpNeed && me && me.pct > 60 ? [...document.querySelectorAll(env.SLOT)].find(b => env.ilOf(b)?.t === 'MANAHEAL' && !env.noEffect?.(b) && ready(b)) : null;   // 7.1.31: Body To Mind на L2WAP «в бою эффекта нет» — не жмём
     if (b2m) { await act(b2m, `MP из HP: ${env.cleanTitle(b2m.title)} (MP ${mp.cur})`); continue; }
@@ -1257,6 +1311,7 @@ async function battle() {
       if (pb) {
         ctx.block['petbuff:' + pb.n] = Date.now() + 5000;
         const r = await act(pb.b, `Бафф кота: ${env.cleanTitle(pb.b.title)}`);
+        if (r === 'lock') ctx.block['petbuff:' + pb.n] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу
         if (r === true) { await env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } }); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
         else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
         continue;
@@ -1301,6 +1356,7 @@ async function battle() {
         env.rec('B', 'недоступно', `бафф «${b.title}»: ${noticeText() || 'недоступен'}`);
         console.info(env.TAG, `бафф ${b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
       } else if (r === 'cd') await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: 0 } });   // на КД — повторим, когда откатится (память КД)
+      else if (r === 'lock') ctx.block['buff:' + bn] = 0;          // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
       else if (!r) ctx.block['buff:' + bn] = Date.now() + 5000;   // не ушёл в КД — повтор не раньше чем через 5 с
       break;
     }
@@ -1312,6 +1368,7 @@ async function battle() {
       if (dbf) {
         const before = env.logLines();
         const dr = await act(dbf.b, `Бой${tc}: дебафф ${dbf.n} · моб ${mob.pct | 0}%`);
+        if (dr === 'lock') continue;   // 8.0.3: клик не дошёл до игры — без паузы 0,5 с и разбора журнала, повтор сразу
         if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else if (dr !== 'lock') ctx.block['debuff:' + dbf.k] = Date.now() + 3000;   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
         ctx.seq.push('✦');
         await env.sleep(500);

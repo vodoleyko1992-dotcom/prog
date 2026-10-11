@@ -23,20 +23,35 @@ async function lowHpEscape(me) {
 }
 
 async function onDeath() {
-  const deaths = [...(env.rt.deaths || []), Date.now()].filter(t => Date.now() - t < 30 * 60000);
+  // 8.0.3 (лог 11.10 11:42:31 и 11:44:43: две смерти на Орфене за 2 мин — обе «1/3 за 30 мин»): «▶ Старт» стирает rt.deaths, а история
+  // смертей за час (rt.deathLog) остаётся — счётчик «N/3 за 30 мин» и стоп после 3 смертей считаются по ней
+  const now = Date.now(), deathLog = [...new Set([...(env.rt.deathLog || []), ...(env.rt.deaths || [])])].filter(t => now - t < 3600000).concat(now);
+  const deaths = deathLog.filter(t => now - t < 30 * 60000);
   const rbId = env.rt.target?.rb ? env.rt.rbCur : (/^l2dop_rb_/i.test(new URLSearchParams(location.search).get('spawnId') || '') ? new URLSearchParams(location.search).get('spawnId') : null);
   const epicD = env.epicOn() && rbId && env.epicById(rbId);   // 🐉 смерть на эпике — не «не по силам», а конец захода: запомнить его HP
   if (epicD) { const m = env.mobHp(); await env.setRt({ epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: Date.now(), cur: m?.cur ?? null, max: m?.max ?? null }] } });
     await env.epicDbSet(epicD.k, { deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 }); }   // 8.0.3: смерти за это появление эпика
-  if (rbId && !epicD) await env.rbNote(rbId, { verdict: 'no', name: env.rt.rbDb?.[rbId]?.name || env.rt.rbSeen?.[rbId]?.name || env.mobName(), lvl: env.rt.rbDb?.[rbId]?.lvl || env.rt.rbSeen?.[rbId]?.lvl || 0, note: `убил героя ${new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` });
-  await env.setRt({ deaths, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {} });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
+  // 8.0.3 (лог 11.10 10:31:48–10:32:18, Барда 55): ход висел 28,6 с (ответ 409), сервер молчал — герой погиб при «✅ победа вероятна»
+  // (РБ 71 %, HP 62 %), а бот записал «не по силам» до 57 ур. и бросил недобитого. Сервер завис за 60 с до смерти (отметка l2bot.srvHang:
+  // ход без ответа > 8 с или «нет ответа игры 20 с») — вердикт не ставим, только заметку; rbWound остаётся — тур вернётся добить
+  let hang = null; try { hang = JSON.parse(sessionStorage.getItem('l2bot.srvHang') || 'null'); } catch (e) {}
+  const srvHang = !!hang && now - (+hang.t || 0) < 60000;
+  if (rbId && !epicD) {
+    const nm = env.rt.rbDb?.[rbId]?.name || env.rt.rbSeen?.[rbId]?.name || env.mobName(), lvl = env.rt.rbDb?.[rbId]?.lvl || env.rt.rbSeen?.[rbId]?.lvl || 0, hm = new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    if (srvHang) {
+      await env.rbNote(rbId, { name: nm, lvl, note: `погиб при зависании сервера (${hang.why || 'ход без ответа'}) ${hm} — не «не по силам»` });
+      env.rec('B', 'смерть', `${nm}: герой погиб, пока сервер не отвечал (${hang.why || 'ход без ответа'}) — «не по силам» не пишу, недобитого РБ добью позже`);
+    } else await env.rbNote(rbId, { verdict: 'no', name: nm, lvl, note: `убил героя ${hm}` });
+  }
+  await env.setRt({ deaths, deathLog, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {} });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
   env.rec('B', 'смерть', `смертей за 30 мин: ${deaths.length}`);
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
   // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат
   // (rt.epic.step ≠ «выбор»): 2 × «смертей на эпика» (не больше 20) за час; между эпиками (фарм мобов) — обычные 3 за 30 мин
   const epicNow = env.epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick', epicCap = Math.min(20, 2 * Math.max(1, +env.cfg.epicMaxDeaths || 3));
   if (epicNow ? [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000).length >= epicCap : deaths.length >= 3) return env.halt(epicNow ? `${epicCap} смертей за час на эпиках — бот остановлен` : '3 смерти за 30 минут — бот остановлен (проверьте уровень целей и настройки)');
-  if (env.epicOn()) await env.setRt({ deaths1h: [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000) });
+  // 8.0.3: смерть от любого босса (и в ручном бою, и в «Фарме РБ») — в счёт «2 смерти за час — за Coin of Luck не захожу» (epics)
+  if (env.epicOn() || rbId) await env.setRt({ deaths1h: [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000) });
   env.setStatus(`Персонаж погиб (${deaths.length}/3 за 30 мин) — в город`);
   await env.sleep(env.rnd(1500, 2500));
   const btn = await env.waitFor(() => [env.$q('#battle-defeat-tocity'), env.$q('#map-defeat-tocity')].find(env.shown) || env.byText(/^(Вернуться в город|Повернутися до міста|В город|До міста)$/i, 'button,a'), 6000, 200);
@@ -50,13 +65,23 @@ async function reviveStep() {
   // v4.43 (журнал 01:48): «без сознания», пока на экране поражения не нажата «Вернуться в город». Экран поражения — на странице
   // того боя, где погибли; «Город» может открыться и без него (тогда статуя и бафф не работают). Поэтому: страница боя →
   // «Вернуться в город» (отметка «воскрешён» — до нажатия) → город → «Магическая статуя» → бафф → «Восстановить»
-  const R = env.rt.revive;
+  let R = env.rt.revive;
   const finish = async (why, toBuffer) => {
     env.rec('B', 'воскрешение', why);
     await env.setRt({ revive: null, ...(toBuffer ? { restoreT: Date.now(), restoreRes: null, tbuff: { set: null, fa: [], step: 'restore', why: 'после смерти', t: Date.now(), back: '/map.html', reviveTried: true } } : {}) });
   };
   if (Date.now() - (R.t || 0) > 150000) return finish('не уложился в 2,5 мин — продолжаю как есть');
   const defeatBtn = () => [env.$q('#battle-defeat-tocity'), env.$q('#map-defeat-tocity')].find(env.shown) || null;
+  // 8.0.3 (лог 11.10 11:44:46: бот стоял, игрок сам нажал «Вернуться в город» — отметки «воскрешён» не было, и после ▶ бот повёл героя
+  // на страницу боя с Орфеном: battle/start → 400, ≈7 с впустую). Ответ POST /game/battle/return-to-town 2xx (content.js пишет время
+  // во вкладке и при остановленном боте) позже смерти = воскрешён. Запись onDeath (revived: false) — считаем от времени смерти (игрок мог
+  // нажать, пока бот ждал кнопку), запись «без сознания» от баффера — от её времени
+  let toTown = 0; try { toTown = +sessionStorage.getItem('l2bot.toTown') || 0; } catch (e) {}
+  const deathT = R.revived === false && env.rt.deathLog?.length ? Math.max(...env.rt.deathLog) : (R.t || 0) - 3000;
+  if (!R.revived && toTown && toTown >= deathT) {
+    R = { ...R, revived: true }; await env.setRt({ revive: R });
+    env.rec('B', 'воскрешение', '«Вернуться в город» уже нажато (ответ игры) — к магической статуе');
+  }
   const toCity = defeatBtn();
   if (toCity) {
     env.setStatus('После смерти: «Вернуться в город»');
@@ -67,15 +92,18 @@ async function reviveStep() {
     return;
   }
   if (!R.revived) {
+    // 8.0.3: смерть от босса — к экрану поражения через карту (там тот же «Вернуться в город»), а не на страницу боя с ним: она сама
+    // шлёт battle/start — из города «слишком далеко» (лог 11:44:58), а рядом начала бы новый бой с тем, кто только что убил
+    const url = R.url || env.rt.lastBattle, boss = /[?&]spawnId=l2dop_rb_/i.test(url || '');
     if (env.isBattle() || env.isMap()) {                    // экран поражения может появиться не сразу
       if (await env.waitFor(defeatBtn, 4000, 200)) return;
       if (env.isBattle()) { env.rec('B', 'воскрешение', 'на странице боя поражения нет — персонаж в сознании'); await env.setRt({ revive: { ...R, revived: true } }); return; }
+      if (boss && (R.hops || 0) >= 1) { env.rec('B', 'воскрешение', 'на карте экрана поражения нет — персонаж в сознании'); await env.setRt({ revive: { ...R, revived: true } }); return; }
     }
     if ((R.hops || 0) >= 3) { env.rec('B', 'воскрешение', 'экран поражения не нашёл — пробую дальше как есть'); await env.setRt({ revive: { ...R, revived: true } }); return; }
     await env.setRt({ revive: { ...R, hops: (R.hops || 0) + 1 } });
-    const url = R.url || env.rt.lastBattle;
     env.setStatus('После смерти: к экрану поражения');
-    if (url && !(env.isBattle() && location.pathname + location.search === url)) location.href = url;
+    if (url && !boss && !(env.isBattle() && location.pathname + location.search === url)) location.href = url;
     else location.href = '/map.html';
     await env.sleep(4000);
     return;

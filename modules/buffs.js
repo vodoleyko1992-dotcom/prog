@@ -199,7 +199,9 @@ function townBuffNeed() {                          // что взять: { set, 
   // 8.0.3 (ревью): в режиме эпиков — всегда (и между эпиками), и только когда сам заход разрешён (epics.epicBuffWhy)
   if ((set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
   const H = hudBuffs();
-  if (!H || set === 'off' && !(env.cfg.faBuffs || '').trim()) return null;
+  if (H) try { faDeathNote(H); } catch (e) {}       // 8.0.3: что смерть сделала с баффами за FA — в журнал
+  // 8.0.3: городской набор выключен и своего списка FA нет — Noblesse при платных баффах (и РБ-сессия) всё равно докупается
+  if (!H || set === 'off' && !(env.cfg.faBuffs || '').trim() && !faWanted().length) return null;
   const soon = id => !H[id] || H[id] - Date.now() < 10 * 60000;
   // v5.3: набор учим по факту — какие баффы появились/обновились после «Применить» (rt.tbSetIds). Раньше проверялись
   // 4 «ключевых» ID, и если слетал любой другой из ~10 баффов набора, бот этого не замечал (скрин 08.10 14:46)
@@ -221,11 +223,48 @@ function townBuffNeed() {                          // что взять: { set, 
     needSet = false;
     if (Date.now() - tbDownLogT > 1800000) { tbDownLogT = Date.now(); env.rec('B', 'бафф', `городской набор «${set}» не беру — он понизит ваши баффы: ${down.map(x => `${env.FA_KNOWN?.[x.id]?.[0] || env.rt.faCat?.[x.id]?.name || 'skill ' + x.id} Lv.${x.have}→${x.give}`).join(', ')}`); }
   }
-  const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < 60000);
+  const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < 60000 || (id === 1323 && nobGone(H)));
   return needSet || fa.length ? { set: needSet ? set : null, fa } : null;
 }
 
 const faIdsOf = v => String(v || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
+// 8.0.3 (лог 11.10 09:05–10:32): платные баффы за FA на герое — куплены у баффера Fast Aden (цена есть в его каталоге rt.faCat или в
+// FA_KNOWN), действуют 3 ч; те же id у городского баффера (набор на 24 ч: 1059, 1085, 1303 …) не считаем → { id: время конца }
+const FA_DUR = 3 * 3600000;
+function faPaidOn(H, now = Date.now()) {
+  const town = new Set([...Object.values(env.TB_KEYS || {}).flat(), ...Object.values(env.rt.tbSetIds || {}).flat(), ...Object.values(TB_LVL_DEF).flatMap(o => Object.keys(o))].map(Number));
+  const out = {};
+  for (const [k, e] of Object.entries(H || {})) { const id = +k; if (e !== Infinity && e > now && e - now <= FA_DUR * 1.1 && !town.has(id) && (env.rt.faCat?.[id] || env.FA_KNOWN?.[id])) out[id] = e; }
+  return out;
+}
+const faCostOf = id => +(env.rt.faCat?.[id]?.cost || env.FA_KNOWN?.[id]?.[1] || 1);
+const lastDeath = () => Math.max(0, ...(env.rt.deathLog || []), ...(env.rt.deaths || []));
+const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+// 8.0.3: Noblesse Blessing уходит со смертью (сберегая остальные баффы). Страховка от старой шапки сразу после воскрешения: Noblesse,
+// купленный до последней смерти (своя отметка nobBuyT и срок −3 ч: в шапке 09:39 он на 3 ч, как и баффы за 1 FA), считаем ушедшим
+function nobGone(H, now = Date.now()) {
+  if (!H?.[1323]) return true;
+  const d = lastDeath();
+  return d > 0 && now - d < FA_DUR && d > Math.max(env.rt.nobBuyT || 0, H[1323] - FA_DUR);
+}
+// 8.0.3 (лог 11.10 10:00:09 и 10:32:18): что смерть сделала с баффами за FA — в журнал (раньше ни строки: ушёл Noblesse, потом все 9
+// баффов, макс. HP 6178 → 4151). Снимок платных баффов — при каждом их изменении; после смерти сравниваем со свежей шапкой (≥ 20 с, не у баффера)
+function faDeathNote(H, now = Date.now()) {
+  const d = lastDeath(), S = env.rt.faSnap, paid = faPaidOn(H, now);
+  if (S?.ids && d > (S.t || 0) && d !== env.rt.faDeathSaid) {          // смерть после снимка — снимок не трогаем, пока не сравним
+    if (now - d < 20000 || /town-buffer/.test(location.pathname)) return;
+    const was = Object.entries(S.ids).map(([id, e]) => [+id, +e]).filter(([, e]) => e > now + 60000), had = was.filter(([id]) => id !== 1323);
+    const lost = had.filter(([id]) => !H[id]), nob = (S.ids[1323] || 0) > d;
+    const nm = id => env.rt.faCat?.[id]?.name || env.FA_KNOWN?.[id]?.[0] || 'skill ' + id;
+    if (lost.length) env.rec('B', 'бафф', `смерть ${hhmm(d)} сняла ${lost.length} бафф(ов) за FA: ${lost.map(([id]) => nm(id)).join(', ')} (им оставалось до ≈${Math.round(Math.max(...lost.map(([, e]) => e - now)) / 60000)} мин)${nob ? '' : ' — Noblesse Blessing не было'}`);
+    else if (had.length && nob) env.rec('B', 'бафф', `смерть ${hhmm(d)}: Noblesse Blessing сберёг ${had.length} бафф(ов) за FA и ушёл — докупаю его`);
+    env.setRt({ faDeathSaid: d, faSnap: { t: now, sig: faSig(paid), ids: paid } });
+    return;
+  }
+  const sig = faSig(paid);
+  if (sig !== (S?.sig ?? '')) env.setRt({ faSnap: { t: now, sig, ids: paid } });
+}
+const faSig = P => Object.entries(P).map(([id, e]) => `${id}:${Math.round(e / 60000)}`).sort().join(',');
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
   if (env.rt.faSkipUntil && now < env.rt.faSkipUntil) return [];
@@ -238,7 +277,11 @@ function faWanted() {
   // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA
   const bossOn = !!(env.cfg.rbMode || env.cfg.rbHuntMode || (env.cfg.epicMode && env.rt.epic?.k && env.rt.epic.step !== 'pick'));
   let H = {}; if (bossOn) try { H = hudBuffs() || {}; } catch (e) {}
-  const paidUp = Object.keys(H).some(id => +id !== 1323 && (env.FA_KNOWN?.[id]?.[1] || 0) >= 5 && H[id] - now > 10 * 60000);
+  // 8.0.3 (лог 11.10: игрок купил 9 баффов по 1 FA и Noblesse за 5 FA; после смерти в 10:00:09 Noblesse ушёл и за 32 мин и 7 РБ не
+  // докупался — условие ждало бафф ценой ≥ 5 FA, а их нет; смерть в 10:32:18 сняла все 9, ≈1,5 ч оставалось): платные баффы с запасом
+  // > 10 мин в сумме стоят не меньше Noblesse — он нужен
+  const atRisk = Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > 10 * 60000).reduce((a, [id]) => a + faCostOf(id), 0);
+  const paidUp = atRisk > 0 && atRisk >= (env.faCost ? env.faCost(1323) : 5);
   const nob = paidUp && bossOn && env.cfg.rbSessNob !== false ? [1323] : [];
   let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
@@ -382,7 +425,7 @@ async function townBuffStep() {
     const balNow = () => +((env.$q('#fast-aden-balance')?.textContent || '0').replace(/\D/g, '') || 0);
     const nm = id => env.rt.faCat?.[id]?.name || env.FA_KNOWN[id]?.[0] || id;
     const got = [], gone = { ...(env.rt.faGone || {}) };
-    let bought = 0, short = 0;
+    let bought = 0, short = 0, nobT = 0;
     for (const id of st.fa || []) {
       if (!env.on) break;
       const bal = balNow(), b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
@@ -393,11 +436,12 @@ async function townBuffStep() {
       await env.pause(); env.fire(b);
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
       if (ok) bought++;
+      if (ok && id === 1323) nobT = Date.now();   // 8.0.3: свой Noblesse — куплен после последней смерти (nobGone)
       got.push(`${nm(id)}: ${ok ? '−' + cost + ' FA' : 'без подтверждения'}`);
       await env.sleep(env.rnd(250, 450));
     }
     const left = balNow();
-    const patch = { faGone: gone, faBal: { v: left, t: Date.now() } };
+    const patch = { faGone: gone, faBal: { v: left, t: Date.now() }, ...(nobT ? { nobBuyT: nobT } : {}) };
     if (short && !bought) { patch.faSkipUntil = Date.now() + 60 * 60000; got.push('FA не хватает — к бафферу FA не хожу 60 мин (или пока баланс не вырастет)'); }
     await env.setRt(patch);
     return done(`Fast Aden (баланс ${left} FA): ${got.join(' · ') || 'нечего брать'}`);

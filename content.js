@@ -1400,8 +1400,10 @@ function townBuffNeed(...args) { return L2V7Modules.buffs.townBuffNeed(...args);
 // (до 60 мин или пока не увидим баланс больше); бафф, которого нет в списке игры, пропускаем 6 ч; покупаем по порядку списка,
 // не хватает на один — берём следующие, что по карману; ничего не купили из-за баланса — пауза 60 мин.
 // 7.2.1 (снимок баффера 10.10 22:27): Greater — по 5 FA, обычные — 1 FA, всё на 3 ч; номера Prophecy были перепутаны (1357 — Water, 1355 — Wind)
+// 8.0.3 (лог 11.10 09:05: игрок купил 9 баффов по 1 FA, среди них Song of Wind 268 и Song of Vitality 304 — их в списке не было)
 const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 5], 1357: ['Prophecy of Water', 5], 1355: ['Prophecy of Wind', 5], 1413: ["Magnus' Chant", 5], 1414: ["Victories of Pa'agrio", 5], 1323: ['Noblesse Blessing', 5],
-  4703: ['Дар Серафима (откат −30 %)', 1], 273: ['Dance of Mystic', 1], 365: ['Dance of Siren', 1], 1303: ['Wild Magic', 1], 264: ['Song of Earth', 1], 267: ['Song of Warding', 1], 1389: ['Великий щит', 1], 1059: ['M.Atk ↑', 1], 1085: ['Cast.Spd ↑', 1], 276: ['Dance of Concentration', 1] };
+  4703: ['Дар Серафима (откат −30 %)', 1], 273: ['Dance of Mystic', 1], 365: ['Dance of Siren', 1], 1303: ['Wild Magic', 1], 264: ['Song of Earth', 1], 267: ['Song of Warding', 1], 1389: ['Великий щит', 1], 1059: ['M.Atk ↑', 1], 1085: ['Cast.Spd ↑', 1], 276: ['Dance of Concentration', 1],
+  268: ['Song of Wind', 1], 304: ['Song of Vitality', 1] };
 const faCost = id => rt.faCat?.[id]?.cost || FA_KNOWN[id]?.[1] || 1;
 function faWanted(...args) { return L2V7Modules.buffs.faWanted(...args); }
 function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args); }
@@ -1409,7 +1411,9 @@ async function townBuffStart(...args) { return L2V7Modules.buffs.townBuffStart(.
 async function townBuffStep(...args) { return L2V7Modules.buffs.townBuffStep(...args); }
 
 async function rest(...args) { return L2V7Modules.resources.rest(...args); }
-const fmtT = sec => !isFinite(sec) ? '∞' : `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+// 8.0.3 (лог 11.10 10:13:25 «РБ HP 704k ≈6:60», 09:59:54 «до опасного HP ≈-1:-1»): секунды округлялись отдельно от минут (419,6 с →
+// «6:60»), отрицательное не обрезалось. Теперь сначала округляем всё время, меньше нуля — «0:00» (уже)
+const fmtT = sec => { if (!isFinite(sec)) return '∞'; const s = Math.max(0, Math.round(sec)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
 // перейти на страницу спавна и кликнуть его строку (через обработчик карты)
 async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...args); }
@@ -2862,6 +2866,9 @@ function logCooldownApi(d, path) {
   if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: fields });
 }
 const netOutage = { failures: [], successes: [], since: 0, last: 0 };
+// 8.0.3: отметка «сервер завис в бою» (ход без ответа > 8 с, «нет ответа игры 20 с», серия 5xx) — в sessionStorage вкладки: смерть сразу после неё
+// не пишется как «не по силам» (survival.onDeath читает l2bot.srvHang)
+const srvHangMark = why => { try { sessionStorage.setItem('l2bot.srvHang', JSON.stringify({ t: Date.now(), why: String(why || '').slice(0, 60) })); } catch (e) {} };
 function observeGameHttp(path, status, now = Date.now()) {
   if (!/^\/(game|character)(?:\/|$)/.test(path)) return;
   const code = Number(status);
@@ -2872,6 +2879,7 @@ function observeGameHttp(path, status, now = Date.now()) {
     if (!netOutage.since && netOutage.failures.length >= 3 &&
         new Set(netOutage.failures.map(x => x.path)).size >= 2) {
       netOutage.since = now;
+      srvHangMark('сбой ответов сервера (5xx)');   // 8.0.3: смерть в бою сразу после — не «не по силам» (survival.onDeath)
       rec('S', 'сервер', 'Несколько API одновременно возвращают 5xx — приостанавливаю действия до восстановления');
     }
   } else if (code >= 200 && code < 300 && netOutage.since) {
@@ -2951,6 +2959,11 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
+  // 8.0.3 (лог 11.10 10:32:17: «POST /game/battle/action → 409 · 28586 мс», через 1 с — смерть у Барды): ответ на ход дольше 8 с — сервер
+  // висел; отметка во вкладке (переживает перезагрузку) — смерть в ближайшие 60 с не «не по силам» (survival.onDeath)
+  if (path === '/game/battle/action' && +d.ms > 8000) srvHangMark(`ответ на ход ${Math.round(d.ms / 1000)} с`);
+  // 8.0.3 (лог 11.10 11:44:46): «Вернуться в город» нажато (ботом или игроком, и при остановленном боте) — герой воскрешён (survival.reviveStep)
+  if (path === '/game/battle/return-to-town' && d.status >= 200 && d.status < 300) try { sessionStorage.setItem('l2bot.toTown', String(Date.now())); } catch (e) {}
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
@@ -3402,7 +3415,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },

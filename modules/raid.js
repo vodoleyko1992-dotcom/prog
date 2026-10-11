@@ -78,18 +78,27 @@ function rbSpM() {
 }
 // 8.0.3 (эпики): dpsOver — свой ДПС по этому боссу (эпики: осторожная оценка до первого замера), hpOver — макс. HP героя, известное
 // вызывающему (у эпиков без него вердикт «неизвестно» — запасные 6000 HP решать не должны: на 6000 Королева «по силам»)
+// 8.0.3 (лог 11.10 11:42–11:44, Орфен): эпик — l2dop_rb_290xx, есть в списке эпиков / epicDb или игра назвала его kind 'epic'
+const isEpicId = id => /^l2dop_rb_290\d\d$/i.test(String(id || '')) || !!env.epicById?.(id) || env.rt.rbStats?.[id]?.kind === 'epic'
+  || Object.values(env.rt.epicDb || {}).some(e => e && e.id === id);
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {};
-  const k = env.rt.rbK || 0.109, base = Math.max(0, st.patk || 0) * k;
+  const k = env.rt.rbK || 0.109, base0 = Math.max(0, st.patk || 0) * k;
+  // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
+  // «обычный ≈218» (rbK выучен на обычных РБ). У эпика, пока на нём нет своего замера (hitP90), обычный удар ≈0,7 × max(P.Atk, M.Atk),
+  // разброс ×1,1, потеря ≈ удар раз в 4 с (реально ≈650 HP/с: удар раз в 1,6–2,5 с, ≈60 % попаданий)
+  const epic = isEpicId(id), epicHit = epic ? (historical.hitP90 > 0 ? historical.hitP90 : 0.7 * Math.max(st.patk || 0, st.matk || 0)) : 0;
+  const base = Math.max(base0, epicHit);
   const curHp = st.hpExact ? st.hp || 0 : Math.min(st.hp || 0, env.rt.rb?.[id]?.hpAfter || st.hp || 0);   // 8.0.3: эпики передают HP сами (свежесть раны — epicWoundHp)
   const dps = Math.max(1, dpsOver || env.rt.rbDps || 1150), t = curHp / dps;
   const pot = env.potModel(), pool = pot?.pool || 0;
-  const p90 = historical.hitP90 || historical.p90 || Math.max(150, base * 1.65);
+  const p90 = historical.hitP90 || historical.p90 || (epic ? Math.max(150, base * 1.1) : Math.max(150, base * 1.65));
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
-  const sp = historical.sp > 0 ? historical.sp : Math.max(base * rbSpK(), (st.matk || 0) * rbSpM());
+  const sp = historical.sp > 0 ? historical.sp : Math.max(base0 * rbSpK(), (st.matk || 0) * rbSpM());
   const measured = historical.sp > 0;
-  const loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  let loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  if (epic && !(env.rt.rbStats?.[id]?.loss > 0)) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
   const need = loss * t;
   const potRate = pot?.rate || 0;
   const info = `спецудар ${Math.round(sp)} HP${measured ? ' (из боёв)' : ' (оценка)'}, обычный ≈${Math.round(base)}, ` +
@@ -170,7 +179,7 @@ async function rbInfoNote(id, j, from = 'api') {
   const ad = drops.find(d => d.kind === 'adena');
   const top = env.epicById?.(id) ? drops.filter(d => d.kind !== 'adena').sort((a, b) => (+b.chance || 0) - (+a.chance || 0)).slice(0, 3)
     .map(d => ({ n: String(d.displayName || d.name || d.l2ItemId || '').slice(0, 40), c: +d.chance || 0 })) : null;
-  const st = { ...have, hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api', from,
+  const st = { ...have, hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api', from, ...(j.kind ? { kind: String(j.kind).slice(0, 12) } : {}),
     ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}),
     ...(+j.rewardExp > 0 ? { exp: +j.rewardExp } : {}), ...(+j.rewardSp > 0 ? { sp: +j.rewardSp } : {}), ...(top?.length ? { top } : {}),
     ...(typeof j.canAttackRaidBoss === 'boolean' ? { canAttack: j.canAttackRaidBoss } : {}), ...(+j.minRaidBossLevelForAttack > 0 ? { minLvl: +j.minRaidBossLevelForAttack } : {}) };
@@ -720,6 +729,9 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
     env.rbNote(S.id, { sp: Math.max(db.sp || 0, S.sp || 0), hitP90: Math.max(db.hitP90 || 0, p90) });
   }
   const st = env.rt.rbStats?.[S.id];
+  // 8.0.3: удары эпика (Орфен k ≈0,65 против ≈0,056 у обычных РБ) общий rbK не учат — иначе «обычный удар» всех РБ вырос бы в 3–5 раз
+  // и тур браковал бы почти всех; свои hitP90/sp эпика в базу пишутся как раньше (по ним его вердикт)
+  if (st?.patk && (S.hits?.length || 0) >= 12 && !S.kDone && isEpicId(S.id)) S.kDone = 1;
   if (st?.patk && (S.hits?.length || 0) >= 12 && !S.kDone) {
     S.kDone = 1;
     const h = [...S.hits].sort((a, b) => a - b)[S.hits.length >> 1], k = h / st.patk;
@@ -772,8 +784,8 @@ function rbAssess(ctx, me, mob) {
   // оценка брала удар ×0,876 (≈220 HP/с у Берун 50 ур.), а реально с критами и спецударами уходило 300–600 HP/с — две смерти
   const stL = env.rt.rbStats?.[S.id];
   if (dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
-    S.lossT = now; const k = loss / stL.patk;
-    env.setRt({ rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss ? stL.loss * 0.6 + loss * 0.4 : loss) } } });
+    S.lossT = now; const k = loss / stL.patk, epicL = isEpicId(S.id);   // 8.0.3: потери на эпике — только в его цифры, не в общий rbLossK
+    env.setRt({ ...(epicL ? {} : { rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4) }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss ? stL.loss * 0.6 + loss * 0.4 : loss) } } });
   }
   const tKill = dps > 0 ? mob.cur / dps : Infinity;
   const B = me.cur - me.max * env.cfg.stopHp / 100;              // запас HP до аварийного порога
@@ -859,13 +871,33 @@ function rbAssess(ctx, me, mob) {
   return { retreat: false };
 }
 
-async function rbRetreat(ctx, mob, why) {
+// 8.0.3 (лог 11.10 11:42–11:44, Орфен — оба боя начал игрок): удар 2508–2885 = 40–57 % HP героя, бот «из боя уйти нельзя, бьюсь до
+// конца» — две смерти за 2 мин (вторая сняла купленный бафф), хотя выход из боя работает (POST /game/battle/leave → 200 в 11:41:53,
+// 11:42:05). Аварийное правило в бою с боссом: замеренный удар (обычный, спецудар или скачок HP за ≈1 с; и из прошлых боёв с ним)
+// ≥ 45 % макс. HP, а HP меньше двух таких — kind 'strong'; ≥ 35 % и следующий удар убьёт (HP ≤ удар × 1,15) — kind 'brink'.
+// Босс почти добит (≤ 5 % HP) — добиваем. Возвращает { kind, worst, pct, why } или null
+function rbFlee(ctx, me, mob) {
+  const S = ctx?.rb; if (!S || !(me?.max > 0) || !(me.cur > 0) || !(mob?.max > 0) || mob.cur <= mob.max * 0.05) return null;
+  try { rbLearn(ctx); } catch (e) {}
+  const d = env.rt.rbDb?.[S.id] || {};
+  const worst = Math.round(Math.max(0, ...(S.hits || []), S.sp || 0, S.lethal || 0, d.sp || 0, d.hitP90 || 0));
+  if (!worst) return null;
+  const pct = worst / me.max, strong = pct >= 0.45 && me.cur < 2 * worst, brink = !strong && pct >= 0.35 && me.cur <= worst * 1.15;
+  if (!strong && !brink) return null;
+  return { kind: strong ? 'strong' : 'brink', worst, pct: Math.round(pct * 100),
+    why: `удар ${worst} HP = ${Math.round(pct * 100)} % моего макс. HP, у меня ${me.cur} — ${strong ? 'двух таких ударов я не переживу' : 'следующий удар убьёт'}` };
+}
+
+// verdict (8.0.3, аварийный выход rbFlee): 'no' — «не по силам» до нового уровня героя, 'skip' — пропуск 30 мин; оба — без возврата
+// к нему после отдыха (rbPending), обычный отход (без verdict) — как раньше
+async function rbRetreat(ctx, mob, why, verdict) {
   const prev = env.rt.rb?.[ctx.rb.id] || { attempts: 0 };
   const rec = { ...prev, name: ctx.name, max: mob.max, hpAfter: mob.cur, chip: ctx.rb.start - mob.cur,
                 attempts: prev.attempts + 1, t: Date.now() };
-  await env.setRt({ rb: { ...(env.rt.rb || {}), [ctx.rb.id]: rec }, target: null, rbPending: true });
-  await rbNote(ctx.rb.id, { verdict: env.rt.rbDb?.[ctx.rb.id]?.verdict === 'ok' ? 'ok' : 'chip',
-                            note: `отход: снято ${rec.chip}, у него ${mob.cur}/${mob.max}${ctx.rb.stat ? ' · ' + ctx.rb.stat : ''}` });
+  await env.setRt({ rb: { ...(env.rt.rb || {}), [ctx.rb.id]: rec }, target: null, rbPending: !verdict,
+    ...(verdict ? { rbPreSkip: { ...(env.rt.rbPreSkip || {}), [ctx.rb.id]: { t: Date.now(), kind: 'strong' } } } : {}) });
+  await rbNote(ctx.rb.id, { verdict: verdict === 'no' ? 'no' : env.rt.rbDb?.[ctx.rb.id]?.verdict === 'ok' ? 'ok' : 'chip',
+                            note: `${verdict ? 'аварийный выход: ' + why + ' · ' : ''}отход: снято ${rec.chip}, у него ${mob.cur}/${mob.max}${ctx.rb.stat ? ' · ' + ctx.rb.stat : ''}` });
   env.setStatus(`РБ ${ctx.name}: ${why} · снято ${rec.chip}, у него ${mob.cur}/${mob.max}`);
   console.log(env.TAG, `РБ ${ctx.name}: ${why}`, rec);
   await env.sleep(env.rnd(300, 700));
@@ -902,6 +934,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { isEpicId, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
