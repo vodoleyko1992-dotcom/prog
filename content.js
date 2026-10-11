@@ -3142,8 +3142,11 @@ addEventListener('message', e => {
   } catch (er) {}
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
     const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, t: Date.now() } }); }
-  if (/\/game\/tvt\/(combat\/sync|target)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
+  if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
+  // 9.2 (лог 11.10 03:00): павший враг — по ответу удара (targetDead) или отказу выбрать цель (tvt_target_dead), см. tvt.tvtDeadNote
+  if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
+  if (path === '/game/tvt/target' && d.res?.error === 'tvt_target_dead') L2V7Modules.tvt.tvtDeadNote(d.req?.targetCharacterId);
   if (Array.isArray(d.sp) && d.sp.length && !document.prerendering) netSpawns(d.sp).catch(er => console.warn(TAG, 'spawns', er));
   if (d.res?.error && /\/game\/(battle|dungeon)\//.test(path)) NET_ERR = { t: Date.now(), err: d.res.error, path };   // v5.3.1: ответ «battle_too_far» и т.п.
   // v5.6.4: серверный GCD + индивидуальные откаты учитываются раздельно.
