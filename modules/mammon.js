@@ -1,6 +1,7 @@
 /* L2wap 9.0: Маммон — заказы торговца и цель «копить на улучшение у кузнеца».
    Все действия в игре — нажатиями на страницах игры (как у игрока); свои запросы — только GET (env.gameGet, с токеном страницы).
-   Coin of Luck бот не тратит никогда: само улучшение у кузнеца жмёт игрок. */
+   Coin of Luck бот не тратит, кроме одного случая: 9.2.5 (игрок 12.10: «полностью разрешаю функцию прокачки ЛВЛ вещей, выбранных
+   в настройках у Маммона, не смотря на цену в колах») — улучшение у кузнеца вещи-цели до выбранного уровня (cfg.mmUpgrade). */
 (function (root) {
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
@@ -11,6 +12,7 @@
 // Список улучшений кузнеца (GET /game/mammon/blacksmith/upgrades) сервер отдаёт только рядом с ним, иначе 403 mammon_blacksmith_not_nearby
 const NEAR = 12000 * 0.9;                       // радиус NPC с карты (mapRadii.npcInteractionRadius 12000), с запасом
 const POLL = 90000, NPC_POLL = 30 * 60000, JOB_MAX = 4 * 60000, SMITH_EVERY = 6 * 3600000;
+const COL_ID = 4037, UP_RETRY = 30 * 60000;          // 9.2.5: Coin of Luck; повтор улучшения после неудачи
 const PAGE = { order: '/mammon-merchant.html', smith: '/mammon-blacksmith.html' };
 const LOC = { order: '/mammon-merchant-loc.html', smith: '/mammon-blacksmith-loc.html' };
 const STATE = { order: ['/game/mammon/merchant', 'mammonMerchant'], smith: ['/game/mammon/blacksmith', 'mammonBlacksmith'] };
@@ -217,7 +219,7 @@ function goalNote() {                             // раз на изменен�
   else if (p.noCost && !P?.lv.some(x => !x.unk)) st = p.owned ? `${p.name} Lv.${p.lvl} → Lv.${p.lvl + 1}: цены неизвестны — узнаю у кузнеца` : `${p.name}: у героя этой вещи не вижу — кузнец покажет цены, только когда она будет в сумке или надета`;
   else {
     const miss = P.raw.filter(r => r.miss > 0), f = mmFarmGoal();
-    const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — улучшение жмёшь сам у кузнеца. ` : '';
+    const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — ${env.cfg.mmUpgrade !== false ? 'лечу к кузнецу улучшать' : 'улучшение жмёшь сам у кузнеца'}. ` : '';
     st = next + (P.ready ? `✅ наперёд до Lv.${P.to} собрано всё: ${fmtA(P.a)} адены + ${P.col} Coin of Luck`
       : !miss.length ? `${p.name} до Lv.${P.to}: сырьё есть${P.craft.length ? ', осталось скрафтить: ' + P.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') : ''}`
       : `${p.name} Lv.${p.lvl} → Lv.${P.to}: наперёд не хватает ${short(miss)}` + (f ? ` · добываю ${f.name}` : ' · в базе фарма источников нет'))
@@ -244,6 +246,10 @@ function want() {
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
   if (env.rt.mmSmithReq) return { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)' };
   const p = env.cfg.mmGoalItem ? goalPlan() : null;
+  // 9.2.5: всё на следующий уровень собрано (материалы по сумке, Coin of Luck — если сумка его знает) — летим улучшать. После неудачи — не чаще раза в 30 мин
+  const colHave = haveOf(COL_ID);
+  if (p && !p.done && p.ready && env.cfg.mmUpgrade !== false && (colHave == null || colHave >= (p.col || 0)) && (haveOf(57) == null || haveOf(57) >= (p.a || 0)) && now - (env.rt.mmUpT || 0) > UP_RETRY)
+    return { kind: 'smith', up: true, id: `up:${p.id}:${p.lvl}`, why: `улучшить ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
 }
@@ -255,9 +261,9 @@ async function isNear(kind) {
 }
 async function finish(J, ok, why) {
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
-  env.rec('B', 'Маммон', `${J.kind === 'order' ? 'заказ' : 'кузнец'}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
+  env.rec('B', 'Маммон', `${J.kind === 'order' ? 'заказ' : J.up ? 'улучшение' : 'кузнец'}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку' }, zoneGoT: 0 } : {};
-  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...back });
+  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}), ...back });
   if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function teleport(J) {                      // страница телепорта к NPC: цена → кнопка → карта
@@ -295,8 +301,44 @@ async function claim(J) {
 async function smith(J) {
   const r = await getJson('/game/mammon/blacksmith/upgrades');
   if (!r.ok) return finish(J, false, r.status === 403 ? 'кузнец не рядом' : `список улучшений не получен (HTTP ${r.status})`);
+  if (J.up) return upgrade(J, r.j?.items);
   const n = smithNote(r.j?.items);
   return finish(J, true, `цены прочитаны: вещей ${n}${(r.j?.items || []).filter(i => !i.max && i.cost).map(i => ` · ${i.nameUk} Lv.${i.level}→${i.level + 1}: ${fmtA(i.cost.adena)} адены, ${i.cost.coinOfLuck} CoL, ${(i.cost.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`).join('')}`);
+}
+// 9.2.5 (игрок 12.10: «полностью разрешаю функцию прокачки ЛВЛ вещей, выбранных в настройках у мамона, не смотря на цену в колах»):
+// улучшение вещи-цели у кузнеца — кнопкой «Покращити до Lv.N» на его странице (как игрок; ревизию берёт сама страница). Только вещь из
+// настроек (cfg.mmGoalItem), только до выбранного уровня (cfg.mmGoalLvl), по одному уровню за поход, только если игра пишет «хватает»
+// (canAfford). Coin of Luck тратится только здесь
+const upItem = (items, id) => (Array.isArray(items) ? items : []).find(i => +i.itemId === id) || null;
+const upMiss = i => [...(+i.cost?.adenaOwned < +i.cost?.adena ? [`адены ${fmtA(i.cost.adena - i.cost.adenaOwned)}`] : []),
+  ...(+i.cost?.coinOfLuckOwned < +i.cost?.coinOfLuck ? [`Coin of Luck ${i.cost.coinOfLuck - i.cost.coinOfLuckOwned}`] : []),
+  ...(i.cost?.materials || []).filter(m => m.enough === false || +m.owned < +m.required).map(m => `${m.nameUk} ${(+m.required || 0) - (+m.owned || 0)}`)].join(', ');
+async function upgrade(J, items) {
+  smithNote(items);
+  const id = +env.cfg.mmGoalItem || 0, to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), it = upItem(items, id);
+  if (!id || env.cfg.mmUpgrade === false) return finish(J, false, 'улучшение выключено');
+  if (!it) return finish(J, false, 'вещи-цели нет у кузнеца в списке (не в сумке и не надета?)');
+  const L = +it.level || 0, nm = String(it.nameUk || `#${id}`);
+  if (J.clicked != null && L > J.clicked) return finish(J, true, `${nm}: Lv.${J.clicked} → Lv.${L} (Coin of Luck ${J.col ?? '?'})`);
+  if (it.max || L >= to) return finish(J, true, `${nm} уже Lv.${L} — цель Lv.${to} достигнута`);
+  if (J.clicked != null && J.clicked === L && J.tries >= 2) return finish(J, false, `${nm}: после нажатия уровень не вырос (Lv.${L}) ${(env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim().slice(0, 80)}`);
+  if (!it.canAfford) return finish(J, false, `${nm} Lv.${L} → ${L + 1}: не хватает ${upMiss(it) || 'чего-то (игра пишет «не хватает»)'}`);
+  if (location.pathname !== PAGE.smith) { env.setStatus(`Маммон: улучшаю ${nm} у кузнеца`); location.href = PAGE.smith; await env.sleep(4000); return; }
+  const card = await env.waitX(() => [...document.querySelectorAll('.l2-mammon-upgrade-card')].find(c =>
+    (c.querySelector('.l2-mammon-upgrade-card__name')?.textContent || '').trim() === nm && new RegExp(`Lv\\.?\\s*${L}\\b`).test(c.querySelector('.l2-mammon-upgrade-card__level')?.textContent || '')) || null, 10000, 200);
+  const btn = card?.querySelector('.l2-mammon-upgrade-card__btn');
+  if (!btn) return finish(J, false, `${nm} Lv.${L}: карточки улучшения на странице кузнеца нет`);
+  if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
+  const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
+  await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
+  env.rec('B', 'Маммон', `улучшение: жму «${(btn.textContent || '').trim()}» — ${nm}, ${fmtA(a)} адены + ${col} Coin of Luck + ${(it.cost?.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`);
+  try { document.documentElement.dataset.l2botConfirm = String(Date.now()); } catch (e) {}   // окно «точно?» игры — «да» (hook.js, 5 с)
+  env.fire(btn);
+  await env.waitX(() => (env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim() || null, 6000, 200);
+  await env.sleep(500);
+  const r2 = await getJson('/game/mammon/blacksmith/upgrades'), it2 = r2.ok ? upItem(r2.j?.items, id) : null;
+  if (it2 && +it2.level > L) { smithNote(r2.j?.items); return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`); }
+  // уровень не подтвердился — следующий круг цикла перечитает список (J.clicked) и решит: вырос / ещё попытка / неудача
 }
 // 9.0: шаг в главном цикле. true — занят Маммоном (цикл идёт на следующий круг)
 async function mmStep() {
@@ -321,6 +363,6 @@ async function mmStep() {
   env.rec('B', 'Маммон', `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

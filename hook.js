@@ -88,6 +88,16 @@
     const oalert = window.alert;
     window.alert = function (msg) { try { console.warn('[l2bot] окно игры:', msg); window.postMessage({ __l2bot: 'alert', text: String(msg ?? '').slice(0, 300), path: location.pathname }, location.origin); } catch (e) { return oalert.apply(this, arguments); } };
   }
+  // 9.2.5: если кузнец Маммона спросит «точно улучшить?» окном confirm() — «да» только сразу после нажатия бота (метка data-l2bot-confirm
+  // на <html> ставит mammon.upgrade, живёт 5 с); любой другой confirm — обычное окно игроку
+  if (location.pathname === '/mammon-blacksmith.html') {
+    const oconfirm = window.confirm;
+    window.confirm = function (msg) {
+      const h = document.documentElement, t = +(h?.dataset?.l2botConfirm || 0);
+      if (t && Date.now() - t < 5000) { delete h.dataset.l2botConfirm; try { window.postMessage({ __l2bot: 'alert', text: 'подтверждено: ' + String(msg ?? '').slice(0, 280), path: location.pathname }, location.origin); } catch (e) {} return true; }
+      return oconfirm.apply(this, arguments);
+    };
+  }
 
   // 8.0.3 (логи 11.10: 1302 потерянных нажатия за 10 боёв с РБ): пока игра ждёт свой GET /character (уходит ≈8 мс после ответа на ход,
   // идёт 0,25–0,56 с) и ≈30 мс после — клик по панели игра молча теряет. Боту нужны начало и конец этих запросов (rid, путь без query)
