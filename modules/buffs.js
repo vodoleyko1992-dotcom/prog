@@ -193,7 +193,10 @@ function tbDowngrade(set, H) {                     // какие активны�
 }
 let tbDownLogT = 0;
 function townBuffNeed() {                          // что взять: { set, fa: [id…] } или null
-  const set = env.cfg.townBuffSet || 'basic';
+  let set = env.cfg.townBuffSet || 'basic';
+  // 8.0.3 (эпики): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах лимита Coin of Luck на эпиков, иначе
+  // бесплатный «Звичайний баф». Признак — состояние эпика (rt.epic), поэтому и в «Восстановить», и после смерти; для РБ выбор не меняется
+  if ((set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
   const H = hudBuffs();
   if (!H || set === 'off' && !(env.cfg.faBuffs || '').trim()) return null;
   const soon = id => !H[id] || H[id] - Date.now() < 10 * 60000;
@@ -228,9 +231,11 @@ function faWanted() {
   const sessWant = S?.bought ? sess.filter(id => id === 1323 && env.cfg.rbSessNob !== false) : sess;
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
-  let H = {}; if (env.cfg.rbMode || env.cfg.rbHuntMode) try { H = hudBuffs() || {}; } catch (e) {}
+  // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA
+  const bossOn = !!(env.cfg.rbMode || env.cfg.rbHuntMode || (env.cfg.epicMode && env.rt.epic?.k && env.rt.epic.step !== 'pick'));
+  let H = {}; if (bossOn) try { H = hudBuffs() || {}; } catch (e) {}
   const paidUp = Object.keys(H).some(id => +id !== 1323 && (env.FA_KNOWN?.[id]?.[1] || 0) >= 5 && H[id] - now > 10 * 60000);
-  const nob = paidUp && (env.cfg.rbMode || env.cfg.rbHuntMode) && env.cfg.rbSessNob !== false ? [1323] : [];
+  const nob = paidUp && bossOn && env.cfg.rbSessNob !== false ? [1323] : [];
   let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
   if (bal != null && ids.length && bal < Math.min(...ids.map(env.faCost))) return [];   // FA точно не хватит ни на один — не ходим
@@ -325,13 +330,16 @@ async function townBuffStep() {
   }
   if (st.step === 'town') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
-    env.setStatus(`Бафф: городской баффер (${st.set})`);
-    const btn = await env.waitX(() => env.$q(`#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="${st.set}"]`), 10000, 200);
-    if (!btn) return done(`баффер не открылся (${env.shown(env.$q('#town-buffer-load-err')) ? env.$q('#town-buffer-load-err').textContent.trim().slice(0, 80) : 'нет кнопки'})`);
     if (st.set !== 'basic' && !['warrior', 'mage'].includes(env.cfg.townBuffSet)) return done('платный бафф не выбран в меню — пропускаю');
+    // 8.0.3 (эпики): платный набор во время эпика — резерв в бюджете Coin of Luck до нажатия; не разрешён — бесплатный «basic»
+    let set = st.set;
+    if (set !== 'basic' && (await env.epicBuffPay?.(set)) === false) set = 'basic';
+    env.setStatus(`Бафф: городской баффер (${set})`);
+    const btn = await env.waitX(() => env.$q(`#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="${set}"]`), 10000, 200);
+    if (!btn) return done(`баффер не открылся (${env.shown(env.$q('#town-buffer-load-err')) ? env.$q('#town-buffer-load-err').textContent.trim().slice(0, 80) : 'нет кнопки'})`);
     tbLevelsNote();
-    const dn = tbDowngrade(st.set, hudBuffs() || {});
-    if (dn.length) return done(`городской набор «${st.set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
+    const dn = tbDowngrade(set, hudBuffs() || {});
+    if (dn.length) return done(`городской набор «${set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
     const H0 = hudBuffs() || {};
     await env.pause(); env.fire(btn);
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
@@ -340,7 +348,7 @@ async function townBuffStep() {
       await env.waitX(() => Object.keys(hudBuffs() || {}).some(id => !(id in H0) || (hudBuffs()[id] || 0) > (H0[id] || 0) + 60000), 3000, 200);
       const H1 = hudBuffs() || {}, got = Object.keys(H1).map(Number).filter(id => H1[id] !== Infinity && (!(id in H0) || H1[id] > (H0[id] || 0) + 60000) && !faWanted().includes(id));
       await env.setRt({ hudLong: {} });
-      if (got.length) await env.setRt({ tbSetIds: { ...(env.rt.tbSetIds || {}), [st.set]: [...new Set([...(env.rt.tbSetIds?.[st.set] || []), ...got])] } });
+      if (got.length) await env.setRt({ tbSetIds: { ...(env.rt.tbSetIds || {}), [set]: [...new Set([...(env.rt.tbSetIds?.[set] || []), ...got])] } });
     }
     const fail = !ok && res().replace(/\s+/g, ' ').trim().slice(0, 100);
     if (!ok && (env.DEAD_RE.test(res()) || env.DEAD_RE.test(env.$q('#town-buffer-msg')?.textContent || '') || !res().trim())) {
@@ -349,7 +357,7 @@ async function townBuffStep() {
     }
     const cl = env.$q('#town-buffer-result-overlay [class*="close"], #town-buffer-result-overlay');   // закрыть окно результата
     if (ok && cl) { try { env.fire(cl); } catch (e) {} }
-    env.rec('B', 'бафф', ok ? `городской «${st.set}» — наложен` : `городской «${st.set}»: ${fail || 'без подтверждения'}`);
+    env.rec('B', 'бафф', ok ? `городской «${set}» — наложен` : `городской «${set}»: ${fail || 'без подтверждения'}`);
     await env.setRt({ tbOk: !!ok });
     if (st.fa?.length) { await env.setRt({ tbuff: { ...st, step: 'fa' } }); location.href = '/fast-aden-buffer.html'; await env.sleep(4000); return; }
     return done('готово — возвращаюсь');

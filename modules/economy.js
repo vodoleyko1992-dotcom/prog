@@ -156,7 +156,11 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на отк
       // Строка не того грейда (вкладка не переключилась) — не покупаем: так раньше брались NG-заряды вместо D
       const rg = ((String(row.className || '').match(/l2-gm-shop-row--grade-(\w+)/) || [])[1] || '');
       if (it.grade && rg && rg.toUpperCase() !== String(it.grade).toUpperCase()) return { ok: false, why: `в списке грейд ${rg.toUpperCase()}, а нужен ${it.grade} — не покупаю` };
-      const unit = +((row.querySelector('.l2-gm-shop-price')?.textContent || '').replace(/\D/g, '') || 0);
+      // 8.0.3 (эпики, разбор 11.10): Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). Товар с ценой в Coin of Luck
+      // (шлемы B в gm-shop — по 30 CoL) бот не покупает никогда: проверка по тексту цены и подписи значка валюты
+      const prEl = row.querySelector('.l2-gm-shop-price'), prTxt = [prEl?.textContent, ...[...(prEl?.querySelectorAll?.('img, [title]') || [])].map(i => i.getAttribute?.('alt') || i.getAttribute?.('title') || '')].join(' ');
+      if (/coin|luck|монет|удач/i.test(prTxt)) return { ok: false, why: 'цена в Coin of Luck — бот донат не тратит' };
+      const unit = +((prEl?.textContent || '').replace(/\D/g, '') || 0);
       if (!unit) return { ok: false, why: 'цена не прочитана — не покупаю (резерв и лимит не проверить)' };   // v5.6
       const money = shopAdena() - (env.cfg.shopReserve ?? 200000), cap = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
       if (cap <= 0) return { ok: false, why: money < unit ? `не хватает адены (резерв ${(env.cfg.shopReserve ?? 200000).toLocaleString('ru')})` : 'исчерпан лимит трат за раз' };

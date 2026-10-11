@@ -84,12 +84,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
 const BOOL = ['rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const DEF = { farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: false, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -183,12 +183,7 @@ async function load() {
   paintModes(d, on);
   paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
-  { const E = rt.epic || {}, db = rt.epicDb || {}, NM = { ak: 'АК', core: 'Ядро', orfen: 'Орфен', baium: 'Баюм', valakas: 'Валакас', antharas: 'Антарас', frintezza: 'Фринтеза', zaken: 'Закен' };
-    const ST = { pick: 'выбор цели', prep: 'банки, бафф, хил', go: 'полёт', arrive: 'ищу на карте', fight: 'бой' };
-    const L = E.hpLog || [], last = L[L.length - 1];
-    $('epicBox').textContent = (d.epicMode ? '▶ Идёт' : '■ Выключено') + (E.step ? ' · ' + (ST[E.step] || E.step) : '') + (E.name && E.step !== 'pick' ? `: ${E.name}` : '')
-      + (E.deaths ? ` · смертей ${E.deaths}` : '') + (last?.max ? ` · у него ${Math.round(last.cur / last.max * 1000) / 10} %` : '') + (E.last ? `\n${E.last}` : '')
-      + (Object.keys(db).length ? '\n' + Object.entries(db).map(([k, x]) => `${NM[k] || k}: ${x.skipT > Date.now() ? '⏸ ' + (x.why || 'отложен') : x.alive === false ? '💀 ' + (x.status || '') : '✅ жив'}${x.kills ? ' · убит ' + x.kills + '×' : ''}`).join('\n') : ''); }
+  renderEpics(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', !!d.rbHuntMode);
   renderHunt(rt, d);
   renderRb(rt);
@@ -785,6 +780,42 @@ const faIds = () => ($('faBuffs').value || '').split(/[,\s]+/).map(x => +x).filt
 const faSet = async ids => { $('faBuffs').value = [...new Set(ids)].join(', '); await save({ target: $('faBuffs') }); };
 function faInfo(rt, id) { const c = rt.faCat?.[id]; return { name: c?.name || FA_KNOWN[id]?.[0] || 'skill ' + id, cost: c?.cost || FA_KNOWN[id]?.[1] || 1, known: !!c } }
 // 7.2.1: 🔥 РБ-сессия с баффом за FA — состав, цена, баланс, ход сессии
+// 8.0.3 (эпики, разбор 11.10): состояние режима + таблица эпиков (жив / мёртв до ~ЧЧ:ММ, по силам или нет и почему, как туда попасть
+// и сколько это стоит) + строка «Coin of Luck: лимит 0 — не тратить». Данные — rt.epicDb / rt.epicApi (ответ игры /game/epic-bosses)
+function renderEpics(rt, d) {
+  const E = rt.epic || {}, db = rt.epicDb || {}, A = rt.epicApi || {}, now = Date.now();
+  const EP = [['ak', 'Королева Муравьёв', 40], ['core', 'Ядро', 50], ['orfen', 'Орфен', 50], ['zaken', 'Закен', 60], ['baium', 'Баюм', 75], ['antharas', 'Антарас', 79], ['valakas', 'Валакас', 85], ['frintezza', 'Фринтеза', 90]];
+  const LAIR = { ak: 'ant_nest', core: 'cruma_tower', orfen: 'sea_of_spores', baium: 'tower_of_insolence', antharas: 'antharas_lair', zaken: 'devils_isle' };
+  const ST = { pick: 'выбор цели', prep: 'банки, бафф, хил', go: 'дорога', arrive: 'ищу на карте', fight: 'бой', retreatVerify: 'выход из боя' };
+  const hm = t => { if (!(t > 0)) return '?'; const x = new Date(t), s = String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0');
+    return Math.abs(t - now) > 20 * 3600000 ? `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')} ${s}` : s; };
+  const e = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const L = E.hpLog || [], last = L[L.length - 1];
+  $('epicBox').textContent = (d.epicMode ? '▶ Идёт' : '■ Выключено') + (E.step ? ' · ' + (ST[E.step] || E.step) : '') + (E.name && E.step !== 'pick' ? `: ${E.name}` : '')
+    + (E.deaths ? ` · смертей ${E.deaths}` : '') + (last?.max ? ` · у него ${Math.round(last.cur / last.max * 1000) / 10} %` : '') + (E.last ? `\n${E.last}` : '');
+  const lim = Math.max(0, Math.floor(+(d.epicCoinDailyMax ?? 0) || 0)), per = Math.max(0, Math.floor(+(d.epicCoinPerBoss ?? 1) || 0));
+  const recs = (rt.epicTpBudget || []).filter(x => x && x.t > now - 86400000), usedC = recs.filter(x => x.unit === 'Coin of Luck').reduce((a, x) => a + (+x.cost || 0), 0);
+  const now1 = x => x.alive === true ? '✅ жив' : x.alive === false ? (u => !u ? '💀 мёртв' : u.exact || !u.lo ? `💀 до ~${hm(u.hi)}` : `окно ${hm(u.lo)}–${hm(u.hi)}`)(x.until) : '❔';
+  const fit = x => { const v = x.verdict || {};
+    if (x.canAttack === false || v.v === 'level') return ['⛔ игра не пускает', x.deny || v.why];
+    return ({ strong: [`❌ спецудар ${v.spPct || '?'} %`, v.why], pots: ['⚠ банки', v.why], slow: ['⏳ долго', v.why], ok: ['✅', v.why] })[v.v] || ['❔ нет цифр', v.why || 'нажмите «Проверить эпиков»']; };
+  const way = (k, x) => {
+    if (x.seenZone && x.seenZone === rt.zone) return 'рядом — бесплатно';
+    if (x.col === 0 && x.adena === 0 && x.vipFree) return 'VIP — бесплатно';
+    const lair = x.seenZone || LAIR[k], lz = lair && rt.zoneCat?.[lair] && !(x.lairBadT > now - 6 * 3600000) ? `логово ≈${(+rt.zoneCat[lair].price || 0).toLocaleString('ru')} аден` : '';
+    const col = x.col > 0 ? (!lim ? `${x.col} CoL — запрещено (лимит 0)` : (x.paidN || 0) >= per ? `${x.col} CoL — уже ${x.paidN} за появление` : `${x.col} CoL (за 24 ч ${usedC}/${lim})`)
+      : x.adena > 0 ? `${x.adena.toLocaleString('ru')} аден` : x.col === 0 ? 'бесплатно' : '';
+    return [lz, col].filter(Boolean).join(' / ') || '❔'; };
+  const rows = EP.map(([k, nm, lv]) => { const x = db[k] || {}, f = fit(x);
+    return `<tr${E.k === k && E.step !== 'pick' ? ' class="cur"' : ''}><td>${e(nm)} (${x.lvl || lv})${x.skipT > now ? `<br><small>⏸ до ${hm(x.skipT)}: ${e(String(x.why || '').slice(0, 80))}</small>` : ''}</td>`
+      + `<td>${e(now1(x))}</td><td title="${e(f[1] || '')}">${e(f[0])}</td><td>${e(way(k, x))}</td></tr>`; }).join('');
+  $('epicTable').innerHTML = Object.keys(db).length ? `<table><tr><th>Эпик (ур.)</th><th>Сейчас</th><th>По силам?</th><th>Вход</th></tr>${rows}</table>`
+    : '<div class="hint">Пока пусто — нажмите «🔄 Проверить эпиков» (бот должен быть запущен)</div>';
+  $('epicSum').textContent = `Coin of Luck: ${lim ? `лимит ${lim} за 24 ч, не больше ${per} на появление эпика` : 'лимит 0 — не тратить'} · за 24 ч ${usedC}`
+    + (rt.colBal?.t ? ` · баланс ${rt.colBal.v} (${hm(rt.colBal.t)})` : '')
+    + (A.t ? ` · список с сервера ${hm(A.t)}${A.minLvl ? `, мин. уровень босса ${A.minLvl}` : ''}` : ' · список с сервера ещё не читали')
+    + (rt.epicScanReq ? ' · ⏳ проверка запрошена' : rt.epicScanT ? ` · проверка ${hm(rt.epicScanT)}` : '');
+}
 function renderRbSess(rt, d) {
   if (!$('rbSessBox')) return;
   const ids = String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0), S = rt.rbSess, now = Date.now();
@@ -1731,6 +1762,8 @@ async function epicToggle() {
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
 $('epicToggle2').onclick = epicToggle;
+// 8.0.3: «🔄 Проверить эпиков (бесплатно)» — только чтение с сервера, в любом режиме (на рыбалке — фоном, в бою — после боя)
+$('epicScan').onclick = async () => { try { await menuPatch({ epicScanReq: Date.now() }); toast('Проверка эпиков запрошена — итог в журнале и в таблице'); } catch (e) { toast(String(e.message || e)); } };
 document.querySelectorAll('.epicChk').forEach(c => c.addEventListener('change', () => {
   $('epicList').value = [...document.querySelectorAll('.epicChk')].filter(x => x.checked).map(x => x.dataset.epic).join(',');
   save({ target: $('epicList') });

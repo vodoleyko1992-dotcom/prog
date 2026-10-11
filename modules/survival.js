@@ -26,13 +26,16 @@ async function onDeath() {
   const deaths = [...(env.rt.deaths || []), Date.now()].filter(t => Date.now() - t < 30 * 60000);
   const rbId = env.rt.target?.rb ? env.rt.rbCur : (/^l2dop_rb_/i.test(new URLSearchParams(location.search).get('spawnId') || '') ? new URLSearchParams(location.search).get('spawnId') : null);
   const epicD = env.epicOn() && rbId && env.epicById(rbId);   // 🐉 смерть на эпике — не «не по силам», а конец захода: запомнить его HP
-  if (epicD) { const m = env.mobHp(); await env.setRt({ epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: Date.now(), cur: m?.cur ?? null, max: m?.max ?? null }] } }); }
+  if (epicD) { const m = env.mobHp(); await env.setRt({ epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: Date.now(), cur: m?.cur ?? null, max: m?.max ?? null }] } });
+    await env.epicDbSet(epicD.k, { deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 }); }   // 8.0.3: смерти за это появление эпика
   if (rbId && !epicD) await env.rbNote(rbId, { verdict: 'no', name: env.rt.rbDb?.[rbId]?.name || env.rt.rbSeen?.[rbId]?.name || env.mobName(), lvl: env.rt.rbDb?.[rbId]?.lvl || env.rt.rbSeen?.[rbId]?.lvl || 0, note: `убил героя ${new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` });
   await env.setRt({ deaths, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {} });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
   env.rec('B', 'смерть', `смертей за 30 мин: ${deaths.length}`);
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
-  // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме, а общий стоп — 20 смертей за час
-  if (env.epicOn() ? [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000).length >= 20 : deaths.length >= 3) return env.halt(env.epicOn() ? '20 смертей за час в фарме эпиков — бот остановлен' : '3 смерти за 30 минут — бот остановлен (проверьте уровень целей и настройки)');
+  // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат
+  // (rt.epic.step ≠ «выбор»): 2 × «смертей на эпика» (не больше 20) за час; между эпиками (фарм мобов) — обычные 3 за 30 мин
+  const epicNow = env.epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick', epicCap = Math.min(20, 2 * Math.max(1, +env.cfg.epicMaxDeaths || 3));
+  if (epicNow ? [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000).length >= epicCap : deaths.length >= 3) return env.halt(epicNow ? `${epicCap} смертей за час на эпиках — бот остановлен` : '3 смерти за 30 минут — бот остановлен (проверьте уровень целей и настройки)');
   if (env.epicOn()) await env.setRt({ deaths1h: [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000) });
   env.setStatus(`Персонаж погиб (${deaths.length}/3 за 30 мин) — в город`);
   await env.sleep(env.rnd(1500, 2500));
