@@ -1,4 +1,4 @@
-// ===== L2wap Bot v8.0.8 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v9.0.1 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -7,14 +7,14 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
-  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
+  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
   chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
@@ -648,14 +648,18 @@ function observeSlot(b, src) {
     const solo = lastObserve === before.t, petHit = added.some(l => /^Слуга\s*\[|Servitor\s*\[/i.test(l));
     const support = /^(?:(?:mass )?summon|servitor|transfer pain|heal\b|battle heal|cubic)/i.test(name) || ['Призыв', 'Дебафф', 'Бафф', 'Лечение'].includes(ilOf(b)?.c);
     let dmg = buff || support || isChargeName(name) || slotKind(b) === 'предмет' ? 0 : dmgFromLog(name, added, solo);
+    // 9.2: ответ сервера на этот ход уже разобран анализатором боя — его цифры точные (окно 0,9 с захватывает соседние ходы:
+    // лог 11.10 00:49:23 «Blaze: урон 3062 · HP +420» — это банка; 09.10 «Summon Kat» получил урон Vampiric Touch)
+    const ex = L2V7Modules.fightlab?.turnFor(key, before.t);
+    if (ex && !buff && !support && slotKind(b) !== 'предмет') dmg = ex.own;
     // запасной способ — падение HP моба, только если в окне не было других нажатий
     if (!dmg && !buff && !support && solo && !petHit && before.mob && mob && before.mob.cur > mob.cur) dmg = before.mob.cur - mob.cur;
     // мусорное число в логе («Force Burst: сила 1713488» при 2580 HP у моба) — урон не может быть больше ~1,5 HP моба:
     // берём реально снятые HP (v4.23)
     // v4.27: только явный мусор (>3× HP моба и >100 тыс.) — добивающий удар 4620 по мобу с 2388 HP настоящий
     if (dmg > 100000 && before.mob?.max && dmg > before.mob.max * 3) dmg = Math.max(0, before.mob.cur - (mob?.cur ?? before.mob.cur));
-    const mpd = before.mp && mp ? before.mp.cur - mp.cur : 0;
-    const hpd = before.me && me ? me.cur - before.me.cur : 0;
+    const mpd = ex && ex.mpd != null ? ex.mpd : before.mp && mp ? before.mp.cur - mp.cur : 0;
+    const hpd = ex ? ex.selfHeal : before.me && me ? me.cur - before.me.cur : 0;
     const stun = /оглуш|приголомш|stun/i.test(txt);
     const p = { name, uses: 0, usesU: 0, dmg: 0, dmgN: 0, mp: 0, mpN: 0, heal: 0, mpGain: 0, buffSec: 0, stun: 0,
                 ...(rt.skills?.[key] || {}) };
@@ -668,7 +672,7 @@ function observeSlot(b, src) {
     if (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0) fightNote(key, dmg);   // промахи атаки тоже считаем
     // массовые удары: урон по соседям («… поруч: Моб −N») — отдельно, для выбора удара, когда рядом 2–3 моба
     if (slotKind(b) === 'скилл' && dmg > 0) { const spl = splashDmg(added); p.spl = (p.spl || 0) + spl; p.splN = (p.splN || 0) + 1; if (spl) p.aoe = 1; }
-    if (solo && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
+    if ((solo || ex) && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
     if (mpd < -15) p.mpGain = Math.max(p.mpGain, -mpd);
     if (hpd > 15) p.heal = Math.max(p.heal, hpd);
     if (buff) p.buffSec = +buff[1];
@@ -1000,7 +1004,7 @@ async function absorb() {
   }
   // 7.1.30 (лог 14:11:56): строка того же моба БЕЗ ★ (другой спавн) стирала цель — «★ цели: нет», и бот улетел с локации.
   // Снимаем цель, только если на странице этот моб есть и ни одна его строка не со ★, и квест профессии его не требует
-  const open = rt.profQuest?.open || [];
+  const nq = rt.story?.noblesse, open = [...(rt.profQuest?.open || []), ...(nq?.active && !nq.completed ? (nq.targets || []).filter(t => t.have < t.need).map(t => String(t.name).toLowerCase()) : [])];   // 9.0: и цели квеста Noblesse (story.openNames)
   const gone = items => [...new Set(items.filter(i => !i.champ).map(i => i.name.toLowerCase()))]
     .filter(k => qs[k] && !open.includes(k) && !items.some(i => i.quest && i.name.toLowerCase() === k));
   // 8.0.3 (лог 11.10 11:45:50): «★ цели: нет» записалось за 0,2 с до ответов /game/story-quests/* — игра вешает ★ (--quest-target) на строки
@@ -2242,6 +2246,9 @@ async function main() {
       // поход к торговцу/кузнецу — вне боя и туров, с возвратом на точку охоты
       L2V7Modules.mammon.mmTick().catch(() => {});
       if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
+      // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
+      L2V7Modules.story.storyTick().catch(() => {});
+      if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -2987,7 +2994,7 @@ let pageLeaving = false;
 addEventListener('beforeunload', () => { pageLeaving = true; });
 addEventListener('pagehide', () => { pageLeaving = true; });
 addEventListener('pageshow', () => { pageLeaving = false; });
-const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|profession-quest|\/sync$|\/raid-bosses$/;
+const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|profession-quest|story-quests|\/sync$|\/raid-bosses$/;
 // 7.1.17: ходы боя по сети — ушёл / ответ пришёл. Лог 10.10 01:07: ответ на ход шёл 1,1–2,8 с, а бот жал следующее через 1 с —
 // игра такие нажатия не принимала («урон 0 · MP 0» ×6 подряд, бой с чемпионом 33 с). Теперь следующий ход — после ответа
 const ACT_NET = { start: 0, done: 0, t: 0 };
@@ -3067,8 +3074,14 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
+  // 9.0 (лог 12.10 01:08:30, Fairy Queen Timiniel 7 092 из 1,9 млн): ход → 400 «Немає активного бою» (battle_none / not_in_battle) — боя на
+  // сервере уже нет (РБ добили другие), а страница боя осталась. Бот 23 мин жал вслепую. Метка для боя (combat), снимает её любой принятый ход/новый бой
+  if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path) && d.status >= 200 && d.status < 300 && !d.res?.error) ACT_NET.gone = null;
+  else if (path === '/game/battle/action' && (d.res?.error === 'battle_none' || d.res?.reason === 'not_in_battle')) ACT_NET.gone = { t: Date.now(), spawn: d.req?.battleSpawnId || '' };
   // 8.0.3 (лог 11.10 10:32:17: «POST /game/battle/action → 409 · 28586 мс», через 1 с — смерть у Барды): ответ на ход дольше 8 с — сервер
   // висел; отметка во вкладке (переживает перезагрузку) — смерть в ближайшие 60 с не «не по силам» (survival.onDeath)
+  // 9.2: анализатор боя — ход за ходом из ответа сервера (hook.js bt): урон по цели, удары по нам, спецудары, итог боя → rt.fightMem
+  if (d.bt && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync))?$/.test(path)) try { L2V7Modules.fightlab?.onNet(path, d); } catch (e) { console.warn(TAG, 'fightlab', e); }
   if (path === '/game/battle/action' && +d.ms > 8000) srvHangMark(`ответ на ход ${Math.round(d.ms / 1000)} с`);
   // 8.0.3 (лог 11.10 11:44:46): «Вернуться в город» нажато (ботом или игроком, и при остановленном боте) — герой воскрешён (survival.reviveStep)
   if (path === '/game/battle/return-to-town' && d.status >= 200 && d.status < 300) try { sessionStorage.setItem('l2bot.toTown', String(Date.now())); } catch (e) {}
@@ -3089,6 +3102,13 @@ addEventListener('message', e => {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
+  } catch (e) {}
+  // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
+  if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
+    const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
+    if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
+    // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
+    const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch);
   } catch (e) {}
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
@@ -3503,7 +3523,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get gam
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },
@@ -3551,7 +3571,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -3815,7 +3835,10 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
+// 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
+const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
 L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set $q(value) { $q = value; },
+  get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
@@ -4046,6 +4069,22 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() 
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
+
+// 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
+L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+  get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; },
+  get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
+// 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
+const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
+  const b = /^l2_\d+$/.test(a) ? document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) : null;
+  return b ? cleanTitle(b.title || '').toLowerCase() : a; };
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
+  get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
+const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
+// 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
+const awayFree = () => L2V7Modules.mammon.modeFree();
+// 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
+const classSwitched = () => { PET = null; };
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'kick') {

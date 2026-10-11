@@ -442,7 +442,8 @@ function magePlan(ctx, mp) {
     .map(b => {
       const n = env.cleanTitle(b.title), il = env.ilOf(b) || {}, k = env.skKey(b);
       const mpCost = env.skillMp(n) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
-      const dmg = env.expDmg(k) || env.expDmg(n) || 0;
+      // 9.2: урон по ЭТОЙ цели (анализатор боя: прошлые бои с ней + этот бой) важнее общего среднего по всем мобам
+      const dmg = env.fightDmgOn?.(n)?.mean || env.expDmg(k) || env.expDmg(n) || 0;
       const base = Array.isArray(il.pow) ? il.pow[0] : il.pow || 0;
       return { key:'power:' + b.title, name:n, b, dmg:dmg || base, mpCost,
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
@@ -461,6 +462,22 @@ function magePlan(ctx, mp) {
   // Cheap finishing move > observed damage per cast > configured order.
   // 7.1.31: удар кота в этом же ходу — часть добивания: заклинанию нужно снять только остаток (Energy Bolt 8 MP вместо Blaze 22 MP)
   const hpK = Math.max(1, hp - petN);
+  // 9.2: добивание по замерам урона по этой цели — доля ударов, которых хватило бы (а не «среднее ≥ HP × 1,08»): самое дешёвое из
+  // надёжных (≥ 85 %). Надёжного среди готовых нет, а надёжное откатится раньше, чем через полхода, — ждём его, а не тратим ход на
+  // удар, который не добьёт (лог 12.10 01:42:30: Energy Bolt 2940 по Banshee 3060 → 120 HP, ещё ход на Vampiric Touch)
+  if (mob && mob.cur > 0 && env.fightKillP) {
+    const sure = opts.map(o => ({ o, p: env.fightKillP(o.name, hpK) })).filter(x => x.p != null && x.p >= 0.85)
+      .sort((a, b) => a.o.mpCost - b.o.mpCost || b.p - a.p)[0];
+    if (sure) return { ...sure.o, why: `магия: добивание (${hp} HP) · по этой цели добивает в ${Math.round(sure.p * 100)} % ударов` };
+    const wk = mob.max + '/' + mobTitle();
+    if (ctx.waitKillMob !== wk) { ctx.waitKillMob = wk; ctx.waitKillT = 0; }   // новый моб (цепочка) — заново
+    const expired = !!ctx.waitKillT && Date.now() - ctx.waitKillT > 1500;
+    const soon = expired ? null : mageSpellSlots().filter(b => !ready(b) && cdLeft(b) > 0 && cdLeft(b) <= env.turnSec() * 0.5 && (!mp || (env.skillMp(env.cleanTitle(b.title)) || 0) <= mp.cur - 1))
+      .map(b => ({ n: env.cleanTitle(b.title), p: env.fightKillP(env.cleanTitle(b.title), hpK) })).filter(x => x.p != null && x.p >= 0.85)[0];
+    const nowKill = opts.some(o => { const p = env.fightKillP(o.name, hpK); return p != null ? p >= 0.5 : o.dmg >= hpK * 1.08; });
+    if (soon && !nowKill && !ctx.rb) { ctx.waitKillT ||= Date.now(); ctx.waitWhy = `жду ${soon.n}: откатится через полхода и добьёт (${Math.round(soon.p * 100)} %)`; return null; }
+    if (!expired) ctx.waitKillT = 0;               // ждём не дольше 1,5 с на моба — дальше бьём тем, что готово
+  }
   const kill = (known.length ? known : opts).filter(o => o.dmg && o.dmg >= hpK * 1.08)
     .sort((a,b)=>a.mpCost-b.mpCost || b.dmg-a.dmg)[0];
   if (kill) return { ...kill, why: petN > 0 && hpK < hp ? `магия: добивание вместе с котом (${hp} HP, кот ≈${Math.round(petN)})` : `магия: добивание (${hp} HP)` };
@@ -487,7 +504,7 @@ function dpsPlan(ctx, mp) {
       const il = b && env.ilOf(b);
       if (nonOffenseSkill(b)) continue;
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
-      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
+      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
@@ -537,7 +554,9 @@ function dpsPlan(ctx, mp) {
     if (aD && aD * 0.85 >= hp) { const a0 = opts.find(o => o.key === 'attack'); if (a0) return { ...a0, why: `КПД: добиваю атакой (${hp} HP)` }; return null; }
   }
   // 1) добивание
-  const kill = opts.filter(o => o.dmg * 0.85 >= hp).sort((a, b) => env.actCost(a) - env.actCost(b) || b.dmg - a.dmg)[0];
+  // 9.2: по этой цели есть замеры — «добьёт» = добивало в ≥ 85 % ударов (анализатор боя), иначе — как раньше, 85 % среднего
+  const killOk = o => { const p = o.key === 'charge' ? null : env.fightKillP?.(o.name.replace(/\s*\(.*$/, ''), hp); return p != null ? p >= 0.85 : o.dmg * 0.85 >= hp; };
+  const kill = opts.filter(killOk).sort((a, b) => env.actCost(a) - env.actCost(b) || b.dmg - a.dmg)[0];
   if (kill) return { ...kill, why: `добивание (${hp} HP)` };
   if (ctx.rb) {
     const atkD = env.expDmg('атака'), me = env.meHp();
@@ -605,6 +624,16 @@ function ultPick(ctx, mp) {
     return { key: 'ult:' + b.title, name: env.cleanTitle(b.title), b, why: boss ? 'сверхсильный — РБ/чемпион' : `сверхсильный — у моба ${mob.cur} HP` };
   }
   return null;
+}
+
+// 9.0 «цена хода» (разбор боя, лог 11.10 00:47–01:40: на РБ 255 банок из 1 283 ходов, 96 из 234 банок HP — при HP ≥ 80 %):
+// банка — целый ход без урона (≈1 500–2 000 у мага). У знакомого РБ (спецудар и удары замерены) пьём, только если после ещё одного
+// ударного хода худший обычный удар (P90) опустит HP ниже «спецудар + 2 удара»; без «долива до верхней границы» полосы.
+// Пересчёт по логу: 156 из 234 банок были не нужны. Аварийный порог (стоп-HP + 10 %) — всегда лечимся
+function rbTurnHeal(o) {                          // o: { cur, max, spike, p90, stopPct } → { need, floor, at }
+  const floor = Math.min(o.max * 0.96, o.spike + 2 * o.p90), at = floor + o.p90;
+  const need = o.cur < at || o.cur / o.max * 100 <= (o.stopPct || 25) + 10;
+  return { need, floor: Math.round(floor), at: Math.round(at) };
 }
 
 function frenzyDive(ctx, me) {                    // «сливаться под Frenzy»: Frenzy на панели, готов, не висит, HP ещё выше порога
@@ -952,6 +981,19 @@ async function battle() {
     }
     const me = env.meHp(), mp = env.meMp(), mob = mobHp();
     if (me && me.cur === 0) return env.onDeath();
+    // 9.0 (лог 12.10 01:08:28–01:31:22): Fairy Queen Timiniel на 7 092 из 1,9 млн HP — её добили другие игроки, ход → 400 «Немає активного
+    // бою», игра больше ходов не шлёт, а страница боя стоит. Бот 23 мин жал «урон 0 · MP 0» (HP героя от регена менялся — сторож «нет ответа
+    // 20 с» не срабатывал), пока игрок не увёл героя в город. Теперь: сервер сказал «боя нет» после начала этого боя — бой окончен, на карту
+    { const g = env.actNet?.().gone;
+      if (g && g.t >= t0 && !victory() && !defeat()) {
+        const pc = mob && mob.max ? Math.round(mob.cur / mob.max * 1000) / 10 : null;
+        env.rec('B', 'бой', `сервер: «Немає активного бою» — бой с ${ctx.name || mobName()} уже закончен${pc != null ? ` (у него ${pc} %)` : ''}${ctx.rb ? ', РБ, видимо, добили другие' : ''} → ухожу на карту`);
+        env.actNet().gone = null;
+        // недобитым не считаем (иначе тур платил бы за телепорт «добить» к уже мёртвому РБ); жив ли он — покажет список РБ
+        const W = ctx.rb && env.rt.rbWound?.[ctx.rb.id] ? { ...env.rt.rbWound } : null; if (W) delete W[ctx.rb.id];
+        await env.setRt({ target: null, ...(ctx.rb ? { rbCur: null } : {}), ...(W ? { rbWound: W } : {}) });
+        return env.toMap();
+      } }
     // 8.0.3 (лог 11.10 10:31:48–10:32:17, Барда 55): ход ушёл, а ответа нет 28,6 с — пока игра ждёт ответ, нажатия она не отправляет; бот
     // 20 с жал вслепую («урон 0» ×12) при «✅ победа вероятна» по замёрзшим HP, потом герой погиб. Теперь ход без ответа > 8 с (до 60 с) —
     // не жмём, отметка «сервер завис» (смерть сейчас — не «не по силам»), один раз спрашиваем сервер (/game/time): отвечает — завис только
@@ -1140,7 +1182,9 @@ async function battle() {
       }
     }
     // сервер «завис»: удары уходят, а HP моба и журнал боя не меняются 20 с — обновить страницу боя
-    const sig = mob.cur + '|' + (me?.cur ?? '') + '|' + env.logLines().length + '|' + (env.logLines()[0] || '');
+    // 9.0 (лог 12.10 01:08–01:31): HP героя от регена менялось и без боя — признак жизни теперь ответ сервера на ход, а не HP героя
+    // (удар моба по герою и так виден в журнале боя)
+    const sig = mob.cur + '|' + (env.actNet?.().done ?? me?.cur ?? '') + '|' + env.logLines().length + '|' + (env.logLines()[0] || '');
     if (sig !== progSig) { progSig = sig; progT = Date.now(); }
     else if (Date.now() - progT > 20000) {
       env.srvHangMark?.('нет ответа игры 20 с');   // 8.0.3: смерть сразу после — не «не по силам»
@@ -1230,7 +1274,10 @@ async function battle() {
     // 7.2: у мага Vampiric Touch (≈665 урона + ≈266 HP) выгоднее лечащего хода (Corpse Life Drain 178 HP без урона мага, Heal ≈430):
     // вампирик готов и HP не критичное — лечащий скилл пропускаем, ниже сработает вампиризм
     const drainFirst = mageCombat() && me && me.pct > (env.cfg.stopHp || 25) + 10 && !!drainPick(ctx, mp);
-    if (me && me.pct <= env.cfg.hpPotAt && !drainFirst) {
+    // 9.0 «цена хода» (лог 11.10 01:40, Gigantic Chaos Golem: Corpse Life Drain +225 HP за ход, банка +600): на РБ, пока банка HP есть,
+    // ход лечения отдаём банке — лечащий скилл только без банок
+    const rbPotHas = !!ctx.rb && env.cfg.rbTurnPrice !== false && (() => { const p = env.hpPotPick(false); const q = p ? env.qty(p) : 0; return !!p && q !== 0 && (ctx.rb.allIn || q == null || q > (env.cfg.rbPotReserve || 0)); })();
+    if (me && me.pct <= env.cfg.hpPotAt && !drainFirst && !rbPotHas) {
       const hs = env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) && (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10));
       if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; const r = await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); if (r === 'lock') ctx.block['heal:' + hs.title] = 0; continue; }   // 8.0.3: 'lock' — повтор сразу
     }
@@ -1270,8 +1317,19 @@ async function battle() {
       const to = adaptive
         ? Math.min(98, Math.max(from + 3, env.cfg.rbPotTo ?? 80, from + 10))
         : Math.min(98, Math.max(from + 1, env.cfg.rbPotTo ?? 80));
-      if (me && me.pct <= from) ctx.rb.potOn = true;
-      if (me && me.pct >= to) ctx.rb.potOn = false;
+      // 9.2 (анализатор боя, повторные бои с тем же РБ): спецудар приходит ровным ритмом (≥ 3 пауз, разброс ≤ 30 %) и до следующего ещё
+      // > 3 ходов — в цене хода его не держим (лечимся только от обычных ударов и аварийно); подходит — снова «спецудар + 3 удара»
+      const sEta = adaptive && known && env.cfg.rbSpikeRhythm !== false ? env.fightSpikeEta?.() : null;
+      const spikeFar = !!sEta && sEta.eta > 3 * env.turnSec() + 1;
+      if (sEta && !ctx.rb.rhythmNote) { ctx.rb.rhythmNote = 1; env.rec('B', 'РБ', `ритм спецудара: раз в ≈${sEta.gap} с — банки между спецударами только от обычных ударов, перед спецударом — запас`); }
+      const price = adaptive && known && env.cfg.rbTurnPrice !== false && me ? rbTurnHeal({ cur: me.cur, max: me.max, spike: spikeFar ? 0 : spike, p90: ordinaryP90, stopPct: env.cfg.stopHp }) : null;
+      if (price) {                                // 9.0: знакомый РБ — «цена хода» вместо полосы from…to
+        ctx.rb.potOn = price.need;
+        if (!ctx.rb.priceNote) { ctx.rb.priceNote = 1; env.rec('B', 'РБ', `цена хода: банка/лечение только при HP < ${price.at} = спецудар ${Math.round(spike)} + 3 обычных удара по ≈${Math.round(ordinaryP90)}), иначе бью`); }
+      } else {
+        if (me && me.pct <= from) ctx.rb.potOn = true;
+        if (me && me.pct >= to) ctx.rb.potOn = false;
+      }
       potAt = ctx.rb.potOn ? 100 : -1;
       // 8.0.3 (лог 11.10 09:15:35: прогноз «РБ ≈0:16, банки: нужно ≈0», РБ 6 %, а бот выпил 5 банок подряд — 7 с без урона): прогноз решил,
       // что РБ умрёт раньше опасного HP без банок (usePots=false) — в полосе не пьём, только аварийно (HP ниже спецудар + 2 удара)
@@ -1602,6 +1660,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

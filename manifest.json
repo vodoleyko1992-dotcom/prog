@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "8.0.8",
-  "description": "L2wap Bot 8.0.8 — раскладка для планшета только на Android, основная версия как прежде",
+  "version": "9.0.1",
+  "description": "L2wap Bot 9.0.1 — автокач, Маммон, катакомбы, 197 РБ, квесты сабкласса и Noblesse, цена хода на РБ",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -58,6 +58,8 @@
       ],
       "js": [
         "skills-il.js",
+        "zone-db.js",
+        "zone-kpd.js",
         "battle-cooldown.js",
         "engine-core.js",
         "modules/fishing.js",
@@ -76,6 +78,8 @@
         "modules/loot.js",
         "modules/survival.js",
         "modules/mammon.js",
+        "modules/story.js",
+        "modules/fightlab.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -108,5 +112,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "8.0.8"
+  "version_name": "9.0.1"
 }

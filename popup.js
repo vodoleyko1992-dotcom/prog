@@ -84,12 +84,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['sealMin', 'mmTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
-              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
+const NUM  = ['sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
-const BOOL = ['sealAuto', 'mmOrders', 'mmGoalFarm', 'mmSmithAuto', 'rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, sealAuto: false, sealMin: 1, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['sealAuto', 'mmOrders', 'storyTurnIn', 'mmGoalFarm', 'mmSmithAuto', 'rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, sealAuto: false, sealMin: 1, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: false, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -189,6 +189,7 @@ async function load() {
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   renderEpics(rt, d);
   renderMammon(rt, d);
+  renderStory(rt);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', !!d.rbHuntMode);
   renderHunt(rt, d);
   renderRb(rt);
@@ -777,7 +778,7 @@ function renderZones(rt, d) {
   const box = $('zoneBox');
   if (!box) return;
   const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const L = rt.lvl || 0, cat = rt.zoneCat || {}, S = rt.zoneStat || {};
+  const L = rt.lvl || 0, cat = { ...(rt.zoneCat || {}) }, S = rt.zoneStat || {};
   const name = id => cat[id]?.name || String(id).replace(/^out:/, 'Окрестности: ');
   // v4.59: желаемое окно уровней мобов (от героя −lvlBelow до +lvlAbove, по умолчанию −3…+15) — зона подходит, если её мобы в него попадают
   const wLo = L - (d.lvlBelow ?? 3), wHi = L + Math.min(d.lvlAbove ?? 15, 15), wMid = (wLo + wHi) / 2;
@@ -785,16 +786,21 @@ function renderZones(rt, d) {
   const fits = id => { const c = cat[id]; return !!c?.lo && L && c.lo <= wHi && c.hi >= wLo; };
   // насколько зона «в окне»: доля её диапазона внутри окна, затем близость середины к середине окна
   const inWin = c => c?.lo ? (Math.min(c.hi, wHi) - Math.max(c.lo, wLo) + 1) / (c.hi - c.lo + 1) : 0;
+  // 9.0: прогноз КПД по встроенной базе (тот же расчёт, что у автофарма, без поправки на свои замеры зон) + зоны из базы
+  const K = globalThis.L2Kpd, ko = K?.ready?.() && L ? { rt, cfg: d, mage: heroCls(d, rt) !== 'fighter' } : null;
+  if (ko) { ko.cal = K.learn(ko, L); for (const [id, c] of Object.entries(K.cat())) cat[id] = { ...c, ...(cat[id] || {}), lo: cat[id]?.lo || c.lo, hi: cat[id]?.hi || c.hi }; }
+  const est = {}, estOf = id => est[id] !== undefined ? est[id] : (est[id] = ko ? K.zoneEst(id, L, ko) : null);
   const ids = [...new Set([...Object.keys(S), ...Object.keys(cat).filter(fits)])];
   if (!ids.length) { box.innerHTML = `<div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.${Object.keys(cat).length ? '' : ' Нажмите «Обновить список зон», чтобы узнать уровни мобов всех Окрестностей.'}</div>`; return; }
-  const rows = ids.map(id => ({ id, r: L ? zoneRateP(rt, id, L) : null, c: cat[id] || {} }))
-    .sort((a, b) => (b.r?.exp || 0) - (a.r?.exp || 0) || (fits(b.id) - fits(a.id)) || (inWin(b.c) - inWin(a.c)) || (Math.abs((a.c.lo + a.c.hi) / 2 - wMid) - Math.abs((b.c.lo + b.c.hi) / 2 - wMid)));
+  const rows = ids.map(id => ({ id, r: L ? zoneRateP(rt, id, L) : null, c: cat[id] || {}, e: estOf(id) }))
+    .sort((a, b) => (b.r?.exp || 0) - (a.r?.exp || 0) || (b.e?.exp || 0) - (a.e?.exp || 0) || (fits(b.id) - fits(a.id)) || (inWin(b.c) - inWin(a.c)) || (Math.abs((a.c.lo + a.c.hi) / 2 - wMid) - Math.abs((b.c.lo + b.c.hi) / 2 - wMid)));
   const best = rows.find(x => x.r?.exp);
   const k = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' М' : n >= 1e3 ? Math.round(n / 1e3) + ' К' : Math.round(n);
-  box.innerHTML = `<table><tr><th>Зона</th><th>Мобы</th><th>EXP/ч</th><th>%/ч</th><th>Боёв</th><th></th></tr>`
+  box.innerHTML = `<table><tr><th>Зона</th><th>Мобы</th><th>EXP/ч</th><th title="Прогноз по базе игры (КПД)">КПД</th><th>%/ч</th><th>Боёв</th><th></th></tr>`
     + rows.slice(0, 14).map(x => `<tr class="${x.id === rt.zone ? 'cur' : ''} ${best && x.id === best.id ? 'best' : ''}">`
       + `<td>${x.id === rt.zone ? '📍 ' : ''}${h(name(x.id))}</td><td>${x.c.lo ? `${x.c.lo}-${x.c.hi}` : '—'}</td>`
-      + `<td>${x.r?.exp ? k(x.r.exp) + (x.r.near ? '*' : '') : x.r?.few ? '…' : fits(x.id) ? '?' : '—'}</td><td>${x.r?.pct != null ? x.r.pct.toFixed(1) : '—'}</td>`
+      + `<td>${x.r?.exp ? k(x.r.exp) + (x.r.near ? '*' : '') : x.r?.few ? '…' : fits(x.id) ? '?' : '—'}</td>`
+      + `<td title="${h(x.e?.why || '')}">${x.e?.exp ? '≈' + k(x.e.exp) : x.e ? '0' : '—'}</td><td>${x.r?.pct != null ? x.r.pct.toFixed(1) : '—'}</td>`
       + `<td>${x.r?.n || Object.values(S[x.id] || {}).reduce((a, e) => a + e.n, 0) || ''}</td>`
       + `<td>${x.id !== rt.zone && !/^out:/.test(x.id) ? `<button data-zone="${h(x.id)}" title="Лететь (телепорт ${x.c.price ? x.c.price.toLocaleString('ru') + ' аден' : ''})">✈</button>` : ''}</td></tr>`).join('')
     + '</table>';
@@ -803,7 +809,22 @@ function renderZones(rt, d) {
   box.innerHTML += `<div class="rec">${L ? `Герой ${L} ур.` : ''}${best ? ` · лучшая: ${h(name(best.id))} — ${k(best.r.exp)} EXP/ч${best.r.pct != null ? `, ${best.r.pct.toFixed(1)} %/ч (≈${100 / best.r.pct < 1 ? Math.round(6000 / best.r.pct) + ' мин' : (100 / best.r.pct).toFixed(1) + ' ч'} на уровень)` : ''}` : ''}`
     + `${cur?.r?.exp && best && best.id !== cur.id ? `\nТекущая: ${k(cur.r.exp)} EXP/ч — ${Math.round((1 - cur.r.exp / best.r.exp) * 100)} % хуже лучшей` : ''}`
     + `${fresh.length ? `\n🔍 Не изучены, но по уровню подходят: ${h(fresh.slice(0, 5).join(', '))}` : ''}`
-    + `\n<span class="hint">* — по соседнему уровню героя · «…» — меньше 5 боёв · «?» — не охотился</span></div>`;
+    + `${ko ? (b => b ? `\n📈 По базе игры лучше всех для ${L} ур.: ${h(name(b.id))} — ≈${k(b.exp)} EXP/ч (${h(b.why.replace(/^по базе: /, ''))})` : '')(K.rank(L, ko)[0]) : ''}`
+    + `\n<span class="hint">* — по соседнему уровню героя · «…» — меньше 5 боёв · «?» — не охотился · КПД — прогноз по базе игры (наведите — какие мобы)</span></div>`;
+  renderRoute(ko, L, name);
+}
+// 9.0: маршрут кача 1→80 по базе игры — какая зона лучше на каждом отрезке уровней (без своих замеров; свой уровень отмечен 📍)
+let routeSig = '';
+function renderRoute(ko, L, name) {
+  const box = $('routeBox'), K = globalThis.L2Kpd;
+  if (!box || !K?.ready?.()) return;
+  const o = ko || { rt: {}, cfg: {}, mage: true }, sig = [L, o.mage, o.cfg?.lvlBelow, o.cfg?.zoneAbove].join('|');
+  if (sig === routeSig) return; routeSig = sig;
+  const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;'), k = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' М' : Math.round(n / 1e3) + ' К';
+  box.innerHTML = '<table><tr><th>Уровни</th><th>Зона</th><th>Мобы</th><th>КПД</th><th>Телепорт</th></tr>'
+    + K.route(o, 1, 80).map(x => `<tr class="${L >= x.from && L <= x.to ? 'cur' : ''}"><td>${L >= x.from && L <= x.to ? '📍 ' : ''}${x.from}${x.to > x.from ? '–' + x.to : ''}</td>`
+      + `<td>${x.id ? h(name(x.id) || x.name) : '—'}</td><td>${x.mobs || ''}</td><td>${x.exp ? '≈' + k(x.exp) + (k(x.expTo) !== k(x.exp) ? '…' + k(x.expTo) : '') : ''}</td><td>${x.price ? x.price.toLocaleString('ru') : ''}</td></tr>`).join('')
+    + '</table><div class="hint">Прогноз EXP/ч — для героя с «типичным» временем на моба (≈5 с); настоящие цифры бот меряет сам и по ним уточняет выбор. Мобы-«стражи» без цифр в базе считаются со скидкой.</div>';
 }
 
 // 💎 баффы за Fast Aden: выбор из списка «+», порядок ▲▼, ✕; баланс и стоимость круга
@@ -1165,6 +1186,18 @@ function renderMammon(rt, d) {
   const G = MMG?.[gid];
   $('mmGearBox').textContent = G ? `${G.n} (${G.g}, ${MM_SLOT[G.s] || G.s}) — бонусы по уровням:\n` + Object.keys(G.L[0]).map(k => `${MM_STAT[k] || k}: ${G.L.map(x => x[k]).join(' → ')}`).join('\n')
     + (ids.includes(gid) ? `\nСейчас Lv.${lvlOf(gid)}` : '\nЭтой вещи у героя бот не видел') : ids.length ? 'Твои улучшаемые вещи: ' + ids.map(id => `${nm(id)} Lv.${lvlOf(id)}`).join(', ') : '';
+}
+// ---------- 👑 Сабкласс и Noblesse (9.0): прогресс квестов из памяти бота (rt.story) ----------
+function renderStory(rt) {
+  if (!$('storyBox')) return;
+  const S = rt.story || {}, n = S.noblesse, c = S.subclass, out = [];
+  if (rt.classCur?.prof) out.push(`Класс: ${esc(String(rt.classCur.prof).replace(/^(human|elf|dark_elf|orc|dwarf)_/, '').replace(/_/g, ' '))}${Object.keys(rt.classStash || {}).length ? ' · замеры других классов сохранены: ' + esc(Object.keys(rt.classStash).join(', ')) : ''}`);
+  if (c) out.push(`⚔ Сабкласс: ${c.completed ? 'квест пройден ✅' : !c.active ? `не взят (нужен ${c.min || 75} ур.)` : c.stage === 'hunt_bosses' ? 'РБ: ' + c.bosses.map(b => `${b.done ? '✓' : '★'} ${esc(b.name)} ${b.lvl}`).join(', ') : `сдать ${esc(c.npc)}${c.ready ? ' — готово' : ''}`}`);
+  if (n) out.push(`👑 Noblesse: ${n.completed ? 'пройден ✅' : !n.active ? `не взят (сабкласс ${n.min || 50}+, Virgil в Rune)` : `часть ${n.part}/${n.of}: ` + (n.targets.map(t => `${t.have >= t.need ? '✓' : '★'} ${esc(t.name)} ${t.have}/${t.need}`).join(', ') || 'к ' + esc(n.npc)) + (n.ready ? ' — готово к сдаче' : '')}`);
+  if (S.nobleOwn) out.push('👑 Статус Noblesse есть: Noblesse Blessing свой');
+  if (rt.storyJob) out.push(`⏳ бот летит сдавать: ${esc(rt.storyJob.why || '')}`);
+  const lg = (rt.storyLog || [])[0]; if (lg) out.push(`${new Date(lg.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })} ${lg.ok ? '✓' : '✗'} ${esc(lg.why)}`);
+  $('storyBox').innerHTML = out.join('<br>') || 'Прогресс бот узнает у игры сам';
 }
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
 $('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));

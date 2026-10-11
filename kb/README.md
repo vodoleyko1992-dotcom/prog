@@ -8,6 +8,7 @@
 |---|---|---|
 | `repo-facts.md` | код бота, CLAUDE.md, все CHANGELOG, base-profile.json | все цифры и факты по темам с источником; §16 — противоречия и устаревшее, §17 — пробелы данных |
 | `history-facts.md` | вся прошлая сессия разбора логов (10.10 08:45 – 11.10 12:13 UTC) | хронология решений игрока, замеры из логов, формы API, механики, баги и их причины, открытые вопросы |
+| `quest-noblesse.md` | новость игры + живой API 11.10 14:30 | квест Noblesse (4 части), система сабклассов и квест Fate's Whisper, API `/character/subclasses` (add/switch), `/game/story-quests/noblesse|subclass`, план для бота v9 |
 | `mammon.md` | код страницы кузнеца Маммона и скриншот игрока (11.10) | кузнец: улучшение плащей/поясов/тату/крыльев Lv.0–5, API, цена (Coin of Luck!), торговец и заказ Маммона |
 | `game-live.md` | живая игра 11.10 (вход аккаунтом игрока, только GET, ничего не потрачено) | справочник эндпоинтов и полей, лучшие мобы на 60, РБ в досягаемости, цены, что бот может взять из API |
 
@@ -25,7 +26,7 @@
 1. `GET /game/spawn/<id>/info` отдаёт цифры любого моба и РБ (HP, атака, EXP, адена, дроп, спойл) до боя. Можно выбирать зону и цель по таблице, без пробных боёв.
 2. У чемпионов всегда 2× HP и P.Atk, но 10× EXP и адены (проверено на 40 парах). Это аргумент включить поиск чемпионов.
 3. Лучшие обычные мобы на 60 ур. по EXP на единицу HP: Past Knight 64 (Ancient Battleground), Requiem Lord 68, затем Bone Maker 66 и Bone Collector 67 (Den of Evil), Bloody Lord 68.
-4. `RB_KNOWN` в `modules/raid.js` можно расширить с 33 до 197 РБ из `game-raid-bosses.json`. Время респа РБ API не отдаёт, только у эпиков.
+4. `RB_KNOWN` в `modules/raid.js` расширен с 33 до 197 РБ из `game-raid-bosses.json` (9.0). Время респа РБ API не отдаёт, только у эпиков.
 5. Бесплатен только базовый набор баффера. Полные наборы стоят Coin of Luck, бот их не берёт.
 6. В `/character` есть поля, которые бот пока не читает: `learnedBattleSkillsDetail`, `battleHotbarSlots`, `activeBuffs[].expiresAt`, `activeSummon.pAtk`, `armorSetBonus`, `weaponGradeMatchesArmor`, `skillMpCostMul`, `currentZoneId`.
 7. Откаты рыбалки видны в `/game/fishing/state.cooldowns`: `pumpingMs:500`, `reelingMs:700` и время окончания в мс сервера.

@@ -267,6 +267,12 @@
   <label>Проверять карту каждые N боёв (0 = никогда, только цепочка) <input id="deepEvery" type="number" min="0"></label>
   <label>⏹ Стоп, когда квест выполнен <input id="questStop" type="checkbox"></label>
 
+  <h4>👑 Сабкласс и Noblesse</h4>
+  <div id="storyBox" class="camp">Прогресс бот узнает у игры сам</div>
+  <label title="Часть квеста выполнена (убийства и сбор) → бот летит к NPC (Virgil, Caradine, Magister Ladd), жмёт «Завершить часть» и возвращается на точку. Не в бою, не в туре РБ/эпиков, не перед TvT. Взять квест и выбрать сабкласс — только вы">Сдавать готовые части сам <input id="storyTurnIn" type="checkbox"></label>
+  <label title="Телепорт к NPC квеста (Rune ≈20 000, Goddard ≈18 000, Ivory Tower, Oren). Дороже — бот не летит">Макс. цена телепорта к NPC, адены <input id="storyTpMax" type="number" min="0" step="10000"></label>
+  <div class="hint">Квест сабкласса: 75 ур. основного класса и 4 РБ (Cabrio, Hallate, Kernon, Golkonda) — в туре по РБ бот бьёт их первыми, если они по силам. Noblesse: сабкласс 50+, ★ мобы квеста — цели. С Noblesse бот не покупает Noblesse Blessing за FA, а ставит свой с панели боя. При смене класса замеры скиллов, кота, зон и РБ у каждого класса свои.</div>
+
   <h4>📦 Квесты на ресурсы</h4>
   <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
   <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
@@ -296,7 +302,7 @@
   <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
 
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
-  <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации (список зон «Телепорта» и накопленный EXP/ч) и летит в подходящую, дальше пробует зоны и держится лучшей.</p></div>
+  <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
   <h4>🗺 Локации для кача</h4>
   <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="0" style="width:52px"></label>
   <label>… до героя + (99 — без ограничения) <input id="lvlAbove" type="number" min="0" max="99" style="width:52px"></label>
@@ -305,7 +311,9 @@
   <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
   <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
   <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
-  <div class="hint">Подходящие зоны — те, где уровни мобов из «Телепорта» попадают в желаемое окно. Бот бьёт только мобов этого окна (квестовые — до +10 и выше окна); если на карте таких нет — сам летит в подходящую зону. Бот пробует каждую (N боёв), потом летит в лучшую по EXP/ч, если она лучше текущей на 15 %+. Не работает в туре по РБ, эпиках, рыбалке и катакомбах. Телепорт платный — резерв адены из «Закупки».</div>
+  <label>Зона для кача: мобы не выше героя на <input id="zoneAbove" type="number" min="0" max="15" style="width:52px"></label>
+  <div class="hint">Как выбирается зона (9.0, КПД): у бота есть встроенная база игры — 90 точек телепорта, их мобы, уровни и опыт за каждого. Для своего уровня он заранее считает, сколько EXP в час даст каждая зона (мобов в окне от героя −N до +M, опыт за моба ÷ время на моба; у мобов L2WAP HP и защита зависят только от уровня, а опыт за моба различается в 2–3 раза). Летит в лучшую по этому прогнозу, там меряет настоящий EXP/ч и дальше верит замерам: прогноз подстраивается под них (своё время на моба, как герой справляется с мобами выше себя, какие мобы «не по зубам», смерти). Пробует другую зону только если её прогноз не хуже 90 % лучшей известной; перелетает, если зона лучше текущей на 10 %+. Верх окна для зоны — «не выше героя на N» (по умолчанию 10; у слабых героев уже: до 11 ур. +3, к 20 ур. +5) — сам расширяется, если герой уверенно бьёт мобов выше. Не работает в туре по РБ, эпиках, рыбалке и катакомбах. Телепорт платный (только адена) — резерв адены из «Закупки».</div>
+  <details id="routeWrap"><summary>📈 Маршрут кача 1→80 по базе игры</summary><div id="routeBox" class="zbox"></div></details>
 
   <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
   <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
@@ -541,6 +549,8 @@
   <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
   <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
   <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
+  <label>РБ: «цена хода» — лечиться, только когда без этого опасно <input id="rbTurnPrice" type="checkbox"></label>
+  <div class="hint">У знакомого РБ банка или лечение — только если после ещё одного ударного хода HP может упасть ниже «спецудар + 2 удара». Иначе бот бьёт: банка стоит целого хода без урона. Работает вместе с автоматической полосой.</div>
   <label data-cls="fighter">Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
   <div class="hint" data-cls="fighter">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
   <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
@@ -695,6 +705,8 @@
 </div><!-- /.app-shell -->
 <footer>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Ctrl+K</span> поиск</footer>
 <div id="toast" role="status" aria-live="polite"></div>
+<script src="zone-db.js"></script>
+<script src="zone-kpd.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>

@@ -1,0 +1,46 @@
+{
+ "_path": "/game/map/sync → worldMapNpcAnchors (квестовые NPC Noblesse и сабкласса)",
+ "_status": 200,
+ "data": [
+  {
+   "id": "noblesse_virgil",
+   "worldX": 44528,
+   "worldY": -51290,
+   "nameUk": "Virgil · Noblesse",
+   "nameEn": "Virgil - Noblesse Quest",
+   "nameRu": "Virgil · Noblesse",
+   "href": "/noblesse-quest.html",
+   "iconUrl": "/nps/75.png"
+  },
+  {
+   "id": "noblesse_caradine",
+   "worldX": 148024,
+   "worldY": -55281,
+   "nameUk": "Caradine · Noblesse",
+   "nameEn": "Caradine - Noblesse Quest",
+   "nameRu": "Caradine · Noblesse",
+   "href": "/noblesse-quest.html",
+   "iconUrl": "/nps/50.png"
+  },
+  {
+   "id": "subclass_reorin",
+   "worldX": 82956,
+   "worldY": 53162,
+   "nameUk": "Майстро Реорін · Сабклас",
+   "nameEn": "Maestro Reorin - Subclass Quest",
+   "nameRu": "Маэстро Реорин · Сабкласс",
+   "href": "/subclass-quest.html",
+   "iconUrl": "/nps/75.png"
+  },
+  {
+   "id": "subclass_ladd",
+   "worldX": 85300,
+   "worldY": 16202,
+   "nameUk": "Магістр Ладд · Сабклас",
+   "nameEn": "Magister Ladd - Subclass Quest",
+   "nameRu": "Магистр Ладд · Сабкласс",
+   "href": "/subclass-quest.html",
+   "iconUrl": "/nps/50.png"
+  }
+ ]
+}

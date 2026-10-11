@@ -1,0 +1,70 @@
+{
+ "_path": "/game/story-quests/subclass",
+ "_status": 200,
+ "_note": "11.10.2026 14:30 UTC, Warlock 60 без сабкласса; поле character вырезано",
+ "data": {
+  "quest": {
+   "questId": "subclass_fates_whisper",
+   "titleUk": "Шлях до сабкласу",
+   "titleRu": "Путь к сабклассу",
+   "stage": "not_started",
+   "minLevel": 75,
+   "effectiveLevel": 60,
+   "completed": false,
+   "subclassUnlocked": false,
+   "bosses": [
+    {
+     "spawnId": "l2dop_rb_25035",
+     "npcId": 25035,
+     "name": "Shilen's Messenger Cabrio",
+     "level": 70,
+     "done": false
+    },
+    {
+     "spawnId": "l2dop_rb_25220",
+     "npcId": 25220,
+     "name": "Death Lord Hallate",
+     "level": 73,
+     "done": false
+    },
+    {
+     "spawnId": "l2dop_rb_25054",
+     "npcId": 25054,
+     "name": "Kernon",
+     "level": 75,
+     "done": false
+    },
+    {
+     "spawnId": "l2dop_rb_25126",
+     "npcId": 25126,
+     "name": "Longhorn Golkonda",
+     "level": 79,
+     "done": false
+    }
+   ],
+   "location": {
+    "atReorin": false,
+    "atLadd": false
+   },
+   "npc": {
+    "reorin": {
+     "name": "Maestro Reorin",
+     "teleportId": "oren"
+    },
+    "ladd": {
+     "name": "Magister Ladd",
+     "teleportId": "ivory_tower"
+    }
+   },
+   "mapMarkers": {
+    "spawnIds": []
+   },
+   "actions": {
+    "canAccept": false,
+    "canComplete": false
+   },
+   "acceptedAt": null,
+   "completedAt": null
+  }
+ }
+}
