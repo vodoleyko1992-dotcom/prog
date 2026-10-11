@@ -84,12 +84,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['mmTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
-const BOOL = ['rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['mmOrders', 'mmGoalFarm', 'mmSmithAuto', 'rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: false, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -188,6 +188,7 @@ async function load() {
   paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   renderEpics(rt, d);
+  renderMammon(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', !!d.rbHuntMode);
   renderHunt(rt, d);
   renderRb(rt);
@@ -1112,6 +1113,48 @@ async function save(e) {
 
 // ---------- вкладки ----------
 // 7.1.31: 15 разделов сведены в 7. Бывшие разделы — подразделы (метка #tab-<старый> внутри нового), переходы на них работают
+// ---------- 🏺 Маммон (9.0): заказ торговца, где стоят NPC, цель «копить на улучшение» ----------
+let MMG = null;                                    // справочник улучшаемых вещей (mammon-gear.json)
+fetch(chrome.runtime.getURL('mammon-gear.json')).then(r => r.ok ? r.json() : {}).then(j => { MMG = j; load(); }).catch(() => { MMG = {}; });
+const MM_STAT = { cloakMaxHp: 'HP', equipFlatMaxHp: 'HP', equipFlatMaxCp: 'CP', cloakPDefFlat: 'P.Def', equipFlatPDef: 'P.Def', cloakMDefFlat: 'M.Def', equipFlatMDef: 'M.Def',
+  equipFlatPAtk: 'P.Atk', equipFlatMAtk: 'M.Atk', equipOutgoingPhysicalSkillDamagePct: 'урон физ. умений %', equipOutgoingMagicalSkillDamagePct: 'урон маг. умений %',
+  equipAttackSpeedPct: 'скор. атаки %', equipCastSpeedPct: 'скор. каста %', equipFinalRunSpeedFlat: 'бег', equipPhysicalCritDamagePct: 'сила физ. крита %',
+  equipMagicCritDamagePct: 'сила маг. крита %', equipEvasionFlat: 'уклонение' };
+const MM_SLOT = { cloak: 'плащ', belt: 'пояс', tattoo: 'тату', wings: 'крылья' };
+const mmTime = t => t ? new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : '?';
+function renderMammon(rt, d) {
+  if (!$('tab-mammon')) return;
+  const N = rt.mmNpc || {}, npc = (x, nm) => x ? `${nm}: ${esc(x.loc)} · до ${mmTime(x.at)}, дальше ${esc(x.next || '?')} · телепорт ${x.price ? fmt(x.price) + ' адены' : 'бесплатно'}` : `${nm}: ?`;
+  $('mmNpcBox').innerHTML = N.t ? `${npc(N.order, '📦 Торговец')}<br>${npc(N.smith, '⚒ Кузнец')}` : 'Ещё не проверял — бот спросит у игры сам';
+  const o = rt.mmOrder;
+  $('mmOrderBox').innerHTML = !o ? 'Заказа ещё не видел' : o.st === 'OPEN'
+    ? `<b>${esc(o.res)} ×${o.qty}</b> · в сумке ${fmt(o.have)} ${o.have >= o.qty ? '✅' : '— не хватает ' + fmt(o.qty - o.have)}<br>Награда: ${o.col} Coin of Luck + ${fmt(o.adena)} адены · до ${mmTime(o.exp)}${rt.mmJob?.kind === 'order' ? '<br>⏳ бот летит сдавать' : ''}`
+    : `Заказ ${esc(o.res)} ×${o.qty} закрыт${o.win ? ' · забрал ' + esc(o.win) : ''} · следующий — после ${mmTime(o.exp)}`;
+  $('mmLogBox').textContent = (rt.mmLog || []).slice(0, 6).map(x => `${mmTime(x.t)} ${x.kind === 'order' ? 'заказ' : 'кузнец'} ${x.ok ? '✓' : '✗'} ${x.why}`).join('\n');
+  // вещи: экипировка из ответов игры + список кузнеца + все из справочника (для выбора цели заранее)
+  const eq = Object.entries(rt.mmEq || {}), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
+  const lvlOf = id => gear.find(g => g.id === id)?.lvl ?? (eq.find(([, v]) => v[0] === id)?.[1][1] || 0);
+  const nm = id => MMG?.[id]?.n || gear.find(g => g.id === id)?.n || '#' + id;
+  if (MMG && document.activeElement?.id !== 'mmGoalItem') {
+    const all = [...ids, ...Object.keys(MMG).map(Number).filter(id => !ids.includes(id))];
+    const sig = all.join(',') + '|' + ids.map(lvlOf).join(',');
+    if ($('mmGoalItem').dataset.sig !== sig) {
+      $('mmGoalItem').dataset.sig = sig;
+      $('mmGoalItem').innerHTML = '<option value="0">— цели нет —</option>' + all.map(id => `<option value="${id}">${ids.includes(id) ? '★ ' : ''}${esc(nm(id))} · ${MMG?.[id]?.g || ''} ${MM_SLOT[MMG?.[id]?.s] || ''}${ids.includes(id) ? ' · Lv.' + lvlOf(id) : ''}</option>`).join('');
+    }
+    $('mmGoalItem').value = String(+d.mmGoalItem || 0);
+  }
+  if (document.activeElement?.id !== 'mmGoalLvl') $('mmGoalLvl').value = String(+d.mmGoalLvl || 5);
+  const gid = +d.mmGoalItem || 0;
+  $('mmGoalBox').innerHTML = !gid ? 'Цели нет' : esc(rt.mmGoalSt || `${nm(gid)}: считаю…`) + (rt.mmJob?.kind === 'smith' ? '<br>⏳ бот летит к кузнецу' : '');
+  // бонусы выбранной вещи Lv.0–5 (★ — надето/в сумке)
+  const G = MMG?.[gid];
+  $('mmGearBox').textContent = G ? `${G.n} (${G.g}, ${MM_SLOT[G.s] || G.s}) — бонусы по уровням:\n` + Object.keys(G.L[0]).map(k => `${MM_STAT[k] || k}: ${G.L.map(x => x[k]).join(' → ')}`).join('\n')
+    + (ids.includes(gid) ? `\nСейчас Lv.${lvlOf(gid)}` : '\nЭтой вещи у героя бот не видел') : ids.length ? 'Твои улучшаемые вещи: ' + ids.map(id => `${nm(id)} Lv.${lvlOf(id)}`).join(', ') : '';
+}
+$('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
+$('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));
+
 const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', pet: 'panel', fight: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';

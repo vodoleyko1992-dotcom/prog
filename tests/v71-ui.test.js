@@ -13,7 +13,7 @@ assert.equal(mf.version,'8.0.8');
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 for(const id of base) assert(ids.includes(id),`Legacy control lost: ${id}`);
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,7);   // 7.1.31: 15 разделов сведены в 7 (бывшие — подразделы с меткой #tab-<старый>)
+assert.equal(tabs.length,8);   // 7.1.31: 15 разделов сведены в 7 (бывшие — подразделы с меткой #tab-<старый>); 9.0: + «Маммон»
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);
 assert(html.includes('id="tab-epic"')&&html.includes('id="tab-dungeon"'));   // 7.1.31: подразделы «РБ и эпики» / «Охота»

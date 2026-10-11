@@ -219,7 +219,8 @@ async function epicApiScan(why) {                  // свой запрос (GET
   apiBusy = (async () => {
     try {
       const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
-      const r = await fetch('/game/epic-bosses?page=1', { credentials: 'include', cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(tm));
+      // 9.0: с токеном страницы (без него сервер отвечает 401 — см. content.gameAuth)
+      const r = await fetch('/game/epic-bosses?page=1', { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal }).finally(() => clearTimeout(tm));
       const j = r.ok ? await r.json() : null;
       const res = await epicApiNote(j, 'api');
       if (!res) throw new Error(r.ok ? 'в ответе нет полного списка bosses' : 'HTTP ' + r.status);

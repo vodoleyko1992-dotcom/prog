@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
@@ -1250,6 +1250,9 @@ function farmGoal() {
     const t = campOpen().find(x => x.res && FARM?.res?.[x.name.toLowerCase()]);
     if (t) return { key: t.name.toLowerCase(), name: t.name, left: t.total - t.done, why: 'глава кампании' };
   }
+  // 9.0 (игрок 11.10: «копить на определённую задачу и последовательно идти её делать»): цель «Маммон» — недостающий материал
+  // улучшения у кузнеца (по одному, по порядку списка цены). Ресурс, выбранный в «Фарм ресурса», главнее
+  if (!(cfg.farmRes || '').trim() && cfg.mmGoalItem) { const m = L2V7Modules.mammon.mmFarmGoal(); if (m) return m; }
   // 7.2.1 (игрок: «на точку квеста летаю сам и квесты выполняю сам»): «Квесты на ресурсы» — только счётчик, бот к источнику не летит
   const k = (cfg.farmRes || '').trim().toLowerCase();
   if (!k || !FARM?.res?.[k]) return null;
@@ -2143,13 +2146,13 @@ async function main() {
         servicesStarted = true;
         // Справочник предметов — только при работе с сумкой, добычей и оружием.
         // Ресурсы и рецепты подгружаем лишь при активном задании (нужны для приоритетов карты).
-        if (cfg.farmRes || cfg.resQuests || cfg.campaign) farmDb().catch(() => {});
+        if (cfg.farmRes || cfg.resQuests || cfg.campaign || cfg.mmGoalItem) farmDb().catch(() => {});
         if (cfg.recipeRes) recipeDb().catch(() => {});
         try { learnSkillDb(); } catch (e) {}
       }
       // A heartbeat alone cannot detect a live but endlessly looping dispatcher.
       // Check observable progress; exclude intentional maintenance/long waits.
-      const activeJob = isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo ||
+      const activeJob = isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow();
       const sig = [location.pathname, location.search, rt.kills, rt.rbKills,
@@ -2227,6 +2230,10 @@ async function main() {
         else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
         await sleep(200); continue;
       }
+      // 9.0 (игрок 11.10: «функция исполнения заказов» + раздел «Маммон»): заказ торговца и где стоят NPC — фоном (только GET);
+      // поход к торговцу/кузнецу — вне боя и туров, с возвратом на точку охоты
+      L2V7Modules.mammon.mmTick().catch(() => {});
+      if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -2393,6 +2400,14 @@ function serverDown() {
   // 7.2.5: перезапуск сервера может отдавать не 5xx, а страницу техработ — тоже простой (не страница входа: там поле пароля)
   return /технічн\S* (?:робот|перерв)|техническ\S* (?:работ|перерыв)|maintenance|перезапуск сервер|оновлення сервер|обновление сервер/i.test(t)
     && !document.querySelector('input[type="password"]');
+}
+// 9.0 (разбор Маммона 11.10, проверено на сервере): API игры пускает только с заголовком «Authorization: Bearer <токен>» — токен страница
+// держит в localStorage 'token'. Свои GET бота шли с одной cookie и получали 401 (/game/spawn/…/info, /game/epic-bosses, заказ Маммона):
+// отсюда «цифры … у игры не получены» и «список эпиков с сервера не получен». Токен только в заголовок запроса — никуда не пишем
+const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
+async function gameGet(path, ms = 6000) {
+  const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
+  try { return await fetch(path, { credentials: 'include', cache: 'no-store', headers: gameAuth(), signal: c.signal }); } finally { clearTimeout(tm); }
 }
 // 7.2.5 (игрок 10.10, скрин 502 Bad gateway: «сервер уходит в перезагрузку — бот должен восстанавливаться и продолжать задачу»):
 // лёгкая проверка, отвечает ли сервер игры (Cloudflare 5xx или нет ответа — «нет»). Запрос из скрипта расширения hook.js не видит
@@ -3040,6 +3055,12 @@ addEventListener('message', e => {
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
   { const m = invNote(d.inv); if (m) { INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {} } }
+  // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
+  if (tabOwner && d.status >= 200 && d.status < 300 && d.res) try {
+    const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
+    if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
+    if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
+  } catch (e) {}
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
   logCooldownApi(d, path);
@@ -3414,7 +3435,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtC
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -3453,7 +3474,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get inv
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },
@@ -3990,6 +4011,12 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get toOutskirts() { return toOutskirts; }, set toOutskirts(value) { toOutskirts = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
+
+L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
+  get cfg() { return cfg; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
+  get heroNick() { return heroNick; }, get invQty() { return invQty; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
+  get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
+  get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'kick') {

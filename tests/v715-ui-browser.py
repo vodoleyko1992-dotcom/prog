@@ -89,7 +89,7 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==7,stats   # 7.2+: 7 разделов
+    assert stats['tabs']==8,stats   # 7.2+: 7 разделов; 9.0: + «Маммон»
     assert stats['sw']<=stats['cw']+1,stats
     assert stats['navGrid']==(3 if label=='dock' else 5),stats
     for section in ('nav','plain','proof'):
