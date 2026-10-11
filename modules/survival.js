@@ -43,7 +43,9 @@ async function onDeath() {
       env.rec('B', 'смерть', `${nm}: герой погиб, пока сервер не отвечал (${hang.why || 'ход без ответа'}) — «не по силам» не пишу, недобитого РБ добью позже`);
     } else await env.rbNote(rbId, { verdict: 'no', name: nm, lvl, note: `убил героя ${hm}` });
   }
-  await env.setRt({ deaths, deathLog, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {} });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
+  // 8.0.3 (лог 11.10 11:44:43): после смерти герой в городе, дальше — «Окрестности» другого места: прежняя зона и «мягкое окно» уровней
+  // не годятся (автофарм решил «остаюсь здесь» по зоне эпика и бил мобов 15–35 героем 56) — зону определит карта заново
+  await env.setRt({ deaths, deathLog, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {}, zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
   env.rec('B', 'смерть', `смертей за 30 мин: ${deaths.length}`);
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
   // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат

@@ -260,6 +260,10 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
   }, timeout, 250);
 }
 
+// 8.0.3 (лог 11.10 11:43:44 → 11:45:53): «мягкое окно» уровней (20 мин бить мобов ниже/выше окна) открылось в Sea of Spores при выключенном
+// автофарме, а после смерти и ▶ с «Автофармом» действовало в Bee Hive — бот бил Ant Soldier 35 и Ant Larva 29 героем 56. Окно — только на той
+// локации, где его открыли, и открытое без автофарма при автофарме не действует (тот сам летит в зону своего уровня)
+const relaxOk = r => !!r && Date.now() - (r.t || 0) < 20 * 60000 && (r.zone || null) === (env.rt.zone || null) && (!env.cfg.zoneAuto || !!r.auto);
 let farRecT = 0;
 function candidates(rules, sig, types, limitIdx) {
   const out = [];
@@ -277,17 +281,17 @@ function candidates(rules, sig, types, limitIdx) {
                 quest: !!name && env.isQuestName(name, sig.quest) };
     // моб на 7+ ур. выше: атака почти не попадает (лог 20:20: Bloody Banshee 74 при герое 41 — атака 1–2 урона,
     // бой 26 с вместо 3). Такие — не цели, даже если чемпионы. Цели квеста — до +10
-    const hl = env.heroLvl();
+    const hl = env.heroLvl() || env.rt.lvl || 0;   // 8.0.3: уровень в шапке ещё не прочитан — последний известный (без него окно уровня не работало)
     // v5.6: чемпион открытой главы — цель квеста: окно «не ниже героя на N» и «не по зубам» к нему не применяем
     // (глава «Champions · Lv.24» при герое 31 — все чемпионы 24–27 отсекались окном lvlBelow 3)
     // 7.2: моб-источник ресурса/рецепта (правило farm) — как цель квеста: зона выбрана под него (до −10 ур.), окно уровней не отсекает
     const farmT = !!name && rules.some(x => x.farm && x.name === name.toLowerCase());
     const qLike = r.quest || farmT || (champ && env.campActive() && env.campChampOpen());
     // v4.58: «мягкое окно» — улететь в зону своего уровня не вышло, а тут все выше: 20 мин бьём самых слабых из тех, что есть
-    const relax = env.rt.lvlRelax && Date.now() - env.rt.lvlRelax.t < 20 * 60000 ? env.rt.lvlRelax.up : 0;
+    const relax = relaxOk(env.rt.lvlRelax) ? env.rt.lvlRelax.up : 0;
     if (hl && lvl && lvl > hl + Math.max(qLike ? 10 : 0, env.cfg.lvlAbove ?? 15, relax)) return;
     // v4.44: и не ниже героя больше чем на lvlBelow (по умолчанию 5): после смерти бот бил пауков 15 ур. героем 49
-    const relaxDown = env.rt.lvlRelaxDown && Date.now() - env.rt.lvlRelaxDown.t < 20 * 60000;   // 7.1.30: и при автофарме, если улететь не вышло
+    const relaxDown = relaxOk(env.rt.lvlRelaxDown);   // 7.1.30: и при автофарме, если улететь не вышло (8.0.3: только на той же локации)
     // 8.0 (аудит фарма A4, лог 10.10 20:08:57: чемпион «Probe Golem Prodigy IV (46)» в Pavel Ruins при герое 51 окно −3 отсекало):
     // чемпион даёт в 5–10 раз больше опыта обычного моба (≈29 тыс. против ≈3,5–6 тыс., лог 20:20–20:30) — для чемпионов нижняя
     // граница не −lvlBelow, а −8 (если игрок не поставил шире)
@@ -417,8 +421,9 @@ async function map() {
 
   if (env.cfg.rbMode || env.farmRbOn()) {
     // все РБ локации — в базу (видно игроку, даже вне уровня)
-    const seen = { ...(env.rt.rbSeen || {}) };
-    env.raidList().forEach(r => { seen[r.id] = { name: r.name, lvl: r.lvl, inRange: r.lvl >= env.rbLo(env.heroLvl()) && r.lvl <= env.rbHi(env.heroLvl()), zone: env.rt.zone || seen[r.id]?.zone || null, seenT: Date.now() }; });
+    // 8.0.3: зона РБ — только определённая на месте (сразу после перелёта «Телепортом» rt.zone ещё прежняя; телепорт к РБ и смерть её сбрасывают)
+    const seen = { ...(env.rt.rbSeen || {}) }, zNow = !(env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000) && env.rt.zone || null;
+    env.raidList().forEach(r => { seen[r.id] = { name: r.name, lvl: r.lvl, inRange: r.lvl >= env.rbLo(env.heroLvl()) && r.lvl <= env.rbHi(env.heroLvl()), zone: zNow || seen[r.id]?.zone || null, seenT: Date.now() }; });
     const rbs = env.rbCandidates(), me = env.meHp();
     await env.setRt({ rbSeen: seen, rbPending: rbs.length > 0, sinceRb: 0 });
     const bw = rbs.length && me && me.pct >= env.cfg.rbRestHp ? env.buffWaitBeforeRb() : null;
@@ -504,13 +509,19 @@ async function map() {
       env.rec('B', 'локации', 'автофарм: при старте читаю список зон «Телепорта»');
       await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return;   // kick остаётся — после чтения выбор зоны
     }
-    await env.setRt({ zoneAutoKick: null, zoneLvlT: 0 });
     await mapReady(15000);
-    if (await env.zoneForLevel()) return;
-    const pick = env.zonePick();
-    if (pick) { env.rec('B', 'локации', `автофарм: при старте → ${pick.name || pick.id}`); await env.setRt({ zoneGo: { ...pick, t: Date.now() }, zoneGoT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return; }
-    env.rec('B', 'локации', `автофарм: проверил локации — остаюсь здесь (${env.rt.zone || 'текущая зона'})`);
-    await env.setRt({ zoneGoT: Date.now() });
+    // 8.0.3 (лог 11.10 11:45:34): после смерти «проверил локации — остаюсь здесь (sea_of_spores)» решалось по зоне до смерти (зону по карте
+    // бот определял только после этого блока), и герой 56 остался бить мобов 15–35 ур. в Bee Hive. Сначала — зона по этой карте и уровень
+    // героя; не прочитались — решаем на следующем проходе карты (kick остаётся), а сейчас фармим как обычно
+    await env.absorb();
+    if (env.rt.zone && (env.heroLvl() || await env.waitFor(() => env.heroLvl(), 3000, 200))) {
+      await env.setRt({ zoneAutoKick: null, zoneLvlT: 0 });
+      if (await env.zoneForLevel()) return;
+      const pick = env.zonePick();
+      if (pick) { env.rec('B', 'локации', `автофарм: при старте → ${pick.name || pick.id}`); await env.setRt({ zoneGo: { ...pick, t: Date.now() }, zoneGoT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return; }
+      env.rec('B', 'локации', `автофарм: проверил локации — остаюсь здесь (${env.zoneName(env.rt.zone)})`);
+      await env.setRt({ zoneGoT: Date.now() });
+    }
   }
 
   let sig = aroundSig();
@@ -598,11 +609,11 @@ async function map() {
   if (!cands.length && !env.campActive() && env.cfg.zoneAuto && !(env.lootGoal?.()?.zone === env.rt.zone) && await env.zoneForLevel()) return;
   if (!cands.length && !env.campActive()) {   // 7.1.30: автофарм включён, а улететь некуда — тоже бьём, что есть, а не «Целей нет» до остановки
     const hl = env.heroLvl(), lv = pageItems().filter(i => !i.champ && !i.boss && i.lvl).map(i => i.lvl);
-    const downOn = env.rt.lvlRelaxDown && Date.now() - env.rt.lvlRelaxDown.t < 20 * 60000;
+    const downOn = relaxOk(env.rt.lvlRelaxDown);
     const lo = hl - (env.cfg.lvlBelow ?? 3);   // 7.1.30: РБ/охрана эпика не считаются; хватит того, что есть мобы ниже окна
     if (hl && lv.length && lv.some(l => l < lo) && !downOn) {
       env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур. (герой ${hl}) — подбор локации выключен, остаюсь и бью их`);
-      await env.setRt({ lvlRelaxDown: { t: Date.now() } });
+      await env.setRt({ lvlRelaxDown: { t: Date.now(), zone: env.rt.zone || null, auto: !!env.cfg.zoneAuto } });
       return;
     }
   }   // v4.44: мобов своего уровня нет — в зону своего уровня
@@ -610,11 +621,11 @@ async function map() {
   // не стоим на «Целей нет»: 20 мин бьём самых слабых из этих (бои > 45 с всё равно отсекаются как «не по зубам»)
   if (!cands.length && !env.campActive()) {
     const hl = env.heroLvl(), lv = pageItems().filter(i => !i.champ && i.lvl).map(i => i.lvl);
-    const relaxOn = env.rt.lvlRelax && Date.now() - env.rt.lvlRelax.t < 20 * 60000;
+    const relaxOn = relaxOk(env.rt.lvlRelax);
     if (hl && lv.length && Math.min(...lv) > hl + (env.cfg.lvlAbove ?? 10) && !relaxOn) {
       const up = Math.min(...lv) - hl;
       env.rec('B', 'локации', `мобов своего уровня нет, в зону своего уровня улететь не вышло — 20 мин бью самых слабых здесь (${Math.min(...lv)} ур., +${up} к герою)`);
-      await env.setRt({ lvlRelax: { t: Date.now(), up } });
+      await env.setRt({ lvlRelax: { t: Date.now(), up, zone: env.rt.zone || null, auto: !!env.cfg.zoneAuto } });
       return;                                      // следующий проход выберет цель с «мягким окном»
     }
   }

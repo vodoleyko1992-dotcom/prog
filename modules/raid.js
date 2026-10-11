@@ -228,9 +228,13 @@ async function rbInfo(id) {
   }
 }
 
+// 8.0.3 (лог 11.10 11:43:34, шапка «Ядро(50)=?@bee_hive»): зона РБ писалась из rt.zone сразу после телепорта — там ещё прежняя зона фарма.
+// Теперь телепорт к РБ/эпику и смерть сбрасывают rt.zone (content.zoneMoveNet, survival.onDeath), а перелёт по «Телепорту» (zonePend, 2 мин)
+// — не повод писать зону: пишем только зону, которую карта определила уже на месте
+const rbZoneNow = () => !(env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000) && env.rt.zone || null;
 async function rbNote(id, patch) {
   const prev = env.rt.rbDb?.[id] || { tries: 0, kills: 0 };
-  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, t: Date.now(), heroLvl: env.heroLvl(), zone: env.rt.zone || prev.zone || null } } });
+  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, t: Date.now(), heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } } });
 }
 
 function rbTourPick() {

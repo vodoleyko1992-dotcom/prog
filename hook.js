@@ -21,6 +21,9 @@
   // 7.2.3: сумка из ответа (character.inventory.stacks) целиком — redact режет массивы до 8 элементов, а боту нужны все
   // количества (заряды, банки). Только [itemId, qty] — ничего личного
   const invOf = o => { try { const st = o?.character?.inventory?.stacks || o?.inventory?.stacks; return Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : undefined; } catch (e) { return undefined; } };
+  // 8.0.3 (лог 11.10 11:41–11:44): /game/epic-bosses — ровно 8 эпиков, а redact режет массивы до 8: девятый эпик молча выключил бы разбор
+  // (бот берёт список, только если в нём ровно total боссов). Список эпиков — целиком отдельным полем (как inv и sp), каждый — через redact
+  const epicsOf = (u, o) => { try { return u.pathname === '/game/epic-bosses' && Array.isArray(o?.bosses) ? o.bosses.slice(0, 200).map(x => redact(x, 1)) : undefined; } catch (e) { return undefined; } };
   const reqBody = b => {
     try {
       if (b == null) return null;
@@ -54,7 +57,7 @@
     p.then(res => {
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, rid }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), rid }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -70,7 +73,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);
