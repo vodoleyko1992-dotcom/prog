@@ -81,10 +81,11 @@
       observe, observeSync,
       globalWait(id) { return id && spawn && String(id) !== spawn ? 0 : left(globalUntil); },
       skillWait(id, idSpawn) { return idSpawn && spawn && String(idSpawn) !== spawn ? 0 : left(skills[String(id)]?.until || 0); },
-      skillKnown(id, idSpawn) {
+      // 8.0.3: since — время нашего последнего нажатия: откат, полученный ДО него (sync до клика), об этом нажатии ничего не знает
+      skillKnown(id, idSpawn, since = 0) {
         if (idSpawn && spawn && String(idSpawn) !== spawn) return false;
         const info = skills[String(id)];
-        return !!info && clock() - info.observed < 30000;
+        return !!info && clock() - info.observed < 30000 && info.observed >= since;
       },
       recentlyGlobalRejected(since = 0) { return globalRejectAt >= since && globalRejectAt > 0 && clock() - globalRejectAt < 2000; },
       snapshot() { return { spawn, globalWait: left(globalUntil), skillUntil: Object.fromEntries(Object.entries(skills).map(([k, v]) => [k, v.until])) }; }

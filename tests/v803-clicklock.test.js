@@ -22,7 +22,7 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, gap } = {}) => {
     observeSlot: () => {}, actNet: () => NET, fire: () => { fired.push({ afterAnswer: now - NET.doneT, afterGet: getEnd ? now - getEnd : null }); if (accept) { NET.start++; NET.done++; NET.doneT = now + 300; getEnd = 0; } return true; },
     sleep: async ms => { now += ms; }, waitFor: async (fn, ms) => { const r = fn(); if (!r) now += ms; return r; }, setStatus: () => {}, skKey: () => 'blaze',
     slotCd: () => null, petState: () => null, pause: async () => {}, rnd: (a) => a, rec: () => {}, TAG: '', cleanTitle: s => s, memLeft: () => 0, FORCE_NEED: /x^/, UNAVAIL: /x^/, CD_RE: /x^/ };
-  const sb = { env, Date: { now: () => now }, Math, Map, console, ctx: { pet: null }, lostUntil: new Map(), victory: () => false, defeat: () => false, noticeText: () => '', uiReady: () => true,
+  const sb = { env, Date: { now: () => now }, Math, Map, console, ctx: { pet: null }, lostUntil: new Map(), pressAt: new Map(), victory: () => false, defeat: () => false, noticeText: () => '', uiReady: () => true,
     mobHp: () => ({ cur: 100 }), rememberCd: async () => {}, mageCombat: () => true };
   vm.runInNewContext(`${consts}\n${actSrc}\nthis.act = act; this.gap = () => clickGap;`, sb);
   return { sb, fired, rtW, NET, env };

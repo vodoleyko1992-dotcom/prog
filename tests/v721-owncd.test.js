@@ -7,17 +7,24 @@ const sb = { console, Date, Math, document: { querySelectorAll: () => [], queryS
 vm.runInNewContext(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), sb);
 let serverWait = 0;
 const now = Date.now();
+let observedAt = now - 2000;   // 8.0.3: откат сервера получен ДО нажатия (sync) — о нажатии он не знает
 const env = { rt: { cdUse: { blaze: now - 1400, 'aura burn': now - 6000 }, skills: { blaze: { cd: 3.1 }, 'aura burn': { cd: 1.1 } }, cdUntil: {} }, cfg: {},
   slotAction: b => b.cd, battleSpawn: () => 'rb', cdSpawn: () => 'rb', skKey: b => b.title.toLowerCase(), slotKind: () => 'скилл', slotCd: () => null, memLeft: () => 0,
-  combatCooldown: { skillKnown: () => true, skillWait: () => serverWait, globalWait: () => 0 }, HP_POT_RE: /зцілен/i, uiTimer: () => NaN };
+  combatCooldown: { skillKnown: (id, sp, since = 0) => observedAt >= since, skillWait: () => serverWait, globalWait: () => 0 }, HP_POT_RE: /зцілен/i, uiTimer: () => NaN };
 const C = sb.L2V7Factories.combat(env);
 const btn = (title, cd) => ({ title, cd, disabled: false, getAttribute: () => null, querySelector: () => null });
 const blaze = btn('Blaze', 'l2_1220'), ab = btn('Aura Burn', 'l2_1172');
+C.pressAt.set('blaze', now - 1400);   // 8.0.3: время клика (откат сервера получен раньше — о нём не знает)
 assert.equal(C.ready(blaze), false, 'server says ready, own press 1.4 s ago (cd 3.1 → 2.6 s) → not ready');
 assert.equal(C.ready(ab), true, 'other spell is ready → bot casts it in between');
-env.rt.cdUse.blaze = now - 2700;
+env.rt.cdUse.blaze = now - 2700; C.pressAt.set('blaze', now - 2700);
 assert.equal(C.ready(blaze), true, 'after 85 % of the measured cooldown → ready');
 serverWait = 500; assert.equal(C.ready(blaze), false, 'server wait still counts');
+// 8.0.3: откат получен ПОСЛЕ нажатия (ответ на сам ход, delta.skillCooldowns) — верим только серверу: под баффом Blaze готов раньше своей оценки
+env.rt.cdUse.blaze = now - 900; observedAt = now - 850; serverWait = 0;
+C.pressAt.set('blaze', now - 900);
+assert.equal(C.ready(blaze), true, 'server deadline from this press says ready → ready (own stale 3.1 s ignored)');
+serverWait = 300; assert.equal(C.ready(blaze), false, 'server wait from this press counts');
 console.log('PASS: own press cooldown is not overridden by a stale server «ready» (RB log 22:19)');
 // 7.2.2 (лог 22:31–23:07): клик не ушёл в игру — это заклинание 0,7 с «занято», бот бьёт другим
 {

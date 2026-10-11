@@ -54,6 +54,7 @@ function cdBusy(b) {
 // 7.2.2 (лог 10.10 22:31–23:07, РБ под «Даром Серафима»): 53 клика не ушли в игру (Blaze 18, Vampiric Touch 18, Aura Burn 15) — игра
 // считала заклинание на откате, а бот после потерянного клика жал его же снова. Потерянный клик — заклинание «занято» 0,7 с, бьём другим
 const lostUntil = new Map();
+const pressAt = new Map();                         // 8.0.3: skKey → время клика (откат сервера, полученный раньше, об этом нажатии не знает)
 const ownLeft = b => {
   const k = env.skKey(b), lost = Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000;
   const u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
@@ -73,6 +74,11 @@ const lostLeft = b => Math.max(0, (lostUntil.get(env.skKey(b)) || 0) - Date.now(
 function localCdLeft(b) {
   const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
   const own = overlayReadySeen.has(b) ? lostLeft(b) : ownLeft(b);
+  // 8.0.3 (разбор откатов 11.10): сервер знает откат ЭТОГО нажатия (получен не раньше него; с 11.10 — в каждом ответе на ход,
+  // delta.skillCooldowns, с учётом баффов) — только он и потерянный клик; своя оценка (застывшие «Blaze 3,1 с») его не удлиняет.
+  // Откат из sync, пришедший ДО нажатия (лог 10.10 22:19: «готов» через 1,4 с, игра отказала), — не знание, а запасной путь
+  const pressT = pressAt.get(env.skKey(b)) || 0;
+  if (action && env.combatCooldown.skillKnown?.(action, spawn, pressT)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, lostLeft(b));
   if (action && env.combatCooldown.skillKnown?.(action, spawn)) return Math.max(env.combatCooldown.skillWait(action, spawn) / 1000, own);
   if (overlayReadySeen.has(b)) return own; // observed busy -> ready; an absent overlay alone is not evidence
   return Math.max(env.memLeft(b), ownLeft(b));
@@ -849,6 +855,7 @@ async function battle() {
     const net0 = env.actNet?.().start || 0;
     if (!env.fire(b)) return false;
     lastAct = Date.now();
+    if (env.skKey(b)) pressAt.set(env.skKey(b), firedAt);
     if (ctx.pet && env.petState?.()?.has !== false) ctx.pet.acts++;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
     // 7.1.17: ждём, пока игра отправит ход (до 0,6 с) и получит ответ сервера (до 6 с) — иначе следующий клик теряется
     // 8.0.3: запрос уходит сразу после клика — ждём 400 мс (было 600: потерянный клик стоил лишние 0,2 с)
@@ -884,6 +891,8 @@ async function battle() {
     if (done === true) await rememberCd(b, 'used');
     else if (done === 'cd') {
       if (!env.combatCooldown.recentlyGlobalRejected(firedAt)) await rememberCd(b, 'cd');
+      // 8.0.3: отказ «на перезарядке» держит именно этот скилл (ветка «сервер знает откат» rt.cdUntil не читает — иначе жал бы его снова и снова)
+      if (env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + Math.max(300, env.memLeft(b) * 1000));
       env.rec('B', 'перезарядка', `«${env.cleanTitle(b.title)}» ещё на КД — жду ${env.memLeft(b).toFixed(1)} с, бью другим`);
       console.info(env.TAG, `${b.title}: на перезарядке, ещё ≈${env.memLeft(b).toFixed(1)} с`);
       await env.sleep(env.rnd(80, 160));
@@ -1515,6 +1524,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { lostUntil, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { lostUntil, pressAt, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
