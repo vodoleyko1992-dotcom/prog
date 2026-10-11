@@ -3995,7 +3995,7 @@ L2V7Modules.economy = L2V7Factories.economy({ get shopBuyNet(){return () => SHOP
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_POT_RE; }, set HP_POT_RE(value) { HP_POT_RE = value; },
-  get shotGrade() { return (...a) => L2V7Modules.economy.shotGrade(...a); }, get $q() { return $q; }, get shown() { return shown; },
+  get shotGrade() { return (...a) => L2V7Modules.economy.shotGrade(...a); }, get shotsMage() { return (...a) => L2V7Modules.economy.shotsMage(...a); }, get $q() { return $q; }, get shown() { return shown; },
   get MP_REGEN() { return MP_REGEN; }, set MP_REGEN(value) { MP_REGEN = value; },
   get POT_LAST() { return POT_LAST; }, set POT_LAST(value) { POT_LAST = value; },
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
