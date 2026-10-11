@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **8.0.8**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **9.0**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 ## Навыки проекта (`.claude/skills/`)
 
@@ -46,7 +46,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (152 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (163 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -93,7 +93,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 152 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 163 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -109,7 +109,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **9.0 (в работе, автокач по КПД; CHANGELOG-9.0.md)**: выбор зоны по прогнозу EXP/ч из встроенной базы (zone-db.js + zone-kpd.js), прогноз
+- **9.0 (собрана 11.10; автокач по КПД; CHANGELOG-9.0.md)**: выбор зоны по прогнозу EXP/ч из встроенной базы (zone-db.js + zone-kpd.js), прогноз
   приводится к своим замерам (navigation.kpdOf: k = медиана замер÷прогноз; zoneScore подтягивает замер к своему прогнозу), каталог = база +
   «Телепорт» (catAll), проба зоны только при прогнозе ≥ 0,9 лучшей; обучение по rt.mobVal (время на моба, поправка за уровни выше, верх окна
   cfg.zoneAbove расширяется по уверенным боям, сужается после смертей). Меню: колонка КПД, маршрут 1→80. Тест v90-autofarm (+ симуляция кача).
