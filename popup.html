@@ -459,6 +459,18 @@
   <label>Сам ходить к магистру учить скиллы (каждые 2 ур.) <input id="autoMagister" type="checkbox"></label>
   <div class="hint">По умолчанию выключено — скиллы учишь сам.</div>
 
+  <div class="subsec-title"><span id="tab-enemies" class="tab-anchor"></span>☠ Лист врагов</div>
+  <div class="intro-callout"><b>Кто убил тебя — тот враг.</b><p>Игрок, убивший героя, сам попадает в лист (из ответа игры: ник, сколько раз убил, какими ударами). Пока герой охотится, бот поглядывает, кто на локации (раз в 30 с). Враг из листа появился — бот добивает текущего моба и нападает на него кнопкой игры «Атакувати». Убил — следит дальше: вернётся — нападёт снова. Напал враг из листа — бот отвечает.</p></div>
+  <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
+  <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
+  <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
+  <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
+  <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
+  <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
+  <label>Проиграли подряд — не трогать до нового уровня после, раз <input id="enemyMaxLoss" type="number" min="1" max="10"></label>
+  <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
+  <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
+
   <div class="subsec-title" data-cls="summoner"><span id="tab-pet" class="tab-anchor"></span>🐱 Warlock — маг с котом</div>
   <div class="intro-callout"><b>Кот Warlock.</b><p>Кот бьёт вместе с тобой на каждое твоё действие (≈35–40 % всего урона). Бот призывает кота первым действием боя, если его нет, держит его HP, ставит баффы кота и считает, сколько урона даёт каждый кот. «Summon Feline Queen» на L2WAP — это бафф кота <b>Blessing of Queen</b> (+20 % крит-урона слуги на 2 мин): бот держит его в «Баффах кота» и обновляет, как только истечёт. Заклинания, дебаффы и вампиризм — в блоке «Маг» ниже.</p></div>
   <h4 data-cls="summoner">🐱 Кот</h4>
@@ -726,6 +738,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="zone-db.js"></script>
 <script src="zone-kpd.js"></script>
+<script src="modules/enemies.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>

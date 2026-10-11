@@ -63,6 +63,25 @@
       spoil: sp && typeof sp === 'object' ? { ok: !!(sp.ok ?? sp.success), text: String(sp.messageUk || sp.message || '').slice(0, 120) } : sp == null ? undefined : String(sp).slice(0, 60),
       now: n(d.serverNowMs ?? o.serverNowMs) };
   } catch (e) { return undefined; } };
+  // 9.2 (лист врагов; живой ответ 11.10 17:39 — Warlock убит игроком Dremia): смерть от игрока (pvpDefeat — в /character, /game/map/sync,
+  // ответе боя), игроки на локации (/game/map/sync → around.nearbyHeroes, /game/map/around → nearbyHeroes; redact режет массив до 8 и
+  // вымарывает поля с «nick») и кто напал сейчас (pvpIncoming). Кратко: id, ник, уровень, цвет ника, можно ли напасть, удары убийцы из лога
+  const pvOf = o => { try {
+    if (!o || typeof o !== 'object') return undefined;
+    const s = (v, n = 60) => v == null ? '' : String(v).slice(0, n);
+    const ar = Array.isArray(o.nearbyHeroes) ? o.nearbyHeroes : Array.isArray(o.around?.nearbyHeroes) ? o.around.nearbyHeroes : null;
+    const df = [o.pvpDefeat, o.character?.pvpDefeat, o.defeat].find(x => x && typeof x === 'object' && x.killerName);
+    const ic = Array.isArray(o.pvpIncoming) ? o.pvpIncoming : o.pvpIncoming && typeof o.pvpIncoming === 'object' ? [o.pvpIncoming] : null;
+    if (!ar && !df && !ic) return undefined;
+    return {
+      heroes: ar ? ar.slice(0, 200).filter(h => h && typeof h === 'object').map(h => ({ id: s(h.characterId), name: s(h.name), lvl: +h.level || 0, col: s(h.pvpNickColor, 20),
+        atk: 'battleOnNameClick' in h || 'showPkButton' in h ? h.battleOnNameClick === true || h.showPkButton === true : null,
+        ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: s(h.pvpBlockedReasonUk, 120), party: !!h.isPartyMember })) : undefined,
+      zone: s(o.around?.nearestLabelUk || o.nearestLabelUk || o.mapState?.currentZoneNameUk || o.character?.currentZoneNameUk, 80) || undefined,
+      defeat: df ? { id: s(df.killerCharacterId), name: s(df.killerName), ev: s(df.deathEventId), scope: s(df.scope, 30), arena: df.arena === true,
+        log: Array.isArray(df.fullLog) ? df.fullLog.slice(-40).map(x => s(typeof x === 'string' ? x : x?.text ?? x?.message, 200)) : [] } : undefined,
+      incoming: ic ? ic.filter(x => x && x.attackerCharacterId).slice(0, 10).map(x => ({ id: s(x.attackerCharacterId), name: s(x.attackerName), mode: s(x.playerCombatMode, 20) })) : undefined };
+  } catch (e) { return undefined; } };
   // 9.0: на страницах катакомб/подземелья/торговцев игра сообщает об ошибке через alert() — окно останавливает страницу (и бота) до нажатия
   // «ОК». Там вместо окна — сообщение боту (журнал) и в консоль; на других страницах alert не трогаем
   if (/^\/(?:catacombs|dungeon|ancient-trader|mammon-[\w-]+)\.html$/.test(location.pathname)) {
@@ -86,7 +105,7 @@
     p.then(res => {
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), dm: dungMobs(u, o), bt: btOf(u, o), rid }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -102,7 +121,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), dm: dungMobs(u, o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);

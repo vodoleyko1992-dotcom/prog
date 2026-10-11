@@ -84,12 +84,12 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['enemyLvlAbove', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
-const BOOL = ['sealAuto', 'mmOrders', 'storyTurnIn', 'mmGoalFarm', 'mmSmithAuto', 'rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, sealAuto: false, sealMin: 1, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['sealAuto', 'mmOrders', 'storyTurnIn', 'mmGoalFarm', 'mmSmithAuto', 'rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly'];
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, sealAuto: false, sealMin: 1, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponSwap: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', nWeaponBuff: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               chain: true, searchQuest: true, searchChamp: false, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
@@ -227,6 +227,7 @@ async function load() {
 
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderFight(rt);
+  renderEnemies(rt);
   renderPet(rt);
   paintRbOne(rt, on, paused);
   renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
@@ -1214,7 +1215,7 @@ function renderStory(rt) {
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
 $('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));
 
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', enemies: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
@@ -1478,6 +1479,25 @@ function renderFight(rt) {
   if (ch.length) out.push('Чемпионы:\n' + byT(ch).slice(0, 5).map(k => '• ' + line(k)).join('\n'));
   if (mob.length) out.push('Мобы (последние):\n' + byT(mob).slice(0, 8).map(k => '• ' + line(k)).join('\n'));
   box.textContent = keys.length || L ? out.join('\n') : 'Боёв с анализом ещё нет — появится после первых боёв на 9.2';
+}
+// 9.2: «☠ Лист врагов» — rt.enemies (кто убил героя); у каждого: не трогать / убрать из листа
+const EN = typeof L2V7Factories !== 'undefined' && L2V7Factories.enemies ? L2V7Factories.enemies({ rt: {}, cfg: {} }) : null;
+function renderEnemies(rt) {
+  const box = $('enemyBox'); if (!box) return;
+  const E = rt.enemies || {}, keys = Object.keys(E).sort((a, b) => (E[b].lastKill || 0) - (E[a].lastKill || 0));
+  const sig = JSON.stringify(E); if (box.dataset.sig === sig) return; box.dataset.sig = sig;
+  box.textContent = '';
+  if (!keys.length) { box.textContent = 'Лист пуст — сюда попадут игроки, которые убьют героя'; return; }
+  for (const k of keys) {
+    const e = E[k], item = document.createElement('div'), row = document.createElement('div'); row.className = 'row'; item.style.margin = '4px 0 8px';
+    const t = document.createElement('div'); t.textContent = '☠ ' + (EN ? EN.brief(e) : `${e.name}: убил нас ${e.kills || 0}×`);
+    const ig = document.createElement('button'); ig.textContent = e.ignore ? '⚔ Нападать' : '🚫 Не трогать'; ig.title = e.ignore ? 'Снова нападать на этого врага' : 'Оставить в листе, но не нападать';
+    ig.onclick = async () => { const { rt: r = {} } = await chrome.storage.local.get('rt'); const X = { ...(r.enemies || {}) }; if (!X[k]) return;
+      X[k] = { ...X[k], ignore: !X[k].ignore, blockLvl: 0, skipT: 0, skipWhy: '' }; await menuPatch({ enemies: X }); toast(X[k].ignore ? `${e.name}: не трогать` : `${e.name}: снова враг`); };
+    const rm = document.createElement('button'); rm.textContent = '🗑'; rm.title = 'Убрать из листа врагов';
+    rm.onclick = async () => { const { rt: r = {} } = await chrome.storage.local.get('rt'); const X = { ...(r.enemies || {}) }; delete X[k]; await menuPatch({ enemies: X }); toast(`${e.name} убран из листа`); };
+    row.append(ig, rm); item.append(t, row); box.append(item);
+  }
 }
 confirmClick('fightMemReset', async () => {
   await menuPatch({ fightMem: {}, fightLast: null });
