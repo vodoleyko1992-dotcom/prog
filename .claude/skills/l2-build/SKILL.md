@@ -25,8 +25,8 @@ description: Сборка новой версии L2wap Bot — поднять �
 5. **Zip**:
    ```
    rm -f l2wap-bot-vX.Y.Z.zip
-   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
-   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|\.git/\|\.claude/"   # 0
+   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' 'kb/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
+   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|kb/\|\.git/\|\.claude/"   # 0
    ```
 6. **Загрузка zip в Chromium**: распаковать во временную папку scratchpad и
    `NODE_PATH=$(npm root -g) node tests/tools/zipload.cjs <папка>` → версия, 0 ошибок консоли, ключевые значения cfg.

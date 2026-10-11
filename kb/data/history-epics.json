@@ -1,0 +1,78 @@
+{
+ "source": "session_01ChEZvMoWB76qH2jnRofNs6; t=UTC время сообщения, game=местное время игрока (~UTC+9.5..10)",
+ "epics": [
+  {
+   "name": "Королева Муравьёв",
+   "en": "Queen Ant",
+   "lvl": 40,
+   "respawnH": 12,
+   "hp": 430000,
+   "patk": 3150,
+   "matk": 2562,
+   "pdef": 1985,
+   "mdef": 1823,
+   "reward": {
+    "exp": 1180000,
+    "sp": 281000,
+    "adena": 100000,
+    "drop": "Кольцо Королевы 30%"
+   },
+   "note": "не пускает при герое 54: эпик ниже разрешённого уровня",
+   "t": "10.10 23:03"
+  },
+  {
+   "name": "Орфен",
+   "en": "Orfen",
+   "lvl": 50,
+   "respawnH": 12,
+   "hit": "2500-2900 = 40-57% HP героя",
+   "t": "11.10 03:56"
+  },
+  {
+   "name": "Ядро",
+   "en": "Core",
+   "lvl": 50,
+   "respawnH": 12
+  },
+  {
+   "name": "Закен",
+   "en": "Zaken",
+   "lvl": 60,
+   "respawnH": 36
+  },
+  {
+   "name": "Баюм",
+   "en": "Baium",
+   "lvl": 75,
+   "respawnH": 60
+  },
+  {
+   "name": "Антарас",
+   "en": "Antharas",
+   "lvl": 79,
+   "respawnH": 72
+  },
+  {
+   "name": "Валакас",
+   "en": "Valakas",
+   "lvl": 85,
+   "respawnH": 240
+  },
+  {
+   "name": "Фринтеза",
+   "en": "Frintezza",
+   "lvl": 90,
+   "respawnH": 60
+  }
+ ],
+ "rules": {
+  "teleportCost": "1 Coin of Luck",
+  "levelGate": "minRaidBossLevel = герой - 9",
+  "maxDeaths": 3,
+  "CoL": "донат, 0 = никогда не тратить (игрок 10.10 12:32, 11.10 12:01)"
+ },
+ "api": {
+  "list": "GET /game/epic-bosses {characterLevel,minRaidBossLevel,total,bosses[{spawnId,level,isAlive,canAttack,attackBlockedReasonUk,coinOfLuckCost,adenaCost,vipFreeApplied,respawnHours}]}",
+  "teleport": "POST /game/epic-boss/teleport {spawnId,expectedRevision,expectedCoinOfLuckCost}"
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "source": "session_01ChEZvMoWB76qH2jnRofNs6; t=UTC время сообщения, game=местное время игрока (~UTC+9.5..10)",
+ "noFA": {
+  "Blaze": {
+   "dmg": "895 (старый посох) / 1730-1800 (Sprite's Staff)",
+   "mp": 22,
+   "cd": 3.1
+  },
+  "AuraBurn": {
+   "dmg": "847/~1700",
+   "mp": 25,
+   "cd": 2.2
+  },
+  "EnergyBolt": {
+   "dmg": 773,
+   "mp": 8,
+   "cd": 2.2
+  },
+  "VT": {
+   "dmg": 657,
+   "mp": 12
+  },
+  "CorpseLifeDrain": {
+   "heal": 178,
+   "mp": 0,
+   "cd": 2
+  }
+ },
+ "FA": {
+  "Blaze": "2770-3600, крит 28-43%",
+  "AuraBurn": "2400-4900 (~3000)",
+  "AB_cd": "1.1 с вместо 2.2",
+  "dps_rb": "3000-3700 против 1650-1700"
+ },
+ "server": {
+  "cdNoFA": "0.66-0.75 с",
+  "seraphimAccept": "~0.85 с",
+  "noSeraphimAccept": "~1.1 с",
+  "seraphimCdEst": "~0.5 с (косвенно)"
+ },
+ "lostClicks": {
+  "duringGetCharacter": "770/770 потеряно",
+  "after25_200ms": "95% доходит",
+  "getStart": "~8 мс после ответа хода",
+  "getLen": "0.25-0.56 с",
+  "v80": "1302 из 1689 ходов, ход 1.6-1.8 с, ДПС 1436-1606",
+  "gateA": [
+   60,
+   500,
+   120
+  ],
+  "gateB": [
+   30,
+   200,
+   50
+  ]
+ },
+ "cats": {
+  "mult": {
+   "Kai": 25,
+   "Mew": 20,
+   "Kat": 15,
+   "Feline Queen": 10
+  },
+  "hit": {
+   "Kai": 1870,
+   "Feline Queen": 1216
+  },
+  "KaiMiss": "16%"
+ }
+}
