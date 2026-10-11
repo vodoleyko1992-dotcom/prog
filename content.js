@@ -13,7 +13,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
-  autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
+  autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
   chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
@@ -271,7 +271,6 @@ async function buffAuditStep(...args) { return L2V7Modules.buffs.buffAuditStep(.
 const EQUIP_OK = /змінено|изменено|одягнено|надето|экипир/i;
 function equipBy(...args) { return L2V7Modules.equipment.equipBy(...args); }
 async function equip(...args) { return L2V7Modules.equipment.equip(...args); }
-const canSwap = (...args) => L2V7Modules.equipment.canSwap(...args);
 
 // ---------- энергия силы: Focused Force копит, Hurricane Assault / Force Blaster тратят ----------
 // Лог игры: «Концентрація сили: +1 енергія (1/2).» — счётчик и предел; «Hurricane Assault: сила 535, −2 енергії сили» — трата.
@@ -507,12 +506,6 @@ function itemOf(x) {                             // по ID или англий�
   const id = typeof x === 'number' ? x : ITEM_BY_NAME[String(x || '').trim().toLowerCase()];
   return id != null && ITEMS[id] ? { id, ...ITEMS[id] } : null;
 }
-function weaponWt(name) {                        // вид оружия по иконке слота: scallop_jamadhr.png → Scallop Jamadhr → кастеты
-  const b = name ? equipBy(name) : null;           // v4.33: было «name && …» — пустая строка ломала b?.querySelector
-  const stem = (b?.querySelector('img')?.getAttribute('src') || '').split('/').pop().replace(/\.\w+$/, '').replace(/[_-]+/g, ' ');
-  return itemOf(stem)?.wt || '';
-}
-const isFistName = n => /кастет|джамадх|jamadh|fist|knuckle|claw|cestus|baghnakh|багнак/i.test(n || '') || weaponWt(n) === 'кастеты';
 // баффы с общим слотом эффекта (все тотемы — «possession») стирают друг друга: держим один, самый полезный для урона
 // v5.3: «Важные баффы» без условия по HP (War Cry, Battle Roar…) — в бою с РБ и чемпионами (или в каждом бою,
 // если снята галочка «только РБ/чемпионы»); с условием HP ≤ 30 % (Frenzy, Guts, Zealot) — аварийный блок боя
@@ -1779,7 +1772,7 @@ async function goFishing(...args) { return L2V7Modules.fishing.goFishing(...args
 // ---------- персонажи: у каждого своё состояние (кампания, квесты, РБ, профили скиллов) и свои роли панели ----------
 const heroNick = () => (($q('#l2-hud-legacy-name .l2-player-identity__nick')?.childNodes[0]?.textContent)
   || $q('#l2-hud-legacy-name')?.textContent || '').trim();
-const ROLE_KEYS = ['nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'nPetBuffs'];
+const ROLE_KEYS = ['nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nWeaponMain', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'nPetBuffs'];
 // страница переведена браузером (Google Translate): текст искажён — ник «Teddy» превращается в «Тедди»
 const pageTranslated = () => /translated-(ltr|rtl)/.test(document.documentElement.className) || !!$q('font[style*="vertical-align"]');
 async function switchChar() {
@@ -2278,6 +2271,11 @@ async function main() {
       if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
       if (rt.invScan) await setRt({ invScan: null });
       if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); continue; }   // 8.0.3: дополнение «РБ между мобами» не отменяет чтение сумки
+      // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
+      if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) {
+        const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
+        if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); continue; }
+      }
       // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
       if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
       else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(5000); } }
@@ -3051,7 +3049,7 @@ async function weaponEquipNote(req) {
   const W = [...(rt.weapons || [])];
   if (req.action === 'equip') {
     const it = itemOf(+req.itemId); if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) return;
-    const w = { id: +req.itemId, en: it.n, name: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: (it.pa || 0) + (+req.enchantPAtkBonus || 0), ma: typeof it.ma === 'number' ? it.ma : null,
+    const w = { id: +req.itemId, en: it.n, name: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: (it.pa || 0) + (+req.enchantPAtkBonus || 0), ma: typeof it.ma === 'number' ? it.ma + (+req.enchantMAtkBonus || 0) : null,   // 9.2.3: и M.Atk заточки (магу)
       spd: it.spd || 0, two: !!it.two, ench: +req.enchant || 0, where: 'надето', inst: req.targetInstanceId || '' };
     for (const x of W) if (x.where === 'надето') x.where = 'сумка';
     const i = W.findIndex(x => x.id === w.id && (!x.inst || !w.inst || x.inst === w.inst));
@@ -3617,7 +3615,6 @@ L2V7Modules.combat = L2V7Factories.combat({ get fightDmgOn() { return fightDmgOn
   get campActive() { return campActive; }, set campActive(value) { campActive = value; },
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
-  get canSwap() { return canSwap; }, set canSwap(value) { canSwap = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
   get chargeValue() { return chargeValue; }, set chargeValue(value) { chargeValue = value; },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
@@ -3652,7 +3649,6 @@ L2V7Modules.combat = L2V7Factories.combat({ get fightDmgOn() { return fightDmgOn
   get isChamp() { return isChamp; }, set isChamp(value) { isChamp = value; },
   get isChargeName() { return isChargeName; }, set isChargeName(value) { isChargeName = value; },
   get isEquip() { return isEquip; }, set isEquip(value) { isEquip = value; },
-  get isFistName() { return isFistName; }, set isFistName(value) { isFistName = value; },
   get isForceName() { return isForceName; }, set isForceName(value) { isForceName = value; },
   get isQuestName() { return isQuestName; }, set isQuestName(value) { isQuestName = value; },
   get isRaidId() { return isRaidId; }, set isRaidId(value) { isRaidId = value; },
@@ -4196,9 +4192,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   if (names(cfg.nPower || '').some(n => isChargeName(n) || isForceName(n)))
     cf.nPower = (cfg.nPower || '').split(',').map(x => x.trim()).filter(x => x && !isChargeName(x) && !isForceName(x)).join(', ') || 'Iron Punch';
   // v4.7: игра отдала имя надетого оружия как «#262» — сбрасываем такое имя и проверяем инвентарь заново
-  if (/^#\d+$/.test(cfg.nWeaponMain || '') || /^#\d+$/.test(cfg.nWeaponBuff || '') || (rt.weapons || []).some(w => /^#\d+$/.test(w.name || ''))) {
+  if (/^#\d+$/.test(cfg.nWeaponMain || '') || (rt.weapons || []).some(w => /^#\d+$/.test(w.name || ''))) {
     if (/^#\d+$/.test(cfg.nWeaponMain || '')) cf.nWeaponMain = '';
-    if (/^#\d+$/.test(cfg.nWeaponBuff || '')) cf.nWeaponBuff = '';
     Object.assign(rf, { weapons: [], weaponsT: 0, weaponRec: null });
   }
   // --- значения по умолчанию, менявшиеся по просьбам игрока (по возрастанию версий; новые перекрывают старые) ---
@@ -4294,6 +4289,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (!ps.some(n => /^summon feline queen$/i.test(n))) cf.nPetBuffs = [...ps, 'Summon Feline Queen'].join(', ');
     if (/feline queen/i.test(String(C('petSummon') || ''))) cf.petSummon = '';
   });
+  once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)
   once('camp721', () => { cf.campaign = false; Object.assign(rf, { campOnce: false, campaignDue: false }); });   // 7.2.1: кампания убрана — квесты игрок ведёт сам

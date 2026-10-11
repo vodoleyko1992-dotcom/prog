@@ -24,7 +24,8 @@ async function testItems() {
       return { ok: true, async json() { return { 1: { n: 'Test Sword', wt: 'меч' }, 2: { n: 'Other' } }; } };
     }
   });
-  vm.runInContext(chunk(src, 'let ITEMS =', 'function weaponWt') + '\nthis.itemsDb=itemsDb;this.itemOf=itemOf;this.clear=()=>{ITEMS=null;itemsRetryAt=0;};', c);
+  // 9.2.3: weaponWt убран вместе со сменой оружия ради баффа — конец вырезки по следующему комментарию
+  vm.runInContext(chunk(src, 'let ITEMS =', '// баффы с общим слотом эффекта') + '\nthis.itemsDb=itemsDb;this.itemOf=itemOf;this.clear=()=>{ITEMS=null;itemsRetryAt=0;};', c);
   const [a, b] = await Promise.all([c.itemsDb(), c.itemsDb()]);
   assert.equal(n, 1, 'Concurrent item requests should share one fetch');
   assert.equal(a, b);
