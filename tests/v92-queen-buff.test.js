@@ -31,7 +31,7 @@ assert.match(read('popup.html'), /Blessing of Queen/);
   assert.doesNotMatch(r.nPower || '', /feline/i); assert.doesNotMatch(r.nBuffs || '', /feline/i); assert.doesNotMatch(r.nHeal || '', /feline/i);
 }
 
-// 3. бой: бафф ставится, когда истёк (2 мин), даже если моб умрёт с одного удара (цепочка); королева — не кот для призыва
+// 3. бой: бафф ставится, когда истёк (2 мин), на РБ и толстом мобе; на мобе-однохитке (цепочка) — нет (ход дороже +0,8 % урона); королева — не кот
 {
   const mk = (title, cd, il, kind = 'скилл') => ({ title, cd, il, kind, disabled: false, className: '', isConnected: true, getAttribute(k) { return k === 'data-slot-cd' ? this.cd : null; } });
   const queen = mk('Summon Feline Queen', 'l2_1331', { c: 'Бафф', t: 'BUFF', target: 'PET', dur: 120, mp: 87 });
@@ -48,13 +48,14 @@ assert.match(read('popup.html'), /Blessing of Queen/);
     setRt: async p => { Object.assign(env.rt, p); return { ok: true }; }, rec() {} };
   const C = sb.L2V7Factories.combat(env), mp = { cur: 4000, max: 5126 };
   const chain = { cur: 3060, max: 3060, pct: 100 };   // Banshee: умирает с одного Blaze — «осталось < 2 ходов»
-  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, chain)?.n, 'summon feline queen', 'короткий бафф ставится и на мобе-однохитке');
+  const rb = { cur: 700000, max: 771340, pct: 91 }, rbCtx = { block: {}, rb: { id: 'l2dop_rb_25050' } };
+  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, chain), null, 'моб-однохитка (цепочка) — бафф не ставим, ход дороже');
+  assert.equal(C.petBuffPick(rbCtx, { pct: 100 }, mp, rb)?.n, 'summon feline queen', 'на РБ — ставим (первый в списке)');
   env.rt.petBuffAt = { 'summon feline queen': Date.now() - 60000 }; env.rt.petBornT = Date.now() - 600000;
-  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, chain), null, 'висит (прошла 1 мин из 2) — Haste длинный, на однохитке его не ставим');
-  env.rt.petBuffAt = { 'summon feline queen': Date.now() - 116000 };
-  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, chain)?.n, 'summon feline queen', 'истёк (115 с из 120) — повтор');
-  env.rt.petBuffAt = { 'summon feline queen': Date.now() - 1000 };
-  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, { cur: 700000, max: 771340, pct: 91 })?.n, 'servitor haste', 'на РБ/толстом мобе — длинный бафф как раньше');
+  assert.equal(C.petBuffPick(rbCtx, { pct: 100 }, mp, rb)?.n, 'servitor haste', 'висит (1 мин из 2) — следующий бафф');
+  env.rt.petBuffAt = { 'summon feline queen': Date.now() - 116000, 'servitor haste': Date.now() - 1000 };
+  assert.equal(C.petBuffPick(rbCtx, { pct: 100 }, mp, rb)?.n, 'summon feline queen', 'истёк (115 с из 120) — повтор');
+  assert.equal(C.petBuffPick({ block: {} }, { pct: 100 }, mp, { cur: 20000, max: 20000, pct: 100 })?.n, 'summon feline queen', 'толстый моб (≥ 2 ходов) — ставим');
   assert.equal(C.petPick(slots.filter(b => /^summon/i.test(b.title)), '')?.title, 'Summon Kai the Cat', 'королева — не кот для призыва');
   assert.equal(C.petPick([queen], 'feline_queen'), null);
 }
