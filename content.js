@@ -1,4 +1,4 @@
-// ===== L2wap Bot v8.0.7 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v8.0.8 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -2546,6 +2546,8 @@ function layoutInd(bounds) {
     ui.style.width = free >= 300 ? `${Math.min(free, 760)}px` : '';
   } catch (e) {}   // индикатор ещё не создан
 }
+// 8.0.7 (игрок: «основная версия — не под андроиды, там ничего не меняем»): раскладка для планшета — только на Android
+const ANDROID = /Android/i.test(navigator.userAgent || '');
 let dockOver = false;
 const dockOverOpen = () => { try { return localStorage.getItem('l2bot-dockOpen') === '1'; } catch (e) { return false; } };
 function dock() {
@@ -2559,7 +2561,7 @@ function dock() {
   // телефон, узкое окно) — меню стояло поверх правой половины игры, индикатор налезал на меню и кнопки игры. Теперь в таком
   // случае меню свёрнуто, пока его не откроют язычком (своё для этого устройства — localStorage, cfg.dockMin общий с ПК не трогаем),
   // язычок крупнее под палец, открытое меню шире, индикатор — 3 строки и прячется, пока меню открыто поверх игры
-  dockOver = !(bounds.right > 0 && available >= 300);
+  dockOver = ANDROID && !(bounds.right > 0 && available >= 300);
   const min = dockOver ? !dockOverOpen() : !!cfg.dockMin;
   if (!wrap) {
     wrap = document.createElement('div');
@@ -2581,8 +2583,8 @@ function dock() {
   }
   layoutInd(bounds);
   try { ui.classList.toggle('over', dockOver); ui.classList.toggle('hid', dockOver && !min); draw(); } catch (e) {}   // индикатор ещё не создан
-  // Если рядом места нет (узкое окно или ещё не загрузилась игра) — панель поверх игры (8.0.7: до 460 px, было 380)
-  const w = !dockOver ? available : Math.min(460, Math.max(0, viewport - 16));
+  // Если рядом места нет (узкое окно или ещё не загрузилась игра) — компактная панель поверх игры (8.0.7: на Android до 460 px)
+  const w = bounds.right > 0 && available >= 300 ? available : Math.min(dockOver ? 460 : 380, Math.max(0, viewport - 16));
   wrap.style.cssText = `position:fixed;top:8px;right:${min ? -w : 8}px;bottom:8px;width:${w}px;z-index:2147483646;`
     + 'box-sizing:border-box;border:1px solid #56452f;border-radius:12px;background:#14100d;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:right .2s';
   const toggle = wrap.querySelector('#l2bot-dock-toggle'), tw = dockOver ? 36 : 26;
