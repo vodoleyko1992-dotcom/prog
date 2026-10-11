@@ -47,6 +47,8 @@ const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] =
 const rbEff = c => !!(c.rbHuntMode || (c.rbBetween && !c.fishMode && !c.epicMode && !c.campaign));
 const withRb = c => ({ ...c, rbMode: rbEff(c) });
 const mergeCfg = c => withRb({ ...DEF_CFG, ...(c || {}) });
+const modeSig = c => [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
+  !c.rbHuntMode && rbEff(c) && 'РБ между мобами', c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
 
 // ---------- утилиты ----------
 // v5.1 автообучение: каждый поиск элемента запоминается — «на этой странице нашёлся / нет» (за заход на страницу).
@@ -2164,6 +2166,10 @@ async function main() {
         await sleep(200); continue;
       }
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
+      // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
+      // Читаем на шаге выбора РБ, не чаще раза в 30 мин
+      if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
+          && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); continue; }
       if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); continue; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
       if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
       if (rt.invScan) await setRt({ invScan: null });
@@ -3894,7 +3900,11 @@ chrome.storage.onChanged.addListener(ch => {
     tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0;
   }
   if (ch.learn && !ch.learn.newValue) { LEARN = null; learnDirty = false; try { sessionStorage.removeItem(LEARN_SS); } catch (e) {} learnLoad().catch(() => {}); }   // v5.6: «Сбросить обучение» из меню
-  if (ch.cfg) cfg = mergeCfg(ch.cfg.newValue);
+  if (ch.cfg) {
+    // 8.0.3 (разбор лога 11.10 09:16: тур выключали и включали из меню, а журнал этого не показывал): смена режима — строкой в журнал
+    const m0 = modeSig(cfg); cfg = mergeCfg(ch.cfg.newValue); const m1 = modeSig(cfg);
+    if (m0 !== m1 && tabOwner) try { rec('U', 'меню', `режим: ${m0} → ${m1}`); } catch (e) {}
+  }
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
   if (ch.on) {
     on = !!ch.on.newValue;

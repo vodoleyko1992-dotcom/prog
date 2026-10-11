@@ -1183,6 +1183,9 @@ async function battle() {
       if (me && me.pct <= from) ctx.rb.potOn = true;
       if (me && me.pct >= to) ctx.rb.potOn = false;
       potAt = ctx.rb.potOn ? 100 : -1;
+      // 8.0.3 (лог 11.10 09:15:35: прогноз «РБ ≈0:16, банки: нужно ≈0», РБ 6 %, а бот выпил 5 банок подряд — 7 с без урона): прогноз решил,
+      // что РБ умрёт раньше опасного HP без банок (usePots=false) — в полосе не пьём, только аварийно (HP ниже спецудар + 2 удара)
+      if (potAt > 0 && ctx.rb.usePots === false && me.cur > emergencyFloor) potAt = -1;
       if (frenzyDive(ctx, me)) { potAt = -1; if (!ctx.rb.diveNote) { ctx.rb.diveNote = 1; env.rec('B', 'РБ', `слив под Frenzy: банки не пью, пока HP не упадёт до ${env.ilOf(slotsBy('Frenzy')[0])?.pc?.hp || 30} % — там Frenzy`); } }
     }
     const hpPot = me && me.pct <= potAt ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;

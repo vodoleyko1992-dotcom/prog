@@ -204,7 +204,10 @@ function townBuffNeed() {                          // что взять: { set, 
   // или кончается — значит, слетел городской набор (по нему и идём к бафферу, даже если набор ещё не выучен)
   const now = Date.now(), L = { ...(env.rt.hudLong || {}) }, faIds = (env.cfg.faBuffs || '').split(/[,\s]+/).map(Number);
   let ch = false;
-  for (const [k, e] of Object.entries(H)) { const id = +k; if (e !== Infinity && e - now > 25 * 60000 && !faIds.includes(id) && L[id] !== e) { L[id] = e; ch = true; } }
+  // 8.0.3 (лог 11.10 09:05: баффы за FA — на 3 ч, городской набор — на 24 ч): платные FA-баффы (куплены руками или РБ-сессией) не «городские»:
+  // когда кончатся, к бесплатному бафферу за ними не ходим — новый «длинный» бафф только с запасом > 3,2 ч
+  const sessIds = faIdsOf(env.cfg.rbSessBuffs);
+  for (const [k, e] of Object.entries(H)) { const id = +k; if (e !== Infinity && (L[id] ? e - now > 25 * 60000 : e - now > 3.2 * 3600000) && !faIds.includes(id) && !sessIds.includes(id) && L[id] !== e) { L[id] = e; ch = true; } }
   for (const k of Object.keys(L)) if (L[k] < now - 3600000) { delete L[k]; ch = true; }
   if (ch) env.setRt({ hudLong: L });
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000);

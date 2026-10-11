@@ -238,11 +238,11 @@ function rbRowsParse() {
 async function rbListScan() {                     // все страницы списка (≈14), бесплатно
   env.setStatus('РБ: читаю список рейд-боссов (Меню → Рейдовые боссы)');
   await env.waitX(() => env.$q('#rb-list .l2-rb-row'), 10000, 200);
-  let all = {};
+  let all = {}, complete = false, pages = 0;
   for (let i = 0; i < 25 && env.on; i++) {
-    all = { ...all, ...rbRowsParse() };
+    all = { ...all, ...rbRowsParse() }; pages++;
     const nx = env.$q('#rb-pager-next');
-    if (!nx || nx.disabled) break;
+    if (!nx || nx.disabled) { complete = true; break; }
     const sig = env.$q('#rb-pager-ind')?.textContent;
     env.fire(nx);
     if (!(await env.waitX(() => env.$q('#rb-pager-ind')?.textContent !== sig && env.$q('#rb-list .l2-rb-row'), 5000, 150))) break;
@@ -253,6 +253,13 @@ async function rbListScan() {                     // все страницы с�
     env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
     await env.setRt({ rbScan: null, rbListT: Date.now() - 12 * 60000 });
     location.href = '/map.html'; await env.sleep(3000); return;
+  }
+  // 8.0.3 (лог 11.10 09:04:36: пауза на 9-й странице из 14 — 135 РБ из 197 записались как полный свежий список на 15 мин): прочитан не до
+  // конца (пауза/страница не догрузилась) — дописываем к старому и перечитаем через 3 мин
+  if (!complete) {
+    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: Date.now() - 12 * 60000, rbScan: null });
+    env.rec('B', 'РБ', `список игры прочитан частично (${pages} стр.) — дописал ${n.length} РБ к прежнему, перечитаю через 3 мин`);
+    return;
   }
   await env.setRt({ rbList: all, rbListT: Date.now(), rbScan: null });
   env.rec('B', 'РБ', `список игры: ${n.length} РБ · живых ${n.filter(x => x.alive).length} · доступно мне ${ok.length}`
@@ -504,7 +511,9 @@ async function rbHuntStep() {
     // шаг «прилёт» записываем ДО нажатия: телепорт уводит со страницы, и скрипт обрывается на полуслове
     await huntSet({ step: 'arrive', at: Date.now() });
     const cntH = [...((env.rt.rbGoCnt || {})[H.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // v5.6: платные телепорты тура — в общий счётчик «≤3 в час»
-    await env.setRt({ rbWant: H.id, zoneGoT: Date.now(), rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } });
+    // 8.0.3 (лог 11.10 09:16: 26 боёв у Тотема записались в статистику прежней зоны «Vanor Silenos» на 55 ур.): после телепорта зона
+    // неизвестна — её определит карта по мобам (zoneHere), а EXP/ч не попадёт в чужую зону
+    await env.setRt({ rbWant: H.id, zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } });
     env.rec('B', 'тур РБ', `телепорт к ${H.name} (${H.lvl})${H.price ? ' · ' + H.price.toLocaleString('ru') + ' аден' : ''}`);
     await env.pause(); env.fire(b);
     if (await env.waitX(() => !isRbPage(), 8000, 200)) return;
