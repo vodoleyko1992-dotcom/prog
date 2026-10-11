@@ -1,4 +1,4 @@
-// ===== L2wap Bot v8.0.4 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v8.0.5 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -1155,13 +1155,36 @@ function farmRowParse(row) {                      // одна раскрытая
     (isSpoil ? sp : drop).push([m[1].trim(), +m[2], +m[3].replace(',', '.'), +(m[4] || 1), +(m[5] || m[4] || 1), b.dataset.teleportId,
                (el.querySelector('.l2-farm-source__location')?.textContent || '').trim()]);
   }
-  return { name, n: +((row.querySelector('.l2-farm-row__hint')?.textContent || '').match(/\d+/) || [0])[0], drop, spoil, sp, bosses };
+  return { name, n: +((row.querySelector('.l2-farm-row__hint')?.textContent || '').match(/\d+/) || [0])[0], drop, spoil, sp, bosses, icon: farmIconOf(row) };
+}
+// 8.0.5 (игрок: «ресурсы … с картинками как в игре»): иконка предмета строки — путь игры (/icons/resources/basic/coal.jpg,
+// /icons/drops/earring_b/…png, /game/item-icon/<id>); картинки мобов из раскрытых источников не берём
+function farmIconOf(row) {
+  for (const img of row.querySelectorAll('img')) {
+    if (img.closest('.l2-farm-source, .l2-farm-boss, .l2-farm-row__detail')) continue;
+    const s = (img.getAttribute('src') || '').trim().replace(/^https?:\/\/(?:[\w-]+\.)?l2wap\.com(?=\/)/i, '');
+    if (/^\/(?:icons|game\/item-icon|assets)\/[^\s"'<>]+$/.test(s) && !/\/(?:mobs|l2dop-mob)\//.test(s)) return s.slice(0, 200);
+  }
+  return '';
+}
+// 8.0.5: иконки без полного перечитывания базы — со всех строк, что уже есть на странице (раздел и уровни не трогаем)
+async function farmIcons() {
+  const db = await farmDb(); let n = 0;
+  for (const row of document.querySelectorAll('.l2-farm-row')) {
+    const k = (row.querySelector('.l2-farm-row__name')?.textContent || '').trim().toLowerCase(), r = db.res[k], ic = k && r && farmIconOf(row);
+    if (ic && r.icon !== ic) { r.icon = ic; n++; }
+    if (r && !r.cat) { const c = farmCatOf(row); if (c) { r.cat = c; n++; } }
+  }
+  if (n) { await chrome.storage.local.set({ farmDb: db }); rec('B', 'фарм', `база ресурсов: картинки/разделы обновлены у ${n} строк`); }
+  return n;
 }
 async function farmSave(list) {
   if (!list.length) return;
   const db = await farmDb(), cat = { ...(rt.zoneCat || {}) };
   for (const r of list) {
-    db.res[r.name.toLowerCase()] = { ...r, t: Date.now() };
+    // 8.0.5: строка, раскрытая игроком, приходит без раздела/иконки — не стираем прежние (Oriharukon Ore попал в «Прочее»)
+    const k = r.name.toLowerCase(), old = db.res[k] || {};
+    db.res[k] = { ...r, cat: r.cat || old.cat || '', icon: r.icon || old.icon || '', t: Date.now() };
     for (const d of r.drop) if (!cat[d[5]]) cat[d[5]] = { name: d[6] || d[5], url: FARM_URL, forum: true };
   }
   db.t = Date.now();
@@ -1175,6 +1198,7 @@ async function farmSave(list) {
 async function farmScan() {
   setStatus('Фарм: читаю «Фарм ресурсов» на форуме');
   await waitX(() => $q('.l2-farm-row__toggle, details.l2-farm-guide-section, details'), 15000, 300);
+  await farmIcons().catch(() => {});
   const done = new Set(rt.farmScanDone || []);
   const out = [];
   let n = 0;
@@ -3297,9 +3321,11 @@ setTimeout(() => {
 }, 2500);
 addEventListener('click', e => { if (e.isTrusted && !isBattle() && !e.target.closest?.('#l2bot-dock')) trySnap(1800); }, true);
 if (location.pathname === FARM_URL) {             // «Фарм ресурсов»: раскрытую игроком строку — в базу (только эту строку)
+  let farmIconT = setTimeout(() => farmIcons().catch(() => {}), 4000);
   addEventListener('click', e => {
     const row = e.target.closest?.('.l2-farm-row');
-    if (row) setTimeout(() => { const r = farmRowParse(row); if (r) farmSave([r]).catch(() => {}); }, 1500);
+    if (row) setTimeout(() => { const r = farmRowParse(row); if (r) { r.cat = farmCatOf(row); farmSave([r]).catch(() => {}); } }, 1500);
+    clearTimeout(farmIconT); farmIconT = setTimeout(() => farmIcons().catch(() => {}), 2500);   // раскрытый раздел — его картинки
   }, true);
 }
 if (/\/forum/i.test(location.pathname)) {        // форум: кнопки телепорта и РБ — в базу (сразу и после раскрытия строк)

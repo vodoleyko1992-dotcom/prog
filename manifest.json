@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "8.0.4",
-  "description": "L2wap Bot 8.0.4 — отход от смертельного босса, Noblesse после смерти, рыбалка без раздувания отката",
+  "version": "8.0.5",
+  "description": "L2wap Bot 8.0.5 — «Фарм ресурсов»: ресурсы первыми, картинки предметов как в игре",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -106,5 +106,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "8.0.4"
+  "version_name": "8.0.5"
 }

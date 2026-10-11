@@ -11,6 +11,9 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
   const b = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
   for (const [w, nm] of [[760, 'wide'], [375, 'dock']]) {
     const page = await b.newPage({ viewport: { width: w, height: 1100 } });
+    // 8.0.5: картинки предметов — с сервера игры; coal.jpg «есть», stem.jpg «нет» (404 → пустое место вместо битой картинки)
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==', 'base64');
+    await page.route('https://l2wap.com/icons/**', r => /stem\.jpg$/.test(r.request().url()) ? r.fulfill({ status: 404, body: '' }) : r.fulfill({ status: 200, contentType: 'image/png', body: png }));
     const errors = []; page.on('pageerror', e => errors.push(String(e)));
     await page.evaluate(db => { window.__farmDb = db; }, base.farmDb);
     await page.evaluate(mock);
@@ -22,8 +25,13 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="hunt"]').click(); await page.waitForTimeout(400);
     await page.evaluate(() => { document.querySelector('#farmTree').scrollIntoView(); });
     const groups = await page.$$eval('#farmTree > details.fgrp > summary', s => s.map(x => x.textContent.trim()));
-    await page.locator('#farmTree > details.fgrp >> nth=2 >> summary').click(); await page.waitForTimeout(400);   // «Ресурсы»
+    await page.locator('#farmTree > details.fgrp >> nth=0 >> summary').click(); await page.waitForTimeout(900);   // 8.0.5: «Ресурсы» — первыми
     const sub = await page.$$eval('#farmTree details.fgrp[open] .frow', r => r.length);
+    const ico = await page.$$eval('#farmTree details.fgrp[open] .frow', r => r.map(x => { const i = x.querySelector('.fr-ico'), n = x.querySelector('.fr-name').textContent;
+      return [n.replace(/^\W+/, '').trim(), i.tagName === 'IMG' ? (i.complete && i.naturalWidth > 0 ? i.getAttribute('src') : 'broken') : 'none'];
+    }));
+    const icoOk = ico.find(x => x[0] === 'Coal')?.[1] === 'https://l2wap.com/icons/resources/basic/coal.jpg' && ico.find(x => x[0] === 'Stem')?.[1] === 'none'
+      && ico.some(x => x[0] === 'Oriharukon Ore') && !ico.some(x => x[1] === 'broken');
     await page.locator('#farmTree .fr-name >> nth=0').click(); await page.waitForTimeout(300);
     const src = await page.$$eval('#farmTree .fr-src .fs', r => r.slice(0, 4).map(x => x.textContent));
     await page.locator('#farmTree .fr-go >> nth=0').click(); await page.waitForTimeout(500);
@@ -34,9 +42,9 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     await page.evaluate(() => document.querySelector('#farmTree').scrollIntoView());
     
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    const ok = groups.length >= 3 && sub > 0 && src.length > 0 && target && found.some(x => /Stone of Purity/.test(x)) && !overflow && !errors.length;
-    if (!ok) { console.error('FAIL', JSON.stringify({ w, groups, sub, src, target, found, overflow, errors })); process.exit(1); }
-    console.log(`PASS ${w}px: forum-like farm list — groups, rows, sources, «farm this», search`);
+    const ok = groups.length >= 3 && /^Ресурсы/.test(groups[0]) && /^Кейматы/.test(groups[1]) && icoOk && sub > 0 && src.length > 0 && target && found.some(x => /Stone of Purity/.test(x)) && !overflow && !errors.length;
+    if (!ok) { console.error('FAIL', JSON.stringify({ w, groups, ico, sub, src, target, found, overflow, errors })); process.exit(1); }
+    console.log(`PASS ${w}px: forum-like farm list — «Ресурсы» first, game icons (missing → blank), groups, rows, sources, «farm this», search`);
     await page.close();
   }
   await b.close();

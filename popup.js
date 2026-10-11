@@ -591,7 +591,19 @@ function renderCat(rt, d) {
 const TREE = { farm: { db: 'farmDb', items: 'res', input: 'farmRes', search: 'farmSearch', box: 'farmTree' },
   recipe: { db: 'recipeDb', items: 'rec', input: 'recipeRes', search: 'recipeSearch', box: 'recipeTree' } };
 const treeSig = {}, treeOpen = { farm: new Set(), recipe: new Set() };
-const treePath = (kind, r) => kind === 'farm' ? String(r.cat || 'Прочее').split(/\s*›\s*/) : [r.grade || 'Без грейда', r.group || 'Прочее'];
+// 8.0.5 (игрок: «перед кейматами сделай ресурсы … с картинками как в игре»): разделы в порядке страницы игры, у предмета — иконка игры.
+// Базовые ресурсы без раздела (строку раскрыл игрок — раньше раздел стирался) — в «Ресурсы»
+const BASIC_RES = /^(animal (bone|skin)|charcoal|coal|iron ore|mithril ore|oriharukon ore|silver nugget|adamantite nugget|stem|stone of purity|suede|thread|varnish|asofe|thons|enria|mold \w+|cokes|steel|leather|braided hemp|coarse bone powder|cord|metallic (fiber|thread)|crafted leather|high grade suede|compound braid|durable metal plate|metal hardener|oriharukon|mithril alloy|synthetic cokes|varnish of purity|artisan's frame|blacksmith's frame|crafter's frame|reorin|maestro (holder|anvil lock|mold)|warsmith's (holder|mold)|craftsman mold)$/i;
+const treeCat = r => r.cat || (BASIC_RES.test(String(r.name || '').trim()) ? 'Ресурсы' : 'Прочее');
+const treePath = (kind, r) => kind === 'farm' ? String(treeCat(r)).split(/\s*›\s*/) : [r.grade || 'Без грейда', r.group || 'Прочее'];
+const TREE_ORDER = ['Ресурсы', 'Кейматы', 'Шмот с РБ'];          // как на странице «Фарм ресурсов»; остальное — по алфавиту, «Прочее» в конце
+const treeRank = p => { const i = TREE_ORDER.findIndex(x => p.replace(/^[^\p{L}]+/u, '').startsWith(x)); return i >= 0 ? i : p === 'Прочее' ? 99 : 50; };
+// иконка: путь игры из базы (content.farmIconOf), у базовых ресурсов без неё — /icons/resources/basic/<имя>.jpg (так их рисует журнал боя)
+const treeIcon = (kind, r) => {
+  let s = kind === 'farm' ? String(r.icon || '') : '';
+  if (!s && kind === 'farm' && treeCat(r) === 'Ресурсы') s = '/icons/resources/basic/' + String(r.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') + '.jpg';
+  return /^\/(?:icons|game\/item-icon|assets)\/[^\s"'<>]+$/.test(s) ? 'https://l2wap.com' + s : '';
+};
 const treeKey = (kind, n) => kind === 'farm' ? String(n || '').trim().toLowerCase() : String(n || '').toLowerCase().replace(/\s*\(\d+%\)\s*$/, '').trim();
 function treeSources(kind, r, L, d) {
   const w = farmWinP(d, L), fit = l => !L || (l >= w.lo && l <= w.hi);   // 7.2.1: 🎯 — в предпочтительном диапазоне (−3…+5 ур.)
@@ -613,8 +625,9 @@ function treeRow(kind, k, r, cur, got, L, d) {
   const n = kind === 'farm' ? `дроп ${(r.drop || []).length}${(r.sp || []).length || r.spoil ? ` · спойл ${(r.sp || []).length || r.spoil}` : ''}${(r.bosses || []).length ? ` · РБ ${r.bosses.length}` : ''}`
     : `дроп ${(r.drop || []).length}${(r.spoil || []).length ? ` · спойл ${r.spoil.length}` : ''}`;
   const on = k === cur, open = treeOpen[kind].has('i:' + k);
-  return `<div class="frow${on ? ' cur' : ''}" data-k="${esc(k)}"><div class="fr-h"><button class="fr-name" data-tree-item="${esc(k)}" aria-expanded="${open}">${open ? '▾' : '▸'} ${esc(r.name)}</button>`
-    + `<span class="fr-hint">${n}${on ? ` · ✓ цель${got ? ` · собрано ${got}` : ''}` : ''}</span>`
+  const ico = treeIcon(kind, r);
+  return `<div class="frow${on ? ' cur' : ''}" data-k="${esc(k)}"><div class="fr-h">${ico ? `<img class="fr-ico" src="${esc(ico)}" alt="" loading="lazy" decoding="async">` : '<span class="fr-ico none"></span>'}<span class="fr-t"><button class="fr-name" data-tree-item="${esc(k)}" aria-expanded="${open}">${open ? '▾' : '▸'} ${esc(r.name)}</button>`
+    + `<span class="fr-hint">${n}${on ? ` · ✓ цель${got ? ` · собрано ${got}` : ''}` : ''}</span></span>`
     + `<button class="fr-go" data-tree-go="${esc(k)}" title="Фармить это">${on ? '✓' : '🌾'}</button></div>`
     + (open ? `<div class="fr-src">${treeSources(kind, r, L, d)}</div>` : '') + '</div>';
 }
@@ -636,7 +649,7 @@ async function renderTree(kind, rt, d) {
   const tree = {};                                             // разделы → подразделы → предметы
   for (const k of keys) { let node = tree; for (const p of treePath(kind, all[k])) node = (node[p] ||= { _items: [] }); node._items.push(k); }
   const count = node => node._items.length + Object.entries(node).filter(([p]) => p !== '_items').reduce((s, [, v]) => s + count(v), 0);
-  const html = (node, path) => Object.entries(node).filter(([p]) => p !== '_items').sort(([a], [b]) => a.localeCompare(b)).map(([p, v]) => {
+  const html = (node, path) => Object.entries(node).filter(([p]) => p !== '_items').sort(([a], [b]) => (path ? 0 : treeRank(a) - treeRank(b)) || a.localeCompare(b)).map(([p, v]) => {
     const id = path + '›' + p, open = treeOpen[kind].has('g:' + id);
     return `<details class="fgrp" data-tree-grp="${esc(id)}"${open ? ' open' : ''}><summary>${esc(p)} <span class="fr-hint">${count(v)}</span></summary>`
       + (open ? html(v, id) + v._items.sort((a, b) => all[a].name.localeCompare(all[b].name)).map(k => treeRow(kind, k, all[k], cur, gotMap[k], L, d)).join('') : '') + '</details>';
@@ -655,6 +668,8 @@ document.addEventListener('l2:tabchange', async e => {
 async function treeRefresh(kind) { const { rt = {}, cfg = {} } = await chrome.storage.local.get(['rt', 'cfg']); treeSig[kind] = ''; await renderTree(kind, rt, { ...DEF, ...cfg }); }
 for (const kind of Object.keys(TREE)) {
   const T = TREE[kind], box = $(T.box); if (!box) continue;
+  // 8.0.5: картинки нет на сервере игры — пустое место той же ширины (строки не прыгают); inline onerror запрещён CSP
+  box.addEventListener('error', e => { const i = e.target; if (i?.classList?.contains('fr-ico') && i.tagName === 'IMG') i.replaceWith(Object.assign(document.createElement('span'), { className: 'fr-ico none' })); }, true);
   box.addEventListener('toggle', e => { const g = e.target.closest?.('[data-tree-grp]'); if (!g) return; const id = 'g:' + g.dataset.treeGrp;
     if (g.open === treeOpen[kind].has(id)) return;              // перерисовка открытого раздела тоже шлёт «toggle» — это не клик
     if (g.open) treeOpen[kind].add(id); else treeOpen[kind].delete(id); treeRefresh(kind); }, true);

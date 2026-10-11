@@ -263,6 +263,10 @@ html.cls-mage:not(.show-all) [data-cls="spoil"],html.cls-fighter:not(.cls-spoil)
 .ftree .frow{margin:2px 6px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.03);border:1px solid transparent}
 .ftree .frow.cur{border-color:rgba(92,194,122,.6);background:rgba(92,194,122,.08)}
 .ftree .fr-h{display:flex;align-items:center;gap:6px}
+.ftree .fr-ico{flex:none;width:24px;height:24px;border-radius:4px;border:1px solid rgba(201,162,94,.35);background:rgba(0,0,0,.35);object-fit:cover}
+.ftree .fr-ico.none{display:inline-block;opacity:.35}
+.ftree .fr-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}   /* 8.0.5: имя целиком, подпись — строкой ниже */
+.ftree .fr-t .fr-hint{overflow:hidden;text-overflow:ellipsis}
 .ftree .fr-name{flex:1;text-align:left;background:none;border:0;padding:2px 0;color:var(--txt,#efe6d6);font:inherit;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ftree .fr-hint{color:var(--mute,#a39280);font-size:11px;font-weight:400;white-space:nowrap}
 .ftree .fr-go{flex:0 0 auto;padding:2px 8px;min-height:0}
