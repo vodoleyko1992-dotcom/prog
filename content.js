@@ -16,7 +16,7 @@ const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,anthar
   autoRoles: true, weaponSwap: true, nWeaponMain: '', nWeaponBuff: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
   chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
-  lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3,
+  lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35,
@@ -1897,7 +1897,7 @@ const CAT_LIST = {
   necropolis_of_devotion: ['Necropolis of Devotion', 60, 70], necropolis_of_martyrdom: ['Necropolis of Martyrdom', 60, 70],
   saints_necropolis: ["The Saint's Necropolis", 70, 80], disciples_necropolis: ["The Disciple's Necropolis", 70, 80],
   catacomb_of_the_heretic: ['Catacomb of the Heretic', 30, 40], catacomb_of_the_branded: ['Catacomb of the Branded', 40, 50],
-  catacomb_of_the_apostate: ['Catacomb of the Apostate', 50, 51], catacomb_of_the_witch: ['Catacomb of the Witch', 60, 70],
+  catacomb_of_the_apostate: ['Catacomb of the Apostate', 50, 51], catacomb_of_the_witch: ['Catacomb of the Witch', 60, 72],   // 9.0: Witch — живой список 11.10 (60–72)
   catacomb_of_dark_omens: ['Catacomb of Dark Omens', 70, 80], catacomb_of_the_forbidden_path: ['Catacomb of the Forbidden Path', 75, 76],
 };
 const isCatPage = (...args) => L2V7Modules.dungeons.isCatPage(...args);
@@ -1908,6 +1908,8 @@ function catTarget(...args) { return L2V7Modules.dungeons.catTarget(...args); }
 function dungeonMobs(...args) { return L2V7Modules.dungeons.dungeonMobs(...args); }
 async function catGo(...args) { return L2V7Modules.dungeons.catGo(...args); }
 async function catHunt(...args) { return L2V7Modules.dungeons.catHunt(...args); }
+const sealDue = (...args) => L2V7Modules.dungeons.sealDue(...args);   // 9.0: камни печати → Ancient Adena
+async function sealStep(...args) { return L2V7Modules.dungeons.sealStep(...args); }
 // ---------- ⚔ v5.4: TvT (Город → TvT Arena) — запись, бой «убить как можно быстрее, по возможности застанить», итог ----------
 // Расписание и состояние — из ответов игры (сетевой «жучок»): GET /game/tvt { phase REGISTRATION/…/ACTIVE/…, isRegistered,
 // myTeam, schedule.next { registrationOpensAt, preparationStartsAt, battleStartsAt } } и GET /game/tvt/combat/sync
@@ -2226,6 +2228,12 @@ async function main() {
         else if (svc === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(4000); } }
         else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
         await sleep(200); continue;
+      }
+      // 9.0: камни печати → Ancient Adena (кнопка «Обменять сейчас» или автообмен) — вне боя, не посреди вываживания рыбы, не в TvT и не посреди
+      // захода на эпика/РБ (автообмен ждёт выбора следующего РБ)
+      if (!isBattle() && !(isFishing() && fishState()) && !tvtSoon() && !/tvt/i.test(location.pathname)) {
+        const sd = sealDue();
+        if (sd && (sd === 'по кнопке' || (!rt.epic?.step && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')))) { await sealStep(); await sleep(200); continue; }
       }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
@@ -2974,6 +2982,19 @@ let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv
 const invNote = inv => { if (!Array.isArray(inv) || !inv.length) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invQty = id => INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
 const actNet = () => ACT_NET;
+// 9.0 (катакомбы): список мобов подземелья целиком из ответа игры (hook.js поле dm: [id, тип, имя, ур., агр.]) и где герой по последнему
+// снимку персонажа (character.activeDungeonId, locationType — в sessionStorage, переживает переход на другую страницу)
+let DUNG_NET = null;
+let HERO_AT = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-at') || 'null'); } catch (e) { return null; } })();
+const dungNet = () => DUNG_NET, heroAt = () => HERO_AT && Date.now() - (HERO_AT.t || 0) < 10 * 60000 ? HERO_AT : null;
+// 9.0: окно игры alert() на страницах катакомб/подземелья/торговцев (hook.js его не показывает, а пересылает) и ответ обмена камней печати
+let GAME_ALERT = { t: 0 }, SEAL_NET = { t: 0 };
+const gameAlert = () => GAME_ALERT, sealNet = () => SEAL_NET;
+addEventListener('message', e => {
+  if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'alert') return;
+  GAME_ALERT = { t: Date.now(), text: String(e.data.text || '').slice(0, 300), path: String(e.data.path || '') };
+  rec('B', 'игра', `окно игры (${GAME_ALERT.path}): ${GAME_ALERT.text.slice(0, 160)}`);
+});
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
 // его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
 const GAME_REQ = new Map(); let GAME_END = 0;
@@ -3039,7 +3060,15 @@ addEventListener('message', e => {
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
-  { const m = invNote(d.inv); if (m) { INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {} } }
+  { const m = invNote(d.inv); if (m) { INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
+    const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
+    if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && Date.now() - (ss?.t || 0) > 60000) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
+  if (d.dm && Array.isArray(d.dm.mobs)) DUNG_NET = { id: d.dm.id, mobs: d.dm.mobs, t: Date.now() };
+  { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
+    try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
+  if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
+    msg: String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 160), stone: d.req?.stone, qty: +d.req?.qty || 0 };
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
   logCooldownApi(d, path);
@@ -3617,7 +3646,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get rbFlee() { return (...a) => L2V7
   get uiTimer() { return uiTimer; }, set uiTimer(value) { uiTimer = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CAT_LIST() { return CAT_LIST; }, set CAT_LIST(value) { CAT_LIST = value; },
   get CAT_URL() { return CAT_URL; }, set CAT_URL(value) { CAT_URL = value; },
   get NET_ERR() { return NET_ERR; }, set NET_ERR(value) { NET_ERR = value; },

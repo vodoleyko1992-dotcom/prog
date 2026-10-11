@@ -41,6 +41,18 @@
   const spawns = o => { try { const a = o && Array.isArray(o.nearbySpawns) ? o.nearbySpawns : null;
     return a ? a.slice(0, 3000).map(x => [String(x.id || ''), String(x.kind || ''), String(x.name || '').slice(0, 60), +x.level || 0, +x.distance || 0]) : undefined; } catch (e) { return undefined; } };
 
+  // 9.0 (катакомбы, живой ответ 11.10: в Catacomb of the Witch 190 мобов, игра показывает их по 15 на странице, по возрастанию уровня):
+  // список мобов подземелья (/game/dungeon/view|enter → dungeon.mobs) — целиком, кратко: [id, тип, имя, ур., агрессивный]. Тип
+  // (champion/raid…) в разметке списка не виден вовсе, а redact режет массивы до 8
+  const dungMobs = (u, o) => { try { if (!/^\/game\/dungeon\/(?:view|enter)$/.test(u.pathname)) return undefined; const g = o?.dungeon; const a = g && (Array.isArray(g.mobs) && g.mobs.length ? g.mobs : g.nearbyMobs);
+    return Array.isArray(a) ? { id: String(g.id || ''), mobs: a.slice(0, 2000).map(x => [String(x.id || ''), String(x.kind || ''), String(x.name || '').slice(0, 60), +x.level || 0, x.aggressive ? 1 : 0]) } : undefined; } catch (e) { return undefined; } };
+  // 9.0: на страницах катакомб/подземелья/торговцев игра сообщает об ошибке через alert() — окно останавливает страницу (и бота) до нажатия
+  // «ОК». Там вместо окна — сообщение боту (журнал) и в консоль; на других страницах alert не трогаем
+  if (/^\/(?:catacombs|dungeon|ancient-trader|mammon-[\w-]+)\.html$/.test(location.pathname)) {
+    const oalert = window.alert;
+    window.alert = function (msg) { try { console.warn('[l2bot] окно игры:', msg); window.postMessage({ __l2bot: 'alert', text: String(msg ?? '').slice(0, 300), path: location.pathname }, location.origin); } catch (e) { return oalert.apply(this, arguments); } };
+  }
+
   // 8.0.3 (логи 11.10: 1302 потерянных нажатия за 10 боёв с РБ): пока игра ждёт свой GET /character (уходит ≈8 мс после ответа на ход,
   // идёт 0,25–0,56 с) и ≈30 мс после — клик по панели игра молча теряет. Боту нужны начало и конец этих запросов (rid, путь без query)
   const TRACK = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
@@ -57,7 +69,7 @@
     p.then(res => {
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), rid }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), dm: dungMobs(u, o), rid }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -73,7 +85,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), dm: dungMobs(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);
