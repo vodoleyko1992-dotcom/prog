@@ -814,7 +814,8 @@ async function battle() {
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
-  { const hd = !isRb && !ctx.questKill && env.rt.hardMobs?.[nm]; if (hd && Date.now() - hd.t < 7200000 && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
+  // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)
+  { const hd = !isRb && !ctx.questKill && !(ctx.champ && env.campActive() && env.campChampOpen()) && env.rt.hardMobs?.[nm]; if (hd && Date.now() - hd.t < 7200000 && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
     env.rec('B', 'цели', `${ctx.name}: «не по зубам» (${hd.why || 'долгий бой'}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
   ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;
   if (isRb) {
