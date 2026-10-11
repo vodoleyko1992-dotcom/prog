@@ -491,7 +491,7 @@ async function fishPrepare() {                  // удочка, наживка 
     if (bought || !env.cfg.fishAutoBuy || !buyOk('bait')) return false;
     bought = true;
     env.setStatus('Рыбалка: обычная наживка кончилась — покупаю');
-    await buy('bait', 'bait_x10', env.cfg.fishBuyPacks || 1000, 'Fishing Lure ×10');
+    await buy('bait', 'bait_x10', env.cfg.fishBuyPacks || 100, 'Fishing Lure ×10');
     return env.on && avail('basicBait');
   };
   // уже перешли на другую наживку — 30 мин ловим на ней, не переключая туда-сюда перед каждым забросом
