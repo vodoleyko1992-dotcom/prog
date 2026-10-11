@@ -2892,8 +2892,15 @@ let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv
 const invNote = inv => { if (!Array.isArray(inv) || !inv.length) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invQty = id => INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
 const actNet = () => ACT_NET;
+// 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
+// его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
+const GAME_REQ = new Map(); let GAME_END = 0;
+const gameBusy = () => { const now = Date.now(); for (const [rid, t] of GAME_REQ) { if (now - t > 3000) GAME_REQ.delete(rid); else return { busy: true, end: GAME_END }; } return { busy: false, end: GAME_END }; };
 addEventListener('message', e => {
-  if (e.source === window && e.origin === location.origin && e.data?.__l2bot === 'netStart') { ACT_NET.start++; ACT_NET.t = Date.now(); }
+  if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
+  const p = e.data.path || '/game/battle/action';
+  if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); }   // 8.0.3: GET /character — не «ход ушёл»
+  if (e.data.rid != null) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
 });
 async function weaponEquipNote(req) {
   await itemsDb();
@@ -2932,8 +2939,8 @@ function profQuestNote(st) {
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
-  // 8.0.3 (логи 11.10 09:11–09:35): ≈0,3 с после ответа на ход (и после начала боя / «Охотиться дальше») игра молча отбрасывает нажатия —
-  // время ответа нужно бою (combat.act ждёт окно блокировки)
+  if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();   // 8.0.3: запрос игры закончился — она снова принимает клики
+  // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
@@ -3371,7 +3378,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get noEffect() { return noEffect; }, get actNet() { return actNet; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
