@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **9.2.1**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **9.2.2**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 ## Навыки проекта (`.claude/skills/`)
 
@@ -46,7 +46,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (170 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (173 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -93,7 +93,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 170 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 173 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -110,6 +110,7 @@ Firefox ставится как временное дополнение (`about:
 ## Последние версии (что уже сделано)
 
 - **9.2.2 (в работе; CHANGELOG-9.2.2.md)**: Blessing of Queen переделан админом (скрин 11.10 21:21: «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин, у админа «3 удара 3 крита») — IL_FIX 1331 dur 1200, combat.petBuffPick ставит бафф кота везде, как истёк (правило 9.2 «только РБ/толстые» снято); расчёт: кот ≈×2,1, весь урон ≈+40 %.
+- **9.2.2 (собрана 11.10 по «Исправь и сборка»; CHANGELOG-9.2.2.md, PR #17 + #18)**: Blessing of Queen (l2_1331) переделан админом — +30 % крит / +25 % урона крита кота на 20 мин, ставится в любом бою; «заело» (лог 12.10 07:22–07:34, спойлер): источник ресурса Маммона «не по зубам» больше не выбирается на карте (карта и бой прощают «не по зубам» только ★ квесту и чемпиону главы), опрос заказа Маммона — метки в sessionStorage (не 429 на каждой странице). 173 PASS.
 - **9.2.1 (собрана 11.10 по «Сборка»; CHANGELOG-9.2.1.md)**: основная ветка (полный лог хода считается один раз, Blessing of Queen = бафф кота, TvT — к следующему врагу #12, Маммон — ресурсы наперёд #14) + «☠ Лист врагов» (modules/enemies.js, PR #15: убийцы в лист, нападение на врага на локации с проверкой сил, слежка за возвращением). 170 PASS, 17 смоуков, zip в Chromium без ошибок.
 - **9.2 (собрана 11.10 по «доделай и собери»; CHANGELOG-9.2.md, PR #11)**. Лог 12.10 02:31–02:56 (9.0.1): **ответ на ход почти всегда `kind:'full'` с ПОЛНЫМ `battle.log`** (225 из 242; `delta.logTail` — только новые строки) → fightlab режет полный лог по виденным строкам (`newLines`), банка HP — по нажатию `battle_potion_use` (лечит импульсами «Зілля +600 HP» каждую секунду). Снимки страниц игры: `/mnt/project-files/snapshots/l2wap-pages-2026-10-11-16-57.html` (smokes.sh подставляет в battle-dom/v715-mage смоуки). Анализатор боя `modules/fightlab.js` — журнал хода по ответу сервера (hook `bt`), память на цель `rt.fightMem`/`rt.fightLast` (в CLASS_KEYS), добивание по доле ударов по этой цели (маг ждёт добивающий скилл ≤ полхода), ритм спецудара РБ в «цене хода» (cfg.rbSpikeRhythm), профиль класса `fightlab.role()`. Универсальность: незнакомая профессия → `rt.classBranch` (character.classBranch mystic/fighter, story.charNote) → панель (≥ 2 «Маг. атака»); воин пробует новый удар на «толстом» мобе (dpsPlan probe). Меню: раздел «⚔ Бой» (id tab-panel) = «🧠 Анализ боя» (clsBox, fightBox, dpsBox, combatProfile) → «⚔ Общие правила боя» → подразделы по классу: «🐱 Warlock — маг с котом» (data-cls=summoner, html.cls-summoner), «🔮 Маг» (mage), «⛏ Спойлер» (spoil), «🗡 Воин» (fighter) → «🛡 Герой»; popup грузит modules/fightlab.js (heroRole/role). Смоуки v92-fightlab-browser, v92-combat-menu-browser. Дальше (9.3): подстройка ротации A/B по цели, правила профилей в бою (спойлер: успех спойла по цели; Дестр: Frenzy по ритму спецудара).
 - **9.0.1 (собрана 11.10 по «Сборка!»; CHANGELOG-9.0.1.md)**: общая сборка 9.0 + все 197 РБ в RB_KNOWN (PR #3) + квесты сабкласса/Noblesse (PR #5) + «цена хода» на РБ (combat.rbTurnHeal, cfg.rbTurnPrice, PR #9) + «бой, которого уже нет» (PR #8).

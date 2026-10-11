@@ -298,8 +298,11 @@ function candidates(rules, sig, types, limitIdx) {
     const below = champ && champOn ? Math.max(env.cfg.lvlBelow ?? 3, CHAMP_BELOW) : (env.cfg.lvlBelow ?? 3);
     if (hl && lvl && !qLike && !relaxDown && env.cfg.lvlBelow !== 0 && lvl < hl - below) return;
     // «не по зубам» по опыту: бой с этим видом шёл дольше 45 с (или урон ≈0) — пропускаем 2 часа (v4.23)
+    // 9.2.2 (лог 12.10 07:22–07:34, спойлер): источник ресурса (farmT, цель Маммона «Mithril Ore») обходил «не по зубам», а бой
+    // (combat: «не по зубам» прощает только ★ квест) сразу возвращал на карту — 12 мин по кругу карта → Guardian Basilisk → карта.
+    // Теперь исключение — только ★ квест и чемпион главы (как в бою); источник ресурса «не по зубам» 2 ч не выбираем
     const hard = env.rt.hardMobs?.[(name || '').toLowerCase()];
-    if (hard && Date.now() - hard.t < 7200000 && !qLike) return;
+    if (hard && Date.now() - hard.t < 7200000 && !(r.quest || (champ && env.campActive() && env.campChampOpen()))) return;
     const k = rank(r, rules);
     if (k >= 0) out.push({ ...r, rank: k, ql: qLike });
   });

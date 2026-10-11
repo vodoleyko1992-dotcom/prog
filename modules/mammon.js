@@ -22,7 +22,12 @@ const MM_CRAFT = { 1878: 'Braided Hemp = 5 Stem', 1879: 'Cokes = 3 Charcoal + 3 
   1882: 'Leather = 6 Animal Skin', 1884: 'Cord ×20 = 2 Steel + 25 Thread', 1885: 'High Grade Suede = 1 Coarse Bone Powder + 3 Suede', 1887: 'Varnish of Purity = 1 Stone of Purity + 3 Coarse Bone Powder + 3 Varnish',
   1888: 'Synthetic Cokes = 1 Oriharukon Ore + 3 Cokes', 1889: 'Compound Braid = 5 Braided Hemp + 5 Thread', 1890: 'Mithril Alloy = 1 Mithril Ore + 1 Varnish of Purity + 2 Steel',
   1893: 'Oriharukon = 1 Synthetic Cokes + 4 Oriharukon Ore + 12 Silver Nugget', 5549: 'Metallic Thread = 5 Iron Ore + 10 Thread' };
-let GEAR = null, gearLoading = null, pollT = 0, npcT = 0, goalT = 0, busy = null;
+let GEAR = null, gearLoading = null, goalT = 0, busy = null;
+// 9.2.2 (лог 12.10 07:22: «заказ торговца не получен: HTTP 429» ×92): метки опроса жили в переменных модуля и обнулялись при каждой
+// загрузке страницы — при частых переходах бот спрашивал заказ на каждой странице. Теперь метки — в sessionStorage вкладки
+const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
+let pollT = ssNum('l2bot-mmPollT'), npcT = ssNum('l2bot-mmNpcT');
 async function gearDb() {                        // справочник улучшаемых вещей (mammon-gear.json: имя, грейд, слот, бонусы Lv.0–5)
   if (GEAR) return GEAR;
   if (!gearLoading) gearLoading = (async () => { try { const r = await fetch(chrome.runtime.getURL('mammon-gear.json')); GEAR = r.ok ? await r.json() : {}; } catch (e) { GEAR = {}; } return GEAR; })();
@@ -74,8 +79,8 @@ async function mmTick() {
   if (!wantNpc && !wantOrder) return null;
   busy = (async () => {
     try {
-      if (wantOrder) { pollT = Date.now(); await orderPoll(); }
-      if (wantNpc) { npcT = Date.now(); await npcPoll(); }
+      if (wantOrder) { pollT = Date.now(); ssSet('l2bot-mmPollT', pollT); await orderPoll(); }
+      if (wantNpc) { npcT = Date.now(); ssSet('l2bot-mmNpcT', npcT); await npcPoll(); }
       if (env.rt.mmPollReq) await env.setRt({ mmPollReq: null });
     } catch (e) {} finally { busy = null; }
   })();
