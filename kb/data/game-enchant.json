@@ -1,0 +1,81 @@
+{
+  "_source": "клиентские скрипты игры l2wap.com (l2-enchant-policy.js, weapon-enchant-flat-grade-curve.js, enchant-scroll-meta.js, enchant.js; версия ?v=7e608a3f7816, скачаны 11.10.2026) + лог игрока 11.10 02:05–02:08 (16:05 UTC)",
+  "api": {
+    "path": "POST /game/inventory/enchant",
+    "request": {"expectedRevision": 87981, "targetInstanceId": "eq:l3 | bag:<itemId>:<enchant>[:<pBonus>:<mBonus>]", "payment": "scroll", "count": 1, "scrollItemId": 910516, "weaponEnchantMode": "balanced|physical|magic (только для оружия)"},
+    "response": {"success": false, "previousEnchantLevel": 1, "currentEnchantLevel": 0, "attemptedCount": 1, "successCount": 0, "failCount": 1, "scrollConsumed": true, "scrollConsumedCount": 1, "coinConsumed": false, "count": 1, "messageUk": "Заточка не вдалася. Рівень заточки знижено: +1 → +0.", "updatedTargetInstanceId": "eq:l3", "character": "полный снимок героя"},
+    "errors": {"409": "ревизия устарела — перечитать героя и повторить", "401": "нет токена"},
+    "pages": {"/enchant.html?target=eq:l1&mode=balanced": "заточка предмета", "/enchant-items.html?category=weapon|armor|jewelry": "выбор предмета"}
+  },
+  "maxEnchant": {"weapon": 25, "armor": 25, "shield": 25, "jewelry": 25, "fishingRod_910600": 10},
+  "chance": {"ordinary": 60, "blessed": 100, "dependsOnLevel": false, "safeLevel": null,
+    "onFailOrdinary": "уровень −1 (минимум +0); предмет не ломается и не кристаллизуется",
+    "onFailBlessed": "не бывает: успех гарантирован, уровень не снижается"},
+  "scrolls": [
+    {"id": 910510, "kind": "ordinary", "target": "armor",  "grade": "D", "oly": 3000, "col": 3,  "rbDrop": "РБ 21–39, 15 %, 1–2 шт."},
+    {"id": 910511, "kind": "ordinary", "target": "weapon", "grade": "D", "oly": 3000, "col": 3,  "rbDrop": "РБ 21–39, 8 %, 1–2 шт."},
+    {"id": 910512, "kind": "ordinary", "target": "armor",  "grade": "C", "oly": 4000, "col": 6,  "rbDrop": "РБ 40–51, 15 %"},
+    {"id": 910513, "kind": "ordinary", "target": "weapon", "grade": "C", "oly": 4000, "col": 6,  "rbDrop": "РБ 40–51, 8 %"},
+    {"id": 910514, "kind": "ordinary", "target": "armor",  "grade": "B", "oly": 5000, "col": 9,  "rbDrop": "РБ 52–60, 14 %"},
+    {"id": 910515, "kind": "ordinary", "target": "weapon", "grade": "B", "oly": 5000, "col": 9,  "rbDrop": "РБ 52–60, 7 %"},
+    {"id": 910516, "kind": "ordinary", "target": "armor",  "grade": "A", "oly": 6000, "col": 12, "rbDrop": "РБ 61–75, 13 %"},
+    {"id": 910517, "kind": "ordinary", "target": "weapon", "grade": "A", "oly": 6000, "col": 12, "rbDrop": "РБ 61–75, 6 %"},
+    {"id": 910518, "kind": "ordinary", "target": "armor",  "grade": "S", "oly": 7000, "col": 15, "rbDrop": "РБ 76–87, 12 %"},
+    {"id": 910519, "kind": "ordinary", "target": "weapon", "grade": "S", "oly": 7000, "col": 15, "rbDrop": "РБ 76–87, 5 %"},
+    {"id": 910520, "kind": "blessed", "target": "armor",  "grade": "D", "shil": 34,  "col": 10, "rbDrop": "РБ 21–39, 2 %"},
+    {"id": 910521, "kind": "blessed", "target": "weapon", "grade": "D", "shil": 34,  "col": 10, "rbDrop": "РБ 21–39, 2 %"},
+    {"id": 910522, "kind": "blessed", "target": "armor",  "grade": "C", "shil": 51,  "col": 20, "rbDrop": "РБ 40–51, 1,5 %"},
+    {"id": 910523, "kind": "blessed", "target": "weapon", "grade": "C", "shil": 51,  "col": 20, "rbDrop": "РБ 40–51, 1,5 %"},
+    {"id": 910524, "kind": "blessed", "target": "armor",  "grade": "B", "shil": 68,  "col": 30, "rbDrop": "РБ 52–60, 1 %"},
+    {"id": 910525, "kind": "blessed", "target": "weapon", "grade": "B", "shil": 68,  "col": 30, "rbDrop": "РБ 52–60, 1 %"},
+    {"id": 910526, "kind": "blessed", "target": "armor",  "grade": "A", "shil": 85,  "col": 40, "rbDrop": "РБ 61–75, 1 %"},
+    {"id": 910527, "kind": "blessed", "target": "weapon", "grade": "A", "shil": 85,  "col": 40, "rbDrop": "РБ 61–75, 1 %"},
+    {"id": 910528, "kind": "blessed", "target": "armor",  "grade": "S", "shil": 102, "col": 50, "rbDrop": "РБ 76–87, 0,5 %"},
+    {"id": 910529, "kind": "blessed", "target": "weapon", "grade": "S", "shil": 102, "col": 50, "rbDrop": "РБ 76–87, 0,5 %"}
+  ],
+  "_priceKeys": {"oly": "кристаллы Олимпиады (/game/olympiad/crystal-shop)", "shil": "Shil Coins магазина TvT (/game/tvt/shop/catalog; 2 Shil за победу в TvT)", "col": "Coin of Luck в GM-премиум магазине — НЕ тратить", "rbDrop": "дроп РБ по /game/spawn/<id>/info (game-raid-bosses.json)"},
+  "bonus": {
+    "armorPDefPerLevel": {"D": 5, "C": 7, "B": 10, "A": 14, "S": 18},
+    "shieldDefPerLevel": {"D": 5, "C": 7, "B": 10, "A": 14, "S": 18},
+    "jewelryMDefPerLevel": {"D": 10, "C": 10, "B": 15, "A": 22, "S": 28},
+    "weaponStepByTier": {
+      "_tiers": "индекс по достигнутому уровню: +1..5, +6..10, +11..15, +16..20, +21..25; бонус = сумма шагов",
+      "magic":      {"D": [3,4,5,7,9],  "C": [4,5,7,9,11],  "B": [5,6,9,11,14],  "A": [6,8,11,14,18],  "S": [8,10,14,18,22]},
+      "sword_blunt_dual": {"D": [3,4,5,6,8], "C": [4,5,6,8,10], "B": [5,6,8,10,13], "A": [6,8,10,13,16], "S": [8,10,13,16,20]},
+      "dagger":     {"D": [3,4,5,5,7],  "C": [4,5,5,7,9],   "B": [5,5,7,9,12],   "A": [5,7,9,12,14],  "S": [7,9,12,14,18]},
+      "spear":      {"D": [3,4,5,5,7],  "C": [4,5,5,7,9],   "B": [5,5,7,9,12],   "A": [5,7,9,12,14],  "S": [7,9,12,14,18]},
+      "fist":       {"D": [3,4,5,6,8],  "C": [4,5,6,8,10],  "B": [5,6,8,10,12],  "A": [6,8,10,12,15],  "S": [8,10,12,15,19]},
+      "two_handed": {"D": [4,5,6,7,9],  "C": [5,6,8,10,12], "B": [6,8,10,13,16], "A": [8,10,13,16,20], "S": [9,11,15,18,24]},
+      "bow":        {"D": [4,5,7,9,11], "C": [5,6,8,10,13], "B": [6,8,10,13,16], "A": [8,10,13,16,20], "S": [10,12,16,20,24]}
+    },
+    "weaponNG": "процент от базы: +80 б.п./ур. на 1–5, 100 на 6–10, 120 на 11–15, 140 на 16–20, 160 на 21–25",
+    "weaponGoesTo": "маг. оружие — всё в M.Atk, физ. — всё в P.Atk (режим balanced/physical/magic в запросе на итог не влияет по клиентской формуле)"
+  },
+  "milestones": {
+    "weapon": {
+      "magic":  {"10": "Швидкість касту +3%", "20": "Маг. крит +3%, Маг. урон +3%", "25": "Швидкість касту +2%, Маг. крит +2%, Маг. урон +4%"},
+      "dagger": {"10": "Швидкість атаки +3%", "20": "Фіз. крит +4%, Сила фіз. крита +4%", "25": "Швидкість атаки +2%, Фіз. крит +2%, Сила фіз. крита +5%"},
+      "sword":  {"10": "Швидкість атаки +2%", "20": "Фіз. урон +3%", "25": "Швидкість атаки +3%, Фіз. урон +4%"},
+      "bow":    {"10": "Фіз. крит +3%", "20": "Сила фіз. крита +5%", "25": "Фіз. крит +3%, Сила фіз. крита +6%"},
+      "two-handed": {"10": "Сила фіз. крита +4%", "20": "Урон фіз. скілів +5%", "25": "Сила фіз. крита +6%, Урон фіз. скілів +7%"},
+      "spear":  {"10": "AoE фіз. урон +5%", "20": "AoE фіз. урон +7%", "25": "AoE фіз. урон +8%, Фіз. урон +3%"},
+      "fist":   {"10": "Швидкість атаки +3%", "20": "Фіз. крит +3%", "25": "Швидкість атаки +3%, Фіз. крит +4%"},
+      "dual":   {"10": "Швидкість атаки +2%", "20": "Урон фіз. скілів +4%", "25": "Фіз. урон +4%, Урон фіз. скілів +5%"},
+      "blunt":  {"10": "Фіз. урон +3%", "20": "Урон фіз. скілів +4%", "25": "Фіз. урон +4%, Урон фіз. скілів +5%"}
+    },
+    "armorSet": {
+      "heavy": {"10": "P.Def +2%", "20": "Max HP +3%, Stun Resistance +5%", "25": "P.Def +3%, Max HP +2%, Stun Resistance +5%"},
+      "light": {"10": "Attack Speed +2%", "20": "P.Atk +3%, Speed +3", "25": "Attack Speed +2%, P.Atk +3%, P. Critical Damage +5%"},
+      "robe":  {"10": "Casting Speed +2%", "20": "M.Atk +3%, Max MP +3%", "25": "Casting Speed +2%, Magic Critical Rate +2%, Magic Critical Damage +4%"}
+    },
+    "shield": {"10": "Shield Defense +5%", "20": "Shield Block Rate +5%", "25": "Shield Defense +5%, Shield Block Rate +5%"}
+  },
+  "expectedOrdinaryScrolls": {"_note": "60 %, неудача −1 (мин. 0): среднее число обычных свитков с +0", "3": 8, "5": 16, "9": 35, "10": 40, "15": 65, "20": 90, "25": 115},
+  "playerLog_2026-10-11": {
+    "item": "Majestic Robe (A, eq:l3)",
+    "ordinary_910516": ["0→0 ✗", "0→1 ✓", "1→0 ✗", "0→0 ✗", "0→1 ✓", "1→2 ✓", "2→3 ✓", "3→2 ✗", "2→3 ✓", "3→4 ✓"],
+    "blessed_910526": ["4→5", "5→6", "6→7", "7→8", "8→9"],
+    "result": "10 обычных: 6 успехов / 4 неудачи (+4); 5 благословенных: 5/5 (+9). P.Def 147 → 273 (+14 за уровень)",
+    "weapon": "+5 Кристал Даймона A (магическое): M.Atk +30 = 5×6; следующий шаг +8 (уровни 6–10)"
+  }
+}
