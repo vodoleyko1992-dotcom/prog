@@ -58,6 +58,8 @@
       ],
       "js": [
         "skills-il.js",
+        "zone-db.js",
+        "zone-kpd.js",
         "battle-cooldown.js",
         "engine-core.js",
         "modules/fishing.js",

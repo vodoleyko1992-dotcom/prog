@@ -85,7 +85,7 @@ async function activateMode(rtPatch, cfgPatch) {
 }
 
 const NUM  = ['farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
-              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'farmNeed', 'recipeNeed'];
+              'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 const TXT  = ['rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nWeaponBuff', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList'];
 const BOOL = ['rbSessNob', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbCharge', 'rbChipRetreat', 'epicCheck', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'weaponSwap', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil'];
@@ -762,7 +762,7 @@ function renderZones(rt, d) {
   const box = $('zoneBox');
   if (!box) return;
   const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const L = rt.lvl || 0, cat = rt.zoneCat || {}, S = rt.zoneStat || {};
+  const L = rt.lvl || 0, cat = { ...(rt.zoneCat || {}) }, S = rt.zoneStat || {};
   const name = id => cat[id]?.name || String(id).replace(/^out:/, 'Окрестности: ');
   // v4.59: желаемое окно уровней мобов (от героя −lvlBelow до +lvlAbove, по умолчанию −3…+15) — зона подходит, если её мобы в него попадают
   const wLo = L - (d.lvlBelow ?? 3), wHi = L + Math.min(d.lvlAbove ?? 15, 15), wMid = (wLo + wHi) / 2;
@@ -770,16 +770,21 @@ function renderZones(rt, d) {
   const fits = id => { const c = cat[id]; return !!c?.lo && L && c.lo <= wHi && c.hi >= wLo; };
   // насколько зона «в окне»: доля её диапазона внутри окна, затем близость середины к середине окна
   const inWin = c => c?.lo ? (Math.min(c.hi, wHi) - Math.max(c.lo, wLo) + 1) / (c.hi - c.lo + 1) : 0;
+  // 9.0: прогноз КПД по встроенной базе (тот же расчёт, что у автофарма, без поправки на свои замеры зон) + зоны из базы
+  const K = globalThis.L2Kpd, ko = K?.ready?.() && L ? { rt, cfg: d, mage: heroCls(d, rt) !== 'fighter' } : null;
+  if (ko) { ko.cal = K.learn(ko, L); for (const [id, c] of Object.entries(K.cat())) cat[id] = { ...c, ...(cat[id] || {}), lo: cat[id]?.lo || c.lo, hi: cat[id]?.hi || c.hi }; }
+  const est = {}, estOf = id => est[id] !== undefined ? est[id] : (est[id] = ko ? K.zoneEst(id, L, ko) : null);
   const ids = [...new Set([...Object.keys(S), ...Object.keys(cat).filter(fits)])];
   if (!ids.length) { box.innerHTML = `<div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.${Object.keys(cat).length ? '' : ' Нажмите «Обновить список зон», чтобы узнать уровни мобов всех Окрестностей.'}</div>`; return; }
-  const rows = ids.map(id => ({ id, r: L ? zoneRateP(rt, id, L) : null, c: cat[id] || {} }))
-    .sort((a, b) => (b.r?.exp || 0) - (a.r?.exp || 0) || (fits(b.id) - fits(a.id)) || (inWin(b.c) - inWin(a.c)) || (Math.abs((a.c.lo + a.c.hi) / 2 - wMid) - Math.abs((b.c.lo + b.c.hi) / 2 - wMid)));
+  const rows = ids.map(id => ({ id, r: L ? zoneRateP(rt, id, L) : null, c: cat[id] || {}, e: estOf(id) }))
+    .sort((a, b) => (b.r?.exp || 0) - (a.r?.exp || 0) || (b.e?.exp || 0) - (a.e?.exp || 0) || (fits(b.id) - fits(a.id)) || (inWin(b.c) - inWin(a.c)) || (Math.abs((a.c.lo + a.c.hi) / 2 - wMid) - Math.abs((b.c.lo + b.c.hi) / 2 - wMid)));
   const best = rows.find(x => x.r?.exp);
   const k = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' М' : n >= 1e3 ? Math.round(n / 1e3) + ' К' : Math.round(n);
-  box.innerHTML = `<table><tr><th>Зона</th><th>Мобы</th><th>EXP/ч</th><th>%/ч</th><th>Боёв</th><th></th></tr>`
+  box.innerHTML = `<table><tr><th>Зона</th><th>Мобы</th><th>EXP/ч</th><th title="Прогноз по базе игры (КПД)">КПД</th><th>%/ч</th><th>Боёв</th><th></th></tr>`
     + rows.slice(0, 14).map(x => `<tr class="${x.id === rt.zone ? 'cur' : ''} ${best && x.id === best.id ? 'best' : ''}">`
       + `<td>${x.id === rt.zone ? '📍 ' : ''}${h(name(x.id))}</td><td>${x.c.lo ? `${x.c.lo}-${x.c.hi}` : '—'}</td>`
-      + `<td>${x.r?.exp ? k(x.r.exp) + (x.r.near ? '*' : '') : x.r?.few ? '…' : fits(x.id) ? '?' : '—'}</td><td>${x.r?.pct != null ? x.r.pct.toFixed(1) : '—'}</td>`
+      + `<td>${x.r?.exp ? k(x.r.exp) + (x.r.near ? '*' : '') : x.r?.few ? '…' : fits(x.id) ? '?' : '—'}</td>`
+      + `<td title="${h(x.e?.why || '')}">${x.e?.exp ? '≈' + k(x.e.exp) : x.e ? '0' : '—'}</td><td>${x.r?.pct != null ? x.r.pct.toFixed(1) : '—'}</td>`
       + `<td>${x.r?.n || Object.values(S[x.id] || {}).reduce((a, e) => a + e.n, 0) || ''}</td>`
       + `<td>${x.id !== rt.zone && !/^out:/.test(x.id) ? `<button data-zone="${h(x.id)}" title="Лететь (телепорт ${x.c.price ? x.c.price.toLocaleString('ru') + ' аден' : ''})">✈</button>` : ''}</td></tr>`).join('')
     + '</table>';
@@ -788,7 +793,22 @@ function renderZones(rt, d) {
   box.innerHTML += `<div class="rec">${L ? `Герой ${L} ур.` : ''}${best ? ` · лучшая: ${h(name(best.id))} — ${k(best.r.exp)} EXP/ч${best.r.pct != null ? `, ${best.r.pct.toFixed(1)} %/ч (≈${100 / best.r.pct < 1 ? Math.round(6000 / best.r.pct) + ' мин' : (100 / best.r.pct).toFixed(1) + ' ч'} на уровень)` : ''}` : ''}`
     + `${cur?.r?.exp && best && best.id !== cur.id ? `\nТекущая: ${k(cur.r.exp)} EXP/ч — ${Math.round((1 - cur.r.exp / best.r.exp) * 100)} % хуже лучшей` : ''}`
     + `${fresh.length ? `\n🔍 Не изучены, но по уровню подходят: ${h(fresh.slice(0, 5).join(', '))}` : ''}`
-    + `\n<span class="hint">* — по соседнему уровню героя · «…» — меньше 5 боёв · «?» — не охотился</span></div>`;
+    + `${ko ? (b => b ? `\n📈 По базе игры лучше всех для ${L} ур.: ${h(name(b.id))} — ≈${k(b.exp)} EXP/ч (${h(b.why.replace(/^по базе: /, ''))})` : '')(K.rank(L, ko)[0]) : ''}`
+    + `\n<span class="hint">* — по соседнему уровню героя · «…» — меньше 5 боёв · «?» — не охотился · КПД — прогноз по базе игры (наведите — какие мобы)</span></div>`;
+  renderRoute(ko, L, name);
+}
+// 9.0: маршрут кача 1→80 по базе игры — какая зона лучше на каждом отрезке уровней (без своих замеров; свой уровень отмечен 📍)
+let routeSig = '';
+function renderRoute(ko, L, name) {
+  const box = $('routeBox'), K = globalThis.L2Kpd;
+  if (!box || !K?.ready?.()) return;
+  const o = ko || { rt: {}, cfg: {}, mage: true }, sig = [L, o.mage, o.cfg?.lvlBelow, o.cfg?.zoneAbove].join('|');
+  if (sig === routeSig) return; routeSig = sig;
+  const h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;'), k = n => n >= 1e6 ? (n / 1e6).toFixed(1) + ' М' : Math.round(n / 1e3) + ' К';
+  box.innerHTML = '<table><tr><th>Уровни</th><th>Зона</th><th>Мобы</th><th>КПД</th><th>Телепорт</th></tr>'
+    + K.route(o, 1, 80).map(x => `<tr class="${L >= x.from && L <= x.to ? 'cur' : ''}"><td>${L >= x.from && L <= x.to ? '📍 ' : ''}${x.from}${x.to > x.from ? '–' + x.to : ''}</td>`
+      + `<td>${x.id ? h(name(x.id) || x.name) : '—'}</td><td>${x.mobs || ''}</td><td>${x.exp ? '≈' + k(x.exp) + (k(x.expTo) !== k(x.exp) ? '…' + k(x.expTo) : '') : ''}</td><td>${x.price ? x.price.toLocaleString('ru') : ''}</td></tr>`).join('')
+    + '</table><div class="hint">Прогноз EXP/ч — для героя с «типичным» временем на моба (≈5 с); настоящие цифры бот меряет сам и по ним уточняет выбор. Мобы-«стражи» без цифр в базе считаются со скидкой.</div>';
 }
 
 // 💎 баффы за Fast Aden: выбор из списка «+», порядок ▲▼, ✕; баланс и стоимость круга

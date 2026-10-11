@@ -127,7 +127,7 @@ function zoneHere() {                             // на карте: подтв
 
 const zoneCatThin = () => Object.values(env.rt.zoneCat || {}).filter(c => c.lo && c.city).length < 5;
 
-const zoneName = id => (env.rt.zoneCat?.[id]?.name) || String(id || '?').replace(/^out:/, 'Окрестности: ');
+const zoneName = id => (env.rt.zoneCat?.[id]?.name) || env.kpd?.cat?.()[id]?.name || String(id || '?').replace(/^out:/, 'Окрестности: ');   // 9.0: и зоны из базы
 
 async function zoneTrack(exp, dt, pct) {
   const id = env.rt.zone, l = env.heroLvl();
@@ -165,6 +165,31 @@ function zoneScore(r, prior) { const K = 20; return r?.exp ? (r.n * r.exp + K * 
 const zoneRated = (r, trial) => !!r?.exp && r.n >= trial && (r.n1 || 0) >= Math.ceil(trial / 2);
 const zoneMed = xs => { const a = xs.filter(v => v > 0).sort((p, q) => p - q), m = a.length >> 1; return !a.length ? 0 : a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
 
+// 9.0 (игрок 11.10: «автокач исходя из КПД локации, от 1-х лвлов до хай лвла»): оценка зоны по встроенной базе (zone-kpd.js, zone-db.js —
+// мобы точки, их уровни и EXP из живой игры) — ДО первого боя там. Раньше зона без своих замеров была просто «неизвестной»: летели
+// в ближайшую по уровню и тратили по 15–30 мин на пробу каждой. Теперь:
+//  • каталог зон — база (90 точек) + прочитанный «Телепорт» (его цена и город важнее): автофарм работает и без чтения страницы;
+//  • зона без замеров — по прогнозу КПД (EXP/ч), прогноз приведён к своим замерам: множитель = медиана «замер ÷ прогноз» по изученным зонам;
+//  • изученная зона — замер, «подтянутый» к своему прогнозу (а не к медиане зон), пока боёв мало;
+//  • проба новой зоны раз в час — только если её прогноз не хуже 0,9 лучшей известной (раньше — любая, по очереди).
+// Без базы (env.kpd нет) всё как в 8.0
+function kpdOf(L, ids) {
+  const K = env.kpd; if (!K?.ready?.() || !L) return null;
+  const o = { rt: env.rt, cfg: env.cfg, mage: env.kpdMage?.() ?? true };
+  o.cal = K.learn(o, L);
+  const raw = {}; for (const id of ids) { const e = K.zoneEst(id, L, o); if (e) raw[id] = e; }   // exp 0 — в окне уровня мобов нет
+  const trial = Math.max(15, env.cfg.zoneTrial || 20);
+  const ratios = Object.keys(raw).filter(id => raw[id].exp > 0).map(id => [zoneRate(id, L), raw[id].exp]).filter(([r]) => zoneRated(r, trial)).map(([r, e]) => r.exp / e);
+  const k = ratios.length ? Math.max(0.25, Math.min(4, zoneMed(ratios))) : 1;
+  const est = {}; for (const [id, e] of Object.entries(raw)) est[id] = { ...e, exp: e.exp * k, raw: e.exp };
+  return { est, k, n: ratios.length, cal: o.cal };
+}
+// каталог: база + «Телепорт» (поля «Телепорта» — поверх базы; у городов из «Телепорта» нет уровней — берём из базы)
+const catAll = () => { const db = env.kpd?.cat?.() || {}, cat = env.rt.zoneCat || {}, out = { ...db };
+  for (const [id, c] of Object.entries(cat)) out[id] = { ...(db[id] || {}), ...c, lo: c.lo || db[id]?.lo || 0, hi: c.hi || db[id]?.hi || 0 };
+  return out; };
+const kExp = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(n / 1e3) + ' тыс.';
+
 async function zoneForLevel() {
   const L = env.heroLvl(); if (!L) return false;
   const lo = L - (env.cfg.lvlBelow ?? 3), hi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: окно из меню; для ВЫБОРА ЗОНЫ — не выше +15 (v5.3.1)
@@ -175,7 +200,7 @@ async function zoneForLevel() {
   if ((!env.rt.zoneCatT || zoneCatThin()) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) { env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} — читаю «Телепорт», чтобы найти зону своего уровня`); await env.setRt({ zoneScan: true, zoneLvlT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return true; }   // после чтения — сразу выбор зоны
   const bad = env.rt.zoneBad || {};
   const mid = (lo + hi) / 2, inWin = c => (Math.min(c.hi, hi) - Math.max(c.lo, lo) + 1) / (c.hi - c.lo + 1);
-  const fit = Object.entries(env.rt.zoneCat || {}).filter(([id, c]) => id !== env.rt.zone && !/^out:|^rb:/.test(id) && c.lo && c.hi >= lo && c.lo <= hi && Date.now() - (bad[id] || 0) > 6 * 3600000)   // 7.1.30: не телепорт в ту же зону
+  const fit = Object.entries(catAll()).filter(([id, c]) => id !== env.rt.zone && !/^out:|^rb:/.test(id) && c.lo && c.hi >= lo && c.lo <= hi && Date.now() - (bad[id] || 0) > 6 * 3600000)   // 7.1.30: не телепорт в ту же зону
     .sort((a, b) => (inWin(b[1]) >= 0.5) - (inWin(a[1]) >= 0.5) || Math.abs((a[1].lo + a[1].hi) / 2 - mid) - Math.abs((b[1].lo + b[1].hi) / 2 - mid) || (a[1].price || 0) - (b[1].price || 0));
   if (!fit.length) { env.rec('B', 'локации', `зон для ${lo}–${hi} ур. в «Телепорте» нет (в каталоге ${Object.keys(env.rt.zoneCat || {}).length}) — бью что есть`); return false; }
   // 7.1.31 (лог 10.10 19:35–19:39): мобы тут 15–35 ур. → улетал в ближайшую по уровню Enchanted Valley (≈1,6 M EXP/ч), а через 4 мин
@@ -190,8 +215,13 @@ async function zoneForLevel() {
   const prior = rated.length ? rated.map(x => x[2].exp).sort((a, b) => a - b)[Math.floor(rated.length / 2)] : med;
   const sc = x => zoneRated(x[2], trial) ? zoneScore(x[2], prior) : zoneScore(x[2], prior) * 0.85;
   const known = ev.filter(x => x[2]?.exp && x[2].n >= 5 && !low(x[2])).sort((a, b) => sc(b) - sc(a));
-  const [id, c, rate] = known[0] || ev.find(x => !low(x[2])) || ev[0];
-  const why = rate?.exp ? `${zoneRated(rate, trial) ? 'лучшая по опыту для своего уровня' : 'лучшая по старым замерам'}: ≈${Math.round(rate.exp).toLocaleString('ru')} EXP/ч (${rate.n} боёв)` : `зона своего уровня (${c.lo}–${c.hi})`;
+  // 9.0: зоны без замеров — по прогнозу КПД (а не «ближайшая по уровню»); прогноз заметно лучше известной (×0,85 > ×1,10) — летим туда
+  const kp = kpdOf(L, ev.map(x => x[0])), E = kp?.est || {};
+  const guess = ev.filter(x => !zoneRated(x[2], trial) && E[x[0]]?.exp > 0).sort((a, b) => E[b[0]].exp - E[a[0]].exp)[0];
+  const pickG = guess && (!known[0] || E[guess[0]].exp * 0.85 > sc(known[0]) * 1.10);
+  const [id, c, rate] = pickG ? guess : known[0] || ev.find(x => !low(x[2])) || ev[0];
+  const why = pickG ? `лучшая по КПД для ${L} ур.: ≈${kExp(E[id].exp)} EXP/ч (${E[id].why})`
+    : rate?.exp ? `${zoneRated(rate, trial) ? 'лучшая по опыту для своего уровня' : 'лучшая по старым замерам'}: ≈${Math.round(rate.exp).toLocaleString('ru')} EXP/ч (${rate.n} боёв)` : `зона своего уровня (${c.lo}–${c.hi})`;
   env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} → лечу в «${c.name || id}» (${c.lo}–${c.hi}) · ${why}`);
   await env.setRt({ zoneGo: { id, t: Date.now(), why }, zoneGoT: 0 });
   location.href = '/teleport.html'; await env.sleep(4000);
@@ -199,7 +229,7 @@ async function zoneForLevel() {
 }
 
 function zonePick() {
-  const L = env.heroLvl(), cat = env.rt.zoneCat || {}, cur = env.rt.zone, trial = Math.max(15, env.cfg.zoneTrial || 20);
+  const L = env.heroLvl(), cat = catAll(), cur = env.rt.zone, trial = Math.max(15, env.cfg.zoneTrial || 20);
   if (!L) return null;   // 7.1.30: уровень героя ещё не прочитан — не выбирать зону по окну −3…15
   const badZ = env.rt.zoneBad || {}, notBad = id => Date.now() - (badZ[id] || 0) > 6 * 3600000;   // 7.1.30: зона без кнопки/не по карману — 6 ч не пробуем
   const wLo = L - (env.cfg.lvlBelow ?? 3), wHi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: то же окно, что в меню (зона — не выше +15)
@@ -213,24 +243,34 @@ function zonePick() {
   // 8.0 (аудит фарма): оценки всех подходящих зон (и пробных, по соседним уровням) → медиана; зона с известной оценкой ниже медианы —
   // не цель ни перелёта, ни пробы (симуляция: герой 53 после переустановки из неизвестной зоны летел в Antharas' Lair ≈1,46 M, худшую)
   const all = fits.map(([id, c]) => [id, c, id === cur ? here : zoneRate(id, L)]);
+  // 9.0: прогноз КПД всех подходящих зон (и текущей); E[id].exp — уже в масштабе своих замеров
+  const kp = kpdOf(L, [...new Set([...all.map(x => x[0]), cur].filter(Boolean))]), E = kp?.est || {};
+  const ex = (id, r) => r?.exp || E[id]?.exp || 0;     // старая оценка (соседние уровни), иначе прогноз
   const med = zoneMed([...all.map(x => x[2]?.exp || 0), ...(all.some(x => x[0] === cur) ? [] : [here?.exp || 0])]);
   const low = r => !!r?.exp && r.exp < med;
+  const lowE = (id, r) => !r?.exp && !!E[id]?.exp && !!med && E[id].exp < med;   // 9.0: без замеров, но прогноз ниже медианы — не пробуем
   const rated = all.filter(x => zoneRated(x[2], trial) && afford(x[1]) && (x[0] === cur || Date.now() - (tried[x[0] + ':' + L] || 0) > 1800000));
   const prior = rated.length ? rated.map(x => x[2].exp).sort((a, b) => a - b)[Math.floor(rated.length / 2)] : 0;
-  rated.sort((a, b) => zoneScore(b[2], prior) - zoneScore(a[2], prior));
-  const best = rated[0], hs = here?.exp ? zoneScore(here, prior) : 0;
+  const pr = id => E[id]?.exp || prior;               // 9.0: замер «подтягивается» к своему прогнозу, а не к медиане зон
+  rated.sort((a, b) => zoneScore(b[2], pr(b[0])) - zoneScore(a[2], pr(a[0])));
+  const best = rated[0], bs = best ? zoneScore(best[2], pr(best[0])) : 0, hs = here?.exp ? zoneScore(here, pr(cur)) : 0;
   // проба новой зоны: если хороших замеров меньше двух — сразу, иначе не чаще раза в час (остальное время — лучшая известная)
   // 8.0: сначала пробные зоны с лучшей старой оценкой (замеры на 2–3 ур. от героя), потом неизвестные — ближе к окну уровня;
   // старая оценка (со скидкой 15 %) заметно лучше лучшей изученной и текущей — пробуем сразу, не через час (Den of Evil ≈6,5 M на 51 ур.)
-  const fresh = all.filter(([id, c, r]) => id !== cur && !zoneRated(r, trial) && !low(r) && afford(c) && Date.now() - (tried[id + ':' + L] || 0) > 6 * 3600000)   // 7.1.30: не «пробовать» зону, в которой уже стоим
-    .sort((a, b) => (b[2]?.exp || 0) - (a[2]?.exp || 0) || Math.abs((a[1].lo + a[1].hi) / 2 - (wLo + wHi) / 2) - Math.abs((b[1].lo + b[1].hi) / 2 - (wLo + wHi) / 2));
-  const hot = !!fresh[0]?.[2]?.exp && zoneScore(fresh[0][2], prior || med) * 0.85 > Math.max(best ? zoneScore(best[2], prior) : 0, hs) * 1.10;
+  // 9.0: зоны с прогнозом КПД, но без старых замеров — сортируются по прогнозу; совсем без оценки — последними, ближе к окну уровня;
+  // прогноз «зона пуста для этого уровня» (0 мобов в окне) — не проба
+  const fresh = all.filter(([id, c, r]) => id !== cur && !zoneRated(r, trial) && !low(r) && !lowE(id, r) && !(E[id] && !E[id].exp) && !(kp && !r?.exp && !E[id]) && afford(c) && Date.now() - (tried[id + ':' + L] || 0) > 6 * 3600000)   // 7.1.30: не «пробовать» зону, в которой уже стоим
+    .sort((a, b) => (b[2]?.exp || 0) - (a[2]?.exp || 0) || ex(b[0]) - ex(a[0]) || Math.abs((a[1].lo + a[1].hi) / 2 - (wLo + wHi) / 2) - Math.abs((b[1].lo + b[1].hi) / 2 - (wLo + wHi) / 2));
+  const fx = fresh[0] ? fresh[0][2]?.exp ? zoneScore(fresh[0][2], E[fresh[0][0]]?.exp || prior || med) : ex(fresh[0][0]) : 0;
+  const hot = fx > 0 && fx * 0.85 > Math.max(bs, hs) * 1.10;
   // 8.0: текущая зона на этом уровне не изучена, а проба давно кончилась (переустановка, скачок уровня): её старая оценка не хуже
   // остальных — меряем здесь (бесплатно), не летим пробовать другую; оценки нет совсем — одна проба здесь (до 30 мин) раньше платных
   if (studying && !low(here)) {
     const tk = cur + ':' + L;
-    if (here?.exp && here.exp * 1.10 >= Math.max(fresh[0]?.[2]?.exp || 0, best ? best[2].exp : 0)) return null;
-    if (!here?.exp && !tried[tk]) {
+    if (here?.exp && here.exp * 1.10 >= Math.max(fresh[0]?.[2]?.exp || 0, fx * 0.85, best ? best[2].exp : 0)) return null;   // 9.0: и прогноз КПД (со скидкой 15 %)
+    // 9.0: замеров здесь нет, а по прогнозу КПД мобов своего уровня тут нет или зона хуже 0,85 лучшей альтернативы — бесплатную пробу пропускаем
+    const alt = Math.max(fx, best ? best[2].exp : 0);
+    if (!here?.exp && !tried[tk] && !(E[cur] && (!E[cur].exp || (alt && E[cur].exp < 0.85 * alt)))) {
       env.rt.zoneTrialT = Date.now(); env.rt.zoneTried = { ...tried, [tk]: Date.now() };
       env.setRt({ zoneTrialT: env.rt.zoneTrialT, zoneTried: env.rt.zoneTried });
       return null;
@@ -238,12 +278,15 @@ function zonePick() {
   }
   // замеры уже есть — сначала лучшая известная зона, первая проба новой — через час
   if (!env.rt.zoneExploreT && rated.length >= 2) { env.rt.zoneExploreT = Date.now(); env.setRt({ zoneExploreT: env.rt.zoneExploreT }); }
-  if (fresh.length && (rated.length < 2 || hot || Date.now() - (env.rt.zoneExploreT || 0) > 3600000)) {
+  // 9.0: с прогнозом КПД — проба только если прогноз не хуже 0,9 лучшей известной (одна изученная — 0,8); без прогноза — как раньше
+  const worth = !fresh.length ? false : !fx || fresh[0][2]?.exp ? true : fx >= (rated.length >= 2 ? 0.9 : rated.length ? 0.8 : 0) * Math.max(bs, hs);
+  if (fresh.length && worth && (rated.length < 2 || hot || Date.now() - (env.rt.zoneExploreT || 0) > 3600000)) {
     const [fid, fc, fr] = fresh[0];
     env.rt.zoneExploreT = Date.now(); env.rt.zoneTrialT = Date.now(); env.setRt({ zoneExploreT: env.rt.zoneExploreT, zoneTrialT: env.rt.zoneTrialT });
-    return { id: fid, name: fc.name, why: fr?.exp ? `пробую зону на ${L} ур. (${fc.lo}-${fc.hi}): по старым замерам ≈${Math.round(fr.exp).toLocaleString('ru')} EXP/ч (${fr.n} боёв)` : `пробую новую зону (${fc.lo}-${fc.hi})` };
+    return { id: fid, name: fc.name, why: fr?.exp ? `пробую зону на ${L} ур. (${fc.lo}-${fc.hi}): по старым замерам ≈${Math.round(fr.exp).toLocaleString('ru')} EXP/ч (${fr.n} боёв)`
+      : E[fid]?.exp ? `пробую зону по КПД для ${L} ур.: ≈${kExp(E[fid].exp)} EXP/ч (${E[fid].why})` : `пробую новую зону (${fc.lo}-${fc.hi})` };
   }
-  if (best && best[0] !== cur && !low(best[2]) && (!hs || zoneScore(best[2], prior) > hs * 1.10))
+  if (best && best[0] !== cur && !low(best[2]) && (!hs || bs > hs * 1.10))
     return { id: best[0], name: best[1].name, why: `лучше по опыту: ≈${Math.round(best[2].exp).toLocaleString('ru')} EXP/ч (${best[2].n} боёв) против ${here?.exp ? '≈' + Math.round(here.exp).toLocaleString('ru') : '?'}` };
   return null;
 }
@@ -352,6 +395,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, zoneForLevel, zonePick, zoneGoStep, toMap, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);

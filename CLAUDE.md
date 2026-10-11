@@ -43,6 +43,8 @@ popup.html/js, ui-v7.* меню: 7 разделов (overview, hunt, rb, fish, p
                        #tab-<старый>, TAB_GROUP в popup.js), «Чем занят бот» (setMode/paintModes — ровно один режим),
                        скрытие по классу (data-cls="fighter|mage|spoil" + html.cls-mage/cls-fighter/cls-spoil, «показать всё»)
 skills-il.js, items-il.json   справочники Interlude (скиллы по id, предметы: грейд, тип, P/M.Atk)
+zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
+zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
 tests/                 node tests/run-all.cjs (152 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
@@ -106,6 +108,11 @@ zip -qr l2wap-bot-v7.1.NN.zip . -x 'tests/*' -x '*.orig'
 Firefox ставится как временное дополнение (`about:debugging#/runtime/this-firefox`); после перезапуска браузера данные стираются → срабатывает базовый профиль. Android: в обычном Firefox неподписанный zip не ставится — нужен Firefox Nightly (about:config `xpinstall.signatures.required`=false, «Установить дополнение из файла» в секретном меню) или подпись на AMO (unlisted) аккаунтом игрока. В Firefox для Android нет chrome.commands/notifications/значка/снимка экрана; меню из «⋮ → Расширения» — отдельная вкладка; фоновая вкладка/погасший экран засыпают.
 
 ## Последние версии (что уже сделано)
+
+- **9.0 (в работе, автокач по КПД; CHANGELOG-9.0.md)**: выбор зоны по прогнозу EXP/ч из встроенной базы (zone-db.js + zone-kpd.js), прогноз
+  приводится к своим замерам (navigation.kpdOf: k = медиана замер÷прогноз; zoneScore подтягивает замер к своему прогнозу), каталог = база +
+  «Телепорт» (catAll), проба зоны только при прогнозе ≥ 0,9 лучшей; обучение по rt.mobVal (время на моба, поправка за уровни выше, верх окна
+  cfg.zoneAbove расширяется по уверенным боям, сужается после смертей). Меню: колонка КПД, маршрут 1→80. Тест v90-autofarm (+ симуляция кача).
 
 - **8.0.8** (игрок: «основную версию под андроиды не меняем», CHANGELOG-8.0.8.md): раскладка 8.0.7 — только при /Android/ в userAgent (content.ANDROID → dockOver, popup tabbed); на ПК как в 8.0.6. Сборка стандартно только Chrome, Firefox — по запросу. Смоук v807-tablet-browser проверяет оба режима (ПК и Android-UA).
 - **8.0.7** (игрок: «на планшете с Firefox для Android криво-косо», CHANGELOG-8.0.7.md): content.dock — нет места рядом с игрой (dockOver: bounds.right=0 или <300 px справа) → меню свёрнуто, открывается язычком 36×64 (localStorage l2bot-dockOpen на устройстве, cfg.dockMin не трогаем), ширина до 460; индикатор `.over` — 3 строки, `.hid` пока меню открыто; popup — viewport meta, text-size-adjust:none, во вкладке (tabs.getCurrent) классы docked+tabbed (ui-game.css html.tabbed). Смоук tests/v807-tablet-browser.cjs. Для отладки вёрстки: стили игры с l2wap.com + тела из снимков pages → копия страницы в Firefox (scratchpad tabshot.cjs, кеширующий https-прокси на 127.0.0.1:443).
