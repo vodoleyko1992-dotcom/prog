@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
@@ -3515,7 +3515,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtC
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -3554,7 +3554,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get gam
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },
@@ -3890,7 +3890,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
@@ -4299,6 +4299,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (!ps.some(n => /^summon feline queen$/i.test(n))) cf.nPetBuffs = [...ps, 'Summon Feline Queen'].join(', ');
     if (/feline queen/i.test(String(C('petSummon') || ''))) cf.petSummon = '';
   });
+  once('faFull925', () => { if (String(C('rbSessBuffs') || '').replace(/\s+/g, '') === '1413,1323,4703,273,365,1303,264,267,1389') cf.rbSessBuffs = 'auto'; });   // 9.2.5: заводской список РБ-сессии → фулл бафф под класс (свой список игрока не трогаем)
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)

@@ -60,6 +60,7 @@
         "skills-il.js",
         "zone-db.js",
         "zone-kpd.js",
+        "fa-full.js",
         "battle-cooldown.js",
         "engine-core.js",
         "modules/fishing.js",

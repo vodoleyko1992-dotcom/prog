@@ -540,11 +540,21 @@ async function epicGiveUpNext(k, why) {
 // Coin of Luck: «0 — не тратить никогда» значит никогда (было: платный набор после каждой смерти без лимита)
 const epicFlow = () => epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick';
 const TB_COL = 15;
-function epicBuffWhy(now = Date.now()) {
+// 9.2.5 (игрок 12.10: «фулл баф на РБ и эпиков за ФА»): фулл бафф за FA включён и FA на него хватает — платный городской набор
+// за Coin of Luck в режиме эпиков не берём (баффы FA те же и выше уровнем, на 3 ч). FA мало (баланс известен и меньше набора) — как раньше
+function epicFaCovers() {
+  if (env.cfg.epicFaFull === false) return false;
+  const ids = env.faFullIds?.() || [], bal = env.rt.faBal && Date.now() - env.rt.faBal.t < 6 * H ? env.rt.faBal.v : null;
+  if (!ids.length) return false;
+  const need = ids.reduce((a, id) => a + (+(env.faCost?.(id)) || 1), 0);
+  return bal == null || bal >= need;
+}
+function epicBuffWhy(now = Date.now(), noBudget = false) {
   const E = env.rt.epic || {}, k = epicFlow() ? E.k : '';
-  const q = epicTpBudgetQuote({ known: true, col: TB_COL, adena: 0 }, k, { kind: 'buff', now });
+  if (!noBudget && epicFaCovers()) return 'фулл бафф берётся за FA';
+  const q = noBudget ? { ok: true } : epicTpBudgetQuote({ known: true, col: TB_COL, adena: 0 }, k, { kind: 'buff', now });
   if (!q.ok) return q.why;
-  if (!k) return '';
+  if (!k) return noBudget ? 'эпик ещё не выбран' : '';
   const d = (env.rt.epicDb || {})[k] || {}, h = env.heroLvl(), lw = epicLvlWhy(k);
   if (lw) return lw;
   if (d.deny && (!d.apiLvl || !h || d.apiLvl === h)) return `игра не пускает: ${d.deny}`;
@@ -555,6 +565,9 @@ function epicBuffWhy(now = Date.now()) {
   return '';
 }
 function epicBuffCol() { return epicOn() ? !epicBuffWhy() : null; }
+// 9.2.5: фулл бафф за FA перед эпиком — те же проверки, что у платного набора (по силам, жив по свежему ответу, < 2 смертей за час,
+// дорога выбрана), только без бюджета Coin of Luck: FA тратится только на заход, который точно будет
+function epicFaOk() { return epicOn() && epicFlow() && !epicBuffWhy(Date.now(), true); }
 async function epicBuffPay(set) {                  // прямо перед нажатием платного набора: резерв в бюджете CoL → время резерва; нельзя → false
   if (!epicOn()) return null;
   const why = epicBuffWhy();
@@ -858,7 +871,7 @@ async function epicStep() {
  return { isEpicPage, epicOn, epicNum, epicById, epicByName, epicOf, epicWant, epicIdOf, epicPins, epicGuards, rowOf, unitOf, epicRowRead, epicRowsParse, epicTpBtn,
    epicUntil, epicUntilTxt, epicSeen, epicListScan, epicSet, epicDbSet, epicApiOk, epicApiNote, epicApiScan, epicApiDown, epicApiNext, epicApiDue, epicPollTick, epicScanAll,
    epicLvl, epicLvlWhy, epicPrice, epicTpBudgetQuote, epicTpBudgetReserve, epicTpBudgetRelease, VLBL, epicHeroMax, epicDps, epicVerdict, epicVerdictSave, epicVerdictAll,
-   epicPayGate, epicLair, epicHereNow, epicRoute, epicPickWhy, epicPick, epicWhyNone, epicGiveUp, epicGiveUpNext, epicFlow, epicBuffWhy, epicBuffCol, epicBuffPay, epicBuffRelease, epicTpAck, epicTpAckOf, epicTpReqFor,
+   epicPayGate, epicLair, epicHereNow, epicRoute, epicPickWhy, epicPick, epicWhyNone, epicGiveUp, epicGiveUpNext, epicFlow, epicBuffWhy, epicBuffCol, epicFaOk, epicFaCovers, epicBuffPay, epicBuffRelease, epicTpAck, epicTpAckOf, epicTpReqFor,
    epicWoundHp, epicArriveFail, epicStep };
  };
 })(globalThis);
