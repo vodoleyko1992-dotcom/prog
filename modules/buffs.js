@@ -196,6 +196,7 @@ function townBuffNeed() {                          // что взять: { set, 
   let set = env.cfg.townBuffSet || 'basic';
   // 8.0.3 (эпики): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах лимита Coin of Luck на эпиков, иначе
   // бесплатный «Звичайний баф». Признак — состояние эпика (rt.epic), поэтому и в «Восстановить», и после смерти; для РБ выбор не меняется
+  // 8.0.3 (ревью): в режиме эпиков — всегда (и между эпиками), и только когда сам заход разрешён (epics.epicBuffWhy)
   if ((set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
   const H = hudBuffs();
   if (!H || set === 'off' && !(env.cfg.faBuffs || '').trim()) return null;
@@ -331,17 +332,22 @@ async function townBuffStep() {
   if (st.step === 'town') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
     if (st.set !== 'basic' && !['warrior', 'mage'].includes(env.cfg.townBuffSet)) return done('платный бафф не выбран в меню — пропускаю');
-    // 8.0.3 (эпики): платный набор во время эпика — резерв в бюджете Coin of Luck до нажатия; не разрешён — бесплатный «basic»
+    // 8.0.3 (эпики): платный набор в режиме эпиков — в пределах лимита Coin of Luck; не разрешён — бесплатный «basic».
+    // 8.0.3 (ревью): сначала только проверка (epicBuffCol, без резерва); резерв — прямо перед нажатием, после кнопки и проверки «не
+    // понизит ли баффы» (раньше резерв до них съедал суточный лимит впустую — «баффер не открылся» каждую минуту → телепорт запрещён)
     let set = st.set;
-    if (set !== 'basic' && (await env.epicBuffPay?.(set)) === false) set = 'basic';
+    if (set !== 'basic' && env.epicBuffCol?.() === false) set = 'basic';
     env.setStatus(`Бафф: городской баффер (${set})`);
     const btn = await env.waitX(() => env.$q(`#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="${set}"]`), 10000, 200);
     if (!btn) return done(`баффер не открылся (${env.shown(env.$q('#town-buffer-load-err')) ? env.$q('#town-buffer-load-err').textContent.trim().slice(0, 80) : 'нет кнопки'})`);
     tbLevelsNote();
     const dn = tbDowngrade(set, hudBuffs() || {});
     if (dn.length) return done(`городской набор «${set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
+    let payAt = 0;
+    if (set !== 'basic') { const p = await env.epicBuffPay?.(set); if (p === false) return done(`«${set}» за Coin of Luck не разрешён — в следующий раз бесплатный «basic»`); if (typeof p === 'number') payAt = p; }
     const H0 = hudBuffs() || {};
-    await env.pause(); env.fire(btn);
+    await env.pause();
+    if (!env.fire(btn) && payAt) { await env.epicBuffRelease?.(payAt, 'кнопка не нажалась'); return done(`городской «${set}»: кнопка не нажалась`); }
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
     const ok = await env.waitX(() => /накладено|наложен|applied/i.test(res()), 6000, 200);
     if (ok) {                                       // v5.3: запоминаем, какие баффы даёт набор (новые и обновлённые в шапке)
@@ -355,6 +361,8 @@ async function townBuffStep() {
       // «без подтверждения» у баффера = скорее всего «без сознания» (лог 01:33): сначала воскрешение
       if (!st.reviveTried) { env.rec('B', 'бафф', 'баффер не отвечает — похоже, персонаж «без сознания»: сначала «Вернуться в город»'); await env.setRt({ tbuff: null, revive: { t: Date.now(), url: env.rt.lastBattle } }); return; }
     }
+    // явный отказ баффера (текст есть, не «наложено», не «без сознания») — 15 CoL не списаны: резерв снимаем; без ответа — оставляем
+    if (payAt && !ok && fail && !env.DEAD_RE.test(res())) await env.epicBuffRelease?.(payAt, fail);
     const cl = env.$q('#town-buffer-result-overlay [class*="close"], #town-buffer-result-overlay');   // закрыть окно результата
     if (ok && cl) { try { env.fire(cl); } catch (e) {} }
     env.rec('B', 'бафф', ok ? `городской «${set}» — наложен` : `городской «${set}»: ${fail || 'без подтверждения'}`);

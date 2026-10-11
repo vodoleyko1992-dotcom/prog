@@ -802,7 +802,9 @@ function renderEpics(rt, d) {
   const way = (k, x) => {
     if (x.seenZone && x.seenZone === rt.zone) return 'рядом — бесплатно';
     if (x.col === 0 && x.adena === 0 && x.vipFree) return 'VIP — бесплатно';
-    const lair = x.seenZone || LAIR[k], lz = lair && rt.zoneCat?.[lair] && !(x.lairBadT > now - 6 * 3600000) ? `логово ≈${(+rt.zoneCat[lair].price || 0).toLocaleString('ru')} аден` : '';
+    // 8.0.3 (ревью): валюта логова из «Телепорта» — не адена (Coin of Luck и т. п.) показываем и не берём
+    const lair = x.seenZone || LAIR[k], zc = lair && rt.zoneCat?.[lair], zcCol = zc && +zc.price > 0 && zc.curT != null && zc.cur !== 'аден';
+    const lz = zc && !(x.lairBadT > now - 6 * 3600000) ? (zcCol ? `логово ${(+zc.price).toLocaleString('ru')} ${zc.curT || '(валюта?)'} — не адена, не беру` : `логово ≈${(+zc.price || 0).toLocaleString('ru')} аден`) : '';
     const col = x.col > 0 ? (!lim ? `${x.col} CoL — запрещено (лимит 0)` : (x.paidN || 0) >= per ? `${x.col} CoL — уже ${x.paidN} за появление` : `${x.col} CoL (за 24 ч ${usedC}/${lim})`)
       : x.adena > 0 ? `${x.adena.toLocaleString('ru')} аден` : x.col === 0 ? 'бесплатно' : '';
     return [lz, col].filter(Boolean).join(' / ') || '❔'; };
@@ -1726,6 +1728,16 @@ $('cfgFile').onchange = async e => {
     load();
   } catch (err) { $('cfgNote').textContent = '⚠ Не импортировано: ' + (err.message || err); }
 };
+// 8.0.3 (эпики, ревью): траты Coin of Luck за 24 ч (rt.epicTpBudget) и платные заходы появления эпика (epicDb[k].paidN) при загрузке
+// старой «Памяти» не откатываются: записи объединяются, paidN — большее (иначе суточный лимит CoL обнулялся импортом). Другой герой — как в файле
+function colLedgerKeep(cur, imp, now = Date.now()) {
+  if (!cur || !imp || typeof imp !== 'object' || (cur.char && imp.char && cur.char !== imp.char)) return imp;
+  const key = x => [x.t, x.k, x.cost, x.unit, x.kind].join('|'), seen = new Set(), L = [];
+  for (const x of [...(imp.epicTpBudget || []), ...(cur.epicTpBudget || [])]) if (x && Number.isFinite(x.t) && x.t > now - 86400000 && !seen.has(key(x))) { seen.add(key(x)); L.push(x); }
+  const db = { ...(imp.epicDb || {}) };
+  for (const [k, d] of Object.entries(cur.epicDb || {})) if ((d?.paidN || 0) > (db[k]?.paidN || 0)) db[k] = { ...(db[k] || {}), paidN: d.paidN, paidT: d.paidT || 0 };
+  return { ...imp, epicTpBudget: L, epicDb: db };
+}
 $('memFile').onchange = async e => {
   const f = e.target.files?.[0]; e.target.value = '';
   if (!f) return;
@@ -1733,6 +1745,9 @@ $('memFile').onchange = async e => {
     const j = JSON.parse(await f.text());
     if (!j?.l2bot || !j.data?.cfg) throw new Error('это не файл памяти L2wap Bot');
     const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k)));
+    { const all0 = await chrome.storage.local.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
+      for (const [k, v] of Object.entries(all0)) if ((k === 'rt' || /^rt@/.test(k)) && v && typeof v === 'object') byChar[v.char || k.slice(3)] = v;
+      for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
     if (data.rt) data.rt = { ...data.rt, _src: 'menu' };
     await chrome.storage.local.set({ ...data, on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
     const rt = data.rt || {};

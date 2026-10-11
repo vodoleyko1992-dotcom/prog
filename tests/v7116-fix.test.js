@@ -7,7 +7,7 @@ let active = 'charges', bought = null;
 const ITEMS = { charges: ['Благословенний заряд духу', 'Заряд душі воїна'], vials: ['Зілля слабкого зцілення', 'Зілля зцілення', 'Зілля мани (мала банка)'], all: ['Благословенний заряд духу', 'Зілля зцілення'] };
 const tab = sub => ({ getAttribute: k => k === 'aria-selected' ? String(active === sub) : null, classList: { contains: () => active === sub }, _sub: sub });
 const tabs = { charges: tab('charges'), vials: tab('vials'), all: tab('all') };
-const row = n => ({ querySelector: s => s === '.l2-gm-shop-name' ? { textContent: n } : s === '.l2-gm-shop-price' ? { textContent: '50' } : s === '.l2-gm-shop-buy' ? { _buy: n } : null });
+const row = n => ({ querySelector: s => s === '.l2-gm-shop-name' ? { textContent: n } : s === '.l2-gm-shop-price' ? { textContent: '50 Adena', className: 'l2-gm-shop-price l2-gm-shop-price--adena' } : s === '.l2-gm-shop-buy' ? { _buy: n } : null });
 const document = { querySelectorAll: s => s === '.l2-gm-shop-pager-btn' ? [{ disabled: true }, { disabled: true }] : s === '.l2-gm-shop-name' ? ITEMS[active].map(n => ({ textContent: n })) : s === '.l2-gm-shop-row' ? ITEMS[active].map(row) : [] };
 const sb = { document, console, Date }; sb.globalThis = sb;
 vm.runInNewContext(fs.readFileSync(path.join(root, 'modules/economy.js'), 'utf8'), sb);

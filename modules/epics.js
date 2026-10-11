@@ -122,15 +122,24 @@ function epicUntil(d, now = Date.now()) {
 }
 const epicUntilTxt = u => !u ? 'когда — неизвестно' : u.late ? `окно прошло (${when(u.hi)}) — проверяю` : u.exact ? `ровно в ${when(u.hi)}` : u.lo ? `между ${when(u.lo)} и ${when(u.hi)}` : `не позже ${when(u.hi)}`;
 
-// новые сведения о эпике (сервер или страница): жив — запомнить время; впервые мёртв — время, платные заходы этой «жизни» обнуляются
+// новые сведения о эпике (сервер или страница): жив — запомнить время; впервые мёртв — время, платные заходы этой «жизни» обнуляются.
+// 8.0.3 (эпики, ревью): lifeT — с какого момента знаем эту «жизнь» живой (HP прошлых заходов до неё — не про него)
 function epicSeen(p, x, now = Date.now()) {
   p = p || {};
   const d = { ...p, ...x, seenT: now };
-  if (x.alive === true) Object.assign(d, { aliveT: now, deadT: 0, killT: 0, respAt: 0 });
+  if (x.alive === true) Object.assign(d, { aliveT: now, deadT: 0, killT: 0, respAt: 0, ...(p.alive !== true || !p.lifeT ? { lifeT: now } : {}) });
   else if (x.alive === false) Object.assign(d, { deadT: p.alive === false && p.deadT ? p.deadT : now, paidN: 0, deathsLife: 0, ...(p.alive !== false ? { retreatsLife: 0 } : {}) });
   d.until = epicUntil(d, now);
   return d;
 }
+// 8.0.3 (эпики, ревью): у эпика сменилась «жизнь» (впервые мёртв или снова жив) — HP прошлого захода (rt.rbWound, rt.rb[id].hpAfter)
+// больше не про него: стираем, иначе вердикт через дни считал свежего босса недобитым (10 % вместо 100 %) и пускал платить
+function lifeResetPatch(ids) {
+  const W = { ...(env.rt.rbWound || {}) }, R = { ...(env.rt.rb || {}) }; let ch = false;
+  for (const id of ids) { if (id && W[id]) { delete W[id]; ch = true; } if (id && R[id]) { delete R[id]; ch = true; } }
+  return ch ? { rbWound: W, rb: R } : {};
+}
+const lifeTurn = (p, x) => x.alive !== undefined && (p?.alive ?? null) !== x.alive;
 
 async function epicListScan() {                    // запасной путь (сервер 3 раза не ответил): страница «Эпик боссы»
   env.setStatus('Эпики: читаю список (Меню → Эпик боссы)');
@@ -145,10 +154,11 @@ async function epicListScan() {                    // запасной путь 
     if (!(await env.waitX(() => document.body.innerText.length !== sig, 4000, 150))) break;
     all = { ...epicRowsParse(), ...all };
   }
-  const n = Object.values(all), now = Date.now(), db = { ...(env.rt.epicDb || {}) };
-  for (const x of n) db[x.k] = epicSeen(db[x.k], { id: x.id || db[x.k]?.id || '', name: x.name, lvl: x.lvl || db[x.k]?.lvl || 0, alive: x.alive, status: x.status, deny: x.deny,
-    respH: x.respH || db[x.k]?.respH || 0, price: x.price, priceUnit: x.priceUnit, priceText: x.priceText, page: x.page, tp: x.tp, domT: now }, now);
-  await env.setRt({ epicDb: db, epicListT: now, epicPageOk: n.length > 0 });
+  const n = Object.values(all), now = Date.now(), db = { ...(env.rt.epicDb || {}) }, turn = [];
+  for (const x of n) { const id = x.id || db[x.k]?.id || ''; if (lifeTurn(db[x.k], x)) turn.push(id || epicIdOf(x.k));
+    db[x.k] = epicSeen(db[x.k], { id, name: x.name, lvl: x.lvl || db[x.k]?.lvl || 0, alive: x.alive, status: x.status, deny: x.deny,
+    respH: x.respH || db[x.k]?.respH || 0, price: x.price, priceUnit: x.priceUnit, priceText: x.priceText, page: x.page, tp: x.tp, domT: now }, now); }
+  await env.setRt({ epicDb: db, epicListT: now, epicPageOk: n.length > 0, ...lifeResetPatch(turn) });
   if (!n.length) {
     // разметку не узнали — пишем кусок страницы в журнал (по нему разметку доучим)
     const main = ((['main', '#app', '.l2-page'].map(x => env.$q(x)).find(Boolean) || document.body)?.innerHTML || '').replace(/\s+/g, ' ').slice(0, 1500);   // v5.6: раньше всегда body (шапка и меню)
@@ -172,7 +182,7 @@ function epicApiOk(j) {                            // полный список:
 }
 async function epicApiNote(j, src = 'api', now = Date.now()) {
   if (!epicApiOk(j)) return null;
-  const db = { ...(env.rt.epicDb || {}) }, seen = [], fresh = [], ch = [];
+  const db = { ...(env.rt.epicDb || {}) }, seen = [], fresh = [], ch = [], turn = [];
   for (const b of j.bosses) {
     if (!b.spawnId) continue;
     const e = epicById(b.spawnId); if (!e) { fresh.push(`${String(b.name || b.spawnId).slice(0, 30)} (${+b.level || '?'})`); continue; }
@@ -186,6 +196,7 @@ async function epicApiNote(j, src = 'api', now = Date.now()) {
       const ra = tsOf(b.respawnAt ?? b.nextRespawnAt ?? b.respawnAtMs ?? b.nextSpawnAt), kt = tsOf(b.killedAt ?? b.diedAt ?? b.deathAt ?? b.lastKilledAt);
       if (ra) x.respAt = ra; if (kt) x.killT = kt;
     }
+    if (lifeTurn(p, x)) turn.push(b.spawnId);
     db[e.k] = epicSeen(p, x, now);
     if (alive === true && p.alive !== true) ch.push(`🐉 ${e.nm} появился`);
     if (alive === false && p.alive === true) ch.push(`${e.nm} убит — появится ${epicUntilTxt(db[e.k].until)}`);
@@ -194,7 +205,7 @@ async function epicApiNote(j, src = 'api', now = Date.now()) {
   const A0 = env.rt.epicApi || {}, keys = Object.keys(j.bosses[0] || {}).sort().join(','), fr = fresh.join(', ');
   const bal = env.invQty?.(COL_ID);
   await env.setRt({ epicDb: db, epicListT: now, epicApi: { t: now, src, minLvl: +j.minRaidBossLevel || 0, charLvl: +j.characterLevel || 0, col: num(j.coinOfLuckCost), adena: num(j.adenaCost),
-    vipFree: !!j.vipFreeApplied, keys, fresh: fr, n: seen.length }, ...(bal != null ? { colBal: { v: bal, t: now } } : {}) });
+    vipFree: !!j.vipFreeApplied, keys, fresh: fr, n: seen.length }, ...(bal != null ? { colBal: { v: bal, t: now } } : {}), ...lifeResetPatch(turn) });
   if (keys !== A0.keys) env.rec('B', 'эпики', `ответ /game/epic-bosses: поля эпика ${keys}`);   // вдруг сервер начнёт слать время смерти
   if (fr && fr !== A0.fresh) env.rec('B', 'эпики', `в списке игры незнакомые эпики: ${fr}`);
   for (const c of ch) env.rec('B', 'эпики', c);
@@ -308,7 +319,8 @@ function epicPrice(k, row, now = Date.now(), maxAge = 10 * MIN) {
 // платных заходов; неизвестная цена/единица — отказ. Адена: 0 — без лимита (как раньше). kind: 'tp' | 'lair' | 'buff' (бафф 15 CoL)
 function epicTpBudgetQuote(price, k, opt = {}) {
   const now = opt.now || Date.now(), kind = opt.kind || 'tp';
-  const records = (env.rt.epicTpBudget || []).filter(x => x && Number.isFinite(x.t) && x.t > now - 86400000 && x.t <= now);
+  // 8.0.3 (ревью): запись «из будущего» (часы перевели назад) тоже считается — раньше x.t <= now выкидывал её из лимита
+  const records = (env.rt.epicTpBudget || []).filter(x => x && Number.isFinite(x.t) && x.t > now - 86400000);
   const p = price && typeof price === 'object' && 'known' in price ? price : epicPrice(k, price, now);   // старый вызов строкой {priceKnown, price, priceUnit}
   if (!p || !p.known) return { ok: false, why: p?.why || 'цена телепорта неизвестна', records, unknown: true };
   const colLim = Math.max(0, Math.floor(+env.cfg.epicCoinDailyMax || 0)), adLim = Math.max(0, +env.cfg.epicAdenaDailyMax || 0);
@@ -373,6 +385,13 @@ function epicDps(id, st) {
   if (xs.length && M > 0) return { dps: Math.max(1, Math.round(xs[Math.floor(xs.length * 0.25)])), how: `по ${xs.length} РБ с поправкой на M.Def ${M}, осторожно` };
   return { dps: Math.max(1, Math.round((env.rt.rbDps || 1150) * 0.5)), how: 'замеров нет — половина среднего ДПС по РБ' };
 }
+// 8.0.3 (эпики, ревью): HP эпика с прошлого захода (rbWound — раз в 8 с в бою, rb[id].hpAfter — при отходе) — только свежее (30 мин,
+// как rbWounded) и из этой «жизни» (позже lifeT / смерти). Раньше бралось без срока: через 3 дня Орфен на 10 % — «по силам» вместо «долго»
+function epicWoundHp(id, d, now = Date.now()) {
+  const w = env.rt.rbWound?.[id], r = env.rt.rb?.[id], from = Math.max(d?.lifeT || 0, d?.deadT || 0, d?.killT || 0);
+  const xs = [w && { cur: +w.cur, t: +w.t || 0 }, r?.hpAfter > 0 && { cur: +r.hpAfter, t: +r.t || 0 }].filter(x => x && x.cur > 0 && now - x.t < 30 * MIN && x.t > from);
+  return xs.length ? Math.min(...xs.map(x => x.cur)) : 0;
+}
 function epicVerdict(k, now = Date.now()) {
   const d = (env.rt.epicDb || {})[k] || {}, id = epicIdOf(k), h = env.heroLvl(), heroMax = epicHeroMax(now);
   const base = { k, id, heroLvl: h, heroMax, t: now };
@@ -382,11 +401,11 @@ function epicVerdict(k, now = Date.now()) {
   const st = env.rt.rbStats?.[id];
   if (!(st?.hp > 0 && st?.matk > 0 && st?.patk > 0)) return { ...base, v: 'unknown', why: 'нет цифр босса (HP, P.Atk, M.Atk) — бот спросит у игры' };
   if (!heroMax) return { ...base, v: 'unknown', why: 'макс. HP героя неизвестно' };
-  const D = epicDps(id, st), dps = D.dps, curHp = Math.min(st.hp, env.rt.rbWound?.[id]?.cur || st.hp);
+  const D = epicDps(id, st), dps = D.dps, curHp = Math.min(st.hp, epicWoundHp(id, d, now) || st.hp);
   // потеря HP в бою: базовый профиль учился на слабых РБ (rbLossK ≈0,013 × P.Atk); единственный тяжёлый замер — Селян (P.Atk 2894,
   // ≈171 HP/с = 0,059 × P.Atk, один РБ!). Берём большее — осторожно
   const loss = Math.round(Math.max(st.loss || 0, (env.rt.rbLossK || 0) * st.patk, 0.059 * st.patk));
-  const chk = env.rbPreCheck(id, { ...st, hp: curHp, loss, est: false }, 1, dps, heroMax);
+  const chk = env.rbPreCheck(id, { ...st, hp: curHp, hpExact: true, loss, est: false }, 1, dps, heroMax);   // hpExact: rb[id].hpAfter второй раз не применять
   const out = { ...base, sp: chk.sp, spPct: chk.spPct, tKill: Math.round(curHp / dps), dps, dpsHow: D.how, need: chk.need, pool: chk.pool };
   if (!chk.ok) return { ...out, v: chk.kind === 'pots' ? 'pots' : 'strong', why: chk.why };
   const maxS = Math.max(300, (+env.cfg.epicMaxFightMin || 30) * 60);
@@ -451,6 +470,8 @@ function epicLair(k, now = Date.now()) {
   if (!z) return { ok: false, why: 'логово не знаю' };
   if (d.lairBadT && now - d.lairBadT < 6 * H) return { ok: false, why: 'логово не подтвердилось (пауза 6 ч)' };
   const c = env.rt.zoneCat?.[z]; if (!c) return { ok: false, why: `телепорта «${z}» нет в каталоге локаций` };
+  // 8.0.3 (эпики, ревью): валюта цены (navigation.zoneRows → cur/curT) — логово только за адену; Coin of Luck/непонятное — не здесь
+  if (+c.price > 0 && c.curT != null && c.cur !== 'аден') return { ok: false, why: `логово «${z}» не за адену: ${(+c.price).toLocaleString('ru')} ${c.curT || '(валюта не подписана)'}` };
   const q = epicTpBudgetQuote({ known: true, col: 0, adena: +c.price || 0 }, k, { now, kind: 'lair' });
   return q.ok ? { ok: true, zone: z, price: +c.price || 0, q } : { ok: false, why: q.why };
 }
@@ -511,20 +532,65 @@ async function epicGiveUpNext(k, why) {
 }
 
 // 8.0.3 (P0-8): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах того же лимита Coin of Luck.
-// Признак — состояние эпика (rt.epic), поэтому действует и в подготовке, и в «Восстановить», и после смерти. null — не эпик
+// Признак — состояние эпика (rt.epic), поэтому действует и в подготовке, и в «Восстановить», и после смерти. null — режим эпиков выключен.
+// 8.0.3 (ревью): (1) только когда сам заход уже разрешён — те же проверки, что у epicPayGate: вердикт «по силам» (пересчёт), жив по
+// свежему ответу сервера (≤3 мин), игра пускает, смертей за час < 2, дорога выбрана. Было: 15 CoL на эпика «❔ нет цифр» (дорога «здесь»)
+// и после двух смертей, когда ворота платить уже не давали. (2) Режим эпиков между заходами (выбор цели, фарм мобов) — тот же лимит
+// Coin of Luck: «0 — не тратить никогда» значит никогда (было: платный набор после каждой смерти без лимита)
 const epicFlow = () => epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick';
 const TB_COL = 15;
-function epicBuffCol() { return epicFlow() ? epicTpBudgetQuote({ known: true, col: TB_COL, adena: 0 }, env.rt.epic.k, { kind: 'buff' }).ok : null; }
-async function epicBuffPay(set) {                  // перед нажатием платного набора: резерв в бюджете CoL → true; нельзя → false
-  if (!epicFlow()) return null;
-  const q = await epicTpBudgetReserve(env.rt.epic.k, { known: true, col: TB_COL, adena: 0 }, { kind: 'buff' });
-  if (!q.ok) env.rec('B', 'бафф', `«${set}» за ${TB_COL} Coin of Luck во время эпика не разрешён: ${q.why} — беру бесплатный «basic»`);
-  return !!q.ok;
+function epicBuffWhy(now = Date.now()) {
+  const E = env.rt.epic || {}, k = epicFlow() ? E.k : '';
+  const q = epicTpBudgetQuote({ known: true, col: TB_COL, adena: 0 }, k, { kind: 'buff', now });
+  if (!q.ok) return q.why;
+  if (!k) return '';
+  const d = (env.rt.epicDb || {})[k] || {}, h = env.heroLvl(), lw = epicLvlWhy(k);
+  if (lw) return lw;
+  if (d.deny && (!d.apiLvl || !h || d.apiLvl === h)) return `игра не пускает: ${d.deny}`;
+  if (d.alive !== true || !(now - (d.apiT || 0) < 3 * MIN)) return 'сервер не подтвердил (за 3 мин), что эпик жив';
+  const v = epicVerdict(k, now); if (v.v !== 'ok') return `эпик ${VLBL[v.v] || v.v}`;
+  const d1h = (env.rt.deaths1h || []).filter(t => now - t < H).length; if (d1h >= 2) return `${d1h} смерти за последний час`;
+  if (!E.route) return 'дорога к эпику ещё не выбрана';
+  return '';
+}
+function epicBuffCol() { return epicOn() ? !epicBuffWhy() : null; }
+async function epicBuffPay(set) {                  // прямо перед нажатием платного набора: резерв в бюджете CoL → время резерва; нельзя → false
+  if (!epicOn()) return null;
+  const why = epicBuffWhy();
+  const q = why ? { ok: false, why } : await epicTpBudgetReserve(epicFlow() ? env.rt.epic.k : 'buff', { known: true, col: TB_COL, adena: 0 }, { kind: 'buff' });
+  if (!q.ok) { env.rec('B', 'бафф', `«${set}» за ${TB_COL} Coin of Luck в режиме эпиков не разрешён: ${q.why} — беру бесплатный «basic»`); return false; }
+  return q.reservationAt || true;
+}
+async function epicBuffRelease(at, why) {          // баффер явно отказал — 15 CoL не списаны, резерв снимаем
+  const L = env.rt.epicTpBudget || [], r = at > 0 && L.find(x => x && x.kind === 'buff' && x.t === at);
+  if (!r) return false;
+  await env.setRt({ epicTpBudget: L.filter(x => x !== r) });
+  env.rec('B', 'бафф', `платный набор не наложен (${String(why || 'отказ').slice(0, 80)}) — резерв ${r.cost} Coin of Luck снят`);
+  return true;
 }
 
 // ответ сервера на телепорт со страницы эпиков (content.js пишет его в sessionStorage 'l2bot.epicTp' в 10 с после нажатия)
 function epicTpAck(E) {
   try { const a = JSON.parse(sessionStorage.getItem('l2bot.epicTp') || 'null'); return a && a.t >= (E.tpT || 0) - 1000 ? a : null; } catch (er) { return null; }
+}
+// 8.0.3 (эпики, ревью): что ответил сервер на POST …/teleport. Отказ (ok:false → резерв снимается) — только ЯВНЫЙ: 4xx с телом ошибки
+// или 2xx с error / ok:false / success:false. 5xx (502/504 прокси, перезапуск сервера), обрыв (status 0, «нет ответа»), 4xx без тела —
+// ok:null «неизвестно»: CoL могли уже списать, резерв остаётся
+function epicTpAckOf(d) {
+  const s = +d?.status || 0, r = d?.res && typeof d.res === 'object' && !Array.isArray(d.res) ? d.res : null;
+  const no2 = s >= 200 && s < 300 && !!r && !!(r.error || r.ok === false || r.success === false);
+  const no4 = s >= 400 && s < 500 && !!r && !!(r.error || r.ok === false || r.success === false || r.messageRu || r.messageUk || r.message);
+  return { ok: no2 || no4 ? false : s >= 200 && s < 300 && !d?.error ? true : null, status: s };
+}
+// запрос про этот эпик? Номер босса в теле или пути — должен совпасть; формат запроса ещё не видели — по времени (10 с после нажатия)
+function epicTpReqFor(d, path, id) {
+  const n = epicNum(id), q = d?.req && typeof d.req === 'object' ? d.req : {}, all = JSON.stringify(d?.req ?? '') + ' ' + (path || '');
+  const ids = [...all.matchAll(/l2dop_[a-z]+_\d+/g)].map(m => m[0]);
+  if (ids.length) return ids.includes(id);
+  const sid = q.spawnId ?? q.battleSpawnId ?? q.bossSpawnId ?? q.bossId ?? q.npcId;
+  if (sid != null && sid !== '') return String(sid) === String(id) || (+sid > 0 && +sid === n);
+  const pm = String(path || '').match(/\/(\d{4,})(?:\/|$|\?)/); if (pm) return +pm[1] === n;
+  return true;
 }
 // не долетели / на месте его нет. Страницей второй раз не идём (CoL); логово — только подтверждённое
 async function epicArriveFail(E, e, why) {
@@ -652,6 +718,9 @@ async function epicStep() {
   // ---- подготовка: банки → бафф → хил (полные HP/MP) ----
   if (E.step === 'prep') {
     if (await env.rbShopFirst(e.nm)) return;
+    // 8.0.3 (ревью): платный набор разрешён только по свежему (≤3 мин) ответу сервера «жив» — спросим заранее (GET, бесплатно)
+    if (['warrior', 'mage'].includes(env.cfg.townBuffSet) && Math.floor(+env.cfg.epicCoinDailyMax || 0) >= TB_COL && !(now - ((env.rt.epicDb || {})[E.k]?.apiT || 0) < 2 * MIN)
+      && !epicApiDown() && now - (env.rt.epicApiFail?.t || 0) > MIN) await epicApiScan('перед платным баффом');
     if (await env.townBuffStart(`перед эпиком ${e.nm}`, true)) return;   // платный набор — через бюджет CoL (buffs: epicBuffCol/epicBuffPay)
     const me = env.meHp(), mp = env.meMp(), need = Math.max(90, env.cfg.rbRestHp || 95);
     if (me && (me.pct < need || (mp && mp.cur < mp.max * 0.8)) && await env.restoreVitals(`хил перед эпиком ${e.nm}: HP ${me.pct | 0}%`)) return;
@@ -683,7 +752,7 @@ async function epicStep() {
     if (lz.ok) {
       const res = await epicTpBudgetReserve(E.k, { known: true, col: 0, adena: lz.price }, { kind: 'lair' });
       if (!res.ok) return epicGiveUp(E.k, 60, `логово: ${res.why}`);
-      await epicSet({ step: 'arrive', at: Date.now(), via: 'zone', seenSaved: false });
+      await epicSet({ step: 'arrive', at: Date.now(), via: 'zone', lair: lz.zone, seenSaved: false });   // lair — куда летим (rt.zone обновится только на карте)
       await env.setRt({ zoneGo: { id: lz.zone, t: Date.now(), why: `эпик ${e.nm}` }, zoneGoT: 0 });
       env.rec('B', 'эпики', `${e.nm}: лечу в логово ${lz.zone}${lz.price ? ' · ' + lz.price.toLocaleString('ru') + ' аден' : ''}`);
       location.href = '/teleport.html'; await env.sleep(4000);
@@ -695,7 +764,7 @@ async function epicStep() {
     if (!isEpicPage()) { env.setStatus(`Эпики: к ${e.nm} — страница «Эпик боссы»`); location.href = env.EPIC_URL; await env.sleep(4000); return; }
     const b = await env.waitX(() => epicTpBtn(E.k), 8000, 200);
     const row = epicRowsParse()[E.k];
-    if (row) { const db = { ...(env.rt.epicDb || {}) }; db[E.k] = epicSeen(db[E.k], { id: row.id || db[E.k]?.id || '', alive: row.alive, status: row.status, deny: row.deny, respH: row.respH || db[E.k]?.respH || 0, price: row.price, priceUnit: row.priceUnit, priceText: row.priceText, tp: row.tp, domT: now }, now); await env.setRt({ epicDb: db }); }
+    if (row) { const db = { ...(env.rt.epicDb || {}) }, turn = lifeTurn(db[E.k], row) ? [row.id || db[E.k]?.id || E.id] : []; db[E.k] = epicSeen(db[E.k], { id: row.id || db[E.k]?.id || '', alive: row.alive, status: row.status, deny: row.deny, respH: row.respH || db[E.k]?.respH || 0, price: row.price, priceUnit: row.priceUnit, priceText: row.priceText, tp: row.tp, domT: now }, now); await env.setRt({ epicDb: db, ...lifeResetPatch(turn) }); }
     if (row && !row.alive) return epicGiveUpNext(E.k, `мёртв (${row.status || 'по списку'})`);
     if (row?.deny) return epicGiveUp(E.k, 60, row.deny);
     if (!b) return epicGiveUp(E.k, 60, 'кнопки «Телепорт» нет — платно не иду');
@@ -730,7 +799,12 @@ async function epicStep() {
   if (E.step === 'arrive') {
     if (E.via === 'page') {
       const ack = epicTpAck(E);
-      if (ack && ack.ok === false) { try { sessionStorage.removeItem('l2bot.epicTp'); } catch (er) {} await epicTpBudgetRelease(E.k, E.tpRes, 'сервер отказал'); return epicGiveUp(E.k, 60, `сервер отказал в телепорте${ack.msg ? ': ' + ack.msg : ''}`); }
+      if (ack && ack.ok === false) {
+        try { sessionStorage.removeItem('l2bot.epicTp'); } catch (er) {}
+        // 8.0.3 (ревью): «отказ», а метка эпика на этой карте — мы на месте: CoL, скорее всего, списан — резерв не снимаем
+        if (env.isMap() && epicPins().some(x => x.k === E.k)) env.rec('B', 'эпики', `${e.nm}: сервер ответил отказом (${ack.status || '?'}${ack.msg ? ': ' + ack.msg : ''}), но он на карте — резерв оставляю`);
+        else { await epicTpBudgetRelease(E.k, E.tpRes, 'сервер отказал'); return epicGiveUp(E.k, 60, `сервер отказал в телепорте${ack.msg ? ': ' + ack.msg : ''}`); }
+      }
     }
     if (!env.isMap()) {
       if (now - (E.at || 0) > 90000) return epicArriveFail(E, e, 'карта не открылась');
@@ -743,7 +817,12 @@ async function epicStep() {
       return epicArriveFail(E, e, 'на карте его нет');
     }
     if (!E.seenSaved) {                             // на месте: запомнить локацию (бесплатный путь в следующий раз), логово подтверждено
-      await epicDbSet(E.k, { id: r.id, ...(r.lvl ? { lvl: r.lvl } : {}), ...(env.rt.zone ? { seenZone: env.rt.zone } : {}), ...(E.via === 'zone' ? { lairOkT: now, lairMiss: 0, lairBadT: 0 } : {}) });
+      // 8.0.3 (ревью, probe1): rt.zone меняется только в zoneHere (фарм на карте) — сразу после телепорта там старая зона фарма, и
+      // «логовом Орфена» записывался Blazing Swamp. Логово — то, куда летели (E.lair); страницей — не пишем (кнопка без data-teleport-id);
+      // «он здесь» — rt.zone, только если перелёт не в пути (zonePend) и это настоящая точка телепорта
+      const zp = env.rt.zonePend && now - (env.rt.zonePend.t || 0) < 120000, zh = E.via === 'here' && !zp ? env.rt.zone : '';
+      const sz = E.via === 'zone' ? E.lair || '' : zh && env.rt.zoneCat?.[zh]?.city ? zh : '';
+      await epicDbSet(E.k, { id: r.id, ...(r.lvl ? { lvl: r.lvl } : {}), ...(sz ? { seenZone: sz } : {}), ...(E.via === 'zone' ? { lairOkT: now, lairMiss: 0, lairBadT: 0 } : {}) });
       await epicSet({ seenSaved: true });
     }
     if ((E.tries || 0) >= 4) return epicGiveUp(E.k, 30, 'бой с ним 4 раза не открылся');
@@ -778,6 +857,7 @@ async function epicStep() {
  return { isEpicPage, epicOn, epicNum, epicById, epicByName, epicOf, epicWant, epicIdOf, epicPins, epicGuards, rowOf, unitOf, epicRowRead, epicRowsParse, epicTpBtn,
    epicUntil, epicUntilTxt, epicSeen, epicListScan, epicSet, epicDbSet, epicApiOk, epicApiNote, epicApiScan, epicApiDown, epicApiNext, epicApiDue, epicPollTick, epicScanAll,
    epicLvl, epicLvlWhy, epicPrice, epicTpBudgetQuote, epicTpBudgetReserve, epicTpBudgetRelease, VLBL, epicHeroMax, epicDps, epicVerdict, epicVerdictSave, epicVerdictAll,
-   epicPayGate, epicLair, epicHereNow, epicRoute, epicPickWhy, epicPick, epicWhyNone, epicGiveUp, epicGiveUpNext, epicFlow, epicBuffCol, epicBuffPay, epicTpAck, epicArriveFail, epicStep };
+   epicPayGate, epicLair, epicHereNow, epicRoute, epicPickWhy, epicPick, epicWhyNone, epicGiveUp, epicGiveUpNext, epicFlow, epicBuffWhy, epicBuffCol, epicBuffPay, epicBuffRelease, epicTpAck, epicTpAckOf, epicTpReqFor,
+   epicWoundHp, epicArriveFail, epicStep };
  };
 })(globalThis);

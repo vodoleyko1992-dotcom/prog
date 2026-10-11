@@ -3,103 +3,8 @@
 // тратой CoL (свежий список, жив, игра пускает, цифры босса, вердикт); 1 платный заход на появление; резерв не снимается на таймауте;
 // разбор строки .l2-rb-row (подсказка «Недоступно»); список и цифры — из ответов сервера; смерть без подтверждённого сохранения HP — ждать
 // следующего появления; магазин не покупает за Coin of Luck
-const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
-const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const content = read('content.js'), epicsSrc = read('modules/epics.js'), raidSrc = read('modules/raid.js');
-const EPICS = vm.runInNewContext('(' + content.slice(content.indexOf('const EPICS = [') + 'const EPICS = '.length, content.indexOf('const EPIC_URL')).replace(/;\s*$/, '') + ')');
-const LV_RE = vm.runInNewContext(content.match(/const LV_RE = (\/.+\/iu);/)[1]);
-const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
-const fx = JSON.parse(read('tests/fixtures-epic-bosses-803.json'));
-const clone = o => JSON.parse(JSON.stringify(o));
-const H = 3600000, MIN = 60000;
-
-// ---------- мини-DOM: разбор корректного HTML-фрагмента + простые селекторы (тег, #id, .класс, [атр], [атр="v"], [атр*="v"], [атр$="v"], :not()) ----------
-const ENT = { lt: '<', gt: '>', amp: '&', nbsp: ' ', quot: '"' };
-const decode = t => t.replace(/&(lt|gt|amp|nbsp|quot);/g, (_, k) => ENT[k]);
-function El(tag, attrs, parent) { this.tag = tag; this.attrs = attrs; this.kids = []; this.parentElement = parent || null; }
-El.prototype = {
-  get className() { return this.attrs.class || ''; }, get hidden() { return 'hidden' in this.attrs; }, get disabled() { return 'disabled' in this.attrs; },
-  get id() { return this.attrs.id || ''; },
-  get dataset() { const o = {}; for (const [k, v] of Object.entries(this.attrs)) if (k.startsWith('data-')) o[k.slice(5).replace(/-(\w)/g, (_, c) => c.toUpperCase())] = v; return o; },
-  get textContent() { return this.kids.map(k => k.text != null ? k.text : k.textContent).join(''); }, set textContent(v) { this.kids = [{ text: String(v) }]; },
-  get innerText() { return this.textContent; }, get classList() { return { contains: c => this.className.split(/\s+/).includes(c) }; },
-  get nextElementSibling() { const p = this.parentElement, a = p ? p.kids.filter(k => k instanceof El) : []; return a[a.indexOf(this) + 1] || null; },
-  getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; },
-  setStatus(cls, txt) { this.attrs.class = cls; this.textContent = txt; },
-  all() { const out = []; const walk = e => { for (const k of e.kids) if (k instanceof El) { out.push(k); walk(k); } }; walk(this); return out; },
-  querySelectorAll(sel) { return this.all().filter(e => matches(e, sel)); }, querySelector(sel) { return this.all().find(e => matches(e, sel)) || null; },
-  closest(sel) { for (let e = this; e && e.tag !== '#root'; e = e.parentElement) if (matches(e, sel)) return e; return null; },
-};
-function matchOne(el, sel) {
-  let s = sel.trim(); const tm = s.match(/^[a-zA-Z][\w-]*/);
-  if (tm) { if (el.tag !== tm[0].toLowerCase()) return false; s = s.slice(tm[0].length); }
-  while (s) {
-    let m;
-    if ((m = s.match(/^\.([\w-]+)/))) { if (!el.className.split(/\s+/).includes(m[1])) return false; }
-    else if ((m = s.match(/^#([\w-]+)/))) { if (el.attrs.id !== m[1]) return false; }
-    else if ((m = s.match(/^\[([\w-]+)(?:([*$]?=)"([^"]*)")?\]/))) { const v = el.attrs[m[1]]; if (v == null || (m[2] === '=' && v !== m[3]) || (m[2] === '*=' && !v.includes(m[3])) || (m[2] === '$=' && !v.endsWith(m[3]))) return false; }
-    else if ((m = s.match(/^:not\(([^)]+)\)/))) { if (matchOne(el, m[1])) return false; }
-    else throw new Error('selector not supported: ' + sel);
-    s = s.slice(m[0].length);
-  }
-  return true;
-}
-function matchDesc(el, sel) {                      // «A B» — потомок: B на элементе, A у кого-то из предков
-  const parts = sel.trim().split(/\s+(?![^[]*\])/);
-  if (!matchOne(el, parts.pop())) return false;
-  for (let e = el.parentElement; parts.length && e && e.tag !== '#root'; e = e.parentElement) if (matchOne(e, parts[parts.length - 1])) parts.pop();
-  return !parts.length;
-}
-const matches = (el, sel) => sel.split(',').some(x => matchDesc(el, x));
-function parseHTML(html) {
-  const top = new El('#root', {}), stack = [top], re = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z0-9]+)((?:\s+[\w:-]+(?:="[^"]*")?)*)\s*\/?>|([^<]+)/g; let m;
-  while ((m = re.exec(html))) {
-    if (m[0].startsWith('<!--')) continue;
-    const cur = stack[stack.length - 1];
-    if (m[4] != null) { cur.kids.push({ text: decode(m[4]) }); continue; }
-    const tag = m[2].toLowerCase();
-    if (m[1]) { while (stack.length > 1 && stack.pop().tag !== tag); continue; }
-    const attrs = {}; m[3].replace(/([\w:-]+)(?:="([^"]*)")?/g, (_, k, v) => { attrs[k] = decode(v ?? ''); });
-    const el = new El(tag, attrs, cur); cur.kids.push(el);
-    if (!/^(img|br|input|meta|link|hr)$/.test(tag)) stack.push(el);
-  }
-  return top;
-}
-const docOf = html => { const top = parseHTML(html); return { querySelectorAll: s => top.querySelectorAll(s), querySelector: s => top.querySelector(s), body: { get innerText() { return top.textContent; } }, top }; };
-const pageHtml = read('tests/fixtures-epic-page-803.html');
-
-// ---------- окружение модулей (как в content.js: зависимости только через env) ----------
-function mk(o = {}) {
-  const logs = [], fires = [], calls = [], store = {};
-  let doc = o.doc || docOf('');
-  const loc = { pathname: o.path || '/map.html', search: o.search || '', href: '' };
-  const sessionStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
-  const fetchMock = async u => { calls.push(u); const r = o.net?.(u); if (!r) throw new Error('net'); return { ok: true, status: 200, json: async () => clone(r) }; };
-  const sb = { console, Date, Math, JSON, URLSearchParams, CSS: { escape: s => s }, AbortController, setTimeout, clearTimeout, sessionStorage, fetch: fetchMock,
-    get document() { return doc; }, location: loc };
-  sb.globalThis = sb; vm.createContext(sb);
-  vm.runInContext(raidSrc, sb); vm.runInContext(epicsSrc, sb);
-  let hero = o.hero || 54;
-  const env = { EPICS, EPIC_URL: '/epic-bosses.html', LV_RE, on: true,
-    cfg: { epicMode: true, epicList: 'ak,core,orfen,zaken,baium,antharas,valakas,frintezza', epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicMaxDeaths: 3, epicMaxFightMin: 30, epicMaxRetreats: 8, autoRevive: true, rbRestHp: 95, ...(o.cfg || {}) },
-    rt: { rbStats: clone(base.rbStats), rbDb: clone(base.rbDb), rbK: base.rbK, rbDps: base.rbDps, rbLossK: base.rbLossK, ...(o.rt || {}) },
-    heroLvl: () => hero, meHp: o.meHp || (() => ({ max: 4843, cur: 4843, pct: 100 })), meMp: () => ({ cur: 3794, max: 3794 }),
-    potModel: () => ({ pool: 600000, rate: 2000, n: 960 }), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),
-    invQty: o.invQty || (() => null), setRt: async p => { Object.assign(env.rt, p); }, rec: (...a) => logs.push(a.slice(1).join(' ')), recBot: m => logs.push(m),
-    setStatus() {}, sleep: async () => {}, waitX: async f => f() || null, mapReady: async () => true, isMap: () => loc.pathname === '/map.html',
-    isFishing: () => false, fishState: () => null, aroundSig: () => ({ ids: [] }), shown: el => !!el && !el.hidden && !el.closest?.('[hidden]'),
-    fire: el => { fires.push(el); return o.fireOk !== false; }, pause: async () => {}, transitionMonitor: { expect() {}, check: () => 'pending', clear() {} },
-    $q: s => doc.querySelector(s), rbShopFirst: async () => false, townBuffStart: async () => false, restoreVitals: async () => false, buffWaitBeforeRb: () => null,
-    rbEngage: async () => true, attackSpawn: async () => false, map: async () => 'map', ...(o.env || {}) };
-  const R = sb.L2V7Factories.raid(env);
-  env.rbPreCheck = R.rbPreCheck; env.rbInfo = R.rbInfo; env.epicById = id => sb.L2V7Factories && E.epicById(id);
-  const E = sb.L2V7Factories.epics(env);
-  return { env, E, R, logs, fires, calls, store, loc, setDoc: d => { doc = d; }, setHero: h => { hero = h; } };
-}
-const QA = { hp: 429898, patk: 3150, pdef: 1985, matk: 2562, mdef: 1823 };                  // окно Королевы Муравьёв (снимок 75dac78f)
-const WEAK = { stats: { maxHp: 400000, pAtk: 1100, pDef: 700, mAtk: 700, mDef: 800 }, drops: [{ kind: 'adena', chance: 1, min: 90000, max: 110000 }, { kind: 'equipment', chance: 0.3, displayName: 'Ring of Core' }, '…ещё 4'], rewardExp: 900000, rewardSp: 200000 };
-const listAlive = (k, alive = true) => { const j = clone(fx); for (const b of j.bosses) if (b.spawnId === k) b.isAlive = alive; return j; };
-const T0 = Date.parse('2026-10-10T23:03:37Z');
+const assert = require('node:assert/strict');
+const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base, fx, clone, H, MIN, docOf, pageHtml, mk, QA, WEAK, listAlive, T0 } = require('./epic-harness.cjs');
 
 (async () => {
   // ---------- T1: /game/epic-bosses → epicDb ----------
@@ -268,9 +173,10 @@ const T0 = Date.parse('2026-10-10T23:03:37Z');
     await m.E.epicStep();
     assert.equal(m.env.rt.epic.via, 'zone'); assert.equal(m.env.rt.zoneGo.id, 'sea_of_spores');
     assert.deepEqual(m.env.rt.epicTpBudget.map(x => [x.cost, x.unit, x.kind]).join(), '6000,аден,lair', 'adena reserved, Coin of Luck not touched (limit 0)');
-    m.loc.pathname = '/map.html'; m.setDoc(docOf(pin)); m.env.rt.zone = 'sea_of_spores';
+    // 8.0.3 (ревью, probe1): rt.zone обновляется только zoneHere при фарме — сразу после телепорта там прежняя зона фарма
+    m.loc.pathname = '/map.html'; m.setDoc(docOf(pin)); m.env.rt.zone = 'blazing_swamp'; m.env.rt.zonePend = { id: 'sea_of_spores', t: Date.now() };
     await m.E.epicStep();
-    assert.ok(m.env.rt.epicDb.orfen.lairOkT); assert.equal(m.env.rt.epicDb.orfen.seenZone, 'sea_of_spores'); assert.equal(m.env.rt.epic.step, 'fight');
+    assert.ok(m.env.rt.epicDb.orfen.lairOkT); assert.equal(m.env.rt.epicDb.orfen.seenZone, 'sea_of_spores', 'the lair flown to, not the stale farming zone'); assert.equal(m.env.rt.epic.step, 'fight');
     const d = mk({ path: '/town.html', net: () => fx, rt: { epicDb: okDb({ apiT: 0 }), rbStats: okStats(), zoneCat: zc, epic: { step: 'go', k: 'orfen', id: 'l2dop_rb_29014', name: 'Орфен', mapChecked: true } } });
     await d.E.epicStep();
     assert.equal(d.calls[0], '/game/epic-bosses?page=1', 'stale list → asked before the road'); assert.equal(d.env.rt.zoneGo, undefined, 'dead — no lair trip'); assert.equal(d.env.rt.epic.step, 'pick');
@@ -329,11 +235,13 @@ const T0 = Date.parse('2026-10-10T23:03:37Z');
   }
   // ---------- P0-8: платный «Повний баф» во время эпика — только в пределах лимита Coin of Luck ----------
   {
-    const m = mk({ rt: { epic: { step: 'prep', k: 'orfen' } } });
+    // заход разрешён (живой по свежему ответу, «по силам», дорога выбрана) — тогда решает только лимит CoL
+    const m = mk({ rt: { epic: { step: 'prep', k: 'orfen', route: 'page' }, epicDb: okDb(), rbStats: okStats() } });
     assert.equal(m.E.epicBuffCol(), false, 'limit 0 → free set');
     m.env.cfg.epicCoinDailyMax = 20; assert.equal(m.E.epicBuffCol(), true);
-    assert.equal(await m.E.epicBuffPay('mage'), true); assert.equal(m.env.rt.epicTpBudget[0].kind, 'buff'); assert.equal(m.env.rt.epicDb?.orfen?.paidN || 0, 0, 'buff is not a paid entry');
-    m.env.rt.epic = { step: 'pick' }; assert.equal(m.E.epicBuffCol(), null, 'not in an epic — player choice as before');
+    const at = await m.E.epicBuffPay('mage'); assert.ok(at > 0, 'reservation time'); assert.equal(m.env.rt.epicTpBudget[0].kind, 'buff'); assert.equal(m.env.rt.epicDb?.orfen?.paidN || 0, 0, 'buff is not a paid entry');
+    assert.equal(await m.E.epicBuffRelease(at, 'Недостатньо Coin of Luck'), true); assert.equal(m.env.rt.epicTpBudget.length, 0, 'explicit refusal → released');
+    m.env.cfg.epicMode = false; assert.equal(m.E.epicBuffCol(), null, 'epic mode off — player choice as before'); m.env.cfg.epicMode = true;
     const hud = { querySelectorAll: () => [] };      // шапка с баффами есть, баффов нет — набор нужен
     const benv = { cfg: { townBuffSet: 'mage', epicMode: true }, rt: { epic: { step: 'fight', k: 'orfen' } }, TB_KEYS: { basic: [1068], mage: [1059] }, $q: s => s === '#l2-hud-active-buffs' ? hud : null,
       setRt: async () => {}, rec() {}, faCost: () => 1, epicBuffCol: () => false };
@@ -343,7 +251,8 @@ const T0 = Date.parse('2026-10-10T23:03:37Z');
     assert.equal(need?.set, 'basic', 'paid set downgraded to basic during an epic: ' + JSON.stringify(need));
     benv.epicBuffCol = () => null; assert.equal(B.townBuffNeed()?.set, 'mage', 'RB / outside an epic — player choice');
     const buffs = read('modules/buffs.js');
-    assert.match(buffs, /if \(set !== 'basic' && \(await env\.epicBuffPay\?\.\(set\)\) === false\) set = 'basic';/);
+    assert.match(buffs, /if \(set !== 'basic' && env\.epicBuffCol\?\.\(\) === false\) set = 'basic';/);
+    assert.match(buffs, /if \(set !== 'basic'\) \{ const p = await env\.epicBuffPay\?\.\(set\);/);
     assert.match(buffs, /const bossOn = !!\(env\.cfg\.rbMode \|\| env\.cfg\.rbHuntMode \|\| \(env\.cfg\.epicMode && env\.rt\.epic\?\.k && env\.rt\.epic\.step !== 'pick'\)\);\s+let H = \{\}; if \(bossOn\)/, 'Noblesse: both the HUD gate and the want');
     console.log('PASS P0-8/P2-3: paid town set during an epic only within the CoL limit (incl. restore/revive — state-derived), Noblesse in epics');
   }
@@ -390,7 +299,7 @@ const T0 = Date.parse('2026-10-10T23:03:37Z');
     assert.match(content, /d\.method === 'POST' && \/\\\/teleport\(\\\/\|\$\|\\\?\)\/\.test\(path\)/, 'teleport detector matches …/teleport too');
     { const tpRe = vm.runInNewContext(content.match(/d\.method === 'POST' && (\/.+?\/)\.test\(path\)/)[1]);
       assert.ok(['/game/raid-boss/teleport', '/game/epic-boss/teleport', '/game/epic-boss/teleport/29014'].every(p => tpRe.test(p)) && !tpRe.test('/game/teleports'), 'teleport path matcher'); }
-    assert.match(content, /if \(rt\.epicScanReq && !isBattle\(\)\) \{ if \(fishNow\(\)\) L2V7Modules\.epics\.epicScanAll\('по кнопке'\)\.catch\(\(\) => \{\}\); else \{ await L2V7Modules\.epics\.epicScanAll\('по кнопке'\); continue; \} \}/);
+    assert.match(content, /if \(rt\.epicScanReq\) \{ if \(fishNow\(\) \|\| isBattle\(\)\) L2V7Modules\.epics\.epicScanAll\('по кнопке'\)\.catch\(\(\) => \{\}\); else \{ await L2V7Modules\.epics\.epicScanAll\('по кнопке'\); continue; \} \}/, 'scan runs in the background on the battle page too (chain)');
     assert.match(content, /if \(epicOn\(\)\) L2V7Modules\.epics\.epicPollTick\(\)\.catch\(\(\) => \{\}\);/);
     assert.match(content, /once\('epicCol803', /); assert.match(content, /once\('epicDeaths803', \(\) => \{ if \(\+C\('epicMaxDeaths'\) === 10\) cf\.epicMaxDeaths = 3; \}\);/);
     const def = content.slice(content.indexOf('const DEF_CFG = {'), content.indexOf('\n', content.indexOf('const DEF_CFG = {')));

@@ -1909,25 +1909,26 @@ const epicWant = (...args) => L2V7Modules.epics.epicWant(...args);
 // метки эпиков на карте (и на всякий случай — «рейдовые» метки с id эпика)
 function epicPins(...args) { return L2V7Modules.epics.epicPins(...args); }
 function epicGuards(...args) { return L2V7Modules.epics.epicGuards(...args); }
-// страница «Эпик боссы»: разметку игры ещё не видели — читаем широко. Похоже на «Рейдовые боссы» (.l2-rb-row, кнопка
-// с data-spawn-id), но на случай другой вёрстки: любой элемент с data-spawn-id эпика, иначе — строка с именем эпика
-// и кнопкой «Телепорт». Живой/мёртв — по классу статуса (--alive) или тексту.
+// страница «Эпик боссы»: 8.0.3 (эпики, разбор 11.10): строка .l2-rb-row (снимок 75dac78f) — имя, уровень, статус (--alive/--dead), респаун,
+// цена .l2-rb-row__price-gold («1 Coin of Luck»), подсказка «Недоступно» в соседнем .l2-rb-row__actions, кнопка .l2-rb-row__tp;
+// широкий разбор (любой data-spawn-id эпика, строка с именем и «Телепорт») — запасной.
 function epicRowsParse(...args) { return L2V7Modules.epics.epicRowsParse(...args); }
 function epicTpBtn(...args) { return L2V7Modules.epics.epicTpBtn(...args); }
 async function epicListScan(...args) { return L2V7Modules.epics.epicListScan(...args); }
 async function epicSet(...args) { return L2V7Modules.epics.epicSet(...args); }
 async function epicDbSet(...args) { return L2V7Modules.epics.epicDbSet(...args); }
 // кого бить: начатого добиваем; дальше — по порядку списка, кроме мёртвых (по списку игры, 15 мин), запрещённых и «отложенных»
-// Доступ сервера: ±10 уровней. Настройка epicLvlUp — пожелание, а не запрет:
+// 8.0.3 (эпики, разбор 11.10): сервер пускает к боссам не ниже «герой − 9» (minRaidBossLevel), сверху — предохранитель бота: герой + 10.
+// Настройка epicLvlUp — пожелание, а не запрет:
 // если все живые эпики ниже пожелания, всё равно берём доступного по уровню.
 const epicLvl = (...args) => L2V7Modules.epics.epicLvl(...args);
 function epicLvlWhy(...args) { return L2V7Modules.epics.epicLvlWhy(...args); }
 function epicPick(...args) { return L2V7Modules.epics.epicPick(...args); }
 function epicWhyNone(...args) { return L2V7Modules.epics.epicWhyNone(...args); }
 async function epicGiveUp(...args) { return L2V7Modules.epics.epicGiveUp(...args); }
-// Добровольные бюджеты платных телепортов за последние 24 часа.
-// Учитываем ПОПЫТКУ до нажатия, чтобы ошибка/перезагрузка не привела к превышению лимита.
-// В журнале это резерв бюджета, а не утверждение об успешном платеже.
+// 8.0.3 (эпики, разбор 11.10): бюджеты за 24 ч. Coin of Luck: 0 — не тратить никогда, N — не больше N за 24 ч (телепорты к эпикам и
+// платный «Повний баф» в режиме эпиков), не больше epicCoinPerBoss платных заходов на одно появление; адена: 0 — без лимита.
+// Учитываем ПОПЫТКУ до нажатия (резерв), чтобы ошибка/перезагрузка не привела к превышению лимита; снимается только при явном отказе.
 function epicTpBudgetQuote(...args) { return L2V7Modules.epics.epicTpBudgetQuote(...args); }
 async function epicTpBudgetReserve(...args) { return L2V7Modules.epics.epicTpBudgetReserve(...args); }
 async function epicTpBudgetRelease(...args) { return L2V7Modules.epics.epicTpBudgetRelease(...args); }
@@ -2144,8 +2145,9 @@ async function main() {
       if (rt.farmScan && !isBattle()) { if (isFarmPage()) await farmScan(); else { location.href = FARM_URL; await sleep(4000); } continue; }
       if (rt.rbScan && !isBattle()) { if (isRbPage()) await rbListScan(); else { location.href = '/rb-bosses.html'; await sleep(4000); } continue; }
       // 8.0.3 (эпики): «🔄 Проверить эпиков (бесплатно)» — в любом режиме, только чтение с сервера (список + цифры боссов), без переходов.
-      // В бою — после боя; на рыбалке — фоном, не останавливая вываживание (≈6–10 с запросов с паузами)
-      if (rt.epicScanReq && !isBattle()) { if (fishNow()) L2V7Modules.epics.epicScanAll('по кнопке').catch(() => {}); else { await L2V7Modules.epics.epicScanAll('по кнопке'); continue; } }
+      // На рыбалке и на странице боя — фоном, не останавливая вываживание и бой (≈6–10 с запросов с паузами). 8.0.3 (ревью): раньше в бою
+      // ждали ухода со страницы боя, а цепочка «Охотиться дальше» с неё не уходит — «⏳ проверка запрошена» висела часами
+      if (rt.epicScanReq) { if (fishNow() || isBattle()) L2V7Modules.epics.epicScanAll('по кнопке').catch(() => {}); else { await L2V7Modules.epics.epicScanAll('по кнопке'); continue; } }
       if (rt.rbGo && !isBattle()) { if (Date.now() - (rt.rbGo.t || 0) < 90000) { await rbGoStep(); continue; } await setRt({ rbGo: null }); }
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { location.href = '/teleport.html'; await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
@@ -2948,11 +2950,13 @@ addEventListener('message', e => {
   { const m = path.match(/^\/game\/spawn\/(l2dop_rb_\d+)\/info$/);
     if (m && d.res?.stats?.maxHp > 0 && !d.res.error) try { L2V7Modules.raid.rbInfoNote(m[1], d.res, 'page').then(() => epicById(m[1]) && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {} }
   // запрос телепорта к эпику ещё ни разу не видели (у РБ — POST /game/raid-boss/teleport): любой POST «…/teleport» в 10 с после нажатия
-  // «Телепорт» на странице эпиков — ответ сервера в sessionStorage (отказ → резерв Coin of Luck снимается), путь и тело — в журнал
+  // «Телепорт» на странице эпиков — ответ сервера в sessionStorage (отказ → резерв Coin of Luck снимается), путь и тело — в журнал.
+  // 8.0.3 (ревью): отказ — только явный (epicTpAckOf: 4xx с телом ошибки, 2xx с error/ok:false); 5xx, обрыв, «нет ответа» — «неизвестно»,
+  // резерв остаётся (CoL могли списать). Запрос про другой spawnId (epicTpReqFor) — не наш, не учитываем
   if (d.method === 'POST' && /\/teleport(\/|$|\?)/.test(path) && rt.epic?.step === 'arrive' && rt.epic.via === 'page' && Date.now() - (rt.epic.tpT || 0) < 10000) try {
-    const ok = !d.error && /^2/.test(String(d.status)) && !d.res?.error, msg = String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 120);
-    sessionStorage.setItem('l2bot.epicTp', JSON.stringify({ path, status: d.status, ok, msg, t: Date.now() }));
-    rec('B', 'эпики', `телепорт к эпику: ${d.method} ${path} → ${d.status || d.error} · запрос ${JSON.stringify(d.req ?? null).slice(0, 200)}${msg ? ' · ' + msg : ''}`);
+    const EP = L2V7Modules.epics, mine = EP.epicTpReqFor(d, path, rt.epic.id), a = EP.epicTpAckOf(d), msg = String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 120);
+    if (mine) sessionStorage.setItem('l2bot.epicTp', JSON.stringify({ path, status: d.status, ok: a.ok, msg, t: Date.now() }));
+    rec('B', 'эпики', `телепорт к эпику: ${d.method} ${path} → ${d.status || d.error} · запрос ${JSON.stringify(d.req ?? null).slice(0, 200)}${msg ? ' · ' + msg : ''}${!mine ? ' · запрос не к этому эпику — не учитываю' : a.ok === null ? ' · ответ неясен — резерв оставляю' : ''}`);
   } catch (er) {}
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
     const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, t: Date.now() } }); }
@@ -3663,7 +3667,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
