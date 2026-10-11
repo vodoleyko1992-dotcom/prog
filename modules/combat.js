@@ -1410,19 +1410,10 @@ async function battle() {
       // v4.37: время баффа пишем только после того, как скилл сработал. Раньше писали ДО нажатия: сбой между записью
       // и нажатием (лог 01:02, weaponWt) — и бот 2 мин считал тотем наложенным, а его не было
       ctx.block['buff:' + bn] = Date.now() + 5000;        // пока идёт нажатие — повторно не берём
-      // через кастеты сразу — только если точно известно, что сейчас надето другое оружие
-      const needFist = /кастет/.test(env.ilOf(b)?.w || '') && !env.isFistName(env.rt.weaponNow || env.cfg.nWeaponMain || '');
-      const viaSwap = env.canSwap() && (env.rt.buffSwap?.[bn] || needFist) && !!env.rt.weaponNow && env.rt.weaponNow !== env.cleanTitle(env.equipBy(env.cfg.nWeaponBuff).title);
-      if (viaSwap) await env.equip(env.equipBy(env.cfg.nWeaponBuff));
-      let r = await act(b, `Бафф${viaSwap ? ' (через ' + env.cfg.nWeaponBuff + ')' : ''}: ${b.title}`); buffed = true;
+      // 9.2.3 (игрок 11.10: «на кастетах уже не играем, функция писалась ради Тирана с копьём»): смена оружия ради баффа убрана —
+      // Тиран носит кастеты основным, остальным она только тратила клики в бою. Бафф, недоступный с этим оружием, — до конца боя не жмём
+      let r = await act(b, `Бафф: ${b.title}`); buffed = true;
       if (r === true) { await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } }); ctx.block['buff:' + bn] = 0; }
-      if (r === 'unavail' && !viaSwap && env.canSwap()) {     // недоступен с этим оружием — пробуем через кастеты и запоминаем
-        await env.setRt({ buffSwap: { ...(env.rt.buffSwap || {}), [bn]: true } });
-        await env.equip(env.equipBy(env.cfg.nWeaponBuff));
-        r = await act(b, `Бафф (через ${env.cfg.nWeaponBuff}): ${b.title}`);
-        if (r === true) { env.rec('B', 'бафф через смену оружия', `«${b.title}» работает только с «${env.cfg.nWeaponBuff}» — запомнено`); await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } }); ctx.block['buff:' + bn] = 0; }
-        await env.equip(env.equipBy(env.cfg.nWeaponMain));
-      } else if (viaSwap) await env.equip(env.equipBy(env.cfg.nWeaponMain));
       if (r === 'unavail') {                      // с этим оружием бафф не работает — до конца боя не трогаем
         ctx.block['buff:' + bn] = Infinity;
         env.rec('B', 'недоступно', `бафф «${b.title}»: ${noticeText() || 'недоступен'}`);

@@ -25,7 +25,6 @@ async function equip(w) {
   return ok;
 }
 
-const canSwap = () => env.cfg.weaponSwap && !!equipBy(env.cfg.nWeaponMain) && !!equipBy(env.cfg.nWeaponBuff);
 
 const POT_MP = /мани|маны|mana|\bmp\b/i, POT_HP = /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i;
 function suggestRoles() {
@@ -81,7 +80,6 @@ function suggestRoles() {
     // 7.2.1 (лог 10.10 21:17:42): Servitor Ultimate Defense — «слуга нерухомий ~30 с», откат 30 мин: аварийная защита, не бафф на каждый бой
     nPetBuffs: skills.filter(live).filter(s => isPetOnly(s) && il(s)?.eff !== 'ImobilePetBuff' && !/ultimate defen/i.test(s.name) && (il(s) ? il(s).c === 'Бафф' : /^(?:servitor|fast servitor)\s/i.test(s.name) && !/heal|recharge|cure|bless|ultimate/i.test(s.name))).map(s => s.name).join(', '),
     nHeal:   skills.filter(live).filter(s => !isPetOnly(s) && il(s)?.c === 'Лечение' && /^(HEAL|HEAL_PERCENT|HOT|HEAL_STATIC)$/.test(il(s).t || '')).map(s => s.name).join(', '),
-    nWeaponBuff: inv.find(s => s.kind === 'снаряжение' && /кастет|джамадх|jamadh|fist|knuckle|кулак|claw|cestus|baghnakh|багнак|tiger|кулачн/i.test(s.name + ' ' + s.img))?.name || '',
     nWeaponMain: weaponMainSuggest(inv)
   };
   for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
@@ -132,7 +130,7 @@ async function autoRoles() {
     // even when the old fighter Soulshot slot is still visible on the bar.
     const mageShots = k === 'nShots' && v && (shotsForMageWeapon() ? /благослов|blessed.*spiritshot/i.test(v) : /заряд\S* душ|soulshot/i.test(v));
     const found = mageShots ? env.names(cur).includes(v.toLowerCase())
-      : k === 'nWeaponMain' || k === 'nWeaponBuff' ? (!!equipBy(cur) || inInv(cur) || (!!cur && !!env.cfg.weaponManual))
+      : k === 'nWeaponMain' ? (!!equipBy(cur) || inInv(cur) || (!!cur && !!env.cfg.weaponManual))
       // v5.2: список баффов игрока НЕ заменяем никогда (раньше один бафф, не найденный на панели — например, ряд панели
       // не успел открыться, — и весь список подменялся «распознанным»: назначенные баффы пропадали). Пустой — заполняем.
       : k === 'nBuffs' || k === 'nKeyBuffs' || k === 'nToggles' || k === 'nSpoil' || k === 'nSpoilMass' || k === 'nSweep' || k === 'nUltra' || k === 'nDrain' || k === 'nPetBuffs' ? env.names(cur).length > 0
@@ -225,8 +223,7 @@ function rankWeapons(list) {
   const sorted = [...list].sort((a, b) => score(b) - score(a));
   const inClass = w => mage ? true : types.includes(w.wt);
   const main = sorted.find(w => inClass(w) && lv >= (env.GRADE_LV[w.g] ?? 0)) || null;
-  const fists = sorted.filter(w => w.wt === 'кастеты' && lv >= (env.GRADE_LV[w.g] ?? 0));
-  return { types, src, mage, main, buff: types[0] === 'кастеты' ? null : fists[0] || null, inClass, lv };
+  return { types, src, mage, main, inClass, lv };
 }
 
 async function readWeaponsPage() {               // текущая страница сумки
@@ -352,14 +349,13 @@ async function invScanStep() {
       const curMain = list.find(w => has(env.cfg.nWeaponMain) && (w.name || '').toLowerCase().startsWith(String(env.cfg.nWeaponMain).toLowerCase().split(',')[0].trim()));
       const offClass = curMain && R.main && !R.inClass(curMain) && !env.cfg.weaponManual;   // выбор не «в класс» и игрок его не ставил сам
       if (mainPick && (!env.cfg.nWeaponMain || !has(env.cfg.nWeaponMain) || offClass)) fix.nWeaponMain = mainPick.name;
-      if (R.buff && (!env.cfg.nWeaponBuff || !has(env.cfg.nWeaponBuff))) fix.nWeaponBuff = R.buff.name;
     }
     let wore = '';
     // 7.1.30 (лог 15:38:22→24): игрок нажал «Стоп», а бот через 2 с всё равно переодел оружие — после остановки не надеваем
     if (env.on && env.cfg.weaponClassEquip !== false && R.main && R.main.where !== 'надето' && better) {
       if (await wearFromBag(R.main)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
-    await env.setRt({ weapons: list, weaponsT: Date.now(), weaponRec: { main: R.main?.name || '', buff: R.buff?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
+    await env.setRt({ weapons: list, weaponsT: Date.now(), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
       eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better) }, invScan: null });
     if (Object.keys(fix).length) await env.setCfg(fix);
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
@@ -370,6 +366,28 @@ async function invScanStep() {
   }
   await env.setRt({ invScan: null });
   return false;
+}
+
+// 9.2.3 (игрок 11.10: «оружие в класс делалось давно и на коленке»): сумка читалась один раз на установку — новое оружие
+// (дроп, Маммон, кузнец) и новый грейд (52 — B, 61 — A, 76 — S) бот не замечал, пока игрок не нажмёт «Проверить инвентарь».
+// Повод перечитать: в сумке (ответ сервера, bag = { itemId → qty }) есть оружие, которого нет в rt.weapons, или уровень героя
+// перешёл порог грейда с прошлого чтения. Один и тот же повод — один раз (rt.weapRescan.sig), не чаще раза в 10 мин
+function weaponRescanWhy(bag, lv) {
+  if (!env.rt.weaponsT) return '';
+  const R = env.rt.weaponRec || {}, why = [];
+  const g = lv && R.lv ? Object.entries(env.GRADE_LV).find(([, L]) => R.lv < L && lv >= L) : null;
+  if (g) why.push(`открыт грейд ${g[0]} (${lv} ур.)`);
+  if (bag) {
+    const known = new Set((env.rt.weapons || []).map(w => +w.id));
+    // мелочь с дропа (грейд ниже надетого или выше уровня) — не повод: надеть её бот всё равно не станет
+    const eq = (env.rt.weapons || []).find(w => w.where === 'надето'), gr = g => GRADE_RANK[String(g || 'NG').toUpperCase()] ?? 0;
+    const fresh = Object.keys(bag).map(Number).filter(id => { const w = bag[id] > 0 && !known.has(id) && weaponOf(id);
+      return w && gr(w.g) >= gr(eq?.g) && (lv || 99) >= (env.GRADE_LV[w.g] ?? 0); });
+    if (fresh.length) why.push('новое оружие в сумке: ' + fresh.map(id => env.itemOf(id)?.n || '#' + id).join(', '));
+  }
+  const sig = why.join(' · '), last = env.rt.weapRescan || {};
+  if (!sig || sig === last.sig || Date.now() - (last.t || 0) < 600000) return '';
+  return sig;
 }
 
 async function invScanDrive() {                  // кнопка меню при выключенном боте / продолжение после перехода страницы
@@ -388,6 +406,6 @@ async function invScanStart(back) {
   await env.setRt({ invScan: { step: 'prof', back: back || location.pathname + location.search, t: Date.now() } });
   return invScanStep();
 }
- return { equipBy, equip, canSwap, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
+ return { weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
  };
 })(globalThis);

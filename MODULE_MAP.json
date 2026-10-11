@@ -268,7 +268,6 @@
       "campActive",
       "campOpen",
       "campRbOpen",
-      "canSwap",
       "cfg",
       "chargeValue",
       "cleanTitle",
@@ -303,7 +302,6 @@
       "isChamp",
       "isChargeName",
       "isEquip",
-      "isFistName",
       "isForceName",
       "isQuestName",
       "isRaidId",
@@ -708,7 +706,6 @@
     "exports": [
       "equipBy",
       "equip",
-      "canSwap",
       "suggestRoles",
       "weaponMainSuggest",
       "autoRoles",
