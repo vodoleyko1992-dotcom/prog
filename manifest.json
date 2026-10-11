@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "L2wap Bot",
   "version": "9.0.1",
-  "description": "L2wap Bot 9.0.1 — автокач, Маммон, катакомбы, квесты сабкласса и Noblesse, цена хода на РБ",
+  "description": "L2wap Bot 9.0.1 — автокач, Маммон, катакомбы, 197 РБ, квесты сабкласса и Noblesse, цена хода на РБ",
   "permissions": [
     "storage",
     "unlimitedStorage",
