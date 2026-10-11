@@ -56,7 +56,7 @@
  function learn(o, L) {
   const V = o?.rt?.mobVal || {}, now = o?.now || Date.now(), mage = o?.mage, pts = [];
   for (const [k, v] of Object.entries(V)) {
-   if (k.startsWith('ч:') || !v || !(v.n >= MIN_N) || !(v.sec > 0) || !(v.exp > 0) || (v.t && now - v.t > CAL_AGE)) continue;
+   if (k.startsWith('ч:') || !v || !mine(v, o) || !(v.n >= MIN_N) || !(v.sec > 0) || !(v.exp > 0) || (v.t && now - v.t > CAL_AGE)) continue;
    const m = mobOf(k, o); if (!m) continue;
    const d = m.lvl - L, base = W + (1 - W) * thick(m.lvl, L, mage);
    pts.push({ k, d, n: v.n, sec: v.sec / v.n, base, hard: !!o.rt.hardMobs?.[k] });
@@ -74,6 +74,8 @@
   return { s: s || 5, sMeasured: !!s, g, above, below: o?.cfg?.lvlBelow ?? 3, n: pts.length, deaths };
  }
  const gOf = (cal, d) => cal?.g?.[d] ?? gPrior(d);
+ // сабклассы (11.10): замер другого класса героя (метка c ≠ rt.prof) — не наш: другой уровень, скиллы и кот
+ const mine = (v, o) => !v?.c || !o?.rt?.prof || v.c === o.rt.prof;
 
  // EXP/с одного вида моба у героя L: по базе, а если вид уже бит ≥3 раз — замер с весом боёв (база как 3 «виртуальных» боя)
  function mobEps(name, L, o, cal) {
@@ -81,7 +83,7 @@
   const d = m.lvl - L, t = cal.s * (W + (1 - W) * thick(m.lvl, L, o?.mage)) * gOf(cal, d);
   const pred = m.exp * pen(L, m.lvl) / t * (m.est ? 0.8 : 1);   // EXP без цифр — по кривой уровня: доверяем меньше
   const v = o?.rt?.mobVal?.[lc(name)];
-  const meas = v && v.n >= MIN_N && v.sec > 0 && v.exp > 0 && !(v.t && (o.now || Date.now()) - v.t > CAL_AGE) ? v.exp / v.sec : 0;
+  const meas = v && mine(v, o) && v.n >= MIN_N && v.sec > 0 && v.exp > 0 && !(v.t && (o.now || Date.now()) - v.t > CAL_AGE) ? v.exp / v.sec : 0;
   return { name, lvl: m.lvl, d, exp: m.exp, est: m.est, eps: meas ? (v.n * meas + 3 * pred) / (v.n + 3) : pred, meas: !!meas };
  }
 

@@ -344,8 +344,9 @@ function mobValRank(out, champOn = champRuleOn()) {
 function mobValNote(name, champ, exp, sec) {
   if (!name || !(exp > 0) || !(sec > 0)) return;
   const V = { ...(env.rt.mobVal || {}) }, k = mobKey(name, champ), o = V[k] || { n: 0, exp: 0, sec: 0 };
-  const f = o.n >= MOBVAL_N ? (MOBVAL_N - 1) / MOBVAL_N : 1;
-  V[k] = { n: Math.min(MOBVAL_N, o.n + 1), exp: Math.round(o.exp * f + exp), sec: +(o.sec * f + sec).toFixed(1), t: Date.now() };
+  // 9.0 (сабклассы, 11.10: у каждого класса свой уровень и скиллы): замер помечен классом героя (rt.prof); другой класс — замер с нуля
+  const c = env.rt.prof || undefined, same = !o.c || !c || o.c === c, b = same ? o : { n: 0, exp: 0, sec: 0 }, f = b.n >= MOBVAL_N ? (MOBVAL_N - 1) / MOBVAL_N : 1;
+  V[k] = { n: Math.min(MOBVAL_N, b.n + 1), exp: Math.round(b.exp * f + exp), sec: +(b.sec * f + sec).toFixed(1), t: Date.now(), ...(c ? { c } : {}) };
   const ks = Object.keys(V);
   if (ks.length > MOBVAL_MAX) ks.sort((a, b) => (V[a].t || 0) - (V[b].t || 0)).slice(0, ks.length - MOBVAL_MAX).forEach(x => delete V[x]);
   return env.setRt({ mobVal: V });

@@ -87,6 +87,12 @@ assert.match(after.why, /свои замеры/);
 // старые (> 3 дней) замеры не учитываются
 o.rt.mobVal['past knight'].t = now.t - 4 * 86400000;
 assert.ok(!K.zoneEst('ancient_battleground', 62, o).mobs.find(m => m.name === 'Past Knight').meas, 'stale measurement ignored');
+// сабклассы: замеры другого класса (метка c) модель не берёт
+const oc = { rt: { prof: 'Warlock', mobVal: { 'past knight': { ...mv(30, 11588, 40), c: 'Warlock' } } }, cfg, mage: true, now: now.t };
+assert.ok(K.zoneEst('ancient_battleground', 62, oc).mobs.find(m => m.name === 'Past Knight').meas, 'own class measurement used');
+oc.rt.prof = 'Bishop';
+assert.ok(!K.zoneEst('ancient_battleground', 62, oc).mobs.find(m => m.name === 'Past Knight').meas, 'another subclass measurement ignored');
+assert.equal(K.learn(oc, 62).n, 0);
 // мобы, увиденные ботом на карте зоны (rt.zoneMobs + уровни из rt.spawns), дополняют базу
 const zx = K.zoneEst('aden', 60, { rt: { zoneMobs: { aden: ['Totally New Mob'] }, spawns: { s1: ['Totally New Mob', 61] } }, cfg, mage: true });
 assert.ok(zx.mobs.some(m => m.name === 'Totally New Mob' && m.est), 'mob seen on the map counts (EXP by level curve)');
@@ -184,6 +190,12 @@ console.log('PASS: zone choice — new hero flies to the best KPD zone at any le
   assert.ok(pj.includes('<th title="Прогноз по базе игры (КПД)">КПД</th>'), 'KPD column in the zone table');
   assert.ok(pj.includes('cat = { ...(rt.zoneCat || {}) }'), 'menu does not mutate rt.zoneCat while adding base zones');
   assert.ok(cj.includes('get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },'), 'navigation gets the model through env');
+  // сабклассы: mobValNote помечает замер классом и начинает заново при смене класса
+  const msb = sandbox(['modules/mobfarm.js']), menv = { cfg: {}, rt: { prof: 'Warlock', mobVal: {} }, setRt: p => Object.assign(menv.rt, p) }, MF = msb.L2V7Factories.mobfarm(menv);
+  for (let i = 0; i < 5; i++) MF.mobValNote('Past Knight', false, 11588, 6);
+  assert.equal(menv.rt.mobVal['past knight'].c, 'Warlock'); assert.equal(menv.rt.mobVal['past knight'].n, 5);
+  menv.rt.prof = 'Bishop'; MF.mobValNote('Past Knight', false, 11588, 20);
+  assert.equal(menv.rt.mobVal['past knight'].n, 1, 'subclass switch: measurement restarts'); assert.equal(menv.rt.mobVal['past knight'].c, 'Bishop');
   console.log('PASS: menu — KPD column, best-by-base line, route 1→80, «мобы не выше героя на N» setting');
   finished = true;
 })().catch(e => { console.error(e); process.exit(1); });
