@@ -214,7 +214,7 @@
 <button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
   <span class="nav-toggle-icon" aria-hidden="true">▦</span>
   <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 7 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+  <span class="nav-toggle-right">Все 8 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
 </button>
 <nav id="moduleNav" aria-label="Разделы управления">
   <div class="nav-heading">НАВИГАЦИЯ</div>
@@ -226,6 +226,7 @@
   <div class="nav-group">ОБЩЕЕ</div>
   <button data-tab="panel" title="Умения, кот, дебаффы, баффы, оружие, безопасность"><span class="ic">⚔</span>Бой и кот</button>
   <button data-tab="supply" title="Банки, закупка, добыча, эффективность"><span class="ic">🧪</span>Снабжение</button>
+  <button data-tab="mammon" title="Заказы торговца Маммона, кузнец, накопление на улучшение"><span class="ic">🏺</span>Маммон</button>
   <button data-tab="svc" title="Журнал, диагностика, автовход, память"><span class="ic">⚙</span>Сервис</button>
 </nav>
 <div class="workarea">
@@ -333,9 +334,15 @@
   <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
   <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
   <div id="catBox" class="hint" style="white-space:pre-line"></div>
-  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов», но не выше героя +8 (в подземельях мобы злее). После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). РБ внутри — только при включённом «👑 РБ между мобами». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
+  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов». Список мобов бот берёт целиком из ответа игры (все страницы списка), первыми бьёт ★-цели квеста и чемпионов. После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). РБ внутри — только при включённом «👑 РБ между мобами». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
 
   <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включение производится только переключателем «Фармить в подземелье».</div>
+  <h4>💱 Камни печати → Ancient Adena</h4>
+  <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
+  <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
+  <div id="sealBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="sealNow">💱 Обменять все камни сейчас</button></div>
+  <div class="hint">Камни печати (зелёный → 5 AA, синий → 3, красный → 10) падают с мобов в катакомбах и некрополях. Бот меняет их у Ancient Trader (Город → Ancient Trader) все сразу: по кнопке — при первой возможности (бой и вываживание рыбы доводит до конца), с галочкой — сам, не чаще раза в 20 минут, когда камней набралось не меньше порога. Адена и Coin of Luck не тратятся. Ancient Adena нужна у торговца Маммона.</div>
 </section>
 
 
@@ -574,6 +581,28 @@
   <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
   <h4>⭐ Особая добыча и ценность</h4>
   <div id="lootExtra" class="box"></div>
+</section>
+
+<!-- 🏺 Маммон (9.0) -->
+<section id="tab-mammon">
+  <h4>Где сейчас Маммон</h4>
+  <div id="mmNpcBox" class="camp">Ещё не проверял — бот спросит у игры сам</div>
+  <h4>📦 Заказ торговца</h4>
+  <div id="mmOrderBox" class="camp">Заказа ещё не видел</div>
+  <label title="Ресурс уже есть в сумке → телепорт к торговцу, «Здати», обратно на точку охоты. Не в бою, не в туре РБ/эпиков, не перед TvT">Исполнять заказы сам <input id="mmOrders" type="checkbox"></label>
+  <label title="Телепорт к Маммону стоит 500 000 адены (с VIP бесплатно). Дороже — бот не летит">Макс. цена телепорта, адены <input id="mmTpMax" type="number" min="0" step="50000"></label>
+  <div class="row"><button id="mmPoll">🔄 Проверить заказ</button></div>
+  <div id="mmLogBox" class="hint" style="white-space:pre-line"></div>
+  <div class="hint">Заказ — ресурс × N, награда 1 Coin of Luck + 1,5 млн адены, достаётся первому, кто сдаст. Бот спрашивает заказ раз в 90 с (только чтение) и летит, только если ресурса в сумке хватает. Не хватает — ничего не тратит.</div>
+  <h4>⚒ Копить на улучшение у кузнеца</h4>
+  <label>Вещь <select id="mmGoalItem"><option value="0">— цели нет —</option></select></label>
+  <label>До уровня <select id="mmGoalLvl"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3">Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select></label>
+  <label title="Недостающий материал, у которого есть источник в базе «Фарм ресурсов», бот добывает сам: по одному, по порядку (как цель «Фарм ресурса»)">Добывать недостающее самому <input id="mmGoalFarm" type="checkbox"></label>
+  <label title="Цены следующего уровня кузнец показывает только рядом с собой: бот слетает к нему (телепорт по лимиту выше), прочитает и вернётся. Не чаще раза в 6 ч">Узнавать цены у кузнеца сам <input id="mmSmithAuto" type="checkbox"></label>
+  <div id="mmGoalBox" class="camp">Цели нет</div>
+  <div class="row"><button id="mmSmith">⚒ Узнать цены у кузнеца</button></div>
+  <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
+  <div class="important-note">Само улучшение стоит Coin of Luck — бот его не нажимает никогда. Когда всё собрано, бот пишет об этом в журнал, а «Покращити» жмёшь ты у кузнеца.</div>
 </section>
 
 <!-- 🎣 РЫБАЛКА -->
