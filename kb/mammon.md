@@ -46,6 +46,12 @@ NPC 31126, иконка `/nps/76.png`. Одна функция: **улучшен
 - `GET /game/mammon/merchant/shop` — магазин за Ancient Adena (`aaPrice`): Gemstone D–S, Life Stone (General 129 600 … Unique 1 036 800), Greater Dye ±1 (45 000) и ±4 (174 000). Покупка `POST /game/mammon/merchant/buy`.
 - **Заказ Маммона** `GET /game/mammon/merchant/request` → `{request {status OPEN|CLAIMED, resourceItemId, resourceNameEn, quantity, reward {coinOfLuck:1, adena:1500000}, expiresAt, winnerName, playerHaveQty}}`. Кто первым сдаст ресурс (`POST /game/mammon/merchant/request/claim`), получает 1 Coin of Luck и 1,5 млн адены. 11.10 просили 33 Silver Nugget, у героя было 2371, заказ уже забрал другой игрок. Это способ **получить** Coin of Luck, а не потратить.
 
+## Что сделано в боте (9.0, CHANGELOG-9.0.md)
+
+Модуль `modules/mammon.js` и раздел меню «🏺 Маммон»: заказ из сумки исполняется сам (телепорт ≤ лимита → «Здати» → обратно), цель «Копить на улучшение» добывает недостающие материалы по очереди, цены кузнеца бот читает сам. Важно: свои GET бота идут с `Authorization: Bearer <localStorage.token>` (`content.gameGet`), без токена сервер отвечает 401.
+
+Крафт материалов (`GET /game/craft/materials`): только у Artisan/Warsmith/Maestro (`canCraftProfession`, `createItemLevel`), у Warlock — 0. Рецепты: Steel = 5 Iron Ore + 5 Varnish, Cokes = 3 Charcoal + 3 Coal, Braided Hemp = 5 Stem, Coarse Bone Powder = 10 Animal Bone, Leather = 6 Animal Skin, Mithril Alloy = 1 Mithril Ore + 1 Varnish of Purity + 2 Steel и др. (`MM_CRAFT` в модуле). Заказы идут окнами по 2 ч (`expiresAt` 14:00, 16:00 …).
+
 ## Что может пригодиться боту (версия 9)
 
 1. Учитывать `specialGearLevel` при оценке снаряжения (сейчас equipment.js смотрит только оружие).

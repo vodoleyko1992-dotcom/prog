@@ -25,7 +25,7 @@ with sync_playwright() as p:
   page.locator('#navToggle').click()
   page.wait_for_timeout(80)
   menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==7,menu   # 7.2+: 7 разделов
+  assert menu['tabs']==8,menu   # 7.2+: 7 разделов; 9.0: + «Маммон»
   assert menu['grid']==(2 if mode=='dock' else 4),menu
   assert menu['visible']=='grid',menu
   page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-menu.png')))

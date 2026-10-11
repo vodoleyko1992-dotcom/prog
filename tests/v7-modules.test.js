@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 const mf = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 const featurePaths = mf.content_scripts.find(x => x.js.includes('content.js')).js;
 const modules = featurePaths.filter(x=>x.startsWith('modules/'));
-const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival'];
+const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon'];   // 9.0: + Маммон
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
 assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|8\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия
@@ -100,7 +100,7 @@ for (const modName of required) {
   const missing=[...exported].filter(name=>!actual.has(name));
   assert.deepEqual(missing,[],`${modName} missing dependencies ${missing.join(', ')}`);
 }
-console.log('PASS: potion runtime and complete lazy dependency bridges for 15 modules');
+console.log('PASS: potion runtime and complete lazy dependency bridges for 16 modules');
 
 // Lazy dependencies must refer to the current character object, not its init-time snapshot.
 vm.runInContext("rt = {char:'West', fish:{casts:3}}",ctx);

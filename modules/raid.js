@@ -216,7 +216,8 @@ async function rbInfo(id) {
   if (Date.now() - ((env.rt.rbInfoFail || {})[id] || 0) < 10 * 60000) return have || null;
   try {
     const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
-    const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(tm));
+    // 9.0: с токеном страницы (без него сервер отвечает 401 — см. content.gameAuth)
+    const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', headers: env.gameAuth?.() || {}, signal: c.signal }).finally(() => clearTimeout(tm));
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const j = await r.json();
     const st = await rbInfoNote(id, j, 'api');
