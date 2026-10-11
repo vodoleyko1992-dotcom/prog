@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "9.2.2",
-  "description": "L2wap Bot 9.2.2 — бафф кота Blessing of Queen на 20 мин, без зацикливания на «не по зубам» цели, лист врагов, Маммон",
+  "version": "9.2.3",
+  "description": "L2wap Bot 9.2.3 — заряды сами встают на панель, оружие в класс по новой сумке, спойлер без лишней карты, бафф кота Blessing of Queen",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -113,5 +113,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "9.2.2"
+  "version_name": "9.2.3"
 }
