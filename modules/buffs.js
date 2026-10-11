@@ -98,7 +98,9 @@ async function buffAuditStep(ctx, me) {
 
 function buffList(ctx = env.BUFF_CTX) {
   const keys = ctx && (ctx.rb || ctx.champ || env.cfg.keyBuffBoss === false) ? env.names(env.cfg.nKeyBuffs) : [];
-  const arr = [...new Set([...env.names(env.cfg.nBuffs), ...keys])].map(bn => ({ bn, b: env.slotsBy(bn)[0] }));
+  // 9.0: свой Noblesse Blessing (статус Noblesse) — бафф, если он на панели боя (уходит со смертью, держит остальные баффы)
+  const nob = env.rt.story?.nobleOwn && env.slotsBy('noblesse blessing')[0] ? ['noblesse blessing'] : [];
+  const arr = [...new Set([...env.names(env.cfg.nBuffs), ...keys, ...nob])].map(bn => ({ bn, b: env.slotsBy(bn)[0] }));
   const tot = arr.filter(x => x.b && env.isTotem(x.b));
   const pick = tot.length ? totemPick() : null;   // тотемы: висит только один — какой ставить сейчас, решает замер
   const best = {};
@@ -284,6 +286,8 @@ function faWanted() {
   const paidUp = atRisk > 0 && atRisk >= (env.faCost ? env.faCost(1323) : 5);
   const nob = paidUp && bossOn && env.cfg.rbSessNob !== false ? [1323] : [];
   let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
+  // 9.0 (квест Noblesse): статус Noblesse — скилл 1323 свой (на всех классах), за FA его не покупаем
+  if (env.rt.story?.nobleOwn) ids = ids.filter(id => id !== 1323);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
   if (bal != null && ids.length && bal < Math.min(...ids.map(env.faCost))) return [];   // FA точно не хватит ни на один — не ходим
   return ids;

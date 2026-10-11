@@ -267,6 +267,12 @@
   <label>Проверять карту каждые N боёв (0 = никогда, только цепочка) <input id="deepEvery" type="number" min="0"></label>
   <label>⏹ Стоп, когда квест выполнен <input id="questStop" type="checkbox"></label>
 
+  <h4>👑 Сабкласс и Noblesse</h4>
+  <div id="storyBox" class="camp">Прогресс бот узнает у игры сам</div>
+  <label title="Часть квеста выполнена (убийства и сбор) → бот летит к NPC (Virgil, Caradine, Magister Ladd), жмёт «Завершить часть» и возвращается на точку. Не в бою, не в туре РБ/эпиков, не перед TvT. Взять квест и выбрать сабкласс — только вы">Сдавать готовые части сам <input id="storyTurnIn" type="checkbox"></label>
+  <label title="Телепорт к NPC квеста (Rune ≈20 000, Goddard ≈18 000, Ivory Tower, Oren). Дороже — бот не летит">Макс. цена телепорта к NPC, адены <input id="storyTpMax" type="number" min="0" step="10000"></label>
+  <div class="hint">Квест сабкласса: 75 ур. основного класса и 4 РБ (Cabrio, Hallate, Kernon, Golkonda) — в туре по РБ бот бьёт их первыми, если они по силам. Noblesse: сабкласс 50+, ★ мобы квеста — цели. С Noblesse бот не покупает Noblesse Blessing за FA, а ставит свой с панели боя. При смене класса замеры скиллов, кота, зон и РБ у каждого класса свои.</div>
+
   <h4>📦 Квесты на ресурсы</h4>
   <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
   <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>

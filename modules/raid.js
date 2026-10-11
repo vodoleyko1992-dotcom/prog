@@ -413,6 +413,10 @@ function rbListPick() {
   // 7.2.2: недобитый нами РБ (HP с прошлого захода, не «не по силам») — первым, сначала тот, у кого меньше HP
   const wd = base.filter(([id]) => rbWounded(id)).sort((a, b) => env.rt.rbWound[a[0]].cur / env.rt.rbWound[a[0]].max - env.rt.rbWound[b[0]].cur / env.rt.rbWound[b[0]].max);
   if (wd[0]) return { id: wd[0][0], ...wd[0][1], wounded: env.rt.rbWound[wd[0][0]] };
+  // 9.0: РБ квеста сабкласса (Cabrio, Hallate, Kernon, Golkonda) и части Noblesse (Barakiel) — следующими, если в окне уровней и по силам
+  const qIds = env.storyRbIds ? env.storyRbIds() : [];
+  const qb = base.filter(([id]) => qIds.includes(id) && now - (tried[id] || 0) > env.RB_TRY_MS).sort((a, b) => a[1].lvl - b[1].lvl);
+  if (qb[0]) return { id: qb[0][0], ...qb[0][1], quest: true };
   const dir = env.cfg.rbOrder === 'down' ? -1 : 1;
   const ord = env.cfg.rbValueTour
     ? (a, b) => rbValueScore(b[0],b[1]) - rbValueScore(a[0],a[1])
