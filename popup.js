@@ -1182,6 +1182,17 @@ function renderMammon(rt, d) {
   if (document.activeElement?.id !== 'mmGoalLvl') $('mmGoalLvl').value = String(+d.mmGoalLvl || 5);
   const gid = +d.mmGoalItem || 0;
   $('mmGoalBox').innerHTML = !gid ? 'Цели нет' : esc(rt.mmGoalSt || `${nm(gid)}: считаю…`) + (rt.mmJob?.kind === 'smith' ? '<br>⏳ бот летит к кузнецу' : '');
+  // 9.2 (игрок 11.10: «собрать ВСЕ ресурсы наперёд»): по уровням до цели, итог наперёд, сырьё (крафтовое разобрано) и что передать крафтеру
+  const P = gid && rt.mmGoalPlan?.id === gid ? rt.mmGoalPlan : null, n0 = v => v == null ? '?' : fmt(v);
+  const tb = (head, rows) => `<table class="mm-t" style="width:100%;border-collapse:collapse;margin:3px 0 7px;font-size:11px"><tr>${head.map(h => `<th style="text-align:left;opacity:.75;padding-right:6px">${h}</th>`).join('')}</tr>${rows.join('')}</table>`;
+  $('mmPlanBox').innerHTML = !P ? '' : `<b>По уровням</b> (≈ — оценка по известной цене, уточню у кузнеца):`
+    + tb(['Уровень', 'Адена', 'CoL', 'Материалы'], P.lv.map(x => `<tr><td style="white-space:nowrap;padding-right:6px">${x.e ? '≈ ' : ''}Lv.${x.L}→${x.L + 1}</td>` + (x.unk ? '<td colspan="3">цена неизвестна — узнаю у кузнеца</td></tr>'
+      : `<td style="white-space:nowrap;padding-right:6px">${fmt(x.a)}</td><td>${x.c}</td><td>${x.m.map(m => `${esc(m[0])} ${fmt(m[1])}`).join(', ')}</td></tr>`)))
+    + `<b>Всего наперёд до Lv.${P.to}</b>: ${fmt(P.a)} адены + ${P.c} Coin of Luck`
+    + tb(['Материал', 'Нужно', 'Есть', 'Не хватает'], P.tot.map(t => `<tr><td>${esc(t[0])}</td><td>${fmt(t[1])}</td><td>${n0(t[2])}</td><td>${t[3] ? '<b>' + fmt(t[3]) + '</b>' : '✅'}</td></tr>`))
+    + (P.cr.length ? `<b>Сырьё</b> (крафтовое разобрано по рецептам, сумка учтена):`
+      + tb(['Ресурс', 'Нужно', 'Есть', 'Не хватает'], P.raw.map(r => `<tr><td>${esc(r[0])}${r[4] ? '' : ' <span title="В базе фарма источников нет">·нет в фарме</span>'}</td><td>${fmt(r[1])}</td><td>${n0(r[2])}</td><td>${r[3] ? '<b>' + fmt(r[3]) + '</b>' : '✅'}</td></tr>`))
+      + `<b>Передать крафтеру</b> (письмом, обратно — готовое):` + tb(['Скрафтить', 'Шт.', 'Рецепт'], P.cr.map(c => `<tr><td>${esc(c[0])}</td><td>${fmt(c[1])}</td><td>${esc(c[3])}${c[2] !== c[1] ? ` ×${c[2]}` : ''}</td></tr>`)) : '');
   // бонусы выбранной вещи Lv.0–5 (★ — надето/в сумке)
   const G = MMG?.[gid];
   $('mmGearBox').textContent = G ? `${G.n} (${G.g}, ${MM_SLOT[G.s] || G.s}) — бонусы по уровням:\n` + Object.keys(G.L[0]).map(k => `${MM_STAT[k] || k}: ${G.L.map(x => x[k]).join(' → ')}`).join('\n')

@@ -76,6 +76,11 @@ const PAGES = {
   const rtMenu = { char: 'Warlock', lvl: 60, mmOrder: { id: 'r-77', st: 'OPEN', res: 'Stem', qty: 42, have: 2299, adena: 1500000, col: 1, exp: Date.now() + 3600000 },
     mmNpc: { t: Date.now(), order: { loc: "The Pilgrim's Necropolis", next: 'Necropolis of Worship', at: Date.now() + 3600000, price: 500000 }, smith: { loc: 'Catacomb of the Witch', next: 'Catacomb of Dark Omens', at: Date.now() + 3600000, price: 500000 } },
     mmEq: { belt: [920018, 0], cloak: [920019, 0], tattoo: [910623, 0] }, mmGoalSt: 'Пояс першопрохідця Lv.1: не хватает Crystal: D-Grade 100, Mithril Ore 100, Steel 3 · добываю Mithril Ore',
+    // 9.2: план наперёд до цели — по уровням (≈ оценка), итог, сырьё, что передать крафтеру
+    mmGoalPlan: { id: 920018, n: 'Пояс першопрохідця', lvl: 0, to: 3, a: 1500000, c: 3, unk: [], lv: [{ L: 0, e: 0, a: 250000, c: 1, m: [['Crystal: D-Grade', 100], ['Iron Ore', 100], ['Mithril Ore', 100], ['Steel', 3]] },
+      { L: 1, e: 1, a: 500000, c: 1, m: [['Crystal: D-Grade', 200], ['Iron Ore', 200], ['Mithril Ore', 200], ['Steel', 6]] }, { L: 2, e: 1, a: 750000, c: 1, m: [['Crystal: D-Grade', 300], ['Iron Ore', 300], ['Mithril Ore', 300], ['Steel', 9]] }],
+      tot: [['Crystal: D-Grade', 600, 0, 600], ['Iron Ore', 600, 908, 0], ['Mithril Ore', 600, 0, 600], ['Steel', 18, 0, 18]],
+      raw: [['Crystal: D-Grade', 600, 0, 600, 0], ['Iron Ore', 690, 908, 0, 1], ['Mithril Ore', 600, 0, 600, 1], ['Varnish', 90, null, 90, 1]], cr: [['Steel', 18, 18, '5 Iron Ore + 5 Varnish']] },
     mmLog: [{ kind: 'order', ok: true, why: 'сдал Stem ×42 → +1 Coin of Luck, +1 500 000 адены', t: Date.now() }] };
   const m = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:5}}", `rt:${JSON.stringify(rtMenu)}`).replace(/cfg:\{/, 'cfg:{mmGoalItem:920018,mmGoalLvl:3,');
   if (m === mock) { console.error('FAIL 4: popup mock not patched'); process.exit(1); }
@@ -97,10 +102,11 @@ const PAGES = {
     await page.evaluate(() => document.querySelector('#mmPoll').click()); await page.waitForTimeout(200);
     const req = await page.evaluate(() => window.__mockState?.rt?.mmPollReq);
     const ok = /Stem ×42/.test(t) && /1 Coin of Luck \+ 1\s500\s000 адены/.test(t) && /Pilgrim's Necropolis/.test(t) && /Catacomb of the Witch/.test(t) && /добываю Mithril Ore/.test(t)
+      && /≈ Lv\.2→3/.test(t) && /Всего наперёд до Lv\.3: 1\s500\s000 адены \+ 3 Coin of Luck/.test(t) && /Varnish\s+90\s+\?\s+90/.test(t) && /Передать крафтеру/.test(t) && /Steel\s+18\s+5 Iron Ore \+ 5 Varnish/.test(t)
       && /M\.Def|HP: 200 → 220/.test(t) && opts === 24 && sel === '920018' && !overflow && req && !errs.length;
     if (!ok) { console.error('FAIL 4', JSON.stringify({ w, t: t.slice(0, 900), opts, sel, overflow, req, errs })); process.exit(1); }
     if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT + '-' + w + '.png', fullPage: true });
-    console.log(`PASS browser ${w}px: «Маммон» — order, NPC places, goal progress, bonuses Lv.0–5, 23 items to pick, «Проверить заказ» → mmPollReq, no sideways scroll`);
+    console.log(`PASS browser ${w}px: «Маммон» — order, NPC places, goal progress, plan ahead by level + total + raw + crafter list, bonuses Lv.0–5, 23 items to pick, «Проверить заказ» → mmPollReq, no sideways scroll`);
     await page.close();
   }
   await b.close();
