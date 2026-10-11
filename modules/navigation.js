@@ -81,10 +81,17 @@ function zoneHere() {                             // на карте: подтв
   const near = +(String(env.$q?.('#map-mob-page-ind')?.textContent || '').match(/(\d+)\s*\//)?.[1] || 1) <= 1;
   const mid = lvMid(items.map(i => i.lvl));
   let lvOf = null;
+  // 8.0.3 (ревью): полоса — не мин…макс всех спавнов (одно чужое имя 78–80 в списке Pavel Ruins растягивало её до [46,80] и пропускало
+  // страницу Фальстона), а уровень каждого имени (медиана его спавнов) и сплошной кусок вокруг медианы зоны: разрыв > 2×ZONE_LV_PAD — чужие
   const band = z => {                              // [мин, макс] уровней мобов зоны или null (не знаем — не мешаем)
     if (!lvOf) { lvOf = {}; for (const v of Object.values(env.rt.spawns || {})) if (v && v[1]) (lvOf[v[0]] = lvOf[v[0]] || []).push(v[1]); }
-    const ls = (mobs[z] || []).flatMap(n => lvOf[n] || []);
-    if (ls.length >= 3) return [Math.min(...ls), Math.max(...ls)];
+    const ls = (mobs[z] || []).map(n => lvMid(lvOf[n] || [])).filter(v => v > 0).sort((p, q) => p - q);
+    if (ls.length >= 3) {
+      let a = ls.length >> 1, b = a;
+      while (a > 0 && ls[a] - ls[a - 1] <= 2 * ZONE_LV_PAD) a--;
+      while (b < ls.length - 1 && ls[b + 1] - ls[b] <= 2 * ZONE_LV_PAD) b++;
+      return [ls[a], ls[b]];
+    }
     const c = env.rt.zoneCat?.[z]; return c?.lo ? [c.lo, c.hi || c.lo] : null;
   };
   const fits = z => { const b = band(z); return !b || !mid || (mid >= b[0] - ZONE_LV_PAD && mid <= b[1] + ZONE_LV_PAD); };
@@ -93,14 +100,21 @@ function zoneHere() {                             // на карте: подтв
   const pend = !!env.rt.zonePend && Date.now() - env.rt.zonePend.t < 120000;
   let id = env.rt.zone || null;
   if (pend) id = env.rt.zonePend.id;
-  else if (!near) { if (!id) return; }           // дальняя страница — зону не определяем (имена — в список текущей, как раньше)
+  else if (!near) { if (!id) return; }           // дальняя страница — зону не определяем (имена в полосе уровней — в список текущей)
   else if (!id || ((mobs[id] || []).length >= 3 && !sure(id))) {     // мобы не те — ищем зону с такими мобами
     const best = Object.keys(mobs).filter(z => sure(z) && ov(z) * 2 >= names.length).map(z => [z, ov(z)]).sort((a, b) => b[1] - a[1])[0];
     id = best ? best[0] : 'out:' + names.slice(0, 2).join(' / ');
   }
   // 8.0 (аудит фарма C5): в Pavel Ruins уже 31 имя (память 10.10 22:40); на больших локациях сверх 40 хвост списка выпадал бы
   // из «мобов зоны», и ★ цели / мобы из правил оттуда считались бы «не на этой локации». Храним до 80 имён
-  mobs[id] = [...new Set([...(mobs[id] || []), ...names])].slice(0, 80);
+  // 8.0.3 (ревью): с дальней страницы (соседние локации) — только имена с уровнем в полосе текущей зоны ±5: раньше так в список
+  // Pavel Ruins возвращались Spiked Stakato/Tomb (75–80) и после разовой чистки pavelZone803
+  let add = names;
+  if (!near && !pend) {
+    const b = band(id), lvN = n => lvMid(items.filter(i => i.name === n).map(i => i.lvl));
+    if (b) add = names.filter(n => { const l = lvN(n); return !l || (l >= b[0] - ZONE_LV_PAD && l <= b[1] + ZONE_LV_PAD); });
+  }
+  mobs[id] = [...new Set([...(mobs[id] || []), ...add])].slice(0, 80);
   const lv = items.filter(i => i.lvl).map(i => i.lvl);
   const cat = env.rt.zoneCat || {}, lo = lv.length ? Math.min(...lv) : 0, hi = lv.length ? Math.max(...lv) : 0;
   const patch = { zone: id, zonePend: null, zoneMobs: mobs, lvl: env.heroLvl() || env.rt.lvl };
