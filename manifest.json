@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "9.0",
-  "description": "L2wap Bot 9.0 — автокач по КПД локации (1→80), Маммон, катакомбы",
+  "version": "9.0.1",
+  "description": "L2wap Bot 9.0.1 — автокач, Маммон, катакомбы, квесты сабкласса и Noblesse, цена хода на РБ",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -111,5 +111,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "9.0"
+  "version_name": "9.0.1"
 }
