@@ -4,7 +4,8 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.combat = function create_combat(env) {
-const CLICK_GAP_MIN = 40, CLICK_GAP_MAX = 400, CLICK_GAP_DEF = 60;   // 8.0.3: запас после того, как игра освободилась (ответ хода / её GET /character), мс
+// 8.0.3: шлюз нажатий — запас после ответа на ход (A) и после конца GET /character игры (B), мс: [мин, макс, начальный]
+const LOCK_A = [60, 500, 120], LOCK_B = [30, 200, 50];
 function mobHp() {
   const m = (env.$q('#battle-mob-hp-val')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/);
   return m ? { cur: +m[1], max: +m[2], pct: +m[2] ? 100 * m[1] / m[2] : 0 } : null;
@@ -840,18 +841,20 @@ async function battle() {
   // 8.0.3 (логи 11.10 09:11–10:37, 10 боёв с РБ: 1302 потерянных нажатия на 1689 ходов, ДПС 1436 против ≈3300 в тех же баффах на 7.2.1):
   // после ответа на ход игра шлёт свой GET /character (через ≈8 мс, идёт 0,25–0,56 с) и, пока он в полёте и ≈30 мс после, молча теряет
   // клик по панели. 8.0 убрал паузу 250 мс после принятого хода — бот жал через 0,1–0,3 с, почти каждый первый клик терялся.
-  // Теперь клик — когда игра свободна: нет её запросов в полёте и прошёл запас после последнего ответа/конца запроса. Запас подстраивается:
-  // клик потерян сразу после освобождения → +30 мс (до 400; так же ловится блокировка без GET /character), дошёл → −2 мс (до 40)
-  let clickGap = Math.min(CLICK_GAP_MAX, Math.max(CLICK_GAP_MIN, +env.rt.clickGapMs || CLICK_GAP_DEF));
-  const gapSave = () => { if (Math.abs(clickGap - (+env.rt.clickGapMs || CLICK_GAP_DEF)) >= 20) env.setRt({ clickGapMs: clickGap })?.catch?.(() => {}); };
-  const gameFree = async () => {                  // → момент, когда игра освободилась (0 — не знаем), или -1 — бой кончился / бот выключен
+  // Теперь клик — когда игра свободна: нет её запросов в полёте, прошёл запас A после ответа на ход и запас B после конца её GET /character
+  // (лог 23:35: и без записанного GET клики через 100–300 мс после ответа терялись — 300 из 306; журнал пишет GET не чаще раза в 3 с).
+  // Запасы подстраиваются отдельно: клик потерян — растёт тот, что решал (A +30, B +15), дошёл впритык — тот же −2 / −1
+  const clampL = (v, L) => Math.min(L[1], Math.max(L[0], +v || L[2]));
+  let lockA = clampL(env.rt.clickLockA, LOCK_A), lockB = clampL(env.rt.clickLockB, LOCK_B);
+  const lockSave = () => { if (Math.abs(lockA - clampL(env.rt.clickLockA, LOCK_A)) >= 20 || Math.abs(lockB - clampL(env.rt.clickLockB, LOCK_B)) >= 10) env.setRt({ clickLockA: lockA, clickLockB: lockB })?.catch?.(() => {}); };
+  const gameFree = async () => {                  // → { dT, gE } — ответ на ход и конец GET после него (0 — нет), или null — бой кончился / бот выключен
     const t0 = Date.now();
     for (;;) {
-      const g = env.gameBusy ? env.gameBusy() : { busy: false, end: 0 }, last = Math.max(env.actNet?.().doneT || 0, g.end || 0);
-      const need = g.busy ? 40 : last ? last + clickGap - Date.now() : 0;
-      if (need <= 0 || Date.now() - t0 > 1500) return last;
+      const g = env.gameBusy ? env.gameBusy() : { busy: false, end: 0 }, dT = env.actNet?.().doneT || 0, gE = g.end > dT ? g.end : 0;
+      const need = g.busy ? 40 : Math.max(dT ? dT + lockA - Date.now() : 0, gE ? gE + lockB - Date.now() : 0);
+      if (need <= 0 || Date.now() - t0 > 1500) return { dT, gE };
       await env.sleep(Math.min(need, 60));
-      if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return -1;
+      if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return null;
     }
   };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
@@ -865,11 +868,12 @@ async function battle() {
     if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
     const exact = env.slotAction(b);
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
-    const freeT = await gameFree();
-    if (freeT < 0) return false;
+    const free = await gameFree();
+    if (!free) return false;
     env.observeSlot(b, 'B');
     const before = noticeText();
-    const firedAt = Date.now(), gap = freeT ? firedAt - freeT : 1e9;
+    const firedAt = Date.now(), slackA = free.dT ? firedAt - (free.dT + lockA) : 1e9, slackB = free.gE ? firedAt - (free.gE + lockB) : 1e9;
+    const bindB = slackB < slackA, gap = Math.min(slackA, slackB);   // какой запас решал и насколько впритык
     const net0 = env.actNet?.().start || 0;
     if (!env.fire(b)) return false;
     lastAct = Date.now();
@@ -888,9 +892,9 @@ async function battle() {
     const lost = !!env.actNet && net0 > 0 && !sent && !victory() && !defeat();
     // 8.0.3: потерян сразу после освобождения игры (≤ запас + 0,25 с) — запас больше, а сам скилл не «занят»: его же жмём снова (так
     // Vampiric Touch прошёл 4 раза из 60 — после потери он блокировался, и бот пил банки); дошёл быстро — запас меньше
-    const lockLost = lost && gap < clickGap + 250;
-    if (lockLost) { clickGap = Math.min(CLICK_GAP_MAX, clickGap + 30); gapSave(); }
-    else if (sent && gap < clickGap + 60) { clickGap = Math.max(CLICK_GAP_MIN, clickGap - 2); gapSave(); }   // −2/+30: на границе теряется ≈6 % нажатий
+    const lockLost = lost && gap < 250;
+    if (lockLost) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
+    else if (sent && gap < 60) { if (bindB) lockB = Math.max(LOCK_B[0], lockB - 1); else lockA = Math.max(LOCK_A[0], lockA - 2); lockSave(); }   // на границе теряется ≈6 % нажатий
     if (lost && !lockLost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
     if (lockLost) return 'lock';
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:

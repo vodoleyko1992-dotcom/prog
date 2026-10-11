@@ -11,12 +11,12 @@ const { createBattleCooldown } = require('../battle-cooldown.js');
 // конца запроса; потеря сразу после освобождения → 'lock' (без «занят 0,7 с») и запас больше; быстро дошёл → запас меньше
 const actSrc = combat.slice(combat.indexOf('  let lastHpPot = 0, lastMpPot = 0'), combat.indexOf('  const t0 = Date.now();\n  let progSig'));
 assert.ok(actSrc.includes('const act = async (b, status) =>'), 'act() extracted');
-const consts = combat.match(/const CLICK_GAP_MIN = 40, CLICK_GAP_MAX = 400, CLICK_GAP_DEF = 60;/)[0];
-const mk = ({ accept = true, doneAgo = 5, getMs = 0, gap } = {}) => {
+const consts = combat.match(/const LOCK_A = \[60, 500, 120\], LOCK_B = \[30, 200, 50\];/)[0];
+const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   let now = 1_000_000; const fired = [], rtW = [];
   const NET = { start: 1, done: 1, doneT: now - doneAgo, ok: true, action: 'l2_1220' };
   let getEnd = getMs ? now + getMs : 0;          // GET /character игры в полёте до getEnd
-  const env = { on: true, tabOwner: true, isBattle: () => true, rt: gap ? { clickGapMs: gap } : {}, setRt: p => { rtW.push(p); Object.assign(env.rt, p); return Promise.resolve(); },
+  const env = { on: true, tabOwner: true, isBattle: () => true, rt: lockA ? { clickLockA: lockA } : {}, setRt: p => { rtW.push(p); Object.assign(env.rt, p); return Promise.resolve(); },
     gameBusy: () => getEnd && now < getEnd ? { busy: true, end: 0 } : { busy: false, end: getEnd },
     combatCooldown: { globalWait: () => 0, skillWait: () => 0, recentlyGlobalRejected: () => false }, slotAction: () => 'l2_1220', cdSpawn: () => 'sp', battleSpawn: () => 'sp',
     observeSlot: () => {}, actNet: () => NET, fire: () => { fired.push({ afterAnswer: now - NET.doneT, afterGet: getEnd ? now - getEnd : null }); if (accept) { NET.start++; NET.done++; NET.doneT = now + 300; getEnd = 0; } return true; },
@@ -24,18 +24,19 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, gap } = {}) => {
     slotCd: () => null, petState: () => null, pause: async () => {}, rnd: (a) => a, rec: () => {}, TAG: '', cleanTitle: s => s, memLeft: () => 0, FORCE_NEED: /x^/, UNAVAIL: /x^/, CD_RE: /x^/ };
   const sb = { env, Date: { now: () => now }, Math, Map, console, ctx: { pet: null }, lostUntil: new Map(), pressAt: new Map(), victory: () => false, defeat: () => false, noticeText: () => '', uiReady: () => true,
     mobHp: () => ({ cur: 100 }), rememberCd: async () => {}, mageCombat: () => true };
-  vm.runInNewContext(`${consts}\n${actSrc}\nthis.act = act; this.gap = () => clickGap;`, sb);
+  vm.runInNewContext(`${consts}\n${actSrc}\nthis.act = act; this.locks = () => JSON.stringify([lockA, lockB]);`, sb);
   return { sb, fired, rtW, NET, env };
 };
 (async () => {
   { const t = mk({ doneAgo: 5, getMs: 300 });   // ход только что принят, игра шлёт GET /character на 0,3 с
     const r = await t.sb.act({ title: 'Blaze' }, 'Blaze');
     assert.equal(r, true);
-    assert.ok(t.fired[0].afterGet >= 60, `click only after the game GET ended + margin (fired ${t.fired[0].afterGet} ms after it; 8.0.2: during it)`);
-    assert.equal(t.sb.gap(), 58, 'accepted right at the margin → margin −2'); }
+    assert.ok(t.fired[0].afterGet >= 50, `click only after the game GET ended + margin B (fired ${t.fired[0].afterGet} ms after it; 8.0.2: during it)`);
+    assert.equal(t.sb.locks(), '[120,49]', 'accepted right at margin B → B −1'); }
   { const t = mk({ doneAgo: 5, getMs: 0 });     // без GET (бой с мобом): только запас после ответа
     await t.sb.act({ title: 'Blaze' }, 'Blaze');
-    assert.ok(t.fired[0].afterAnswer >= 60 && t.fired[0].afterAnswer < 130, 'no GET → short margin after the answer'); }
+    assert.ok(t.fired[0].afterAnswer >= 120 && t.fired[0].afterAnswer < 190, 'no GET → margin A after the answer');
+    assert.equal(t.sb.locks(), '[118,50]', 'accepted right at margin A → A −2'); }
   { const t = mk({ doneAgo: 5000 });
     await t.sb.act({ title: 'Blaze' }, 'Blaze');
     assert.ok(t.fired[0].afterAnswer >= 5000 && t.fired[0].afterAnswer < 5030, 'no wait when the game is long free'); }
@@ -43,13 +44,16 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, gap } = {}) => {
     const r = await t.sb.act({ title: 'Vampiric Touch' }, 'VT');
     assert.equal(r, 'lock', 'lost right after the game freed → «lock»');
     assert.equal(t.sb.lostUntil.has('blaze'), false, 'not marked busy for 0.7 s — the same spell is pressed again');
-    assert.equal(t.sb.gap(), 90, 'margin +30 ms');
-    assert.equal(t.rtW.at(-1).clickGapMs, 90, 'learned margin persisted (≥20 ms change)'); }
+    assert.equal(t.sb.locks(), '[120,65]', 'lost when margin B decided → B +15');
+    assert.equal(t.rtW.at(-1).clickLockB, 65, 'learned margins persisted'); }
+  { const t = mk({ doneAgo: 5, getMs: 0, accept: false });
+    assert.equal(await t.sb.act({ title: 'Blaze' }, 'Blaze'), 'lock');
+    assert.equal(t.sb.locks(), '[150,50]', 'lost when margin A decided (no GET) → A +30'); }
   { const t = mk({ doneAgo: 5000, accept: false });
     const r = await t.sb.act({ title: 'Blaze' }, 'Blaze');
     assert.equal(r, false, 'lost long after the game freed — the old rule');
     assert.ok(t.sb.lostUntil.has('blaze'), 'busy 0.7 s as before'); }
-  { const t = mk({ gap: 9999 }); assert.equal(t.sb.gap(), 400, 'margin capped 40–400'); }
+  { const t = mk({ lockA: 9999 }); assert.equal(JSON.parse(t.sb.locks())[0], 500, 'margin A capped 60–500'); }
   { const t = mk({ doneAgo: 5, getMs: 99999 });  // запрос игры «завис» — ждём не больше 1,5 с
     await t.sb.act({ title: 'Blaze' }, 'Blaze');
     assert.ok(t.fired.length === 1, 'stuck request does not block forever'); }
@@ -82,5 +86,5 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, gap } = {}) => {
   await sb.learnCd('blaze', 'Blaze', 0.2, {});
   assert.equal(saved.length, 1, 'below 0.4 s — noise');
   assert.match(content, /once\('cdS803', \(\) => \{ for \(const \[k, p\] of Object\.entries\(S\)\) if \(p && \(p\.cd \|\| p\.cdS\)\) \{ S\[k\] = \{ \.\.\.p, cd: 0, cdS: \[\] \}; sk = true; \} \}\);/);
-  console.log('PASS: 8.0.3 click gate — click when the game is free (its GET /character done + adaptive 40–400 ms margin), lost click right after it is retried at once (VT no longer yields to potions), server cooldowns read from delta, short buffed cooldowns learned');
+  console.log('PASS: 8.0.3 click gate — click when the game is free (no request in flight, margin A after the answer + margin B after its GET /character, both adaptive), lost click right after it is retried at once (VT no longer yields to potions), server cooldowns read from delta, short buffed cooldowns learned');
 })().catch(e => { console.error(e); process.exit(1); });
