@@ -1,0 +1,751 @@
+{
+ "starterShop": {
+  "availableAdena": 66358189,
+  "offers": [
+   {
+    "key": "starter_rod",
+    "name": "Fishing Rod",
+    "icon": "/icons/fishing/fishing_rod.png",
+    "qty": 1,
+    "priceAdena": 25000,
+    "canBuy": true
+   },
+   {
+    "key": "bait_x10",
+    "name": "Fishing Lure",
+    "icon": "/icons/fishing/bait_basic.png",
+    "qty": 10,
+    "priceAdena": 1000,
+    "canBuy": true
+   },
+   {
+    "key": "soulshot_x50",
+    "name": "Fishing Soulshot",
+    "icon": "/icons/fishing/fishing_soulshot.png",
+    "qty": 50,
+    "priceAdena": 5000,
+    "canBuy": true
+   }
+  ]
+ },
+ "economy": {
+  "proofQty": 239,
+  "proofName": "Proof of Catching a Fish",
+  "proofIcon": "/icons/fishing/proof_of_catching_a_fish.png",
+  "exchanges": [
+   {
+    "key": "fish_oil",
+    "itemId": 910607,
+    "name": "Fish Oil",
+    "icon": "/icons/fishing/fish_oil.png",
+    "requiredQty": 25,
+    "proofReward": 1,
+    "ownedQty": 18,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "greater_fish_oil",
+    "itemId": 910608,
+    "name": "Greater Fish Oil",
+    "icon": "/icons/fishing/fish_oil.png",
+    "requiredQty": 2,
+    "proofReward": 1,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "premium_fish_oil",
+    "itemId": 910609,
+    "name": "Premium Fish Oil",
+    "icon": "/icons/fishing/fish_oil.png",
+    "requiredQty": 1,
+    "proofReward": 5,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "fish_scale",
+    "itemId": 910610,
+    "name": "Fish Scale",
+    "icon": "/icons/fishing/fish_scale.png",
+    "requiredQty": 5,
+    "proofReward": 1,
+    "ownedQty": 1,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "shiny_fish_scale",
+    "itemId": 910611,
+    "name": "Shiny Fish Scale",
+    "icon": "/icons/fishing/fish_scale.png",
+    "requiredQty": 1,
+    "proofReward": 2,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "fish_gem",
+    "itemId": 910612,
+    "name": "Fish Gem",
+    "icon": "/icons/fishing/fish_gem.png",
+    "requiredQty": 4,
+    "proofReward": 1,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "shiny_fish_gem",
+    "itemId": 910613,
+    "name": "Shiny Fish Gem",
+    "icon": "/icons/fishing/fish_gem.png",
+    "requiredQty": 1,
+    "proofReward": 2,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "thin_fish_bone",
+    "itemId": 910614,
+    "name": "Thin Fish Bone",
+    "icon": "/icons/fishing/thin_fish_bone.png",
+    "requiredQty": 4,
+    "proofReward": 1,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   },
+   {
+    "key": "thick_fish_bone",
+    "itemId": 910615,
+    "name": "Thick Fish Bone",
+    "icon": "/icons/fishing/thick_fish_bone.png",
+    "requiredQty": 1,
+    "proofReward": 2,
+    "ownedQty": 0,
+    "canExchange": false,
+    "maxExchangeCount": 0
+   }
+  ],
+  "offers": [
+   {
+    "key": "good_bait_x10",
+    "itemId": 910602,
+    "name": "Good Fishing Lure x10",
+    "icon": "/icons/fishing/bait_good.png",
+    "quantity": 10,
+    "priceProof": 3,
+    "canBuy": true
+   },
+   {
+    "key": "soulshot_x50",
+    "itemId": 910601,
+    "name": "Fishing Soulshot x50",
+    "icon": "/icons/fishing/fishing_soulshot.png",
+    "quantity": 50,
+    "priceProof": 2,
+    "canBuy": true
+   },
+   {
+    "key": "soulshot_x200",
+    "itemId": 910601,
+    "name": "Fishing Soulshot x200",
+    "icon": "/icons/fishing/fishing_soulshot.png",
+    "quantity": 200,
+    "priceProof": 7,
+    "canBuy": true
+   },
+   {
+    "key": "basic_bait_x50",
+    "itemId": 6519,
+    "name": "Fishing Lure x50",
+    "icon": "/icons/fishing/bait_basic.png",
+    "quantity": 50,
+    "priceProof": 2,
+    "canBuy": true
+   },
+   {
+    "key": "rod_enchant_scroll_x1",
+    "itemId": 910617,
+    "name": "Fishing Rod Enchant Scroll x1",
+    "icon": "/icons/fishing/fishing_rod_enchant_scroll.jpg",
+    "quantity": 1,
+    "priceProof": 100,
+    "canBuy": true
+   }
+  ],
+  "gearCategories": [
+   {
+    "key": "cloaks",
+    "label": "Плащі",
+    "items": [
+     {
+      "key": "cloak_d",
+      "itemId": 910618,
+      "name": "Плащ рибалки",
+      "grade": "D",
+      "icon": "/icons/drops/item/fishing_cloak_d.png",
+      "type": "cloak",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+250"
+       },
+       {
+        "labelUk": "Фіз. захист",
+        "valueUk": "+70"
+       },
+       {
+        "labelUk": "Маг. захист",
+        "valueUk": "+70"
+       }
+      ],
+      "priceProof": 500,
+      "priceAdena": 500000,
+      "canBuy": false
+     },
+     {
+      "key": "cloak_c",
+      "itemId": 910619,
+      "name": "Плащ мисливця моря",
+      "grade": "C",
+      "icon": "/icons/drops/item/fishing_cloak_c.png",
+      "type": "cloak",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+450"
+       },
+       {
+        "labelUk": "Фіз. захист",
+        "valueUk": "+110"
+       },
+       {
+        "labelUk": "Маг. захист",
+        "valueUk": "+110"
+       }
+      ],
+      "priceProof": 1500,
+      "priceAdena": 1500000,
+      "canBuy": false
+     },
+     {
+      "key": "cloak_b",
+      "itemId": 910620,
+      "name": "Плащ глибокого моря",
+      "grade": "B",
+      "icon": "/icons/drops/item/fishing_cloak_b.png",
+      "type": "cloak",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+700"
+       },
+       {
+        "labelUk": "Фіз. захист",
+        "valueUk": "+170"
+       },
+       {
+        "labelUk": "Маг. захист",
+        "valueUk": "+170"
+       }
+      ],
+      "priceProof": 3500,
+      "priceAdena": 5000000,
+      "canBuy": false
+     },
+     {
+      "key": "cloak_a",
+      "itemId": 910621,
+      "name": "Плащ стража океану",
+      "grade": "A",
+      "icon": "/icons/drops/item/fishing_cloak_a.png",
+      "type": "cloak",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+1000"
+       },
+       {
+        "labelUk": "Фіз. захист",
+        "valueUk": "+240"
+       },
+       {
+        "labelUk": "Маг. захист",
+        "valueUk": "+240"
+       }
+      ],
+      "priceProof": 5000,
+      "priceAdena": 15000000,
+      "canBuy": false
+     },
+     {
+      "key": "cloak_s",
+      "itemId": 910622,
+      "name": "Плащ Левіафан",
+      "grade": "S",
+      "icon": "/icons/drops/item/fishing_cloak_s.png",
+      "type": "cloak",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+1400"
+       },
+       {
+        "labelUk": "Фіз. захист",
+        "valueUk": "+320"
+       },
+       {
+        "labelUk": "Маг. захист",
+        "valueUk": "+320"
+       }
+      ],
+      "priceProof": 8000,
+      "priceAdena": 50000000,
+      "canBuy": false
+     }
+    ]
+   },
+   {
+    "key": "tattoos",
+    "label": "Татуювання",
+    "items": [
+     {
+      "key": "tattoo_d",
+      "itemId": 910623,
+      "name": "Татуювання річки",
+      "grade": "D",
+      "icon": "/icons/drops/item/fishing_tattoo_d.png",
+      "type": "tattoo",
+      "stats": [
+       {
+        "labelUk": "P.Atk",
+        "valueUk": "+150"
+       },
+       {
+        "labelUk": "M.Atk",
+        "valueUk": "+173"
+       },
+       {
+        "labelUk": "Швидкість атаки",
+        "valueUk": "+1%"
+       },
+       {
+        "labelUk": "Швидкість магії",
+        "valueUk": "+1%"
+       }
+      ],
+      "priceProof": 500,
+      "priceAdena": 500000,
+      "canBuy": false
+     },
+     {
+      "key": "tattoo_c",
+      "itemId": 910624,
+      "name": "Татуювання озера",
+      "grade": "C",
+      "icon": "/icons/drops/item/fishing_tattoo_c.png",
+      "type": "tattoo",
+      "stats": [
+       {
+        "labelUk": "P.Atk",
+        "valueUk": "+250"
+       },
+       {
+        "labelUk": "M.Atk",
+        "valueUk": "+288"
+       },
+       {
+        "labelUk": "Швидкість атаки",
+        "valueUk": "+2%"
+       },
+       {
+        "labelUk": "Швидкість магії",
+        "valueUk": "+2%"
+       }
+      ],
+      "priceProof": 1500,
+      "priceAdena": 1500000,
+      "canBuy": false
+     },
+     {
+      "key": "tattoo_b",
+      "itemId": 910625,
+      "name": "Татуювання моря",
+      "grade": "B",
+      "icon": "/icons/drops/item/fishing_tattoo_b.png",
+      "type": "tattoo",
+      "stats": [
+       {
+        "labelUk": "P.Atk",
+        "valueUk": "+400"
+       },
+       {
+        "labelUk": "M.Atk",
+        "valueUk": "+460"
+       },
+       {
+        "labelUk": "Швидкість атаки",
+        "valueUk": "+3%"
+       },
+       {
+        "labelUk": "Швидкість магії",
+        "valueUk": "+3%"
+       }
+      ],
+      "priceProof": 3500,
+      "priceAdena": 5000000,
+      "canBuy": false
+     },
+     {
+      "key": "tattoo_a",
+      "itemId": 910626,
+      "name": "Татуювання глибокого моря",
+      "grade": "A",
+      "icon": "/icons/drops/item/fishing_tattoo_a.png",
+      "type": "tattoo",
+      "stats": [
+       {
+        "labelUk": "P.Atk",
+        "valueUk": "+700"
+       },
+       {
+        "labelUk": "M.Atk",
+        "valueUk": "+805"
+       },
+       {
+        "labelUk": "Швидкість атаки",
+        "valueUk": "+4%"
+       },
+       {
+        "labelUk": "Швидкість магії",
+        "valueUk": "+4%"
+       }
+      ],
+      "priceProof": 5000,
+      "priceAdena": 15000000,
+      "canBuy": false
+     },
+     {
+      "key": "tattoo_s",
+      "itemId": 910627,
+      "name": "Татуювання Левіафан",
+      "grade": "S",
+      "icon": "/icons/drops/item/fishing_tattoo_s.png",
+      "type": "tattoo",
+      "stats": [
+       {
+        "labelUk": "P.Atk",
+        "valueUk": "+1000"
+       },
+       {
+        "labelUk": "M.Atk",
+        "valueUk": "+1150"
+       },
+       {
+        "labelUk": "Швидкість атаки",
+        "valueUk": "+5%"
+       },
+       {
+        "labelUk": "Швидкість магії",
+        "valueUk": "+5%"
+       }
+      ],
+      "priceProof": 8000,
+      "priceAdena": 50000000,
+      "canBuy": false
+     }
+    ]
+   },
+   {
+    "key": "belts",
+    "label": "Пояси",
+    "items": [
+     {
+      "key": "belt_d",
+      "itemId": 910628,
+      "name": "Пояс рибалки",
+      "grade": "D",
+      "icon": "/icons/drops/item/fishing_belt_d.png",
+      "type": "belt",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+250"
+       },
+       {
+        "labelUk": "Швидкість бігу",
+        "valueUk": "+3"
+       },
+       {
+        "labelUk": "Сила фіз. крит. атаки",
+        "valueUk": "+2%"
+       },
+       {
+        "labelUk": "Сила маг. крит. атаки",
+        "valueUk": "+2%"
+       }
+      ],
+      "priceProof": 500,
+      "priceAdena": 500000,
+      "canBuy": false
+     },
+     {
+      "key": "belt_c",
+      "itemId": 910629,
+      "name": "Пояс досвідченого рибалки",
+      "grade": "C",
+      "icon": "/icons/drops/item/fishing_belt_c.png",
+      "type": "belt",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+450"
+       },
+       {
+        "labelUk": "Швидкість бігу",
+        "valueUk": "+5"
+       },
+       {
+        "labelUk": "Сила фіз. крит. атаки",
+        "valueUk": "+3%"
+       },
+       {
+        "labelUk": "Сила маг. крит. атаки",
+        "valueUk": "+3%"
+       }
+      ],
+      "priceProof": 1500,
+      "priceAdena": 1500000,
+      "canBuy": false
+     },
+     {
+      "key": "belt_b",
+      "itemId": 910630,
+      "name": "Пояс ветерана рибалки",
+      "grade": "B",
+      "icon": "/icons/drops/item/fishing_belt_b.png",
+      "type": "belt",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+700"
+       },
+       {
+        "labelUk": "Швидкість бігу",
+        "valueUk": "+7"
+       },
+       {
+        "labelUk": "Сила фіз. крит. атаки",
+        "valueUk": "+5%"
+       },
+       {
+        "labelUk": "Сила маг. крит. атаки",
+        "valueUk": "+5%"
+       }
+      ],
+      "priceProof": 3500,
+      "priceAdena": 5000000,
+      "canBuy": false
+     },
+     {
+      "key": "belt_a",
+      "itemId": 910631,
+      "name": "Пояс майстра рибалки",
+      "grade": "A",
+      "icon": "/icons/drops/item/fishing_belt_a.png",
+      "type": "belt",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+1000"
+       },
+       {
+        "labelUk": "Швидкість бігу",
+        "valueUk": "+9"
+       },
+       {
+        "labelUk": "Сила фіз. крит. атаки",
+        "valueUk": "+7%"
+       },
+       {
+        "labelUk": "Сила маг. крит. атаки",
+        "valueUk": "+7%"
+       }
+      ],
+      "priceProof": 5000,
+      "priceAdena": 15000000,
+      "canBuy": false
+     },
+     {
+      "key": "belt_s",
+      "itemId": 910632,
+      "name": "Пояс Левіафан",
+      "grade": "S",
+      "icon": "/icons/drops/item/fishing_belt_s.png",
+      "type": "belt",
+      "stats": [
+       {
+        "labelUk": "Макс. HP",
+        "valueUk": "+1400"
+       },
+       {
+        "labelUk": "Швидкість бігу",
+        "valueUk": "+12"
+       },
+       {
+        "labelUk": "Сила фіз. крит. атаки",
+        "valueUk": "+10%"
+       },
+       {
+        "labelUk": "Сила маг. крит. атаки",
+        "valueUk": "+10%"
+       }
+      ],
+      "priceProof": 8000,
+      "priceAdena": 50000000,
+      "canBuy": false
+     }
+    ]
+   }
+  ]
+ },
+ "rod": {
+  "itemId": 910600,
+  "name": "Вудка",
+  "icon": "/icons/fishing/fishing_rod.png",
+  "enchant": 10
+ },
+ "rods": [
+  {
+   "itemId": 910600,
+   "targetInstanceId": "bag:910600:10",
+   "name": "Fishing Rod +10",
+   "icon": "/icons/fishing/fishing_rod.png",
+   "enchant": 10,
+   "oldBoxChancePct": 10,
+   "selected": true
+  }
+ ],
+ "bait": {
+  "itemId": 6519,
+  "name": "Наживка",
+  "icon": "/icons/fishing/bait_basic.png",
+  "quantity": 7432
+ },
+ "basicBait": {
+  "itemId": 6519,
+  "name": "Наживка",
+  "icon": "/icons/fishing/bait_basic.png",
+  "quantity": 7432,
+  "selected": true
+ },
+ "goodBait": {
+  "itemId": 910602,
+  "name": "Якісна наживка",
+  "icon": "/icons/fishing/bait_good.png",
+  "quantity": 342,
+  "selected": false
+ },
+ "fishingSoulshot": {
+  "itemId": 910601,
+  "name": "Рибальський заряд душі",
+  "icon": "/icons/fishing/fishing_soulshot.png",
+  "quantity": 38321,
+  "enabled": true
+ },
+ "fishingTime": {
+  "remainingMs": 44461177,
+  "active": false,
+  "activeUntilMs": 0,
+  "activeGraceMs": 30000,
+  "availableAdena": 66358189,
+  "canFish": true,
+  "packages": [
+   {
+    "key": "1h",
+    "hours": 1,
+    "durationMs": 3600000,
+    "priceAdena": 3000000,
+    "canBuy": true
+   },
+   {
+    "key": "2h",
+    "hours": 2,
+    "durationMs": 7200000,
+    "priceAdena": 5500000,
+    "canBuy": true
+   },
+   {
+    "key": "3h",
+    "hours": 3,
+    "durationMs": 10800000,
+    "priceAdena": 7500000,
+    "canBuy": true
+   },
+   {
+    "key": "6h",
+    "hours": 6,
+    "durationMs": 21600000,
+    "priceAdena": 14000000,
+    "canBuy": true
+   }
+  ]
+ },
+ "fishingSpot": {
+  "purchased": true,
+  "priceAdena": 10000000,
+  "canBuy": false,
+  "blockedReason": null
+ },
+ "training": {
+  "availableSp": 23007946,
+  "learnedCount": 3,
+  "totalCount": 3,
+  "blockedReason": null,
+  "skills": [
+   {
+    "key": "fishing",
+    "name": "Fishing",
+    "icon": "/icons/fishing/skill_fishing.png",
+    "costSp": 100000,
+    "learned": true,
+    "canLearn": false
+   },
+   {
+    "key": "pumping",
+    "name": "Pumping",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "costSp": 100000,
+    "learned": true,
+    "canLearn": false
+   },
+   {
+    "key": "reeling",
+    "name": "Reeling",
+    "icon": "/icons/fishing/skill_reeling.png",
+    "costSp": 100000,
+    "learned": true,
+    "canLearn": false
+   }
+  ]
+ },
+ "learnedSkills": {
+  "fishing": true,
+  "pumping": true,
+  "reeling": true
+ },
+ "skillTotal": 3,
+ "cooldowns": {
+  "pumpingUntil": 1791703064711,
+  "reelingUntil": 1791703065539,
+  "pumpingMs": 500,
+  "reelingMs": 700
+ }
+}

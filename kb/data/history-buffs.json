@@ -1,0 +1,72 @@
+{
+ "source": "session_01ChEZvMoWB76qH2jnRofNs6; t=UTC время сообщения, game=местное время игрока (~UTC+9.5..10)",
+ "FA": {
+  "normal": "1 FA / 3 ч",
+  "greater": "5 FA / 3 ч",
+  "playerHad": 82,
+  "set": "Magnus + Noblesse по 5 + 7×1 = 17 FA",
+  "catalog": 42,
+  "rbSessBuffs": [
+   1413,
+   1323,
+   4703,
+   273,
+   365,
+   1303,
+   264,
+   267,
+   1389
+  ],
+  "seraphim": "Дар Серафима 4703: -30% откат",
+  "magnus": "1413: +13-18% к урону заклинаний и кота",
+  "death": "без Noblesse слетают все; с Noblesse только она"
+ },
+ "town": {
+  "count": 13,
+  "examples": {
+   "Berserker": "M.Atk +10%, каст +5%",
+   "Acumen": "каст +15%"
+  },
+  "note": "уровни ниже FA (Shield 2 против 3)"
+ },
+ "avadon": {
+  "matk": "+12%",
+  "cast": "+10%",
+  "mcritDmg": "+9%",
+  "maxHp": "+3% +950",
+  "mp": "+13% +1250",
+  "cp": 1295,
+  "pdef": "+7%",
+  "poisonBleedRes": "+60%",
+  "run": 11
+ },
+ "olympiad": {
+  "place": 5,
+  "bonus": "+500 P/M.Atk, +350 P/M.Def на неделю",
+  "reward": "8 CoL, 2 M аден",
+  "t": "10.10 21:40"
+ },
+ "belts": {
+  "critPower": {
+   "D": 2,
+   "C": 3,
+   "B": 5,
+   "A": 7,
+   "S": 10
+  },
+  "perEnchant": "+25%",
+  "S+5": 22.5,
+  "t": "10.10 20:40"
+ },
+ "cloaks": "бонусы растут от баффов",
+ "heroUnderBuffs": {
+  "game": "11.10 09:38",
+  "lvl": 55,
+  "matk": 3569,
+  "cast": 3500,
+  "hp": 6056,
+  "mcrit": "31%",
+  "mcritDmg": 1.92,
+  "cat": "Kai Lv.4"
+ }
+}

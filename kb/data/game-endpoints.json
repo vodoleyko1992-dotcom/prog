@@ -1,0 +1,3571 @@
+[
+ {
+  "method": "GET?",
+  "path": "/admin",
+  "jsFiles": [
+   "admin-common.js"
+  ],
+  "pages": [
+   "admin.html",
+   "mod.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/change-password",
+  "jsFiles": [
+   "character-settings.js"
+  ],
+  "pages": [
+   "character-settings.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/login",
+  "jsFiles": [
+   "main.js"
+  ],
+  "pages": [
+   "index.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/logout",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/logout-all",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/refresh",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/auth/register",
+  "jsFiles": [
+   "register.js"
+  ],
+  "pages": [
+   "register.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/character",
+  "jsFiles": [
+   "arena.js",
+   "battle.js",
+   "common.js",
+   "craft.js",
+   "sw.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/bonuses",
+  "jsFiles": [
+   "bonuses-page.js"
+  ],
+  "pages": [
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/catalog-hints",
+  "jsFiles": [
+   "l2-catalog-cache.js"
+  ],
+  "pages": [
+   "about.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html",
+   "brave-hunter.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/catalog-version",
+  "jsFiles": [
+   "l2-catalog-cache.js"
+  ],
+  "pages": [
+   "about.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html",
+   "brave-hunter.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/companion/dismiss",
+  "jsFiles": [
+   "l2-hud-companion.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/companion/feline-queen-blessing",
+  "jsFiles": [
+   "l2-hud-companion.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/companion/seraphim-gift",
+  "jsFiles": [
+   "l2-hud-companion.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/consumable/use",
+  "jsFiles": [
+   "char.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/equip",
+  "jsFiles": [
+   "battle-hotbar.js",
+   "char.js"
+  ],
+  "pages": [
+   "battle.html",
+   "char.html",
+   "skill-panel.html",
+   "tvt-arena.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/equipment/crystallize",
+  "jsFiles": [
+   "char-crystallize-modal.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/equipment/crystallize/preview",
+  "jsFiles": [
+   "char-crystallize-modal.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/exp-gain-enabled",
+  "jsFiles": [
+   "character-settings.js"
+  ],
+  "pages": [
+   "character-settings.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/inventory/discard",
+  "jsFiles": [
+   "char-inventory-discard.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/magister",
+  "jsFiles": [
+   "magister.js"
+  ],
+  "pages": [
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/magister?npcId={+}",
+  "jsFiles": [
+   "l2-game-helper.js",
+   "magister.js"
+  ],
+  "pages": [
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/buy",
+  "jsFiles": [
+   "market-listing-buy.js"
+  ],
+  "pages": [
+   "market-buy-item.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/buy-order/cancel",
+  "jsFiles": [
+   "market.js"
+  ],
+  "pages": [
+   "market.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/cancel",
+  "jsFiles": [
+   "market-coin-of-luck.js",
+   "market.js"
+  ],
+  "pages": [
+   "market-coin-of-luck.html",
+   "market.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/coin-of-luck/buy-order",
+  "jsFiles": [
+   "market-coin-buy-orders.js"
+  ],
+  "pages": [
+   "market-coin-buy-orders.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/coin-of-luck/buy-order/cancel",
+  "jsFiles": [
+   "market-coin-buy-orders.js"
+  ],
+  "pages": [
+   "market-coin-buy-orders.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/list",
+  "jsFiles": [
+   "market-coin-sell.js"
+  ],
+  "pages": [
+   "market-coin-sell.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/market/my-buy-orders",
+  "jsFiles": [
+   "market.js"
+  ],
+  "pages": [
+   "market.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/market/my-listings",
+  "jsFiles": [
+   "market.js"
+  ],
+  "pages": [
+   "market.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/profession-quest/accept-first",
+  "jsFiles": [
+   "magister-profession-common.js"
+  ],
+  "pages": [
+   "magister-profession.html",
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/dark-elf-fighter-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/dark-elf-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/dwarf-fighter-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/human-fighter-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/human-mystic-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/light-elf-fighter-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/light-elf-mystic-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/orc-fighter-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-quest/orc-mystic-second/status",
+  "jsFiles": [
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/profession-resource-requirement/{+}",
+  "jsFiles": [
+   "magister-profession-common.js"
+  ],
+  "pages": [
+   "magister-profession.html",
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/profession/{+}",
+  "jsFiles": [
+   "magister-profession-common.js"
+  ],
+  "pages": [
+   "magister-profession.html",
+   "magister.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/profile-status",
+  "jsFiles": [
+   "character.js"
+  ],
+  "pages": [
+   "character.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/rename",
+  "jsFiles": [
+   "character-settings.js"
+  ],
+  "pages": [
+   "character-settings.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/skills/cast",
+  "jsFiles": [
+   "l2-skill-cast-client.js"
+  ],
+  "pages": [
+   "skill-panel.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/skills/learn",
+  "jsFiles": [
+   "magister.js"
+  ],
+  "pages": [
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/skills/toggle",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/subclasses",
+  "jsFiles": [
+   "subclasses.js"
+  ],
+  "pages": [
+   "subclasses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/subclasses/{+}",
+  "jsFiles": [
+   "subclasses.js"
+  ],
+  "pages": [
+   "subclasses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/character/town",
+  "jsFiles": [
+   "magisters.js"
+  ],
+  "pages": [
+   "magisters.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/buffer",
+  "jsFiles": [
+   "town-buffer.js"
+  ],
+  "pages": [
+   "town-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/town/buffer/catalog",
+  "jsFiles": [
+   "town-buffer.js"
+  ],
+  "pages": [
+   "town-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/buffer/remove",
+  "jsFiles": [
+   "town-buffer.js"
+  ],
+  "pages": [
+   "town-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/fast-aden-buffer/apply",
+  "jsFiles": [
+   "fast-aden-buffer.js"
+  ],
+  "pages": [
+   "fast-aden-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/fast-aden-buffer/buy-consumable",
+  "jsFiles": [
+   "fast-aden-buffer.js"
+  ],
+  "pages": [
+   "fast-aden-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/fast-aden-buffer/buy-dye",
+  "jsFiles": [
+   "fast-aden-dye-shop.js"
+  ],
+  "pages": [
+   "fast-aden-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/character/town/fast-aden-buffer/catalog",
+  "jsFiles": [
+   "fast-aden-buffer.js"
+  ],
+  "pages": [
+   "fast-aden-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/town/restore-vitals",
+  "jsFiles": [
+   "town-buffer.js"
+  ],
+  "pages": [
+   "town-buffer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/warehouse/deposit",
+  "jsFiles": [
+   "char.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/warehouse/withdraw",
+  "jsFiles": [
+   "warehouse.js"
+  ],
+  "pages": [
+   "warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/achievements",
+  "jsFiles": [
+   "achievements-page.js"
+  ],
+  "pages": [
+   "achievements.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/achievements{+}",
+  "jsFiles": [
+   "char-achievement-rank.js"
+  ],
+  "pages": [
+   "char.html",
+   "character.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/admin/test-mob/reset",
+  "jsFiles": [
+   "battle-test-mob-ui.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/admin/test-mob/start",
+  "jsFiles": [
+   "test-mob.js"
+  ],
+  "pages": [
+   "test-mob.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/ancient-trader/exchange",
+  "jsFiles": [
+   "ancient-trader.js"
+  ],
+  "pages": [
+   "ancient-trader.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/ancient-trader/offers",
+  "jsFiles": [
+   "ancient-trader.js"
+  ],
+  "pages": [
+   "ancient-trader.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/antibot/activity",
+  "jsFiles": [
+   "battle-antibot.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/antibot/challenge",
+  "jsFiles": [
+   "battle-antibot.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/arena",
+  "jsFiles": [
+   "arena-rating.js",
+   "arena.js"
+  ],
+  "pages": [
+   "arena-rating.html",
+   "arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/arena/leave",
+  "jsFiles": [
+   "arena-presence.js"
+  ],
+  "pages": [
+   "arena-rating.html",
+   "arena.html",
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/arena/return",
+  "jsFiles": [
+   "battle-defeat-flow.js"
+  ],
+  "pages": [
+   "battle.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/arena/start",
+  "jsFiles": [
+   "arena.js"
+  ],
+  "pages": [
+   "arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/action",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/hotbar",
+  "jsFiles": [
+   "battle-hotbar.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html",
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/hunt-continue",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/battle/leave",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/pvp-defeat/ack",
+  "jsFiles": [
+   "battle.js",
+   "map.js"
+  ],
+  "pages": [
+   "battle.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/pvp/start",
+  "jsFiles": [
+   "battle-api-transport.js",
+   "common.js",
+   "dungeon.js",
+   "map.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/return-to-town",
+  "jsFiles": [
+   "battle-api-transport.js",
+   "map.js"
+  ],
+  "pages": [
+   "battle.html",
+   "map.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle/start",
+  "jsFiles": [
+   "battle-api-transport.js",
+   "dungeon.js",
+   "l2-party-hud.js",
+   "map.js",
+   "party.js"
+  ],
+  "pages": [
+   "battle.html",
+   "dungeon.html",
+   "map.html",
+   "party.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/battle/sync{+}",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/battle{+}",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/brave-hunter",
+  "jsFiles": [
+   "brave-hunter-page.js"
+  ],
+  "pages": [
+   "brave-hunter.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/catacombs",
+  "jsFiles": [
+   "catacombs.js"
+  ],
+  "pages": [
+   "catacombs.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/catacombs/teleport",
+  "jsFiles": [
+   "catacombs.js"
+  ],
+  "pages": [
+   "catacombs.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/chat",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/chat/replies/mark-read",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/chat/replies/unread-count",
+  "jsFiles": [
+   "chat.js",
+   "l2-chat-reply-notify.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/chat/social-unread",
+  "jsFiles": [
+   "l2-social-chat-unread-notify.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/chat/social-unread/mark-read",
+  "jsFiles": [
+   "l2-social-chat-unread-notify.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "DELETE",
+  "path": "/game/chat/{+}",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/chat?channel={+}",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clan-tasks",
+  "jsFiles": [
+   "clan-tasks.js"
+  ],
+  "pages": [
+   "clan-tasks.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clan-tasks/{+}",
+  "jsFiles": [
+   "clan-tasks.js"
+  ],
+  "pages": [
+   "clan-tasks.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/announcement",
+  "jsFiles": [
+   "clan-my.js"
+  ],
+  "pages": [
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/castles",
+  "jsFiles": [
+   "clan-castles.js"
+  ],
+  "pages": [
+   "clan-castles.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/castles/{+}",
+  "jsFiles": [
+   "clan-castles.js"
+  ],
+  "pages": [
+   "clan-castles.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/chat",
+  "jsFiles": [
+   "chat.js",
+   "clan-my.js"
+  ],
+  "pages": [
+   "chat.html",
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/chat?page={+}",
+  "jsFiles": [
+   "chat.js",
+   "clan-my.js"
+  ],
+  "pages": [
+   "chat.html",
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/create",
+  "jsFiles": [
+   "clans-create.js"
+  ],
+  "pages": [
+   "clans-create.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/deputy",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/deputy/candidates",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/deputy/demote",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/disband",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/emblem",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/hall",
+  "jsFiles": [
+   "clan-hall.js"
+  ],
+  "pages": [
+   "clan-hall.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/invite",
+  "jsFiles": [
+   "player.js"
+  ],
+  "pages": [
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/invite/accept",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/invite/decline",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/items/catalog",
+  "jsFiles": [
+   "clan-items.js"
+  ],
+  "pages": [
+   "clan-items.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/items/upgrade-level",
+  "jsFiles": [
+   "clan-items-upgrade.js"
+  ],
+  "pages": [
+   "clan-items-upgrade.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/items/upgrades?page={+}",
+  "jsFiles": [
+   "clan-items-upgrade.js"
+  ],
+  "pages": [
+   "clan-items-upgrade.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/leave",
+  "jsFiles": [
+   "clan-my.js"
+  ],
+  "pages": [
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/level",
+  "jsFiles": [
+   "clan-level.js"
+  ],
+  "pages": [
+   "clan-level.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/level-up",
+  "jsFiles": [
+   "clan-level.js"
+  ],
+  "pages": [
+   "clan-level.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/list?page={+}",
+  "jsFiles": [
+   "clans.js"
+  ],
+  "pages": [
+   "clans.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/members/kick",
+  "jsFiles": [
+   "clan-kick.js"
+  ],
+  "pages": [
+   "clan-kick.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/members/kick-targets?page={+}",
+  "jsFiles": [
+   "clan-kick.js"
+  ],
+  "pages": [
+   "clan-kick.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/my",
+  "jsFiles": [
+   "clan-items.js",
+   "clan-manage.js",
+   "clan-my.js"
+  ],
+  "pages": [
+   "clan-items.html",
+   "clan-manage.html",
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/tax-policy",
+  "jsFiles": [
+   "clan-manage.js"
+  ],
+  "pages": [
+   "clan-manage.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/treasury",
+  "jsFiles": [
+   "clan-my.js"
+  ],
+  "pages": [
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/treasury-access",
+  "jsFiles": [
+   "clan-my-treasury-access.js"
+  ],
+  "pages": [
+   "clan-my.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/warehouse",
+  "jsFiles": [
+   "clan-warehouse.js"
+  ],
+  "pages": [
+   "clan-warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/warehouse/access",
+  "jsFiles": [
+   "clan-warehouse.js"
+  ],
+  "pages": [
+   "clan-warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/warehouse/deposit",
+  "jsFiles": [
+   "clan-armor-inventory-client.js",
+   "clan-warehouse-items.js"
+  ],
+  "pages": [
+   "char.html",
+   "character.html",
+   "clan-warehouse.html",
+   "enchant-items.html",
+   "enchant.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/warehouse/items/deposit",
+  "jsFiles": [
+   "clan-warehouse-items.js"
+  ],
+  "pages": [
+   "clan-warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/warehouse/items/withdraw",
+  "jsFiles": [
+   "clan-warehouse-items.js"
+  ],
+  "pages": [
+   "clan-warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/clans/warehouse/withdraw",
+  "jsFiles": [
+   "clan-warehouse-items.js"
+  ],
+  "pages": [
+   "clan-warehouse.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/clans/{+}",
+  "jsFiles": [
+   "clan-view.js"
+  ],
+  "pages": [
+   "clan-view.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/client-config",
+  "jsFiles": [
+   "maintenance.html",
+   "menu.js"
+  ],
+  "pages": [
+   "menu.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/craft/armor",
+  "jsFiles": [
+   "craft-armor-tab.js"
+  ],
+  "pages": [
+   "craft.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/craft/jewelry",
+  "jsFiles": [
+   "craft-jewelry-tab.js"
+  ],
+  "pages": [
+   "craft.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/craft/materials",
+  "jsFiles": [
+   "craft.js"
+  ],
+  "pages": [
+   "craft.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/craft/shields",
+  "jsFiles": [
+   "craft-shield-tab.js"
+  ],
+  "pages": [
+   "craft.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/craft/weapons",
+  "jsFiles": [
+   "craft.js"
+  ],
+  "pages": [
+   "craft.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/daily-quests",
+  "jsFiles": [
+   "daily-quests-page.js"
+  ],
+  "pages": [
+   "daily-quests.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/dragon-dungeon",
+  "jsFiles": [
+   "dragon-dungeon.js"
+  ],
+  "pages": [
+   "dragon-dungeon.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/dragon-dungeon/{+}",
+  "jsFiles": [
+   "dragon-dungeon.js"
+  ],
+  "pages": [
+   "dragon-dungeon.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/drops-shop",
+  "jsFiles": [
+   "gm-shop.js"
+  ],
+  "pages": [
+   "gm-shop.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/drops-shop/buy",
+  "jsFiles": [
+   "gm-shop.js"
+  ],
+  "pages": [
+   "gm-shop.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/dungeon/enter",
+  "jsFiles": [
+   "dungeon.js"
+  ],
+  "pages": [
+   "dungeon.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/dungeon/view?dungeonId={+}",
+  "jsFiles": [
+   "dungeon.js"
+  ],
+  "pages": [
+   "dungeon.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/epic-boss/teleport",
+  "jsFiles": [
+   "epic-bosses.js"
+  ],
+  "pages": [
+   "epic-bosses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/epic-bosses",
+  "jsFiles": [
+   "epic-bosses.js"
+  ],
+  "pages": [
+   "epic-bosses.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/farm-guide",
+  "jsFiles": [
+   "forum-farm-resources.js"
+  ],
+  "pages": [
+   "forum-farm-resources.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/farm-guide/resource-teleport",
+  "jsFiles": [
+   "forum-farm-resources.js"
+  ],
+  "pages": [
+   "forum-farm-resources.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/action",
+  "jsFiles": [
+   "fishing-page-api.js",
+   "fishing-page.js"
+  ],
+  "pages": [
+   "fishing.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/buy-gear",
+  "jsFiles": [
+   "fishing-shop-page.js"
+  ],
+  "pages": [
+   "fishing-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/buy-special",
+  "jsFiles": [
+   "fishing-shop-page.js"
+  ],
+  "pages": [
+   "fishing-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/buy-starter",
+  "jsFiles": [
+   "fishing-page-api.js"
+  ],
+  "pages": [
+   "fishing.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/cut",
+  "jsFiles": [
+   "char-fishing-cut.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/enchant-rod",
+  "jsFiles": [
+   "char-fishing-rod-enchant.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/exchange-material",
+  "jsFiles": [
+   "fishing-shop-page.js"
+  ],
+  "pages": [
+   "fishing-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/learn-skill",
+  "jsFiles": [
+   "fishing-page-api.js"
+  ],
+  "pages": [
+   "fishing.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/fishing/open-old-box",
+  "jsFiles": [
+   "char-fishing-old-box-open.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/fishing/state",
+  "jsFiles": [
+   "fishing-page.js",
+   "fishing-shop-page.js"
+  ],
+  "pages": [
+   "fishing-shop.html",
+   "fishing.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/forum/news",
+  "jsFiles": [
+   "forum-news.js",
+   "forum.js"
+  ],
+  "pages": [
+   "forum-news-post.html",
+   "forum-news.html",
+   "forum.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "DELETE/POST",
+  "path": "/game/forum/news/{+}",
+  "jsFiles": [
+   "forum-news.js"
+  ],
+  "pages": [
+   "forum-news-post.html",
+   "forum-news.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/forum/world/weekly-contests",
+  "jsFiles": [
+   "forum-news.js",
+   "forum-weekly-contests.js",
+   "forum.js",
+   "playerContestHonors.js"
+  ],
+  "pages": [
+   "forum-news-post.html",
+   "forum-news.html",
+   "forum-weekly-contests.html",
+   "forum.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/forum/world/weekly-contests/{+}",
+  "jsFiles": [
+   "forum-weekly-contests.js",
+   "playerContestHonors.js"
+  ],
+  "pages": [
+   "forum-weekly-contests.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/gm-premium-shop",
+  "jsFiles": [
+   "gm-premium-shop.js"
+  ],
+  "pages": [
+   "gm-premium-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/gm-premium-shop/buy",
+  "jsFiles": [
+   "gm-premium-shop.js"
+  ],
+  "pages": [
+   "gm-premium-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/hunt",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/inventory/enchant",
+  "jsFiles": [
+   "enchant.js"
+  ],
+  "pages": [
+   "enchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/inventory/expand",
+  "jsFiles": [
+   "char-inventory-capacity.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/item-icon",
+  "jsFiles": [
+   "char.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/item-icon/",
+  "jsFiles": [
+   "char.js",
+   "l2-catalog-cache.js",
+   "l2-item-runtime.js"
+  ],
+  "pages": [
+   "about.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html",
+   "brave-hunter.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/item-icon/{+}",
+  "jsFiles": [
+   "battle-hotbar.js",
+   "battle-log-reward-renderer.js",
+   "captain-andrei.js",
+   "char-crystallize-modal.js",
+   "char-fishing-cut.js",
+   "char-fishing-reward-result.js",
+   "char.js",
+   "item-stats-modal.js",
+   "l2-item-presentation.js",
+   "l2-item-runtime.js",
+   "mail-admin-grant.js",
+   "market-buy-item.js",
+   "market.js",
+   "warehouse.js"
+  ],
+  "pages": [
+   "about.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html",
+   "brave-hunter.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/item-transfer/candidates?category={+}",
+  "jsFiles": [
+   "item-transfer-cache.js",
+   "item-transfer.js"
+  ],
+  "pages": [
+   "char.html",
+   "item-transfer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/item-transfer/claim",
+  "jsFiles": [
+   "mail-item-render.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/item-transfer/received?page={+}",
+  "jsFiles": [
+   "mail-item-attachments.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/item-transfer/send",
+  "jsFiles": [
+   "item-transfer.js"
+  ],
+  "pages": [
+   "item-transfer.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/latest-news-notice",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/mail/delete",
+  "jsFiles": [
+   "mail.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/mail/read",
+  "jsFiles": [
+   "mail.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/mail/send",
+  "jsFiles": [
+   "mail-compose.js",
+   "mail-thread.js"
+  ],
+  "pages": [
+   "mail-compose.html",
+   "mail-thread.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mail/sent?page={+}",
+  "jsFiles": [
+   "mail-sent-render.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mail/thread?with={+}",
+  "jsFiles": [
+   "mail-thread.js"
+  ],
+  "pages": [
+   "mail-thread.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mail/unread-count",
+  "jsFiles": [
+   "l2-mail-unread-notify.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mail?page={+}",
+  "jsFiles": [
+   "mail.js"
+  ],
+  "pages": [
+   "mail.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mammon/blacksmith",
+  "jsFiles": [
+   "mammon-blacksmith.js"
+  ],
+  "pages": [
+   "mammon-blacksmith.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/mammon/blacksmith/upgrade",
+  "jsFiles": [
+   "mammon-blacksmith.js"
+  ],
+  "pages": [
+   "mammon-blacksmith.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mammon/blacksmith/upgrades",
+  "jsFiles": [
+   "mammon-blacksmith.js"
+  ],
+  "pages": [
+   "mammon-blacksmith.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mammon/merchant",
+  "jsFiles": [
+   "mammon-merchant.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html",
+   "mammon-merchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/mammon/merchant/buy",
+  "jsFiles": [
+   "mammon-merchant.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html",
+   "mammon-merchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mammon/merchant/request",
+  "jsFiles": [
+   "mammon-location-common.js",
+   "mammon-merchant.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html",
+   "mammon-merchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/mammon/merchant/request/claim",
+  "jsFiles": [
+   "mammon-merchant.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html",
+   "mammon-merchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/mammon/merchant/shop",
+  "jsFiles": [
+   "mammon-merchant.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html",
+   "mammon-merchant.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/mammon/teleport",
+  "jsFiles": [
+   "mammon-location-common.js"
+  ],
+  "pages": [
+   "mammon-merchant-loc.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/map/around",
+  "jsFiles": [
+   "map.js"
+  ],
+  "pages": [
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/map/spawns",
+  "jsFiles": [
+   "map-local-spawn-priority.js"
+  ],
+  "pages": [
+   "map.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/map/sync{+}",
+  "jsFiles": [
+   "map.js"
+  ],
+  "pages": [
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/market/coin-of-luck/buy-orders",
+  "jsFiles": [
+   "market-coin-buy-orders.js"
+  ],
+  "pages": [
+   "market-coin-buy-orders.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/market/coin-of-luck/listings",
+  "jsFiles": [
+   "market-buy-item.js",
+   "market-coin-of-luck.js"
+  ],
+  "pages": [
+   "market-buy-item.html",
+   "market-coin-of-luck.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/market/listings",
+  "jsFiles": [
+   "market-buy-item.js",
+   "market.js"
+  ],
+  "pages": [
+   "market-buy-item.html",
+   "market.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/move",
+  "jsFiles": [
+   "map.js"
+  ],
+  "pages": [
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/news/{+}",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/olympiad",
+  "jsFiles": [
+   "olympiad-page.js"
+  ],
+  "pages": [
+   "olympiad.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/olympiad/buy-coupon",
+  "jsFiles": [
+   "olympiad-page.js"
+  ],
+  "pages": [
+   "olympiad.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/olympiad/crystal-shop",
+  "jsFiles": [
+   "crystal-shop-page.js"
+  ],
+  "pages": [
+   "crystal-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/olympiad/crystal-shop/exchange",
+  "jsFiles": [
+   "crystal-shop-page.js"
+  ],
+  "pages": [
+   "crystal-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/online",
+  "jsFiles": [
+   "l2-online-foot.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/online?sort={+}",
+  "jsFiles": [
+   "online.js"
+  ],
+  "pages": [
+   "online.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party",
+  "jsFiles": [
+   "party.js",
+   "player.js"
+  ],
+  "pages": [
+   "party.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/chat",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party/chat?page={+}",
+  "jsFiles": [
+   "chat.js"
+  ],
+  "pages": [
+   "chat.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party/disband",
+  "jsFiles": [
+   "party.js"
+  ],
+  "pages": [
+   "party.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party/hud",
+  "jsFiles": [
+   "l2-party-hud.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/invite-player",
+  "jsFiles": [
+   "player.js"
+  ],
+  "pages": [
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/invite/accept",
+  "jsFiles": [
+   "l2-party-hud.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/invite/decline",
+  "jsFiles": [
+   "l2-party-hud.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party/kick",
+  "jsFiles": [
+   "party.js"
+  ],
+  "pages": [
+   "party.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/party/leave",
+  "jsFiles": [
+   "party.js"
+  ],
+  "pages": [
+   "party.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/reward-notice/ack",
+  "jsFiles": [
+   "l2-party-hud.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/party/support/{+}",
+  "jsFiles": [
+   "player-buffs.js"
+  ],
+  "pages": [
+   "player-buffs.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/player-login-claim",
+  "jsFiles": [
+   "common.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/player/by-name/{+}",
+  "jsFiles": [
+   "mail-compose.js",
+   "player.js"
+  ],
+  "pages": [
+   "mail-compose.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/player/{+}",
+  "jsFiles": [
+   "mail-compose.js",
+   "player-buffs.js",
+   "player.js"
+  ],
+  "pages": [
+   "mail-compose.html",
+   "player-buffs.html",
+   "player.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/premium",
+  "jsFiles": [
+   "premium.js"
+  ],
+  "pages": [
+   "premium.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/public-stats",
+  "jsFiles": [
+   "main.js"
+  ],
+  "pages": [
+   "index.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/quiz/answer",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [
+   "quiz.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/quiz/current{+}",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [
+   "quiz.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/quiz/leaderboard",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [
+   "quiz.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/quiz/log{+}",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [
+   "quiz.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/raid-boss/teleport",
+  "jsFiles": [
+   "rb-bosses.js",
+   "world-boss-list-page.js"
+  ],
+  "pages": [
+   "epic-bosses.html",
+   "rb-bosses.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/raid-bosses",
+  "jsFiles": [
+   "rb-bosses.js",
+   "world-boss-list-page.js"
+  ],
+  "pages": [
+   "epic-bosses.html",
+   "rb-bosses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/ratings?type={+}",
+  "jsFiles": [
+   "ratings-page.js"
+  ],
+  "pages": [
+   "ratings.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/recipes/learn",
+  "jsFiles": [
+   "char.js"
+  ],
+  "pages": [
+   "char.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/recipes/sources?grade={+}",
+  "jsFiles": [
+   "forum-recipe-hunt.js"
+  ],
+  "pages": [
+   "forum-recipe-hunt.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/recommend-nick/color",
+  "jsFiles": [
+   "recommend-nick.js"
+  ],
+  "pages": [
+   "recommend-nick.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/recommend-nick/recommend/{+}",
+  "jsFiles": [
+   "recommend-nick.js"
+  ],
+  "pages": [
+   "recommend-nick.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/recommend-nick/state",
+  "jsFiles": [
+   "recommend-nick.js"
+  ],
+  "pages": [
+   "recommend-nick.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/server-news/mark-read",
+  "jsFiles": [
+   "l2-server-news-unread-notify.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/server-news/unread",
+  "jsFiles": [
+   "l2-server-news-unread-notify.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/server-news?page={+}",
+  "jsFiles": [
+   "news.js"
+  ],
+  "pages": [
+   "news.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/seven-seals",
+  "jsFiles": [
+   "seven-seals-page.js"
+  ],
+  "pages": [
+   "seven-seals.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/siege/schedule",
+  "jsFiles": [
+   "forum-city-sieges.js"
+  ],
+  "pages": [
+   "forum-city-sieges.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/siege/{+}",
+  "jsFiles": [
+   "city.js",
+   "common.js",
+   "siege.js"
+  ],
+  "pages": [
+   "about.html",
+   "achievements.html",
+   "admin.html",
+   "ancient-trader.html",
+   "arena-rating.html",
+   "arena.html",
+   "battle.html",
+   "bonuses.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/spawn/{+}",
+  "jsFiles": [
+   "dungeon.js",
+   "map.js",
+   "world-boss-list-page.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "epic-bosses.html",
+   "map.html",
+   "rb-bosses.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/dion-campaign",
+  "jsFiles": [
+   "city.js",
+   "dion-campaign.js",
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "city.html",
+   "dion-campaign.html",
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/giran-campaign",
+  "jsFiles": [
+   "city.js",
+   "giran-campaign.js",
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "city.html",
+   "dungeon.html",
+   "giran-campaign.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/goddard-ocean-flame",
+  "jsFiles": [
+   "captain-andrei.js",
+   "map-profession-quest-markers.js"
+  ],
+  "pages": [
+   "captain-andrei.html",
+   "dungeon.html",
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/starter-saga",
+  "jsFiles": [
+   "city.js",
+   "map-profession-quest-markers.js",
+   "starter-story-quest.js"
+  ],
+  "pages": [
+   "city.html",
+   "dungeon.html",
+   "map.html",
+   "starter-story-quest.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/support/staff",
+  "jsFiles": [
+   "support-center.js"
+  ],
+  "pages": [
+   "support-new.html",
+   "support-thread.html",
+   "support-tickets.html",
+   "support.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/support/tickets",
+  "jsFiles": [
+   "support-center.js"
+  ],
+  "pages": [
+   "support-new.html",
+   "support-thread.html",
+   "support-tickets.html",
+   "support.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/support/tickets/{+}",
+  "jsFiles": [
+   "support-center.js"
+  ],
+  "pages": [
+   "support-new.html",
+   "support-thread.html",
+   "support-tickets.html",
+   "support.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/support/tickets?page={+}",
+  "jsFiles": [
+   "support-center.js"
+  ],
+  "pages": [
+   "support-new.html",
+   "support-thread.html",
+   "support-tickets.html",
+   "support.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tattoos",
+  "jsFiles": [
+   "tattooist-page.js"
+  ],
+  "pages": [
+   "tattooist.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/tattoos/engrave",
+  "jsFiles": [
+   "tattooist-page.js"
+  ],
+  "pages": [
+   "tattooist.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/tattoos/remove",
+  "jsFiles": [
+   "tattooist-page.js"
+  ],
+  "pages": [
+   "tattooist.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/teleport",
+  "jsFiles": [
+   "l2-game-helper.js",
+   "magister-profession-common.js"
+  ],
+  "pages": [
+   "magister-profession.html",
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/teleport/locations",
+  "jsFiles": [
+   "l2-game-helper.js",
+   "magister-profession-common.js"
+  ],
+  "pages": [
+   "magister-profession.html",
+   "magister.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/time",
+  "jsFiles": [
+   "l2-game-time.js"
+  ],
+  "pages": [],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET",
+  "path": "/game/tvt",
+  "jsFiles": [
+   "l2-tvt-registration-prompt.js",
+   "tvt-arena-lifecycle.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/action",
+  "jsFiles": [
+   "tvt-arena-combat.js",
+   "tvt-arena-hotbar.js",
+   "tvt-arena-skills.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/ally-target",
+  "jsFiles": [
+   "tvt-arena-combat.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/tvt/combat/sync{+}",
+  "jsFiles": [
+   "tvt-arena-combat.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": true,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/presence",
+  "jsFiles": [
+   "tvt-arena-presence.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/tvt/register",
+  "jsFiles": [
+   "l2-tvt-registration-prompt.js",
+   "tvt-arena-lifecycle.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/tvt/result/latest",
+  "jsFiles": [
+   "tvt-arena-result.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/shop/catalog",
+  "jsFiles": [
+   "tvt-shop.js"
+  ],
+  "pages": [
+   "tvt-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/tvt/shop/purchase",
+  "jsFiles": [
+   "tvt-shop.js"
+  ],
+  "pages": [
+   "tvt-shop.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/tvt/skills",
+  "jsFiles": [
+   "tvt-arena-skills.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/summon/action",
+  "jsFiles": [
+   "tvt-arena-summon.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/target",
+  "jsFiles": [
+   "tvt-arena-combat.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/tvt/target/clear",
+  "jsFiles": [
+   "tvt-arena-combat.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/tvt/unregister",
+  "jsFiles": [
+   "l2-tvt-registration-prompt.js",
+   "tvt-arena-lifecycle.js"
+  ],
+  "pages": [
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/vip",
+  "jsFiles": [
+   "vip.js"
+  ],
+  "pages": [
+   "vip.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/vip/purchase",
+  "jsFiles": [
+   "vip.js"
+  ],
+  "pages": [
+   "vip.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/world/enter-city",
+  "jsFiles": [
+   "city.js"
+  ],
+  "pages": [
+   "city.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/world/enter-map",
+  "jsFiles": [
+   "map.js"
+  ],
+  "pages": [
+   "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/moderation",
+  "jsFiles": [
+   "admin-moderation-overview.js"
+  ],
+  "pages": [
+   "admin.html",
+   "mod.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/moderators",
+  "jsFiles": [
+   "admin-moderators.js"
+  ],
+  "pages": [
+   "admin.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/moderators/assign",
+  "jsFiles": [
+   "admin-moderators.js"
+  ],
+  "pages": [
+   "admin.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/moderators/revoke",
+  "jsFiles": [
+   "admin-moderators.js"
+  ],
+  "pages": [
+   "admin.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ }
+]

@@ -1,0 +1,3116 @@
+{
+ "tvtShop": {
+  "categories": [
+   {
+    "key": "weapon",
+    "labelUk": "Зброя",
+    "labelRu": "Оружие",
+    "items": [
+     {
+      "itemId": 920035,
+      "nameUk": "Bauen Blade",
+      "nameRu": "Bauen Blade",
+      "nameEn": "Bauen Blade",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_bauen_2.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "bigsword",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Дворучний меч",
+      "weaponTypeLabelRu": "Двуручный меч",
+      "pAtk": 445,
+      "mAtk": 165,
+      "atkSpd": 325,
+      "wpnCrit": 80
+     },
+     {
+      "itemId": 920036,
+      "nameUk": "Icarus Fists",
+      "nameRu": "Icarus Fists",
+      "nameEn": "Icarus Fists",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_icarus_knuckle.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "fist",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Кастети",
+      "weaponTypeLabelRu": "Кастеты",
+      "pAtk": 420,
+      "mAtk": 155,
+      "atkSpd": 325,
+      "wpnCrit": 40
+     },
+     {
+      "itemId": 920037,
+      "nameUk": "Icarus Spitter",
+      "nameRu": "Icarus Spitter",
+      "nameEn": "Icarus Spitter",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_icarus_spiter.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "bow",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Лук",
+      "weaponTypeLabelRu": "Лук",
+      "pAtk": 660,
+      "mAtk": 155,
+      "atkSpd": 293,
+      "wpnCrit": 120
+     },
+     {
+      "itemId": 920038,
+      "nameUk": "Icarus Trident",
+      "nameRu": "Icarus Trident",
+      "nameEn": "Icarus Trident",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_icarus_trident.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "pole",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Спис",
+      "weaponTypeLabelRu": "Копьё",
+      "pAtk": 345,
+      "mAtk": 155,
+      "atkSpd": 325,
+      "wpnCrit": 80
+     },
+     {
+      "itemId": 920039,
+      "nameUk": "Plenitas",
+      "nameRu": "Plenitas",
+      "nameEn": "Plenitas",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_plenitas_1.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "sword",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Одноручний меч",
+      "weaponTypeLabelRu": "Одноручный меч",
+      "pAtk": 335,
+      "mAtk": 150,
+      "atkSpd": 379,
+      "wpnCrit": 80
+     },
+     {
+      "itemId": 920040,
+      "nameUk": "Dual Blades of Glory",
+      "nameRu": "Dual Blades of Glory",
+      "nameEn": "Dual Blades of Glory",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_r_dualsword.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "dual",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Дуали",
+      "weaponTypeLabelRu": "Дуалы",
+      "pAtk": 450,
+      "mAtk": 155,
+      "atkSpd": 325,
+      "wpnCrit": 80
+     },
+     {
+      "itemId": 920041,
+      "nameUk": "Stampede",
+      "nameRu": "Stampede",
+      "nameEn": "Stampede",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_stanpid.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "dagger",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Кинджал",
+      "weaponTypeLabelRu": "Кинжал",
+      "pAtk": 320,
+      "mAtk": 160,
+      "atkSpd": 433,
+      "wpnCrit": 120
+     },
+     {
+      "itemId": 920042,
+      "nameUk": "Vesper Retributer",
+      "nameRu": "Vesper Retributer",
+      "nameEn": "Vesper Retributer",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_vesper_retributer.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "bigblunt",
+      "weaponMode": "phys",
+      "weaponTypeLabelUk": "Дворучний молот",
+      "weaponTypeLabelRu": "Двуручный молот",
+      "pAtk": 445,
+      "mAtk": 165,
+      "atkSpd": 325,
+      "wpnCrit": 40
+     },
+     {
+      "itemId": 920043,
+      "nameUk": "Vesper Singer",
+      "nameRu": "Vesper Singer",
+      "nameEn": "Vesper Singer",
+      "iconUrl": "/icons/drops/resours/tvt-shop/weapon_vesper_singer.jpg",
+      "slot": "rhand",
+      "shopCategory": "weapon",
+      "priceShil": 200,
+      "purchaseQty": 1,
+      "kindUk": "Зброя",
+      "grade": "S",
+      "requiredLevel": 70,
+      "weaponType": "bigblunt",
+      "weaponMode": "magic",
+      "weaponTypeLabelUk": "Магічний посох",
+      "weaponTypeLabelRu": "Магический посох",
+      "pAtk": 300,
+      "mAtk": 255,
+      "atkSpd": 325,
+      "wpnCrit": 40
+     }
+    ]
+   },
+   {
+    "key": "accessory",
+    "labelUk": "Прикраси",
+    "labelRu": "Украшения",
+    "items": [
+     {
+      "itemId": 920031,
+      "nameUk": "Емблема Величі",
+      "nameRu": "Эмблема Величия",
+      "nameEn": "Emblem of Majesty",
+      "iconUrl": "/icons/drops/resours/tvt-shop/accessory_pledge_.jpg",
+      "slot": "wings",
+      "shopCategory": "accessory",
+      "priceShil": 240,
+      "purchaseQty": 1,
+      "kindUk": "Крила",
+      "grade": "S",
+      "requiredLevel": 70,
+      "equipStats": {
+       "equipFlatMaxCp": 400,
+       "equipFlatPDef": 180,
+       "equipFlatMDef": 180,
+       "equipOutgoingPhysicalSkillDamagePct": 1,
+       "equipOutgoingMagicalSkillDamagePct": 1
+      }
+     }
+    ]
+   },
+   {
+    "key": "belt",
+    "labelUk": "Пояс",
+    "labelRu": "Пояс",
+    "items": [
+     {
+      "itemId": 920032,
+      "nameUk": "Пояс Долі",
+      "nameRu": "Пояс Судьбы",
+      "nameEn": "Belt of Destiny",
+      "iconUrl": "/icons/drops/resours/tvt-shop/Belt_of_destination.jpg",
+      "slot": "belt",
+      "shopCategory": "belt",
+      "priceShil": 180,
+      "purchaseQty": 1,
+      "kindUk": "Пояс",
+      "grade": "S",
+      "requiredLevel": 70,
+      "equipStats": {
+       "equipFlatMaxHp": 700,
+       "equipFinalRunSpeedFlat": 6,
+       "equipPhysicalCritDamagePct": 10,
+       "equipMagicCritDamagePct": 10
+      }
+     }
+    ]
+   },
+   {
+    "key": "tattoo",
+    "labelUk": "Тату",
+    "labelRu": "Тату",
+    "items": [
+     {
+      "itemId": 920033,
+      "nameUk": "Тату Душі",
+      "nameRu": "Тату Души",
+      "nameEn": "Tattoo of Souls",
+      "iconUrl": "/icons/drops/resours/tvt-shop/skeleton_cap.jpg",
+      "slot": "tattoo",
+      "shopCategory": "tattoo",
+      "priceShil": 260,
+      "purchaseQty": 1,
+      "kindUk": "Тату",
+      "grade": "S",
+      "requiredLevel": 70,
+      "equipStats": {
+       "equipFlatPAtk": 850,
+       "equipFlatMAtk": 978,
+       "equipAttackSpeedPct": 2,
+       "equipCastSpeedPct": 2
+      }
+     }
+    ]
+   },
+   {
+    "key": "cloak",
+    "labelUk": "Плащ",
+    "labelRu": "Плащ",
+    "items": [
+     {
+      "itemId": 920034,
+      "nameUk": "Плащ Героя",
+      "nameRu": "Плащ Героя",
+      "nameEn": "Hero's Cloak",
+      "iconUrl": "/icons/drops/resours/tvt-shop/cape.jpg",
+      "slot": "cloak",
+      "shopCategory": "cloak",
+      "priceShil": 230,
+      "purchaseQty": 1,
+      "kindUk": "Плащ",
+      "grade": "S",
+      "requiredLevel": 70,
+      "equipStats": {
+       "cloakMaxHp": 700,
+       "cloakPDefFlat": 180,
+       "cloakMDefFlat": 180,
+       "equipEvasionFlat": 1
+      }
+     }
+    ]
+   },
+   {
+    "key": "consumable",
+    "labelUk": "Розхідники",
+    "labelRu": "Расходники",
+    "items": [
+     {
+      "itemId": 920044,
+      "nameUk": "Велике зілля HP",
+      "nameRu": "Большое зелье HP",
+      "nameEn": "Large HP Potion",
+      "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_.jpg",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 2,
+      "purchaseQty": 10,
+      "kindUk": "Расходник",
+      "consumableGroup": "potion",
+      "restoreChannel": "hp",
+      "restoreAmount": 2500
+     },
+     {
+      "itemId": 920045,
+      "nameUk": "Велике зілля MP",
+      "nameRu": "Большое зелье MP",
+      "nameEn": "Large MP Potion",
+      "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_juice.jpg",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 2,
+      "purchaseQty": 10,
+      "kindUk": "Расходник",
+      "consumableGroup": "potion",
+      "restoreChannel": "mp",
+      "restoreAmount": 2500
+     },
+     {
+      "itemId": 920046,
+      "nameUk": "Велике зілля CP",
+      "nameRu": "Большое зелье CP",
+      "nameEn": "Large CP Potion",
+      "iconUrl": "/icons/drops/resours/tvt-shop/etc_fruit_juice_glass_.jpg",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 2,
+      "purchaseQty": 10,
+      "kindUk": "Расходник",
+      "consumableGroup": "potion",
+      "restoreChannel": "cp",
+      "restoreAmount": 2500
+     },
+     {
+      "itemId": 910520,
+      "nameUk": "Благословенний сувій заточення броні D-grade",
+      "nameRu": "Благословенный свиток заточки брони D-grade",
+      "nameEn": "Blessed Scroll: Enchant Armor D-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_d.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 34,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "D",
+      "enchantTarget": "armor",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910521,
+      "nameUk": "Благословенний сувій заточення зброї D-grade",
+      "nameRu": "Благословенный свиток заточки оружия D-grade",
+      "nameEn": "Blessed Scroll: Enchant Weapon D-grade",
+      "iconUrl": "/icons/drops/resours/bless_weapon_d.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 34,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "D",
+      "enchantTarget": "weapon",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910522,
+      "nameUk": "Благословенний сувій заточення броні C-grade",
+      "nameRu": "Благословенный свиток заточки брони C-grade",
+      "nameEn": "Blessed Scroll: Enchant Armor C-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_c.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 51,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "C",
+      "enchantTarget": "armor",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910523,
+      "nameUk": "Благословенний сувій заточення зброї C-grade",
+      "nameRu": "Благословенный свиток заточки оружия C-grade",
+      "nameEn": "Blessed Scroll: Enchant Weapon C-grade",
+      "iconUrl": "/icons/drops/resours/bless_weapon_c.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 51,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "C",
+      "enchantTarget": "weapon",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910524,
+      "nameUk": "Благословенний сувій заточення броні B-grade",
+      "nameRu": "Благословенный свиток заточки брони B-grade",
+      "nameEn": "Blessed Scroll: Enchant Armor B-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_b.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 68,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "B",
+      "enchantTarget": "armor",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910525,
+      "nameUk": "Благословенний сувій заточення зброї B-grade",
+      "nameRu": "Благословенный свиток заточки оружия B-grade",
+      "nameEn": "Blessed Scroll: Enchant Weapon B-grade",
+      "iconUrl": "/icons/drops/resours/bless_weapon_b.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 68,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "B",
+      "enchantTarget": "weapon",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910526,
+      "nameUk": "Благословенний сувій заточення броні A-grade",
+      "nameRu": "Благословенный свиток заточки брони A-grade",
+      "nameEn": "Blessed Scroll: Enchant Armor A-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_a.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 85,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "A",
+      "enchantTarget": "armor",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910527,
+      "nameUk": "Благословенний сувій заточення зброї A-grade",
+      "nameRu": "Благословенный свиток заточки оружия A-grade",
+      "nameEn": "Blessed Scroll: Enchant Weapon A-grade",
+      "iconUrl": "/icons/drops/resours/bless_weapon_a.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 85,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "A",
+      "enchantTarget": "weapon",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910528,
+      "nameUk": "Благословенний сувій заточення броні S-grade",
+      "nameRu": "Благословенный свиток заточки брони S-grade",
+      "nameEn": "Blessed Scroll: Enchant Armor S-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_s.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 102,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "S",
+      "enchantTarget": "armor",
+      "successChancePercent": 100
+     },
+     {
+      "itemId": 910529,
+      "nameUk": "Благословенний сувій заточення зброї S-grade",
+      "nameRu": "Благословенный свиток заточки оружия S-grade",
+      "nameEn": "Blessed Scroll: Enchant Weapon S-grade",
+      "iconUrl": "/icons/drops/resours/bless_weapon_s.png",
+      "slot": "consumable",
+      "shopCategory": "consumable",
+      "priceShil": 102,
+      "purchaseQty": 1,
+      "kindUk": "Расходник",
+      "consumableGroup": "blessed_enchant",
+      "enchantGrade": "S",
+      "enchantTarget": "weapon",
+      "successChancePercent": 100
+     }
+    ]
+   }
+  ]
+ },
+ "olympiadCrystalShop": {
+  "myCrystals": 0,
+  "crystalCost": 7000,
+  "categoryTitleUk": "Заточки",
+  "grades": [
+   {
+    "grade": "D",
+    "gradeLabelUk": "D-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_d",
+      "itemId": 910510,
+      "nameUk": "Сувій заточення броні D-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_d.png",
+      "grade": "D",
+      "target": "armor",
+      "crystalCost": 3000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_d",
+      "itemId": 910511,
+      "nameUk": "Сувій заточення зброї D-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_d.png",
+      "grade": "D",
+      "target": "weapon",
+      "crystalCost": 3000
+     }
+    ]
+   },
+   {
+    "grade": "C",
+    "gradeLabelUk": "C-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_c",
+      "itemId": 910512,
+      "nameUk": "Сувій заточення броні C-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_c.png",
+      "grade": "C",
+      "target": "armor",
+      "crystalCost": 4000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_c",
+      "itemId": 910513,
+      "nameUk": "Сувій заточення зброї C-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_c.png",
+      "grade": "C",
+      "target": "weapon",
+      "crystalCost": 4000
+     }
+    ]
+   },
+   {
+    "grade": "B",
+    "gradeLabelUk": "B-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_b",
+      "itemId": 910514,
+      "nameUk": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png",
+      "grade": "B",
+      "target": "armor",
+      "crystalCost": 5000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_b",
+      "itemId": 910515,
+      "nameUk": "Сувій заточення зброї B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_b.png",
+      "grade": "B",
+      "target": "weapon",
+      "crystalCost": 5000
+     }
+    ]
+   },
+   {
+    "grade": "A",
+    "gradeLabelUk": "A-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_a",
+      "itemId": 910516,
+      "nameUk": "Сувій заточення броні A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png",
+      "grade": "A",
+      "target": "armor",
+      "crystalCost": 6000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_a",
+      "itemId": 910517,
+      "nameUk": "Сувій заточення зброї A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_a.png",
+      "grade": "A",
+      "target": "weapon",
+      "crystalCost": 6000
+     }
+    ]
+   },
+   {
+    "grade": "S",
+    "gradeLabelUk": "S-grade",
+    "items": [
+     {
+      "shopKey": "consumable/enchant_scroll_armor_s",
+      "itemId": 910518,
+      "nameUk": "Сувій заточення броні S-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png",
+      "grade": "S",
+      "target": "armor",
+      "crystalCost": 7000
+     },
+     {
+      "shopKey": "consumable/enchant_scroll_weapon_s",
+      "itemId": 910519,
+      "nameUk": "Сувій заточення зброї S-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png",
+      "grade": "S",
+      "target": "weapon",
+      "crystalCost": 7000
+     }
+    ]
+   }
+  ],
+  "exchangerCategoryTitleUk": "Обмінник",
+  "exchangerItems": [
+   {
+    "shopKey": "exchanger/adena_2m",
+    "itemId": 0,
+    "nameUk": "2 000 000 аден",
+    "iconUrl": "/assets/l2dop/etc_adena_i00.png",
+    "crystalCost": 3000,
+    "rewardLabelUk": "2 000 000 аден"
+   }
+  ]
+ },
+ "gmPremiumShop": {
+  "categories": [
+   {
+    "key": "enchant",
+    "label": "Заточки",
+    "subcategories": [
+     {
+      "key": "ordinary",
+      "label": "Звичайні",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "enchant/ordinary/armor_d",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910510,
+        "name": "Сувій заточення броні D-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 3,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_d",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910511,
+        "name": "Сувій заточення зброї D-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 3,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_c",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910512,
+        "name": "Сувій заточення броні C-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_c",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910513,
+        "name": "Сувій заточення зброї C-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_b",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910514,
+        "name": "Сувій заточення броні B-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 9,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_b",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910515,
+        "name": "Сувій заточення зброї B-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 9,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_a",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910516,
+        "name": "Сувій заточення броні A-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 12,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_a",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910517,
+        "name": "Сувій заточення зброї A-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 12,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/armor_s",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910518,
+        "name": "Сувій заточення броні S-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_armor_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 15,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/ordinary/weapon_s",
+        "category": "enchant",
+        "subcategory": "ordinary",
+        "itemId": 910519,
+        "name": "Сувій заточення зброї S-grade",
+        "icon": "/icons/drops/resours/scroll_enchant_weapon_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 15,
+        "maxQtyPerPurchase": 9999
+       }
+      ]
+     },
+     {
+      "key": "blessed",
+      "label": "Blessed",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "enchant/blessed/armor_d",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910520,
+        "name": "Благословенний сувій заточення броні D-grade",
+        "icon": "/icons/drops/resours/bless_armor_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_d",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910521,
+        "name": "Благословенний сувій заточення зброї D-grade",
+        "icon": "/icons/drops/resours/bless_weapon_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_c",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910522,
+        "name": "Благословенний сувій заточення броні C-grade",
+        "icon": "/icons/drops/resours/bless_armor_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_c",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910523,
+        "name": "Благословенний сувій заточення зброї C-grade",
+        "icon": "/icons/drops/resours/bless_weapon_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_b",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910524,
+        "name": "Благословенний сувій заточення броні B-grade",
+        "icon": "/icons/drops/resours/bless_armor_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 30,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_b",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910525,
+        "name": "Благословенний сувій заточення зброї B-grade",
+        "icon": "/icons/drops/resours/bless_weapon_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 30,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_a",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910526,
+        "name": "Благословенний сувій заточення броні A-grade",
+        "icon": "/icons/drops/resours/bless_armor_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 40,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_a",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910527,
+        "name": "Благословенний сувій заточення зброї A-grade",
+        "icon": "/icons/drops/resours/bless_weapon_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 40,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/armor_s",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910528,
+        "name": "Благословенний сувій заточення броні S-grade",
+        "icon": "/icons/drops/resours/bless_armor_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 9999
+       },
+       {
+        "key": "enchant/blessed/weapon_s",
+        "category": "enchant",
+        "subcategory": "blessed",
+        "itemId": 910529,
+        "name": "Благословенний сувій заточення зброї S-grade",
+        "icon": "/icons/drops/resours/bless_weapon_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 9999
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "consumable",
+    "label": "Розхідники",
+    "subcategories": [
+     {
+      "key": "crystals",
+      "label": "Кристали",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "consumable/crystals/d",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1458,
+        "name": "Crystal D",
+        "icon": "/icons/resources/crystals/crystal_d_grade.jpg",
+        "grade": "D",
+        "priceCoinOfLuck": 2,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/c",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1459,
+        "name": "Crystal C",
+        "icon": "/icons/resources/crystals/crystal_c_grade.png",
+        "grade": "C",
+        "priceCoinOfLuck": 4,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/b",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1460,
+        "name": "Crystal B",
+        "icon": "/icons/resources/crystals/crystal_b_grade.png",
+        "grade": "B",
+        "priceCoinOfLuck": 6,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/a",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1461,
+        "name": "Crystal A",
+        "icon": "/icons/resources/crystals/crystal_a_grade.png",
+        "grade": "A",
+        "priceCoinOfLuck": 8,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       },
+       {
+        "key": "consumable/crystals/s",
+        "category": "consumable",
+        "subcategory": "crystals",
+        "itemId": 1462,
+        "name": "Crystal S",
+        "icon": "/icons/resources/crystals/crystal_s_grade.png",
+        "grade": "S",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "itemQuantityPerPurchase": 200,
+        "descriptionUk": "Пакет: 200 шт."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "clan",
+    "label": "Клан",
+    "subcategories": [
+     {
+      "key": "reputation",
+      "label": "Репутація",
+      "grades": [],
+      "items": [
+       {
+        "key": "clan/reputation/500",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +500",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 500
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       },
+       {
+        "key": "clan/reputation/2500",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +2 500",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 45,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 2500
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       },
+       {
+        "key": "clan/reputation/5000",
+        "category": "clan",
+        "subcategory": "reputation",
+        "name": "Репутація клану +5 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 80,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "reputation",
+         "amount": 5000
+        },
+        "descriptionUk": "Додає репутацію до поточного балансу клану."
+       }
+      ]
+     },
+     {
+      "key": "clan_points",
+      "label": "Очки клану",
+      "grades": [],
+      "items": [
+       {
+        "key": "clan/clan_points/10000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +10 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 10,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 10000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       },
+       {
+        "key": "clan/clan_points/50000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +50 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 45,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 50000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       },
+       {
+        "key": "clan/clan_points/100000",
+        "category": "clan",
+        "subcategory": "clan_points",
+        "name": "Очки клану +100 000",
+        "icon": "/icons/drops/other.svg",
+        "priceCoinOfLuck": 80,
+        "maxQtyPerPurchase": 1,
+        "clanReward": {
+         "kind": "clan_points",
+         "amount": 100000
+        },
+        "descriptionUk": "Додає очки клану для підвищення рівня."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "key": "fishing",
+    "label": "Рибалка",
+    "subcategories": [
+     {
+      "key": "cloak",
+      "label": "Плащ",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/cloak/d",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910618,
+        "name": "Плащ рибалки",
+        "icon": "/icons/drops/item/fishing_cloak_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+70"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+70"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/c",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910619,
+        "name": "Плащ мисливця моря",
+        "icon": "/icons/drops/item/fishing_cloak_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+450"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+110"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+110"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/b",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910620,
+        "name": "Плащ глибокого моря",
+        "icon": "/icons/drops/item/fishing_cloak_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+170"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+170"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/a",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910621,
+        "name": "Плащ стража океану",
+        "icon": "/icons/drops/item/fishing_cloak_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+240"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+240"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/cloak/s",
+        "category": "fishing",
+        "subcategory": "cloak",
+        "itemId": 910622,
+        "name": "Плащ Левіафан",
+        "icon": "/icons/drops/item/fishing_cloak_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський плащ, що збільшує запас HP та фізичний і магічний захист.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1400"
+          },
+          {
+           "labelUk": "Фіз. захист",
+           "valueUk": "+320"
+          },
+          {
+           "labelUk": "Маг. захист",
+           "valueUk": "+320"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "key": "belt",
+      "label": "Пояс",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/belt/d",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910628,
+        "name": "Пояс рибалки",
+        "icon": "/icons/drops/item/fishing_belt_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+3"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+2%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+2%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/c",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910629,
+        "name": "Пояс досвідченого рибалки",
+        "icon": "/icons/drops/item/fishing_belt_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+450"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+5"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+3%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+3%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/b",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910630,
+        "name": "Пояс ветерана рибалки",
+        "icon": "/icons/drops/item/fishing_belt_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+7"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+5%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+5%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/a",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910631,
+        "name": "Пояс майстра рибалки",
+        "icon": "/icons/drops/item/fishing_belt_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+9"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+7%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+7%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/belt/s",
+        "category": "fishing",
+        "subcategory": "belt",
+        "itemId": 910632,
+        "name": "Пояс Левіафан",
+        "icon": "/icons/drops/item/fishing_belt_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальський пояс, що підсилює витривалість, швидкість і критичні атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "Макс. HP",
+           "valueUk": "+1400"
+          },
+          {
+           "labelUk": "Швидкість бігу",
+           "valueUk": "+12"
+          },
+          {
+           "labelUk": "Сила фіз. крит. атаки",
+           "valueUk": "+10%"
+          },
+          {
+           "labelUk": "Сила маг. крит. атаки",
+           "valueUk": "+10%"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "key": "tattoo",
+      "label": "Тату",
+      "grades": [
+       "D",
+       "C",
+       "B",
+       "A",
+       "S"
+      ],
+      "items": [
+       {
+        "key": "fishing/tattoo/d",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910623,
+        "name": "Татуювання річки",
+        "icon": "/icons/drops/item/fishing_tattoo_d.png",
+        "grade": "D",
+        "priceCoinOfLuck": 20,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+150"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+173"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+1%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+1%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/c",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910624,
+        "name": "Татуювання озера",
+        "icon": "/icons/drops/item/fishing_tattoo_c.png",
+        "grade": "C",
+        "priceCoinOfLuck": 50,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+250"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+288"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+2%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+2%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/b",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910625,
+        "name": "Татуювання моря",
+        "icon": "/icons/drops/item/fishing_tattoo_b.png",
+        "grade": "B",
+        "priceCoinOfLuck": 150,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+400"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+460"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+3%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+3%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/a",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910626,
+        "name": "Татуювання глибокого моря",
+        "icon": "/icons/drops/item/fishing_tattoo_a.png",
+        "grade": "A",
+        "priceCoinOfLuck": 200,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+700"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+805"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+4%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+4%"
+          }
+         ]
+        }
+       },
+       {
+        "key": "fishing/tattoo/s",
+        "category": "fishing",
+        "subcategory": "tattoo",
+        "itemId": 910627,
+        "name": "Татуювання Левіафан",
+        "icon": "/icons/drops/item/fishing_tattoo_s.png",
+        "grade": "S",
+        "priceCoinOfLuck": 300,
+        "maxQtyPerPurchase": 1,
+        "descriptionUk": "Рибальське татуювання, що підвищує P.Atk, M.Atk та швидкість атаки.",
+        "statsPreview": {
+         "lines": [
+          {
+           "labelUk": "P.Atk",
+           "valueUk": "+1000"
+          },
+          {
+           "labelUk": "M.Atk",
+           "valueUk": "+1150"
+          },
+          {
+           "labelUk": "Швидкість атаки",
+           "valueUk": "+5%"
+          },
+          {
+           "labelUk": "Швидкість магії",
+           "valueUk": "+5%"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "mammonMerchantShop": {
+  "categories": [
+   {
+    "categoryId": "gemstones",
+    "categoryUk": "Gemstones",
+    "items": [
+     {
+      "categoryId": "gemstones",
+      "itemKey": "d",
+      "itemId": 2130,
+      "nameEn": "Gemstone D",
+      "nameUk": "Gemstone D",
+      "iconUrl": "/icons/drops/resours/Gemstone_D.jpg",
+      "aaPrice": 32000
+     },
+     {
+      "categoryId": "gemstones",
+      "itemKey": "c",
+      "itemId": 2131,
+      "nameEn": "Gemstone C",
+      "nameUk": "Gemstone C",
+      "iconUrl": "/icons/drops/resours/Gemstone_C.jpg",
+      "aaPrice": 78000
+     },
+     {
+      "categoryId": "gemstones",
+      "itemKey": "b",
+      "itemId": 2132,
+      "nameEn": "Gemstone B",
+      "nameUk": "Gemstone B",
+      "iconUrl": "/icons/drops/resours/Gemstone_B.jpg",
+      "aaPrice": 43000
+     },
+     {
+      "categoryId": "gemstones",
+      "itemKey": "a",
+      "itemId": 2133,
+      "nameEn": "Gemstone A",
+      "nameUk": "Gemstone A",
+      "iconUrl": "/icons/drops/resours/Gemstone_A.jpg",
+      "aaPrice": 187000
+     },
+     {
+      "categoryId": "gemstones",
+      "itemKey": "s",
+      "itemId": 2134,
+      "nameEn": "Gemstone S",
+      "nameUk": "Gemstone S",
+      "iconUrl": "/icons/drops/resours/Gemstone_S.jpg",
+      "aaPrice": 121000
+     }
+    ]
+   },
+   {
+    "categoryId": "life_stones",
+    "categoryUk": "Life Stones",
+    "items": [
+     {
+      "categoryId": "life_stones",
+      "itemKey": "general",
+      "itemId": 10409,
+      "nameEn": "General Life Stone",
+      "nameUk": "General Life Stone",
+      "iconUrl": "/icons/drops/resours/Etc_mineral_general_i03_0.jpg",
+      "aaPrice": 129600
+     },
+     {
+      "categoryId": "life_stones",
+      "itemKey": "rare",
+      "itemId": 10410,
+      "nameEn": "Rare Life Stone",
+      "nameUk": "Rare Life Stone",
+      "iconUrl": "/icons/drops/resours/Etc_mineral_rare_i03_0.jpg",
+      "aaPrice": 259200
+     },
+     {
+      "categoryId": "life_stones",
+      "itemKey": "special",
+      "itemId": 10411,
+      "nameEn": "Special Life Stone",
+      "nameUk": "Special Life Stone",
+      "iconUrl": "/icons/drops/resours/Etc_mineral_special_i03_0.jpg",
+      "aaPrice": 518400
+     },
+     {
+      "categoryId": "life_stones",
+      "itemKey": "unique",
+      "itemId": 10412,
+      "nameEn": "Unique Life Stone",
+      "nameUk": "Unique Life Stone",
+      "iconUrl": "/icons/drops/resours/Etc_mineral_unique_i03_0.jpg",
+      "aaPrice": 1036800
+     }
+    ]
+   },
+   {
+    "categoryId": "dyes",
+    "categoryUk": "Краски",
+    "items": [
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/str_con",
+      "itemId": 923136,
+      "nameEn": "Greater Dye: STR +1 / CON -1",
+      "nameUk": "Greater Dye: STR +1 / CON -1",
+      "iconUrl": "/icons/drops/resours/str.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "STR",
+      "minusStat": "CON",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/str_dex",
+      "itemId": 923137,
+      "nameEn": "Greater Dye: STR +1 / DEX -1",
+      "nameUk": "Greater Dye: STR +1 / DEX -1",
+      "iconUrl": "/icons/drops/resours/str.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "STR",
+      "minusStat": "DEX",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/dex_str",
+      "itemId": 923138,
+      "nameEn": "Greater Dye: DEX +1 / STR -1",
+      "nameUk": "Greater Dye: DEX +1 / STR -1",
+      "iconUrl": "/icons/drops/resours/dex.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "DEX",
+      "minusStat": "STR",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/dex_con",
+      "itemId": 923139,
+      "nameEn": "Greater Dye: DEX +1 / CON -1",
+      "nameUk": "Greater Dye: DEX +1 / CON -1",
+      "iconUrl": "/icons/drops/resours/dex.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "DEX",
+      "minusStat": "CON",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/con_str",
+      "itemId": 923140,
+      "nameEn": "Greater Dye: CON +1 / STR -1",
+      "nameUk": "Greater Dye: CON +1 / STR -1",
+      "iconUrl": "/icons/drops/resours/dye_con.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "CON",
+      "minusStat": "STR",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/con_dex",
+      "itemId": 923141,
+      "nameEn": "Greater Dye: CON +1 / DEX -1",
+      "nameUk": "Greater Dye: CON +1 / DEX -1",
+      "iconUrl": "/icons/drops/resours/dye_con.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "CON",
+      "minusStat": "DEX",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/int_men",
+      "itemId": 923142,
+      "nameEn": "Greater Dye: INT +1 / MEN -1",
+      "nameUk": "Greater Dye: INT +1 / MEN -1",
+      "iconUrl": "/icons/drops/resours/int.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "INT",
+      "minusStat": "MEN",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/int_wit",
+      "itemId": 923143,
+      "nameEn": "Greater Dye: INT +1 / WIT -1",
+      "nameUk": "Greater Dye: INT +1 / WIT -1",
+      "iconUrl": "/icons/drops/resours/int.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "INT",
+      "minusStat": "WIT",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/wit_int",
+      "itemId": 923144,
+      "nameEn": "Greater Dye: WIT +1 / INT -1",
+      "nameUk": "Greater Dye: WIT +1 / INT -1",
+      "iconUrl": "/icons/drops/resours/wit.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "WIT",
+      "minusStat": "INT",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/wit_men",
+      "itemId": 923145,
+      "nameEn": "Greater Dye: WIT +1 / MEN -1",
+      "nameUk": "Greater Dye: WIT +1 / MEN -1",
+      "iconUrl": "/icons/drops/resours/wit.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "WIT",
+      "minusStat": "MEN",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/men_int",
+      "itemId": 923146,
+      "nameEn": "Greater Dye: MEN +1 / INT -1",
+      "nameUk": "Greater Dye: MEN +1 / INT -1",
+      "iconUrl": "/icons/drops/resours/men.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "MEN",
+      "minusStat": "INT",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "weak/men_wit",
+      "itemId": 923147,
+      "nameEn": "Greater Dye: MEN +1 / WIT -1",
+      "nameUk": "Greater Dye: MEN +1 / WIT -1",
+      "iconUrl": "/icons/drops/resours/men.png",
+      "aaPrice": 45000,
+      "dyeTier": "weak",
+      "plusStat": "MEN",
+      "minusStat": "WIT",
+      "plusValue": 1,
+      "minusValue": 1
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "str_con",
+      "itemId": 923100,
+      "nameEn": "Greater Dye: STR +4 / CON -4",
+      "nameUk": "Greater Dye: STR +4 / CON -4",
+      "iconUrl": "/icons/drops/resours/str.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "STR",
+      "minusStat": "CON",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "str_dex",
+      "itemId": 923101,
+      "nameEn": "Greater Dye: STR +4 / DEX -4",
+      "nameUk": "Greater Dye: STR +4 / DEX -4",
+      "iconUrl": "/icons/drops/resours/str.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "STR",
+      "minusStat": "DEX",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "dex_str",
+      "itemId": 923102,
+      "nameEn": "Greater Dye: DEX +4 / STR -4",
+      "nameUk": "Greater Dye: DEX +4 / STR -4",
+      "iconUrl": "/icons/drops/resours/dex.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "DEX",
+      "minusStat": "STR",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "dex_con",
+      "itemId": 923103,
+      "nameEn": "Greater Dye: DEX +4 / CON -4",
+      "nameUk": "Greater Dye: DEX +4 / CON -4",
+      "iconUrl": "/icons/drops/resours/dex.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "DEX",
+      "minusStat": "CON",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "con_str",
+      "itemId": 923104,
+      "nameEn": "Greater Dye: CON +4 / STR -4",
+      "nameUk": "Greater Dye: CON +4 / STR -4",
+      "iconUrl": "/icons/drops/resours/dye_con.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "CON",
+      "minusStat": "STR",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "con_dex",
+      "itemId": 923105,
+      "nameEn": "Greater Dye: CON +4 / DEX -4",
+      "nameUk": "Greater Dye: CON +4 / DEX -4",
+      "iconUrl": "/icons/drops/resours/dye_con.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "CON",
+      "minusStat": "DEX",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "int_men",
+      "itemId": 923106,
+      "nameEn": "Greater Dye: INT +4 / MEN -4",
+      "nameUk": "Greater Dye: INT +4 / MEN -4",
+      "iconUrl": "/icons/drops/resours/int.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "INT",
+      "minusStat": "MEN",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "int_wit",
+      "itemId": 923107,
+      "nameEn": "Greater Dye: INT +4 / WIT -4",
+      "nameUk": "Greater Dye: INT +4 / WIT -4",
+      "iconUrl": "/icons/drops/resours/int.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "INT",
+      "minusStat": "WIT",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "wit_int",
+      "itemId": 923108,
+      "nameEn": "Greater Dye: WIT +4 / INT -4",
+      "nameUk": "Greater Dye: WIT +4 / INT -4",
+      "iconUrl": "/icons/drops/resours/wit.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "WIT",
+      "minusStat": "INT",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "wit_men",
+      "itemId": 923109,
+      "nameEn": "Greater Dye: WIT +4 / MEN -4",
+      "nameUk": "Greater Dye: WIT +4 / MEN -4",
+      "iconUrl": "/icons/drops/resours/wit.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "WIT",
+      "minusStat": "MEN",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "men_int",
+      "itemId": 923110,
+      "nameEn": "Greater Dye: MEN +4 / INT -4",
+      "nameUk": "Greater Dye: MEN +4 / INT -4",
+      "iconUrl": "/icons/drops/resours/men.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "MEN",
+      "minusStat": "INT",
+      "plusValue": 4,
+      "minusValue": 4
+     },
+     {
+      "categoryId": "dyes",
+      "itemKey": "men_wit",
+      "itemId": 923111,
+      "nameEn": "Greater Dye: MEN +4 / WIT -4",
+      "nameUk": "Greater Dye: MEN +4 / WIT -4",
+      "iconUrl": "/icons/drops/resours/men.png",
+      "aaPrice": 174000,
+      "dyeTier": "strong",
+      "plusStat": "MEN",
+      "minusStat": "WIT",
+      "plusValue": 4,
+      "minusValue": 4
+     }
+    ]
+   }
+  ]
+ },
+ "catacombs": {
+  "baseAdenaCost": 1,
+  "adenaCost": 1,
+  "vipFreeApplied": false,
+  "dungeons": [
+   {
+    "dungeonId": "necropolis_of_sacrifice",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Sacrifice",
+    "labelUk": "Некрополь жертвопринесень",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "pilgrims_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Pilgrim's Necropolis",
+    "labelUk": "Некрополь паломників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_worship",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Worship",
+    "labelUk": "Некрополь поклоніння",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "patriots_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Patriot's Necropolis",
+    "labelUk": "Некрополь патріотів",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_devotion",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Devotion",
+    "labelUk": "Некрополь відданості",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "necropolis_of_martyrdom",
+    "kind": "necropolis",
+    "labelEn": "Necropolis of Martyrdom",
+    "labelUk": "Некрополь мучеників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "saints_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Saint's Necropolis",
+    "labelUk": "Некрополь святих",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "disciples_necropolis",
+    "kind": "necropolis",
+    "labelEn": "The Disciple's Necropolis",
+    "labelUk": "Некрополь учнів",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_heretic",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Heretic",
+    "labelUk": "Катакомби єретиків",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_branded",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Branded",
+    "labelUk": "Катакомби клеймених",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_apostate",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Apostate",
+    "labelUk": "Катакомби відступників",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_witch",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Witch",
+    "labelUk": "Катакомби відьми",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_dark_omens",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of Dark Omens",
+    "labelUk": "Катакомби темних знамен",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   },
+   {
+    "dungeonId": "catacomb_of_the_forbidden_path",
+    "kind": "catacomb",
+    "labelEn": "Catacomb of the Forbidden Path",
+    "labelUk": "Катакомби забороненого шляху",
+    "baseAdenaCost": 1,
+    "adenaCost": 1,
+    "vipFreeApplied": false
+   }
+  ]
+ },
+ "ancientTrader": {
+  "offers": [
+   {
+    "stone": "green",
+    "stoneItemId": 6360,
+    "rateAa": 5,
+    "ownedQty": 0,
+    "maxAa": 0
+   },
+   {
+    "stone": "blue",
+    "stoneItemId": 6361,
+    "rateAa": 3,
+    "ownedQty": 0,
+    "maxAa": 0
+   },
+   {
+    "stone": "red",
+    "stoneItemId": 6362,
+    "rateAa": 10,
+    "ownedQty": 0,
+    "maxAa": 0
+   }
+  ]
+ },
+ "premium": {
+  "active": false,
+  "premiumUntil": null,
+  "tierId": null,
+  "tierLabelUk": null,
+  "bonusPercent": 0,
+  "multiplier": 1,
+  "serverNow": "2026-10-11T13:29:40.843Z",
+  "vipActive": false,
+  "vipDiscountPercent": 0,
+  "coinTiers": [
+   {
+    "id": "bronze",
+    "labelUk": "Бронзовий акаунт",
+    "coinCost": 8,
+    "baseCoinCost": 8,
+    "bonusPercent": 50,
+    "multiplier": 1.5,
+    "basicResourceMultiplier": 1.5,
+    "durationHours": 24
+   },
+   {
+    "id": "silver",
+    "labelUk": "Срібний акаунт",
+    "coinCost": 24,
+    "baseCoinCost": 24,
+    "bonusPercent": 100,
+    "multiplier": 2,
+    "basicResourceMultiplier": 1.6666666666666667,
+    "durationHours": 24
+   },
+   {
+    "id": "gold",
+    "labelUk": "Золотий акаунт",
+    "coinCost": 32,
+    "baseCoinCost": 32,
+    "bonusPercent": 150,
+    "multiplier": 2.5,
+    "basicResourceMultiplier": 1.8333333333333333,
+    "durationHours": 24
+   },
+   {
+    "id": "premium",
+    "labelUk": "Преміум акаунт",
+    "coinCost": 46,
+    "baseCoinCost": 46,
+    "bonusPercent": 200,
+    "multiplier": 3,
+    "basicResourceMultiplier": 2,
+    "durationHours": 24
+   }
+  ],
+  "adenaPlans": [
+   {
+    "id": "premium_3h",
+    "hours": 3,
+    "priceAdena": 3,
+    "basePriceAdena": 3
+   },
+   {
+    "id": "premium_6h",
+    "hours": 6,
+    "priceAdena": 5,
+    "basePriceAdena": 5
+   },
+   {
+    "id": "premium_12h",
+    "hours": 12,
+    "priceAdena": 10,
+    "basePriceAdena": 10
+   },
+   {
+    "id": "premium_24h",
+    "hours": 24,
+    "priceAdena": 18,
+    "basePriceAdena": 18
+   }
+  ]
+ },
+ "vip": {
+  "active": false,
+  "vipUntil": null,
+  "serverNow": "2026-10-11T13:29:41.411Z",
+  "durationDays": 30,
+  "benefits": {
+   "freeTeleport": true,
+   "freeTownBuffs": true,
+   "premiumDiscountPercent": 50
+  },
+  "price": {
+   "currency": "coin_of_luck",
+   "amount": 350,
+   "itemId": 4037
+  }
+ },
+ "tattoos": {
+  "availableSlots": 3,
+  "canUseDyes": true,
+  "minLevel": 40,
+  "slotsLocked": false,
+  "canEngraveGlobally": false,
+  "canRemoveGlobally": false,
+  "freeSlot": 1,
+  "engraveCost": 10,
+  "removeRefund": 5,
+  "blockers": [
+   {
+    "code": "not_in_city",
+    "messageUk": "Щоб нанести татуювання, персонаж повинен знаходитися в місті.",
+    "messageRu": "Щоб нанести татуювання, персонаж повинен знаходитися в городе."
+   }
+  ],
+  "tattoos": [
+   {
+    "slot": 1,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   },
+   {
+    "slot": 2,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   },
+   {
+    "slot": 3,
+    "empty": true,
+    "locked": false,
+    "canRemove": false
+   }
+  ],
+  "modifiers": {
+   "STR": 0,
+   "DEX": 0,
+   "CON": 0,
+   "INT": 0,
+   "WIT": 0,
+   "MEN": 0
+  },
+  "dyes": []
+ },
+ "bonuses": {
+  "bonuses": {
+   "raceBranchLabelUk": "Людина (маг)",
+   "professionLabelUk": "Warlock",
+   "professionLabelRu": "Warlock",
+   "passiveBonusesTitleUk": "Пасивні бонуси",
+   "passiveBonusesTitleRu": "Пассивные бонусы",
+   "soulshotSpiritshotLineUk": "P.Atk 693, M.Atk 8256",
+   "soulshotSpiritshotLineRu": "P.Atk 693, M.Atk 8256",
+   "clanBonusLinesUk": [
+    "Досвід +2%",
+    "Adena +3%",
+    "Макс. HP +3%",
+    "Макс. CP +3%",
+    "Фіз. захист +3%",
+    "Маг. захист +3%",
+    "Швидкість бігу +2"
+   ],
+   "clanBonusLinesRu": [
+    "Опыт +2%",
+    "Adena +3%",
+    "Макс. HP +3%",
+    "Макс. CP +3%",
+    "Физ. защита +3%",
+    "Маг. защита +3%",
+    "Скорость бега +2"
+   ],
+   "passiveSkillsTitleUk": "Пасивні навички",
+   "passiveSkillsIntroUk": "Бонуси від вивчених пасивних навичок:",
+   "passiveWeaponRows": [
+    {
+     "labelUk": "Книги",
+     "valueUk": "+ 66.8 M.Atk"
+    }
+   ],
+   "armorBonusesTitleUk": "Бонуси від екіпіровки",
+   "armorBonusRows": [
+    {
+     "labelUk": "P.Atk",
+     "valueUk": "+ 685"
+    },
+    {
+     "labelUk": "M.Atk",
+     "valueUk": "+ 2644"
+    },
+    {
+     "labelUk": "P.Def",
+     "valueUk": "+ 725"
+    },
+    {
+     "labelUk": "M.Def",
+     "valueUk": "+ 752"
+    },
+    {
+     "labelUk": "Макс. HP",
+     "valueUk": "+ 1806"
+    },
+    {
+     "labelUk": "Макс. CP",
+     "valueUk": "+ 1295"
+    },
+    {
+     "labelUk": "Швидкість бігу",
+     "valueUk": "+ 24"
+    }
+   ],
+   "armorSetLinesUk": [
+    "Poison Resistance +60%",
+    "Bleed Resistance +60%",
+    "Max HP +3%",
+    "Max HP +950",
+    "Max MP +13%",
+    "Max MP +1250",
+    "P.Def +7%",
+    "Max CP +1295",
+    "Speed +11",
+    "M.Atk +12%",
+    "Casting Speed +10%",
+    "Magic Critical Damage +9%"
+   ],
+   "armorSetLinesRu": [
+    "Poison Resistance +60%",
+    "Bleed Resistance +60%",
+    "Max HP +3%",
+    "Max HP +950",
+    "Max MP +13%",
+    "Max MP +1250",
+    "P.Def +7%",
+    "Max CP +1295",
+    "Speed +11",
+    "M.Atk +12%",
+    "Casting Speed +10%",
+    "Magic Critical Damage +9%"
+   ],
+   "raceBranchLabelRu": "Человек (маг)",
+   "passiveSkillsTitleRu": "Пассивные навыки",
+   "passiveSkillsIntroRu": "Бонусы от изученных пассивных навыков:",
+   "armorBonusesTitleRu": "Бонусы от экипировки"
+  }
+ },
+ "olympiad": {
+  "weekKey": "2026-10-05",
+  "startsAt": "2026-10-04T21:00:00.000Z",
+  "endsAt": "2026-10-11T21:00:00.000Z",
+  "myCrystals": 0,
+  "participantCount": 7,
+  "totalParticipants": 7,
+  "couponActive": false,
+  "couponExpiresAt": null,
+  "canBuyCoupon": true,
+  "couponMinLevel": 40,
+  "couponAdenaCost": 1000000,
+  "couponSpCost": 50000,
+  "leaderboard": [
+   {
+    "rank": 1,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 36928
+   },
+   {
+    "rank": 2,
+    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
+    "name": "ErGe",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 20164
+   },
+   {
+    "rank": 3,
+    "characterId": "a814f82f-6115-4788-9005-94ec5430b014",
+    "name": "Cawak",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 7932
+   },
+   {
+    "rank": 4,
+    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+    "name": "Teddy",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 7466
+   },
+   {
+    "rank": 5,
+    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+    "name": "Dremia",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 3879
+   },
+   {
+    "rank": 6,
+    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+    "name": "УМиРАЙ",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 2692
+   },
+   {
+    "rank": 7,
+    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "name": "Freed0m",
+    "nickColor": "#ffdf8c",
+    "crystalsEarned": 1416
+   }
+  ]
+ },
+ "sevenSeals": {
+  "phase": "break",
+  "weekKey": "2026-10-05",
+  "startsAt": "2026-10-04T21:00:00.000Z",
+  "endsAt": "2026-10-10T21:00:00.000Z",
+  "nextPhaseAt": "2026-10-11T21:00:00.000Z",
+  "myCups": 761,
+  "participantCount": 47,
+  "leaderboard": [
+   {
+    "rank": 1,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "cups": 2512
+   },
+   {
+    "rank": 2,
+    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+    "name": "Teddy",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "cups": 2360
+   },
+   {
+    "rank": 3,
+    "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+    "name": "★_3oJloTo_★",
+    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
+    "clanEmblemId": 25,
+    "nickColor": "#8A2BE2",
+    "cups": 2279
+   },
+   {
+    "rank": 4,
+    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
+    "name": "ErGe",
+    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
+    "clanEmblemId": 38,
+    "nickColor": "#ffdf8c",
+    "cups": 2151
+   },
+   {
+    "rank": 5,
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "cups": 761
+   }
+  ],
+  "rewards": [
+   {
+    "rank": 1,
+    "coinOfLuck": 18,
+    "adena": "7000000",
+    "pAtk": 750,
+    "mAtk": 750,
+    "pDef": 520,
+    "mDef": 520
+   },
+   {
+    "rank": 2,
+    "coinOfLuck": 15,
+    "adena": "5500000",
+    "pAtk": 680,
+    "mAtk": 680,
+    "pDef": 470,
+    "mDef": 470
+   },
+   {
+    "rank": 3,
+    "coinOfLuck": 12,
+    "adena": "4000000",
+    "pAtk": 610,
+    "mAtk": 610,
+    "pDef": 420,
+    "mDef": 420
+   },
+   {
+    "rank": 4,
+    "coinOfLuck": 10,
+    "adena": "3000000",
+    "pAtk": 550,
+    "mAtk": 550,
+    "pDef": 380,
+    "mDef": 380
+   },
+   {
+    "rank": 5,
+    "coinOfLuck": 8,
+    "adena": "2000000",
+    "pAtk": 500,
+    "mAtk": 500,
+    "pDef": 350,
+    "mDef": 350
+   }
+  ],
+  "rules": {
+   "dropChancePct": 10,
+   "minMobLevelOffset": -15
+  }
+ },
+ "braveHunter": {
+  "phase": "break",
+  "weekKey": "2026-10-05",
+  "startsAt": "2026-10-04T21:00:00.000Z",
+  "endsAt": "2026-10-10T21:00:00.000Z",
+  "nextPhaseAt": "2026-10-11T21:00:00.000Z",
+  "score": 745,
+  "rank": 5,
+  "totalParticipants": 45,
+  "top": [
+   {
+    "rank": 1,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 2480
+   },
+   {
+    "rank": 2,
+    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+    "name": "Teddy",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 2315
+   },
+   {
+    "rank": 3,
+    "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+    "name": "★_3oJloTo_★",
+    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
+    "clanEmblemId": 25,
+    "nickColor": "#8A2BE2",
+    "score": 2311
+   },
+   {
+    "rank": 4,
+    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
+    "name": "ErGe",
+    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
+    "clanEmblemId": 38,
+    "nickColor": "#ffdf8c",
+    "score": 2142
+   },
+   {
+    "rank": 5,
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 745
+   },
+   {
+    "rank": 6,
+    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "name": "Freed0m",
+    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
+    "clanEmblemId": 25,
+    "nickColor": "#ffdf8c",
+    "score": 640
+   },
+   {
+    "rank": 7,
+    "characterId": "f949c929-8a49-46c6-8dbb-16e46a7b772d",
+    "name": "West",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 32,
+    "nickColor": "#ffdf8c",
+    "score": 607
+   },
+   {
+    "rank": 8,
+    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+    "name": "Dremia",
+    "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
+    "clanEmblemId": 76,
+    "nickColor": "#ffdf8c",
+    "score": 574
+   },
+   {
+    "rank": 9,
+    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+    "name": "УМиРАЙ",
+    "clanId": "164085e1-0bdd-42a5-a1ce-23f21f93d318",
+    "clanEmblemId": 44,
+    "nickColor": "#ffdf8c",
+    "score": 525
+   },
+   {
+    "rank": 10,
+    "characterId": "344b1832-4672-4a7e-a1e0-40a2f6a33be4",
+    "name": "luk",
+    "clanId": "349c6602-4fe7-4966-b930-d7045d2daa33",
+    "clanEmblemId": 5,
+    "nickColor": "#ffdf8c",
+    "score": 210
+   }
+  ],
+  "rewards": [
+   {
+    "rank": 1,
+    "coinOfLuck": 6,
+    "adena": "9000000",
+    "expPercent": 0.007,
+    "sp": 1100000,
+    "resources": [
+     {
+      "itemId": 1877,
+      "qty": 800,
+      "nameUk": "Адамантитовий самородок",
+      "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+     },
+     {
+      "itemId": 1874,
+      "qty": 800,
+      "nameUk": "Руда оріхарукону",
+      "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+     },
+     {
+      "itemId": 1876,
+      "qty": 800,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 2,
+    "coinOfLuck": 12,
+    "adena": "7000000",
+    "expPercent": 0.006,
+    "sp": 900000,
+    "resources": [
+     {
+      "itemId": 1874,
+      "qty": 700,
+      "nameUk": "Руда оріхарукону",
+      "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+     },
+     {
+      "itemId": 1876,
+      "qty": 700,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     },
+     {
+      "itemId": 1875,
+      "qty": 700,
+      "nameUk": "Камінь чистоти",
+      "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 3,
+    "coinOfLuck": 10,
+    "adena": "5500000",
+    "expPercent": 0.005,
+    "sp": 750000,
+    "resources": [
+     {
+      "itemId": 1876,
+      "qty": 650,
+      "nameUk": "Міфрилова руда",
+      "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+     },
+     {
+      "itemId": 1875,
+      "qty": 650,
+      "nameUk": "Камінь чистоти",
+      "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+     },
+     {
+      "itemId": 1873,
+      "qty": 650,
+      "nameUk": "Срібний самородок",
+      "iconUrl": "/icons/resources/basic/silver_nugget.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 4,
+    "coinOfLuck": 8,
+    "adena": "4000000",
+    "expPercent": 0.004,
+    "sp": 600000,
+    "resources": [
+     {
+      "itemId": 1873,
+      "qty": 550,
+      "nameUk": "Срібний самородок",
+      "iconUrl": "/icons/resources/basic/silver_nugget.jpg"
+     },
+     {
+      "itemId": 1866,
+      "qty": 550,
+      "nameUk": "Замша",
+      "iconUrl": "/icons/resources/basic/suede.jpg"
+     },
+     {
+      "itemId": 1869,
+      "qty": 550,
+      "nameUk": "Залізна руда",
+      "iconUrl": "/icons/resources/basic/iron_ore.jpg"
+     }
+    ]
+   },
+   {
+    "rank": 5,
+    "coinOfLuck": 5,
+    "adena": "3000000",
+    "expPercent": 0.003,
+    "sp": 450000,
+    "resources": [
+     {
+      "itemId": 1867,
+      "qty": 500,
+      "nameUk": "Шкура тварини",
+      "iconUrl": "/icons/resources/basic/animal_skin.jpg"
+     },
+     {
+      "itemId": 1865,
+      "qty": 500,
+      "nameUk": "Лак",
+      "iconUrl": "/icons/resources/basic/varnish.jpg"
+     },
+     {
+      "itemId": 1868,
+      "qty": 500,
+      "nameUk": "Нитка",
+      "iconUrl": "/icons/resources/basic/thread.jpg"
+     }
+    ]
+   }
+  ],
+  "rules": {
+   "dropChancePct": 10,
+   "minMobLevelOffset": -15
+  }
+ },
+ "siegeSchedule": {
+  "serverNowMs": 1791725378402,
+  "timeZone": "Europe/Kyiv",
+  "gameDayKey": "20261011",
+  "nextDailyResetAt": 1791752400000,
+  "durationMinutes": 20,
+  "activeCityId": null,
+  "nextCityId": "l2dop_oren",
+  "slots": [
+   {
+    "cityId": "l2dop_oren",
+    "labelUk": "Місто Орен",
+    "startHour": 18,
+    "startMinute": 0,
+    "endHour": 18,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_giran",
+    "labelUk": "Місто Гіран",
+    "startHour": 18,
+    "startMinute": 20,
+    "endHour": 18,
+    "endMinute": 40
+   },
+   {
+    "cityId": "l2dop_aden",
+    "labelUk": "Місто Аден",
+    "startHour": 18,
+    "startMinute": 40,
+    "endHour": 19,
+    "endMinute": 0
+   },
+   {
+    "cityId": "l2dop_goddard",
+    "labelUk": "Місто Годдарт",
+    "startHour": 19,
+    "startMinute": 0,
+    "endHour": 19,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_rune",
+    "labelUk": "Рун",
+    "startHour": 19,
+    "startMinute": 20,
+    "endHour": 19,
+    "endMinute": 40
+   },
+   {
+    "cityId": "l2dop_gludio",
+    "labelUk": "Місто Глудіо",
+    "startHour": 19,
+    "startMinute": 40,
+    "endHour": 20,
+    "endMinute": 0
+   },
+   {
+    "cityId": "l2dop_dion",
+    "labelUk": "Місто Діон",
+    "startHour": 20,
+    "startMinute": 0,
+    "endHour": 20,
+    "endMinute": 20
+   },
+   {
+    "cityId": "l2dop_schuttgart",
+    "labelUk": "Місто Штутгарт",
+    "startHour": 20,
+    "startMinute": 20,
+    "endHour": 20,
+    "endMinute": 40
+   }
+  ]
+ },
+ "dailyQuests": {
+  "dayKey": "20261011",
+  "tasks": {
+   "hunt_start_500": {
+    "score": 7022,
+    "have": 500,
+    "need": 500,
+    "percent": 100,
+    "place": 2,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+     "name": "Teddy",
+     "nicknameColor": null,
+     "score": 9356
+    }
+   },
+   "strong_enemy_20": {
+    "score": 12,
+    "have": 1,
+    "need": 1,
+    "percent": 100,
+    "place": 6,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+     "name": "УМиРАЙ",
+     "nicknameColor": null,
+     "score": 48
+    }
+   },
+   "raid_boss_participate": {
+    "score": 13,
+    "have": 1,
+    "need": 1,
+    "percent": 100,
+    "place": 6,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+     "name": "УМиРАЙ",
+     "nicknameColor": null,
+     "score": 48
+    }
+   },
+   "skill_master_50": {
+    "score": 10919,
+    "have": 50,
+    "need": 50,
+    "percent": 100,
+    "place": 1,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+     "name": "Warlock",
+     "nicknameColor": null,
+     "score": 10919
+    }
+   },
+   "daily_playtime_2h": {
+    "score": 9876,
+    "have": 7200,
+    "need": 7200,
+    "percent": 100,
+    "place": 2,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "1a675899-686b-4303-8970-89d10c67090e",
+     "name": "Existence",
+     "nicknameColor": "#33CC66",
+     "score": 18277
+    }
+   },
+   "chat_social_10": {
+    "score": 0,
+    "have": 0,
+    "need": 10,
+    "percent": 0,
+    "place": 178,
+    "done": false,
+    "claimed": false,
+    "leader": {
+     "characterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+     "name": "Cz4",
+     "nicknameColor": null,
+     "score": 6
+    }
+   },
+   "damage_dealer_500k": {
+    "score": 25298992,
+    "have": 500000,
+    "need": 500000,
+    "percent": 100,
+    "place": 5,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+     "name": "Teddy",
+     "nicknameColor": null,
+     "score": 453480894
+    }
+   },
+   "fishing_catch_50": {
+    "score": 1839,
+    "have": 50,
+    "need": 50,
+    "percent": 100,
+    "place": 2,
+    "done": true,
+    "claimed": true,
+    "leader": {
+     "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+     "name": "tms",
+     "nicknameColor": null,
+     "score": 2491
+    }
+   }
+  }
+ },
+ "tvt": {
+  "phase": "IDLE",
+  "serverNow": 1791725370123,
+  "eventId": null,
+  "registrationEndsAt": null,
+  "startsAt": null,
+  "endsAt": null,
+  "finishedAt": null,
+  "resultEndsAt": null,
+  "score": {
+   "team1": 0,
+   "team2": 0
+  },
+  "team1": [],
+  "team2": [],
+  "myTeam": null,
+  "isRegistered": false,
+  "registeredCount": 0,
+  "minPlayers": 2,
+  "maxPlayers": 20,
+  "winnerTeam": null,
+  "registrants": [],
+  "cancelReason": null,
+  "combatRoster": [],
+  "selfCombat": null,
+  "myResult": null,
+  "schedule": {
+   "enabled": true,
+   "slots": [
+    "08:00",
+    "15:00",
+    "20:00"
+   ],
+   "next": {
+    "slotKey": "20261011:2000",
+    "registrationOpensAt": 1791737400000,
+    "preparationStartsAt": 1791737970000,
+    "battleStartsAt": 1791738000000,
+    "startGameTime": "20:00",
+    "registrationGameTime": "19:50"
+   }
+  }
+ }
+}

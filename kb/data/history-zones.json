@@ -1,0 +1,75 @@
+{
+ "source": "session_01ChEZvMoWB76qH2jnRofNs6; t=UTC время сообщения, game=местное время игрока (~UTC+9.5..10)",
+ "expPerHour": [
+  {
+   "zone": "Blazing Swamp",
+   "M": 6.8,
+   "lvl": "49-50"
+  },
+  {
+   "zone": "Blazing Swamp",
+   "M": 5.8,
+   "t": "10.10 09:59"
+  },
+  {
+   "zone": "Den of Evil",
+   "M": 6.5,
+   "lvl": 51
+  },
+  {
+   "zone": "Forest of Mirrors",
+   "M": 4.1
+  },
+  {
+   "zone": "Field of Silence",
+   "M": 3.65
+  },
+  {
+   "zone": "Pavel Ruins",
+   "M": 2.6,
+   "note": "старый посох"
+  },
+  {
+   "zone": "Pavel Ruins",
+   "M": 4.58,
+   "note": "Sprite's Staff, t 10.10 11:34"
+  },
+  {
+   "zone": "мобы 54-63",
+   "M": 4.45
+  },
+  {
+   "zone": "Enchanted Valley",
+   "M": 1.6
+  },
+  {
+   "zone": "Antharas' Lair",
+   "M": 1.46,
+   "note": "худшая"
+  }
+ ],
+ "mobs": [
+  {
+   "what": "чемпион",
+   "exp": "46-49k (аудит 41k)",
+   "adena": "39-73k",
+   "sec": "5-10",
+   "gain": "+11% дохода",
+   "t": "10.10 09:59/14:49"
+  },
+  {
+   "what": "обычный моб",
+   "exp": "~4k"
+  },
+  {
+   "what": "Hot Springs 73-76",
+   "exp": "9-11k",
+   "adena": "11-13k",
+   "hits": "2-3",
+   "game": "11.10 10:43"
+  }
+ ],
+ "chain": {
+  "hunt": "~2.5 с/моб, бой ~0.7 с (10.10 11:02); CLAUDE.md: 5.4 с против 11.4 через карту"
+ }
+}

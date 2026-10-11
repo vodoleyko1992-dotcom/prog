@@ -1,0 +1,6910 @@
+[
+ {
+  "teleportId": "giran",
+  "labelEn": "Town of Giran",
+  "labelUk": "Місто Гіран",
+  "adenaCost": 10000,
+  "mobLevelMin": 31,
+  "mobLevelMax": 50,
+  "mobs": [
+   {
+    "name": "Breka Orc",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1397,
+    "sp": 156
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1920,
+    "sp": 216
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": true,
+    "hp": 3432,
+    "exp": 19200,
+    "sp": 2160
+   },
+   {
+    "name": "Breka Orc Warrior",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1922,
+    "sp": 220
+   },
+   {
+    "name": "Breka Orc Shaman",
+    "level": 34
+   },
+   {
+    "name": "Breka Orc Overlord",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 2380,
+    "sp": 282
+   },
+   {
+    "name": "Breka Orc Overlord",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 23800,
+    "sp": 2820
+   },
+   {
+    "name": "Wyrm",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1817,
+    "sp": 216
+   },
+   {
+    "name": "Wyrm",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 18170,
+    "sp": 2160
+   },
+   {
+    "name": "Guardian Basilisk",
+    "level": 36,
+    "champion": false,
+    "hp": 1908,
+    "exp": 1960,
+    "sp": 236
+   },
+   {
+    "name": "Road Scavenger",
+    "level": 37,
+    "champion": false,
+    "hp": 1956,
+    "exp": 1991,
+    "sp": 244
+   },
+   {
+    "name": "Fettered Soul",
+    "level": 38,
+    "champion": false,
+    "hp": 2004,
+    "exp": 2146,
+    "sp": 268
+   },
+   {
+    "name": "Windsus",
+    "level": 39,
+    "champion": false,
+    "hp": 2052,
+    "exp": 2212,
+    "sp": 282
+   }
+  ]
+ },
+ {
+  "teleportId": "giran_harbor",
+  "labelEn": "Giran Harbor",
+  "labelUk": "Гавань Гірана",
+  "adenaCost": 2500,
+  "mobLevelMin": 25,
+  "mobLevelMax": 51,
+  "mobs": [
+   {
+    "name": "Kadif Werewolf",
+    "level": 25
+   },
+   {
+    "name": "Monster Eye Destroyer",
+    "level": 26,
+    "champion": false,
+    "hp": 1428,
+    "exp": 1078,
+    "sp": 108
+   },
+   {
+    "name": "Monster Eye Destroyer",
+    "level": 26,
+    "champion": true,
+    "hp": 2856,
+    "exp": 10780,
+    "sp": 1080
+   },
+   {
+    "name": "Delu Lizardman",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1166,
+    "sp": 122
+   },
+   {
+    "name": "Delu Lizardman Scout",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1231,
+    "sp": 132
+   },
+   {
+    "name": "Delu Lizardman Warrior",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1321,
+    "sp": 144
+   }
+  ]
+ },
+ {
+  "teleportId": "dragon_valley",
+  "labelEn": "Dragon Valley",
+  "labelUk": "Долина Драконів",
+  "adenaCost": 5000,
+  "mobLevelMin": 31,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Cave Servant",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 3077,
+    "sp": 436
+   },
+   {
+    "name": "Cave Servant Archer",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 4143,
+    "sp": 594
+   },
+   {
+    "name": "Cave Servant Warrior",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 3987,
+    "sp": 582
+   },
+   {
+    "name": "Cave Servant Captain",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 4238,
+    "sp": 626
+   },
+   {
+    "name": "Dragon Bearer Chief",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 5255,
+    "sp": 778
+   },
+   {
+    "name": "Headless Knight",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3708,
+    "sp": 558
+   },
+   {
+    "name": "Royal Cave Servant",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 4546,
+    "sp": 694
+   },
+   {
+    "name": "Steel Trial Champion",
+    "level": 51
+   },
+   {
+    "name": "Hunter Gargoyle",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 4633,
+    "sp": 716
+   }
+  ]
+ },
+ {
+  "teleportId": "antharas_lair",
+  "labelEn": "Antharas' Lair",
+  "labelUk": "Лігво Антараса",
+  "adenaCost": 8000,
+  "mobLevelMin": 40,
+  "mobLevelMax": 66,
+  "mobs": [
+   {
+    "name": "Cave Maiden",
+    "level": 59,
+    "champion": false,
+    "hp": 3012,
+    "exp": 5112,
+    "sp": 874
+   },
+   {
+    "name": "Bloody Lady",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 4536,
+    "sp": 788
+   },
+   {
+    "name": "Cave Beast",
+    "level": 61,
+    "champion": false,
+    "hp": 3108,
+    "exp": 4304,
+    "sp": 756
+   },
+   {
+    "name": "Death Wave",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 4639,
+    "sp": 826
+   },
+   {
+    "name": "Malruk Soldier",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 4953,
+    "sp": 894
+   },
+   {
+    "name": "Plando",
+    "level": 64,
+    "champion": false,
+    "hp": 3252,
+    "exp": 4953,
+    "sp": 906
+   },
+   {
+    "name": "Cave Howler",
+    "level": 65,
+    "champion": false,
+    "hp": 3300,
+    "exp": 5037,
+    "sp": 936
+   },
+   {
+    "name": "Malruk Knight",
+    "level": 66,
+    "champion": false,
+    "hp": 3348,
+    "exp": 5030,
+    "sp": 946
+   }
+  ]
+ },
+ {
+  "teleportId": "devils_isle",
+  "labelEn": "Devil's Isle",
+  "labelUk": "Острів Диявола",
+  "adenaCost": 4500,
+  "mobLevelMin": 25,
+  "mobLevelMax": 51,
+  "mobs": [
+   {
+    "name": "Zaken's Elite Pikeman",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2114,
+    "sp": 286
+   },
+   {
+    "name": "Zaken's Pikeman",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2720,
+    "sp": 368
+   },
+   {
+    "name": "Pirate Zombie",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2832,
+    "sp": 388
+   },
+   {
+    "name": "Zaken's Archer",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 3025,
+    "sp": 414
+   },
+   {
+    "name": "Zaken's Elite Archer",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2273,
+    "sp": 310
+   },
+   {
+    "name": "Zaken's Seer",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 2478,
+    "sp": 344
+   },
+   {
+    "name": "Unpleasant Shout",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 2360,
+    "sp": 334
+   },
+   {
+    "name": "Unpleasant Humming",
+    "level": 46
+   },
+   {
+    "name": "Kaim Vanul",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 3279,
+    "sp": 500
+   }
+  ]
+ },
+ {
+  "teleportId": "brekas_stronghold",
+  "labelEn": "Breka's Stronghold",
+  "labelUk": "Оплот Бреки",
+  "adenaCost": 3500,
+  "mobLevelMin": 31,
+  "mobLevelMax": 52,
+  "mobs": [
+   {
+    "name": "Breka Orc",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1397,
+    "sp": 156
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1920,
+    "sp": 216
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": true,
+    "hp": 3432,
+    "exp": 19200,
+    "sp": 2160
+   },
+   {
+    "name": "Breka Orc Warrior",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1922,
+    "sp": 220
+   },
+   {
+    "name": "Breka Orc Shaman",
+    "level": 34
+   },
+   {
+    "name": "Breka Orc Overlord",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 2380,
+    "sp": 282
+   },
+   {
+    "name": "Breka Orc Overlord",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 23800,
+    "sp": 2820
+   },
+   {
+    "name": "Wyrm",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1817,
+    "sp": 216
+   },
+   {
+    "name": "Wyrm",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 18170,
+    "sp": 2160
+   },
+   {
+    "name": "Guardian Basilisk",
+    "level": 36,
+    "champion": false,
+    "hp": 1908,
+    "exp": 1960,
+    "sp": 236
+   },
+   {
+    "name": "Road Scavenger",
+    "level": 37,
+    "champion": false,
+    "hp": 1956,
+    "exp": 1991,
+    "sp": 244
+   },
+   {
+    "name": "Fettered Soul",
+    "level": 38,
+    "champion": false,
+    "hp": 2004,
+    "exp": 2146,
+    "sp": 268
+   },
+   {
+    "name": "Windsus",
+    "level": 39,
+    "champion": false,
+    "hp": 2052,
+    "exp": 2212,
+    "sp": 282
+   }
+  ]
+ },
+ {
+  "teleportId": "gludio",
+  "labelEn": "Town of Gludio",
+  "labelUk": "Місто Глудіо",
+  "adenaCost": 3000,
+  "mobLevelMin": 5,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Grizzly Bear",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 599,
+    "sp": 50
+   },
+   {
+    "name": "Arachnid Predator",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 1598,
+    "sp": 140
+   },
+   {
+    "name": "Ol Mahum Patrol",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 787,
+    "sp": 72
+   },
+   {
+    "name": "Wandering Eye",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   },
+   {
+    "name": "Hungry Eye",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Ol Mahum Guard",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Ol Mahum Deserter",
+    "level": 23
+   },
+   {
+    "name": "Monster Eye Watcher",
+    "level": 25,
+    "champion": false,
+    "hp": 1380,
+    "exp": 992,
+    "sp": 100
+   }
+  ]
+ },
+ {
+  "teleportId": "ruins_of_agony",
+  "labelEn": "Ruins of Agony",
+  "labelUk": "Руїни Скорботи",
+  "adenaCost": 900,
+  "mobLevelMin": 15,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Ruin Zombie",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 755,
+    "sp": 62
+   },
+   {
+    "name": "Ruin Zombie Leader",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 807,
+    "sp": 66
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6050,
+    "sp": 500
+   },
+   {
+    "name": "Tracker Skeleton Leader",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 652,
+    "sp": 56
+   },
+   {
+    "name": "Skeleton Scout",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 698,
+    "sp": 62
+   },
+   {
+    "name": "Ratman Warrior",
+    "level": 19
+   },
+   {
+    "name": "Skeleton Bowman",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 734,
+    "sp": 64
+   },
+   {
+    "name": "Ruin Spartoi",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   },
+   {
+    "name": "Raging Spartoi",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 837,
+    "sp": 80
+   },
+   {
+    "name": "Stinger Wasp",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1454,
+    "sp": 158
+   },
+   {
+    "name": "Troll",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1332,
+    "sp": 152
+   },
+   {
+    "name": "Dead Seeker",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1664,
+    "sp": 194
+   },
+   {
+    "name": "Medusa",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1714,
+    "sp": 200
+   },
+   {
+    "name": "Two-Headed Giant",
+    "level": 35
+   }
+  ]
+ },
+ {
+  "teleportId": "ruins_of_despair",
+  "labelEn": "Ruins of Despair",
+  "labelUk": "Руїни Відчаю",
+  "adenaCost": 1100,
+  "mobLevelMin": 5,
+  "mobLevelMax": 32,
+  "mobs": [
+   {
+    "name": "Shield Skeleton",
+    "level": 15
+   },
+   {
+    "name": "Skeleton Infantryman",
+    "level": 16
+   },
+   {
+    "name": "Ruin Imp",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Scavenger Bat",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 640,
+    "sp": 56
+   },
+   {
+    "name": "Ruin Bat",
+    "level": 20
+   },
+   {
+    "name": "Ruin Imp Elder",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 779,
+    "sp": 72
+   },
+   {
+    "name": "Ruin Spartoi",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   },
+   {
+    "name": "Raging Spartoi",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 837,
+    "sp": 80
+   },
+   {
+    "name": "Skeleton Pikeman",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 946,
+    "sp": 96
+   },
+   {
+    "name": "Skeleton Knight",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1265,
+    "sp": 142
+   }
+  ]
+ },
+ {
+  "teleportId": "ant_nest",
+  "labelEn": "The Ant Nest",
+  "labelUk": "Муравине гніздо",
+  "adenaCost": 1600,
+  "mobLevelMin": 15,
+  "mobLevelMax": 37,
+  "mobs": [
+   {
+    "name": "Ant",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1308,
+    "sp": 144
+   },
+   {
+    "name": "Ant Captain",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1425,
+    "sp": 158
+   },
+   {
+    "name": "Ant Overseer",
+    "level": 32
+   },
+   {
+    "name": "Ant Recruit",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1451,
+    "sp": 166
+   },
+   {
+    "name": "Ant Patrol",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1667,
+    "sp": 194
+   },
+   {
+    "name": "Ant Guard",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1484,
+    "sp": 176
+   },
+   {
+    "name": "Ant Soldier",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1780,
+    "sp": 210
+   },
+   {
+    "name": "Ant Soldier",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 17800,
+    "sp": 2100
+   },
+   {
+    "name": "Ant Warrior Captain",
+    "level": 36
+   },
+   {
+    "name": "Noble Ant",
+    "level": 37
+   }
+  ]
+ },
+ {
+  "teleportId": "windawood_manor",
+  "labelEn": "Windawood Manor",
+  "labelUk": "Особняк Віндавуд",
+  "adenaCost": 1300,
+  "mobLevelMin": 15,
+  "mobLevelMax": 37,
+  "mobs": [
+   {
+    "name": "Hungry Eye",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Ol Mahum Guard",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Ol Mahum Reserve",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Ol Mahum Officer",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 935,
+    "sp": 92
+   },
+   {
+    "name": "Ol Mahum Shooter",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 963,
+    "sp": 94
+   },
+   {
+    "name": "Ol Mahum Patrolman",
+    "level": 25,
+    "champion": false,
+    "hp": 1380,
+    "exp": 826,
+    "sp": 82
+   }
+  ]
+ },
+ {
+  "teleportId": "dion",
+  "labelEn": "Town of Dion",
+  "labelUk": "Місто Діон",
+  "adenaCost": 8000,
+  "mobLevelMin": 22,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Ol Mahum Ranger",
+    "level": 22
+   },
+   {
+    "name": "Tumran Bugbear",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Ol Mahum Guerilla",
+    "level": 26,
+    "champion": false,
+    "hp": 1428,
+    "exp": 982,
+    "sp": 98
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Basilisk",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1189,
+    "sp": 124
+   },
+   {
+    "name": "Giant Crimson Ant",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1296,
+    "sp": 136
+   },
+   {
+    "name": "Neer Crawler",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1201,
+    "sp": 126
+   },
+   {
+    "name": "Ol Mahum Legionnaire",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 981,
+    "sp": 104
+   },
+   {
+    "name": "Ol Mahum Marksman",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1128,
+    "sp": 118
+   },
+   {
+    "name": "Ol Mahum Sergeant",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1156,
+    "sp": 124
+   },
+   {
+    "name": "Ol Mahum Captain",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1241,
+    "sp": 136
+   }
+  ]
+ },
+ {
+  "teleportId": "cruma_marshlands",
+  "labelEn": "Cruma Marshlands",
+  "labelUk": "Болота Круми",
+  "adenaCost": 4500,
+  "mobLevelMin": 5,
+  "mobLevelMax": 49,
+  "mobs": [
+   {
+    "name": "Neer Crawler",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1201,
+    "sp": 126
+   },
+   {
+    "name": "Marsh Stakato",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1509,
+    "sp": 162
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1663,
+    "sp": 184
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": true,
+    "hp": 3336,
+    "exp": 16630,
+    "sp": 1840
+   },
+   {
+    "name": "Marsh Stakato Soldier",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1583,
+    "sp": 182
+   },
+   {
+    "name": "Marsh Stakato Drone",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1889,
+    "sp": 224
+   }
+  ]
+ },
+ {
+  "teleportId": "cruma_tower",
+  "labelEn": "Cruma Tower",
+  "labelUk": "Вежа Круми",
+  "adenaCost": 6500,
+  "mobLevelMin": 28,
+  "mobLevelMax": 49,
+  "mobs": [
+   {
+    "name": "Porta",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2364,
+    "sp": 304
+   },
+   {
+    "name": "Excuro",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2028,
+    "sp": 264
+   },
+   {
+    "name": "Catherok",
+    "level": 42,
+    "champion": false,
+    "hp": 2196,
+    "exp": 2275,
+    "sp": 302
+   },
+   {
+    "name": "Mordeo",
+    "level": 42,
+    "champion": false,
+    "hp": 2196,
+    "exp": 2625,
+    "sp": 350
+   },
+   {
+    "name": "Ricenseo",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2104,
+    "sp": 284
+   },
+   {
+    "name": "Krator",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2688,
+    "sp": 368
+   },
+   {
+    "name": "Premo",
+    "level": 45
+   },
+   {
+    "name": "Validus",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 2408,
+    "sp": 340
+   },
+   {
+    "name": "Dicor",
+    "level": 47
+   },
+   {
+    "name": "Perum",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 3438,
+    "sp": 502
+   },
+   {
+    "name": "Torfe",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3025,
+    "sp": 446
+   }
+  ]
+ },
+ {
+  "teleportId": "fortress_of_resistance",
+  "labelEn": "Fortress of Resistance",
+  "labelUk": "Фортеця Опору",
+  "adenaCost": 4800,
+  "mobLevelMin": 23,
+  "mobLevelMax": 30,
+  "mobs": [
+   {
+    "name": "Ol Mahum Reserve",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Ol Mahum Shooter",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 963,
+    "sp": 94
+   },
+   {
+    "name": "Ol Mahum Guerilla",
+    "level": 26,
+    "champion": false,
+    "hp": 1428,
+    "exp": 982,
+    "sp": 98
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Ol Mahum Marksman",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1128,
+    "sp": 118
+   },
+   {
+    "name": "Ol Mahum Sergeant",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1156,
+    "sp": 124
+   },
+   {
+    "name": "Ol Mahum Captain",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1241,
+    "sp": 136
+   }
+  ]
+ },
+ {
+  "teleportId": "plains_of_dion",
+  "labelEn": "Plains of Dion",
+  "labelUk": "Рівнини Діона",
+  "adenaCost": 5800,
+  "mobLevelMin": 20,
+  "mobLevelMax": 37,
+  "mobs": [
+   {
+    "name": "Enku Orc Shaman",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 813,
+    "sp": 72
+   },
+   {
+    "name": "Enku Orc Champion",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 927,
+    "sp": 86
+   },
+   {
+    "name": "Ol Mahum Ranger",
+    "level": 22
+   },
+   {
+    "name": "Tumran Bugbear",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Watchman of the Plains",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1335,
+    "sp": 146
+   },
+   {
+    "name": "Roughly Hewn Rock Golem",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1397,
+    "sp": 156
+   }
+  ]
+ },
+ {
+  "teleportId": "bee_hive",
+  "labelEn": "Bee Hive",
+  "labelUk": "Бджолине гніздо",
+  "adenaCost": 3200,
+  "mobLevelMin": 20,
+  "mobLevelMax": 51,
+  "mobs": [
+   {
+    "name": "Giant Crimson Ant",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1296,
+    "sp": 136
+   },
+   {
+    "name": "Stinger Wasp",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1454,
+    "sp": 158
+   },
+   {
+    "name": "Wasp Leader",
+    "level": 37,
+    "champion": false,
+    "hp": 1956,
+    "exp": 1809,
+    "sp": 224
+   }
+  ]
+ },
+ {
+  "teleportId": "tanor_canyon",
+  "labelEn": "Tanor Canyon",
+  "labelUk": "Каньйон Танор",
+  "adenaCost": 2000,
+  "mobLevelMin": 31,
+  "mobLevelMax": 50,
+  "mobs": [
+   {
+    "name": "Tanor Silenos",
+    "level": 40
+   },
+   {
+    "name": "Nightmare Lord",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 4000,
+    "sp": 572
+   },
+   {
+    "name": "Tanor Silenos Chieftain",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 6503,
+    "sp": 980
+   }
+  ]
+ },
+ {
+  "teleportId": "oren",
+  "labelEn": "Town of Oren",
+  "labelUk": "Місто Орен",
+  "adenaCost": 12000,
+  "mobLevelMin": 15,
+  "mobLevelMax": 54,
+  "mobs": [
+   {
+    "name": "Crimson Spider",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Lesser Dark Horror",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": true,
+    "hp": 1896,
+    "exp": 5760,
+    "sp": 460
+   },
+   {
+    "name": "Pincer Spider",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Pincer Spider",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6180,
+    "sp": 520
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Ant Larva",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 3417,
+    "sp": 366
+   },
+   {
+    "name": "Turek Orc Warlord",
+    "level": 30
+   },
+   {
+    "name": "Ant Captain",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1425,
+    "sp": 158
+   },
+   {
+    "name": "Marsh Stakato Soldier",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1583,
+    "sp": 182
+   },
+   {
+    "name": "Ant Soldier",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1780,
+    "sp": 210
+   },
+   {
+    "name": "Ant Soldier",
+    "level": 35,
+    "champion": true,
+    "hp": 3720,
+    "exp": 17800,
+    "sp": 2100
+   },
+   {
+    "name": "Marsh Stakato Drone",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1889,
+    "sp": 224
+   }
+  ]
+ },
+ {
+  "teleportId": "ivory_tower",
+  "labelEn": "Ivory Tower",
+  "labelUk": "Вежа Слонової Кістки",
+  "adenaCost": 5000,
+  "mobLevelMin": 40,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Manashen Gargoyle",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2769,
+    "sp": 358
+   },
+   {
+    "name": "Enchanted Monstereye",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2493,
+    "sp": 326
+   },
+   {
+    "name": "Enchanted Stone Golem",
+    "level": 42,
+    "champion": false,
+    "hp": 2196,
+    "exp": 3627,
+    "sp": 484
+   }
+  ]
+ },
+ {
+  "teleportId": "skyshadow_meadow",
+  "labelEn": "Skyshadow Meadow",
+  "labelUk": "Луг Небесної Тіні",
+  "adenaCost": 3500,
+  "mobLevelMin": 15,
+  "mobLevelMax": 54,
+  "mobs": [
+   {
+    "name": "Connabi",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 7437,
+    "sp": 1184
+   },
+   {
+    "name": "Connabi",
+    "level": 54,
+    "champion": true,
+    "hp": 5544,
+    "exp": 74370,
+    "sp": 11840
+   }
+  ]
+ },
+ {
+  "teleportId": "plains_of_the_lizardman",
+  "labelEn": "Plains of the Lizardman",
+  "labelUk": "Рівнини ящеролюдів",
+  "adenaCost": 4000,
+  "mobLevelMin": 35,
+  "mobLevelMax": 54,
+  "mobs": [
+   {
+    "name": "Leto Lizardman",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1781,
+    "sp": 210
+   },
+   {
+    "name": "Leto Lizardman Archer",
+    "level": 36,
+    "champion": false,
+    "hp": 1908,
+    "exp": 1941,
+    "sp": 234
+   },
+   {
+    "name": "Leto Lizardman Archer",
+    "level": 36,
+    "champion": true,
+    "hp": 3816,
+    "exp": 19410,
+    "sp": 2340
+   },
+   {
+    "name": "Leto Lizardman Soldier",
+    "level": 37,
+    "champion": false,
+    "hp": 1956,
+    "exp": 2030,
+    "sp": 250
+   },
+   {
+    "name": "Leto Lizardman Warrior",
+    "level": 38,
+    "champion": false,
+    "hp": 2004,
+    "exp": 1953,
+    "sp": 242
+   },
+   {
+    "name": "Leto Lizardman Shaman",
+    "level": 39
+   }
+  ]
+ },
+ {
+  "teleportId": "outlaw_forest",
+  "labelEn": "Outlaw Forest",
+  "labelUk": "Ліс розбійників",
+  "adenaCost": 4500,
+  "mobLevelMin": 40,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Shillien Dark Executioner",
+    "level": 49
+   },
+   {
+    "name": "Ol Mahum Transcender",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 4284,
+    "sp": 646
+   },
+   {
+    "name": "Tarlk Basilisk",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3600,
+    "sp": 542
+   },
+   {
+    "name": "Elder Tarlk Basilisk",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 3820,
+    "sp": 582
+   },
+   {
+    "name": "Hunter Gargoyle",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 4633,
+    "sp": 716
+   },
+   {
+    "name": "Oel Mahum",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4167,
+    "sp": 656
+   },
+   {
+    "name": "Oel Mahum Warrior",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4241,
+    "sp": 676
+   },
+   {
+    "name": "Oel Mahum Witch Doctor",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4401,
+    "sp": 710
+   },
+   {
+    "name": "Outlaw Trial Champion",
+    "level": 55
+   }
+  ]
+ },
+ {
+  "teleportId": "hunters",
+  "labelEn": "Hunter's Village",
+  "labelUk": "Селище мисливців",
+  "adenaCost": 11000,
+  "mobLevelMin": 40,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Karul Bugbear",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2741,
+    "sp": 354
+   },
+   {
+    "name": "Tamlin Orc",
+    "level": 41
+   },
+   {
+    "name": "Tamlin Orc Archer",
+    "level": 42
+   },
+   {
+    "name": "Kronbe Spider",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2715,
+    "sp": 368
+   },
+   {
+    "name": "Lakin",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 3317,
+    "sp": 454
+   },
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2943,
+    "sp": 402
+   },
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 29430,
+    "sp": 4020
+   },
+   {
+    "name": "Weird Drake",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3004,
+    "sp": 418
+   },
+   {
+    "name": "Forest of Mirrors Ghost",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 3310,
+    "sp": 470
+   },
+   {
+    "name": "Harit Lizardman",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3636,
+    "sp": 548
+   },
+   {
+    "name": "Harit Lizardman Warrior",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4332,
+    "sp": 682
+   },
+   {
+    "name": "Harit Lizardman Shaman",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4241,
+    "sp": 676
+   },
+   {
+    "name": "Harit Lizardman Matriarch",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4768,
+    "sp": 770
+   }
+  ]
+ },
+ {
+  "teleportId": "enchanted_valley_south",
+  "labelEn": "Enchanted Valley - Southern Region",
+  "labelUk": "Зачарована долина (південь)",
+  "adenaCost": 5500,
+  "mobLevelMin": 40,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Fline",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 2766,
+    "sp": 384
+   },
+   {
+    "name": "Liele",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 2862,
+    "sp": 406
+   },
+   {
+    "name": "Valley Treant",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 4224,
+    "sp": 606
+   },
+   {
+    "name": "Valley Treant",
+    "level": 47,
+    "champion": true,
+    "hp": 4872,
+    "exp": 42240,
+    "sp": 6060
+   },
+   {
+    "name": "Satyr",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 3076,
+    "sp": 448
+   },
+   {
+    "name": "Unicorn",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3299,
+    "sp": 488
+   },
+   {
+    "name": "Unicorn",
+    "level": 49,
+    "champion": true,
+    "hp": 5064,
+    "exp": 32990,
+    "sp": 4880
+   },
+   {
+    "name": "Forest Runner",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3381,
+    "sp": 508
+   },
+   {
+    "name": "Eva's Windblade Guardian",
+    "level": 51
+   }
+  ]
+ },
+ {
+  "teleportId": "enchanted_valley_north",
+  "labelEn": "Enchanted Valley - Northern Region",
+  "labelUk": "Зачарована долина (північ)",
+  "adenaCost": 7000,
+  "mobLevelMin": 48,
+  "mobLevelMax": 62,
+  "mobs": [
+   {
+    "name": "Satyr",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 3076,
+    "sp": 448
+   },
+   {
+    "name": "Unicorn",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3299,
+    "sp": 488
+   },
+   {
+    "name": "Unicorn",
+    "level": 49,
+    "champion": true,
+    "hp": 5064,
+    "exp": 32990,
+    "sp": 4880
+   },
+   {
+    "name": "Forest Runner",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3381,
+    "sp": 508
+   },
+   {
+    "name": "Fline Elder",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 3518,
+    "sp": 536
+   },
+   {
+    "name": "Liele Elder",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 3730,
+    "sp": 576
+   },
+   {
+    "name": "Valley Treant Elder",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 5199,
+    "sp": 816
+   },
+   {
+    "name": "Eva's Grove Guardian",
+    "level": 53
+   }
+  ]
+ },
+ {
+  "teleportId": "aden",
+  "labelEn": "Town of Aden",
+  "labelUk": "Місто Аден",
+  "adenaCost": 15000,
+  "mobLevelMin": 44,
+  "mobLevelMax": 58,
+  "mobs": [
+   {
+    "name": "Vanor Silenos",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3092,
+    "sp": 430
+   },
+   {
+    "name": "Vanor Silenos Grunt",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 3077,
+    "sp": 436
+   },
+   {
+    "name": "Vanor Silenos Scout",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 4004,
+    "sp": 574
+   },
+   {
+    "name": "Vanor Silenos Warrior",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 4188,
+    "sp": 612
+   },
+   {
+    "name": "Vanor Silenos Shaman",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3492,
+    "sp": 516
+   },
+   {
+    "name": "Vanor Silenos Chieftain",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3637,
+    "sp": 548
+   },
+   {
+    "name": "Marsh Stalker",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4199,
+    "sp": 670
+   },
+   {
+    "name": "Marsh Drake",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4443,
+    "sp": 718
+   }
+  ]
+ },
+ {
+  "teleportId": "coliseum",
+  "labelEn": "Coliseum",
+  "labelUk": "Колізей",
+  "adenaCost": 4000,
+  "mobLevelMin": 44,
+  "mobLevelMax": 79,
+  "mobs": [
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2943,
+    "sp": 402
+   },
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 29430,
+    "sp": 4020
+   },
+   {
+    "name": "Vanor Silenos Warrior",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 4188,
+    "sp": 612
+   },
+   {
+    "name": "Vanor Silenos Shaman",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3492,
+    "sp": 516
+   },
+   {
+    "name": "Harit Lizardman",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3636,
+    "sp": 548
+   },
+   {
+    "name": "Vanor Silenos Chieftain",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3637,
+    "sp": 548
+   },
+   {
+    "name": "Harit Lizardman Warrior",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4332,
+    "sp": 682
+   }
+  ]
+ },
+ {
+  "teleportId": "forsaken_plains",
+  "labelEn": "Forsaken Plains",
+  "labelUk": "Запустілі рівнини",
+  "adenaCost": 5000,
+  "mobLevelMin": 44,
+  "mobLevelMax": 79,
+  "mobs": [
+   {
+    "name": "Marsh Stalker",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4199,
+    "sp": 670
+   },
+   {
+    "name": "Fallen Orc",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4399,
+    "sp": 710
+   },
+   {
+    "name": "Marsh Drake",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4443,
+    "sp": 718
+   },
+   {
+    "name": "Fallen Orc Archer",
+    "level": 57,
+    "champion": false,
+    "hp": 2916,
+    "exp": 6093,
+    "sp": 1012
+   },
+   {
+    "name": "Fallen Orc Shaman",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 6898,
+    "sp": 1166
+   },
+   {
+    "name": "Fallen Orc Shaman",
+    "level": 58,
+    "champion": true,
+    "hp": 5928,
+    "exp": 68980,
+    "sp": 11660
+   },
+   {
+    "name": "Fallen Orc Captain",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 6462,
+    "sp": 1122
+   }
+  ]
+ },
+ {
+  "teleportId": "forest_of_mirrors",
+  "labelEn": "Forest of Mirrors",
+  "labelUk": "Ліс Дзеркал",
+  "adenaCost": 6500,
+  "mobLevelMin": 40,
+  "mobLevelMax": 55,
+  "mobs": [
+   {
+    "name": "Taik Orc",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2327,
+    "sp": 300
+   },
+   {
+    "name": "Taik Orc Archer",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 3152,
+    "sp": 412
+   },
+   {
+    "name": "Taik Orc Warrior",
+    "level": 42
+   },
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2943,
+    "sp": 402
+   },
+   {
+    "name": "Taik Orc Captain",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 29430,
+    "sp": 4020
+   },
+   {
+    "name": "Forest of Mirrors Ghost",
+    "level": 46,
+    "champion": false,
+    "hp": 2388,
+    "exp": 3310,
+    "sp": 470
+   },
+   {
+    "name": "Harit Lizardman",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3636,
+    "sp": 548
+   },
+   {
+    "name": "Harit Lizardman Grunt",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 4501,
+    "sp": 686
+   },
+   {
+    "name": "Harit Lizardman Archer",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 4214,
+    "sp": 652
+   },
+   {
+    "name": "Harit Lizardman Warrior",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4332,
+    "sp": 682
+   },
+   {
+    "name": "Mirror Trial Champion",
+    "level": 53
+   },
+   {
+    "name": "Harit Lizardman Shaman",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4241,
+    "sp": 676
+   },
+   {
+    "name": "Mirror Soul Guardian",
+    "level": 54
+   },
+   {
+    "name": "Harit Lizardman Matriarch",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4768,
+    "sp": 770
+   },
+   {
+    "name": "Eva's Mirror Guardian",
+    "level": 55
+   }
+  ]
+ },
+ {
+  "teleportId": "blazing_swamp",
+  "labelEn": "Blazing Swamp",
+  "labelUk": "Полум'яні болота",
+  "adenaCost": 7000,
+  "mobLevelMin": 48,
+  "mobLevelMax": 57,
+  "mobs": [
+   {
+    "name": "Hatar Ratman Boss",
+    "level": 48,
+    "champion": false,
+    "hp": 2484,
+    "exp": 3987,
+    "sp": 582
+   },
+   {
+    "name": "Hatar Hanishee",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3492,
+    "sp": 516
+   },
+   {
+    "name": "Deprive",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3672,
+    "sp": 554
+   },
+   {
+    "name": "Taik Orc Supply",
+    "level": 51
+   },
+   {
+    "name": "Farcran",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4813,
+    "sp": 756
+   },
+   {
+    "name": "Taik Orc Supply Leader",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 5340,
+    "sp": 862
+   },
+   {
+    "name": "Flame Crucible Guardian",
+    "level": 56
+   },
+   {
+    "name": "Flame Trial Champion",
+    "level": 57
+   }
+  ]
+ },
+ {
+  "teleportId": "fields_of_massacre",
+  "labelEn": "Fields of Massacre",
+  "labelUk": "Поля різанини",
+  "adenaCost": 6500,
+  "mobLevelMin": 58,
+  "mobLevelMax": 65,
+  "mobs": [
+   {
+    "name": "Dismal Pole",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 5239,
+    "sp": 886
+   },
+   {
+    "name": "Massacre Trial Champion",
+    "level": 59
+   },
+   {
+    "name": "Doom Trooper",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 7966,
+    "sp": 1438
+   },
+   {
+    "name": "Doom Warrior",
+    "level": 64,
+    "champion": false,
+    "hp": 3252,
+    "exp": 6380,
+    "sp": 1168
+   },
+   {
+    "name": "Doom Warrior",
+    "level": 64,
+    "champion": true,
+    "hp": 6504,
+    "exp": 63800,
+    "sp": 11680
+   },
+   {
+    "name": "Doom Knight",
+    "level": 65,
+    "champion": false,
+    "hp": 3300,
+    "exp": 8649,
+    "sp": 1608
+   },
+   {
+    "name": "Doom Knight",
+    "level": 65,
+    "champion": true,
+    "hp": 6600,
+    "exp": 86490,
+    "sp": 16080
+   }
+  ]
+ },
+ {
+  "teleportId": "ancient_battleground",
+  "labelEn": "Ancient Battleground",
+  "labelUk": "Стародавнє поле бою",
+  "adenaCost": 8000,
+  "mobLevelMin": 60,
+  "mobLevelMax": 70,
+  "mobs": [
+   {
+    "name": "Past Knight",
+    "level": 64,
+    "champion": false,
+    "hp": 3252,
+    "exp": 11588,
+    "sp": 2120
+   },
+   {
+    "name": "Bloody Lord",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 9382,
+    "sp": 1812
+   },
+   {
+    "name": "Dark Guard",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 13863,
+    "sp": 2748
+   },
+   {
+    "name": "Dark Guard",
+    "level": 70,
+    "champion": true,
+    "hp": 7080,
+    "exp": 138630,
+    "sp": 27480
+   }
+  ]
+ },
+ {
+  "teleportId": "silent_valley",
+  "labelEn": "Silent Valley",
+  "labelUk": "Тиха долина",
+  "adenaCost": 7500,
+  "mobLevelMin": 44,
+  "mobLevelMax": 79,
+  "mobs": [
+   {
+    "name": "Changed Creation",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 15493,
+    "sp": 3232
+   },
+   {
+    "name": "Forgotten Ancient People",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 16958,
+    "sp": 3672
+   },
+   {
+    "name": "Giant's Shadow",
+    "level": 79,
+    "champion": false,
+    "hp": 3972,
+    "exp": 13043,
+    "sp": 2892
+   }
+  ]
+ },
+ {
+  "teleportId": "tower_of_insolence",
+  "labelEn": "Tower of Insolence",
+  "labelUk": "Вежа Зухвалості",
+  "adenaCost": 10000,
+  "mobLevelMin": 48,
+  "mobLevelMax": 70,
+  "mobs": [
+   {
+    "name": "Ghost of the Tower",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 4045,
+    "sp": 702
+   },
+   {
+    "name": "Seer of Hallate",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 4045,
+    "sp": 702
+   },
+   {
+    "name": "Ghastly Warrior",
+    "level": 61,
+    "champion": false,
+    "hp": 3108,
+    "exp": 4769,
+    "sp": 838
+   },
+   {
+    "name": "Blader of Despair",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 4938,
+    "sp": 880
+   }
+  ]
+ },
+ {
+  "teleportId": "dark_elf_village",
+  "labelEn": "Dark Elf Village",
+  "labelUk": "Селище темних ельфів",
+  "adenaCost": 2000,
+  "mobLevelMin": 5,
+  "mobLevelMax": 20,
+  "mobs": [
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Imp Elder",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 747,
+    "sp": 48
+   },
+   {
+    "name": "Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Green Dryad",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Werewolf",
+    "level": 9,
+    "champion": false,
+    "hp": 612,
+    "exp": 321,
+    "sp": 22
+   }
+  ]
+ },
+ {
+  "teleportId": "dark_elven_forest",
+  "labelEn": "Dark Elven Forest",
+  "labelUk": "Ліс темних ельфів",
+  "adenaCost": 200,
+  "mobLevelMin": 5,
+  "mobLevelMax": 20,
+  "mobs": [
+   {
+    "name": "Green Dryad",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 924,
+    "sp": 72
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 9240,
+    "sp": 720
+   },
+   {
+    "name": "Lesser Dark Horror",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": true,
+    "hp": 1896,
+    "exp": 5760,
+    "sp": 460
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Venomous Spider",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 704,
+    "sp": 62
+   },
+   {
+    "name": "Arachnid Tracker",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 760,
+    "sp": 68
+   },
+   {
+    "name": "Arachnid Predator",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 1598,
+    "sp": 140
+   }
+  ]
+ },
+ {
+  "teleportId": "swampland",
+  "labelEn": "Swampland",
+  "labelUk": "Болото",
+  "adenaCost": 500,
+  "mobLevelMin": 15,
+  "mobLevelMax": 40,
+  "mobs": [
+   {
+    "name": "Lesser Dark Horror",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": true,
+    "hp": 1896,
+    "exp": 5760,
+    "sp": 460
+   },
+   {
+    "name": "Marsh Stakato",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1509,
+    "sp": 162
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1663,
+    "sp": 184
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": true,
+    "hp": 3336,
+    "exp": 16630,
+    "sp": 1840
+   },
+   {
+    "name": "Marsh Stakato Soldier",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1583,
+    "sp": 182
+   },
+   {
+    "name": "Marsh Spider",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1867,
+    "sp": 218
+   },
+   {
+    "name": "Marsh Stakato Drone",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1889,
+    "sp": 224
+   },
+   {
+    "name": "Giant Fungus",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2327,
+    "sp": 300
+   }
+  ]
+ },
+ {
+  "teleportId": "spider_nest",
+  "labelEn": "Spider Nest",
+  "labelUk": "Гніздо павуків",
+  "adenaCost": 700,
+  "mobLevelMin": 12,
+  "mobLevelMax": 23,
+  "mobs": [
+   {
+    "name": "Crimson Spider",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Giant Spider",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 5450,
+    "sp": 440
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Talon Spider",
+    "level": 16
+   },
+   {
+    "name": "Blade Spider",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Pincer Spider",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Pincer Spider",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6180,
+    "sp": 520
+   },
+   {
+    "name": "Venomous Spider",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 704,
+    "sp": 62
+   },
+   {
+    "name": "Young Araneid",
+    "level": 23,
+    "champion": true,
+    "hp": 2568,
+    "exp": 9850,
+    "sp": 960
+   }
+  ]
+ },
+ {
+  "teleportId": "school_of_dark_arts",
+  "labelEn": "School of Dark Arts",
+  "labelUk": "Школа темних мистецтв",
+  "adenaCost": 900,
+  "mobLevelMin": 12,
+  "mobLevelMax": 23,
+  "mobs": [
+   {
+    "name": "Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Skeleton Marksman",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 428,
+    "sp": 34
+   },
+   {
+    "name": "Lesser Dark Horror",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 545,
+    "sp": 44
+   },
+   {
+    "name": "Crypt Horror",
+    "level": 15
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Dark Horror",
+    "level": 16,
+    "champion": true,
+    "hp": 1896,
+    "exp": 5760,
+    "sp": 460
+   },
+   {
+    "name": "Akaste Succubus",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 605,
+    "sp": 54
+   },
+   {
+    "name": "Akaste Succubus Turen",
+    "level": 21
+   }
+  ]
+ },
+ {
+  "teleportId": "dwarf_village",
+  "labelEn": "Dwarven Village",
+  "labelUk": "Селище гномів",
+  "adenaCost": 2500,
+  "mobLevelMin": 5,
+  "mobLevelMax": 70,
+  "mobs": [
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Utuku Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Darkstone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 545,
+    "sp": 42
+   },
+   {
+    "name": "Darkstone Golem",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 5450,
+    "sp": 420
+   },
+   {
+    "name": "Greystone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Stone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Pitchstone Golem",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 799,
+    "sp": 72
+   },
+   {
+    "name": "Dwarf Ghost",
+    "level": 20
+   },
+   {
+    "name": "Granite Golem",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 2239,
+    "sp": 258
+   }
+  ]
+ },
+ {
+  "teleportId": "mithril_mines",
+  "labelEn": "Mithril Mines",
+  "labelUk": "Мітрілові шахти",
+  "adenaCost": 400,
+  "mobLevelMin": 6,
+  "mobLevelMax": 61,
+  "mobs": [
+   {
+    "name": "Utuku Orc",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Utuku Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": true,
+    "hp": 1512,
+    "exp": 3630,
+    "sp": 260
+   },
+   {
+    "name": "Darkstone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 545,
+    "sp": 42
+   },
+   {
+    "name": "Darkstone Golem",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 5450,
+    "sp": 420
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Greystone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Stone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Pitchstone Golem",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 799,
+    "sp": 72
+   },
+   {
+    "name": "Granite Golem",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 2239,
+    "sp": 258
+   }
+  ]
+ },
+ {
+  "teleportId": "abandoned_coal_mines",
+  "labelEn": "Abandoned Coal Mines",
+  "labelUk": "Покинуті вугільні шахти",
+  "adenaCost": 700,
+  "mobLevelMin": 5,
+  "mobLevelMax": 13,
+  "mobs": [
+   {
+    "name": "Goblin Grave Robber",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin Scout",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Utuku Orc Archer",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 293,
+    "sp": 20
+   },
+   {
+    "name": "Goblin Lookout",
+    "level": 8
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": true,
+    "hp": 1512,
+    "exp": 3630,
+    "sp": 260
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Greystone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Stone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   }
+  ]
+ },
+ {
+  "teleportId": "eastern_mining_zone",
+  "labelEn": "Eastern Mining Zone",
+  "labelUk": "Східна гірнича зона",
+  "adenaCost": 300,
+  "mobLevelMin": 7,
+  "mobLevelMax": 61,
+  "mobs": [
+   {
+    "name": "Greystone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Stone Golem",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 654,
+    "sp": 52
+   },
+   {
+    "name": "Whinstone Golem",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 705,
+    "sp": 54
+   },
+   {
+    "name": "Obsidian Golem",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 755,
+    "sp": 62
+   },
+   {
+    "name": "Pitchstone Golem",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 799,
+    "sp": 72
+   },
+   {
+    "name": "Granite Golem",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 2239,
+    "sp": 258
+   },
+   {
+    "name": "Rotting Golem",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 3942,
+    "sp": 540
+   },
+   {
+    "name": "Lesser Giant",
+    "level": 61,
+    "champion": false,
+    "hp": 3108,
+    "exp": 4058,
+    "sp": 714
+   }
+  ]
+ },
+ {
+  "teleportId": "elf_village",
+  "labelEn": "Elven Village",
+  "labelUk": "Селище ельфів",
+  "adenaCost": 2000,
+  "mobLevelMin": 3,
+  "mobLevelMax": 42,
+  "mobs": [
+   {
+    "name": "Elder Red Keltir",
+    "level": 3
+   },
+   {
+    "name": "Wolf",
+    "level": 4,
+    "champion": false,
+    "hp": 372,
+    "exp": 141,
+    "sp": 8
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Green Dryad",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Werewolf",
+    "level": 9,
+    "champion": false,
+    "hp": 612,
+    "exp": 321,
+    "sp": 22
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 924,
+    "sp": 72
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 9240,
+    "sp": 720
+   },
+   {
+    "name": "Giant Spider",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 5450,
+    "sp": 440
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   }
+  ]
+ },
+ {
+  "teleportId": "elven_forest",
+  "labelEn": "Elven Forest",
+  "labelUk": "Ліс ельфів",
+  "adenaCost": 200,
+  "mobLevelMin": 3,
+  "mobLevelMax": 21,
+  "mobs": [
+   {
+    "name": "Green Dryad",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 924,
+    "sp": 72
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 9240,
+    "sp": 720
+   },
+   {
+    "name": "Giant Spider",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 5450,
+    "sp": 440
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Venomous Spider",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 704,
+    "sp": 62
+   },
+   {
+    "name": "Lirein",
+    "level": 18
+   },
+   {
+    "name": "Lirein Elder",
+    "level": 19
+   },
+   {
+    "name": "Arachnid Predator",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 1598,
+    "sp": 140
+   }
+  ]
+ },
+ {
+  "teleportId": "neutral_zone",
+  "labelEn": "Neutral Zone",
+  "labelUk": "Нейтральна зона",
+  "adenaCost": 500,
+  "mobLevelMin": 5,
+  "mobLevelMax": 20,
+  "mobs": [
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Goblin Scout",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Green Dryad",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Goblin Brigand",
+    "level": 8
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 924,
+    "sp": 72
+   },
+   {
+    "name": "Dryad",
+    "level": 13,
+    "champion": true,
+    "hp": 1608,
+    "exp": 9240,
+    "sp": 720
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Venomous Spider",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 704,
+    "sp": 62
+   },
+   {
+    "name": "Elf Ghost",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 605,
+    "sp": 54
+   },
+   {
+    "name": "Elf Ghost",
+    "level": 20,
+    "champion": true,
+    "hp": 2280,
+    "exp": 6050,
+    "sp": 540
+   }
+  ]
+ },
+ {
+  "teleportId": "elven_fortress",
+  "labelEn": "Elven Fortress",
+  "labelUk": "Фортеця ельфів",
+  "adenaCost": 800,
+  "mobLevelMin": 8,
+  "mobLevelMax": 21,
+  "mobs": [
+   {
+    "name": "Akaste Bone Soldier",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Akaste Bone Archer",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 428,
+    "sp": 34
+   },
+   {
+    "name": "Spartoi",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 454,
+    "sp": 38
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6050,
+    "sp": 500
+   },
+   {
+    "name": "Skeleton Scout",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 698,
+    "sp": 62
+   },
+   {
+    "name": "Skeleton Bowman",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 734,
+    "sp": 64
+   },
+   {
+    "name": "Ruin Spartoi",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   }
+  ]
+ },
+ {
+  "teleportId": "talking_island",
+  "labelEn": "Talking Island Village",
+  "labelUk": "Говорящий Остров (TI)",
+  "adenaCost": 100,
+  "mobLevelMin": 4,
+  "mobLevelMax": 17,
+  "mobs": [
+   {
+    "name": "Wolf",
+    "level": 4,
+    "champion": false,
+    "hp": 372,
+    "exp": 141,
+    "sp": 8
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Zombie",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   }
+  ]
+ },
+ {
+  "teleportId": "elven_ruins",
+  "labelEn": "Elven Ruins",
+  "labelUk": "Руїни ельфів",
+  "adenaCost": 500,
+  "mobLevelMin": 12,
+  "mobLevelMax": 21,
+  "mobs": [
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": true,
+    "hp": 1512,
+    "exp": 3630,
+    "sp": 260
+   },
+   {
+    "name": "Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 405,
+    "sp": 32
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6050,
+    "sp": 500
+   },
+   {
+    "name": "Tracker Skeleton Leader",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 652,
+    "sp": 56
+   },
+   {
+    "name": "Skeleton Scout",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 698,
+    "sp": 62
+   },
+   {
+    "name": "Skeleton Bowman",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 734,
+    "sp": 64
+   },
+   {
+    "name": "Ruin Spartoi",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   }
+  ]
+ },
+ {
+  "teleportId": "talking_island_harbor",
+  "labelEn": "Talking Island Harbor",
+  "labelUk": "Гавань Talking Island",
+  "adenaCost": 300,
+  "mobLevelMin": 4,
+  "mobLevelMax": 17,
+  "mobs": [
+   {
+    "name": "Vuku Orc",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 498,
+    "sp": 38
+   },
+   {
+    "name": "Felim Lizardman",
+    "level": 14
+   },
+   {
+    "name": "Felim Lizardman Scout",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 534,
+    "sp": 44
+   },
+   {
+    "name": "Vuku Orc Archer",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 550,
+    "sp": 44
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Grizzly Bear",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 599,
+    "sp": 50
+   },
+   {
+    "name": "Felim Lizardman Warrior",
+    "level": 17
+   },
+   {
+    "name": "Vuku Orc Fighter",
+    "level": 17
+   }
+  ]
+ },
+ {
+  "teleportId": "cedrics_training_hall",
+  "labelEn": "Cedric's Training Hall",
+  "labelUk": "Зал тренувань Cedric",
+  "adenaCost": 200,
+  "mobLevelMin": 4,
+  "mobLevelMax": 17,
+  "mobs": [
+   {
+    "name": "Wolf",
+    "level": 4,
+    "champion": false,
+    "hp": 372,
+    "exp": 141,
+    "sp": 8
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   }
+  ]
+ },
+ {
+  "teleportId": "gludin",
+  "labelEn": "Gludin Village",
+  "labelUk": "Селище Глудін",
+  "adenaCost": 3500,
+  "mobLevelMin": 5,
+  "mobLevelMax": 31,
+  "mobs": [
+   {
+    "name": "Goblin Raider",
+    "level": 5
+   },
+   {
+    "name": "Rakeclaw Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Imp Elder",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 747,
+    "sp": 48
+   },
+   {
+    "name": "Goblin Scout",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 284,
+    "sp": 20
+   },
+   {
+    "name": "Goblin Brigand",
+    "level": 8
+   },
+   {
+    "name": "Vuku Orc",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 498,
+    "sp": 38
+   },
+   {
+    "name": "Vuku Orc Archer",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 550,
+    "sp": 44
+   },
+   {
+    "name": "Lesser Basilisk",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 3372,
+    "sp": 348
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Basilisk",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1189,
+    "sp": 124
+   }
+  ]
+ },
+ {
+  "teleportId": "langk_lizardman_dwelling",
+  "labelEn": "Langk Lizardman Dwelling",
+  "labelUk": "Житло ящерів Лангк",
+  "adenaCost": 2280,
+  "mobLevelMin": 12,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Langk Lizardman",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 534,
+    "sp": 44
+   },
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 6180,
+    "sp": 520
+   },
+   {
+    "name": "Langk Lizardman Scout",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Langk Lizardman Sentinel",
+    "level": 19
+   },
+   {
+    "name": "Langk Lizardman Lieutenant",
+    "level": 22
+   },
+   {
+    "name": "Langk Lizardman Shaman",
+    "level": 24
+   },
+   {
+    "name": "Langk Lizardman Leader",
+    "level": 25,
+    "champion": false,
+    "hp": 1380,
+    "exp": 1012,
+    "sp": 102
+   },
+   {
+    "name": "Leto Lizardman",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1781,
+    "sp": 210
+   }
+  ]
+ },
+ {
+  "teleportId": "windmill_hill",
+  "labelEn": "Windmill Hill",
+  "labelUk": "Пагорб Вітряків",
+  "adenaCost": 2300,
+  "mobLevelMin": 5,
+  "mobLevelMax": 32,
+  "mobs": [
+   {
+    "name": "Ol Mahum Patrol",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 787,
+    "sp": 72
+   },
+   {
+    "name": "Ol Mahum Guard",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Ol Mahum",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 731,
+    "sp": 70
+   },
+   {
+    "name": "Ol Mahum Officer",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 935,
+    "sp": 92
+   },
+   {
+    "name": "Ol Mahum Shooter",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 963,
+    "sp": 94
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Ol Mahum Marksman",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1128,
+    "sp": 118
+   },
+   {
+    "name": "Roughly Hewn Rock Golem",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1397,
+    "sp": 156
+   }
+  ]
+ },
+ {
+  "teleportId": "fellmere_hunting_grounds",
+  "labelEn": "Fellmere Hunting Grounds",
+  "labelUk": "Мисливські угіддя Феллмір",
+  "adenaCost": 5000,
+  "mobLevelMin": 14,
+  "mobLevelMax": 34,
+  "mobs": [
+   {
+    "name": "Felim Lizardman",
+    "level": 14
+   },
+   {
+    "name": "Felim Lizardman Scout",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 534,
+    "sp": 44
+   },
+   {
+    "name": "Ruin Zombie",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 755,
+    "sp": 62
+   },
+   {
+    "name": "Brown Bear",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Grizzly Bear",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 599,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6050,
+    "sp": 500
+   },
+   {
+    "name": "Felim Lizardman Warrior",
+    "level": 17
+   },
+   {
+    "name": "Venomous Spider",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 704,
+    "sp": 62
+   }
+  ]
+ },
+ {
+  "teleportId": "forgotten_temple",
+  "labelEn": "Forgotten Temple",
+  "labelUk": "Забутий храм",
+  "adenaCost": 4900,
+  "mobLevelMin": 12,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 363,
+    "sp": 26
+   },
+   {
+    "name": "Dungeon Skeleton",
+    "level": 12,
+    "champion": true,
+    "hp": 1512,
+    "exp": 3630,
+    "sp": 260
+   },
+   {
+    "name": "Dungeon Skeleton Archer",
+    "level": 13,
+    "champion": false,
+    "hp": 804,
+    "exp": 397,
+    "sp": 32
+   },
+   {
+    "name": "Akaste Bone Archer",
+    "level": 14,
+    "champion": false,
+    "hp": 852,
+    "exp": 428,
+    "sp": 34
+   },
+   {
+    "name": "Ruin Zombie",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 755,
+    "sp": 62
+   },
+   {
+    "name": "Akaste Bone Warlord",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 612,
+    "sp": 52
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 605,
+    "sp": 50
+   },
+   {
+    "name": "Tracker Skeleton",
+    "level": 17,
+    "champion": true,
+    "hp": 1992,
+    "exp": 6050,
+    "sp": 500
+   },
+   {
+    "name": "Tracker Skeleton Leader",
+    "level": 18,
+    "champion": false,
+    "hp": 1044,
+    "exp": 652,
+    "sp": 56
+   },
+   {
+    "name": "Skeleton Scout",
+    "level": 19,
+    "champion": false,
+    "hp": 1092,
+    "exp": 698,
+    "sp": 62
+   },
+   {
+    "name": "Skeleton Bowman",
+    "level": 20,
+    "champion": false,
+    "hp": 1140,
+    "exp": 734,
+    "sp": 64
+   },
+   {
+    "name": "Ruin Spartoi",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 764,
+    "sp": 70
+   }
+  ]
+ },
+ {
+  "teleportId": "orc_barracks",
+  "labelEn": "Orc Barracks",
+  "labelUk": "Оркський табір",
+  "adenaCost": 2700,
+  "mobLevelMin": 14,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Tumran Bugbear",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Tumran Bugbear Warrior",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 954,
+    "sp": 94
+   },
+   {
+    "name": "Ol Mahum Van Grunt",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1308,
+    "sp": 144
+   },
+   {
+    "name": "Breka Orc",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1397,
+    "sp": 156
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1920,
+    "sp": 216
+   },
+   {
+    "name": "Breka Orc Archer",
+    "level": 32,
+    "champion": true,
+    "hp": 3432,
+    "exp": 19200,
+    "sp": 2160
+   },
+   {
+    "name": "Ol Mahum Van Archer",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1920,
+    "sp": 216
+   },
+   {
+    "name": "Breka Orc Warrior",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1922,
+    "sp": 220
+   },
+   {
+    "name": "Ol Mahum Van Leader",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 2040,
+    "sp": 238
+   }
+  ]
+ },
+ {
+  "teleportId": "windy_hill",
+  "labelEn": "Windy Hill",
+  "labelUk": "Вітряний пагорб",
+  "adenaCost": 4400,
+  "mobLevelMin": 15,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 6180,
+    "sp": 520
+   },
+   {
+    "name": "Langk Lizardman Scout",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Ol Mahum Patrol",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 787,
+    "sp": 72
+   },
+   {
+    "name": "Langk Lizardman Leader",
+    "level": 25,
+    "champion": false,
+    "hp": 1380,
+    "exp": 1012,
+    "sp": 102
+   },
+   {
+    "name": "Lesser Basilisk",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 3372,
+    "sp": 348
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 1035,
+    "sp": 106
+   },
+   {
+    "name": "Ol Mahum Raider",
+    "level": 27,
+    "champion": true,
+    "hp": 2952,
+    "exp": 10350,
+    "sp": 1060
+   },
+   {
+    "name": "Basilisk",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1189,
+    "sp": 124
+   },
+   {
+    "name": "Leto Lizardman",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1781,
+    "sp": 210
+   }
+  ]
+ },
+ {
+  "teleportId": "abandoned_camp",
+  "labelEn": "Abandon Camp",
+  "labelUk": "Покинутий табір",
+  "adenaCost": 3600,
+  "mobLevelMin": 15,
+  "mobLevelMax": 32,
+  "mobs": [
+   {
+    "name": "Ol Mahum Patrol",
+    "level": 21,
+    "champion": false,
+    "hp": 1188,
+    "exp": 787,
+    "sp": 72
+   },
+   {
+    "name": "Ol Mahum Guard",
+    "level": 22,
+    "champion": false,
+    "hp": 1236,
+    "exp": 821,
+    "sp": 78
+   },
+   {
+    "name": "Tumran Bugbear",
+    "level": 23,
+    "champion": false,
+    "hp": 1284,
+    "exp": 878,
+    "sp": 84
+   },
+   {
+    "name": "Tumran Bugbear Warrior",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 954,
+    "sp": 94
+   },
+   {
+    "name": "Ol Mahum Sergeant",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1156,
+    "sp": 124
+   },
+   {
+    "name": "Ol Mahum Captain",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1241,
+    "sp": 136
+   },
+   {
+    "name": "Ol Mahum Van Grunt",
+    "level": 30,
+    "champion": false,
+    "hp": 1620,
+    "exp": 1308,
+    "sp": 144
+   },
+   {
+    "name": "Ol Mahum Van Archer",
+    "level": 32,
+    "champion": false,
+    "hp": 1716,
+    "exp": 1920,
+    "sp": 216
+   }
+  ]
+ },
+ {
+  "teleportId": "wastelands",
+  "labelEn": "Wastelands",
+  "labelUk": "Пустелі",
+  "adenaCost": 1900,
+  "mobLevelMin": 15,
+  "mobLevelMax": 37,
+  "mobs": [
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": false,
+    "hp": 900,
+    "exp": 618,
+    "sp": 52
+   },
+   {
+    "name": "Langk Lizardman Warrior",
+    "level": 15,
+    "champion": true,
+    "hp": 1800,
+    "exp": 6180,
+    "sp": 520
+   },
+   {
+    "name": "Langk Lizardman Scout",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Langk Lizardman Leader",
+    "level": 25,
+    "champion": false,
+    "hp": 1380,
+    "exp": 1012,
+    "sp": 102
+   },
+   {
+    "name": "Lesser Basilisk",
+    "level": 27,
+    "champion": false,
+    "hp": 1476,
+    "exp": 3372,
+    "sp": 348
+   },
+   {
+    "name": "Basilisk",
+    "level": 28,
+    "champion": false,
+    "hp": 1524,
+    "exp": 1189,
+    "sp": 124
+   },
+   {
+    "name": "Leto Lizardman",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1781,
+    "sp": 210
+   },
+   {
+    "name": "Leto Lizardman Archer",
+    "level": 36,
+    "champion": false,
+    "hp": 1908,
+    "exp": 1941,
+    "sp": 234
+   },
+   {
+    "name": "Leto Lizardman Archer",
+    "level": 36,
+    "champion": true,
+    "hp": 3816,
+    "exp": 19410,
+    "sp": 2340
+   },
+   {
+    "name": "Leto Lizardman Soldier",
+    "level": 37,
+    "champion": false,
+    "hp": 1956,
+    "exp": 2030,
+    "sp": 250
+   }
+  ]
+ },
+ {
+  "teleportId": "orc_village",
+  "labelEn": "Orc Village",
+  "labelUk": "Селище орків",
+  "adenaCost": 2500,
+  "mobLevelMin": 4,
+  "mobLevelMax": 7,
+  "mobs": [
+   {
+    "name": "Wolf",
+    "level": 4,
+    "champion": false,
+    "hp": 372,
+    "exp": 141,
+    "sp": 8
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": false,
+    "hp": 420,
+    "exp": 178,
+    "sp": 10
+   },
+   {
+    "name": "Goblin",
+    "level": 5,
+    "champion": true,
+    "hp": 840,
+    "exp": 1780,
+    "sp": 100
+   },
+   {
+    "name": "Imp",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Kaboo Orc",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Utuku Orc",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 213,
+    "sp": 12
+   },
+   {
+    "name": "Kaboo Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Utuku Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   }
+  ]
+ },
+ {
+  "teleportId": "immortal_plateau_southern",
+  "labelEn": "Immortal Plateau, Southern Region",
+  "labelUk": "Безсмертне плато (південь)",
+  "adenaCost": 200,
+  "mobLevelMin": 8,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Kaboo Orc Archer",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 293,
+    "sp": 20
+   },
+   {
+    "name": "Kaboo Orc Fighter",
+    "level": 10,
+    "champion": false,
+    "hp": 660,
+    "exp": 363,
+    "sp": 24
+   },
+   {
+    "name": "Kaboo Orc Fighter Leader",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 436,
+    "sp": 32
+   },
+   {
+    "name": "Marsh Stakato",
+    "level": 29,
+    "champion": false,
+    "hp": 1572,
+    "exp": 1509,
+    "sp": 162
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1663,
+    "sp": 184
+   },
+   {
+    "name": "Marsh Stakato Worker",
+    "level": 31,
+    "champion": true,
+    "hp": 3336,
+    "exp": 16630,
+    "sp": 1840
+   },
+   {
+    "name": "Batur Orc Archer",
+    "level": 32
+   },
+   {
+    "name": "Batur Orc Warrior",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1602,
+    "sp": 184
+   },
+   {
+    "name": "Batur Orc Shaman",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1401,
+    "sp": 164
+   },
+   {
+    "name": "Batur Orc Overlord",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1802,
+    "sp": 214
+   }
+  ]
+ },
+ {
+  "teleportId": "immortal_plateau",
+  "labelEn": "The Immortal Plateau",
+  "labelUk": "Безсмертне плато",
+  "adenaCost": 500,
+  "mobLevelMin": 4,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Black Wolf",
+    "level": 4,
+    "champion": false,
+    "hp": 372,
+    "exp": 141,
+    "sp": 8
+   },
+   {
+    "name": "Black Timber Wolf",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 211,
+    "sp": 12
+   },
+   {
+    "name": "Orc Grunt",
+    "level": 7,
+    "champion": false,
+    "hp": 516,
+    "exp": 249,
+    "sp": 16
+   },
+   {
+    "name": "Utuku Orc Archer",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 293,
+    "sp": 20
+   },
+   {
+    "name": "Kaboo Orc Fighter",
+    "level": 10,
+    "champion": false,
+    "hp": 660,
+    "exp": 363,
+    "sp": 24
+   },
+   {
+    "name": "Orc Fighter",
+    "level": 10,
+    "champion": false,
+    "hp": 660,
+    "exp": 363,
+    "sp": 24
+   },
+   {
+    "name": "Grizzly",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 436,
+    "sp": 32
+   },
+   {
+    "name": "Dire Wolf",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 954,
+    "sp": 94
+   }
+  ]
+ },
+ {
+  "teleportId": "cave_of_trials",
+  "labelEn": "Cave of Trials",
+  "labelUk": "Печера випробувань",
+  "adenaCost": 800,
+  "mobLevelMin": 4,
+  "mobLevelMax": 35,
+  "mobs": [
+   {
+    "name": "Kaboo Orc Fighter",
+    "level": 10,
+    "champion": false,
+    "hp": 660,
+    "exp": 363,
+    "sp": 24
+   },
+   {
+    "name": "Kaboo Orc Fighter Lieutenant",
+    "level": 11,
+    "champion": false,
+    "hp": 708,
+    "exp": 391,
+    "sp": 30
+   },
+   {
+    "name": "Kaboo Orc Fighter Leader",
+    "level": 12,
+    "champion": false,
+    "hp": 756,
+    "exp": 436,
+    "sp": 32
+   },
+   {
+    "name": "Batur Orc",
+    "level": 31,
+    "champion": false,
+    "hp": 1668,
+    "exp": 1164,
+    "sp": 130
+   },
+   {
+    "name": "Batur Orc Warrior",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1602,
+    "sp": 184
+   },
+   {
+    "name": "Marsh Stakato Soldier",
+    "level": 33,
+    "champion": false,
+    "hp": 1764,
+    "exp": 1583,
+    "sp": 182
+   },
+   {
+    "name": "Batur Orc Shaman",
+    "level": 34,
+    "champion": false,
+    "hp": 1812,
+    "exp": 1401,
+    "sp": 164
+   },
+   {
+    "name": "Marsh Stakato Drone",
+    "level": 35,
+    "champion": false,
+    "hp": 1860,
+    "exp": 1889,
+    "sp": 224
+   }
+  ]
+ },
+ {
+  "teleportId": "frozen_waterfall",
+  "labelEn": "Frozen Waterfall",
+  "labelUk": "Крижаний водоспад",
+  "adenaCost": 1000,
+  "mobLevelMin": 6,
+  "mobLevelMax": 24,
+  "mobs": [
+   {
+    "name": "Black Timber Wolf",
+    "level": 6,
+    "champion": false,
+    "hp": 468,
+    "exp": 211,
+    "sp": 12
+   },
+   {
+    "name": "Kaboo Orc Archer",
+    "level": 8,
+    "champion": false,
+    "hp": 564,
+    "exp": 293,
+    "sp": 20
+   },
+   {
+    "name": "Kaboo Orc Fighter",
+    "level": 10,
+    "champion": false,
+    "hp": 660,
+    "exp": 363,
+    "sp": 24
+   },
+   {
+    "name": "Brown Bear",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 576,
+    "sp": 46
+   },
+   {
+    "name": "Hook Spider",
+    "level": 16,
+    "champion": false,
+    "hp": 948,
+    "exp": 570,
+    "sp": 46
+   },
+   {
+    "name": "Grizzly Bear",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 599,
+    "sp": 50
+   },
+   {
+    "name": "Orc Shaman",
+    "level": 17,
+    "champion": false,
+    "hp": 996,
+    "exp": 504,
+    "sp": 42
+   },
+   {
+    "name": "Dire Wolf",
+    "level": 24,
+    "champion": false,
+    "hp": 1332,
+    "exp": 954,
+    "sp": 94
+   }
+  ]
+ },
+ {
+  "teleportId": "heine",
+  "labelEn": "Heine",
+  "labelUk": "Гейне",
+  "adenaCost": 14000,
+  "mobLevelMin": 39,
+  "mobLevelMax": 45,
+  "mobs": [
+   {
+    "name": "Farhite",
+    "level": 39,
+    "champion": false,
+    "hp": 2052,
+    "exp": 2057,
+    "sp": 262
+   },
+   {
+    "name": "Alligator",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2373,
+    "sp": 306
+   },
+   {
+    "name": "Nos",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2251,
+    "sp": 290
+   },
+   {
+    "name": "Crokian Lad",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2574,
+    "sp": 336
+   },
+   {
+    "name": "Great White Shark",
+    "level": 42,
+    "champion": false,
+    "hp": 2196,
+    "exp": 2180,
+    "sp": 290
+   },
+   {
+    "name": "Crokian Lad Warrior",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2678,
+    "sp": 362
+   },
+   {
+    "name": "Nos Lad",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3487,
+    "sp": 484
+   }
+  ]
+ },
+ {
+  "teleportId": "field_of_silence",
+  "labelEn": "Field of Silence",
+  "labelUk": "Поле безмови",
+  "adenaCost": 6000,
+  "mobLevelMin": 38,
+  "mobLevelMax": 59,
+  "mobs": [
+   {
+    "name": "Crokian Warrior",
+    "level": 38
+   },
+   {
+    "name": "Farhite",
+    "level": 39,
+    "champion": false,
+    "hp": 2052,
+    "exp": 2057,
+    "sp": 262
+   },
+   {
+    "name": "Nos",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2251,
+    "sp": 290
+   },
+   {
+    "name": "Crokian Lad",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2574,
+    "sp": 336
+   },
+   {
+    "name": "Crokian Lad Warrior",
+    "level": 43,
+    "champion": false,
+    "hp": 2244,
+    "exp": 2678,
+    "sp": 362
+   },
+   {
+    "name": "Nos Lad",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3487,
+    "sp": 484
+   },
+   {
+    "name": "Eva's Light Spirit",
+    "level": 56
+   },
+   {
+    "name": "Eva's Valor Guardian",
+    "level": 59
+   }
+  ]
+ },
+ {
+  "teleportId": "field_of_whispers",
+  "labelEn": "Field of Whispers",
+  "labelUk": "Шепотливі поля",
+  "adenaCost": 6500,
+  "mobLevelMin": 36,
+  "mobLevelMax": 58,
+  "mobs": [
+   {
+    "name": "Crokian",
+    "level": 36,
+    "champion": false,
+    "hp": 1908,
+    "exp": 1999,
+    "sp": 242
+   },
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2817,
+    "sp": 386
+   },
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 28170,
+    "sp": 3860
+   },
+   {
+    "name": "Eva's Seeker",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 2465,
+    "sp": 352
+   },
+   {
+    "name": "Doll Master",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3949,
+    "sp": 594
+   },
+   {
+    "name": "Doll Master",
+    "level": 50,
+    "champion": true,
+    "hp": 5160,
+    "exp": 39490,
+    "sp": 5940
+   },
+   {
+    "name": "Garden Guard Leader",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 6194,
+    "sp": 932
+   },
+   {
+    "name": "Crimson Doll Blader",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 3450,
+    "sp": 542
+   },
+   {
+    "name": "Doll Blader",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 3931,
+    "sp": 618
+   },
+   {
+    "name": "Eva's Wind Spirit",
+    "level": 54
+   }
+  ]
+ },
+ {
+  "teleportId": "alligator_island",
+  "labelEn": "Alligator Island",
+  "labelUk": "Острів алігаторів",
+  "adenaCost": 8000,
+  "mobLevelMin": 40,
+  "mobLevelMax": 45,
+  "mobs": [
+   {
+    "name": "Alligator",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2373,
+    "sp": 306
+   },
+   {
+    "name": "Crokian Lad",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2574,
+    "sp": 336
+   },
+   {
+    "name": "Great White Shark",
+    "level": 42,
+    "champion": false,
+    "hp": 2196,
+    "exp": 2180,
+    "sp": 290
+   },
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2817,
+    "sp": 386
+   },
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 28170,
+    "sp": 3860
+   },
+   {
+    "name": "Nos Lad",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3487,
+    "sp": 484
+   }
+  ]
+ },
+ {
+  "teleportId": "garden_of_eva",
+  "labelEn": "Garden of Eva",
+  "labelUk": "Сади Єви",
+  "adenaCost": 9500,
+  "mobLevelMin": 36,
+  "mobLevelMax": 58,
+  "mobs": [
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": false,
+    "hp": 2292,
+    "exp": 2817,
+    "sp": 386
+   },
+   {
+    "name": "Farhite Lad",
+    "level": 44,
+    "champion": true,
+    "hp": 4584,
+    "exp": 28170,
+    "sp": 3860
+   },
+   {
+    "name": "Nos Lad",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 3487,
+    "sp": 484
+   },
+   {
+    "name": "Eva's Seeker",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 2465,
+    "sp": 352
+   },
+   {
+    "name": "Doll Master",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3949,
+    "sp": 594
+   },
+   {
+    "name": "Doll Master",
+    "level": 50,
+    "champion": true,
+    "hp": 5160,
+    "exp": 39490,
+    "sp": 5940
+   },
+   {
+    "name": "Garden Guard Leader",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 6194,
+    "sp": 932
+   },
+   {
+    "name": "Eva's Water Spirit",
+    "level": 52
+   },
+   {
+    "name": "Doll Blader",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 3931,
+    "sp": 618
+   },
+   {
+    "name": "Freya's Gardener",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 5053,
+    "sp": 854
+   },
+   {
+    "name": "Freya's Gardener",
+    "level": 58,
+    "champion": true,
+    "hp": 5928,
+    "exp": 50530,
+    "sp": 8540
+   }
+  ]
+ },
+ {
+  "teleportId": "rune",
+  "labelEn": "Rune Township",
+  "labelUk": "Рун",
+  "adenaCost": 20000,
+  "mobLevelMin": 55,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Ice Tarantula",
+    "level": 57,
+    "champion": false,
+    "hp": 2916,
+    "exp": 4087,
+    "sp": 680
+   },
+   {
+    "name": "Frost Tarantula",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 5053,
+    "sp": 854
+   },
+   {
+    "name": "Frost Tarantula",
+    "level": 58,
+    "champion": true,
+    "hp": 5928,
+    "exp": 50530,
+    "sp": 8540
+   },
+   {
+    "name": "Frost Iron Golem",
+    "level": 59,
+    "champion": false,
+    "hp": 3012,
+    "exp": 6134,
+    "sp": 1048
+   },
+   {
+    "name": "Frost Buffalo",
+    "level": 61,
+    "champion": false,
+    "hp": 3108,
+    "exp": 5254,
+    "sp": 924
+   },
+   {
+    "name": "Lost Yeti",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 6303,
+    "sp": 1124
+   },
+   {
+    "name": "Ursus",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 6303,
+    "sp": 1124
+   },
+   {
+    "name": "Frost Yeti",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 6277,
+    "sp": 1134
+   }
+  ]
+ },
+ {
+  "teleportId": "wild_beast_pastures",
+  "labelEn": "Wild Beast Pastures",
+  "labelUk": "Пасовища диких звірів",
+  "adenaCost": 7000,
+  "mobLevelMin": 63,
+  "mobLevelMax": 72,
+  "mobs": [
+   {
+    "name": "Raider of Pastureland",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 7006,
+    "sp": 1266
+   },
+   {
+    "name": "Raider of Pastureland",
+    "level": 63,
+    "champion": true,
+    "hp": 6408,
+    "exp": 70060,
+    "sp": 12660
+   },
+   {
+    "name": "Kookaburra",
+    "level": 67,
+    "champion": false,
+    "hp": 3396,
+    "exp": 8356,
+    "sp": 1592
+   },
+   {
+    "name": "Antelope",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 8608,
+    "sp": 1664
+   },
+   {
+    "name": "Antelope",
+    "level": 68,
+    "champion": true,
+    "hp": 6888,
+    "exp": 86080,
+    "sp": 16640
+   },
+   {
+    "name": "Canyon Antelope",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 6893,
+    "sp": 1332
+   },
+   {
+    "name": "Bandersnatch",
+    "level": 69,
+    "champion": false,
+    "hp": 3492,
+    "exp": 9040,
+    "sp": 1768
+   },
+   {
+    "name": "Canyon Antelope Slave",
+    "level": 69
+   },
+   {
+    "name": "Buffalo",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 9121,
+    "sp": 1808
+   },
+   {
+    "name": "Canyon Bandersnatch",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 7244,
+    "sp": 1436
+   }
+  ]
+ },
+ {
+  "teleportId": "valley_of_saints",
+  "labelEn": "Valley of Saints",
+  "labelUk": "Долина святих",
+  "adenaCost": 10000,
+  "mobLevelMin": 55,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Kookaburra",
+    "level": 67,
+    "champion": false,
+    "hp": 3396,
+    "exp": 8356,
+    "sp": 1592
+   },
+   {
+    "name": "Requiem Behemoth",
+    "level": 67,
+    "champion": false,
+    "hp": 3396,
+    "exp": 8265,
+    "sp": 1574
+   },
+   {
+    "name": "Antelope",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 8608,
+    "sp": 1664
+   },
+   {
+    "name": "Antelope",
+    "level": 68,
+    "champion": true,
+    "hp": 6888,
+    "exp": 86080,
+    "sp": 16640
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 12038,
+    "sp": 2326
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": true,
+    "hp": 6888,
+    "exp": 120380,
+    "sp": 23260
+   },
+   {
+    "name": "Bandersnatch",
+    "level": 69,
+    "champion": false,
+    "hp": 3492,
+    "exp": 9040,
+    "sp": 1768
+   },
+   {
+    "name": "Buffalo",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 9121,
+    "sp": 1808
+   },
+   {
+    "name": "Eye of Restrainer",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 7023,
+    "sp": 1410
+   },
+   {
+    "name": "Grendel",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 9572,
+    "sp": 1920
+   },
+   {
+    "name": "Requiem Priest",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 12750,
+    "sp": 2558
+   },
+   {
+    "name": "Requiem Priest",
+    "level": 71,
+    "champion": true,
+    "hp": 7176,
+    "exp": 127500,
+    "sp": 25580
+   },
+   {
+    "name": "Eye of Guide",
+    "level": 72,
+    "champion": false,
+    "hp": 3636,
+    "exp": 7360,
+    "sp": 1494
+   },
+   {
+    "name": "Eye of Guide",
+    "level": 72,
+    "champion": true,
+    "hp": 7272,
+    "exp": 73600,
+    "sp": 14940
+   }
+  ]
+ },
+ {
+  "teleportId": "forest_of_the_dead",
+  "labelEn": "Forest of the Dead",
+  "labelUk": "Ліс мертвих",
+  "adenaCost": 9000,
+  "mobLevelMin": 55,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Fallen Orc",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 4399,
+    "sp": 710
+   },
+   {
+    "name": "Fallen Orc Archer",
+    "level": 57,
+    "champion": false,
+    "hp": 2916,
+    "exp": 6093,
+    "sp": 1012
+   },
+   {
+    "name": "Fallen Orc Shaman",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 6898,
+    "sp": 1166
+   },
+   {
+    "name": "Fallen Orc Shaman",
+    "level": 58,
+    "champion": true,
+    "hp": 5928,
+    "exp": 68980,
+    "sp": 11660
+   },
+   {
+    "name": "Fallen Orc Captain",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 6462,
+    "sp": 1122
+   },
+   {
+    "name": "Banshee",
+    "level": 60
+   },
+   {
+    "name": "Bone Snatcher",
+    "level": 66,
+    "champion": false,
+    "hp": 3348,
+    "exp": 8774,
+    "sp": 1652
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 12038,
+    "sp": 2326
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": true,
+    "hp": 6888,
+    "exp": 120380,
+    "sp": 23260
+   },
+   {
+    "name": "Ghost of Rebellion Soldier",
+    "level": 69,
+    "champion": false,
+    "hp": 3492,
+    "exp": 10718,
+    "sp": 2098
+   },
+   {
+    "name": "Vampire Soldier",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 11891,
+    "sp": 2386
+   }
+  ]
+ },
+ {
+  "teleportId": "swamp_of_screams",
+  "labelEn": "Swamp of Screams",
+  "labelUk": "Болото криків",
+  "adenaCost": 8500,
+  "mobLevelMin": 55,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Frenzy Stakato Soldier",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 8002,
+    "sp": 1546
+   },
+   {
+    "name": "Ghost of Rebellion Leader",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 10843,
+    "sp": 2176
+   },
+   {
+    "name": "Vampire Soldier",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 11891,
+    "sp": 2386
+   },
+   {
+    "name": "Vampire Warrior",
+    "level": 72
+   },
+   {
+    "name": "Cannibalistic Stakato Follower",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 9177,
+    "sp": 1912
+   },
+   {
+    "name": "Spiked Stakato Soldier",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 8875,
+    "sp": 1896
+   },
+   {
+    "name": "Spiked Stakato Drone",
+    "level": 77
+   },
+   {
+    "name": "Spiked Stakato Captain",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8687,
+    "sp": 1902
+   }
+  ]
+ },
+ {
+  "teleportId": "goddard",
+  "labelEn": "Town of Goddard",
+  "labelUk": "Місто Годдарт",
+  "adenaCost": 18000,
+  "mobLevelMin": 71,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Buffalo Slave",
+    "level": 72,
+    "champion": false,
+    "hp": 3636,
+    "exp": 7481,
+    "sp": 1520
+   },
+   {
+    "name": "Hot Springs Buffalo",
+    "level": 73,
+    "champion": false,
+    "hp": 3684,
+    "exp": 8971,
+    "sp": 1846
+   },
+   {
+    "name": "Hot Springs Antelope",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 9247,
+    "sp": 1928
+   },
+   {
+    "name": "Hot Springs Flava",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 10556,
+    "sp": 2200
+   },
+   {
+    "name": "Hot Springs Nepenthes",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 11636,
+    "sp": 2454
+   },
+   {
+    "name": "Hot Springs Yeti",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 9470,
+    "sp": 1998
+   },
+   {
+    "name": "Hot Springs Atrox",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 11135,
+    "sp": 2380
+   },
+   {
+    "name": "Hot Springs Bandersnatch",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 11135,
+    "sp": 2380
+   },
+   {
+    "name": "Grazing Antelope",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 9015,
+    "sp": 1950
+   },
+   {
+    "name": "Ketra Orc Footman",
+    "level": 77
+   }
+  ]
+ },
+ {
+  "teleportId": "varka_silenos_stronghold",
+  "labelEn": "Varka Silenos Stronghold",
+  "labelUk": "Твердиня варка сіленів",
+  "adenaCost": 8000,
+  "mobLevelMin": 75,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Varka Silenos Footman",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 8487,
+    "sp": 1836
+   },
+   {
+    "name": "Varka Silenos Recruit",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 9851,
+    "sp": 2132
+   },
+   {
+    "name": "Varka Silenos Magus",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9625,
+    "sp": 2212
+   },
+   {
+    "name": "Varka Silenos Scout",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9906,
+    "sp": 2168
+   },
+   {
+    "name": "Varka Silenos Shaman",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9492,
+    "sp": 2104
+   },
+   {
+    "name": "Varka Silenos Shaman",
+    "level": 78,
+    "champion": true,
+    "hp": 7848,
+    "exp": 94920,
+    "sp": 21040
+   },
+   {
+    "name": "Varka Silenos Warrior",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 10771,
+    "sp": 2418
+   },
+   {
+    "name": "Varka Silenos Hunter",
+    "level": 78
+   },
+   {
+    "name": "Varka Silenos Priest",
+    "level": 78
+   }
+  ]
+ },
+ {
+  "teleportId": "ketra_orc_outpost",
+  "labelEn": "Ketra Orc Outpost",
+  "labelUk": "Опорний пункт кетра",
+  "adenaCost": 8000,
+  "mobLevelMin": 72,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Grazing Kookaburra",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 9015,
+    "sp": 1950
+   },
+   {
+    "name": "Ketra's War Hound",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 9015,
+    "sp": 1950
+   },
+   {
+    "name": "Ketra Orc Footman",
+    "level": 77
+   },
+   {
+    "name": "Ketra Orc Lieutenant",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 10420,
+    "sp": 2338
+   },
+   {
+    "name": "Ketra Orc Raider",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 10240,
+    "sp": 2240
+   },
+   {
+    "name": "Ketra Orc Shaman",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9955,
+    "sp": 2206
+   },
+   {
+    "name": "Ketra Orc Warrior",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9304,
+    "sp": 2088
+   },
+   {
+    "name": "Ketra Orc Scout",
+    "level": 78
+   }
+  ]
+ },
+ {
+  "teleportId": "hot_springs",
+  "labelEn": "Hot Springs",
+  "labelUk": "Гарячі джерела",
+  "adenaCost": 6000,
+  "mobLevelMin": 73,
+  "mobLevelMax": 76,
+  "mobs": [
+   {
+    "name": "Hot Springs Bandersnatchling",
+    "level": 73,
+    "champion": false,
+    "hp": 3684,
+    "exp": 8609,
+    "sp": 1772
+   },
+   {
+    "name": "Hot Springs Buffalo",
+    "level": 73,
+    "champion": false,
+    "hp": 3684,
+    "exp": 8971,
+    "sp": 1846
+   },
+   {
+    "name": "Hot Springs Antelope",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 9247,
+    "sp": 1928
+   },
+   {
+    "name": "Hot Springs Flava",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 10556,
+    "sp": 2200
+   },
+   {
+    "name": "Hot Springs Atroxspawn",
+    "level": 74
+   },
+   {
+    "name": "Hot Springs Nepenthes",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 11636,
+    "sp": 2454
+   },
+   {
+    "name": "Hot Springs Yeti",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 9470,
+    "sp": 1998
+   },
+   {
+    "name": "Hot Springs Atrox",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 11135,
+    "sp": 2380
+   },
+   {
+    "name": "Hot Springs Bandersnatch",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 11135,
+    "sp": 2380
+   },
+   {
+    "name": "Hot Springs Grendel",
+    "level": 76
+   }
+  ]
+ },
+ {
+  "teleportId": "wall_of_argos",
+  "labelEn": "Wall of Argos",
+  "labelUk": "Стіна Аргоса",
+  "adenaCost": 9000,
+  "mobLevelMin": 71,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Eye of Restrainer",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 7023,
+    "sp": 1410
+   },
+   {
+    "name": "Eye of Guide",
+    "level": 72,
+    "champion": false,
+    "hp": 3636,
+    "exp": 7360,
+    "sp": 1494
+   },
+   {
+    "name": "Eye of Guide",
+    "level": 72,
+    "champion": true,
+    "hp": 7272,
+    "exp": 73600,
+    "sp": 14940
+   },
+   {
+    "name": "Eye of Watchman",
+    "level": 73,
+    "champion": false,
+    "hp": 3684,
+    "exp": 7105,
+    "sp": 1462
+   },
+   {
+    "name": "Eye of Pilgrim",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 7775,
+    "sp": 1620
+   },
+   {
+    "name": "Eye of Ruler",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 10752,
+    "sp": 2242
+   },
+   {
+    "name": "Lavasaurus",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8988,
+    "sp": 1992
+   },
+   {
+    "name": "Lavastone Golem",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8585,
+    "sp": 1950
+   },
+   {
+    "name": "Magma Golem",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 9174,
+    "sp": 2082
+   }
+  ]
+ },
+ {
+  "teleportId": "monastery_of_silence",
+  "labelEn": "Monastery of Silence",
+  "labelUk": "Монастир Тиші",
+  "adenaCost": 10000,
+  "mobLevelMin": 53,
+  "mobLevelMax": 80,
+  "mobs": [
+   {
+    "name": "Tomb Guard",
+    "level": 75
+   },
+   {
+    "name": "Forgotten Ancient People",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 16958,
+    "sp": 3672
+   },
+   {
+    "name": "Tomb Preacher",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 7190,
+    "sp": 1556
+   },
+   {
+    "name": "Tomb Preacher",
+    "level": 77,
+    "champion": true,
+    "hp": 7752,
+    "exp": 71900,
+    "sp": 15560
+   },
+   {
+    "name": "Forgotten Victim",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 13652,
+    "sp": 1300
+   },
+   {
+    "name": "Spiked Stakato Captain",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8687,
+    "sp": 1902
+   },
+   {
+    "name": "Monastery Guardian",
+    "level": 78
+   },
+   {
+    "name": "Spiked Stakato Nurse",
+    "level": 79,
+    "champion": false,
+    "hp": 3972,
+    "exp": 8749,
+    "sp": 1938
+   },
+   {
+    "name": "Spiked Stakato Shaman",
+    "level": 80,
+    "champion": false,
+    "hp": 4020,
+    "exp": 9431,
+    "sp": 2116
+   }
+  ]
+ },
+ {
+  "teleportId": "schuttgart",
+  "labelEn": "Town of Schuttgart",
+  "labelUk": "Місто Штутгарт",
+  "adenaCost": 22000,
+  "mobLevelMin": 60,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Bandersnatch",
+    "level": 69,
+    "champion": false,
+    "hp": 3492,
+    "exp": 9040,
+    "sp": 1768
+   },
+   {
+    "name": "Buffalo",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 9121,
+    "sp": 1808
+   },
+   {
+    "name": "Grendel",
+    "level": 71,
+    "champion": false,
+    "hp": 3588,
+    "exp": 9572,
+    "sp": 1920
+   },
+   {
+    "name": "Buffalo Slave",
+    "level": 72,
+    "champion": false,
+    "hp": 3636,
+    "exp": 7481,
+    "sp": 1520
+   },
+   {
+    "name": "Eye of Watchman",
+    "level": 73,
+    "champion": false,
+    "hp": 3684,
+    "exp": 7105,
+    "sp": 1462
+   },
+   {
+    "name": "Homunculus",
+    "level": 73
+   },
+   {
+    "name": "Bloody Banshee",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 5879,
+    "sp": 1224
+   },
+   {
+    "name": "Cannibalistic Stakato Leader",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 8521,
+    "sp": 1798
+   },
+   {
+    "name": "Necromancer of Destruction",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8915,
+    "sp": 2024
+   }
+  ]
+ },
+ {
+  "teleportId": "den_of_evil",
+  "labelEn": "Den of Evil",
+  "labelUk": "Лігво Зла",
+  "adenaCost": 9000,
+  "mobLevelMin": 46,
+  "mobLevelMax": 80,
+  "mobs": [
+   {
+    "name": "Bone Maker",
+    "level": 66,
+    "champion": false,
+    "hp": 3348,
+    "exp": 9596,
+    "sp": 1806
+   },
+   {
+    "name": "Bone Snatcher",
+    "level": 66,
+    "champion": false,
+    "hp": 3348,
+    "exp": 8774,
+    "sp": 1652
+   },
+   {
+    "name": "Bone Collector",
+    "level": 67,
+    "champion": false,
+    "hp": 3396,
+    "exp": 9695,
+    "sp": 1846
+   },
+   {
+    "name": "Bloody Banshee",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 5879,
+    "sp": 1224
+   },
+   {
+    "name": "Cannibalistic Stakato Follower",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 9177,
+    "sp": 1912
+   },
+   {
+    "name": "Cannibalistic Stakato Leader",
+    "level": 75,
+    "champion": false,
+    "hp": 3780,
+    "exp": 8521,
+    "sp": 1798
+   },
+   {
+    "name": "Spiked Stakato Soldier",
+    "level": 76,
+    "champion": false,
+    "hp": 3828,
+    "exp": 8875,
+    "sp": 1896
+   },
+   {
+    "name": "Spiked Stakato Captain",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8687,
+    "sp": 1902
+   },
+   {
+    "name": "Spiked Stakato Shaman",
+    "level": 80,
+    "champion": false,
+    "hp": 4020,
+    "exp": 9431,
+    "sp": 2116
+   }
+  ]
+ },
+ {
+  "teleportId": "plunderous_plains",
+  "labelEn": "Plunderous Plains",
+  "labelUk": "Розграблені рівнини",
+  "adenaCost": 8000,
+  "mobLevelMin": 5,
+  "mobLevelMax": 78,
+  "mobs": [
+   {
+    "name": "Fallen Orc Captain",
+    "level": 60,
+    "champion": false,
+    "hp": 3060,
+    "exp": 6462,
+    "sp": 1122
+   },
+   {
+    "name": "Raider of Pastureland",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 7006,
+    "sp": 1266
+   },
+   {
+    "name": "Raider of Pastureland",
+    "level": 63,
+    "champion": true,
+    "hp": 6408,
+    "exp": 70060,
+    "sp": 12660
+   },
+   {
+    "name": "Alpine Bandersnatch",
+    "level": 64,
+    "champion": false,
+    "hp": 3252,
+    "exp": 6076,
+    "sp": 1112
+   },
+   {
+    "name": "Requiem Behemoth",
+    "level": 67,
+    "champion": false,
+    "hp": 3396,
+    "exp": 8265,
+    "sp": 1574
+   },
+   {
+    "name": "Alpine Grendel",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 8162,
+    "sp": 1578
+   },
+   {
+    "name": "Canyon Antelope",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 6893,
+    "sp": 1332
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": false,
+    "hp": 3444,
+    "exp": 12038,
+    "sp": 2326
+   },
+   {
+    "name": "Requiem Lord",
+    "level": 68,
+    "champion": true,
+    "hp": 6888,
+    "exp": 120380,
+    "sp": 23260
+   },
+   {
+    "name": "Bandersnatch",
+    "level": 69,
+    "champion": false,
+    "hp": 3492,
+    "exp": 9040,
+    "sp": 1768
+   },
+   {
+    "name": "Buffalo",
+    "level": 70,
+    "champion": false,
+    "hp": 3540,
+    "exp": 9121,
+    "sp": 1808
+   }
+  ]
+ },
+ {
+  "teleportId": "frozen_labyrinth",
+  "labelEn": "Frozen Labyrinth",
+  "labelUk": "Крижаний лабіринт",
+  "adenaCost": 10000,
+  "mobLevelMin": 46,
+  "mobLevelMax": 80,
+  "mobs": [
+   {
+    "name": "Massive Maze Bandersnatch",
+    "level": 54
+   },
+   {
+    "name": "Frost Tarantula",
+    "level": 58,
+    "champion": false,
+    "hp": 2964,
+    "exp": 5053,
+    "sp": 854
+   },
+   {
+    "name": "Frost Tarantula",
+    "level": 58,
+    "champion": true,
+    "hp": 5928,
+    "exp": 50530,
+    "sp": 8540
+   },
+   {
+    "name": "Frost Iron Golem",
+    "level": 59,
+    "champion": false,
+    "hp": 3012,
+    "exp": 6134,
+    "sp": 1048
+   },
+   {
+    "name": "Frost Buffalo",
+    "level": 61,
+    "champion": false,
+    "hp": 3108,
+    "exp": 5254,
+    "sp": 924
+   },
+   {
+    "name": "Lost Yeti",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 6303,
+    "sp": 1124
+   },
+   {
+    "name": "Ursus",
+    "level": 62,
+    "champion": false,
+    "hp": 3156,
+    "exp": 6303,
+    "sp": 1124
+   },
+   {
+    "name": "Frost Yeti",
+    "level": 63,
+    "champion": false,
+    "hp": 3204,
+    "exp": 6277,
+    "sp": 1134
+   }
+  ]
+ },
+ {
+  "teleportId": "crypts_of_disgrace",
+  "labelEn": "Crypts of Disgrace",
+  "labelUk": "Склеп Ганьби",
+  "adenaCost": 11000,
+  "mobLevelMin": 66,
+  "mobLevelMax": 80,
+  "mobs": [
+   {
+    "name": "Bone Puppeteer",
+    "level": 71,
+    "champion": true,
+    "hp": 7176,
+    "exp": 111050,
+    "sp": 22280
+   },
+   {
+    "name": "Bone Caster",
+    "level": 71
+   },
+   {
+    "name": "Grave Scarab",
+    "level": 73
+   },
+   {
+    "name": "Grave Ant",
+    "level": 74,
+    "champion": false,
+    "hp": 3732,
+    "exp": 9383,
+    "sp": 1956
+   },
+   {
+    "name": "Tomb Guard",
+    "level": 75
+   },
+   {
+    "name": "Tomb Preacher",
+    "level": 77,
+    "champion": false,
+    "hp": 3876,
+    "exp": 7190,
+    "sp": 1556
+   },
+   {
+    "name": "Tomb Preacher",
+    "level": 77,
+    "champion": true,
+    "hp": 7752,
+    "exp": 71900,
+    "sp": 15560
+   },
+   {
+    "name": "Spiked Stakato Captain",
+    "level": 78,
+    "champion": false,
+    "hp": 3924,
+    "exp": 8687,
+    "sp": 1902
+   },
+   {
+    "name": "Spiked Stakato Nurse",
+    "level": 79,
+    "champion": false,
+    "hp": 3972,
+    "exp": 8749,
+    "sp": 1938
+   },
+   {
+    "name": "Spiked Stakato Shaman",
+    "level": 80,
+    "champion": false,
+    "hp": 4020,
+    "exp": 9431,
+    "sp": 2116
+   }
+  ]
+ },
+ {
+  "teleportId": "pavel_ruins",
+  "labelEn": "Pavel Ruins",
+  "labelUk": "Руїни Павла",
+  "adenaCost": 9500,
+  "mobLevelMin": 46,
+  "mobLevelMax": 80,
+  "mobs": [
+   {
+    "name": "Probe Golem Prodigy IV",
+    "level": 46
+   },
+   {
+    "name": "Menacing Jackhammer Golem",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 3311,
+    "sp": 474
+   },
+   {
+    "name": "Spelunking Spider",
+    "level": 47
+   },
+   {
+    "name": "Horrifying Cannon Golem I",
+    "level": 48
+   },
+   {
+    "name": "Cruel Vice Golem",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3659,
+    "sp": 540
+   },
+   {
+    "name": "Probe Golem Champion I",
+    "level": 49,
+    "champion": false,
+    "hp": 2532,
+    "exp": 3659,
+    "sp": 540
+   },
+   {
+    "name": "Spelunking Ant",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 3629,
+    "sp": 546
+   },
+   {
+    "name": "Horrifying Excavator Golem III",
+    "level": 51,
+    "champion": false,
+    "hp": 2628,
+    "exp": 3841,
+    "sp": 586
+   },
+   {
+    "name": "Bloodthirsty Ginzu Golem VII",
+    "level": 51
+   },
+   {
+    "name": "Ginzu Golem Prodigy X",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 2198,
+    "sp": 340
+   },
+   {
+    "name": "Horrifying Cannon Golem",
+    "level": 52,
+    "champion": false,
+    "hp": 2676,
+    "exp": 2198,
+    "sp": 340
+   },
+   {
+    "name": "Horrifying Cannon Golem",
+    "level": 52,
+    "champion": true,
+    "hp": 5352,
+    "exp": 21980,
+    "sp": 3400
+   },
+   {
+    "name": "Horrifying Jackhammer Golem",
+    "level": 52
+   },
+   {
+    "name": "Deadly Ginzu Golem V",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4398,
+    "sp": 692
+   },
+   {
+    "name": "Epic Cannon Golem",
+    "level": 53,
+    "champion": false,
+    "hp": 2724,
+    "exp": 4398,
+    "sp": 692
+   },
+   {
+    "name": "Epic Cannon Golem",
+    "level": 53,
+    "champion": true,
+    "hp": 5448,
+    "exp": 43980,
+    "sp": 6920
+   },
+   {
+    "name": "Horrifying Ginzu Golem VIII",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4370,
+    "sp": 696
+   }
+  ]
+ },
+ {
+  "teleportId": "ancient_tomb_fields",
+  "labelEn": "Ancient Tomb Fields",
+  "labelUk": "Поля стародавніх могил",
+  "adenaCost": 1,
+  "mobLevelMin": 40,
+  "mobLevelMax": 66,
+  "mobs": [
+   {
+    "name": "Vagabond of the Ruins",
+    "level": 40
+   },
+   {
+    "name": "Grave Wanderer",
+    "level": 45,
+    "champion": false,
+    "hp": 2340,
+    "exp": 4123,
+    "sp": 574
+   },
+   {
+    "name": "Grave Overlord",
+    "level": 45
+   },
+   {
+    "name": "Grave Priest",
+    "level": 47,
+    "champion": false,
+    "hp": 2436,
+    "exp": 2396,
+    "sp": 342
+   },
+   {
+    "name": "Spiteful Ghost of Ruins",
+    "level": 50,
+    "champion": false,
+    "hp": 2580,
+    "exp": 5349,
+    "sp": 806
+   },
+   {
+    "name": "Soul of Ruins",
+    "level": 54,
+    "champion": false,
+    "hp": 2772,
+    "exp": 4325,
+    "sp": 690
+   },
+   {
+    "name": "Tomb Archon",
+    "level": 55,
+    "champion": false,
+    "hp": 2820,
+    "exp": 3459,
+    "sp": 558
+   },
+   {
+    "name": "Tomb Inquisitor",
+    "level": 57,
+    "champion": false,
+    "hp": 2916,
+    "exp": 3524,
+    "sp": 586
+   }
+  ]
+ },
+ {
+  "teleportId": "sea_of_spores",
+  "labelEn": "Sea of Spores",
+  "labelUk": "Море спор",
+  "adenaCost": 6000,
+  "mobLevelMin": 5,
+  "mobLevelMax": 57,
+  "mobs": [
+   {
+    "name": "Giant Fungus",
+    "level": 40,
+    "champion": false,
+    "hp": 2100,
+    "exp": 2327,
+    "sp": 300
+   },
+   {
+    "name": "Giant Monstereye",
+    "level": 41,
+    "champion": false,
+    "hp": 2148,
+    "exp": 2444,
+    "sp": 320
+   },
+   {
+    "name": "Dire Wyrm",
+    "level": 42
+   },
+   {
+    "name": "Spore Essence Guardian",
+    "level": 52
+   },
+   {
+    "name": "Eva's Purity Guardian",
+    "level": 57
+   }
+  ]
+ }
+]

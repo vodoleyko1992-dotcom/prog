@@ -1,0 +1,3090 @@
+[
+ {
+  "spawnId": "l2dop_rb_29001",
+  "npcId": 29001,
+  "name": "Queen Ant",
+  "level": 40,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 429898,
+   "pAtk": 3150,
+   "pDef": 1985,
+   "mAtk": 2562,
+   "mDef": 1823
+  },
+  "exp": 1179536,
+  "sp": 281480,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 12,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 100000,
+    "max": 100000
+   },
+   {
+    "item": "Ring of Queen Ant",
+    "itemId": 6660,
+    "kind": "equipment",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Bonebreaker",
+    "itemId": 159,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Glaive",
+    "itemId": 297,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Elven Long Sword",
+    "itemId": 2499,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Claymore",
+    "itemId": 70,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Dagger",
+    "itemId": 225,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Light Crossbow",
+    "itemId": 280,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scallop Jamadhr",
+    "itemId": 262,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Staff of Life",
+    "itemId": 189,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tomahawk",
+    "itemId": 86,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Two-handed Sword",
+    "itemId": 124,
+    "kind": "equipment",
+    "chance": 0.08,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Breastplate",
+    "itemId": 58,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Gaiters",
+    "itemId": 59,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Helmet",
+    "itemId": 499,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Gloves",
+    "itemId": 61,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Mithril Boots",
+    "itemId": 62,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Reinforced Leather Shirt",
+    "itemId": 394,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Reinforced Leather Gaiters",
+    "itemId": 416,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Reinforced Gloves",
+    "itemId": 720,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Reinforced Leather Boots",
+    "itemId": 2422,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tunic of Knowledge",
+    "itemId": 436,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Stockings of Knowledge",
+    "itemId": 469,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Gloves of Knowledge",
+    "itemId": 2447,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Boots of Knowledge",
+    "itemId": 2423,
+    "kind": "equipment",
+    "chance": 0.06153846153846154,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Bronze Shield",
+    "itemId": 626,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Hoplon",
+    "itemId": 628,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plate Shield",
+    "itemId": 2494,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Red Cresent Earing I00",
+    "itemId": 847,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Enchanted Earing I00",
+    "itemId": 848,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Tigerseye Earing I00",
+    "itemId": 849,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Elven Earing I00",
+    "itemId": 850,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Onyxbeastseye Earing I00",
+    "itemId": 851,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Enchanted Ring I00",
+    "itemId": 879,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Black Pearl Ring I00",
+    "itemId": 880,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Elven Ring I00",
+    "itemId": 881,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Mithril Ring I00",
+    "itemId": 882,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Devotion I00",
+    "itemId": 890,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Devotion I00",
+    "itemId": 910,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Enchanted Necklace I00",
+    "itemId": 911,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Near Forest Necklace I00",
+    "itemId": 912,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Elven Necklace I00",
+    "itemId": 913,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Darkness I00",
+    "itemId": 914,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (D)",
+    "itemId": 910510,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (D)",
+    "itemId": 910511,
+    "kind": "resource",
+    "chance": 0.1,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні D-grade",
+    "itemId": 910520,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї D-grade",
+    "itemId": 910521,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні C-grade",
+    "itemId": 910522,
+    "kind": "resource",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї C-grade",
+    "itemId": 910523,
+    "kind": "resource",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29006",
+  "npcId": 29006,
+  "name": "Core",
+  "level": 50,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 876883,
+   "pAtk": 3920,
+   "pDef": 2001,
+   "mAtk": 3192,
+   "mDef": 2124
+  },
+  "exp": 1041407,
+  "sp": 307572,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 12,
+  "isAliveAtCrawl": true,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 200000,
+    "max": 200000
+   },
+   {
+    "item": "Ring of Core",
+    "itemId": 6662,
+    "kind": "equipment",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Homunkulus's Sword",
+    "itemId": 84,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Big Hammer",
+    "itemId": 89,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Samurai Longsword",
+    "itemId": 135,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Battle Axe",
+    "itemId": 160,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "War Axe",
+    "itemId": 162,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heavy Doom Hammer",
+    "itemId": 191,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heavy Doom Axe",
+    "itemId": 194,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Staff",
+    "itemId": 206,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Crystal Dagger",
+    "itemId": 228,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Screamer",
+    "itemId": 233,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Fisted Blade",
+    "itemId": 265,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Great Pata",
+    "itemId": 266,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Akat Long Bow",
+    "itemId": 283,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Tunic",
+    "itemId": 439,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Stockings",
+    "itemId": 471,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Gloves",
+    "itemId": 2454,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Boots",
+    "itemId": 2430,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Helmet",
+    "itemId": 20002,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Tunic",
+    "itemId": 441,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Stockings",
+    "itemId": 472,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Gloves",
+    "itemId": 2459,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Boots",
+    "itemId": 2435,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Helmet",
+    "itemId": 20001,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather",
+    "itemId": 398,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Gaiters",
+    "itemId": 418,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Boots",
+    "itemId": 2431,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Gloves",
+    "itemId": 2455,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Helmet",
+    "itemId": 20003,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Composite Shield",
+    "itemId": 107,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Full Plate Shield",
+    "itemId": 2497,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Binding I00",
+    "itemId": 119,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Moonstone Earing I00",
+    "itemId": 852,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Earing Of Protection I00",
+    "itemId": 853,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Earing Of Binding I00",
+    "itemId": 854,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Nassens Earing I00",
+    "itemId": 855,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Earing I00",
+    "itemId": 857,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Aquastone Ring I00",
+    "itemId": 883,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Protection I00",
+    "itemId": 884,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Ages I00",
+    "itemId": 885,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Binding I00",
+    "itemId": 886,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Ring I00",
+    "itemId": 888,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Aquastone Necklace I00",
+    "itemId": 915,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Protection I00",
+    "itemId": 916,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Mermaid I00",
+    "itemId": 917,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Necklace I00",
+    "itemId": 919,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (C)",
+    "itemId": 910512,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (C)",
+    "itemId": 910513,
+    "kind": "resource",
+    "chance": 0.1,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні C-grade",
+    "itemId": 910522,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї C-grade",
+    "itemId": 910523,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні B-grade",
+    "itemId": 910524,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї B-grade",
+    "itemId": 910525,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29014",
+  "npcId": 29014,
+  "name": "Orfen",
+  "level": 50,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 487686,
+   "pAtk": 3920,
+   "pDef": 1601,
+   "mAtk": 3192,
+   "mDef": 1924
+  },
+  "exp": 1041407,
+  "sp": 307572,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 12,
+  "isAliveAtCrawl": true,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 200000,
+    "max": 200000
+   },
+   {
+    "item": "Earring of Orfen",
+    "itemId": 6661,
+    "kind": "equipment",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Homunkulus's Sword",
+    "itemId": 84,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Big Hammer",
+    "itemId": 89,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Samurai Longsword",
+    "itemId": 135,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Battle Axe",
+    "itemId": 160,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "War Axe",
+    "itemId": 162,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heavy Doom Hammer",
+    "itemId": 191,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heavy Doom Axe",
+    "itemId": 194,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Staff",
+    "itemId": 206,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Crystal Dagger",
+    "itemId": 228,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Screamer",
+    "itemId": 233,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Fisted Blade",
+    "itemId": 265,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Great Pata",
+    "itemId": 266,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Akat Long Bow",
+    "itemId": 283,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Tunic",
+    "itemId": 439,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Stockings",
+    "itemId": 471,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Gloves",
+    "itemId": 2454,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Boots",
+    "itemId": 2430,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Karmian Helmet",
+    "itemId": 20002,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Tunic",
+    "itemId": 441,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Stockings",
+    "itemId": 472,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Gloves",
+    "itemId": 2459,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Boots",
+    "itemId": 2435,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon's Helmet",
+    "itemId": 20001,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather",
+    "itemId": 398,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Gaiters",
+    "itemId": 418,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Boots",
+    "itemId": 2431,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Gloves",
+    "itemId": 2455,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Plated Leather Helmet",
+    "itemId": 20003,
+    "kind": "equipment",
+    "chance": 0.06666666666666667,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Composite Shield",
+    "itemId": 107,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Full Plate Shield",
+    "itemId": 2497,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Binding I00",
+    "itemId": 119,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Moonstone Earing I00",
+    "itemId": 852,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Earing Of Protection I00",
+    "itemId": 853,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Earing Of Binding I00",
+    "itemId": 854,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Nassens Earing I00",
+    "itemId": 855,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Earing I00",
+    "itemId": 857,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Aquastone Ring I00",
+    "itemId": 883,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Protection I00",
+    "itemId": 884,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Ages I00",
+    "itemId": 885,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Ring Of Binding I00",
+    "itemId": 886,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Ring I00",
+    "itemId": 888,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Aquastone Necklace I00",
+    "itemId": 915,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Protection I00",
+    "itemId": 916,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Necklace Of Mermaid I00",
+    "itemId": 917,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Accessary Blessed Necklace I00",
+    "itemId": 919,
+    "kind": "equipment",
+    "chance": 0.05333333333333334,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (C)",
+    "itemId": 910512,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (C)",
+    "itemId": 910513,
+    "kind": "resource",
+    "chance": 0.1,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні C-grade",
+    "itemId": 910522,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї C-grade",
+    "itemId": 910523,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні B-grade",
+    "itemId": 910524,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї B-grade",
+    "itemId": 910525,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29022",
+  "npcId": 29022,
+  "name": "Zaken",
+  "level": 60,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 3654666,
+   "pAtk": 3433,
+   "pDef": 2717,
+   "mAtk": 3222,
+   "mDef": 2626
+  },
+  "exp": 2879745,
+  "sp": 847178,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 36,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 400000,
+    "max": 400000
+   },
+   {
+    "item": "Earring of Zaken",
+    "itemId": 6659,
+    "kind": "equipment",
+    "chance": 0.6,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Great Sword",
+    "itemId": 78,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Sword of Damascus",
+    "itemId": 79,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Sword of Valhalla",
+    "itemId": 148,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Art of Battle Axe",
+    "itemId": 175,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Staff of Evil Spirits",
+    "itemId": 210,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Kris",
+    "itemId": 229,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Bellion Cestus",
+    "itemId": 268,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Bow of Peril",
+    "itemId": 287,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Great Axe",
+    "itemId": 300,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Guardian Sword",
+    "itemId": 7883,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Wizard's Tear",
+    "itemId": 7889,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Kaim Vanul's Bones",
+    "itemId": 7893,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Star Buster",
+    "itemId": 7901,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Avadon Robe",
+    "itemId": 30002,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Avadon Circlet",
+    "itemId": 30001,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Avadon Gloves",
+    "itemId": 30003,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Avadon Boots",
+    "itemId": 30004,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blue Wolf Breastplate",
+    "itemId": 358,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blue Wolf Gaiters",
+    "itemId": 2380,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blue Wolf Helmet",
+    "itemId": 2416,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blue Wolf Gloves",
+    "itemId": 2487,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blue Wolf Boots",
+    "itemId": 2439,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Leather Armor of Doom",
+    "itemId": 30009,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Doom Helmet",
+    "itemId": 30008,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Doom Gloves",
+    "itemId": 30010,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Doom Boots",
+    "itemId": 30011,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Avadon Shield",
+    "itemId": 673,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Doom Shield",
+    "itemId": 110,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shield of Pledge",
+    "itemId": 111,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Earring of Black Ore",
+    "itemId": 864,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Ring of Black Ore",
+    "itemId": 895,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Necklace of Black Ore",
+    "itemId": 926,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (B)",
+    "itemId": 910514,
+    "kind": "resource",
+    "chance": 0.2,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (B)",
+    "itemId": 910515,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні B-grade",
+    "itemId": 910524,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї B-grade",
+    "itemId": 910525,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні A-grade",
+    "itemId": 910526,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї A-grade",
+    "itemId": 910527,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29020",
+  "npcId": 29020,
+  "name": "Baium",
+  "level": 75,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 41117713,
+   "pAtk": 8845,
+   "pDef": 7891,
+   "mAtk": 11767,
+   "mDef": 8778
+  },
+  "exp": 8253419,
+  "sp": 2163088,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 60,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 1000000,
+    "max": 1000000
+   },
+   {
+    "item": "Ring of Baium",
+    "itemId": 6658,
+    "kind": "equipment",
+    "chance": 1,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tallum Blade",
+    "itemId": 80,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dragon Slayer",
+    "itemId": 81,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Sword of Miracles",
+    "itemId": 151,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Elysian",
+    "itemId": 164,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dasparion's Staff",
+    "itemId": 212,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Bloody Orchid",
+    "itemId": 235,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blood Tornado",
+    "itemId": 269,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Carnage Bow",
+    "itemId": 288,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tallum Glaive",
+    "itemId": 305,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Legion's Edge",
+    "itemId": 2500,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Infernal Master",
+    "itemId": 7884,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Naga Storm",
+    "itemId": 8682,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shyeed's Bow",
+    "itemId": 8684,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Brigandine",
+    "itemId": 7864,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Helm",
+    "itemId": 7860,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Leather Gloves",
+    "itemId": 7865,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Boots",
+    "itemId": 7866,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Breastplate",
+    "itemId": 365,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Gaiters",
+    "itemId": 388,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Helmet",
+    "itemId": 512,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Gloves [Heavy Armor]",
+    "itemId": 2472,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Boots [Heavy Armor]",
+    "itemId": 563,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Robe",
+    "itemId": 2409,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Circlet",
+    "itemId": 2419,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Gauntlets [Robe]",
+    "itemId": 2482,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Boots [Robe]",
+    "itemId": 583,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Shield",
+    "itemId": 641,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shield of Nightmare",
+    "itemId": 2498,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка величі A-grade.",
+    "itemId": 862,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка фантому A-grade.",
+    "itemId": 868,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка фенікса A-grade.",
+    "itemId": 871,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка цербера A-grade.",
+    "itemId": 872,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце величі A-grade.",
+    "itemId": 893,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце фантому A-grade.",
+    "itemId": 899,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце фенікса A-grade.",
+    "itemId": 902,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце цербера A-grade.",
+    "itemId": 903,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто величі A-grade.",
+    "itemId": 924,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто фантому A-grade.",
+    "itemId": 930,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто фенікса A-grade.",
+    "itemId": 933,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто цербера A-grade.",
+    "itemId": 934,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (A)",
+    "itemId": 910516,
+    "kind": "resource",
+    "chance": 0.2,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (A)",
+    "itemId": 910517,
+    "kind": "resource",
+    "chance": 0.15,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні A-grade",
+    "itemId": 910526,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї A-grade",
+    "itemId": 910527,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні S-grade",
+    "itemId": 910528,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї S-grade",
+    "itemId": 910529,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29019",
+  "npcId": 29019,
+  "name": "Antharas",
+  "level": 79,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 62545640,
+   "pAtk": 9153,
+   "pDef": 6938,
+   "mAtk": 13019,
+   "mDef": 8719
+  },
+  "exp": 12720918,
+  "sp": 58232752,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 72,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 1750000,
+    "max": 1750000
+   },
+   {
+    "item": "Earring of Antharas",
+    "itemId": 6656,
+    "kind": "equipment",
+    "chance": 1,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dragon Slayer",
+    "itemId": 81,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Elysian",
+    "itemId": 164,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Soul Separator",
+    "itemId": 236,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Blood Tornado",
+    "itemId": 269,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Soul Bow",
+    "itemId": 289,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Legion's Edge",
+    "itemId": 2500,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Infernal Master",
+    "itemId": 7884,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Spiritual Eye",
+    "itemId": 7894,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Sirra's Blade",
+    "itemId": 8678,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Sword of Ipos",
+    "itemId": 8679,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Naga Storm",
+    "itemId": 8682,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shyeed's Bow",
+    "itemId": 8684,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Themis' Tongue",
+    "itemId": 8686,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Brigandine",
+    "itemId": 7864,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Helm",
+    "itemId": 7860,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Leather Gloves",
+    "itemId": 7865,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apella Boots",
+    "itemId": 7866,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Breastplate",
+    "itemId": 365,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Gaiters",
+    "itemId": 388,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Helmet",
+    "itemId": 512,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Gloves",
+    "itemId": 2472,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Boots",
+    "itemId": 563,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Robe",
+    "itemId": 2409,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Circlet",
+    "itemId": 2419,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Gauntlets",
+    "itemId": 2482,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Majestic Boots",
+    "itemId": 583,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dark Crystal Shield",
+    "itemId": 641,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shield of Nightmare",
+    "itemId": 2498,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка величі A-grade.",
+    "itemId": 862,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка фантому A-grade.",
+    "itemId": 868,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка фенікса A-grade.",
+    "itemId": 871,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Сережка цербера A-grade.",
+    "itemId": 872,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце величі A-grade.",
+    "itemId": 893,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце фантому A-grade.",
+    "itemId": 899,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце фенікса A-grade.",
+    "itemId": 902,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Кільце цербера A-grade.",
+    "itemId": 903,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто величі A-grade.",
+    "itemId": 924,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто фантому A-grade.",
+    "itemId": 930,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто фенікса A-grade.",
+    "itemId": 933,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Намисто цербера A-grade.",
+    "itemId": 934,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (A)",
+    "itemId": 910516,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (A)",
+    "itemId": 910517,
+    "kind": "resource",
+    "chance": 0.2,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні A-grade",
+    "itemId": 910526,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї A-grade",
+    "itemId": 910527,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення броні S-grade",
+    "itemId": 910528,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї S-grade",
+    "itemId": 910529,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29028",
+  "npcId": 29028,
+  "name": "Valakas",
+  "level": 85,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 86480200,
+   "pAtk": 11615,
+   "pDef": 6707,
+   "mAtk": 11397,
+   "mDef": 7880
+  },
+  "exp": 40286410,
+  "sp": 54430802,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 240,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 3000000,
+    "max": 3000000
+   },
+   {
+    "item": "Necklace of Valakas",
+    "itemId": 6657,
+    "kind": "equipment",
+    "chance": 1,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apprentice's Spellbook",
+    "itemId": 910201,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Baguette's Dualsword",
+    "itemId": 910202,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Angel Slayer",
+    "itemId": 6367,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Arcana Mace",
+    "itemId": 6579,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Basalt Battlehammer",
+    "itemId": 6365,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon Splinter",
+    "itemId": 6371,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Bow",
+    "itemId": 7575,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dragon Hunter Axe",
+    "itemId": 6369,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "God's Blade",
+    "itemId": 82,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heaven's Divider",
+    "itemId": 6372,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Staff",
+    "itemId": 6366,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Saint Spear",
+    "itemId": 6370,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shining Bow",
+    "itemId": 6368,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Breastplate",
+    "itemId": 6373,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Gaiters",
+    "itemId": 6374,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Helmet",
+    "itemId": 6378,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Gauntlets",
+    "itemId": 6375,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Boots",
+    "itemId": 6376,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Armor",
+    "itemId": 6379,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Helmet",
+    "itemId": 6382,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Gloves",
+    "itemId": 6380,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Boots",
+    "itemId": 6381,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Robe",
+    "itemId": 6383,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Circlet",
+    "itemId": 6386,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Gloves",
+    "itemId": 6384,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Boots",
+    "itemId": 6385,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Shield",
+    "itemId": 6377,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Earring",
+    "itemId": 858,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Ring",
+    "itemId": 889,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Necklace",
+    "itemId": 920,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (S)",
+    "itemId": 910518,
+    "kind": "resource",
+    "chance": 0.3,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (S)",
+    "itemId": 910519,
+    "kind": "resource",
+    "chance": 0.25,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні S-grade",
+    "itemId": 910528,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї S-grade",
+    "itemId": 910529,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ },
+ {
+  "spawnId": "l2dop_rb_29045",
+  "npcId": 29045,
+  "name": "Frintezza",
+  "level": 90,
+  "bossType": "epic",
+  "stats": {
+   "maxHp": 42619522,
+   "pAtk": 7000,
+   "pDef": 5065,
+   "mAtk": 8712,
+   "mDef": 8830
+  },
+  "exp": 1470000,
+  "sp": 26464096,
+  "teleportAdena": 0,
+  "coinOfLuckCost": 1,
+  "respawnHours": 60,
+  "isAliveAtCrawl": false,
+  "drops": [
+   {
+    "item": "Adena",
+    "itemId": 57,
+    "kind": "adena",
+    "chance": 1,
+    "min": 5000000,
+    "max": 5000000
+   },
+   {
+    "item": "Necklace of Frintezza",
+    "itemId": 8191,
+    "kind": "equipment",
+    "chance": 0.9,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Apprentice's Spellbook",
+    "itemId": 910201,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Baguette's Dualsword",
+    "itemId": 910202,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Angel Slayer",
+    "itemId": 6367,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Arcana Mace",
+    "itemId": 6579,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Basalt Battlehammer",
+    "itemId": 6365,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Demon Splinter",
+    "itemId": 6371,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Bow",
+    "itemId": 7575,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Dragon Hunter Axe",
+    "itemId": 6369,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "God's Blade",
+    "itemId": 82,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Heaven's Divider",
+    "itemId": 6372,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Staff",
+    "itemId": 6366,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Saint Spear",
+    "itemId": 6370,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Shining Bow",
+    "itemId": 6368,
+    "kind": "equipment",
+    "chance": 0.07692307692307693,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Breastplate",
+    "itemId": 6373,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Gaiters",
+    "itemId": 6374,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Helmet",
+    "itemId": 6378,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Gauntlets",
+    "itemId": 6375,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Boots",
+    "itemId": 6376,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Armor",
+    "itemId": 6379,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Helmet",
+    "itemId": 6382,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Gloves",
+    "itemId": 6380,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Draconic Leather Boots",
+    "itemId": 6381,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Robe",
+    "itemId": 6383,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Circlet",
+    "itemId": 6386,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Gloves",
+    "itemId": 6384,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Major Arcana Boots",
+    "itemId": 6385,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Imperial Crusader Shield",
+    "itemId": 6377,
+    "kind": "equipment",
+    "chance": 0.07,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Earring",
+    "itemId": 858,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Ring",
+    "itemId": 889,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Tateossian Necklace",
+    "itemId": 920,
+    "kind": "equipment",
+    "chance": 0.06999999999999999,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Scroll: Enchant Armor (S)",
+    "itemId": 910518,
+    "kind": "resource",
+    "chance": 0.35,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Scroll: Enchant Weapon (S)",
+    "itemId": 910519,
+    "kind": "resource",
+    "chance": 0.3,
+    "min": 1,
+    "max": 3
+   },
+   {
+    "item": "Благословенний сувій заточення броні S-grade",
+    "itemId": 910528,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   },
+   {
+    "item": "Благословенний сувій заточення зброї S-grade",
+    "itemId": 910529,
+    "kind": "resource",
+    "chance": 0.5,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "dropsSynthetic": true
+ }
+]
