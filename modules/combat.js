@@ -767,7 +767,11 @@ async function battle() {
       const L = env.rt.epic.hpLog || [], last = L[L.length - 1];
       const reset = !!last && last.cur < last.max * 0.95 && mob0.cur >= mob0.max * 0.99;
       await env.setRt({ epic: { ...env.rt.epic, startHp: mob0.cur, resetN: reset ? (env.rt.epic.resetN || 0) + 1 : 0 } });
-      env.rec('B', 'эпики', `${ctx.name}: заход ${(env.rt.epic.deaths || 0) + 1} · у него ${Math.round(mob0.cur / mob0.max * 1000) / 10} % (${env.fmtK(mob0.cur)}/${env.fmtK(mob0.max)})${reset ? ' — HP восстановилось полностью!' : ''}`);
+      // 8.0.3 (эпики): сохраняется ли HP эпика между заходами — замер на повторном входе: восстановилось полностью → нет; через ≥60 с
+      // у него не больше, чем было + 2 % → да. Без подтверждения после смерти бот ждёт следующего появления (epicStep)
+      const ek = env.epicById(ctx.rb.id).k, keep = !reset && last?.max && last.cur != null && last.cur < last.max * 0.99 && Date.now() - (last.t || 0) >= 60000 && mob0.cur <= last.cur + mob0.max * 0.02;
+      if (reset || keep) await env.epicDbSet(ek, { persist: !!keep, persistT: Date.now() });
+      env.rec('B', 'эпики', `${ctx.name}: заход ${(env.rt.epic.deaths || 0) + 1} · у него ${Math.round(mob0.cur / mob0.max * 1000) / 10} % (${env.fmtK(mob0.cur)}/${env.fmtK(mob0.max)})${reset ? ' — HP восстановилось полностью!' : keep ? ' — HP с прошлого захода сохранилось' : ''}`);
     }
     // 7.2.1 (лог 10.10 21:32: у Короля Тарлка сохранились цифры окна карты другого РБ — HP 273k при настоящих 920k): HP из окна карты
     // не совпадает с HP в бою больше чем на 10 % — цифры чужие, стираем (по ним оценивались и другие РБ)

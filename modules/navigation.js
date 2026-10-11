@@ -6,6 +6,12 @@
  root.L2V7Factories.navigation = function create_navigation(env) {
 const isMap = () => /\/map\.html/i.test(location.pathname);
 
+// 8.0.3 (эпики, ревью): валюта цены телепорта (.l2-teleport-miru-price-currency, «аден»). Раньше читалось только число — логово за
+// Coin of Luck оплатилось бы мимо лимита. curT — подпись как есть (нет элемента — undefined: старая разметка/каталог), cur — как epics.unitOf
+const curOf = row => { const el = row?.querySelector('.l2-teleport-miru-price-currency'); if (!el) return {};
+  const t = [el.textContent, ...[...(el.querySelectorAll?.('img, [title]') || [])].map(i => [i.getAttribute('alt'), i.getAttribute('title')].join(' '))].join(' ').replace(/\s+/g, ' ').trim();
+  const src = [...(el.querySelectorAll?.('img') || [])].map(i => i.getAttribute('src') || '').join(' ');
+  return { cur: /coin|luck|монет|удач|\bcol\b/i.test(t) || /(^|\D)4037(\D|$)|luck/i.test(src) ? 'Coin of Luck' : /аден|adena/i.test(t) ? 'аден' : '', curT: t.slice(0, 20) }; };
 function zoneRows() {                             // видимые строки «Окрестности» на странице телепорта
   const cat = {};
   for (const r of document.querySelectorAll('.l2-teleport-miru-surroundings-row')) {
@@ -14,7 +20,7 @@ function zoneRows() {                             // видимые строки
     cat[b.dataset.teleportId] = {
       name: (r.querySelector('.l2-teleport-miru-surroundings-label > span')?.textContent || b.dataset.teleportId).trim(),
       city: r.closest('[data-surroundings-key]')?.dataset.surroundingsKey || '',
-      price: +((r.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0),
+      price: +((r.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0), ...curOf(r),
       lo: lv ? +lv[1] : 0, hi: lv ? +lv[2] : 0,
     };
   }
@@ -50,7 +56,7 @@ async function zoneCatalogScan() {                // раскрыть все г�
     // v5.1: и сам город — тоже цель телепорта («Town of Giran», «Rune Township» — так их называет форум рецептов)
     const cr = blk?.querySelector('.l2-teleport-miru-city-row'), ctb = cr?.querySelector('.l2-teleport-miru-tp-btn[data-teleport-id]');
     const cl = (cr?.querySelector('.l2-teleport-miru-city-label')?.textContent || '').trim();
-    if (ctb && cl) cat[ctb.dataset.teleportId] = { ...(cat[ctb.dataset.teleportId] || {}), name: cl, city: key, town: true, price: +((cr.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0) };
+    if (ctb && cl) cat[ctb.dataset.teleportId] = { ...(cat[ctb.dataset.teleportId] || {}), name: cl, city: key, town: true, price: +((cr.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0), ...curOf(cr) };
     await env.sleep(env.rnd(120, 250));
   }
   const withLv = Object.values(cat).filter(c => c.lo && c.city).length;
@@ -260,6 +266,14 @@ async function zoneGoStep() {                     // полёт: Телепор�
   }
   const tried = { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() };
   if (!btn) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта нет — пробую следующую зону`); await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
+  // 8.0.3 (эпики, ревью): перед нажатием — валюта в строке. Явно не адена (Coin of Luck, значок 4037) — не летим; подпись есть, но
+  // непонятная — тоже нет. Элемента валюты нет или он без подписи (старая разметка, значок) — как раньше (логово эпика строже: epicLair)
+  const tr = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'), tc = curOf(tr), tp = +((tr?.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0);
+  if (tp > 0 && (tc.cur === 'Coin of Luck' || (tc.curT && tc.cur !== 'аден'))) {
+    env.rec('B', 'локации', `${zoneName(g.id)}: телепорт не за адену (${tp.toLocaleString('ru')} ${tc.curT || 'валюта не подписана'}) — Coin of Luck бот не тратит`);
+    await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: tp, ...tc } } });
+    location.href = '/map.html'; await env.sleep(3000); return;
+  }
   await env.setRt({ zoneTried: tried, zoneGoT: Date.now() });
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
   env.fire(btn);
@@ -304,6 +318,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, zoneForLevel, zonePick, zoneGoStep, toMap, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, zoneForLevel, zonePick, zoneGoStep, toMap, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);

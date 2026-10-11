@@ -156,7 +156,19 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на отк
       // Строка не того грейда (вкладка не переключилась) — не покупаем: так раньше брались NG-заряды вместо D
       const rg = ((String(row.className || '').match(/l2-gm-shop-row--grade-(\w+)/) || [])[1] || '');
       if (it.grade && rg && rg.toUpperCase() !== String(it.grade).toUpperCase()) return { ok: false, why: `в списке грейд ${rg.toUpperCase()}, а нужен ${it.grade} — не покупаю` };
-      const unit = +((row.querySelector('.l2-gm-shop-price')?.textContent || '').replace(/\D/g, '') || 0);
+      // 8.0.3 (эпики, разбор 11.10): Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). Товар с ценой в Coin of Luck
+      // (шлемы B в gm-shop — по 30 CoL) бот не покупает никогда. 8.0.3 (ревью, снимки gm-shop 23:00): разметка игры — «l2-gm-shop-price
+      // --adena» «124 200 Adena» и «--coin» «30 Coin of Luck». Покупаем только известное «за адену» (класс --adena или подпись Adena/аден);
+      // признак CoL (класс --coin, «Coin of Luck»/«CoL», значок 4037, .l2-gm-shop-coin в строке) — отказ; непонятная валюта — тоже отказ.
+      // Обычное слово «coin»/«монети» у значка адены (класс --adena) покупку не останавливает
+      const prEl = row.querySelector('.l2-gm-shop-price'), prCls = String(prEl?.className || ''), prT = String(prEl?.textContent || '');
+      const marks = [...(prEl?.querySelectorAll?.('img, [title]') || [])].map(i => [i.getAttribute?.('alt'), i.getAttribute?.('title')].join(' ')).join(' ');
+      const srcs = [...(prEl?.querySelectorAll?.('img') || [])].map(i => i.getAttribute?.('src') || '').join(' ');
+      const isAd = /l2-gm-shop-price--adena\b/.test(prCls), lbl = prT + ' ' + marks;
+      const isCol = /--(coin|col|luck)\b/.test(prCls) || /coin\s*of\s*luck|монет\S*\s+удач|\bcol\b/i.test(lbl) || /(^|\D)4037(\D|$)|luck/i.test(srcs) || !!row.querySelector?.('.l2-gm-shop-coin') || (!isAd && /coin|luck|монет|удач/i.test(lbl));
+      if (isCol) return { ok: false, why: 'цена в Coin of Luck — бот донат не тратит' };
+      if (!isAd && !/adena|аден/i.test(lbl)) return { ok: false, why: `валюта цены не распознана («${prT.replace(/\s+/g, ' ').trim().slice(0, 30)}») — не покупаю` };
+      const unit = +((prEl?.textContent || '').replace(/\D/g, '') || 0);
       if (!unit) return { ok: false, why: 'цена не прочитана — не покупаю (резерв и лимит не проверить)' };   // v5.6
       const money = shopAdena() - (env.cfg.shopReserve ?? 200000), cap = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
       if (cap <= 0) return { ok: false, why: money < unit ? `не хватает адены (резерв ${(env.cfg.shopReserve ?? 200000).toLocaleString('ru')})` : 'исчерпан лимит трат за раз' };

@@ -48,19 +48,25 @@ async function testBudget() {
   const module=ctx.L2V7Factories.epics({ cfg,rt,rec(){}, async setRt(update){Object.assign(rt,update); } });
   ctx.quote=module.epicTpBudgetQuote; ctx.reserve=module.epicTpBudgetReserve;
   const coin={ price:1, priceKnown:true,priceUnit:'Coin of Luck' };
-  for(let i=0;i<3;i++)assert.equal((await ctx.reserve('core',coin)).ok,true);
-  assert.equal(ctx.quote(coin).ok,false,'Fourth Coin of Luck teleport must be blocked');
+  // 8.0.3: не больше 1 платного захода на одно появление эпика (epicCoinPerBoss) — три разных эпика
+  for(const k of ['core','orfen','zaken'])assert.equal((await ctx.reserve(k,coin)).ok,true,k);
+  assert.equal((await ctx.reserve('core',coin)).ok,false,'A second paid entry for the same epic spawn is refused');
+  assert.equal(rt.epicDb.core.paidN,1);
+  assert.equal(ctx.quote(coin,'ak').ok,false,'Fourth Coin of Luck teleport must be blocked (3 per 24 h)');
   assert.equal(rt.epicTpBudget.length,3);
-  assert.equal(ctx.quote({price:0,priceKnown:false}).ok,false,'Unknown cost must fail closed with a limit');
+  assert.equal(ctx.quote({price:0,priceKnown:false},'ak').ok,false,'Unknown cost must fail closed');
   const adena={ price:4000,priceKnown:true,priceUnit:'аден' };
   assert.equal((await ctx.reserve('core',adena)).ok,true);
   assert.equal((await ctx.reserve('orfen',adena)).ok,true);
-  assert.equal(ctx.quote(adena).ok,false,'Adena daily limit should apply');
+  assert.equal(ctx.quote(adena,'ak').ok,false,'Adena daily limit should apply');
   now+=86400001;
-  assert.equal(ctx.quote(coin).ok,true,'Entries expire after rolling 24h');
+  assert.equal(ctx.quote(coin,'ak').ok,true,'Entries expire after rolling 24h');
+  assert.equal(ctx.quote(coin,'core').ok,false,'…but the per-spawn rule does not expire by time');
   cfg.epicCoinDailyMax=0;cfg.epicAdenaDailyMax=0;
-  assert.equal(ctx.quote({priceKnown:false}).ok,true,'Limits are opt-in for backward compatibility');
-  console.log('PASS: rolling 24h currency budgets, conservative reservation, unknown-price guard');
+  assert.equal(ctx.quote({priceKnown:false},'ak').ok,false,'Unknown price is always refused');
+  assert.equal(ctx.quote(coin,'ak').ok,false,'Coin of Luck limit 0 = never spend');
+  assert.equal(ctx.quote(adena,'ak').ok,true,'Adena limit 0 = no limit (as before)');
+  console.log('PASS: rolling 24h currency budgets, 1 paid entry per epic spawn, CoL 0 = never, unknown-price guard');
 }
 function testIntegration() {
   const c = manifest.content_scripts.find(c=>c.js.includes('content.js'));

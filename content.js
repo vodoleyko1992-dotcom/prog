@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 10, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: '1413, 1323, 4703, 273, 365, 1303, 264, 267, 1389', rbSessNob: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
@@ -1877,15 +1877,15 @@ async function tvtLeave(...args) { return L2V7Modules.tvt.tvtLeave(...args); }
 function tvtEnemies(...args) { return L2V7Modules.tvt.tvtEnemies(...args); }
 async function tvtFight(...args) { return L2V7Modules.tvt.tvtFight(...args); }
 // ---------- 🐉 v5.5: ФАРМ ЭПИКОВ (Меню → «Эпик боссы», /epic-bosses.html) ----------
-// Эпик — тот же РБ (метка l2-map-mob-pin--epic, id l2dop_rb_29xxx, «Закен · ур. 60 · эпик-босс»), но за один заход
-// его обычно не убить. Из боя уйти нельзя, а HP босса между заходами сохраняется («Моб ще поранений»). Поэтому цикл такой:
-//   выбор эпика (по списку из меню) → банки (магазин) → бафф → «Восстановить» HP/MP (хил) → телепорт к нему → бой до конца
-//   → погибли: город → статуя → бафф → хил → снова к нему (добиваем) → убит: следующий по списку.
-// Сдаёмся на этом эпике, когда смертей на нём ≥ «смертей на эпика» или 3 захода подряд почти не снимают ему HP
-// (отхиливается быстрее) — тогда 1–3 ч его не трогаем. Путь: кнопка «Телепорт» на странице «Эпик боссы»; не нашли —
-// телепорт в его логово (ant_nest, cruma_tower…) и поиск метки на карте. Миньоны зоны («Ангел Печати», «Кукла»…) мешают
-// открыть бой — бьём ближайшего и пробуем снова. Состояние: rt.epic = { step, k, id, name, at, deaths, hpLog, … },
-// база: rt.epicDb[k] = { id, name, lvl, alive, page, seenT, skipT, why, kills, deaths, best }.
+// Эпик — тот же РБ (метка l2-map-mob-pin--epic, id l2dop_rb_29xxx, «Закен · ур. 60 · эпик-босс»), но за один заход его обычно не убить.
+// 8.0.3 (эпики, разбор 11.10): сначала безопасность. Список — из ответа игры GET /game/epic-bosses (жив/мёртв, респаун в часах, цена,
+// canAttack; сервер пускает к боссам не ниже «герой − 9»), цифры босса — GET /game/spawn/<id>/info; оба запроса — те же, что шлёт игра.
+// Цикл: выбор (жив, игра пускает, вердикт «по силам») → банки → бафф → хил → дорога: эпик на этой карте — без телепорта → логово за
+// адену → «Телепорт» за Coin of Luck только через единые ворота (epicPayGate) и лимит (0 — не тратить), не больше 1 платного захода на
+// появление. Смерть: заходами — только если подтверждено, что HP эпика между заходами сохраняется (не проверено в живой игре),
+// иначе ждём следующего появления; смертей на эпика по умолчанию 3. Миньоны зоны мешают открыть бой — бьём ближайшего.
+// Состояние: rt.epic = { step, k, id, name, at, via, deaths, hpLog, noPay, … }, база: rt.epicDb[k] = { id, name, lvl, alive, aliveT, deadT,
+// until, respH, canAttack, deny, col, adena, apiT, verdict, paidN, persist, seenZone, lairOkT, lairBadT, skipT, why, kills, deaths }.
 const EPICS = [
   { k: 'ak', lvl: 40,        nm: 'Королева Муравьёв (АК)', ids: [29001], re: /^(queen ant|королева мурав\S*|королева мурах\S*)$/i, tp: 'ant_nest' },
   { k: 'core', lvl: 50,      nm: 'Ядро (Core)',            ids: [29006], re: /^(core|ядро)$/i,                                     tp: 'cruma_tower' },
@@ -1893,7 +1893,7 @@ const EPICS = [
   { k: 'baium', lvl: 75,     nm: 'Баюм',                   ids: [29020], re: /^(baium|баюм)$/i,                                    tp: 'tower_of_insolence' },
   { k: 'valakas', lvl: 85,   nm: 'Валакас',                ids: [29028], re: /^(valakas|валакас)$/i,                               tp: null },
   { k: 'antharas', lvl: 79,  nm: 'Антарас',                ids: [29019, 29066, 29067, 29068], re: /^(antharas|антарас)$/i,         tp: 'antharas_lair' },
-  { k: 'frintezza', lvl: 85, nm: 'Фринтеза',               ids: [29045], re: /^(frintezza|фринтез\S*|фрінтез\S*)$/i,               tp: null },
+  { k: 'frintezza', lvl: 90, nm: 'Фринтеза',               ids: [29045], re: /^(frintezza|фринтез\S*|фрінтез\S*)$/i,               tp: null },
   { k: 'zaken', lvl: 60,     nm: 'Закен',                  ids: [29022], re: /^(zaken|закен)$/i,                                   tp: 'devils_isle' },
 ];
 const EPIC_URL = '/epic-bosses.html';
@@ -1913,25 +1913,26 @@ const epicWant = (...args) => L2V7Modules.epics.epicWant(...args);
 // метки эпиков на карте (и на всякий случай — «рейдовые» метки с id эпика)
 function epicPins(...args) { return L2V7Modules.epics.epicPins(...args); }
 function epicGuards(...args) { return L2V7Modules.epics.epicGuards(...args); }
-// страница «Эпик боссы»: разметку игры ещё не видели — читаем широко. Похоже на «Рейдовые боссы» (.l2-rb-row, кнопка
-// с data-spawn-id), но на случай другой вёрстки: любой элемент с data-spawn-id эпика, иначе — строка с именем эпика
-// и кнопкой «Телепорт». Живой/мёртв — по классу статуса (--alive) или тексту.
+// страница «Эпик боссы»: 8.0.3 (эпики, разбор 11.10): строка .l2-rb-row (снимок 75dac78f) — имя, уровень, статус (--alive/--dead), респаун,
+// цена .l2-rb-row__price-gold («1 Coin of Luck»), подсказка «Недоступно» в соседнем .l2-rb-row__actions, кнопка .l2-rb-row__tp;
+// широкий разбор (любой data-spawn-id эпика, строка с именем и «Телепорт») — запасной.
 function epicRowsParse(...args) { return L2V7Modules.epics.epicRowsParse(...args); }
 function epicTpBtn(...args) { return L2V7Modules.epics.epicTpBtn(...args); }
 async function epicListScan(...args) { return L2V7Modules.epics.epicListScan(...args); }
 async function epicSet(...args) { return L2V7Modules.epics.epicSet(...args); }
 async function epicDbSet(...args) { return L2V7Modules.epics.epicDbSet(...args); }
 // кого бить: начатого добиваем; дальше — по порядку списка, кроме мёртвых (по списку игры, 15 мин), запрещённых и «отложенных»
-// Доступ сервера: ±10 уровней. Настройка epicLvlUp — пожелание, а не запрет:
+// 8.0.3 (эпики, разбор 11.10): сервер пускает к боссам не ниже «герой − 9» (minRaidBossLevel), сверху — предохранитель бота: герой + 10.
+// Настройка epicLvlUp — пожелание, а не запрет:
 // если все живые эпики ниже пожелания, всё равно берём доступного по уровню.
 const epicLvl = (...args) => L2V7Modules.epics.epicLvl(...args);
 function epicLvlWhy(...args) { return L2V7Modules.epics.epicLvlWhy(...args); }
 function epicPick(...args) { return L2V7Modules.epics.epicPick(...args); }
 function epicWhyNone(...args) { return L2V7Modules.epics.epicWhyNone(...args); }
 async function epicGiveUp(...args) { return L2V7Modules.epics.epicGiveUp(...args); }
-// Добровольные бюджеты платных телепортов за последние 24 часа.
-// Учитываем ПОПЫТКУ до нажатия, чтобы ошибка/перезагрузка не привела к превышению лимита.
-// В журнале это резерв бюджета, а не утверждение об успешном платеже.
+// 8.0.3 (эпики, разбор 11.10): бюджеты за 24 ч. Coin of Luck: 0 — не тратить никогда, N — не больше N за 24 ч (телепорты к эпикам и
+// платный «Повний баф» в режиме эпиков), не больше epicCoinPerBoss платных заходов на одно появление; адена: 0 — без лимита.
+// Учитываем ПОПЫТКУ до нажатия (резерв), чтобы ошибка/перезагрузка не привела к превышению лимита; снимается только при явном отказе.
 function epicTpBudgetQuote(...args) { return L2V7Modules.epics.epicTpBudgetQuote(...args); }
 async function epicTpBudgetReserve(...args) { return L2V7Modules.epics.epicTpBudgetReserve(...args); }
 async function epicTpBudgetRelease(...args) { return L2V7Modules.epics.epicTpBudgetRelease(...args); }
@@ -2147,6 +2148,10 @@ async function main() {
       }
       if (rt.farmScan && !isBattle()) { if (isFarmPage()) await farmScan(); else { location.href = FARM_URL; await sleep(4000); } continue; }
       if (rt.rbScan && !isBattle()) { if (isRbPage()) await rbListScan(); else { location.href = '/rb-bosses.html'; await sleep(4000); } continue; }
+      // 8.0.3 (эпики): «🔄 Проверить эпиков (бесплатно)» — в любом режиме, только чтение с сервера (список + цифры боссов), без переходов.
+      // На рыбалке и на странице боя — фоном, не останавливая вываживание и бой (≈6–10 с запросов с паузами). 8.0.3 (ревью): раньше в бою
+      // ждали ухода со страницы боя, а цепочка «Охотиться дальше» с неё не уходит — «⏳ проверка запрошена» висела часами
+      if (rt.epicScanReq) { if (fishNow() || isBattle()) L2V7Modules.epics.epicScanAll('по кнопке').catch(() => {}); else { await L2V7Modules.epics.epicScanAll('по кнопке'); continue; } }
       if (rt.rbGo && !isBattle()) { if (Date.now() - (rt.rbGo.t || 0) < 90000) { await rbGoStep(); continue; } await setRt({ rbGo: null }); }
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { location.href = '/teleport.html'; await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
@@ -2165,6 +2170,7 @@ async function main() {
         else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
         await sleep(200); continue;
       }
+      if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
       // Читаем на шаге выбора РБ, не чаще раза в 30 мин
@@ -2956,6 +2962,21 @@ addEventListener('message', e => {
     const id = d.req?.battleSpawnId;
     if (id && id === rt.epic.id) try { sessionStorage.setItem('l2bot.epicLeave', JSON.stringify({ id, at: Date.now(), ok: !d.error && d.status >= 200 && d.status < 300 && !d.res?.error })); } catch (er) {}
   }
+  // 8.0.3 (эпики, разбор 11.10): список эпиков и цифры босса — пассивно, когда их запрашивает сама игра (страница «Эпик боссы», нажатие
+  // на РБ на карте). Список — только полный (все элементы объекты и их ровно total: hook.js режет массивы длиннее 8)
+  if (path === '/game/epic-bosses' && d.res && !d.res.error && Array.isArray(d.res.bosses) && d.res.bosses.every(b => b && typeof b === 'object') && d.res.bosses.length === +d.res.total)
+    try { L2V7Modules.epics.epicApiNote(d.res, 'page').then(r => r && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {}
+  { const m = path.match(/^\/game\/spawn\/(l2dop_rb_\d+)\/info$/);
+    if (m && d.res?.stats?.maxHp > 0 && !d.res.error) try { L2V7Modules.raid.rbInfoNote(m[1], d.res, 'page').then(() => epicById(m[1]) && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {} }
+  // запрос телепорта к эпику ещё ни разу не видели (у РБ — POST /game/raid-boss/teleport): любой POST «…/teleport» в 10 с после нажатия
+  // «Телепорт» на странице эпиков — ответ сервера в sessionStorage (отказ → резерв Coin of Luck снимается), путь и тело — в журнал.
+  // 8.0.3 (ревью): отказ — только явный (epicTpAckOf: 4xx с телом ошибки, 2xx с error/ok:false); 5xx, обрыв, «нет ответа» — «неизвестно»,
+  // резерв остаётся (CoL могли списать). Запрос про другой spawnId (epicTpReqFor) — не наш, не учитываем
+  if (d.method === 'POST' && /\/teleport(\/|$|\?)/.test(path) && rt.epic?.step === 'arrive' && rt.epic.via === 'page' && Date.now() - (rt.epic.tpT || 0) < 10000) try {
+    const EP = L2V7Modules.epics, mine = EP.epicTpReqFor(d, path, rt.epic.id), a = EP.epicTpAckOf(d), msg = String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 120);
+    if (mine) sessionStorage.setItem('l2bot.epicTp', JSON.stringify({ path, status: d.status, ok: a.ok, msg, t: Date.now() }));
+    rec('B', 'эпики', `телепорт к эпику: ${d.method} ${path} → ${d.status || d.error} · запрос ${JSON.stringify(d.req ?? null).slice(0, 200)}${msg ? ' · ' + msg : ''}${!mine ? ' · запрос не к этому эпику — не учитываю' : a.ok === null ? ' · ответ неясен — резерв оставляю' : ''}`);
+  } catch (er) {}
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
     const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
@@ -3291,7 +3312,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtC
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -3665,7 +3686,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
@@ -3843,7 +3864,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get $q() { return $q; }, set $q(value) {
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.survival = L2V7Factories.survival({ get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbSet; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },
@@ -4015,11 +4036,14 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('cdFloor80', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cdFloor || p.cdFloorAt)) { S[k] = { ...p, cdFloor: 0, cdFloorAt: 0 }; sk = true; } });
   once('fish724', () => { Object.assign(cf, { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 1000, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 }); });   // 7.2.3: игрок 10.10 — «минимум сосок в запасе 1000, докупать до 5000»
   once('champ803', () => { cf.searchChamp = false; });   // 8.0.3 (игрок 11.10): «поиск чемпионов по умолчанию откл., с возможностью вкл»
-  // 8.0.3 (игрок 11.10: «купил почему-то сразу 9999 крючков» — 1000 пакетов × 10 = 10 000 наживки за 1 000 000 аден одной суммой;
-  // выбор игрока: «покупать по 100 пакетов — кончилась, бот докупит»): 100 пакетов = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч рыбалки
   // 8.0.3: замеры отката до правки learnCd (Blaze «3,1 с» при настоящих ≈0,8 с под баффами) — стереть, переучатся за пару боёв
   once('cdS803', () => { for (const [k, p] of Object.entries(S)) if (p && (p.cd || p.cdS)) { S[k] = { ...p, cd: 0, cdS: [] }; sk = true; } });
+  // 8.0.3 (игрок 11.10: «купил почему-то сразу 9999 крючков» — 1000 пакетов × 10 = 10 000 наживки за 1 000 000 аден одной суммой;
+  // выбор игрока: «покупать по 100 пакетов — кончилась, бот докупит»): 100 пакетов = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч рыбалки
   once('fishBait803', () => { if (C('fishBuyPacks') === 1000) cf.fishBuyPacks = 100; });
+  // 8.0.3 (эпики): «Coin of Luck на эпиков» 0 теперь значит «НЕ тратить» (было «без лимита») — значение игрока не трогаем, только строка в журнал
+  once('epicCol803', () => { const n = +C('epicCoinDailyMax') || 0; setTimeout(() => { try { rec('B', 'эпики', `Coin of Luck на эпиков: 0 теперь значит НЕ тратить (раньше — без лимита); ${n ? `ваш лимит ${n} за 24 ч сохранён` : 'сейчас стоит 0 — бот их не тратит'}`); } catch (e) {} }, 3000); });
+  once('epicDeaths803', () => { if (+C('epicMaxDeaths') === 10) cf.epicMaxDeaths = 3; });   // 8.0.3: смертей на эпика 10 → 3 (только заводские 10)
   once('fishPack80', () => { if (C('fishTimePack') === '1h') cf.fishTimePack = '6h'; });   // 8.0 (аудит рыбалки): время рыбалки пакетом 6 ч — на 22 % дешевле часа (2,33 млн/ч против 3 млн/ч)
   once('rbFix721', () => {   // 7.2.1: окно карты другого РБ портило замеры (одинаковые HP/P.Atk у разных РБ) и вечные «не по силам» по оценке
     const S = { ...(rt.rbStats || {}) }, sig = {};

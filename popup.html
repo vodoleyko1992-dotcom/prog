@@ -380,19 +380,25 @@
   <div class="subsec-title"><span id="tab-epic" class="tab-anchor"></span>🐉 Эпик-боссы</div>
   <h4>🐉 Фарм эпиков</h4>
   <div class="row"><button id="epicToggle2">🐉 Эпики: ВЫКЛ</button></div>
-  <div class="hint">Бот летает к выбранным эпикам по порядку (Меню → «Эпик боссы» → «Телепорт», иначе — в логово) и бьётся до конца: за один заход эпика обычно не убить, а HP он не восстанавливает. Погиб — город → статуя → бафф → «Восстановить» (хил) → докупка банок → снова к нему, пока не добьёт. Мешают миньоны зоны — бьёт их. Мёртвых по списку игры пропускает. Опыт за смерти теряется — следите за лимитом.</div>
+  <div class="hint">Бот берёт выбранных эпиков по порядку, но только живых, к которым игра пускает и которые <b>по силам</b>: перед любой дорогой он спрашивает у игры цифры босса (HP, P.Atk, M.Atk, защиты) и считает спецудар, время боя и нужные банки — проверка сил до оплаты всегда. Дорога: эпик на этой же карте — без телепорта; потом логово за адену; за Coin of Luck — только если ничего другого нет и вы разрешили лимитом. Погиб — следующий заход только если подтверждено, что HP эпика между заходами сохраняется, иначе ждёт следующего появления. Мешают миньоны зоны — бьёт их. Опыт за смерти теряется.</div>
   <label>Королева Муравьёв (АК) <input type="checkbox" class="epicChk" data-epic="ak"></label><label>Ядро <input type="checkbox" class="epicChk" data-epic="core"></label><label>Орфен <input type="checkbox" class="epicChk" data-epic="orfen"></label><label>Баюм <input type="checkbox" class="epicChk" data-epic="baium"></label><label>Валакас <input type="checkbox" class="epicChk" data-epic="valakas"></label><label>Антарас <input type="checkbox" class="epicChk" data-epic="antharas"></label><label>Фринтеза <input type="checkbox" class="epicChk" data-epic="frintezza"></label><label>Закен <input type="checkbox" class="epicChk" data-epic="zaken"></label>
   <input id="epicList" hidden>
-  <label>Смертей на одного эпика, потом следующий <input id="epicMaxDeaths" type="number" min="1"></label>
-  <label>Оценивать до боя (не лезть к неподъёмным) <input id="epicCheck" type="checkbox"></label>
+  <label>Смертей на одного эпика за его появление (3) <input id="epicMaxDeaths" type="number" min="1"></label>
+  <label>Строго и на месте: не лезть и при «мало банок» (перед оплатой проверка всегда) <input id="epicCheck" type="checkbox"></label>
   <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
   <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
   <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
-  <label>Лимит Coin of Luck на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
+  <label>💎 Coin of Luck на эпиков за 24 ч (0 — НЕ тратить) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
+  <label>Платных заходов на одно появление эпика (1) <input id="epicCoinPerBoss" type="number" min="0" step="1"></label>
+  <label>Не опускать баланс Coin of Luck ниже (0 — не проверять) <input id="epicCoinKeep" type="number" min="0" step="1"></label>
   <label>Лимит аден на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicAdenaDailyMax" type="number" min="0" step="1"></label>
-  <div class="hint">Ограничения касаются телепортов со страницы эпиков. Считаются попытки, а не только успешные платежи: при ошибке сервера резерв может быть завышен. Для телепортов через обычные локации стоимость не отслеживается. Если выбран лимит, а цена неизвестна — платный переход со страницы не выполняется.</div>
-  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится у баффера, докупает банки и возвращается — HP эпика сохраняется, смертей и потери опыта нет. Каждый заход пишется в журнал (снял, %, урон/с) — по ним будем настраивать бой под каждого эпика. Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас и Фринтеза 85 (уточняются по игре).</div>
-  <div class="hint">Эпика откладывает при бесперспективном уроне (в том числе после одной смерти) или если HP восстанавливается между заходами. Общий стоп — 20 смертей за час.</div>
+  <label>Не браться, если бой дольше, мин (30) <input id="epicMaxFightMin" type="number" min="5" step="1"></label>
+  <label>Отходов на одно появление эпика (8) <input id="epicMaxRetreats" type="number" min="1" step="1"></label>
+  <div class="hint">Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). «0» — бот не тратит их никогда (так по умолчанию). Число — не больше стольких за 24 часа и не больше «платных заходов» на одно появление эпика; при неизвестной цене, после смерти или выхода из боя — никогда. Платный «Повний баф» (15 CoL) во время эпика — тоже в пределах этого лимита, иначе бесплатный «Звичайний баф». Считаются попытки: если сервер не подтвердил телепорт, резерв остаётся (учёт может быть завышен — это безопасная сторона).</div>
+  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится и возвращается (только бесплатно или через логово). Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас 85, Фринтеза 90. Игра пускает к боссам не ниже «уровень героя − 9»; выше героя больше чем на 10 бот не берёт. Общий стоп — 2 × «смертей на эпика» за час (не больше 20).</div>
+  <div class="row"><button id="epicScan" title="Только чтение: список эпиков и цифры каждого босса с сервера, ≈полминуты">🔄 Проверить эпиков (бесплатно)</button></div>
+  <div id="epicSum" class="hint" style="white-space:pre-line"></div>
+  <div id="epicTable" class="zbox"><div class="hint">Пока пусто — нажмите «🔄 Проверить эпиков» (бот должен быть запущен)</div></div>
   <div id="epicBox" class="camp" style="white-space:pre-line">Режим не запускался</div>
 
 </section>

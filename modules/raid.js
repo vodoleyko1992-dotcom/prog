@@ -53,9 +53,9 @@ async function rbPinAttack(r, label) {
   return true;
 }
 
-function rbModalStats() {
+function rbModalStats() {                          // 8.0.3 (эпики, снимок 75dac78f): окно босса на странице «Эпик боссы» — #rb-modal-stats
   const o = {};
-  document.querySelectorAll('#map-mob-modal-stats dt[data-stat]').forEach(dt => { const v = +(dt.nextElementSibling?.textContent || '').replace(/\D/g, ''); if (v) o[dt.dataset.stat] = v; });
+  document.querySelectorAll('#map-mob-modal-stats dt[data-stat], #rb-modal-stats dt[data-stat]').forEach(dt => { const v = +(dt.nextElementSibling?.textContent || '').replace(/\D/g, ''); if (v) o[dt.dataset.stat] = v; });
   return o.hp ? o : null;
 }
 
@@ -76,12 +76,14 @@ function rbSpM() {
   if (r.length < 3) return 1.05;
   return Math.min(1.4, Math.max(0.9, r[Math.floor(r.length * 0.75)] * 1.15, r[r.length >> 1] * 1.25));
 }
-function rbPreCheck(id, st, slack = 1) {
-  const me = env.meHp(), maxHp = me?.max || 6000;
+// 8.0.3 (эпики): dpsOver — свой ДПС по этому боссу (эпики: осторожная оценка до первого замера), hpOver — макс. HP героя, известное
+// вызывающему (у эпиков без него вердикт «неизвестно» — запасные 6000 HP решать не должны: на 6000 Королева «по силам»)
+function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
+  const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {};
   const k = env.rt.rbK || 0.109, base = Math.max(0, st.patk || 0) * k;
-  const curHp = Math.min(st.hp || 0, env.rt.rb?.[id]?.hpAfter || st.hp || 0);
-  const dps = Math.max(1, env.rt.rbDps || 1150), t = curHp / dps;
+  const curHp = st.hpExact ? st.hp || 0 : Math.min(st.hp || 0, env.rt.rb?.[id]?.hpAfter || st.hp || 0);   // 8.0.3: эпики передают HP сами (свежесть раны — epicWoundHp)
+  const dps = Math.max(1, dpsOver || env.rt.rbDps || 1150), t = curHp / dps;
   const pot = env.potModel(), pool = pot?.pool || 0;
   const p90 = historical.hitP90 || historical.p90 || Math.max(150, base * 1.65);
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
@@ -95,11 +97,12 @@ function rbPreCheck(id, st, slack = 1) {
     `банки ≈${env.fmtK(need)} из ${env.fmtK(pool)}`;
   // по прикидке (РБ ни разу не видели — цифры по другим РБ) отсекаем только явно неподъёмных; на месте решат настоящие цифры из окна карты
   const lim = st.est ? 1.5 : 1;
-  if (sp >= maxHp * 0.45 * lim) return { ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}` };
-  if (sp + 2 * p90 >= maxHp * 0.60 * lim) return { ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}` };
-  if (loss > potRate * 0.8 * slack && loss > 0) return { ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}` };
-  if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}` };
-  return { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}` };
+  const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool };   // 8.0.3: цифры — для таблицы эпиков
+  if (sp >= maxHp * 0.45 * lim) return { ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x };
+  if (sp + 2 * p90 >= maxHp * 0.60 * lim) return { ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x };
+  if (loss > potRate * 0.8 * slack && loss > 0) return { ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x };
+  if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
+  return { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
 }
 
 // 7.2.1 (лог 10.10 21:32:54–21:33:09, смерть): окно карты ещё показывало «Розпалений Голем · ур. 44 · NPC 25431» (HP 273k, удар ≈110),
@@ -157,6 +160,24 @@ async function rbEngage(r, label, opt = {}) {
   return rbPinAttack(r, label);
 }
 
+// 8.0.3 (эпики, разбор 11.10): разбор ответа GET /game/spawn/<id>/info — и своего запроса (rbInfo), и того, что шлёт сама игра
+// (нажатие на РБ на карте, окно босса на странице «Эпик боссы»: пассивно из сети). Любой ответ сервера — src:'api' (по нему тур РБ
+// проверяет РБ ДО платного телепорта: st.src === 'api'), откуда он — в from ('api' свой запрос / 'page' игра). Массив drops hook.js
+// режет до 8 (последний элемент — строка «…ещё N») — берём только объекты
+async function rbInfoNote(id, j, from = 'api') {
+  const s = j?.stats; if (!id || !(s?.maxHp > 0)) return null;
+  const have = env.rt.rbStats?.[id] || {}, drops = (Array.isArray(j.drops) ? j.drops : []).filter(d => d && typeof d === 'object');
+  const ad = drops.find(d => d.kind === 'adena');
+  const top = env.epicById?.(id) ? drops.filter(d => d.kind !== 'adena').sort((a, b) => (+b.chance || 0) - (+a.chance || 0)).slice(0, 3)
+    .map(d => ({ n: String(d.displayName || d.name || d.l2ItemId || '').slice(0, 40), c: +d.chance || 0 })) : null;
+  const st = { ...have, hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api', from,
+    ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}),
+    ...(+j.rewardExp > 0 ? { exp: +j.rewardExp } : {}), ...(+j.rewardSp > 0 ? { sp: +j.rewardSp } : {}), ...(top?.length ? { top } : {}),
+    ...(typeof j.canAttackRaidBoss === 'boolean' ? { canAttack: j.canAttackRaidBoss } : {}), ...(+j.minRaidBossLevelForAttack > 0 ? { minLvl: +j.minRaidBossLevelForAttack } : {}) };
+  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });
+  return st;
+}
+
 // 8.0 (аудит РБ C1: 3 из 18 телепортов по 100 000 аден впустую — «не полезу» уже после прилёта): цифры РБ (HP, P.Atk, M.Atk,
 // адена) отдаёт GET /game/spawn/<id>/info — тот же запрос, что игра шлёт при нажатии на РБ на карте. Спрашиваем ДО телепорта,
 // раз на РБ (цифры РБ постоянные); не ответил — 6 ч не спрашиваем, решаем как раньше (на месте)
@@ -167,12 +188,9 @@ async function rbInfo(id) {
   try {
     const c = new AbortController(), tm = setTimeout(() => c.abort(), 6000);
     const r = await fetch(`/game/spawn/${encodeURIComponent(id)}/info`, { credentials: 'include', cache: 'no-store', signal: c.signal }).finally(() => clearTimeout(tm));
-    const j = r.ok ? await r.json() : null, s = j?.stats;
-    if (!(s?.maxHp > 0)) throw new Error('нет stats');
-    const ad = (j.drops || []).find(d => d?.kind === 'adena');
-    const st = { ...(have || {}), hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api',
-      ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}) };
-    await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });
+    const j = r.ok ? await r.json() : null;
+    const st = await rbInfoNote(id, j, 'api');
+    if (!st) throw new Error('нет stats');
     return st;
   } catch (e) {
     await env.setRt({ rbInfoFail: { ...(env.rt.rbInfoFail || {}), [id]: Date.now() } });
@@ -215,6 +233,11 @@ const isRbPage = () => /\/rb-bosses\.html/i.test(location.pathname);
 
 const rbPageNow = () => +((env.$q('#rb-pager-ind')?.textContent || '').match(/^\s*(\d+)\s*\//)?.[1] || new URLSearchParams(location.search).get('page') || 1);
 
+// 8.0.3 (эпики, ревью): у страницы «Рейдовые боссы» та же строка, что у эпиков, где цена — «1 Coin of Luck». Цена РБ (снимок 23:00) —
+// «(Аден 100000)». Валюта — как epics.unitOf; телепорт только за адену или бесплатно, иначе не летим (Coin of Luck бот не тратит)
+const unitOf = t => /coin|luck|монет|удач|\bcol\b/i.test(t || '') ? 'Coin of Luck' : /аден|adena/i.test(t || '') ? 'аден' : '';
+const rbPriceWhy = r => r && r.price > 0 && r.unit != null && r.unit !== 'аден' ? `телепорт не за адену («${r.priceText || r.price}») — Coin of Luck бот не тратит` : '';
+const btnPrice = b => { const t = (b?.closest?.('.l2-rb-row')?.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\s+/g, ' ').trim(); return { price: +(t.replace(/\D/g, '') || 0), unit: unitOf(t), priceText: t.slice(0, 40) }; };
 function rbRowsParse() {
   const page = rbPageNow();
   const out = {};
@@ -229,6 +252,7 @@ function rbRowsParse() {
       lvl: +((r.querySelector('.l2-rb-row__level')?.textContent || '').match(/\d+/) || [0])[0],
       alive: !!st && /--alive/.test(st.className), status: (st?.textContent || '').replace(/^\s*·\s*/, '').trim().slice(0, 40),
       price: +((r.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\D/g, '') || 0),
+      unit: unitOf(r.querySelector('.l2-rb-row__price')?.textContent), priceText: (r.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40),
       deny: /недоступ|unavailable/i.test(hint) ? hint.replace(/^Недоступно:\s*/i, '').slice(0, 60) : '', page, ord, t: Date.now(),
     };
   }
@@ -282,6 +306,7 @@ function rbStatsGuess(id, lvl) {
 const rbSkipNotices = new Map();
 const preSkip = id => { const v = env.rt.rbPreSkip?.[id]; return typeof v === 'number' ? { t: v, kind: '' } : v && v.t ? v : { t: 0, kind: '' }; };   // 8.0: старый формат — число
 function rbTeleportCheck(id, x) {                 // → null (можно лететь) или причина «не полетим»
+  const cw = rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]); if (cw) { noteRbSkip(id, cw); return cw; }   // 8.0.3: только за адену
   const ps = preSkip(id);
   const whySkip = rbVerdictBlocks(id) ? 'ранее не по силам при этом уровне' :
     now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : 'пропуск после осмотра (недавно)') : '';
@@ -407,7 +432,8 @@ async function rbGoStep() {                       // список РБ → ну�
   if (b) await env.setRt({ rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now() });   // v5.6: только если кнопка есть (телепорт будет)
   if (!b) { env.rec('B', 'РБ-тур', `${g.name}: на странице ${g.page} нет — обновлю список`); await env.setRt({ rbGo: null, rbListT: 0 }); return; }
   const row = rbRowsParse()[g.id];
-  if (row && (!row.alive || row.deny)) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
+  if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
+  if (!row && rbPriceWhy(btnPrice(b))) { env.rec('B', 'РБ-тур', `${g.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`); await env.setRt({ rbGo: null }); location.href = '/map.html'; await env.sleep(3000); return; }
   env.rec('B', 'РБ-тур', `телепорт к ${g.name} (${g.lvl})${g.price ? ' · ' + g.price.toLocaleString('ru') + ' аден' : ''}`);
   // v4.30: rbGo снимаем ДО нажатия: телепорт уводит со страницы и скрипт умирает, не дойдя до «rbGo: null» внизу.
   // Раньше бот на новой странице видел rbGo, возвращался в список и телепортировался снова — 90 с подряд, за аден.
@@ -507,7 +533,8 @@ async function rbHuntStep() {
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
     if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`); }
     const row = rbRowsParse()[H.id];
-    if (row && (!row.alive || row.deny)) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`); }
+    if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); }
+    if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`);
     // шаг «прилёт» записываем ДО нажатия: телепорт уводит со страницы, и скрипт обрывается на полуслове
     await huntSet({ step: 'arrive', at: Date.now() });
     const cntH = [...((env.rt.rbGoCnt || {})[H.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // v5.6: платные телепорты тура — в общий счётчик «≤3 в час»
@@ -834,6 +861,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbInfo, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { unitOf, rbPriceWhy, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
