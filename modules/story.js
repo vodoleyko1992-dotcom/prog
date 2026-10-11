@@ -16,7 +16,7 @@ const POLL = 10 * 60000, JOB_MAX = 4 * 60000, RETRY = 30 * 60000;
 // 9.0: всё, что зависит от класса (скиллы и их замеры, кот, дебаффы, EXP/ч зон, вердикты РБ «по силам») — у каждого класса своё.
 // При переключении класса эти ключи памяти уходят в rt.classStash[<старый класс>] и возвращаются из stash нового (или пустые)
 const CLASS_KEYS = ['skills', 'skillDb', 'petStat', 'petAdvice', 'petLast', 'petBuffAt', 'petResummon', 'debuffStat', 'debuffGain', 'debuffImmune',
-  'zoneStat', 'mobVal', 'rbDb', 'rbK', 'hardMobs', 'profQuest'];
+  'zoneStat', 'mobVal', 'rbDb', 'rbK', 'hardMobs', 'profQuest', 'fightMem'];   // 9.2: + память анализатора боя на цель
 let pollT = 0;
 const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
 const low = s => String(s || '').trim().toLowerCase();
