@@ -128,9 +128,10 @@
     supply:['Снабжение','Банки, закупка, добыча, эффективность'],
     loot:['Добыча','Учет и эффективность предметов'],
     log:['Диагностика','Журналы, API, снимки и автообучение'],
+    mammon:['Маммон','Заказы торговца, кузнец, накопление на улучшение'],
     svc:['Сервис','Автовход, память, настройки, журнал и диагностика']
   };
-  // Large, discoverable tile menu: all 7 sections appear at once, no sideways scrolling.
+  // Large, discoverable tile menu: all 8 sections appear at once, no sideways scrolling.
   // Collapse after selection, preserving room for module settings in a 375px dock.
   const modeToggle = document.getElementById('modeToggle');
   const quickModes = document.getElementById('quickModeGrid');
