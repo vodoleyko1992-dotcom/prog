@@ -119,6 +119,25 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.equal(fl.fight().key, 'm:wolf'); assert.equal(fl.fight().done, false);
 }
 
+// 4в. ответ `kind:'full'` (лог 12.10 02:31–02:56: 225 из 242 ходов) — battle.log = ВЕСЬ лог боя, не хвост: строки считаются один раз;
+// банка — по нажатию battle_potion_use, а не по импульсам «Зілля +600 HP» (снимок боя с Verfa 12.10 00:47: импульс каждую секунду)
+{
+  const { fl } = make();
+  const L0 = ['Бой начат: Orc (ур. 60)'];
+  start(fl, { mob: 5000, mobMax: 5000, hp: 6000, mp: 5000, name: 'Orc', full: true, log: L0 });
+  const L1 = [...L0, '[Orc] ударив тебе −100 HP.', 'Енергетична блискавка 1000', 'Слуга [Kai the Cat] атакує [Orc] 500 урону.'];
+  const t1 = act(fl, 'l2_1274', { mob: 3500, hp: 5900, mp: 4985, full: true, log: L1 });
+  assert.equal(t1.own, 1000); assert.equal(t1.pet, 500); assert.equal(t1.hitIn, 100);
+  const L2 = [...L1, 'Зілля +600 HP', 'Зілля зцілення: відновлення імпульсами по 600 HP кожні 1 с.'];
+  const t2 = act(fl, 'battle_potion_use', { mob: 3500, hp: 6000, mp: 4985, full: true, log: L2 });
+  assert.equal(t2.own, 0); assert.equal(t2.pot, 600);
+  const L3 = [...L2.slice(2), 'Зілля +600 HP', 'Зілля зцілення: відновлення імпульсами по 600 HP кожні 1 с.', 'Полум’я 3500', 'Победа!'];   // старое уходит из лога игры
+  act(fl, 'l2_1220', { mob: 0, hp: 6000, mp: 4960, full: true, log: L3, end: true, win: true });
+  const s = fl.lastSum();
+  assert.equal(s.dealt, 4500, 'каждая строка полного лога считается один раз'); assert.equal(s.pet, 500); assert.equal(s.pots, 1, 'банка одна — по нажатию'); assert.equal(s.turns, 3);
+  deq(fl.mem()['m:orc'].h, [100]);
+}
+
 // 5. профиль класса
 {
   const { fl } = make();

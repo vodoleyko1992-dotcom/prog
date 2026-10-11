@@ -1,7 +1,7 @@
 'use strict';
 // 9.2 анализатор боя: браузерный смоук (node tests/v92-fightlab-browser.cjs; CHROMIUM=…). Настоящие hook.js и скрипты расширения на
 // подставной https://l2wap.com/battle.html: страница сама шлёт POST /game/battle/start и два хода (ответы — в формате игры: kind 'delta',
-// delta.logTail из 12 строк, victory) → hook отдаёт поле bt, анализатор пишет ходы (имя скилла по слоту панели), память на цель rt.fightMem
+// `kind:'full'` с полным battle.log, victory) → hook отдаёт поле bt, анализатор пишет ходы (имя скилла по слоту панели), память на цель rt.fightMem
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -18,9 +18,11 @@ const PAGE = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-id
 const filler = Array.from({ length: 10 }, (_, i) => `Charcoal ×${i + 1}`);
 const RESP = {
   '/game/battle/start': { kind: 'full', battle: { spawnId: 'dense_26917', mobName: 'Banshee', mobLevel: 63, mobHp: 3060, mobMaxHp: 3060, kind: 'normal', logSeq: 1, log: ['Бой начат: Banshee (ур. 63)'] }, character: { hp: 5417, maxHp: 5417, mp: 4298, maxMp: 4298 } },
-  a1: { kind: 'delta', revision: 2, delta: { mobHp: 120, mobMaxHp: 3060, characterHp: 5405, characterMp: 4283, characterMaxHp: 5417, characterMaxMp: 4298, logSeq: 13,
-    logTail: [...filler, '[Banshee] ударив тебе −12 HP.', 'Енергетична блискавка 2940'] } },
-  a2: { kind: 'delta', revision: 3, delta: { mobHp: 0, mobMaxHp: 3060, characterHp: 5417, characterMp: 4253, logSeq: 15, battleEnded: true, logTail: ['Полум’я 3585', 'Победа!'] }, victory: { fullLog: [] } },
+  // ответы хода — как у игры 12.10 (225 из 242 — `kind:'full'` с ПОЛНЫМ battle.log): анализатор считает строки один раз
+  a1: { kind: 'full', revision: 2, battle: { spawnId: 'dense_26917', mobName: 'Banshee', mobLevel: 63, mobHp: 120, mobMaxHp: 3060, kind: 'normal',
+    log: ['Бой начат: Banshee (ур. 63)', ...filler, '[Banshee] ударив тебе −12 HP.', 'Енергетична блискавка 2940'] }, character: { hp: 5405, maxHp: 5417, mp: 4283, maxMp: 4298 } },
+  a2: { kind: 'full', revision: 3, battle: { spawnId: 'dense_26917', mobName: 'Banshee', mobLevel: 63, mobHp: 0, mobMaxHp: 3060, kind: 'normal',
+    log: [...filler, '[Banshee] ударив тебе −12 HP.', 'Енергетична блискавка 2940', 'Полум’я 3585', 'Победа!'] }, character: { hp: 5417, maxHp: 5417, mp: 4253, maxMp: 4298 }, victory: { fullLog: [] } },
 };
 (async () => {
   const b = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
@@ -54,6 +56,6 @@ const RESP = {
     && m?.n === 1 && m?.w === 1 && m?.hp === 3060 && m?.a?.blaze?.s?.[0] === 3585 && m?.h?.[0] === 12
     && res.stored?.['m:banshee']?.n === 1 && !errors.length;
   if (!ok) { console.error('FAIL', JSON.stringify({ res, errors })); process.exit(1); }
-  console.log('PASS browser: real hook.js → bt (12-line log kept whole), turn by turn: Energy Bolt 2940 exact (slot name), hit −12, MP −15; victory → rt.fightMem «Banshee» saved via statePatch');
+  console.log('PASS browser: real hook.js → bt (full battle.log kept whole, counted once), turn by turn: Energy Bolt 2940 exact (slot name), hit −12, MP −15; victory → rt.fightMem «Banshee» saved via statePatch');
   await b.close();
 })().catch(e => { console.error(e); process.exit(1); });

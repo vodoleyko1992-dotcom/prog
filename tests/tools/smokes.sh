@@ -1,4 +1,6 @@
 #!/bin/bash
+# 9.2: снимки страниц игры 12.10 (бой с Verfa, панель Warlock 61) — для смоуков боя по настоящему DOM; свои снимки — через L2_PAGES / L2_PAGES_MAGE
+SNAP=/mnt/project-files/snapshots/l2wap-pages-2026-10-11-16-57.html; [ -f "$SNAP" ] && export L2_PAGES="${L2_PAGES:-$SNAP}" L2_PAGES_MAGE="${L2_PAGES_MAGE:-$SNAP}"
 cd "$(dirname "$0")/../.."
 export CHROMIUM=/opt/pw-browsers/chromium
 for t in tests/browser-smoke.py tests/v7-chromium-runtime.py tests/v715-ui-browser.py tests/v718-ui-browser.py tests/v719-fishing-toggle-browser.py tests/v715-mage-dom-browser.py tests/battle-dom-smoke.py; do

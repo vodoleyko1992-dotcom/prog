@@ -8,7 +8,7 @@ assert snapshots,'no player HTML battle snapshots'
 body=None
 for sn in snapshots:
  b=re.search(r'<body\b.*?</body>',sn,re.S)
- if b and 'Wind Strike' in b.group(0) and 'battle-mob-hp-val' in b.group(0):body=b.group(0);break
+ if b and ('Wind Strike' in b.group(0) or 'Energy Bolt' in b.group(0)) and 'battle-mob-hp-val' in b.group(0):body=b.group(0);break   # 9.2: снимки 12.10 — Warlock 61 без Wind Strike на панели
 assert body,'no mage hotbar battle fixture found'
 manifest=json.loads((root/'manifest.json').read_text())
 scripts=next(x['js'] for x in manifest['content_scripts'] if 'content.js' in x['js'])
@@ -30,7 +30,7 @@ with sync_playwright() as p:
    return {count:skills.length,skills,selected:out?.name||'wait',type:out?.b?ilOf(out.b)?.c:null,kind:out?.key||null};
  }''')
  print('Mage real DOM:',result,'errors',errors)
- assert any(x['name']=='Wind Strike' and x['kind']=='Маг. атака' for x in result['skills']),result
+ assert any(x['name'] in ('Wind Strike','Energy Bolt') and x['kind']=='Маг. атака' for x in result['skills']),result
  assert result['kind']!='attack',result
  assert result['type'] in ('Маг. атака',None),result
  assert not errors,errors
