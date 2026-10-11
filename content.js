@@ -850,7 +850,16 @@ const campChampDue = () => campActive() && campChampOpen();
 // с карты — раз в 5 боёв при «0», не реже раза в 10 при большем числе (99999 — иначе фарм ресурса бьёт кого попало). Если цепочка
 // сама приносит источники в ≥ 50 % боёв — карта откладывается (chainCarries), как для ★ целей
 const FARM_EVERY = 5;
-const farmMapOn = () => { const lg = lootGoal(); return !!lg && !!rt.zone && rt.zone === lg.zone; };
+// 9.2.3 (игрок 12.10: «на спойлере пересматривает карту раз в несколько боёв, вместо того чтобы бить следующего»): цель Маммона
+// «добываю Mithril Ore» включает карту раз в 10 боёв ради источника (Guardian Basilisk), а он «не по зубам» (9.2.2: на карте не выбирается) —
+// карта ходила впустую. Все источники цели на этой точке «не по зубам» → карта по обычному правилу (цепочка)
+const hardNow = n => { const h = rt.hardMobs?.[String(n || '').toLowerCase()]; return !!h && Date.now() - (h.t || 0) < 7200000; };
+const farmMapOn = () => {
+  const lg = lootGoal();
+  if (!lg || !rt.zone || rt.zone !== lg.zone) return false;
+  const names = [...farmRules(), ...recipeRules()].map(x => x.name);
+  return !names.length || names.some(n => !hardNow(n));
+};
 const deepN = () => campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
   : farmMapOn() ? Math.min(+cfg.deepEvery > 0 ? +cfg.deepEvery : FARM_EVERY, FARM_EVERY * 2)
   : mapOff() ? Infinity : champHunt() ? Math.min(cfg.deepEvery, CHAMP_EVERY) : cfg.deepEvery;
