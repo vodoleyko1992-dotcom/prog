@@ -39,7 +39,8 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
   // ---------- T2: окно появления и расписание опроса ----------
   {
     const { env, E } = mk({ cfg: { epicList: 'orfen' } });
-    assert.deepEqual(clone(E.epicUntil({ alive: false, killT: T0, respH: 12 })), { lo: T0 + 12 * H, hi: T0 + 12 * H, exact: true, late: false });
+    // 8.0.8: «сейчас» передаём явно — раньше тест сравнивал с часами машины и падал, когда T0 + 12 ч оставалось в прошлом
+    assert.deepEqual(clone(E.epicUntil({ alive: false, killT: T0, respH: 12 }, T0 + H)), { lo: T0 + 12 * H, hi: T0 + 12 * H, exact: true, late: false });
     const last = Date.now() - 30 * 1000;
     env.rt.epicApi = { t: last, minLvl: 45, charLvl: 54 };
     const now = Date.now(), set = d => { env.rt.epicDb = { orfen: { lvl: 50, canAttack: true, alive: false, respH: 12, ...d } }; };
