@@ -8,6 +8,7 @@
 |---|---|---|
 | `repo-facts.md` | код бота, CLAUDE.md, все CHANGELOG, base-profile.json | все цифры и факты по темам с источником; §16 — противоречия и устаревшее, §17 — пробелы данных |
 | `history-facts.md` | вся прошлая сессия разбора логов (10.10 08:45 – 11.10 12:13 UTC) | хронология решений игрока, замеры из логов, формы API, механики, баги и их причины, открытые вопросы |
+| `mammon.md` | код страницы кузнеца Маммона и скриншот игрока (11.10) | кузнец: улучшение плащей/поясов/тату/крыльев Lv.0–5, API, цена (Coin of Luck!), торговец и заказ Маммона |
 | `game-live.md` | живая игра 11.10 (вход аккаунтом игрока, только GET, ничего не потрачено) | справочник эндпоинтов и полей, лучшие мобы на 60, РБ в досягаемости, цены, что бот может взять из API |
 
 Если источники расходятся, побеждает более новый: живая игра (11.10) → история логов → CLAUDE.md/CHANGELOG.
@@ -15,7 +16,7 @@
 ## Данные (`data/`)
 
 - Из кода и профиля (`tools/build_all.py` пересобирает): `mobs`, `zones`, `raidbosses`, `skills`, `items`, `farm`, `fishing`, `character`, `api`, `selectors`.
-- Из живой игры: `game-mobs` (400 записей, 360 видов: HP, атака/защита, EXP, SP, адена, дроп, спойл), `game-zones`, `game-teleports` (90 точек с ценой и уровнями мобов), `game-raid-bosses` (197 РБ с характеристиками и дропом), `game-epics`, `game-shop-drops`, `game-other-shops`, `game-buffer`, `game-items`, `game-fishing`, `game-skills-warlock`, `game-farm-guide` (база фарма форума), `game-recipes`, `game-endpoints` (275 путей фронтенда игры).
+- Из живой игры: `game-mobs` (400 записей, 360 видов: HP, атака/защита, EXP, SP, адена, дроп, спойл), `game-zones`, `game-teleports` (90 точек с ценой и уровнями мобов), `game-raid-bosses` (197 РБ с характеристиками и дропом), `game-epics`, `game-shop-drops`, `game-other-shops`, `game-buffer`, `game-items`, `game-fishing`, `game-skills-warlock`, `game-farm-guide` (база фарма форума), `game-recipes`, `game-endpoints` (275 путей фронтенда игры), `game-mammon-upgrades` (бонусы Lv.0–5 у 23 улучшаемых плащей, поясов, тату и крыльев).
 - Из истории логов: `history-epics`, `history-rb`, `history-zones`, `history-fishing`, `history-buffs`, `history-skills`, `history-timeline`.
 - `raw/` — сырые ответы сервера (токены, логин, почта, IP вырезаны).
 

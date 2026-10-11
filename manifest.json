@@ -75,6 +75,7 @@
         "modules/resources.js",
         "modules/loot.js",
         "modules/survival.js",
+        "modules/mammon.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -94,7 +95,8 @@
         "popup.html",
         "popup.js",
         "icons/*",
-        "items-il.json"
+        "items-il.json",
+        "mammon-gear.json"
       ],
       "matches": [
         "https://l2wap.com/*",
