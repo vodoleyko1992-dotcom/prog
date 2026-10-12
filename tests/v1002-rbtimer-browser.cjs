@@ -50,12 +50,14 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       await fetch('/game/raid-bosses?page=5'); await wait(() => rt.rbTimer?.b?.l2dop_rb_25103?.al === false);
       const x = rt.rbTimer.b.l2dop_rb_25103;
       const polled = await L2V7Modules.rbtimer.tick();
-      return { al: x.al, win: x.dl > 0 && x.dh >= x.dl, listAlive: rt.rbList.l2dop_rb_25103.alive, polled, zaken: rt.rbTimer.b.l2dop_rb_29022, pg: rt.rbTimer.pg };
+      ui.classList.add('wide'); draw(); const ind = document.getElementById('l2bot-ind')?.innerText || '';
+      ui.classList.remove('wide'); draw(); const ind2 = document.getElementById('l2bot-ind')?.innerText || '';
+      return { al: x.al, win: x.dl > 0 && x.dh >= x.dl, listAlive: rt.rbList.l2dop_rb_25103.alive, polled, zaken: rt.rbTimer.b.l2dop_rb_29022, pg: rt.rbTimer.pg, ind, ind2 };
     });
     const ok = res.n1 === 15 && res.list1 === 15 && res2.al === false && res2.win && res2.listAlive === false && res2.polled === true && res2.zaken?.rh === 36
-      && gets.some(g => /^\/game\/raid-bosses\?page=5 Bearer tok-123$/.test(g)) && gets.some(g => /^\/game\/epic-bosses Bearer tok-123$/.test(g)) && !errors.length;
+      && /🐉 Респ эпиков\s+💀 Zaken \(60\): не позже/.test(res2.ind) && /🐉 Респ эпиков: Zaken \(60\): не позже [\d.: ]+$/.test(res2.ind2) && gets.some(g => /^\/game\/raid-bosses\?page=5 Bearer tok-123$/.test(g)) && gets.some(g => /^\/game\/epic-bosses Bearer tok-123$/.test(g)) && !errors.length;
     if (!ok) { console.error('FAIL 1-3', JSON.stringify({ res, res2, gets, errors })); process.exit(1); }
-    console.log('PASS browser: game list via hook (all 15 RB, not cut to 8) → rbTimer + rbList; RB killed → death window; own poll (GET with token) → window pages + epics');
+    console.log('PASS browser: game list via hook (all 15 RB, not cut to 8) → rbTimer + rbList; RB killed → death window; own poll (GET with token) → window pages + epics; «🐉 Респ эпиков» in the in-game indicator (wide and narrow)');
     await p.close();
   }
   const now = Date.now(), H = 3600000;
