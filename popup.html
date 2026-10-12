@@ -417,6 +417,15 @@
   <div id="rbList"><div class="hint">Пусто — включите «👑 Тур по РБ» или «РБ между мобами» и зайдите на карту</div></div>
   <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
 
+  <div class="subsec-title"><span id="tab-rbtimer" class="tab-anchor"></span>⏱ Таймеры боссов</div>
+  <div class="hint">Игра показывает у РБ только «Живой / Убит» (у эпиков ещё «респ. N ч»), времени смерти и воскрешения не отдаёт. Бот запоминает сам: своего убитого — точно, чужого — между «видел живым» и «увидел убитым». Длительность респа обычного РБ бот учит по своим наблюдениям (босс убит → воскрес), пока замеров нет — берёт число ниже. «Тур РБ» к убитым не летает, а простой заканчивает, как только подходящий РБ воскрес.</div>
+  <label title="Раз в N минут бот читает у игры список РБ своего окна уровней и список эпиков (только чтение, бесплатно)">Следить за боссами (опрос списка) <input id="rbTimers" type="checkbox"></label>
+  <label>Опрос списка раз в, мин <input id="rbTimerMin" type="number" min="5" step="1"></label>
+  <label title="Пока бот сам не замерил респ, он берёт это число (со слов игрока — около 8 ч)">Респ обычного РБ, пока не замерен, ч <input id="rbRespH" type="number" min="1" max="72" step="0.5"></label>
+  <label>Показать всех РБ, а не только своего окна уровней <input id="rbTimerAll" type="checkbox"></label>
+  <div id="rbTimerSum" class="hint" style="white-space:pre-line"></div>
+  <div id="rbTimerTable" class="zbox"><div class="hint">Пока пусто — бот должен быть запущен: список боссов он прочитает в течение 10 мин</div></div>
+
   <div class="subsec-title"><span id="tab-epic" class="tab-anchor"></span>🐉 Эпик-боссы</div>
   <h4>🐉 Фарм эпиков</h4>
   <div class="row"><button id="epicToggle2">🐉 Эпики: ВЫКЛ</button></div>
@@ -774,6 +783,7 @@
 <script src="modules/enemies.js"></script>
 <script src="modules/tvtshop.js"></script>
 <script src="modules/dailies.js"></script>
+<script src="modules/rbtimer.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>

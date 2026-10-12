@@ -1619,6 +1619,7 @@ async function battle() {
   if (ctx.rb) {
     const rb = { ...(env.rt.rb || {}) }; delete rb[ctx.rb.id];
     await env.setRt({ rb, rbCur: null, sinceRb: 999, rbKills: (env.rt.rbKills || 0) + 1, ...(env.rt.rbList?.[ctx.rb.id] ? { rbList: { ...env.rt.rbList, [ctx.rb.id]: { ...env.rt.rbList[ctx.rb.id], alive: false } } } : {}) });   // v5.6: убит — в списке «мёртв»
+    env.rbTimerKill?.(ctx.rb.id, ctx.name, ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || 0)?.catch?.(() => {});   // 10.0.2: таймеры боссов — время смерти точно
     // Actual per-boss rewards and fight duration: economic RB tour uses these
     // in preference to guesses from other bosses. Do not overwrite with zero
     // when the victory screen has no readable reward line.

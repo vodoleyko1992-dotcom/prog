@@ -68,7 +68,7 @@
 - **GET `/game/teleport/locations`** → `locations[] {teleportId, labelUk, labelEn, baseAdenaCost, adenaCost, vipFreeApplied, mobLevelMin, mobLevelMax}`. Готовая полоса уровней точки — для `zoneForLevel` без замеров. Сам телепорт — `POST /game/teleport` (не вызывался).
 
 ### РБ и эпики
-- **GET `/game/raid-bosses?page=N`** (15 на странице, всего 197) → `{baseAdenaCost:100000, adenaCost, vipFreeApplied, characterLevel, minRaidBossLevel (= герой − 9), bosses[] {spawnId, name, level, bossType, isAlive, adenaCost, icon, canAttack, attackBlockedReasonUk}}`. **Времени респавна у РБ нет** (есть только у эпиков).
+- **GET `/game/raid-bosses?page=N`** (15 на странице, всего 197) → `{baseAdenaCost:100000, adenaCost, vipFreeApplied, characterLevel, minRaidBossLevel (= герой − 9), bosses[] {spawnId, name, level, bossType, isAlive, adenaCost, icon, canAttack, attackBlockedReasonUk}}`. **Времени респавна у РБ нет** (есть только у эпиков). Проверено ещё раз 12.10 12:38: ни в списке, ни в `/game/spawn/<id>/info` (у РБ и эпиков) нет и времени смерти — бот считает его сам (`modules/rbtimer.js`, 10.0.2).
 - **GET `/game/epic-bosses`** → то же + `baseCoinOfLuckCost:1, coinOfLuckCost:1, respawnHours`.
 
 ### Магазины и экономика
