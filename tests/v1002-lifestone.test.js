@@ -23,6 +23,12 @@ assert.deepEqual({ ...A.ofEq({ l1: { itemId: 8688, enchant: 7 } }) }, { w: 8688,
 assert.deepEqual({ ...A.ofEq({ l3: { itemId: 2409 } }) }, { w: 0, e: 0, o: null, g: null }, 'weapon removed');
 assert.equal(A.keep({ o: 'prominence' }), true); assert.equal(A.keep({ o: 'matk_6' }), true); assert.equal(A.keep({ o: 'bad_matk_10' }), false); assert.equal(A.keep({ o: null }), false);
 assert.deepEqual({ ...A.tryCost('A') }, { aa: 100000, adena: 30000, aaGem: 187000 }, 'A attempt: Life Stone A 100k AA + Gemstone A 30k adena (gm-shop)');
+// шансы из новости игры 12.10: плюсы 6,364 %, умения 9 %, минусы 84,636 %
+const sum = k => Object.values(A.OUT).filter(o => o.k === k).reduce((a, o) => a + o.p, 0);
+assert.ok(Math.abs(sum('positive') - 6.364) < 0.01 && Math.abs(sum('active') - 9) < 1e-9 && Math.abs(sum('negative') - 84.636) < 1e-9, 'chances as announced');
+assert.match(A.OUT.matk_6.n, /M\.Atk \+15%/); assert.match(A.OUT.mage_skill_5.n, /\+15%/);
+// магу полезно: 5 ударных (6 %) + M.Atk +15 % + сила умений +15 % ≈ 7,8 % → ≈13 попыток в среднем
+assert.ok(Math.abs(A.goodChance('mage') - 0.07818) < 0.0005); assert.equal(Math.round(A.triesFor('mage')), 13);
 assert.equal(A.tryCost('D'), null, 'D-grade weapons cannot be augmented');
 assert.match(A.text({ o: 'prominence', g: 'A' }), /Prominence.*Power 109.*A/);
 
