@@ -2183,6 +2183,15 @@ setInterval(async () => {
 }, 5000);
 // замок при уходе со страницы не снимаем: следующая страница этой же вкладки продолжит с тем же ключом; закрытую вкладку отпустит таймаут 90 с
 
+// 10.0.2: замеры по РБ из лога 12.10 22:11–22:46 (Warlock 65 + Kai): ДПС в бою, спецудар, обычный удар p90 / макс.
+const RB_FIT_1002 = {
+  l2dop_rb_25234: { name: 'Ancient Weird Drake', lvl: 60, dps: 4837, sp: 2623, hitP90: 539, maxHit: 539 },
+  l2dop_rb_29056: { name: 'Ice Fairy Sirra', lvl: 60, dps: 5179, sp: 2954, hitP90: 221, maxHit: 221 },
+  l2dop_rb_25140: { name: 'Hekaton Prime', lvl: 65, dps: 3421, sp: 2770, hitP90: 605, maxHit: 646 },
+  l2dop_rb_25051: { name: 'Rahha', lvl: 65, dps: 4337, sp: 2770, hitP90: 635, maxHit: 648 },
+  l2dop_rb_25220: { name: 'Death Lord Hallate', lvl: 73, dps: 2465, sp: 2640, hitP90: 845, maxHit: 874 },
+  l2dop_rb_25126: { name: 'Longhorn Golkonda', lvl: 79, dps: 2397, sp: 2396, hitP90: 675, maxHit: 730 },
+};
 // 10.0.2 (лог 12.10 22:35:26–22:35:45, Death Lord Hallate): «пытаюсь выйти» → страница ушла на карту, но POST /game/battle/leave так и не
 // пришёл (сервер отвечал по 8 с) — бой на сервере шёл дальше, герой «на карте» стоял под ударами и погиб, а бот выбирал моба
 // (battle/start → 400 pve_defeat_pending). Перед нажатием выхода — метка (sessionStorage), ответ 2xx на leave её снимает; не снята через 2 с
@@ -4455,6 +4464,17 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean);
     if (!ps.some(n => /^summon feline queen$/i.test(n))) cf.nPetBuffs = [...ps, 'Summon Feline Queen'].join(', ');
     if (/feline queen/i.test(String(C('petSummon') || ''))) cf.petSummon = '';
+  });
+  // 10.0.2 (игрок 12.10: «учти нужные данные в модели»): замеры лога 12.10 22:11–22:46 (Warlock 65, с котом) — свой ДПС по РБ, спецудар,
+  // обычный удар p90/макс. Пишем только то, чего в памяти нет (свои замеры игрока важнее); ДПС привязан к уровню 65 и нынешнему общему ДПС
+  once('rbFit1002', () => {
+    const D = { ...(rt.rbDb || {}) }, base = rt.rbDps || null;
+    for (const [id, v] of Object.entries(RB_FIT_1002)) {
+      const d = D[id] || {};
+      D[id] = { ...d, name: d.name || v.name, lvl: d.lvl || v.lvl, sp: Math.max(d.sp || 0, v.sp), hitP90: Math.max(d.hitP90 || 0, v.hitP90), maxHit: Math.max(d.maxHit || 0, v.maxHit),
+        ...(d.dps > 0 ? {} : { dps: v.dps, dpsLvl: 65, dpsBase: base }) };
+    }
+    rf.rbDb = D;
   });
   // 9.2.5 (игрок 12.10: РБ «не уверен» бот не шёл проверять): цифры 4 РБ из базового профиля 8.0.3 (from 'base803', M.Atk Кастора 9339
   // при настоящих 4339) — на встроенные цифры игры (замеры loss и т. п. сохраняем); пропуски «не по силам по оценке» — снять
