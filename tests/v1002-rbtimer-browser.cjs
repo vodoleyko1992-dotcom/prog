@@ -89,6 +89,16 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       && at(/Rahha/) < at(/Hekaton/) && at(/Hekaton/) < at(/Tiphon/)
       && /Знаю 5 боссов: живых 2, убитых 3/.test(sum) && /пока не замерен — беру 8 ч/.test(sum) && on && resp === '8' && every === '10' && vis && !overflow && !errs.length;
     if (!ok) { console.error('FAIL 4', JSON.stringify({ w, t, sum, on, resp, every, vis, overflow, errs })); process.exit(1); }
+    // файл слежки из облака (по строке на опрос) → «📥 Загрузить таймеры из файла слежки» → таймеры героя
+    if (w === 760) {
+      const t0 = Math.floor(now / 1000) - 9 * 3600, snaps = [0, 600, 1200, 8 * 3600 + 1200, 8 * 3600 + 1800].map((dt, i) => JSON.stringify({ t: t0 + dt, st: { l2dop_rb_9: ['Lokness', 70, !(i >= 2 && i <= 3), 'raid'], l2dop_rb_25051: ['Rahha', 65, false, 'raid'] } })).join('\n');
+      await page.setInputFiles('#rbtFile', { name: 'rb-poll.jsonl', mimeType: 'application/json', buffer: Buffer.from(snaps) });
+      await page.waitForTimeout(800);
+      const t2 = await page.$eval('#rbTimerTable', e => e.innerText);
+      const ok2 = /Lokness \(70\)\s+✅ жив/.test(t2) && /8 ч–8 ч 20 мин · мой замер \(1\)/.test(t2) && /Rahha \(65\)\s+💀 убит мной/.test(t2);
+      if (!ok2) { console.error('FAIL import', JSON.stringify({ t2 })); process.exit(1); }
+      console.log('PASS browser: tracking file import — Lokness alive with respawn measured 8 h–8 h 20 min, own Rahha kill kept');
+    }
     if (process.env.SHOT) { await page.$eval('#rbTimerTable', e => e.scrollIntoView()); await page.screenshot({ path: process.env.SHOT + '-' + w + '.png' }); }
     console.log(`PASS browser ${w}px: «👑 РБ» → «⏱ Таймеры боссов»: killed first by respawn time, epic by game hours, window 50–80, settings, no sideways scroll`);
     await page.close();

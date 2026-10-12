@@ -58,6 +58,44 @@ function killed(T0, id, now = Date.now(), n, l) {
   B[id] = { ...p, n: String(n || p.n || id).slice(0, 40), l: +l || p.l || 0, al: false, ch: now, pv: p.al === false ? p.pv || 0 : p.ls || 0, dl: now, dh: now, k: now, ls: now };
   return { ...(T0 || {}), b: B };
 }
+// 10.0.2 (игрок 12.10: «как синхронизировать таймер на основном боте со слежкой?»): файл слежки из облака (снимки списка по строке:
+// {t, st: {spawnId: [имя, ур., isAlive, bossType]}}) → таймеры, как если бы бот сам опрашивал список в эти моменты
+function replay(snaps) {
+  let T = { b: {} };
+  for (const s of [...(snaps || [])].filter(x => x && +x.t > 0 && x.st && typeof x.st === 'object').sort((a, b) => a.t - b.t)) {
+    const t = +s.t < 1e12 ? +s.t * 1000 : +s.t;
+    T = observe(T, Object.entries(s.st).map(([id, v]) => Array.isArray(v) ? { id, n: v[0], l: +v[1] || 0, al: typeof v[2] === 'boolean' ? v[2] : null, e: v[3] === 'epic' } : null), t).T;
+  }
+  return T;
+}
+// чужие таймеры (файл слежки, другой персонаж) к своим: по каждому боссу — более свежее наблюдение, замеры респа — вместе
+function merge(A, Bt) {
+  const out = { ...(A || {}), b: { ...(A?.b || {}) } };
+  for (const [id, y] of Object.entries(Bt?.b || {})) {
+    const x = out.b[id];
+    const fresh = !x || (y.ls || 0) > (x.ls || 0) ? { ...(x || {}), ...y } : { ...y, ...x };
+    const ob = [...(x?.ob || []), ...(y.ob || [])].filter((o, i, a) => Array.isArray(o) && a.findIndex(z => z[0] === o[0] && z[1] === o[1]) === i).slice(-OB_MAX);
+    if (ob.length) fresh.ob = ob; else delete fresh.ob;
+    // обе стороны видят его убитым — берём точное окно смерти (свой килл, узкое окно), а не «не позже»
+    if (x && x.al === false && y.al === false) { const w = z => z.dl > 0 ? z.dh - z.dl : Infinity, best = w(x) <= w(y) ? x : y;
+      Object.assign(fresh, { dl: best.dl || 0, dh: best.dh || fresh.dh }); if (best.k) fresh.k = best.k; else delete fresh.k; }
+    out.b[id] = fresh;
+  }
+  return out;
+}
+// текст файла: таймеры бота (rt.rbTimer / { rbTimer }) или снимки слежки (JSON-массив или по строке)
+function parseFile(txt) {
+  const s = String(txt || '').trim(); if (!s) return null;
+  try { const j = JSON.parse(s);
+    if (j?.b && typeof j.b === 'object') return j;
+    if (j?.rbTimer?.b) return j.rbTimer;
+    if (j?.rt?.rbTimer?.b) return j.rt.rbTimer;
+    if (Array.isArray(j)) return replay(j);
+    if (j?.st) return replay([j]);
+  } catch (e) {}
+  const lines = s.split(/\r?\n/).map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(x => x?.st);
+  return lines.length ? replay(lines) : null;
+}
 // окно респа [lo, hi] мс по замерам: пересечение (респ ровный) или общий разброс (респ случайный, rnd)
 function band(ob) {
   if (!Array.isArray(ob) || !ob.length) return null;
@@ -211,6 +249,6 @@ async function tick() {
   return pages > 0;
 }
 
-return { observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, state };
+return { replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, state };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
