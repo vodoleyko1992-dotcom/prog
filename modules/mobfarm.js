@@ -169,7 +169,7 @@ async function nextFight(ctx) {
     if (env.cfg.chain !== false && (env.rt.catIn || /spawnId=sdms_/i.test(location.search))) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (hunt) {
-        env.setStatus('Катакомбы: охотиться дальше'); await env.setRt({ via: 'chain', catInT: Date.now() });
+        env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
         const href = location.href; env.fire(hunt);
         if (await env.waitFor(() => location.href !== href || (!env.victory() && (env.mobHp()?.cur || 0) > 0), 8000) || !env.on) return;
       }
@@ -239,10 +239,17 @@ async function nextFight(ctx) {
     const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
     if (hunt) {
       env.setStatus('Охотиться дальше');
-      await env.setRt({ via: 'chain' });
-      const href = location.href;
+      // 10.0 (лог 12.10: от записи «Охотиться дальше» до запроса 273 мс против ≈45 мс у игрока): запись не ждём — rt в памяти уже новый,
+      // хвост очереди досылается при уходе со страницы (pagehide); опрос 50 мс вместо 250
+      env.setRt({ via: 'chain' });
+      const href = location.href, t0 = Date.now();
       env.fire(hunt);
-      const ok = await env.waitFor(() => (location.href !== href && !env.victory()) || (!env.victory() && (env.mobHp()?.cur || 0) > 0), 8000);   // 7.1.30: пока экран победы виден, бой не «начат» — иначе «Охотиться дальше» жмётся дважды
+      const started = () => (location.href !== href && !env.victory()) || (!env.victory() && (env.mobHp()?.cur || 0) > 0);   // 7.1.30: пока экран победы виден, бой не «начат» — иначе «Охотиться дальше» жмётся дважды
+      let ok = await env.waitFor(started, 8000, 50);
+      // 10.0 (лог 12.10, 7 раз за 47 мин: сервер отвечает на hunt-continue через ≈8,4 с, бот уходил на карту за 0,3 с до ответа):
+      // запрос ушёл и ещё в полёте — ждём до 15 с
+      const net = env.actNet?.();
+      if (!ok && env.on && net && net.huntT >= t0 && !((net.huntDoneT || 0) >= net.huntT)) ok = await env.waitFor(started, 7000, 50);
       if (ok || !env.on) return;
       console.info(env.TAG, '«Охотиться дальше» не сработало — иду на карту');
     }
