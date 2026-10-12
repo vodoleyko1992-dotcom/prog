@@ -8,28 +8,30 @@
   // k: active — умение на панели боя, positive / negative — пассивный бонус. il — id умения Interlude (иконка игры, skills-il.js).
   // mage / fighter — грубая оценка прибавки урона в процентах для класса (для меню; отрицательная — потеря).
   // Все активные на L2WAP — Power 109 (у Blaze 44): одно нажатие ≈ 2,5 Blaze.
+  // p — шанс исхода за одну попытку, % (новость игры 12.10 «Life Stone и Катакомбы», одинаково для C/B/A/S): плюсы 6,364 %, умения 9 %, минусы 84,636 %.
+  // Там же: matk_6 теперь P.Atk +10 % / M.Atk +15 % от итоговых статов, mage_skill_5 — +15 % (id исходов прежние)
   const OUT = {
-    prominence: { n: 'Prominence', d: 'магическая атака огнём · Power 109', k: 'active', il: 1230, mage: 15, fighter: 3 },
-    hurricane: { n: 'Hurricane', d: 'магическая атака ветром · Power 109', k: 'active', il: 1239, mage: 15, fighter: 3 },
-    hydro_blast: { n: 'Hydro Blast', d: 'магическая атака водой · Power 109', k: 'active', il: 1235, mage: 15, fighter: 3 },
-    vampiric_claw: { n: 'Vampiric Claw', d: 'магическая атака с лечением HP · Power 109', k: 'active', il: 1234, mage: 14, fighter: 3 },
-    tempest: { n: 'Tempest', d: 'массовая магическая атака · Power 109', k: 'active', il: 1176, mage: 12, fighter: 2 },
-    major_heal: { n: 'Major Heal', d: 'сильное лечение HP', k: 'active', il: 1401, mage: 0, fighter: 0 },
-    matk_6: { n: 'P.Atk / M.Atk +6%', d: 'пассивный бонус', k: 'positive', mage: 6, fighter: 6 },
-    mage_skill_5: { n: 'Сила магических умений +5%', d: 'пассивный бонус', k: 'positive', mage: 5, fighter: 0 },
-    magic_crit_chance_10: { n: 'Шанс маг. крита +10%', d: 'пассивный бонус', k: 'positive', mage: 4, fighter: 0 },
-    mage_crit_damage_5: { n: 'Сила маг. крита +5%', d: 'пассивный бонус', k: 'positive', mage: 1, fighter: 0 },
-    physical_skill_10: { n: 'Сила физ. умений +10%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 7 },
-    physical_crit_100: { n: 'Шанс физ. крита +100', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 6 },
-    physical_crit_damage_5: { n: 'Сила физ. крита +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 2 },
-    hp_5: { n: 'Максимум HP +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0 },
-    mp_5: { n: 'Максимум MP +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0 },
-    pdef_4: { n: 'P.Def +4%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0 },
-    mdef_5: { n: 'M.Def +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0 },
-    bad_matk_10: { n: 'M.Atk −10%', d: 'отрицательный бонус', k: 'negative', mage: -10, fighter: 0 },
-    bad_patk_9: { n: 'P.Atk −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: -9 },
-    bad_pdef_9: { n: 'P.Def −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: 0 },
-    bad_mdef_9: { n: 'M.Def −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: 0 }
+    prominence: { n: 'Prominence', d: 'магическая атака огнём · Power 109', k: 'active', il: 1230, mage: 15, fighter: 3, p: 0.75 },
+    hurricane: { n: 'Hurricane', d: 'магическая атака ветром · Power 109', k: 'active', il: 1239, mage: 15, fighter: 3, p: 0.75 },
+    hydro_blast: { n: 'Hydro Blast', d: 'магическая атака водой · Power 109', k: 'active', il: 1235, mage: 15, fighter: 3, p: 0.75 },
+    vampiric_claw: { n: 'Vampiric Claw', d: 'магическая атака с лечением HP · Power 109', k: 'active', il: 1234, mage: 14, fighter: 3, p: 0.75 },
+    tempest: { n: 'Tempest', d: 'массовая магическая атака · Power 109', k: 'active', il: 1176, mage: 12, fighter: 2, p: 3 },
+    major_heal: { n: 'Major Heal', d: 'сильное лечение HP', k: 'active', il: 1401, mage: 0, fighter: 0, p: 3 },
+    matk_6: { n: 'P.Atk +10% / M.Atk +15%', d: 'пассивный бонус от итоговых статов', k: 'positive', mage: 15, fighter: 10, p: 0.909 },
+    mage_skill_5: { n: 'Сила магических умений +15%', d: 'пассивный бонус', k: 'positive', mage: 15, fighter: 0, p: 0.909 },
+    magic_crit_chance_10: { n: 'Шанс маг. крита +10%', d: 'пассивный бонус', k: 'positive', mage: 4, fighter: 0, p: 0.455 },
+    mage_crit_damage_5: { n: 'Сила маг. крита +5%', d: 'пассивный бонус', k: 'positive', mage: 1, fighter: 0, p: 0.455 },
+    physical_skill_10: { n: 'Сила физ. умений +10%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 7, p: 0.909 },
+    physical_crit_100: { n: 'Шанс физ. крита +100', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 6, p: 0.455 },
+    physical_crit_damage_5: { n: 'Сила физ. крита +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 2, p: 0.455 },
+    hp_5: { n: 'Максимум HP +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0, p: 0.455 },
+    mp_5: { n: 'Максимум MP +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0, p: 0.455 },
+    pdef_4: { n: 'P.Def +4%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0, p: 0.455 },
+    mdef_5: { n: 'M.Def +5%', d: 'пассивный бонус', k: 'positive', mage: 0, fighter: 0, p: 0.455 },
+    bad_matk_10: { n: 'M.Atk −10%', d: 'отрицательный бонус', k: 'negative', mage: -10, fighter: 0, p: 21.159 },
+    bad_patk_9: { n: 'P.Atk −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: -9, p: 21.159 },
+    bad_pdef_9: { n: 'P.Def −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: 0, p: 21.159 },
+    bad_mdef_9: { n: 'M.Def −9%', d: 'отрицательный бонус', k: 'negative', mage: 0, fighter: 0, p: 21.159 }
   };
   const POWER = 109;
   // действие боя → id умения Interlude (battle-hotbar.js ACTION_L2_ICON)
@@ -61,5 +63,8 @@
   const keep = a => { const m = a && info(a.o); return !!m && (m.k === 'active' || m.k === 'positive'); };
   // цена одной попытки: Life Stone за AA + Gemstone за адену (или за AA у Маммона)
   const tryCost = gr => { gr = String(gr || '').toUpperCase(); return LIFE_STONE[gr] ? { aa: LS_AA[gr], adena: GEM_ADENA[gr], aaGem: GEM_AA[gr] } : null; };
-  g.L2Aug = { OUT, POWER, SKILL_IL, isLs, LIFE_STONE, GEMSTONE, LS_AA, GEM_AA, GEM_ADENA, ofEq, info, text, keep, tryCost };
+  // шанс за попытку получить исход с оценкой ≥ min % для роли (mage | fighter) и среднее число попыток до него
+  const goodChance = (role, min = 5) => Object.values(OUT).filter(o => (o[role] || 0) >= min).reduce((a, o) => a + (o.p || 0), 0) / 100;
+  const triesFor = (role, min = 5) => { const q = goodChance(role, min); return q > 0 ? 1 / q : Infinity; };
+  g.L2Aug = { goodChance, triesFor, OUT, POWER, SKILL_IL, isLs, LIFE_STONE, GEMSTONE, LS_AA, GEM_AA, GEM_ADENA, ofEq, info, text, keep, tryCost };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1109,7 +1109,7 @@ function augLine(rt) {
   const m = A.info(a.o);
   if (!a.o) return '\n💎 Life Stone: нет (вставка — «Персонаж → Аугментація зброї», бот сам не вставляет)';
   const onPanel = (rt.panel || []).some(s => s.cdKey === 'ls_' + a.o);
-  return `\n💎 Life Stone: ${A.text(a)}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
+  return `\n💎 Life Stone: ${A.text(a)}${m?.p != null ? ` · шанс такого ${m.p} %` : ''}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
     + (A.keep(a) ? ' · бот не меняет это оружие сам' : '');
 }
 async function weapScan() {
