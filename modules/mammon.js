@@ -136,6 +136,7 @@ function gearLvl(id) {                            // уровень вещи: и
 }
 const owned = id => (env.rt.mmGear || []).some(x => x.id === id) || Object.values(env.rt.mmEq || {}).some(x => x[0] === id);
 const nameEn = id => env.ITEMS?.[id]?.n || '';
+const itNm = id => nameEn(+id) || MM_RNAME[id] || MM_INAME[id] || `#${id}`;
 const haveOf = (id, snap) => { const q = env.invQty(id); return q != null ? q : snap ?? null; };
 // 9.0 (игрок 11.10: «копить на определённую задачу и последовательно идти её делать»): что нужно до цели, по порядку
 function goalPlan() {
@@ -162,6 +163,8 @@ const MM_RECIPES = { 1878: [1, [[1864, 'Stem', 5]]], 1879: [1, [[1871, 'Charcoal
 const MM_RNAME = { 1878: 'Braided Hemp', 1879: 'Cokes', 1880: 'Steel', 1881: 'Coarse Bone Powder', 1882: 'Leather', 1884: 'Cord', 1885: 'High Grade Suede', 1887: 'Varnish of Purity',
   1888: 'Synthetic Cokes', 1889: 'Compound Braid', 1890: 'Mithril Alloy', 1893: 'Oriharukon', 5549: 'Metallic Thread', 1883: 'Steel Mold', 1886: 'Silver Mold',
   1891: "Artisan's Frame", 1892: "Blacksmith's Frame", 1894: 'Crafted Leather', 1895: 'Metallic Fiber', 5550: 'Durable Metal Plate', 5220: 'Metal Hardener' };
+// 10.0.2 (лог 12.10 17:47 «у крафтера ещё #1868 700, #1869 255»): сырьё из рецептов — тоже по имени (Thread, Iron Ore…)
+const MM_INAME = Object.fromEntries(Object.values(MM_RECIPES).flatMap(R => R[1].map(([iid, inm]) => [iid, inm])));
 // цена уровня L: известная (кузнец/скриншот) или оценка. Цены растут с уровнем линейно: Кристалл D 100 на Lv.0→1 (пояс), 200 на Lv.1→2 (тату,
 // скриншот игрока 11.10) → цена уровня L ≈ цена уровня k × (L+1)/(k+1). Оценка — по ближайшей известной цене этой вещи, иначе той же грейда
 function levelCost(id, L) {
@@ -476,7 +479,7 @@ function craftWant(now = Date.now()) {
   if (!P || P.done) return cmd ? { drop: 'вещь-цель уже на уровне цели' } : null;
   const items = (P.snd || []).filter(x => x.q > 0);
   // 10.0 (лог 12.10 17:30/17:38: кнопка сразу после отправки — «крафтить нечего») — пишем, что именно уже лежит у крафтера
-  const atTxt = () => Object.entries(atC()).filter(([, n]) => n > 0).slice(0, 6).map(([mid, n]) => `${nameEn(+mid) || MM_RNAME[mid] || '#' + mid} ${fmtA(n)}`).join(', ');
+  const atTxt = () => Object.entries(atC()).filter(([, n]) => n > 0).slice(0, 6).map(([mid, n]) => `${itNm(mid)} ${fmtA(n)}`).join(', ');
   if (!items.length) return cmd ? { drop: P.cmiss ? `в сумке нет сырья на крафт (не хватает ${short(P.raw.filter(r => r.miss > 0))})` : atTxt() ? `сырьё уже у крафтера ${to} (${atTxt()}) — жду готовое письмом` : 'крафтить нечего — крафтовое уже есть' } : null;
   if (!cmd && P.cmiss > 0) return null;           // сам — только полный набор, чтобы крафтер скрафтил всё сразу
   // 9.2.5 (игрок 12.10: «нужно не на все 5 уровней, а на все недостающие»): план и так считается от текущего уровня вещи (goalAll: L = lvl … to−1) —
@@ -507,17 +510,24 @@ function mailList(list) {
   patch.mmMail = { t: Date.now(), unc: unc.slice(0, 20) };
   // учёт возврата: письма от крафтера после отправки, уже забранные в сумку (claimedAt) — кто бы ни нажал «Забрати», бот или игрок
   if (C?.at && to) {
-    const seen = new Set(C.seen || []), at = { ...C.at }, got = [];
+    const seen = new Set(C.seen || []), at = { ...C.at }, got = [], odd = [], want = new Set();
+    const tree = (id, d = 0) => { if (want.has(id) || d > 6) return; want.add(id); for (const [iid] of MM_RECIPES[id]?.[1] || []) tree(iid, d + 1); };
+    for (const k of Object.keys(C.ret || {})) tree(+k);   // ждём готовое и его промежуточное
     for (const a of list) {
       if (!a || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
       const k = String(a.attachmentId), t = Date.parse(a.createdAt) || Date.now();
       if (seen.has(k) || t < (C.t0 || 0) - 60000) continue;
+      const before = JSON.stringify(at);
       seen.add(k); unsend(at, +a.itemId, +a.qty || 0); got.push(`${a.name || '#' + a.itemId} ×${fmtA(a.qty)}`);
+      // 10.0.2 (лог 12.10 17:47: отправили сырьё на Durable Metal Plate, Skye вернул Steel Mold ×19 — рецепты бота совпадают с игрой,
+      // /game/craft/materials): вернулось то, что из отправленного не делается, — «у крафтера» не списываем и пишем, чего ждали
+      if (want.size ? !want.has(+a.itemId) && !(JSON.parse(before)[a.itemId] > 0) : JSON.stringify(at) === before) odd.push(`${a.name || itNm(a.itemId)} ×${fmtA(a.qty)}`);
     }
     if (got.length) {
       for (const k of Object.keys(at)) if (!(at[k] > 0)) delete at[k];
       const left = Object.keys(at).length;
-      env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${nameEn(+id) || MM_RNAME[id] || '#' + id} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
+      if (odd.length) env.rec('B', 'Маммон', `${C.to || crafter()} вернул не то, что нужно: ${odd.join(', ')} — из отправленного это не делается${C.want?.length ? `; ждём: ${C.want.map(([n, q]) => `${n} ×${fmtA(q)}`).join(', ')}` : ''}. Сырьё считаю ещё у крафтера — напиши ему или нажми «↺ Забыть, что у крафтера»`);
+      env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${itNm(id)} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
       patch.mmCraft = left ? { ...C, at, seen: [...seen].slice(-200), gotT: Date.now() } : null;
       goalT = 0;
     }
@@ -560,7 +570,7 @@ const shownTxt = el => el && !el.hidden ? (el.textContent || '').trim() : '';
 // 10.0.2: письмо крафтеру после партии — что скрафтить и что вернуть (/mail-compose.html: «Кому», «Повідомлення» до 1000 знаков,
 // POST /game/mail/send {text, recipientName}). Язык — украинский, как интерфейс игры у клана
 function noteOf(P, goal) {
-  const nm = id => nameEn(+id) || MM_RNAME[id] || `#${id}`;
+  const nm = itNm;
   return { goal, part: (P.cmiss || 0) > 0, craft: (P.craft || []).filter(c => c.qty > 0).map(c => [c.nm, c.qty]),
     ret: Object.entries(P.ret || {}).filter(([, q]) => q > 0).map(([id, q]) => [nm(id), q]) };
 }
@@ -613,7 +623,8 @@ async function sentOk(J, cur) {
   at[cur.id] = (at[cur.id] || 0) + cur.q;
   const ret = { ...(C.ret || {}) }; for (const [k, n] of Object.entries(J.ret || {})) if (!J.retDone) ret[k] = (ret[k] || 0) + n;
   const done = [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]];
-  await env.setRt({ mmCraft: { to: J.to, t0: C.t0 || Date.now(), t: Date.now(), at, ret, seen: C.seen || [] }, mmJob: { ...J, cur: null, retDone: true, items: J.items.slice(1), done } });
+  const want = J.note?.ret?.length ? J.note.ret : Object.entries(ret).map(([k, n]) => [itNm(k), n]);
+  await env.setRt({ mmCraft: { to: J.to, t0: C.t0 || Date.now(), t: Date.now(), at, ret, want, seen: C.seen || [] }, mmJob: { ...J, cur: null, retDone: true, items: J.items.slice(1), done } });
   env.rec('B', 'Маммон', `крафтеру ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`);
 }
 async function sendStep(J) {

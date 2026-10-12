@@ -14,7 +14,7 @@ function composePage({ err = '' } = {}) {
     getElementById: id => ({ 'mail-compose-form': P.form, 'mail-compose-to': P.to, 'mail-compose-text': P.text, 'mail-compose-submit': P.submit, 'mail-compose-success': P.ok, 'mail-compose-err': P.err })[id] || null };
   return P;
 }
-const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', doc = null, click = null } = {}) => {
+const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', doc = null, click = null, received = [] } = {}) => {
   const recs = [], loc = { pathname: pn, href: '' };
   class Event { constructor(t) { this.type = t; } }
   const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Event, location: loc, document: doc || { querySelectorAll: () => [], querySelector: () => null, getElementById: () => null },
@@ -24,7 +24,7 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', doc = null, click =
     setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), setStatus: () => {}, sleep: async () => {}, waitX: async fn => fn(),
     fire: e => { click?.(e); return true; }, $q: () => null, isBattle: () => false, isFishing: () => false, fishState: () => null, fishNow: () => false,
     autonomyMode: () => 'hunt', tvtSoon: () => false, heroNick: () => 'Warlock', invQty: id => inv[id] ?? (Object.keys(inv).length ? 0 : null), ITEMS: {}, FARM: { res: {} },
-    invRefresh: async () => ({ ...inv }), gameGet: async () => ({ ok: true, status: 200, json: async () => ({}) }) };
+    invRefresh: async () => ({ ...inv }), gameGet: async p => ({ ok: true, status: 200, json: async () => /received/.test(p) ? { attachments: received } : {} }) };
   return { env, M: sb.L2V7Factories.mammon(env), loc, recs };
 };
 // пояс D Lv.0 → 1: Steel 3 = 15 Iron Ore + 15 Varnish (как в v925-mammon-crafter)
@@ -75,6 +75,20 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     assert.equal(JSON.stringify(env.rt.mmCraft.pendNote.prev), JSON.stringify([['Iron Ore', 15]]));
     env.rt.mmSendT = 0; const p = M.craftWant(); assert.equal(p.pendJob, true);
     const t = M.noteText(p.note, [...p.note.prev, ['Varnish', 15]], 'Warlock')[0]; assert.match(t, /Iron Ore ×15, Varnish ×15/); }
+  // лог 12.10 17:47: сырьё на Durable Metal Plate (Thread 700, Iron Ore 255, Mithril Ore 70) — Skye вернул Steel Mold ×19 (его из отправленного
+  // не сделать: Braided Hemp + Coal + Iron Ore). «У крафтера» не списываем, пишем «вернул не то» и чего ждём; имена сырья — не «#1868»
+  { const now = Date.now(), iso = new Date(now).toISOString();
+    const { env, M, recs } = mk({ received: [{ attachmentId: 'a1', senderName: 'Skye', itemId: 1883, name: 'Steel Mold', qty: 19, createdAt: iso, claimedAt: iso }],
+      rt: { mmCraft: { to: 'Skye', at: { 1868: 700, 1869: 255, 1876: 70 }, t0: now - 1000, ret: { 5550: 14 }, want: [['Durable Metal Plate', 14]] } } });
+    await M.mailPoll();
+    const r = recs.join('\n');
+    assert.match(r, /Skye вернул не то, что нужно: Steel Mold ×19 — из отправленного это не делается; ждём: Durable Metal Plate ×14/);
+    assert.match(r, /у крафтера ещё Thread 700, Iron Ore \d+, Mithril Ore 70/); assert.equal(env.rt.mmCraft.at[1868], 700); }
+  // нужное вернулось — списано, без «не то»
+  { const now = Date.now(), iso = new Date(now).toISOString();
+    const { env, M, recs } = mk({ received: [{ attachmentId: 'a2', senderName: 'Skye', itemId: 5550, name: 'Durable Metal Plate', qty: 14, createdAt: iso, claimedAt: iso }],
+      rt: { mmCraft: { to: 'Skye', at: { 1868: 700, 1869: 350, 1876: 70 }, t0: now - 1000, ret: { 5550: 14 } } } });
+    await M.mailPoll(); assert.ok(!recs.some(x => /не то/.test(x))); assert.equal(env.rt.mmCraft, null, 'plates write off all the raw'); }
   // меню и настройки
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   assert.ok(html.includes('id="mmCraftNote"')); assert.match(pj, /'mmCraftNote'/); assert.match(pj, /mmCraftNote: true/); assert.match(c, /mmCraftNote: true/);
