@@ -61,3 +61,9 @@ NPC 31126, иконка `/nps/76.png`. Одна функция: **улучшен
 1. Учитывать `specialGearLevel` при оценке снаряжения (сейчас equipment.js смотрит только оружие).
 2. Следить за заказом Маммона: если ресурс есть в сумке и заказ `OPEN`, предлагать игроку сдать (или сдавать сам по разрешению). Нужен героем рядом с торговцем, телепорт 500 000 адены (с VIP бесплатно).
 3. Показывать в меню, сколько материалов не хватает до следующего уровня (кристаллы D, руда, сталь можно фармить и спойлить), сам апгрейд — с 9.2.5 бот делает для вещи-цели (разрешено игроком 12.10).
+
+## Передача предметов и почта (снято с кода страниц игры 12.10)
+
+- Страница `/item-transfer.html` («Передача предмета»): `GET /game/item-transfer/candidates?category=all&page=N&pageSize=20` → `{candidates[{itemKey, itemId, name, stackable, availableQty, transferValueUnitAdena, currencyKind, enchant}], page, totalPages, categoryCounts}`. Отправка: `POST /game/item-transfer/send {expectedRevision, clientTransferId, itemKey, recipientName, qty}`. Комиссия = max(1, ceil(5 % × transferValueUnitAdena × qty)) адены. В интерфейсе: строка → форма (Кількість, Отримувач (нік)) → «Надіслати» → окно «Підтвердження передачі» → «Підтвердити». После отправки список остаётся на той же странице.
+- Пришедшее: `/mail.html`, вкладка «Предмети» (`[data-mail-tab=items]`): `GET /game/item-transfer/received?page=N` → `{attachments[{attachmentId, senderName, itemId, name, qty, enchant, createdAt, claimedAt}]}`, «Забрати» = `POST /game/item-transfer/claim {attachmentId, expectedRevision}`. Переполненный инвентарь — сообщение «Ваш інвентар переповнений!».
+- Бот 9.2.5 шлёт крафтеру (cfg.mmCrafter) сырьё на крафт материалов Маммона и забирает почту сам (CHANGELOG-9.2.5.md).

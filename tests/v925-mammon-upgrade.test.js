@@ -103,7 +103,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     assert.equal(recs.length, n, 'name flip does not spam the journal');
     inv[1458] = 50; M.goalNote(); assert.equal(recs.length, n + 1, 'a real change is logged'); }
   const cj = read('content.js');
-  assert.match(cj, /path === '\/game\/item-transfer\/claim' && d\.status === 200\) L2V7Modules\.mammon\.mailNote\(\)/);
+  assert.match(cj, /path === '\/game\/item-transfer\/claim' && d\.status === 200\) \{? ?L2V7Modules\.mammon\.mailNote\(\)/);
   // 7. меню и настройки: галочка, по умолчанию ВКЛ
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   assert.ok(html.includes('id="mmUpgrade"')); assert.match(pj, /'mmSmithAuto', 'mmUpgrade'/); assert.match(pj, /mmSmithAuto: true, mmUpgrade: true/); assert.match(c, /mmSmithAuto: true, mmUpgrade: true/);

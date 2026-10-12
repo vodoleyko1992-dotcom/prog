@@ -30,6 +30,12 @@ let GEAR = null, gearLoading = null, goalT = 0, busy = null;
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
 let pollT = ssNum('l2bot-mmPollT'), npcT = ssNum('l2bot-mmNpcT');
+// 9.2.5 (игрок 12.10: «ник кланового крафтера Skye — отправлять ему ресурсы для очередного / всех повышений вещи у Маммона, а он вернёт
+// улучшенные ресурсы почтой; учитывать ресурсы, полученные по почте, и проверять, что в рюкзаке по факту»): почта и сумка
+const MAIL_POLL = 10 * 60000, INV_EVERY = 5 * 60000, SEND_MAX = 8 * 60000, CLAIM_MAX = 30, PAGE_TR = '/item-transfer.html', PAGE_MAIL = '/mail.html';
+let mailT = ssNum('l2bot-mmMailT'), invT = ssNum('l2bot-mmInvT');
+const crafter = () => String(env.cfg.mmCrafter ?? 'Skye').trim();
+const atC = () => env.rt.mmCraft?.at || {};      // что лежит у крафтера: отправили, он ещё не вернул (сырьё и промежуточное)
 async function gearDb() {                        // справочник улучшаемых вещей (mammon-gear.json: имя, грейд, слот, бонусы Lv.0–5)
   if (GEAR) return GEAR;
   if (!gearLoading) gearLoading = (async () => { try { const r = await fetch(chrome.runtime.getURL('mammon-gear.json')); GEAR = r.ok ? await r.json() : {}; } catch (e) { GEAR = {}; } return GEAR; })();
@@ -78,9 +84,14 @@ async function mmTick() {
   const now = Date.now(), np = env.rt.mmNpc;
   const wantNpc = now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > 60000) || env.rt.mmPollReq;
   const wantOrder = (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
-  if (!wantNpc && !wantOrder) return null;
+  // 9.2.5: сумка по факту — своим GET /character, если ответов игры с сумкой не было > 5 мин (бот считает план по сумке); почта — раз в 10 мин
+  const wantInv = !!env.cfg.mmGoalItem && env.invQty(0) == null && now - invT > INV_EVERY && !!env.invRefresh;
+  const wantMail = !!crafter() && (env.cfg.mmMailClaim !== false || !!env.rt.mmCraft) && now - mailT > MAIL_POLL;
+  if (!wantNpc && !wantOrder && !wantInv && !wantMail) return null;
   busy = (async () => {
     try {
+      if (wantInv) { invT = Date.now(); ssSet('l2bot-mmInvT', invT); await env.invRefresh(); }
+      if (wantMail) await mailPoll();
       if (wantOrder) { pollT = Date.now(); ssSet('l2bot-mmPollT', pollT); await orderPoll(); }
       if (wantNpc) { npcT = Date.now(); ssSet('l2bot-mmNpcT', npcT); await npcPoll(); }
       if (env.rt.mmPollReq) await env.setRt({ mmPollReq: null });
@@ -177,24 +188,37 @@ function goalAll(upTo) {                          // upTo — только до 
     lv.push({ L, est: c.est, a: c.a, c: c.c, m: c.m.map(([mid, nm, n]) => [mid, nameEn(mid) || nm, n]) });
     for (const [mid, nm, n] of c.m) { const t = tot.get(mid) || { id: mid, nm: nameEn(mid) || nm, need: 0, lv: L }; t.need += n; tot.set(mid, t); }
   }
-  // сумка расходуется один раз на весь план: сначала готовые материалы, затем промежуточные (Сталь в сумке не надо крафтить), затем сырьё
-  const stock = {}, unknownHave = new Set();
-  const take = (mid, n) => { if (!(mid in stock)) { const h = haveOf(mid); if (h == null) unknownHave.add(mid); stock[mid] = h || 0; } const u = Math.min(stock[mid], n); stock[mid] -= u; return n - u; };
+  // сумка расходуется один раз на весь план: сначала готовые материалы, затем промежуточные (Сталь в сумке не надо крафтить), затем сырьё.
+  // 9.2.5 (крафтер): то, что уже лежит у крафтера (rt.mmCraft.at — отправили, он ещё не вернул), идёт только на крафт (depth ≥ 1) и раньше
+  // сумки; сырьё на крафт, взятое из сумки, — «отправить крафтеру» (snd); недостача сырья на крафт — cmiss; готовое от крафтера — ret
+  const stock = {}, unknownHave = new Set(), cst = { ...atC() }, snd = new Map(), ret = new Map();
+  let cmiss = 0;
+  const take = (mid, n, depth) => {
+    if (!(mid in stock)) { const h = haveOf(mid); if (h == null) unknownHave.add(mid); stock[mid] = h || 0; }
+    let left = n;
+    if (depth > 0 && cst[mid] > 0) { const c = Math.min(cst[mid], left); cst[mid] -= c; left -= c; }
+    const u = Math.min(stock[mid], left); stock[mid] -= u;
+    if (depth > 0 && u) snd.set(mid, (snd.get(mid) || 0) + u);
+    return left - u;
+  };
   const raw = new Map(), craft = new Map();
   const addRaw = (mid, nm, n, gross, L) => { const r = raw.get(mid) || { id: mid, nm: nameEn(mid) || nm, need: 0, miss: 0, lv: L }; r.need += gross; r.miss += n; raw.set(mid, r); };
   const expand = (mid, nm, n, L, depth = 0) => {           // n — сколько нужно; возвращает недостачу, разложенную до сырья
-    const left = take(mid, n), R = MM_RECIPES[mid];
-    if (!R || depth > 6) { addRaw(mid, nm, left, n, L); return; }
+    const left = take(mid, n, depth), R = MM_RECIPES[mid];
+    if (!R || depth > 6) { addRaw(mid, nm, left, n, L); if (depth > 0) cmiss += left; return; }
     if (!left) return;
     const k = Math.ceil(left / R[0]), cr = craft.get(mid) || { id: mid, nm: MM_RNAME[mid] || nameEn(mid) || nm, qty: 0, runs: 0, rec: R[1].map(x => `${x[2]} ${x[1]}`).join(' + ') + (R[0] > 1 ? ` (выход ${R[0]})` : '') };
     cr.qty += left; cr.runs += k; craft.set(mid, cr);
+    if (!depth) ret.set(mid, (ret.get(mid) || 0) + left);
     for (const [iid, inm, q] of R[1]) expand(iid, inm, q * k, L, depth + 1);
   };
   const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
   for (const t of tl) { t.have = haveOf(t.id); t.miss = t.have == null ? t.need : Math.max(0, t.need - t.have); }
   for (const t of tl) expand(t.id, t.nm, t.need, t.lv);
   const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id), farm: !!env.FARM?.res?.[r.nm.toLowerCase()] }));
-  return { id, name, lvl, to, a, col, lv, unk, tot: tl, raw: rl, craft: [...craft.values()].reverse(), est: lv.some(x => x.est), ready: !unk.length && tl.every(t => t.have != null && t.miss === 0) };
+  const nmOf = mid => nameEn(mid) || MM_RNAME[mid] || raw.get(mid)?.nm || `#${mid}`;
+  return { id, name, lvl, to, a, col, lv, unk, tot: tl, raw: rl, craft: [...craft.values()].reverse(), est: lv.some(x => x.est), ready: !unk.length && tl.every(t => t.have != null && t.miss === 0),
+    snd: [...snd].map(([mid, q]) => ({ id: mid, nm: nmOf(mid), q })), cmiss, ret: Object.fromEntries(ret) };
 }
 // цель фарма для content.farmGoal. 9.2: по всему плану до цели (наперёд), крафтовое — его сырьём; сначала сырьё ближайшего уровня,
 // затем остальное: первое недостающее сырьё, у которого есть источник в базе фарма форума (дроп/спойл)
@@ -211,7 +235,7 @@ function planOut(P) {                             // компактный пла
   return { id: P.id, n: P.name, lvl: P.lvl, to: P.to, a: P.a, c: P.col, unk: P.unk,
     lv: P.lv.map(x => x.unk ? { L: x.L, unk: 1 } : { L: x.L, e: x.est, a: x.a, c: x.c, m: x.m.map(m => [m[1], m[2]]) }),
     tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0]),
-    cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]) };
+    cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0 };
 }
 function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt / rt.mmGoalPlan для меню)
   const p = goalPlan(), P = p && !p.done ? goalAll() : null;
@@ -267,6 +291,10 @@ function want() {
   const o = env.rt.mmOrder, now = Date.now(), tried = env.rt.mmTried || {};
   if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
+  const cw = craftWant(now); if (cw?.cmd && !cw.drop) return cw;
+  if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3)
+    return { kind: 'claim', why: `в почте предметов: ${env.rt.mmMail.unc.length} (${env.rt.mmMail.unc.slice(0, 3).map(a => `${a.n} ×${fmtA(a.q)} от ${a.s}`).join(', ')})` };
+  if (cw && !cw.drop) return cw;
   if (env.rt.mmSmithReq) return { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)' };
   const p = env.cfg.mmGoalItem ? goalPlan() : null;
   // 9.2.5: всё на следующий уровень собрано (материалы по сумке, Coin of Luck — если сумка его знает) — летим улучшать. После неудачи — не чаще раза в 30 мин
@@ -284,11 +312,13 @@ async function isNear(kind) {
   const [me, n] = [await heroXY(), (await npcPoll())[kind]];
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
+const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
 async function finish(J, ok, why) {
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
-  env.rec('B', 'Маммон', `${J.kind === 'order' ? 'заказ' : J.up ? 'улучшение' : 'кузнец'}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
+  env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку' }, zoneGoT: 0 } : {};
-  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}), ...back });
+  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}),
+    ...(J.kind === 'send' ? { mmSendT: ok ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...back });
   if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function teleport(J) {                      // страница телепорта к NPC: цена → кнопка → карта
@@ -383,12 +413,182 @@ function mailNote() {
   env.rec('B', 'Маммон', `забрал вложение из почты — проверю у кузнеца, хватает ли на ${p.name} Lv.${p.lvl + 1}`);
   return true;
 }
+// ---- 9.2.5: клановый крафтер (cfg.mmCrafter, по умолчанию Skye) ----
+// Передача предметов в игре — страница /item-transfer.html (письмом: строка предмета → «Кількість», «Отримувач (нік)» → «Надіслати» →
+// окно «Підтвердження передачі» → «Підтвердити»; комиссия 5 % от стоимости предмета в адене). Пришедшее — /mail.html, вкладка «Предмети»,
+// кнопка «Забрати» (GET /game/item-transfer/received: attachments[{attachmentId, senderName, itemId, name, qty, createdAt, claimedAt}]).
+// Что крафтеру: сырьё (и промежуточное из сумки) на крафтовые материалы вещи-цели — на следующий уровень или до цели (cfg.mmCraftScope).
+// Сам бот шлёт только полный набор (cmiss = 0) и одну партию за раз; кнопка «отправить сейчас» шлёт то, что есть. Отправленное лежит
+// «у крафтера» (rt.mmCraft.at) и считается в плане как своё — бот не фармит его заново; вернулось письмом от крафтера — списываем по рецептам
+function craftPlan(scope = env.cfg.mmCraftScope) {
+  const p = env.cfg.mmGoalItem ? goalPlan() : null; if (!p || p.done) return p;
+  return goalAll(scope === 'all' ? 0 : p.lvl + 1);
+}
+function craftWant(now = Date.now()) {
+  const R = env.rt.mmCraftReq, cmd = !!R?.t, to = crafter();
+  if (cmd && now - R.t > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
+  if (!to) return cmd ? { drop: 'ник крафтера не задан в меню' } : null;
+  if (!env.cfg.mmGoalItem) return cmd ? { drop: 'вещь-цель не выбрана в меню' } : null;
+  if (!cmd && (env.cfg.mmCraftSend === false || Object.values(atC()).some(v => v > 0) || now - (env.rt.mmSendT || 0) < UP_RETRY)) return null;   // одна партия за раз
+  if (env.invQty(0) == null) return null;         // сумка не свежая — сначала проверка (mmTick), команда подождёт
+  const P = craftPlan();
+  if (!P || P.done) return cmd ? { drop: 'вещь-цель уже на уровне цели' } : null;
+  const items = (P.snd || []).filter(x => x.q > 0);
+  if (!items.length) return cmd ? { drop: P.cmiss ? `в сумке нет сырья на крафт (не хватает ${short(P.raw.filter(r => r.miss > 0))})` : 'крафтить нечего — крафтовое уже есть или у крафтера' } : null;
+  if (!cmd && P.cmiss > 0) return null;           // сам — только полный набор, чтобы крафтер скрафтил всё сразу
+  const scope = P.to > P.lvl + 1 ? `${P.name} Lv.${P.lvl} → ${P.to}` : `${P.name} Lv.${P.lvl + 1}`;
+  return { kind: 'send', cmd, to, items: items.map(x => [x.id, x.q, x.nm]), ret: P.ret,
+    why: `${cmd ? 'по кнопке: ' : ''}сырьё на крафт для ${scope}: ${items.slice(0, 6).map(x => `${x.nm} ${fmtA(x.q)}`).join(', ')}${items.length > 6 ? ` и ещё ${items.length - 6}` : ''}${P.cmiss ? ' (набор неполный)' : ''}` };
+}
+// вернулось от крафтера: id × q — то же, что отправили (не пригодилось), или скрафченное — списываем его сырьё по рецепту
+function unsend(at, id, q, depth = 0) {
+  if (!(q > 0) || depth > 6) return;
+  if (at[id] > 0) { const u = Math.min(at[id], q); at[id] -= u; q -= u; }
+  const R = MM_RECIPES[id]; if (!q || !R) return;
+  const runs = Math.ceil(q / R[0]);
+  for (const [iid, , n] of R[1]) unsend(at, iid, n * runs, depth + 1);
+}
+function mailList(list) {
+  if (!Array.isArray(list)) return null;
+  const unc = list.filter(a => a && a.attachmentId != null && a.claimedAt == null)
+    .map(a => ({ a: String(a.attachmentId), s: String(a.senderName || ''), id: +a.itemId || 0, n: String(a.name || `#${a.itemId}`), q: +a.qty || 0 }));
+  const patch = {}, C = env.rt.mmCraft, to = crafter().toLowerCase();
+  if (JSON.stringify(unc) !== JSON.stringify(env.rt.mmMail?.unc || [])) {
+    const old = new Set((env.rt.mmMail?.unc || []).map(a => a.a)), fresh = unc.filter(a => !old.has(a.a));
+    if (fresh.length) env.rec('B', 'Маммон', `почта: пришло ${fresh.map(a => `${a.n} ×${fmtA(a.q)} от ${a.s || '?'}`).join(', ')}`);
+  }
+  patch.mmMail = { t: Date.now(), unc: unc.slice(0, 20) };
+  // учёт возврата: письма от крафтера после отправки, уже забранные в сумку (claimedAt) — кто бы ни нажал «Забрати», бот или игрок
+  if (C?.at && to) {
+    const seen = new Set(C.seen || []), at = { ...C.at }, got = [];
+    for (const a of list) {
+      if (!a || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
+      const k = String(a.attachmentId), t = Date.parse(a.createdAt) || Date.now();
+      if (seen.has(k) || t < (C.t0 || 0) - 60000) continue;
+      seen.add(k); unsend(at, +a.itemId, +a.qty || 0); got.push(`${a.name || '#' + a.itemId} ×${fmtA(a.qty)}`);
+    }
+    if (got.length) {
+      for (const k of Object.keys(at)) if (!(at[k] > 0)) delete at[k];
+      const left = Object.keys(at).length;
+      env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${nameEn(+id) || MM_RNAME[id] || '#' + id} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
+      patch.mmCraft = left ? { ...C, at, seen: [...seen].slice(-200), gotT: Date.now() } : null;
+      goalT = 0;
+    }
+  }
+  env.setRt(patch);
+  return unc;
+}
+async function mailPoll() {
+  mailT = Date.now(); ssSet('l2bot-mmMailT', mailT);
+  const { ok, j } = await getJson('/game/item-transfer/received?page=1');
+  return ok ? mailList(j?.attachments) : null;
+}
+function mailSeen() { mailT = 0; ssSet('l2bot-mmMailT', 0); }   // игрок/бот забрал вложение — перечитать почту на следующем круге
+// строки «Передачі предмета» (GET /game/item-transfer/candidates — по 20 на страницу): itemKey нужен, чтобы найти строку на странице
+async function candFind(id) {
+  for (let pg = 1, tp = 1; pg <= Math.min(tp, 30); pg++) {
+    const { ok, status, j } = await getJson(`/game/item-transfer/candidates?category=all&page=${pg}&pageSize=20`);
+    if (!ok) return { err: `список предметов не получен (HTTP ${status})` };
+    tp = Math.max(1, +j?.totalPages || 1);
+    const c = (Array.isArray(j?.candidates) ? j.candidates : []).find(x => +x.itemId === id && x.currencyKind !== 'adena' && !(+x.enchant > 0));
+    if (c) return { key: String(c.itemKey), avail: +c.availableQty || 0, unit: +c.transferValueUnitAdena || 0, stack: !!c.stackable, page: pg };
+  }
+  return null;
+}
+const setVal = (el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
+const shownTxt = el => el && !el.hidden ? (el.textContent || '').trim() : '';
+async function sentOk(J, cur) {
+  const C = env.rt.mmCraft || {}, at = { ...(C.at || {}) };
+  at[cur.id] = (at[cur.id] || 0) + cur.q;
+  const ret = { ...(C.ret || {}) }; for (const [k, n] of Object.entries(J.ret || {})) if (!J.retDone) ret[k] = (ret[k] || 0) + n;
+  const done = [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]];
+  await env.setRt({ mmCraft: { to: J.to, t0: C.t0 || Date.now(), t: Date.now(), at, ret, seen: C.seen || [] }, mmJob: { ...J, cur: null, retDone: true, items: J.items.slice(1), done } });
+  env.rec('B', 'Маммон', `крафтеру ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`);
+}
+async function sendStep(J) {
+  const to = J.to || crafter();
+  if (location.pathname !== PAGE_TR) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
+  // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
+  if (J.cur) {
+    const m = await env.invRefresh?.(), h = m ? m[J.cur.id] || 0 : null;
+    if (h == null) return finish(J, false, `сумка не прочиталась — не знаю, ушло ли ${J.cur.nm} ×${J.cur.q}; проверь почту «Відправлені»`);
+    if (h <= J.cur.before - J.cur.q) return sentOk(J, J.cur);
+    J = { ...J, cur: null }; await env.setRt({ mmJob: J });
+  }
+  if (!J.items?.length) {
+    const d = J.done || [], fee = d.reduce((a, x) => a + (x[2] || 0), 0);
+    return finish(J, d.length > 0, d.length ? `отправил ${to}: ${d.map(x => `${x[0]} ${fmtA(x[1])}`).join(', ')}${fee ? ` · комиссия ${fmtA(fee)} адены` : ''} — жду готовое письмом` : 'отправлять нечего');
+  }
+  const [id, want, nm] = J.items[0];
+  const m = J.inv ? null : await env.invRefresh?.();    // сумка по факту — один раз на поход
+  if (m) J = { ...J, inv: 1 };
+  const have = env.invQty(id), q = Math.min(want, have ?? 0);
+  if (!(q > 0)) { env.rec('B', 'Маммон', `крафтеру: ${nm} в сумке нет — пропускаю`); await env.setRt({ mmJob: { ...J, items: J.items.slice(1) } }); return; }
+  const c = await candFind(id);
+  if (!c || c.err) return finish(J, false, c?.err || `${nm}: нет в списке «Передача предмета»`);
+  const n = c.stack ? Math.min(q, c.avail || q) : 1;
+  const rowOf = () => [...document.querySelectorAll('.l2-item-transfer-row-wrap')].find(w => w.dataset.itemKey === c.key) || null;
+  await env.waitX(() => document.querySelector('.l2-item-transfer-row-wrap') || null, 10000, 200);
+  // строка на другой странице: после передачи игра остаётся на той же странице списка — сначала «« Назад» до первой, затем «Вперед »»
+  let wrap = rowOf();
+  for (const dir of [0, 1]) for (let i = 0; !wrap && i < 30; i++) {
+    const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], nx = dir ? bs[bs.length - 1] : bs[0];
+    if (!nx || nx.disabled || bs.length < 2) break;
+    env.fire(nx); await env.sleep(700); wrap = await env.waitX(rowOf, 3000, 200);
+  }
+  if (!wrap) return finish(J, false, `${nm}: строки на странице передачи нет`);
+  if (!wrap.querySelector('form')) { env.fire(wrap.querySelector('.l2-item-transfer-row')); }
+  const form = await env.waitX(() => wrap.querySelector('form.l2-item-transfer-form') || null, 4000, 100);
+  const qIn = form?.querySelector('input[type="number"]'), nIn = form?.querySelector('input[type="text"]'), btn = form?.querySelector('button[type="submit"]');
+  if (!nIn || !btn || (c.stack && !qIn)) return finish(J, false, `${nm}: форма передачи не открылась`);
+  if (qIn) setVal(qIn, n);
+  setVal(nIn, to);
+  const fee = c.unit * n > 0 ? Math.max(1, Math.ceil(c.unit * n * 5 / 100)) : 0, cur = { id, q: n, nm, fee, before: have, t: Date.now() };
+  await env.setRt({ mmJob: { ...J, cur } });
+  env.setStatus(`Почта: ${nm} ×${fmtA(n)} → ${to}`);
+  env.fire(btn);
+  const modal = await env.waitX(() => { const md = document.getElementById('item-transfer-confirm-modal'); return md && !md.hidden ? md : null; }, 5000, 100);
+  if (!modal) { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')) || 'окно подтверждения не открылось'}`); }
+  // окно игры: «Надіслати «предмет» гравцю «ник»?», «Кількість: N» — жмём «Підтвердити» только если там наш крафтер и наше количество
+  const body = (modal.querySelector('#item-transfer-confirm-body')?.textContent || ''), nums = (body.match(/\d[\d\s ]*/g) || []).map(x => +x.replace(/\D/g, ''));
+  const okBtn = modal.querySelector('.l2-item-transfer-confirm-actions .l2-item-transfer-form__btn:not(.l2-item-transfer-form__btn--ghost)');
+  if (!body.includes(`«${to}»`) || (c.stack && !nums.includes(n)) || !okBtn) {
+    env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); await env.setRt({ mmJob: { ...J, cur: null } });
+    return finish(J, false, `${nm}: в окне подтверждения не тот получатель или количество (${body.replace(/\s+/g, ' ').slice(0, 80)}) — отменил`);
+  }
+  env.fire(okBtn);
+  const res = await env.waitX(() => shownTxt(document.getElementById('item-transfer-success')) ? 'ok' : shownTxt(document.getElementById('item-transfer-err')) ? 'err' : null, 10000, 200);
+  if (res === 'ok') return sentOk({ ...J, cur: null }, cur);
+  if (res === 'err') { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')).slice(0, 100)}`); }
+  // ответа нет — следующий круг проверит сумку (J.cur): ушло или нет
+}
+async function claimStep(J) {
+  if (location.pathname !== PAGE_MAIL) { env.setStatus('Почта: забираю предметы'); location.href = PAGE_MAIL; await env.sleep(4000); return; }
+  const tab = await env.waitX(() => document.querySelector('#mail-tabs [data-mail-tab="items"]') || null, 8000, 200);
+  if (!tab) return finish(J, false, 'вкладки «Предмети» в почте нет');
+  if (!tab.classList.contains('is-active')) { env.fire(tab); await env.sleep(800); }
+  const pane = '#mail-tab-items';
+  const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
+  const got = J.got || [];
+  if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
+  const card = b.closest('.l2-mail-item'), what = (card?.querySelector('.l2-mail-item-transfer__name')?.textContent || '?').trim(), from = (card?.querySelector('.l2-mail-item__sender')?.textContent || '').trim();
+  const msgEl = () => document.querySelector(`${pane} .l2-mail-items-msg`);
+  if (msgEl()) msgEl().textContent = '';
+  env.fire(b);
+  const msg = await env.waitX(() => shownTxt(msgEl()) || null, 6000, 200);
+  if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
+  await env.setRt({ mmJob: { ...J, got: [...got, `${what}${from ? ' от ' + from : ''}`] } });
+  await env.sleep(600);
+}
 // 9.0: шаг в главном цикле. true — занят Маммоном (цикл идёт на следующий круг)
 async function mmStep() {
   const J = env.rt.mmJob;
   if (J) {
     if (env.isBattle()) return false;
-    if (Date.now() - (J.t || 0) > JOB_MAX) { await finish(J, false, 'не уложился в 4 мин'); return true; }
+    const mx = J.kind === 'send' ? SEND_MAX : JOB_MAX;
+    if (Date.now() - (J.t || 0) > mx) { await finish(J, false, `не уложился в ${mx / 60000} мин`); return true; }
+    if (J.kind === 'send') { await sendStep(J); return true; }
+    if (J.kind === 'claim') { await claimStep(J); return true; }
     if (J.step === 'go') {
       if (await isNear(J.kind)) await env.setRt({ mmJob: { ...J, step: 'act' } });
       else await teleport(J);
@@ -399,16 +599,20 @@ async function mmStep() {
   }
   if (env.cfg.mmGoalItem && Date.now() - goalT > 30000) { goalT = Date.now(); await gearDb(); env.itemsDb?.().catch?.(() => {}); goalNote(); }
   const g = goReq();
+  const cw = craftWant();
+  if (cw?.drop) { env.rec('B', 'Маммон', `кнопка «отправить крафтеру сейчас»: ${cw.drop}`); await env.setRt({ mmCraftReq: null, mmCraftSay: { t: Date.now(), why: cw.drop } }); return false; }
   if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
   const w = want();
   if (!w) return false;
   if (!modeFree()) { if (w.cmd) env.setStatus('Маммон: по кнопке полечу, как только закончу бой/тур/поход'); return false; }
   // точка возврата: зона охоты (рыбалка, катакомбы и туры возвращаются сами)
-  const home = !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
-  await env.setRt({ mmJob: { ...w, step: 'go', home, t: Date.now() }, ...(w.cmd ? { mmGoReq: null, mmGoSay: null } : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
-  env.rec('B', 'Маммон', `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
+  // почта и передача предметов — без телепорта, со своей страницы игры (после — на карту, точка та же)
+  const mail = w.kind === 'send' || w.kind === 'claim';
+  const home = !mail && !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
+  await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
+  env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { mailNote, goReq, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
