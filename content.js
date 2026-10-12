@@ -3517,7 +3517,7 @@ function panelReport() {
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtCommit(){return rtCommit}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
