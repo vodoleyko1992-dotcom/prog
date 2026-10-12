@@ -26,7 +26,8 @@
     return { w: l == null ? 0 : typeof l === 'number' ? l : +l.itemId || 0, e: l && typeof l === 'object' ? +l.enchant || 0 : 0, o: a && typeof a.outcomeId === 'string' ? a.outcomeId.slice(0, 40) : null, g: a && a.grade ? String(a.grade).slice(0, 2) : null }; } catch (e) { return undefined; } };
   // 8.0.3 (лог 11.10 11:41–11:44): /game/epic-bosses — ровно 8 эпиков, а redact режет массивы до 8: девятый эпик молча выключил бы разбор
   // (бот берёт список, только если в нём ровно total боссов). Список эпиков — целиком отдельным полем (как inv и sp), каждый — через redact
-  const epicsOf = (u, o) => { try { return u.pathname === '/game/epic-bosses' && Array.isArray(o?.bosses) ? o.bosses.slice(0, 200).map(x => redact(x, 1)) : undefined; } catch (e) { return undefined; } };
+  // 10.0.2 (таймеры боссов): и /game/raid-bosses — 15 РБ на странице, тоже длиннее 8
+  const epicsOf = (u, o) => { try { return /^\/game\/(?:epic|raid)-bosses$/.test(u.pathname) && Array.isArray(o?.bosses) ? o.bosses.slice(0, 200).map(x => redact(x, 1)) : undefined; } catch (e) { return undefined; } };
   const reqBody = b => {
     try {
       if (b == null) return null;

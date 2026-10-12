@@ -396,6 +396,7 @@ async function rbListScan() {                     // все страницы с�
     await env.sleep(env.rnd(150, 300));
   }
   const L = env.heroLvl(), n = Object.values(all), ok = n.filter(x => x.alive && !x.deny);
+  env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
     env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
     await env.setRt({ rbScan: null, rbListT: Date.now() - 12 * 60000 });
@@ -533,7 +534,9 @@ function rbListWhy() {
   const pm = env.potModel();
   const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`, c.slow && `бой дольше ${env.cfg.rbMaxKillMin ?? 20} мин ${c.slow}`,
     c.pots && `мало банок HP ${c.pots} (сверх резерва ${env.cfg.rbPotReserve || 0}: ${pm ? pm.n + ' шт.' : 'нет'})`, c.tried && `только что пробовал ${c.tried}`].filter(Boolean);
-  return `в окне ${lo}–${hi} ур. ${win.length} РБ${parts.length ? ': ' + parts.join(', ') : ''}${c.below ? ` · слабее окна ${c.below}` : ''}${c.above ? ` · сильнее ${c.above}` : ''}`;
+  const nx = c.dead ? env.rbTimer?.nextUp?.(lo, hi) : null;   // 10.0.2: таймеры боссов — кто воскреснет первым
+  return `в окне ${lo}–${hi} ур. ${win.length} РБ${parts.length ? ': ' + parts.join(', ') : ''}${c.below ? ` · слабее окна ${c.below}` : ''}${c.above ? ` · сильнее ${c.above}` : ''}`
+    + (nx ? ` · первым воскреснет ${nx.n} (${nx.l}): ${nx.txt.replace(/\s*\(через[^)]*\)/, '')}` : '');
 }
 
 async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)
@@ -663,6 +666,7 @@ async function rbHuntStep() {
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
     if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`); }
     const row = rbRowsParse()[H.id];
+    if (row) env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {});
     if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); }
     if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`);
     // шаг «прилёт» записываем ДО нажатия: телепорт уводит со страницы, и скрипт обрывается на полуслове
@@ -690,6 +694,7 @@ async function rbHuntStep() {
     if (!r) {
       if (Date.now() - (H.at || 0) < 25000) { await env.sleep(1500); return; }   // карта ещё догружается
       if (env.rt.rbList?.[H.id]) await env.setRt({ rbList: { ...env.rt.rbList, [H.id]: { ...env.rt.rbList[H.id], alive: false } } });   // v5.6: до перечитки списка — мёртв
+      env.rbTimer?.domNote({ [H.id]: { name: H.name, lvl: H.lvl, alive: false } }, 'нет на карте')?.catch?.(() => {});   // 10.0.2: убит другими — окно смерти «видел живым → нет на карте»
       return huntDone(H.id, `${H.name}: на карте нет (убит другими?)`);
     }
     if (rbVerdictBlocks(r.id)) return huntDone(H.id, `${H.name}: в базе «не по силам» — пропускаю`);
@@ -715,6 +720,12 @@ async function rbHuntStep() {
   // v5.2.2: подходящих РБ не было — фармим мобов, пока не придёт время перечитать список (раньше: карта ↔ список РБ
   // каждые 20 с без единого боя, лог 08.10 13:41–13:44 — «петля туда-сюда»)
   if ((env.rt.rbHuntIdle || 0) > Date.now()) {
+    // 10.0.2 (таймеры боссов): опрос списка увидел, что подходящий РБ воскрес, — простой не досиживаем
+    const up = env.rbTimer?.revivedSince?.(env.rt.rbIdleMark?.t || 0) || [], ok = up.length ? new Set(rbEligible().map(([id]) => id)) : null, hit = up.find(id => ok?.has(id));
+    if (hit) {
+      env.rec('B', 'тур РБ', `${env.rt.rbList?.[hit]?.name || hit} (${env.rt.rbList?.[hit]?.lvl || '?'}) воскрес — заканчиваю простой`);
+      await env.setRt({ rbHuntIdle: 0, rbIdleN: 0, rbIdleMark: null, rbRefuse: null }); return;
+    }
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
     env.setStatus(`Тур РБ: ${String(H.last || 'подходящих РБ нет').slice(0, 140)} — фармлю мобов, проверю снова через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`);
     return env.map();

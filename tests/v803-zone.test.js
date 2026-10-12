@@ -227,8 +227,11 @@ const content = read('content.js');
     const d8 = { res: { total: 8, bosses: bosses.slice(0, 8) } };
     assert.equal(epicNetList(d8, '/game/epic-bosses').bosses.length, 8, 'old hook (no eb), 8 bosses: still parsed');
     // другие ответы — без поля eb
+    // 10.0.2 (таймеры боссов): список РБ тоже целиком полем eb (15 на странице)
     posts.length = 0; await win.fetch('/game/raid-bosses?page=1'); await new Promise(r => setTimeout(r, 20));
-    assert.equal(posts.find(m => m.__l2bot === 'net').eb, undefined, 'eb only for /game/epic-bosses');
+    assert.equal(posts.find(m => m.__l2bot === 'net').eb.length, 9, 'eb for /game/raid-bosses too (10.0.2)');
+    posts.length = 0; await win.fetch('/game/teleport/locations'); await new Promise(r => setTimeout(r, 20));
+    assert.equal(posts.find(m => m.__l2bot === 'net').eb, undefined, 'eb only for boss lists');
   }
   console.log('PASS 7: hook.js sends the full epic list (eb) — a 9th epic does not silently disable passive parsing');
 
