@@ -117,18 +117,20 @@
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
   // Serial execution and retry preserve update ordering even if storage is down.
   function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
-    let pending = {}, inflight = {}, flushing = null, retryAt = 0;
+    let pending = {}, inflight = {}, flushing = null, retryAt = 0, gen = 0;   // 10.0: gen — поколение очереди (clear() после потери замка)
     async function drain() {
       while (Object.keys(pending).length) {
         if (!canWrite()) return { ok: false, reason: 'inactive' };
-        const batch = pending; pending = {}; inflight = batch;
+        const batch = pending, g0 = gen; pending = {}; inflight = batch;
         try {
           const response = await send(batch);
           if (!response?.ok) throw new Error(response?.reason || 'storage_patch_failed');
           retryAt = 0; inflight = {};
         } catch (e) {
           // Newer updates take precedence over the failed older batch.
-          pending = { ...batch, ...pending }; inflight = {};
+          // 10.0 (аудит ядра): пакет из «до потери замка» (clear() был, пока он летел) обратно не ставим — иначе после возврата замка
+          // старые kills/exp/zoneStat затёрли бы то, что за это время записала другая вкладка
+          if (g0 === gen) pending = { ...batch, ...pending }; inflight = {};
           retryAt = clock() + 3000;
           onError(e);
           return { ok: false, reason: 'write_failed' };
@@ -147,7 +149,7 @@
     }
     function peek() { return { ...inflight, ...pending }; }
     function recover() { return flushing || (!Object.keys(pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
-    function clear() { pending = {}; retryAt = 0; }
+    function clear() { pending = {}; inflight = {}; retryAt = 0; gen++; }
     return { enqueue, peek, recover, clear };
   }
 

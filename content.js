@@ -2146,6 +2146,8 @@ async function main() {
           rec('S', 'ядро', `v${chrome.runtime.getManifest().version}: управление вкладкой получено, запускаю цикл ${location.pathname}`);
           // При передаче управления перечитываем последнюю сохранённую версию,
           // не продолжаем со снимком состояния вкладки-ожидателя.
+          // 10.0 (аудит ядра): накопленное, пока вкладка ждала замок, — устаревшее (хозяином была другая вкладка); очередь чистим
+          rtWriter.clear();
           const fresh = await chrome.storage.local.get(['rt', 'cfg']);
           rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
         }
@@ -2183,11 +2185,13 @@ async function main() {
       const activeJob = isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow();
+      // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
+      const abWait = !!antibotState() || (rt.pveBlockUntil || 0) > Date.now();
       const sig = [location.pathname, location.search, rt.kills, rt.rbKills,
         rt.fish?.casts || 0, rt.fish?.caught || 0, rt.epic?.step || '',
         rt.rbHunt?.step || '', rt.shop?.step || '', rt.tbuff?.step || '',
         meHp()?.cur ?? '', mobHp()?.cur ?? ''].join('|');
-      if (progressMonitor.tick(sig, activeJob) === 'stalled' && !serverDown()) {
+      if (progressMonitor.tick(sig, activeJob && !abWait) === 'stalled' && !serverDown()) {
         if (!(await srvUp())) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); continue; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
         const history = (rt.stallRecoveries || []).filter(t => Date.now() - t < 30 * 60000);
         rec('S', 'восстановление', `нет прогресса 9 мин: ${location.pathname}, режим ${autonomyMode()}, попытка ${history.length + 1}/3`);
@@ -3145,14 +3149,16 @@ addEventListener('message', e => {
   if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
     msg: String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 160), stone: d.req?.stone, qty: +d.req?.qty || 0 };
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
-  if (tabOwner && d.status >= 200 && d.status < 300 && d.res) try {
+  // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
+  const meNow = !heroNick() || rt.char === heroNick();
+  if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res) try {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
     if (path === '/game/item-transfer/claim' && d.status === 200) { L2V7Modules.mammon.mailNote(); L2V7Modules.mammon.mailSeen(); }   // 9.2.5: ресурсы с почты → спросить кузнеца, перечитать почту (учёт возврата от крафтера)
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
-  if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
+  if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
@@ -4143,6 +4149,8 @@ const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 const classSwitched = () => { PET = null; };
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
+  if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }
   if (m.cmd === 'kick') {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
@@ -4189,6 +4197,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
   if (ch.on) {
     on = !!ch.on.newValue;
+    if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
     const stopMeta = ch.stopMeta?.newValue;
     const reason = !on && stopMeta && Date.now() - (+stopMeta.t || 0) < 30000
       ? ` · источник: ${String(stopMeta.source || 'не указан').slice(0, 50)} · ${String(stopMeta.reason || '').slice(0, 180)}`

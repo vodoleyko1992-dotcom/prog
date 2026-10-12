@@ -40,6 +40,8 @@ async function lockCommand(m, sender) {
         !(lock.vis === false && m.vis === true && m.focus === true))
       return { ok: false, reason: 'other_tab', owner: lock.k };
     const changed = !valid;
+    // 10.0 (аудит ядра): замок уходит видимой вкладке — прежнему хозяину сразу сообщаем (раньше узнавал через ≤ 5 с при продлении)
+    if (lock && !mine && Number.isInteger(lock.tab) && lock.tab !== tab) try { chrome.tabs.sendMessage(lock.tab, { cmd: 'lockLost' }).catch(() => {}); } catch (e) {}
     // An old context may call acquire after navigation. Rotating epoch prevents
     // its in-flight actions and heartbeat from regaining the lease.
     const epoch = valid ? lock.epoch : makeLease();
@@ -148,7 +150,7 @@ chrome.storage.onChanged.addListener(ch => {
   paint(ch.on.newValue);
   if (ch.on.newValue) chrome.storage.local.get('hbBg').then(({ hbBg }) => {   // старт — отсчёт сторожа заново
     const h = hbMem || hbBg; if (!h) return;
-    hbMem = { ...h, t: Date.now() }; chrome.storage.local.set({ hbBg: { ...hbMem }, wdog: [], wdDown: null })   // 8.0: старая метка простоя сервера — не после нового старта.then(() => { hbPersistedAt = Date.now(); }).catch(() => {});   // ручной старт — счёт перезагрузок с нуля
+    hbMem = { ...h, t: Date.now() }; chrome.storage.local.set({ hbBg: { ...hbMem }, wdog: [], wdDown: null }).then(() => { hbPersistedAt = Date.now(); }).catch(() => {});   // ручной старт — счёт перезагрузок с нуля; 8.0: старая метка простоя сервера — не после нового старта (10.0: комментарий съедал .then/.catch)
   }).catch(() => {});
 });
 
