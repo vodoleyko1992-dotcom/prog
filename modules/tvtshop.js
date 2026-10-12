@@ -59,6 +59,7 @@ function shilNote() {                                  // вызывается �
   if (was === q) return;
   env.setRt({ tsShil: { n: q, t: Date.now() } });
   if (was != null && q > was) env.rec('B', 'TvT-магазин', `Shil Coins: ${was} → ${q} (+${q - was})`);
+  readyNote();
 }
 // цель: что копим, сколько не хватает, сколько побед (2 Shil за победу)
 function plan() {
@@ -69,8 +70,17 @@ function plan() {
 function line() {
   const p = plan(); if (!p) return 'Цели нет';
   const h = p.have == null ? 'монеты ещё не считал (нужен снимок сумки)' : `есть ${p.have} Shil`;
-  if (p.lack === 0) return `${p.it.n} · ${p.need} Shil · ${h} — хватает${p.lvlOk ? '' : `, но нужен ${p.it.lvl} ур. (сейчас ${p.lvl})`}`;
+  if (p.lack === 0) return `✔ Готово: ${p.it.n} · ${p.need} Shil · ${h} — хватает${p.lvlOk ? ', можно покупать в «TvT Магазин»' : `, но нужен ${p.it.lvl} ур. (сейчас ${p.lvl})`}`;
   return `${p.it.n} · ${p.need} Shil · ${h}${p.lack != null ? `, не хватает ${p.lack} (≈${p.wins} побед в TvT)` : ''}${p.lvlOk ? '' : ` · нужен ${p.it.lvl} ур.`}`;
+}
+// 10.0 (игрок 12.10: «не ставь автопокупку, пусть появляется отметка ОК»): монет на цель хватило → rt.tsReady {id,t} + одна запись в журнал
+function readyNote() {
+  const p = plan(); if (!p || p.have == null) { if (env.rt.tsReady) env.setRt({ tsReady: null }); return false; }
+  if (p.lack !== 0) { if (env.rt.tsReady) env.setRt({ tsReady: null }); return false; }
+  if (env.rt.tsReady?.id === p.it.id) return true;
+  env.setRt({ tsReady: { id: p.it.id, t: Date.now() } });
+  env.rec('B', 'TvT-магазин', `✔ Готово: на ${p.it.n} хватает Shil (${p.have}/${p.need})${p.lvlOk ? '' : `, но нужен ${p.it.lvl} ур.`}${env.cfg.tsBuy ? '' : ' — покупай сам в «TvT Магазин»'}`);
+  return true;
 }
 // покупка: галочка, монет хватает, уровень есть, не куплено, не чаще раза в час (ошибка игры — через час снова)
 function want() {
@@ -121,6 +131,6 @@ async function finish(J, ok, why) {
   await env.setRt({ tsJob: null, tsLog: log, ...(ok ? { tsGoalDone: { id: J.it.id, t: Date.now() } } : {}) });
   if (isShop()) { location.href = env.fishNow?.() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
-return { SHIL_ID, SHOP_URL, TS_KNOWN, CAT_RU, catalog, itemOf, shopNote, statsText, shil, shilNote, plan, line, want, shopStep, chainWant, buy, finish, isShop };
+return { SHIL_ID, SHOP_URL, TS_KNOWN, CAT_RU, catalog, itemOf, shopNote, statsText, shil, shilNote, readyNote, plan, line, want, shopStep, chainWant, buy, finish, isShop };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

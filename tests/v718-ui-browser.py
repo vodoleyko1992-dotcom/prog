@@ -40,6 +40,10 @@ with sync_playwright() as p:
   assert 33 <= metrics['buttonHeight'] <= 41, metrics # compact controls requested
   assert len(errors)==0,errors
   page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-fishing.png')))
+  # 10.0: сетка режимов открыта по умолчанию, «◫ Быстрые режимы» сворачивает и разворачивает её по-настоящему
+  assert page.locator('#quickModeGrid').is_visible()
+  page.locator('#modeToggle').click()
+  assert not page.locator('#quickModeGrid').is_visible()
   page.locator('#modeToggle').click()
   assert page.locator('#quickModeGrid').is_visible()
   assert page.locator('#quickModeGrid button[data-mode]').count()==7   # 7.2+: 6 режимов «Чем занят бот» + 10.0 «Только задачи»

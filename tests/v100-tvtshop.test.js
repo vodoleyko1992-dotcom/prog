@@ -29,6 +29,12 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
     assert.equal(mk({ inv: { 920030: 300 }, rt: { tsLog: [{ id: 920033, ok: true }] } }).T.want(), null, 'already bought');
     assert.equal(mk({ inv: { 920030: 300 }, rt: { tsTryT: Date.now() } }).T.want(), null, 'tried < 1 h ago');
     assert.match(mk({ inv: { 920030: 300 } }).T.want().why, /Тату Души за 260 Shil \(есть 300\)/); }
+  // 3b. (игрок 12.10: «не ставь автопокупку, пусть появляется отметка ОК») монет хватило → «✔ Готово» в строке, rt.tsReady, одна запись в журнал; снова не хватает → метка снята
+  { const { env, T, recs } = mk({ inv: { 920030: 260 }, cfg: { tsBuy: false } }); assert.match(T.line(), /^✔ Готово: Тату Души · 260 Shil · есть 260 Shil — хватает, можно покупать/);
+    assert.equal(T.readyNote(), true); assert.equal(env.rt.tsReady.id, 920033); assert.match(recs.join('\n'), /✔ Готово: на Тату Души хватает Shil \(260\/260\) — покупай сам/); assert.equal(recs.length, 1);
+    assert.equal(T.readyNote(), true); assert.equal(recs.length, 1, 'one log entry'); assert.equal(T.want(), null, 'no auto-buy without checkbox');
+    env.invQty = () => 100; assert.equal(T.readyNote(), false); assert.equal(env.rt.tsReady, null);
+    const e2 = mk({ inv: { 920030: 300 }, rt: { lvl: 64, tsShil: { n: 13, t: 1 } } }); e2.T.shilNote(); assert.equal(e2.env.rt.tsReady?.id, 920033, 'shilNote → readyNote'); assert.match(e2.recs.join(), /но нужен 70 ур/); }
   // 4. шаг: монет хватает → задача, переход в магазин; на странице — строка по имени, «Купити», ответ игры «Придбано» → ✓, на карту
   { const { env, T, loc } = mk({ inv: { 920030: 300 } }); assert.equal(await T.shopStep(), true); assert.equal(env.rt.tsJob.kind, 'buy'); assert.ok(env.rt.tsTryT);
     assert.equal(await T.shopStep(), true); assert.equal(loc.href, '/tvt-shop.html'); }
@@ -46,7 +52,8 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
   // 5. ядро и меню
   const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), manifest = read('manifest.json'), mobfarm = read('modules/mobfarm.js');
   assert.match(manifest, /"modules\/tvtshop\.js"/); assert.match(html, /<script src="modules\/tvtshop\.js"><\/script>/);
-  assert.match(content, /tsGoalItem: 0, tsBuy: false,/); assert.match(popup, /tsGoalItem: 0, tsBuy: false,/);
+  assert.match(content, /tsGoalItem: 920033, tsBuy: false,/); assert.match(popup, /tsGoalItem: 920033, tsBuy: false,/);   // игрок 12.10: цель Тату Душі, автопокупка выкл
+  assert.match(content, /once\('tsGoal100', \(\) => \{ if \(!\+C\('tsGoalItem'\)\) cf\.tsGoalItem = 920033; \}\);/); assert.match(popup, /rt\.tsReady \? ' ✔ готово к покупке'/);
   assert.match(content, /if \(await L2V7Modules\.tvtshop\.shopStep\(\)\) \{ await sleep\(200\); continue; \}/);
   assert.match(content, /path === '\/game\/tvt\/shop\/catalog' && tabOwner && Array\.isArray\(d\.res\?\.categories\)\) try \{ L2V7Modules\.tvtshop\.shopNote\(d\.res\); \}/);
   assert.match(content, /if \(tabOwner\) try \{ L2V7Modules\.tvtshop\.shilNote\(\); \} catch \(er\) \{\}/);

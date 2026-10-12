@@ -1,0 +1,2094 @@
+{
+ "_source": "GET /game/clans/items/catalog, /game/clans/items/<cat>/<id>/config, /game/clans/items/upgrades (снято 12.10.2026 заместителем клана; только GET)",
+ "_notes": [
+  "Покупка (craft): POST /game/clans/items/<weapon|armor|jewelry|shield>/<id>/craft {attributes:[3 id], recipientId} — платит клан: репутация + адена казны; получатель — член клана",
+  "Каждая вещь: 3 слота атрибутов из списка, уровень атрибутов Lv1→5 — POST /game/clans/items/upgrade-level, стоимость — ресурсы (руда/шкуры + крафтовые материалы), см. upgradesSample",
+  "Все вещи S-grade, 76 ур.; для мага: перчатки робы (m_atk_pct +25 %, magic_crit_chance +25 %, critical_damage +25 %), штаны робы (legs_magic_skill_damage_pct +25 %), кастер (magical_damage +12 %, critical_damage +16 %), ожерелье (magical_power_pct +10 %), кольцо (magic_crit_chance +5 %, magic_crit_damage +12 %)",
+  "Клан BlackLotus 12.10: ур. 4, репутация 30 231, казна 2 000 000 000 адены, 5 членов; поднятие уровня клана — /game/clans/level (очки клана + адена)"
+ ],
+ "catalog": [
+  {
+   "id": "clan_weapon_hammer",
+   "numericItemId": 9002275,
+   "nameUk": "Клановий молот",
+   "weaponKindLabelUk": "Дворучний молот",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/contristo_hammer.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 532,
+   "mAtk": 192,
+   "wpnCrit": 65,
+   "atkSpd": 340
+  },
+  {
+   "id": "clan_weapon_dual_swords",
+   "numericItemId": 9002276,
+   "nameUk": "Кланові дуали",
+   "weaponKindLabelUk": "Парні мечі",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/dual_sword.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 484,
+   "mAtk": 176,
+   "wpnCrit": 100,
+   "atkSpd": 340
+  },
+  {
+   "id": "clan_weapon_lava_saw",
+   "numericItemId": 9002277,
+   "nameUk": "Кланова пила",
+   "weaponKindLabelUk": "Дворучний меч",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/lava_saw.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 532,
+   "mAtk": 192,
+   "wpnCrit": 100,
+   "atkSpd": 340
+  },
+  {
+   "id": "clan_weapon_mamba_edge",
+   "numericItemId": 9002278,
+   "nameUk": "Клановий клинок",
+   "weaponKindLabelUk": "Кинджал",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/mamba_edge.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 382,
+   "mAtk": 192,
+   "wpnCrit": 135,
+   "atkSpd": 460
+  },
+  {
+   "id": "clan_weapon_avenger",
+   "numericItemId": 9002279,
+   "nameUk": "Клановий месник",
+   "weaponKindLabelUk": "Одноручна булава",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_avenger.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 396,
+   "mAtk": 176,
+   "wpnCrit": 65,
+   "atkSpd": 399
+  },
+  {
+   "id": "clan_weapon_cutter",
+   "numericItemId": 9002280,
+   "nameUk": "Клановий різак",
+   "weaponKindLabelUk": "Одноручний меч",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_cutter.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 396,
+   "mAtk": 176,
+   "wpnCrit": 100,
+   "atkSpd": 399
+  },
+  {
+   "id": "clan_weapon_fighter",
+   "numericItemId": 9002281,
+   "nameUk": "Клановий винищувач",
+   "weaponKindLabelUk": "Кастети",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_fighter.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 482,
+   "mAtk": 176,
+   "wpnCrit": 65,
+   "atkSpd": 340
+  },
+  {
+   "id": "clan_weapon_stormer",
+   "numericItemId": 9002282,
+   "nameUk": "Клановий штормер",
+   "weaponKindLabelUk": "Спис",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_stormer.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 396,
+   "mAtk": 176,
+   "wpnCrit": 100,
+   "atkSpd": 340
+  },
+  {
+   "id": "clan_weapon_thrower",
+   "numericItemId": 9002283,
+   "nameUk": "Клановий метальник",
+   "weaponKindLabelUk": "Лук",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_thrower.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 724,
+   "mAtk": 176,
+   "wpnCrit": 135,
+   "atkSpd": 325
+  },
+  {
+   "id": "clan_weapon_caster",
+   "numericItemId": 9002284,
+   "nameUk": "Клановий кастер",
+   "weaponKindLabelUk": "Магічний стаф",
+   "category": "weapon",
+   "iconUrl": "/icons/clan_gear/vesper_caster.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pAtk": 317,
+   "mAtk": 334,
+   "wpnCrit": 65,
+   "atkSpd": 399
+  },
+  {
+   "id": "clan_armor_helmet",
+   "numericItemId": 9002271,
+   "nameUk": "Клановий шолом",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Легкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_leather_helmet.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 180
+  },
+  {
+   "id": "clan_armor_chest",
+   "numericItemId": 9002272,
+   "nameUk": "Кланова бригандина",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Легкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_leather_breastplate.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 300
+  },
+  {
+   "id": "clan_armor_legs",
+   "numericItemId": 9002289,
+   "nameUk": "Кланові штани",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Легкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_leather_leggings.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 195
+  },
+  {
+   "id": "clan_armor_gloves",
+   "numericItemId": 9002273,
+   "nameUk": "Кланові рукавички",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Легкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_leather_gloves.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 165
+  },
+  {
+   "id": "clan_armor_boots",
+   "numericItemId": 9002274,
+   "nameUk": "Кланові чоботи",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Легкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_leather_boots.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 160
+  },
+  {
+   "id": "clan_armor_heavy_helmet",
+   "numericItemId": 9002290,
+   "nameUk": "Клановий важкий шолом",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Важкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/helmet.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 210
+  },
+  {
+   "id": "clan_armor_heavy_chest",
+   "numericItemId": 9002291,
+   "nameUk": "Клановий важкий нагрудник",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Важкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_breastplate.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 340
+  },
+  {
+   "id": "clan_armor_heavy_legs",
+   "numericItemId": 9002292,
+   "nameUk": "Кланові важкі штани",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Важкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_gaiters.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 210
+  },
+  {
+   "id": "clan_armor_heavy_gloves",
+   "numericItemId": 9002293,
+   "nameUk": "Кланові важкі рукавиці",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Важкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_gauntlet.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 180
+  },
+  {
+   "id": "clan_armor_heavy_boots",
+   "numericItemId": 9002294,
+   "nameUk": "Кланові важкі чоботи",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Важкий клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_boots.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 185
+  },
+  {
+   "id": "clan_armor_robe_helmet",
+   "numericItemId": 9002295,
+   "nameUk": "Клановий магічний шолом",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Магічний клановий комплект",
+   "iconUrl": "/icons/clan_gear/circlet.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 170
+  },
+  {
+   "id": "clan_armor_robe_chest",
+   "numericItemId": 9002296,
+   "nameUk": "Кланова магічна туніка",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Магічний клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_tunic.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 280
+  },
+  {
+   "id": "clan_armor_robe_legs",
+   "numericItemId": 9002297,
+   "nameUk": "Кланові магічні штани",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Магічний клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_stockings.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 165
+  },
+  {
+   "id": "clan_armor_robe_gloves",
+   "numericItemId": 9002298,
+   "nameUk": "Кланові магічні рукавиці",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Магічний клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_gloves.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 150
+  },
+  {
+   "id": "clan_armor_robe_boots",
+   "numericItemId": 9002299,
+   "nameUk": "Кланові магічні чоботи",
+   "category": "armor",
+   "armorSetFamilyLabelUk": "Магічний клановий комплект",
+   "iconUrl": "/icons/clan_gear/vesper_shoes.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 145
+  },
+  {
+   "id": "clan_shield",
+   "numericItemId": 9002285,
+   "nameUk": "Клановий щит",
+   "category": "shield",
+   "iconUrl": "/icons/clan_gear/weapon_vesper_verteidiger.png?v=20260910-1",
+   "grade": "S",
+   "requiredLevel": 76,
+   "pDef": 390,
+   "blockChancePct": 25
+  },
+  {
+   "id": "clan_jewelry_ring",
+   "numericItemId": 9002286,
+   "nameUk": "Кланове кільце",
+   "category": "jewelry",
+   "iconUrl": "/icons/clan_gear/vesper_ring.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "mDef": 240
+  },
+  {
+   "id": "clan_jewelry_earring",
+   "numericItemId": 9002287,
+   "nameUk": "Кланова сережка",
+   "category": "jewelry",
+   "iconUrl": "/icons/clan_gear/vesper_earring.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "mDef": 265
+  },
+  {
+   "id": "clan_jewelry_necklace",
+   "numericItemId": 9002288,
+   "nameUk": "Кланове намисто",
+   "category": "jewelry",
+   "iconUrl": "/icons/clan_gear/vesper_necklace.png",
+   "grade": "S",
+   "requiredLevel": 76,
+   "mDef": 370
+  }
+ ],
+ "configs": {
+  "clan_jewelry_ring": {
+   "item": {
+    "id": "clan_jewelry_ring",
+    "nameUk": "Кланове кільце",
+    "iconUrl": "/icons/clan_gear/vesper_ring.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "mDef": 240
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 6000,
+    "adena": "20000000"
+   },
+   "attributes": [
+    {
+     "id": "accuracy_flat",
+     "nameUk": "Точність",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "evasion_flat",
+     "nameUk": "Ухилення",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "physical_crit_chance_pct",
+     "nameUk": "Шанс фіз. криту",
+     "levels": [
+      2,
+      3,
+      4,
+      5,
+      6
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "magic_crit_chance_pct",
+     "nameUk": "Шанс маг. криту",
+     "levels": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "physical_crit_damage_pct",
+     "nameUk": "Сила фіз. криту",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "magic_crit_damage_pct",
+     "nameUk": "Сила маг. криту",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "debuff_land_chance_pct",
+     "nameUk": "Шанс проходження дебафів",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_jewelry_earring": {
+   "item": {
+    "id": "clan_jewelry_earring",
+    "nameUk": "Кланова сережка",
+    "iconUrl": "/icons/clan_gear/vesper_earring.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "mDef": 265
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 7000,
+    "adena": "24000000"
+   },
+   "attributes": [
+    {
+     "id": "stun_resist_pct",
+     "nameUk": "Стійкість до оглушення",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "sleep_resist_pct",
+     "nameUk": "Стійкість до сну",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "hold_resist_pct",
+     "nameUk": "Стійкість до утримання",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "poison_resist_pct",
+     "nameUk": "Стійкість до отрути",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "bleed_resist_pct",
+     "nameUk": "Стійкість до кровотечі",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "hp_regen_flat",
+     "nameUk": "Відновлення HP",
+     "levels": [
+      20,
+      40,
+      60,
+      80,
+      100
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "mp_regen_flat",
+     "nameUk": "Відновлення MP",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_robe_helmet": {
+   "item": {
+    "id": "clan_armor_robe_helmet",
+    "nameUk": "Клановий магічний шолом",
+    "iconUrl": "/icons/clan_gear/circlet.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 170
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 7000,
+    "adena": "30000000"
+   },
+   "attributes": [
+    {
+     "id": "max_mp_pct",
+     "nameUk": "Макс. MP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "heal_power_pct",
+     "nameUk": "Сила лікування",
+     "levels": [
+      10,
+      15,
+      20,
+      25,
+      30
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "mp_cost_reduction_pct",
+     "nameUk": "Зниження витрат MP",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "debuff_resistance_pct",
+     "nameUk": "Стійкість до дебафів",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "stun_resistance_pct",
+     "nameUk": "Стійкість до стану",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_robe_legs": {
+   "item": {
+    "id": "clan_armor_robe_legs",
+    "nameUk": "Кланові магічні штани",
+    "iconUrl": "/icons/clan_gear/vesper_stockings.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 165
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 7000,
+    "adena": "30000000"
+   },
+   "attributes": [
+    {
+     "id": "legs_fish_damage",
+     "nameUk": "Урон по рибі",
+     "levels": null,
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "legs_inventory_slots",
+     "nameUk": "Місткість інвентарю",
+     "levels": null,
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "legs_physical_skill_damage_pct",
+     "nameUk": "Урон фізичними навичками",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "legs_magic_skill_damage_pct",
+     "nameUk": "Урон магічними навичками",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "legs_teleport_cost_reduction_pct",
+     "nameUk": "Вартість телепорту",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_robe_gloves": {
+   "item": {
+    "id": "clan_armor_robe_gloves",
+    "nameUk": "Кланові магічні рукавички",
+    "iconUrl": "/icons/clan_gear/vesper_gloves.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 150
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 7000,
+    "adena": "30000000"
+   },
+   "attributes": [
+    {
+     "id": "p_atk_pct",
+     "nameUk": "Фіз. атака",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "m_atk_pct"
+     ]
+    },
+    {
+     "id": "m_atk_pct",
+     "nameUk": "Маг. атака",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "p_atk_pct"
+     ]
+    },
+    {
+     "id": "physical_crit_chance_pct",
+     "nameUk": "Шанс фіз. криту",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "magic_crit_chance_pct"
+     ]
+    },
+    {
+     "id": "magic_crit_chance_pct",
+     "nameUk": "Шанс маг. криту",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "physical_crit_chance_pct"
+     ]
+    },
+    {
+     "id": "critical_damage_pct",
+     "nameUk": "Сила крит. удару",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "vampirism_pct",
+     "nameUk": "Вампіризм",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_robe_boots": {
+   "item": {
+    "id": "clan_armor_robe_boots",
+    "nameUk": "Кланові магічні чоботи",
+    "iconUrl": "/icons/clan_gear/vesper_shoes.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 145
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 7000,
+    "adena": "30000000"
+   },
+   "attributes": [
+    {
+     "id": "move_speed_pct",
+     "nameUk": "Швидкість бігу",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "evasion_pct",
+     "nameUk": "Ухилення",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "adena_bonus_pct",
+     "nameUk": "Бонус адени",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "attack_speed_pct",
+     "nameUk": "Швидкість атаки",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "casting_speed_pct",
+     "nameUk": "Швидкість магії",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_chest": {
+   "item": {
+    "id": "clan_armor_chest",
+    "nameUk": "Кланова бригандина",
+    "iconUrl": "/icons/clan_gear/vesper_leather_breastplate.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 300
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 10000,
+    "adena": "50000000"
+   },
+   "attributes": [
+    {
+     "id": "p_def_pct",
+     "nameUk": "Фіз. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "m_def_pct",
+     "nameUk": "Маг. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_hp_pct",
+     "nameUk": "Макс. HP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_cp_pct",
+     "nameUk": "Макс. CP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "pvp_reflect_pct",
+     "nameUk": "Відбиття PvP-урону",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_heavy_chest": {
+   "item": {
+    "id": "clan_armor_heavy_chest",
+    "nameUk": "Клановий важкий нагрудник",
+    "iconUrl": "/icons/clan_gear/vesper_breastplate.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 340
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 10000,
+    "adena": "50000000"
+   },
+   "attributes": [
+    {
+     "id": "p_def_pct",
+     "nameUk": "Фіз. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "m_def_pct",
+     "nameUk": "Маг. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_hp_pct",
+     "nameUk": "Макс. HP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_cp_pct",
+     "nameUk": "Макс. CP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "pvp_reflect_pct",
+     "nameUk": "Відбиття PvP-урону",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_shield": {
+   "item": {
+    "id": "clan_shield",
+    "nameUk": "Клановий щит",
+    "iconUrl": "/icons/clan_gear/weapon_vesper_verteidiger.png?v=20260910-1",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 390,
+     "blockChancePct": 25
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 4500,
+    "adena": "15000000"
+   },
+   "attributes": [
+    {
+     "id": "shield_block_rate_pct",
+     "nameUk": "Шанс блоку щитом",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "shield_defense_flat",
+     "nameUk": "Захист щита",
+     "levels": [
+      400,
+      800,
+      1200,
+      1600,
+      2000
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "bow_defense_pct",
+     "nameUk": "Захист від луків",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "stun_resist_pct",
+     "nameUk": "Стійкість до оглушення",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "debuff_resist_pct",
+     "nameUk": "Стійкість до дебафів",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "cancel_resist_pct",
+     "nameUk": "Стійкість до зняття бафів",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "heal_received_pct",
+     "nameUk": "Ефективність отриманого лікування",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_weapon_hammer": {
+   "item": {
+    "id": "clan_weapon_hammer",
+    "nameUk": "Клановий молот",
+    "weaponKindLabelUk": "Дворучний молот",
+    "iconUrl": "/icons/clan_gear/contristo_hammer.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pAtk": 532,
+     "mAtk": 192,
+     "wpnCrit": 65,
+     "atkSpd": 340
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 8000,
+    "adena": "55000000"
+   },
+   "attributes": [
+    {
+     "id": "debuff_land_chance_pct",
+     "nameUk": "Шанс проходження дебафів",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "skill_cooldown_reduction_pct",
+     "nameUk": "Відкат умінь",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "magical_damage_pct",
+     "nameUk": "Магічна шкода",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "physical_damage_pct"
+     ]
+    },
+    {
+     "id": "physical_damage_pct",
+     "nameUk": "Фізична шкода",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "magical_damage_pct"
+     ]
+    },
+    {
+     "id": "critical_damage_pct",
+     "nameUk": "Сила криту",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "combat_speed_pct",
+     "nameUk": "Швидкість бою",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "accuracy_flat",
+     "nameUk": "Точність",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_weapon_caster": {
+   "item": {
+    "id": "clan_weapon_caster",
+    "nameUk": "Клановий кастер",
+    "weaponKindLabelUk": "Магічний стаф",
+    "iconUrl": "/icons/clan_gear/vesper_caster.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pAtk": 317,
+     "mAtk": 334,
+     "wpnCrit": 65,
+     "atkSpd": 399
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 8000,
+    "adena": "55000000"
+   },
+   "attributes": [
+    {
+     "id": "debuff_land_chance_pct",
+     "nameUk": "Шанс проходження дебафів",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "skill_cooldown_reduction_pct",
+     "nameUk": "Відкат умінь",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "magical_damage_pct",
+     "nameUk": "Магічна шкода",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "physical_damage_pct"
+     ]
+    },
+    {
+     "id": "physical_damage_pct",
+     "nameUk": "Фізична шкода",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "magical_damage_pct"
+     ]
+    },
+    {
+     "id": "critical_damage_pct",
+     "nameUk": "Сила криту",
+     "levels": [
+      4,
+      7,
+      10,
+      13,
+      16
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "combat_speed_pct",
+     "nameUk": "Швидкість бою",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "accuracy_flat",
+     "nameUk": "Точність",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_jewelry_necklace": {
+   "item": {
+    "id": "clan_jewelry_necklace",
+    "nameUk": "Кланове намисто",
+    "iconUrl": "/icons/clan_gear/vesper_necklace.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "mDef": 370
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 10000,
+    "adena": "40000000"
+   },
+   "attributes": [
+    {
+     "id": "max_hp_flat",
+     "nameUk": "Макс. HP",
+     "levels": [
+      1000,
+      2500,
+      4000,
+      5500,
+      7000
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_mp_flat",
+     "nameUk": "Макс. MP",
+     "levels": [
+      300,
+      700,
+      1100,
+      1500,
+      2000
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_cp_flat",
+     "nameUk": "Макс. CP",
+     "levels": [
+      1000,
+      2000,
+      3000,
+      4000,
+      5000
+     ],
+     "unit": "flat",
+     "conflictsWith": []
+    },
+    {
+     "id": "physical_power_pct",
+     "nameUk": "Фізична сила",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "magical_power_pct"
+     ]
+    },
+    {
+     "id": "magical_power_pct",
+     "nameUk": "Магічна сила",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": [
+      "physical_power_pct"
+     ]
+    },
+    {
+     "id": "heal_received_pct",
+     "nameUk": "Ефективність лікування",
+     "levels": [
+      3,
+      5,
+      7,
+      9,
+      12
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "cooldown_reduction_pct",
+     "nameUk": "Відкат умінь",
+     "levels": [
+      2,
+      4,
+      6,
+      8,
+      10
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  },
+  "clan_armor_robe_chest": {
+   "item": {
+    "id": "clan_armor_robe_chest",
+    "nameUk": "Кланова магічна туніка",
+    "iconUrl": "/icons/clan_gear/vesper_tunic.png",
+    "grade": "S",
+    "requiredLevel": 76,
+    "baseStats": {
+     "pDef": 280
+    }
+   },
+   "attributeSlots": 3,
+   "price": {
+    "reputation": 10000,
+    "adena": "50000000"
+   },
+   "attributes": [
+    {
+     "id": "p_def_pct",
+     "nameUk": "Фіз. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "m_def_pct",
+     "nameUk": "Маг. захист",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_hp_pct",
+     "nameUk": "Макс. HP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "max_cp_pct",
+     "nameUk": "Макс. CP",
+     "levels": [
+      7,
+      12,
+      17,
+      22,
+      27
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    },
+    {
+     "id": "pvp_reflect_pct",
+     "nameUk": "Відбиття PvP-урону",
+     "levels": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "unit": "pct",
+     "conflictsWith": []
+    }
+   ]
+  }
+ },
+ "upgradesSample": [
+  {
+   "itemId": 9002290,
+   "nameUk": "Клановий важкий шолом",
+   "level": 4,
+   "enchant": 0,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "max_mp_pct",
+     "Lv.4 (+22%)",
+     "Lv.5 (+27%)"
+    ],
+    [
+     "stun_resistance_pct",
+     "Lv.4 (+20%)",
+     "Lv.5 (+25%)"
+    ],
+    [
+     "heal_power_pct",
+     "Lv.4 (+25%)",
+     "Lv.5 (+30%)"
+    ]
+   ],
+   "costNext": [
+    [
+     1869,
+     "Залізна руда",
+     720
+    ],
+    [
+     1867,
+     "Шкура тварини",
+     780
+    ],
+    [
+     1866,
+     "Замша",
+     560
+    ],
+    [
+     1894,
+     "Вичинена шкіра",
+     20
+    ],
+    [
+     1885,
+     "Високоякісна замша",
+     32
+    ]
+   ]
+  },
+  {
+   "itemId": 9002291,
+   "nameUk": "Клановий важкий нагрудник",
+   "level": 5,
+   "enchant": 10,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "max_hp_pct",
+     "Lv.5 (+27%)",
+     null
+    ],
+    [
+     "p_def_pct",
+     "Lv.5 (+27%)",
+     null
+    ],
+    [
+     "m_def_pct",
+     "Lv.5 (+27%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002292,
+   "nameUk": "Кланові важкі штани",
+   "level": 5,
+   "enchant": 0,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "legs_fish_damage",
+     "Lv.5 (+30)",
+     null
+    ],
+    [
+     "legs_physical_skill_damage_pct",
+     "Lv.5 (+25%)",
+     null
+    ],
+    [
+     "legs_inventory_slots",
+     "Lv.5 (+50 слотів)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002293,
+   "nameUk": "Кланові важкі рукавиці",
+   "level": 5,
+   "enchant": 0,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "critical_damage_pct",
+     "Lv.5 (+25%)",
+     null
+    ],
+    [
+     "physical_crit_chance_pct",
+     "Lv.5 (+25%)",
+     null
+    ],
+    [
+     "p_atk_pct",
+     "Lv.5 (+25%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002294,
+   "nameUk": "Кланові важкі чоботи",
+   "level": 3,
+   "enchant": 0,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "attack_speed_pct",
+     "Lv.3 (+15%)",
+     "Lv.4 (+20%)"
+    ],
+    [
+     "adena_bonus_pct",
+     "Lv.3 (+15%)",
+     "Lv.4 (+20%)"
+    ],
+    [
+     "move_speed_pct",
+     "Lv.3 (+15%)",
+     "Lv.4 (+20%)"
+    ]
+   ],
+   "costNext": [
+    [
+     1869,
+     "Залізна руда",
+     540
+    ],
+    [
+     1867,
+     "Шкура тварини",
+     585
+    ],
+    [
+     1866,
+     "Замша",
+     420
+    ],
+    [
+     1894,
+     "Вичинена шкіра",
+     15
+    ],
+    [
+     1885,
+     "Високоякісна замша",
+     24
+    ]
+   ]
+  },
+  {
+   "itemId": 9002295,
+   "nameUk": "Клановий магічний шолом",
+   "level": 3,
+   "enchant": 0,
+   "owner": "tms",
+   "attributes": [
+    [
+     "max_mp_pct",
+     "Lv.3 (+17%)",
+     "Lv.4 (+22%)"
+    ],
+    [
+     "mp_cost_reduction_pct",
+     "Lv.3 (-15%)",
+     "Lv.4 (-20%)"
+    ],
+    [
+     "debuff_resistance_pct",
+     "Lv.3 (+15%)",
+     "Lv.4 (+20%)"
+    ]
+   ],
+   "costNext": [
+    [
+     1869,
+     "Залізна руда",
+     540
+    ],
+    [
+     1867,
+     "Шкура тварини",
+     585
+    ],
+    [
+     1866,
+     "Замша",
+     420
+    ],
+    [
+     1894,
+     "Вичинена шкіра",
+     15
+    ],
+    [
+     1885,
+     "Високоякісна замша",
+     24
+    ]
+   ]
+  },
+  {
+   "itemId": 9002296,
+   "nameUk": "Кланова магічна туніка",
+   "level": 5,
+   "enchant": 2,
+   "owner": "tms",
+   "attributes": [
+    [
+     "max_hp_pct",
+     "Lv.5 (+27%)",
+     null
+    ],
+    [
+     "p_def_pct",
+     "Lv.5 (+27%)",
+     null
+    ],
+    [
+     "m_def_pct",
+     "Lv.5 (+27%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002297,
+   "nameUk": "Кланові магічні штани",
+   "level": 5,
+   "enchant": 0,
+   "owner": "tms",
+   "attributes": [
+    [
+     "legs_fish_damage",
+     "Lv.5 (+30)",
+     null
+    ],
+    [
+     "legs_inventory_slots",
+     "Lv.5 (+50 слотів)",
+     null
+    ],
+    [
+     "legs_magic_skill_damage_pct",
+     "Lv.5 (+25%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002298,
+   "nameUk": "Кланові магічні рукавиці",
+   "level": 5,
+   "enchant": 0,
+   "owner": "tms",
+   "attributes": [
+    [
+     "m_atk_pct",
+     "Lv.5 (+25%)",
+     null
+    ],
+    [
+     "magic_crit_chance_pct",
+     "Lv.5 (+25%)",
+     null
+    ],
+    [
+     "vampirism_pct",
+     "Lv.5 (+25%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002299,
+   "nameUk": "Кланові магічні чоботи",
+   "level": 2,
+   "enchant": 0,
+   "owner": "tms",
+   "attributes": [
+    [
+     "casting_speed_pct",
+     "Lv.2 (+10%)",
+     "Lv.3 (+15%)"
+    ],
+    [
+     "adena_bonus_pct",
+     "Lv.2 (+10%)",
+     "Lv.3 (+15%)"
+    ],
+    [
+     "move_speed_pct",
+     "Lv.2 (+10%)",
+     "Lv.3 (+15%)"
+    ]
+   ],
+   "costNext": [
+    [
+     1869,
+     "Залізна руда",
+     360
+    ],
+    [
+     1867,
+     "Шкура тварини",
+     390
+    ],
+    [
+     1866,
+     "Замша",
+     280
+    ],
+    [
+     1894,
+     "Вичинена шкіра",
+     10
+    ],
+    [
+     1885,
+     "Високоякісна замша",
+     16
+    ]
+   ]
+  },
+  {
+   "itemId": 9002285,
+   "nameUk": "Клановий щит",
+   "level": 4,
+   "enchant": 1,
+   "owner": "tms",
+   "attributes": [
+    [
+     "shield_defense_flat",
+     "Lv.4 (+1600)",
+     "Lv.5 (+2000)"
+    ],
+    [
+     "debuff_resist_pct",
+     "Lv.4 (+9%)",
+     "Lv.5 (+12%)"
+    ],
+    [
+     "cancel_resist_pct",
+     "Lv.4 (+13%)",
+     "Lv.5 (+16%)"
+    ]
+   ],
+   "costNext": [
+    [
+     1869,
+     "Залізна руда",
+     1000
+    ],
+    [
+     1877,
+     "Адамантитовий самородок",
+     680
+    ],
+    [
+     1880,
+     "Сталь",
+     80
+    ],
+    [
+     1890,
+     "Міфриловий сплав",
+     48
+    ],
+    [
+     5550,
+     "Міцна металева пластина",
+     24
+    ]
+   ]
+  },
+  {
+   "itemId": 9002277,
+   "nameUk": "Кланова пила",
+   "level": 5,
+   "enchant": 20,
+   "owner": "Teddy",
+   "attributes": [
+    [
+     "skill_cooldown_reduction_pct",
+     "Lv.5 (-12%)",
+     null
+    ],
+    [
+     "physical_damage_pct",
+     "Lv.5 (+12%)",
+     null
+    ],
+    [
+     "critical_damage_pct",
+     "Lv.5 (+16%)",
+     null
+    ]
+   ],
+   "costNext": []
+  },
+  {
+   "itemId": 9002284,
+   "nameUk": "Клановий кастер",
+   "level": 5,
+   "enchant": 2,
+   "owner": "tms",
+   "attributes": [
+    [
+     "skill_cooldown_reduction_pct",
+     "Lv.5 (-12%)",
+     null
+    ],
+    [
+     "magical_damage_pct",
+     "Lv.5 (+12%)",
+     null
+    ],
+    [
+     "debuff_land_chance_pct",
+     "Lv.5 (+16%)",
+     null
+    ]
+   ],
+   "costNext": []
+  }
+ ]
+}

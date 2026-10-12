@@ -83,6 +83,7 @@
         "modules/fightlab.js",
         "modules/enemies.js",
         "modules/tvtshop.js",
+        "modules/dailies.js",
         "content.js"
       ],
       "run_at": "document_idle"

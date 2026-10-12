@@ -15,7 +15,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
-  taskOnly: false, tsGoalItem: 0, tsBuy: false, chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -2288,6 +2288,10 @@ async function main() {
       if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
       // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
       if (await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
+      // 10.0 (игрок 12.10): дейлики и клановые задания — опрос фоном (GET), сдать/взять/помочь (POST), рыба и РБ по дейликам (вне боя и туров)
+      L2V7Modules.dailies.tick().catch(() => {});
+      if (await L2V7Modules.dailies.clanStep()) { await sleep(200); continue; }
+      if (await L2V7Modules.dailies.dailyStep()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -2467,6 +2471,11 @@ function serverDown() {
 // держит в localStorage 'token'. Свои GET бота шли с одной cookie и получали 401 (/game/spawn/…/info, /game/epic-bosses, заказ Маммона):
 // отсюда «цифры … у игры не получены» и «список эпиков с сервера не получен». Токен только в заголовок запроса — никуда не пишем
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
+// 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
+async function gamePost(path, body, ms = 8000) {
+  const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
+  try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
+}
 async function gameGet(path, ms = 6000) {
   const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
   try { return await fetch(path, { credentials: 'include', cache: 'no-store', headers: gameAuth(), signal: c.signal }); } finally { clearTimeout(tm); }
@@ -3214,7 +3223,9 @@ addEventListener('message', e => {
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 9.2 (лог 11.10 03:00): павший враг — по ответу удара (targetDead) или отказу выбрать цель (tvt_target_dead), см. tvt.tvtDeadNote
   if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
-  if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}   // 10.0: каталог магазина TvT
+  if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}
+  if (path === '/game/daily-quests' && tabOwner && d.res?.tasks) try { L2V7Modules.dailies.dailyNote(d.res); } catch (er) {}   // 10.0: страница «Ежедневные задания»
+  if (path === '/game/clan-tasks' && tabOwner && d.res && !d.error) try { L2V7Modules.dailies.clanNote(d.res); } catch (er) {}   // 10.0: страница «Клановые задания»   // 10.0: каталог магазина TvT
   if (path === '/game/tvt/target' && d.res?.error === 'tvt_target_dead') L2V7Modules.tvt.tvtDeadNote(d.req?.targetCharacterId);
   if (Array.isArray(d.sp) && d.sp.length && !document.prerendering) netSpawns(d.sp).catch(er => console.warn(TAG, 'spawns', er));
   if (d.res?.error && /\/game\/(battle|dungeon)\//.test(path)) NET_ERR = { t: Date.now(), err: d.res.error, path };   // v5.3.1: ответ «battle_too_far» и т.п.
@@ -3517,7 +3528,7 @@ function panelReport() {
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -4157,6 +4168,9 @@ const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L
 L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get fire() { return fire; },
   get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
+// 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
+L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
+  get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return fire; },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
@@ -4360,6 +4374,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 10.0 (ребаланс ради КПД): банок MP 20/100 хватало на ≈10 мин боя (MP не экономим — игрок 10.10), бот бегал в магазин; РБ ниже героя
   // на 10–15 уровней дают EXP со штрафом и почти пустой дроп, а тур летал к ним за телепорт — окно вниз 9 уровней. Только заводские значения
   once('rebal100', () => { if (C('shopMp') === '20/100') cf.shopMp = '200/1000'; if (+C('rbMaxBelow') === 15) cf.rbMaxBelow = 9; });
+  once('tsGoal100', () => { if (!+C('tsGoalItem')) cf.tsGoalItem = 920033; });   // 10.0 (игрок 12.10): цель магазина TvT по умолчанию — Тату Душі (+978 M.Atk, лучшее для ДПС), автопокупка выключена
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)

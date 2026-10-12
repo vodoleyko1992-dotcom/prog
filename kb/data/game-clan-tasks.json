@@ -1,0 +1,111 @@
+{
+ "_source": "GET /game/clan-tasks (12.10.2026)",
+ "_api": {
+  "take": "POST /game/clan-tasks/<taskType>/take",
+  "help": "POST /game/clan-tasks/<taskId>/help",
+  "claim": "POST /game/clan-tasks/<taskId>/claim",
+  "cancel": "POST /game/clan-tasks/<taskId>/cancel"
+ },
+ "_notes": [
+  "Один активный таск на игрока (me.activeTaskId); blockedReason: cooldown (≈24 ч после сдачи), participant_busy, clan_task_active",
+  "Личная награда владельцу + алмазы клану; помощник (help) присоединяется к чужому таску"
+ ],
+ "clan": {
+  "id": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+  "name": "BlackLotus",
+  "diamonds": 18
+ },
+ "taskDefinitions": [
+  {
+   "id": "earn_adena",
+   "name": "Постачання скарбниці",
+   "nameRu": "Снабжение казны",
+   "description": "Заробіть 150 000 адени під час полювання.",
+   "descriptionRu": "Заработайте 150 000 адены во время охоты.",
+   "target": 150000,
+   "progressLabel": "адени",
+   "personalReward": {
+    "exp": 50000,
+    "adena": 0,
+    "coinOfLuck": 0
+   },
+   "clanRewardDiamonds": 3,
+   "canTake": false,
+   "blockedReason": "cooldown",
+   "cooldownEndsAt": "2026-10-12T21:35:49.997Z"
+  },
+  {
+   "id": "kill_monsters",
+   "name": "Велике полювання",
+   "nameRu": "Большая охота",
+   "description": "Знищіть 500 звичайних монстрів.",
+   "descriptionRu": "Уничтожьте 500 обычных монстров.",
+   "target": 500,
+   "progressLabel": "монстрів",
+   "personalReward": {
+    "exp": 0,
+    "adena": 0,
+    "coinOfLuck": 1
+   },
+   "clanRewardDiamonds": 4,
+   "canTake": false,
+   "blockedReason": "cooldown",
+   "cooldownEndsAt": "2026-10-12T21:54:42.431Z"
+  },
+  {
+   "id": "earn_sp_from_monsters",
+   "name": "Сила духу",
+   "nameRu": "Сила духа",
+   "description": "Заробіть 100 000 SP у боях зі звичайними монстрами.",
+   "descriptionRu": "Заработайте 100 000 SP в боях с обычными монстрами.",
+   "target": 100000,
+   "progressLabel": "SP",
+   "personalReward": {
+    "exp": 0,
+    "adena": 100000,
+    "coinOfLuck": 0
+   },
+   "clanRewardDiamonds": 5,
+   "canTake": false,
+   "blockedReason": "cooldown",
+   "cooldownEndsAt": "2026-10-12T21:37:04.316Z"
+  },
+  {
+   "id": "kill_raid_boss",
+   "name": "Виклик рейдового боса",
+   "nameRu": "Вызов рейдового босса",
+   "description": "Візьміть участь у перемозі над одним рейдовим босом відповідного рівня.",
+   "descriptionRu": "Примите участие в победе над одним рейдовым боссом подходящего уровня.",
+   "target": 1,
+   "progressLabel": "рейдовий бос",
+   "personalReward": {
+    "exp": 140000,
+    "adena": 0,
+    "coinOfLuck": 0
+   },
+   "clanRewardDiamonds": 7,
+   "canTake": true,
+   "blockedReason": null,
+   "cooldownEndsAt": null
+  },
+  {
+   "id": "damage_siege_wall",
+   "name": "Штурм міської стіни",
+   "nameRu": "Штурм городской стены",
+   "description": "Завдайте разом 50 000 урону стіні під час кланової облоги.",
+   "descriptionRu": "Нанесите вместе 50 000 урона стене во время клановой осады.",
+   "target": 50000,
+   "progressLabel": "урону стіні",
+   "personalReward": {
+    "exp": 200000,
+    "adena": 0,
+    "coinOfLuck": 2
+   },
+   "clanRewardDiamonds": 10,
+   "canTake": true,
+   "blockedReason": null,
+   "cooldownEndsAt": null
+  }
+ ],
+ "activeClanTasks": []
+}
