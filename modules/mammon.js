@@ -111,7 +111,9 @@ function smithNote(items) {                      // ответ /upgrades: уро
     if (!i.max && i.cost) cost[`${id}:${+i.level || 0}`] = { a: +i.cost.adena || 0, c: +i.cost.coinOfLuck || 0,
       m: (i.cost.materials || []).map(x => [+x.itemId, String(x.nameUk || ''), +x.required || 0]), t: Date.now() };
   }
-  env.setRt({ mmCost: cost, mmGear: gear, mmGearT: Date.now() });
+  // 9.2.5 (лог 12.10 11:56–12:00): кузнец сам пишет, хватает ли всего (canAfford, owned у материалов) — это точнее сумки бота
+  const g = items.find(i => +i.itemId === +env.cfg.mmGoalItem && !i.max);
+  env.setRt({ mmCost: cost, mmGear: gear, mmGearT: Date.now(), ...(g ? { mmSmithOk: { id: +g.itemId, lvl: +g.level || 0, ok: !!g.canAfford, t: Date.now() } } : {}) });
   return gear.length;
 }
 const costOf = (id, lvl) => env.rt.mmCost?.[`${id}:${lvl}`] || MM_KNOWN[`${id}:${lvl}`] || null;
@@ -226,8 +228,11 @@ function goalNote() {                             // раз на изменен�
       + (P.est ? ' · ≈ часть цен — оценка' : '') + (P.unk.length ? ` · цены Lv.${P.unk.map(L => L + 1).join(', ')} неизвестны` : '');
   }
   const plan = planOut(P), ps = JSON.stringify(plan);
-  const stNew = st !== (env.rt.mmGoalSt || '');
-  if (stNew || ps !== JSON.stringify(env.rt.mmGoalPlan || null)) { env.setRt({ mmGoalSt: st, mmGoalPlan: plan }); if (stNew && st) env.rec('B', 'Маммон', st); }
+  // 9.2.5 (лог 12.10 11:18–12:01): имя материала скачет между страницами («Кристал: ранг D» ↔ «Crystal: D-Grade» — справочник предметов
+  // есть не везде) → строка писалась в журнал раз в полминуты. В журнал — только когда меняется суть (имена заменены на id)
+  const sig = [...(P?.raw || []), ...(P?.tot || []), ...(p?.mats || [])].reduce((a, r) => [r.nm, r.uk].filter(Boolean).reduce((x, n) => x.split(n).join('#' + r.id), a), st);
+  const stNew = st !== (env.rt.mmGoalSt || ''), sigNew = sig !== (env.rt.mmGoalSig ?? null);
+  if (stNew || ps !== JSON.stringify(env.rt.mmGoalPlan || null)) { env.setRt({ mmGoalSt: st, mmGoalPlan: plan, mmGoalSig: sig }); if (sigNew && st) env.rec('B', 'Маммон', st); }
   return p;
 }
 // ---- поход к NPC ----
@@ -247,8 +252,10 @@ function want() {
   if (env.rt.mmSmithReq) return { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)' };
   const p = env.cfg.mmGoalItem ? goalPlan() : null;
   // 9.2.5: всё на следующий уровень собрано (материалы по сумке, Coin of Luck — если сумка его знает) — летим улучшать. После неудачи — не чаще раза в 30 мин
-  const colHave = haveOf(COL_ID);
-  if (p && !p.done && p.ready && env.cfg.mmUpgrade !== false && (colHave == null || colHave >= (p.col || 0)) && (haveOf(57) == null || haveOf(57) >= (p.a || 0)) && now - (env.rt.mmUpT || 0) > UP_RETRY)
+  // Адена — не предмет сумки (character.adena), её проверяет кузнец (canAfford). Сумка не видит всего (лог 12.10: ресурсы с почты) —
+  // свежий ответ кузнеца «хватает» (mmSmithOk, ≤ 30 мин, тот же уровень) тоже готовность
+  const colHave = haveOf(COL_ID), so = env.rt.mmSmithOk, smithOk = !!(p && so?.ok && so.id === p.id && so.lvl === p.lvl && now - (so.t || 0) < 30 * 60000);
+  if (p && !p.done && (smithOk || (p.ready && (colHave == null || colHave >= (p.col || 0)))) && env.cfg.mmUpgrade !== false && now - (env.rt.mmUpT || 0) > UP_RETRY)
     return { kind: 'smith', up: true, id: `up:${p.id}:${p.lvl}`, why: `улучшить ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
@@ -302,8 +309,16 @@ async function smith(J) {
   const r = await getJson('/game/mammon/blacksmith/upgrades');
   if (!r.ok) return finish(J, false, r.status === 403 ? 'кузнец не рядом' : `список улучшений не получен (HTTP ${r.status})`);
   if (J.up) return upgrade(J, r.j?.items);
-  const n = smithNote(r.j?.items);
-  return finish(J, true, `цены прочитаны: вещей ${n}${(r.j?.items || []).filter(i => !i.max && i.cost).map(i => ` · ${i.nameUk} Lv.${i.level}→${i.level + 1}: ${fmtA(i.cost.adena)} адены, ${i.cost.coinOfLuck} CoL, ${(i.cost.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`).join('')}`);
+  const n = smithNote(r.j?.items), items = Array.isArray(r.j?.items) ? r.j.items : [];
+  // 9.2.5: у кузнеца, а вещь-цель уже можно улучшить (игра пишет «хватает») — улучшаем в этот же заход, без второго телепорта
+  const g = upItem(items, +env.cfg.mmGoalItem || 0), to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
+  if (g && g.canAfford && !g.max && (+g.level || 0) < to && env.cfg.mmUpgrade !== false) {
+    const U = { ...J, up: true, why: `улучшить ${g.nameUk} Lv.${g.level} → ${+g.level + 1}` };
+    await env.setRt({ mmJob: U }); env.rec('B', 'Маммон', `кузнец: на ${g.nameUk} Lv.${+g.level + 1} всего хватает — улучшаю сразу`);
+    return upgrade(U, items);
+  }
+  const mat = m => `${m.nameUk} ${m.owned != null ? `${fmtA(m.owned)}/` : ''}${fmtA(m.required)}`;
+  return finish(J, true, `цены прочитаны: вещей ${n}${items.filter(i => !i.max && i.cost).map(i => ` · ${i.nameUk} Lv.${i.level}→${i.level + 1}${i.canAfford ? ' ✅ хватает' : ''}: ${fmtA(i.cost.adena)} адены, ${i.cost.coinOfLuck} CoL, ${(i.cost.materials || []).map(mat).join(', ')}`).join('')}`);
 }
 // 9.2.5 (игрок 12.10: «полностью разрешаю функцию прокачки ЛВЛ вещей, выбранных в настройках у мамона, не смотря на цену в колах»):
 // улучшение вещи-цели у кузнеца — кнопкой «Покращити до Lv.N» на его странице (как игрок; ревизию берёт сама страница). Только вещь из
@@ -340,6 +355,16 @@ async function upgrade(J, items) {
   if (it2 && +it2.level > L) { smithNote(r2.j?.items); return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`); }
   // уровень не подтвердился — следующий круг цикла перечитает список (J.clicked) и решит: вырос / ещё попытка / неудача
 }
+// 9.2.5 (лог 12.10 11:56: ресурсы на улучшение пришли почтой, «Забрати» → сумка бота их не показала, бот так и не пошёл): забрали
+// вложение из почты, а вещь-цель по сумке ещё не готова → спросить кузнеца (он видит всё, что есть у героя); не чаще раза в 2 ч
+function mailNote() {
+  if (!env.cfg.mmGoalItem || env.cfg.mmUpgrade === false || env.rt.mmSmithReq) return false;
+  const p = goalPlan(); if (!p || p.done || p.ready || !owned(p.id)) return false;
+  if (Date.now() - (env.rt.mmMailT || 0) < 2 * 3600000) return false;
+  env.setRt({ mmSmithReq: Date.now(), mmMailT: Date.now(), mmUpT: 0 });
+  env.rec('B', 'Маммон', `забрал вложение из почты — проверю у кузнеца, хватает ли на ${p.name} Lv.${p.lvl + 1}`);
+  return true;
+}
 // 9.0: шаг в главном цикле. true — занят Маммоном (цикл идёт на следующий круг)
 async function mmStep() {
   const J = env.rt.mmJob;
@@ -363,6 +388,6 @@ async function mmStep() {
   env.rec('B', 'Маммон', `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { mailNote, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -28,7 +28,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     const w = M.want(); assert.equal(w.kind, 'smith'); assert.equal(w.up, true); assert.match(w.why, /улучшить .* Lv\.0 → 1/);
     env.cfg.mmUpgrade = false; assert.equal(M.want(), null, 'switched off'); env.cfg.mmUpgrade = true;
     INV[4037] = 0; assert.equal(M.want(), null, 'no Coin of Luck'); INV[4037] = 3;
-    INV[57] = 1000; assert.equal(M.want(), null, 'no adena'); INV[57] = 9e6;
+    INV[57] = 0; assert.equal(M.want().up, true, 'adena is character.adena, not a bag stack (57 always 0) → the smith checks it'); INV[57] = 9e6;
     env.rt.mmUpT = Date.now(); assert.equal(M.want(), null, 'failed recently'); env.rt.mmUpT = 0;
     env.rt.mmEq = { belt: [920018, 2] }; assert.equal(M.want(), null, 'goal Lv.2 reached'); }
   // 2. на странице кузнеца: жмёт кнопку своей вещи (не соседней), один раз; уровень вырос → ✓, mmJob закрыт, журнал с ценой в Coin of Luck
@@ -66,6 +66,44 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     const { env, M, fired } = mk({ inv: INV, cards: [mine], lists: [[item()]] });
     await M.smith({ kind: 'smith', up: true, step: 'act', t: Date.now(), clicked: 0, tries: 2 });
     assert.equal(fired.length, 0); assert.equal(env.rt.mmLog[0].ok, false); assert.match(env.rt.mmLog[0].why, /не вырос/); }
+  // 8. лог 12.10 11:56–12:00 (9.2.4): ресурсы пришли почтой, сумка бота показывала 0 кристаллов, план «не хватает Crystal D 1 400»;
+  // игрок нажал «Узнать цены» — кузнец ответил, но бот не улучшил. Теперь: кузнец пишет «хватает» → улучшаем в тот же заход
+  { const mine = card('Пояс першопрохідця', 0, 'Покращити до Lv.1');
+    const inv = { ...INV, 1458: 0 };
+    const { env, M, fired, recs } = mk({ inv, cards: [mine], lists: [[item()], [item()], [item({ level: 1 })]] });
+    assert.equal(M.goalPlan().ready, false, 'bag says not ready');
+    const J = { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)', step: 'act', t: Date.now() }; env.rt.mmJob = J; env.rt.mmSmithReq = Date.now();
+    await M.smith(J);
+    assert.deepEqual(fired, [mine.btn], 'price check turned into the upgrade');
+    assert.ok(recs.some(r => /всего хватает — улучшаю сразу/.test(r)));
+    assert.equal(env.rt.mmSmithOk.ok, true); assert.equal(env.rt.mmSmithOk.lvl, 0); }
+  // 8б. свежий ответ кузнеца «хватает» → want() зовёт улучшать, хотя по сумке не всё; старый (> 30 мин) или другой уровень — нет
+  { const { env, M } = mk({ inv: { ...INV, 1458: 0 } });
+    assert.equal(M.want(), null);
+    env.rt.mmSmithOk = { id: 920018, lvl: 0, ok: true, t: Date.now() }; assert.equal(M.want().up, true);
+    env.rt.mmSmithOk = { id: 920018, lvl: 0, ok: true, t: Date.now() - 31 * 60000 }; assert.equal(M.want(), null, 'stale');
+    env.rt.mmSmithOk = { id: 920018, lvl: 1, ok: true, t: Date.now() }; assert.equal(M.want(), null, 'other level');
+    env.rt.mmSmithOk = { id: 920018, lvl: 0, ok: false, t: Date.now() }; assert.equal(M.want(), null, 'smith: not enough'); }
+  // 8в. без «хватает» — только цены, в журнале «есть/нужно»
+  { const { env, M, fired } = mk({ inv: INV, lists: [[item({ canAfford: false, cost: { adena: 250000, coinOfLuck: 1, materials: [{ itemId: 1458, nameUk: 'Кристал: ранг D', required: 200, owned: 0 }] } })]] });
+    await M.smith({ kind: 'smith', step: 'act', t: Date.now() });
+    assert.equal(fired.length, 0); assert.match(env.rt.mmLog[0].why, /Кристал: ранг D 0\/200/); assert.equal(env.rt.mmSmithOk.ok, false); }
+  // 8г. забрал вложение из почты, а по сумке не готово → проверка у кузнеца (не чаще раза в 2 ч); готово / выключено / нет цели — нет
+  { const { env, M } = mk({ inv: { ...INV, 1458: 0 } });
+    assert.equal(M.mailNote(), true); assert.ok(env.rt.mmSmithReq); assert.equal(M.want().kind, 'smith');
+    env.rt.mmSmithReq = null; assert.equal(M.mailNote(), false, 'once per 2 h');
+    env.rt.mmMailT = 0; env.cfg.mmUpgrade = false; assert.equal(M.mailNote(), false, 'upgrade off'); env.cfg.mmUpgrade = true;
+    env.rt.mmMailT = 0; INV[1458] = 100; const r = mk({ inv: INV }); assert.equal(r.M.mailNote(), false, 'bag already ready → want() goes by itself'); }
+  // 8д. одно и то же «не хватает» с разными именами материала (справочник есть не на каждой странице) — в журнал один раз
+  { const cost = { '920018:0': { a: 250000, c: 1, m: [[1458, 'Кристал: ранг D', 100], [1869, 'Залізна руда', 100]], t: Date.now() } };
+    const inv = { ...INV, 1458: 0 }, { env, M, recs } = mk({ rt: { mmCost: cost }, inv });
+    M.goalNote(); const n = recs.length, st1 = env.rt.mmGoalSt; assert.ok(n >= 1); assert.match(st1, /Кристал: ранг D/);
+    env.ITEMS = { 1458: { n: 'Crystal: D-Grade' } }; M.goalNote(); assert.match(env.rt.mmGoalSt, /Crystal: D-Grade/, 'status for the menu still updates');
+    env.ITEMS = {}; M.goalNote(); env.ITEMS = { 1458: { n: 'Crystal: D-Grade' } }; M.goalNote();
+    assert.equal(recs.length, n, 'name flip does not spam the journal');
+    inv[1458] = 50; M.goalNote(); assert.equal(recs.length, n + 1, 'a real change is logged'); }
+  const cj = read('content.js');
+  assert.match(cj, /path === '\/game\/item-transfer\/claim' && d\.status === 200\) L2V7Modules\.mammon\.mailNote\(\)/);
   // 7. меню и настройки: галочка, по умолчанию ВКЛ
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   assert.ok(html.includes('id="mmUpgrade"')); assert.match(pj, /'mmSmithAuto', 'mmUpgrade'/); assert.match(pj, /mmSmithAuto: true, mmUpgrade: true/); assert.match(c, /mmSmithAuto: true, mmUpgrade: true/);

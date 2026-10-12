@@ -3130,6 +3130,7 @@ addEventListener('message', e => {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
+    if (path === '/game/item-transfer/claim' && d.status === 200) L2V7Modules.mammon.mailNote();   // 9.2.5: ресурсы с почты → спросить кузнеца
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
   if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
