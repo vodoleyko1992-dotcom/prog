@@ -1438,7 +1438,7 @@ async function activeTab() {
   return g.find(x => x.active) || g[0] || t;
 }
 
-document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk')) el.addEventListener('change', save); });
+document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk')) el.addEventListener('change', save); });
 
 $('check').onclick = async () => {
   await save();
@@ -2019,6 +2019,20 @@ $('cfgExport').onclick = async () => {
   $('cfgNote').textContent = `✅ Экспортировано настроек: ${n}. Файл — в «Загрузках».`;
   toast?.('⬇ Настройки сохранены в файл');
 };
+// 10.0.2: таймеры боссов из файла слежки (облако / другой персонаж) — сливаются с таймерами этого героя
+$('rbtImport').onclick = () => $('rbtFile').click();
+$('rbtFile').onchange = async e => {
+  const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+  try {
+    const RT = L2V7Factories.rbtimer({ rt: {}, cfg: {} }), T2 = RT.parseFile(await f.text());
+    if (!T2 || !Object.keys(T2.b || {}).length) throw new Error('в файле нет таймеров боссов');
+    const { rt = {} } = await chrome.storage.local.get('rt'), M = RT.merge(rt.rbTimer || { b: {} }, T2);
+    await menuPatch({ rbTimer: M });
+    const n = Object.keys(T2.b).length, ob = Object.values(T2.b).reduce((a, x) => a + (x.ob?.length || 0), 0);
+    toast(`Таймеры загружены: ${n} боссов${ob ? `, замеров респа ${ob}` : ''}`);
+    load();
+  } catch (er) { toast('Не загрузил таймеры: ' + (er?.message || er)); }
+};
 $('cfgImport').onclick = () => $('cfgFile').click();
 $('cfgFile').onchange = async e => {
   const f = e.target.files?.[0]; e.target.value = '';
@@ -2218,7 +2232,7 @@ function toast(msg, color) {
 }
 document.addEventListener('change', e => {
   const el = e.target;
-  if (!el.matches?.('section input, section select, section textarea') || ['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile'].includes(el.id)) return;
+  if (!el.matches?.('section input, section select, section textarea') || ['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile'].includes(el.id)) return;
   const name = (el.closest('label')?.firstChild?.textContent || el.placeholder || '').trim().slice(0, 40);
   toast(`✓ Сохранено${name ? ': ' + name : ''}`);
 });
