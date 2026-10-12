@@ -14,7 +14,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
-  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
+  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
   taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
@@ -2183,6 +2183,26 @@ setInterval(async () => {
 }, 5000);
 // замок при уходе со страницы не снимаем: следующая страница этой же вкладки продолжит с тем же ключом; закрытую вкладку отпустит таймаут 90 с
 
+// 10.0.2 (лог 12.10 22:35:26–22:35:45, Death Lord Hallate): «пытаюсь выйти» → страница ушла на карту, но POST /game/battle/leave так и не
+// пришёл (сервер отвечал по 8 с) — бой на сервере шёл дальше, герой «на карте» стоял под ударами и погиб, а бот выбирал моба
+// (battle/start → 400 pve_defeat_pending). Перед нажатием выхода — метка (sessionStorage), ответ 2xx на leave её снимает; не снята через 2 с
+// на карте — бой не закончен: обратно на страницу боя (один раз), там бой/банки/аварийный выход как обычно. Остались в бою (выход не сработал) — метку
+// снимает сам бой (leaveMark(null))
+function leaveMark(id, name) { try { if (!id) { sessionStorage.removeItem('l2bot.leavePend'); return; } sessionStorage.setItem('l2bot.leavePend', JSON.stringify({ id, name: name || id, at: Date.now() })); sessionStorage.removeItem('l2bot.leaveOk'); } catch (e) {} }
+function leaveOk(id) { try { sessionStorage.setItem('l2bot.leaveOk', JSON.stringify({ id: id || '', at: Date.now() })); } catch (e) {} }
+function leavePending(now = Date.now()) {
+  let p = null, ok = null; try { p = JSON.parse(sessionStorage.getItem('l2bot.leavePend') || 'null'); ok = JSON.parse(sessionStorage.getItem('l2bot.leaveOk') || 'null'); } catch (e) {}
+  if (!p?.id || now - (p.at || 0) > 60000) return null;
+  if (ok && ok.at >= p.at && (!ok.id || ok.id === p.id)) return null;
+  return now - p.at >= 2000 ? p : null;
+}
+async function leaveCheck() {
+  const p = leavePending(); if (!p) return false;
+  try { sessionStorage.removeItem('l2bot.leavePend'); } catch (e) {}
+  rec('B', 'РБ', `${p.name}: выход из боя сервер не подтвердил (нет ответа на «Назад на карту») — бой, скорее всего, идёт, возвращаюсь в бой`);
+  location.href = '/battle.html?spawnId=' + encodeURIComponent(p.id); await sleep(4000);
+  return true;
+}
 async function main() {
   if (running) return;
   if (!on) { try { await switchChar(); } catch (e) { console.warn(TAG, 'персонаж', e); } return; }
@@ -2257,6 +2277,7 @@ async function main() {
       if (loginPage()) { await autoLogin(); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
       if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
+      if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
       if (cfg.tvtOn && await tvtStep()) { await sleep(200); continue; }
       // 9.2 (игрок 11.10: «Лист врагов»): убийцы героя — в лист; враг на локации — нападаем кнопкой игры (с проверкой сил), следим за возвращением
       L2V7Modules.enemies.tick().catch(() => {});
@@ -3255,6 +3276,7 @@ addEventListener('message', e => {
   logCooldownApi(d, path);
   const secret = /login|auth|register|passw|token|session|sign-?in|sign-?up|enter-game|account/i.test(path);   // v5.6: + вход/регистрация в других написаниях
   const key = `${d.method} ${path}`, body = secret ? '(скрыто)' : d.res != null ? JSON.stringify(d.res) : '';
+  if (path === '/game/battle/leave' && d.method === 'POST' && d.status >= 200 && d.status < 300 && !d.error && !d.res?.error) leaveOk(d.req?.battleSpawnId);
   if (path === '/game/battle/leave' && d.method === 'POST' && rt.epic?.step === 'retreatVerify') {
     const id = d.req?.battleSpawnId;
     if (id && id === rt.epic.id) try { sessionStorage.setItem('l2bot.epicLeave', JSON.stringify({ id, at: Date.now(), ok: !d.error && d.status >= 200 && d.status < 300 && !d.res?.error })); } catch (er) {}
@@ -3721,7 +3743,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },

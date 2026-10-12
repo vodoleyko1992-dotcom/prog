@@ -1115,8 +1115,10 @@ async function battle() {
           let hang = null; try { hang = JSON.parse(sessionStorage.getItem('l2bot.srvHang') || 'null'); } catch (e) {}
           const verdict = fl.kind === 'strong' && !(hang && Date.now() - (+hang.t || 0) < 60000) ? 'no' : 'skip';
           env.rec('B', 'РБ', `${ctx.name}: ⚠ ${fl.why} — ухожу из боя${manualRb ? ' (бой начат вами — смерть хуже, чем уйти)' : ''}${verdict === 'no' ? ', «не по силам» до нового уровня' : ', пропуск 30 мин'}`);
+          env.leaveMark?.(ctx.rb.id, ctx.name);
           env.fire(leave);
           if (await env.waitFor(() => !env.isBattle(), 8000, 150)) { await env.rbRetreat(ctx, mob, fl.why, verdict); return; }
+          env.leaveMark?.(null);
           await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
           env.rec('B', 'РБ', `${ctx.name}: выход не подтверждён — бьюсь дальше, повторный выход запрещён на 1 час`);
         } else if (!ctx.rb.fleeSaid) { ctx.rb.fleeSaid = 1; env.rec('B', 'РБ', `${ctx.name}: ⚠ ${fl.why}, но выйти нельзя (нет кнопки или выход не работал) — бьюсь до конца на банках`); }
@@ -1180,12 +1182,14 @@ async function battle() {
         if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
           ctx.rb.retreated = true;
           env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти (сервер должен подтвердить завершение боя)`);
+          env.leaveMark?.(ctx.rb.id, ctx.name);
           env.fire(leave);
           const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
           if (ended) {
             await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), probe ? 'skip' : undefined);
             return;
           }
+          env.leaveMark?.(null);
           await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
           env.rec('B', 'РБ', `${ctx.name}: выход не подтверждён, повторный выход запрещён на 1 час`);
         }
