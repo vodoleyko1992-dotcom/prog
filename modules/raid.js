@@ -654,11 +654,20 @@ async function rbOnePause(name) {
   return env.pauseBot(`🎯 По одному РБ: ${name ? name + ' убит' : 'РБ убит'} (${n}-й по команде) — жду команды: «🎯 Ещё один РБ» или «▶ Продолжить»`);
 }
 
+// 10.0.2 (лог 12.10 01:00): Rahha убит в 01:00:20, а пауза «по одному РБ» встала только в 01:00:39 — между ними сторож баффов
+// ядра (он раньше шага тура) купил набор за FA (−13 FA). Теперь ядро зовёт эту проверку первой: убит РБ по команде — сразу пауза,
+// без баффов, магазина и прочих сборов (итог боя пишет тот же rbHuntStep)
+async function rbOneStep() {
+  if (!rbOneHit()) return false;
+  await rbHuntStep();
+  return true;
+}
+
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
-  if (await rbSessTick()) return;                   // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм
   const H = env.rt.rbHunt || { step: 'pick' };
   if (rbOneHit() && H.step !== 'fight') return rbOnePause(H.name);   // 8.0.3: РБ убит по команде «один РБ» (и вне шага боя)
+  if (!rbOneHit() && await rbSessTick()) return;    // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм (10.0.2: не после «один РБ убит»)
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
     const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
     // 7.2.3: недобитый РБ (пауза/отход/магазин) — не «следующий»: rbListPick вернёт к нему первым
@@ -1092,6 +1101,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

@@ -34,6 +34,19 @@ const mk = rt => {
   { const { log, R } = mk({ rbKills: 30, rbHunt: { step: 'fight', id: 'y', name: 'Y' }, rbDb: { y: { kills: 3 } } });
     await R.rbHuntStep();
     assert.equal(log.pauses.length, 0, 'plain tour never pauses'); }
+  // 5. 10.0.2 (лог 12.10 01:00:20–01:00:39): Rahha убит, а до паузы сторож баффов успел купить набор за FA — rbOneStep ядро зовёт первым
+  { const { env, log, R } = mk({ rbKills: 2, rbOne: { on: true, k0: 1 }, rbHunt: { step: 'fight', id: 'l2dop_rb_25051', name: 'Rahha' }, rbDb: { l2dop_rb_25051: { kills: 1 } },
+      rbSess: { on: true, bought: true, until: Date.now() + 3600000 } });
+    let sess = 0; env.faFullIds = () => { sess++; return [1413]; };
+    assert.equal(await R.rbOneStep(), true, 'kill by command — handled');
+    assert.equal(log.pauses.length, 1); assert.match(log.pauses[0], /Rahha убит/);
+    assert.equal(sess, 0, 'RB session tick (FA buffs) is not run after the commanded kill');
+    assert.equal(await R.rbOneStep(), false, 'after the pause the next kill is counted from the new k0'); }
+  { const { log, R } = mk({ rbKills: 5, rbHunt: { step: 'fight', id: 'y', name: 'Y' } });
+    assert.equal(await R.rbOneStep(), false, 'plain tour — no-op'); assert.equal(log.pauses.length, 0); }
+  { const content = read('content.js'), i1 = content.indexOf('await L2V7Modules.raid.rbOneStep()'), i2 = content.indexOf("townBuffStart('сторож: баффы слетели')"),
+      i3 = content.indexOf('if (rt.shop && (!isBattle() || rt.shop.urgent)'), i4 = content.indexOf('if (rt.tbuff && !isBattle()');
+    assert.ok(i1 > 0 && i1 < i2 && i1 < i3 && i1 < i4, 'core: «one RB killed» pause comes before the buff watchdog, shop and town buff'); }
   // ядро: пауза = как кнопка «⏸ Пауза» (on:false + paused), геттер модуля есть
   const content = read('content.js');
   assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  on = false;\n  await chrome\.storage\.local\.set\(\{ on: false, paused: \{ t: Date\.now\(\), why:/);
