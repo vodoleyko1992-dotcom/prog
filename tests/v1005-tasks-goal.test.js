@@ -22,3 +22,12 @@ assert.match(content, /else if \(autonomyMode\(\) === 'tasks' && \(tasksGoalNote
 assert.match(content, /function tasksGoalNote\(g\) \{[\s\S]{0,400}снимите ✓/);
 assert.match(html, /на её точке бьёт мобов-источники/);
 console.log('PASS: 10.0.5 «Только задачи» — мобов бьёт только на точке цели фарма, на чужой точке ждёт перелёта, журнал называет цель и как её снять');
+// 4. игрок 12.10 15:54: «убери эту цель в встроенных настройках на будущее» — разовая миграция снимает Oriharukon Ore; умолчания и базовый профиль без цели
+const mig = content.match(/  once\('oriOff1005', \(\) => (\{[^\n]+\})\);/)[1];
+const runMig = farmRes => { const cf = {}, cfg = { farmRes, farmNeed: 500 }, C = k => (k in cf ? cf[k] : cfg[k]); vm.runInNewContext(`(${mig})()`.replace(/^\(\{/, '(() => {').replace(/\}\)\(\)$/, '})()'), { cf, C, Object, String }); return cf; };
+assert.deepEqual(runMig('Oriharukon Ore'), { farmRes: '', farmNeed: 0 });
+assert.deepEqual(runMig(' oriharukon ore '), { farmRes: '', farmNeed: 0 });
+assert.deepEqual(runMig('Mithril Ore'), {}, 'другую цель не трогаем');
+assert.match(content, /farmRes: '', farmNeed: 0,/, 'умолчание без цели');
+assert.equal(JSON.parse(read('base-profile.json')).cfg.farmRes, '', 'базовый профиль без цели');
+console.log('PASS: 10.0.5 цель фарма Oriharukon Ore снимается разово, в умолчаниях и базовом профиле цели нет');

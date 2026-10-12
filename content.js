@@ -4557,6 +4557,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // на 10–15 уровней дают EXP со штрафом и почти пустой дроп, а тур летал к ним за телепорт — окно вниз 9 уровней. Только заводские значения
   once('rebal100', () => { if (C('shopMp') === '20/100') cf.shopMp = '200/1000'; if (+C('rbMaxBelow') === 15) cf.rbMaxBelow = 9; });
   once('tsGoal100', () => { if (!+C('tsGoalItem')) cf.tsGoalItem = 920033; });   // 10.0 (игрок 12.10): цель магазина TvT по умолчанию — Тату Душі (+978 M.Atk, лучшее для ДПС), автопокупка выключена
+  once('oriOff1005', () => { if (/^oriharukon ore$/i.test(String(C('farmRes') || '').trim())) Object.assign(cf, { farmRes: '', farmNeed: 0 }); });   // 10.0.5 (игрок 12.10 15:54: «убери эту цель… на будущее»): цель фарма Oriharukon Ore снята; в базовом профиле и умолчаниях цели нет
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)
