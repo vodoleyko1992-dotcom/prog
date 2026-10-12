@@ -9,8 +9,8 @@
   "baseAdenaCost": 100000,
   "adenaCost": 100000,
   "vipFreeApplied": false,
-  "characterLevel": 60,
-  "minRaidBossLevel": 51,
+  "characterLevel": 64,
+  "minRaidBossLevel": 55,
   "bosses": [
    {
     "spawnId": "l2dop_rb_25309",
@@ -30,7 +30,7 @@
     "name": "Master Anays",
     "level": 87,
     "bossType": "raid",
-    "isAlive": true,
+    "isAlive": false,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,

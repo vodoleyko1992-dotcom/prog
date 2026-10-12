@@ -2,8 +2,8 @@
  "_path": "/game/fishing/state",
  "_status": 200,
  "data": {
-  "serverNowMs": 1791725369566,
-  "revision": 86381,
+  "serverNowMs": 1791774519762,
+  "revision": 104759,
   "learnedSkills": {
    "fishing": true,
    "pumping": true,
@@ -13,11 +13,11 @@
   "skillTotal": 3,
   "unlocked": true,
   "fishingTime": {
-   "remainingMs": 44461177,
-   "active": false,
-   "activeUntilMs": 0,
+   "remainingMs": 42323702,
+   "active": true,
+   "activeUntilMs": 1791774549504,
    "activeGraceMs": 30000,
-   "availableAdena": 66358189,
+   "availableAdena": 83074474,
    "canFish": true,
    "packages": [
     {
@@ -57,7 +57,7 @@
    "blockedReason": null
   },
   "training": {
-   "availableSp": 23007946,
+   "availableSp": 37860554,
    "learnedCount": 3,
    "totalCount": 3,
    "blockedReason": null,
@@ -89,7 +89,7 @@
    ]
   },
   "starterShop": {
-   "availableAdena": 66358189,
+   "availableAdena": 83074474,
    "offers": [
     {
      "key": "starter_rod",
@@ -726,56 +726,56 @@
    "itemId": 6519,
    "name": "Наживка",
    "icon": "/icons/fishing/bait_basic.png",
-   "quantity": 7432
+   "quantity": 7590
   },
   "basicBait": {
    "itemId": 6519,
    "name": "Наживка",
    "icon": "/icons/fishing/bait_basic.png",
-   "quantity": 7432,
+   "quantity": 7590,
    "selected": true
   },
   "goodBait": {
    "itemId": 910602,
    "name": "Якісна наживка",
    "icon": "/icons/fishing/bait_good.png",
-   "quantity": 342,
+   "quantity": 281,
    "selected": false
   },
   "fishingSoulshot": {
    "itemId": 910601,
    "name": "Рибальський заряд душі",
    "icon": "/icons/fishing/fishing_soulshot.png",
-   "quantity": 38321,
+   "quantity": 36113,
    "enabled": true
   },
   "target": {
    "type": "fish",
-   "itemId": 910603,
-   "name": "White Fish",
-   "icon": "/icons/fishing/fish_white.png",
-   "maxHp": 250,
-   "currentHp": 43,
-   "state": "resisting",
-   "stateHint": "Рыба сопротивляется — используй Reeling!"
+   "itemId": 910606,
+   "name": "Old Box",
+   "icon": "/icons/fishing/old_box.png",
+   "maxHp": 2000,
+   "currentHp": 1202,
+   "state": "calm",
+   "stateHint": "Рыба замерла — используй Pumping!"
   },
   "cooldowns": {
-   "pumpingUntil": 1791703064711,
-   "reelingUntil": 1791703065539,
+   "pumpingUntil": 1791774519453,
+   "reelingUntil": 1791774520204,
    "pumpingMs": 500,
    "reelingMs": 700
   },
   "logTail": [
    {
-    "text": "Reeling + Soulshot — 68 урона. Рыба: 43 / 250 HP.",
+    "text": "Reeling + Soulshot — 72 урона. Рыба: 1202 / 2000 HP.",
     "kind": "soulshot",
     "icon": "/icons/fishing/skill_reeling.png",
     "parts": [
      {
-      "text": "Reeling + Soulshot — 68 урона. Рыба: "
+      "text": "Reeling + Soulshot — 72 урона. Рыба: "
      },
      {
-      "text": "43 / 250 HP",
+      "text": "1202 / 2000 HP",
       "tone": "hp"
      },
      {
@@ -784,15 +784,15 @@
     ]
    },
    {
-    "text": "Pumping + Soulshot — 63 урона. Рыба: 111 / 250 HP.",
+    "text": "Pumping + Soulshot — 73 урона. Рыба: 1274 / 2000 HP.",
     "kind": "soulshot",
     "icon": "/icons/fishing/skill_pumping.png",
     "parts": [
      {
-      "text": "Pumping + Soulshot — 63 урона. Рыба: "
+      "text": "Pumping + Soulshot — 73 урона. Рыба: "
      },
      {
-      "text": "111 / 250 HP",
+      "text": "1274 / 2000 HP",
       "tone": "hp"
      },
      {
@@ -801,7 +801,109 @@
     ]
    },
    {
-    "text": "Reeling + Soulshot — 76 урона. Рыба: 174 / 250 HP.",
+    "text": "Pumping + Soulshot — 77 урона. Рыба: 1347 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "parts": [
+     {
+      "text": "Pumping + Soulshot — 77 урона. Рыба: "
+     },
+     {
+      "text": "1347 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Reeling + Soulshot — 65 урона. Рыба: 1424 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_reeling.png",
+    "parts": [
+     {
+      "text": "Reeling + Soulshot — 65 урона. Рыба: "
+     },
+     {
+      "text": "1424 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Pumping + Soulshot — 76 урона. Рыба: 1489 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "parts": [
+     {
+      "text": "Pumping + Soulshot — 76 урона. Рыба: "
+     },
+     {
+      "text": "1489 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Reeling + Soulshot — 77 урона. Рыба: 1565 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_reeling.png",
+    "parts": [
+     {
+      "text": "Reeling + Soulshot — 77 урона. Рыба: "
+     },
+     {
+      "text": "1565 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Pumping + Soulshot — 74 урона. Рыба: 1642 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "parts": [
+     {
+      "text": "Pumping + Soulshot — 74 урона. Рыба: "
+     },
+     {
+      "text": "1642 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Reeling + Soulshot — 73 урона. Рыба: 1716 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_reeling.png",
+    "parts": [
+     {
+      "text": "Reeling + Soulshot — 73 урона. Рыба: "
+     },
+     {
+      "text": "1716 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Reeling + Soulshot — 76 урона. Рыба: 1789 / 2000 HP.",
     "kind": "soulshot",
     "icon": "/icons/fishing/skill_reeling.png",
     "parts": [
@@ -809,7 +911,41 @@
       "text": "Reeling + Soulshot — 76 урона. Рыба: "
      },
      {
-      "text": "174 / 250 HP",
+      "text": "1789 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Pumping + Soulshot — 69 урона. Рыба: 1865 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "parts": [
+     {
+      "text": "Pumping + Soulshot — 69 урона. Рыба: "
+     },
+     {
+      "text": "1865 / 2000 HP",
+      "tone": "hp"
+     },
+     {
+      "text": "."
+     }
+    ]
+   },
+   {
+    "text": "Pumping + Soulshot — 66 урона. Рыба: 1934 / 2000 HP.",
+    "kind": "soulshot",
+    "icon": "/icons/fishing/skill_pumping.png",
+    "parts": [
+     {
+      "text": "Pumping + Soulshot — 66 урона. Рыба: "
+     },
+     {
+      "text": "1934 / 2000 HP",
       "tone": "hp"
      },
      {
@@ -847,92 +983,6 @@
    {
     "text": "Рыба больше не сопротивляется!",
     "kind": "resist_done"
-   },
-   {
-    "text": "Pumping + Soulshot — 74 урона. Рыба: 0 / 250 HP.",
-    "kind": "soulshot",
-    "icon": "/icons/fishing/skill_pumping.png",
-    "parts": [
-     {
-      "text": "Pumping + Soulshot — 74 урона. Рыба: "
-     },
-     {
-      "text": "0 / 250 HP",
-      "tone": "hp"
-     },
-     {
-      "text": "."
-     }
-    ]
-   },
-   {
-    "text": "Pumping + Soulshot — 74 урона. Рыба: 47 / 250 HP.",
-    "kind": "soulshot",
-    "icon": "/icons/fishing/skill_pumping.png",
-    "parts": [
-     {
-      "text": "Pumping + Soulshot — 74 урона. Рыба: "
-     },
-     {
-      "text": "47 / 250 HP",
-      "tone": "hp"
-     },
-     {
-      "text": "."
-     }
-    ]
-   },
-   {
-    "text": "Reeling + Soulshot — 63 урона. Рыба: 121 / 250 HP.",
-    "kind": "soulshot",
-    "icon": "/icons/fishing/skill_reeling.png",
-    "parts": [
-     {
-      "text": "Reeling + Soulshot — 63 урона. Рыба: "
-     },
-     {
-      "text": "121 / 250 HP",
-      "tone": "hp"
-     },
-     {
-      "text": "."
-     }
-    ]
-   },
-   {
-    "text": "Reeling + Soulshot — 66 урона. Рыба: 184 / 250 HP.",
-    "kind": "soulshot",
-    "icon": "/icons/fishing/skill_reeling.png",
-    "parts": [
-     {
-      "text": "Reeling + Soulshot — 66 урона. Рыба: "
-     },
-     {
-      "text": "184 / 250 HP",
-      "tone": "hp"
-     },
-     {
-      "text": "."
-     }
-    ]
-   },
-   {
-    "text": "Что-то клюнуло!",
-    "kind": "bite"
-   },
-   {
-    "text": "Вы забросили удочку...",
-    "kind": "cast",
-    "icon": "/icons/fishing/skill_fishing.png"
-   },
-   {
-    "text": "Рыба не клюнула.",
-    "kind": "no_bite"
-   },
-   {
-    "text": "Вы забросили удочку...",
-    "kind": "cast",
-    "icon": "/icons/fishing/skill_fishing.png"
    }
   ]
  }

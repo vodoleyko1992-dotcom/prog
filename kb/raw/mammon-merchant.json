@@ -8,20 +8,20 @@
    "nameUk": "Торговець Маммона",
    "iconUrl": "/mobs/247.png",
    "rotationMs": 14400000,
-   "rotatesAtMs": 1791734400000,
-   "slotIndex": 1,
+   "rotatesAtMs": 1791777600000,
+   "slotIndex": 4,
    "current": {
-    "id": "pilgrims_necropolis",
-    "labelEn": "The Pilgrim's Necropolis",
-    "labelUk": "Некрополь паломників",
-    "worldX": 45600,
-    "worldY": 126944,
-    "slotIndex": 1
+    "id": "necropolis_of_devotion",
+    "labelEn": "Necropolis of Devotion",
+    "labelUk": "Некрополь відданості",
+    "worldX": -56064,
+    "worldY": 78720,
+    "slotIndex": 4
    },
    "next": {
-    "id": "necropolis_of_worship",
-    "labelEn": "Necropolis of Worship",
-    "labelUk": "Некрополь поклоніння"
+    "id": "necropolis_of_martyrdom",
+    "labelEn": "Necropolis of Martyrdom",
+    "labelUk": "Некрополь мучеників"
    }
   },
   "teleport": {

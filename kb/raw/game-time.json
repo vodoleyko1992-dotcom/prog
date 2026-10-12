@@ -2,9 +2,9 @@
  "_path": "/game/time",
  "_status": 200,
  "data": {
-  "serverNowMs": 1791725225880,
+  "serverNowMs": 1791774520319,
   "timeZone": "Europe/Kyiv",
-  "gameDayKey": "20261011",
-  "nextDailyResetAt": 1791752400000
+  "gameDayKey": "20261012",
+  "nextDailyResetAt": 1791838800000
  }
 }

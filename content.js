@@ -470,7 +470,9 @@ const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 
   // 9.2 (игрок 11.10, скрин окна кота + лог 12.10 02:44:49 «Blessing of Queen застосовано до героя та активного слуги»): слот «Summon Feline Queen»
   // (l2_1331) на L2WAP больше не призывает королеву — это бафф кота Blessing of Queen. 9.2.2 (игрок 11.10 21:21, ответ админа): админ переделал
   // бафф — «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин (было +20 % крит-урона, 2 мин). Роль «Баффы кота», ставим всегда, как истёк
-  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 1200, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 20 мин · MP 87' } };
+  // 10.0 (данные игры 12.10: новость 11.10 «WARLOCK, СУММОНЫ И SPOIL», код игры l2-hud-companion.js «Blessing of Queen накладено на 2 хв.»):
+  // длительность снова 2 мин. Ставим, как истёк (лишний повтор стоит 87 MP — дешевле, чем 18 мин без +40 % урона кота)
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 2 мин · MP 87' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;

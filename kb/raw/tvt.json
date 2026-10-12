@@ -3,7 +3,7 @@
  "_status": 200,
  "data": {
   "phase": "IDLE",
-  "serverNow": 1791725370123,
+  "serverNow": 1791774537260,
   "eventId": null,
   "registrationEndsAt": null,
   "startsAt": null,
@@ -35,12 +35,12 @@
     "20:00"
    ],
    "next": {
-    "slotKey": "20261011:2000",
-    "registrationOpensAt": 1791737400000,
-    "preparationStartsAt": 1791737970000,
-    "battleStartsAt": 1791738000000,
-    "startGameTime": "20:00",
-    "registrationGameTime": "19:50"
+    "slotKey": "20261012:0800",
+    "registrationOpensAt": 1791780600000,
+    "preparationStartsAt": 1791781170000,
+    "battleStartsAt": 1791781200000,
+    "startGameTime": "08:00",
+    "registrationGameTime": "07:50"
    }
   }
  }

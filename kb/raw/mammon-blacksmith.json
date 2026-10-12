@@ -8,20 +8,20 @@
    "nameUk": "Коваль Маммона",
    "iconUrl": "/mobs/35.png",
    "rotationMs": 14400000,
-   "rotatesAtMs": 1791734400000,
-   "slotIndex": 3,
+   "rotatesAtMs": 1791777600000,
+   "slotIndex": 0,
    "current": {
-    "id": "catacomb_of_the_witch",
-    "labelEn": "Catacomb of the Witch",
-    "labelUk": "Катакомби відьми",
-    "worldX": 136672,
-    "worldY": 79328,
-    "slotIndex": 3
+    "id": "catacomb_of_the_heretic",
+    "labelEn": "Catacomb of the Heretic",
+    "labelUk": "Катакомби єретиків",
+    "worldX": 39232,
+    "worldY": 143568,
+    "slotIndex": 0
    },
    "next": {
-    "id": "catacomb_of_dark_omens",
-    "labelEn": "Catacomb of Dark Omens",
-    "labelUk": "Катакомби темних знамен"
+    "id": "catacomb_of_the_branded",
+    "labelEn": "Catacomb of the Branded",
+    "labelUk": "Катакомби клеймених"
    }
   },
   "teleport": {

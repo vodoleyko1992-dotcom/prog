@@ -3567,5 +3567,137 @@
   ],
   "usedByBot": false,
   "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/ashen-bastion/mobs?offset={+}&limit={+}",
+  "jsFiles": [
+   "ashen-bastion.js"
+  ],
+  "pages": [
+   "ashen-bastion.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/shop/sell/prices",
+  "jsFiles": [
+   "gm-shop-sell-nav.js",
+   "sell-items.js"
+  ],
+  "pages": [
+   "gm-shop.html",
+   "sell-items.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/game/shop/sell",
+  "jsFiles": [
+   "sell-items-bulk.js",
+   "sell-items.js"
+  ],
+  "pages": [
+   "sell-items.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/market/buy-orders",
+  "jsFiles": [
+   "market-sell-resources.js",
+   "market-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-sell-resources.html",
+   "market-sell-to-buy-order.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/buy-order/sell",
+  "jsFiles": [
+   "market-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-sell-to-buy-order.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/coin-of-luck/buy-order/sell",
+  "jsFiles": [
+   "market-coin-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-coin-sell-to-buy-order.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/game/premium/purchase-tier",
+  "jsFiles": [
+   "premium-confirm.js"
+  ],
+  "pages": [
+   "premium-confirm.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/skill-icon/{+}",
+  "jsFiles": [
+   "battle-active-view-renderer.js",
+   "battle-hotbar.js",
+   "tvt-arena-preview.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html",
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/noblesse",
+  "jsFiles": [
+   "map-profession-quest-markers.js",
+   "noblesse-quest.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html",
+   "noblesse-quest.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/subclass",
+  "jsFiles": [
+   "subclass-quest.js"
+  ],
+  "pages": [
+   "subclass-quest.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
  }
 ]

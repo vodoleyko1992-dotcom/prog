@@ -11,8 +11,8 @@
   "vipFreeApplied": false,
   "baseCoinOfLuckCost": 1,
   "coinOfLuckCost": 1,
-  "characterLevel": 60,
-  "minRaidBossLevel": 51,
+  "characterLevel": 64,
+  "minRaidBossLevel": 55,
   "bosses": [
    {
     "spawnId": "l2dop_rb_29001",
@@ -67,7 +67,7 @@
     "name": "Zaken",
     "level": 60,
     "bossType": "epic",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 0,
     "adenaCost": 0,
     "vipFreeApplied": false,

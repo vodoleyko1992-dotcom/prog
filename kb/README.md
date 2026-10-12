@@ -18,7 +18,7 @@
 ## Данные (`data/`)
 
 - Из кода и профиля (`tools/build_all.py` пересобирает): `mobs`, `zones`, `raidbosses`, `skills`, `items`, `farm`, `fishing`, `character`, `api`, `selectors`.
-- Из живой игры: `game-mobs` (400 записей, 360 видов: HP, атака/защита, EXP, SP, адена, дроп, спойл), `game-zones`, `game-teleports` (90 точек с ценой и уровнями мобов), `game-raid-bosses` (197 РБ с характеристиками и дропом), `game-epics`, `game-shop-drops`, `game-other-shops`, `game-buffer`, `game-items`, `game-fishing`, `game-skills-warlock`, `game-farm-guide` (база фарма форума), `game-recipes`, `game-endpoints` (275 путей фронтенда игры), `game-enchant` (свитки заточки, шансы, бонусы за уровень, пороги), `game-mammon-upgrades` (бонусы Lv.0–5 у 23 улучшаемых плащей, поясов, тату и крыльев).
+- Из живой игры: `game-mobs` (400 записей, 360 видов: HP, атака/защита, EXP, SP, адена, дроп, спойл), `game-zones`, `game-teleports` (91 точка с ценой и уровнями мобов; 12.10 — Ashen Bastion), `game-raid-bosses` (197 РБ с характеристиками и дропом), `game-epics`, `game-shop-drops`, `game-other-shops`, `game-buffer`, `game-items`, `game-fishing`, `game-skills-warlock`, `game-farm-guide` (база фарма форума), `game-recipes`, `game-endpoints` (285 путей фронтенда игры, обновлено 12.10), `game-enchant` (свитки заточки, шансы, бонусы за уровень, пороги), `game-mammon-upgrades` (бонусы Lv.0–5 у 23 улучшаемых плащей, поясов, тату и крыльев).
 - Из истории логов: `history-epics`, `history-rb`, `history-zones`, `history-fishing`, `history-buffs`, `history-skills`, `history-timeline`.
 - `raw/` — сырые ответы сервера (токены, логин, почта, IP вырезаны).
 

@@ -2,32 +2,32 @@
  "_path": "/game/brave-hunter",
  "_status": 200,
  "data": {
-  "phase": "break",
-  "weekKey": "2026-10-05",
-  "startsAt": "2026-10-04T21:00:00.000Z",
-  "endsAt": "2026-10-10T21:00:00.000Z",
-  "nextPhaseAt": "2026-10-11T21:00:00.000Z",
-  "score": 745,
-  "rank": 5,
-  "totalParticipants": 45,
+  "phase": "collection",
+  "weekKey": "2026-10-12",
+  "startsAt": "2026-10-11T21:00:00.000Z",
+  "endsAt": "2026-10-17T21:00:00.000Z",
+  "nextPhaseAt": "2026-10-17T21:00:00.000Z",
+  "score": 269,
+  "rank": 2,
+  "totalParticipants": 8,
   "top": [
    {
     "rank": 1,
-    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
-    "name": "tms",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+    "name": "Dremia",
+    "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
+    "clanEmblemId": 76,
     "nickColor": "#ffdf8c",
-    "score": 2480
+    "score": 394
    },
    {
     "rank": 2,
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "name": "Teddy",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
     "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
-    "score": 2315
+    "score": 269
    },
    {
     "rank": 3,
@@ -36,70 +36,52 @@
     "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
     "clanEmblemId": 25,
     "nickColor": "#8A2BE2",
-    "score": 2311
+    "score": 199
    },
    {
     "rank": 4,
-    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
-    "name": "ErGe",
-    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
-    "clanEmblemId": 38,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
-    "score": 2142
+    "score": 16
    },
    {
     "rank": 5,
-    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
-    "name": "Warlock",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "characterId": "73c6d075-661a-4c70-9573-18e512d0b924",
+    "name": "WestSPOIL",
+    "clanId": null,
+    "clanEmblemId": null,
     "nickColor": "#ffdf8c",
-    "score": 745
+    "score": 11
    },
    {
     "rank": 6,
-    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
-    "name": "Freed0m",
-    "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
-    "clanEmblemId": 25,
+    "characterId": "daef3c04-3120-4f56-8415-5a5e0b8802cb",
+    "name": "Junior",
+    "clanId": null,
+    "clanEmblemId": null,
     "nickColor": "#ffdf8c",
-    "score": 640
+    "score": 10
    },
    {
     "rank": 7,
-    "characterId": "f949c929-8a49-46c6-8dbb-16e46a7b772d",
-    "name": "West",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
-    "nickColor": "#ffdf8c",
-    "score": 607
-   },
-   {
-    "rank": 8,
-    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
-    "name": "Dremia",
+    "characterId": "de246ad5-640d-4d04-9a51-6097938b4ba0",
+    "name": "Kraft",
     "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
     "clanEmblemId": 76,
     "nickColor": "#ffdf8c",
-    "score": 574
+    "score": 7
    },
    {
-    "rank": 9,
-    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
-    "name": "УМиРАЙ",
-    "clanId": "164085e1-0bdd-42a5-a1ce-23f21f93d318",
-    "clanEmblemId": 44,
+    "rank": 8,
+    "characterId": "a814f82f-6115-4788-9005-94ec5430b014",
+    "name": "Cawak",
+    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
+    "clanEmblemId": 38,
     "nickColor": "#ffdf8c",
-    "score": 525
-   },
-   {
-    "rank": 10,
-    "characterId": "344b1832-4672-4a7e-a1e0-40a2f6a33be4",
-    "name": "luk",
-    "clanId": "349c6602-4fe7-4966-b930-d7045d2daa33",
-    "clanEmblemId": 5,
-    "nickColor": "#ffdf8c",
-    "score": 210
+    "score": 2
    }
   ],
   "rewards": [

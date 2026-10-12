@@ -3,27 +3,27 @@
  "_status": 200,
  "data": {
   "request": {
-   "requestId": "94cbebe2-1dee-446e-a8b6-a4d92da31352",
-   "slotIndex": "248850",
+   "requestId": "f24e74a7-fc96-4c86-960f-87e7305e9ceb",
+   "slotIndex": "248857",
    "status": "CLAIMED",
-   "resourceItemId": 1873,
-   "resourceNameEn": "Silver Nugget",
-   "resourceIconUrl": "/icons/resources/basic/silver_nugget.jpg",
+   "resourceItemId": 1865,
+   "resourceNameEn": "Varnish",
+   "resourceIconUrl": "/icons/resources/basic/varnish.jpg",
    "resourceColor": "resource",
-   "quantity": 33,
+   "quantity": 68,
    "reward": {
     "coinOfLuck": 1,
     "adena": 1500000
    },
-   "expiresAt": "2026-10-11T14:00:00.000Z",
-   "winnerName": "tms",
+   "expiresAt": "2026-10-12T04:00:00.000Z",
+   "winnerName": "Warlock",
    "winner": {
-    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
-    "name": "tms",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
     "nickColor": "#ffdf8c",
     "nameStyle": "STANDARD"
    },
-   "playerHaveQty": 2371
+   "playerHaveQty": 3022
   }
  }
 }

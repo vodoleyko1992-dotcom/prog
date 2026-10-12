@@ -58928,5 +58928,924 @@
     }
    ]
   }
- ]
+ ],
+ "ashenBastion": {
+  "_note": "12.10: новая PvE-зона 85 ур. без карты (/ashen-bastion.html, 200 мобов ashen_bastion_mob_001…200, 6 видов). Цифры — /game/spawn/<id>/info (выборка 26 spawnId). Список /game/ashen-bastion/mobs отдаёт 403 not_in_ashen_bastion, пока герой не там. Отдельно от mobs: в zone-db.js не попадает (тест v90-autofarm ждёт 90 точек и HP = 180 + 48·ур.).",
+  "mobs": [
+   {
+    "name": "Ashen Guardian",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_0",
+    "stats": {
+     "maxHp": 259784,
+     "pAtk": 11299,
+     "pDef": 9096,
+     "mAtk": 9347,
+     "mDef": 12210
+    },
+    "exp": 65598,
+    "sp": 2550,
+    "expPerHp": 0.253,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_049",
+     "ashen_bastion_mob_057",
+     "ashen_bastion_mob_153",
+     "ashen_bastion_mob_193"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   },
+   {
+    "name": "Dark Reaper",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_1",
+    "stats": {
+     "maxHp": 267416,
+     "pAtk": 10996,
+     "pDef": 8580,
+     "mAtk": 8707,
+     "mDef": 11342
+    },
+    "exp": 54349,
+    "sp": 2550,
+    "expPerHp": 0.203,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_001",
+     "ashen_bastion_mob_033",
+     "ashen_bastion_mob_073",
+     "ashen_bastion_mob_113",
+     "ashen_bastion_mob_121",
+     "ashen_bastion_mob_145",
+     "ashen_bastion_mob_169",
+     "ashen_bastion_mob_200"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   },
+   {
+    "name": "Infernal Knight",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_2",
+    "stats": {
+     "maxHp": 390278,
+     "pAtk": 9258,
+     "pDef": 9096,
+     "mAtk": 12646,
+     "mDef": 11399
+    },
+    "exp": 54719,
+    "sp": 2550,
+    "expPerHp": 0.14,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_017",
+     "ashen_bastion_mob_025",
+     "ashen_bastion_mob_137",
+     "ashen_bastion_mob_185"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   },
+   {
+    "name": "Cursed Warlock",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_3",
+    "stats": {
+     "maxHp": 390268,
+     "pAtk": 11167,
+     "pDef": 8308,
+     "mAtk": 12647,
+     "mDef": 11426
+    },
+    "exp": 54403,
+    "sp": 2550,
+    "expPerHp": 0.139,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_065",
+     "ashen_bastion_mob_105",
+     "ashen_bastion_mob_129"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   },
+   {
+    "name": "Abyss Walker",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_4",
+    "stats": {
+     "maxHp": 258718,
+     "pAtk": 10864,
+     "pDef": 8523,
+     "mAtk": 8513,
+     "mDef": 11287
+    },
+    "exp": 54971,
+    "sp": 2550,
+    "expPerHp": 0.212,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_009",
+     "ashen_bastion_mob_041",
+     "ashen_bastion_mob_081",
+     "ashen_bastion_mob_097"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   },
+   {
+    "name": "Doom Bringer",
+    "level": 85,
+    "champion": false,
+    "npcId": null,
+    "templateId": "ashen_bastion_mob_template_5",
+    "stats": {
+     "maxHp": 407600,
+     "pAtk": 9060,
+     "pDef": 8251,
+     "mAtk": 12256,
+     "mDef": 11370
+    },
+    "exp": 55035,
+    "sp": 2550,
+    "expPerHp": 0.135,
+    "adena": [
+     28665,
+     34888,
+     0.4
+    ],
+    "drops": [
+     {
+      "item": "Fast Aden",
+      "itemId": 920048,
+      "kind": "other",
+      "chance": 0.05,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Oriharukon Ore",
+      "itemId": 1874,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Stone of Purity",
+      "itemId": 1875,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Ore",
+      "itemId": 1876,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Adamantite Nugget",
+      "itemId": 1877,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Varnish of Purity",
+      "itemId": 1887,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Mithril Alloy",
+      "itemId": 1890,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Enria",
+      "itemId": 4042,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Asofe",
+      "itemId": 4043,
+      "kind": "resource",
+      "chance": 0.03125,
+      "min": 2,
+      "max": 5
+     },
+     {
+      "item": "Large HP Potion",
+      "itemId": 920044,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large MP Potion",
+      "itemId": 920045,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Large CP Potion",
+      "itemId": 920046,
+      "kind": "other",
+      "chance": 0.03333333333333333,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення броні S-grade",
+      "itemId": 910518,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     },
+     {
+      "item": "Сувій заточення зброї S-grade",
+      "itemId": 910519,
+      "kind": "other",
+      "chance": 0.035,
+      "min": 1,
+      "max": 1
+     }
+    ],
+    "spoil": [],
+    "kinds": [
+     "neutral"
+    ],
+    "spawnIdsSample": [
+     "ashen_bastion_mob_089",
+     "ashen_bastion_mob_161",
+     "ashen_bastion_mob_177"
+    ],
+    "locations": [
+     {
+      "loc": "Ashen Bastion",
+      "tp": "ashen_bastion"
+     }
+    ]
+   }
+  ]
+ }
 }

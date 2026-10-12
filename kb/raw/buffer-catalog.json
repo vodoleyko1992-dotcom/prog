@@ -532,10 +532,11 @@
      },
      {
       "skillId": 1323,
+      "iconSkillId": 1323,
       "nameUk": "Noblesse Blessing",
       "level": 1,
       "durationSec": 86400,
-      "descriptionUk": "Зберігає активні бафи після однієї смерті"
+      "descriptionUk": "Зберігає активні бафи після смерті. Після смерті Noblesse Blessing зникає."
      }
     ]
    }

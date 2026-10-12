@@ -2,10 +2,10 @@
  "_path": "/game/siege/schedule",
  "_status": 200,
  "data": {
-  "serverNowMs": 1791725378402,
+  "serverNowMs": 1791774532767,
   "timeZone": "Europe/Kyiv",
-  "gameDayKey": "20261011",
-  "nextDailyResetAt": 1791752400000,
+  "gameDayKey": "20261012",
+  "nextDailyResetAt": 1791838800000,
   "durationMinutes": 20,
   "activeCityId": null,
   "nextCityId": "l2dop_oren",

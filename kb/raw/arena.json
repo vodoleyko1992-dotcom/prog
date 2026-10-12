@@ -5,7 +5,7 @@
   "me": {
    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
    "name": "Warlock",
-   "level": 60,
+   "level": 64,
    "nicknameColor": null,
    "wins": 0,
    "losses": 0
@@ -18,7 +18,7 @@
     {
      "characterId": "1a675899-686b-4303-8970-89d10c67090e",
      "name": "Existence",
-     "level": 40,
+     "level": 80,
      "nicknameColor": null,
      "wins": 22,
      "losses": 9
@@ -108,7 +108,7 @@
     {
      "characterId": "1a675899-686b-4303-8970-89d10c67090e",
      "name": "Existence",
-     "level": 40,
+     "level": 80,
      "nicknameColor": null,
      "wins": 22,
      "losses": 9

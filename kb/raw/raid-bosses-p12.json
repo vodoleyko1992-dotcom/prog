@@ -9,8 +9,8 @@
   "baseAdenaCost": 100000,
   "adenaCost": 100000,
   "vipFreeApplied": false,
-  "characterLevel": 60,
-  "minRaidBossLevel": 51,
+  "characterLevel": 64,
+  "minRaidBossLevel": 55,
   "bosses": [
    {
     "spawnId": "l2dop_rb_25296",
@@ -82,7 +82,7 @@
     "name": "Kernon",
     "level": 75,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
@@ -173,7 +173,7 @@
     "name": "Fire of Wrath Shuriel",
     "level": 78,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,

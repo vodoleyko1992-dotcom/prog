@@ -1,0 +1,9 @@
+{
+ "_path": "/game/ashen-bastion/mobs?offset=0&limit=25",
+ "_status": 403,
+ "data": {
+  "error": "not_in_ashen_bastion",
+  "messageUk": "Спочатку телепортуйся до Ashen Bastion.",
+  "messageRu": "Сначала телепортуйся до Ashen Bastion."
+ }
+}

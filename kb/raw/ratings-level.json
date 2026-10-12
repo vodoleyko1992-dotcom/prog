@@ -8,6 +8,19 @@
   "rows": [
    {
     "rank": 1,
+    "characterId": "1a675899-686b-4303-8970-89d10c67090e",
+    "name": "Existence",
+    "professionUk": "Arcana Lord",
+    "level": 80,
+    "value": "80",
+    "clanId": "587c88fb-232d-424e-a15a-8db58a059f60",
+    "clanName": "Test",
+    "clanEmblemId": 29,
+    "nickColor": "#33CC66",
+    "vipActive": true
+   },
+   {
+    "rank": 2,
     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
     "name": "Teddy",
     "professionUk": "Titan",
@@ -15,12 +28,12 @@
     "value": "79",
     "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
     "clanName": "BlackLotus",
-    "clanEmblemId": 32,
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
     "vipActive": true
    },
    {
-    "rank": 2,
+    "rank": 3,
     "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
     "name": "tms",
     "professionUk": "Storm Screamer",
@@ -28,12 +41,12 @@
     "value": "78",
     "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
     "clanName": "BlackLotus",
-    "clanEmblemId": 32,
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
     "vipActive": true
    },
    {
-    "rank": 3,
+    "rank": 4,
     "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
     "name": "Freed0m",
     "professionUk": "Titan",
@@ -46,7 +59,7 @@
     "vipActive": true
    },
    {
-    "rank": 4,
+    "rank": 5,
     "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
     "name": "★_3oJloTo_★",
     "professionUk": "Destroyer",
@@ -59,20 +72,20 @@
     "vipActive": true
    },
    {
-    "rank": 5,
+    "rank": 6,
     "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
     "name": "Dremia",
-    "professionUk": "Spellhowler",
-    "level": 66,
-    "value": "66",
+    "professionUk": "Storm Screamer",
+    "level": 76,
+    "value": "76",
     "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
     "clanName": "AZOV-STAL",
     "clanEmblemId": 76,
     "nickColor": "#ffdf8c",
-    "vipActive": false
+    "vipActive": true
    },
    {
-    "rank": 6,
+    "rank": 7,
     "characterId": "3681aef0-16db-4fd6-a00b-f4fae0c35396",
     "name": "Щрщрщ",
     "professionUk": "Bishop",
@@ -85,7 +98,7 @@
     "vipActive": false
    },
    {
-    "rank": 7,
+    "rank": 8,
     "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
     "name": "УМиРАЙ",
     "professionUk": "Destroyer",
@@ -98,7 +111,20 @@
     "vipActive": false
    },
    {
-    "rank": 8,
+    "rank": 9,
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
+    "professionUk": "Warlock",
+    "level": 64,
+    "value": "64",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanName": "BlackLotus",
+    "clanEmblemId": 37,
+    "nickColor": "#ffdf8c",
+    "vipActive": false
+   },
+   {
+    "rank": 10,
     "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
     "name": "ErGe",
     "professionUk": "Spellhowler",
@@ -107,32 +133,6 @@
     "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
     "clanName": "IMPERIAL",
     "clanEmblemId": 38,
-    "nickColor": "#ffdf8c",
-    "vipActive": false
-   },
-   {
-    "rank": 9,
-    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
-    "name": "Warlock",
-    "professionUk": "Warlock",
-    "level": 60,
-    "value": "60",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanName": "BlackLotus",
-    "clanEmblemId": 32,
-    "nickColor": "#ffdf8c",
-    "vipActive": false
-   },
-   {
-    "rank": 10,
-    "characterId": "f949c929-8a49-46c6-8dbb-16e46a7b772d",
-    "name": "West",
-    "professionUk": "Tyrant",
-    "level": 57,
-    "value": "57",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanName": "BlackLotus",
-    "clanEmblemId": 32,
     "nickColor": "#ffdf8c",
     "vipActive": false
    }

@@ -4,6 +4,36 @@
  "data": {
   "listings": [
    {
+    "id": "937be5dd-0914-4bf5-8751-ac3bb7b21c60",
+    "sellerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "sellerName": "Freed0m",
+    "sellerNickColor": "#ffdf8c",
+    "itemId": 6365,
+    "qty": 1,
+    "enchant": 0,
+    "enchantPAtkBonus": 0,
+    "enchantMAtkBonus": 0,
+    "specialGearLevel": 0,
+    "priceAdena": "0",
+    "priceCoinOfLuck": 70,
+    "createdAt": "2026-10-11T14:01:47.321Z"
+   },
+   {
+    "id": "3db0cdfd-1d3d-42c0-9371-be65f5765292",
+    "sellerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "sellerName": "Freed0m",
+    "sellerNickColor": "#ffdf8c",
+    "itemId": 6368,
+    "qty": 1,
+    "enchant": 0,
+    "enchantPAtkBonus": 0,
+    "enchantMAtkBonus": 0,
+    "specialGearLevel": 0,
+    "priceAdena": "0",
+    "priceCoinOfLuck": 70,
+    "createdAt": "2026-10-11T14:01:27.764Z"
+   },
+   {
     "id": "2b47e5fe-a257-4991-9b5a-155d57937c31",
     "sellerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
     "sellerName": "Freed0m",
@@ -362,51 +392,6 @@
     "priceAdena": "0",
     "priceCoinOfLuck": 100,
     "createdAt": "2026-10-10T19:31:03.130Z"
-   },
-   {
-    "id": "9521060d-413a-43ac-b4df-b7780e42b2b4",
-    "sellerCharacterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "sellerName": "Teddy",
-    "sellerNickColor": "#ffdf8c",
-    "itemId": 164,
-    "qty": 1,
-    "enchant": 0,
-    "enchantPAtkBonus": 0,
-    "enchantMAtkBonus": 0,
-    "specialGearLevel": 0,
-    "priceAdena": "0",
-    "priceCoinOfLuck": 55,
-    "createdAt": "2026-10-07T21:46:48.174Z"
-   },
-   {
-    "id": "945853cb-b3bb-44bc-b0aa-1721aab42106",
-    "sellerCharacterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "sellerName": "Teddy",
-    "sellerNickColor": "#ffdf8c",
-    "itemId": 6579,
-    "qty": 1,
-    "enchant": 0,
-    "enchantPAtkBonus": 0,
-    "enchantMAtkBonus": 0,
-    "specialGearLevel": 0,
-    "priceAdena": "0",
-    "priceCoinOfLuck": 70,
-    "createdAt": "2026-10-07T21:46:32.938Z"
-   },
-   {
-    "id": "527261cd-30c0-476c-8ec8-e3bc8dff4310",
-    "sellerCharacterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "sellerName": "Teddy",
-    "sellerNickColor": "#ffdf8c",
-    "itemId": 78,
-    "qty": 1,
-    "enchant": 0,
-    "enchantPAtkBonus": 0,
-    "enchantMAtkBonus": 0,
-    "specialGearLevel": 0,
-    "priceAdena": "0",
-    "priceCoinOfLuck": 25,
-    "createdAt": "2026-10-07T21:45:19.085Z"
    }
   ]
  }

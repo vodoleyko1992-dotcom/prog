@@ -8,8 +8,8 @@
    "professionLabelRu": "Warlock",
    "passiveBonusesTitleUk": "Пасивні бонуси",
    "passiveBonusesTitleRu": "Пассивные бонусы",
-   "soulshotSpiritshotLineUk": "P.Atk 693, M.Atk 8256",
-   "soulshotSpiritshotLineRu": "P.Atk 693, M.Atk 8256",
+   "soulshotSpiritshotLineUk": "P.Atk 1074, M.Atk 14895",
+   "soulshotSpiritshotLineRu": "P.Atk 1074, M.Atk 14895",
    "clanBonusLinesUk": [
     "Досвід +2%",
     "Adena +3%",
@@ -33,67 +33,75 @@
    "passiveWeaponRows": [
     {
      "labelUk": "Книги",
-     "valueUk": "+ 66.8 M.Atk"
+     "valueUk": "+ 77.4 M.Atk"
     }
    ],
    "armorBonusesTitleUk": "Бонуси від екіпіровки",
    "armorBonusRows": [
     {
      "labelUk": "P.Atk",
-     "valueUk": "+ 685"
+     "valueUk": "+ 1066"
     },
     {
      "labelUk": "M.Atk",
-     "valueUk": "+ 2644"
+     "valueUk": "+ 4839"
     },
     {
      "labelUk": "P.Def",
-     "valueUk": "+ 725"
+     "valueUk": "+ 1222"
     },
     {
      "labelUk": "M.Def",
-     "valueUk": "+ 752"
+     "valueUk": "+ 1194"
     },
     {
      "labelUk": "Макс. HP",
-     "valueUk": "+ 1806"
+     "valueUk": "+ 2523"
     },
     {
      "labelUk": "Макс. CP",
-     "valueUk": "+ 1295"
+     "valueUk": "+ 1895"
+    },
+    {
+     "labelUk": "Фіз. шкода скілів",
+     "valueUk": "+ 6%"
+    },
+    {
+     "labelUk": "Маг. шкода скілів",
+     "valueUk": "+ 6%"
     },
     {
      "labelUk": "Швидкість бігу",
-     "valueUk": "+ 24"
+     "valueUk": "+ 32"
     }
    ],
    "armorSetLinesUk": [
-    "Poison Resistance +60%",
-    "Bleed Resistance +60%",
+    "MP Recovery Bonus +8%",
     "Max HP +3%",
-    "Max HP +950",
-    "Max MP +13%",
-    "Max MP +1250",
-    "P.Def +7%",
-    "Max CP +1295",
-    "Speed +11",
-    "M.Atk +12%",
-    "Casting Speed +10%",
-    "Magic Critical Damage +9%"
+    "Max HP +1400",
+    "Max MP +16%",
+    "Max MP +1850",
+    "P.Def +9%",
+    "Max CP +1895",
+    "Speed +15",
+    "M.Atk +15%",
+    "Casting Speed +12%",
+    "Magic Critical Damage +11%",
+    "Stun Resistance +50%"
    ],
    "armorSetLinesRu": [
-    "Poison Resistance +60%",
-    "Bleed Resistance +60%",
+    "MP Recovery Bonus +8%",
     "Max HP +3%",
-    "Max HP +950",
-    "Max MP +13%",
-    "Max MP +1250",
-    "P.Def +7%",
-    "Max CP +1295",
-    "Speed +11",
-    "M.Atk +12%",
-    "Casting Speed +10%",
-    "Magic Critical Damage +9%"
+    "Max HP +1400",
+    "Max MP +16%",
+    "Max MP +1850",
+    "P.Def +9%",
+    "Max CP +1895",
+    "Speed +15",
+    "M.Atk +15%",
+    "Casting Speed +12%",
+    "Magic Critical Damage +11%",
+    "Stun Resistance +50%"
    ],
    "raceBranchLabelRu": "Человек (маг)",
    "passiveSkillsTitleRu": "Пассивные навыки",
