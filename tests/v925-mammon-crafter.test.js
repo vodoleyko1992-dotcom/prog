@@ -64,7 +64,7 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     const P = M.goalAll(); assert.equal(P.snd.length, 0); assert.equal(P.cmiss, 0); assert.ok(P.raw.every(r => r.miss === 0), 'nothing to farm'); }
   // 4. поход: страница передачи — строка, количество и ник, «Надіслати», в окне наш крафтер и количество → «Підтвердити»
   { const T = transferPage();
-    const { env, M, recs } = mk({ inv: INV, pn: '/item-transfer.html', doc: T.doc, click: T.click });
+    const { env, M, recs } = mk({ inv: INV, pn: '/item-transfer.html', doc: T.doc, click: T.click, cfg: { mmCraftNote: false } });   // письмо крафтеру — v1002-crafter-note
     const w = M.craftWant(); env.rt.mmJob = { ...w, step: 'act', t: Date.now() };
     env.rt.mmJob.items = [[1869, 15, 'Iron Ore']];
     await M.sendStep(env.rt.mmJob);
@@ -135,8 +135,8 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   // 9. меню, настройки, ядро
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   for (const id of ['mmCrafter', 'mmCraftScope', 'mmCraftSend', 'mmMailClaim', 'mmCraftBox', 'mmCraftGo', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
-  assert.match(pj, /const TXT {2}= \['mmCrafter', 'mmCraftScope',/); assert.match(pj, /'mmCraftSend', 'mmMailClaim'/);
-  assert.match(pj, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmMailClaim: true/); assert.match(c, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmMailClaim: true/);
+  assert.match(pj, /const TXT {2}= \['mmCrafter', 'mmCraftScope',/); assert.match(pj, /'mmCraftSend', ('mmCraftNote', )?'mmMailClaim'/);
+  assert.match(pj, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/); assert.match(c, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/);
   assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.match(c, /async function invRefresh\(\)[\s\S]{0,400}inventory\?\.stacks/);
   assert.match(c, /item-transfer\/claim' && d\.status === 200\) \{ L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\); \}/);
   console.log('PASS: 9.2.5 crafter — raw for crafting sent to Skye by «Передача предмета» (full set, one batch, recipient/qty checked in the confirm window, no double send), returns from mail written off by recipe, mail items claimed, bag checked by GET /character');

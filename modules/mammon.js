@@ -32,7 +32,7 @@ const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e
 let pollT = ssNum('l2bot-mmPollT'), npcT = ssNum('l2bot-mmNpcT');
 // 9.2.5 (игрок 12.10: «ник кланового крафтера Skye — отправлять ему ресурсы для очередного / всех повышений вещи у Маммона, а он вернёт
 // улучшенные ресурсы почтой; учитывать ресурсы, полученные по почте, и проверять, что в рюкзаке по факту»): почта и сумка
-const MAIL_POLL = 10 * 60000, INV_EVERY = 5 * 60000, SEND_MAX = 8 * 60000, CLAIM_MAX = 30, PAGE_TR = '/item-transfer.html', PAGE_MAIL = '/mail.html';
+const MAIL_POLL = 10 * 60000, INV_EVERY = 5 * 60000, SEND_MAX = 8 * 60000, CLAIM_MAX = 30, PAGE_TR = '/item-transfer.html', PAGE_MAIL = '/mail.html', PAGE_MC = '/mail-compose.html', NOTE_MAX = 990;
 let mailT = ssNum('l2bot-mmMailT'), invT = ssNum('l2bot-mmInvT');
 const crafter = () => String(env.cfg.mmCrafter ?? 'Skye').trim();
 const atC = () => env.rt.mmCraft?.at || {};      // что лежит у крафтера: отправили, он ещё не вернул (сырьё и промежуточное)
@@ -331,7 +331,7 @@ async function finish(J, ok, why) {
     const pn = J.pendJob ? (env.rt.mmCraft.pendN || 0) + 1 : 0;   // досылка не прошла 3 раза — бросаем (в журнал), дальше кнопками
     const pend = !ok && ((J.done || []).length || J.pendJob) && (J.items || []).length && pn < 3 ? J.items : null;
     if (!ok && J.pendJob && !pend) env.rec('B', 'Маммон', `остаток партии крафтеру не ушёл 3 раза — бросаю: ${J.items.map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}`);
-    if (pend || env.rt.mmCraft.pend) extra.mmCraft = { ...env.rt.mmCraft, pend, pendN: pend ? pn : 0 };
+    if (pend || env.rt.mmCraft.pend) extra.mmCraft = { ...env.rt.mmCraft, pend, pendN: pend ? pn : 0, pendNote: pend && J.note ? { ...J.note, prev: [...(J.note.prev || []), ...(J.done || []).map(x => [x[0], x[1]])] } : null };
   }
   await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}),
     ...(J.kind === 'send' ? { mmSendT: ok ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
@@ -462,7 +462,7 @@ function craftWant(now = Date.now()) {
   // 10.0 (аудит): партия ушла не вся (строки нет, форма не открылась) — досылаем остаток, иначе у крафтера неполный набор и автоотправка стоит навсегда
   const pend = env.rt.mmCraft?.pend;
   if (!cmd && pend?.length && env.cfg.mmCraftSend !== false && now - (env.rt.mmSendT || 0) >= UP_RETRY)
-    return { kind: 'send', cmd: false, pendJob: true, to, items: pend, ret: {}, retDone: true, why: `досылаю остаток партии: ${pend.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
+    return { kind: 'send', cmd: false, pendJob: true, to, items: pend, ret: {}, retDone: true, note: env.cfg.mmCraftNote !== false ? env.rt.mmCraft?.pendNote || null : null, why: `досылаю остаток партии: ${pend.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
   // у крафтера лежит отправленное > 48 ч и ничего не вернулось — пишем в журнал раз в сутки (вдруг он не получил)
   if (!cmd && Object.values(atC()).some(v => v > 0) && now - (env.rt.mmCraft?.gotT || env.rt.mmCraft?.t || now) > 48 * 3600000 && now - (env.rt.mmCraftWarnT || 0) > 86400000) {
     env.setRt({ mmCraftWarnT: now }); env.rec('B', 'Маммон', `${to}: отправленное лежит у крафтера больше 48 ч — проверь почту «Відправлені» или нажми «↺ Забыть, что у крафтера»`);
@@ -484,7 +484,7 @@ function craftWant(now = Date.now()) {
   // 10.0 (лог 12.10 17:27–17:37): пояс Lv.1 → 5 — Steel на Lv.3–4 оценён по Lv.0, а кузнец на Lv.3 попросил Durable Metal Plate → вторая партия
   const eL = P.lv.find(x => x.est || x.unk);
   const n = P.to - P.lvl, scope = n > 1 ? `${P.name} Lv.${P.lvl} → ${P.to} (недостающие ${n} ур.)` : `${P.name} Lv.${P.lvl} → ${P.lvl + 1}`;
-  return { kind: 'send', cmd, to, items: items.map(x => [x.id, x.q, x.nm]), ret: P.ret,
+  return { kind: 'send', cmd, to, items: items.map(x => [x.id, x.q, x.nm]), ret: P.ret, note: env.cfg.mmCraftNote !== false ? noteOf(P, `${P.name} Lv.${P.lvl} → ${P.to}`) : null,
     why: `${cmd ? 'по кнопке: ' : ''}сырьё на крафт для ${scope}: ${items.slice(0, 6).map(x => `${x.nm} ${fmtA(x.q)}`).join(', ')}${items.length > 6 ? ` и ещё ${items.length - 6}` : ''}${P.cmiss ? ' (набор неполный)' : ''}${eL ? ` · цены с Lv.${eL.L} → ${eL.L + 1} — оценка: кузнец показывает только следующий уровень, на дальних может понадобиться другой материал и ещё партия` : ''}` };
 }
 // вернулось от крафтера: id × q — то же, что отправили (не пригодилось), или скрафченное — списываем его сырьё по рецепту
@@ -557,6 +557,57 @@ async function pageGo(target) {                   // листать список
 }
 const setVal = (el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
 const shownTxt = el => el && !el.hidden ? (el.textContent || '').trim() : '';
+// 10.0.2: письмо крафтеру после партии — что скрафтить и что вернуть (/mail-compose.html: «Кому», «Повідомлення» до 1000 знаков,
+// POST /game/mail/send {text, recipientName}). Язык — украинский, как интерфейс игры у клана
+function noteOf(P, goal) {
+  const nm = id => nameEn(+id) || MM_RNAME[id] || `#${id}`;
+  return { goal, part: (P.cmiss || 0) > 0, craft: (P.craft || []).filter(c => c.qty > 0).map(c => [c.nm, c.qty]),
+    ret: Object.entries(P.ret || {}).filter(([, q]) => q > 0).map(([id, q]) => [nm(id), q]) };
+}
+function noteText(N, sent, me) {         // → письма по ≤ NOTE_MAX знаков (длинное делится по строкам, строка — по пунктам)
+  const ls = l => l.map(([n, q]) => `${n} ×${fmtA(q)}`);
+  const same = JSON.stringify(N.craft) === JSON.stringify(N.ret);
+  const parts = [[`Привіт! Надіслав ресурси на крафт${N.goal ? ` (${N.goal})` : ''}:`, ls(sent)]];
+  if (N.craft.length) parts.push([same ? 'Скрафти, будь ласка, і поверни поштою' + (me ? ` на ${me}` : '') + ':' : 'Скрафти, будь ласка:', ls(N.craft)]);
+  if (N.ret.length && !same) parts.push([`Поверни поштою${me ? ` на ${me}` : ''}:`, ls(N.ret)]);
+  const tail = [N.part ? 'Частину сировини ще збираю — дошлю пізніше.' : '', 'Дякую!'].filter(Boolean);
+  const out = []; let cur = '';
+  const put = t => { if (cur && cur.length + 1 + t.length > NOTE_MAX) { out.push(cur); cur = ''; } cur = cur ? cur + '\n' + t : t; };
+  for (const [h, l] of parts) {
+    const line = `${h} ${l.join(', ')}.`;
+    if (line.length <= NOTE_MAX) { put(line); continue; }
+    let acc = h;
+    for (const x of l) { if (acc.length + 2 + x.length > NOTE_MAX) { put(acc); acc = h; } acc += (acc === h ? ' ' : ', ') + x; }
+    put(acc + '.');
+  }
+  for (const t of tail) put(t);
+  if (cur) out.push(cur);
+  return out;
+}
+async function noteStep(J) {
+  const to = J.to || crafter();
+  const left = J.notes || noteText(J.note, [...(J.note.prev || []), ...(J.done || []).map(x => [x[0], x[1]])], String(env.heroNick?.() || '').trim());
+  const end = why => env.setRt({ mmJob: { ...J, notes: null, noteCur: null, noteEnd: why } });   // итог — в строку «отправил …» (finish)
+  if (!left.length) return end('письмо с заданием отправил');
+  // прошлое нажатие «Надіслати» без ответа (страница перезагрузилась) — считаем ушедшим: лучше без одного письма, чем два одинаковых
+  if (J.noteCur) { await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
+  if (location.pathname !== PAGE_MC) { await env.setRt({ mmJob: { ...J, notes: left } }); env.setStatus(`Почта: письмо крафтеру ${to}`); location.href = PAGE_MC; await env.sleep(4000); return; }
+  const form = await env.waitX(() => document.getElementById('mail-compose-form') || null, 10000, 200);
+  if (!form) return end('страница письма не открылась — письмо не ушло');
+  if (form.hidden) { location.href = PAGE_MC; await env.sleep(4000); return; }      // после «надіслано» форма скрыта — следующее письмо с новой страницы
+  const toIn = document.getElementById('mail-compose-to'), tx = document.getElementById('mail-compose-text'), btn = document.getElementById('mail-compose-submit');
+  if (!toIn || !tx || !btn) return end('форма письма не найдена — письмо не ушло');
+  if (!toIn.readOnly) setVal(toIn, to);
+  setVal(tx, left[0]);
+  for (const eid of ['mail-compose-success', 'mail-compose-err']) { const el = document.getElementById(eid); if (el) { el.textContent = ''; el.hidden = true; } }
+  await env.setRt({ mmJob: { ...J, notes: left, noteCur: Date.now() } });
+  env.setStatus(`Почта: письмо крафтеру ${to}`);
+  env.fire(btn);
+  const res = await env.waitX(() => shownTxt(document.getElementById('mail-compose-success')) ? 'ok' : shownTxt(document.getElementById('mail-compose-err')) ? 'err' : null, 10000, 200);
+  if (res === 'ok') { env.rec('B', 'Маммон', `письмо крафтеру ${to}: ${left[0].replace(/\s+/g, ' ').slice(0, 160)}`); await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
+  if (res === 'err') return end(`письмо не ушло (${shownTxt(document.getElementById('mail-compose-err')).slice(0, 80)})`);
+  // ответа нет — следующий круг считает письмо ушедшим (noteCur)
+}
 async function sentOk(J, cur) {
   const C = env.rt.mmCraft || {}, at = { ...(C.at || {}) };
   at[cur.id] = (at[cur.id] || 0) + cur.q;
@@ -567,7 +618,9 @@ async function sentOk(J, cur) {
 }
 async function sendStep(J) {
   const to = J.to || crafter();
-  if (location.pathname !== PAGE_TR) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
+  // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
+  if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
+  if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
   // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
   if (J.cur) {
     const m = await env.invRefresh?.(), h = m ? m[J.cur.id] || 0 : null;
@@ -577,7 +630,7 @@ async function sendStep(J) {
   }
   if (!J.items?.length) {
     const d = J.done || [], fee = d.reduce((a, x) => a + (x[2] || 0), 0);
-    return finish(J, d.length > 0, d.length ? `отправил ${to}: ${d.map(x => `${x[0]} ${fmtA(x[1])}`).join(', ')}${fee ? ` · комиссия ${fmtA(fee)} адены` : ''} — жду готовое письмом` : 'отправлять нечего');
+    return finish(J, d.length > 0, d.length ? `отправил ${to}: ${d.map(x => `${x[0]} ${fmtA(x[1])}`).join(', ')}${fee ? ` · комиссия ${fmtA(fee)} адены` : ''}${J.noteEnd ? ` · ${J.noteEnd}` : ''} — жду готовое письмом` : 'отправлять нечего');
   }
   const [id, want, nm] = J.items[0];
   const m = J.inv ? null : await env.invRefresh?.();    // сумка по факту — один раз на поход
@@ -688,6 +741,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { chainWant, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
