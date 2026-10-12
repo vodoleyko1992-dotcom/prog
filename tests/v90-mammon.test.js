@@ -76,7 +76,8 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
     env.cfg.mmGoalLvl = 1; inv[1876] = 100; assert.equal(M.mmFarmGoal(), null, 'target Lv.1: Mithril done → nothing farmable left (Steel → Varnish has no source in this FARM)');
     M.goalNote(); assert.ok(/наперёд не хватает Crystal: D-Grade 100, Varnish 15/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
     inv[1458] = 100; inv[1880] = 3; assert.equal(M.goalPlan().ready, true); M.goalNote();
-    assert.ok(/всё собрано.*Coin of Luck — улучшение жмёшь сам/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
+    assert.ok(/всё собрано.*Coin of Luck — лечу к кузнецу улучшать/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);   // 9.2.5: улучшение разрешено
+    env.cfg.mmUpgrade = false; M.goalNote(); assert.ok(/всё собрано.*Coin of Luck — улучшение жмёшь сам/.test(env.rt.mmGoalSt), env.rt.mmGoalSt); env.cfg.mmUpgrade = true;
     env.rt.mmEq = { belt: [920018, 5] }; assert.equal(M.goalPlan().done, true); }
   // 6б. 9.2 (игрок 11.10: «собрать ВСЕ ресурсы наперёд», «ресурсы, из которых крафтятся улучшенные — передаю крафтеру»):
   // таблица по уровням до цели (неизвестные — оценка ×(L+1)), итог минус сумка, крафтовое разобрано до сырья, список крафтеру
@@ -117,9 +118,11 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   // 9. справочник: 23 вещи, Lv.0–5, пояс со скриншота (крит 2 → 2,5 %)
   assert.equal(Object.keys(GEAR).length, 23);
   assert.equal(GEAR['920018'].L[1].equipMagicCritDamagePct, 2.5); assert.equal(GEAR['910623'].L[5].equipFlatMAtk, 389);
-  // 10. безопасность: модуль не шлёт POST и не жмёт «Покращити» (Coin of Luck тратит только игрок)
+  // 10. безопасность: модуль не шлёт POST; «Покращити» жмёт только upgrade() (9.2.5: вещь-цель, cfg.mmUpgrade — tests/v925-mammon-upgrade.test.js)
   assert.ok(!/method:\s*['"]POST/i.test(src), 'no own POST');
-  assert.ok(!/Покращ|blacksmith\/upgrade['"`]|l2-mammon-upgrade-card__btn/.test(src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), 'never presses upgrade');
+  { const code = src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''), up = code.slice(code.indexOf('async function upgrade('), code.indexOf('async function mmStep('));
+    assert.equal((code.match(/l2-mammon-upgrade-card__btn/g) || []).length, 1, 'upgrade button only in upgrade()'); assert.ok(up.includes('l2-mammon-upgrade-card__btn'));
+    assert.ok(!/blacksmith\/upgrade['"`]/.test(code), 'no own upgrade POST'); assert.match(up, /env\.cfg\.mmUpgrade === false/); }
   // 11. ядро: свои GET с токеном страницы (без него 401), РБ/эпики тоже; цель Маммона в farmGoal; шаг в цикле; манифест; меню
   const c = read('content.js');
   assert.match(c, /const gameAuth = \(\) => \{ try \{ const t = localStorage\.getItem\('token'\); return t \? \{ Authorization: 'Bearer ' \+ t \}/);
@@ -135,5 +138,5 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   assert.match(pj, /const DEF = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true,/);
   assert.match(c, /const DEF_CFG = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true,/);
   const bp = JSON.parse(read('base-profile.json')).cfg; assert.equal(bp.mmOrders, true); assert.equal(bp.mmTpMax, 500000);
-  console.log('PASS: 9.0 Mammon — order from bag (teleport ≤ limit, «Здати», winner check, back to the spot), never in battle/tours/TvT; goal «save up for an upgrade» (missing materials in order, farm source, craft hint, ready → player upgrades, Coin of Luck never), smith prices; own GETs with the page token (RB/epics 401 fixed)');
+  console.log('PASS: 9.0 Mammon — order from bag (teleport ≤ limit, «Здати», winner check, back to the spot), never in battle/tours/TvT; goal «save up for an upgrade» (missing materials in order, farm source, craft hint, ready → upgrade at the smith (9.2.5) or the player), smith prices; own GETs with the page token (RB/epics 401 fixed)');
 })().catch(e => { console.error(e); process.exit(1); });
