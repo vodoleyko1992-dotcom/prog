@@ -10,9 +10,9 @@ assert.equal(chooseMode({}), 'farm');
 assert.equal(chooseMode({ tasks: true, fish: true }), 'fish');
 assert.match(content, /cat: !!cfg\.catMode, campaign: !!cfg\.campaign, tasks: !!cfg\.taskOnly/);
 // 2. главный цикл: без режима и без цели фарма — стоим (задачи Маммона/квестов/TvT стоят выше в цикле)
-assert.match(content, /else if \(autonomyMode\(\) === 'tasks' && !lootGoal\(\)\) await tasksIdle\(\);\n\s*else if \(isMap\(\)\)/);
+assert.match(content, /else if \(autonomyMode\(\) === 'tasks' && !lootGoal\(\)\) await tasksIdle\(\);\n[^\n]*tasksGoalNote[^\n]*\n\s*else if \(isMap\(\)\)/);
 assert.ok(content.indexOf("await tasksIdle();") > content.indexOf('await L2V7Modules.mammon.mmStep()'), 'tasks run before idling');
-assert.match(mobfarm, /if \(env\.autonomyMode\(\) === 'tasks' && !env\.lootGoal\?\.\(\)\) return env\.toMap\(\);/);
+assert.match(mobfarm, /if \(env\.autonomyMode\(\) === 'tasks' && !tasksGoalHere\(\)\) return env\.toMap\(\);/);
 assert.match(story, /\['cat', 'tasks'\]\.includes\(env\.autonomyMode\(\)\)/);
 // 3. меню: currentMode, снятие режима повторным нажатием, кнопка «Только задачи», кнопки задач
 const cm = popup.match(/function currentMode\(d\) \{\n([^\n]+)\n\}/)[1];

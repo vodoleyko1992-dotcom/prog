@@ -1999,10 +1999,18 @@ const epicOn = (...args) => L2V7Modules.epics.epicOn(...args);
 // 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
 async function tasksIdle() {
   const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmCraftSend && cfg.mmGoalItem && 'крафтер', cfg.mmMailClaim && 'почта',
-    cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT'].filter(Boolean);
+    cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
   setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
   if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
   await sleep(2000);
+}
+// 10.0.5 (лог 12.10 01:30, игрок: «почему в режиме „только задачи“ автофармит мобов?»): цель фарма ресурса/рецепта — тоже задача, и бот
+// бьёт мобов на её точке. Раньше журнал писал «мобов не бью», а бот летел за Oriharukon Ore — теперь говорит прямо, что фармит и как снять
+function tasksGoalNote(g) {
+  const k = g.kind + ':' + g.name;
+  if (window.__tasksGoalK === k && Date.now() - (window.__tasksGoalT || 0) < 30 * 60000) return;
+  window.__tasksGoalK = k; window.__tasksGoalT = Date.now();
+  rec('S', 'режим', `только задачи: цель ${g.kind === 'farm' ? 'фарма' : 'охоты на рецепт'} «${g.name}» — бью мобов-источники на её точке (снимите ✓ у «${g.name}» в «${g.kind === 'farm' ? 'Фарм ресурсов' : 'Охота на рецепты'}», чтобы бот не бил мобов)`);
 }
 const autonomyMode = () => L2EngineCore.chooseMode({
   epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
@@ -2402,6 +2410,7 @@ async function main() {
       // 10.0 (игрок 12.10: «кнопка старт без быстрого режима… не все задачи стоят на быстром режиме»): режим не выбран — бот делает только
       // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
       else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
+      else if (autonomyMode() === 'tasks' && (tasksGoalNote(lootGoal()), isMap())) await map();   // 10.0.5: на чужой точке map() не бьёт, ждёт перелёта
       else if (isMap()) {
         if (campOn() && (rt.campaignDue || !rt.campaign)) await goCampaign();
         else await map();

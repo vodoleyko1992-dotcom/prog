@@ -150,7 +150,7 @@ async function nextFight(ctx) {
   const healing = env.rt.rbHunt?.last === 'лечусь на мобах' && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
   if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();
-  if (env.autonomyMode() === 'tasks' && !env.lootGoal?.()) return env.toMap();   // 10.0: без режима — бой (начатый игроком или по задаче) довели, дальше не охотимся   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
+  if (env.autonomyMode() === 'tasks' && !tasksGoalHere()) return env.toMap();   // 10.0: без режима — бой (начатый игроком или по задаче) довели, дальше не охотимся   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
   // расходники на исходе (по панели) или пора проверить руду (раз в час) — сначала в магазин
   // (не чаще раза в 10 мин — если адены не хватило, не бегаем в магазин после каждого боя)
   if (env.rt.shop) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Закупить сейчас» нажали во время боя
@@ -398,6 +398,9 @@ async function attackSpawn(c, label) {
   return true;
 }
 
+// 10.0.5: «Только задачи» — бить мобов можно только на точке активной цели фарма ресурса/рецепта (зона известна и совпадает)
+function tasksGoalHere() { const g = env.lootGoal?.(); return !!g && !!env.rt.zone && env.rt.zone === g.zone; }
+
 async function map() {
   // защита от петли «клик по мобу → снова карта»
   if (env.rt.mobClickAt && Date.now() - env.rt.mobClickAt < 8000) {
@@ -548,6 +551,14 @@ async function map() {
 
   let sig = aroundSig();
   await env.absorb();
+  // 10.0.5 (лог 12.10 01:29:58–01:30:25, «почему в режиме „только задачи“ автофармит мобов»): без режима мобов бьём только на точке
+  // цели фарма ресурса/рецепта. Раньше карта в Окрестностях сразу выбрала Vampire Soldier (71), и лишь после боя бот полетел за
+  // Oriharukon Ore: farmStep не летит 3 мин после прошлого перелёта (zoneGoT), и в это время map() бил всех подряд
+  if (env.autonomyMode() === 'tasks' && !tasksGoalHere()) {
+    const g = env.lootGoal?.();
+    env.setStatus(g ? `⏹ Только задачи: цель фарма «${g.name}» — жду перелёта к её точке, здесь мобов не бью` : '⏹ Только задачи: мобов не бью');
+    await env.sleep(2000); return;
+  }
   // ★ цели: из подписи карты + ★ в строках списка (несюжетные квесты); в «оригинальном» написании имён
   // только свежие (до 6 ч, как в isQuestName) и только мобы текущей зоны: раньше ★ из прошлой локации
   // (Leto Lizardman Warrior в Hot Springs) висела в «На локации» и считалась квестовой целью бесконечно
