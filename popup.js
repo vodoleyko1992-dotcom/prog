@@ -650,7 +650,7 @@ function treeRow(kind, k, r, cur, got, L, d) {
   const ico = treeIcon(kind, r);
   return `<div class="frow${on ? ' cur' : ''}" data-k="${esc(k)}"><div class="fr-h">${ico ? `<img class="fr-ico" src="${esc(ico)}" alt="" loading="lazy" decoding="async">` : '<span class="fr-ico none"></span>'}<span class="fr-t"><button class="fr-name" data-tree-item="${esc(k)}" aria-expanded="${open}">${open ? '▾' : '▸'} ${esc(r.name)}</button>`
     + `<span class="fr-hint">${n}${on ? ` · ✓ цель${got ? ` · собрано ${got}` : ''}` : ''}</span></span>`
-    + `<button class="fr-go" data-tree-go="${esc(k)}" title="Фармить это">${on ? '✓' : '🌾'}</button></div>`
+    + `<button class="fr-go" data-tree-go="${esc(k)}" title="${on ? 'Снять цель' : 'Фармить это'}">${on ? '✓' : '🌾'}</button></div>`
     + (open ? `<div class="fr-src">${treeSources(kind, r, L, d)}</div>` : '') + '</div>';
 }
 async function renderTree(kind, rt, d) {
@@ -700,8 +700,11 @@ for (const kind of Object.keys(TREE)) {
     if (it) { const id = 'i:' + it.dataset.treeItem; if (treeOpen[kind].has(id)) treeOpen[kind].delete(id); else treeOpen[kind].add(id); return treeRefresh(kind); }
     if (go) {
       const db = await dbGet(T.db, { [T.items]: {} }), r = db[T.items]?.[go.dataset.treeGo]; if (!r) return;
-      $(T.input).value = r.name; await save({ target: $(T.input) });
-      toast?.(`${kind === 'farm' ? '🌾 Фарм ресурса' : '📜 Охота на рецепт'}: ${r.name}`);
+      // 9.2.6 (игрок 12.10: «не получается снять галочку / отменить фармимый ресурс»): ✓ у текущей цели снимает её —
+      // раньше кнопка только ставила цель заново, отменить можно было лишь стерев поле «Ресурс» руками
+      const off = go.dataset.treeGo === treeKey(kind, $(T.input).value);
+      $(T.input).value = off ? '' : r.name; await save({ target: $(T.input) });
+      toast?.(`${kind === 'farm' ? '🌾 Фарм ресурса' : '📜 Охота на рецепт'}${off ? ' снят' : ''}: ${r.name}`);
       treeRefresh(kind);
     }
   });
