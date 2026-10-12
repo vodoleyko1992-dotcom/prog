@@ -247,7 +247,7 @@ function goalNote() {                             // раз на изменен�
     const miss = P.raw.filter(r => r.miss > 0), f = mmFarmGoal();
     const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — ${env.cfg.mmUpgrade !== false ? 'лечу к кузнецу улучшать' : 'улучшение жмёшь сам у кузнеца'}. ` : '';
     st = next + (P.ready ? `✅ наперёд до Lv.${P.to} собрано всё: ${fmtA(P.a)} адены + ${P.col} Coin of Luck`
-      : !miss.length ? `${p.name} до Lv.${P.to}: сырьё есть${P.craft.length ? ', осталось скрафтить: ' + P.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') : ''}`
+      : !miss.length ? `${p.name} до Lv.${P.to}: сырьё есть${P.craft.length ? ', осталось скрафтить: ' + P.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') + (Object.values(atC()).some(v => v > 0) ? ` (сырьё у крафтера ${crafter()}, жду письмо)` : '') : ''}`
       : `${p.name} Lv.${p.lvl} → Lv.${P.to}: наперёд не хватает ${short(miss)}` + (f ? ` · добываю ${f.name}` : ' · в базе фарма источников нет'))
       + (P.est ? ' · ≈ часть цен — оценка' : '') + (P.unk.length ? ` · цены Lv.${P.unk.map(L => L + 1).join(', ')} неизвестны` : '');
   }
@@ -475,13 +475,17 @@ function craftWant(now = Date.now()) {
   const P = craftPlan();
   if (!P || P.done) return cmd ? { drop: 'вещь-цель уже на уровне цели' } : null;
   const items = (P.snd || []).filter(x => x.q > 0);
-  if (!items.length) return cmd ? { drop: P.cmiss ? `в сумке нет сырья на крафт (не хватает ${short(P.raw.filter(r => r.miss > 0))})` : 'крафтить нечего — крафтовое уже есть или у крафтера' } : null;
+  // 10.0 (лог 12.10 17:30/17:38: кнопка сразу после отправки — «крафтить нечего») — пишем, что именно уже лежит у крафтера
+  const atTxt = () => Object.entries(atC()).filter(([, n]) => n > 0).slice(0, 6).map(([mid, n]) => `${nameEn(+mid) || MM_RNAME[mid] || '#' + mid} ${fmtA(n)}`).join(', ');
+  if (!items.length) return cmd ? { drop: P.cmiss ? `в сумке нет сырья на крафт (не хватает ${short(P.raw.filter(r => r.miss > 0))})` : atTxt() ? `сырьё уже у крафтера ${to} (${atTxt()}) — жду готовое письмом` : 'крафтить нечего — крафтовое уже есть' } : null;
   if (!cmd && P.cmiss > 0) return null;           // сам — только полный набор, чтобы крафтер скрафтил всё сразу
   // 9.2.5 (игрок 12.10: «нужно не на все 5 уровней, а на все недостающие»): план и так считается от текущего уровня вещи (goalAll: L = lvl … to−1) —
   // в журнале пишем, на какие именно уровни
+  // 10.0 (лог 12.10 17:27–17:37): пояс Lv.1 → 5 — Steel на Lv.3–4 оценён по Lv.0, а кузнец на Lv.3 попросил Durable Metal Plate → вторая партия
+  const eL = P.lv.find(x => x.est || x.unk);
   const n = P.to - P.lvl, scope = n > 1 ? `${P.name} Lv.${P.lvl} → ${P.to} (недостающие ${n} ур.)` : `${P.name} Lv.${P.lvl} → ${P.lvl + 1}`;
   return { kind: 'send', cmd, to, items: items.map(x => [x.id, x.q, x.nm]), ret: P.ret,
-    why: `${cmd ? 'по кнопке: ' : ''}сырьё на крафт для ${scope}: ${items.slice(0, 6).map(x => `${x.nm} ${fmtA(x.q)}`).join(', ')}${items.length > 6 ? ` и ещё ${items.length - 6}` : ''}${P.cmiss ? ' (набор неполный)' : ''}` };
+    why: `${cmd ? 'по кнопке: ' : ''}сырьё на крафт для ${scope}: ${items.slice(0, 6).map(x => `${x.nm} ${fmtA(x.q)}`).join(', ')}${items.length > 6 ? ` и ещё ${items.length - 6}` : ''}${P.cmiss ? ' (набор неполный)' : ''}${eL ? ` · цены с Lv.${eL.L} → ${eL.L + 1} — оценка: кузнец показывает только следующий уровень, на дальних может понадобиться другой материал и ещё партия` : ''}` };
 }
 // вернулось от крафтера: id × q — то же, что отправили (не пригодилось), или скрафченное — списываем его сырьё по рецепту
 function unsend(at, id, q, depth = 0) {
@@ -539,6 +543,18 @@ async function candFind(id) {
   }
   return null;
 }
+const pgNow = () => { const m = (document.querySelector('#item-transfer-pagination .l2-item-transfer-page-label')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); return m ? [+m[1], +m[2]] : null; };
+async function pageGo(target) {                   // листать список «Передача предмета» прямо к странице target; ждём смену подписи, не таймаут
+  for (let i = 0; i < 30; i++) {
+    const p = pgNow(); if (!p) return false;
+    if (p[0] === target) return true;
+    const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], b = p[0] > target ? bs[0] : bs[bs.length - 1];
+    if (!b || b.disabled || bs.length < 2) return false;
+    env.fire(b);
+    if (!await env.waitX(() => { const q = pgNow(); return q && q[0] !== p[0] ? q : null; }, 4000, 100)) return false;
+  }
+  return false;
+}
 const setVal = (el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
 const shownTxt = el => el && !el.hidden ? (el.textContent || '').trim() : '';
 async function sentOk(J, cur) {
@@ -574,7 +590,11 @@ async function sendStep(J) {
   const rowOf = () => [...document.querySelectorAll('.l2-item-transfer-row-wrap')].find(w => w.dataset.itemKey === c.key) || null;
   await env.waitX(() => document.querySelector('.l2-item-transfer-row-wrap') || null, 10000, 200);
   // строка на другой странице: после передачи игра остаётся на той же странице списка — сначала «« Назад» до первой, затем «Вперед »»
+  // 10.0 (лог 12.10 17:28–17:38): листали «« Назад» до первой страницы и потом вперёд, ожидая строку 3 с на каждой — Thread со стр. 6
+  // после Iron Ore со стр. 5: 9 страниц ≈ 34 с. Номер страницы строки уже известен (candFind) → листаем прямо к ней по подписи «Страница N / M»
   let wrap = rowOf();
+  if (!wrap && c.page) { await pageGo(c.page); wrap = await env.waitX(rowOf, 1500, 100); }
+  // запасной путь (подписи нет, список сдвинулся): «« Назад» до первой, затем «Вперед »»
   for (const dir of [0, 1]) for (let i = 0; !wrap && i < 30; i++) {
     const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], nx = dir ? bs[bs.length - 1] : bs[0];
     if (!nx || nx.disabled || bs.length < 2) break;
@@ -617,7 +637,11 @@ async function claimStep(J) {
   const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
   const got = J.got || [];
   if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
-  const card = b.closest('.l2-mail-item'), what = (card?.querySelector('.l2-mail-item-transfer__name')?.textContent || '?').trim(), from = (card?.querySelector('.l2-mail-item__sender')?.textContent || '').trim();
+  // 10.0 (лог 12.10 17:37 «✓ забрал: ? от Skye»): игра красит имя предмета (L2.decorateItemNameEl) и заменяет его класс
+  // .l2-mail-item-transfer__name на l2-item-name → имя и число берём из списка почты по attachmentId, иначе из строки «Ви отримали»
+  const card = b.closest('.l2-mail-item'), aid = String(card?.dataset?.attachmentId ?? ''), a = aid ? (env.rt.mmMail?.unc || []).find(x => x.a === aid) : null;
+  const what = a ? `${a.n} ×${fmtA(a.q)}` : (card?.querySelector('.l2-mail-item-transfer__loot')?.textContent || card?.querySelector('.l2-mail-item-transfer__name')?.textContent || '?').trim();
+  const from = (a?.s || card?.querySelector('.l2-mail-item__sender')?.textContent || '').trim();
   const msgEl = () => document.querySelector(`${pane} .l2-mail-items-msg`);
   if (msgEl()) msgEl().textContent = '';
   env.fire(b);
@@ -664,6 +688,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { chainWant, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { chainWant, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
