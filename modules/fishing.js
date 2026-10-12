@@ -232,6 +232,28 @@ function fishNet(nf) {                           // из сетевого обр
 
 const fishCdLeft = name => Math.max(0, (env.FCD[name] || 0) + fishCdLen() - Date.now());
 
+// 10.0.1 (лог 12.10 14:04:32–16:46:16, 2 ч 42 мин простоя): сервер отвечал на каждое нажатие 400 «in_battle» («Під час бою рибалка
+// недоступна») — у героя висел незакрытый бой (его начала другая вкладка/вход из облака и не довела), а бот 598 раз писал «нет ответа
+// 15 с (лаг сервера) — жму снова»: код ответа сервера он не смотрел. Теперь «in_battle» на рыбалке = идём закончить этот бой:
+// spawnId боя — из GET /character (inBattle/battleSpawnId), страница /battle.html?spawnId=…; после победы бой сам возвращает на рыбалку
+// (mobfarm.nextFight → goFishing). Сервер уже не в бою — просто продолжаем; не чаще раза в 20 с
+let fishBattleT = 0;
+async function fishBattle(act) {
+  env.NET_FISH = { t: 0 };                       // ответ «in_battle» обработан — следующий круг не видит его снова
+  if (Date.now() - fishBattleT < 20000) { await env.sleep(3000); return false; }
+  fishBattleT = Date.now();
+  let ch = null;
+  try { const r = await env.gameGet('/character'); if (r.ok) ch = (await r.json())?.character || null; } catch (e) {}
+  if (ch && ch.inBattle === false) { env.rec('B', 'рыбалка', `сервер ответил «идёт бой» на ${act}, но герой уже не в бою — продолжаю рыбалку`); return false; }
+  const sid = String(ch?.battleSpawnId || '');
+  env.rec('B', 'рыбалка', `сервер: «Під час бою рибалка недоступна» на ${act} — у героя незакрытый бой${sid ? ` (${sid})` : ''}, иду его закончить и вернусь на рыбалку`);
+  env.setStatus('Рыбалка: герой в незакрытом бою — иду его закончить');
+  statFlush(); try { await env.rtCommit(); } catch (e) {}
+  location.href = sid ? '/battle.html?spawnId=' + encodeURIComponent(sid) : '/map.html';
+  await env.sleep(5000);
+  return true;
+}
+
 async function fishAct(name) {                   // нажать рыболовный скилл и дождаться ответа в журнале
   fishWatch();
   const before = fishLog(), m0 = env.fishMut, c0 = env.fishCdMsg, hp0 = fishState()?.cur, t0 = Date.now();
@@ -252,9 +274,10 @@ async function fishAct(name) {                   // нажать рыболов�
   let stuck = false;
   // 8.0.3 (лог 11.10 11:19:44, 11:34:40): игра сама оборвала запрос через ≈9 с («signal is aborted without reason»), а бот ждал ещё 6 с
   // до своих 15 с. Обрыв ЭТОГО клика (ошибка сети из hook.js, запрос ушёл не раньше клика) — сразу к повтору по свежему состоянию
-  let aborted = false;
+  let aborted = false, busy = false;
   const got = await env.waitFor(() => {
     const nf = env.NET_FISH;
+    if (nf.t > t0 && nf.code === 'in_battle') return (busy = true);   // 10.0.1: герой в бою — ждать 15 с бесполезно
     if (nf.t > t0 && nf.err && nf.act === name && !(nf.ms > 0 && nf.t - nf.ms < t0 - 150)) return (aborted = true);
     if (env.NET_FISH.t > t0 && env.NET_FISH.ok && Date.now() - env.NET_FISH.t > 2500) return (stuck = true);
     if (env.fishCdMsg !== c0 || (hint() !== h0 && env.CD_RE.test(hint()))) return (rej = true);
@@ -262,6 +285,7 @@ async function fishAct(name) {                   // нажать рыболов�
     if (!f || (hp0 != null && f.cur !== hp0)) return true;
     return fishNewLines(before).some(l => RESP_RE.test(l.t) || env.CD_RE.test(l.t) || /catch|lost|fail|hit/.test(l.cls));
   }, 15000, 25);
+  if (busy) { await fishBattle(name); const L = []; L.rej = false; L.tmo = true; return L; }
   if (stuck && env.on) {
     let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.fishReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
     if (rl.length >= 3) { stuck = false; await env.sleep(1500); }   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик со сторожем)
@@ -715,6 +739,7 @@ async function fishSetup() {
 }
 
 async function fishing() {
+  if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
   if (await fishSetup()) return;
   // страница рыбалки дорисовывается скриптом игры: в первые секунды блоки «купите место» / «изучите навыки» /
   // «недоступно» могут мелькнуть до загрузки данных — раньше бот на этом останавливался (журнал 07.10: стоп через
@@ -988,6 +1013,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow };
+ return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);
