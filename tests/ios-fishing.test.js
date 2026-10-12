@@ -7,7 +7,7 @@ const files={};
 for(const n of ['content.js','popup.js','popup.html','background.js','ui-v7.js','ui-game.css'])
   files[n]=fs.readFileSync(path.join(base,n),'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(base,'manifest.json')));
-assert.equal(manifest.version,'10.0.3');
+assert.equal(manifest.version,'10.0.4');
 for(const n of ['content.js','popup.js']){
   assert.match(files[n],/fishMode: false, rodEnchantTo: 10,/);
   assert.match(files[n],/fishGoal: ''/);
