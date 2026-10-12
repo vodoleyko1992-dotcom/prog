@@ -548,14 +548,15 @@ async function huntDone(id, why) {                 // с этим РБ зако�
 // Старт (кнопка в меню): баффер → баффы сессии (rbSessBuffs) → тур по РБ. Смерть снимает баффы, если нет Noblesse Blessing; с ним
 // слетает только он — бот сразу покупает его снова (5 FA). Баффы слетели совсем — сессия окончена (не тратим FA по новой).
 // Бафф кончается (за 2 мин) — итог в журнал, режим «Автофарм», ждём игрока
-const sessIds = () => env.faIdsOf ? env.faIdsOf(env.cfg.rbSessBuffs) : String(env.cfg.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
+// 9.2.5: список сессии — фулл бафф (buffs.faFullIds: «auto» = набор под класс, без пар, что снимают друг друга)
+const sessIds = () => env.faFullIds ? env.faFullIds() : env.faIdsOf ? env.faIdsOf(env.cfg.rbSessBuffs) : String(env.cfg.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
 const sessTime = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 async function rbSessTick() {
   const S = env.rt.rbSess; if (!S?.on) return false;
   const now = Date.now(), H = env.hudBuffs?.() || null, gone = env.rt.faGone || {};
   const need = sessIds().filter(id => !(gone[id] && now - gone[id] < 6 * 3600000));   // чего у баффера нет — не ждём
   if (!S.bought) {
-    const have = H ? need.filter(id => H[id] && H[id] - now > 30 * 60000) : [];
+    const have = H ? need.filter(id => H[id] && H[id] - now > 30 * 60000 && !env.faLow?.(id)) : [];   // 9.2.5: городской Lv.2 вместо FA Lv.3 — ещё не куплен
     if (need.length && have.length === need.length) {
       const until = Math.min(...need.map(id => H[id]));
       await env.setRt({ rbSess: { ...S, bought: true, until, t0: now, k0: env.rt.rbKills || 0, e0: env.rt.exp || 0, a0: env.rt.adena || 0, d0: (env.rt.deaths || []).length, fa: env.rt.faBal?.v ?? null } });
