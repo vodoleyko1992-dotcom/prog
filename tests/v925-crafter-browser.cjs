@@ -3,6 +3,7 @@
 // mail-item-attachments.js — берутся с l2wap.com при запуске; нет сети — пропуск). 1) «Передача предмета»: модуль mammon находит строку
 // Iron Ore на 2-й странице (листает «Вперед »»), вводит количество и ник, жмёт «Надіслати», проверяет окно подтверждения и жмёт
 // «Підтвердити» — игра шлёт POST /game/item-transfer/send {itemKey, qty, recipientName: 'Skye'} ровно один раз на предмет.
+// (письмо крафтеру после партии — в v1002-crafter-note-browser.cjs, здесь выключено)
 // 2) Почта, вкладка «Предмети»: «Забрати» — игра шлёт POST /game/item-transfer/claim, после — список перечитан, возврат от Skye списан.
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const assert = require('node:assert/strict'), fs = require('fs'), path = require('path');
@@ -25,7 +26,7 @@ const ENV = `
   const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt || {}, recs = [], bag = window.__bag;
-  const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye' }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
+  const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye', mmCraftNote: false }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
     sleep: ms => new Promise(r => setTimeout(r, Math.min(ms, 400))), waitX: async (fn, ms = 5000, st = 100) => { const t0 = Date.now(); for (;;) { const v = fn(); if (v) return v; if (Date.now() - t0 > ms) return null; await new Promise(r => setTimeout(r, st)); } },
     fire, $q: s => document.querySelector(s), isBattle: () => false, isFishing: () => false, fishState: () => null, fishNow: () => false, autonomyMode: () => 'hunt', tvtSoon: () => false,
     heroNick: () => 'Warlock', invQty: id => bag[id] ?? 0, invRefresh: async () => ({ ...bag }), ITEMS: {}, FARM: { res: {} }, gameGet: p => fetch(p) };
