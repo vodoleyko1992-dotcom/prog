@@ -98,11 +98,20 @@ with sync_playwright() as p:
       assert ct>=4.5,(label,section,ct)
     print('PASS',label,'tabs',stats['tabs'],'grid',stats['navGrid'],'no horizontal overflow',path.name)
     # The gear selection must write its exact setting, and Proof mode must clear it.
-    page.locator('#goalItems').click()
-    page.locator('#goalGrid button[data-goal="cloak_d"]').click()
+    # 10.0: нижняя панель разделов фиксирована и накрывает низ прокрутки — кнопку сначала выводим в середину экрана
+    # (с ростом меню «ближний край» прокрутки Playwright попадал под панель «Сервис», клик ждал 30 с)
+    # 10.0: сетка «◫ Быстрые режимы» в шапке занимает ≈430 px из 594 — настройки раздела видны только при свёрнутой сетке;
+    # кнопка сворачивания теперь работает (hidden не перебивается display:grid), проверяем её и сворачиваем перед кликами
+    assert page.evaluate("getComputedStyle(document.getElementById('quickModeGrid')).display")!='none'
+    page.locator('#modeToggle').click(); page.wait_for_timeout(120)
+    assert page.evaluate("getComputedStyle(document.getElementById('quickModeGrid')).display")=='none'
+    def click_mid(sel):
+      page.locator(sel).evaluate("e=>e.scrollIntoView({block:'center'})"); page.wait_for_timeout(60); page.locator(sel).click()
+    click_mid('#goalItems')
+    click_mid('#goalGrid button[data-goal="cloak_d"]')
     page.wait_for_timeout(140)
     assert page.evaluate("__mockState.cfg.fishGoal") == 'cloak_d'
-    page.locator('#goalProof').click()
+    click_mid('#goalProof')
     page.wait_for_timeout(140)
     assert page.evaluate("__mockState.cfg.fishGoal") == ''
     assert page.get_by_text('Proof накоплено:').count()>0

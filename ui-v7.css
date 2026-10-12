@@ -241,6 +241,7 @@ html.docked section{padding:1px 10px 14px}
 
 /* 7.1.31: «Чем занят бот» — один режим из шести + дополнения; подзаголовки объединённых разделов; меню под класс */
 #quickModeGrid.modes{grid-template-columns:repeat(3,minmax(0,1fr))}
+#quickModeGrid[hidden]{display:none}   /* 10.0: «◫ Быстрые режимы» сворачивает сетку по-настоящему (раньше hidden перебивался display:grid) */
 html.docked #quickModeGrid.modes{grid-template-columns:repeat(2,minmax(0,1fr))}
 .modes .mode-label{grid-column:1/-1;font-size:11px;opacity:.75;margin:4px 2px 0}
 .modes button.mod{font-weight:600}

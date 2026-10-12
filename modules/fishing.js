@@ -632,6 +632,7 @@ async function fishCaught(name) {
   fishStat({ caught: 1 }, name);
   bg(env.setRt(statTake({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess })));
   const tg = env.rt.fishTgt; if (tg && !tg.done && tg.type === 'fish') await fishTgtAdd('fish', 1);   // цель «N рыб» — может остановить бота, это ждём
+  if (env.dailyFishNote) bg(env.dailyFishNote());   // 10.0: дейлик «50 рыб» — счётчик улова
   env.rec('B', 'рыбалка', `поймана ${name} · ${fishRateTxt()}`);
 }
 

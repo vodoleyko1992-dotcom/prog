@@ -191,10 +191,10 @@
   <div id="heroLine"></div>
   <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
   <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
-  <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="false" title="Показать или скрыть быстрые переключатели">
+  <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="true" title="Показать или скрыть быстрые переключатели">
     <span class="mode-toggle-title">◫ Быстрые режимы</span><span id="modeSummary">Настроить режимы</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
   </button>
-  <div id="quickModeGrid" class="modes" hidden>
+  <div id="quickModeGrid" class="modes">
     <div class="mode-label">Чем занят бот — один режим или ни одного (повторное нажатие снимает режим):</div>
     <button id="tasksToggle" data-mode="tasks" title="Без режима: бот делает только включённые задачи — Маммон (заказ, кузнец, крафтер, почта), квесты сабкласса/Noblesse, цель фарма ресурса или рецепта, TvT. Между ними стоит там, где стоит, мобов не бьёт">⏹ Только задачи</button>
     <button id="farmToggle" data-mode="farm" title="Стоять там, где оставили: ★ цели квестов и мобы этой локации (чемпионы — если включено «Искать чемпионов» в «Охоте»)">⚔ Фарм на месте</button>
@@ -209,6 +209,8 @@
     <button class="mod" data-task="mmCraftSend" title="Сырьё на крафт вещи-цели — крафтеру почтой (раздел «Маммон» → «Крафтер и почта»)">📮 Крафтер</button>
     <button class="mod" data-task="storyTurnIn" title="Квесты сабкласса и Noblesse: готовую часть бот сдаёт у NPC сам">📜 Квесты</button>
     <button class="mod" data-task="enemyHunt" title="Лист врагов: нападать на врага на своей локации (с проверкой сил)">☠ Враги</button>
+    <button class="mod" data-task="dailyAuto" title="Дейлики: дотянуть «50 рыб» и «1 РБ» за день (раздел «Охота» → «Дейлики и клан»)">📅 Дейлики</button>
+    <button class="mod" data-task="clanTasks" title="Клановые задания: взять, помочь соклановцу, сдать — сам (раздел «Охота» → «Дейлики и клан»)">🏰 Клан</button>
     <button id="tvtToggle" class="mod" title="TvT: запись и бой 3 раза в день (прерывает любой режим)">⚔ TvT</button>
     <div class="mode-label">Дополнительно (к фарму):</div>
     <button id="campToggle" class="mod" hidden title="7.2.1: кампания убрана — квесты игрок ведёт сам">📜 Кампания</button>
@@ -314,6 +316,11 @@
   <div id="tsGoalBox" class="hint"></div>
   <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
   <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
+  <div class="subsec-title"><span id="tab-dailies" class="tab-anchor"></span>📅 Дейлики и клановые задания</div>
+  <label title="Ежедневные задания игра засчитывает сама. Бот дотягивает то, чего фарм не даёт: «50 рыб» (1 Coin of Luck + 300 000 аден + 50 000 EXP) — идёт на рыбалку и возвращается; «Убей 1 РБ» и «Участие в РБ» — один тур по РБ и назад (раз в день, с 40 ур.)">📅 Дотягивать дейлики: 50 рыб и 1 РБ в день <input id="dailyAuto" type="checkbox"></label>
+  <label title="Клановые задания (/clan-tasks): бот сам берёт доступное (500 монстров — 1 Coin of Luck; SP; адена; РБ, если РБ разрешены), помогает соклановцу, сдаёт готовое. Штурм стены не берёт. Свои запросы с токеном страницы, без переходов">🏰 Клановые задания: взять, помочь, сдать <input id="clanTasks" type="checkbox"></label>
+  <div id="dqBox" class="hint"></div>
+  <div class="hint">«10 сообщений в чате» бот не делает — писать в чат за игрока не будем. Прогресс дейликов и клановых заданий бот читает раз в 10 минут и при открытии их страниц.</div>
 
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
   <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
@@ -764,6 +771,7 @@
 <script src="fa-full.js"></script>
 <script src="modules/enemies.js"></script>
 <script src="modules/tvtshop.js"></script>
+<script src="modules/dailies.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
