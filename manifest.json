@@ -85,6 +85,7 @@
         "modules/enemies.js",
         "modules/tvtshop.js",
         "modules/dailies.js",
+        "modules/rbtimer.js",
         "content.js"
       ],
       "run_at": "document_idle"
