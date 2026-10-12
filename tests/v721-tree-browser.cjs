@@ -36,15 +36,22 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     const src = await page.$$eval('#farmTree .fr-src .fs', r => r.slice(0, 4).map(x => x.textContent));
     await page.locator('#farmTree .fr-go >> nth=0').click(); await page.waitForTimeout(500);
     const target = await page.evaluate(() => window.__mockState.cfg.farmRes);
+    // 9.2.6 (игрок 12.10): ✓ в «Текущая цель» снимает цель — раньше ставил её заново, снять было нельзя
+    await page.waitForTimeout(300);
+    const curRow = await page.$$eval('#farmTree > .frow.cur .fr-go', b => b.map(x => [x.textContent, x.title]));
+    await page.locator('#farmTree > .frow.cur .fr-go').click(); await page.waitForTimeout(500);
+    const cleared = await page.evaluate(() => window.__mockState.cfg.farmRes);
+    const curGone = await page.$$eval('#farmTree .frow.cur', r => r.length);
+    const unset = curRow.length === 1 && curRow[0][0] === '✓' && curRow[0][1] === 'Снять цель' && cleared === '' && curGone === 0;
     await page.fill('#farmSearch', 'stone of'); await page.waitForTimeout(400);
     const found = await page.$$eval('#farmTree .frow .fr-name', r => r.map(x => x.textContent.trim()).slice(0, 5));
     await page.fill('#farmSearch', ''); await page.waitForTimeout(300);
     await page.evaluate(() => document.querySelector('#farmTree').scrollIntoView());
     
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    const ok = groups.length >= 3 && /^Ресурсы/.test(groups[0]) && /^Кейматы/.test(groups[1]) && icoOk && sub > 0 && src.length > 0 && target && found.some(x => /Stone of Purity/.test(x)) && !overflow && !errors.length;
-    if (!ok) { console.error('FAIL', JSON.stringify({ w, groups, ico, sub, src, target, found, overflow, errors })); process.exit(1); }
-    console.log(`PASS ${w}px: forum-like farm list — «Ресурсы» first, game icons (missing → blank), groups, rows, sources, «farm this», search`);
+    const ok = groups.length >= 3 && /^Ресурсы/.test(groups[0]) && /^Кейматы/.test(groups[1]) && icoOk && sub > 0 && src.length > 0 && target && unset && found.some(x => /Stone of Purity/.test(x)) && !overflow && !errors.length;
+    if (!ok) { console.error('FAIL', JSON.stringify({ w, groups, ico, sub, src, target, curRow, cleared, curGone, found, overflow, errors })); process.exit(1); }
+    console.log(`PASS ${w}px: forum-like farm list — «Ресурсы» first, game icons (missing → blank), groups, rows, sources, «farm this», ✓ unsets target, search`);
     await page.close();
   }
   await b.close();
