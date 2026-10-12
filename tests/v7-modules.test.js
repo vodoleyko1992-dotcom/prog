@@ -10,7 +10,7 @@ const modules = featurePaths.filter(x=>x.startsWith('modules/'));
 const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon','story','fightlab','enemies','tvtshop','dailies'];   // 9.2: + лист врагов; 10.0: + магазин TvT   // 9.0: + Маммон, + квесты сабкласса/Noblesse
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
-assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|[89]\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая
+assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|(?:[89]|10)\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая; 10.0 — десятая
 for (const s of featurePaths) assert(fs.existsSync(path.join(root,s)), `Missing module ${s}`);
 const ctx = vm.createContext({
   addEventListener(){}, removeEventListener(){},

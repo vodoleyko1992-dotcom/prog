@@ -38,7 +38,7 @@ with sync_playwright() as p:
         # Exposed mode must work from a real user click, not only rod +10.
         page.locator('#navToggle').click()
         page.locator('#moduleNav button[data-tab="fish"]').click()
-        page.locator('#modeToggle').click()
+        if page.locator('#quickModeGrid').is_hidden(): page.locator('#modeToggle').click()   # 10.0: «◫ Быстрые режимы» сворачивает сетку, по умолчанию она открыта
         page.locator('#fishToggle').click()
         page.wait_for_function('window.__mockState.on === true && window.__mockState.cfg.fishMode === true')
         st = page.evaluate('''() => ({ on:__mockState.on,cfg:{...__mockState.cfg},rt:{...__mockState.rt} })''')
