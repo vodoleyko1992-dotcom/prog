@@ -235,7 +235,7 @@ function planOut(P) {                             // компактный пла
   return { id: P.id, n: P.name, lvl: P.lvl, to: P.to, a: P.a, c: P.col, unk: P.unk,
     lv: P.lv.map(x => x.unk ? { L: x.L, unk: 1 } : { L: x.L, e: x.est, a: x.a, c: x.c, m: x.m.map(m => [m[1], m[2]]) }),
     tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0]),
-    cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0 };
+    lk: owned(P.id) ? 1 : 0, cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0 };
 }
 function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt / rt.mmGoalPlan для меню)
   const p = goalPlan(), P = p && !p.done ? goalAll() : null;
@@ -436,7 +436,9 @@ function craftWant(now = Date.now()) {
   const items = (P.snd || []).filter(x => x.q > 0);
   if (!items.length) return cmd ? { drop: P.cmiss ? `в сумке нет сырья на крафт (не хватает ${short(P.raw.filter(r => r.miss > 0))})` : 'крафтить нечего — крафтовое уже есть или у крафтера' } : null;
   if (!cmd && P.cmiss > 0) return null;           // сам — только полный набор, чтобы крафтер скрафтил всё сразу
-  const scope = P.to > P.lvl + 1 ? `${P.name} Lv.${P.lvl} → ${P.to}` : `${P.name} Lv.${P.lvl + 1}`;
+  // 9.2.5 (игрок 12.10: «нужно не на все 5 уровней, а на все недостающие»): план и так считается от текущего уровня вещи (goalAll: L = lvl … to−1) —
+  // в журнале пишем, на какие именно уровни
+  const n = P.to - P.lvl, scope = n > 1 ? `${P.name} Lv.${P.lvl} → ${P.to} (недостающие ${n} ур.)` : `${P.name} Lv.${P.lvl} → ${P.lvl + 1}`;
   return { kind: 'send', cmd, to, items: items.map(x => [x.id, x.q, x.nm]), ret: P.ret,
     why: `${cmd ? 'по кнопке: ' : ''}сырьё на крафт для ${scope}: ${items.slice(0, 6).map(x => `${x.nm} ${fmtA(x.q)}`).join(', ')}${items.length > 6 ? ` и ещё ${items.length - 6}` : ''}${P.cmiss ? ' (набор неполный)' : ''}` };
 }

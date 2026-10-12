@@ -123,6 +123,15 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   { const { env, M, gets } = mk({}); let n = 0; env.invRefresh = async () => { n++; return {}; };
     await M.mmTick(); assert.equal(n, 1); assert.ok(gets.some(g => /item-transfer\/received/.test(g)));
     await M.mmTick(); assert.equal(n, 1, 'not every loop'); }
+  // 10. игрок 12.10: «нужно не на все 5 уровней, а на все недостающие» — вещь Lv.2, цель Lv.5: сырьё только на Lv.2→3, 3→4, 4→5
+  { const c = (st) => ({ a: 1, c: 1, m: [[1880, 'Steel', st]], t: Date.now() });
+    const mmCost = { '920018:0': c(100), '920018:1': c(100), '920018:2': c(3), '920018:3': c(3), '920018:4': c(3) };
+    const { M, env } = mk({ inv: { 1869: 1000, 1865: 1000 }, cfg: { mmGoalLvl: 5, mmCraftScope: 'all' }, rt: { mmEq: { belt: [920018, 2] }, mmCost } });
+    const P = M.craftPlan(); same(P.lv.map(x => x.L), [2, 3, 4]);
+    same(P.snd.map(x => [x.id, x.q]).sort(), [[1865, 45], [1869, 45]], '3 levels × Steel 3 × 5 — not from Lv.0');
+    assert.match(M.craftWant().why, /Lv\.2 → 5 \(недостающие 3 ур\.\)/);
+    env.cfg.mmCraftScope = 'next'; same(M.craftPlan().snd.map(x => [x.id, x.q]).sort(), [[1865, 15], [1869, 15]], 'next level only'); }
+  assert.ok(read('popup.html').includes('<option value="all">на все недостающие уровни (от текущего до цели)</option>'));
   // 9. меню, настройки, ядро
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   for (const id of ['mmCrafter', 'mmCraftScope', 'mmCraftSend', 'mmMailClaim', 'mmCraftBox', 'mmCraftGo', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
