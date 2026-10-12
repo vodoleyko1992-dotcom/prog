@@ -38,10 +38,15 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     await p.addScriptTag({ content: read('hook.js') });
     for (const s of scripts) await p.addScriptTag({ content: read(s) });
     const res = await p.evaluate(async () => {
+      // бот на паузе, таймеров ещё нет (скрин игрока 13.10 00:14): блок всё равно виден внизу окна; эпики из rt.epicDb
+      ui.classList.add('wide'); draw(); const ind0 = ui.innerText;
+      const ebox = ui.querySelector('.e'), wb = ui.getBoundingClientRect(), eb = ebox?.getBoundingClientRect();
+      rt.epicDb = { zaken: { name: 'Zaken', lvl: 60, alive: false, until: { lo: 0, hi: Date.now() + 5 * 3600000 } }, core: { name: 'Core', lvl: 50, alive: true } };
+      draw(); const ind1 = ui.innerText; rt.epicDb = {}; ui.classList.remove('wide');
       on = true; tabOwner = true; leaseEpoch = 'e';
       const wait = async f => { for (let i = 0; i < 60 && !f(); i++) await new Promise(r => setTimeout(r, 50)); return f(); };
       await fetch('/game/raid-bosses?page=5'); await wait(() => rt.rbTimer && Object.keys(rt.rbTimer.b || {}).length === 15);
-      return { n1: Object.keys(rt.rbTimer?.b || {}).length, list1: Object.keys(rt.rbList || {}).length };
+      return { n1: Object.keys(rt.rbTimer?.b || {}).length, list1: Object.keys(rt.rbList || {}).length, ind0, ind1, low: !!eb && eb.bottom > wb.bottom - 40 && eb.top > wb.top + wb.height / 2 };
     });
     alive = false;
     const res2 = await p.evaluate(async () => {
@@ -54,10 +59,10 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       ui.classList.remove('wide'); draw(); const ind2 = document.getElementById('l2bot-ind')?.innerText || '';
       return { al: x.al, win: x.dl > 0 && x.dh >= x.dl, listAlive: rt.rbList.l2dop_rb_25103.alive, polled, zaken: rt.rbTimer.b.l2dop_rb_29022, pg: rt.rbTimer.pg, ind, ind2 };
     });
-    const ok = res.n1 === 15 && res.list1 === 15 && res2.al === false && res2.win && res2.listAlive === false && res2.polled === true && res2.zaken?.rh === 36
+    const ok = res.n1 === 15 && res.list1 === 15 && /🐉 Респ эпиков\s+данных пока нет/.test(res.ind0) && res.low && /💀 Zaken \(60\): не позже \d\d:\d\d \(через [45] ч/.test(res.ind1) && /✅ живы: Core/.test(res.ind1) && res2.al === false && res2.win && res2.listAlive === false && res2.polled === true && res2.zaken?.rh === 36
       && /🐉 Респ эпиков\s+💀 Zaken \(60\): не позже/.test(res2.ind) && /🐉 Респ эпиков: Zaken \(60\): не позже [\d.: ]+$/.test(res2.ind2) && gets.some(g => /^\/game\/raid-bosses\?page=5 Bearer tok-123$/.test(g)) && gets.some(g => /^\/game\/epic-bosses Bearer tok-123$/.test(g)) && !errors.length;
     if (!ok) { console.error('FAIL 1-3', JSON.stringify({ res, res2, gets, errors })); process.exit(1); }
-    console.log('PASS browser: game list via hook (all 15 RB, not cut to 8) → rbTimer + rbList; RB killed → death window; own poll (GET with token) → window pages + epics; «🐉 Респ эпиков» in the in-game indicator (wide and narrow)');
+    console.log('PASS browser: game list via hook (all 15 RB, not cut to 8) → rbTimer + rbList; RB killed → death window; own poll (GET with token) → window pages + epics; «🐉 Респ эпиков» in the in-game indicator (wide and narrow; bottom of the window, shown with no data, epics from epicDb while paused)');
     await p.close();
   }
   const now = Date.now(), H = 3600000;
