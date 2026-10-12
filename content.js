@@ -1,4 +1,4 @@
-// ===== L2wap Bot v9.2.4 — content script (РБ, квесты, карта по точным селекторам) =====
+// ===== L2wap Bot v9.2.5 — content script (РБ, квесты, карта по точным селекторам) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, mmUpgrade: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 3, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 30, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
@@ -3029,6 +3029,19 @@ const ACT_NET = { start: 0, done: 0, t: 0 };
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
 const invNote = inv => { if (!Array.isArray(inv) || !inv.length) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invQty = id => INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
+// 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
+// hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
+async function invRefresh() {
+  try {
+    const r = await gameGet('/character'); if (!r.ok) return null;
+    const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
+    const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
+    if (!m) return null;
+    INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    if (tabOwner && c?.inventory?.eq) L2V7Modules.mammon.eqNote(c.inventory.eq);
+    return m;
+  } catch (e) { return null; }
+}
 const actNet = () => ACT_NET;
 // 9.0 (катакомбы): список мобов подземелья целиком из ответа игры (hook.js поле dm: [id, тип, имя, ур., агр.]) и где герой по последнему
 // снимку персонажа (character.activeDungeonId, locationType — в sessionStorage, переживает переход на другую страницу)
@@ -3130,7 +3143,7 @@ addEventListener('message', e => {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
-    if (path === '/game/item-transfer/claim' && d.status === 200) L2V7Modules.mammon.mailNote();   // 9.2.5: ресурсы с почты → спросить кузнеца
+    if (path === '/game/item-transfer/claim' && d.status === 200) { L2V7Modules.mammon.mailNote(); L2V7Modules.mammon.mailSeen(); }   // 9.2.5: ресурсы с почты → спросить кузнеца, перечитать почту (учёт возврата от крафтера)
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
   if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
@@ -4096,7 +4109,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
 
 L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
   get cfg() { return cfg; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
-  get heroNick() { return heroNick; }, get invQty() { return invQty; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
+  get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 

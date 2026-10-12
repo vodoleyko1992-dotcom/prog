@@ -87,7 +87,7 @@ function testModesAndTransitions() {
   console.log('PASS: exclusive mode, navigation confirmation, no-progress detection');
 }
 function testIntegration() {
-  assert.equal(manifest.version,'9.2.4');
+  assert.equal(manifest.version,'9.2.5');
   const script=manifest.content_scripts.find(x=>x.js.includes('content.js'));
   assert(script.js.indexOf('engine-core.js')<script.js.indexOf('content.js'));
   assert(content.includes("cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch"));

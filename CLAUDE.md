@@ -1,6 +1,6 @@
 # L2wap Bot — контекст для работы в Claude Code
 
-Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **9.2.4**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
+Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **9.2.5**. Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
 ## Навыки проекта (`.claude/skills/`)
 
@@ -47,7 +47,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (178 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (183 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG-7.1.*.md     история правок, по файлу на версию
 ```
 
@@ -94,7 +94,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 178 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 183 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -110,7 +110,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **9.2.5 (в работе; CHANGELOG-9.2.5.md)**: фулл бафф за FA на РБ и эпиков — `fa-full.js` (наборы под класс: маг 22 FA, воин 30 FA), rbSessBuffs `auto` (once faFull925), эпики берут тот же набор за FA при разрешённом заходе вместо 15 Coin of Luck (cfg.epicFaFull, epics.epicFaOk/epicFaCovers), городской Lv.2 под FA Lv.3 (buffs.faLow), пары «не стакаются» учатся при покупке (rt.faClash). Тест v925-fafull. РБ «не уверен» — пробный заход (cfg.rbProbe, raid.probeOk/probeGuard/probeFight, оценка < 80 % HP, раз на уровень), встроенные цифры РБ важнее base803 (once rbStats925), тест v925-rbprobe; 180 PASS.
+- **9.2.5 (собрана 12.10 по «собирай»; CHANGELOG-9.2.5.md, PR #23–#27)**: фулл бафф за FA на РБ и эпиков — `fa-full.js` (наборы под класс: маг 22 FA, воин 30 FA), rbSessBuffs `auto` (once faFull925), эпики берут тот же набор за FA при разрешённом заходе вместо 15 Coin of Luck (cfg.epicFaFull, epics.epicFaOk/epicFaCovers), городской Lv.2 под FA Lv.3 (buffs.faLow), пары «не стакаются» учатся при покупке (rt.faClash). Тест v925-fafull. РБ «не уверен» — пробный заход (cfg.rbProbe, raid.probeOk/probeGuard/probeFight, оценка < 80 % HP, раз на уровень), встроенные цифры РБ важнее base803 (once rbStats925), тест v925-rbprobe. Крафтер Skye (cfg.mmCrafter): сырьё на крафтовые материалы вещи-цели уходит через «Передача предмета» (полный набор, одна партия; rt.mmCraft.at — «у крафтера», считается своим), почта раз в 10 мин (rt.mmMail, «Забрати»), возврат списывается по рецептам, сумка по факту — content.invRefresh (GET /character). Тесты v925-mammon-crafter, смоук v925-crafter-browser. 183 PASS, 18 смоуков, zip в Chromium без ошибок.
 - **9.2.4 (собрана 12.10 по «собирай»; CHANGELOG-9.2.4.md, PR #22)**: «не по зубам» (combat, первые 15 с боя) считал урон по HP одного моба вверху экрана — спойлер с Glaive бил соседей (древко, Дикий розмах), Guardian Basilisk получил «урон ≈4.6/с». Теперь урон = max(HP главного, HP всех мобов боя ctx.dealt, строки журнала combat.logDmg), время убийства по HP всех мобов; once hard924 стирает метки. 178 PASS.
 - **9.2.3 (собрана 12.10 по «Собираем»; CHANGELOG-9.2.3.md, PR #19 + #20 + #21)**: заряды сами встают на панель, если слота зарядов нет (resources.shotSlotAdd); убрано «Для баффов (кастеты)», «оружие в класс» перечитывает сумку при новом оружии / уровнях 52, 61, 76; точка фарма ресурса не гоняет на карту, если все источники «не по зубам». 177 PASS, 17 смоуков, zip в Chromium без ошибок.
 - **9.2.2 (в работе; CHANGELOG-9.2.2.md)**: Blessing of Queen переделан админом (скрин 11.10 21:21: «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин, у админа «3 удара 3 крита») — IL_FIX 1331 dur 1200, combat.petBuffPick ставит бафф кота везде, как истёк (правило 9.2 «только РБ/толстые» снято); расчёт: кот ≈×2,1, весь урон ≈+40 %.
