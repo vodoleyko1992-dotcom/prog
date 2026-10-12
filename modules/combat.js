@@ -1168,17 +1168,18 @@ async function battle() {
       }
       // Optional attrition retreat on normal RBs. Navigation is permitted only
       // after an explicit leave acknowledgement from the game's API/DOM.
-      const canAttrit = !ep && env.cfg.rbChipRetreat === true && (v.abort || v.retreat || v.lethal);
+      const probe = !ep && !!env.probeFight?.(ctx.rb.id);   // 9.2.5: бой-проба — плохой прогноз = выход (пропуск 30 мин), не бой до конца
+      const canAttrit = !ep && (env.cfg.rbChipRetreat === true || probe) && (v.abort || v.retreat || v.lethal);
       if (canAttrit && !ctx.rb.retreated && me && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
         const attempts = (env.rt.rbGoCnt?.[ctx.rb.id] || []).filter(t => Date.now() - t < 3600000).length;
         const leave = env.$q('#battle-back-map');
-        if (attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3) && env.shown(leave)) {
+        if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
           ctx.rb.retreated = true;
           env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти (сервер должен подтвердить завершение боя)`);
           env.fire(leave);
           const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
           if (ended) {
-            await env.rbRetreat(ctx, mob, v.why || 'отступление');
+            await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), probe ? 'skip' : undefined);
             return;
           }
           await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
@@ -1334,7 +1335,7 @@ async function battle() {
       const d = env.rt.rbDb?.[ctx.rb.id] || {};
       const ordinaryP90 = d.hitP90 || (ctx.rb.hits?.length >= 3
         ? [...ctx.rb.hits].sort((a,b)=>a-b)[Math.floor(ctx.rb.hits.length*0.9)] : Math.max(150, me.max * 0.06));
-      const spike = d.sp || Math.max(ctx.rb.sp || 0, me.max * 0.30);
+      const spike = d.sp || Math.max(ctx.rb.sp || 0, d.probe?.sp || 0, me.max * 0.30);   // 9.2.5: бой-проба — оценка спецудара держит полосу банок
       const emergencyFloor = Math.min(me.max * 0.96, spike + 2 * ordinaryP90);
       // Measured spikes + two ordinary hits determine an adaptive safety band.
       // The revised RB tactic uses an 80% floor, with a 20 pp reserve over the
