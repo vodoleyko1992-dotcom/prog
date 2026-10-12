@@ -386,7 +386,9 @@ function powerOf(k) {
   const db = rt.skillDb?.[k];
   if (db?.power) return db.power;
   const m = (rt.skills?.[k]?.last || '').match(/сил[аи]\s*(\d+)/i);
-  return m ? +m[1] : 0;
+  if (m) return +m[1];
+  const ls = LS_BY_NAME[k] ?? (IL_FIX[IL_BY_NAME[k]]?.ls ? IL_BY_NAME[k] : null);   // 10.0.2: умение Life Stone — Power 109
+  return ls != null ? ilNum(IL_FIX[ls]?.pow) || 0 : 0;
 }
 function powerK() {                              // медиана «урон / сила» по скиллам, где известно и то и другое
   const r = Object.entries(rt.skills || {}).filter(([k, p]) => p.dmgN >= 2 && powerOf(k)).map(([k, p]) => p.dmg / p.dmgN / powerOf(k)).sort((a, b) => a - b);
@@ -449,14 +451,21 @@ const NAME_ALIAS = { 'force buster': 'force burst',
 const apos = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '’');
 const logName = n => apos(rt.logAlias?.[(n || '').toLowerCase()] || NAME_ALIAS[(n || '').toLowerCase()] || n);
 for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL_BY_NAME[a] == null) IL_BY_NAME[a] = IL_BY_NAME[b];
+// 10.0.2: Life Stone (augment.js) — активные умения оружия. На L2WAP все Power 109 (код игры, weapon-augmentation-display.js)
+const AUG = typeof L2Aug !== 'undefined' ? L2Aug : null;
+const LS_BY_NAME = Object.create(null);
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
   if (x && typeof x === 'object') {
     const k = x.cdKey ?? x.querySelector?.('[data-slot-cd]')?.dataset.slotCd ?? '';
     const m = String(k).match(/l2_(\d+)/);
-    if (m) id = +m[1]; else name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
+    name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
+    if (m) id = +m[1];
+    // 10.0.2: умение Life Stone на панели — data-slot-cd="ls_prominence" (без номера). Имя слота (labelUk игры) запоминаем:
+    // замеры и план боя ищут скилл по имени
+    else if (AUG?.isLs(k)) { id = AUG.SKILL_IL[k] ?? null; const nm = String(name || '').trim().toLowerCase(); if (id != null && nm && !AUG.isLs(nm)) LS_BY_NAME[nm] = id; }
   } else name = x || '';
-  if (id == null && name) id = IL_BY_NAME[name.trim().toLowerCase()];
+  if (id == null && name) id = IL_BY_NAME[name.trim().toLowerCase()] ?? LS_BY_NAME[name.trim().toLowerCase()] ?? AUG?.SKILL_IL[name.trim().toLowerCase()];
   return id != null && IL[id] ? { id, ...IL[id], ...(IL_FIX[id] || {}) } : null;
 }
 // 7.2: скиллы, которые на L2WAP работают иначе, чем в справочнике Interlude.
@@ -475,7 +484,10 @@ const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 
   // бафф — «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин (было +20 % крит-урона, 2 мин). Роль «Баффы кота», ставим всегда, как истёк
   // 10.0 (данные игры 12.10: новость 11.10 «WARLOCK, СУММОНЫ И SPOIL», код игры l2-hud-companion.js «Blessing of Queen накладено на 2 хв.»):
   // длительность снова 2 мин. Ставим, как истёк (лишний повтор стоит 87 MP — дешевле, чем 18 мин без +40 % урона кота)
-  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 2 мин · MP 87' } };
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 2 мин · MP 87' },
+  // 10.0.2: умения Life Stone (есть, пока надето оружие с этим ЛС). Power 109 у всех ударных — замер урона заменит оценку после 1–2 нажатий
+  ...Object.fromEntries(Object.values(AUG?.OUT || {}).filter(o => o.k === 'active' && o.il !== 1401).map(o => [o.il, { pow: AUG.POWER, ls: 1, L: `Life Stone · L2WAP: ${o.d}` }])),
+  1401: { ls: 1, L: 'Life Stone · L2WAP: сильное лечение HP' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -547,7 +559,7 @@ function panelInventory() {
     img: (b.querySelector('img')?.getAttribute('src') || '').split('/').pop(),
     cdKey: b.querySelector('[data-slot-cd]')?.dataset.slotCd || '', qty: qty(b),
     row: +(b.closest('[data-hotbar-row]')?.dataset.hotbarRow || 1)
-  }));
+  })).map(r => (AUG?.isLs(r.cdKey) && ilOf(r), r));        // 10.0.2: имя умения Life Stone → id (LS_BY_NAME) для поиска по имени
 }
 const BUFF_RE = /\s+на\s+(\d+)\s*с(?![а-яa-z])/i;               // «Totem Spirit Bear на 120 с.»
 // урон из строк лога: «Iron Punch ⏎ 993» / «Ты нанёс [ моб ] 97 урона»
@@ -3089,6 +3101,20 @@ const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|pro
 const ACT_NET = { start: 0, done: 0, t: 0 };
 // 7.2.3: сумка по ответам сервера { m: itemId → qty, t } — в sessionStorage вкладки, чтобы пережить переход на другую страницу
 // (после победы бот сразу уходит на карту, а там панели боя нет)
+// 10.0.2 (Life Stone): надетое оружие и его ЛС из ответов сервера (hook.js aug). rt.weaponAug {w, e, o, g, k, n, t} —
+// меню показывает бонус, equipment не меняет само оружие с полезным ЛС, бой узнаёт умение ls_* на панели (ilOf)
+function augNote(a, path) {
+  if (!a || typeof a !== 'object' || !AUG) return;
+  const p = rt.weaponAug || {}, m = AUG.info(a.o);
+  if (p.w === a.w && p.o === a.o && p.e === a.e && Date.now() - (p.t || 0) < 6 * 3600000) return;
+  const same = p.w === a.w && p.o === a.o && p.e === a.e;
+  setRt({ weaponAug: { w: a.w, e: a.e, o: a.o, g: a.g, k: m?.k || (a.o ? '?' : ''), n: m?.n || a.o || '', t: Date.now() } });
+  if (same || p.w == null && !a.o) return;            // тот же ЛС (освежили отметку) / первая запись без ЛС — в журнал не пишем
+  const wn = (itemOf(a.w)?.n || (a.w ? '#' + a.w : 'оружие снято')) + (a.e ? ' +' + a.e : '');
+  if (a.o && a.o !== p.o) rec('S', 'ЛС', `Life Stone на ${wn}: ${AUG.text(a)}${m?.k === 'active' ? ' — умение появится в «Навыках», поставьте его на панель боя: бот будет его жать'
+    : m?.k === 'negative' ? ' — бонус отрицательный' : ''}`, { path });
+  else if (!a.o && p.o && p.w === a.w) rec('S', 'ЛС', `Life Stone снят с ${wn}`, { path });
+}
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
 const invNote = inv => { if (!Array.isArray(inv) || !inv.length) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invQty = id => INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
@@ -3199,6 +3225,8 @@ addEventListener('message', e => {
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
     const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
     if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && Date.now() - (ss?.t || 0) > 60000) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
+  // 10.0.2 (обновление игры 12.10 «Life Stone»): надетое оружие и его аугментация — для меню, боя и «не снимать оружие с ЛС»
+  if (d.aug && tabOwner) try { augNote(d.aug, path); } catch (e) { console.warn(TAG, 'ЛС', e); }
   if (d.dm && Array.isArray(d.dm.mobs)) DUNG_NET = { id: d.dm.id, mobs: d.dm.mobs, t: Date.now() };
   { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
     try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
@@ -4193,7 +4221,7 @@ L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyM
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
-  const b = /^l2_\d+$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
+  const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
 L2V7Modules.fightlab = L2V7Factories.fightlab({ get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });

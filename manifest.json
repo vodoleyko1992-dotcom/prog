@@ -61,6 +61,7 @@
         "zone-db.js",
         "zone-kpd.js",
         "fa-full.js",
+        "augment.js",
         "battle-cooldown.js",
         "engine-core.js",
         "modules/fishing.js",

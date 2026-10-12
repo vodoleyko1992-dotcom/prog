@@ -1,0 +1,180 @@
+{
+ "source": "augmentation-page.js / weapon-augmentation-display.js / battle-hotbar.js, GET /game/mammon/merchant/shop, /game/drops-shop (12.10.2026)",
+ "lifeStone": {
+  "C": {
+   "itemId": 10409,
+   "aa": 70000
+  },
+  "B": {
+   "itemId": 10410,
+   "aa": 80000
+  },
+  "A": {
+   "itemId": 10411,
+   "aa": 100000
+  },
+  "S": {
+   "itemId": 10412,
+   "aa": 160000
+  }
+ },
+ "gemstone": {
+  "C": {
+   "itemId": 2131,
+   "aa": 78000,
+   "adena": 3000
+  },
+  "B": {
+   "itemId": 2132,
+   "aa": 43000,
+   "adena": 10000
+  },
+  "A": {
+   "itemId": 2133,
+   "aa": 187000,
+   "adena": 30000
+  },
+  "S": {
+   "itemId": 2134,
+   "aa": 121000,
+   "adena": 100000
+  }
+ },
+ "api": {
+  "install": "POST /character/weapon-augmentation {expectedRevision, operation:'install'}",
+  "remove": "POST /character/weapon-augmentation {expectedRevision, operation:'remove'}",
+  "state": "GET /character → inventory.eq.l1.augmentation {uid,outcomeId,grade}"
+ },
+ "activeSkills": {
+  "ls_prominence": 1230,
+  "ls_hurricane": 1239,
+  "ls_hydro_blast": 1235,
+  "ls_vampiric_claw": 1234,
+  "ls_tempest": 1176,
+  "ls_major_heal": 1401
+ },
+ "power": 109,
+ "outcomes": {
+  "tempest": [
+   "Tempest",
+   "Масова магічна атака · Power 109",
+   "active"
+  ],
+  "hurricane": [
+   "Hurricane",
+   "Магічна атака вітром · Power 109",
+   "active"
+  ],
+  "vampiric_claw": [
+   "Vampiric Claw",
+   "Магічна атака з відновленням HP · Power 109",
+   "active"
+  ],
+  "hydro_blast": [
+   "Hydro Blast",
+   "Магічна атака водою · Power 109",
+   "active"
+  ],
+  "prominence": [
+   "Prominence",
+   "Магічна атака вогнем · Power 109",
+   "active"
+  ],
+  "major_heal": [
+   "Major Heal",
+   "Активне лікування",
+   "active"
+  ],
+  "mage_skill_5": [
+   "Сила магічних умінь +5%",
+   "",
+   "positive"
+  ],
+  "mage_crit_damage_5": [
+   "Сила магічного крита +5%",
+   "",
+   "positive"
+  ],
+  "hp_5": [
+   "Максимум HP +5%",
+   "",
+   "positive"
+  ],
+  "mp_5": [
+   "Максимум MP +5%",
+   "",
+   "positive"
+  ],
+  "physical_crit_100": [
+   "Шанс фізичного крита +100",
+   "",
+   "positive"
+  ],
+  "magic_crit_chance_10": [
+   "Шанс магічного крита +10%",
+   "",
+   "positive"
+  ],
+  "matk_6": [
+   "P.Atk / M.Atk +6%",
+   "",
+   "positive"
+  ],
+  "pdef_4": [
+   "P.Def +4%",
+   "",
+   "positive"
+  ],
+  "mdef_5": [
+   "M.Def +5%",
+   "",
+   "positive"
+  ],
+  "physical_crit_damage_5": [
+   "Сила фізичного крита +5%",
+   "",
+   "positive"
+  ],
+  "physical_skill_10": [
+   "Сила фізичних умінь +10%",
+   "",
+   "positive"
+  ],
+  "bad_matk_10": [
+   "M.Atk −10%",
+   "",
+   "negative"
+  ],
+  "bad_patk_9": [
+   "P.Atk −9%",
+   "",
+   "negative"
+  ],
+  "bad_pdef_9": [
+   "P.Def −9%",
+   "",
+   "negative"
+  ],
+  "bad_mdef_9": [
+   "M.Def −9%",
+   "",
+   "negative"
+  ]
+ },
+ "warlock_1210": {
+  "weapon": {
+   "itemId": 8688,
+   "name": "Daimon Crystal",
+   "grade": "A",
+   "enchant": 7,
+   "augmentation": null
+  },
+  "ancientAdena": 0,
+  "sealStones": {
+   "green": 18188,
+   "blue": 8416,
+   "red": 5490,
+   "aaIfExchanged": 171088
+  }
+ }
+}

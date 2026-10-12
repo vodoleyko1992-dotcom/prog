@@ -47,7 +47,7 @@ NPC 31126, иконка `/nps/76.png`. Одна функция: **улучшен
 
 ## Торговец Маммона (Merchant of Mammon, NPC 31113)
 
-- `GET /game/mammon/merchant/shop` — магазин за Ancient Adena (`aaPrice`): Gemstone D–S, Life Stone (General 129 600 … Unique 1 036 800), Greater Dye ±1 (45 000) и ±4 (174 000). Покупка `POST /game/mammon/merchant/buy`.
+- `GET /game/mammon/merchant/shop` — магазин за Ancient Adena (`aaPrice`): Gemstone D–S, Life Stone C/B/A/S (70 000 / 80 000 / 100 000 / 160 000 с 12.10, см. `lifestone.md`), Greater Dye ±1 (45 000) и ±4 (174 000). Покупка `POST /game/mammon/merchant/buy`.
 - **Заказ Маммона** `GET /game/mammon/merchant/request` → `{request {status OPEN|CLAIMED, resourceItemId, resourceNameEn, quantity, reward {coinOfLuck:1, adena:1500000}, expiresAt, winnerName, playerHaveQty}}`. Кто первым сдаст ресурс (`POST /game/mammon/merchant/request/claim`), получает 1 Coin of Luck и 1,5 млн адены. 11.10 просили 33 Silver Nugget, у героя было 2371, заказ уже забрал другой игрок. Это способ **получить** Coin of Luck, а не потратить.
 
 ## Что сделано в боте (9.0, CHANGELOG-9.0.md)
