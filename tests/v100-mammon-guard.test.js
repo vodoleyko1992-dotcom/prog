@@ -79,7 +79,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
   { const { env, M } = mk({ inv: INV, path: '/map.html', rt: { zone: 'old', zonePend: { id: 'new', t: Date.now() } } });
     assert.equal(await M.mmStep(), true); assert.equal(env.rt.mmJob.home, 'new'); }
   // 8. исходник: смена персонажа сбрасывает вещь-цель, перед «Підтвердити» сообщения очищаются, список кандидатов с паузой, опрос NPC не раз в минуту
-  assert.match(read('modules/mobfarm.js'), /if \(!ctx\?\.rb && \(env\.mmChainWant\?\.\(\) \|\| env\.storyChainWant\?\.\(\)\)\)/);
+  assert.match(read('modules/mobfarm.js'), /if \(!ctx\?\.rb && \(env\.mmChainWant\?\.\(\) \|\| env\.storyChainWant\?\.\(\)(?: \|\| env\.tsChainWant\?\.\(\))?\)\)/);
   assert.match(read('content.js'), /get mmChainWant\(\) \{ return \(\) => L2V7Modules\.mammon\?\.chainWant\?\.\(\); \}/);
   const bg = read('background.js'); assert.match(bg, /nextCfg\.mmGoalItem = ''/);
   assert.match(src, /'item-transfer-success', 'item-transfer-err'\]\) \{ const el = document\.getElementById\(eid\); if \(el\) el\.textContent = ''; \}\s*\n\s*env\.fire\(okBtn\)/);

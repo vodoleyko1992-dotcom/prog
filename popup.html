@@ -307,6 +307,12 @@
   <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
   <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
   <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
+  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
+  <div id="tsBox" class="hint"></div>
+  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
+  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
+  <div id="tsGoalBox" class="hint"></div>
+  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
 
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
   <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
@@ -756,6 +762,7 @@
 <script src="zone-kpd.js"></script>
 <script src="fa-full.js"></script>
 <script src="modules/enemies.js"></script>
+<script src="modules/tvtshop.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>

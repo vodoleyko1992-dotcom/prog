@@ -235,8 +235,8 @@ async function nextFight(ctx) {
     due = false;
   }
   // 10.0 (лог 12.10 12:01): заказ Маммона / почта / готовая часть квеста ждали, пока идёт цепочка — после этой победы разово на карту, дальше mmStep/storyStep
-  if (!ctx?.rb && (env.mmChainWant?.() || env.storyChainWant?.())) {
-    env.rec('B', 'цепочка', `после боя — дело вне боя (${env.mmChainWant?.()?.why || env.storyChainWant?.()?.why || ''}), иду на карту`);
+  if (!ctx?.rb && (env.mmChainWant?.() || env.storyChainWant?.() || env.tsChainWant?.())) {
+    env.rec('B', 'цепочка', `после боя — дело вне боя (${env.mmChainWant?.()?.why || env.storyChainWant?.()?.why || env.tsChainWant?.()?.why || ''}), иду на карту`);
     return env.toMap();
   }
   if (env.cfg.chain && !offQuest && !due) {
