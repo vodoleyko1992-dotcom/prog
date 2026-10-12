@@ -7,7 +7,7 @@ const load = (extra = {}) => { const sb = { console, Date, Math, JSON, CSS: { es
 const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
 (async () => {
   const recs = [];
-  const mk = (rt, extra = {}) => { const env = { cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 55, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
+  const mk = (rt, extra = {}) => { const env = { cfg: { rbProbe: false, rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 55, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
     meHp: () => ({ max: 6056, cur: 6056, pct: 100 }), potModel: () => ({ pool: 600000, rate: 2000, n: 800 }), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),
     setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), ...extra }; return { env, R: load(extra.sb || {}).L2V7Factories.raid(env) }; };
   // 1. встроенные цифры: Тарлк известен без памяти (после переустановки)

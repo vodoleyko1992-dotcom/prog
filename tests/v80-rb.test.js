@@ -5,7 +5,7 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const load = (f, extra = {}) => { const sb = { console, Date, Math, JSON, CSS: { escape: s => s }, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(read(f), sb); return sb; };
 const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
-const mk = (rt, extra = {}) => { const env = { cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
+const mk = (rt, extra = {}) => { const env = { cfg: { rbProbe: false, rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
   meHp: () => ({ max: 4710, cur: 4710, pct: 100 }), potModel: () => ({ pool: 600000, rate: 2000, n: 960 }), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),
   setRt: async p => Object.assign(env.rt, p), rec: () => {}, ...extra }; return { env, R: load('modules/raid.js', extra.sb || {}).L2V7Factories.raid(env) }; };
 
@@ -14,6 +14,8 @@ const { R } = mk({ rbStats: base.rbStats, rbDb: base.rbDb, rbK: base.rbK });
 const k = R.rbSpM(); assert.ok(k >= 0.9 && k <= 1.4, 'M.Atk multiplier ' + k);
 const verfa = R.rbPreCheck('l2dop_rb_25050', { hp: 771340, patk: 3310, matk: 3110 });          // реально 2600 (60 % HP) — не лезть
 assert.equal(verfa.ok, false, 'Верфа is refused: ' + verfa.why);
+{ const { env: e9, R: R9 } = mk({ rbStats: base.rbStats, rbDb: base.rbDb, rbK: base.rbK }); delete e9.cfg.rbProbe;   // 9.2.5: оценка 59 % (реально 2600) — пробный заход, выход ниже оценки × 1,1
+  assert.equal(R9.rbPreCheck('l2dop_rb_25050', { hp: 771340, patk: 3310, matk: 3110 }).probe, true); }
 const golem = R.rbPreCheck('x_golem', { hp: 500000, patk: 3800, matk: 4204 });
 assert.equal(golem.ok, false, 'Golem (M.Atk 4204) refused');
 const selyan = R.rbPreCheck('l2dop_rb_25013', { hp: 507285, patk: 2894, matk: 2217 });        // убит в логе — должен проходить

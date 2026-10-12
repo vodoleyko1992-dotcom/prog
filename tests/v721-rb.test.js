@@ -21,8 +21,10 @@ env.rt.rbStats.g = { hp: 576831, patk: 2171 }; env.rt.rbDb.g = { sp: 1344 };
 assert.ok(Math.abs(R.rbSpK() - 1344 / (2171 * 0.144) * 1.15) < 1e-9);
 // 3. РБ, которого не видели (цифры — прикидка): отсекается только явно неподъёмный
 const est = { hp: 700000, patk: 2600, est: true }, real = { ...est, est: false };
+env.cfg.rbProbe = false;   // 9.2.5: без пробного захода — как раньше
 const a = R.rbPreCheck('n', est), b = R.rbPreCheck('n', real);
 assert.equal(b.ok, false, 'real numbers: special ≈1860 = 46 % HP → no');
+delete env.cfg.rbProbe; assert.equal(R.rbPreCheck('n', real).probe, true, '9.2.5: estimate < 80 % HP → one probe');
 assert.ok(a.ok || a.kind !== 'strong', 'estimate only: not rejected as «strong» — real numbers on the map decide');
 // 4. код: оценка до боя — пропуск 30 мин, а не вечный вердикт; иммунитет к дебаффам; самопроверка HP; миграция
 const raid = fs.readFileSync(path.join(root, 'modules/raid.js'), 'utf8'), combat = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), content = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
