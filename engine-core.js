@@ -105,12 +105,13 @@
 
   // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
   // combat remain higher-priority interrupts in the content-script dispatcher.
-  function chooseMode({ epic = false, raid = false, fish = false, cat = false, campaign = false } = {}) {
+  function chooseMode({ epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
     if (epic) return 'epic';
     if (raid) return 'raid';
     if (fish) return 'fish';
     if (cat && !campaign) return 'cat';
     if (campaign) return 'campaign';
+    if (tasks) return 'tasks';     // 10.0 (игрок 12.10: «старт без быстрого режима»): режима нет — только задачи (Маммон, квесты, цель фарма, TvT)
     return 'farm';
   }
 

@@ -149,7 +149,8 @@ async function nextFight(ctx) {
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
   const healing = env.rt.rbHunt?.last === 'лечусь на мобах' && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
-  if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
+  if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();
+  if (env.autonomyMode() === 'tasks' && !env.lootGoal?.()) return env.toMap();   // 10.0: без режима — бой (начатый игроком или по задаче) довели, дальше не охотимся   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
   // расходники на исходе (по панели) или пора проверить руду (раз в час) — сначала в магазин
   // (не чаще раза в 10 мин — если адены не хватило, не бегаем в магазин после каждого боя)
   if (env.rt.shop) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Закупить сейчас» нажали во время боя

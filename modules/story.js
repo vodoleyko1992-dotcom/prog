@@ -178,7 +178,8 @@ async function storyStep() {
   const home = !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
   // 10.0 (аудит): «стоять там, где оставили» — точка неизвестна (после телепорта к РБ/смерти) или найдена только по мобам (out:…, телепорта туда нет) —
   // бот не вернулся бы; сдаём, когда точка снова определится по карте
-  if (!env.fishNow() && env.autonomyMode() !== 'cat' && (!home || /^out:/.test(home))) return false;
+  // 10.0: без режима (только задачи) бот стоит, где стоял — точка возврата не нужна
+  if (!env.fishNow() && !['cat', 'tasks'].includes(env.autonomyMode()) && (!home || /^out:/.test(home))) return false;
   const tried = Object.fromEntries(Object.entries(env.rt.storyTried || {}).filter(([, t]) => Date.now() - t < 86400000));
   await env.setRt({ storyJob: { ...w, home, t: Date.now() }, storyTried: { ...tried, [w.key]: Date.now() } });
   env.rec('B', 'квест', `${Q[w.kind].name}: иду сдавать — ${w.why}`);

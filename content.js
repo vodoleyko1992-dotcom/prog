@@ -15,7 +15,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
-  chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -1981,9 +1981,17 @@ const EPICS = [
 const EPIC_URL = '/epic-bosses.html';
 const isEpicPage = (...args) => L2V7Modules.epics.isEpicPage(...args);
 const epicOn = (...args) => L2V7Modules.epics.epicOn(...args);
+// 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
+async function tasksIdle() {
+  const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmCraftSend && cfg.mmGoalItem && 'крафтер', cfg.mmMailClaim && 'почта',
+    cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT'].filter(Boolean);
+  setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
+  if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
+  await sleep(2000);
+}
 const autonomyMode = () => L2EngineCore.chooseMode({
   epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
-  cat: !!cfg.catMode, campaign: !!cfg.campaign
+  cat: !!cfg.catMode, campaign: !!cfg.campaign, tasks: !!cfg.taskOnly
 });
 // эпики + рыбалка: эпиков подходящих нет (выбор цели) — бот рыбачит; места «куда вернуться» и «мягкая ошибка» считают это рыбалкой
 const fishNow = (...args) => L2V7Modules.fishing.fishNow(...args);
@@ -2307,6 +2315,9 @@ async function main() {
       else if (campOn() && (rt.campaignDue || !rt.campaign) && !isMap()) await goCampaign();
       else if (campOn() && isMail() && rt.campaignDue) await mailStep();
       else if (campOn() && isQuests() && rt.campaignDue) await questsStep();
+      // 10.0 (игрок 12.10: «кнопка старт без быстрого режима… не все задачи стоят на быстром режиме»): режим не выбран — бот делает только
+      // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
+      else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
       else if (isMap()) {
         if (campOn() && (rt.campaignDue || !rt.campaign)) await goCampaign();
         else await map();
