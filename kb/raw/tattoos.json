@@ -6,18 +6,12 @@
   "canUseDyes": true,
   "minLevel": 40,
   "slotsLocked": false,
-  "canEngraveGlobally": false,
+  "canEngraveGlobally": true,
   "canRemoveGlobally": false,
   "freeSlot": 1,
   "engraveCost": 10,
   "removeRefund": 5,
-  "blockers": [
-   {
-    "code": "not_in_city",
-    "messageUk": "Щоб нанести татуювання, персонаж повинен знаходитися в місті.",
-    "messageRu": "Щоб нанести татуювання, персонаж повинен знаходитися в городе."
-   }
-  ],
+  "blockers": [],
   "tattoos": [
    {
     "slot": 1,

@@ -195,17 +195,24 @@
     <span class="mode-toggle-title">◫ Быстрые режимы</span><span id="modeSummary">Настроить режимы</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
   </button>
   <div id="quickModeGrid" class="modes" hidden>
-    <div class="mode-label">Чем занят бот — включён ровно один режим:</div>
+    <div class="mode-label">Чем занят бот — один режим или ни одного (повторное нажатие снимает режим):</div>
+    <button id="tasksToggle" data-mode="tasks" title="Без режима: бот делает только включённые задачи — Маммон (заказ, кузнец, крафтер, почта), квесты сабкласса/Noblesse, цель фарма ресурса или рецепта, TvT. Между ними стоит там, где стоит, мобов не бьёт">⏹ Только задачи</button>
     <button id="farmToggle" data-mode="farm" title="Стоять там, где оставили: ★ цели квестов и мобы этой локации (чемпионы — если включено «Искать чемпионов» в «Охоте»)">⚔ Фарм на месте</button>
     <button id="autoFarmToggle" data-mode="auto" title="Бот сам подбирает лучшую по опыту локацию своего уровня">🗺 Автофарм</button>
     <button id="huntToggle" data-mode="rb" title="Бот летает по списку РБ игры и бьёт их по очереди">👑 Тур по РБ</button>
     <button id="epicToggle" data-mode="epic" title="Бот летает к эпик-боссам по списку и добивает их заходами">🐉 Эпики</button>
     <button id="fishToggle" data-mode="fish" title="Рыбалка: заброс, вываживание, разделка и обмен на Proof">🎣 Рыбалка</button>
     <button id="catToggle" data-mode="cat" title="Фарм катакомб и некрополей">🏛 Катакомбы</button>
+    <div class="mode-label">Задачи — работают в любом режиме и без режима:</div>
+    <button class="mod" data-task="mmOrders" title="Заказ торговца Маммона: бот сам сдаёт ресурсы, когда они есть (раздел «Маммон»)">📦 Заказ Маммона</button>
+    <button class="mod" data-task="mmUpgrade" title="Улучшение вещи-цели у кузнеца Маммона (тратит Coin of Luck; раздел «Маммон»)">⬆ Кузнец</button>
+    <button class="mod" data-task="mmCraftSend" title="Сырьё на крафт вещи-цели — крафтеру почтой (раздел «Маммон» → «Крафтер и почта»)">📮 Крафтер</button>
+    <button class="mod" data-task="storyTurnIn" title="Квесты сабкласса и Noblesse: готовую часть бот сдаёт у NPC сам">📜 Квесты</button>
+    <button class="mod" data-task="enemyHunt" title="Лист врагов: нападать на врага на своей локации (с проверкой сил)">☠ Враги</button>
+    <button id="tvtToggle" class="mod" title="TvT: запись и бой 3 раза в день (прерывает любой режим)">⚔ TvT</button>
     <div class="mode-label">Дополнительно (к фарму):</div>
     <button id="campToggle" class="mod" hidden title="7.2.1: кампания убрана — квесты игрок ведёт сам">📜 Кампания</button>
     <button id="rbToggle" class="mod" title="Бить РБ в текущей локации между мобами">👑 РБ между мобами</button>
-    <button id="tvtToggle" class="mod" title="TvT: запись и бой 3 раза в день (прерывает любой режим)">⚔ TvT</button>
   </div>
   <div id="status"></div>
   <div id="questBox"></div>
@@ -252,7 +259,7 @@
     <button type="button" class="module-tile" data-goto="fish"><span class="tile-icon">◉</span><span><strong>Рыбалка</strong><small>Заброс, улов, разделка, Proof</small></span><em id="modeFishState">Открыть ↗</em></button>
     <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">⚔</span><span><strong>Бой</strong><small>Анализ боя, общие правила, Warlock и кот, маг, спойлер, воин</small></span><em>Открыть ↗</em></button>
   </div>
-  <div class="hint">Режим выбирается в «◫ Быстрых режимах» сверху — включён ровно один; «РБ между мобами» и TvT — дополнения к фарму. TvT прерывает любой режим на время события. ↺ — новая сессия: темп «в час» считается с этого нажатия.</div>
+  <div class="hint">Режим выбирается в «◫ Быстрых режимах» сверху — один или ни одного («⏹ Только задачи»: Маммон, квесты, цель фарма, TvT; мобов между задачами бот не бьёт); «РБ между мобами» и TvT — дополнения к фарму. TvT прерывает любой режим на время события. ↺ — новая сессия: темп «в час» считается с этого нажатия.</div>
 </section>
 
 <!-- 🎯 ЦЕЛИ -->
@@ -300,6 +307,12 @@
   <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
   <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
   <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
+  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
+  <div id="tsBox" class="hint"></div>
+  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
+  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
+  <div id="tsGoalBox" class="hint"></div>
+  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
 
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
   <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
@@ -600,7 +613,7 @@
   <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
   <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
   <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
-  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="20/100"></label>
+  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="200/1000"></label>
   <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
   <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
   <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
@@ -749,6 +762,7 @@
 <script src="zone-kpd.js"></script>
 <script src="fa-full.js"></script>
 <script src="modules/enemies.js"></script>
+<script src="modules/tvtshop.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>

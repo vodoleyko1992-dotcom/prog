@@ -718,5 +718,13 @@
   "adenaCost": 6000,
   "mobLevelMin": 5,
   "mobLevelMax": 57
+ },
+ {
+  "teleportId": "ashen_bastion",
+  "labelEn": "Ashen Bastion",
+  "labelUk": "Ashen Bastion",
+  "adenaCost": 0,
+  "mobLevelMin": 85,
+  "mobLevelMax": 85
  }
 ]

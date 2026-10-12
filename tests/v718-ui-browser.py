@@ -42,7 +42,7 @@ with sync_playwright() as p:
   page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-fishing.png')))
   page.locator('#modeToggle').click()
   assert page.locator('#quickModeGrid').is_visible()
-  assert page.locator('#quickModeGrid button[data-mode]').count()==6   # 7.2+: 6 режимов «Чем занят бот»
+  assert page.locator('#quickModeGrid button[data-mode]').count()==7   # 7.2+: 6 режимов «Чем занят бот» + 10.0 «Только задачи»
   page.close()
  browser.close()
 print('PASS: Classic in-game layout, 13-module navigation, 375px dock, +10 setting, zero console errors')

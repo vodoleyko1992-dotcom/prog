@@ -9,15 +9,15 @@
   "baseAdenaCost": 100000,
   "adenaCost": 100000,
   "vipFreeApplied": false,
-  "characterLevel": 60,
-  "minRaidBossLevel": 51,
+  "characterLevel": 64,
+  "minRaidBossLevel": 55,
   "bosses": [
    {
     "spawnId": "l2dop_rb_25131",
     "name": "Carnage Lord Gato",
     "level": 50,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
@@ -69,7 +69,7 @@
     "name": "Lilith's Witch Marilion",
     "level": 50,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
@@ -82,7 +82,7 @@
     "name": "Messenger of Fairy Queen Berun",
     "level": 50,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
@@ -113,8 +113,8 @@
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/226.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25050",
@@ -126,34 +126,34 @@
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/172.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25067",
     "name": "Captain of Red Flag Shaka",
     "level": 52,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/12.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25496",
     "name": "Fafurion's Envoy Pingolpin",
     "level": 52,
     "bossType": "raid",
-    "isAlive": true,
+    "isAlive": false,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/210.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25512",
@@ -165,34 +165,34 @@
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/29.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25473",
     "name": "Grave Robber Kim",
     "level": 52,
     "bossType": "raid",
-    "isAlive": true,
+    "isAlive": false,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/14.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25029",
     "name": "Atraiban",
     "level": 53,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/311.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25509",
@@ -204,8 +204,8 @@
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/323.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    }
   ]
  }

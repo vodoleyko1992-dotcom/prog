@@ -11,11 +11,11 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
-  autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
+  autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
-  chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, tsGoalItem: 0, tsBuy: false, chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -470,7 +470,9 @@ const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 
   // 9.2 (игрок 11.10, скрин окна кота + лог 12.10 02:44:49 «Blessing of Queen застосовано до героя та активного слуги»): слот «Summon Feline Queen»
   // (l2_1331) на L2WAP больше не призывает королеву — это бафф кота Blessing of Queen. 9.2.2 (игрок 11.10 21:21, ответ админа): админ переделал
   // бафф — «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин (было +20 % крит-урона, 2 мин). Роль «Баффы кота», ставим всегда, как истёк
-  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 1200, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 20 мин · MP 87' } };
+  // 10.0 (данные игры 12.10: новость 11.10 «WARLOCK, СУММОНЫ И SPOIL», код игры l2-hud-companion.js «Blessing of Queen накладено на 2 хв.»):
+  // длительность снова 2 мин. Ставим, как истёк (лишний повтор стоит 87 MP — дешевле, чем 18 мин без +40 % урона кота)
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 2 мин · MP 87' } };
 const ilNum = v => Array.isArray(v) ? v[0] : v;
 // ---------- база предметов Interlude (items-il.json, 9208 шт.) — грузится один раз, когда нужна ----------
 let ITEMS = null, ITEM_BY_NAME = Object.create(null), itemsLoading = null, itemsRetryAt = 0;
@@ -895,6 +897,7 @@ const rtWriter = L2EngineCore.createPatchQueue(
 // (location.href, перезагрузка) недописанное не пропало — отправляем остаток очереди сразу, без ожидания ответа
 addEventListener('pagehide', () => {
   try {
+    try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
     const p = rtWriter.peek();
     if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch }, () => void chrome.runtime.lastError);
   } catch (e) {}
@@ -1341,7 +1344,8 @@ async function farmStep() {                       // после боя: пора
   if (r0?.bosses?.length && !r0.drop?.length) {     // только с РБ
     // v5.6: раньше требовался «👑 Фарм РБ», а при нём фарм ресурсов не вызывается вовсе — такой предмет был недостижим.
     // Теперь сам: список РБ игры (если не читан или старше 20 мин) → телепорт к нужному РБ → бой только с ним (rt.farmRb)
-    if (!Object.keys(rt.rbList || {}).length || Date.now() - (rt.rbListT || 0) > 20 * 60000) {
+    // 10.0 (аудит фарма): подходящего РБ не было (farmWhy) — список ≈14 страниц перечитываем раз в 60 мин, а не в 20
+    if (!Object.keys(rt.rbList || {}).length || Date.now() - (rt.rbListT || 0) > (rt.farmWhy === 'rb:' + g.key ? 60 : 20) * 60000) {
       if (rt.rbScan) return false;
       rec('B', 'фарм', `${g.name}: падает только с РБ — читаю список рейд-боссов`);
       await setRt({ rbScan: true }); return true;
@@ -1977,9 +1981,17 @@ const EPICS = [
 const EPIC_URL = '/epic-bosses.html';
 const isEpicPage = (...args) => L2V7Modules.epics.isEpicPage(...args);
 const epicOn = (...args) => L2V7Modules.epics.epicOn(...args);
+// 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
+async function tasksIdle() {
+  const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmCraftSend && cfg.mmGoalItem && 'крафтер', cfg.mmMailClaim && 'почта',
+    cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT'].filter(Boolean);
+  setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
+  if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
+  await sleep(2000);
+}
 const autonomyMode = () => L2EngineCore.chooseMode({
   epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
-  cat: !!cfg.catMode, campaign: !!cfg.campaign
+  cat: !!cfg.catMode, campaign: !!cfg.campaign, tasks: !!cfg.taskOnly
 });
 // эпики + рыбалка: эпиков подходящих нет (выбор цели) — бот рыбачит; места «куда вернуться» и «мягкая ошибка» считают это рыбалкой
 const fishNow = (...args) => L2V7Modules.fishing.fishNow(...args);
@@ -2142,6 +2154,8 @@ async function main() {
           rec('S', 'ядро', `v${chrome.runtime.getManifest().version}: управление вкладкой получено, запускаю цикл ${location.pathname}`);
           // При передаче управления перечитываем последнюю сохранённую версию,
           // не продолжаем со снимком состояния вкладки-ожидателя.
+          // 10.0 (аудит ядра): накопленное, пока вкладка ждала замок, — устаревшее (хозяином была другая вкладка); очередь чистим
+          rtWriter.clear();
           const fresh = await chrome.storage.local.get(['rt', 'cfg']);
           rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
         }
@@ -2179,11 +2193,13 @@ async function main() {
       const activeJob = isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow();
+      // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
+      const abWait = !!antibotState() || (rt.pveBlockUntil || 0) > Date.now();
       const sig = [location.pathname, location.search, rt.kills, rt.rbKills,
         rt.fish?.casts || 0, rt.fish?.caught || 0, rt.epic?.step || '',
         rt.rbHunt?.step || '', rt.shop?.step || '', rt.tbuff?.step || '',
         meHp()?.cur ?? '', mobHp()?.cur ?? ''].join('|');
-      if (progressMonitor.tick(sig, activeJob) === 'stalled' && !serverDown()) {
+      if (progressMonitor.tick(sig, activeJob && !abWait) === 'stalled' && !serverDown()) {
         if (!(await srvUp())) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); continue; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
         const history = (rt.stallRecoveries || []).filter(t => Date.now() - t < 30 * 60000);
         rec('S', 'восстановление', `нет прогресса 9 мин: ${location.pathname}, режим ${autonomyMode()}, попытка ${history.length + 1}/3`);
@@ -2270,6 +2286,8 @@ async function main() {
       // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
       L2V7Modules.story.storyTick().catch(() => {});
       if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
+      // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
+      if (await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -2299,12 +2317,15 @@ async function main() {
       else if (campOn() && (rt.campaignDue || !rt.campaign) && !isMap()) await goCampaign();
       else if (campOn() && isMail() && rt.campaignDue) await mailStep();
       else if (campOn() && isQuests() && rt.campaignDue) await questsStep();
+      // 10.0 (игрок 12.10: «кнопка старт без быстрого режима… не все задачи стоят на быстром режиме»): режим не выбран — бот делает только
+      // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
+      else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
       else if (isMap()) {
         if (campOn() && (rt.campaignDue || !rt.campaign)) await goCampaign();
         else await map();
       }
       else await goOutskirts();                   // город, магазин, инвентарь… — в Окрестности
-      await sleep(200);
+      await sleep(isBattle() ? 40 : 200);         // 10.0 (лог 12.10): цепочка — следующий бой уже на этой странице, 200 мс простоя на каждого моба не нужны
     } catch (e) { console.error(TAG, e); try { await softError(e); } catch (e2) { console.error(TAG, 'softError', e2); await sleep(3000); } }   // 7.1.30: ошибка внутри обработчика не глушит цикл
   }
   } finally { running = false; }
@@ -3064,6 +3085,7 @@ addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
   const p = e.data.path || '/game/battle/action';
   if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); }   // 8.0.3: GET /character — не «ход ушёл»
+  if (p === '/game/battle/hunt-continue') ACT_NET.huntT = Date.now();             // 10.0: «Охотиться дальше» в полёте (сервер замирает до ≈8,4 с)
   if (e.data.rid != null) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
 });
 async function weaponEquipNote(req) {
@@ -3112,6 +3134,7 @@ addEventListener('message', e => {
   if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();   // 8.0.3: запрос игры закончился — она снова принимает клики
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
+  if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
   // 9.0 (лог 12.10 01:08:30, Fairy Queen Timiniel 7 092 из 1,9 млн): ход → 400 «Немає активного бою» (battle_none / not_in_battle) — боя на
   // сервере уже нет (РБ добили другие), а страница боя осталась. Бот 23 мин жал вслепую. Метка для боя (combat), снимает её любой принятый ход/новый бой
@@ -3130,6 +3153,7 @@ addEventListener('message', e => {
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
   { const m = invNote(d.inv); if (m) { INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    if (tabOwner) try { L2V7Modules.tvtshop.shilNote(); } catch (er) {}   // 10.0: Shil Coins в сумке → rt.tsShil
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
     const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
     if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && Date.now() - (ss?.t || 0) > 60000) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
@@ -3139,14 +3163,16 @@ addEventListener('message', e => {
   if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
     msg: String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 160), stone: d.req?.stone, qty: +d.req?.qty || 0 };
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
-  if (tabOwner && d.status >= 200 && d.status < 300 && d.res) try {
+  // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
+  const meNow = !heroNick() || rt.char === heroNick();
+  if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res) try {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
     if (path === '/game/item-transfer/claim' && d.status === 200) { L2V7Modules.mammon.mailNote(); L2V7Modules.mammon.mailSeen(); }   // 9.2.5: ресурсы с почты → спросить кузнеца, перечитать почту (учёт возврата от крафтера)
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
-  if (tabOwner && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
+  if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
@@ -3188,6 +3214,7 @@ addEventListener('message', e => {
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 9.2 (лог 11.10 03:00): павший враг — по ответу удара (targetDead) или отказу выбрать цель (tvt_target_dead), см. tvt.tvtDeadNote
   if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
+  if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}   // 10.0: каталог магазина TvT
   if (path === '/game/tvt/target' && d.res?.error === 'tvt_target_dead') L2V7Modules.tvt.tvtDeadNote(d.req?.targetCharacterId);
   if (Array.isArray(d.sp) && d.sp.length && !document.prerendering) netSpawns(d.sp).catch(er => console.warn(TAG, 'spawns', er));
   if (d.res?.error && /\/game\/(battle|dungeon)\//.test(path)) NET_ERR = { t: Date.now(), err: d.res.error, path };   // v5.3.1: ответ «battle_too_far» и т.п.
@@ -3779,7 +3806,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },
@@ -4119,22 +4146,29 @@ L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyM
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
-  const b = /^l2_\d+$/.test(a) ? document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) : null;
+  // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
+  // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
+  const b = /^l2_\d+$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
 L2V7Modules.fightlab = L2V7Factories.fightlab({ get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
 const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.2: лист врагов и ответный PvP (modules/enemies.js)
+L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get fire() { return fire; },
+  get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
+  get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return fire; },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
 // 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
-const awayFree = () => L2V7Modules.mammon.modeFree();
+const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
 const classSwitched = () => { PET = null; };
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
+  if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }
   if (m.cmd === 'kick') {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
@@ -4181,6 +4215,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
   if (ch.on) {
     on = !!ch.on.newValue;
+    if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
     const stopMeta = ch.stopMeta?.newValue;
     const reason = !on && stopMeta && Date.now() - (+stopMeta.t || 0) < 30000
       ? ` · источник: ${String(stopMeta.source || 'не указан').slice(0, 50)} · ${String(stopMeta.reason || '').slice(0, 180)}`
@@ -4322,6 +4357,9 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     Object.assign(rf, { rbStats: S, rbPreSkip: P });
   });
   once('faFull925', () => { if (String(C('rbSessBuffs') || '').replace(/\s+/g, '') === '1413,1323,4703,273,365,1303,264,267,1389') cf.rbSessBuffs = 'auto'; });   // 9.2.5: заводской список РБ-сессии → фулл бафф под класс (свой список игрока не трогаем)
+  // 10.0 (ребаланс ради КПД): банок MP 20/100 хватало на ≈10 мин боя (MP не экономим — игрок 10.10), бот бегал в магазин; РБ ниже героя
+  // на 10–15 уровней дают EXP со штрафом и почти пустой дроп, а тур летал к ним за телепорт — окно вниз 9 уровней. Только заводские значения
+  once('rebal100', () => { if (C('shopMp') === '20/100') cf.shopMp = '200/1000'; if (+C('rbMaxBelow') === 15) cf.rbMaxBelow = 9; });
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)

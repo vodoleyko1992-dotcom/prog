@@ -9,21 +9,21 @@
   "baseAdenaCost": 100000,
   "adenaCost": 100000,
   "vipFreeApplied": false,
-  "characterLevel": 60,
-  "minRaidBossLevel": 51,
+  "characterLevel": 64,
+  "minRaidBossLevel": 55,
   "bosses": [
    {
     "spawnId": "l2dop_rb_25481",
     "name": "Magus Kenishee",
     "level": 53,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/86.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25159",
@@ -35,8 +35,8 @@
     "adenaCost": 100000,
     "vipFreeApplied": false,
     "icon": "/mobs/177.png",
-    "canAttack": true,
-    "attackBlockedReasonUk": null
+    "canAttack": false,
+    "attackBlockedReasonUk": "Недоступно: Raid Boss нижче дозволеного рівня."
    },
    {
     "spawnId": "l2dop_rb_25434",
@@ -108,7 +108,7 @@
     "name": "Furious Thieles",
     "level": 55,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,
@@ -134,7 +134,7 @@
     "name": "Harit Hero Tamash",
     "level": 55,
     "bossType": "raid",
-    "isAlive": false,
+    "isAlive": true,
     "baseAdenaCost": 100000,
     "adenaCost": 100000,
     "vipFreeApplied": false,

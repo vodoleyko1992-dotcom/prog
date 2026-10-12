@@ -82,7 +82,7 @@ async function npcPoll() {
 async function mmTick() {
   if (busy) return busy;
   const now = Date.now(), np = env.rt.mmNpc;
-  const wantNpc = now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > 60000) || env.rt.mmPollReq;
+  const wantNpc = now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > (now - np.order.at < 10 * 60000 ? 60000 : 5 * 60000)) || env.rt.mmPollReq;
   const wantOrder = (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
   // 9.2.5: сумка по факту — своим GET /character, если ответов игры с сумкой не было > 5 мин (бот считает план по сумке); почта — раз в 10 мин
   const wantInv = !!env.cfg.mmGoalItem && env.invQty(0) == null && now - invT > INV_EVERY && !!env.invRefresh;
@@ -260,9 +260,9 @@ function goalNote() {                             // раз на изменен�
   return p;
 }
 // ---- поход к NPC ----
-function modeFree() {                             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
-  const r = env.rt;
-  if (env.isBattle() || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return false;
+function modeFree(afterWin = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
+  const r = env.rt;                               // afterWin — 10.0: экран победы в цепочке (страница боя, но бой окончен)
+  if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return false;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return false;
   if (['epic', 'raid'].includes(env.autonomyMode())) return false;
   if (env.cfg.tvtOn && env.tvtSoon?.()) return false;
@@ -292,7 +292,9 @@ function want() {
   if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
   const cw = craftWant(now); if (cw?.cmd && !cw.drop) return cw;
-  if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3)
+  // 10.0 (аудит): вложение не забирается (инвентарь полон, кнопки нет) — не ходить на почту раз в 10 мин: повтор, когда почта изменилась, или раз в 2 ч
+  const uncSig = (env.rt.mmMail?.unc || []).map(a => a.a).join(','), cf = env.rt.mmClaimFail;
+  if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3 && !(cf?.sig === uncSig && now - (cf.t || 0) < 2 * 3600000))
     return { kind: 'claim', why: `в почте предметов: ${env.rt.mmMail.unc.length} (${env.rt.mmMail.unc.slice(0, 3).map(a => `${a.n} ×${fmtA(a.q)} от ${a.s}`).join(', ')})` };
   if (cw && !cw.drop) return cw;
   if (env.rt.mmSmithReq) return { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)' };
@@ -301,7 +303,11 @@ function want() {
   // Адена — не предмет сумки (character.adena), её проверяет кузнец (canAfford). Сумка не видит всего (лог 12.10: ресурсы с почты) —
   // свежий ответ кузнеца «хватает» (mmSmithOk, ≤ 30 мин, тот же уровень) тоже готовность
   const colHave = haveOf(COL_ID), so = env.rt.mmSmithOk, smithOk = !!(p && so?.ok && so.id === p.id && so.lvl === p.lvl && now - (so.t || 0) < 30 * 60000);
-  if (p && !p.done && (smithOk || (p.ready && (colHave == null || colHave >= (p.col || 0)))) && env.cfg.mmUpgrade !== false && now - (env.rt.mmUpT || 0) > UP_RETRY)
+  // 10.0 (аудит): две неудачи на этом уровне (карточки нет, кнопка недоступна, уровень не вырос) — не платить за телепорт раз в 30 мин без конца:
+  // ждём 6 ч или кнопку игрока; кузнец недавно ответил «не хватает» на этом уровне — по сумке (p.ready) не летим, адену видит только кузнец
+  const uf = env.rt.mmUpFail, upKey = p ? `${p.id}:${p.lvl}` : '', failStop = !!(uf && uf.k === upKey && uf.n >= 2 && now - (uf.t || 0) < 6 * 3600000);
+  const smithNo = !!(p && so && so.ok === false && so.id === p.id && so.lvl === p.lvl && now - (so.t || 0) < 2 * 3600000);
+  if (p && !p.done && !failStop && (smithOk || (p.ready && !smithNo && (colHave == null || colHave >= (p.col || 0)))) && env.cfg.mmUpgrade !== false && now - (env.rt.mmUpT || 0) > UP_RETRY)
     return { kind: 'smith', up: true, id: `up:${p.id}:${p.lvl}`, why: `улучшить ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
@@ -317,8 +323,18 @@ async function finish(J, ok, why) {
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку' }, zoneGoT: 0 } : {};
+  // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
+  const extra = {};
+  if (J.up) { const k = String(J.id || '').replace(/^up:/, ''), uf = env.rt.mmUpFail; extra.mmUpFail = ok ? null : { k, n: (uf?.k === k ? uf.n || 0 : 0) + 1, t: Date.now() }; }
+  if (J.kind === 'claim') extra.mmClaimFail = ok && (J.got || []).length ? null : { sig: (env.rt.mmMail?.unc || []).map(a => a.a).join(','), t: Date.now() };
+  if (J.kind === 'send' && env.rt.mmCraft) {
+    const pn = J.pendJob ? (env.rt.mmCraft.pendN || 0) + 1 : 0;   // досылка не прошла 3 раза — бросаем (в журнал), дальше кнопками
+    const pend = !ok && ((J.done || []).length || J.pendJob) && (J.items || []).length && pn < 3 ? J.items : null;
+    if (!ok && J.pendJob && !pend) env.rec('B', 'Маммон', `остаток партии крафтеру не ушёл 3 раза — бросаю: ${J.items.map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}`);
+    if (pend || env.rt.mmCraft.pend) extra.mmCraft = { ...env.rt.mmCraft, pend, pendN: pend ? pn : 0 };
+  }
   await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}),
-    ...(J.kind === 'send' ? { mmSendT: ok ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...back });
+    ...(J.kind === 'send' ? { mmSendT: ok ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
   if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function teleport(J) {                      // страница телепорта к NPC: цена → кнопка → карта
@@ -372,7 +388,9 @@ async function smith(J) {
 // улучшение вещи-цели у кузнеца — кнопкой «Покращити до Lv.N» на его странице (как игрок; ревизию берёт сама страница). Только вещь из
 // настроек (cfg.mmGoalItem), только до выбранного уровня (cfg.mmGoalLvl), по одному уровню за поход, только если игра пишет «хватает»
 // (canAfford). Coin of Luck тратится только здесь
-const upItem = (items, id) => (Array.isArray(items) ? items : []).find(i => +i.itemId === id) || null;
+// 10.0 (аудит): две одинаковые вещи (надета и в сумке) — улучшаем надетую
+const upItem = (items, id) => { const l = (Array.isArray(items) ? items : []).filter(i => +i.itemId === id);
+  return l.find(i => /одягн|одет|надет|equip/i.test(String(i.locationLabelUk || ''))) || l[0] || null; };
 const upMiss = i => [...(+i.cost?.adenaOwned < +i.cost?.adena ? [`адены ${fmtA(i.cost.adena - i.cost.adenaOwned)}`] : []),
   ...(+i.cost?.coinOfLuckOwned < +i.cost?.coinOfLuck ? [`Coin of Luck ${i.cost.coinOfLuck - i.cost.coinOfLuckOwned}`] : []),
   ...(i.cost?.materials || []).filter(m => m.enough === false || +m.owned < +m.required).map(m => `${m.nameUk} ${(+m.required || 0) - (+m.owned || 0)}`)].join(', ');
@@ -400,7 +418,16 @@ async function upgrade(J, items) {
   await env.waitX(() => (env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim() || null, 6000, 200);
   await env.sleep(500);
   const r2 = await getJson('/game/mammon/blacksmith/upgrades'), it2 = r2.ok ? upItem(r2.j?.items, id) : null;
-  if (it2 && +it2.level > L) { smithNote(r2.j?.items); return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`); }
+  if (it2 && +it2.level > L) {
+    smithNote(r2.j?.items);
+    // 10.0 (аудит): цель выше и на следующий уровень игра пишет «хватает» — улучшаем в этот же заход (раньше: домой и снова телепорт за 500 000)
+    if (it2.canAfford && !it2.max && +it2.level < to) {
+      env.rec('B', 'Маммон', `улучшение: ${nm} Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck) · на Lv.${+it2.level + 1} тоже хватает — продолжаю`);
+      await env.setRt({ mmJob: { ...J, id: `up:${id}:${+it2.level}`, clicked: null, tries: 0, t: Date.now(), why: `улучшить ${nm} Lv.${it2.level} → ${+it2.level + 1}` }, mmUpFail: null });
+      return;
+    }
+    return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`);
+  }
   // уровень не подтвердился — следующий круг цикла перечитает список (J.clicked) и решит: вырос / ещё попытка / неудача
 }
 // 9.2.5 (лог 12.10 11:56: ресурсы на улучшение пришли почтой, «Забрати» → сумка бота их не показала, бот так и не пошёл): забрали
@@ -408,6 +435,9 @@ async function upgrade(J, items) {
 function mailNote() {
   if (!env.cfg.mmGoalItem || env.cfg.mmUpgrade === false || env.rt.mmSmithReq) return false;
   const p = goalPlan(); if (!p || p.done || p.ready || !owned(p.id)) return false;
+  // 10.0 (аудит): не любое письмо — только от крафтера или с материалом/сырьём вещи-цели (иначе платный полёт к кузнецу за чужую посылку)
+  const P = goalAll(), ids = new Set([...(p.mats || []), ...(P?.raw || []), ...(P?.tot || [])].map(m => +m.id)), cr = crafter().toLowerCase();
+  if (!(env.rt.mmMail?.unc || []).some(a => ids.has(+a.id) || (cr && a.s.trim().toLowerCase() === cr))) return false;
   if (Date.now() - (env.rt.mmMailT || 0) < 2 * 3600000) return false;
   env.setRt({ mmSmithReq: Date.now(), mmMailT: Date.now(), mmUpT: 0 });
   env.rec('B', 'Маммон', `забрал вложение из почты — проверю у кузнеца, хватает ли на ${p.name} Lv.${p.lvl + 1}`);
@@ -429,7 +459,18 @@ function craftWant(now = Date.now()) {
   if (cmd && now - R.t > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
   if (!to) return cmd ? { drop: 'ник крафтера не задан в меню' } : null;
   if (!env.cfg.mmGoalItem) return cmd ? { drop: 'вещь-цель не выбрана в меню' } : null;
+  // 10.0 (аудит): партия ушла не вся (строки нет, форма не открылась) — досылаем остаток, иначе у крафтера неполный набор и автоотправка стоит навсегда
+  const pend = env.rt.mmCraft?.pend;
+  if (!cmd && pend?.length && env.cfg.mmCraftSend !== false && now - (env.rt.mmSendT || 0) >= UP_RETRY)
+    return { kind: 'send', cmd: false, pendJob: true, to, items: pend, ret: {}, retDone: true, why: `досылаю остаток партии: ${pend.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
+  // у крафтера лежит отправленное > 48 ч и ничего не вернулось — пишем в журнал раз в сутки (вдруг он не получил)
+  if (!cmd && Object.values(atC()).some(v => v > 0) && now - (env.rt.mmCraft?.gotT || env.rt.mmCraft?.t || now) > 48 * 3600000 && now - (env.rt.mmCraftWarnT || 0) > 86400000) {
+    env.setRt({ mmCraftWarnT: now }); env.rec('B', 'Маммон', `${to}: отправленное лежит у крафтера больше 48 ч — проверь почту «Відправлені» или нажми «↺ Забыть, что у крафтера»`);
+  }
   if (!cmd && (env.cfg.mmCraftSend === false || Object.values(atC()).some(v => v > 0) || now - (env.rt.mmSendT || 0) < UP_RETRY)) return null;   // одна партия за раз
+  // 10.0 (аудит): сам — только когда уровень вещи виден (надета или кузнец показывал); иначе план от Lv.0 и лишнее сырьё уходит крафтеру
+  const gid = +env.cfg.mmGoalItem;
+  if (!cmd && !((env.rt.mmGear || []).some(x => x.id === gid) || Object.values(env.rt.mmEq || {}).some(x => x[0] === gid))) return null;
   if (env.invQty(0) == null) return null;         // сумка не свежая — сначала проверка (mmTick), команда подождёт
   const P = craftPlan();
   if (!P || P.done) return cmd ? { drop: 'вещь-цель уже на уровне цели' } : null;
@@ -494,6 +535,7 @@ async function candFind(id) {
     tp = Math.max(1, +j?.totalPages || 1);
     const c = (Array.isArray(j?.candidates) ? j.candidates : []).find(x => +x.itemId === id && x.currencyKind !== 'adena' && !(+x.enchant > 0));
     if (c) return { key: String(c.itemKey), avail: +c.availableQty || 0, unit: +c.transferValueUnitAdena || 0, stack: !!c.stackable, page: pg };
+    if (pg < tp) await env.sleep(350);             // 10.0 (аудит): до 30 страниц подряд — с паузой, иначе 429
   }
   return null;
 }
@@ -558,6 +600,8 @@ async function sendStep(J) {
     env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); await env.setRt({ mmJob: { ...J, cur: null } });
     return finish(J, false, `${nm}: в окне подтверждения не тот получатель или количество (${body.replace(/\s+/g, ' ').slice(0, 80)}) — отменил`);
   }
+  // 10.0 (аудит): старое «успешно» от прошлого предмета не должно засчитать этот — очищаем сообщения перед нажатием
+  for (const eid of ['item-transfer-success', 'item-transfer-err']) { const el = document.getElementById(eid); if (el) el.textContent = ''; }
   env.fire(okBtn);
   const res = await env.waitX(() => shownTxt(document.getElementById('item-transfer-success')) ? 'ok' : shownTxt(document.getElementById('item-transfer-err')) ? 'err' : null, 10000, 200);
   if (res === 'ok') return sentOk({ ...J, cur: null }, cur);
@@ -610,11 +654,16 @@ async function mmStep() {
   // точка возврата: зона охоты (рыбалка, катакомбы и туры возвращаются сами)
   // почта и передача предметов — без телепорта, со своей страницы игры (после — на карту, точка та же)
   const mail = w.kind === 'send' || w.kind === 'claim';
-  const home = !mail && !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
+  // 10.0 (лог 12.10 12:00:05–12:00:13): перелёт в новую зону ещё в пути (zonePend, 2 мин) — возвращаемся туда, а не в старую rt.zone
+  const zp = env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000 ? env.rt.zonePend.id : null;
+  const home = !mail && !env.fishNow() && env.autonomyMode() !== 'cat' ? zp || env.rt.zone || null : null;
   await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
   env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+// 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
+// со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
+function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
+return { chainWant, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

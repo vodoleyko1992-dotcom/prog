@@ -902,6 +902,16 @@
     "vipFreeApplied": false,
     "mobLevelMin": 5,
     "mobLevelMax": 57
+   },
+   {
+    "teleportId": "ashen_bastion",
+    "labelUk": "Ashen Bastion",
+    "labelEn": "Ashen Bastion",
+    "baseAdenaCost": 0,
+    "adenaCost": 0,
+    "vipFreeApplied": false,
+    "mobLevelMin": null,
+    "mobLevelMax": null
    }
   ]
  }

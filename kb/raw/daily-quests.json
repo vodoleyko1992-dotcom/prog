@@ -2,55 +2,55 @@
  "_path": "/game/daily-quests",
  "_status": 200,
  "data": {
-  "dayKey": "20261011",
+  "dayKey": "20261012",
   "tasks": {
    "hunt_start_500": {
-    "score": 7022,
+    "score": 2725,
     "have": 500,
     "need": 500,
     "percent": 100,
-    "place": 2,
+    "place": 3,
     "done": true,
     "claimed": true,
     "leader": {
-     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-     "name": "Teddy",
+     "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+     "name": "Dremia",
      "nicknameColor": null,
-     "score": 9356
+     "score": 11217
     }
    },
    "strong_enemy_20": {
-    "score": 12,
+    "score": 26,
     "have": 1,
     "need": 1,
     "percent": 100,
-    "place": 6,
+    "place": 1,
     "done": true,
     "claimed": true,
     "leader": {
-     "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
-     "name": "УМиРАЙ",
+     "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+     "name": "Warlock",
      "nicknameColor": null,
-     "score": 48
+     "score": 26
     }
    },
    "raid_boss_participate": {
-    "score": 13,
+    "score": 27,
     "have": 1,
     "need": 1,
     "percent": 100,
-    "place": 6,
+    "place": 1,
     "done": true,
     "claimed": true,
     "leader": {
-     "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
-     "name": "УМиРАЙ",
+     "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+     "name": "Warlock",
      "nicknameColor": null,
-     "score": 48
+     "score": 27
     }
    },
    "skill_master_50": {
-    "score": 10919,
+    "score": 9404,
     "have": 50,
     "need": 50,
     "percent": 100,
@@ -61,22 +61,22 @@
      "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
      "name": "Warlock",
      "nicknameColor": null,
-     "score": 10919
+     "score": 9404
     }
    },
    "daily_playtime_2h": {
-    "score": 9876,
-    "have": 7200,
+    "score": 2748,
+    "have": 2748,
     "need": 7200,
-    "percent": 100,
-    "place": 2,
-    "done": true,
-    "claimed": true,
+    "percent": 38.166666666666664,
+    "place": 3,
+    "done": false,
+    "claimed": false,
     "leader": {
-     "characterId": "1a675899-686b-4303-8970-89d10c67090e",
-     "name": "Existence",
-     "nicknameColor": "#33CC66",
-     "score": 18277
+     "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+     "name": "Dremia",
+     "nicknameColor": null,
+     "score": 4235
     }
    },
    "chat_social_10": {
@@ -84,33 +84,33 @@
     "have": 0,
     "need": 10,
     "percent": 0,
-    "place": 178,
+    "place": 179,
     "done": false,
     "claimed": false,
     "leader": {
-     "characterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
-     "name": "Cz4",
+     "characterId": "de246ad5-640d-4d04-9a51-6097938b4ba0",
+     "name": "Kraft",
      "nicknameColor": null,
-     "score": 6
+     "score": 4
     }
    },
    "damage_dealer_500k": {
-    "score": 25298992,
+    "score": 39087476,
     "have": 500000,
     "need": 500000,
     "percent": 100,
-    "place": 5,
+    "place": 3,
     "done": true,
     "claimed": true,
     "leader": {
      "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
      "name": "Teddy",
      "nicknameColor": null,
-     "score": 453480894
+     "score": 136936476
     }
    },
    "fishing_catch_50": {
-    "score": 1839,
+    "score": 276,
     "have": 50,
     "need": 50,
     "percent": 100,
@@ -118,10 +118,10 @@
     "done": true,
     "claimed": true,
     "leader": {
-     "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
-     "name": "tms",
+     "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+     "name": "Teddy",
      "nicknameColor": null,
-     "score": 2491
+     "score": 342
     }
    }
   }

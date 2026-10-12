@@ -2,12 +2,12 @@
  "_path": "/game/olympiad",
  "_status": 200,
  "data": {
-  "weekKey": "2026-10-05",
-  "startsAt": "2026-10-04T21:00:00.000Z",
-  "endsAt": "2026-10-11T21:00:00.000Z",
+  "weekKey": "2026-10-12",
+  "startsAt": "2026-10-11T21:00:00.000Z",
+  "endsAt": "2026-10-18T21:00:00.000Z",
   "myCrystals": 0,
-  "participantCount": 7,
-  "totalParticipants": 7,
+  "participantCount": 1,
+  "totalParticipants": 1,
   "couponActive": false,
   "couponExpiresAt": null,
   "canBuyCoupon": true,
@@ -17,52 +17,10 @@
   "leaderboard": [
    {
     "rank": 1,
-    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
-    "name": "tms",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 36928
-   },
-   {
-    "rank": 2,
-    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
-    "name": "ErGe",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 20164
-   },
-   {
-    "rank": 3,
-    "characterId": "a814f82f-6115-4788-9005-94ec5430b014",
-    "name": "Cawak",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 7932
-   },
-   {
-    "rank": 4,
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "name": "Teddy",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 7466
-   },
-   {
-    "rank": 5,
     "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
     "name": "Dremia",
     "nickColor": "#ffdf8c",
-    "crystalsEarned": 3879
-   },
-   {
-    "rank": 6,
-    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
-    "name": "УМиРАЙ",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 2692
-   },
-   {
-    "rank": 7,
-    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
-    "name": "Freed0m",
-    "nickColor": "#ffdf8c",
-    "crystalsEarned": 1416
+    "crystalsEarned": 381
    }
   ]
  }

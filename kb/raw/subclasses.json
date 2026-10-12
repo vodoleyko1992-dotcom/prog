@@ -11,7 +11,7 @@
      "active": true,
      "profession": "human_warlock",
      "race": "Human",
-     "level": 60
+     "level": 64
     },
     {
      "slot": 1,
@@ -78,14 +78,14 @@
   "character": {
    "id": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
    "name": "Warlock",
-   "level": 60,
-   "hp": 5416,
-   "maxHp": 5417,
-   "cp": 2683,
-   "maxCp": 2683,
-   "mp": 4298,
-   "maxMp": 4298,
-   "cityId": "l2dop_aden",
+   "level": 64,
+   "hp": 6517,
+   "maxHp": 6517,
+   "cp": 3430,
+   "maxCp": 3430,
+   "mp": 5395,
+   "maxMp": 5395,
+   "cityId": "l2dop_schuttgart",
    "race": "Human",
    "classBranch": "mystic",
    "gender": "male",
@@ -102,7 +102,7 @@
       "active": true,
       "profession": "human_warlock",
       "race": "Human",
-      "level": 60
+      "level": 64
      },
      {
       "slot": 1,
@@ -131,13 +131,14 @@
     ],
     "secondAndThirdUnlocked": false
    },
-   "adena": "66358189",
-   "exp": "138090384",
-   "expBarCur": "17000331",
-   "expBarMax": "19798551",
-   "expBarPct": 85.87,
-   "sp": 23007946,
-   "mobsKilled": 14918,
+   "noblesse": false,
+   "adena": "83074474",
+   "exp": "192669082",
+   "expBarCur": "528620",
+   "expBarMax": "16423162",
+   "expBarPct": 3.22,
+   "sp": 37860554,
+   "mobsKilled": 18310,
    "profileStatus": null,
    "expGainEnabled": true,
    "karma": 0,
@@ -146,8 +147,8 @@
    "recommendationsLeft": 0,
    "pvpWins": 0,
    "pvpLosses": 0,
-   "revision": 86381,
-   "lastUpdate": "2026-10-11T13:29:04.396Z",
+   "revision": 104779,
+   "lastUpdate": "2026-10-12T03:08:54.982Z",
    "activeDungeonId": null,
    "inventory": {
     "v": 1,
@@ -155,39 +156,39 @@
     "stacks": [
      {
       "itemId": 1870,
-      "qty": 2791
+      "qty": 4514
      },
      {
       "itemId": 1868,
-      "qty": 2963
+      "qty": 4248
      },
      {
       "itemId": 1869,
-      "qty": 2446
+      "qty": 3725
      },
      {
       "itemId": 1865,
-      "qty": 2007
+      "qty": 3022
      },
      {
       "itemId": 1872,
-      "qty": 2735
+      "qty": 4231
      },
      {
       "itemId": 1867,
-      "qty": 2139
+      "qty": 3290
      },
      {
       "itemId": 1871,
-      "qty": 2459
+      "qty": 4548
      },
      {
       "itemId": 1864,
-      "qty": 2299
+      "qty": 3860
      },
      {
       "itemId": 1866,
-      "qty": 2299
+      "qty": 3715
      },
      {
       "itemId": 3031,
@@ -195,7 +196,7 @@
      },
      {
       "itemId": 1061,
-      "qty": 448
+      "qty": 986
      },
      {
       "itemId": 920002,
@@ -203,7 +204,7 @@
      },
      {
       "itemId": 1873,
-      "qty": 2371
+      "qty": 3204
      },
      {
       "itemId": 922066,
@@ -211,19 +212,19 @@
      },
      {
       "itemId": 4037,
-      "qty": 55
+      "qty": 52
      },
      {
       "itemId": 920048,
-      "qty": 133
+      "qty": 113
      },
      {
       "itemId": 1876,
-      "qty": 2011
+      "qty": 2822
      },
      {
       "itemId": 1875,
-      "qty": 1724
+      "qty": 1983
      },
      {
       "itemId": 920005,
@@ -231,7 +232,7 @@
      },
      {
       "itemId": 1877,
-      "qty": 472
+      "qty": 629
      },
      {
       "itemId": 922018,
@@ -239,7 +240,7 @@
      },
      {
       "itemId": 4043,
-      "qty": 1337
+      "qty": 2216
      },
      {
       "itemId": 922011,
@@ -259,7 +260,7 @@
      },
      {
       "itemId": 920008,
-      "qty": 84
+      "qty": 140
      },
      {
       "itemId": 922037,
@@ -267,11 +268,11 @@
      },
      {
       "itemId": 728,
-      "qty": 1024
+      "qty": 1074
      },
      {
       "itemId": 1874,
-      "qty": 764
+      "qty": 942
      },
      {
       "itemId": 922022,
@@ -295,11 +296,11 @@
      },
      {
       "itemId": 920011,
-      "qty": 79
+      "qty": 114
      },
      {
       "itemId": 4042,
-      "qty": 350
+      "qty": 484
      },
      {
       "itemId": 910607,
@@ -331,7 +332,7 @@
      },
      {
       "itemId": 920030,
-      "qty": 11
+      "qty": 13
      },
      {
       "itemId": 920045,
@@ -343,11 +344,11 @@
      },
      {
       "itemId": 920009,
-      "qty": 52
+      "qty": 95
      },
      {
       "itemId": 920007,
-      "qty": 31
+      "qty": 41
      },
      {
       "itemId": 920004,
@@ -355,7 +356,7 @@
      },
      {
       "itemId": 910601,
-      "qty": 38321
+      "qty": 36095
      },
      {
       "itemId": 922032,
@@ -363,15 +364,15 @@
      },
      {
       "itemId": 920015,
-      "qty": 9
+      "qty": 15
      },
      {
       "itemId": 920012,
-      "qty": 105
+      "qty": 124
      },
      {
       "itemId": 920010,
-      "qty": 82
+      "qty": 121
      },
      {
       "itemId": 922064,
@@ -383,7 +384,7 @@
      },
      {
       "itemId": 3950,
-      "qty": 1608
+      "qty": 503
      },
      {
       "itemId": 5467,
@@ -407,7 +408,7 @@
      },
      {
       "itemId": 910512,
-      "qty": 12
+      "qty": 14
      },
      {
       "itemId": 910513,
@@ -415,33 +416,23 @@
      },
      {
       "itemId": 4104,
-      "qty": 1
+      "qty": 3
      },
      {
       "itemId": 922084,
       "qty": 1
      },
      {
-      "itemId": 194,
-      "qty": 1,
-      "enchantPAtkBonus": 0,
-      "enchantMAtkBonus": 0
-     },
-     {
       "itemId": 2957,
       "qty": 1
      },
      {
-      "itemId": 910515,
-      "qty": 1
-     },
-     {
       "itemId": 4116,
-      "qty": 1
+      "qty": 2
      },
      {
       "itemId": 4114,
-      "qty": 1
+      "qty": 2
      },
      {
       "itemId": 2122,
@@ -461,7 +452,7 @@
      },
      {
       "itemId": 4106,
-      "qty": 1
+      "qty": 2
      },
      {
       "itemId": 20003,
@@ -469,11 +460,11 @@
      },
      {
       "itemId": 920013,
-      "qty": 2
+      "qty": 3
      },
      {
       "itemId": 6519,
-      "qty": 7432
+      "qty": 7589
      },
      {
       "itemId": 910610,
@@ -481,7 +472,7 @@
      },
      {
       "itemId": 920044,
-      "qty": 9
+      "qty": 11
      },
      {
       "itemId": 920006,
@@ -489,7 +480,7 @@
      },
      {
       "itemId": 920001,
-      "qty": 18
+      "qty": 19
      },
      {
       "itemId": 920003,
@@ -533,7 +524,7 @@
      },
      {
       "itemId": 910602,
-      "qty": 342
+      "qty": 281
      },
      {
       "itemId": 910600,
@@ -542,23 +533,23 @@
      },
      {
       "itemId": 910603,
-      "qty": 99
+      "qty": 224
      },
      {
       "itemId": 910604,
-      "qty": 52
+      "qty": 143
      },
      {
       "itemId": 910605,
-      "qty": 28
+      "qty": 59
      },
      {
       "itemId": 910606,
-      "qty": 20
+      "qty": 50
      },
      {
       "itemId": 922047,
-      "qty": 6
+      "qty": 7
      },
      {
       "itemId": 4190,
@@ -571,37 +562,262 @@
      {
       "itemId": 4189,
       "qty": 1
+     },
+     {
+      "itemId": 6362,
+      "qty": 5490
+     },
+     {
+      "itemId": 398,
+      "qty": 1
+     },
+     {
+      "itemId": 2431,
+      "qty": 1
+     },
+     {
+      "itemId": 20003,
+      "qty": 1
+     },
+     {
+      "itemId": 2455,
+      "qty": 1
+     },
+     {
+      "itemId": 418,
+      "qty": 1
+     },
+     {
+      "itemId": 884,
+      "qty": 1
+     },
+     {
+      "itemId": 6361,
+      "qty": 8416
+     },
+     {
+      "itemId": 855,
+      "qty": 1
+     },
+     {
+      "itemId": 855,
+      "qty": 1
+     },
+     {
+      "itemId": 884,
+      "qty": 1
+     },
+     {
+      "itemId": 916,
+      "qty": 1
+     },
+     {
+      "itemId": 6360,
+      "qty": 18188
+     },
+     {
+      "itemId": 920046,
+      "qty": 65
+     },
+     {
+      "itemId": 8335,
+      "qty": 1
+     },
+     {
+      "itemId": 8339,
+      "qty": 2
+     },
+     {
+      "itemId": 92,
+      "qty": 1,
+      "enchantPAtkBonus": 0,
+      "enchantMAtkBonus": 0
+     },
+     {
+      "itemId": 30001,
+      "qty": 1
+     },
+     {
+      "itemId": 30004,
+      "qty": 1,
+      "enchant": 1
+     },
+     {
+      "itemId": 30003,
+      "qty": 1,
+      "enchant": 1
+     },
+     {
+      "itemId": 30002,
+      "qty": 1,
+      "enchant": 3
+     },
+     {
+      "itemId": 891,
+      "qty": 1
+     },
+     {
+      "itemId": 860,
+      "qty": 1
+     },
+     {
+      "itemId": 935,
+      "qty": 1
+     },
+     {
+      "itemId": 884,
+      "qty": 1
+     },
+     {
+      "itemId": 2130,
+      "qty": 200
+     },
+     {
+      "itemId": 922029,
+      "qty": 1
+     },
+     {
+      "itemId": 8711,
+      "qty": 1
+     },
+     {
+      "itemId": 8347,
+      "qty": 2
+     },
+     {
+      "itemId": 4108,
+      "qty": 3
+     },
+     {
+      "itemId": 8340,
+      "qty": 1
+     },
+     {
+      "itemId": 210,
+      "qty": 1,
+      "enchantPAtkBonus": 0,
+      "enchantMAtkBonus": 0
+     },
+     {
+      "itemId": 2965,
+      "qty": 1
+     },
+     {
+      "itemId": 2976,
+      "qty": 1
+     },
+     {
+      "itemId": 4117,
+      "qty": 1
+     },
+     {
+      "itemId": 30001,
+      "qty": 1
+     },
+     {
+      "itemId": 8330,
+      "qty": 1
+     },
+     {
+      "itemId": 5536,
+      "qty": 1
+     },
+     {
+      "itemId": 4110,
+      "qty": 1
+     },
+     {
+      "itemId": 111,
+      "qty": 1
+     },
+     {
+      "itemId": 2981,
+      "qty": 1
+     },
+     {
+      "itemId": 4112,
+      "qty": 1
+     },
+     {
+      "itemId": 4113,
+      "qty": 1
+     },
+     {
+      "itemId": 3951,
+      "qty": 3657
+     },
+     {
+      "itemId": 4115,
+      "qty": 1
+     },
+     {
+      "itemId": 923,
+      "qty": 1
+     },
+     {
+      "itemId": 8348,
+      "qty": 1
+     },
+     {
+      "itemId": 8719,
+      "qty": 1
+     },
+     {
+      "itemId": 5534,
+      "qty": 1
+     },
+     {
+      "itemId": 1887,
+      "qty": 62
+     },
+     {
+      "itemId": 1458,
+      "qty": 2300
      }
     ],
     "eq": {
-     "l1": 92,
+     "l1": {
+      "itemId": 8688,
+      "enchant": 7,
+      "enchantPAtkBonus": 0,
+      "enchantMAtkBonus": 46
+     },
      "l3": {
-      "itemId": 30002,
-      "enchant": 3
+      "itemId": 2409,
+      "enchant": 9
      },
      "lf": {
-      "itemId": 30004,
-      "enchant": 1
+      "itemId": 583,
+      "enchant": 3
      },
      "lg": {
-      "itemId": 30003,
+      "itemId": 2482,
       "enchant": 1
      },
-     "lh": 30001,
-     "le1": 860,
-     "le2": 855,
-     "lr1": 891,
-     "lr2": 884,
-     "belt": 920018,
-     "neck": 935,
+     "lh": {
+      "itemId": 2419,
+      "enchant": 5
+     },
+     "le1": 6327,
+     "le2": 871,
+     "lr1": 6328,
+     "lr2": 6325,
+     "belt": {
+      "itemId": 920018,
+      "specialGearLevel": 1
+     },
+     "neck": 934,
      "cloak": 920019,
-     "tattoo": 910623
+     "tattoo": {
+      "itemId": 910623,
+      "specialGearLevel": 3
+     }
     },
     "_invCanon": 2,
     "_mysticRobePatch": 1
    },
    "inventoryCapacity": {
-    "usedSlots": 104,
+    "usedSlots": 153,
     "maxSlots": 200
    },
    "warehouse": {
@@ -616,42 +832,42 @@
     "usedSlots": 1,
     "maxSlots": 100
    },
-   "pAtk": 1193,
-   "pDef": 1114,
-   "mAtk": 3252,
-   "mDef": 1180,
+   "pAtk": 1574,
+   "pDef": 1616,
+   "mAtk": 5465,
+   "mDef": 1630,
    "str": 22,
    "int": 41,
    "dex": 21,
    "wit": 20,
    "con": 27,
    "men": 39,
-   "accuracy": 96,
-   "evasion": 88,
+   "accuracy": 107,
+   "evasion": 92,
    "critRate": 56,
    "pAtkSpd": 5000,
-   "runSpeed": 282,
+   "runSpeed": 290,
    "castSpd": 3500,
    "shieldPDef": 0,
    "mCritPct": 1,
-   "equipmentPhysicalAttackFlat": 150,
-   "equipmentMagicalAttackFlat": 173,
+   "equipmentPhysicalAttackFlat": 263,
+   "equipmentMagicalAttackFlat": 303,
    "equipmentPhysicalAttackPct": 0,
    "equipmentMagicalAttackPct": 0,
    "outgoingPhysicalDamagePct": 0,
    "outgoingMagicalDamagePct": 0,
-   "outgoingPhysicalSkillDamagePct": 0,
-   "outgoingMagicalSkillDamagePct": 0,
-   "magicCritDmgMul": 1.5478,
-   "magicCritPowerPct": 2,
-   "magicCritDamageMultiplier": 1.924689,
-   "critDmgMul": 1.48512,
-   "stunResistPct": 7,
+   "outgoingPhysicalSkillDamagePct": 6,
+   "outgoingMagicalSkillDamagePct": 6,
+   "magicCritDmgMul": 1.5762,
+   "magicCritPowerPct": 2.5,
+   "magicCritDamageMultiplier": 1.9414012499999997,
+   "critDmgMul": 1.4924,
+   "stunResistPct": 57,
    "paralyzeResistPct": 0,
    "debuffResistPct": 19,
    "skillMpCostMul": 1,
    "addDebuffLandChancePct": 0,
-   "statsRenderKey": "22:21:27:41:20:39:693:764:2752:830:88:56:5417:4298:2683:5000:282:3500:1:150:173:0:0:0:0:0:0:ss:5:500:350",
+   "statsRenderKey": "22:21:27:41:20:39:1074:1266:4965:1280:92:56:6517:5395:3430:5000:290:3500:1:263:303:0:0:0:0:6:6:ss:5:500:350",
    "sevenSealsBonus": {
     "rank": 5,
     "activeFrom": "2026-10-10T21:01:28.681Z",
@@ -663,53 +879,53 @@
    },
    "newPlayerStarterBonus": null,
    "armorSetBonus": {
-    "id": "b_avadon_robe",
-    "nameUk": "Avadon Robe Set (B)",
+    "id": "a_majestic_robe",
+    "nameUk": "Majestic Robe Set (A)",
     "linesUk": [
-     "Poison Resistance +60%",
-     "Bleed Resistance +60%",
+     "MP Recovery Bonus +8%",
      "Max HP +3%",
-     "Max HP +950",
-     "Max MP +13%",
-     "Max MP +1250",
-     "P.Def +7%",
-     "Max CP +1295",
-     "Speed +11",
-     "M.Atk +12%",
-     "Casting Speed +10%",
-     "Magic Critical Damage +9%"
+     "Max HP +1400",
+     "Max MP +16%",
+     "Max MP +1850",
+     "P.Def +9%",
+     "Max CP +1895",
+     "Speed +15",
+     "M.Atk +15%",
+     "Casting Speed +12%",
+     "Magic Critical Damage +11%",
+     "Stun Resistance +50%"
     ],
-    "nameRu": "Avadon Robe Set (B)",
+    "nameRu": "Majestic Robe Set (A)",
     "linesRu": [
-     "Poison Resistance +60%",
-     "Bleed Resistance +60%",
+     "MP Recovery Bonus +8%",
      "Max HP +3%",
-     "Max HP +950",
-     "Max MP +13%",
-     "Max MP +1250",
-     "P.Def +7%",
-     "Max CP +1295",
-     "Speed +11",
-     "M.Atk +12%",
-     "Casting Speed +10%",
-     "Magic Critical Damage +9%"
+     "Max HP +1400",
+     "Max MP +16%",
+     "Max MP +1850",
+     "P.Def +9%",
+     "Max CP +1895",
+     "Speed +15",
+     "M.Atk +15%",
+     "Casting Speed +12%",
+     "Magic Critical Damage +11%",
+     "Stun Resistance +50%"
     ]
    },
    "addCritDmg": 0,
-   "addCritDisplay": "48%+0",
+   "addCritDisplay": "49%+0",
    "weaponGradeMatchesArmor": true,
    "vampiricPct": 8,
    "reflectPct": 0,
-   "regenCp": 13,
-   "regenHp": 14,
-   "regenMp": 253,
-   "worldX": 114736,
-   "worldY": -2316,
+   "regenCp": 15,
+   "regenHp": 16,
+   "regenMp": 415,
+   "worldX": 86846,
+   "worldY": -162538,
    "targetX": 0,
    "targetY": 0,
    "mapMoving": false,
    "mapAngle": 0,
-   "mapMoveSpeed": 564,
+   "mapMoveSpeed": 580,
    "learnedBattleSkills": [
     "l2_1011",
     "l2_1083",
@@ -761,7 +977,7 @@
     },
     {
      "battleId": "l2_1083",
-     "level": 10,
+     "level": 12,
      "nameUk": "Surrender to Fire",
      "hintUk": "M.Def цілі −10%.",
      "hintRu": "M.Def цели −10%.",
@@ -772,7 +988,7 @@
     },
     {
      "battleId": "l2_1111",
-     "level": 11,
+     "level": 13,
      "nameUk": "Summon Kat the Cat",
      "hintUk": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
      "hintRu": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
@@ -783,7 +999,7 @@
     },
     {
      "battleId": "l2_1126",
-     "level": 20,
+     "level": 24,
      "nameUk": "Servitor Recharge",
      "hintUk": "Відновлює MP викликаного слуги. Сила відновлення зростає з рівнем уміння.",
      "hintRu": "Восстанавливает MP викликаного слуги. Сила восстановление растёт с уровнем умения.",
@@ -794,7 +1010,7 @@
     },
     {
      "battleId": "l2_1127",
-     "level": 31,
+     "level": 35,
      "nameUk": "Servitor Heal",
      "hintUk": "Відновлює HP викликаного слуги. Сила лікування зростає з рівнем уміння.",
      "hintRu": "Восстанавливает HP викликаного слуги. Сила лечение растёт с уровнем умения.",
@@ -827,7 +1043,7 @@
     },
     {
      "battleId": "l2_1151",
-     "level": 9,
+     "level": 11,
      "nameUk": "Corpse Life Drain",
      "hintUk": "Лікує HP: Power×4 + рівень×3 + ранг×5. Power 0.",
      "hintRu": "Лечит HP: Power×4 + уровень×3 + ранг×5. Power 0.",
@@ -849,7 +1065,7 @@
     },
     {
      "battleId": "l2_1160",
-     "level": 8,
+     "level": 10,
      "nameUk": "Slow",
      "hintUk": "Speed цілі ×0,7 на 120 с.",
      "hintRu": "Speed цели ×0,7 на 120 с.",
@@ -871,7 +1087,7 @@
     },
     {
      "battleId": "l2_1167",
-     "level": 4,
+     "level": 5,
      "nameUk": "Poisonous Cloud",
      "hintUk": "Отрута 120 шкоди × 6 тиків (кожні 5 с).",
      "hintRu": "Яд 120 урона × 6 тиков (каждые 5 с).",
@@ -882,7 +1098,7 @@
     },
     {
      "battleId": "l2_1168",
-     "level": 5,
+     "level": 6,
      "nameUk": "Curse Poison",
      "hintUk": "P.Atk цілі −12%. Окремого контролю чи зняття бафів немає.",
      "hintRu": "P.Atk цели −12%. Окремого контролю чи снятие бафов нет.",
@@ -970,7 +1186,7 @@
     },
     {
      "battleId": "l2_1222",
-     "level": 8,
+     "level": 10,
      "nameUk": "Curse Chaos",
      "hintUk": "P.Atk цілі −12%, M.Def −10%. Accuracy не змінює.",
      "hintRu": "P.Atk цели −12%, M.Def −10%. Accuracy не меняет.",
@@ -981,7 +1197,7 @@
     },
     {
      "battleId": "l2_1225",
-     "level": 11,
+     "level": 13,
      "nameUk": "Summon Mew the Cat",
      "hintUk": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
      "hintRu": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
@@ -1003,7 +1219,7 @@
     },
     {
      "battleId": "l2_1276",
-     "level": 7,
+     "level": 9,
      "nameUk": "Summon Kai the Cat",
      "hintUk": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
      "hintRu": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
@@ -1016,8 +1232,8 @@
      "battleId": "l2_1299",
      "level": 1,
      "nameUk": "Servitor Ultimate Defense",
-     "hintUk": "Слуга: Ultimate Defense — різке підвищення P.Def/M.Def; слуга нерухомий ~30 с.",
-     "hintRu": "Слуга: Ultimate Defense — різке підвищення P.Def/M.Def; слуга нерухомий ~30 с.",
+     "hintUk": "Слуга: Ultimate Defense — посилення P.Def/M.Def на 20 хв; нерухомість лише 30 с.",
+     "hintRu": "Слуга: Ultimate Defense — посилення P.Def/M.Def на 20 хв; нерухомість лише 30 с.",
      "l2SkillId": 1299,
      "iconUrl": "/skills/skill1299.gif",
      "kind": "battle",
@@ -1025,7 +1241,7 @@
     },
     {
      "battleId": "l2_1331",
-     "level": 3,
+     "level": 5,
      "nameUk": "Summon Feline Queen",
      "hintUk": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
      "hintRu": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
@@ -1036,10 +1252,10 @@
     },
     {
      "battleId": "l2_146",
-     "level": 31,
+     "level": 35,
      "nameUk": "Anti Magic",
-     "hintUk": "Пасивно: +78 M.Def.",
-     "hintRu": "Пассивно: +78 M.Def.",
+     "hintUk": "Пасивно: +86 M.Def.",
+     "hintRu": "Пассивно: +86 M.Def.",
      "l2SkillId": 146,
      "iconUrl": "/skills/skill0146.gif",
      "kind": "passive",
@@ -1080,7 +1296,7 @@
     },
     {
      "battleId": "l2_234",
-     "level": 27,
+     "level": 31,
      "nameUk": "Robe Mastery",
      "hintUk": "Пасив: P.Def +1,7.",
      "hintRu": "Пассив: P.Def +1,7.",
@@ -1102,10 +1318,10 @@
     },
     {
      "battleId": "l2_249",
-     "level": 28,
+     "level": 32,
      "nameUk": "Weapon Mastery",
-     "hintUk": "Пасив: +66.8 M. Atk (flat) на рівні 28 скіла. MP у бою не витрачається.",
-     "hintRu": "Пассив: +66.8 M. Atk (flat) на уровне 28 скила. MP в бою не тратится.",
+     "hintUk": "Пасив: +77.4 M. Atk (flat) на рівні 32 скіла. MP у бою не витрачається.",
+     "hintRu": "Пассив: +77.4 M. Atk (flat) на уровне 32 скила. MP в бою не тратится.",
      "l2SkillId": 249,
      "iconUrl": "/skills/skill0249.gif",
      "kind": "passive",
@@ -1113,10 +1329,10 @@
     },
     {
      "battleId": "l2_258",
-     "level": 19,
+     "level": 23,
      "nameUk": "Light Armor Mastery",
-     "hintUk": "Пасив: P.Def +30,5. Cast, Atk.Spd і MP regen ×30,5.",
-     "hintRu": "Пассив: P.Def +30,5. Cast, Atk.Spd и MP regen ×30,5.",
+     "hintUk": "Пасив: P.Def +34,8. Cast, Atk.Spd і MP regen ×34,8.",
+     "hintRu": "Пассив: P.Def +34,8. Cast, Atk.Spd и MP regen ×34,8.",
      "l2SkillId": 258,
      "iconUrl": "/skills/skill0258.gif",
      "kind": "passive",
@@ -1124,7 +1340,7 @@
     },
     {
      "battleId": "l2_285",
-     "level": 20,
+     "level": 22,
      "nameUk": "Higher Mana Gain",
      "hintUk": "Пасив: +0,6 MP за тик.",
      "hintRu": "Пассив: +0,6 MP за тик.",
@@ -1143,8 +1359,8 @@
      "nameUk": "Магічний барʼєр",
      "descriptionUk": "M.Def +23%.",
      "iconUrl": "/skills/skill1036.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1040,
@@ -1152,8 +1368,8 @@
      "nameUk": "Щит",
      "descriptionUk": "+8% P.Def, MP 10.",
      "iconUrl": "/skills/skill1040.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1045,
@@ -1161,8 +1377,8 @@
      "nameUk": "Благословення тіла",
      "descriptionUk": "Максимальний HP +10%.",
      "iconUrl": "/skills/skill1045.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1048,
@@ -1170,8 +1386,8 @@
      "nameUk": "Благословення душі",
      "descriptionUk": "Максимальний MP +10%.",
      "iconUrl": "/skills/skill1048.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1059,
@@ -1179,8 +1395,8 @@
      "nameUk": "Посилення",
      "descriptionUk": "Баф: духовний бар’єр знижує отриману шкоду. Тривалість і MP з каталогу.",
      "iconUrl": "/skills/skill1059.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1062,
@@ -1188,8 +1404,8 @@
      "nameUk": "Дух берсерка",
      "descriptionUk": "Berserker: P.Atk +5%, M.Atk +10%, Atk.Spd/Cast.Spd +5%, Speed +5; P.Def −5%, M.Def −10%.",
      "iconUrl": "/skills/skill1062.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1068,
@@ -1197,8 +1413,8 @@
      "nameUk": "Сила",
      "descriptionUk": "+8% P.Atk, MP 10.",
      "iconUrl": "/skills/skill1068.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1077,
@@ -1206,8 +1422,8 @@
      "nameUk": "Фокус",
      "descriptionUk": "Збільшує шанс фізичного критичного удару на 20%.",
      "iconUrl": "/skills/skill1077.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1085,
@@ -1215,8 +1431,8 @@
      "nameUk": "Кмітливість",
      "descriptionUk": "Cast.Spd +15%, MP 0.",
      "iconUrl": "/skills/skill1085.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1086,
@@ -1224,8 +1440,8 @@
      "nameUk": "Швидкість",
      "descriptionUk": "Atk.Spd +15%.",
      "iconUrl": "/skills/skill1086.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1240,
@@ -1233,8 +1449,8 @@
      "nameUk": "Наведення",
      "descriptionUk": "Accuracy +2.",
      "iconUrl": "/skills/skill1240.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1242,
@@ -1242,8 +1458,8 @@
      "nameUk": "Death Whisper",
      "descriptionUk": "Урон фізичного критичного удару +30%.",
      "iconUrl": "/skills/skill1242.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     },
     {
      "skillId": 1268,
@@ -1251,30 +1467,30 @@
      "nameUk": "Vampiric Rage",
      "descriptionUk": "На 20 хв вампіризм від фіз. атаки: 6–9% за рангом. Не діє на скіли й стріли. Каст на себе та союзників.",
      "iconUrl": "/skills/skill1268.gif",
-     "expiresAt": 1791769509915,
-     "remainingSec": 44142
+     "expiresAt": 1791819652464,
+     "remainingSec": 45118
     }
    ],
    "activeSummon": {
     "kind": "servitor",
     "key": "kai_the_cat",
     "summonSkillId": 1276,
-    "summonSkillLevel": 6,
+    "summonSkillLevel": 7,
     "nameUk": "Kai the Cat",
     "iconUrl": "/skills/skill1276.gif",
-    "hp": 2659,
-    "maxHp": 2659,
-    "mp": 692,
-    "maxMp": 692,
-    "pAtk": 1455,
-    "pDef": 535,
-    "mAtk": 256,
-    "mDef": 500,
-    "pAtkSpd": 310,
-    "castSpd": 363,
-    "accuracy": 118,
-    "critRate": 41,
-    "mCritRate": 23,
+    "hp": 3074,
+    "maxHp": 3110,
+    "mp": 728,
+    "maxMp": 728,
+    "pAtk": 2039,
+    "pDef": 672,
+    "mAtk": 269,
+    "mDef": 621,
+    "pAtkSpd": 320,
+    "castSpd": 368,
+    "accuracy": 70,
+    "critRate": 500,
+    "mCritRate": 25,
     "critDmgMul": 2,
     "runSpeed": 100,
     "debuffResistPct": 0,
@@ -1299,10 +1515,10 @@
     {
      "battleId": "l2_1167",
      "l2SkillId": 1167,
-     "skillLevel": 4,
+     "skillLevel": 5,
      "nameUk": "Отруйна хмара",
      "iconUrl": "/skills/skill1167.gif",
-     "mpCost": 61,
+     "mpCost": 71,
      "durationSec": 30,
      "cooldownSec": 20,
      "readyRemainingSec": 0,
@@ -1312,10 +1528,10 @@
     {
      "battleId": "l2_1222",
      "l2SkillId": 1222,
-     "skillLevel": 8,
+     "skillLevel": 10,
      "nameUk": "Прокляття хаосу",
      "iconUrl": "/skills/skill1222.gif",
-     "mpCost": 44,
+     "mpCost": 48,
      "durationSec": 10,
      "cooldownSec": 8,
      "readyRemainingSec": 0,
@@ -1325,10 +1541,10 @@
     {
      "battleId": "l2_1160",
      "l2SkillId": 1160,
-     "skillLevel": 8,
+     "skillLevel": 10,
      "nameUk": "Сповільнення",
      "iconUrl": "/skills/skill1160.gif",
-     "mpCost": 44,
+     "mpCost": 48,
      "durationSec": 120,
      "cooldownSec": 7,
      "readyRemainingSec": 0,
@@ -1526,7 +1742,10 @@
    ],
    "toggleStances": [],
    "battleHotbarSlots": [
-    null,
+    {
+     "k": "u",
+     "id": 3951
+    },
     {
      "k": "u",
      "id": 728
@@ -1579,10 +1798,7 @@
      "k": "a",
      "a": "l2_1274"
     },
-    {
-     "k": "u",
-     "id": 3950
-    },
+    null,
     null,
     null,
     {
@@ -1666,6 +1882,7 @@
    },
    "giranCampaignQuest": null,
    "subclassQuest": null,
+   "noblesseQuest": null,
    "dailyQuests": {
     "tasks": {
      "hunt_start_500": {
@@ -1693,10 +1910,10 @@
       "claimed": true
      },
      "daily_playtime_2h": {
-      "have": 7200,
+      "have": 2748,
       "need": 7200,
-      "done": true,
-      "claimed": true
+      "done": false,
+      "claimed": false
      },
      "chat_social_10": {
       "have": 0,
@@ -1722,24 +1939,24 @@
     "v": 1,
     "learned": []
    },
-   "coinOfLuck": 55,
-   "heroPower": 21042,
+   "coinOfLuck": 52,
+   "heroPower": 28947,
    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
    "clanName": "BlackLotus",
-   "clanEmblemId": 32,
+   "clanEmblemId": 37,
    "clanRole": "member",
    "inBattle": false,
    "battleSpawnId": null,
-   "locationType": "zone",
-   "currentZoneId": "ancient_battleground",
-   "currentZoneNameUk": "Стародавнє поле бою",
-   "currentZoneHref": "/map.html",
-   "currentTownId": "l2dop_aden",
-   "hasActiveMapContext": true,
-   "mapReturnHref": "/map.html",
+   "locationType": "city",
+   "currentZoneId": "schuttgart",
+   "currentZoneNameUk": "Місто Штутгарт",
+   "currentZoneHref": null,
+   "currentTownId": "l2dop_schuttgart",
+   "hasActiveMapContext": false,
+   "mapReturnHref": null,
    "catalogVersion": "20261009-epic-jewelry-stats-valakas-mcrit30-v1",
-   "snapshotGeneratedAt": 1791725368836,
-   "clientSnapshotVersion": 1791725368836000,
+   "snapshotGeneratedAt": 1791774535326,
+   "clientSnapshotVersion": 1791774535326000,
    "chatUnreadReplyCount": 0,
    "pendingClanInvite": null,
    "registeredAt": "2026-10-09T12:06:04.478Z",

@@ -2,31 +2,31 @@
  "_path": "/game/seven-seals",
  "_status": 200,
  "data": {
-  "phase": "break",
-  "weekKey": "2026-10-05",
-  "startsAt": "2026-10-04T21:00:00.000Z",
-  "endsAt": "2026-10-10T21:00:00.000Z",
-  "nextPhaseAt": "2026-10-11T21:00:00.000Z",
-  "myCups": 761,
-  "participantCount": 47,
+  "phase": "collection",
+  "weekKey": "2026-10-12",
+  "startsAt": "2026-10-11T21:00:00.000Z",
+  "endsAt": "2026-10-17T21:00:00.000Z",
+  "nextPhaseAt": "2026-10-17T21:00:00.000Z",
+  "myCups": 270,
+  "participantCount": 9,
   "leaderboard": [
    {
     "rank": 1,
-    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
-    "name": "tms",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "characterId": "6f573aad-08ee-4713-9d76-33f5fd4afc93",
+    "name": "Dremia",
+    "clanId": "93743d5d-469e-46c0-b86e-042bc8db3073",
+    "clanEmblemId": 76,
     "nickColor": "#ffdf8c",
-    "cups": 2512
+    "cups": 361
    },
    {
     "rank": 2,
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "name": "Teddy",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "name": "Warlock",
     "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
-    "cups": 2360
+    "cups": 270
    },
    {
     "rank": 3,
@@ -35,25 +35,25 @@
     "clanId": "d90c1391-730d-458a-b9d8-3e2f87b3de51",
     "clanEmblemId": 25,
     "nickColor": "#8A2BE2",
-    "cups": 2279
+    "cups": 200
    },
    {
     "rank": 4,
-    "characterId": "f17b56d1-34ff-4573-b038-a29e4967f613",
-    "name": "ErGe",
-    "clanId": "4e9a9f0d-0b2c-44da-bae2-65dd0dc5aac3",
-    "clanEmblemId": 38,
+    "characterId": "1ac06bc2-dc58-480c-aa78-34a9813a9c82",
+    "name": "tms",
+    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
+    "clanEmblemId": 37,
     "nickColor": "#ffdf8c",
-    "cups": 2151
+    "cups": 37
    },
    {
     "rank": 5,
-    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
-    "name": "Warlock",
-    "clanId": "159af9c1-8577-4461-8b03-f3db0b5fea6f",
-    "clanEmblemId": 32,
+    "characterId": "73c6d075-661a-4c70-9573-18e512d0b924",
+    "name": "WestSPOIL",
+    "clanId": null,
+    "clanEmblemId": null,
     "nickColor": "#ffdf8c",
-    "cups": 761
+    "cups": 12
    }
   ],
   "rewards": [

@@ -9,7 +9,7 @@ const names = s => String(s || '').split(',').map(x => x.trim().toLowerCase()).f
 // 1. справочник: IL_FIX 1331 — бафф на слугу, 120 с; миграция настроек
 const content = read('content.js');
 const fix = content.match(/1331: \{([^}]+)\}/)[1];
-assert.match(fix, /c: 'Бафф'/); assert.match(fix, /target: 'PET'/); assert.match(fix, /dur: 1200/); assert.match(fix, /mp: 87/);
+assert.match(fix, /c: 'Бафф'/); assert.match(fix, /target: 'PET'/); assert.match(fix, /dur: 120,/);   // 10.0: снова 2 мин (данные игры 12.10) assert.match(fix, /mp: 87/);
 assert.match(content, /once\('queenBuff92'/, 'миграция: королева → в «Баффы кота», из выбора кота — убрать');
 assert.doesNotMatch(read('popup.html'), /<option value="Summon Feline Queen">/);
 assert.match(read('popup.html'), /Blessing of Queen/);

@@ -27,7 +27,8 @@ async function onDeath() {
   // смертей за час (rt.deathLog) остаётся — счётчик «N/3 за 30 мин» и стоп после 3 смертей считаются по ней
   const now = Date.now(), deathLog = [...new Set([...(env.rt.deathLog || []), ...(env.rt.deaths || [])])].filter(t => now - t < 3600000).concat(now);
   const deaths = deathLog.filter(t => now - t < 30 * 60000);
-  const rbId = env.rt.target?.rb ? env.rt.rbCur : (/^l2dop_rb_/i.test(new URLSearchParams(location.search).get('spawnId') || '') ? new URLSearchParams(location.search).get('spawnId') : null);
+  // 10.0 (аудит боя): spawnId РБ из адреса боя — точнее rt.rbCur (тот мог устареть); rbCur — запасной
+  const urlRb = new URLSearchParams(location.search).get('spawnId') || '', rbId = /^l2dop_rb_/i.test(urlRb) ? urlRb : env.rt.target?.rb ? env.rt.rbCur : null;
   const epicD = env.epicOn() && rbId && env.epicById(rbId);   // 🐉 смерть на эпике — не «не по силам», а конец захода: запомнить его HP
   if (epicD) { const m = env.mobHp(); await env.setRt({ epic: { ...(env.rt.epic || {}), died: true, hpLog: [...((env.rt.epic || {}).hpLog || []).slice(-9), { t: Date.now(), cur: m?.cur ?? null, max: m?.max ?? null }] } });
     await env.epicDbSet(epicD.k, { deathsLife: ((env.rt.epicDb || {})[epicD.k]?.deathsLife || 0) + 1 }); }   // 8.0.3: смерти за это появление эпика

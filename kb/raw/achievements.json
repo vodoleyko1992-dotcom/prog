@@ -5,7 +5,7 @@
   "character": {
    "id": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
    "name": "Warlock",
-   "level": 60
+   "level": 64
   },
   "globalStage": 0,
   "rank": null,
@@ -18,7 +18,7 @@
   "categories": [
    {
     "key": "level",
-    "value": "60",
+    "value": "64",
     "stage": 2,
     "thresholds": [
      "40",
@@ -30,7 +30,7 @@
    },
    {
     "key": "raidBoss",
-    "value": "31",
+    "value": "63",
     "stage": 0,
     "thresholds": [
      "100",
@@ -54,7 +54,7 @@
    },
    {
     "key": "mobs",
-    "value": "14889",
+    "value": "18251",
     "stage": 1,
     "thresholds": [
      "10000",
@@ -78,7 +78,7 @@
    },
    {
     "key": "adena",
-    "value": "93920000",
+    "value": "124316013",
     "stage": 2,
     "thresholds": [
      "10000000",
@@ -102,7 +102,7 @@
    },
    {
     "key": "sevenSeals",
-    "value": "0",
+    "value": "3694",
     "stage": 0,
     "thresholds": [
      "10000",

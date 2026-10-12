@@ -24,7 +24,7 @@ description: Проверенные факты об игре l2wap.com для б
 - Эпики: `GET /game/epic-bosses` → `bosses[] {spawnId, level, isAlive, canAttack, attackBlockedReasonUk, coinOfLuckCost, respawnHours}`, `minRaidBossLevel` = герой − 9. Телепорт: `POST /game/epic-boss/teleport {spawnId, expectedRevision, expectedCoinOfLuckCost:1}` → 200 + {character} (явного ok нет). 8 эпиков: 29001 Королева 40, 29006 Ядро 50, 29014 Орфен 50, 29022 Закен 60, 29020 Баюм 75, 29019 Антарас 79, 29028 Валакас 85, 29045 Фринтеза 90.
 
 ## Коты (Warlock)
-- P.Atk кота = % от M.Atk хозяина: Kai +25 % (основной DD), Mew +20 %, Kat +15 %, «Summon Feline Queen» (l2_1331) с 11.10 — НЕ кот, а бафф кота Blessing of Queen: с 11.10 21:21 (переделан админом) шанс физ. крита +30 % и урон крита +25 % на 20 мин (до того +20 % крит-урона на 2 мин), MP 87, «застосовано до героя та активного слуги» (IL_FIX 1331, роль «Баффы кота»; было: Feline Queen +10 %, бафф физ. крита «Blessing of Queen» — магу бесполезен). Kai Lv.5 P.Atk ≈1381, удар ≈1870.
+- P.Atk кота = % от M.Atk хозяина: Kai +25 % (основной DD), Mew +20 %, Kat +15 %, «Summon Feline Queen» (l2_1331) с 11.10 — НЕ кот, а бафф кота Blessing of Queen: с 11.10 21:21 (переделан админом) шанс физ. крита +30 % и урон крита +25 % на 20 мин → с 12.10 снова **2 мин** (новость игры 11.10, код l2-hud-companion.js; 10.0 IL_FIX 1331 dur 120); у всех слуг точность 70 %, шанс крита 50 % (до того +20 % крит-урона на 2 мин), MP 87, «застосовано до героя та активного слуги» (IL_FIX 1331, роль «Баффы кота»; было: Feline Queen +10 %, бафф физ. крита «Blessing of Queen» — магу бесполезен). Kai Lv.5 P.Atk ≈1381, удар ≈1870.
 - Слоты панели: заголовки призывов английские («Summon Kai the Cat») при любом языке.
 
 ## Язык интерфейса

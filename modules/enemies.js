@@ -17,7 +17,9 @@ const MIN = 60000;
 const HERO = { t: 0, list: [], zone: '' };   // игроки на локации — последний ответ игры (или список на странице карты)
 const INC = { t: 0, list: [] };              // кто напал на нас сейчас
 const DONE = new Set();                       // разобранные смерти (deathEventId) во вкладке
-let scanT = 0, scanBusy = false;
+// 10.0 (аудит ядра): метка своего GET /game/map/around — в sessionStorage (иначе запрос на каждой загрузке страницы боя)
+const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
+let scanT = ssNum('l2bot-enScanT'), scanBusy = false;
 const low = s => String(s || '').trim().toLowerCase();
 const keyOf = (id, name) => id ? String(id) : 'n:' + low(name);
 const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
@@ -170,7 +172,7 @@ async function tick() {
   const every = Math.max(15, +env.cfg.enemyScanS || 30) * 1000;
   if (Date.now() - scanT < every || Date.now() - HERO.t < every) return;   // на карте игра сама опрашивает /game/map/sync раз в 15 с
   if (busy() || /tvt|arena|dungeon|catacomb|city|town|fishing/i.test(location.pathname)) return;
-  scanT = Date.now(); scanBusy = true;
+  scanT = Date.now(); scanBusy = true; try { sessionStorage.setItem('l2bot-enScanT', String(scanT)); } catch (e) {}
   try {
     const r = await env.gameGet('/game/map/around');
     if (!r?.ok) return;
@@ -218,7 +220,9 @@ async function step() {
   const lv = p.h.lvl || p.e.lvl;
   env.setStatus(`Враги: нападаю на ${p.e.name}`);
   env.rec('B', 'враги', `нападаю на ${p.e.name}${lv ? ` (${lv} ур.)` : ''} — убивал нас ${p.e.kills} раз, ответных побед ${p.e.w || 0}, поражений ${p.e.l || 0}`);
-  await env.setRt({ enemyHunt: { id: p.e.id || p.h.id, name: p.e.name, t: Date.now(), via: 'map' } });
+  // 10.0 (аудит): кнопка не запустила бой — не жать её каждые 4 с: этот враг 2 мин не выбирается (бой начался — неважно)
+  const E2 = { ...list() }; E2[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нажал «напасть», жду боя' };
+  await env.setRt({ enemyHunt: { id: p.e.id || p.h.id, name: p.e.name, t: Date.now(), via: 'map' }, enemies: E2 });
   env.fire(btn);
   await env.sleep(4000);
   return true;

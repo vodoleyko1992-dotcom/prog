@@ -1,0 +1,4556 @@
+{
+ "_path": "/game/spawn/ashen_bastion_mob_NNN/info",
+ "_status": 200,
+ "data": {
+  "ashen_bastion_mob_001": {
+   "spawnId": "ashen_bastion_mob_001",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 267416,
+    "pAtk": 10996,
+    "pDef": 8580,
+    "mAtk": 8707,
+    "mDef": 11342
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 54349,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_009": {
+   "spawnId": "ashen_bastion_mob_009",
+   "name": "Abyss Walker",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_4",
+   "npcId": null,
+   "icon": "/mobs/180.png",
+   "stats": {
+    "maxHp": 258718,
+    "pAtk": 10864,
+    "pDef": 8523,
+    "mAtk": 8513,
+    "mDef": 11287
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 54971,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_017": {
+   "spawnId": "ashen_bastion_mob_017",
+   "name": "Infernal Knight",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_2",
+   "npcId": null,
+   "icon": "/mobs/100.png",
+   "stats": {
+    "maxHp": 390278,
+    "pAtk": 9258,
+    "pDef": 9096,
+    "mAtk": 12646,
+    "mDef": 11399
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 54719,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_025": {
+   "spawnId": "ashen_bastion_mob_025",
+   "name": "Infernal Knight",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_2",
+   "npcId": null,
+   "icon": "/mobs/100.png",
+   "stats": {
+    "maxHp": 268546,
+    "pAtk": 9324,
+    "pDef": 9209,
+    "mAtk": 9541,
+    "mDef": 12210
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 65600,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_033": {
+   "spawnId": "ashen_bastion_mob_033",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 264187,
+    "pAtk": 11298,
+    "pDef": 9237,
+    "mAtk": 9056,
+    "mDef": 12210
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 66222,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_041": {
+   "spawnId": "ashen_bastion_mob_041",
+   "name": "Abyss Walker",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_4",
+   "npcId": null,
+   "icon": "/mobs/180.png",
+   "stats": {
+    "maxHp": 268482,
+    "pAtk": 11430,
+    "pDef": 9152,
+    "mAtk": 9153,
+    "mDef": 12154
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 64977,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_049": {
+   "spawnId": "ashen_bastion_mob_049",
+   "name": "Ashen Guardian",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_0",
+   "npcId": null,
+   "icon": "/mobs/31.png",
+   "stats": {
+    "maxHp": 259784,
+    "pAtk": 11299,
+    "pDef": 9096,
+    "mAtk": 9347,
+    "mDef": 12210
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 65598,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_057": {
+   "spawnId": "ashen_bastion_mob_057",
+   "name": "Ashen Guardian",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_0",
+   "npcId": null,
+   "icon": "/mobs/31.png",
+   "stats": {
+    "maxHp": 268472,
+    "pAtk": 11364,
+    "pDef": 8308,
+    "mAtk": 12259,
+    "mDef": 11398
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 65910,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_065": {
+   "spawnId": "ashen_bastion_mob_065",
+   "name": "Cursed Warlock",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_3",
+   "npcId": null,
+   "icon": "/mobs/120.png",
+   "stats": {
+    "maxHp": 390268,
+    "pAtk": 11167,
+    "pDef": 8308,
+    "mAtk": 12647,
+    "mDef": 11426
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 54403,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_073": {
+   "spawnId": "ashen_bastion_mob_073",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 412003,
+    "pAtk": 11167,
+    "pDef": 8167,
+    "mAtk": 12744,
+    "mDef": 11370
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 54403,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_081": {
+   "spawnId": "ashen_bastion_mob_081",
+   "name": "Abyss Walker",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_4",
+   "npcId": null,
+   "icon": "/mobs/180.png",
+   "stats": {
+    "maxHp": 416297,
+    "pAtk": 9191,
+    "pDef": 8307,
+    "mAtk": 12062,
+    "mDef": 11314
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 55657,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_089": {
+   "spawnId": "ashen_bastion_mob_089",
+   "name": "Doom Bringer",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_5",
+   "npcId": null,
+   "icon": "/mobs/215.png",
+   "stats": {
+    "maxHp": 407600,
+    "pAtk": 9060,
+    "pDef": 8251,
+    "mAtk": 12256,
+    "mDef": 11370
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 55035,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_097": {
+   "spawnId": "ashen_bastion_mob_097",
+   "name": "Abyss Walker",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_4",
+   "npcId": null,
+   "icon": "/mobs/180.png",
+   "stats": {
+    "maxHp": 407590,
+    "pAtk": 8994,
+    "pDef": 8307,
+    "mAtk": 12256,
+    "mDef": 12182
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 55969,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_105": {
+   "spawnId": "ashen_bastion_mob_105",
+   "name": "Cursed Warlock",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_3",
+   "npcId": null,
+   "icon": "/mobs/120.png",
+   "stats": {
+    "maxHp": 274779,
+    "pAtk": 11256,
+    "pDef": 9193,
+    "mAtk": 10961,
+    "mDef": 11044
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 58994,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_113": {
+   "spawnId": "ashen_bastion_mob_113",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 283486,
+    "pAtk": 11322,
+    "pDef": 9164,
+    "mAtk": 8341,
+    "mDef": 10904
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 68943,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_121": {
+   "spawnId": "ashen_bastion_mob_121",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 257403,
+    "pAtk": 10993,
+    "pDef": 8460,
+    "mAtk": 8244,
+    "mDef": 11883
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 57751,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_129": {
+   "spawnId": "ashen_bastion_mob_129",
+   "name": "Cursed Warlock",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_3",
+   "npcId": null,
+   "icon": "/mobs/120.png",
+   "stats": {
+    "maxHp": 266100,
+    "pAtk": 11124,
+    "pDef": 8404,
+    "mAtk": 8050,
+    "mDef": 11827
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 58373,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_137": {
+   "spawnId": "ashen_bastion_mob_137",
+   "name": "Infernal Knight",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_2",
+   "npcId": null,
+   "icon": "/mobs/100.png",
+   "stats": {
+    "maxHp": 400924,
+    "pAtk": 10993,
+    "pDef": 8404,
+    "mAtk": 8244,
+    "mDef": 11939
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 57440,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_145": {
+   "spawnId": "ashen_bastion_mob_145",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 396501,
+    "pAtk": 9150,
+    "pDef": 8404,
+    "mAtk": 8245,
+    "mDef": 11939
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 67697,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_153": {
+   "spawnId": "ashen_bastion_mob_153",
+   "name": "Ashen Guardian",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_0",
+   "npcId": null,
+   "icon": "/mobs/31.png",
+   "stats": {
+    "maxHp": 396511,
+    "pAtk": 8821,
+    "pDef": 8319,
+    "mAtk": 8148,
+    "mDef": 11968
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 57124,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_161": {
+   "spawnId": "ashen_bastion_mob_161",
+   "name": "Doom Bringer",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_5",
+   "npcId": null,
+   "icon": "/mobs/215.png",
+   "stats": {
+    "maxHp": 405218,
+    "pAtk": 11124,
+    "pDef": 9192,
+    "mAtk": 11156,
+    "mDef": 10932
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 68321,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_169": {
+   "spawnId": "ashen_bastion_mob_169",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 413916,
+    "pAtk": 10992,
+    "pDef": 9249,
+    "mAtk": 11350,
+    "mDef": 10988
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 67699,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_177": {
+   "spawnId": "ashen_bastion_mob_177",
+   "name": "Doom Bringer",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_5",
+   "npcId": null,
+   "icon": "/mobs/215.png",
+   "stats": {
+    "maxHp": 418274,
+    "pAtk": 9150,
+    "pDef": 9192,
+    "mAtk": 10961,
+    "mDef": 11827
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 67387,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_185": {
+   "spawnId": "ashen_bastion_mob_185",
+   "name": "Infernal Knight",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_2",
+   "npcId": null,
+   "icon": "/mobs/100.png",
+   "stats": {
+    "maxHp": 257466,
+    "pAtk": 10992,
+    "pDef": 9306,
+    "mAtk": 8242,
+    "mDef": 11827
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 57756,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_193": {
+   "spawnId": "ashen_bastion_mob_193",
+   "name": "Ashen Guardian",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_0",
+   "npcId": null,
+   "icon": "/mobs/31.png",
+   "stats": {
+    "maxHp": 266174,
+    "pAtk": 11058,
+    "pDef": 9278,
+    "mAtk": 7951,
+    "mDef": 11015
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 57755,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  },
+  "ashen_bastion_mob_200": {
+   "spawnId": "ashen_bastion_mob_200",
+   "name": "Dark Reaper",
+   "level": 85,
+   "kind": "neutral",
+   "aggressive": false,
+   "templateId": "ashen_bastion_mob_template_1",
+   "npcId": null,
+   "icon": "/mobs/64.png",
+   "stats": {
+    "maxHp": 275959,
+    "pAtk": 11140,
+    "pDef": 9242,
+    "mAtk": 8218,
+    "mDef": 10938
+   },
+   "drops": [
+    {
+     "id": "ashen_adena",
+     "kind": "adena",
+     "chance": 0.4,
+     "min": 28665,
+     "max": 34888,
+     "displayName": "Adena",
+     "l2ItemId": 57,
+     "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+    },
+    {
+     "id": "ashen_fa",
+     "kind": "other",
+     "chance": 0.05,
+     "min": 1,
+     "max": 1,
+     "displayName": "Fast Aden",
+     "l2ItemId": 920048,
+     "iconUrl": "/game/item-icon/920048"
+    },
+    {
+     "id": "ashen_res_1874",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Oriharukon Ore",
+     "l2ItemId": 1874,
+     "iconUrl": "/icons/resources/basic/oriharukon_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1875",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Stone of Purity",
+     "l2ItemId": 1875,
+     "iconUrl": "/icons/resources/basic/stone_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1876",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Ore",
+     "l2ItemId": 1876,
+     "iconUrl": "/icons/resources/basic/mithril_ore.jpg"
+    },
+    {
+     "id": "ashen_res_1877",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Adamantite Nugget",
+     "l2ItemId": 1877,
+     "iconUrl": "/icons/resources/basic/adamantite_nugget.jpg"
+    },
+    {
+     "id": "ashen_res_1887",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Varnish of Purity",
+     "l2ItemId": 1887,
+     "iconUrl": "/icons/resources/crafted/varnish_of_purity.jpg"
+    },
+    {
+     "id": "ashen_res_1890",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Mithril Alloy",
+     "l2ItemId": 1890,
+     "iconUrl": "/icons/resources/crafted/mithril_alloy.jpg"
+    },
+    {
+     "id": "ashen_res_4042",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Enria",
+     "l2ItemId": 4042,
+     "iconUrl": "/icons/resources/rare/enria.jpg"
+    },
+    {
+     "id": "ashen_res_4043",
+     "kind": "resource",
+     "chance": 0.03125,
+     "min": 2,
+     "max": 5,
+     "displayName": "Asofe",
+     "l2ItemId": 4043,
+     "iconUrl": "/icons/resources/rare/asofe.jpg"
+    },
+    {
+     "id": "ashen_pot_920044",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large HP Potion",
+     "l2ItemId": 920044,
+     "iconUrl": "/game/item-icon/920044"
+    },
+    {
+     "id": "ashen_pot_920045",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large MP Potion",
+     "l2ItemId": 920045,
+     "iconUrl": "/game/item-icon/920045"
+    },
+    {
+     "id": "ashen_pot_920046",
+     "kind": "other",
+     "chance": 0.03333333333333333,
+     "min": 1,
+     "max": 1,
+     "displayName": "Large CP Potion",
+     "l2ItemId": 920046,
+     "iconUrl": "/game/item-icon/920046"
+    },
+    {
+     "id": "ashen_enchant_910518",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення броні S-grade",
+     "l2ItemId": 910518,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+    },
+    {
+     "id": "ashen_enchant_910519",
+     "kind": "other",
+     "chance": 0.035,
+     "min": 1,
+     "max": 1,
+     "displayName": "Сувій заточення зброї S-grade",
+     "l2ItemId": 910519,
+     "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+    }
+   ],
+   "spoil": [],
+   "viewerMaySeeSpoil": false,
+   "rewardExp": 58299,
+   "rewardSp": 2550,
+   "rewardExpSynthetic": false,
+   "dropsSynthetic": false
+  }
+ }
+}

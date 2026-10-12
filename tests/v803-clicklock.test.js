@@ -60,7 +60,7 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   // 2. вампирик: блок 1,5 с только по результату (потерян в окне — повторяем, а не банка); дебафф — без паузы 3 с на «lock»
   assert.match(combat, /if \(drainB\) \{ ctx\.seq\.push\('💉'\); const r = await act\(drainB, [^;]+\); if \(r !== 'lock'\) ctx\.block\['drain:' \+ drainB\.title\] = Date\.now\(\) \+ 1500; continue; \}/);
   assert.doesNotMatch(combat, /if \(drainB\) \{ ctx\.block\['drain:'/);
-  assert.match(combat, /else if \(dr !== 'lock'\) ctx\.block\['debuff:' \+ dbf\.k\] = Date\.now\(\) \+ 3000;/);
+  assert.match(combat, /else if \(dr !== 'lock'\) ctx\.block\['debuff:' \+ dbf\.k\] = Date\.now\(\) \+ \(ctx\.lastLost \? 700 : 3000\);/);
   // 3. время ответа и «игра занята»: hook сообщает начало/конец GET /character и запросов боя (rid); netStart от GET — не «ход ушёл»
   const hook = read('hook.js');
   assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\\\/battle\\\/\(\?:action\|start\|hunt-continue\)\)\$\/;/);

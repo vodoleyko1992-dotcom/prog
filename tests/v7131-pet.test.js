@@ -90,7 +90,9 @@ assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big), null, 'бафф
 env.rt.petBornT = Date.now() - 1000;
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big)?.n, 'servitor haste', 'кота призвали заново — бафф снова');
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, { cur: 1500, max: 5000, pct: 30 })?.n, 'servitor haste', '9.2.2: моб при смерти — бафф всё равно (кот бьёт и на этот ход, бафф на 20 мин)');
-assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, { cur: 200, max: 1000 }, big), null, 'мало MP — мана на урон');
+// 10.0 (правило «MP не экономим»): резерва 25 % больше нет — 200 MP хватает на бафф; не хватает на сам бафф — нет
+assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, { cur: 200, max: 1000 }, big)?.n, 'servitor haste', '10.0: no 25 % reserve');
+assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, { cur: 0, max: 1000 }, big), null, 'не хватает MP на сам бафф');
 PET = { ...PET, has: false };
 assert.equal(C.petBuffPick({ block: {} }, { pct: 90 }, hi, big), null, 'кота нет — некому');
 PET = { ...PET, has: true, t: Date.now() };

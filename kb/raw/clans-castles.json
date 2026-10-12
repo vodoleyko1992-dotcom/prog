@@ -4,15 +4,15 @@
  "data": {
   "castles": [
    {
-    "cityId": "l2dop_schuttgart",
-    "cityLabelUk": "Місто Штутгарт",
-    "capturedAt": "2026-10-10T17:31:48.478Z",
-    "pendingTaxAdena": "0",
+    "cityId": "l2dop_gludio",
+    "cityLabelUk": "Місто Глудіо",
+    "capturedAt": "2026-10-11T16:55:39.123Z",
+    "pendingTaxAdena": "570836",
     "canWithdraw": false
    }
   ],
-  "totalPendingTaxAdena": "0",
+  "totalPendingTaxAdena": "570836",
   "canManageClan": false,
-  "clanTreasuryAdena": "1000000000"
+  "clanTreasuryAdena": "2000000000"
  }
 }

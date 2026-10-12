@@ -289,8 +289,8 @@ function petBuffPick(ctx, me, mp, mob) {
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
     if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
-    const reserve = mp?.max ? mp.max * (env.cfg.mageMpPct ?? 25) / 100 : 0;
-    if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0) + reserve) continue;
+    // 10.0 (аудит боя): Blessing of Queen ≈ +40 % урона на 20 мин — резерв 25 % MP не держим (MP не экономим), хватает на сам бафф — ставим
+    if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0)) continue;
     return { b, n };
   }
   return null;
@@ -445,7 +445,8 @@ function magePlan(ctx, mp) {
   // Реген ≈7 MP/с — когда мана кончилась, урон упирается в «урон за 1 MP»: Energy Bolt ≈60/MP против Blaze ≈35/MP.
   // Поэтому: банки нет и MP < mageEcoPct (30 %) — режим экономии: заклинание с лучшим уроном на 1 MP; ниже порога
   // skillMpMin — всё равно колдуем, если хватает на самое дешёвое (атака мага по мобам ≈0)
-  const potB = env.mpPotSlot?.(), potOk = !!(potB && ready(potB) && env.qty(potB) !== 0);
+  // 10.0 (правило игрока «MP не экономим», аудит боя): экономия — только когда банки MP нет совсем; банка на откате — не повод (раньше ready(potB))
+  const potB = env.mpPotSlot?.(), potOk = !!(potB && env.qty(potB) !== 0);
   const eco = !!mp && !potOk && mp.max > 0 && mp.cur / mp.max * 100 < (env.cfg.mageEcoPct ?? 30);
   if (mp && mp.cur < (env.cfg.skillMpMin ?? 35)) {
     const cheap = Math.min(Infinity, ...mageSpellSlots().filter(ready).map(b => {
@@ -608,7 +609,7 @@ function dpsPlan(ctx, mp) {
   if (chargeAct && spNear && hp > env.expDmg('атака') * 1.2) return { ...chargeAct, why: `ещё 1 заряд → ${spNear.name}` };
   // 2б) экономия маны: MP мало, а банки нет/на откате — оставляем только скиллы с лучшей отдачей
   //     «урон сверх обычной атаки на 1 MP» (атака бесплатна; Hurricane с 2 зарядами часто хуже Iron Punch)
-  const mpMax = mp?.max || 0, potB = env.mpPotSlot(), potOk = !!potB && ready(potB);
+  const mpMax = mp?.max || 0, potB = env.mpPotSlot(), potOk = !!potB && env.qty(potB) !== 0;   // 10.0: банка есть (пусть на откате) — без экономии
   if (!lf && mp && mpMax && mp.cur < mpMax * 0.35 && !potOk && opts.length > 1) {
     const atkD = env.expDmg('атака'), effOf = o => o.key === 'attack' ? Infinity : (o.dmg - atkD * (1 + (o.force || 0))) / Math.max(1, env.skillMp(o.name));
     const bestEff = Math.max(0, ...opts.filter(o => o.key !== 'attack').map(effOf));
@@ -730,7 +731,7 @@ async function battle() {
   env.setStatus('Бой: загрузка');
   const bUrl = location.pathname + location.search;   // v4.43: экран поражения — на странице боя; после смерти вернёмся сюда
   if (env.rt.lastBattle !== bUrl) env.setRt({ lastBattle: bUrl });
-  const st = await env.waitFor(() => env.serverDown() ? 'down' : victory() ? 'win' : defeat() ? 'dead' : loadErr() ? 'err' : mobHp() ? 'fight' : null, 10000);
+  const st = await env.waitFor(() => env.serverDown() ? 'down' : victory() ? 'win' : defeat() ? 'dead' : loadErr() ? 'err' : mobHp() ? 'fight' : null, 10000, 50);   // 10.0: опрос 50 мс (было 250 — в среднем +125 мс на бой)
   if (!env.on || st === 'down') return;
   if (!st) {                                     // не загрузилась — обновить (2 раза), потом на карту
     const n = (env.rt.battleReload || 0) + 1;
@@ -956,14 +957,17 @@ async function battle() {
     if (lockLost) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
     else if (sent && gap < 60) { if (bindB) lockB = Math.max(LOCK_B[0], lockB - 1); else lockA = Math.max(LOCK_A[0], lockA - 2); lockSave(); }   // на границе теряется ≈6 % нажатий
     if (lost && !lockLost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
+    ctx.lastLost = lost && !lockLost;             // 10.0 (аудит боя): потерянный клик — слот «занят» 0,7 с (lostUntil), а не 3 с паузы вызывающего
+    // 10.0 (аудит боя): сервер уже ответил отказом на этот ход — не ждём по экрану до 1 с, откат учтён моделью (combatCooldown)
+    const refused = sent && !netOk && env.actNet().done >= env.actNet().start && (!exact || env.actNet().action === exact) && !victory() && !defeat();
     if (lockLost) return 'lock';
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:
     // удар Soul Breaker → «итог боя» через 1,7 с, хотя моб умирал с первого удара; на цепочке это ~1,2 с лишних на моба)
     const dead = () => victory() || (mobHp()?.cur ?? 1) === 0;
-    let done = lost ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
+    let done = lost || refused ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
     // ответ игры: «скилл недоступен» (оружие) или «Скіл на перезарядці»
     // 8.0: сервер принял именно этот ход (2xx) — «на перезарядке»/«недоступен» к нему не относится, 250 мс не ждём
-    const ans = dead() || (done === true && netOk) ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost ? 300 : 600, 50);
+    const ans = dead() || (done === true && netOk) ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost || refused ? 300 : 600, 50);
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
     if (turnSamples.length >= 10) { const avg = turnSamples.reduce((x, y) => x + y, 0) / turnSamples.length; turnSamples.length = 0;
@@ -1211,7 +1215,12 @@ async function battle() {
         const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
         await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [nmNow]: { t: Date.now(), ttk: isFinite(ttk) ? Math.round(ttk) : 9999, lvl: env.heroLvl(), why } }, target: null });
         env.rec('B', 'цели', `${mobName()}: не пробиваю — ${why} → ухожу, этот вид 2 ч не бью`);
-        if (me && me.pct < 60) { if (await env.restoreVitals(`после неподъёмного моба HP ${me.pct | 0}%`)) return; }
+        if (me && me.pct < 60) {
+          // 10.0 (аудит боя): уход со страницы бой не завершает — моб бьёт дальше, баффер отвечает «Во время бою відновлення недоступне». Сначала выходим из боя
+          const leave = env.$q('#battle-back-map');
+          if (leave) { env.fire(leave); await env.waitFor(() => !env.isBattle() || null, 4000, 100); }
+          if (await env.restoreVitals(`после неподъёмного моба HP ${me.pct | 0}%`)) return;
+        }
         return env.toMap();
       }
     }
@@ -1331,7 +1340,7 @@ async function battle() {
     // «Сливаться под Frenzy» (Дестроер): пока Frenzy готов — банок не пьём (кроме аварийных ≤ стоп-HP), HP падает до 30 %,
     // жмём Frenzy (+Guts/Zealot по правилам), дальше снова держим 90 %. Симуляция: бой на 21 % быстрее, банок на 31 % меньше.
     let potAt = env.cfg.hpPotAt;
-    if (ctx.rb) {
+    if (ctx.rb && me) {                            // 10.0 (аудит боя): HUD не отдал HP (me = null) — без TypeError на me.max
       const d = env.rt.rbDb?.[ctx.rb.id] || {};
       const ordinaryP90 = d.hitP90 || (ctx.rb.hits?.length >= 3
         ? [...ctx.rb.hits].sort((a,b)=>a-b)[Math.floor(ctx.rb.hits.length*0.9)] : Math.max(150, me.max * 0.06));
@@ -1452,9 +1461,10 @@ async function battle() {
         const before = env.logLines();
         const dr = await act(dbf.b, `Бой${tc}: дебафф ${dbf.n} · моб ${mob.pct | 0}%`);
         if (dr === 'lock') continue;   // 8.0.3: клик не дошёл до игры — без паузы 0,5 с и разбора журнала, повтор сразу
-        if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else if (dr !== 'lock') ctx.block['debuff:' + dbf.k] = Date.now() + 3000;   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
+        if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else if (dr !== 'lock') ctx.block['debuff:' + dbf.k] = Date.now() + (ctx.lastLost ? 700 : 3000);   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
         ctx.seq.push('✦');
-        await env.sleep(500);
+        // 10.0 (аудит боя): не фиксированные 0,5 с после каждого дебаффа — ждём строку результата в журнале (до 0,5 с), не прошёл клик — не ждём
+        if (dr === true) await env.waitFor(() => /Ефект|Эффект|опір|опира|сопротивл|resist|не подіяв|не подействовал|імунітет|иммунитет/i.test(env.newLines(before, env.logLines()).join(' ')) ? 1 : null, 500, 40);
         const added = env.newLines(before, env.logLines()).join(' ⏎ ');
         const ok = /Ефект пройшов|Эффект прош[её]л/i.test(added), fail = /не пройшов|не прош[её]л|опір|опира|сопротивл|resist|не подіяв|не подействовал/i.test(added);   // 8.0.3: и «Ціль опирається ефекту» (34 строки 10.10, fail = 0)
         if (fail && !ok && ctx.debuffed) delete ctx.debuffed[dbf.k];   // 7.2.1: не прошёл — цель не под дебаффом (иначе замер выгоды врёт)
@@ -1520,7 +1530,7 @@ async function battle() {
       } else if (done === 'cd') {                 // «на перезарядке» — сразу другим скиллом/атакой (ready() учтёт память КД)
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
       } else if (!done) {                            // слот не ушёл в КД — нет MP / отказ игры
-        ctx.block[a.key] = Date.now() + (a.key === 'attack' ? 1000 : 3000);
+        ctx.block[a.key] = Date.now() + (ctx.lastLost ? 700 : a.key === 'attack' ? 1000 : 3000);   // 10.0: потерянный клик — 0,7 с, не 3 с без лучшего заклинания
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
         console.info(env.TAG, `${a.name} не сработал — пауза для слота`);
       }

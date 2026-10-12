@@ -7,529 +7,83 @@
   "totalPages": 18,
   "entries": [
    {
-    "id": "7f7d9c38-b3cf-4f14-8379-c975ba8a5eef",
+    "id": "fa38a1fa-13fb-44ed-b439-ff923a46ea78",
     "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:30:09.804Z",
-    "playerName": "Freed0m",
-    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
-    "bossSpawnId": "l2dop_rb_25517",
-    "bossName": "Master Anays",
-    "bossType": "raid",
-    "bossLevel": 87,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 362326,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 910518,
-      "qty": 2,
-      "label": "Сувій заточення броні S-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
-     },
-     {
-      "itemId": 6695,
-      "qty": 1,
-      "label": "Demon Splinter Blade",
-      "iconUrl": "/icons/key_materials/s_grade/weapons/demon_splinter_blade.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "64cd412a-1c87-4da0-ace2-32c68a3bc8c9",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:28:05.354Z",
-    "playerName": "Freed0m",
-    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
-    "bossSpawnId": "l2dop_rb_25283",
-    "bossName": "Lilith",
-    "bossType": "raid",
-    "bossLevel": 80,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 374694,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 6688,
-      "qty": 1,
-      "label": "Forgotten Blade Edge",
-      "iconUrl": "/icons/key_materials/s_grade/weapons/forgotten_blade_edge.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "c741adc3-febe-4d98-bde2-67211255bdb7",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:23:04.583Z",
-    "playerName": "Cz4",
-    "characterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
-    "bossSpawnId": "l2dop_rb_25102",
-    "bossName": "Shacram",
-    "bossType": "raid",
-    "bossLevel": 45,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 182461,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 2431,
-      "qty": 1,
-      "label": "Plated Leather Boots",
-      "iconUrl": "/icons/drops/arrom_c/plated_leather_boots.jpg"
-     },
-     {
-      "itemId": 910512,
-      "qty": 2,
-      "label": "Сувій заточення броні C-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_c.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "b2b2da18-d5cc-44c9-9b39-3e49b3c7b990",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:22:58.813Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25319",
-    "bossName": "Ember",
-    "bossType": "raid",
-    "bossLevel": 80,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 333317,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "e0ba93b5-a2c0-49c5-a30d-628155f6883c",
-    "kind": "player_login",
-    "createdAt": "2026-10-11T13:22:18.393Z",
-    "playerName": "Dark",
-    "characterId": "8e146dd8-90e6-4166-b65b-dbd2db2aad9a",
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "ff24a288-4454-41fd-9c40-10ae63e8158c",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:21:48.072Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25286",
-    "bossName": "Anakim",
-    "bossType": "raid",
-    "bossLevel": 80,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 383656,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 910519,
-      "qty": 2,
-      "label": "Сувій заточення зброї S-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
-     },
-     {
-      "itemId": 2978,
-      "qty": 1,
-      "label": "Shield S",
-      "iconUrl": "/icons/key_materials/s_grade/shields/shield_s.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "fcb75014-1815-4a38-92a2-ba46ea9ebf18",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:21:18.267Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25244",
-    "bossName": "Last Lesser Giant Olkuth",
-    "bossType": "raid",
-    "bossLevel": 75,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 329432,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 2968,
-      "qty": 1,
-      "label": "Dark Crystal",
-      "iconUrl": "/icons/key_materials/a_grade/armor/dark_crystal_breastplate.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "dc6878e5-286d-4484-8787-241530333b04",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:21:04.584Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25282",
-    "bossName": "Death Lord Shax",
-    "bossType": "raid",
-    "bossLevel": 75,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 317630,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "fd061aa9-0cbd-464b-a20f-6fb0a7320b77",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:20:09.246Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25276",
-    "bossName": "Death Lord Ipos",
-    "bossType": "raid",
-    "bossLevel": 75,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 366737,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 910516,
-      "qty": 1,
-      "label": "Сувій заточення броні A-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png"
-     },
-     {
-      "itemId": 8713,
-      "qty": 1,
-      "label": "Sword of Ipos Blade",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/sword_of_Ipos_blade.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "41d54d33-bfad-4870-ab55-b01078ef4b48",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:19:47.893Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25202",
-    "bossName": "Krokian Padisha Sobekk",
-    "bossType": "raid",
-    "bossLevel": 74,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 340766,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 8712,
-      "qty": 1,
-      "label": "Sirra's Blade Edge",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/sirras_blade_edge.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "2dac76c3-c356-486b-90c1-dd9607888424",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:19:31.003Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25296",
-    "bossName": "Icicle Emperor Bumbalump",
-    "bossType": "raid",
-    "bossLevel": 74,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 349894,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 365,
-      "qty": 1,
-      "label": "Dark Crystal Breastplate",
-      "iconUrl": "/icons/drops/arrom_а/dark_crystal_breastplate.jpg"
-     },
-     {
-      "itemId": 512,
-      "qty": 1,
-      "label": "Dark Crystal Helmet",
-      "iconUrl": "/icons/drops/arrom_а/dark_crystal_helmet.jpg"
-     },
-     {
-      "itemId": 8714,
-      "qty": 1,
-      "label": "Barakiel's Axe Piece",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/barakiels_axe_piece.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "b0e06261-81a7-45fc-97f6-e884a190e23b",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:19:19.156Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25523",
-    "bossName": "Plague Golem",
-    "bossType": "raid",
-    "bossLevel": 73,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 300595,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 910516,
-      "qty": 2,
-      "label": "Сувій заточення броні A-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png"
-     },
-     {
-      "itemId": 5538,
-      "qty": 1,
-      "label": "Dragon Grinder Edge",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/dragon_grinder_edge.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "132c5455-3c1e-47e5-a1f8-083d97dd7dc7",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:18:55.120Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25199",
-    "bossName": "Water Dragon Seer Sheshark",
-    "bossType": "raid",
-    "bossLevel": 72,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 291635,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 5544,
-      "qty": 1,
-      "label": "Branch of the Mother Tree Head",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/branch_of_the_mother_tree_head.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "160cc460-70bf-49e0-91a3-2cec2c241cd1",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:17:48.003Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25235",
-    "bossName": "Vanor Chief Kandra",
-    "bossType": "raid",
-    "bossLevel": 72,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 328799,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 2966,
-      "qty": 1,
-      "label": "Majestic",
-      "iconUrl": "/icons/key_materials/a_grade/armor/majestic.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "5729da61-79bb-4502-acfc-098906c8067c",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:17:33.088Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25447",
-    "bossName": "Immortal Savior Mardil",
-    "bossType": "raid",
-    "bossLevel": 71,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 345007,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 5532,
-      "qty": 1,
-      "label": "Meteor Shower Head",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/meteor_shower_head.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "3fb3a246-47c4-4c4a-8db4-3bac6049b43b",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:17:21.766Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25328",
-    "bossName": "Eilhalder von Hellmann",
-    "bossType": "raid",
-    "bossLevel": 71,
-    "drops": [
-     {
-      "itemId": 57,
-      "qty": 331266,
-      "label": "Adena",
-      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 365,
-      "qty": 1,
-      "label": "Dark Crystal Breastplate",
-      "iconUrl": "/icons/drops/arrom_а/dark_crystal_breastplate.jpg"
-     },
-     {
-      "itemId": 8720,
-      "qty": 1,
-      "label": "Themis' Tongue Piece",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/themis_tongue_piece.png"
-     }
-    ],
-    "nickColor": "#ffdf8c"
-   },
-   {
-    "id": "2c2f0b53-59c6-413e-9eac-3d555e9cd106",
-    "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:17:07.164Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25163",
-    "bossName": "Roaring Skylancer",
+    "createdAt": "2026-10-12T02:56:59.872Z",
+    "playerName": "★_3oJloTo_★",
+    "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+    "bossSpawnId": "l2dop_rb_25281",
+    "bossName": "Anakim's Nemesis Zakaron",
     "bossType": "raid",
     "bossLevel": 70,
     "drops": [
      {
       "itemId": 57,
-      "qty": 344609,
+      "qty": 289943,
       "label": "Adena",
       "iconUrl": "/assets/l2dop/etc_adena_i00.png"
      },
      {
-      "itemId": 5542,
+      "itemId": 2482,
       "qty": 1,
-      "label": "Halberd Edge",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/halberd_edge.png"
+      "label": "Majestic Gauntlets [Robe]",
+      "iconUrl": "/icons/drops/arrom_а/majestic_gauntlets.jpg"
      }
     ],
-    "nickColor": "#ffdf8c"
+    "nickColor": "#8A2BE2"
    },
    {
-    "id": "38620ac7-feed-4286-a0a7-6a48d10403ff",
+    "id": "1ecc928c-ac7b-40ff-87d7-4d052a6ab8fd",
     "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:16:53.801Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25266",
-    "bossName": "Bloody Empress Decarbia",
+    "createdAt": "2026-10-12T02:49:59.468Z",
+    "playerName": "★_3oJloTo_★",
+    "characterId": "3c89ee7e-ab95-4911-947c-ceeaca0a8d46",
+    "bossSpawnId": "l2dop_rb_25233",
+    "bossName": "Spirit of Andras the Betrayer",
     "bossType": "raid",
-    "bossLevel": 75,
+    "bossLevel": 69,
     "drops": [
      {
       "itemId": 57,
-      "qty": 309897,
+      "qty": 287603,
       "label": "Adena",
       "iconUrl": "/assets/l2dop/etc_adena_i00.png"
-     },
-     {
-      "itemId": 910516,
-      "qty": 2,
-      "label": "Сувій заточення броні A-grade",
-      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png"
-     },
-     {
-      "itemId": 5535,
-      "qty": 1,
-      "label": "Carnage Bow Stave",
-      "iconUrl": "/icons/key_materials/a_grade/weapons/carnage_bow_stave.png"
      }
     ],
-    "nickColor": "#ffdf8c"
+    "nickColor": "#8A2BE2"
    },
    {
-    "id": "ab2729b1-7161-49d7-9bf8-2c3fbaf86935",
+    "id": "4d33d312-298a-4ee3-b604-29aed6e8e3c7",
     "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:16:36.015Z",
-    "playerName": "Teddy",
-    "characterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
-    "bossSpawnId": "l2dop_rb_25252",
-    "bossName": "Palibati Queen Themis",
+    "createdAt": "2026-10-12T00:38:03.243Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25444",
+    "bossName": "Enmity Ghost Ramdal",
     "bossType": "raid",
-    "bossLevel": 70,
+    "bossLevel": 65,
     "drops": [
      {
       "itemId": 57,
-      "qty": 329369,
+      "qty": 280995,
       "label": "Adena",
       "iconUrl": "/assets/l2dop/etc_adena_i00.png"
      },
      {
-      "itemId": 235,
+      "itemId": 5534,
       "qty": 1,
-      "label": "Bloody Orchid",
-      "iconUrl": "/icons/drops/weapon_a/bloody_orchid.jpg"
+      "label": "Soul Bow Stave",
+      "iconUrl": "/icons/key_materials/a_grade/weapons/soul_bow_stave.png"
      }
     ],
     "nickColor": "#ffdf8c"
    },
    {
-    "id": "224a0e41-a8ec-4603-8737-92d0db51d769",
+    "id": "a1ec8417-bba3-415d-9b33-98677e2ae2f2",
     "kind": "raid_boss_kill",
-    "createdAt": "2026-10-11T13:09:00.638Z",
-    "playerName": "УМиРАЙ",
-    "characterId": "7efe8673-688b-450e-ac70-c9327ce96df3",
+    "createdAt": "2026-10-12T00:24:17.045Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
     "bossSpawnId": "l2dop_rb_25467",
     "bossName": "Gorgolos",
     "bossType": "raid",
@@ -537,7 +91,7 @@
     "drops": [
      {
       "itemId": 57,
-      "qty": 320146,
+      "qty": 269273,
       "label": "Adena",
       "iconUrl": "/assets/l2dop/etc_adena_i00.png"
      },
@@ -546,6 +100,454 @@
       "qty": 1,
       "label": "Sobekk's Hurricane Edge",
       "iconUrl": "/icons/key_materials/a_grade/weapons/sobekks_hurricane_edge.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "eb091ad7-6a0a-4b65-bb06-0233bea4548d",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-12T00:12:36.752Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25407",
+    "bossName": "Lord Ishka",
+    "bossType": "raid",
+    "bossLevel": 60,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 246415,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 8348,
+      "qty": 1,
+      "label": "Star Buster Head",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/star_buster_head.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "3812922a-44de-466e-8fd5-85b7987048da",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-12T00:09:13.150Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25179",
+    "bossName": "Guardian of the Statue of Giant Karum",
+    "bossType": "raid",
+    "bossLevel": 60,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 245717,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 910524,
+      "qty": 1,
+      "label": "Благословенний сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_b.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "6d4d34ec-f2aa-406f-b883-f8bff4624358",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-12T00:05:43.423Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25106",
+    "bossName": "Ghost of the Well Lidia",
+    "bossType": "raid",
+    "bossLevel": 60,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 291467,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 923,
+      "qty": 1,
+      "label": "Accessary Paradia Necklace I00",
+      "iconUrl": "/icons/drops/earring_b/accessary_paradia_necklace_i00.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "3aaa9132-6348-4c02-a6c0-4981acea3ed8",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-12T00:02:40.475Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25089",
+    "bossName": "Soulless Wild Boar",
+    "bossType": "raid",
+    "bossLevel": 59,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 290213,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 910514,
+      "qty": 2,
+      "label": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "334d7a9e-6e19-4b2d-8991-bacfd3e4dbf6",
+    "kind": "mammon_blacksmith_spawn",
+    "createdAt": "2026-10-12T00:00:47.815Z",
+    "locationEn": "Catacomb of the Heretic"
+   },
+   {
+    "id": "efcd1c56-d5f3-4879-9dfc-d60d03a866d5",
+    "kind": "mammon_spawn",
+    "createdAt": "2026-10-12T00:00:47.810Z",
+    "locationEn": "Necropolis of Devotion"
+   },
+   {
+    "id": "2b8b5a34-7979-455f-88aa-63cf4aa449a8",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:59:34.297Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25182",
+    "bossName": "Demon Kurikups",
+    "bossType": "raid",
+    "bossLevel": 59,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 291276,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 910514,
+      "qty": 1,
+      "label": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png"
+     },
+     {
+      "itemId": 4115,
+      "qty": 1,
+      "label": "Lance Blade",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/lance_blade.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "0488762a-6854-44a1-a779-2500bf6448d9",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:56:04.344Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25238",
+    "bossName": "Abyss Brukunt",
+    "bossType": "raid",
+    "bossLevel": 59,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 265595,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 910514,
+      "qty": 2,
+      "label": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png"
+     },
+     {
+      "itemId": 4113,
+      "qty": 1,
+      "label": "Great Axe Head",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/great_axe_head.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "d2f6ed98-a0d1-44da-aca5-df76a49ce5f5",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:52:12.326Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25230",
+    "bossName": "Timak Seer Ragoth",
+    "bossType": "raid",
+    "bossLevel": 57,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 267312,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 4112,
+      "qty": 1,
+      "label": "Dark Elven Long Bow Shaft",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/dark_elven_long_bow_shaft.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "9adde0cd-9963-448c-85fa-7fd00c63a186",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:50:25.779Z",
+    "playerName": "Freed0m",
+    "characterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "bossSpawnId": "l2dop_rb_29045",
+    "bossName": "Frintezza",
+    "bossType": "epic",
+    "bossLevel": 90,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 5000000,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 8191,
+      "qty": 1,
+      "label": "Necklace of Frintezza",
+      "iconUrl": "/icons/drops/earring_s/necklace_of_frintessa.png"
+     },
+     {
+      "itemId": 910518,
+      "qty": 3,
+      "label": "Scroll: Enchant Armor (S)",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_s.png"
+     },
+     {
+      "itemId": 910519,
+      "qty": 2,
+      "label": "Scroll: Enchant Weapon (S)",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_s.png"
+     },
+     {
+      "itemId": 6579,
+      "qty": 1,
+      "label": "Arcana Mace",
+      "iconUrl": "/icons/drops/weapon_s/arcana_mace.jpg"
+     },
+     {
+      "itemId": 6379,
+      "qty": 1,
+      "label": "Draconic Leather Armor",
+      "iconUrl": "/icons/drops/arrom_s/draconic_leather_armor.jpg"
+     },
+     {
+      "itemId": 910528,
+      "qty": 1,
+      "label": "Благословенний сувій заточення броні S-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_s.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "9b80258d-dc3e-49dc-ad11-5cf600824ea2",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:49:20.288Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25463",
+    "bossName": "Harit Guardian Garangky",
+    "bossType": "raid",
+    "bossLevel": 56,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 281701,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 111,
+      "qty": 1,
+      "label": "Shield Of Pledge I00 0",
+      "iconUrl": "/icons/drops/arrom_b/shield_shield_of_pledge_i00_0.jpg"
+     },
+     {
+      "itemId": 910514,
+      "qty": 2,
+      "label": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png"
+     },
+     {
+      "itemId": 2981,
+      "qty": 1,
+      "label": "Jewelry B",
+      "iconUrl": "/icons/key_materials/b_grade/accessory/Jewelry_B.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "ed4d84c6-305f-4fce-b36e-a0cdfb40d9ef",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:46:51.369Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25259",
+    "bossName": "Zaken's Butcher Krantz",
+    "bossType": "raid",
+    "bossLevel": 55,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 239049,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 2416,
+      "qty": 1,
+      "label": "Blue Wolf Helmet",
+      "iconUrl": "/icons/drops/arrom_b/blue_wolf_helmet.jpg"
+     },
+     {
+      "itemId": 910514,
+      "qty": 1,
+      "label": "Сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_b.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "ccaee94f-845d-4285-88ce-e76d05dac0b1",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:42:47.942Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25280",
+    "bossName": "Pagan Watcher Cerberon",
+    "bossType": "raid",
+    "bossLevel": 55,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 280358,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 4110,
+      "qty": 1,
+      "label": "Hell Knife Edge",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/hell_knife_edge.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "4330b787-5913-4b95-af2c-10153987e27e",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:36:50.293Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25423",
+    "bossName": "Fairy Queen Timiniel",
+    "bossType": "raid",
+    "bossLevel": 61,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 256269,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 910516,
+      "qty": 1,
+      "label": "Сувій заточення броні A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_armor_a.png"
+     },
+     {
+      "itemId": 910517,
+      "qty": 2,
+      "label": "Сувій заточення зброї A-grade",
+      "iconUrl": "/icons/drops/resours/scroll_enchant_weapon_a.png"
+     },
+     {
+      "itemId": 5536,
+      "qty": 1,
+      "label": "Bloody Orchid Head",
+      "iconUrl": "/icons/key_materials/a_grade/weapons/bloody_orchid_head.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "c264fedd-e174-459b-a2c2-d5ea34df1305",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:29:37.334Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25070",
+    "bossName": "Enchanted Forest Watcher Ruell",
+    "bossType": "raid",
+    "bossLevel": 55,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 235169,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
+     },
+     {
+      "itemId": 8330,
+      "qty": 1,
+      "label": "Guardian Sword Blade",
+      "iconUrl": "/icons/key_materials/b_grade/weapons/guardian_sword_blade.png"
+     },
+     {
+      "itemId": 910524,
+      "qty": 1,
+      "label": "Благословенний сувій заточення броні B-grade",
+      "iconUrl": "/icons/drops/resours/bless_armor_b.png"
+     }
+    ],
+    "nickColor": "#ffdf8c"
+   },
+   {
+    "id": "06712327-f613-4ec5-8542-f803c042f376",
+    "kind": "raid_boss_kill",
+    "createdAt": "2026-10-11T23:27:31.686Z",
+    "playerName": "Warlock",
+    "characterId": "d6c099b6-b073-483b-a9af-b9fc898fc3d3",
+    "bossSpawnId": "l2dop_rb_25176",
+    "bossName": "Black Lily",
+    "bossType": "raid",
+    "bossLevel": 55,
+    "drops": [
+     {
+      "itemId": 57,
+      "qty": 259686,
+      "label": "Adena",
+      "iconUrl": "/assets/l2dop/etc_adena_i00.png"
      }
     ],
     "nickColor": "#ffdf8c"

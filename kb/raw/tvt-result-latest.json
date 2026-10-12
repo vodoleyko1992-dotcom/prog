@@ -2,15 +2,15 @@
  "_path": "/game/tvt/result/latest",
  "_status": 200,
  "data": {
-  "eventId": "tvt-scheduled-20261011:0800",
+  "eventId": "tvt-scheduled-20261011:2000",
   "outcome": "WIN",
-  "myTeam": 2,
-  "winnerTeam": 2,
+  "myTeam": 1,
+  "winnerTeam": 1,
   "score": {
-   "team1": 0,
-   "team2": 2
+   "team1": 6,
+   "team2": 0
   },
-  "kills": 2,
+  "kills": 3,
   "deaths": 0,
   "reward": {
    "granted": true,
@@ -21,7 +21,7 @@
   },
   "rewardEligible": true,
   "ineligibleReason": null,
-  "endedAt": 1791694824833,
+  "endedAt": 1791738033442,
   "cancelReason": null
  }
 }

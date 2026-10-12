@@ -2,29 +2,29 @@
  "_path": "/game/quiz/current",
  "_status": 200,
  "data": {
-  "roundId": "29862090",
-  "startsAt": "2026-10-11T13:30:00.000Z",
-  "endsAt": "2026-10-11T13:31:00.000Z",
-  "questionId": "adena_currency",
+  "roundId": "29862908",
+  "startsAt": "2026-10-12T03:08:00.000Z",
+  "endsAt": "2026-10-12T03:09:00.000Z",
+  "questionId": "hard_gen_sql",
   "question": {
-   "uk": "Яка базова валюта Lineage 2?",
-   "ru": "Какая базовая валюта Lineage 2?"
+   "uk": "Для чого переважно використовується SQL?",
+   "ru": "Для чего преимущественно используется SQL?"
   },
   "options": [
    {
     "index": 0,
-    "uk": "Adena",
-    "ru": "Adena"
+    "uk": "Edit raster images",
+    "ru": "Edit raster images"
    },
    {
     "index": 1,
-    "uk": "SP",
-    "ru": "SP"
+    "uk": "Query relational databases",
+    "ru": "Query relational databases"
    },
    {
     "index": 2,
-    "uk": "CP",
-    "ru": "CP"
+    "uk": "Compile kernels",
+    "ru": "Compile kernels"
    }
   ],
   "answered": false,

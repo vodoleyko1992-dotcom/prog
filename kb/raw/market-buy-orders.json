@@ -1,0 +1,98 @@
+{
+ "_path": "/game/market/buy-orders",
+ "_status": 200,
+ "data": {
+  "orders": [
+   {
+    "id": "6b5c5560-c347-4012-a3df-bcfc32a68710",
+    "buyerCharacterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+    "buyerName": "Cz4",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 910616,
+    "qtyRemaining": 500,
+    "unitPriceAdena": "10000",
+    "createdAt": "2026-10-12T02:31:24.666Z"
+   },
+   {
+    "id": "d808aa29-49ac-45bb-9cf1-1c0dcb72a6a7",
+    "buyerCharacterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+    "buyerName": "Cz4",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 910603,
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "6000",
+    "createdAt": "2026-10-12T02:30:19.208Z"
+   },
+   {
+    "id": "bcf37350-f1c1-4d8e-8452-2ce549fd1710",
+    "buyerCharacterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+    "buyerName": "Cz4",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 910603,
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "5000",
+    "createdAt": "2026-10-12T02:29:59.832Z"
+   },
+   {
+    "id": "9ebdf67c-fe29-446a-bf2b-9b448d52d47e",
+    "buyerCharacterId": "5ce85f2c-ed47-4792-8a39-65de9b58b13e",
+    "buyerName": "Cz4",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 910605,
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "3000",
+    "createdAt": "2026-10-12T02:29:19.164Z"
+   },
+   {
+    "id": "4b28f163-f53a-4be9-b9e5-ba2be00ca085",
+    "buyerCharacterId": "5ebccec9-b9dc-4447-b1da-01b750141ad8",
+    "buyerName": "Teddy",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 920048,
+    "qtyRemaining": 1500,
+    "unitPriceAdena": "250000",
+    "createdAt": "2026-10-11T23:33:22.432Z"
+   },
+   {
+    "id": "41eda359-1647-408e-bc48-8e86280a3e9f",
+    "buyerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "buyerName": "Freed0m",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 920048,
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "150000",
+    "createdAt": "2026-10-11T15:34:13.586Z"
+   },
+   {
+    "id": "11cad894-a2c4-4c24-bab5-6bd2900d556c",
+    "buyerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "buyerName": "Freed0m",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 1869,
+    "qtyRemaining": 5000,
+    "unitPriceAdena": "10000",
+    "createdAt": "2026-10-11T15:16:08.867Z"
+   },
+   {
+    "id": "7488b335-05a1-4dc7-83db-7e1653027a19",
+    "buyerCharacterId": "95beeb65-d278-470d-ba3e-d57dfdfbf9b6",
+    "buyerName": "Freed0m",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 1867,
+    "qtyRemaining": 4561,
+    "unitPriceAdena": "10000",
+    "createdAt": "2026-10-10T22:31:28.114Z"
+   },
+   {
+    "id": "6467feeb-3cd9-4697-be7f-fbbc61791e92",
+    "buyerCharacterId": "251f42e6-bdca-46e1-94b0-d2a30e718bd1",
+    "buyerName": "Haydn",
+    "buyerNickColor": "#ffdf8c",
+    "itemId": 1865,
+    "qtyRemaining": 1000,
+    "unitPriceAdena": "2000",
+    "createdAt": "2026-10-06T17:35:56.032Z"
+   }
+  ]
+ }
+}

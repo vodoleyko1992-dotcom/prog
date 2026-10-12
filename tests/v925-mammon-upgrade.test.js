@@ -33,7 +33,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     env.rt.mmEq = { belt: [920018, 2] }; assert.equal(M.want(), null, 'goal Lv.2 reached'); }
   // 2. на странице кузнеца: жмёт кнопку своей вещи (не соседней), один раз; уровень вырос → ✓, mmJob закрыт, журнал с ценой в Coin of Luck
   { const other = card('Плащ', 0, 'Покращити до Lv.1'), mine = card('Пояс першопрохідця', 0, 'Покращити до Lv.1');
-    const { env, M, fired, recs } = mk({ inv: INV, cards: [other, mine], lists: [[item()], [item({ level: 1 })]] });
+    const { env, M, fired, recs } = mk({ inv: INV, cards: [other, mine], lists: [[item()], [item({ level: 1, canAfford: false })]] });   // 10.0: на Lv.2 не хватает — заход закончен (иначе продолжает)
     const J = { kind: 'smith', up: true, step: 'act', t: Date.now() }; env.rt.mmJob = J;
     await M.smith(J);
     assert.deepEqual(fired, [mine.btn], 'clicked own card only');
@@ -89,8 +89,8 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     await M.smith({ kind: 'smith', step: 'act', t: Date.now() });
     assert.equal(fired.length, 0); assert.match(env.rt.mmLog[0].why, /Кристал: ранг D 0\/200/); assert.equal(env.rt.mmSmithOk.ok, false); }
   // 8г. забрал вложение из почты, а по сумке не готово → проверка у кузнеца (не чаще раза в 2 ч); готово / выключено / нет цели — нет
-  { const { env, M } = mk({ inv: { ...INV, 1458: 0 } });
-    assert.equal(M.mailNote(), true); assert.ok(env.rt.mmSmithReq); assert.equal(M.want().kind, 'smith');
+  { const { env, M } = mk({ inv: { ...INV, 1458: 0 }, rt: { mmMail: { unc: [{ a: '1', s: 'Skye', id: 1458, n: 'Кристал D', q: 100 }] } } });   // 10.0: письмо с материалом цели
+    assert.equal(M.mailNote(), true); assert.ok(env.rt.mmSmithReq); env.rt.mmMail = { unc: [] }; assert.equal(M.want().kind, 'smith');
     env.rt.mmSmithReq = null; assert.equal(M.mailNote(), false, 'once per 2 h');
     env.rt.mmMailT = 0; env.cfg.mmUpgrade = false; assert.equal(M.mailNote(), false, 'upgrade off'); env.cfg.mmUpgrade = true;
     env.rt.mmMailT = 0; INV[1458] = 100; const r = mk({ inv: INV }); assert.equal(r.M.mailNote(), false, 'bag already ready → want() goes by itself'); }

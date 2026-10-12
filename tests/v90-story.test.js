@@ -40,6 +40,9 @@ const active = (o = {}) => ({ ...RAW_N, part: 1, active: true, subclassLevel: 52
     const w = S.want(); assert.equal(w.kind, 'noblesse'); assert.equal(w.key, 'noblesse:1');
     env.cfg.storyTurnIn = false; assert.equal(S.want(), null, 'switched off'); env.cfg.storyTurnIn = true;
     env.rt.storyTried = { 'noblesse:1': Date.now() }; assert.equal(S.want(), null, 'tried 30 min ago'); env.rt.storyTried = {};
+    // 10.0: точка возврата неизвестна или «out:…» — не сдаём (бот не вернулся бы), известна — идём
+    assert.equal(await S.storyStep(), false, 'no home spot'); env.rt.zone = 'out:Vanor'; assert.equal(await S.storyStep(), false, 'out: spot has no teleport'); env.rt.zone = 'coliseum';
+    assert.equal(S.chainWant()?.kind, 'noblesse', 'after a win in the chain — go to the map for it');
     assert.equal(await S.storyStep(), true); assert.equal(env.rt.storyJob.kind, 'noblesse'); assert.ok(env.rt.storyTried['noblesse:1']);
     env.rt.storyJob = null;
     const { env: e2, S: S2 } = mk(); S2.qNote('noblesse', active({ part: 4, completed: true, actions: { canAdvance: true } })); assert.equal(S2.want(), null, 'completed');

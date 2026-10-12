@@ -3,7 +3,7 @@
  "_status": 200,
  "data": {
   "fastAdenItemId": 920048,
-  "fastAdenBalance": 133,
+  "fastAdenBalance": 113,
   "sets": [
    {
     "id": "warrior",
@@ -472,10 +472,11 @@
      },
      {
       "skillId": 1323,
+      "iconSkillId": 1323,
       "nameUk": "Noblesse Blessing",
       "level": 1,
       "durationSec": 10800,
-      "descriptionUk": "Зберігає активні бафи після однієї смерті",
+      "descriptionUk": "Зберігає активні бафи після смерті. Після смерті Noblesse Blessing зникає.",
       "costFastAden": 5
      }
     ]

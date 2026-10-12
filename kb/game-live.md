@@ -6,14 +6,32 @@
 
 Время в ответах — мс эпохи; `serverNowMs` есть в `/game/time`, `/game/fishing/state` и `/game/siege/schedule`. Числа EXP/SP у РБ приходят **строкой с пробелами** (`"1 837 252"`), у обычных мобов — числом.
 
+## Обновление 12.10 (повторный сбор, только GET)
+
+Сбор 12.10 ≈04:00 UTC: **1 POST `/auth/login` + 1 134 GET** (≈640 к API, ≈490 статических HTML/JS — 126 страниц, 365 скриптов). Статусы: 200 — 1 125; 403 — 3 (`/game/clans/items/catalog` и `/game/mammon/blacksmith/upgrades`, как и 11.10; `/game/ashen-bastion/mobs` → `not_in_ashen_bastion`); 404 — 5 (2 страницы, 3 пробы spawnId); 502 — 2 (повтор прошёл). 429 и 423 не было. Ничего не потрачено.
+
+**Не изменилось** (сверено с 11.10 поле в поле): `catalogVersion` прежняя (`20261009-epic-jewelry-stats-valakas-mcrit30-v1`), `catalog-hints`, `drops-shop` (все цены), `farm-guide`, рецепты D/C/B, экономика рыбалки (стартовый магазин, Proof, пакеты), магазины Маммона/TvT/GM/Олимпиады, VIP/премиум, катакомбы, городской и FA-баффер (кроме текста Noblesse). РБ — те же 197 (имена, уровни, цена 100 000), эпики — те же 8. `/game/spawn/<id>/info` заново снят у **всех 205 боссов** и у **317 мобов** (все 233 вида ≥ 40 ур. + каждый второй ниже): HP/атака/защита/EXP/SP/дроп/спойл — **без изменений**. Поэтому `game-raid-bosses.json`, `game-epics.json`, `game-zones.json`, `game-items.json`, `game-shop-drops.json`, `game-farm-guide.json`, `game-recipes.json`, `game-fishing.json` не менялись, `zone-db.js` не пересобирался.
+
+**Изменилось в игре:**
+1. **Новость 11.10 15:52 UTC «WARLOCK, СУММОНЫ И SPOIL»** (`kb/raw/forum-news-post-warlock.json`):
+   - Summon Feline Queen (1331) не призывает кота, а сразу даёт **Blessing of Queen на 2 минуты** (не 20!). Подтверждено кодом игры (`l2-hud-companion.js`: «Blessing of Queen накладено на 2 хв.», подпись «Crit Rate +25–30% · урон крита +20–25% · 2 хв · ти + Party»; кнопка в окне слуги → `POST /character/companion/feline-queen-blessing {expectedRevision, characterId}`). В `/character`: у героя бафф 4699 «Фіз. Crit Rate +30% і урон фіз. крита +25%», у кота в `activeSummon.activeBuffs` — 4699 «+20% Crit Damage слуги» с `expiresAtMs`. Боевой кот остаётся и тоже получает бонус.
+   - **Все слуги: точность 70 %, шанс физ. крита 50 % фиксированно** (PvE и TvT, не зависит от уровней). Kai в `activeSummon`: `accuracy 70, critRate 500, critDmgMul 2.4` (11.10: 118 / 41 / 2.0). Баффы на силу крита работают, шанс выше 50 % не поднимают.
+   - Spoil Festival (302) — спойл со 100 % шансом на всех живых мобов в зоне (не на РБ/эпиков); обычный Spoil и Sweeper остались.
+2. **Новая зона Ashen Bastion** (`teleportId ashen_bastion`, телепорт 0 адены, в `/game/teleport/locations` без полосы уровней — стало 91 точка). PvE 85 ур., **без карты**: страница `/ashen-bastion.html`, список `GET /game/ashen-bastion/mobs?offset&limit=25` (`{mobs[{id,name,level,maxHp,exp,icon,respawnSeconds}], total, offset}`, 403 вне зоны), бой — `/battle.html?spawnId=ashen_bastion_mob_NNN` (001…200). 6 видов (Dark Reaper, Abyss Walker, Infernal Knight, Ashen Guardian, Cursed Warlock, Doom Bringer): HP 259–408 тыс., P.Atk 9–11,3 тыс., M.Atk 8,5–12,6 тыс., M.Def 11,3–12,2 тыс., EXP 54–66 тыс., SP 2 550; дроп: адена 28,7–34,9 тыс. (40 %), Fast Aden 5 %, ресурсы B-уровня по 3,1 %, большие банки, свитки заточки S 3,5 %. Записаны в `game-mobs.json → ashenBastion` (не в `mobs`, чтобы не ломать `zone-db.js`/v90-autofarm: 90 точек, HP = 180 + 48·ур.).
+3. **Карта**: `nearbySpawns[]` в `/game/map/spawns` и `/game/map/around` теперь несут `maxHp` и `rewardExp` — EXP/HP моба видно прямо из списка, без `/spawn/<id>/info`. У РБ в `/spawn/<id>/info` добавлено `raidBossAttackBlockedReasonUk`.
+4. `/character`: новые поля `noblesse` (false) и `noblesseQuest` (null). Описание Noblesse Blessing (1323) в обоих бафферах: «Зберігає активні бафи після смерті. Після смерті Noblesse Blessing зникає.» + `iconSkillId`.
+5. Подсказки скиллов: Servitor Ultimate Defense — «посилення P.Def/M.Def на 20 хв; нерухомість лише 30 с»; Summon Feline Queen — «support-слуга; P.Atk +10 % от M.Atk; в окне слуги Blessing of Queen для тебя + Party».
+6. **Новые эндпоинты** (в `game-endpoints.json`, стало 285): `GET /game/shop/sell/prices` (цена продажи NPC: 616 предметов, например Stone of Purity 773, Mithril Ore 804, Greater Mana Potion 1 100, Fast Aden 241, BSPS B 80) и `POST /game/shop/sell` (страница `sell-items.html`); `GET /game/market/buy-orders` (заявки игроков на покупку: Fast Aden 150–250 тыс. адены, Proof of Catching a Fish 10 000, White Fish 5–6 тыс. при цене NPC 476, Iron Ore/Animal Skin по 10 000) и `POST /character/market/buy-order/sell`, `POST /character/market/coin-of-luck/buy-order/sell`; `POST /game/premium/purchase-tier`; `GET /game/skill-icon/<id>`; `/game/ashen-bastion/mobs`; `GET /game/story-quests/noblesse|subclass` (в каталоге не было). Цены NPC и заявки — `game-other-shops.json → npcSellPrices / marketBuyOrders`.
+7. Герой (не игра): Warlock **64 ур.** (11.10 — 60), M.Atk 5 465 (3 252), HP 6 517, MP 5 395, сет **Majestic Robe (A)** (был Avadon B), Kai summonSkillLevel 7, P.Atk кота 2 039; `minRaidBossLevel` 55 → РБ 51–54 теперь «нижче дозволеного рівня». Ранги скиллов — `game-skills-warlock.json` (обновлён).
+
 ## 1. Файлы
 
 | Файл | Что внутри | Кол-во |
 |---|---|---|
-| `kb/data/game-endpoints.json` | каталог API фронтенда: метод, путь, JS, страницы, `usedByBot`, `crawledGET` | 275 путей (бот использует 23, снято GET 76) |
+| `kb/data/game-endpoints.json` | каталог API фронтенда: метод, путь, JS, страницы, `usedByBot`, `crawledGET` | 285 путей (12.10: +10; бот использует 23) |
 | `kb/data/game-mobs.json` | мобы: npcId, stats {maxHp,pAtk,pDef,mAtk,mDef}, exp, sp, expPerHp, адена [min,max,шанс], drops, spoil, локации (teleportId), kinds, примеры spawnId; отдельно `champion:true` | 400 записей (357 обычных + 43 чемпиона, 360 видов моба) + 81 моб только из farm-guide (имя/ур./локация, без цифр) |
 | `kb/data/game-zones.json` | 90 точек телепорта: цена, `mobLevelMin/Max`, мобы точки | 90 |
-| `kb/data/game-teleports.json` | телепорты: id, EN/UK, цена в адене, полоса уровней мобов | 90 |
+| `kb/data/game-teleports.json` | телепорты: id, EN/UK, цена в адене, полоса уровней мобов | 91 (12.10: + Ashen Bastion) |
 | `kb/data/game-raid-bosses.json` | все РБ: spawnId, npcId, уровень, stats, exp/sp, цена телепорта, живой ли при снятии, дроп с шансами | 197 |
 | `kb/data/game-epics.json` | 8 эпиков: stats, exp, `respawnHours`, `coinOfLuckCost` | 8 |
 | `kb/data/game-shop-drops.json` | магазин `/game/drops-shop` по грейдам: shopKey, itemId, цена в адене/CoL, подтип, строки статов | 749 |
