@@ -114,6 +114,9 @@ function byText(re, sel = 'a,button,div,span') {
 
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
+  // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
+  // кроме крестика окна «Фарм заблокирован» (тогда проверки уже нет)
+  if (abHold() && !el.closest?.('.l2-antibot-card--blocked')) return false;
   el.scrollIntoView({ block: 'nearest' });
   const r = el.getBoundingClientRect();
   const o = { bubbles: true, cancelable: true, composed: true, view: window,
@@ -2040,8 +2043,36 @@ function antibotState() {
   if (L && (L.querySelector('.l2-antibot-card--blocked') || /заблок|недоступ|blocked/i.test(L.textContent) && !L.querySelector('.l2-antibot-card__options'))) return 'blocked';
   if (L && (L.querySelector('.l2-antibot-card__options') || /провер|символ|перевір/i.test(L.textContent))) return 'check';
   if ((rt.pveBlockUntil || 0) > Date.now()) return 'blocked';
+  if (rt.abChal) return 'check';                   // 10.0.2: проверка выдана сервером, а окна на странице нет (перезагрузка, другая страница) — всё равно ждём
   return null;
 }
+// 10.0.2 (скрин админки игры 12.10 13:22: «CAPTCHA активна · підозрілих спроб після неї: 0/10»; у другого игрока 10 попыток → «Фарм
+// заблоковано»). Как устроено у игры (battle-antibot.js): ответ боя с code «anti_bot_challenge» включает проверку; пока она активна,
+// ЛЮБОЙ клик по странице мимо кнопок символов уходит на сервер (POST /game/antibot/activity) как «подозрительная попытка», 10 — блок.
+// Окно проверки живёт только в памяти страницы: после перезагрузки или перехода его нет, а проверка на сервере висит. Поэтому:
+// выдачу проверки запоминаем по ответу сервера (rt.abChal — переживает перезагрузку), снимаем только по «passed» / «not_found» / блоку
+// фарма или когда игрок сам жмёт ▶ (включает бота / снимает паузу). Пока проверка висит — ни одного клика бота (fire) и ни одного
+// своего запроса к игре (fetch ниже)
+function abNet(path, res) {
+  const code = String(res?.code || res?.error || '');
+  if (code === 'anti_bot_challenge') {
+    if (!rt.abChal) rec('B', 'антибот', `сервер выдал «Проверку активности» (${path}) — бот замер: ни кликов, ни запросов, пока вы её не решите`);
+    if (!rt.abChal || Date.now() - (rt.abChal.t || 0) > 60000) setRt({ abChal: { t: Date.now(), id: String(res?.challenge?.id || '').slice(0, 40) } });
+    return;
+  }
+  if (!rt.abChal) return;
+  if (path === '/game/antibot/challenge' && res?.passed === true || code === 'antibot_challenge_not_found' || code === 'pve_farm_blocked') setRt({ abChal: null });
+}
+const abHold = () => !!rt.abChal || !!abLayer()?.querySelector('.l2-antibot-card__options');
+// свои запросы бота к игре (content.gameGet/gamePost/srvUp, epics, raid, mammon…) идут через fetch этого мира — один затвор на всех
+const fetch0 = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
+if (fetch0) window.fetch = async function (u, o) {
+  const s = typeof u === 'string' ? u : u?.url || '';
+  if (!/^(chrome|moz)-extension:/.test(s) && abHold()) return new Response(JSON.stringify({ error: 'l2bot_antibot_wait' }), { status: 423, headers: { 'content-type': 'application/json' } });
+  const r = await fetch0(u, o);
+  if (r.status === 423) r.clone().json().then(j => abNet(new URL(s, location.href).pathname, j)).catch(() => {});
+  return r;
+};
 const sendAlert = (id, title, text, sticky) => { try { chrome.runtime.sendMessage({ cmd: 'alert', id, title, text, sticky }, () => void chrome.runtime.lastError); } catch (e) {} };
 const clearAlert = id => { try { chrome.runtime.sendMessage({ cmd: 'alertClear', id }, () => void chrome.runtime.lastError); } catch (e) {} };
 // v5.5.7: пока висит проверка — звать игрока: сигнал (если браузер разрешил звук), мигающий заголовок вкладки, повтор уведомления раз в 45 с
@@ -2073,7 +2104,9 @@ async function antibotGuard() {                     // true — бот на па
     if (Date.now() - (window.__abBeepT || 0) > 10000) { window.__abBeepT = Date.now(); abBeep(); }          // сигнал раз в 10 с
     if (Date.now() - (window.__abNoteT || 0) > 45000) { if (window.__abNoteT) sendAlert('ab', '⚠ L2wap: проверка всё ещё ждёт', 'Нажмите символы по порядку в окне игры — бот на паузе.', true); window.__abNoteT = Date.now(); }
     const waited = Math.round((Date.now() - (rt.abT || Date.now())) / 1000);
-    setStatus(`⚠ КАПЧА: решите проверку в окне игры — бот ждёт вас (${waited} с) и ничего не нажимает`);
+    // 10.0.2: окна на странице нет (перезагрузка/другая страница), а сервер проверку не снимал — игра покажет её снова на первом ходе боя
+    setStatus(abLayer() ? `⚠ КАПЧА: решите проверку в окне игры — бот ждёт вас (${waited} с) и ничего не нажимает`
+      : `⚠ КАПЧА ждёт (${waited} с): откройте бой и сделайте ход сами — игра покажет символы; решили — бот продолжит сам (или нажмите ▶)`);
     await sleep(1000); return true;
   }
   const until = rt.pveBlockUntil || 0, left = Math.max(0, until - Date.now());
@@ -3263,6 +3296,7 @@ addEventListener('message', e => {
   } catch (er) {}
   // Skill deadlines are managed by battle-cooldown.js (server time + sequence order).
   // Do not independently write rt.cdUntil using Math.max or retain a stale estimate.
+  if (d.res && typeof d.res === 'object') try { abNet(path, d.res); } catch (er) {}   // 10.0.2: проверка активности выдана / пройдена
   if (d.res?.code === 'pve_farm_blocked' || d.res?.error === 'pve_farm_blocked') try {   // v5.5.6: игра заблокировала PvE-фарм
     const u = Date.parse(d.res.blockedUntil || '') || (d.res.remainingSeconds ? Date.now() + d.res.remainingSeconds * 1000 : 0);
     if (u && u !== rt.pveBlockUntil) setRt({ pveBlockUntil: u, pveBlockMsg: d.res.messageRu || d.res.messageUk || '' });
@@ -4227,9 +4261,11 @@ chrome.storage.onChanged.addListener(ch => {
     if (m0 !== m1 && tabOwner) try { rec('U', 'меню', `режим: ${m0} → ${m1}`); } catch (e) {}
   }
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  if (ch.paused && ch.paused.oldValue && !ch.paused.newValue && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок снял паузу — проверку решил
   if (ch.on) {
     on = !!ch.on.newValue;
     if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
+    if (on && ch.on.oldValue === false && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок сам включил бота — значит, проверку решил
     const stopMeta = ch.stopMeta?.newValue;
     const reason = !on && stopMeta && Date.now() - (+stopMeta.t || 0) < 30000
       ? ` · источник: ${String(stopMeta.source || 'не указан').slice(0, 50)} · ${String(stopMeta.reason || '').slice(0, 180)}`

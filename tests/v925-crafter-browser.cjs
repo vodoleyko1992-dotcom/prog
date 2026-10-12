@@ -22,7 +22,7 @@ const CANDS = Array.from({ length: 25 }, (_, i) => i === 21 ? { itemKey: 'res:18
 // окружение модуля как в content.js (настоящий fire из content.js)
 const ENV = `
   const contentSrc = window.__content, fireSrc = contentSrc.slice(contentSrc.indexOf('function fire(el) {'), contentSrc.indexOf('\\n}\\n', contentSrc.indexOf('function fire(el) {')) + 3);
-  const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true; return ' + fireSrc.replace('function fire', 'function') + '; })()');
+  const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt || {}, recs = [], bag = window.__bag;
   const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye' }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},
