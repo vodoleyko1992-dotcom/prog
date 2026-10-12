@@ -2804,6 +2804,7 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind.wide .r{font-size:14.5px;margin-top:10px;padding-top:9px}
 #l2bot-ind .e{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind .e b{color:#f0cf86}
+#l2bot-ind.wide .e{margin-top:auto;padding-top:9px;font-size:15px;flex:0 0 auto}
 #l2bot-ind.over{max-width:min(380px,calc(100vw - 60px));opacity:.92}
 #l2bot-ind.hid{display:none!important}`;
 document.documentElement.append(uiCss, ui);
@@ -2820,10 +2821,20 @@ const IND_HEALTH = { retry: 'повтор действия', reload: 'перез
 // опрос списка эпиков, свои убийства). Убитые — по времени воскрешения, живые — одной строкой. В узком окне — одна строка
 function epicRespTxt(wide, now = Date.now()) {
   try {
-    const RT = L2V7Modules.rbtimer, T = rt.rbTimer; if (!RT || !T?.b) return '';
-    const E = RT.table(T, now, { all: true }).filter(t => t.e); if (!E.length) return '';
-    const nm = t => String(t.n || '').replace(/^Queen Ant$/, 'АК');
-    const dead = E.filter(t => !t.al).map(t => `${nm(t)} (${t.l}): ${RT.upTxt(t, now)}`), live = E.filter(t => t.al).map(nm);
+    const RT = L2V7Modules.rbtimer, T = rt.rbTimer || { b: {} }; if (!RT) return '';
+    const nm = n => String(n || '').replace(/^Queen Ant$/, 'АК');
+    const E = RT.table(T, now, { all: true }).filter(t => t.e).map(t => ({ n: nm(t.n), l: t.l, al: t.al, txt: t.al ? '' : RT.upTxt(t, now), at: t.al ? Infinity : t.at.lo || t.at.hi }));
+    // 10.0.2 (скрин игрока 13.10 00:14: блока не было — бот на паузе, своих опросов ещё не делал): эпики, которых нет в таймерах, — из
+    // rt.epicDb (список эпиков игры, страница «Эпик боссы», раздел «🐉 Эпики»)
+    const seen = new Set(E.map(x => x.n.toLowerCase()));
+    for (const d of Object.values(rt.epicDb || {})) {
+      const n = nm(d?.name); if (!n || seen.has(n.toLowerCase()) || typeof d.alive !== 'boolean') continue;
+      const u = d.until, txt = d.alive ? '' : !u?.hi ? 'когда — неизвестно' : u.late ? `уже должен воскреснуть (не позже ${RT.hm(u.hi, now)})` : u.lo && u.hi - u.lo > 15 * 60000 ? `${RT.hm(u.lo, now)}–${RT.hm(u.hi, now)}` : `${u.lo ? '≈' : 'не позже '}${RT.hm(u.hi, now)} (через ${RT.dur(u.hi - now)})`;
+      E.push({ n, l: d.lvl || 0, al: d.alive, txt, at: d.alive ? Infinity : u?.lo || u?.hi || Infinity }); seen.add(n.toLowerCase());
+    }
+    if (!E.length) return wide ? '— 🐉 респ эпиков —\nданных пока нет: бот читает список эпиков раз в 10 мин, пока работает (на паузе — нет); можно открыть в игре «Эпик боссы» — бот запомнит' : '';
+    E.sort((a, b) => a.at - b.at);
+    const dead = E.filter(t => !t.al).map(t => `${t.n} (${t.l}): ${t.txt}`), live = E.filter(t => t.al).map(t => t.n);
     if (!wide) return `🐉 Респ эпиков: ${dead.length ? dead[0].replace(/\s*\(через[^)]*\)/, '') + (dead.length > 1 ? ` · ещё убиты ${dead.length - 1}` : '') : 'все живы'}${live.length ? ` · живы ${live.length}` : ''}`;
     return '— 🐉 респ эпиков —\n' + [...dead.map(x => '💀 ' + x), live.length ? '✅ живы: ' + live.join(', ') : ''].filter(Boolean).join('\n');
   } catch (e) { return ''; }
@@ -2880,9 +2891,10 @@ function draw() {
   if (cfg.fishMode && F?.casts) L.push(`🎣 ${F.caught} поймано / ${F.lost} сорвалось / ${F.casts} забросов${rt.fishSess?.n ? '\n🎣 сессия: ' + fishRateTxt() : ''}`);
   const q = questSummary(); if (q) L.push(q.replace(/^\s*·\s*/, ''));
   const wide = ui.classList.contains('wide');        // 7.2.1: окно на всю высоту — больше истории и длиннее строки
-  const ep = epicRespTxt(wide, now); if (ep) L.push(ep);   // 10.0.2 (игрок 12.10: «слева снизу раздел — респ эпиков»)
   const rec5 = RECENT.slice(1, wide ? 31 : 6);      // [0] — текущий статус, он уже сверху
   if (rec5.length) L.push('— последние действия —\n' + rec5.map(x => `${new Date(x.t).toLocaleTimeString('ru')} ${x.s.replace(/\[РБ [^\]]*\]/, '[РБ]').slice(0, wide ? 140 : 64)}`).join('\n'));
+  // 10.0.2 (игрок 12.10: «слева снизу раздел — респ эпиков»; скрин 13.10 00:14 — обвёл пустой низ окна): блок внизу окна, виден всегда
+  const ep = epicRespTxt(wide, now); if (ep) L.push(ep);
   const mode = cfg.indMode || 'full';
   if (mode === 'off') { ui.style.display = 'none'; return; }
   ui.style.display = '';
