@@ -424,7 +424,7 @@
   <label>Опрос списка раз в, мин <input id="rbTimerMin" type="number" min="5" step="1"></label>
   <label title="Пока бот сам не замерил респ, он берёт это число (со слов игрока — около 8 ч)">Респ обычного РБ, пока не замерен, ч <input id="rbRespH" type="number" min="1" max="72" step="0.5"></label>
   <label>Показать всех РБ, а не только своего окна уровней <input id="rbTimerAll" type="checkbox"></label>
-  <div class="row"><button id="rbtImport" title="Файл слежки из облака (по строке на опрос) или таймеры другого персонажа — сольются с таймерами этого">📥 Загрузить таймеры из файла слежки</button><input id="rbtFile" type="file" accept=".json,.jsonl,.txt,application/json" hidden></div>
+  <div class="row"><button id="rbtImport" title="Alt+R. Файл слежки из облака (по строке на опрос) или таймеры другого персонажа — сольются с таймерами этого">📥 Загрузить таймеры из файла слежки</button><input id="rbtFile" type="file" accept=".json,.jsonl,.txt,application/json" hidden></div>
   <div id="rbTimerSum" class="hint" style="white-space:pre-line"></div>
   <div id="rbTimerTable" class="zbox"><div class="hint">Пока пусто — бот должен быть запущен: список боссов он прочитает в течение 10 мин</div></div>
 
@@ -777,7 +777,7 @@
 
 </div><!-- /.workarea -->
 </div><!-- /.app-shell -->
-<footer>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Ctrl+K</span> поиск</footer>
+<footer>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+R</span> таймеры · <span class="kbd">Ctrl+K</span> поиск</footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="zone-db.js"></script>
 <script src="zone-kpd.js"></script>

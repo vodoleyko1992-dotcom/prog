@@ -2915,6 +2915,36 @@ function draw() {
 let escT = 0;
 addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true); escT = Date.now(); }, true);
 
+// 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов»): Alt+R на странице игры — выбор файла слежки,
+// таймеры сливаются с таймерами героя (как кнопка «📥 Загрузить таймеры из файла слежки» в меню; в меню Alt+R делает то же)
+function rbtSay(t, bad) {
+  try {
+    const d = document.createElement('div'); d.textContent = t; d.id = 'l2bot-rbt-say';
+    d.style.cssText = `position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:2147483647;padding:8px 14px;border-radius:8px;font:14px sans-serif;background:#2a2217;color:${bad ? '#f08a7a' : '#9fe0a8'};border:1px solid #d4a856`;
+    document.getElementById('l2bot-rbt-say')?.remove(); document.body.appendChild(d); setTimeout(() => d.remove(), 5000);
+  } catch (e) {}
+}
+async function rbtImportText(txt) {
+  const RT = L2V7Modules.rbtimer, T2 = RT?.parseFile(txt);
+  if (!T2 || !Object.keys(T2.b || {}).length) throw new Error('в файле нет таймеров боссов');
+  const { rt: s = {} } = await chrome.storage.local.get('rt'), M = RT.merge(s.rbTimer || rt.rbTimer || { b: {} }, T2);
+  const r = await chrome.runtime.sendMessage({ cmd: 'rbtImport', rbTimer: M });
+  if (!r?.ok) throw new Error(r?.reason || 'фон недоступен');
+  rt = { ...rt, rbTimer: M };
+  const n = Object.keys(T2.b).length, ob = Object.values(T2.b).reduce((a, x) => a + (x.ob?.length || 0), 0);
+  return `Таймеры загружены: ${n} боссов${ob ? `, замеров респа ${ob}` : ''}`;
+}
+function rbtPick() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,.jsonl,.txt,application/json'; inp.style.display = 'none';
+  inp.onchange = async () => {
+    const f = inp.files?.[0]; inp.remove(); if (!f) return;
+    try { const m = await rbtImportText(await f.text()); rbtSay('⏱ ' + m); try { rec('U', 'таймеры', m + ' (Alt+R)'); } catch (e) {} try { draw(); } catch (e) {} }
+    catch (er) { rbtSay('Не загрузил таймеры: ' + (er?.message || er), true); }
+  };
+  document.body.appendChild(inp); inp.click();
+}
+addEventListener('keydown', e => { if (!e.isTrusted || !e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyR') return; e.preventDefault(); e.stopPropagation(); rbtPick(); }, true);
+
 // ---------- запись действий (для анализа) ----------
 // Пишутся клики на ВСЕХ страницах игры. На чате/почте/форуме/поддержке — только какой элемент нажат, без текста.
 const PRIVATE = /chat|mail|forum|support/i;
