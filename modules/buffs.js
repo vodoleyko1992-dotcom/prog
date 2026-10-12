@@ -288,6 +288,11 @@ function faWanted() {
   // 9.2.5: эпик — тот же фулл бафф за FA (вместо платного городского набора за 15 Coin of Luck), когда заход на эпика уже разрешён
   // (epics.epicFaOk: по силам, жив по свежему ответу, < 2 смертей за час, дорога выбрана). Берётся только то, чего нет или что кончается
   const epicWant = env.cfg.epicFaFull !== false && env.epicFaOk?.() ? faFullIds() : [];
+  // 10.0.1 (лог 12.10 18:10–18:12, игрок: «не срабатывает автобафф под РБ перед рейдом»): фулл бафф брался только по кнопке
+  // «🔥 Начать РБ-сессию» — обычный «Тур РБ» летел к трём РБ без единого баффа за FA. Теперь и тур берёт тот же набор (cfg.rbFaFull),
+  // но только перед вылетом к выбранному РБ (townBuffStart «перед РБ …», шаг тура go/fight, rbGo), а не пока тур фармит мобов
+  const RH = env.rt.rbHunt || {};
+  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
   // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA
@@ -299,7 +304,7 @@ function faWanted() {
   const atRisk = Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > 10 * 60000).reduce((a, [id]) => a + faCostOf(id), 0);
   const paidUp = atRisk > 0 && atRisk >= (env.faCost ? env.faCost(1323) : 5);
   const nob = paidUp && bossOn && env.cfg.rbSessNob !== false ? [1323] : [];
-  let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...epicWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
+  let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...epicWant, ...tourWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
   // 9.0 (квест Noblesse): статус Noblesse — скилл 1323 свой (на всех классах), за FA его не покупаем
   if (env.rt.story?.nobleOwn) ids = ids.filter(id => id !== 1323);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
@@ -324,7 +329,9 @@ function faCatalogNote() {                        // страница /fast-aden
   return n;
 }
 
+let rbAskT = 0;                                     // 10.0.1: когда тур РБ последний раз спрашивал «баффы перед РБ …» (faWanted → tourWant)
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
+  if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   const n = townBuffNeed();
   if (!n) { if (env.rt.tbFail) env.setRt({ tbFail: 0 }); return false; }
   // v5.5: после баффера баффов в шапке так и нет (скрин 08.10 15:29: остался один, бот «не видит») — раньше «наложен» по
