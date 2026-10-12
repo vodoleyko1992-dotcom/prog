@@ -128,6 +128,8 @@ async function switchCharacter(m, sender) {
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
+      // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
+      nextCfg.mmGoalItem = '';
     }
     const nextRt = { ...(m.defRt || {}), ...(current['rt@' + nick] || {}),
       char: nick, status: `Персонаж: ${nick}`, campaignDue: !!nextCfg.campaign, _src: m.src };

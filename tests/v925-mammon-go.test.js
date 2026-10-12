@@ -39,7 +39,7 @@ const now = Date.now(), ORDER = { id: 'r1', st: 'OPEN', res: 'Iron Ore', qty: 50
     assert.equal(await M.mmStep(), true); assert.equal(env.rt.mmJob.cmd, true); assert.equal(env.rt.mmGoReq, null); }
   // у кузнеца: команда игрока проходит «улучшение выключено», но «не хватает» игры по-прежнему останавливает
   { const mine = card('Пояс першопрохідця', 0, 'Покращити до Lv.1');
-    const { env, M, fired } = mk({ cfg: { mmUpgrade: false }, cards: [mine], lists: [[item()], [item({ level: 1 })]] });
+    const { env, M, fired } = mk({ cfg: { mmUpgrade: false }, cards: [mine], lists: [[item()], [item({ level: 1, canAfford: false })]] });
     const J = { kind: 'smith', up: true, cmd: true, step: 'act', t: Date.now() }; env.rt.mmJob = J;
     await M.smith(J); assert.deepEqual(fired, [mine.btn]); assert.equal(env.rt.mmLog[0].ok, true); }
   { const mine = card('Пояс першопрохідця', 0, 'Покращити до Lv.1');

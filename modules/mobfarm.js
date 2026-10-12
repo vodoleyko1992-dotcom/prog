@@ -228,6 +228,11 @@ async function nextFight(ctx) {
     await env.setRt({ chainWhy: 'carry' });
     due = false;
   }
+  // 10.0 (лог 12.10 12:01): заказ Маммона / почта / готовая часть квеста ждали, пока идёт цепочка — после этой победы разово на карту, дальше mmStep/storyStep
+  if (!ctx?.rb && (env.mmChainWant?.() || env.storyChainWant?.())) {
+    env.rec('B', 'цепочка', `после боя — дело вне боя (${env.mmChainWant?.()?.why || env.storyChainWant?.()?.why || ''}), иду на карту`);
+    return env.toMap();
+  }
   if (env.cfg.chain && !offQuest && !due) {
     // кнопка «Охотиться дальше» появляется на экране победы не сразу (иногда через 0,3–1 с) —
     // ждём её, а не уходим на карту (v4.6–4.13: бот уходил через 0,2 с, «цепочка не работает»)

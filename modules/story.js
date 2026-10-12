@@ -17,7 +17,10 @@ const POLL = 10 * 60000, JOB_MAX = 4 * 60000, RETRY = 30 * 60000;
 // При переключении класса эти ключи памяти уходят в rt.classStash[<старый класс>] и возвращаются из stash нового (или пустые)
 const CLASS_KEYS = ['skills', 'skillDb', 'petStat', 'petAdvice', 'petLast', 'petBuffAt', 'petResummon', 'debuffStat', 'debuffGain', 'debuffImmune',
   'zoneStat', 'mobVal', 'rbDb', 'rbK', 'hardMobs', 'profQuest', 'fightMem', 'fightLast'];   // 9.2: + память анализатора боя на цель
-let pollT = 0;
+// 10.0 (аудит ядра): метка опроса — в sessionStorage, иначе 2 GET на каждой загрузке страницы (как Маммон в 9.2.2)
+const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
+let pollT = ssNum('l2bot-storyPollT');
 const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
 const low = s => String(s || '').trim().toLowerCase();
 // ответ игры → короткая запись rt.story[kind]
@@ -102,7 +105,7 @@ async function getJson(path) {
 // фоновый опрос (только GET): прогресс обоих квестов раз в 10 мин
 async function storyTick(force) {
   if (!force && Date.now() - pollT < POLL) return;
-  pollT = Date.now();
+  pollT = Date.now(); ssSet('l2bot-storyPollT', pollT);
   for (const kind of Object.keys(Q)) {
     const S = env.rt.story?.[kind];
     if (!force && S?.completed && Date.now() - (S.t || 0) < 24 * 3600000) continue;   // пройденный — раз в сутки
@@ -173,11 +176,16 @@ async function storyStep() {
   const w = want();
   if (!w || !env.awayFree()) return false;
   const home = !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
+  // 10.0 (аудит): «стоять там, где оставили» — точка неизвестна (после телепорта к РБ/смерти) или найдена только по мобам (out:…, телепорта туда нет) —
+  // бот не вернулся бы; сдаём, когда точка снова определится по карте
+  if (!env.fishNow() && env.autonomyMode() !== 'cat' && (!home || /^out:/.test(home))) return false;
   const tried = Object.fromEntries(Object.entries(env.rt.storyTried || {}).filter(([, t]) => Date.now() - t < 86400000));
   await env.setRt({ storyJob: { ...w, home, t: Date.now() }, storyTried: { ...tried, [w.key]: Date.now() } });
   env.rec('B', 'квест', `${Q[w.kind].name}: иду сдавать — ${w.why}`);
   return true;
 }
-return { Q, CLASS_KEYS, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line };
+// 10.0 (лог 12.10 12:01: заказ Маммона висел, пока шла цепочка): готовую часть есть смысл сдать — цепочку прерываем после боя
+function chainWant() { const w = want(); if (!w || !env.awayFree(true)) return null; const z = env.rt.zone; return z && !/^out:/.test(z) ? w : null; }
+return { chainWant, Q, CLASS_KEYS, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
