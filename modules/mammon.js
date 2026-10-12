@@ -240,7 +240,25 @@ function modeFree() {                             // можно ли отлуч�
   if (env.isFishing() && env.fishState()) return false;          // рыба на крючке — сначала вываживаем
   return true;
 }
+// 9.2.5 (игрок 12.10: «добавь кнопку — идти улучшить / выполнить задание у Маммона»): кнопки меню ставят rt.mmGoReq {kind:'order'|'up', t}.
+// Разовая команда игрока: летим сразу, без автоматических условий (галочки «сам», пауза 30 мин после неудачи, «уже пробовал»).
+// Остаются проверки игры: заказ открыт и ресурса хватает по сумке; улучшение — вещь-цель выбрана, цель не достигнута, «хватает» — у кузнеца
+function goReq(now = Date.now()) {
+  const R = env.rt.mmGoReq; if (!R?.kind) return null;
+  if (now - (R.t || 0) > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
+  if (R.kind === 'order') {
+    const o = env.rt.mmOrder;
+    if (!o || o.st !== 'OPEN' || !(o.exp - now > 60000)) return { drop: `открытого заказа нет${o?.st === 'CLAIMED' ? ` (забрал ${o.win || 'другой игрок'})` : ''}` };
+    if (!(o.have >= o.qty)) return { drop: `для заказа ${o.res} ×${o.qty} в сумке ${o.have ?? 0} — не хватает` };
+    return { kind: 'order', id: o.id, cmd: true, why: `по кнопке: заказ ${o.res} ×${o.qty}` };
+  }
+  const p = env.cfg.mmGoalItem ? goalPlan() : null;
+  if (!p) return { drop: 'вещь-цель не выбрана в меню' };
+  if (p.done) return { drop: `${p.name} уже на уровне цели` };
+  return { kind: 'smith', up: true, cmd: true, id: `up:${p.id}:${p.lvl}`, why: `по кнопке: улучшить ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
+}
 function want() {
+  const g = goReq(); if (g && !g.drop) return g;
   const o = env.rt.mmOrder, now = Date.now(), tried = env.rt.mmTried || {};
   if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
@@ -316,7 +334,7 @@ const upMiss = i => [...(+i.cost?.adenaOwned < +i.cost?.adena ? [`адены ${f
 async function upgrade(J, items) {
   smithNote(items);
   const id = +env.cfg.mmGoalItem || 0, to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), it = upItem(items, id);
-  if (!id || env.cfg.mmUpgrade === false) return finish(J, false, 'улучшение выключено');
+  if (!id || (env.cfg.mmUpgrade === false && !J.cmd)) return finish(J, false, 'улучшение выключено');   // 9.2.5: кнопка «улучшить сейчас» — команда игрока
   if (!it) return finish(J, false, 'вещи-цели нет у кузнеца в списке (не в сумке и не надета?)');
   const L = +it.level || 0, nm = String(it.nameUk || `#${id}`);
   if (J.clicked != null && L > J.clicked) return finish(J, true, `${nm}: Lv.${J.clicked} → Lv.${L} (Coin of Luck ${J.col ?? '?'})`);
@@ -355,14 +373,17 @@ async function mmStep() {
     return true;
   }
   if (env.cfg.mmGoalItem && Date.now() - goalT > 30000) { goalT = Date.now(); await gearDb(); env.itemsDb?.().catch?.(() => {}); goalNote(); }
+  const g = goReq();
+  if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
   const w = want();
-  if (!w || !modeFree()) return false;
+  if (!w) return false;
+  if (!modeFree()) { if (w.cmd) env.setStatus('Маммон: по кнопке полечу, как только закончу бой/тур/поход'); return false; }
   // точка возврата: зона охоты (рыбалка, катакомбы и туры возвращаются сами)
   const home = !env.fishNow() && env.autonomyMode() !== 'cat' ? env.rt.zone || null : null;
-  await env.setRt({ mmJob: { ...w, step: 'go', home, t: Date.now() }, ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
+  await env.setRt({ mmJob: { ...w, step: 'go', home, t: Date.now() }, ...(w.cmd ? { mmGoReq: null, mmGoSay: null } : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
   env.rec('B', 'Маммон', `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
-return { upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { goReq, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -628,7 +628,7 @@
   <div id="mmOrderBox" class="camp">Заказа ещё не видел</div>
   <label title="Ресурс уже есть в сумке → телепорт к торговцу, «Здати», обратно на точку охоты. Не в бою, не в туре РБ/эпиков, не перед TvT">Исполнять заказы сам <input id="mmOrders" type="checkbox"></label>
   <label title="Телепорт к Маммону стоит 500 000 адены (с VIP бесплатно). Дороже — бот не летит">Макс. цена телепорта, адены <input id="mmTpMax" type="number" min="0" step="50000"></label>
-  <div class="row"><button id="mmPoll">🔄 Проверить заказ</button></div>
+  <div class="row"><button id="mmPoll">🔄 Проверить заказ</button><button id="mmGoOrder" title="Лететь к торговцу сейчас и сдать заказ (если ресурса в сумке хватает). Телепорт — до лимита цены">📦 Сдать заказ сейчас</button></div>
   <div id="mmLogBox" class="hint" style="white-space:pre-line"></div>
   <div class="hint">Заказ — ресурс × N, награда 1 Coin of Luck + 1,5 млн адены, достаётся первому, кто сдаст. Бот спрашивает заказ раз в 90 с (только чтение) и летит, только если ресурса в сумке хватает. Не хватает — ничего не тратит.</div>
   <h4>⚒ Копить на улучшение у кузнеца</h4>
@@ -639,7 +639,7 @@
   <label title="Разрешено игроком 12.10. Когда для следующего уровня вещи-цели всё собрано (материалы, адена, Coin of Luck), бот летит к кузнецу и жмёт «Покращити» — по одному уровню, только эту вещь и только до уровня цели. Coin of Luck тратится только здесь">Улучшать вещь-цель у кузнеца сам (тратит Coin of Luck) <input id="mmUpgrade" type="checkbox"></label>
   <div id="mmGoalBox" class="camp">Цели нет</div>
   <div id="mmPlanBox" class="hint mm-plan"></div>
-  <div class="row"><button id="mmSmith">⚒ Узнать цены у кузнеца</button></div>
+  <div class="row"><button id="mmSmith">⚒ Узнать цены у кузнеца</button><button id="mmGoUp" title="Лететь к кузнецу сейчас и улучшить вещь-цель на один уровень (тратит Coin of Luck). Если чего-то не хватает — кузнец покажет, бот ничего не нажмёт">⬆ Улучшить сейчас</button></div>
   <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
   <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
 </section>

@@ -1175,7 +1175,9 @@ function renderMammon(rt, d) {
   $('mmOrderBox').innerHTML = !o ? 'Заказа ещё не видел' : o.st === 'OPEN'
     ? `<b>${esc(o.res)} ×${o.qty}</b> · в сумке ${fmt(o.have)} ${o.have >= o.qty ? '✅' : '— не хватает ' + fmt(o.qty - o.have)}<br>Награда: ${o.col} Coin of Luck + ${fmt(o.adena)} адены · до ${mmTime(o.exp)}${rt.mmJob?.kind === 'order' ? '<br>⏳ бот летит сдавать' : ''}`
     : `Заказ ${esc(o.res)} ×${o.qty} закрыт${o.win ? ' · забрал ' + esc(o.win) : ''} · следующий — после ${mmTime(o.exp)}`;
-  $('mmLogBox').textContent = (rt.mmLog || []).slice(0, 6).map(x => `${mmTime(x.t)} ${x.kind === 'order' ? 'заказ' : 'кузнец'} ${x.ok ? '✓' : '✗'} ${x.why}`).join('\n');
+  // 9.2.5: команда «… сейчас» ждёт (бой/тур) или отклонена — первой строкой
+  const go = rt.mmGoReq?.kind ? `⏳ по кнопке: ${rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить вещь-цель'} — полечу, как только закончу бой/тур` : rt.mmGoSay && Date.now() - rt.mmGoSay.t < 600000 ? `✗ по кнопке не полетел: ${rt.mmGoSay.why}` : '';
+  $('mmLogBox').textContent = (go ? go + '\n' : '') + (rt.mmLog || []).slice(0, 6).map(x => `${mmTime(x.t)} ${x.kind === 'order' ? 'заказ' : 'кузнец'} ${x.ok ? '✓' : '✗'} ${x.why}`).join('\n');
   // вещи: экипировка из ответов игры + список кузнеца + все из справочника (для выбора цели заранее)
   const eq = Object.entries(rt.mmEq || {}), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
   const lvlOf = id => gear.find(g => g.id === id)?.lvl ?? (eq.find(([, v]) => v[0] === id)?.[1][1] || 0);
@@ -1222,6 +1224,9 @@ function renderStory(rt) {
 }
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
 $('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));
+// 9.2.5: «идти сейчас» — разовая команда (mammon.goReq); бот летит, как только закончит бой/тур
+$('mmGoOrder')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'order', t: Date.now() }, mmGoSay: null }); toast('📦 Лечу сдавать заказ Маммону'); });
+$('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
 const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', enemies: 'panel', epic: 'rb', loot: 'supply', log: 'svc' };
 function showTab(t) {
