@@ -83,6 +83,16 @@ function rbSpM() {
 const EPIC_IDS = new Set(['29001', '29006', '29014', '29019', '29020', '29022', '29028', '29045']);
 const isEpicId = id => EPIC_IDS.has(String(id || '').replace(/^l2dop_rb_/i, '')) || !!env.epicById?.(id) || env.rt.rbStats?.[id]?.kind === 'epic'
   || Object.values(env.rt.epicDb || {}).some(e => e && e.id === id);
+// 10.0.2: ожидаемый ДПС по этому РБ — свой замер (rbDb.dps), иначе общий ДПС по РБ с поправкой на уровни выше героя (лог 12.10: +8 ур. ≈0,6,
+// +14 ур. ≈0,55 от урона по РБ своего уровня) — −5 % за уровень, не меньше половины
+function rbDpsOn(id) {
+  const d = env.rt.rbDb?.[id] || {};
+  if (d.dps > 0) return d.dps;
+  const lvl = env.rt.rbList?.[id]?.lvl || d.lvl || 0, gap = lvl && env.heroLvl() ? lvl - env.heroLvl() : 0;
+  return Math.max(1, (env.rt.rbDps || 1150) * (gap > 0 ? Math.max(0.5, 1 - 0.05 * gap) : 1));
+}
+// 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
+const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id]; return Math.min(hp, env.rt.rb?.[id]?.hpAfter || hp, w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp); };
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {};
@@ -92,8 +102,8 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // разброс ×1,1, потеря ≈ удар раз в 4 с (реально ≈650 HP/с: удар раз в 1,6–2,5 с, ≈60 % попаданий)
   const epic = isEpicId(id), epicHit = epic ? (historical.hitP90 > 0 ? historical.hitP90 : 0.7 * Math.max(st.patk || 0, st.matk || 0)) : 0;
   const base = Math.max(base0, epicHit);
-  const curHp = st.hpExact ? st.hp || 0 : Math.min(st.hp || 0, env.rt.rb?.[id]?.hpAfter || st.hp || 0);   // 8.0.3: эпики передают HP сами (свежесть раны — epicWoundHp)
-  const dps = Math.max(1, dpsOver || env.rt.rbDps || 1150), t = curHp / dps;
+  const curHp = st.hpExact ? st.hp || 0 : rbHpNow(id, st.hp || 0);   // 8.0.3: эпики передают HP сами (свежесть раны — epicWoundHp)
+  const dps = Math.max(1, dpsOver || rbDpsOn(id)), t = curHp / dps;
   const pot = env.potModel(), pool = pot?.pool || 0;
   const p90 = historical.hitP90 || historical.p90 || (epic ? Math.max(150, base * 1.1) : Math.max(150, base * 1.65));
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
@@ -110,6 +120,11 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const lim = st.est ? 1.5 : 1;
   const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool };   // 8.0.3: цифры — для таблицы эпиков
   const no = r => probeOk(id, st, sp, maxHp, measured, epic, r) || r;
+  // 10.0.2 (игрок 12.10: «плохо фармит РБ, особенно сильных»; лог 22:16–22:46: Галлате 73 и Голконда 79 — по ≈25–43 мин боя каждый, ни один
+  // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
+  // Эпики (свой ДПС от вызывающего) — по своим правилам
+  const maxMin = env.cfg.rbMaxKillMin ?? 20;
+  if (!epic && !dpsOver && maxMin > 0 && t > maxMin * 60) return { ok: false, kind: 'slow', why: `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${historical.dps > 0 ? ', свой замер' : ''}, предел ${maxMin} мин) · ${info}`, ...x };
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
@@ -130,7 +145,9 @@ function probeOk(id, st, sp, maxHp, measured, epic, r) {
   return { ...r, ok: true, probe: true, confidence: 'probe', why: `🧪 пробный заход — свой спецудар не видел, оценка: ${r.why}` };
 }
 // бой-проба (3 ч с начала): «не убить» / отход — выходим штатной кнопкой, а не «бьюсь до конца на банках»
-const probeFight = id => { const pr = env.rt.rbDb?.[id]?.probe; return !!pr && Date.now() - (pr.t || 0) < PROBE_MS; };
+// 10.0.2 (лог 12.10 22:12–22:35: «Предварительная оценка» по замеренному спецудару, а бой всё равно шёл как проба — выход после каждого
+// спецудара): проба кончается, когда спецудар замерен (как у probeGuard), а не через 3 ч
+const probeFight = id => { const d = env.rt.rbDb?.[id] || {}, pr = d.probe; return !!pr && !(d.sp > 0) && Date.now() - (pr.t || 0) < PROBE_MS; };
 // бой-проба: спецудар этого РБ ещё не замерен — порог HP героя (оценка × 1,1), ниже — выходим из боя
 function probeGuard(id) {
   const d = env.rt.rbDb?.[id] || {}, pr = d.probe;
@@ -173,8 +190,8 @@ async function rbEngage(r, label, opt = {}) {
     // v5.2: «мало банок» — не приговор РБ: закупим банки — снова можно. Такой РБ пропускаем 30 мин, «не по силам» не пишем
     // 7.2.1: «не по силам» по ОЦЕНКЕ — не вечный приговор (оценка бывает по чужим цифрам: лог 21:32 — окно карты от другого РБ);
     // пропуск на 30 мин, цифры РБ сохранены — следующая проверка до телепорта увидит их сама. Вечный «не по силам» — только по бою
-    await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: { t: Date.now(), kind: chk.kind === 'pots' ? 'pots' : 'strong' } } });   // 8.0: с видом — «сильный» больше не пишется как «мало банок»
-    if (chk.kind !== 'pots') await rbNote(r.id, { name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
+    await env.setRt({ rbPreSkip: { ...(env.rt.rbPreSkip || {}), [r.id]: { t: Date.now(), kind: chk.kind === 'pots' || chk.kind === 'slow' ? chk.kind : 'strong' } } });   // 8.0: с видом — «сильный» больше не пишется как «мало банок»
+    if (chk.kind !== 'pots' && chk.kind !== 'slow') await rbNote(r.id, { name: r.name, lvl: r.lvl, note: 'оценка до боя: ' + chk.why });
     env.rec('B', 'РБ', `${r.name} (${r.lvl}): не полезу — ${chk.why}`);
     return 'skip';
   }
@@ -415,7 +432,7 @@ function rbTeleportCheck(id, x) {                 // → null (можно лет
   const cw = rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]); if (cw) { noteRbSkip(id, cw); return cw; }   // 8.0.3: только за адену
   const ps = preSkip(id);
   const whySkip = rbVerdictBlocks(id) ? 'ранее не по силам при этом уровне' :
-    now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : 'пропуск после осмотра (недавно)') : '';
+    now_() - ps.t < 30 * 60000 ? (ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : ps.kind === 'slow' ? 'долгий бой (недавно)' : 'пропуск после осмотра (недавно)') : '';
   if (whySkip) { noteRbSkip(id, whySkip); return whySkip; }
   // История действительно измеренного спецудара имеет приоритет даже если статистика P.Atk ещё отсутствует.
   const maxHp = env.meHp()?.max || 0;
@@ -428,7 +445,7 @@ function rbTeleportCheck(id, x) {                 // → null (можно лет
   const st = rbStatsGuess(id, x?.lvl || env.rt.rbList?.[id]?.lvl || 0);
   if (!st) return null;                            // ни одного замера — оценим на месте (как раньше)
   const chk = rbPreCheck(id, st, st.est ? 1.6 : 1);   // по прикидке (РБ не видели) — отсеиваем только явно неподъёмных
-  const why = chk.ok ? null : (chk.kind === 'pots' ? 'мало банок' : 'не по силам (оценка)');
+  const why = chk.ok ? null : (chk.kind === 'pots' ? 'мало банок' : chk.kind === 'slow' ? 'долгий бой' : 'не по силам (оценка)');
   if (why) noteRbSkip(id, why + ': ' + chk.why);
   return why;
 }
@@ -455,7 +472,7 @@ function rbValueScore(id, x) {
   const win = rate == null ? (stats.verdict === 'ok' && stats.kills ? .90 : .65) :
     rate < .30 ? .97 : Math.max(.15, .97 - (rate - .30) / .15 * .82);
   const bossHp = env.rt.rbStats?.[id]?.hp || stats.maxHp || 0;
-  const dps = env.rt.rbDps || 1150;
+  const dps = rbDpsOn(id);
   const tFight = stats.fightS > 0 ? stats.fightS : bossHp > 0 ? bossHp / Math.max(1,dps) : 420;
   const travel = 90;
   // Valuations are configurable economic assumptions, not server-provided exchange rates.
@@ -510,11 +527,11 @@ function rbListWhy() {
     if (!x.alive) c.dead++;
     else if (x.deny) c.deny++;
     else if (rbVerdictBlocks(id)) c.no++;
-    else if ((skipReason = rbTeleportCheck(id, x))) { if (/банок/.test(skipReason)) c.pots = (c.pots || 0) + 1; else c.no++; }
+    else if ((skipReason = rbTeleportCheck(id, x))) { if (/банок/.test(skipReason)) c.pots = (c.pots || 0) + 1; else if (/долгий бой/.test(skipReason)) c.slow = (c.slow || 0) + 1; else c.no++; }
     else if (now - (tried[id] || 0) <= env.RB_RETRY_MS) { c.tried++; soon = Math.min(soon, env.RB_RETRY_MS - (now - tried[id])); }
   }
   const pm = env.potModel();
-  const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`,
+  const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`, c.slow && `бой дольше ${env.cfg.rbMaxKillMin ?? 20} мин ${c.slow}`,
     c.pots && `мало банок HP ${c.pots} (сверх резерва ${env.cfg.rbPotReserve || 0}: ${pm ? pm.n + ' шт.' : 'нет'})`, c.tried && `только что пробовал ${c.tried}`].filter(Boolean);
   return `в окне ${lo}–${hi} ур. ${win.length} РБ${parts.length ? ': ' + parts.join(', ') : ''}${c.below ? ` · слабее окна ${c.below}` : ''}${c.above ? ` · сильнее ${c.above}` : ''}`;
 }
@@ -791,7 +808,7 @@ function rbWoundNote(ctx) {
   W[S.id] = { cur: mob.cur, max: mob.max, t: Date.now(), name: ctx.name };
   env.setRt({ rbWound: W });
 }
-const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.95 && !rbVerdictBlocks(id); };
+const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.99 && !rbVerdictBlocks(id); };   // 10.0.2: 95 → 99 % (лог 12.10 22:16: Рахха 96,7 % — «бой окончен → следующий», урон по 4 РБ вразброс)
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
   try { rbWoundNote(ctx); } catch (e) {}
   const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
@@ -849,17 +866,25 @@ function rbAssess(ctx, me, mob) {
   const dt = (b.t - a.t) / 1000;
   // смертельный удар (Церберон 55 ур. снял 4200 из 5060 одним ударом — смерть за 4 с): один шаг ≥ 30 % макс. HP —
   // уходим сразу, не дожидаясь оценки, и помечаем «не по силам» (v4.24)
-  const p = S.samples[S.samples.length - 2];
-  if (p && p.me - b.me >= me.max * 0.30) {
-    S.lethal = Math.round(p.me - b.me);
+  // 10.0.2 (лог 12.10 22:12–22:35, тур РБ: 30 выходов из боя за 35 мин, убиты 2 РБ из 6): спецудар 2396–2954 = 29–36 % HP героя (Сірра,
+  // Рахха, Гекатон, Галлате, Голконда) давал «смертельно» при HP 55–65 % → выход, восстановление, новый заход через 10–25 с; Сірра (у неё 8 %)
+  // добивалась 5 заходами за 2:18 вместо ≈35 с. Скачок ≥ 30 % — смертельно, только если второй такой нас добьёт (HP < скачок × 1,2) или он
+  // ≥ 60 % HP; иначе это спецудар: бьём дальше (банки по «цене хода», настоящую опасность ловит rbFlee)
+  const p = S.samples[S.samples.length - 2], jump = p ? p.me - b.me : 0;
+  if (p && jump >= me.max * 0.30 && (b.me < jump * 1.2 || jump >= me.max * 0.60)) {
+    S.lethal = Math.round(jump);
     return { abort: true, lethal: true, why: `удар на ${S.lethal} HP (${Math.round(S.lethal / me.max * 100)} % моего HP) — смертельно опасен` };
   }
+  if (p && jump >= me.max * 0.30 && !S.bigSaid) { S.bigSaid = 1; env.rec('B', 'РБ', `${ctx.name}: удар на ${Math.round(jump)} HP (${Math.round(jump / me.max * 100)} %), у меня ${b.me} — второй такой переживу, бьюсь дальше`); }
   if (dt < 8) {                                   // мало данных — только жёсткий порог
     S.note = 'оценка…';
     return { retreat: me.pct <= env.cfg.rbRetreatHp, why: `HP ${me.pct | 0}% до оценки — отход` };   // отдых и новый заход
   }
   const dealt = Math.max(0, a.mob - b.mob);
   const dps  = Math.max(0, dealt / dt);                    // урон по РБ, HP/с
+  // 10.0.2: свой ДПС по ЭТОМУ РБ (с котом) — для выбора цели: на 8–14 ур. выше героя урон вдвое меньше (лог 12.10: Рахха 65 ≈4,3k/с,
+  // Галлате 73 ≈2,5k/с, Голконда 79 ≈2,4k/с при общем «≈4k/с») — по общему ДПС тур ждал от Голконды 25 мин, реально ≈43 мин и две смерти
+  if (dt >= 8 && dealt > 0 && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; const od = env.rt.rbDb?.[S.id]?.dps; rbNote(S.id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps) }).catch(() => {}); }
   // Не объявляем победу по 1–2 случайным значениям HP или кратковременному лечению персонажа.
   // Для эпика прежний аварийный выход по нулевому урону продолжает действовать.
   const reliable = dt >= 15 && S.samples.length >= 5 && dealt >= Math.max(1, mob.max * 0.001);
@@ -920,7 +945,9 @@ function rbAssess(ctx, me, mob) {
   // v4.31: лечение банки ещё не измерено (300 HP — догадка) — не сдаёмся, пока не выпьем банку и не узнаем, сколько она лечит
   // (лог 08.10 00:55, Карте 49: «нужно ≈73, есть 75 → хватит», а бот ушёл через 24 с, не выпив ни одной)
   const probePot = !unrealisticEpic && !win && !!pm && pm.est && pm.n > 0 && need <= pm.n && me.pct > env.cfg.rbRetreatHp;
-  S.usePots = !win0 && (candidateWin || probePot); // не прекращаем лечение во время сбора данных
+  // 10.0.2 (лог 12.10 22:45:30–22:46:00, Голконда: HP 22–45 % минуту подряд, смерть): «победа не подтверждена» выключала банки в полосе —
+  // пили только аварийно, хотя уйти нельзя (выход заходами выключен). Банки в полосе — всегда, кроме «убьём и без банок» (win0)
+  S.usePots = !win0;
   const verdict = win ? 'likely' : pending || probePot ? 'measuring' : 'risk';
   const verdictLabel = win ? '✅ победа вероятна' : pending || probePot ? '🧪 данных недостаточно' : '⚠ победа не подтверждена';
   const risk = spikeRisk ? `крупный удар ≈${Math.round(worstHit)} HP` : !enoughCombatData
@@ -955,7 +982,7 @@ function rbAssess(ctx, me, mob) {
   if (chip) {
     const lossPer = loss > 0 ? me.max * Math.max(10, env.cfg.rbRestHp - env.cfg.rbRetreatHp) / 100 / loss : Infinity;   // длительность полного захода (от «пробую» до «отход»), с
     const perTry = Math.min(lossPer, 1800) * dps;                                          // урон за заход
-    S.chip = true; S.usePots = false;
+    S.chip = true; if (env.cfg.rbChipRetreat === true || probeFight(S.id)) S.usePots = false;   // 10.0.2: банки бережём, только если правда отойдём
     S.note = `⚠ заходами: снимем ≈${Math.round(perTry / 1000)}k за заход, нужно ≈${Math.max(1, Math.ceil(mob.cur / Math.max(perTry, 1)))} заход(а)`;
     if (me.pct <= env.cfg.rbRetreatHp) return { retreat: true, why: 'конец захода — лечусь на мобах и вернусь' };
     return { retreat: false };
@@ -1039,6 +1066,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { isEpicId, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { isEpicId, rbDpsOn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
