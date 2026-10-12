@@ -2915,8 +2915,8 @@ function draw() {
 let escT = 0;
 addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true); escT = Date.now(); }, true);
 
-// 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов»): Alt+R на странице игры — выбор файла слежки,
-// таймеры сливаются с таймерами героя (как кнопка «📥 Загрузить таймеры из файла слежки» в меню; в меню Alt+R делает то же)
+// 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов», 14:56: «переделай на alt+e»): Alt+E на странице игры — выбор файла слежки,
+// таймеры сливаются с таймерами героя (как кнопка «📥 Загрузить таймеры из файла слежки» в меню; в меню Alt+E делает то же)
 function rbtSay(t, bad) {
   try {
     const d = document.createElement('div'); d.textContent = t; d.id = 'l2bot-rbt-say';
@@ -2938,12 +2938,12 @@ function rbtPick() {
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,.jsonl,.txt,application/json'; inp.style.display = 'none';
   inp.onchange = async () => {
     const f = inp.files?.[0]; inp.remove(); if (!f) return;
-    try { const m = await rbtImportText(await f.text()); rbtSay('⏱ ' + m); try { rec('U', 'таймеры', m + ' (Alt+R)'); } catch (e) {} try { draw(); } catch (e) {} }
+    try { const m = await rbtImportText(await f.text()); rbtSay('⏱ ' + m); try { rec('U', 'таймеры', m + ' (Alt+E)'); } catch (e) {} try { draw(); } catch (e) {} }
     catch (er) { rbtSay('Не загрузил таймеры: ' + (er?.message || er), true); }
   };
   document.body.appendChild(inp); inp.click();
 }
-addEventListener('keydown', e => { if (!e.isTrusted || !e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyR') return; e.preventDefault(); e.stopPropagation(); rbtPick(); }, true);
+addEventListener('keydown', e => { if (!e.isTrusted || !e.altKey || e.ctrlKey || e.metaKey || e.code !== 'KeyE') return; e.preventDefault(); e.stopPropagation(); rbtPick(); }, true);
 
 // ---------- запись действий (для анализа) ----------
 // Пишутся клики на ВСЕХ страницах игры. На чате/почте/форуме/поддержке — только какой элемент нажат, без текста.

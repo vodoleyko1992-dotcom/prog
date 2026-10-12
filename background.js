@@ -463,7 +463,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     statePatch(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
-  // 10.0.3: Alt+R на странице игры — таймеры боссов из файла слежки (только ключ rbTimer, только со страницы игры)
+  // 10.0.3: Alt+E на странице игры — таймеры боссов из файла слежки (только ключ rbTimer, только со страницы игры)
   if (m?.cmd === 'rbtImport') {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const T = m.rbTimer;

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "L2wap Bot",
   "version": "10.0.3",
-  "description": "L2wap Bot 10.0.3 — таймеры боссов (Alt+R), респ эпиков в окне бота, крафтер",
+  "description": "L2wap Bot 10.0.3 — таймеры боссов (Alt+E), респ эпиков в окне бота, крафтер",
   "permissions": [
     "storage",
     "unlimitedStorage",

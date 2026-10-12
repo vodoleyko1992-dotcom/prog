@@ -1,6 +1,6 @@
 'use strict';
-// 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов»): фон принимает таймеры боссов со страницы игры (команда rbtImport)
-// только ключом rbTimer и только с l2wap.com; меню и страница игры откликаются на Alt+R, подсказка в нижней строке меню
+// 10.0.3 (игрок 12.10 14:26: «Alt+E вызывает окно загрузки таймингов»): фон принимает таймеры боссов со страницы игры (команда rbtImport)
+// только ключом rbTimer и только с l2wap.com; меню и страница игры откликаются на Alt+E, подсказка в нижней строке меню
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 (async () => {
@@ -23,9 +23,10 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   assert(ok?.ok, 'страница игры пишет таймеры: ' + JSON.stringify(ok));
   assert.strictEqual(store.rt.rbTimer.b.l2dop_rb_9.n, 'Lokness'); assert.deepStrictEqual(store.rt.zoneStat, { a: 1 }, 'прочая память не тронута');
   const pop = read('popup.js'), html = read('popup.html'), content = read('content.js');
-  assert(/e\.code === 'KeyR'\) \{ e\.preventDefault\(\); showTab\('rbtimer'\); \$\('rbtFile'\)\.click\(\)/.test(pop), 'Alt+R в меню');
+  assert(/e\.code === 'KeyE'\) \{ e\.preventDefault\(\); showTab\('rbtimer'\); \$\('rbtFile'\)\.click\(\)/.test(pop), 'Alt+E в меню');
   assert(/rbtimer: 'rb'/.test(pop), 'вкладка таймеров в разделе РБ');
-  assert(/<span class="kbd">Alt\+R<\/span> таймеры/.test(html), 'подсказка Alt+R в нижней строке');
-  assert(/e\.code !== 'KeyR'\) return; e\.preventDefault\(\); e\.stopPropagation\(\); rbtPick\(\)/.test(content), 'Alt+R на странице игры');
-  console.log('PASS: 10.0.3 Alt+R — boss timers from a file: background accepts only rbTimer and only from l2wap.com, menu and game page hotkeys, footer hint');
+  assert(/<span class="kbd">Alt\+E<\/span> таймеры/.test(html), 'подсказка Alt+E в нижней строке');
+  assert(/e\.code !== 'KeyE'\) return; e\.preventDefault\(\); e\.stopPropagation\(\); rbtPick\(\)/.test(content), 'Alt+E на странице игры');
+  assert(!/IDBKeyEange/.test(pop) && (pop.match(/IDBKeyRange\.lowerBound/g) || []).length >= 4, 'журнал меню: IDBKeyRange цел (замена клавиши его не задела)');
+  console.log('PASS: 10.0.3 Alt+E — boss timers from a file: background accepts only rbTimer and only from l2wap.com, menu and game page hotkeys, footer hint');
 })().catch(e => { console.error('FAIL:', e.message); process.exit(1); });
