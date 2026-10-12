@@ -1096,9 +1096,20 @@ function fillWeapons(rt, d) {
 `
       + `Надето: ${eq ? `${eq.name} [${eq.wt}, ${eq.g}]${inClass(eq) ? ' ⭐ в класс' : ' — не в класс'}` : 'ничего'}
 `
-      + `Рекомендую: ${R.main || 'оружия в класс нет в инвентаре'}${R.wore ? '\n✅ Надел: ' + R.wore : R.keptEq ? '\nℹ «В класс» не надето: слабее текущего больше чем на 15 %' : ''}
+      + `Рекомендую: ${R.main || 'оружия в класс нет в инвентаре'}${R.wore ? '\n✅ Надел: ' + R.wore : R.keptAug ? '\nℹ «В класс» не надето: на надетом оружии Life Stone — смените сами, если нужно' : R.keptEq ? '\nℹ «В класс» не надето: слабее текущего больше чем на 15 %' : ''}
 `
-      + `Оружия в инвентаре: ${uniq.length} · проверено ${new Date(rt.weaponsT).toLocaleTimeString('ru')}${rt.invScan ? ' · ⏳ проверяю…' : ''}`;
+      + `Оружия в инвентаре: ${uniq.length} · проверено ${new Date(rt.weaponsT).toLocaleTimeString('ru')}${rt.invScan ? ' · ⏳ проверяю…' : ''}`
+      + augLine(rt);
+}
+// 10.0.2: Life Stone на надетом оружии (rt.weaponAug из ответов сервера) и умение на панели
+function augLine(rt) {
+  const a = rt.weaponAug, A = typeof L2Aug !== 'undefined' ? L2Aug : null;
+  if (!a || !A || !a.w) return '';
+  const m = A.info(a.o);
+  if (!a.o) return '\n💎 Life Stone: нет (вставка — «Персонаж → Аугментація зброї», бот сам не вставляет)';
+  const onPanel = (rt.panel || []).some(s => s.cdKey === 'ls_' + a.o);
+  return `\n💎 Life Stone: ${A.text(a)}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
+    + (A.keep(a) ? ' · бот не меняет это оружие сам' : '');
 }
 async function weapScan() {
   const { rt = {} } = await chrome.storage.local.get('rt');

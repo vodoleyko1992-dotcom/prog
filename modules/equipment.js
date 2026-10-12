@@ -351,12 +351,15 @@ async function invScanStep() {
       if (mainPick && (!env.cfg.nWeaponMain || !has(env.cfg.nWeaponMain) || offClass)) fix.nWeaponMain = mainPick.name;
     }
     let wore = '';
+    // 10.0.2 (Life Stone): на надетом оружии полезный ЛС (умение или бонус, rt.weaponAug от сервера) — сам не переодеваем:
+    // ЛС остаётся на старом оружии, умение пропадёт. Рекомендация в меню остаётся, надеть может игрок
+    const aw = env.rt.weaponAug, augHold = !!(aw && aw.o && (aw.k === 'active' || aw.k === 'positive') && (!eq?.id || !aw.w || +eq.id === +aw.w));
     // 7.1.30 (лог 15:38:22→24): игрок нажал «Стоп», а бот через 2 с всё равно переодел оружие — после остановки не надеваем
-    if (env.on && env.cfg.weaponClassEquip !== false && R.main && R.main.where !== 'надето' && better) {
+    if (env.on && env.cfg.weaponClassEquip !== false && R.main && R.main.where !== 'надето' && better && !augHold) {
       if (await wearFromBag(R.main)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
     await env.setRt({ weapons: list, weaponsT: Date.now(), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
-      eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better) }, invScan: null });
+      eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better), keptAug: !!(augHold && better && !wore) }, invScan: null });
     if (Object.keys(fix).length) await env.setCfg(fix);
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
       + (R.main ? ` · рекомендую: ${R.main.name}` : ' · оружия «в класс» нет') + (wore ? ` · надел ${wore}` : '') + (Object.keys(fix).length ? ` · в меню: ${Object.entries(fix).map(([k, v]) => k + '=' + v).join(', ')}` : ''));
