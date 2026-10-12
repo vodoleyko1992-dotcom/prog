@@ -102,5 +102,30 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   // настройка
   assert.match(content, /rbMaxKillMin: 20,/); assert.match(read('popup.js'), /'rbMaxKillMin'/); assert.match(read('popup.html'), /id="rbMaxKillMin"/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.rbMaxKillMin, 20);
+  // ---------- 7. игрок 12.10: «как потом вернуться к этим боссам… надо учиться всегда» ----------
+  const m7 = mk({ hero: 65, meHp: () => ({ max: 8313, cur: 8313, pct: 100 }), rt: { rbDps: 4300, rbList: { [GOLK]: { lvl: 79, alive: true } } } });
+  m7.env.rt.rbDb = { [GOLK]: { dps: 2400, dpsLvl: 65, dpsBase: 4300, sp: 2396, hitP90: 675 } };
+  const G = { hp: 6194391, patk: 9953, matk: 2500 };
+  assert.equal(Math.round(m7.R.rbDpsOn(GOLK)), 2400, 'same level and damage → as measured');
+  assert.equal(m7.R.rbPreCheck(GOLK, G).kind, 'slow');
+  m7.env.rt.rbDps = 10000;   // общий урон вырос (шмот, баффы) — ожидание по Голконде растёт так же
+  assert.equal(Math.round(m7.R.rbDpsOn(GOLK)), Math.round(2400 * 10000 / 4300));
+  assert.equal(m7.R.rbPreCheck(GOLK, G).ok, true, 'stronger hero → Golkonda comes back by itself (≈18.5 min)');
+  m7.env.rt.rbDps = 4300; m7.setHero(72);   // +7 уровней: разница 14 → 7 ур.
+  assert.equal(Math.round(m7.R.rbDpsOn(GOLK)), Math.round(2400 * 0.65 / 0.5), 'level up scales the old measurement');
+  // учёба в бою: новый замер — среднее с приведённым старым, с уровнем и общим ДПС; поправка за уровни учится
+  m7.setHero(65); m7.env.rt.rbGapK = 0;
+  await m7.R.rbDpsLearn(GOLK, 2000);
+  assert.equal(m7.env.rt.rbDb[GOLK].dps, Math.round(2400 * 0.6 + 2000 * 0.4)); assert.equal(m7.env.rt.rbDb[GOLK].dpsLvl, 65); assert.equal(m7.env.rt.rbDb[GOLK].dpsBase, 4300);
+  assert.ok(Math.abs(m7.env.rt.rbGapK - (1 - 2000 / 4300) / 14) < 0.001, 'gap factor learned from the fight: ' + m7.env.rt.rbGapK);
+  // замеры лога 12.10 — в памяти сразу (once rbFit1002) и в базовом профиле
+  const c7 = read('content.js'), mig = c7.slice(c7.indexOf("once('rbFit1002'"), c7.indexOf("once('rbStats925'"));
+  const FIT = new Function(c7.slice(c7.indexOf('const RB_FIT_1002 = '), c7.indexOf('};', c7.indexOf('const RB_FIT_1002 = ')) + 2) + '; return RB_FIT_1002;')();
+  const rt7 = { rbDps: 4000, rbDb: { [RAHHA]: { dps: 5000, sp: 3000, kills: 2 } } }, rf7 = {};
+  new Function('rt', 'rf', 'once', 'RB_FIT_1002', mig)(rt7, rf7, (f, fn) => fn(), FIT);
+  assert.equal(rf7.rbDb[RAHHA].dps, 5000, 'own measurement wins'); assert.equal(rf7.rbDb[RAHHA].sp, 3000); assert.equal(rf7.rbDb[RAHHA].kills, 2);
+  assert.equal(rf7.rbDb[GOLK].dps, 2397); assert.equal(rf7.rbDb[GOLK].dpsLvl, 65); assert.equal(rf7.rbDb[GOLK].dpsBase, 4000); assert.equal(rf7.rbDb[HALLATE].sp, 2640);
+  const bp = JSON.parse(read('base-profile.json')).chars.Warlock.rt.rbDb;
+  for (const id of Object.keys(FIT)) assert.ok(bp[id]?.dps > 0 && bp[id].sp > 0 && bp[id].dpsLvl === 65, 'base profile ' + id);
   console.log('v1002-rbtour-strong: PASS');
 })().catch(e => { console.error(e); process.exit(1); });

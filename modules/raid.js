@@ -84,12 +84,27 @@ const EPIC_IDS = new Set(['29001', '29006', '29014', '29019', '29020', '29022', 
 const isEpicId = id => EPIC_IDS.has(String(id || '').replace(/^l2dop_rb_/i, '')) || !!env.epicById?.(id) || env.rt.rbStats?.[id]?.kind === 'epic'
   || Object.values(env.rt.epicDb || {}).some(e => e && e.id === id);
 // 10.0.2: ожидаемый ДПС по этому РБ — свой замер (rbDb.dps), иначе общий ДПС по РБ с поправкой на уровни выше героя (лог 12.10: +8 ур. ≈0,6,
-// +14 ур. ≈0,55 от урона по РБ своего уровня) — −5 % за уровень, не меньше половины
+// +14 ур. ≈0,55 от урона по РБ своего уровня). Поправка учится по своим боям (rt.rbGapK, сначала −5 % за уровень), не меньше половины.
+// Игрок 12.10 («как потом вернуться к этим боссам… надо учиться всегда»): замер помнит уровень героя и общий ДПС на момент замера
+// (dpsLvl, dpsBase) — вырос уровень или урон (шмот, баффы) — ожидание по этому РБ растёт само, «долгий бой» снимается без нового захода
+const gapK = () => Math.min(0.1, Math.max(0.01, env.rt.rbGapK || 0.05));
+const gapF = g => g > 0 ? Math.max(0.5, 1 - gapK() * g) : 1;
+const rbLvlOf = id => env.rt.rbList?.[id]?.lvl || env.rt.rbDb?.[id]?.lvl || 0;
 function rbDpsOn(id) {
-  const d = env.rt.rbDb?.[id] || {};
-  if (d.dps > 0) return d.dps;
-  const lvl = env.rt.rbList?.[id]?.lvl || d.lvl || 0, gap = lvl && env.heroLvl() ? lvl - env.heroLvl() : 0;
-  return Math.max(1, (env.rt.rbDps || 1150) * (gap > 0 ? Math.max(0.5, 1 - 0.05 * gap) : 1));
+  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), base = env.rt.rbDps || 1150;
+  if (d.dps > 0) {
+    const kb = d.dpsBase > 0 ? Math.min(3, Math.max(0.5, base / d.dpsBase)) : 1;
+    const kl = lvl && L && d.dpsLvl ? gapF(lvl - L) / gapF(lvl - d.dpsLvl) : 1;
+    return Math.max(1, d.dps * kb * kl);
+  }
+  return Math.max(1, base * gapF(lvl && L ? lvl - L : 0));
+}
+// замер ДПС по РБ в бою: среднее с прежним (приведённым к нынешнему уровню и урону) + урок поправки за уровни (по РБ выше героя)
+async function rbDpsLearn(id, dps) {
+  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), base = env.rt.rbDps || 0, od = d.dps > 0 ? rbDpsOn(id) : 0;
+  const gap = lvl && L ? lvl - L : 0;
+  if (gap >= 3 && base > 0 && dps < base) { const k = Math.min(0.1, Math.max(0.01, (1 - dps / base) / gap)); env.setRt?.({ rbGapK: +(env.rt.rbGapK ? env.rt.rbGapK * 0.8 + k * 0.2 : k).toFixed(4) }); }
+  return rbNote(id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), dpsLvl: L || null, dpsBase: base || null });
 }
 // 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
 const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id]; return Math.min(hp, env.rt.rb?.[id]?.hpAfter || hp, w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp); };
@@ -895,7 +910,7 @@ function rbAssess(ctx, me, mob) {
   const dps  = Math.max(0, dealt / dt);                    // урон по РБ, HP/с
   // 10.0.2: свой ДПС по ЭТОМУ РБ (с котом) — для выбора цели: на 8–14 ур. выше героя урон вдвое меньше (лог 12.10: Рахха 65 ≈4,3k/с,
   // Галлате 73 ≈2,5k/с, Голконда 79 ≈2,4k/с при общем «≈4k/с») — по общему ДПС тур ждал от Голконды 25 мин, реально ≈43 мин и две смерти
-  if (dt >= 8 && dealt > 0 && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; const od = env.rt.rbDb?.[S.id]?.dps; rbNote(S.id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps) }).catch(() => {}); }
+  if (dt >= 8 && dealt > 0 && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; rbDpsLearn(S.id, dps).catch(() => {}); }
   // Не объявляем победу по 1–2 случайным значениям HP или кратковременному лечению персонажа.
   // Для эпика прежний аварийный выход по нулевому урону продолжает действовать.
   const reliable = dt >= 15 && S.samples.length >= 5 && dealt >= Math.max(1, mob.max * 0.001);
@@ -1077,6 +1092,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { isEpicId, rbDpsOn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
