@@ -53,7 +53,7 @@ function shopPlan() {
   const mage = shotsMage();   // тип по надетому оружию, грейд — грейд оружия (C-оружие → C-заряды, S → S …)
   const list = [
     { key: 'hp', label: 'Банки HP', ids: [1061], name: /^(Зілля зцілення|Зелье исцеления|Healing Potion)$/i, grade: 'NG', mm: env.pair(env.cfg.shopHp, '300/1000') },
-    { key: 'mp', label: 'Банки MP', ids: [728], name: /велика банка|большая банка|^Mana Potion$/i, grade: 'NG', mm: env.pair(env.cfg.shopMp, '20/100') },
+    { key: 'mp', label: 'Банки MP', ids: [728], name: /велика банка|большая банка|^Mana Potion$/i, grade: 'NG', mm: env.pair(env.cfg.shopMp, '200/1000') },
     { key: 'shots', label: mage ? `Благосл. заряды духа ${g}` : `Заряды души ${g}`, ids: [(mage ? env.BSPS_IDS : env.SHOT_IDS)[g] || env.SHOT_IDS.NG],
       name: mage ? /Благословенн\S* заряд дух|Blessed Spiritshot/i : /Заряд душ\S* во(?:їна|ина)|^Soulshot/i, grade: g, mm: env.pair(env.cfg.shopShots, '1000/5000') },
     { key: 'spirit', label: 'Spirit Ore', ids: [3031], name: /^Spirit Ore$/i, grade: 'NG', mm: env.pair(env.cfg.shopSpirit, '0/1000') },
@@ -78,7 +78,7 @@ function shopNeedByPanel() {
   const chk = (slot, mm, label, id) => { const nq = id ? env.invQty?.(id) : null, q = nq ?? (slot ? env.qty(slot) : null);
     if (q != null && mm[1] > 0 && q < mm[0]) low.push(`${label} ${q} < ${mm[0]}`); };
   chk(env.slotsBy(env.cfg.nHpPot || 'Зілля зцілення, Зелье исцеления, Healing Potion').find(b => /зцілен|исцелен|healing/i.test(b.title) && !/велик|больш|greater/i.test(b.title)), env.pair(env.cfg.shopHp, '300/1000'), 'банки HP', 1061);
-  chk(env.slotsBy(env.cfg.nMpPot).find(b => /велик|больш/i.test(b.title)) || env.slotsBy(env.cfg.nMpPot)[0], env.pair(env.cfg.shopMp, '20/100'), 'банки MP', 728);
+  chk(env.slotsBy(env.cfg.nMpPot).find(b => /велик|больш/i.test(b.title)) || env.slotsBy(env.cfg.nMpPot)[0], env.pair(env.cfg.shopMp, '200/1000'), 'банки MP', 728);
   // заряды — грейд и тип по надетому оружию (как в закупке); оружие не прочитано — только счётчик на панели
   const sp = shopPlan().find(x => x.key === 'shots');
   chk(env.shotSlot?.(), env.pair(env.cfg.shopShots, '1000/5000'), sp ? sp.label.replace(/^Благосл\. заряды духа/, 'заряды') : 'заряды', sp?.ids[0]);

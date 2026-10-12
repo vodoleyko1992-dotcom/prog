@@ -11,7 +11,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0,
-  autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '20/100', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 15, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: true, farmRes: '', farmNeed: 0,
+  autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbUsePots: true, rbPotReserve: 10,
@@ -4339,6 +4339,9 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     Object.assign(rf, { rbStats: S, rbPreSkip: P });
   });
   once('faFull925', () => { if (String(C('rbSessBuffs') || '').replace(/\s+/g, '') === '1413,1323,4703,273,365,1303,264,267,1389') cf.rbSessBuffs = 'auto'; });   // 9.2.5: заводской список РБ-сессии → фулл бафф под класс (свой список игрока не трогаем)
+  // 10.0 (ребаланс ради КПД): банок MP 20/100 хватало на ≈10 мин боя (MP не экономим — игрок 10.10), бот бегал в магазин; РБ ниже героя
+  // на 10–15 уровней дают EXP со штрафом и почти пустой дроп, а тур летал к ним за телепорт — окно вниз 9 уровней. Только заводские значения
+  once('rebal100', () => { if (C('shopMp') === '20/100') cf.shopMp = '200/1000'; if (+C('rbMaxBelow') === 15) cf.rbMaxBelow = 9; });
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
   once('bait721', () => { if (C('fishBait') !== 'good') cf.fishBait = 'auto'; });   // 7.2.1: наживка по замеру (обычная была заводской)
