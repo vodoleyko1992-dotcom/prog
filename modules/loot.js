@@ -144,7 +144,9 @@ async function trackLoot(lines, mob) {
   if (Object.keys(LS).length > 120) for (const [k] of Object.entries(LS).sort((a, b) => a[1].n - b[1].n).slice(0, 20)) delete LS[k];
   if (Object.keys(MK).length > 120) for (const [k] of Object.entries(MK).sort((a, b) => a[1] - b[1]).slice(0, 20)) delete MK[k];
   const patch = { lootStat: LS, mobKills: MK, lootStatT0: env.rt.lootStatT0 || Date.now() };
-  const cap = (o, n) => { const k = Object.keys(o); if (k.length <= n) return o; return Object.fromEntries(Object.entries(o).sort((a, b) => (b[1]?.n || 0) - (a[1]?.n || 0)).slice(0, n)); };   // v5.6: без бесконечного роста
+  // 10.0 (аудит): у словаря «имя → число» поля .n нет — сортировка не работала, и после 200 видов каждый новый предмет отрезался сразу
+  const cv = x => typeof x === 'number' ? x : +x?.n || 0;
+  const cap = (o, n) => { const k = Object.keys(o); if (k.length <= n) return o; return Object.fromEntries(Object.entries(o).sort((a, b) => cv(b[1]) - cv(a[1])).slice(0, n)); };   // v5.6: без бесконечного роста
   if (got) Object.assign(patch, { loot: cap(L, 200), lootSpecial: cap(S, 120), lootValue: (env.rt.lootValue || 0) + value, resGot: RG });
   if (campCh) Object.assign(patch, { campaign: { ...env.rt.campaign, live: Date.now() }, campaignDue: env.rt.campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);

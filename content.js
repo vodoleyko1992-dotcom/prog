@@ -1344,7 +1344,8 @@ async function farmStep() {                       // после боя: пора
   if (r0?.bosses?.length && !r0.drop?.length) {     // только с РБ
     // v5.6: раньше требовался «👑 Фарм РБ», а при нём фарм ресурсов не вызывается вовсе — такой предмет был недостижим.
     // Теперь сам: список РБ игры (если не читан или старше 20 мин) → телепорт к нужному РБ → бой только с ним (rt.farmRb)
-    if (!Object.keys(rt.rbList || {}).length || Date.now() - (rt.rbListT || 0) > 20 * 60000) {
+    // 10.0 (аудит фарма): подходящего РБ не было (farmWhy) — список ≈14 страниц перечитываем раз в 60 мин, а не в 20
+    if (!Object.keys(rt.rbList || {}).length || Date.now() - (rt.rbListT || 0) > (rt.farmWhy === 'rb:' + g.key ? 60 : 20) * 60000) {
       if (rt.rbScan) return false;
       rec('B', 'фарм', `${g.name}: падает только с РБ — читаю список рейд-боссов`);
       await setRt({ rbScan: true }); return true;

@@ -30,7 +30,7 @@ function tvtSoon() {                                // пора на арену:
   // 7.1.30 (лог 10.10 15:00–15:03): бой закончился (FINISHED), а правило «до старта < 60 с / идёт < 11 мин» по времени держало
   // «пора на арену» — бот 40 раз бегал рыбалка ↔ арена. Закончился/отменён — не на арену, какое бы ни было время
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
-  if (env.rt.tvtDone && env.rt.tvtDone === S.id) return false;          // этот бой уже отыгран (итог записан)
+  if (env.rt.tvtDone && env.rt.tvtDone === (S.id || String(S.start || ''))) return false;   // 10.0: пустой id события — по времени старта          // этот бой уже отыгран (итог записан)
   return /ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase) || (S.start && S.start - S.now < 60000 && S.now - S.start < 11 * 60000);
 }
 
@@ -64,7 +64,7 @@ async function tvtLeave() {
   const rew = [...document.querySelectorAll('.l2-tvt-result__reward-text')].map(e => e.textContent.replace(/\s+/g, ' ').trim()).join(', ');
   const st = (env.$q('.l2-tvt-result__stats')?.textContent || '').trim();
   env.rec('B', 'TvT', `итог: ${head || '—'} ${score} · ${st}${rew ? ' · награда: ' + rew : ''}`);
-  await env.setRt({ tvtIn: null, tvtDone: tvtState()?.id || env.rt.tvtDone || null });   // 7.1.30: отыгранный бой больше не зовёт на арену
+  await env.setRt({ tvtIn: null, tvtDone: (tvtState()?.id || String(tvtState()?.start || '')) || env.rt.tvtDone || null });   // 7.1.30: отыгранный бой больше не зовёт на арену
   location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
 }
 

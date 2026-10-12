@@ -354,7 +354,8 @@ async function zoneGoStep() {                     // полёт: Телепор�
   await env.setRt({ zoneTried: tried, zoneGoT: Date.now() });
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
   env.fire(btn);
-  await env.sleep(2500);
+  // 10.0 (аудит фарма): переход на карту бывает дольше 2,5 с — удачный платный полёт писался «не улетели» и зона «плохой» на 6 ч. Ждём до 8 с
+  await env.waitX(() => !isTeleport() || /недостат|not enough/i.test(document.body.innerText.slice(-4000)) || null, 8000, 200);
   if (isTeleport()) {                              // остались на месте: не хватило адены или другая причина
     const msg = /недостат|not enough/i.test(document.body.innerText.slice(-4000)) ? 'не хватает адены' : 'не улетели';
     env.rec('B', 'локации', `${zoneName(g.id)}: ${msg}`);

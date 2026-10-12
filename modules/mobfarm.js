@@ -6,7 +6,9 @@
  root.L2V7Factories.mobfarm = function create_mobfarm(env) {
 // 8.0.3 (проверка правки «РБ между мобами»): держит на месте тур по РБ или РБ, который ждёт здесь (rbPending). Само дополнение
 // «РБ между мобами» (бьёт РБ в текущей локации) больше не запрещает автофарму менять локацию и не мешает идти за ресурсом/рецептом
-const rbHold = () => !!(env.cfg.rbHuntMode || (env.cfg.rbMode && env.rt.rbPending));
+// 10.0 (лог 12.10 11:16–11:52: тур 36 мин без единого РБ — «все не по силам», а автофарм стоял в зоне 8,8 M EXP/ч при замере 32 M в Silent Valley):
+// тур в простое (подходящих РБ нет, rbHuntIdle) больше не держит автофарм и фарм ресурса на месте
+const rbHold = () => !!((env.cfg.rbHuntMode && !((env.rt.rbHuntIdle || 0) > Date.now())) || (env.cfg.rbMode && env.rt.rbPending));
 // 7.1.30: «Риба · ур. 48 · миньоны зоны эпика» (spawnId l2dop_eg_…) — охрана эпика, не обычный моб
 const EPIC_GUARD = /миньон|мін[ьй]он|epic guard|зоны эпика|зони епіка/i;
 function pageItems() {
@@ -144,7 +146,9 @@ async function nextFight(ctx) {
   if (!env.on) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
-  if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now())) return env.toMap();
+  // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
+  const healing = env.rt.rbHunt?.last === 'лечусь на мобах' && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
+  if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
   if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
   // расходники на исходе (по панели) или пора проверить руду (раз в час) — сначала в магазин
   // (не чаще раза в 10 мин — если адены не хватило, не бегаем в магазин после каждого боя)
@@ -184,7 +188,8 @@ async function nextFight(ctx) {
   if (env.cfg.zoneAuto && !env.cfg.campaign && !rbHold() && !ctx?.rb && !env.lootGoal?.() && Date.now() - (env.rt.zoneGoT || 0) > 600000) {   // 7.2: цель ресурса/рецепта держит на месте
     if ((!env.rt.zoneCatT || env.zoneCatThin() || Date.now() - env.rt.zoneCatT > 24 * 3600000) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) { await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return; }
     const pick = env.zonePick();
-    if (pick) { await env.setRt({ zoneGo: { ...pick, t: Date.now() }, zoneGoT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return; }
+    // 10.0 (лог 12.10 12:00:05–12:00:16): метка «▶ при старте» из меню оставалась — карта выбирала зону второй раз сразу после полёта
+    if (pick) { await env.setRt({ zoneGo: { ...pick, t: Date.now() }, zoneGoT: 0, zoneAutoKick: null }); location.href = '/teleport.html'; await env.sleep(4000); return; }
   }
   // глава: «Охотиться дальше» даёт случайного соседа. Чужой моб в цепочке — не повод уходить на карту:
   // уходим, только если цепочка приносит цели реже, чем окупается дорога через карту

@@ -478,21 +478,23 @@ function rbListPick() {
   const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L), now = Date.now(), tried = env.rt.rbGoTried || {};
   if (env.cfg.rbValueTour && now - (env.rt.rbListT || 0) > 10 * 60000) return null;
   const base = rbEligible();
+  // 10.0 (аудит фарма): «не больше 3 платных телепортов к одному РБ в час» — для любого выбора (раньше только для повтора по кругу:
+  // проба, недобитый и РБ квеста могли лететь к одному боссу раз в 10 мин)
+  const hourN = id => ((env.rt.rbGoCnt || {})[id] || []).filter(t => now - t < 3600000).length;
   // 7.2.2: недобитый нами РБ (HP с прошлого захода, не «не по силам») — первым, сначала тот, у кого меньше HP
-  const wd = base.filter(([id]) => rbWounded(id)).sort((a, b) => env.rt.rbWound[a[0]].cur / env.rt.rbWound[a[0]].max - env.rt.rbWound[b[0]].cur / env.rt.rbWound[b[0]].max);
+  const wd = base.filter(([id]) => rbWounded(id) && hourN(id) < 3).sort((a, b) => env.rt.rbWound[a[0]].cur / env.rt.rbWound[a[0]].max - env.rt.rbWound[b[0]].cur / env.rt.rbWound[b[0]].max);
   if (wd[0]) return { id: wd[0][0], ...wd[0][1], wounded: env.rt.rbWound[wd[0][0]] };
   // 9.0: РБ квеста сабкласса (Cabrio, Hallate, Kernon, Golkonda) и части Noblesse (Barakiel) — следующими, если в окне уровней и по силам
   const qIds = env.storyRbIds ? env.storyRbIds() : [];
-  const qb = base.filter(([id]) => qIds.includes(id) && now - (tried[id] || 0) > env.RB_TRY_MS).sort((a, b) => a[1].lvl - b[1].lvl);
+  const qb = base.filter(([id]) => qIds.includes(id) && now - (tried[id] || 0) > env.RB_TRY_MS && hourN(id) < 3).sort((a, b) => a[1].lvl - b[1].lvl);
   if (qb[0]) return { id: qb[0][0], ...qb[0][1], quest: true };
   const dir = env.cfg.rbOrder === 'down' ? -1 : 1;
   const ord = env.cfg.rbValueTour
     ? (a, b) => rbValueScore(b[0],b[1]) - rbValueScore(a[0],a[1])
     : (a, b) => dir * (a[1].lvl - b[1].lvl) || dir * ((a[1].ord ?? 1e9) - (b[1].ord ?? 1e9));
   const candidates = env.cfg.rbValueTour ? base.filter(([id,x]) => rbValueScore(id,x) > 0) : base;
-  const fresh = candidates.filter(([id]) => now - (tried[id] || 0) > env.RB_TRY_MS).sort(ord);
+  const fresh = candidates.filter(([id]) => now - (tried[id] || 0) > env.RB_TRY_MS && hourN(id) < 3).sort(ord);
   if (fresh[0]) return { id: fresh[0][0], ...fresh[0][1] };
-  const hourN = id => ((env.rt.rbGoCnt || {})[id] || []).filter(t => now - t < 3600000).length;   // не больше 3 телепортов к одному РБ в час (они платные)
   const again = candidates.filter(([id]) => now - (tried[id] || 0) > env.RB_RETRY_MS && hourN(id) < 3).sort(ord);    // все недавно пробованы — по кругу
   return again[0] ? { id: again[0][0], ...again[0][1], retry: true } : null;
 }
@@ -654,9 +656,12 @@ async function rbHuntStep() {
     await env.setRt({ rbWant: H.id, zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } });
     env.rec('B', 'тур РБ', `телепорт к ${H.name} (${H.lvl})${H.price ? ' · ' + H.price.toLocaleString('ru') + ' аден' : ''}`);
     await env.pause(); env.fire(b);
-    if (await env.waitX(() => !isRbPage(), 8000, 200)) return;
+    if (await env.waitX(() => !isRbPage() || (env.$q('#rb-load-err')?.textContent || '').trim() || null, 8000, 200) && !isRbPage()) return;
     const msg = (env.$q('#rb-load-err')?.textContent || '').trim().slice(0, 80);
-    return huntDone(H.id, `${H.name}: телепорт не сработал${msg ? ' — ' + msg : ''}`);
+    // 10.0 (аудит фарма): страница не сменилась за 8 с, но ошибки игры нет — переход медленный, а не отказ: шаг «прилёт» (уже записан) сам
+    // отведёт на карту и поищет РБ; раньше — «следующий РБ» и второй платный телепорт
+    if (!msg) return;
+    return huntDone(H.id, `${H.name}: телепорт не сработал — ${msg}`);
   }
   if (H.step === 'arrive') {
     if (!env.isMap()) {
@@ -717,8 +722,11 @@ async function rbHuntStep() {
     // v5.2.2: не стоим и не гоняем список по кругу — фармим мобов здесь (8.0: 5 мин, список — из кэша, если не устарел), потом снова выбор
     // (в журнал пишем только смену причины)
     if (/мало банок/.test(why) && await rbShopFirst('')) return;   // РБ отсеяны из-за банок — сначала магазин
-    if (H.last !== why) { await huntSet({ last: why }); env.recBot(`Тур РБ: ${why} — фармлю мобов, проверю снова через 5 мин`); }
-    await env.setRt({ rbHuntIdle: Date.now() + RB_IDLE_MS, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now() } });
+    // 10.0 (лог 12.10: 7 проверок за 35 мин, каждая 7–19 с с цепочки на карту/список, итог тот же «не по силам / мертвы»): та же причина —
+    // простой растёт 5 → 10 → 20 мин (рост уровня или банок сбрасывает его раньше, rbIdleMark)
+    const idleN = H.last === why ? Math.min(2, (env.rt.rbIdleN || 0) + 1) : 0, idleMs = RB_IDLE_MS * [1, 2, 4][idleN];
+    if (H.last !== why) { await huntSet({ last: why }); env.recBot(`Тур РБ: ${why} — фармлю мобов, проверю снова через ${idleMs / 60000} мин`); }
+    await env.setRt({ rbHuntIdle: Date.now() + idleMs, rbIdleN: idleN, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now() } });
     return env.map();
   }
   if (await rbShopFirst(p.name)) return;             // v5.2.2: сначала банки (минимум «Банки HP»), потом РБ
@@ -732,6 +740,9 @@ async function rbHuntStep() {
     env.setStatus(`Тур РБ: HP ${me.pct | 0}% — лечусь на мобах до ${env.cfg.rbRestHp}%, потом ${p.name}`);
     return env.map();
   }
+  // 10.0 (аудит фарма): после перечитки списка бот стоит на странице РБ — проверка «он здесь, на этой карте» пропускалась, и бот платил
+  // 100 000 за телепорт туда, где уже стоит. Сначала карта
+  if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
   // 8.0 (аудит РБ B1): РБ на ЭТОЙ карте (бесплатное восстановление не уводит с карты) — бьём без телепорта за 100 000:
   // 22:31 Злий Дух Сиріон стоял на карте Келбара, бот через 3 мин летел к нему за деньги
   if (env.isMap()) {
