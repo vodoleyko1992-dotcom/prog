@@ -1,5 +1,5 @@
 'use strict';
-// 7.2.1 (игрок 10.10): точка фарма — источники в диапазоне −3…+5 ур. от героя в первую очередь, диапазон настраивается
+// 7.2.1 (игрок 10.10): точка фарма — источники в диапазоне −5…+5 ур. от героя (10.0.7; было −3…+5) в первую очередь, диапазон настраивается
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..');
 (async () => {
@@ -17,7 +17,7 @@ const root = path.join(__dirname, '..');
   ctx.__drop = [['Mob A', 55, 5, 1, 1, 'zA', 'Zone A'], ['Mob B', 64, 40, 1, 1, 'zB', 'Zone B']];
   vm.runInContext('rt = { ...DEF_RT }; cfg = mergeCfg({})', ctx);
   let z = vm.runInContext('farmZones(__drop, 52, 20)', ctx);
-  assert.equal(z[0].tp, 'zA', 'source inside −3…+5 wins even with a lower chance');
+  assert.equal(z[0].tp, 'zA', 'source inside −5…+5 wins even with a lower chance');
   assert.equal(z[0].inWin, true); assert.equal(z[1].inWin, false);
   // поправили диапазон до +15 — теперь обе в диапазоне, выигрывает больший шанс
   vm.runInContext('cfg = mergeCfg({ farmLvlAbove: 15 })', ctx);
@@ -29,8 +29,8 @@ const root = path.join(__dirname, '..');
   z = vm.runInContext('farmZones(__drop, 52, 20)', ctx);
   assert.equal(z[0].tp, 'zN', 'nothing in window → closest level first');
   assert.equal(vm.runInContext('farmFit(49, 52)', ctx), 1); assert.equal(vm.runInContext('farmFit(57, 52)', ctx), 1);
-  assert.ok(vm.runInContext('farmFit(58, 52)', ctx) < 1); assert.ok(vm.runInContext('farmFit(48, 52)', ctx) < 1);
+  assert.ok(vm.runInContext('farmFit(58, 52)', ctx) < 1); assert.ok(vm.runInContext('farmFit(46, 52)', ctx) < 1);   // 10.0.7: окно −5…+5 (игрок 13.10 03:19)
   const html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
   assert.match(html, /id="farmLvlBelow"/); assert.match(html, /id="farmLvlAbove"/);
-  console.log('PASS: farm spot — sources in −3…+5 levels first (adjustable), otherwise closest level');
+  console.log('PASS: farm spot — sources in −5…+5 levels first (adjustable), otherwise closest level');
 })().catch(e => { console.error(e); process.exit(1); });
