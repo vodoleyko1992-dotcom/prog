@@ -240,10 +240,56 @@ function mmFarmGoal() {
   if (env.cfg.mmGoalFarm === false) return null;
   const p = goalAll(); if (!p?.raw) return null;
   const fit = x => x.miss > 0 && x.farm && !(x.shop && shopBuyOn());   // 10.0.7: продаётся в магазине и докупка включена — не фармим, купим
+  if (env.cfg.mmFarmBest !== false) { const b = farmPlanPt(p); if (b) return b.goal; }   // 10.0.7: точка по всем недостающим сразу
   const n = p.lvl + 1 < p.to ? goalAll(p.lvl + 1) : null, rn = n?.raw?.find(fit);   // сначала то, что нужно на ближайший уровень
   const r = rn ? p.raw.find(x => x.id === rn.id) : p.raw.find(fit);
   return r ? { key: r.nm.toLowerCase(), name: env.FARM.res[r.nm.toLowerCase()].name || r.nm, left: r.miss, why: `Маммон: ${p.name} до Lv.${p.to} (наперёд)` } : null;
 }
+// 10.0.7 (игрок 13.10: «автофарм расходников на апрейд выбранного снаряжения… выбор оптимальных локаций, учитывать дроп и спойл»):
+// раньше бот добывал ОДИН недостающий ресурс и летел к лучшей точке по нему, а соседние нужные ресурсы с тех же мобов не учитывал.
+// Теперь точка выбирается по всем недостающим материалам цели сразу: для каждого ресурса — зоны-источники (content.farmZones:
+// шт./бой по дропу + спойлу × шанс пометки, окно уровней), затем по точкам телепорта — сколько «боёв в другом месте» экономят 50 боёв
+// здесь: Σ min(шт./бой × 50, недостача) × (боёв на 1 шт. в лучшей точке этого ресурса). Так редкое сырьё (Mithril Ore 7 % дроп / 42 % спойл)
+// весит больше, чем Iron Ore (16 %), а точка, где падает и то и другое, побеждает. Дроп и спойл — по галочкам cfg.mmFarmDrop / mmFarmSpoil
+const spoilOn = () => env.cfg.mmFarmSpoil === 'on' || (env.cfg.mmFarmSpoil !== 'off' && !!env.canSpoil?.());
+const resKeys = r => [...new Set([r.nm, nameEn(r.id), MM_INAME[r.id], MM_RNAME[r.id]].filter(Boolean).map(n => String(n).toLowerCase()))];
+const resOf = r => { for (const k of resKeys(r)) { const x = env.FARM?.res?.[k]; if (x && (x.drop?.length || x.sp?.length)) return { key: k, res: x }; } return null; };
+function farmPlanPt(P, raws) {
+  const L = +env.heroLvl?.() || 0; if (!L || !env.farmZones) return null;
+  const list = (raws || (P?.raw || []).filter(x => x.miss > 0 && x.farm && !(x.shop && shopBuyOn()))).map(r => ({ r, src: resOf(r) })).filter(x => x.src);
+  if (!list.length) return null;
+  const N = 50, spK = +env.spoilK?.() || 0.8, useD = env.cfg.mmFarmDrop !== false, useS = spoilOn();
+  if (!useD && !useS) return null;
+  const pts = new Map(), best = {};
+  for (const { r, src } of list) {
+    const zones = env.farmZones(useD ? src.res.drop || [] : [], L, env.cfg.lvlAbove ?? 6, useS ? src.res.sp || [] : [], spK);
+    for (const z of zones) {
+      if (!(z.e > 0)) continue;
+      best[src.key] = Math.max(best[src.key] || 0, z.e);
+      const pt = pts.get(z.tp) || { tp: z.tp, loc: z.loc, mobs: {}, res: [], inWin: false };
+      for (const [nm, m] of Object.entries(z.mobs)) { const o = pt.mobs[nm] || { lvl: m.lvl, e: 0, ch: 0, spCh: 0 }; o.e += m.e; o.ch = Math.max(o.ch, m.ch || 0); o.spCh = Math.max(o.spCh, m.spCh || 0); pt.mobs[nm] = o; }
+      pt.res.push({ key: src.key, nm: r.nm, id: r.id, e: z.e, miss: r.miss, need: r.need, fit: z.e > 0 ? z.score / z.e : 1, inWin: !!z.inWin });
+      pt.inWin = pt.inWin || !!z.inWin;
+      pts.set(z.tp, pt);
+    }
+  }
+  if (!pts.size) return null;
+  const out = [...pts.values()].map(pt => {
+    pt.score = pt.res.reduce((a, x) => a + Math.min(x.e * N, x.miss) / best[x.key] * x.fit, 0) * (pt.inWin ? 1.3 : 1);
+    pt.e = pt.res.reduce((a, x) => a + x.e, 0);
+    pt.fights = Math.max(...pt.res.map(x => Math.ceil(x.miss / x.e)));   // боёв, чтобы закрыть всё, что тут падает
+    pt.res.sort((a, b) => b.miss / b.e - a.miss / a.e);   // первым — ресурс, который тут закрывать дольше всех (он и «цель» для журнала)
+    return pt;
+  }).sort((a, b) => b.score - a.score);
+  const b = out[0], main = b.res[0], names = Object.keys(b.mobs);
+  const pick = { tp: b.tp, loc: b.loc, mobs: b.mobs, e: b.e, score: b.score, inWin: b.inWin, names, res: b.res, fights: b.fights, all: out.length };
+  const why = `Маммон: ${P?.name || 'цель'}${P?.to ? ` до Lv.${P.to}` : ''} — точка по всем материалам (${b.res.map(x => `${x.nm} ≈${x.e.toFixed(2)}/бой`).join(', ')})`;
+  return { goal: { key: main.key, name: env.FARM.res[main.key]?.name || main.nm, left: main.miss, why, pick }, pts: out, best };
+}
+// план точки для меню (rt.mmGoalPlan.pt): первые 3 точки — локация, мобы, шт./бой по ресурсам, боёв до закрытия
+const ptOut = (B, n = 3) => !B ? null : { d: env.cfg.mmFarmDrop !== false ? 1 : 0, s: spoilOn() ? 1 : 0, sk: Math.round((+env.spoilK?.() || 0.8) * 100),
+  pts: B.pts.slice(0, n).map(pt => ({ tp: pt.tp, loc: pt.loc, f: pt.fights, w: pt.inWin ? 1 : 0, sc: Math.round(pt.score * 100) / 100,
+    m: Object.entries(pt.mobs).slice(0, 4).map(([nm, m]) => [nm, m.lvl, m.ch || 0, m.spCh || 0]), r: pt.res.map(x => [x.nm, Math.round(x.e * 100) / 100, x.miss]) })) };
 // 10.0.7: что из недостающего сырья бот докупит в магазине и во сколько это обойдётся (ориентир по kb-ценам)
 const shopNote = miss => { const s = miss.filter(r => r.shop); if (!s.length) return '';
   return ` · ${shopBuyOn() ? 'докуплю в магазине' : 'продаётся в магазине (докупка выключена)'}: ${s.map(r => `${r.nm} ${fmtA(r.miss)} ≈ ${fmtA(r.miss * r.shop.a)} аден`).join(', ')}`; };
@@ -261,7 +307,8 @@ function planOut(P) {                             // компактный пла
   return { id: P.id, n: P.name, lvl: P.lvl, to: P.to, a: P.a, c: P.col, unk: P.unk,
     lv: P.lv.map(x => x.unk ? { L: x.L, unk: 1 } : { L: x.L, e: x.est, a: x.a, c: x.c, m: x.m.map(m => [m[1], m[2]]) }),
     tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0, r.shop?.g || '', r.shop?.a || 0]),
-    lk: owned(P.id) ? 1 : 0, cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0 };
+    lk: owned(P.id) ? 1 : 0, cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0,
+    pt: env.cfg.mmGoalFarm !== false && env.cfg.mmFarmBest !== false ? ptOut(farmPlanPt(P)) : null };   // 10.0.7: точка по всем материалам
 }
 function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt / rt.mmGoalPlan для меню)
   const p = goalPlan(), P = p && !p.done ? goalAll() : null;
@@ -318,6 +365,7 @@ function want() {
   if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
   const cw = craftWant(now); if (cw?.cmd && !cw.drop) return cw;
+  const hw = env.handWant?.(now); if (hw && !hw.drop) return hw;   // 10.0.7: «📤 Передать основному сейчас» (modules/subclass.js)
   // 10.0 (аудит): вложение не забирается (инвентарь полон, кнопки нет) — не ходить на почту раз в 10 мин: повтор, когда почта изменилась, или раз в 2 ч
   const uncSig = (env.rt.mmMail?.unc || []).map(a => a.a).join(','), cf = env.rt.mmClaimFail;
   if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3 && !(cf?.sig === uncSig && now - (cf.t || 0) < 2 * 3600000))
@@ -485,6 +533,7 @@ function craftWant(now = Date.now()) {
   if (cmd && now - R.t > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
   if (!to) return cmd ? { drop: 'ник крафтера не задан в меню' } : null;
   if (!env.cfg.mmGoalItem) return cmd ? { drop: 'вещь-цель не выбрана в меню' } : null;
+  if (env.craftSelf?.()) return cmd ? { drop: 'активный класс крафтит сам (саб крафтера, раздел «Сабклассы») — крафтеру не шлю' } : null;   // 10.0.7
   // 10.0 (аудит): партия ушла не вся (строки нет, форма не открылась) — досылаем остаток, иначе у крафтера неполный набор и автоотправка стоит навсегда
   const pend = env.rt.mmCraft?.pend;
   if (!cmd && pend?.length && env.cfg.mmCraftSend !== false && now - (env.rt.mmSendT || 0) >= UP_RETRY)
@@ -642,6 +691,7 @@ async function noteStep(J) {
   // ответа нет — следующий круг считает письмо ушедшим (noteCur)
 }
 async function sentOk(J, cur) {
+  if (J.hand) { await env.setRt({ mmJob: { ...J, cur: null, items: J.items.slice(1), done: [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]] } }); env.rec('B', 'саб', `основному ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`); return; }   // 10.0.7
   const C = env.rt.mmCraft || {}, at = { ...(C.at || {}) };
   at[cur.id] = (at[cur.id] || 0) + cur.q;
   const ret = { ...(C.ret || {}) }; for (const [k, n] of Object.entries(J.ret || {})) if (!J.retDone) ret[k] = (ret[k] || 0) + n;
@@ -664,7 +714,7 @@ async function sendStep(J) {
   }
   if (!J.items?.length) {
     const d = J.done || [], fee = d.reduce((a, x) => a + (x[2] || 0), 0);
-    return finish(J, d.length > 0, d.length ? `отправил ${to}: ${d.map(x => `${x[0]} ${fmtA(x[1])}`).join(', ')}${fee ? ` · комиссия ${fmtA(fee)} адены` : ''}${J.noteEnd ? ` · ${J.noteEnd}` : ''} — жду готовое письмом` : 'отправлять нечего');
+    return finish(J, d.length > 0, d.length ? `отправил ${to}: ${d.map(x => `${x[0]} ${fmtA(x[1])}`).join(', ')}${fee ? ` · комиссия ${fmtA(fee)} адены` : ''}${J.noteEnd ? ` · ${J.noteEnd}` : ''}${J.hand ? ' — пусть заберёт в «Пошта → Предмети»' : ' — жду готовое письмом'}` : 'отправлять нечего');
   }
   const [id, want, nm] = J.items[0];
   const m = J.inv ? null : await env.invRefresh?.();    // сумка по факту — один раз на поход
@@ -758,6 +808,8 @@ async function mmStep() {
   const g = goReq();
   const cw = craftWant();
   if (cw?.drop) { env.rec('B', 'Маммон', `кнопка «отправить крафтеру сейчас»: ${cw.drop}`); await env.setRt({ mmCraftReq: null, mmCraftSay: { t: Date.now(), why: cw.drop } }); return false; }
+  const hw = env.handWant?.();
+  if (hw?.drop) { env.rec('B', 'саб', `кнопка «передать основному сейчас»: ${hw.drop}`); await env.setRt({ subHandReq: null, subHandSay: { t: Date.now(), why: hw.drop } }); return false; }
   if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
   const w = want();
   if (!w) return false;
@@ -768,13 +820,13 @@ async function mmStep() {
   // 10.0 (лог 12.10 12:00:05–12:00:13): перелёт в новую зону ещё в пути (zonePend, 2 мин) — возвращаемся туда, а не в старую rt.zone
   const zp = env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000 ? env.rt.zonePend.id : null;
   const home = !mail && !env.fishNow() && env.autonomyMode() !== 'cat' ? zp || env.rt.zone || null : null;
-  await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
+  await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.hand ? { subHandReq: null, subHandSay: null } : w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
   env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
   return true;
 }
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -88,6 +88,7 @@
         "modules/champs.js",
         "modules/rbtimer.js",
         "modules/rbrun.js",
+        "modules/subclass.js",
         "content.js"
       ],
       "run_at": "document_idle"
