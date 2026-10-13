@@ -398,8 +398,8 @@ function candidates(rules, sig, types, limitIdx) {
     // 10.0.7 (лог 13.10 13:07–13:11, игрок 03:15: «некоторые мобы научились убивать бафф, таких избегаем»): моб снимает баффы
     // («[Frost Tarantula] зняв з вас 3 бафи», два набора по 8–9 FA ушли за минуту) — не цель: по памяти снятий (rt.buffCancel, чемпион и
     // обычный моб вида отдельно) и по списку игрока cfg.cancelMobs; галка cfg.noCancelMobs (ВКЛ). ★ квест и источник ресурса — как прежде
-    if (!qLike && env.cfg.noCancelMobs !== false) {
-      const cr = env.cancelRisk?.(name, champ);
+    if (!qLike && env.cfg.noCancelMobs !== false) {     // 10.0.8: оранжевый/красный чемпион — по правилу игры в champs.judge (cancelRisk → null)
+      const cr = env.cancelRisk?.(name, champ, r.tier);
       if (cr) { cancelSkip(r, cr); return; }
     }
     let k = rank(r, rules);

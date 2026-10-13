@@ -18,10 +18,10 @@ const B = load('modules/buffs.js').L2V7Factories.buffs(env);
   assert.equal(B.cancelNote(lines, 'Frost Tarantula', { champ: true, tier: 'red' }), 4);
   assert.equal(env.rt.buffCancel['ч:frost tarantula'].n, 4); assert.equal(env.rt.buffCancel['ч:frost tarantula'].k, 1);
   assert.ok(env.rt.tbCancelT > 0);
-  assert.match(recs.join('\n'), /Frost Tarantula \[чемп\] снял с вас 4 бафф\(ов\) за бой — платных за FA осталось 2; бесплатный набор возьму у баффера сразу, такого больше не выбираю/);
+  assert.match(recs.join('\n'), /Frost Tarantula \[чемп\] снял с вас 4 бафф\(ов\) за бой \(правило игры: красный 60 % за удар\) — платных за FA осталось 2; бесплатный набор возьму у баффера сразу, таких при платных баффах за FA не выбираю/);   // 10.0.8: красный — правило игры
   assert.equal(B.cancelNote(['Полум’я 2679', 'Победа!'], 'Frost Buffalo'), 0, 'no cancel line — nothing recorded');
   assert.ok(!env.rt.buffCancel['frost buffalo']);
-  assert.ok(B.cancelRisk('Frost Tarantula', true) && !B.cancelRisk('Kookaburra', true));
+  assert.ok(B.cancelRisk('Frost Tarantula', true) && !B.cancelRisk('Kookaburra', true)); assert.equal(B.cancelRisk('Frost Tarantula', true, 'red'), null, '10.0.8: red/orange — game rule, judged by champs');
   assert.equal(B.faPaidLeft(), 1, 'Prophecy of Water (3 h) counts, Dance of Siren with 5 min left does not, town buffs never');
   // 2. поход к бафферу сразу после снятия: без «так и не появились (1/3)» и без ожидания 10 мин (в логе: «к бафферу через 571 с»)
   hud = [[1357, H3]];                                   // городской набор снят целиком
