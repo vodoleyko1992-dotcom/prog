@@ -87,6 +87,7 @@
         "modules/dailies.js",
         "modules/champs.js",
         "modules/rbtimer.js",
+        "modules/rbrun.js",
         "content.js"
       ],
       "run_at": "document_idle"
