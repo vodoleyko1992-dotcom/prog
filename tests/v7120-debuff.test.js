@@ -25,7 +25,9 @@ mobTxt = '9000 / 9000';
 let ctx = { block: {} };
 assert.equal(C.debuffPlan(ctx, mp, me)?.n, 'Curse Chaos', 'long fight (11 actions) → Curse Chaos first (M.Def −10 % + P.Atk −12 %)');
 ctx.debuffed = { 'curse chaos': Date.now() };
-assert.equal(C.debuffPlan(ctx, mp, me)?.n, 'Surrender to Fire', 'then Surrender (M.Def −10 %)');
+// 10.0.7: второй M.Def-дебафф поверх первого — только на РБ (стакаются ли Chaos и Surrender, игра не пишет; на мобе второй ход — потеря)
+assert.equal(C.debuffPlan(ctx, mp, me), null, 'Chaos on the target → Surrender is not stacked on a mob');
+assert.equal(C.debuffPlan({ ...ctx, rb: { id: 1 }, spellDmg: { blaze: { off: [1800, 2], on: [0, 0] } } }, mp, me)?.n, 'Surrender to Fire', 'RB: Surrender over Chaos still (long fight)');
 ctx.debuffed['surrender to fire'] = Date.now();
 assert.equal(C.debuffPlan(ctx, mp, me), null, 'non-boss: Curse Weakness only when hero is hurt, once per target');
 assert.equal(C.debuffPlan(ctx, mp, { pct: 60 })?.n, 'Curse Weakness');
