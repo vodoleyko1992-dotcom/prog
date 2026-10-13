@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.10",
-  "description": "L2wap Bot 10.0.10 — сюжетные квесты новичка сами, чемпионы по цветам и уровню, закупка зарядов первыми, пауза «Целей нет» с причиной",
+  "version": "10.0.11",
+  "description": "L2wap Bot 10.0.11 — TvT важнее всего (выход из боя на арену, удары по MP, атака питомца), проба нового удара воина не по кругу",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -122,5 +122,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.10"
+  "version_name": "10.0.11"
 }
