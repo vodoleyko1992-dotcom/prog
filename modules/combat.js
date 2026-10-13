@@ -768,7 +768,11 @@ async function battle() {
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
   if (st === 'dead') return env.onDeath();
-  if (st === 'err') return env.toMap();
+  if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
+    const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
+    if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
+    return env.toMap();
+  }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
   if (st === 'win') return env.nextFight();                     // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка

@@ -364,7 +364,14 @@ async function zoneGoStep() {                     // полёт: Телепор�
   }
 }
 
+// 10.0.7 (лог 13.10 13:21, Necropolis of Devotion): бой в подземелье (spawnId sdms_<подземелье>_NNN) кончился не победой (ошибка загрузки,
+// босс, «не по зубам») — бот шёл «на карту» (/map.html), а оттуда «назад в подземелье» (+2 страницы, ≈3–10 с, и риск входа заново).
+// Код игры (battle.js resolveBattleReturnUrl): «Назад на карту» из боя в подземелье сама игра ведёт на /dungeon.html?dungeonId=…, карту
+// бот бы ждал 8 с впустую. Теперь из боя в подземелье — сразу на страницу подземелья
+const dungeonOfBattle = () => { const m = (location.search || '').match(/spawnId=sdms_(.+?)_\d+(?:&|$)/i); return m ? decodeURIComponent(m[1]) : (env.heroAt?.()?.dung || ''); };
 async function toMap() {
+  const dg = env.cfg.catMode && /spawnId=sdms_/i.test(location.search) ? dungeonOfBattle() : '';
+  if (dg) { env.setStatus('Возврат в подземелье'); location.href = `/dungeon.html?dungeonId=${encodeURIComponent(dg)}`; await env.sleep(3000); return; }
   env.setStatus('Возврат на карту');
   const back = env.$q('#battle-back-map') || await env.waitFor(() => env.byText(env.BACK), 3000);
   if (back) env.fire(back); else location.href = '/map.html';
@@ -396,6 +403,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);

@@ -18,6 +18,10 @@ function catTarget() {                            // какое подземел
   const bad = env.rt.catBad || {}, now = Date.now();
   const c = Object.keys(env.CAT_LIST).filter(id => now - (bad[id] || 0) > 3600000).map(id => { const [lo, hi, seen] = catLv(id); return { id, lo, hi, seen, d: L < lo ? lo - L + 5 : L > hi ? L - hi : 0 }; })
     .sort((a, b) => a.d - b.d || (b.seen - a.seen) || (a.id === env.rt.catCur ? -1 : b.id === env.rt.catCur ? 1 : 0));
+  // 10.0.7 (лог 13.10 13:21): герой уже стоит в подземелье по уровню (character.activeDungeonId) — «авто» не уводит его в другое такое же
+  // (Devotion/Martyrdom/Witch для 67 равны по уровню; раньше решал порядок списка — после боя могли улететь в соседнее за адену)
+  const at = env.heroAt?.()?.dung, here = at && c.find(x => x.id === at);
+  if (here && here.d === c[0].d) return at;
   return c[0]?.id || null;
 }
 
