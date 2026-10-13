@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
@@ -2024,7 +2024,7 @@ async function sealStep(...args) { return L2V7Modules.dungeons.sealStep(...args)
 // Бой на /tvt-arena.html: враги — .l2-tvt-nick[data-target-kind="enemy"][data-character-id] (клик = цель), панель скиллов —
 // та же, что в бою с мобами. Цель — живой враг, которого быстрее всего добить (меньше HP+CP); стан, пока цель не в стане;
 // дальше сильнейшие удары. Награда за победу: 500 000 аден, Coin of Luck, 2 Shil Coins (если не «afk» — поэтому бьём всегда).
-var TVT = null, TVTC = null;                        // последние ответы /game/tvt и /game/tvt/combat/sync (+ время получения)
+var TVT = null, TVTC = null, TVTS = null;           // последние ответы /game/tvt и /game/tvt/combat/sync (+ время получения); 10.0.11: TVTS — /game/tvt/skills
 const tvtNow = (...args) => L2V7Modules.tvt.tvtNow(...args);  // серверное время
 // v5.6: время в ответе — число (мс); если игра пришлёт строку ISO — разбираем, а не получаем NaN
 const tvtMs = (...args) => L2V7Modules.tvt.tvtMs(...args);
@@ -2357,13 +2357,17 @@ async function main() {
       if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
+      if (cfg.tvtOn && await tvtStep()) { await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
       if (!isBattle() && await L2V7Modules.raid.rbOneStep()) { await sleep(200); continue; }   // 10.0.2 (лог 01:00): «один РБ» убит — пауза раньше сторожа баффов и магазина
-      if (cfg.tvtOn && await tvtStep()) { await sleep(200); continue; }
       // 9.2 (игрок 11.10: «Лист врагов»): убийцы героя — в лист; враг на локации — нападаем кнопкой игры (с проверкой сил), следим за возвращением
       L2V7Modules.enemies.tick().catch(() => {});
       // 10.0.2 (игрок 12.10: «таймеры боссов»): раз в 10 мин — список РБ своего окна уровней и эпиков (только GET): кто жив, кто убит и когда воскреснет
       L2V7Modules.rbtimer.tick().catch(() => {});
       if (await L2V7Modules.enemies.step()) { await sleep(200); continue; }
+      // 10.0.11 (игрок 13.10 22:00: «команды других задач подавляют TvT»): окно TvT (записаны, до старта < tvtHoldMin мин или бой идёт) —
+      // закупку, магистра, баффы, Маммона, квесты, дейлики, туры и телепорты не начинаем; бой с мобом и заброс рыбалки доводим,
+      // «🛒 Закупить сейчас» (urgent) — как и раньше. На арену уводит tvtStep выше (за минуту до старта)
+      if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { await L2V7Modules.tvt.tvtWait(); continue; }
       if (await antibotGuard()) continue;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
       // «🛒 Закупить сейчас» (urgent) — сразу, даже со страницы боя: бросаем моба/РБ/рыбалку
       if (rt.shop && (!isBattle() || rt.shop.urgent) && Date.now() - (rt.shop.t || 0) < 300000) { await shopStep(); await sleep(300); continue; }
@@ -3548,6 +3552,14 @@ addEventListener('message', e => {
     const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
+  // 10.0.11 (лог 13.10 22:00): скиллы арены (MP, откат) и ответ на каждый удар — для выбора приёма по MP и для «клик ушёл на сервер?»
+  if (path === '/game/tvt/skills' && Array.isArray(d.res?.skills)) TVTS = { skills: d.res.skills.map(x => ({ ...x })), t: Date.now() };
+  if (path === '/game/tvt/action') { TVTC = TVTC || { t: 0 }; TVTC.actT = Date.now(); TVTC.actN = (TVTC.actN || 0) + 1;
+    const r = d.res && !d.res.error ? d.res : null, sk = r?.skillId ?? d.req?.skillId;
+    if (r) { if (r.combatVersion) TVTC.combatVersion = r.combatVersion; if (r.selfMp != null) { TVTC.selfMp = r.selfMp; TVTC.mpT = Date.now(); } if (r.nextBasicAttackAt) TVTC.nextBasicAttackAt = r.nextBasicAttackAt; TVTC.actErr = null; }
+    else TVTC.actErr = { err: d.res?.error || d.error || String(d.status || ''), t: Date.now() };
+    const ent = sk != null && TVTS?.skills?.find(x => x.skillId === sk);
+    if (ent) { if (r?.skillReadyAt) ent.readyAt = r.skillReadyAt; else if (d.res?.error === 'tvt_skill_cooldown' && !(tvtMs(ent.readyAt) > tvtNow())) ent.readyAt = tvtNow() + 1200; } }
   // 9.2 (лог 11.10 03:00): павший враг — по ответу удара (targetDead) или отказу выбрать цель (tvt_target_dead), см. tvt.tvtDeadNote
   if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
   if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}
@@ -4120,9 +4132,11 @@ L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; 
 L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get TVT() { return TVT; }, set TVT(value) { TVT = value; },
   get TVTC() { return TVTC; }, set TVTC(value) { TVTC = value; },
+  get TVTS() { return TVTS; }, set TVTS(value) { TVTS = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
+  get meMp() { return meMp; }, get slotAction() { return slotAction; }, get toMap() { return toMap; },
   get fishNow() { return fishNow; }, set fishNow(value) { fishNow = value; },
   get forceCosts() { return forceCosts; }, set forceCosts(value) { forceCosts = value; },
   get forceMax() { return forceMax; }, set forceMax(value) { forceMax = value; },
