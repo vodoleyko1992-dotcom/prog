@@ -127,7 +127,15 @@ const shopAdena = () => +((env.$q('.l2-gm-shop-adena__amount')?.textContent || '
 // богатому Warlock (100 M) правило ничего не меняет, бедный новичок тратит половину сумки на заряды и банки
 const shopReserve = (adena = shopAdena()) => Math.max(0, Math.min(+(env.cfg.shopReserve ?? 200000) || 0, Math.floor((+adena || 0) / 2)));
 
-async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
+// 10.0.10 (игрок 13.10 11:33: «адены мало, но хотя бы 1000 или 5000 сосок купить может, или зелья — не 1000, а 100»; лог 19:41: alt1
+// 204 960 аден — первыми куплены банки MP по 2 200, на заряды осталось 23 шт.). Денег на весь список нет → порядок «заряды → банки HP →
+// банки MP → прочее», каждому из трёх главных — доля оставшихся денег (заряды — половина, HP — половина остатка, MP — что осталось),
+// количество — круглой пачкой (по 1000 / 100 / 10)
+const SHOP_ORDER = { shots: 0, hp: 1, mp: 2 };
+const shopShare = (key, rest) => key in SHOP_ORDER ? (rest.some(k => k in SHOP_ORDER && SHOP_ORDER[k] > SHOP_ORDER[key]) ? 0.5 : 1) : 1;
+const packQty = (cap, want) => { if (cap >= want || cap < 10) return cap; const st = cap >= 1000 ? 1000 : cap >= 100 ? 100 : 10; return Math.floor(cap / st) * st; };
+
+async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
   const pager = () => [...document.querySelectorAll('.l2-gm-shop-pager-btn')];
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
   // искались там — «нет в магазине (видел: Благословенний заряд духу…)» (лог 09.10 23:38, 23:48). Ищем в нужном подразделе:
@@ -179,8 +187,9 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на отк
       if (!isAd && !/adena|аден/i.test(lbl)) return { ok: false, why: `валюта цены не распознана («${prT.replace(/\s+/g, ' ').trim().slice(0, 30)}») — не покупаю` };
       const unit = +((prEl?.textContent || '').replace(/\D/g, '') || 0);
       if (!unit) return { ok: false, why: 'цена не прочитана — не покупаю (резерв и лимит не проверить)' };   // v5.6
-      const adena = shopAdena(), reserve = shopReserve(adena), money = adena - reserve, cap = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
-      if (cap <= 0) return { ok: false, why: money < unit ? `не хватает адены (резерв ${reserve.toLocaleString('ru')}${reserve < (env.cfg.shopReserve ?? 200000) ? ' — половина адены, резерв из меню больше' : ''})` : 'исчерпан лимит трат за раз' };
+      const adena = shopAdena(), reserve = shopReserve(adena), money = adena - reserve, cap0 = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) * (+share > 0 && share < 1 ? share : 1) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
+      const cap = cap0 > 0 ? packQty(cap0, qtyWant) : 0;   // 10.0.10: круглая пачка (1000 / 100 / 10)
+      if (!(cap > 0)) return { ok: false, why: money < unit ? `не хватает адены (резерв ${reserve.toLocaleString('ru')}${reserve < (env.cfg.shopReserve ?? 200000) ? ' — половина адены, резерв из меню больше' : ''})` : money * share < unit ? 'мало адены — она ушла на более нужное (заряды → банки HP → банки MP)' : 'исчерпан лимит трат за раз' };
       env.fire(row.querySelector('.l2-gm-shop-buy'));
       const modal = await env.waitX(() => { const m = env.$q('#l2-drops-shop-buy-qty-modal'); return m && env.shown(m.querySelector('[data-buy-qty-confirm]')) ? m : null; }, 4000, 100);
       if (!modal) return { ok: false, why: 'окно покупки не открылось' };
@@ -234,7 +243,9 @@ async function shopStep() {
     if (shopAdena()) env.setRt({ adenaSeen: { v: shopAdena(), t: Date.now() } });
     const plan = shopPlan(), done = [...(st.done || [])];
     let spent = st.spent || 0;
-    for (const n of st.need) {
+    const ord = k => SHOP_ORDER[k] ?? 9;
+    const needs = [...st.need].sort((a, b) => ord(a.key) - ord(b.key));   // 10.0.10: заряды → HP → MP → прочее
+    for (const n of needs) {
       if (!env.on) return;
       if (done.some(d => d.key === n.key)) continue;
       const g = (new URLSearchParams(location.search).get('grade') || 'NG').toUpperCase();
@@ -242,7 +253,8 @@ async function shopStep() {
       const it = plan.find(x => x.key === n.key);
       if (n.key === 'shots' && !st.gradeNote) { st.gradeNote = 1; const sg = shotGrade(), w = equippedWeapon(), wm = weaponIsMage(w); env.rec('B', 'закупка', `${n.label}: грейд ${sg.g} — ${sg.src}; тип — ${wm == null ? 'по классу персонажа' : (wm ? 'магическое' : 'физическое') + ' оружие ' + (w?.name || w?.en || '')}`); }
       env.setStatus(`Закупка: ${n.label} +${n.buy}`);
-      const r = it ? await shopBuyOne(it, n.buy, spent) : { ok: false, why: 'нет в списке' };
+      const rest = needs.filter(x => x !== n && !done.some(d => d.key === x.key)).map(x => x.key);
+      const r = it ? await shopBuyOne(it, n.buy, spent, shopShare(n.key, rest)) : { ok: false, why: 'нет в списке' };
       if (r.ok) spent += r.spent || 0;
       env.rec('B', 'закупка', `${n.label}: ${r.ok ? `куплено ${r.qty} × ${r.unit} = ${r.spent.toLocaleString('ru')} аден` : 'не куплено — ' + (r.why || r.msg || '?')}`);
       done.push({ key: n.key, ok: r.ok, label: n.label, qty: r.qty, why: r.ok ? '' : (r.why || r.msg || '?') });
@@ -267,6 +279,6 @@ async function shopStart(why, force) {
   await env.setRt({ shop: { step: 'count', back: env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html', t: Date.now(), force: !!force } });
   env.rec('B', 'закупка', `иду за расходниками: ${why}`);
 }
- return { shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
+ return { SHOP_ORDER, shopShare, packQty, shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
  };
 })(globalThis);

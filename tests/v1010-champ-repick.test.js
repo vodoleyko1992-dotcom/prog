@@ -10,7 +10,7 @@ const load = (file, env, extra) => { const ctx = mk(extra); vm.runInNewContext(r
 (async () => {
   // 1. champs: уровень героя на переходе = 0 → вердикт всё равно по настоящему разрыву (ctx.heroLvl0 / кэш), держит 5 мин
   let lvl = 8;
-  const env = { cfg: {}, rt: { dps: { dps: 298, n: 1 } }, heroLvl: () => lvl, farmRate: () => null, setRt: async p => Object.assign(env.rt, p) };
+  const env = { cfg: { champRed: true, champMinLvl: 0 }, rt: { dps: { dps: 298, n: 1 } }, heroLvl: () => lvl, farmRate: () => null, setRt: async p => Object.assign(env.rt, p) };
   const C = load('modules/champs.js', env);
   const spider = { tier: 'red', lvl: 16, hp: 28440, exp: 11400, fa: 0.6 };
   lvl = 0;                                                   // шапка пуста (страница боя закрывается)
@@ -41,7 +41,7 @@ const load = (file, env, extra) => { const ctx = mk(extra); vm.runInNewContext(r
   let hl = 8;
   const row = (id, text) => ({ getAttribute: () => `/battle.html?spawnId=${id}`, textContent: text, classList: { contains: () => false }, className: '' });
   const rows = [row('champ_r_elf_village_2', 'Hook Spider · ур. 16 · чемпион'), row('dense_1', 'Elder Red Keltir · ур. 3')];
-  const menv = { cfg: { priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 5, lvlAbove: 5, lvlMin: 1, lvlMax: 99, champFa: true },
+  const menv = { cfg: { champRed: true, champMinLvl: 0, /* 10.0.10: красные по умолчанию ВЫКЛ, порог 20 ур. — здесь проверяется логика до галок */  priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 5, lvlAbove: 5, lvlMin: 1, lvlMax: 99, champFa: true },
     rt: { spawns: {} }, PAGE_SIZE: 15, champs: C, LV_RE: /^([^\p{L}\d]*)(.+?)\s*[·•]\s*ур\.?\s*(\d+)/iu, QUEST: /★/, isChamp: t => /чемпион/.test(t),
     NET_SPAWNS: { t: Date.now(), kind: { champ_r_elf_village_2: 'champion' }, tier: { champ_r_elf_village_2: 'red' }, hp: { champ_r_elf_village_2: 28440 }, exp: { champ_r_elf_village_2: 11400 } },
     heroLvl: () => hl, isRaidId: () => false, isBoss: () => false, isQuestName: () => false, cancelRisk: () => null, faPaidLeft: () => 0,

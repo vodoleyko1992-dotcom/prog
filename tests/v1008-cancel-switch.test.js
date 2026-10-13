@@ -8,7 +8,7 @@ assert(/value="always">Обход ВЫКЛ/.test(sel[1]), 'always = обход �
 const src = fs.readFileSync(path.join(__dirname, '..', 'modules', 'champs.js'), 'utf8');
 const ctx = { L2V7Factories: {}, L2V7Modules: {}, console }; vm.createContext(ctx); vm.runInContext(src, ctx);
 function mk(mode) {
-  const rt = { champLearn: {} }, cfg = { champCancel: mode };
+  const rt = { champLearn: {} }, cfg = { champCancel: mode, champRed: true, champMinLvl: 0 };   // 10.0.10: красные по умолчанию ВЫКЛ
   return ctx.L2V7Factories.champs({ get cfg() { return cfg; }, get rt() { return rt; }, setRt: p => Object.assign(rt, p), rec: () => {}, farmRate: () => ({ eps: 1000, sk: 3000 }), faPaidLeft: () => 3, heroLvl: () => 67 });
 }
 const red = { tier: 'red', lvl: 68, hp: 145000, exp: 207000 };

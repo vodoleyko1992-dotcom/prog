@@ -7,7 +7,7 @@ const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const load = (file, env) => { const ctx = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise }; ctx.globalThis = ctx;
   vm.runInNewContext(read(file), ctx); return ctx.L2V7Factories[path.basename(file, '.js')](env); };
 let lvl = 66;
-const env = { cfg: {}, rt: { lvl: 66, rbDps: 3000 }, heroLvl: () => lvl, farmRate: () => ({ eps: 5600, sk: 1.5 }), setRt: async p => Object.assign(env.rt, p) };
+const env = { cfg: { champRed: true, champMinLvl: 0 }, rt: { lvl: 66, rbDps: 3000 }, heroLvl: () => lvl, farmRate: () => ({ eps: 5600, sk: 1.5 }), setRt: async p => Object.assign(env.rt, p) };
 const C = load('modules/champs.js', env);
 (async () => {
   // 1. цена чемпиона в секундах обычного фарма: EXP ÷ EXP/с + шанс FA × (время на моба ÷ 1 %)
@@ -60,7 +60,7 @@ const C = load('modules/champs.js', env);
   assert.match(read('popup.html'), /id="champLeave"/); assert.match(read('popup.html'), /id="champEvery"/);
   // 6. mobfarm: безнадёжный чемпион — не кандидат, в журнал «пропускаю»
   const recs = [];
-  const menv = { cfg: { priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 3, lvlAbove: 20, lvlMin: 1, lvlMax: 99 },
+  const menv = { cfg: { champRed: true, champMinLvl: 0, /* 10.0.10: красные по умолчанию ВЫКЛ, порог 20 ур. — здесь проверяется логика до галок */  priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 3, lvlAbove: 20, lvlMin: 1, lvlMax: 99 },
     rt: { spawns: { r1: ['Kookaburra', 67], b1: ['Buffalo', 70] }, lvl: 66 }, PAGE_SIZE: 15, champs: C,
     NET_SPAWNS: { t: Date.now(), kind: { r1: 'champion', b1: 'champion' }, tier: { r1: 'red', b1: 'blue' }, hp: { r1: 9000000, b1: 49560 }, exp: { r1: 250680, b1: 136815 } },
     heroLvl: () => 66, isRaidId: () => false, isBoss: () => false, isQuestName: () => false,
