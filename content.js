@@ -15,7 +15,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: false, champFa: true, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -857,6 +857,8 @@ const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: реш�
 // проверка карты каждые N боёв; пока глава ждёт чемпионов — не реже чем раз в 5 боёв (чемпионы появляются и пропадают)
 // v4.30: ищем чемпионов (правило «Чемп» в приоритете) — не реже раза в 20 боёв: при «раз в 100» бот их почти не заставал
 const CHAMP_EVERY = 20;
+// 10.0.5 (игрок 13.10: «автопоиск чемпионов раз в 20 убитых мобов»): карта ради чемпионов — раз в cfg.champEvery боёв (20), и при «0 = никогда»
+const champEvery = () => Math.max(5, +cfg.champEvery || CHAMP_EVERY);
 const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.neg);
 // 7.1.31 (просьба игрока: «поставил 99999, а он всё равно проверяет карту»): 0 — карту по плану НЕ проверять никогда, только цепочка
 // «Охотиться дальше» (было «0 = каждый бой»). Выключает и «не реже раза в 20 боёв» ради чемпионов, и «горячую» карту, и уход за ★ целью.
@@ -879,9 +881,9 @@ const farmMapOn = () => {
 };
 const deepN = () => campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
   : farmMapOn() ? Math.min(+cfg.deepEvery > 0 ? +cfg.deepEvery : FARM_EVERY, FARM_EVERY * 2)
-  : mapOff() ? Infinity : champHunt() ? Math.min(cfg.deepEvery, CHAMP_EVERY) : cfg.deepEvery;
+  : champHunt() ? (mapOff() ? champEvery() : Math.min(cfg.deepEvery, champEvery())) : mapOff() ? Infinity : cfg.deepEvery;
 const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) || (searchActive(rules) &&
-  (campChampDue() || !mapOff() || farmMapOn()) && (rt.deepHot || rt.sinceDeep >= deepN()));
+  (campChampDue() || !mapOff() || farmMapOn() || champHunt()) && (rt.deepHot || rt.sinceDeep >= deepN()));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 
@@ -3820,7 +3822,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -3983,7 +3985,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get champs() { return L2V7Modules.champs; }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },
@@ -4342,6 +4344,9 @@ L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get auton
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
 // 10.0.2: таймеры боссов (modules/rbtimer.js): когда убит и когда воскреснет РБ / эпик
+// 10.0.5: чемпионы ради FA — оценка до боя, проба, отход, обучение (rt.champLearn)
+L2V7Modules.champs = L2V7Factories.champs({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
+  get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); } });
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });
 // 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
@@ -4557,6 +4562,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // на 10–15 уровней дают EXP со штрафом и почти пустой дроп, а тур летал к ним за телепорт — окно вниз 9 уровней. Только заводские значения
   once('rebal100', () => { if (C('shopMp') === '20/100') cf.shopMp = '200/1000'; if (+C('rbMaxBelow') === 15) cf.rbMaxBelow = 9; });
   once('tsGoal100', () => { if (!+C('tsGoalItem')) cf.tsGoalItem = 920033; });   // 10.0 (игрок 12.10): цель магазина TvT по умолчанию — Тату Душі (+978 M.Atk, лучшее для ДПС), автопокупка выключена
+  once('champAuto1005', () => { cf.searchChamp = true; });   // 10.0.5 (игрок 13.10 00:38: «добавь автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов ВКЛ (было ВЫКЛ с 8.0.3)
   once('oriOff1005', () => { if (/^oriharukon ore$/i.test(String(C('farmRes') || '').trim())) Object.assign(cf, { farmRes: '', farmNeed: 0 }); });   // 10.0.5 (игрок 12.10 15:54: «убери эту цель… на будущее»): цель фарма Oriharukon Ore снята; в базовом профиле и умолчаниях цели нет
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота

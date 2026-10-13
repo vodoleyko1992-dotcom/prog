@@ -831,7 +831,11 @@ async function battle() {
   // (в цепочке «Охотиться дальше» spawnId в адресе — от первого боя: верим ему, только если имя в кэше спавнов совпало)
   const spOk = !!spawnId && (env.rt.spawns?.[spawnId]?.[0] || '').toLowerCase() === nm;
   ctx.lvl = rbLvl || (spOk ? env.rt.spawns[spawnId][1] : 0) || 0;
+  ctx.spawnId = spOk ? spawnId : '';
   if (ctx.champ) ctx.tier = (same && t.tier) || (spOk ? env.champTier?.(spawnId) : '') || 'blue';
+  // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
+  if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0;
+    ctx.chLim = (same && t.lim) || env.champs?.limitS({ tier: ctx.tier, lvl: ctx.lvl, exp: 0 }) || 40; }
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
   // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)
@@ -1003,7 +1007,7 @@ async function battle() {
       env.setStatus('🛒 Закупка сейчас — бросаю бой'); location.href = '/char.html'; await env.sleep(4000); return;
     }
     if (ctx.tot) { const tn = Date.now(), k = env.totemActive()?.bn || '—'; ctx.tot[k] = (ctx.tot[k] || 0) + tn - ctx.totT; ctx.totT = tn; }
-    if (defeat()) return env.onDeath();
+    if (defeat()) { if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, 'death', Math.max(0, (ctx.chHp0 || 0) - (ctx.mobLast || 0)), (Date.now() - t0) / 1000)?.catch?.(() => {}); return env.onDeath(); }
     if (env.rt.epic?.step === 'retreatVerify' && ctx.rb && env.rt.epic.id === ctx.rb.id) {
       // После команды выхода боевой цикл ждёт смены страницы. HTTP 2xx без
       // ухода из боя не считаем доказательством выхода на сервере.
@@ -1109,6 +1113,27 @@ async function battle() {
     // до конца» — две смерти за 2 мин, вторая сняла купленный бафф. Штатный выход «Назад на карту» (POST /game/battle/leave → 200) в этой
     // игре бой завершает (11:41:53, 11:42:05). Аварийное правило (raid.rbFlee) — и в бою, начатом игроком: смерть хуже, чем уйти.
     // Своя эпик-цепочка (rt.epic, шаг «бой») — по своим правилам ниже (epicRetreatHp)
+    // 10.0.5 (игрок 13.10: «отход, если мы его не пробиваем или его бить нецелесообразно по времени — по отношению к фарму ФА»):
+    // чемпион не пробивается (за 8 с < 3 %), бой выходит дольше его цены ×1,3 или HP героя < 30 % при живом чемпионе — выход «Назад на карту»
+    // (тот же штатный выход, что у РБ: POST /game/battle/leave бой завершает); вердикт — до роста силы (champs.learn)
+    if (ctx.champ && !ctx.rb && !ctx.chOut && env.champs && env.cfg.champLeave !== false) {
+      const fl = env.champs.fleeCheck(ctx, me, mob, (Date.now() - t0) / 1000);
+      const leave = fl && env.$q('#battle-back-map');
+      if (fl && env.shown(leave)) {
+        ctx.chOut = true;
+        const sec = (Date.now() - t0) / 1000, dealt = Math.max(0, (ctx.chHp0 || mob.max) - mob.cur);
+        env.rec('B', 'чемпионы', `${ctx.name} (${ctx.lvl || '?'}, ${env.champs.tierRu(ctx.tier)}): ⚠ ${fl.why} — ухожу из боя, снято ${dealt} из ${mob.max} за ${sec.toFixed(0)} с; снова попробую, когда вырастет сила`);
+        if (ctx.spawnId) env.leaveMark?.(ctx.spawnId, ctx.name);   // spawnId известен точно — иначе «вернуться в бой» не к кому
+        env.fire(leave);
+        if (await env.waitFor(() => !env.isBattle(), 8000, 150)) {
+          await env.champs.learn(ctx, fl.kind, dealt, sec);
+          await env.setRt({ target: null, sinceDeep: 999 });
+          return;
+        }
+        env.leaveMark?.(null);
+        env.rec('B', 'чемпионы', `${ctx.name}: выход не подтверждён — бьюсь дальше`);
+      }
+    }
     if (ctx.rb && me && mob && !ctx.rb.retreated) {
       const epChain = env.epicOn() && env.epicById(ctx.rb.id) && env.rt.epic?.k === env.epicById(ctx.rb.id).k && env.rt.epic?.step === 'fight';
       const fl = !epChain && env.rbFlee ? env.rbFlee(ctx, me, mob) : null;
@@ -1605,7 +1630,10 @@ async function battle() {
     env.setRt({ dps: { n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
     env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${base < ctx.max ? `${base} из ${ctx.max}` : ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt})` : ''} · ${ctx.seq.join('→')}`);
     if (ctx.tot) await env.totemNote(ctx, dps);
-    if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
+    // 10.0.5: чемпион — свой учёт (champs.learn: ДПС, итог по цвету, вердикт снимается); метка «не по зубам» по имени вида закрыла бы
+    // и обычных мобов того же вида (красный Kookaburra ≈145 тыс. HP → обычные Kookaburra 3,4 тыс. HP на 2 ч не цели)
+    if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, victory() ? 'win' : 'left', dealt, ttk)?.catch?.(e => console.warn(env.TAG, 'чемпионы', e));
+    else if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
     }

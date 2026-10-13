@@ -74,7 +74,7 @@ assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| 'blue
   assert.equal(lt.faNote(['Fast Aden ×1'], 'Rahha', null), null, 'RB not counted');
   // 5. настройки и меню
   const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), base = JSON.parse(read('base-profile.json'));
-  assert.match(content, /searchChamp: false, champFa: true/);
+  assert.match(content, /searchChamp: true, champFa: true/);   // 10.0.5: поиск чемпионов ВКЛ (игрок 13.10)
   assert.match(popup, /'searchChamp', 'champFa'/);
   assert.match(html, /id="champFa"/); assert.match(html, /id="faDropBox"/);
   assert.equal(JSON.stringify(base).includes('"champFa":true'), true);
