@@ -99,7 +99,8 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     const vis = await page.$eval('#rbTimerTable', e => e.getBoundingClientRect().height > 0);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     const rows = t.split('\n').filter(Boolean), at = re => rows.findIndex(r => re.test(r));
-    const ok = /Rahha \(65\)\s+💀 убит мной в \d\d:\d\d\s+≈[\d.: ]+ \(через 5 ч\)\s+≈8 ч · догадка/.test(t) && /Hekaton Prime/.test(t) && /Tiphon \(65\)\s+✅ жив/.test(t)
+    // 10.0.5: после полуночи время убийства вчерашнее — с датой «12.10 21:04» (проверка падала с 00:00 до 03:00)
+    const ok = /Rahha \(65\)\s+💀 убит мной в (?:\d\d\.\d\d )?\d\d:\d\d\s+≈[\d.: ]+ \(через 5 ч\)\s+≈8 ч · догадка/.test(t) && /Hekaton Prime/.test(t) && /Tiphon \(65\)\s+✅ жив/.test(t)
       && /🐉 Zaken \(60\)\s+💀 убит до [\d.: ]+\s+не позже .*36 ч · игра/.test(t) && !/Far Low/.test(t)
       && at(/Rahha/) < at(/Hekaton/) && at(/Hekaton/) < at(/Tiphon/)
       && /Знаю 5 боссов: живых 2, убитых 3/.test(sum) && /пока не замерен — беру 8 ч/.test(sum) && on && resp === '8' && every === '10' && vis && !overflow && !errs.length;
