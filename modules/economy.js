@@ -122,6 +122,10 @@ async function bagCounts() {                     // инвентарь «Все�
 }
 
 const shopAdena = () => +((env.$q('.l2-gm-shop-adena__amount')?.textContent || '').replace(/\D/g, '') || 0);
+// 10.0.10 (лог 13.10 19:41, новый герой alt1 19 ур., 204 960 аден): резерв 200 000 из настроек Warlock оставил новичку 4 960 аден —
+// куплено 3 банки MP и 23 заряда души, с которыми он бил по 1–5 урона весь вечер. Резерв — не больше половины адены героя:
+// богатому Warlock (100 M) правило ничего не меняет, бедный новичок тратит половину сумки на заряды и банки
+const shopReserve = (adena = shopAdena()) => Math.max(0, Math.min(+(env.cfg.shopReserve ?? 200000) || 0, Math.floor((+adena || 0) / 2)));
 
 async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
   const pager = () => [...document.querySelectorAll('.l2-gm-shop-pager-btn')];
@@ -175,8 +179,8 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на отк
       if (!isAd && !/adena|аден/i.test(lbl)) return { ok: false, why: `валюта цены не распознана («${prT.replace(/\s+/g, ' ').trim().slice(0, 30)}») — не покупаю` };
       const unit = +((prEl?.textContent || '').replace(/\D/g, '') || 0);
       if (!unit) return { ok: false, why: 'цена не прочитана — не покупаю (резерв и лимит не проверить)' };   // v5.6
-      const money = shopAdena() - (env.cfg.shopReserve ?? 200000), cap = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
-      if (cap <= 0) return { ok: false, why: money < unit ? `не хватает адены (резерв ${(env.cfg.shopReserve ?? 200000).toLocaleString('ru')})` : 'исчерпан лимит трат за раз' };
+      const adena = shopAdena(), reserve = shopReserve(adena), money = adena - reserve, cap = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
+      if (cap <= 0) return { ok: false, why: money < unit ? `не хватает адены (резерв ${reserve.toLocaleString('ru')}${reserve < (env.cfg.shopReserve ?? 200000) ? ' — половина адены, резерв из меню больше' : ''})` : 'исчерпан лимит трат за раз' };
       env.fire(row.querySelector('.l2-gm-shop-buy'));
       const modal = await env.waitX(() => { const m = env.$q('#l2-drops-shop-buy-qty-modal'); return m && env.shown(m.querySelector('[data-buy-qty-confirm]')) ? m : null; }, 4000, 100);
       if (!modal) return { ok: false, why: 'окно покупки не открылось' };
@@ -263,6 +267,6 @@ async function shopStart(why, force) {
   await env.setRt({ shop: { step: 'count', back: env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html', t: Date.now(), force: !!force } });
   env.rec('B', 'закупка', `иду за расходниками: ${why}`);
 }
- return { shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopBuyOne, shopStep, hpPotStock, shopStart };
+ return { shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
  };
 })(globalThis);
