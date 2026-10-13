@@ -512,13 +512,17 @@ function cancelNote(lines, name, opt = {}) {         // после боя: ск�
   C[key] = { t: Date.now(), n: (o.n || 0) + n, k: (o.k || 0) + 1, name: name || who, champ: !!opt.champ, tier: opt.tier || '' };
   for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 30 * 86400000) delete C[k];
   env.setRt({ buffCancel: C, tbCancelT: Date.now() });
-  const paid = faPaidLeft(0), avoid = env.cfg.noCancelMobs !== false;
-  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? ', такого больше не выбираю' : ''}`);
+  const paid = faPaidLeft(0), rule = opt.champ && (opt.tier === 'red' || opt.tier === 'orange');   // 10.0.8: правило игры, не свойство вида
+  const avoid = rule ? (env.cfg.champCancel || 'paid') !== 'always' : env.cfg.noCancelMobs !== false;
+  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${rule ? ` (правило игры: ${opt.tier === 'red' ? 'красный 60' : 'оранжевый 30'} % за удар)` : ''}${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? (rule ? ', таких при платных баффах за FA не выбираю' : ', такого больше не выбираю') : ''}`);
   return n;
 }
 const cancelKey = (name, champ) => (champ ? 'ч:' : '') + String(name || '').toLowerCase().trim();
 // снимает ли этот моб баффы: память (30 дней, по факту снятия; чемпион и обычный моб вида — отдельно) или список игрока cfg.cancelMobs (любой вид)
-function cancelRisk(name, champ) {
+// 10.0.8 (анонс 13.10): оранжевый/красный чемпион снимает баффы по правилу игры (30/60 % за удар) — это решает champs.judge по режиму
+// cfg.champCancel (при платных FA — не цель), память по виду тут не нужна; синий (10 %, раз в 30 с) и обычные мобы — по памяти и списку, как прежде
+function cancelRisk(name, champ, tier) {
+  if (champ && (tier === 'red' || tier === 'orange')) return null;
   const k = cancelKey(name, champ), o = env.rt.buffCancel?.[k];
   if (o && Date.now() - (o.t || 0) < 30 * 86400000) return o;
   const own = String(env.cfg.cancelMobs || '').split(/[,\n;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);

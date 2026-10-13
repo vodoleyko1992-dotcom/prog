@@ -15,7 +15,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'paid', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -4473,7 +4473,7 @@ L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get auton
 // 10.0.2: таймеры боссов (modules/rbtimer.js): когда убит и когда воскреснет РБ / эпик
 // 10.0.5: чемпионы ради FA — оценка до боя, проба, отход, обучение (rt.champLearn)
 L2V7Modules.champs = L2V7Factories.champs({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
-  get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); } });
+  get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); }, get faPaidLeft() { return (...a) => L2V7Modules.buffs.faPaidLeft(...a); } });   // 10.0.8: платные баффы за FA — «Cancel» чемпионов
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });
 // 10.0.6: «📦 Серия РБ» — что выпало с РБ/эпиков с запуска серии (кнопка в окне бота)
