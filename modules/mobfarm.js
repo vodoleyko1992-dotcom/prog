@@ -308,6 +308,12 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
 const relaxOk = r => !!r && Date.now() - (r.t || 0) < 20 * 60000 && (r.zone || null) === (env.rt.zone || null) && (!env.cfg.zoneAuto || !!r.auto);
 let farRecT = 0, lowRecT = 0;
 const skipRecT = {};
+function cancelSkip(r, cr) {                        // в журнал — раз в 10 мин на вид
+  const k = 'снятие:' + (r.champ ? 'ч:' : '') + String(r.name || '').toLowerCase();
+  if (Date.now() - (skipRecT[k] || 0) < 600000) return;
+  skipRecT[k] = Date.now();
+  env.rec('B', 'цели', `${r.name || 'моб'} (${r.lvl || '?'}${r.champ ? ', ' + (TIER_RU[r.tier] || 'чемпион') : ''}): пропускаю — снимает баффы${cr.own ? ' (ваш список)' : ` (${cr.n} за ${cr.k} боёв)`}`);
+}
 function champSkip(r, why) {                       // в журнал — раз в 10 мин на цвет и уровень
   const k = (r.tier || 'blue') + ':' + (r.lvl || 0);
   if (Date.now() - (skipRecT[k] || 0) < 600000) return;
@@ -375,10 +381,13 @@ function candidates(rules, sig, types, limitIdx) {
       const j = env.champs.judge(r);
       Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
       if (!j.ok) { champSkip(r, j.why); return; }
-      // 10.0.7 (лог 13.10 13:07–13:11): чемпион снимает баффы («зняв з вас 3 бафи»), а у нас платные баффы за FA — два набора по 8–9 FA
-      // ушли за минуту. Такой вид (rt.buffCancel, сутки) при платных баффах с запасом > 10 мин — не цель; без них бьём как прежде
-      const cr = env.cfg.champNoCancel !== false && env.cancelRisk?.(r.name);
-      if (cr && (env.faPaidLeft?.() || 0) > 0) { champSkip(r, `снимает баффы (${cr.n} за ${cr.k} боёв), а у нас баффы за FA`); return; }
+    }
+    // 10.0.7 (лог 13.10 13:07–13:11, игрок 03:15: «некоторые мобы научились убивать бафф, таких избегаем»): моб снимает баффы
+    // («[Frost Tarantula] зняв з вас 3 бафи», два набора по 8–9 FA ушли за минуту) — не цель: по памяти снятий (rt.buffCancel, чемпион и
+    // обычный моб вида отдельно) и по списку игрока cfg.cancelMobs; галка cfg.noCancelMobs (ВКЛ). ★ квест и источник ресурса — как прежде
+    if (!qLike && env.cfg.noCancelMobs !== false) {
+      const cr = env.cancelRisk?.(name, champ);
+      if (cr) { cancelSkip(r, cr); return; }
     }
     let k = rank(r, rules);
     const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) >= FA_P.orange && faRank >= 0;

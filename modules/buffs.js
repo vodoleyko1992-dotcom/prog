@@ -507,21 +507,30 @@ function cancelNote(lines, name, opt = {}) {         // после боя: ск�
   let n = 0, who = '';
   for (const l of lines || []) { const m = CANCEL_RE.exec(l); if (m) { n += +m[2] || 0; who = who || m[1]; } }
   if (!n) return 0;
-  const key = String(name || who).toLowerCase(), C = { ...(env.rt.buffCancel || {}) }, o = C[key] || {};
+  // память по виду: чемпион и обычный моб того же вида — разные записи (снимают оранжевые/красные чемпионы, обычный Buffalo — нет)
+  const key = cancelKey(name || who, opt.champ), C = { ...(env.rt.buffCancel || {}) }, o = C[key] || {};
   C[key] = { t: Date.now(), n: (o.n || 0) + n, k: (o.k || 0) + 1, name: name || who, champ: !!opt.champ, tier: opt.tier || '' };
-  for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 7 * 86400000) delete C[k];
+  for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 30 * 86400000) delete C[k];
   env.setRt({ buffCancel: C, tbCancelT: Date.now() });
-  const paid = faPaidLeft(0);
-  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу`);
+  const paid = faPaidLeft(0), avoid = env.cfg.noCancelMobs !== false;
+  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? ', такого больше не выбираю' : ''}`);
   return n;
 }
-const cancelRisk = name => { const o = env.rt.buffCancel?.[String(name || '').toLowerCase()]; return o && Date.now() - (o.t || 0) < 86400000 ? o : null; };
+const cancelKey = (name, champ) => (champ ? 'ч:' : '') + String(name || '').toLowerCase().trim();
+// снимает ли этот моб баффы: память (30 дней, по факту снятия; чемпион и обычный моб вида — отдельно) или список игрока cfg.cancelMobs (любой вид)
+function cancelRisk(name, champ) {
+  const k = cancelKey(name, champ), o = env.rt.buffCancel?.[k];
+  if (o && Date.now() - (o.t || 0) < 30 * 86400000) return o;
+  const own = String(env.cfg.cancelMobs || '').split(/[,\n;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
+  const nm = String(name || '').toLowerCase().trim();
+  return nm && own.some(x => nm === x || nm.includes(x)) ? { n: 0, k: 0, name, own: true } : null;
+}
 function faPaidLeft(minMs = 10 * 60000) {           // сколько платных баффов за FA висит с запасом > minMs (кроме Noblesse)
   let H = null; try { H = hudBuffs(); } catch (e) {}
   if (!H) return 0;
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, faPaidLeft, CANCEL_RE };
+ return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
