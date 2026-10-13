@@ -1,6 +1,6 @@
 ---
 name: l2-build
-description: Сборка новой версии L2wap Bot — поднять версию, CHANGELOG, CLAUDE.md, все проверки (тесты, node --check, геттеры, браузерные смоуки), zip без tests/.git/.claude, загрузка zip в Chromium, отправка игроку. Использовать, когда правки по логу/просьбе закончены или игрок пишет «сборка»/«собирай».
+description: Сборка новой версии L2wap Bot — поднять версию, CHANGELOG, CLAUDE.md, все проверки (тесты, node --check, геттеры, браузерные смоуки), zip без tests/kb/docs/.git/.claude, загрузка zip в Chromium, отправка игроку. Использовать, когда правки по логу/просьбе закончены или игрок пишет «сборка»/«собирай».
 ---
 
 # Сборка L2wap Bot
@@ -12,7 +12,7 @@ description: Сборка новой версии L2wap Bot — поднять �
    - `manifest.json`: `version`, `version_name`, `description` («L2wap Bot X.Y.Z — суть»);
    - `content.js` строка 1 (`// ===== L2wap Bot vX.Y.Z — …`);
    - `tests/stage1.test.js`, `tests/stage3.test.js`, `tests/ios-fishing.test.js`, `tests/v71-ui.test.js`, `tests/v6-core.test.js`.
-2. **CHANGELOG-X.Y.Z.md**: что было (с логом/временем) → что сделано; «Проверено / не проверено в живой игре».
+2. **docs/changelog/CHANGELOG-X.Y.Z.md** (с 10.0.7 история версий лежит в `docs/changelog/`, в корне — только `CHANGELOG.md`-оглавление): что было (с логом/временем) → что сделано; «Проверено / не проверено в живой игре». Добавить строку новой версии сверху списка в `CHANGELOG.md`.
 3. **CLAUDE.md**: «Текущая версия», число PASS (2 места), строка в «Последние версии», «Известные ограничения/что дальше».
 4. **Проверки** (все должны пройти):
    ```
@@ -25,8 +25,8 @@ description: Сборка новой версии L2wap Bot — поднять �
 5. **Zip**:
    ```
    rm -f l2wap-bot-vX.Y.Z.zip
-   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' 'kb/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
-   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|kb/\|\.git/\|\.claude/"   # 0
+   zip -qr l2wap-bot-vX.Y.Z.zip . -x 'tests/*' 'kb/*' 'docs/*' '*.orig' '.git/*' '.claude/*' '*.zip' '__pycache__/*'
+   unzip -l l2wap-bot-vX.Y.Z.zip | grep -c "tests/\|kb/\|docs/\|\.git/\|\.claude/\|CHANGELOG-"   # 0
    ```
 6. **Загрузка zip в Chromium**: распаковать во временную папку scratchpad и
    `NODE_PATH=$(npm root -g) node tests/tools/zipload.cjs <папка>` → версия, 0 ошибок консоли, ключевые значения cfg.
