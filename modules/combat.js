@@ -753,6 +753,17 @@ async function hotbarRows3() {
   if (vis() >= 3 && !env.rt.rows3) { env.rec('B', 'панель', 'открыты все 3 ряда панели скиллов'); env.setRt({ rows3: 1 }); }
 }
 
+// 10.0.10 (лог 13.10 19:39–20:57, alt1 18–19 ур.): обычная атака 1 урона 112 ударов из 112, Power Strike 0–3 (Elf Ghost 20, Lesser Dark
+// Horror 15) — кончился «Бонус новичка» (так же лог 08.10 16:31), герой с NG-оружием не пробивает мобов 15–20 ур. Бот метил виды «не по зубам»
+// по одному и молчал о причине. Теперь при «не по зубам» раз в час — понятная строка: что с уроном и что делать (оружие бот сам не покупает)
+async function lowDmgNote() {
+  const aS = env.rt.skills?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
+  if (!atk || atk > 5 || Date.now() - (env.rt.lowDmgNoteT || 0) < 3600000) return;
+  await env.setRt({ lowDmgNoteT: Date.now() });
+  env.rec('B', 'цели', `⚠ обычная атака ≈${atk.toFixed(0)} урона за удар (${aS.dmgN} ударов) — герой почти не пробивает: кончился «Бонус новичка» или оружие слабое/снято. `
+    + `Нужны оружие по уровню (с 20 ур. — D-grade) и заряды под него; пока — мобы слабее или другая зона. Оружие бот сам не покупает`);
+}
+
 async function battle() {
   env.setStatus('Бой: загрузка');
   const bUrl = location.pathname + location.search;   // v4.43: экран поражения — на странице боя; после смерти вернёмся сюда
@@ -1315,6 +1326,7 @@ async function battle() {
         } else {
         await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [nmNow]: { t: Date.now(), ttk: isFinite(ttk) ? Math.round(ttk) : 9999, lvl: env.heroLvl(), why } }, target: null });
         env.rec('B', 'цели', `${mobName()}: не пробиваю — ${why} → ухожу, этот вид 2 ч не бью`);
+        await lowDmgNote();
         }
         if (me && me.pct < 60) {
           // 10.0 (аудит боя): уход со страницы бой не завершает — моб бьёт дальше, баффер отвечает «Во время бою відновлення недоступне». Сначала выходим из боя
@@ -1705,6 +1717,7 @@ async function battle() {
     else if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
+      await lowDmgNote();
     }
   }
   debuffGainFlush(ctx).catch(e => console.warn(env.TAG, 'выгода дебаффов', e));   // 7.2.1

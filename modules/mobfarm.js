@@ -319,7 +319,7 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
 // автофарме, а после смерти и ▶ с «Автофармом» действовало в Bee Hive — бот бил Ant Soldier 35 и Ant Larva 29 героем 56. Окно — только на той
 // локации, где его открыли, и открытое без автофарма при автофарме не действует (тот сам летит в зону своего уровня)
 const relaxOk = r => !!r && Date.now() - (r.t || 0) < 20 * 60000 && (r.zone || null) === (env.rt.zone || null) && (!env.cfg.zoneAuto || !!r.auto);
-let farRecT = 0, lowRecT = 0;
+let farRecT = 0, lowRecT = 0, idleN = 0, idleRecT = 0;   // 10.0.10: idleN — проходов карты без целей подряд, idleRecT — запись «целей нет»
 const skipRecT = {};
 function cancelSkip(r, cr) {                        // в журнал — раз в 10 мин на вид
   const k = 'снятие:' + (r.champ ? 'ч:' : '') + String(r.name || '').toLowerCase();
@@ -754,11 +754,27 @@ async function map() {
     }
   }
   if (!cands.length) {
-    env.setStatus('Целей нет, обновлю карту через 15 с');
-    for (let i = 0; i < 15 && env.on && !env.rt.shop?.urgent; i++) await env.sleep(1000);
+    // 10.0.10 (лог 13.10 19:44–20:56, alt1 19 ур.): все 6 видов в окне −5…+5 «не по зубам» (урон атаки ≈1 после конца «Бонуса новичка»),
+    // подбор зоны выключен — бот 72 мин перезагружал карту каждые 15 с (242 раза, 375 входов на карту) и молчал. Теперь пауза растёт
+    // (15 с → 60 с → 3 мин), а в журнал раз в 10 мин — почему целей нет и что сделать
+    idleN++;
+    const wait = idleN <= 3 ? 15 : idleN <= 8 ? 60 : 180;
+    if (Date.now() - idleRecT > 600000) {
+      idleRecT = Date.now();
+      const hl = env.heroLvl() || env.rt.lvl || 0, lo = hl - lowCap(), hi = hl + (env.cfg.lvlAbove ?? 5);
+      const hardHere = [...new Set(pageItems().filter(i => i.name && !i.champ && i.lvl >= lo && i.lvl <= hi).map(i => i.name))]
+        .filter(n => { const h = env.rt.hardMobs?.[n.toLowerCase()]; return h && Date.now() - h.t < 7200000; });
+      const aS = env.rt.skills?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
+      env.rec('B', 'локации', `целей нет: в окне ${lo}–${hi} ур. ${hardHere.length ? `все виды «не по зубам» 2 ч (${hardHere.join(', ')})` : 'подходящих мобов нет'}`
+        + (atk && atk <= 5 ? ` · обычная атака ≈${atk.toFixed(0)} урона за удар — герой почти не пробивает (кончился «Бонус новичка» / слабое или снятое оружие): нужны оружие по уровню и заряды, пока — мобы слабее или другая зона` : '')
+        + ` · проверяю карту раз в ${wait} с`);
+    }
+    env.setStatus(`Целей нет, обновлю карту через ${wait} с`);
+    for (let i = 0; i < wait && env.on && !env.rt.shop?.urgent; i++) await env.sleep(1000);
     if (env.on) { location.href = '/map.html'; await env.sleep(5000); }
     return;
   }
+  idleN = 0;
 
   // цель могла погибнуть/сдвинуться — пробуем до 5 лучших
   for (const c of cands.slice(0, 5)) {
