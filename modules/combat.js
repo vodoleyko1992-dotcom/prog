@@ -1666,6 +1666,7 @@ async function battle() {
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
   env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
+  try { env.cancelNote?.(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, { champ: !!ctx.champ, tier: ctx.tier || '' }); } catch (e) { console.warn(env.TAG, 'снятие баффов', e); }   // 10.0.7: «[моб] зняв з вас N бафи»
   env.setRt({
     kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
     adena: env.rt.adena + pick(/([\d\s.,]+)\s*аден/i), exp: env.rt.exp + pick(/([\d\s.,]+)\s*EXP/i), sp: env.rt.sp + pick(/([\d\s.,]+)\s*SP/i)
