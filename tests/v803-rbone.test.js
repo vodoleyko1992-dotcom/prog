@@ -58,7 +58,7 @@ const mk = rt => {
   assert.match(box, /<button id="rbOneBtn" type="button"[^>]*>🎯 Убить один РБ и ждать команды<\/button><div id="rbOneInfo" class="hint"><\/div>/);
   assert.match(popup, /if \(on && cfg\.rbHuntMode && rt\.rbOne\?\.on\) return toast\(/);
   assert.match(popup, /const one = \{ \.\.\.\(rt\.rbOne \|\| \{\}\), on: true, k0: rt\.rbKills \|\| 0, t: now \};/);
-  assert.match(popup, /\.\.\.\(tour \? \{\} : \{ rbHunt: \{ step: 'pick', t: now, last: 'один РБ по команде' \}, rbGo: null, rbWant: null, rbListT: 0 \}\)/, 'tour already running — no list rescan');
+  assert.match(popup, /\.\.\.\(tour \? \{\} : \{ (?:rbRun: \{ t0: now, mode: 'one' \}, )?rbHunt: \{ step: 'pick', t: now, last: 'один РБ по команде' \}, rbGo: null, rbWant: null, rbListT: 0 \}\)/, 'tour already running — no list rescan');   // 10.0.6: + rbRun — новая «📦 Серия РБ»
   assert.match(popup, /if \(rt\.rbOne\?\.on\) await menuPatch\(\{ rbOne: \{ \.\.\.rt\.rbOne, on: false \} \}\); \}   \/\/ 8\.0\.3: режим выбран руками/);
   assert.match(popup, /\.\.\.\(rt\.rbOne\?\.on \? \{ rbOne: \{ \.\.\.rt\.rbOne, on: false \} \} : \{\}\) \};\n  const mode = \{ rbHuntMode: v,/, 'tour toggle = plain tour');
   assert.match(popup, /paintRbOne\(rt, on, paused\);/);

@@ -113,6 +113,7 @@ async function dailyStep() {
   if (rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
     await env.setRt({ dailyRb: { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap() }, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
     await env.setCfg({ rbHuntMode: true, fishMode: false, epicMode: false, catMode: false });
+    try { await env.rbRun?.start('daily', 'дейлик'); } catch (e) {}   // 10.0.6: тур по дейлику — новая «📦 Серия РБ»
     env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
     return true;
   }

@@ -48,6 +48,7 @@ async function onDeath() {
   // не годятся (автофарм решил «остаюсь здесь» по зоне эпика и бил мобов 15–35 героем 56) — зону определит карта заново
   await env.setRt({ deaths, deathLog, lastTeleport: '', campaignDue: !!env.cfg.campaign, target: null, catIn: null, toggleOn: {}, toggleOff: {}, zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null });   // после смерти тогглы слетают   // v5.3: после смерти в подземелье — входим заново
   env.rec('B', 'смерть', `смертей за 30 мин: ${deaths.length}`);
+  try { await env.rbRun?.death(); } catch (e) {}   // 10.0.6: смерть в серии РБ — в сводку «📦 Серия РБ»
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
   // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат
   // (rt.epic.step ≠ «выбор»): 2 × «смертей на эпика» (не больше 20) за час; между эпиками (фарм мобов) — обычные 3 за 30 мин
