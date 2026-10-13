@@ -16,7 +16,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
   taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
-  lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
+  lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35,
@@ -3942,7 +3942,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -4105,7 +4105,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },
@@ -4206,7 +4206,7 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 // 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
 const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
-L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.navigation = L2V7Factories.navigation({ get heroAt() { return heroAt; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
@@ -4697,6 +4697,9 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('epicTime1005', () => { if (+C('epicMaxFightMin') === 30) cf.epicMaxFightMin = 0; });   // 10.0.5 (игрок 13.10 01:10: «для эпиков лимит по времени не нужен»): только прежние заводские 30
   // 10.0.7 (лог 13.10 13:03–13:12): эти чемпионы снимали баффы (50 строк «зняв з вас N бафи») — в память снятий сразу, чтобы не учиться заново
   once('cancel1007', () => { const C = { ...(rt.buffCancel || {}) }, t = Date.now(); for (const [n, k, tier] of [['Lost Yeti', 23, 'red'], ['Frost Tarantula', 17, 'red'], ['Ghost of Rebellion Soldier', 4, 'orange'], ['Vanor Silenos Shaman', 6, 'red'], ['Buffalo', 4, 'orange'], ['Canyon Antelope', 4, 'red']]) if (!C['ч:' + n.toLowerCase()]) C['ч:' + n.toLowerCase()] = { t, n: k * 3, k, name: n, champ: true, tier }; setRt({ buffCancel: C }); });
+  // 10.0.7 (игрок 13.10 03:16, скрин Warlock 67 против Tomb Guard 75: «бот пытается бить моба больше чем на 5 лвл старше»): верхний предел
+  // «до героя +» был 99 (v5.3.1 снял), у игрока 20 — Tomb Guard +8 проходил. Теперь по умолчанию +5 (как и −5); шире — руками в «Охоте»
+  once('lvlTop1007', () => { if (!(+C('lvlAbove') <= 5)) cf.lvlAbove = 5; });
   once('oriOff1005', () => { if (/^oriharukon ore$/i.test(String(C('farmRes') || '').trim())) Object.assign(cf, { farmRes: '', farmNeed: 0 }); });   // 10.0.5 (игрок 12.10 15:54: «убери эту цель… на будущее»): цель фарма Oriharukon Ore снята; в базовом профиле и умолчаниях цели нет
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота

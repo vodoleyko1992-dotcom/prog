@@ -768,7 +768,11 @@ async function battle() {
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
   if (st === 'dead') return env.onDeath();
-  if (st === 'err') return env.toMap();
+  if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
+    const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
+    if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
+    return env.toMap();
+  }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
   if (st === 'win') return env.nextFight();                     // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
@@ -867,6 +871,13 @@ async function battle() {
   // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)
   { const hd = !isRb && !ctx.questKill && !(ctx.champ && env.campActive() && env.campChampOpen()) && env.rt.hardMobs?.[nm]; if (hd && Date.now() - hd.t < 7200000 && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
     env.rec('B', 'цели', `${ctx.name}: «не по зубам» (${hd.why || 'долгий бой'}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
+  // 10.0.7 (игрок 13.10 03:16: «бот пытается бить моба больше чем на 5 лвл старше» — Warlock 67 против Tomb Guard 75): цепочка «Охотиться
+  // дальше» подсовывает моба без выбора по карте — выше героя на > lvlAbove (по умолчанию +5) не бьём, идём на карту. Исключения — как в
+  // mobfarm.candidates: ★ квест, источник ресурса, чемпион главы; РБ — свои пределы. Только нетронутый бой (HP ≥ 98 %, соседей нет)
+  { const hl = env.heroLvl() || env.rt.lvl || 0, up = env.cfg.lvlAbove ?? 5, lv = rbLvl || ctx.lvl || 0, farmT = !!nm && (env.farmRules?.() || []).some(x => x.farm && x.name === nm);
+    if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
+        && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
+      env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
   ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;
   if (isRb) {
     ctx.champ = false;                                      // «Оглушення не діє на РБ» (лог 07.10) — стан по РБ не используем
