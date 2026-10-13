@@ -3,10 +3,11 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), mobfarm = read('modules/mobfarm.js');
-// 10.0.5: после searchChamp добавлено champFa (FA с чемпионов) — само «Искать чемпионов» по умолчанию по-прежнему ВЫКЛ
-assert.match(content, /chain: true, searchQuest: true, searchChamp: false, (champFa: true, )?deepEvery: 10,/, 'core default: off');
-assert.match(popup, /chain: true, searchQuest: true, searchChamp: false,/, 'menu default: off');
-assert.equal(JSON.parse(read('base-profile.json')).cfg.searchChamp, false, 'base profile: off');
+// 10.0.5 (игрок 13.10 00:38: «добавь автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов снова ВКЛ по умолчанию (once champAuto1005)
+assert.match(content, /chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, champEvery: 20, deepEvery: 10,/, 'core default: on (10.0.5)');
+assert.match(popup, /chain: true, searchQuest: true, searchChamp: true,/, 'menu default: on (10.0.5)');
+assert.equal(JSON.parse(read('base-profile.json')).cfg.searchChamp, true, 'base profile: on (10.0.5)');
+assert.match(content, /once\('champAuto1005', \(\) => \{ cf\.searchChamp = true; \}\);/, '10.0.5: existing installs switched on once');
 assert.match(content, /once\('champ803', \(\) => \{ cf\.searchChamp = false; \}\);/, 'existing installs switched off once');
 assert.match(html, /<label>⚔ Искать чемпионов по локации <input id="searchChamp" type="checkbox"><\/label>/, 'toggle to turn it on');
 assert.match(popup, /const BOOL = \[[^\]]*'searchChamp'/, 'toggle is saved');
