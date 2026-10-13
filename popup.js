@@ -1212,7 +1212,7 @@ function renderMammon(rt, d) {
     ? `<b>${esc(o.res)} ×${o.qty}</b> · в сумке ${fmt(o.have)} ${o.have >= o.qty ? '✅' : '— не хватает ' + fmt(o.qty - o.have)}<br>Награда: ${o.col} Coin of Luck + ${fmt(o.adena)} адены · до ${mmTime(o.exp)}${rt.mmJob?.kind === 'order' ? '<br>⏳ бот летит сдавать' : ''}`
     : `Заказ ${esc(o.res)} ×${o.qty} закрыт${o.win ? ' · забрал ' + esc(o.win) : ''} · следующий — после ${mmTime(o.exp)}`;
   // 9.2.5: команда «… сейчас» ждёт (бой/тур) или отклонена — первой строкой
-  const go = rt.mmGoReq?.kind ? `⏳ по кнопке: ${rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить вещь-цель'} — полечу, как только закончу бой/тур` : rt.mmGoSay && Date.now() - rt.mmGoSay.t < 600000 ? `✗ по кнопке не полетел: ${rt.mmGoSay.why}` : '';
+  const go = rt.mmGoReq?.kind ? `⏳ по кнопке: ${rt.mmGoReq.kind === 'order' ? 'сдать заказ' : rt.mmGoReq.kind === 'visit' ? `прийти к ${rt.mmGoReq.npc === 'smith' ? 'кузнецу' : 'торговцу'} Маммона` : 'улучшить вещь-цель'} — полечу, как только закончу бой/тур` : rt.mmGoSay && Date.now() - rt.mmGoSay.t < 600000 ? `✗ по кнопке не полетел: ${rt.mmGoSay.why}` : '';
   $('mmLogBox').textContent = (go ? go + '\n' : '') + (rt.mmLog || []).slice(0, 6).map(x => `${mmTime(x.t)} ${MM_KIND[x.kind] || 'кузнец'} ${x.ok ? '✓' : '✗'} ${x.why}`).join('\n');
   // 9.2.5: крафтер и почта — что лежит у крафтера, что пришло в почту, что отправить
   const C = rt.mmCraft, at = Object.entries(C?.at || {}).filter(([, n]) => n > 0), U = rt.mmMail?.unc || [], to = String(d.mmCrafter ?? 'Skye').trim() || '—';

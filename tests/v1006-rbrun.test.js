@@ -57,7 +57,7 @@ function make({ rt = {}, cfg = {} } = {}) {
   assert.ok(/rbOne: one, \.\.\.\(tour \? \{\} : \{ rbRun: \{ t0: now, mode: 'one' \}/.test(popup), '«один РБ»: новая серия только если тур не шёл');
   assert.ok(!/m === 'farm'\) await activateMode\(\{[^\n]*rbRun/.test(popup) && !/\$\('start'\)\.onclick[\s\S]{0,600}rbRun/.test(popup), '«▶ Старт» и другие режимы серию не трогают');
   assert.ok(/data-rbrun="toggle"/.test(content), 'content: /data-rbrun="toggle"/'); assert.ok(/data-rbrun="reset"/.test(content), 'content: /data-rbrun="reset"/'); assert.ok(/#l2bot-ind \.b \.bt\{pointer-events:auto/.test(content), 'content: /#l2bot-ind \.b \.bt\{pointer-events:auto/');
-  assert.ok(content.indexOf("L2V7Modules.rbrun.lines(wide, now)") < content.indexOf('const ep = epicRespTxt(wide, now); if (ep) L.push(ep);'), 'блок серии — перед «Респ эпиков»');
+  assert.ok(content.indexOf("L2V7Modules.rbrun.lines(wide, now)") < content.indexOf("const ep = epicRespTxt(wide, now); L.push(ep || '— 🏛 маммон —');"), 'блок серии — перед «Респ эпиков»');
   // 7. фон: команда rbRunSet пишет только rbRun и только со страницы игры (кнопка «↺ Новая серия» работает и без замка вкладки)
   { const store = { rt: { char: 'Warlock', zoneStat: { a: 1 }, rbRun: { t0: 5, kills: 3 } } }, L = [];
     const ev = () => ({ addListener: f => L.push(f) });
