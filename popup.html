@@ -213,7 +213,7 @@
     <button class="mod" data-task="clanTasks" title="Клановые задания: взять, помочь соклановцу, сдать — сам (раздел «Охота» → «Дейлики и клан»)">🏰 Клан</button>
     <button id="tvtToggle" class="mod" title="TvT: запись и бой 3 раза в день (прерывает любой режим)">⚔ TvT</button>
     <div class="mode-label">Дополнительно (к фарму):</div>
-    <button id="campToggle" class="mod" hidden title="7.2.1: кампания убрана — квесты игрок ведёт сам">📜 Кампания</button>
+    <button id="campToggle" class="mod" title="Сюжетные квесты (кампания): бот сам берёт главу, летит к точке, бьёт ★-цели и сдаёт у NPC. У нового героя (< 40 ур.) с непройденным «Путём новичка» включается сама — галка «★ Сюжетные квесты новичка» в «Охоте»">📜 Кампания</button>
     <button id="rbToggle" class="mod" title="Бить РБ в текущей локации между мобами">👑 РБ между мобами</button>
   </div>
   <div id="status"></div>
@@ -270,6 +270,7 @@
   <h4>Режим охоты</h4>
   <label>🔁 Цепочкой («Охотиться дальше») <input id="chain" type="checkbox"></label>
   <label>★ Искать квестовых по локации <input id="searchQuest" type="checkbox"></label>
+  <label title="10.0.10: у героя до 40 ур. с непройденным сюжетным квестом «Путь новичка» бот сам ведёт кампанию: берёт квест, летит к точке, бьёт ★-цели, жмёт «Поговорить»/«Завершить». Снять — квесты ведёте сами (как на Warlock)">★ Сюжетные квесты новичка — вести самому (герой до 40 ур.) <input id="campAuto" type="checkbox"></label>
   <div class="hint">Квесты ведёте вы (сами летите и сдаёте). Бот там, где стоит, первыми бьёт мобов квеста: ★ на карте и цели квеста профессии.</div>
   <label>⚔ Искать чемпионов по локации <input id="searchChamp" type="checkbox"></label>
   <label>Искать чемпионов раз в N боёв <input id="champEvery" type="number" min="5" style="width:60px"></label>

@@ -8,7 +8,7 @@ const content = read('content.js'), popup = read('popup.js'), html = read('popup
 assert.equal(chooseMode({ tasks: true }), 'tasks');
 assert.equal(chooseMode({}), 'farm');
 assert.equal(chooseMode({ tasks: true, fish: true }), 'fish');
-assert.match(content, /cat: !!cfg\.catMode, campaign: !!cfg\.campaign, tasks: !!cfg\.taskOnly/);
+assert.match(content, /cat: !!cfg\.catMode, campaign: campEnabled\(\), tasks: !!cfg\.taskOnly/);   // 10.0.10: кампания из меню или авто (сюжетный квест новичка)
 // 2. главный цикл: без режима и без цели фарма — стоим (задачи Маммона/квестов/TvT стоят выше в цикле)
 assert.match(content, /else if \(autonomyMode\(\) === 'tasks' && !lootGoal\(\)\) await tasksIdle\(\);\n[^\n]*tasksGoalNote[^\n]*\n\s*else if \(isMap\(\)\)/);
 assert.ok(content.indexOf("await tasksIdle();") > content.indexOf('await L2V7Modules.mammon.mmStep()'), 'tasks run before idling');

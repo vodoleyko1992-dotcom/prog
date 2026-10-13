@@ -1303,8 +1303,13 @@ async function battle() {
       const hopeless = el >= 15 && okHits >= 5 && !lagged && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
       if (hopeless || Date.now() - t0 > 180000) {
         const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
+        // 10.0.10 (лог 13.10 18:31:07, alt1 15 ур.): красный чемпион Tracker Skeleton (29 880 HP) получил «не пробиваю» на ВИД → обычные
+        // Tracker Skeleton (996 HP) 2 ч «не по зубам» и «на карту» с боя. Чемпион — свой учёт (champs.learn по итогу боя, как в 10.0.5), вид не метим
+        if (ctx.champ && !isRb) { await env.setRt({ target: null }); env.rec('B', 'цели', `${mobName()} [чемп]: не пробиваю — ${why} → ухожу (вид не метю: обычные ${mobName()} бью)`); }
+        else {
         await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [nmNow]: { t: Date.now(), ttk: isFinite(ttk) ? Math.round(ttk) : 9999, lvl: env.heroLvl(), why } }, target: null });
         env.rec('B', 'цели', `${mobName()}: не пробиваю — ${why} → ухожу, этот вид 2 ч не бью`);
+        }
         if (me && me.pct < 60) {
           // 10.0 (аудит боя): уход со страницы бой не завершает — моб бьёт дальше, баффер отвечает «Во время бою відновлення недоступне». Сначала выходим из боя
           const leave = env.$q('#battle-back-map');

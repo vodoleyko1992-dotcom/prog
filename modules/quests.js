@@ -9,11 +9,34 @@ function questLinesInLog() {
     .map(m => ({ label: m[1].replace(/[★·\s]+$/, '').trim(), done: +m[2], total: +m[3], left: m[4] != null ? +m[4] : Math.max(0, +m[3] - +m[2]) }));
 }
 
-const campActive   = () => !!env.cfg.campaign && (env.rt.campaign?.targets || []).length > 0;
+// 10.0.10 (лог 13.10 18:17–18:58, alt1 Human Fighter 12→17): игрок взял «Путь новичка» руками, бот 20 скелетов не добил —
+// кампания с 7.2.1 выключена (игрок на Warlock вёл квесты сам), кнопка «📜 Кампания» спрятана, автофарм улетел с точки квеста.
+// Теперь: сюжетный квест новичка (GET /game/story-quests/starter-saga — карта опрашивает сама) не пройден, уровень подходит и герой
+// ещё молодой (< 40) → кампания включается сама (cfg.campAuto, галка «★ Сюжетные квесты новичка — вести самому»); у Warlock 67 ничего не меняется
+const CAMP_AUTO_MAX_LVL = 40;
+function sagaNote(q) {                            // ответ /game/story-quests/starter-saga → rt.storySaga
+  if (!q || typeof q !== 'object') return;
+  const S = { id: q.questId || '', title: q.titleRu || q.titleUk || q.title || '', stage: q.stage || '', completed: !!q.completed,
+              minLevel: +q.minLevel || 0, lvl: +q.effectiveLevel || 0, tp: q.scout?.teleportId || '', t: Date.now() };
+  const o = env.rt.storySaga;
+  if (o && o.stage === S.stage && o.completed === S.completed && o.minLevel === S.minLevel && o.lvl === S.lvl && Date.now() - (o.t || 0) < 600000) return;
+  env.setRt({ storySaga: S });
+}
+function campAuto() {
+  if (env.cfg.campAuto === false || env.cfg.campaign) return false;
+  const S = env.rt.storySaga; if (!S || S.completed || S.stage === 'completed') return false;
+  const lvl = env.heroLvl() || S.lvl || 0;
+  if (!lvl || lvl < (S.minLevel || 0) || lvl >= CAMP_AUTO_MAX_LVL) return false;
+  if (env.rt.campAutoOn !== S.title) { env.setRt({ campAutoOn: S.title, campaignDue: true }); env.rec('B', 'квест', `сюжетный квест «${S.title}» не пройден (${S.stage || '?'}), герой ${lvl} ур. → веду кампанию сам (авто; снять: галка в «Охоте»)`); }
+  return true;
+}
+const campEnabled  = () => !!env.cfg.campaign || campAuto();
+
+const campActive   = () => campEnabled() && (env.rt.campaign?.targets || []).length > 0;
 
 const campOpen     = () => (env.rt.campaign?.targets || []).filter(t => !t.ok);
 
-const campMobOpen  = () => env.cfg.campaign ? campOpen().filter(t => !t.objective && !t.rb).map(t => t.name.toLowerCase()) : [];
+const campMobOpen  = () => campEnabled() ? campOpen().filter(t => !t.objective && !t.rb).map(t => t.name.toLowerCase()) : [];
 
 const campRbOpen   = () => campActive() ? campOpen().filter(t => t.rb) : [];
 
@@ -127,7 +150,7 @@ const isCampaignPage = () => !!env.rt.campaignUrl && location.pathname === env.r
 
 const isQuests = () => /\/character-quests\.html/i.test(location.pathname);
 
-const campOn = () => (!!env.cfg.campaign && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
+const campOn = () => (campEnabled() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
 
 async function goCampaign() {
   if (env.isCampaign() || /\/starter-story-quest\.html$/i.test(location.pathname)) return campaign();
@@ -136,6 +159,10 @@ async function goCampaign() {
   // туда — раз в 10 мин и всегда, когда запомненной главы в этом списке нет
   if (isQuests()) return questsStep();
   if (env.isMail() && env.rt.campaignViaMail) return mailStep();   // v5.6: «Мои квесты» пусты — путь через почту (раньше: квесты ↔ почта по кругу)
+  // 10.0.10: сюжетный квест новичка ещё идёт (storySaga) и адрес главы не запомнен — сразу на его страницу, без «Мои квесты» и почты
+  if (!env.rt.campaignUrl && env.rt.storySaga && !env.rt.storySaga.completed) {
+    env.setStatus('Кампания: открываю сюжетный квест новичка'); location.href = '/starter-story-quest.html'; await env.sleep(4000); return;
+  }
   const pathOf = h => { try { return new URL(h, location.origin).pathname; } catch (e) { return String(h || '').split('?')[0]; } };
   const QL = env.rt.questList || [], inList = !!env.rt.campaignUrl && QL.some(q => q.href && pathOf(env.rt.campaignUrl) === pathOf(q.href));
   if (!env.rt.questListT || Date.now() - env.rt.questListT > 10 * 60000 || (env.rt.campaignUrl && !inList)) {
@@ -153,21 +180,7 @@ async function goCampaign() {
     const actBtn = [...document.querySelectorAll('#starter-story-actions button[data-action], [id$="-actions"] button[data-action], .l2-captain-andrei-btn[data-action]')]
       .find(b => env.shown(b) && !b.disabled && b.dataset.action !== 'complete-chapter');
     if (actBtn && (env.rt.campActTry || 0) < 4) {
-      const lbl = (actBtn.textContent || '').trim().slice(0, 40), tries = (env.rt.campActTry || 0) + 1;
-      await env.setRt({ campActTry: tries });
-      env.setStatus(`Кампания: «${lbl}»`);
-      env.rec('B', 'кампания', `глава ждёт действия — жму «${lbl}» (${actBtn.dataset.action})`);
-      const before = (document.querySelector('[class*="quest-body"]')?.textContent || '').length;
-      await env.pause(); env.fire(actBtn);
-      const res = await env.waitFor(() => env.isCampaign() ? 'ok' : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })()
-        || ((document.querySelector('[class*="quest-body"]')?.textContent || '').length !== before ? 'changed' : null), 6000, 200);
-      if (res === 'ok') { await env.setRt({ campActTry: 0, campOpenTry: 0 }); return campaign(); }
-      if (res === 'err') {
-        const err = env.$q('[id$="-err"]').textContent.trim().slice(0, 100);
-        const tpb = env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]');
-        env.rec('B', 'кампания', `«${lbl}»: ${err}${tpb ? ' → телепорт к точке главы' : ''}`);
-        if (tpb) { await env.pause(); env.fire(tpb); await env.sleep(env.rnd(1500, 2500)); await env.setRt({ lastTeleport: '' }); if (env.on && !isCampaignPage()) { location.href = env.rt.campaignUrl; await env.sleep(4000); } }
-      }
+      if (await pressAction(actBtn) === 'ok' && env.isCampaign()) return campaign();   // 10.0.10: общий код с campaign()
       return;                                       // следующий проход: глава открыта / снова кнопка
     }
     if (actBtn) { env.rec('B', 'кампания', 'кнопка действия главы 4 раза не помогла — фармлю, проверю позже'); await env.setRt({ campActTry: 0, questListT: 0, campaignDue: false, sinceCamp: Math.max(0, (env.cfg.campaignEvery || 25) - 10) }); return env.goOutskirts(); }
@@ -229,6 +242,32 @@ async function mailStep() {                      // почта → карточ�
   if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000))) return env.goOutskirts();
 }
 
+const actionBtn = () => [...document.querySelectorAll('#starter-story-actions button[data-action], [id$="-actions"] button[data-action], .l2-captain-andrei-btn[data-action]')]
+  .find(b => env.shown(b) && !b.disabled && b.dataset.action !== 'complete-chapter');
+
+// 10.0.10: кнопка действия главы («Взять квест», «Поговорить»…): жмём, ждём цели / ошибку / смену текста; ошибка «не у NPC» →
+// кнопка телепорта к точке главы и повтор на следующем проходе. Общий код для goCampaign и campaign
+async function pressAction(actBtn) {
+  const lbl = (actBtn.textContent || '').trim().slice(0, 40), tries = (env.rt.campActTry || 0) + 1;
+  await env.setRt({ campActTry: tries });
+  env.setStatus(`Кампания: «${lbl}»`);
+  env.rec('B', 'кампания', `глава ждёт действия — жму «${lbl}» (${actBtn.dataset.action}, ${tries}/4)`);
+  const before = (document.querySelector('[class*="quest-body"]')?.textContent || '').length;
+  await env.pause(); env.fire(actBtn);
+  const res = await env.waitFor(() => campaignState().targets.some(t => !t.ok) || env.shown(env.$q('[data-action="complete-chapter"]')) ? 'ok'
+    : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })()
+    || ((document.querySelector('[class*="quest-body"]')?.textContent || '').length !== before ? 'changed' : null), 6000, 200);
+  if (res === 'ok') { await env.setRt({ campActTry: 0, campOpenTry: 0 }); return 'ok'; }
+  if (res === 'err') {
+    const err = env.$q('[id$="-err"]').textContent.trim().slice(0, 100);
+    const tpb = env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]')
+      || [...document.querySelectorAll('[data-quest-teleport-id], [data-quest-transport-id]')].find(env.shown);
+    env.rec('B', 'кампания', `«${lbl}»: ${err}${tpb ? ' → телепорт к точке главы' : ''}`);
+    if (tpb) { await env.pause(); env.fire(tpb); await env.sleep(env.rnd(1500, 2500)); await env.setRt({ lastTeleport: '' }); if (env.on && !isCampaignPage() && env.rt.campaignUrl) { location.href = env.rt.campaignUrl; await env.sleep(4000); } }
+  }
+  return res;
+}
+
 function campaignState() {
   const targets = [...document.querySelectorAll('li.l2-starter-story-target')].map(li => {
     const pr = (li.querySelector('.l2-starter-story-progress')?.textContent || li.textContent).match(/(\d+)\s*\/\s*(\d+)/);
@@ -272,10 +311,18 @@ async function campaign() {
     if (!env.on) return;
   }
   env.setStatus('Кампания: читаю главу');
-  if (env.rt.campOpenTry || env.rt.campActTry) env.setRt({ campOpenTry: 0, campActTry: 0 });
-  await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources'), 10000, 300);
+  await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources, #starter-story-actions button[data-action]'), 10000, 300);
   if (!env.on) return;
   let st = campaignState();
+  // 10.0.10 (лог 13.10 18:17:15): страница «Путь новичка» до принятия — целей нет, только «Взять квест» (#starter-story-actions
+  // button[data-action=accept]); между этапами — «Поговорить» и т.п. Раньше такая страница считалась «главой без целей» и кампания
+  // замирала на 10 мин (кнопку жал только goCampaign, а сюда ведёт сам адрес страницы). Жмём кнопку сами, до 4 раз
+  if (!st.targets.some(t => !t.ok) && !env.shown(st.complete)) {
+    const btn = actionBtn();
+    if (btn && (env.rt.campActTry || 0) < 4) { await pressAction(btn); return; }
+    if (btn) { env.rec('B', 'кампания', 'кнопка действия главы 4 раза не помогла — фармлю, проверю через 10 мин'); await env.setRt({ campActTry: 0, campaignDue: false, campSkipUntil: Date.now() + 10 * 60000 }); return env.goOutskirts(); }
+  }
+  if (env.rt.campOpenTry || env.rt.campActTry) env.setRt({ campOpenTry: 0, campActTry: 0 });
   if (!st.targets.length && !env.shown(st.complete)) {
     const count = (env.rt.campEmptyPage || 0) + 1;
     await env.setRt({ campEmptyPage: count, campaignDue: false,
@@ -284,7 +331,7 @@ async function campaign() {
     return env.goOutskirts();
   }
   if (env.rt.campEmptyPage) await env.setRt({ campEmptyPage: 0, campSkipUntil: 0 });
-  if (!env.cfg.campaign) {                           // разовая проверка из меню: только прочитать и вернуться
+  if (!campEnabled()) {                              // разовая проверка из меню: только прочитать и вернуться
     await env.setRt({ campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, campOnce: false, sinceCamp: 0,
                   campaignUrl: location.pathname + location.search });
     env.rec('B', 'кампания', `разовая проверка: ${st.title || '?'} · ` + st.targets.map(t => `${t.name} ${t.done}/${t.total}${t.ok ? ' ✓' : ''}`).join(' · '));
@@ -357,6 +404,6 @@ async function campaign() {
   }
   return env.goOutskirts();
 }
- return { questLinesInLog, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
+ return { questLinesInLog, sagaNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
  };
 })(globalThis);

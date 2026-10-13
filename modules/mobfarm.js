@@ -220,10 +220,10 @@ async function nextFight(ctx) {
   }
   if (env.campOn() && env.rt.campaignDue) return env.goCampaign();
   // фарм ресурса (меню или «Нужно сдать» главы): не в той зоне — летим с форума «Фарм ресурсов»
-  if ((env.cfg.farmRes || env.cfg.campaign || env.resQuests().length) && !rbHold() && !ctx?.rb && !env.campMobOpen().length && await env.farmStep()) return;
+  if ((env.cfg.farmRes || env.campEnabled() || env.resQuests().length) && !rbHold() && !ctx?.rb && !env.campMobOpen().length && await env.farmStep()) return;
   if (env.cfg.recipeRes && !rbHold() && !ctx?.rb && !env.campMobOpen().length && await env.recipeStep()) return;   // охота на рецепт
   // сам подбирает локацию для кача (не в кампании/РБ/рыбалке): проба новых подходящих зон, затем лучшая по EXP/ч
-  if (env.cfg.zoneAuto && !env.cfg.campaign && !rbHold() && !ctx?.rb && !env.lootGoal?.() && Date.now() - (env.rt.zoneGoT || 0) > 600000) {   // 7.2: цель ресурса/рецепта держит на месте
+  if (env.cfg.zoneAuto && !env.campEnabled() && !rbHold() && !ctx?.rb && !env.lootGoal?.() && Date.now() - (env.rt.zoneGoT || 0) > 600000) {   // 7.2: цель ресурса/рецепта держит на месте
     if ((!env.rt.zoneCatT || env.zoneCatThin() || Date.now() - env.rt.zoneCatT > 24 * 3600000) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) { await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return; }
     const pick = env.zonePick();
     // 10.0 (лог 12.10 12:00:05–12:00:16): метка «▶ при старте» из меню оставалась — карта выбирала зону второй раз сразу после полёта

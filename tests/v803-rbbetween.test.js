@@ -49,7 +49,7 @@ assert.doesNotMatch(popup, /: \{ rbHuntMode: false \}\) \};/, 'turning the add-o
 assert.equal((popup.match(/paintRbToggle\(d\);/g) || []).length, 2);
 assert.match(popup, /b\.classList\.toggle\('on', !!d\.rbBetween\); b\.classList\.toggle\('susp', susp\);/);
 assert.match(popup, /const mods = \[rbEff\(d\) && m !== 'rb' && 'РБ между мобами'/);
-assert.match(popup, /const mods = \[d\.campaign && '📜 кампания', rbEff\(d\) && m !== 'rb' && '👑 РБ между мобами'/);
+assert.match(popup, /const mods = \[d\.campaign \? '📜 кампания' : \(d\.campAuto !== false && rt\?\.campAutoOn && `📜 кампания \(авто: /);   // 10.0.10: + «кампания (авто)» по сюжетному квесту новичка
 assert.match(popup, /tile\('modeRbState', m === 'rb' \|\| rbEff\(d\)\);/);
 assert.doesNotMatch(popup, /d\.rbMode/, 'no summary reads the stored flag');
 assert.match(read('ui-v7.css'), /#rbToggle\.on\.susp\{/);
