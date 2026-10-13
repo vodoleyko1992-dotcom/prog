@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.6",
-  "description": "L2wap Bot 10.0.6 — откат рыбалки по серверу, «📦 Серия РБ» в окне бота",
+  "version": "10.0.7",
+  "description": "L2wap Bot 10.0.7 — ценность баффов FA по цифрам, автофарм под апгрейд, мобы-снимающие-баффы, окно уровней −5…+5, катакомбы",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -122,5 +122,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.6"
+  "version_name": "10.0.7"
 }

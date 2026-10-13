@@ -2,7 +2,7 @@
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
 
-- [10.0.7 (в работе)](docs/changelog/CHANGELOG-10.0.7.md)
+- [L2wap Bot 10.0.7 (собрана 13.10 по «сборка»; PR #69–#79)](docs/changelog/CHANGELOG-10.0.7.md)
 - [L2wap Bot 10.0.6 (собрана 13.10 по «сборка»; PR #66, #67)](docs/changelog/CHANGELOG-10.0.6.md)
 - [L2wap Bot 10.0.5 (собрана 13.10 по «Сборка»; PR #54–#64)](docs/changelog/CHANGELOG-10.0.5.md)
 - [L2wap Bot 10.0.4 (собрана 12.10 по «сборка»)](docs/changelog/CHANGELOG-10.0.4.md)
