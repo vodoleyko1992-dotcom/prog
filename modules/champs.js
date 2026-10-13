@@ -77,20 +77,40 @@ function limitS(c) {
   if (!r || !(r.eps > 0) || !(r.sk > 0) || !(c.exp > 0)) return T_DEF[c.tier] || T_DEF.blue;
   return Math.round(Math.max(15, Math.min(300, c.exp / r.eps + p * r.sk / FA_MOB)));
 }
-// решение до боя: { ok, probe, eta, lim, why }
-function judge(c) {
-  const tier = TIER_RU[c.tier] ? c.tier : 'blue', lim = limitS(c), gap = (c.lvl || 0) - L(), hard = isHard(c), key = tKey(c);
-  const d = dpsOn(hard), hn = hard ? ' (73+: HP ×3, защита ×4)' : '';
-  const sec = c.hp > 0 && d.dps > 0 ? Math.min(lim * 2, c.hp / d.dps + 2) : lim;   // ожидаемая длина боя для цены «Cancel»
-  const cb = cancelBlock(c, sec, lim);
-  if (cb) return { ok: false, lim, cancel: true, why: `снимает баффы (${TIER_RU[tier]}: ${Math.round(cb.p * 100)} % за удар, до ${CANCEL_MAX} за раз)${cb.never ? ' — таких не бью (настройка)' : ` — платных за FA висит ${cb.paid}, за ≈${Math.round(sec)} с боя потеряю ≈${cb.buffs} (≈${cb.s} с фарма при цене чемпиона ${lim} с)`}` };
+// 10.0.10 (игрок 13.10 11:33: «включены нападения на красных, которые кидают кансел, мы договаривались их избегать… добавь опции, каких
+// чемпионов бить, а каких нет, особенно на лоу лвлах»): галки по цвету (cfg.champBlue/champOrange/champRed; красные по умолчанию ВЫКЛ) и
+// «чемпионов не бить, пока герой ниже N ур.» (cfg.champMinLvl, по умолчанию 20) → строка причины или null
+const TIER_CFG = { blue: 'champBlue', orange: 'champOrange', red: 'champRed' }, TIER_DEF = { blue: true, orange: true, red: false };
+function tierOff(c) {
+  const t = TIER_RU[c?.tier] ? c.tier : 'blue', v = env.cfg?.[TIER_CFG[t]];
+  if (!(v ?? TIER_DEF[t])) return `${TIER_RU[t]} — таких не бью (настройка «Каких чемпионов бить»)`;
+  const minL = +(env.cfg?.champMinLvl ?? 20) || 0, hl = L();
+  if (minL > 0 && hl > 0 && hl < minL) return `герой ${hl} ур. — чемпионов бью с ${minL} ур. (настройка)`;
+  return null;
+}
+// вердикт прошлого боя с таким чемпионом ещё держит? → строка причины или null (10.0.10: и для цепочки «Охотиться дальше» в combat —
+// игрок 13.10 11:33: «уходит от чемпиона и возвращается к нему же»)
+function held(c) {
+  const key = tKey(c), gap = (c.lvl || 0) - L();
   const v = mem().v?.[key];
   if (v) {
     const fresh = Date.now() - (+v.t || 0) < V_HOLD, lvlUp = v.pow?.lvl > 0 && L() > v.pow.lvl;
     const sameOrHarder = c.lvl ? gap >= (v.gap ?? -99) : true;   // уровень чемпиона неизвестен — считаем, что это тот же
     if (sameOrHarder && (fresh ? !lvlUp : !grown(v.pow)))
-      return { ok: false, lim, why: `${v.why} — жду роста силы (ур. ${v.pow?.lvl || '?'}, урон ${v.pow?.base || '?'})${fresh && !lvlUp ? `, не раньше чем через ${Math.ceil((V_HOLD - (Date.now() - (+v.t || 0))) / 60000)} мин` : ''}` };
+      return `${v.why} — жду роста силы (ур. ${v.pow?.lvl || '?'}, урон ${v.pow?.base || '?'})${fresh && !lvlUp ? `, не раньше чем через ${Math.ceil((V_HOLD - (Date.now() - (+v.t || 0))) / 60000)} мин` : ''}`;
   }
+  return null;
+}
+// решение до боя: { ok, probe, eta, lim, why }
+function judge(c) {
+  { const off = tierOff(c); if (off) return { ok: false, off: true, lim: 0, why: off }; }
+  const tier = TIER_RU[c.tier] ? c.tier : 'blue', lim = limitS(c), gap = (c.lvl || 0) - L(), hard = isHard(c), key = tKey(c);
+  const d = dpsOn(hard), hn = hard ? ' (73+: HP ×3, защита ×4)' : '';
+  const sec = c.hp > 0 && d.dps > 0 ? Math.min(lim * 2, c.hp / d.dps + 2) : lim;   // ожидаемая длина боя для цены «Cancel»
+  const cb = cancelBlock(c, sec, lim);
+  if (cb) return { ok: false, lim, cancel: true, why: `снимает баффы (${TIER_RU[tier]}: ${Math.round(cb.p * 100)} % за удар, до ${CANCEL_MAX} за раз)${cb.never ? ' — таких не бью (настройка)' : ` — платных за FA висит ${cb.paid}, за ≈${Math.round(sec)} с боя потеряю ≈${cb.buffs} (≈${cb.s} с фарма при цене чемпиона ${lim} с)`}` };
+  { const h = held(c); if (h) return { ok: false, lim, why: h }; }
+
   if (!(c.hp > 0) || !(d.dps > 0)) return { ok: true, probe: true, lim, hard, why: 'цифр нет — проба' + hn };
   const eta = Math.round(c.hp / d.dps + 2);
   if (eta <= lim) return { ok: true, probe: !d.known, eta, lim, hard, why: d.known ? '' : 'своего замера нет — проба' + hn };
@@ -132,6 +152,6 @@ async function learn(ctx, outcome, dealt, sec) {
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, fleeCheck, learn };
+ return { FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

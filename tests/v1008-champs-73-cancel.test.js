@@ -7,7 +7,7 @@ const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const load = (file, env) => { const ctx = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise }; ctx.globalThis = ctx;
   vm.runInNewContext(read(file), ctx); return ctx.L2V7Factories[path.basename(file, '.js')](env); };
 let paid = 0;
-const env = { cfg: {}, rt: { lvl: 70, rbDps: 3000 }, heroLvl: () => 70, farmRate: () => ({ eps: 5600, sk: 1.5 }), faPaidLeft: () => paid, setRt: async p => Object.assign(env.rt, p) };
+const env = { cfg: { champRed: true, champMinLvl: 0 }, rt: { lvl: 70, rbDps: 3000 }, heroLvl: () => 70, farmRate: () => ({ eps: 5600, sk: 1.5 }), faPaidLeft: () => paid, setRt: async p => Object.assign(env.rt, p) };
 const C = load('modules/champs.js', env);
 (async () => {
   // 1. усиленный 73+ — отдельный класс: без своего замера ДПС делится на 4 (защита ×4) → Hot Springs Yeti 75 (476 тыс. HP) безнадёжен
@@ -52,7 +52,7 @@ const C = load('modules/champs.js', env);
   env.cfg.champCancel = 'always'; paid = 5; assert.ok(C.judge({ tier: 'red', lvl: 68, hp: 144648, exp: 206790, fa: 0.6 }).ok);
   env.cfg.champCancel = 'paid'; paid = 0;
   // 5. buffs: оранжевый/красный чемпион — не в память снятий как «свойство вида» (cancelRisk → null), журнал называет правило игры
-  const recs = [], benv = { cfg: {}, rt: {}, $q: () => null, TB_KEYS: {}, IL: {}, setRt: async p => Object.assign(benv.rt, p), rec: (...a) => recs.push(a.join(' ')), FA_KNOWN: {}, faCost: () => 1, sleep: async () => {} };
+  const recs = [], benv = { cfg: { champRed: true, champMinLvl: 0 }, rt: {}, $q: () => null, TB_KEYS: {}, IL: {}, setRt: async p => Object.assign(benv.rt, p), rec: (...a) => recs.push(a.join(' ')), FA_KNOWN: {}, faCost: () => 1, sleep: async () => {} };
   const sb = { console, Date, Math, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/map.html', href: '' } }; sb.globalThis = sb;
   vm.runInNewContext(read('modules/buffs.js'), sb); const B = sb.L2V7Factories.buffs(benv);
   assert.equal(B.cancelNote(['[Hot Springs Yeti] зняв з вас 3 бафи.'], 'Hot Springs Yeti', { champ: true, tier: 'red' }), 3);

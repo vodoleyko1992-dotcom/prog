@@ -90,7 +90,7 @@ const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь нови
   assert.match(mobfarm, /env\.campEnabled\(\)/); assert.match(content, /get campEnabled\(\) \{ return campEnabled; \}/);
   assert.doesNotMatch(mobfarm, /env\.cfg\.campaign\b/, 'mobfarm — только через campEnabled');
   assert.doesNotMatch(html, /id="campToggle" class="mod" hidden/, 'кнопка «📜 Кампания» снова видна');
-  assert.match(html, /id="campAuto" type="checkbox"/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto',/); assert.match(popup, /, campAuto: true \};/);
+  assert.match(html, /id="campAuto" type="checkbox"/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto',/); assert.match(popup, /, campAuto: true[,}]/);
   assert.match(popup, /function paintModes\(d, on, rt = \{\}\)/); assert.match(popup, /paintModes\(d, on, rt\)/);
   assert.equal(JSON.parse(src('base-profile.json')).cfg.campAuto, true);
   // 6. чемпион «не пробиваю» за 15 с — вид не метим (combat.battle)

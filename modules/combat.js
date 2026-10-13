@@ -889,6 +889,12 @@ async function battle() {
     if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
         && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
       env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
+  // 10.0.10 (игрок 13.10 11:33): «Охотиться дальше» подсовывает чемпиона цвета, который выключен в «Каких чемпионов бить» (или герой ниже
+  // порога уровня), — нетронутый бой не начинаем, на карту. ★ квест и чемпион главы — бьём
+  if (ctx.champ && !isRb && !ctx.questKill && !(env.campActive() && env.campChampOpen()) && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
+    const off = env.champs?.tierOff?.(ctx) || env.champs?.held?.(ctx);   // и вердикт прошлого отхода («жду роста силы»)
+    if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
+  }
   ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm; ctx.okN0 = env.actNet?.()?.okN || 0;   // 10.0.8: принятые ходы на старте замера «не по зубам»
   if (isRb) {
     ctx.champ = false;                                      // «Оглушення не діє на РБ» (лог 07.10) — стан по РБ не используем
