@@ -10,7 +10,7 @@ const { createBattleCooldown } = require('../battle-cooldown.js');
 // 1. act(): клик только когда игра свободна — нет её запросов в полёте (GET /character после хода) и прошёл запас после последнего ответа /
 // конца запроса; потеря сразу после освобождения → 'lock' (без «занят 0,7 с») и запас больше; быстро дошёл → запас меньше
 const actSrc = combat.slice(combat.indexOf('  let lastHpPot = 0, lastMpPot = 0'), combat.indexOf('  const t0 = Date.now();\n  let progSig'));
-assert.ok(actSrc.includes('const act = async (b, status) =>'), 'act() extracted');
+assert.ok(actSrc.includes('const act = async (b, status, hpGuard = false) =>'), 'act() extracted');
 const consts = combat.match(/const LOCK_A = \[60, 500, 120\], LOCK_B = \[30, 200, 50\];/)[0];
 const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   let now = 1_000_000; const fired = [], rtW = [];
