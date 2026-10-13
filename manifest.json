@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.5",
-  "description": "L2wap Bot 10.0.5 — чемпионы ради FA, мобы не ниже героя −5, лечение при критическом HP, эпики без предела по времени",
+  "version": "10.0.6",
+  "description": "L2wap Bot 10.0.6 — откат рыбалки по серверу, «📦 Серия РБ» в окне бота",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -120,5 +120,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.5"
+  "version_name": "10.0.6"
 }
