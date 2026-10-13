@@ -13,6 +13,9 @@
     mage: [
       [1413, 'урон', "Magnus' Chant: M.Atk +30 % (≈+14 % урона заклинаний, кот — по M.Atk), M.Def +30 %"],
       [1323, 'защита', 'Noblesse Blessing: смерть снимает только его, остальные баффы остаются'],
+      // 10.0.7 (игрок 13.10 03:07, цифры /character 13.10: шанс маг. крита 17 % под Prophecy of Water + Siren, крит ×2,0):
+      // Prophecy of Water в наборе — M.Atk +20 % и шанс маг. крита ×2 (≈+15 % ДПС за 5 FA); сняла ли она Magnus — заметит rt.faClash
+      [1357, 'урон', 'Prophecy of Water: M.Atk +20 %, шанс маг. крита ×2 (подсказка игры «+100 %»)'],
       [365, 'урон', 'Dance of Siren: шанс маг. крита (крит ≈×1,9 урона)'],
       [1303, 'урон', 'Wild Magic Lv.2: шанс маг. крита'],
       [273, 'урон', 'Dance of Mystic: M.Atk группы (и кот)'],
@@ -25,6 +28,9 @@
       [1045, 'защита', 'Благословение тела Lv.6 (в городе Lv.5, HP +10 %)'],
       [304, 'защита', 'Song of Vitality: Max HP группы'],
       [1389, 'защита', 'Great Shield Lv.3: P.Def +5 %'],
+      // 10.0.7: кот — ≈30 % урона Warlock; Blessing of Queen Lv.3 (крит кота 50 → 80 %, сила крита +25 %) = ≈×1,4 коту. Бот ставит
+      // свой (Summon Feline Queen, 2 мин) — тогда модель ценности даёт ≈0 и бафф за FA не берётся (buff-value plan, minGain)
+      [4699, 'урон', 'Blessing of Queen Lv.3: крит кота +30 %, урон крита +25 % (если свой бафф Королевы не ставится)'],
     ],
     fighter: [
       [1414, 'урон', "Victories of Pa'agrio: HP, атака, защита, скорость, крит, резисты"],
@@ -56,10 +62,12 @@
   const COST = { 1413: 5, 1414: 5, 1363: 5, 1356: 5, 1357: 5, 1355: 5, 1323: 5 };
   const kind = role => (role && role.mage) || role === 'mage' ? 'mage' : 'fighter';
   const isAuto = v => { const s = String(v ?? '').trim(); return !s || /^(auto|авто)$/i.test(s); };
-  const ids = role => SETS[kind(role)].map(x => x[0]);
-  const cost = (role, costOf) => ids(role).reduce((a, id) => a + (+(costOf ? costOf(id) : 0) || COST[id] || 1), 0);
+  // 10.0.7: есть цифры героя (S из buff-value.js fromRt) — порядок покупки по прибавке ДПС на 1 FA (Noblesse первым, урон по ценности,
+  // темп, защита как в списке); бафф, что ДПС не прибавляет (< 0,5 %: Королева при своём баффе кота), за FA не берётся
+  const ids = (role, S) => { const V = G.L2BuffVal, L = SETS[kind(role)].map(x => x[0]); return S && V ? V.plan(L, S, null, id => COST[id] || 0).map(x => x.id) : L; };
+  const cost = (role, costOf, S) => ids(role, S).reduce((a, id) => a + (+(costOf ? costOf(id) : 0) || COST[id] || 1), 0);
   // список «баффы РБ-сессии / эпиков»: «auto» (или пусто) — набор под класс, иначе номера игрока как есть
-  const resolve = (v, role) => isAuto(v) ? ids(role) : String(v).split(/[,\s]+/).map(x => +x).filter(x => x > 0);
+  const resolve = (v, role, S) => isAuto(v) ? ids(role, S) : String(v).split(/[,\s]+/).map(x => +x).filter(x => x > 0);
   // покупка X сняла Y (rt.faClash { X: [Y…] }) — из пары оставляем того, кто раньше в списке
   function dropClash(list, clash) {
     const C = clash || {}, out = [];

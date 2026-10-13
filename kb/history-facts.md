@@ -252,3 +252,4 @@
 - Живой вход Claude в игру: окружение отказалось записывать пароль из чата; предложены переменные окружения `L2WAP_LOGIN` / `L2WAP_PASSWORD` и смена пароля. Правило игрока: без трат CoL и FA.
 - Королева Муравьёв недоступна при герое 54 (minRaidBossLevel 45?) — сверить формулу.
 - Почему ответ на ход иногда давал VT «урон 0» (А 23:41).
+- **[13.10 03:10 UTC, GET /character из облака]** Warlock 67: M.Atk 9 014 (под Prophecy of Water, Dance of Mystic, Berserker Lv.1, Empower Lv.2, Serафим; Magnus не висел), P.Atk 1 678, INT 45 / WIT 20 / MEN 34, `mCritPct` 17 (вместе с Water ×2 и Siren → база ≈4 %), сила маг. крита ×2,0 (magicCritPowerPct 4,5), физ. крит 68 (6,8 %), каст 3 500, HP 6 940, MP 5 196. Кот Kai: P.Atk 3 019, critRate 500 (50 %), critDmgMul 2,44, точность 70, свой Blessing of Queen Lv.2 «+22 % Crit Damage слуги». Баланс FA 2. Каталог баффера FA без изменений (Greater по 5 FA, описания без цифр).
