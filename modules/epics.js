@@ -680,7 +680,7 @@ async function epicStep() {
     // 8.0.3: заходами — только если подтверждено, что HP эпика между заходами сохраняется (замер на повторном входе, combat);
     // иначе ждём следующего появления: смерть стоит опыта и платных баффов, а второй платный заход за появление запрещён
     if (db0.persist !== true) return epicGiveUpNext(E.k, `смерть${pct != null ? ` (у него ${pct} %)` : ''}, а сохранение HP эпика между заходами не подтверждено`);
-    if (deaths >= Math.max(1, +env.cfg.epicMaxDeaths || 3)) return epicGiveUpNext(E.k, `${deaths} смертей${pct != null ? `, у него осталось ${pct} %` : ''}`);
+    if (deaths >= Math.max(1, +env.cfg.epicMaxDeaths || 5)) return epicGiveUpNext(E.k, `${deaths} смертей${pct != null ? `, у него осталось ${pct} %` : ''}`);
     const attemptChip = last?.cur != null && last?.max && E.startHp != null ? Math.max(0, E.startHp - last.cur) / last.max : null;
     if (attemptChip != null && attemptChip < 0.005) return epicGiveUpNext(E.k, `за последний заход снято только ${(attemptChip * 100).toFixed(2)} % HP эпика — повторять смерти нецелесообразно`);
     if (L.length >= 3) {
@@ -688,7 +688,7 @@ async function epicStep() {
       if (a.max && b.max && a.cur - b.cur < a.max * 0.01) return epicGiveUpNext(E.k, `3 захода почти не снимают ему HP (${Math.round(a.cur / a.max * 100)} % → ${Math.round(b.cur / b.max * 100)} %) — отхиливается быстрее`);
     }
     if ((E.resetN || 0) >= 2) return epicGiveUpNext(E.k, 'HP эпика восстанавливается полностью после каждой смерти — заходами не добить');
-    env.rec('B', 'эпики', `${e.nm}: смерть ${deaths}/${env.cfg.epicMaxDeaths || 3}${pct != null ? ` · у него ${pct} %` : ''} → хил, банки, бафф и снова к нему (только бесплатно или логово)`);
+    env.rec('B', 'эпики', `${e.nm}: смерть ${deaths}/${env.cfg.epicMaxDeaths || 5}${pct != null ? ` · у него ${pct} %` : ''} → хил, банки, бафф и снова к нему (только бесплатно или логово)`);
     await env.setRt({ epic: { ...E, step: 'prep', deaths, died: false, noPay: true, mapChecked: false, at: now, t: now }, rbCur: null, rbWant: null, target: null });
     return;
   }

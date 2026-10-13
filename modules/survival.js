@@ -51,7 +51,7 @@ async function onDeath() {
   if (!env.cfg.autoRevive) return env.halt('Персонаж погиб');
   // 🐉 в фарме эпиков смерть — часть плана (заходы); предел — «смертей на эпика» в самом режиме. 8.0.3: общий стоп — пока эпик начат
   // (rt.epic.step ≠ «выбор»): 2 × «смертей на эпика» (не больше 20) за час; между эпиками (фарм мобов) — обычные 3 за 30 мин
-  const epicNow = env.epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick', epicCap = Math.min(20, 2 * Math.max(1, +env.cfg.epicMaxDeaths || 3));
+  const epicNow = env.epicOn() && !!env.rt.epic?.k && env.rt.epic.step !== 'pick', epicCap = Math.min(20, 2 * Math.max(1, +env.cfg.epicMaxDeaths || 5));
   if (epicNow ? [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000).length >= epicCap : deaths.length >= 3) return env.halt(epicNow ? `${epicCap} смертей за час на эпиках — бот остановлен` : '3 смерти за 30 минут — бот остановлен (проверьте уровень целей и настройки)');
   // 8.0.3: смерть от любого босса (и в ручном бою, и в «Фарме РБ») — в счёт «2 смерти за час — за Coin of Luck не захожу» (epics)
   if (env.epicOn() || rbId) await env.setRt({ deaths1h: [...(env.rt.deaths1h || []), Date.now()].filter(t => Date.now() - t < 3600000) });
