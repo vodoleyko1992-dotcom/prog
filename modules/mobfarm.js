@@ -199,8 +199,21 @@ async function nextFight(ctx) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (hunt) {
         env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
-        const href = location.href; env.fire(hunt);
-        if (await env.waitFor(() => location.href !== href || (!env.victory() && (env.mobHp()?.cur || 0) > 0), 8000) || !env.on) return;
+        const href = location.href, t0 = Date.now(); env.fire(hunt);
+        const started = () => (location.href !== href && !/\/dungeon\.html/i.test(location.pathname)) || (!env.victory() && (env.mobHp()?.cur || 0) > 0);
+        let ok = await env.waitFor(started, 8000, 50);
+        // 10.0 (карта): запрос hunt-continue ещё в полёте — ждём ответ до 15 с, а не уходим
+        const net = env.actNet?.();
+        if (!ok && env.on && net && net.huntT >= t0 && !((net.huntDoneT || 0) >= net.huntT)) ok = await env.waitFor(started, 7000, 50);
+        if (ok || !env.on) return;
+        // 10.0.7 (игрок 13.10 03:20: «в катакомбах не работает кнопка охотиться дальше»; код игры battle.js huntContinueManual): в подземелье
+        // отказ сервера на hunt-continue игра не показывает — молча уводит на страницу подземелья (/dungeon.html). Бот считал «бой начался»
+        // по смене адреса, а дальше ничего не писал. Теперь: причина в журнал (раз в 10 мин), следующий моб — из списка подземелья
+        const E = env.NET_ERR, err = E && E.t >= t0 && /hunt-continue/.test(E.path || '') ? E.err : '';
+        if (Date.now() - (env.rt.catHuntNoteT || 0) > 600000) {
+          env.rec('B', 'катакомбы', `«Охотиться дальше» в подземелье не сработало${err ? ` (сервер: ${String(err).slice(0, 60)})` : ''} — следующий моб беру из списка подземелья`);
+          env.setRt({ catHuntNoteT: Date.now() });
+        }
       }
     }
     return env.catGo();
