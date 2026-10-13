@@ -23,12 +23,12 @@ const load = (f, extra = {}) => { const sb = { console, Date, Math, JSON, Object
 // 2. простой «Целей нет»: отсчёт, запись через 3 мин, повтор не чаще 10 мин, сброс при цели
 {
   const mf = read('modules/mobfarm.js');
-  assert.match(mf, /let farRecT = 0, lowRecT = 0, idleT0 = 0, idleRecT = 0;/);
+  assert.match(mf, /let farRecT = 0, lowRecT = 0, idleT0 = 0, idleRecT = 0, idleN = 0;/);   // PR #90: + idleN (растущая пауза)
   assert.match(mf, /if \(!idleT0\) idleT0 = Date\.now\(\);\n\s+else if \(Date\.now\(\) - idleT0 > 180000 && Date\.now\(\) - idleRecT > 600000\) \{/);
   assert.match(mf, /целей нет уже \$\{Math\.round\(\(now - idleT0\) \/ 60000\)\} мин: на карте \$\{items\.length\} мобов — \$\{nHard\} «не по зубам» \(2 ч\), \$\{nLow\} ниже героя −5, \$\{nHigh\} выше окна`/);
   assert.match(mf, /подбор локации ВЫКЛ: включите «🗺 Автофарм» или смените оружие\/зону сами/);
-  assert.ok(mf.indexOf('idleT0 = 0;                                    // 10.0.10: цели есть') > mf.indexOf("env.setStatus('Целей нет, обновлю карту через 15 с');"), 'сброс отсчёта стоит у выбора цели');
-  const before = mf.slice(0, mf.indexOf("env.setStatus('Целей нет, обновлю карту через 15 с');"));
-  assert.match(before.slice(-1600), /if \(!cands\.length\) \{\n\s+\/\/ 10\.0\.10/, 'подсказка — в той же ветке «целей нет»');
+  assert.ok(mf.indexOf('idleT0 = 0; idleN = 0;                         // 10.0.10: цели есть') > mf.indexOf("env.setStatus(`Целей нет, обновлю карту через ${wait} с`);"), 'сброс отсчёта стоит у выбора цели');
+  const before = mf.slice(0, mf.indexOf("env.setStatus(`Целей нет, обновлю карту через ${wait} с`);"));
+  assert.match(before.slice(-2200), /if \(!cands\.length\) \{\n\s+\/\/ 10\.0\.10/, 'подсказка — в той же ветке «целей нет»');
 }
 console.log('PASS: 10.0.10 alt — adena reserve capped at half the purse, idle «Целей нет» loop explained in the journal');
