@@ -827,6 +827,11 @@ async function battle() {
   if (nm && mob0 && !(same && t.champ))
     env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');
+  // 10.0.5 (FA с чемпионов): цвет чемпиона и уровень моба — для учёта выпавших Fast Aden (loot.faNote)
+  // (в цепочке «Охотиться дальше» spawnId в адресе — от первого боя: верим ему, только если имя в кэше спавнов совпало)
+  const spOk = !!spawnId && (env.rt.spawns?.[spawnId]?.[0] || '').toLowerCase() === nm;
+  ctx.lvl = rbLvl || (spOk ? env.rt.spawns[spawnId][1] : 0) || 0;
+  if (ctx.champ) ctx.tier = (same && t.tier) || (spOk ? env.champTier?.(spawnId) : '') || 'blue';
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
   // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)
@@ -1609,7 +1614,7 @@ async function battle() {
   if (ctx.pet) { try { petTick(ctx); petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))).catch(e => console.warn(env.TAG, 'статистика кота', e)); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
-  env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name)?.catch?.(e => console.warn(env.TAG, 'добыча', e));
+  env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
   env.setRt({
     kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
     adena: env.rt.adena + pick(/([\d\s.,]+)\s*аден/i), exp: env.rt.exp + pick(/([\d\s.,]+)\s*EXP/i), sp: env.rt.sp + pick(/([\d\s.,]+)\s*SP/i)

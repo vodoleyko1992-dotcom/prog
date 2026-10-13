@@ -99,8 +99,33 @@ function resHave(key) {
   return (b?.n || 0) + got;                       // resGot обнуляется при каждом пересчёте сумки
 }
 
-async function trackLoot(lines, mob) {
+// 10.0.5 (обновление игры 13.10): учёт Fast Aden с мобов — сколько боёв и сколько FA по видам: чемпион синий/оранжевый/красный
+// (шанс 10/20/60 %), обычный моб (1 %), «низкий» — ниже героя больше чем на 5 ур. (FA не падает). rt.faDrop = { t0, k:{вид:боёв}, f:{вид:FA} }
+const FA_RE = /^fast\s*ad[eé]n/i, FA_TIER = { blue: 'синий', orange: 'оранжевый', red: 'красный' };
+const faKind = info => {
+  const hl = env.heroLvl?.() || env.rt.lvl || 0;
+  if (hl && info.lvl && info.lvl < hl - 5) return 'low';
+  return info.champ ? (FA_TIER[info.tier] ? info.tier : 'blue') : 'mob';
+};
+function faNote(lines, mob, info) {
+  if (!info) return null;                          // РБ — не считаем (у них свой дроп)
+  let q = 0;
+  for (const l of lines) { const m = l.match(env.LOOT_RE); if (m && FA_RE.test(m[1].replace(/^\s*(?:Спойл|Spoil)\s*:?\s*/i, '').trim())) q += +m[2] || 0; }
+  const kind = faKind(info), D = env.rt.faDrop || {}, k = { ...(D.k || {}) }, f = { ...(D.f || {}) };
+  k[kind] = (k[kind] || 0) + 1;
+  if (q) f[kind] = (f[kind] || 0) + q;
+  const fd = { t0: D.t0 || Date.now(), k, f };
+  const sum = ks => ks.reduce((a, x) => a + (f[x] || 0), 0), cnt = ks => ks.reduce((a, x) => a + (k[x] || 0), 0);
+  const tot = `всего: чемпионы ${sum(['blue', 'orange', 'red'])} FA за ${cnt(['blue', 'orange', 'red'])} боёв, мобы ${sum(['mob'])} FA за ${cnt(['mob'])}`;
+  const who = info.champ ? `чемпион, ${FA_TIER[info.tier] || 'синий'}` : 'моб';
+  if (q) env.rec('B', 'FA', `💎 Fast Aden +${q} — ${mob} (${info.lvl || '?'}, ${who}) · ${tot}`);
+  else if (info.champ && kind !== 'blue' && kind !== 'mob') env.rec('B', 'FA', `${mob} (${info.lvl || '?'}, ${who}): FA не выпал${kind === 'low' ? ' — ниже героя больше чем на 5 ур., FA с него не падает' : ''} · ${tot}`);
+  return fd;
+}
+
+async function trackLoot(lines, mob, info) {
   await env.itemsDb();
+  const faDrop = faNote(lines, mob, info);
   const L = { ...(env.rt.loot || {}) }, S = { ...(env.rt.lootSpecial || {}) };
   const LS = { ...(env.rt.lootStat || {}) }, MK = { ...(env.rt.mobKills || {}) }, RG = { ...(env.rt.resGot || {}) };
   const mk = (mob || '?').trim();
@@ -143,7 +168,7 @@ async function trackLoot(lines, mob) {
   }
   if (Object.keys(LS).length > 120) for (const [k] of Object.entries(LS).sort((a, b) => a[1].n - b[1].n).slice(0, 20)) delete LS[k];
   if (Object.keys(MK).length > 120) for (const [k] of Object.entries(MK).sort((a, b) => a[1] - b[1]).slice(0, 20)) delete MK[k];
-  const patch = { lootStat: LS, mobKills: MK, lootStatT0: env.rt.lootStatT0 || Date.now() };
+  const patch = { lootStat: LS, mobKills: MK, lootStatT0: env.rt.lootStatT0 || Date.now(), ...(faDrop ? { faDrop } : {}) };
   // 10.0 (аудит): у словаря «имя → число» поля .n нет — сортировка не работала, и после 200 видов каждый новый предмет отрезался сразу
   const cv = x => typeof x === 'number' ? x : +x?.n || 0;
   const cap = (o, n) => { const k = Object.keys(o); if (k.length <= n) return o; return Object.fromEntries(Object.entries(o).sort((a, b) => cv(b[1]) - cv(a[1])).slice(0, n)); };   // v5.6: без бесконечного роста
@@ -151,6 +176,6 @@ async function trackLoot(lines, mob) {
   if (campCh) Object.assign(patch, { campaign: { ...env.rt.campaign, live: Date.now() }, campaignDue: env.rt.campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
- return { spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
+ return { faKind, faNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };
  };
 })(globalThis);
