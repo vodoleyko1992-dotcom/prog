@@ -3423,7 +3423,9 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
-  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; }
+  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || '';
+    if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
+    if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 9.0 (лог 12.10 01:08:30, Fairy Queen Timiniel 7 092 из 1,9 млн): ход → 400 «Немає активного бою» (battle_none / not_in_battle) — боя на
   // сервере уже нет (РБ добили другие), а страница боя осталась. Бот 23 мин жал вслепую. Метка для боя (combat), снимает её любой принятый ход/новый бой
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path) && d.status >= 200 && d.status < 300 && !d.res?.error) ACT_NET.gone = null;
@@ -4629,7 +4631,9 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('weap7128', () => { Object.assign(rf, { weaponsT: 0 }); });   // 7.1.30: перечитать оружие (в памяти могла остаться кукла NG как «надето»)
   once('mag7125', () => { cf.autoMagister = false; Object.assign(rf, { magister: null }); });   // 7.1.30: магистр — только руками
   once('shots723', () => { cf.shopShots = '1000/5000'; });
-  once('hard924', () => { Object.assign(rf, { hardMobs: {} }); });   // 9.2.4: «не по зубам» считалось по HP одного моба (Guardian Basilisk у спойлера) — метки 2 ч стереть
+  once('hard924', () => { Object.assign(rf, { hardMobs: {} }); });
+  // 10.0.8 (лог 13.10 17:17:57, Purgatory Gargoyle «урон ≈0.0/с» после зависшей банки): метки без единого принятого удара — ложные, стереть
+  once('hard1008', () => { const H = rf.hardMobs || {}; const keep = Object.fromEntries(Object.entries(H).filter(([, v]) => !/урон ≈0\.0\/с/.test(v?.why || ''))); if (Object.keys(keep).length !== Object.keys(H).length) Object.assign(rf, { hardMobs: keep }); });   // 9.2.4: «не по зубам» считалось по HP одного моба (Guardian Basilisk у спойлера) — метки 2 ч стереть
   // 7.2.4: настройки рыбалки игрока (скрин 10.10) — базовые: наживка «Авто», заряды вкл., докупать вкл., 1000 пакетов наживки,
   // заряды под наживку (авто), 750 пакетов, если авто выкл., без лимита забросов
   // 8.0 (аудит боя): устаревшие «нижние границы» отката (Aura Burn 3,4 с при 1,1 с, VT 3,9 с) тормозили лучшие заклинания — стереть
