@@ -2708,11 +2708,12 @@ setInterval(() => {
 // 7.2.1 (игрок 10.10: «информационное окно крупнее, полностью по левому пустому краю, текст покрупнее»): слева от игры есть место
 // (≥ 300 px) — окно на всю высоту и ширину этого поля, шрифт крупнее; места нет — компактное окно внизу слева, как раньше
 // 7.2.3: ширина запоминается (stickyFree) — окно больше не прыгает между крупным и мелким при смене экрана
+// 10.0.5: запоминается самое узкое измеренное поле — окно не залезает на игру (спойлер 13.10: «левая панель вышла за край»)
 let indStick = (() => { try { return JSON.parse(localStorage.getItem('l2bot-indw') || 'null'); } catch (e) { return null; } })();
 function layoutInd(bounds) {
   try {
     const vw = document.documentElement.clientWidth || innerWidth;
-    const s = L2EngineCore.stickyFree(indStick, (bounds?.left || 0) - 16, vw);
+    const s = L2EngineCore.stickyFree(indStick, (bounds?.left || 0) - 16, vw, !!bounds?.observed?.length);
     if (s !== indStick) { indStick = s; try { localStorage.setItem('l2bot-indw', JSON.stringify(s)); } catch (e) {} }
     const free = s.free;
     ui.classList.toggle('wide', free >= 300);
@@ -2797,7 +2798,7 @@ const uiCss = document.createElement('style');
 // 8.0.3 (игрок 11.10: «бывает полоска с перемоткой, она раздражает»): крупное окно было overflow:auto — когда 30 строк истории не
 // влезали по высоте, появлялась полоса прокрутки, хотя окно не кликается (pointer-events:none) и прокрутить её нельзя. Теперь окно
 // не прокручивается: сверху статус и бой целиком, история (новые строки сверху) обрезается снизу с плавным затуханием
-uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line}
+uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none;position:fixed;left:8px;bottom:8px;z-index:2147483647;width:440px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:9px 12px 10px;border-radius:12px;font:12px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#efe6d6;background:rgba(20,16,13,.88);backdrop-filter:blur(6px);border:1px solid rgba(212,168,86,.35);box-shadow:0 6px 22px rgba(0,0,0,.5);pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
 #l2bot-ind .h{display:flex;align-items:center;gap:7px;font-weight:700;color:#f0cf86;font-size:11.5px;letter-spacing:.02em}
 #l2bot-ind .h i{width:8px;height:8px;border-radius:50%;flex:0 0 8px;box-shadow:0 0 6px currentColor}
 #l2bot-ind .s{font-weight:600;font-size:13px;margin:4px 0 3px;color:#fff}

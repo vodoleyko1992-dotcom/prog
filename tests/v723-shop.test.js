@@ -72,11 +72,15 @@ const R = load('modules/raid.js').L2V7Factories.raid(renv);
   // 5. информационное окно не прыгает: ширина поля запоминается для этой ширины браузера
   const { stickyFree } = require('../engine-core.js');
   let s = stickyFree(null, 520, 1920);
-  assert.deepEqual(s, { vw: 1920, free: 520 });
-  assert.equal(stickyFree(s, 180, 1920), s, 'another screen measured a narrower margin — keep the big window');
-  assert.equal(stickyFree(s, -16, 1920), s, 'game not loaded yet — keep the big window');
-  assert.deepEqual(stickyFree(s, 300, 1280), { vw: 1280, free: 300 }, 'browser resized — measure again');
+  assert.deepEqual(s, { vw: 1920, free: 520, m: 1 });
+  assert.equal(stickyFree(s, 700, 1920), s, 'another screen measured a wider margin — keep the window, no jumping');
+  assert.equal(stickyFree(s, -16, 1920, false), s, 'game not loaded yet — keep the window');
+  assert.deepEqual(stickyFree(s, 300, 1280), { vw: 1280, free: 300, m: 1 }, 'browser resized — measure again');
+  // 10.0.5 (спойлер 13.10: «левая панель вышла за край»): экран с более широкой рамкой игры — окно сужается и не лезет на игру
+  assert.deepEqual(stickyFree(s, 360, 1920), { vw: 1920, free: 360, m: 1 }, 'narrower margin measured — shrink, never cover the game');
+  assert.deepEqual(stickyFree({ vw: 1920, free: 700 }, 400, 1920), { vw: 1920, free: 400, m: 1 }, 'old «widest» record is replaced by a real measure');
+  assert.deepEqual(stickyFree({ vw: 1920, free: 700 }, -16, 1920, false), { vw: 1920, free: 700 }, 'no measure — keep what we had');
   assert.equal(stickyFree(null, 1500, 1920).free, 944, 'never wider than half of the screen');
-  assert.match(content, /const s = L2EngineCore\.stickyFree\(indStick, \(bounds\?\.left \|\| 0\) - 16, vw\);/);
+  assert.match(content, /const s = L2EngineCore\.stickyFree\(indStick, \(bounds\?\.left \|\| 0\) - 16, vw, !!bounds\?\.observed\?\.length\);/);
   console.log('PASS: bag counts from the server (full list), shots 1000/5000, shopping only between RB fights (back to the same RB), info window keeps its size');
 })().catch(e => { console.error(e); process.exit(1); });
