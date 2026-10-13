@@ -39,7 +39,9 @@ const C = load('modules/champs.js', env);
   assert.ok(C.judge({ tier: 'red', lvl: 65, hp: 1000, exp: 250680 }).ok, 'easier (lower gap) red — not blocked by the verdict');
   // сила выросла: уровень героя → снова проба/оценка
   lvl = 67; assert.ok(!/жду роста силы/.test(C.judge({ tier: 'red', lvl: 67, hp: 142632, exp: 250680, fa: 0.6 }).why || ''), 'level up lifts the verdict');
-  lvl = 66; env.rt.rbDps = 3500; assert.ok(!/жду роста силы/.test(C.judge({ tier: 'red', lvl: 67, hp: 142632, exp: 250680, fa: 0.6 }).why || ''), '+15 % damage lifts the verdict');
+  // 10.0.10: свежий вердикт (< 5 мин) снимает только новый уровень; рост урона +15 % — после выдержки (v.t сдвинут назад)
+  lvl = 66; env.rt.rbDps = 3500; assert.ok(/жду роста силы/.test(C.judge({ tier: 'red', lvl: 67, hp: 142632, exp: 250680, fa: 0.6 }).why || ''), '+15 % damage within 5 min — still blocked (10.0.10)');
+  env.rt.champLearn.v.red.t -= C.V_HOLD + 1; assert.ok(!/жду роста силы/.test(C.judge({ tier: 'red', lvl: 67, hp: 142632, exp: 250680, fa: 0.6 }).why || ''), '+15 % damage lifts the verdict');
   env.rt.rbDps = 3000;
   // победа снимает вердикт; уход со страницы («left») вердикта не ставит
   await C.learn({ ...ctx, lvl: 67 }, 'win', 142632, 30);

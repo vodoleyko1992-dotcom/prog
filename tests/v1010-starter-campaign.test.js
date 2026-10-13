@@ -96,7 +96,8 @@ const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь нови
   // 6. чемпион «не пробиваю» за 15 с — вид не метим (combat.battle)
   const i = combat.indexOf("const hopeless = el >= 15");
   const blk = combat.slice(i, i + 2200);
-  assert.match(blk, /if \(ctx\.champ && !isRb\) \{ await env\.setRt\(\{ target: null \}\);/, 'чемпион: только выход, без hardMobs');
-  assert.ok(blk.indexOf('ctx.champ && !isRb') < blk.indexOf('hardMobs: { ...(env.rt.hardMobs'), 'ветка чемпиона раньше записи hardMobs');
+  // (слито с PR #87: чемпион уходит через champs.learn, метка по имени вида не ставится)
+  assert.match(blk, /if \(ctx\.champ && !ctx\.rb && env\.champs\) \{/, 'чемпион: свой учёт, без hardMobs');
+  assert.ok(blk.indexOf('ctx.champ && !ctx.rb && env.champs') < blk.indexOf('hardMobs: { ...(env.rt.hardMobs'), 'ветка чемпиона раньше записи hardMobs');
   console.log('v1010-starter-campaign: PASS');
 })().catch(e => { console.error(e); process.exit(1); });

@@ -350,9 +350,12 @@ function candidates(rules, sig, types, limitIdx) {
   // 10.0.5: «FA с чемпионов» (cfg.champFa, по умолчанию ВКЛ) — оранжевый/красный чемпион не ниже героя −5 (шанс FA 20/60 %) идёт сразу
   // после ★ квеста и источников ресурса, даже при выключенном «Искать чемпионов». Только из списка этой локации: бот никуда не летит
   const pos = rules.filter(x => !x.neg), faRank = pos.findIndex(x => !(x.quest || x.farm));
+  // 10.0.10 (лог 13.10 18:13: красный Hook Spider 16 при герое 8 — окно +5 не сработало): чемпиона без записи в кэше спавнов брали с уровнем 0,
+  // а окно уровней при 0 не проверяется. Имя и уровень такого — из строки списка на экране (pageItems), если она видна
+  const onPage = {}; try { for (const it of pageItems()) if (it.id && !onPage[it.id]) onPage[it.id] = it; } catch (e) {}
   sig.ids.forEach((id, idx) => {
     if (idx >= limitIdx || env.isRaidId(id) || types[id] === 'raid' || types[id] === 'epic_guard') return;
-    const c = env.rt.spawns?.[id];
+    const c = env.rt.spawns?.[id] || (onPage[id]?.name && onPage[id].lvl ? [onPage[id].name, onPage[id].lvl] : null);
     const minL = env.campChampMin();
     const champ = types[id] === 'champion' && !(minL && c && c[1] && c[1] < minL);
     if (!c && !champ) return;                  // имя неизвестно и не чемпион — оценить нельзя

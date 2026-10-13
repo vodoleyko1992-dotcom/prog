@@ -864,7 +864,7 @@ async function battle() {
   ctx.spawnId = spOk ? spawnId : '';
   if (ctx.champ) ctx.tier = (same && t.tier) || (spOk ? env.champTier?.(spawnId) : '') || 'blue';
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
-  if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0;
+  if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0; ctx.heroLvl0 = env.heroLvl() || env.rt.lvl || 0;   // 10.0.10: уровень героя на входе — для вердикта (champs.learn)
     ctx.chLim = (same && t.lim) || env.champs?.limitS({ tier: ctx.tier, lvl: ctx.lvl, exp: 0 }) || 40; }
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
@@ -1303,10 +1303,16 @@ async function battle() {
       const hopeless = el >= 15 && okHits >= 5 && !lagged && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
       if (hopeless || Date.now() - t0 > 180000) {
         const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
-        // 10.0.10 (лог 13.10 18:31:07, alt1 15 ур.): красный чемпион Tracker Skeleton (29 880 HP) получил «не пробиваю» на ВИД → обычные
-        // Tracker Skeleton (996 HP) 2 ч «не по зубам» и «на карту» с боя. Чемпион — свой учёт (champs.learn по итогу боя, как в 10.0.5), вид не метим
-        if (ctx.champ && !isRb) { await env.setRt({ target: null }); env.rec('B', 'цели', `${mobName()} [чемп]: не пробиваю — ${why} → ухожу (вид не метю: обычные ${mobName()} бью)`); }
-        else {
+        // 10.0.10 (лог 13.10 18:31:07, Elven Ruins): красный Tracker Skeleton 17 (29 880 HP, предел чемпиона 188 с) через 15 с получил общее «не пробиваю
+        // (убить ≈134 с)» с меткой «этот вид 2 ч не бью» по ИМЕНИ — и обычные Tracker Skeleton 996 HP (цель ★ квеста рядом) бот дважды отказался бить.
+        // У чемпиона свой предел (champs.fleeCheck/learn по цвету) — метка по имени вида не ставится, вердикт «долго» идёт в память чемпионов
+        if (ctx.champ && !ctx.rb && env.champs) {
+          ctx.chOut = true;
+          const secC = (Date.now() - t0) / 1000, dealtC = Math.max(0, (ctx.chHp0 || mob.max) - mob.cur);
+          env.rec('B', 'чемпионы', `${ctx.name} (${ctx.lvl || '?'}, ${env.champs.tierRu(ctx.tier)}): ⚠ ${why} — ухожу из боя, снято ${dealtC} из ${mob.max} за ${secC.toFixed(0)} с; снова попробую, когда вырастет сила`);
+          await env.setRt({ target: null });
+          await env.champs.learn(ctx, losing ? 'danger' : 'slow', dealtC, secC);
+        } else {
         await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [nmNow]: { t: Date.now(), ttk: isFinite(ttk) ? Math.round(ttk) : 9999, lvl: env.heroLvl(), why } }, target: null });
         env.rec('B', 'цели', `${mobName()}: не пробиваю — ${why} → ухожу, этот вид 2 ч не бью`);
         }

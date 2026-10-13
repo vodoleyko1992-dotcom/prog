@@ -27,14 +27,22 @@ const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'кра
 const HARD_LVL = 73, DEF_K = 4, CANCEL_P = { blue: 0.03, orange: 0.05, red: 0.07 }, CANCEL_MAX = 3, CANCEL_GAP = { blue: 30 }, HIT_S = 1.3, HIT_ACC = 0.8;
 const isHard = c => !!c && (c.tier === 'red' || c.tier === 'orange') && (c.lvl || 0) >= HARD_LVL;
 const tKey = c => (TIER_RU[c?.tier] ? c.tier : 'blue') + (isHard(c) ? '73' : '');
-const L = () => env.heroLvl?.() || env.rt.lvl || 0;
+// 10.0.10 (лог 13.10 18:13:01–18:13:51, новый Human Fighter 8 ур.): после отхода «не пробиваю» бот пять раз подряд снова шёл к тому же красному
+// Hook Spider 16 (+8 к герою) — уровень героя на момент вердикта читался как 0/1 (шапка на переходе со страницы боя), «разрыв» вердикта
+// выходил 15–16, и при следующем выборе (разрыв 8) вердикт не действовал; а «сила выросла» срабатывала от скачка среднего ДПС после 1–2 боёв.
+// Теперь: уровень — последний ненулевой (кэш), вердикт не старше 5 мин держит всегда (кроме роста уровня), рост урона считается только
+// по устойчивому замеру (ДПС по РБ или ≥ 10 боёв), ДПС из боя «не пробиваю» не запоминается (удары не попадают — это не наш темп)
+let lvlSeen = 0;
+const L = () => { const v = env.heroLvl?.() || 0; if (v) lvlSeen = v; return v || lvlSeen || env.rt.lvl || 0; };
 const mem = () => env.rt.champLearn || {};
+const V_HOLD = 5 * 60000;                          // вердикт держит столько, даже если урон «подрос», — только новый уровень снимает раньше
 // «сила» — уровень героя и урон по долгим целям (ДПС по РБ, иначе общий): по ней видно, что стало сильнее (уровень, шмот, тату, баффы)
-const powNow = () => ({ lvl: L(), base: Math.round(env.rt.rbDps || env.rt.dps?.dps || 0) });
+const powNow = () => ({ lvl: L(), base: Math.round(env.rt.rbDps || env.rt.dps?.dps || 0), firm: !!(env.rt.rbDps > 0 || (env.rt.dps?.n || 0) >= 10) });
 function grown(p) {
   if (!p) return true;
   const n = powNow();
-  return !!((n.lvl && p.lvl && n.lvl > p.lvl) || (n.base > 0 && p.base > 0 && n.base >= p.base * 1.15));
+  if (n.lvl && p.lvl && n.lvl > p.lvl) return true;
+  return !!(n.firm && n.base > 0 && p.base > 0 && n.base >= p.base * 1.15);
 }
 // свой ДПС по чемпионам (замер боёв, приведён к нынешней силе); без замера — ДПС по РБ или общий (тогда только проба).
 // 10.0.8: усиленные 73+ (защита ×4) — свой замер dpsH; без него — общий ÷ 4
@@ -77,7 +85,12 @@ function judge(c) {
   const cb = cancelBlock(c, sec, lim);
   if (cb) return { ok: false, lim, cancel: true, why: `снимает баффы (${TIER_RU[tier]}: ${Math.round(cb.p * 100)} % за удар, до ${CANCEL_MAX} за раз)${cb.never ? ' — таких не бью (настройка)' : ` — платных за FA висит ${cb.paid}, за ≈${Math.round(sec)} с боя потеряю ≈${cb.buffs} (≈${cb.s} с фарма при цене чемпиона ${lim} с)`}` };
   const v = mem().v?.[key];
-  if (v && gap >= (v.gap ?? -99) && !grown(v.pow)) return { ok: false, lim, why: `${v.why} — жду роста силы (ур. ${v.pow?.lvl || '?'}, урон ${v.pow?.base || '?'})` };
+  if (v) {
+    const fresh = Date.now() - (+v.t || 0) < V_HOLD, lvlUp = v.pow?.lvl > 0 && L() > v.pow.lvl;
+    const sameOrHarder = c.lvl ? gap >= (v.gap ?? -99) : true;   // уровень чемпиона неизвестен — считаем, что это тот же
+    if (sameOrHarder && (fresh ? !lvlUp : !grown(v.pow)))
+      return { ok: false, lim, why: `${v.why} — жду роста силы (ур. ${v.pow?.lvl || '?'}, урон ${v.pow?.base || '?'})${fresh && !lvlUp ? `, не раньше чем через ${Math.ceil((V_HOLD - (Date.now() - (+v.t || 0))) / 60000)} мин` : ''}` };
+  }
   if (!(c.hp > 0) || !(d.dps > 0)) return { ok: true, probe: true, lim, hard, why: 'цифр нет — проба' + hn };
   const eta = Math.round(c.hp / d.dps + 2);
   if (eta <= lim) return { ok: true, probe: !d.known, eta, lim, hard, why: d.known ? '' : 'своего замера нет — проба' + hn };
@@ -100,7 +113,7 @@ function fleeCheck(ctx, me, mob, sec) {
 async function learn(ctx, outcome, dealt, sec) {
   if (!ctx?.champ || ctx.rb) return null;
   const tier = tKey(ctx), M = { ...mem() }, pw = powNow(), hard = isHard(ctx), dk = hard ? 'dpsH' : 'dps';   // 10.0.8: 73+ — свой класс (red73)
-  if (sec >= 4 && dealt > 0) {
+  if (sec >= 4 && dealt > 0 && outcome !== 'weak') {   // 10.0.10: «не пробиваю» — удары не попадают, это не замер темпа
     const dps = dealt / sec, o = M[dk], od = o?.dps > 0 ? dpsOn(hard).dps : 0;
     M[dk] = { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), base: pw.base || null, lvl: pw.lvl || null, n: (o?.n || 0) + 1 };
   }
@@ -108,17 +121,17 @@ async function learn(ctx, outcome, dealt, sec) {
   s[outcome] = (s[outcome] || 0) + 1;
   if (outcome === 'win') s.sec = +(s.sec ? s.sec * 0.7 + sec * 0.3 : sec).toFixed(1);
   S[tier] = s; M.st = S;
-  const V = { ...(M.v || {}) }, gap = (ctx.lvl || 0) - L();
+  const V = { ...(M.v || {}) }, hl = ctx.heroLvl0 || L(), gap = (ctx.lvl || 0) - hl;   // 10.0.10: уровень героя — с начала боя (ctx.heroLvl0), шапка на переходе пуста
   if (outcome === 'win' && V[tier] && gap >= (V[tier].gap ?? -99)) delete V[tier];
   if (['death', 'danger', 'weak', 'slow'].includes(outcome)) {
     const why = outcome === 'death' ? 'погиб в бою' : outcome === 'danger' ? 'отход: мало HP' : outcome === 'weak' ? 'не пробиваю' : 'слишком долго';
-    V[tier] = { t: Date.now(), why: `${TIER_RU[ctx.tier] || TIER_RU.blue}${hard ? ' 73+' : ''} ${ctx.lvl ? ctx.lvl + ' ур.' : ''}: ${why}`.trim(), gap: Math.min(gap, V[tier]?.gap ?? 99), pow: pw };
+    V[tier] = { t: Date.now(), why: `${TIER_RU[ctx.tier] || TIER_RU.blue}${hard ? ' 73+' : ''} ${ctx.lvl ? ctx.lvl + ' ур.' : ''}: ${why}`.trim(), gap: Math.min(gap, V[tier]?.gap ?? 99), chLvl: ctx.lvl || 0, pow: { ...pw, lvl: hl || pw.lvl } };
   }
   M.v = V;
   await env.setRt({ champLearn: M });
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { FA_P, FA_MOB, T_DEF, TIER_RU, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, fleeCheck, learn };
+ return { FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, fleeCheck, learn };
  };
 })(globalThis);
