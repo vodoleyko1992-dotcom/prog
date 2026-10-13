@@ -63,7 +63,8 @@ with sync_playwright() as p:
             page.wait_for_function('''k => __mockState.on === true && __mockState.cfg[k] === true''', arg=flag)
             page.wait_for_function('''n => __wakeChecks.kicks > n''', arg=before)
         assert page.evaluate('__wakeChecks.reloads') == 0
-        assert page.locator('#campToggle').is_hidden(), '7.2.1: campaign removed from the menu'
+        assert page.locator('#campToggle').is_visible(), '10.0.10: campaign button is back (starter story quest for alts); off by default'
+        assert page.evaluate('__mockState.cfg.campaign') is not True, 'campaign stays off until the player (or campAuto) turns it on'
         # A stale extension script must be reloaded, not silently declared active.
         page.evaluate('chrome.tabs.sendMessage = async () => null')
         page.locator('#start').click()
