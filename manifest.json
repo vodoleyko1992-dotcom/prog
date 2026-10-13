@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.9",
-  "description": "L2wap Bot 10.0.9 — кнопки «Торговец/Кузнец Маммона» в окне бота, катакомбы без ложного «не по зубам»",
+  "version": "10.0.10",
+  "description": "L2wap Bot 10.0.10 — сюжетные квесты новичка сами, чемпионы по цветам и уровню, закупка зарядов первыми, пауза «Целей нет» с причиной",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -122,5 +122,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.9"
+  "version_name": "10.0.10"
 }
