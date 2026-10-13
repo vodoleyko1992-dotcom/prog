@@ -166,6 +166,8 @@ function onNet(path, d) {
       a.n++; if (own > 0) { a.s.push(own); if (a.s.length > SAMPLES) a.s.shift(); } else a.z++;
     }
     last = turn;
+    // 10.0.7 (ценность баффов): доля критов заклинаний под текущими крит-баффами → content.critNote (rt.critStat)
+    if (L.ownN > 0 && !/^battle_potion|_toggle$|^attack$/.test(action)) try { env.critNote?.(L.ownN, Math.min(L.ownN, L.crit)); } catch (e) {}
   }
   if (bt.mob != null) F.mob = bt.mob;
   if (bt.hp != null) F.me = bt.hp;
@@ -183,6 +185,7 @@ function turnFor(name, since) {
 function finish(outcome, now = Date.now()) {
   if (!F || F.done) return null;
   F.done = true;
+  try { env.critFlush?.(); } catch (e) {}     // 10.0.7: замер крита — в память по концу боя
   const sec = Math.max(0.1, (F.tl - F.t0) / 1000);
   const sum = { key: F.key, name: F.name, lvl: F.lvl, rb: F.rb, champ: F.champ, outcome, sec: Math.round(sec * 10) / 10, turns: F.turns,
     dealt: F.dealt, pet: F.petDmg, pots: F.pots, lost: F.lost, dps: F.dealt + F.petDmg > 0 && sec >= 1 ? Math.round((F.dealt + F.petDmg) / sec) : 0, t: now };

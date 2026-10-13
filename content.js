@@ -3290,6 +3290,37 @@ const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|pro
 const ACT_NET = { start: 0, done: 0, t: 0 };
 // 7.2.3: сумка по ответам сервера { m: itemId → qty, t } — в sessionStorage вкладки, чтобы пережить переход на другую страницу
 // (после победы бот сразу уходит на карту, а там панели боя нет)
+// 10.0.7 (игрок 13.10 03:07: «переоценка ценности баффов на боевую систему»): цифры героя из ответа игры GET /character (hook.js hero):
+// M.Atk, P.Atk, шанс и сила маг./физ. крита, баффы на герое, кот (P.Atk, крит, сила крита, точность) → rt.heroStats (не чаще раза в
+// минуту и только при изменении); снимок M.Atk под набором баффов → rt.matkObs (buff-value.js учит настоящие множители баффов)
+let heroNoteT = 0;
+function heroNote(h) {
+  if (!h || !(h.matk > 0 || h.patk > 0)) return;
+  const V = globalThis.L2BuffVal, prev = rt.heroStats || {};
+  const sig = [h.lv, h.matk, h.patk, h.mcrit, h.crit, (h.buffs || []).join(','), h.cat?.patk, h.cat?.crit].join('|');
+  if (sig === prev.sig && Date.now() - (prev.t || 0) < 3600000) return;
+  if (Date.now() - heroNoteT < 60000 && sig !== prev.sig && h.lv === prev.lv) { if (Date.now() - (prev.t || 0) < 600000) return; }
+  heroNoteT = Date.now();
+  const patch = { heroStats: { ...h, sig, t: Date.now() } };
+  if (V) patch.matkObs = V.snapAdd(rt.matkObs, h);
+  setRt(patch);
+}
+// цифры героя для модели ценности баффов (fa-full.js порядок набора, меню): null, пока /character не читали
+function heroStatsFor() {
+  const V = globalThis.L2BuffVal; if (!V || !rt.heroStats) return null;
+  let role = null; try { role = L2V7Modules.fightlab?.role?.() || null; } catch (e) {}
+  return V.fromRt(rt, cfg, role);
+}
+// замер крита в бою (fightlab → critNote): нажатий n, из них критов c — под набором крит-баффов, что сейчас на герое (шапка)
+let CRIT_ACC = null, critAccN = 0;
+function critNote(n, c) {
+  if (!tabOwner || !(n > 0) || combatProfileKind() !== 'mage_summoner') return;
+  const V = globalThis.L2BuffVal; if (!V) return;
+  let ids = []; try { ids = Object.keys(L2V7Modules.buffs.hudBuffs() || {}).map(Number); } catch (e) {}
+  CRIT_ACC = V.obsAdd(CRIT_ACC || rt.critStat, ids, n, c); critAccN += n;
+  if (critAccN >= 20) critFlush();
+}
+function critFlush() { if (!CRIT_ACC || !critAccN) return; const o = CRIT_ACC; CRIT_ACC = null; critAccN = 0; setRt({ critStat: o }); }
 // 10.0.2 (Life Stone): надетое оружие и его ЛС из ответов сервера (hook.js aug). rt.weaponAug {w, e, o, g, k, n, t} —
 // меню показывает бонус, equipment не меняет само оружие с полезным ЛС, бой узнаёт умение ls_* на панели (ilOf)
 function augNote(a, path) {
@@ -3416,6 +3447,8 @@ addEventListener('message', e => {
     if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && Date.now() - (ss?.t || 0) > 60000) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
   // 10.0.2 (обновление игры 12.10 «Life Stone»): надетое оружие и его аугментация — для меню, боя и «не снимать оружие с ЛС»
   if (d.aug && tabOwner) try { augNote(d.aug, path); } catch (e) { console.warn(TAG, 'ЛС', e); }
+  // 10.0.7 (ценность баффов): цифры героя из /character (hook.js hero) → rt.heroStats + снимки M.Atk под наборами баффов (rt.matkObs)
+  if (d.hero && tabOwner) try { heroNote(d.hero); } catch (e) { console.warn(TAG, 'герой', e); }
   if (d.dm && Array.isArray(d.dm.mobs)) DUNG_NET = { id: d.dm.id, mobs: d.dm.mobs, t: Date.now() };
   { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
     try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
@@ -4197,7 +4230,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get $q() { return $q; }, set
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },
@@ -4423,7 +4456,7 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
   const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
-L2V7Modules.fightlab = L2V7Factories.fightlab({ get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
 const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.2: лист врагов и ответный PvP (modules/enemies.js)

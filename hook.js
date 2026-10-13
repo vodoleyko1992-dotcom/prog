@@ -22,6 +22,12 @@
   // количества (заряды, банки). Только [itemId, qty] — ничего личного
   const invOf = o => { try { const st = o?.character?.inventory?.stacks || o?.inventory?.stacks; return Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : undefined; } catch (e) { return undefined; } };
   // 10.0.2 (Life Stone): надетое оружие и его аугментация (inventory.eq.l1) — redact глубже 5 уровней не пускает. Только id/заточка/исход, без uid
+  // 10.0.7 (ценность баффов): цифры героя из ответа /character — M.Atk, P.Atk, шанс/сила крита, баффы, кот (P.Atk, крит, точность)
+  const heroOf = o => { try { const c = o?.character; if (!c || typeof c !== 'object' || !(c.mAtk > 0 || c.pAtk > 0) || !Array.isArray(c.activeBuffs)) return undefined;
+    const s = c.activeSummon && typeof c.activeSummon === 'object' ? c.activeSummon : null, n = x => (x == null ? null : +x);
+    return { lv: n(c.level), matk: n(c.mAtk), patk: n(c.pAtk), mcrit: n(c.mCritPct), mck: n(c.magicCritDamageMultiplier), crit: n(c.critRate), ck: n(c.critDmgMul),
+      buffs: c.activeBuffs.slice(0, 60).map(b => +b?.skillId || 0).filter(Boolean), lvls: Object.fromEntries(c.activeBuffs.slice(0, 60).filter(b => b?.skillId).map(b => [+b.skillId, +b.level || 1])),
+      cat: s ? { key: String(s.key || '').slice(0, 40), patk: n(s.pAtk), crit: n(s.critRate), ck: n(s.critDmgMul), acc: n(s.accuracy), buffs: (s.activeBuffs || []).slice(0, 10).map(b => +b?.skillId || 0).filter(Boolean) } : null }; } catch (e) { return undefined; } };
   const augOf = o => { try { const eq = o?.character?.inventory?.eq || o?.inventory?.eq; if (!eq || typeof eq !== 'object' || !Object.keys(eq).length) return undefined; const l = eq.l1, a = l && typeof l === 'object' ? l.augmentation : null;
     return { w: l == null ? 0 : typeof l === 'number' ? l : +l.itemId || 0, e: l && typeof l === 'object' ? +l.enchant || 0 : 0, o: a && typeof a.outcomeId === 'string' ? a.outcomeId.slice(0, 40) : null, g: a && a.grade ? String(a.grade).slice(0, 2) : null }; } catch (e) { return undefined; } };
   // 8.0.3 (лог 11.10 11:41–11:44): /game/epic-bosses — ровно 8 эпиков, а redact режет массивы до 8: девятый эпик молча выключил бы разбор
@@ -123,7 +129,7 @@
     p.then(res => {
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -139,7 +145,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);
