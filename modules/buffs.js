@@ -238,8 +238,9 @@ function faLow(id, lv = hudLevels()) { const up = root.L2FaFull?.UP?.[id]; retur
 function faFullIds() {
   const F = root.L2FaFull, v = env.cfg.rbSessBuffs;
   if (!F) return faIdsOf(v);
-  let role = null; try { role = env.heroRole?.() || null; } catch (e) {}
-  return F.dropClash(F.resolve(v, role), env.rt.faClash);
+  let role = null, S = null; try { role = env.heroRole?.() || null; } catch (e) {}
+  try { S = env.heroStatsFor?.() || null; } catch (e) {}   // 10.0.7: порядок набора «auto» — по ценности для ДПС (buff-value.js)
+  return F.dropClash(F.resolve(v, role, S), env.rt.faClash);
 }
 // 8.0.3 (лог 11.10 09:05–10:32): платные баффы за FA на герое — куплены у баффера Fast Aden (цена есть в его каталоге rt.faCat или в
 // FA_KNOWN), действуют 3 ч; те же id у городского баффера (набор на 24 ч: 1059, 1085, 1303 …) не считаем → { id: время конца }

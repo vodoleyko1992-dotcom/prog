@@ -884,14 +884,27 @@ function renderRbSess(rt, d) {
   if (!$('rbSessBox')) return;
   // 9.2.5: «auto» — фулл бафф под класс (fa-full.js), с причиной каждого баффа; пары, что снимают друг друга (rt.faClash), — без второго
   const F = globalThis.L2FaFull, role = heroRole(rt), auto = !F || F.isAuto(d.rbSessBuffs);
-  const raw = F ? F.resolve(d.rbSessBuffs, role) : String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
+  // 10.0.7 (игрок 13.10: «переоценка ценности баффов»): цифры героя из /character (rt.heroStats) → порядок по прибавке ДПС на 1 FA,
+  // у каждого баффа — ≈ прибавка ДПС (герой + кот); «?» — цифра баффа не из игры (догадка по Interlude, замер крита/M.Atk поправит)
+  const V = globalThis.L2BuffVal, HS = V && F ? V.fromRt(rt, d, role) : null;
+  const raw = F ? F.resolve(d.rbSessBuffs, role, HS) : String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
   const ids = F ? F.dropClash(raw, rt.faClash) : raw, S = rt.rbSess, now = Date.now();
   const sum = ids.reduce((a, id) => a + faInfo(rt, id).cost, 0), bal = rt.faBal?.v;
   const why = F && auto ? Object.fromEntries(F.SETS[F.kind(role)].map(([id, , t]) => [id, t])) : {};
-  const L = [auto && F ? `⚡ Фулл бафф под класс (${F.kind(role) === 'mage' ? 'маг' : 'воин'}${role ? '' : ', класс ещё не известен'}):` : 'Баффы (свой список):',
-    ...ids.map(id => `• ${why[id] || faInfo(rt, id).name} · ${faInfo(rt, id).cost} FA`),
+  const val = HS ? Object.fromEntries(V.rank(ids, HS, id => faInfo(rt, id).cost).map(x => [x.id, x])) : {};
+  const gainTxt = id => { const x = val[id]; if (!x || x.k === 'защита') return ''; const f = (HS.fx || V.FX)[id]; return ` · ДПС ${V.pct(x.gain)}${f?.g ? '?' : ''}`; };
+  const skipped = HS && auto ? F.SETS[F.kind(role)].map(x => x[0]).filter(id => !raw.includes(id)) : [];
+  const L = [auto && F ? `⚡ Фулл бафф под класс (${F.kind(role) === 'mage' ? 'маг' : 'воин'}${role ? '' : ', класс ещё не известен'}${HS ? ', порядок по прибавке ДПС на 1 FA' : ''}):` : 'Баффы (свой список):',
+    ...ids.map(id => `• ${why[id] || faInfo(rt, id).name} · ${faInfo(rt, id).cost} FA${gainTxt(id)}`),
+    ...skipped.map(id => `✕ ${faInfo(rt, id).name} — ДПС не прибавит, за FA не беру`),
     ...raw.filter(id => !ids.includes(id)).map(id => `✕ ${faInfo(rt, id).name} — снимает другой бафф из списка, не беру`),
     `Стоимость: ${sum} FA на 3 ч${bal != null ? ` · баланс ${bal} FA${bal < sum ? ' ⚠ не хватает' : ` (хватит на ${Math.floor(bal / Math.max(1, sum))})`}` : ' · баланс FA ещё не видел'}`];
+  if (HS) { const d0 = V.dps(HS, []), d1 = V.dps(HS, ids), H = rt.heroStats || {};
+    L.push(`Прогноз под набором: ДПС ×${(d1.total / Math.max(1, d0.total)).toFixed(2)} (заклинания ×${(d1.own / Math.max(1, d0.own)).toFixed(2)}${HS.cat ? `, кот ×${(d1.cat / Math.max(1, d0.cat)).toFixed(2)}` : ''}) · шанс маг. крита ${Math.round(HS.mcrit * 100)} % → ${Math.round(d1.mcrit * 100)} % при силе ×${HS.mck.toFixed(2)} · цифры героя ${H.t ? new Date(H.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : '?'} (M.Atk ${H.matk}${HS.cat ? `, кот P.Atk ${HS.cat.patk}` : ''})`);
+    const obs = Object.entries(rt.critStat || {}).filter(([, o]) => o.n >= 40);
+    if (obs.length) L.push(`Замер крита в бою: ${obs.map(([sig, o]) => `${sig ? sig.split(',').map(id => faInfo(rt, +id).name).join(' + ') : 'без крит-баффов'} — ${Math.round(o.c / o.n * 100)} % (${o.n} нажатий)`).join('; ')}`);
+    const Lm = V.fxLearn(rt.matkObs); if (Object.keys(Lm).length) L.push(`Выучено по цифрам игры: ${Object.entries(Lm).map(([id, m]) => `${faInfo(rt, +id).name} M.Atk ×${m.toFixed(2)}`).join(', ')}`); }
+  else if (V && F) L.push('Цифры героя для оценки баффов ещё не читал — откройте страницу персонажа в игре');
   if (S?.on && !S.bought) L.push('⏳ Сессия начинается: иду к бафферу за баффами');
   else if (S?.on) { const left = Math.max(0, S.until - now) / 60000, k = (rt.rbKills || 0) - (S.k0 || 0), e = (rt.exp || 0) - (S.e0 || 0);
     L.push(`🔥 Идёт: осталось ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} · РБ убито ${k} · EXP +${e.toLocaleString('ru')}`); }
