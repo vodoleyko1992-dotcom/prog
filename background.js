@@ -474,6 +474,15 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   }
   // 10.0.6: «↺ Новая серия» в окне бота на странице игры — сводка «📦 Серия РБ» обнуляется и без замка вкладки (бот на паузе/стоит);
   // только ключ rbRun и только с l2wap.com (как rbtImport)
+  // 10.0.9: кнопки «Торговец/Кузнец Маммона» в окне бота — разовая команда rt.mmGoReq и без замка вкладки; только с l2wap.com, только этот ключ
+  if (m?.cmd === 'mmGoSet') {
+    let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
+    const R = m.mmGoReq;
+    if (!game || !R || typeof R !== 'object' || Array.isArray(R) || R.kind !== 'visit' || !['order', 'smith'].includes(R.npc) || !(+R.t > 0)) { reply({ ok: false, reason: 'invalid' }); return true; }
+    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, mmGoReq: { kind: 'visit', npc: R.npc, t: +R.t }, mmGoSay: null, _src: 'menu' } }); return { ok: true }; })
+      .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
   if (m?.cmd === 'rbRunSet') {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const R = m.rbRun;

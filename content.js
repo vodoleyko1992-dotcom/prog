@@ -2874,6 +2874,14 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind.wide .r{font-size:14.5px;margin-top:10px;padding-top:9px}
 #l2bot-ind .e{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind .e b{color:#f0cf86}
+#l2bot-ind .e{display:flex;gap:10px;align-items:flex-start}
+#l2bot-ind .e .et{flex:1 1 auto;min-width:0}
+#l2bot-ind .e .mm{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:4px;max-width:46%}
+#l2bot-ind .e .mm .bt{pointer-events:auto;cursor:pointer;font:inherit;font-size:11px;line-height:1.3;padding:3px 9px;margin:0;border-radius:7px;border:1px solid rgba(212,168,86,.55);background:rgba(212,168,86,.14);color:#f0cf86;white-space:nowrap;text-align:left}
+#l2bot-ind .e .mm .bt:hover{background:rgba(212,168,86,.3)}
+#l2bot-ind .e .mm .ms{font-size:10.5px;color:#a39280;white-space:normal}
+#l2bot-ind.wide .e .mm .bt{font-size:14px;padding:4px 12px}
+#l2bot-ind.wide .e .mm .ms{font-size:12.5px}
 #l2bot-ind.wide .e{margin-top:auto;padding-top:9px;font-size:15px;flex:0 0 auto}
 #l2bot-ind .b{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind .b .bt{pointer-events:auto;cursor:pointer;font:inherit;font-size:11px;line-height:1.3;padding:3px 9px;margin:1px 6px 1px 0;border-radius:7px;border:1px solid rgba(212,168,86,.55);background:rgba(212,168,86,.14);color:#f0cf86}
@@ -2930,6 +2938,28 @@ async function rbRunReset() {
   if (ok) { rt = { ...rt, rbRun: r }; rec('B', 'серия РБ', '📦 новая серия (вручную, кнопка «↺ Новая серия» в окне бота) — добыча и награды считаются заново'); }
   else await R.start('manual', 'кнопка «↺ Новая серия» в окне бота');
   try { draw(); } catch (e) {}
+}
+// 10.0.9 (игрок 13.10 07:22, скрин: обвёл место справа от «Респ эпиков»): кнопки «🛒 Торговец Маммона» / «⚒ Кузнец Маммона» в окне бота.
+// Бот работает — разовая команда rt.mmGoReq {kind:'visit', npc} (modules/mammon.js goReq/visit: телепорт за адену, страница NPC, пауза);
+// пишется через фон (mmGoSet, без замка вкладки). Бот стоит/на паузе — сразу открываем страницу телепорта к NPC, игрок летит сам
+const MM_LOC = { order: '/mammon-merchant-loc.html', smith: '/mammon-blacksmith-loc.html' };
+if (typeof addEventListener === 'function') addEventListener('click', e => {
+  const b = e.target?.closest?.('[data-mmgo]'); if (!b || !ui.contains?.(b)) return; e.preventDefault(); e.stopPropagation();
+  mmGoClick(b.dataset.mmgo === 'smith' ? 'smith' : 'order').catch(() => {});
+});
+async function mmGoClick(npc) {
+  const who = npc === 'smith' ? 'кузнецу' : 'торговцу';
+  if (!on) { rec('B', 'Маммон', `кнопка «${who === 'кузнецу' ? '⚒ Кузнец' : '🛒 Торговец'} Маммона»: бот стоит — открываю страницу телепорта к ${who}`); location.href = MM_LOC[npc]; return; }
+  const req = { kind: 'visit', npc, t: Date.now() }; let ok = false;
+  try { ok = !!(await chrome.runtime.sendMessage({ cmd: 'mmGoSet', mmGoReq: req }))?.ok; } catch (e) {}
+  if (ok) rt = { ...rt, mmGoReq: req, mmGoSay: null }; else await setRt({ mmGoReq: req, mmGoSay: null });
+  rec('B', 'Маммон', `кнопка в окне бота: прийти к ${who} Маммона — полечу, как только закончу бой/тур`);
+  try { draw(); } catch (e) {}
+}
+function mmGoBtns() {
+  const R = rt.mmGoReq, S = rt.mmGoSay, J = rt.mmJob, now = Date.now();
+  const st = J?.visit ? `⏳ иду к ${J.kind === 'smith' ? 'кузнецу' : 'торговцу'}…` : R?.kind === 'visit' && now - (R.t || 0) < 30 * 60000 ? `⏳ к ${R.npc === 'smith' ? 'кузнецу' : 'торговцу'}: после боя/тура` : S && now - (S.t || 0) < 600000 ? `✗ ${S.why}` : '';
+  return `<button type="button" class="bt" data-mmgo="order" title="${on ? 'Телепорт к торговцу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к торговцу Маммона'}">🛒 Торговец Маммона</button><button type="button" class="bt" data-mmgo="smith" title="${on ? 'Телепорт к кузнецу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к кузнецу Маммона'}">⚒ Кузнец Маммона</button>${st ? `<span class="ms">${escH(st)}</span>` : ''}`;
 }
 function draw() {
   const L = [], now = Date.now();
@@ -2989,7 +3019,7 @@ function draw() {
   // с запуска серии (modules/rbrun.js, rt.rbRun); нажатие раскрывает сводку, «↺ Новая серия» обнуляет
   let rbRunTxt = ''; try { if (typeof L2V7Modules !== 'undefined' && L2V7Modules.rbrun) { rbRunTxt = '— 📦 серия РБ —\n' + L2V7Modules.rbrun.lines(wide, now).join('\n'); L.push(rbRunTxt); } } catch (e) {}
   // 10.0.2 (игрок 12.10: «слева снизу раздел — респ эпиков»; скрин 13.10 00:14 — обвёл пустой низ окна): блок внизу окна, виден всегда
-  const ep = epicRespTxt(wide, now); if (ep) L.push(ep);
+  const ep = epicRespTxt(wide, now); L.push(ep || '— 🏛 маммон —');   // 10.0.9: без строк эпиков блок всё равно есть — ради кнопок Маммона
   const mode = cfg.indMode || 'full';
   if (mode === 'off') { ui.style.display = 'none'; return; }
   ui.style.display = '';
@@ -3000,7 +3030,9 @@ function draw() {
     if (i === 1) return `<div class="s${on ? '' : ' old'}">${escH(t)}</div>`;
     if (t === sess) return `<div class="t">${escH(t)}</div>`;
     if (t.startsWith('— последние действия —')) return `<div class="r">${escH(t.replace(/^— последние действия —\n/, ''))}</div>`;
-    if (t.startsWith('— 🐉 респ эпиков —')) return `<div class="e"><b>🐉 Респ эпиков</b>\n${escH(t.replace(/^— 🐉 респ эпиков —\n/, ''))}</div>`;
+    // 10.0.9: справа от «Респ эпиков» — кнопки Маммона (.mm); без эпиков — только кнопки
+    if (t.startsWith('— 🐉 респ эпиков —')) return `<div class="e"><div class="et"><b>🐉 Респ эпиков</b>\n${escH(t.replace(/^— 🐉 респ эпиков —\n/, ''))}</div><div class="mm">${mmGoBtns()}</div></div>`;
+    if (t === '— 🏛 маммон —') return `<div class="e"><div class="mm">${mmGoBtns()}</div></div>`;
     if (rbRunTxt && t === rbRunTxt) { let S = null; try { S = L2V7Modules.rbrun.summary(now); } catch (e) {}
       const head = `<button type="button" class="bt" data-rbrun="toggle" title="${rbRunOpen ? 'Свернуть сводку' : 'Показать, что выпало с РБ за серию'}">📦 Серия РБ${S ? `: убито ${S.kills}${S.nItems ? ` · вещей ${S.nItems}` : ''}` : ''} ${rbRunOpen ? '▴' : '▾'}</button>`;
       const body = rbRunOpen ? `${escH(t.replace(/^— 📦 серия РБ —\n/, ''))}\n<button type="button" class="bt" data-rbrun="reset" title="Обнулить сводку и считать заново с этого момента">↺ Новая серия</button>` : '';
@@ -4433,7 +4465,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
   get toOutskirts() { return toOutskirts; }, set toOutskirts(value) { toOutskirts = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 
-L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
+L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
   get farmZones() { return farmZones; }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },

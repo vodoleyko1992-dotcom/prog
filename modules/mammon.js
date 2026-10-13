@@ -345,9 +345,13 @@ function modeFree(afterWin = false) {             // можно ли отлуч�
 // 9.2.5 (игрок 12.10: «добавь кнопку — идти улучшить / выполнить задание у Маммона»): кнопки меню ставят rt.mmGoReq {kind:'order'|'up', t}.
 // Разовая команда игрока: летим сразу, без автоматических условий (галочки «сам», пауза 30 мин после неудачи, «уже пробовал»).
 // Остаются проверки игры: заказ открыт и ресурса хватает по сумке; улучшение — вещь-цель выбрана, цель не достигнута, «хватает» — у кузнеца
+// 10.0.9 (игрок 13.10 07:22, скрин: «где отметил красным, добавь кнопку — открыть Маммона/прийти к Маммону — на выбор торговец или кузнец»):
+// kind 'visit' {npc:'order'|'smith'} — просто прийти к NPC (телепорт за адену, как у задач), открыть его страницу и встать на паузу,
+// чтобы игрок сделал своё; никаких проверок заказа/вещи-цели
 function goReq(now = Date.now()) {
   const R = env.rt.mmGoReq; if (!R?.kind) return null;
   if (now - (R.t || 0) > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
+  if (R.kind === 'visit') { const k = R.npc === 'smith' ? 'smith' : 'order'; return { kind: k, visit: true, cmd: true, why: `по кнопке: прийти к ${NPC_NAME[k]} Маммона` }; }
   if (R.kind === 'order') {
     const o = env.rt.mmOrder;
     if (!o || o.st !== 'OPEN' || !(o.exp - now > 60000)) return { drop: `открытого заказа нет${o?.st === 'CLAIMED' ? ` (забрал ${o.win || 'другой игрок'})` : ''}` };
@@ -393,6 +397,7 @@ async function isNear(kind) {
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
+const NPC_NAME = { order: 'торговцу', smith: 'кузнецу' };
 async function finish(J, ok, why) {
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
@@ -428,6 +433,14 @@ async function teleport(J) {                      // страница телеп
     const err = (env.$q('#mammon-loc-err')?.textContent || '').trim();
     if (err) return finish({ ...J, home: null }, false, `не улетели: ${err.slice(0, 80)}`);
   }
+}
+// 10.0.9: «прийти к Маммону» — NPC рядом: открываем его страницу и ставим бота на паузу (игрок жмёт ▶ Продолжить, когда закончит)
+async function visit(J) {
+  const page = PAGE[J.kind];
+  if (location.pathname !== page) { env.setStatus(`Маммон: открываю ${NPC_NAME[J.kind]}`); location.href = page; await env.sleep(4000); return; }
+  const log = [{ kind: 'visit', id: J.kind, ok: true, why: `пришёл к ${NPC_NAME[J.kind]}`, t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
+  await env.setRt({ mmJob: null, mmLog: log });
+  await env.pauseBot(`пришёл к ${NPC_NAME[J.kind]} Маммона (по кнопке в окне бота) — жду команды: ▶ Продолжить в меню`);
 }
 async function claim(J) {
   if (location.pathname !== PAGE.order) { env.setStatus('Маммон: сдаю заказ'); location.href = PAGE.order; await env.sleep(4000); return; }
@@ -801,7 +814,7 @@ async function mmStep() {
       else await teleport(J);
       return true;
     }
-    if (J.kind === 'order') await claim(J); else await smith(J);
+    if (J.visit) await visit(J); else if (J.kind === 'order') await claim(J); else await smith(J);
     return true;
   }
   if (env.cfg.mmGoalItem && Date.now() - goalT > 30000) { goalT = Date.now(); await gearDb(); env.itemsDb?.().catch?.(() => {}); goalNote(); }
@@ -810,7 +823,7 @@ async function mmStep() {
   if (cw?.drop) { env.rec('B', 'Маммон', `кнопка «отправить крафтеру сейчас»: ${cw.drop}`); await env.setRt({ mmCraftReq: null, mmCraftSay: { t: Date.now(), why: cw.drop } }); return false; }
   const hw = env.handWant?.();
   if (hw?.drop) { env.rec('B', 'саб', `кнопка «передать основному сейчас»: ${hw.drop}`); await env.setRt({ subHandReq: null, subHandSay: { t: Date.now(), why: hw.drop } }); return false; }
-  if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
+  if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : env.rt.mmGoReq.kind === 'visit' ? `прийти к ${NPC_NAME[env.rt.mmGoReq.npc] || 'торговцу'}` : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
   const w = want();
   if (!w) return false;
   if (!modeFree()) { if (w.cmd) env.setStatus('Маммон: по кнопке полечу, как только закончу бой/тур/поход'); return false; }
@@ -819,14 +832,14 @@ async function mmStep() {
   const mail = w.kind === 'send' || w.kind === 'claim';
   // 10.0 (лог 12.10 12:00:05–12:00:13): перелёт в новую зону ещё в пути (zonePend, 2 мин) — возвращаемся туда, а не в старую rt.zone
   const zp = env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000 ? env.rt.zonePend.id : null;
-  const home = !mail && !env.fishNow() && env.autonomyMode() !== 'cat' ? zp || env.rt.zone || null : null;
+  const home = !mail && !w.visit && !env.fishNow() && env.autonomyMode() !== 'cat' ? zp || env.rt.zone || null : null;   // 10.0.9: визит кончается паузой — домой не летим
   await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.hand ? { subHandReq: null, subHandSay: null } : w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
-  env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${w.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${w.why}`);
+  env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${NPC_NAME[w.kind]}: ${w.why}`);
   return true;
 }
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
