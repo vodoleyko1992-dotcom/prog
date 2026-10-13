@@ -94,7 +94,7 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   const menv = {
     cfg: { lvlBelow: 3, lvlAbove: 20, lvlMin: 1, lvlMax: 99, searchChamp: true }, PAGE_SIZE: 15,   // 8.0.3: проверки A4/B1 — при ВКЛ поиске чемпионов
     rt: { zone: 'z', hardMobs: {}, zoneMobs: { z: ['Near Weak', 'Far Strong', 'Mid', 'Low'] }, mobVal: {},
-      spawns: { s1: ['Near Weak', 52], s3: ['Mid', 52], s4: ['Low', 52], s2: ['Far Strong', 53], q1: ['Quest Mob', 52], c1: ['Probe Golem Prodigy IV', 46], c2: ['Old Champ', 43], m6: ['Lowbie', 46] } },
+      spawns: { s1: ['Near Weak', 52], s3: ['Mid', 52], s4: ['Low', 52], s2: ['Far Strong', 53], q1: ['Quest Mob', 52], c1: ['Probe Golem Prodigy IV', 47], c2: ['Old Champ', 43], m6: ['Lowbie', 47] } },
     heroLvl: () => 52, isRaidId: id => /^l2dop_/.test(id), campChampMin: () => 0, isBoss: () => false, campActive: () => false, campChampOpen: () => false,
     isQuestName: (n, q = []) => q.some(x => x.toLowerCase() === String(n).toLowerCase()), setRt: p => { Object.assign(menv.rt, p); },
   };
@@ -105,8 +105,9 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   const sig = { ids: ids.map((x, i) => x || 'gap' + i), quest: ['Quest Mob'] }, types = { c1: 'champion', c2: 'champion' };
   // без замеров: чемпион 46 (−6) — цель, обычный 46 — нет, чемпион 43 (−9) — нет; среди равных — выше уровнем, потом ближе
   let c = Array.from(M.candidates(rules, sig, types, 99), x => x.id);   // массив из песочницы vm — в обычный
-  assert.ok(c.includes('c1'), 'champion at hero−6 is a target (A4)');
-  assert.ok(!c.includes('m6'), 'normal mob at hero−6 stays out of the window');
+  // 10.0.5 (игрок 13.10: «фарм мобов −5 лвл максимум, иначе не падают ФА»): окно чемпионов −8 → −5 — чемпион и обычный теперь на −5 (были −6)
+  assert.ok(c.includes('c1'), 'champion at hero−5 is a target (A4, FA window)');
+  assert.ok(!c.includes('m6'), 'normal mob at hero−5 stays out of the window −3');
   assert.ok(!c.includes('c2'), 'champion at hero−9 is out');
   assert.equal(c[0], 'q1', '★ quest target first');
   assert.equal(c[1], 's2', 'no measurements: higher level first (53 > 52)');
@@ -125,7 +126,7 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   menv.rt.spawns.c3 = ['Near Champ', 52]; idsAt.c3 = 8; ids[8] = 'c3'; types.c3 = 'champion';
   const sigOff = { ids: ids.map((x, i) => x || 'gap' + i), quest: ['Quest Mob'] };
   c = Array.from(M.candidates(rules, sigOff, types, 99), x => x.id);
-  assert.ok(!c.includes('c1'), 'search off: champion at hero−6 is out of the window, like a normal mob');
+  assert.ok(!c.includes('c1'), 'search off: champion at hero−5 is out of the window −3, like a normal mob');
   assert.ok(c.includes('c3'), 'search off: champion inside the window is still a normal target');
   assert.ok(c.indexOf('c3') > c.indexOf('s3'), 'search off: unmeasured champion gets the zone median, not 3× — no rush to champions');
   menv.cfg.searchChamp = true;

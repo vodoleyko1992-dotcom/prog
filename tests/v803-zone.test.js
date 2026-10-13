@@ -111,7 +111,10 @@ const content = read('content.js');
     isQuestName: (n, q = []) => q.some(x => x.toLowerCase() === String(n).toLowerCase()), setRt: p => { Object.assign(menv.rt, p); } };
   const M = mf.L2V7Factories.mobfarm(menv);
   const rules = [{ neg: false, quest: true, champ: false, all: false, name: '' }, { neg: false, quest: false, champ: false, all: true, name: '' }];
-  const sig = { ids: ['s1', 's2', 'q1'], quest: ['Ol Mahum Raider'] };
+  // 10.0.5 (игрок 13.10: «фарм мобов −5 лвл максимум»): «мягкое окно» открывает только до героя −5 — Ant Soldier 51 / Ant Larva 52
+  // (ниже окна −3, но в пределах −5) им открываются, Ant Worker 35 — никогда
+  menv.rt.spawns.s1 = ['Ant Soldier', 51]; menv.rt.spawns.s2 = ['Ant Larva', 52]; menv.rt.spawns.s5 = ['Ant Worker', 35];
+  const sig = { ids: ['s1', 's2', 'q1', 's5'], quest: ['Ol Mahum Raider'] };
   const ids = () => Array.from(M.candidates(rules, sig, {}, 99), x => x.id);
   // лог: окно открыто в 11:43:44 в Sea of Spores без автофарма, в 11:45 — Bee Hive с автофармом
   menv.rt.lvlRelaxDown = { t: Date.now() - 120000 };

@@ -12,7 +12,8 @@ assert.match(html, /<label>⚔ Искать чемпионов по локаци
 assert.match(popup, /const BOOL = \[[^\]]*'searchChamp'/, 'toggle is saved');
 // без поиска — ни окна −8, ни ×3; с поиском — как в 8.0
 assert.match(mobfarm, /const champOn = champRuleOn\(\);/);
-assert.match(mobfarm, /const below = champ && champOn \? Math\.max\(env\.cfg\.lvlBelow \?\? 3, CHAMP_BELOW\) : \(env\.cfg\.lvlBelow \?\? 3\);/);
+// 10.0.5 (игрок 13.10: «фарм мобов −5 лвл максимум»): окно чемпионов −8 → −5, как у всех
+assert.match(mobfarm, /const below = \(champ && champOn\) \|\| relaxDown \? FA_BELOW : lowCap\(\);/);
 assert.match(mobfarm, /const ch = c\.champ && champOn;/);
 assert.match(mobfarm, /return !!env\.cfg\.searchChamp;/, 'the [чемп] rule follows the toggle');
 // 8.0.3 (проверка правок): вкладка, ждавшая замок, не возвращает старый пакет разовых миграций настроек

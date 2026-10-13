@@ -176,7 +176,8 @@ async function catHunt(id) {                      // внутри подземе
 // (v5.3.1: выбрал высокую зону — бот стоял и «ждал мобов по уровню», лог 08.10 14:47)
 function catWin(L) {
   const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
-  return auto ? { lo: L - (env.cfg.lvlBelow ?? 3), hi: L + (env.cfg.lvlAbove ?? 99) } : { lo: 0, hi: 999 };
+  return auto ? { lo: L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5),   // 10.0.5: не ниже героя −5 (FA)
+     hi: L + (env.cfg.lvlAbove ?? 99) } : { lo: 0, hi: 999 };
 }
 // 9.0: кого бить. РБ (тип raid/epic — раньше в подземелье не распознавался: в разметке его нет) — только с «РБ между мобами»;
 // первыми ★-цели квеста, затем чемпионы (≈×10 EXP и адены за ×2 HP — kb/README), затем ближе к «герой +1». Среди равных — случайный
