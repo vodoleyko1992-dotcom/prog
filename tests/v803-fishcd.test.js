@@ -165,7 +165,7 @@ const NORMAL = { up: 200, down: 40 };
     assert.match(content, /addEventListener\('visibilitychange'[\s\S]{0,300}fishing\\\.html[\s\S]{0,200}рыбалка ушла в фон/);
     assert.ok(!content.includes('куплен один свиток за 100 Proof: +${lvl} → +${rodTo}'), 'старый текст «+4 → +10» убран');
     assert.ok(content.includes('куплен свиток заточки за 100 Proof (удочка сейчас +${lvl}, цель +${rodTo})'));
-    assert.match(code, /fishCdLeft, fishNet, fishAct/, 'fishNet в экспорте модуля');
+    assert.match(code, /fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct/, 'fishNet в экспорте модуля');   // 10.0.6: + fishSrvOn/fishSrvMargin
   }
   console.log('PASS: 8.0.3 fishing cooldown — lag-shifted cooldown from serverNowMs (no early press after 1.4 s response), late net summary, lag refusals do not inflate (retry 150 ms), clean refusal +30 ms cap 1.5 s, fast decay to 1.05 s, aborted request retried at once, cooldowns logged once, background-tab warning, scroll message');
 })().catch(e => { console.error(e); process.exit(1); });
