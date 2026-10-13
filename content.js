@@ -1053,7 +1053,11 @@ async function absorb() {
 function candidates(...args) { return L2V7Modules.mobfarm.candidates(...args); }
 
 // ---------- рейд-боссы ----------
-const heroLvl = () => parseInt(($q('#l2-hud-legacy-lvl')?.textContent || '').replace(/\D/g, ''), 10) || 0;
+// 10.0.10 (лог 13.10 18:13, новый герой alt1 8 ур.): уровень в шапке не прочитался (0) — окно уровней в карте и бою не работало, бот пять раз подряд шёл
+// к красному Hook Spider 16 (+8), а вердикт чемпионов считался от уровня 0/1. Последнее прочитанное ненулевое значение — запас на такой случай
+// (уровень только растёт; ответ игры GET /character тоже его знает, но шапка — быстрее). Смена персонажа — кэш сброшен (lvlSeenNick)
+let lvlSeen = 0, lvlSeenNick = '';
+const heroLvl = () => { const v = parseInt(($q('#l2-hud-legacy-lvl')?.textContent || '').replace(/\D/g, ''), 10) || 0, n = rt?.char || ''; if (lvlSeenNick !== n) { lvlSeen = 0; lvlSeenNick = n; } if (v) lvlSeen = v; return v || lvlSeen || 0; };
 function raidList(...args) { return L2V7Modules.raid.raidList(...args); }
 // база РБ: rt.rbDb[id] = { name, lvl, verdict: 'ok'|'no'|'chip', heroLvl, tries, kills, t, note }
 // «не по силам» не пробуем снова, пока не вырос уровень героя (или пока игрок не нажал «перепроверить»)
@@ -1919,7 +1923,7 @@ cw('Orc Fighter', ['кастеты', 'двуруч. меч', 'двуруч. ду
 cw('Dwarven Fighter, Scavenger, Bounty Hunter, Fortune Seeker', ['дубина', 'двуруч. дубина', 'древковое']);
 cw('Artisan, Warsmith, Maestro', ['дубина', 'двуруч. дубина']);
 cw('Mage, Human Mage, Mystic, Human Wizard, Wizard, Sorcerer, Sorceror, Necromancer, Warlock, Cleric, Bishop, Prophet, Elven Mage, Elven Wizard, Spellsinger, Elemental Summoner, Elven Oracle, Elven Elder, Dark Elven Mage, Dark Mage, Dark Wizard, Spellhowler, Phantom Summoner, Shillien Oracle, Shillien Elder, Orc Mage, Orc Shaman, Overlord, Warcryer, Archmage, Soultaker, Arcana Lord, Cardinal, Hierophant, Mystic Muse, Elemental Master, Evas Saint, Eva\'s Saint, Storm Screamer, Spectral Master, Shillien Saint, Dominator, Doomcryer', [MAGE]);
-const heroLevel = () => +($q('#l2-hud-legacy-lvl')?.textContent.match(/\d+/)?.[0] || 0);
+const heroLevel = () => heroLvl();   // 10.0.10: один источник с запасом (см. heroLvl)
 const iconStem = src => (src || '').split('/').pop().replace(/\.\w+$/, '').replace(/_i\d+$/, '').replace(/[_-]+/g, ' ').trim();
 // виды оружия «в класс»: по профессии; если профессии нет — по требованиям атакующих скиллов на панели (поле w базы IL)
 const normalizeProfession = name => String(name || '').trim().replace(/[_\s-]+/g, ' ').replace(/\s+/g, ' ').toLowerCase();
