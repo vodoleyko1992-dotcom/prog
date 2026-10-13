@@ -328,7 +328,8 @@
   <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
   <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
   <h4>🗺 Локации для кача</h4>
-  <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="0" style="width:52px"></label>
+  <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="1" max="5" style="width:52px"></label>
+  <div class="hint">Не больше 5: с мобов ниже героя больше чем на 5 ур. Fast Aden не падает, таких бот не бьёт (кроме ★ квеста и цели фарма).</div>
   <label>… до героя + (99 — без ограничения) <input id="lvlAbove" type="number" min="0" max="99" style="width:52px"></label>
   <div id="lvlWin" class="hint"></div>
   <div id="zoneBox" class="zbox"><div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.</div></div>

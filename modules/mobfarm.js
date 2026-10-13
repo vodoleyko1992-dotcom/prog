@@ -61,6 +61,10 @@ function champTier(id, a) {                        // цвет чемпиона:
   return m ? m[1] : 'blue';
 }
 // шанс 1 FA с этого моба (0 — моб ниже героя больше чем на 5 ур.)
+// 10.0.5 (игрок 13.10 00:32: «поставь фарм мобов −5 лвл максимум, иначе не падают ФА»): ниже героя больше чем на 5 ур. не бьём никогда —
+// ни по окну из меню (больше 5 или «0» = 5), ни чемпионов (было −8), ни «мягким окном», когда тут все мобы ниже. Исключения — только явные
+// задачи: ★ квест, источник ресурса/рецепта, чемпион главы
+const lowCap = () => Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : FA_BELOW, FA_BELOW);
 const faChance = (champ, tier, lvl, hl = env.heroLvl() || env.rt.lvl || 0) => hl && lvl && lvl < hl - FA_BELOW ? 0 : champ ? FA_P[tier] || FA_P.blue : FA_MOB;
 
 async function netSpawns(list) {
@@ -302,7 +306,7 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
 // автофарме, а после смерти и ▶ с «Автофармом» действовало в Bee Hive — бот бил Ant Soldier 35 и Ant Larva 29 героем 56. Окно — только на той
 // локации, где его открыли, и открытое без автофарма при автофарме не действует (тот сам летит в зону своего уровня)
 const relaxOk = r => !!r && Date.now() - (r.t || 0) < 20 * 60000 && (r.zone || null) === (env.rt.zone || null) && (!env.cfg.zoneAuto || !!r.auto);
-let farRecT = 0;
+let farRecT = 0, lowRecT = 0;
 function candidates(rules, sig, types, limitIdx) {
   const out = [];
   // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): пока «Искать чемпионов» выключено (и глава не просит чемпионов),
@@ -338,8 +342,9 @@ function candidates(rules, sig, types, limitIdx) {
     // 8.0 (аудит фарма A4, лог 10.10 20:08:57: чемпион «Probe Golem Prodigy IV (46)» в Pavel Ruins при герое 51 окно −3 отсекало):
     // чемпион даёт в 5–10 раз больше опыта обычного моба (≈29 тыс. против ≈3,5–6 тыс., лог 20:20–20:30) — для чемпионов нижняя
     // граница не −lvlBelow, а −8 (если игрок не поставил шире)
-    const below = champ && champOn ? Math.max(env.cfg.lvlBelow ?? 3, CHAMP_BELOW) : (env.cfg.lvlBelow ?? 3);
-    if (hl && lvl && !qLike && !relaxDown && env.cfg.lvlBelow !== 0 && lvl < hl - below) return;
+    // 10.0.5: окно чемпионов и «мягкое окно» вниз — не дальше −5 (FA с мобов ниже не падает)
+    const below = (champ && champOn) || relaxDown ? FA_BELOW : lowCap();
+    if (hl && lvl && !qLike && lvl < hl - below) return;
     // «не по зубам» по опыту: бой с этим видом шёл дольше 45 с (или урон ≈0) — пропускаем 2 часа (v4.23)
     // 9.2.2 (лог 12.10 07:22–07:34, спойлер): источник ресурса (farmT, цель Маммона «Mithril Ore») обходил «не по зубам», а бой
     // (combat: «не по зубам» прощает только ★ квест) сразу возвращал на карту — 12 мин по кругу карта → Guardian Basilisk → карта.
@@ -361,7 +366,7 @@ function candidates(rules, sig, types, limitIdx) {
 // без замера — медиана зоны (чемпион — ×3: Blazing Swamp 20:20–20:30 — ≈29 тыс. EXP за ≈11 с против ≈870 EXP/с у зоны), при равенстве — выше уровнем
 // (до героя +5; кто ещё выше — тем позже: без замеров к ним не тянемся), ближе — только последним. Вид с замером (≥3 боя) ниже 0,7 медианы зоны — не цель,
 // если есть другие (★ цели квеста и источники ресурса не отсекаются)
-const CHAMP_BELOW = 8, PAGE_S = 0.6, MOBVAL_MAX = 150, MOBVAL_N = 30;
+const PAGE_S = 0.6, MOBVAL_MAX = 150, MOBVAL_N = 30;
 const mobKey = (name, champ) => (champ ? 'ч:' : '') + String(name || '').toLowerCase();
 const medOf = xs => { const a = xs.filter(v => v > 0).sort((p, q) => p - q), m = a.length >> 1; return !a.length ? 0 : a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
 function mobEps(name, champ) {                   // EXP/с вида моба по замерам (обычный — от 3 боёв, чемпион — от 1) или null
@@ -672,9 +677,12 @@ async function map() {
   if (!cands.length && !env.campActive()) {   // 7.1.30: автофарм включён, а улететь некуда — тоже бьём, что есть, а не «Целей нет» до остановки
     const hl = env.heroLvl(), lv = pageItems().filter(i => !i.champ && !i.boss && i.lvl).map(i => i.lvl);
     const downOn = relaxOk(env.rt.lvlRelaxDown);
-    const lo = hl - (env.cfg.lvlBelow ?? 3);   // 7.1.30: РБ/охрана эпика не считаются; хватит того, что есть мобы ниже окна
-    if (hl && lv.length && lv.some(l => l < lo) && !downOn) {
-      env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур. (герой ${hl}) — подбор локации выключен, остаюсь и бью их`);
+    const lo = hl - lowCap();   // 7.1.30: РБ/охрана эпика не считаются; хватит того, что есть мобы ниже окна
+    // 10.0.5: «мягкое окно» открывает только до −5; мобы тут все ниже — не бьём (FA не падает), стоим и пишем, что делать
+    if (hl && lv.length && Math.max(...lv) < hl - FA_BELOW) {
+      if (Date.now() - lowRecT > 600000) { lowRecT = Date.now(); env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., герой ${hl}: все ниже героя больше чем на 5 ур. — не бью (FA с них не падает). Включите «Автофарм» или перелетите в зону от ${hl - FA_BELOW} ур.`); }
+    } else if (hl && lv.length && lv.some(l => l < lo) && lo > hl - FA_BELOW && !downOn) {
+      env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур. (герой ${hl}) — подбор локации выключен, остаюсь и бью тех, что не ниже ${hl - FA_BELOW} ур.`);
       await env.setRt({ lvlRelaxDown: { t: Date.now(), zone: env.rt.zone || null, auto: !!env.cfg.zoneAuto } });
       return;
     }
@@ -706,6 +714,6 @@ async function map() {
   env.setStatus('Цели исчезли из списка, ищу заново');
   await env.sleep(1500);
 }
- return { FA_P, FA_MOB, FA_BELOW, champTier, faChance, pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
+ return { FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
  };
 })(globalThis);

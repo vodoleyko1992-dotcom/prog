@@ -45,7 +45,7 @@ assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| 'blue
   let c = mf.candidates(rules, sig, types, 99);
   assert.deepEqual(JSON.parse(JSON.stringify(c.slice(0, 2).map(x => x.id))), ['champ_r_wbp_0', 'champ_o_wbp_0'], 'red, then orange');
   const low = c.find(x => x.id === 'champ_r_low_0');
-  assert.ok(low && !low.faHot, 'red champion 6 levels below — no FA, no priority');
+  assert.ok(!low, 'red champion 6 levels below — not a target at all (floor −5, even with lvlBelow 10)');
   assert.ok(!c.find(x => x.id === 'dense_2').faHot, 'blue — ordinary priority');
   // ★ квест выше FA-чемпиона
   sig.quest = ['Antelope'];
@@ -81,3 +81,23 @@ assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| 'blue
   assert.match(read('modules/combat.js'), /env\.trackLoot\([^\n]+\{ champ: !!ctx\.champ, tier: ctx\.tier \|\| '', lvl: ctx\.lvl \|\| 0 \}/);
   console.log('PASS: 10.0.5 FA from champions — tier from server/spawnId/markup, FA window −5, red→orange first (after ★ quest), toggle, FA drop journal and stats');
 })().catch(e => { console.error(e); process.exit(1); });
+// 10.0.5 (игрок 13.10 00:32: «поставь фарм мобов −5 лвл максимум, иначе не падают ФА»): ниже героя −5 не бьём никогда, кроме явных задач
+(() => {
+  const recs2 = [];
+  const env2 = { cfg: { priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 0, lvlAbove: 20, lvlMin: 1, lvlMax: 99 },
+    rt: { spawns: { a: ['Sixty', 60], b: ['SixtyOne', 61], c: ['Champ', 60], q: ['Quest', 55] }, lvl: 66, lvlRelaxDown: { t: Date.now(), zone: null } }, PAGE_SIZE: 15,
+    heroLvl: () => 66, isRaidId: () => false, isBoss: () => false, isQuestName: (n, q) => (q || []).includes(n),
+    campActive: () => false, campChampOpen: () => false, campChampMin: () => 0, campMobOpen: () => [], farmRules: () => [], recipeRules: () => [],
+    rec: (...a) => recs2.push(a.join(' | ')), setRt: async p => Object.assign(env2.rt, p) };
+  const m2 = load('modules/mobfarm.js', env2);
+  assert.equal(m2.lowCap(), 5, 'lvlBelow 0 (no limit) → 5');
+  env2.cfg.lvlBelow = 9; assert.equal(m2.lowCap(), 5, 'lvlBelow 9 → 5');
+  env2.cfg.lvlBelow = 3; assert.equal(m2.lowCap(), 3);
+  const ids = Array.from(m2.candidates(m2.parseRules(), { ids: ['a', 'b', 'c', 'q'], quest: ['Quest'] }, { c: 'champion' }, 99), x => x.id);
+  assert.ok(!ids.includes('a') && !ids.includes('c'), '60 at hero 66: neither mob nor champion, even with the soft window');
+  assert.ok(ids.includes('b'), '61 = hero −5 allowed by the soft window');
+  assert.ok(ids.includes('q'), '★ quest target is an explicit task — kept');
+  assert.match(read('modules/mobfarm.js'), /все ниже героя больше чем на 5 ур\. — не бью \(FA с них не падает\)/);
+  assert.match(read('modules/navigation.js'), /const lo = L - Math\.min\(\+env\.cfg\.lvlBelow > 0 \? \+env\.cfg\.lvlBelow : 5, 5\)/);
+  console.log('PASS: 10.0.5 hero −5 floor — menu window capped at 5, champions −8 → −5, soft window only to −5, ★ quest kept, zone/catacomb windows capped');
+})();
