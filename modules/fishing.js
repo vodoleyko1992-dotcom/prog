@@ -209,8 +209,31 @@ const fishCdLen = () => Math.min(FCD_MAX, Math.max(FCD_MIN, env.rt.fishCdLen || 
 // прошлого принятого нажатия умения; off — «приход − serverNowMs» (минимум = сдвиг часов + самая быстрая доставка ответа); lat — обычное
 // «клик → отметка сервера»
 const FNET = { off: [], lat: 0, n: 0, sent: {}, over: {}, ms: {}, cdsLog: false };
+// 10.0.6 (разбор 13.10 по логам 12.10 12:20–18:12, 4259 ударов): откат ОДНОГО и того же приёма бот держал 1,05 с по своей модели,
+// а сервер в каждом ответе отдаёт свои откаты — fishing.cooldowns {pumpingUntil, reelingUntil} в мс сервера при pumpingMs 500 /
+// reelingMs 700 (образец в журнале 12.10 12:20:34). Ниже 1,05 с бот ни разу не пробовал, а все 3 отказа «action_cooldown» за день —
+// после ответов по 8,6 с (сервер отметил нажатие поздно, бот жал через 0,13 с). Теперь откат приёма — по серверу: готов в
+// «приход ответа − обратный путь + (Until − serverNowMs)» плюс запас (rt.fishSrvMargin, 60 мс; отказ +50, 50 чистых нажатий −10,
+// 30…400). Запас упёрся в 400 и отказы идут — откат по серверу выключается на час (rt.fishSrvOff), работает прежняя модель 1,05 с.
+// Выключить насовсем: cfg.fishSrvCd = false. Сводка сети пришла позже экрана — до неё ждём по модели (цикл вываживания перечитывает)
+const SRV = { until: {}, ms: {}, t: 0, used: {}, rej: {}, log: false };
+const fishSrvOn = () => env.cfg.fishSrvCd !== false && SRV.t > 0 && !(env.rt.fishSrvOff && Date.now() - env.rt.fishSrvOff < 3600000);
+const fishSrvMargin = () => Math.min(400, Math.max(30, +env.rt.fishSrvMargin || 60));
+const fishSrvStale = name => SRV.t < (FNET.sent[name] || 0) && SRV.rej[name] !== FNET.sent[name];   // ответа на ЭТО нажатие ещё нет
+function fishSrvNote(nf) {
+  const c = nf.cds; if (!c || typeof c !== 'object') return;
+  const back = nf.ms > 1000 || !(nf.ms > 0) ? 0 : Math.min(150, nf.ms / 2);   // обратный путь ответа ≈ половина запроса (до 150 мс); лаг > 1 с — где застрял, неизвестно: от прихода
+  for (const k of ['pumping', 'reeling']) {
+    const u = +c[k + 'Until'] || 0;
+    SRV.until[k] = u > nf.srv ? nf.t - back + (u - nf.srv) : 0;
+    if (+c[k + 'Ms'] > 0) SRV.ms[k] = +c[k + 'Ms'];
+  }
+  SRV.t = nf.t;
+  if (!SRV.log && fishSrvOn()) { SRV.log = true; env.rec('B', 'рыбалка', `откат приёмов — по серверу: Pumping ${(SRV.ms.pumping || 0) / 1000} с, Reeling ${(SRV.ms.reeling || 0) / 1000} с, запас ${fishSrvMargin()} мс (своя модель ${(fishCdLen() / 1000).toFixed(2)} с — только без сводки сети)`); }
+}
 function fishNet(nf) {                           // из сетевого обработчика content.js: ответ на POST /game/fishing/action
   if (!nf || !nf.ok || !(nf.srv > 0) || !(nf.t > 0)) return;
+  fishSrvNote(nf);
   // структура fishing.cooldowns неизвестна (журнал режет ответ на 800 знаков, поле дальше) — первый непустой образец раз за сессию вкладки
   // в журнал, чтобы по следующему логу брать откат прямо у сервера. Пока откат — своя модель с поправкой по serverNowMs (ниже)
   if (!FNET.cdsLog && nf.cds != null && JSON.stringify(nf.cds).length > 2) {
@@ -230,7 +253,11 @@ function fishNet(nf) {                           // из сетевого обр
   if (over && env.FCD[a] === sent) env.FCD[a] = sent + over;   // fishAct уже засчитал нажатие (экран обновился раньше, чем пришла сводка сети)
 }
 
-const fishCdLeft = name => Math.max(0, (env.FCD[name] || 0) + fishCdLen() - Date.now());
+const fishCdLeft = name => {
+  const model = Math.max(0, (env.FCD[name] || 0) + fishCdLen() - Date.now());
+  if (!fishSrvOn() || fishSrvStale(name)) return model;
+  return Math.max(0, (SRV.until[name] || 0) + fishSrvMargin() - Date.now());   // 10.0.6: откат по серверу
+};
 
 // 10.0.1 (лог 12.10 14:04:32–16:46:16, 2 ч 42 мин простоя): сервер отвечал на каждое нажатие 400 «in_battle» («Під час бою рибалка
 // недоступна») — у героя висел незакрытый бой (его начала другая вкладка/вход из облака и не довела), а бот 598 раз писал «нет ответа
@@ -259,7 +286,7 @@ async function fishAct(name) {                   // нажать рыболов�
   const before = fishLog(), m0 = env.fishMut, c0 = env.fishCdMsg, hp0 = fishState()?.cur, t0 = Date.now();
   const hint = () => env.$q('.l2-fishing-combat-hint')?.textContent.trim() || '', h0 = hint();
   env.fishLastPre = before;
-  if (name === 'pumping' || name === 'reeling') FNET.sent[name] = t0;   // 8.0.3: по нему fishNet узнаёт ответ на ЭТОТ клик
+  if (name === 'pumping' || name === 'reeling') { SRV.used[name] = fishSrvOn() && !fishSrvStale(name) ? t0 : 0; FNET.sent[name] = t0; }   // 8.0.3: по нему fishNet узнаёт ответ на ЭТОТ клик; 10.0.6: нажато по откату сервера
   env.fire(fSlot(name));
   let rej = false;
   // ответ — только настоящий: у рыбы сменилось HP / рыба пропала / в журнале строка удара, улова, срыва или отказ
@@ -311,13 +338,21 @@ async function fishAct(name) {                   // нажать рыболов�
     const gap = t0 - (env.FCD[name] || 0);
     const F = { ok: 0, rej: 0, ...(env.rt.fishCdStat || {}) };
     // 8.0: запись — с исходом заброса (statPut), нажатия её не ждут; откат в памяти меняется сразу
-    if (rej) {
+    if (rej && SRV.used[name] === t0) {
+      // 10.0.6: отказ на откате сервера — свою модель не трогаем, растим запас; откат сервера тот же (нажатие не прошло) — ждём его снова
+      F.rej++; F.srvRej = (F.srvRej || 0) + 1; SRV.rej[name] = t0;
+      const m = Math.min(400, fishSrvMargin() + 50); statPut('fishSrvMargin', m);
+      if (fishSrvMargin() >= 400 && F.srvRej % 5 === 0) { statPut('fishSrvOff', Date.now()); env.rec('B', 'рыбалка', `отказ «на перезарядке» при запасе 400 мс (${F.srvRej} отказов по серверу) — час откат приёмов по своей модели ${(fishCdLen() / 1000).toFixed(2)} с`); }
+      else if (F.srvRej <= 3 || F.srvRej % 10 === 0) env.rec('B', 'рыбалка', `отказ «на перезарядке» при откате по серверу (${name}, через ${gap} мс после прошлого нажатия, ответ ${lag} мс) — запас ${m} мс`);
+      env.FCD[name] = Math.max(env.FCD[name] || 0, Date.now() + 150 - fishCdLen());
+    } else if (rej) {
       F.rej++;
       // 8.0.3: учим только чистый отказ (жали по своему откату, без лага) — +30 мс; отказ после лага откат не раздувает, повтор через 150 мс
       const cd = fishCdLen();
       if (gap >= cd - 30 && gap < 3000 && (FNET.ms[name] || 0) <= 1000 && lag <= 1000) statPut('fishCdLen', +Math.min(FCD_MAX, cd / 1000 + 0.03).toFixed(3));
       else env.FCD[name] = Math.max(env.FCD[name] || 0, Date.now() + 150 - cd);
     } else if (got && !tmo) {
+      if (SRV.used[name] === t0) { F.srvOk = (F.srvOk || 0) + 1; if (F.srvOk % 50 === 0 && fishSrvMargin() > 30) statPut('fishSrvMargin', Math.max(30, fishSrvMargin() - 10)); }   // 10.0.6: чистые нажатия по серверу ужимают запас
       // 8.0.3: отсчёт отката — с поправкой на опоздание клика на сервер (fishNet; если сводка сети придёт позже — поправит она)
       const o = FNET.over[name];
       env.FCD[name] = t0 + (o && o.t0 === t0 ? o.over : 0); F.ok++; FNET.ms[name] = lag;
@@ -640,7 +675,7 @@ function fishRateTxt() {
   const S = env.rt.fishSess; if (!S || !S.n) return '';
   const h = Math.max(1, (S.last || Date.now()) - S.t0) / 3600000;
   const C = env.rt.fishCdStat || {};
-  return (env.rt.fishNoShots && env.cfg.fishShots ? '⚠ нет зарядов · ' : '') + `${S.n} рыб · ${Math.round(S.n / h)}/ч · откат ${(fishCdLen() / 1000).toFixed(2)} с` + (C.rej ? ` · отказов ${C.rej}` : '')
+  return (env.rt.fishNoShots && env.cfg.fishShots ? '⚠ нет зарядов · ' : '') + `${S.n} рыб · ${Math.round(S.n / h)}/ч · откат ${fishSrvOn() ? `сервер ${(SRV.ms.pumping || 500) / 1000}/${(SRV.ms.reeling || 700) / 1000} с +${fishSrvMargin()} мс` : `${(fishCdLen() / 1000).toFixed(2)} с`}` + (C.rej ? ` · отказов ${C.rej}` : '')
     + (env.rt.fishLag ? ` · ответ ${env.rt.fishLag} мс${env.rt.fishLag > 1000 ? ' ⚠ лаг' : ''}` : '')
     // 8.0.3 (лог 11.10 11:01:56–11:37): в фоновой вкладке игра снимает «disabled» с кнопок умений только на своём секундном тике
     // (88 нажатий опоздали, ≈48 с за час) — жать недоступную кнопку нельзя, поэтому только предупреждение: держать окно рыбалки видимым
@@ -1014,6 +1049,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);
