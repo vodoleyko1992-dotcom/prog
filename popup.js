@@ -88,7 +88,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'champEvery', 'enemyMinHits', 'enem
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 const TXT  = ['mmCrafter', 'mmCraftScope', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'paid', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
@@ -98,7 +98,7 @@ const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGo
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
               fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
-              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0 };
+              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
@@ -184,7 +184,7 @@ async function load() {
   // режим РБ
   paintRbToggle(d);
   $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
-  paintModes(d, on);
+  paintModes(d, on, rt);
   paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   renderEpics(rt, d);
@@ -251,11 +251,11 @@ async function load() {
   // квесты: прогресс, частота дропа, прогноз боёв
   const rate = q => (q.drops + 1) / (q.kills + 2);
   // в кампании — только цели текущей главы (прошлая глава могла оставить «Ol Mahum Raider 39/40»)
-  const campNames = cfg?.campaign && rt.campaign?.targets?.length ? rt.campaign.targets.filter(t => !t.objective).map(t => (t.name || '').toLowerCase()) : null;
+  const campNames = (cfg?.campaign || rt.campAutoOn) && rt.campaign?.targets?.length ? rt.campaign.targets.filter(t => !t.objective).map(t => (t.name || '').toLowerCase()) : null;
   const inCamp = mob => !campNames || campNames.some(n => n.includes(mob.toLowerCase()) || mob.toLowerCase().includes(n));
   const qs = Object.entries(rt.quests || {}).filter(([mob, q]) => q.total && inCamp(mob));
   // «На локации» — только когда бот ищет квестовых (галочка; кампания убрана в 7.2.1); защита от мусора в старых данных
-  const qt = d.searchQuest || d.campaign ? (rt.questTargets || []).filter(x => x.length < 60 && !/:\d/.test(x)) : [];
+  const qt = d.searchQuest || d.campaign || rt.campAutoOn ? (rt.questTargets || []).filter(x => x.length < 60 && !/:\d/.test(x)) : [];
   renderQuestBox(rt, qt, qs, campNames ? rt.campaign : null, rate);
 }
 
@@ -1535,7 +1535,7 @@ function currentMode(d) {
   return d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
 }
 const MODE_NAME = { tasks: '⏹ Без режима — только задачи', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы' };
-function paintModes(d, on) {
+function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампания (авто)»
   const m = currentMode(d);
   $('rbSessStart').onclick = async () => {
   await save();
@@ -1553,7 +1553,7 @@ $('rbSessStop').onclick = async () => {
 document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
   $('campToggle').classList.toggle('on', !!d.campaign); $('tvtToggle').classList.toggle('on', !!d.tvtOn); paintRbToggle(d);
   document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => b.classList.toggle('on', d[b.dataset.task] !== false));
-  const mods = [d.campaign && '📜 кампания', rbEff(d) && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
+  const mods = [d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`), rbEff(d) && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
   const ms = $('modeSummary'); if (ms) ms.textContent = `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.

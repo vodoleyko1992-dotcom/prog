@@ -12,7 +12,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
-  campaign: false, autoRevive: true, campaignEvery: 25,
+  campaign: false, campAuto: true, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
   taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'paid', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
@@ -1327,7 +1327,7 @@ function farmGuideTick() {                        // фоном, только GE
 }
 // цель фарма: из меню (ресурс + сколько) или ресурс главы кампании («Нужно сдать: Stone of Purity 48/50»)
 function farmGoal() {
-  if (cfg.campaign) {
+  if (campEnabled()) {
     const t = campOpen().find(x => x.res && FARM?.res?.[x.name.toLowerCase()]);
     if (t) return { key: t.name.toLowerCase(), name: t.name, left: t.total - t.done, why: 'глава кампании' };
   }
@@ -1621,6 +1621,7 @@ function questLinesInLog(...args) { return L2V7Modules.quests.questLinesInLog(..
 const campActive = (...args) => L2V7Modules.quests.campActive(...args);
 const campOpen = (...args) => L2V7Modules.quests.campOpen(...args);
 const campMobOpen = (...args) => L2V7Modules.quests.campMobOpen(...args);
+const campEnabled = (...args) => L2V7Modules.quests.campEnabled(...args);   // 10.0.10: кампания из меню или авто по сюжетному квесту новичка
 const campRbOpen = (...args) => L2V7Modules.quests.campRbOpen(...args);
 const nameLike = (a, b) => { a = (a || '').toLowerCase().trim(); b = (b || '').toLowerCase().trim(); return !!a && !!b && (a === b || a.includes(b) || b.includes(a)); };
 const campChampOpen = (...args) => L2V7Modules.quests.campChampOpen(...args);
@@ -2075,7 +2076,7 @@ function tasksGoalNote(g) {
 }
 const autonomyMode = () => L2EngineCore.chooseMode({
   epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
-  cat: !!cfg.catMode, campaign: !!cfg.campaign, tasks: !!cfg.taskOnly
+  cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
 // эпики + рыбалка: эпиков подходящих нет (выбор цели) — бот рыбачит; места «куда вернуться» и «мягкая ошибка» считают это рыбалкой
 const fishNow = (...args) => L2V7Modules.fishing.fishNow(...args);
@@ -2327,7 +2328,7 @@ async function main() {
         servicesStarted = true;
         // Справочник предметов — только при работе с сумкой, добычей и оружием.
         // Ресурсы и рецепты подгружаем лишь при активном задании (нужны для приоритетов карты).
-        if (cfg.farmRes || cfg.resQuests || cfg.campaign || cfg.mmGoalItem) farmDb().catch(() => {});
+        if (cfg.farmRes || cfg.resQuests || campEnabled() || cfg.mmGoalItem) farmDb().catch(() => {});
         if (cfg.recipeRes) recipeDb().catch(() => {});
         try { learnSkillDb(); } catch (e) {}
       }
@@ -3505,6 +3506,7 @@ addEventListener('message', e => {
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
+    if (/^\/game\/story-quests\/starter-saga(?:\/\w+)?$/.test(path) && d.res.quest) L2V7Modules.quests.sagaNote(d.res.quest);   // 10.0.10: сюжетный квест новичка → rt.storySaga (кампания авто)
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
     const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch), L2V7Modules.subclass.charNote(ch);   // 10.0.7: + слоты классов (заготовка под сабы)
   } catch (e) {}
@@ -4143,7 +4145,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },
@@ -4222,7 +4224,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; },
   get zoneForLevel() { return zoneForLevel; }, set zoneForLevel(value) { zoneForLevel = value; },
   get zoneName() { return zoneName; }, set zoneName(value) { zoneName = value; },
   get zonePick() { return zonePick; }, set zonePick(value) { zonePick = value; } });
-L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
   get QLINE() { return QLINE; }, set QLINE(value) { QLINE = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
