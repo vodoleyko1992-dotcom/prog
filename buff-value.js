@@ -37,6 +37,9 @@
     275:  { nm: 'Dance of Fury', tempo: 1, k: 'темп' }, 1086: { nm: 'Haste Lv.2', tempo: 1, k: 'темп' },
     1240: { nm: 'Guidance Lv.3', hit: 1.02, g: 1, k: 'урон' }, 272: { nm: 'Dance of Inspiration', hit: 1.02, g: 1, k: 'урон' },
   };
+  // 10.0.7 (игрок 13.10 03:27: «Magnus и Water — нет, не стакаются»): Greater-баффы баффера FA — одна группа, действует один
+  // (как в Interlude: Prophecy of Fire/Water/Wind, Chant of Victory, Magnus' Chant, Victories of Pa'agrio). В наборе остаётся лучший по ДПС
+  const GROUP = [1356, 1357, 1355, 1363, 1413, 1414];
   const CRIT_CAP = 0.5;           // предел шанса крита на сервере не известен (под 4 крит-баффами видели 28–43 %); выше 50 % не считаем
   const TEMPO = 0.03;             // 8.0.3: ход ≈1,1 с ограничен кликами, откат сервера ≈0,7 с — ускорение даёт ≈3 %
   const MEXP = 0.5;               // урон заклинаний ≈ √M.Atk (Magnus +30 % → +14 %, лог 11.10 01:12)
@@ -78,7 +81,8 @@
   }
   // ---------- ДПС героя + кота под набором баффов (условные единицы) ----------
   function dps(S, ids) {
-    const set = (ids || []).map(Number), on = id => set.includes(id);
+    const set0 = (ids || []).map(Number), set = []; let g0 = false;
+    for (const id of set0) { if (GROUP.includes(id)) { if (g0) continue; g0 = true; } set.push(id); }   // второй Greater не действует
     let matk = S.matk, patk = S.patk, crit = S.crit, ck = S.ck, hit = 1, tempo = 0, catCrit = S.cat?.crit || 0, catCk = S.cat?.ck || 0;
     const matk0 = matk;
     const FXS = S.fx || FX;
@@ -167,5 +171,5 @@
     return S;
   }
   const pct = x => `${x >= 0 ? '+' : ''}${(x * 100).toFixed(x * 100 >= 10 ? 0 : 1)} %`;
-  G.L2BuffVal = { FX, DEF, CRIT_CAP, TEMPO, MEXP, SPELL_K, kind, stats, baseCrit, critSig, matkSig, mcritOf, dps, rank, plan, total, obsAdd, snapAdd, fxLearn, fromRt, pct };
+  G.L2BuffVal = { FX, DEF, GROUP, CRIT_CAP, TEMPO, MEXP, SPELL_K, kind, stats, baseCrit, critSig, matkSig, mcritOf, dps, rank, plan, total, obsAdd, snapAdd, fxLearn, fromRt, pct };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -118,4 +118,14 @@ const hero = { lv: 67, matk: 9014, patk: 1678, mcrit: 17, mck: 2.0, crit: 68, ck
   fl.onNet('/game/battle/action', { status: 200, req: { action: 'l2_1220' }, res: {}, bt: { log: ['Полум’я 3000'], mob: 0, hp: 5000, mp: 3940, seq: 5, end: true, win: true } });
   deq(calls, [[1, 1], [1, 0], [1, 0]], 'three spell casts, one crit'); assert.equal(flushed, 1, 'flushed at the end of the fight');
 }
+// ---------- 5. 10.0.7 (игрок 13.10 03:27: «Magnus и Water — нет, не стакаются»): Greater-баффы — одна группа, действует один ----------
+{
+  const S = V.stats('mage', hero);
+  deq(V.GROUP, [1356, 1357, 1355, 1363, 1413, 1414]); deq(F.GROUP, V.GROUP);
+  near(V.dps(S, [1413, 1357]).total, V.dps(S, [1413]).total, 1e-9, 'Water after Magnus adds nothing'); near(V.dps(S, [1357, 1413]).total, V.dps(S, [1357]).total, 1e-9, 'and vice versa');
+  const ids = F.ids('mage', S); assert.ok(ids.includes(1413) && !ids.includes(1357), 'with the cat Magnus wins → Water dropped from the set');
+  const noCat = F.ids('mage', V.stats('mage', { ...hero, cat: null })); assert.ok(noCat.includes(1357) && !noCat.includes(1413), 'without the cat Water wins → Magnus dropped');
+  deq(F.dropClash([1413, 1357, 365], {}), [1413, 365], 'no hero numbers: the earlier Greater stays'); deq(F.dropClash([1414, 1363, 1356], {}), [1414]);
+  assert.equal(V.plan(F.ids('fighter'), V.stats('fighter', { patk: 3000, crit: 100, ck: 1.9, buffs: [] }), null, id => F.COST[id] || 1).filter(x => V.GROUP.includes(x.id)).length, 1, 'fighter: one Greater in the plan');
+}
 console.log('PASS: 10.0.7 buff value — crit/M.Atk/cat model, FA order by DPS gain per FA, hero stats from /character, crit learning in fights');
