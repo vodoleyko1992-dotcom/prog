@@ -788,7 +788,7 @@ function renderZones(rt, d) {
   const L = rt.lvl || 0, cat = { ...(rt.zoneCat || {}) }, S = rt.zoneStat || {};
   const name = id => cat[id]?.name || String(id).replace(/^out:/, 'Окрестности: ');
   // v4.59: желаемое окно уровней мобов (от героя −lvlBelow до +lvlAbove, по умолчанию −3…+15) — зона подходит, если её мобы в него попадают
-  const wLo = L - (d.lvlBelow ?? 3), wHi = L + Math.min(d.lvlAbove ?? 15, 15), wMid = (wLo + wHi) / 2;
+  const wLo = L - Math.min(+d.lvlBelow > 0 ? +d.lvlBelow : 5, 5), wHi = L + Math.min(d.lvlAbove ?? 15, 15), wMid = (wLo + wHi) / 2;
   if ($('lvlWin')) $('lvlWin').textContent = L ? `Герой ${L} ур. → бьёт мобов ${(d.lvlAbove ?? 99) >= 99 ? `от ${Math.max(1, wLo)} ур. и выше (без верхнего предела; слишком сильных — бой > 45 с — сам пропускает на 2 ч)` : `${Math.max(1, wLo)}–${L + (d.lvlAbove ?? 15)} ур.`} · зону для кача выбирает до ${wHi} ур.` : '';
   const fits = id => { const c = cat[id]; return !!c?.lo && L && c.lo <= wHi && c.hi >= wLo; };
   // насколько зона «в окне»: доля её диапазона внутри окна, затем близость середины к середине окна

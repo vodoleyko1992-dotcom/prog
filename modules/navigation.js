@@ -192,7 +192,7 @@ const kExp = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' M' : Mat
 
 async function zoneForLevel() {
   const L = env.heroLvl(); if (!L) return false;
-  const lo = L - (env.cfg.lvlBelow ?? 3), hi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: окно из меню; для ВЫБОРА ЗОНЫ — не выше +15 (v5.3.1)
+  const lo = L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5), hi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: окно из меню; для ВЫБОРА ЗОНЫ — не выше +15 (v5.3.1)
   const lv = env.pageItems().filter(i => !i.champ && i.lvl).map(i => i.lvl);
   if (!lv.length || lv.some(l => l >= lo && l <= hi)) return false;    // на этой странице есть свои — дело не в уровне
   if (Date.now() - (env.rt.zoneLvlT || 0) < 5 * 60000) return false;
@@ -232,7 +232,7 @@ function zonePick() {
   const L = env.heroLvl(), cat = catAll(), cur = env.rt.zone, trial = Math.max(15, env.cfg.zoneTrial || 20);
   if (!L) return null;   // 7.1.30: уровень героя ещё не прочитан — не выбирать зону по окну −3…15
   const badZ = env.rt.zoneBad || {}, notBad = id => Date.now() - (badZ[id] || 0) > 6 * 3600000;   // 7.1.30: зона без кнопки/не по карману — 6 ч не пробуем
-  const wLo = L - (env.cfg.lvlBelow ?? 3), wHi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: то же окно, что в меню (зона — не выше +15)
+  const wLo = L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5), wHi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: то же окно, что в меню (зона — не выше +15)
   const fits = Object.entries(cat).filter(([id, c]) => !/^out:/.test(id) && c.lo && c.lo <= wHi && c.hi >= wLo && notBad(id));
   const adena = env.rt.adenaSeen && Date.now() - env.rt.adenaSeen.t < 3600000 ? env.rt.adenaSeen.v : null;   // из магазина/телепорта, если видели недавно
   const afford = c => adena == null || !c.price || adena - c.price >= Math.min(env.cfg.shopReserve ?? 200000, adena / 2);
