@@ -18,10 +18,13 @@ const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'кра
 // P.Atk 11 356 против красного Canyon Antelope 68 — 145 тыс. HP, M.Def 1 366, P.Atk 2 577; EXP почти та же (284 тыс. против 207 тыс.).
 // Цифры сервера уже с усилением (HP в NET_SPAWNS настоящее), но свой ДПС по «обычным» чемпионам к таким не годится: защита ×4 → урон ≈¼.
 // Такие чемпионы — отдельный класс: свой замер ДПС (dpsH), свои итоги и вердикты (ключ «red73»), отход при HP < 50 % (удар ×4).
-// «Cancel»: каждый удачный физ. удар оранжевого/красного снимает до 3 баффов — 30 % / 60 % за удар без задержки (синий 10 %, раз в 30 с),
-// промах не снимает, удары по коту хозяина не трогают. Это правило игры, не свойство вида: при платных баффах за FA (> 10 мин) оранжевый/красный
-// чемпион — не цель (cfg.champCancel 'paid', по умолчанию); 'never' — не бить их вовсе; 'always' — бить, баффы не считать
-const HARD_LVL = 73, DEF_K = 4, CANCEL_P = { blue: 0.1, orange: 0.3, red: 0.6 }, CANCEL_MAX = 3;
+// «Cancel» (второй анонс 13.10 06:10 заменил шансы первого 10/30/60 %): каждый удачный физ. удар чемпиона снимает до 3 баффов — синий 3 %
+// (раз в 30 с), оранжевый 5 %, красный 7 % за удар без задержки; промах не снимает; сопротивление «Cancel» работает. Это правило игры, не
+// свойство вида, и считается ценой: ожидаемые снятые платные баффы за FA (удары за бой ≈ длительность ÷ 1,3 с × точность 0,8 × шанс × 3,
+// не больше, чем висит) × время на 1 FA с мобов (≈150 с) против цены чемпиона — дороже → не цель (cfg.champCancel 'paid', по умолчанию).
+// Красный 68 при ≈50 с боя: ≈31 удар × 7 % ≈ 2,2 срабатывания → до 6 баффов ≈ 900 с против ≈135 с → при наборе за FA не цель; бесплатный
+// городской набор не считаем (бот берёт его заново сам). 'never' — оранжевых/красных не бить вовсе; 'always' — бить, баффы не считать
+const HARD_LVL = 73, DEF_K = 4, CANCEL_P = { blue: 0.03, orange: 0.05, red: 0.07 }, CANCEL_MAX = 3, CANCEL_GAP = { blue: 30 }, HIT_S = 1.3, HIT_ACC = 0.8;
 const isHard = c => !!c && (c.tier === 'red' || c.tier === 'orange') && (c.lvl || 0) >= HARD_LVL;
 const tKey = c => (TIER_RU[c?.tier] ? c.tier : 'blue') + (isHard(c) ? '73' : '');
 const L = () => env.heroLvl?.() || env.rt.lvl || 0;
@@ -43,13 +46,22 @@ function dpsOn(hard = false) {
   }
   return { dps: (env.rt.rbDps || env.rt.dps?.dps || 0) / (hard ? DEF_K : 1), known: false };
 }
-// 10.0.8: снимет ли этот чемпион платные баффы за FA → { p, paid } или null (режим cfg.champCancel: paid | never | always)
-function cancelBlock(c) {
+// 10.0.8: цена «Cancel» для этого чемпиона — ожидаемо снятые платные баффы за FA и их стоимость в секундах фарма; sec — ожидаемая длина боя
+function cancelCost(c, sec) {
+  const p = CANCEL_P[c?.tier] || 0, paid = env.faPaidLeft?.() || 0;
+  if (!(p > 0) || !(paid > 0) || !(sec > 0)) return { p, paid, buffs: 0, s: 0 };
+  let fires = sec / HIT_S * HIT_ACC * p;
+  if (CANCEL_GAP[c.tier]) fires = Math.min(fires, 1 + sec / CANCEL_GAP[c.tier]);
+  const buffs = Math.min(paid, fires * CANCEL_MAX), r = env.farmRate?.(), perFa = r?.sk > 0 ? r.sk / FA_MOB : 150;
+  return { p, paid, fires: +fires.toFixed(2), buffs: +buffs.toFixed(1), s: Math.round(buffs * perFa) };
+}
+// 10.0.8: не цель из-за «Cancel»? → { p, paid, s } или null (режим cfg.champCancel: paid — по цене, never — оранжевых/красных не бить, always — не считать)
+function cancelBlock(c, sec, lim) {
   const mode = env.cfg?.champCancel || 'paid', p = CANCEL_P[c?.tier] || 0;
-  if (mode === 'always' || p < CANCEL_P.orange) return null;
-  if (mode === 'never') return { p, paid: 0 };
-  const paid = env.faPaidLeft?.() || 0;
-  return paid > 0 ? { p, paid } : null;
+  if (mode === 'always' || !(p > 0)) return null;
+  if (mode === 'never' && p >= CANCEL_P.orange) return { p, paid: 0, s: 0, never: true };
+  const cc = cancelCost(c, sec);
+  return cc.s > (lim || 0) ? cc : null;
 }
 // предел боя с этим чемпионом, с: сколько стоит он в секундах обычного фарма (EXP + FA)
 function limitS(c) {
@@ -60,11 +72,12 @@ function limitS(c) {
 // решение до боя: { ok, probe, eta, lim, why }
 function judge(c) {
   const tier = TIER_RU[c.tier] ? c.tier : 'blue', lim = limitS(c), gap = (c.lvl || 0) - L(), hard = isHard(c), key = tKey(c);
-  const cb = cancelBlock(c);
-  if (cb) return { ok: false, lim, cancel: true, why: `снимает баффы (${TIER_RU[tier]}: ${Math.round(cb.p * 100)} % за удар, до ${CANCEL_MAX} за раз)${cb.paid ? ` — платных за FA висит ${cb.paid}` : ' — таких не бью (настройка)'}` };
+  const d = dpsOn(hard), hn = hard ? ' (73+: HP ×3, защита ×4)' : '';
+  const sec = c.hp > 0 && d.dps > 0 ? Math.min(lim * 2, c.hp / d.dps + 2) : lim;   // ожидаемая длина боя для цены «Cancel»
+  const cb = cancelBlock(c, sec, lim);
+  if (cb) return { ok: false, lim, cancel: true, why: `снимает баффы (${TIER_RU[tier]}: ${Math.round(cb.p * 100)} % за удар, до ${CANCEL_MAX} за раз)${cb.never ? ' — таких не бью (настройка)' : ` — платных за FA висит ${cb.paid}, за ≈${Math.round(sec)} с боя потеряю ≈${cb.buffs} (≈${cb.s} с фарма при цене чемпиона ${lim} с)`}` };
   const v = mem().v?.[key];
   if (v && gap >= (v.gap ?? -99) && !grown(v.pow)) return { ok: false, lim, why: `${v.why} — жду роста силы (ур. ${v.pow?.lvl || '?'}, урон ${v.pow?.base || '?'})` };
-  const d = dpsOn(hard), hn = hard ? ' (73+: HP ×3, защита ×4)' : '';
   if (!(c.hp > 0) || !(d.dps > 0)) return { ok: true, probe: true, lim, hard, why: 'цифр нет — проба' + hn };
   const eta = Math.round(c.hp / d.dps + 2);
   if (eta <= lim) return { ok: true, probe: !d.known, eta, lim, hard, why: d.known ? '' : 'своего замера нет — проба' + hn };
@@ -106,6 +119,6 @@ async function learn(ctx, outcome, dealt, sec) {
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { FA_P, FA_MOB, T_DEF, TIER_RU, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelBlock, limitS, judge, fleeCheck, learn };
+ return { FA_P, FA_MOB, T_DEF, TIER_RU, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, fleeCheck, learn };
  };
 })(globalThis);

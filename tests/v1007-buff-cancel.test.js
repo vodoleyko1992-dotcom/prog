@@ -18,7 +18,7 @@ const B = load('modules/buffs.js').L2V7Factories.buffs(env);
   assert.equal(B.cancelNote(lines, 'Frost Tarantula', { champ: true, tier: 'red' }), 4);
   assert.equal(env.rt.buffCancel['ч:frost tarantula'].n, 4); assert.equal(env.rt.buffCancel['ч:frost tarantula'].k, 1);
   assert.ok(env.rt.tbCancelT > 0);
-  assert.match(recs.join('\n'), /Frost Tarantula \[чемп\] снял с вас 4 бафф\(ов\) за бой \(правило игры: красный 60 % за удар\) — платных за FA осталось 2; бесплатный набор возьму у баффера сразу, таких при платных баффах за FA не выбираю/);   // 10.0.8: красный — правило игры
+  assert.match(recs.join('\n'), /Frost Tarantula \[чемп\] снял с вас 4 бафф\(ов\) за бой \(правило игры: красный 7 % за удар\) — платных за FA осталось 2; бесплатный набор возьму у баффера сразу, при платных баффах за FA чемпиона беру только если он стоит потери/);   // 10.0.8: красный — правило игры
   assert.equal(B.cancelNote(['Полум’я 2679', 'Победа!'], 'Frost Buffalo'), 0, 'no cancel line — nothing recorded');
   assert.ok(!env.rt.buffCancel['frost buffalo']);
   assert.ok(B.cancelRisk('Frost Tarantula', true) && !B.cancelRisk('Kookaburra', true)); assert.equal(B.cancelRisk('Frost Tarantula', true, 'red'), null, '10.0.8: red/orange — game rule, judged by champs');
