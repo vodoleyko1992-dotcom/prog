@@ -964,5 +964,37 @@
       "heroLvl",
       "farmRate"
     ]
+  },
+  "subclass": {
+    "exports": [
+      "roleOf",
+      "role",
+      "charNote",
+      "craftSelf",
+      "craftSelfPlan",
+      "spoilFirst",
+      "helpGoal",
+      "handover",
+      "handWant",
+      "text",
+      "tick"
+    ],
+    "dependencies": [
+      "cfg",
+      "rt",
+      "setRt",
+      "rec",
+      "FARM",
+      "heroNick",
+      "heroLvl",
+      "mammon",
+      "canSpoil",
+      "farmZones",
+      "spoilK",
+      "invQty",
+      "gameGet",
+      "sharedGet",
+      "sharedSet"
+    ]
   }
 }

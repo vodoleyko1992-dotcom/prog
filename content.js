@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
@@ -1274,6 +1274,53 @@ function farmCatOf(row) {
   while (d) { heads.unshift((d.querySelector(':scope > summary')?.textContent || '').replace(/[—-]\s*\d+\s*$/, '').replace(/\s+/g, ' ').trim()); d = d.parentElement?.closest('details'); }
   return heads.filter(Boolean).join(' › ').slice(0, 80);
 }
+// 10.0.7 (игрок 13.10: «автофарм расходников на апгрейд… учитывать дроп и спойл»): база источников прямо из игры — GET /game/farm-guide
+// (то же, что форум «Фарм ресурсов», но JSON: resources[] {itemId, nameEn, sources[] {mode drop|spoil, mobName, mobLevel, locationEn, teleportId,
+// chanceMin/Max, qtyMin/Max}}). Со страницы форума бот читал только строки дропа — разметку спойл-строк он не видел ни разу (7.2), и спойл
+// в базе был только счётчиком. Раз в сутки (или по кнопке): дроп и спойл 14 базовых ресурсов → FARM.res[имя].drop / .sp в формате farmRowParse
+const FARM_GUIDE_URL = '/game/farm-guide', FARM_GUIDE_EVERY = 24 * 3600000;
+let farmGuideBusy = false;
+function farmGuideMerge(db, data) {
+  const list = Array.isArray(data?.resources) ? data.resources : [];
+  let n = 0, sp = 0, dr = 0;
+  for (const r of list) {
+    const name = String(r?.nameEn || '').trim(); if (!name || !Array.isArray(r.sources)) continue;
+    const drop = [], spl = [];
+    for (const x of r.sources) {
+      const mob = String(x?.mobName || '').trim(), tp = String(x?.teleportId || '').trim();
+      if (!mob || !tp) continue;
+      const ch = Math.round(((+x.chanceMax || +x.chanceMin || 0) * 100) * 100) / 100, a = +x.qtyMin || 1, b = +x.qtyMax || a;
+      (x.mode === 'spoil' ? spl : drop).push([mob, +x.mobLevel || 0, ch, a, b, tp, String(x.locationEn || '').trim()]);
+    }
+    const k = name.toLowerCase(), old = db.res[k] || {};
+    db.res[k] = { ...old, name: old.name || name, id: +r.itemId || old.id || 0, drop, sp: spl, spoil: spl.length, bosses: old.bosses || [], cat: old.cat || 'Ресурсы',
+      icon: old.icon || (typeof r.iconUrl === 'string' && /^\/(?:icons|game\/item-icon|assets)\//.test(r.iconUrl) ? r.iconUrl.slice(0, 200) : ''), t: Date.now(), api: 1 };
+    n++; dr += drop.length; sp += spl.length;
+  }
+  return { n, dr, sp };
+}
+async function farmGuideSync(why = 'раз в сутки') {
+  if (farmGuideBusy) return false;
+  farmGuideBusy = true;
+  try {
+    const r = await gameGet(FARM_GUIDE_URL, 20000);
+    if (!r.ok) { rec('B', 'фарм', `источники из игры (${why}): HTTP ${r.status} — пробую позже`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    const j = await r.json(), db = await farmDb(), m = farmGuideMerge(db, j);
+    if (!m.n) { rec('B', 'фарм', `источники из игры (${why}): ответ без ресурсов`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    db.t = Date.now(); FARM = db;
+    await chrome.storage.local.set({ farmDb: db });
+    await setRt({ farmGuideT: Date.now(), farmN: Object.keys(db.res).length, farmGuideReq: null });
+    rec('B', 'фарм', `источники из игры (${why}): ресурсов ${m.n}, источников дропа ${m.dr}, спойла ${m.sp}${+j?.resourceTeleportAdenaCost ? ` · телепорт к точке ${(+j.resourceTeleportAdenaCost).toLocaleString('ru')} адены` : ''}`);
+    return true;
+  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+  finally { farmGuideBusy = false; }
+}
+function farmGuideTick() {                        // фоном, только GET; нужна цели Маммона, цели «Фарм ресурса» и помощнику основного
+  if (rt.farmGuideReq) { farmGuideSync('по кнопке').catch(() => {}); return; }
+  if (cfg.mmFarmGuide === false || !(cfg.mmGoalItem || (cfg.farmRes || '').trim() || (cfg.subMainNick || '').trim())) return;
+  if (Date.now() - (rt.farmGuideT || 0) < FARM_GUIDE_EVERY) return;
+  farmGuideSync().catch(() => {});
+}
 // цель фарма: из меню (ресурс + сколько) или ресурс главы кампании («Нужно сдать: Stone of Purity 48/50»)
 function farmGoal() {
   if (cfg.campaign) {
@@ -1285,10 +1332,14 @@ function farmGoal() {
   if (!(cfg.farmRes || '').trim() && cfg.mmGoalItem) { const m = L2V7Modules.mammon.mmFarmGoal(); if (m) return m; }
   // 7.2.1 (игрок: «на точку квеста летаю сам и квесты выполняю сам»): «Квесты на ресурсы» — только счётчик, бот к источнику не летит
   const k = (cfg.farmRes || '').trim().toLowerCase();
-  if (!k || !FARM?.res?.[k]) return null;
-  const got = rt.farmGot?.[k] || 0, need = cfg.farmNeed || 0;
-  if (need && got >= need) return null;
-  return { key: k, name: FARM.res[k].name, left: need ? need - got : Infinity, why: 'из меню' };
+  if (k && FARM?.res?.[k]) {
+    const got = rt.farmGot?.[k] || 0, need = cfg.farmNeed || 0;
+    if (!need || got < need) return { key: k, name: FARM.res[k].name, left: need ? need - got : Infinity, why: 'из меню' };
+  }
+  // 10.0.7 (заготовка под саб спойлера): этот персонаж — помощник основного (cfg.subMainNick): добывает сырьё, которого не хватает
+  // цели Маммона основного (запись subNeed в хранилище от вкладки основного), точка — по всем недостающим сразу
+  if (!k && !cfg.mmGoalItem) { const h = L2V7Modules.subclass?.helpGoal?.(); if (h) return h; }
+  return null;
 }
 // зоны-источники: «шт. за бой» = средний (шанс × среднее кол-во) по мобам зоны в окне уровня;
 // оценка = это × близость уровня (свой ±3 — лучше: и опыт, и бой быстрый) × (1 + 0,1 за каждый вид моба, до 5 — проще найти цель)
@@ -1318,13 +1369,17 @@ function farmZones(drop, L, above, sp = [], spK = 0.8) {
     return z;
   }).sort((x, y) => (y.inWin - x.inWin) || y.score - x.score);
 }
+// 7.2: спойлер (есть спойл на панели / гном) — считаем и спойл. Шанс пометить моба — по замеру (rt.spoilStat ok/fail за нажатие,
+// до 3 попыток на моба: 1 − (1 − p)³), без замера 80 %. 10.0.7: вынесено — точку «по всем материалам» считает modules/mammon.js
+function spoilK() {
+  const st = rt.spoilStat || {}, tries = (st.ok || 0) + (st.fail || 0);
+  return tries >= 10 ? Math.max(0.2, 1 - Math.pow(1 - (st.ok || 0) / tries, 3)) : 0.8;
+}
 function farmPick(goal) {
+  if (goal?.pick?.tp) return goal.pick;           // 10.0.7: точка уже выбрана по всем недостающим материалам цели (mammon.mmFarmGoal)
   const r = FARM?.res?.[goal.key], L = heroLvl();
   if (!r || !L) return null;
-  // 7.2: спойлер (есть спойл на панели / гном) — считаем и спойл. Шанс пометить моба — по замеру (rt.spoilStat ok/fail за нажатие,
-  // до 3 попыток на моба: 1 − (1 − p)³), без замера 80 %
-  const st = rt.spoilStat || {}, tries = (st.ok || 0) + (st.fail || 0);
-  const spK = tries >= 10 ? Math.max(0.2, 1 - Math.pow(1 - (st.ok || 0) / tries, 3)) : 0.8;
+  const spK = spoilK();
   const zones = farmZones(r.drop, L, cfg.lvlAbove ?? 6, canSpoil() ? r.sp || [] : [], spK);
   const best = zones[0];
   return best ? { ...best, names: Object.keys(best.mobs) } : null;
@@ -2370,6 +2425,8 @@ async function main() {
       // 9.0 (игрок 11.10: «функция исполнения заказов» + раздел «Маммон»): заказ торговца и где стоят NPC — фоном (только GET);
       // поход к торговцу/кузнецу — вне боя и туров, с возвратом на точку охоты
       L2V7Modules.mammon.mmTick().catch(() => {});
+      farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
+      L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
       if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
       // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
       L2V7Modules.story.storyTick().catch(() => {});
@@ -3378,7 +3435,7 @@ addEventListener('message', e => {
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
-    const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch);
+    const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch), L2V7Modules.subclass.charNote(ch);   // 10.0.7: + слоты классов (заготовка под сабы)
   } catch (e) {}
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
@@ -4344,6 +4401,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 
 L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
+  get farmZones() { return farmZones; }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
@@ -4353,6 +4411,12 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get FARM() 
 L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
+
+// 10.0.7 (игрок 13.10: «заготовка под саб крафтера и спойлера»): роль активного класса, свой крафт вместо крафтера, помощь основному персонажу (modules/subclass.js)
+L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get FARM() { return FARM; },
+  get heroNick() { return heroNick; }, get heroLvl() { return heroLvl; }, get mammon() { return L2V7Modules.mammon; }, get canSpoil() { return canSpoil; },
+  get farmZones() { return farmZones; }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
+  get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';
   // 10.0 (аудит боя): в разметке игры data-slot-cd стоит на внутреннем <span class="l2-battle-hotbar-slot-cd">, а не на кнопке —
