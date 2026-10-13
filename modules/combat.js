@@ -878,7 +878,7 @@ async function battle() {
     if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
         && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
       env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
-  ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;
+  ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm; ctx.okN0 = env.actNet?.()?.okN || 0;   // 10.0.8: принятые ходы на старте замера «не по зубам»
   if (isRb) {
     ctx.champ = false;                                      // «Оглушення не діє на РБ» (лог 07.10) — стан по РБ не используем
     ctx.rb = { id: spawnId || nm, start: mob0.cur, samples: [], note: 'оценка…' };
@@ -1290,12 +1290,17 @@ async function battle() {
       // урон считался только по HP главного моба. Спойлер бьёт Wild Sweep по всем мобам боя (главный + «рядом») — урон расходится
       // по соседям, HP главного падает медленно, и вид получал «не по зубам». Теперь — весь урон боя (ctx.dealt, главный + соседи)
       // против HP всех живых мобов боя; и урон по строкам журнала (logDmg) — удар по мобу, чьё HP вверху не показано
-      if (nmNow !== ctx.hp0N) { ctx.hp0N = nmNow; ctx.hp0 = mob.cur; ctx.hp0T = Date.now(); ctx.me0 = me?.cur; ctx.dealt0 = ctx.dealt || 0; ctx.logAt = env.logLines(); }
+      if (nmNow !== ctx.hp0N) { ctx.hp0N = nmNow; ctx.hp0 = mob.cur; ctx.hp0T = Date.now(); ctx.me0 = me?.cur; ctx.dealt0 = ctx.dealt || 0; ctx.logAt = env.logLines(); ctx.okN0 = env.actNet?.()?.okN || 0; }
       ctx.me0 ??= me?.cur;
       const left = mob.cur + extraMobs().reduce((a, x) => a + x.cur, 0);
       const el = (Date.now() - ctx.hp0T) / 1000, dmg = Math.max(ctx.hp0 - mob.cur, (ctx.dealt || 0) - (ctx.dealt0 || 0), logDmg(env.newLines(ctx.logAt || ctx.logStart || [], env.logLines()))), dps = el > 0 ? dmg / el : 0, ttk = dps > 0 ? left / dps : Infinity;
       const losing = me && ctx.me0 != null && me.cur < ctx.me0 && me.cur - (ctx.me0 - me.cur) / el * ttk < 0;   // HP кончится раньше моба
-      const hopeless = el >= 15 && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
+      // 10.0.8 (лог 13.10 17:17:41–57, Necropolis of Martyrdom): банка MP отвечала 8,4 с, после неё 6 нажатий не ушли на сервер («урон 0 · MP 0»,
+      // ни одного POST /game/battle/action) — через 15 с Purgatory Gargoyle (3444 HP, такие бот убивает за 1 с) получил «не пробиваю — урон ≈0,0/с»
+      // на 2 ч, а «Охотиться дальше» в подземелье подсовывал его снова и снова → 51 уход на страницу подземелья за 8 мин. Вердикт — только по
+      // ударам, которые сервер принял (≥ 5 за это время) и без зависания сервера (ответ > 5 с) в окне замера; иначе это не «не по зубам», а лаг
+      const N = env.actNet?.() || {}, okHits = (N.okN || 0) - (ctx.okN0 || 0), lagged = (N.slowT || 0) >= ctx.hp0T;
+      const hopeless = el >= 15 && okHits >= 5 && !lagged && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
       if (hopeless || Date.now() - t0 > 180000) {
         const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
         await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [nmNow]: { t: Date.now(), ttk: isFinite(ttk) ? Math.round(ttk) : 9999, lvl: env.heroLvl(), why } }, target: null });
