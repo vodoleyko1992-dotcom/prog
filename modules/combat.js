@@ -682,6 +682,13 @@ function drainPick(ctx, mp) {                     // готовый скилл �
   return null;
 }
 
+function healPick(ctx, mp) {                      // готовый лечащий скилл на себя из роли «Лечение» (порядок = приоритет)
+  return env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) &&
+    (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10)) || null;
+}
+
+const healSlot = b => [...env.names(env.cfg.nDrain), ...env.names(env.cfg.nHeal || '')].some(n => slotsBy(n)[0] === b);   // 10.0.5: ход лечит героя
+
 function chooseAction(ctx, mp) {
   if (mageCombat()) return magePlan(ctx, mp);
   const free = k => (ctx.block[k] || 0) <= Date.now();
@@ -928,7 +935,7 @@ async function battle() {
     }
   };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
-  const act = async (b, status) => {
+  const act = async (b, status, hpGuard = false) => {
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
     // Не полагаемся на визуально готовую кнопку, когда сервер сообщил blockedBy=global.
     while (env.combatCooldown.globalWait() > 0) {
@@ -940,6 +947,10 @@ async function battle() {
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
     const free = await gameFree();
     if (!free) return false;
+    // 10.0.5 (лог 13.10 10:51:56): удар выбран при HP 55 %, а пока ждали ответ хода после лага, HP стал 19 % — бот всё равно нажал Blaze.
+    // Удар (hpGuard) не жмём, если за время ожидания HP упал до опасного: 'lock' — цикл сразу решает заново (банка, вампирик, лечение)
+    if (hpGuard && !healSlot(b)) { const m2 = env.meHp(), p0 = ctx.mePct0;
+      if (m2 && p0 != null && m2.pct <= 50 && m2.pct < p0 - 15) { env.rec('B', 'мало HP', `HP упал ${p0 | 0} → ${m2.pct | 0} % за время ожидания хода — вместо «${env.cleanTitle(b.title)}» лечусь`); return 'lock'; } }
     env.observeSlot(b, 'B');
     const before = noticeText();
     const firedAt = Date.now(), slackA = free.dT ? firedAt - (free.dT + lockA) : 1e9, slackB = free.gE ? firedAt - (free.gE + lockB) : 1e9;
@@ -1021,6 +1032,7 @@ async function battle() {
       env.rec('B', 'эпики', 'Не удалось подтвердить выход из боя за 12 с — продолжаю текущий бой, повторное отступление запрещено');
     }
     const me = env.meHp(), mp = env.meMp(), mob = mobHp();
+    ctx.mePct0 = me ? me.pct : null;                 // 10.0.5: HP на момент решения — для act(..., hpGuard)
     if (me && me.cur === 0) return env.onDeath();
     // 9.0 (лог 12.10 01:08:28–01:31:22): Fairy Queen Timiniel на 7 092 из 1,9 млн HP — её добили другие игроки, ход → 400 «Немає активного
     // бою», игра больше ходов не шлёт, а страница боя стоит. Бот 23 мин жал «урон 0 · MP 0» (HP героя от регена менялся — сторож «нет ответа
@@ -1160,6 +1172,12 @@ async function battle() {
     // 8.0.3: уход СО СТРАНИЦЫ бой не прекращает, а штатная кнопка выхода — прекращает (см. выше: аварийный выход от смертельных ударов)
     if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {
       const pot = env.hpPotPick(true);
+      // 10.0.5 (лог 13.10 10:51:56–10:52:06, Fierce Tiger King Angel): после лага HP 6–24 %, бот 10 с чередовал банку (+600 HP) и Blaze,
+      // а Vampiric Touch (+1 880 HP за ход) и Corpse Life Drain не жал — вампиризм был запрещён ниже стоп-HP + 10 %, лечение на РБ отдано
+      // банке; игрок жал вампирик руками. Теперь при критическом HP ход — только лечению: у мага сначала вампирик (лечит втрое больше
+      // глотка), банка, а пока банка на паузе 1,1 с — вампирик или лечащий скилл, удар — только если лечить нечем
+      const emDrain = drainPick(ctx, mp);
+      if (emDrain && mageCombat()) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`); if (r !== 'lock') ctx.block['drain:' + emDrain.title] = Date.now() + 1500; continue; }
       if (pot && Date.now() - lastHpPot > 1100) {
         // 8.0.3 (лог 11.10 09:59:55 и 10:00:06.8, Тимініель: клик аварийной банки потерян в окне занятости игры, повтор — только через
         // 1,1–1,3 с, за 2,3 с до смерти): потерян в окне ('lock') — отметку банки откатываем, следующий цикл жмёт её снова сразу
@@ -1169,6 +1187,9 @@ async function battle() {
         if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }
         continue;
       }
+      if (emDrain) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`); if (r !== 'lock') ctx.block['drain:' + emDrain.title] = Date.now() + 1500; continue; }
+      const emHeal = healPick(ctx, mp);
+      if (emHeal) { ctx.block['heal:' + emHeal.title] = Date.now() + 2500; const r = await act(emHeal, `Мало HP (${me.pct | 0}%) — лечение скиллом: ${env.cleanTitle(emHeal.title)}`); if (r === 'lock') ctx.block['heal:' + emHeal.title] = 0; continue; }
       if (!pot && !ctx.noPotSaid && !env.hpPots().length) { ctx.noPotSaid = 1; env.rec('B', 'мало HP', `HP ${me.pct | 0}%, банок HP нет — из боя уйти нельзя, бьюсь до конца`); }
     }
     ctx.emWait = 0;                                  // HP выше порога — ожидание банки с нуля
@@ -1350,12 +1371,13 @@ async function battle() {
     // v4.42: лечащий скилл (роль «Лечение») — раньше банки: бесплатно. Хватает MP — лечимся им
     // 7.2: у мага Vampiric Touch (≈665 урона + ≈266 HP) выгоднее лечащего хода (Corpse Life Drain 178 HP без урона мага, Heal ≈430):
     // вампирик готов и HP не критичное — лечащий скилл пропускаем, ниже сработает вампиризм
-    const drainFirst = mageCombat() && me && me.pct > (env.cfg.stopHp || 25) + 10 && !!drainPick(ctx, mp);
+    // 10.0.5: и при низком HP — вампирик лечит больше лечащего скилла (раньше ниже стоп-HP + 10 % он был запрещён)
+    const drainFirst = mageCombat() && me && !!drainPick(ctx, mp);
     // 9.0 «цена хода» (лог 11.10 01:40, Gigantic Chaos Golem: Corpse Life Drain +225 HP за ход, банка +600): на РБ, пока банка HP есть,
     // ход лечения отдаём банке — лечащий скилл только без банок
     const rbPotHas = !!ctx.rb && env.cfg.rbTurnPrice !== false && (() => { const p = env.hpPotPick(false); const q = p ? env.qty(p) : 0; return !!p && q !== 0 && (ctx.rb.allIn || q == null || q > (env.cfg.rbPotReserve || 0)); })();
     if (me && me.pct <= env.cfg.hpPotAt && !drainFirst && !rbPotHas) {
-      const hs = env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) && (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10));
+      const hs = healPick(ctx, mp);
       if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; const r = await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); if (r === 'lock') ctx.block['heal:' + hs.title] = 0; continue; }   // 8.0.3: 'lock' — повтор сразу
     }
     // v5.3: 🩸 вампиризм (Vampiric Claw, Drain Health, Life Leech, Steal Essence, Dark Vortex…): HP ≤ «вампиризм при» —
@@ -1363,7 +1385,8 @@ async function battle() {
     // или HP уже опасно низкое (≤ стоп-HP + 10 %)
     // 8.0 (аудит боя, лог 13-30: 18 из 105 банок на РБ выпиты при HP > 85 %): на РБ, пока включена «полоса банок», вампирик готов —
     // он раньше банки при любом HP (лечит почти столько же и бьёт ≈1400); банка — когда он на откате или HP опасно низкое
-    const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) && me.pct > (env.cfg.stopHp || 25) + 10 ? drainPick(ctx, mp) : null;
+    // 10.0.5 (лог 13.10 10:51:57): нижняя граница «HP > стоп-HP + 10 %» снята — при HP 25–35 % вампирик не жался вовсе
+    const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) ? drainPick(ctx, mp) : null;
     // 8.0.3 (лог 11.10 09:13–09:16: VT ушёл 4 раза из 60 решений, 17 банок сериями): блок 1,5 с — только по результату; клик, потерянный
     // в окне блокировки ('lock'), повторяется сразу (после окна), а не уступает банке
     if (drainB) { ctx.seq.push('💉'); const r = await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); if (r !== 'lock') ctx.block['drain:' + drainB.title] = Date.now() + 1500; continue; }
@@ -1445,7 +1468,7 @@ async function battle() {
       const pb = petBuffPick(ctx, me, mp, mob);
       if (pb) {
         ctx.block['petbuff:' + pb.n] = Date.now() + 5000;
-        const r = await act(pb.b, `Бафф кота: ${env.cleanTitle(pb.b.title)}`);
+        const r = await act(pb.b, `Бафф кота: ${env.cleanTitle(pb.b.title)}`, true);
         if (r === 'lock') ctx.block['petbuff:' + pb.n] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу
         if (r === true) { await env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } }); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
         else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
@@ -1493,7 +1516,7 @@ async function battle() {
       const dbf = debuffPlan(ctx, mp, me);
       if (dbf) {
         const before = env.logLines();
-        const dr = await act(dbf.b, `Бой${tc}: дебафф ${dbf.n} · моб ${mob.pct | 0}%`);
+        const dr = await act(dbf.b, `Бой${tc}: дебафф ${dbf.n} · моб ${mob.pct | 0}%`, true);
         if (dr === 'lock') continue;   // 8.0.3: клик не дошёл до игры — без паузы 0,5 с и разбора журнала, повтор сразу
         if (dr === true) (ctx.debuffed ||= {})[dbf.k] = Date.now(); else if (dr !== 'lock') ctx.block['debuff:' + dbf.k] = Date.now() + (ctx.lastLost ? 700 : 3000);   // 7.1.30: не прошёл клик — короткая пауза, цель не считается «обработанной»
         ctx.seq.push('✦');
@@ -1524,7 +1547,7 @@ async function battle() {
       if (a.key.startsWith('stun')) ctx.lastStun = Date.now();
       const logBefore = new Set(env.logLines());
       const logArr = env.logLines();
-      const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`);
+      const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true);
       if (a.probe && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
       if (a.charge || a.cost) {                     // энергия силы: по новым строкам лога, иначе свой учёт
