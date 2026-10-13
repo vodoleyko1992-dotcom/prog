@@ -15,6 +15,7 @@ function mobHp() {
 // ворогів поруч: A −1, B −35.», «Дикий розмах: power 191 597». Цель удара бывает не тем мобом, чьё HP показано вверху (бой с соседями:
 // вверху Guardian Basilisk 1789/1908, а «Ты нанёс [ Breka Orc Shaman ]»), — по HP одного моба урон занижался в разы
 const dmgNum = s => +String(s || '').replace(/[^\d]/g, '') || 0;
+const PROBE_USES = 8;   // 10.0.11: проба нового удара воина — не больше стольких нажатий без 3 замеров урона
 function logDmg(lines) {
   let sum = 0;
   for (const raw of lines || []) {
@@ -543,6 +544,9 @@ function dpsPlan(ctx, mp) {
       const il = b && env.ilOf(b);
       if (nonOffenseSkill(b)) continue;
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
+      // 10.0.11 (лог 13.10 22:03–22:12, Knight alt1): Drain Health — в логе игры без цифры урона («Витягування життя: темний урон…»),
+      // 26 нажатий, урон засчитан 1 раз. Как у мага (mageSpellSlots): 5+ нажатий без единого замера урона — удара в ротации нет
+      { const pS = env.rt.skills?.[env.skKey(b)]; if (pS && (pS.uses || 0) >= 5 && !pS.dmgN) continue; }
       opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
@@ -597,7 +601,10 @@ function dpsPlan(ctx, mp) {
   if (env.cfg.mageProbe !== false && !ctx.rb && hp > 0) {
     const meas = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.dmgN || 0;
     const known = opts.filter(o => o.key !== 'attack' && !o.charge && meas(o) >= 3), maxKnown = Math.max(env.expDmg('атака') || 0, ...known.map(o => o.dmg));
-    const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3).sort((a, b) => meas(a) - meas(b))[0];
+    // 10.0.11 (лог 13.10 22:03–22:12): «пробую новый удар (замер 1/3)» 16 раз подряд — Drain Health не даёт цифры урона в логе игры,
+    // замер не растёт. Проба — не больше PROBE_USES нажатий: дальше удар живёт по тому, что намерено (или по справочнику)
+    const used = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.uses || 0;
+    const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3 && used(o) < PROBE_USES).sort((a, b) => meas(a) - meas(b))[0];
     if (probe && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
   }
   // 1) добивание
