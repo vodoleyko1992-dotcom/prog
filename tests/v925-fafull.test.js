@@ -11,8 +11,9 @@ const F = fsb.L2FaFull;
 const mage = [...F.ids({ mage: true })], fighter = [...F.ids({ mage: false })];
 assert.equal(mage[0], 1413, "mage: Magnus' Chant first"); assert.ok(mage.includes(1323) && mage.includes(365) && mage.includes(4703) && mage.includes(267));
 assert.ok(!mage.includes(1085) && !mage.includes(276), 'cast speed is capped at 3500 — no Acumen / Concentration for the mage');
-assert.ok(!mage.includes(1357), 'Prophecy of Water is not in the default set (stacking with Magnus unknown)');
-assert.equal(F.cost({ mage: true }), 22, 'mage full set = 22 FA');
+// 10.0.7: Prophecy of Water (M.Atk +20 %, маг. крит ×2) и Blessing of Queen Lv.3 (кот) — в наборе; пара с Magnus — через rt.faClash
+assert.ok(mage.includes(1357) && mage.includes(4699), 'Prophecy of Water and Blessing of Queen are in the default set (10.0.7)');
+assert.equal(F.cost({ mage: true }), 28, 'mage full set = 28 FA (10.0.7: +Prophecy of Water 5, +Queen 1)');
 assert.equal(fighter[0], 1414); assert.ok(fighter.includes(4699) && fighter.includes(1388) && fighter.includes(1323));
 assert.equal(F.cost(null), F.cost({ mage: false }), 'unknown class → fighter set');
 assert.equal(new Set(mage).size, mage.length); assert.equal(new Set(fighter).size, fighter.length, 'no duplicates');

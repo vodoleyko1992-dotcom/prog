@@ -60,6 +60,7 @@
         "skills-il.js",
         "zone-db.js",
         "zone-kpd.js",
+        "buff-value.js",
         "fa-full.js",
         "augment.js",
         "battle-cooldown.js",

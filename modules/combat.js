@@ -369,14 +369,27 @@ function debuffPlan(ctx, mp, me) {
   if (env.rt.debuffImmune?.[ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob']) return null;   // 7.2.1: «має імунітет до негативних ефектів»
   const mob = mobHp(); if (!mob || mob.cur <= 0) return null;
   const avg = spellAvg(), mode = env.cfg.debuffMode || 'auto', g = debuffGain();
-  const actsLeft = mob.cur / Math.max(1, avg + petExpect(ctx));
-  const needActs = g ? g.minActs : (env.cfg.debuffMinActs ?? 10);
+  const pet = petExpect(ctx), actsLeft = mob.cur / Math.max(1, avg + pet);
+  // 10.0.7 (игрок 13.10 03:11: «бот стал усиленно дебафать мобов — на сколько это даёт прирост?»; лог 13.10 12:25–13:12: на чемпионах
+  // 35 ходов на дебаффы, Ghost of Rebellion Soldier — 6 из 18 ходов, 12 из 44 дебаффов не прошли, «замер выгоды» ни разу — дебафф шёл
+  // первым ходом, сравнивать было не с чем). Цена хода на дебафф против выигрыша теперь по той же модели, что и баффы:
+  // M.Def −10 % → заклинания ≈×1,11 (урон ∝ 1/M.Def), кот от M.Def цели не зависит → прибавка только на долю заклинаний в уроне;
+  // шанс пройти — по своей статистике (rt.debuffStat, ≥ 6 попыток; на чемпионах 13.10 — 73 %); окупается, если за время действия
+  // дебаффа (dur ÷ ход) и за остаток боя набегает ≥ 1 ход выигрыша. Без замера — модель, замер rt.debuffGain её заменяет
+  const share = avg / Math.max(1, avg + pet), ratio = g ? g.ratio : DBF_MODEL;
+  const st0 = Object.values(env.rt.debuffStat || {}).reduce((a, s) => [a[0] + (s.ok || 0), a[1] + (s.fail || 0)], [0, 0]);
+  const pass = st0[0] + st0[1] >= 6 ? Math.max(0.2, st0[0] / (st0[0] + st0[1])) : 1;
+  const eff = (ratio - 1) * share * pass, turnS = Math.max(0.6, (env.rt.turnMs || 1000) / 1000);
+  const needActs = Math.max(g ? 0 : (env.cfg.debuffMinActs ?? 10), eff > 0.001 ? Math.ceil(1 / eff) + 1 : Infinity);
   const noGain = !!g && g.ratio < 1.03 && mode !== 'always';                 // замер: прибавки нет
   const longFight = actsLeft >= needActs, boss = !!(ctx.rb || ctx.champ), hurt = !!me && me.pct < 70;
-  // на РБ без замера — сперва 2 заклинания без дебаффа (чтобы было с чем сравнить), потом дебафф
+  // на РБ и чемпионе без замера — сперва 2 заклинания без дебаффа (чтобы было с чем сравнить), потом дебафф
   const offSamples = Object.values(ctx.spellDmg || {}).reduce((s, x) => s + x.off[1], 0);
-  const learnWait = !g && !!ctx.rb && offSamples < 2;
-  const offOk = !noGain && !learnWait && (mode !== 'auto' || longFight || !!ctx.rb);
+  const learnWait = !g && !!(ctx.rb || (ctx.champ && mode === 'auto')) && offSamples < 2;
+  // 10.0.7: проба на чемпионе ради замера — один M.Def-дебафф раз в 3 мин, даже если модель говорит «не окупится» (иначе замера не будет)
+  const now0 = Date.now(), probe = !g && !!ctx.champ && !learnWait && !ctx.dbfProbe && actsLeft >= 6 && now0 - (env.rt.dbfProbeT || 0) > 180000;
+  const offOk = !noGain && !learnWait && (mode !== 'auto' || longFight || !!ctx.rb || probe);
+  const mdefOn = dbfOn(ctx) && !ctx.rb;                                      // 10.0.7: второй M.Def-дебафф поверх первого — только на РБ (стакаются ли — не знаем)
   if (mode === 'boss' ? !boss : !offOk && !hurt && !ctx.rb) return null;
   const list = env.names(env.cfg.nDebuff || '');            // свой список в «Бой → Дебаффы»: только они, в этом порядке
   const stat = env.rt.debuffStat || {}, now = Date.now();
@@ -384,21 +397,27 @@ function debuffPlan(ctx, mp, me) {
     const il = dbfIl(b), n = env.cleanTitle(b.title), k = n.toLowerCase(), s = stat[k] || {};
     const defOk = !!ctx.rb || hurt || (mode !== 'auto' && boss);
     let pr = 0;
-    if (il.off && il.def) pr = offOk ? 95 : defOk ? 70 : 0;      // Curse Chaos: и урон, и защита
-    else if (il.off) pr = offOk ? 90 : 0;                       // Surrender to Fire
+    if (il.off && il.def) pr = offOk && !mdefOn ? 95 : defOk ? 70 : 0;      // Curse Chaos: и урон, и защита
+    else if (il.off) pr = offOk && !mdefOn ? 90 : 0;                       // Surrender to Fire
     else if (il.def) pr = defOk ? (/weakness/i.test(k) ? 75 : 60) : 0;   // Curse Weakness (−20 %) раньше Poison (−12 %)
     else if (il.t === 'POISON') pr = ctx.rb ? 30 : 0;
     else pr = ctx.rb && !/^slow\b/i.test(k) ? 20 : 0;          // прочие — только РБ; Slow (скорость) в пошаговом бою не нужен
     if (list.length) pr = list.includes(k) && (pr > 0 || mode === 'always') ? 100 - list.indexOf(k) : 0;
     if (s.offUntil > now || (ctx.block['debuff:' + k] || 0) > now) pr = 0;
     const last = (ctx.debuffed || {})[k] || 0, dur = (il.dur || 15) * 1000;
+    // 10.0.7: атакующий дебафф не успеет окупиться за своё время действия (dur ÷ ход < нужных ходов) — не жмём (кроме РБ/пробы/«всегда»)
+    if (il.off && !ctx.rb && !probe && mode === 'auto' && dur / 1000 / turnS < needActs) pr = il.def && defOk ? 70 : 0;
     if (last && !(ctx.rb || mob.cur >= avg * 6)) pr = 0;          // обычный моб — один раз
     if (last && now - last < dur) pr = 0;
     if (mp && mp.cur < (env.skillMp(n) || 10) + 30) pr = 0;       // мана — сначала на урон
     return { b, n, k, pr };
   }).filter(o => o.pr > 0).sort((a, b) => b.pr - a.pr);
-  return opts[0] || null;
+  const pick = opts[0] || null;
+  if (pick && probe && dbfIl(pick.b).off) { ctx.dbfProbe = 1; env.setRt({ dbfProbeT: now0 }); env.rec('B', 'дебафф', `проба на чемпионе: ${pick.n} — замерю прибавку урона заклинаний (модель: ≈×${ratio.toFixed(2)}, проходит ${Math.round(pass * 100)} %)`); }
+  return pick;
 }
+// 10.0.7: модель без замера — M.Def −10 % → урон заклинаний ×1,11 (Interlude: урон ∝ 1/M.Def); замер rt.debuffGain важнее
+const DBF_MODEL = 1.11;
 
 // средний замеренный урон заклинаний с панели (≥ 2 замера), без замеров — 600
 function spellAvg() {
@@ -852,6 +871,13 @@ async function battle() {
   // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)
   { const hd = !isRb && !ctx.questKill && !(ctx.champ && env.campActive() && env.campChampOpen()) && env.rt.hardMobs?.[nm]; if (hd && Date.now() - hd.t < 7200000 && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
     env.rec('B', 'цели', `${ctx.name}: «не по зубам» (${hd.why || 'долгий бой'}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
+  // 10.0.7 (игрок 13.10 03:16: «бот пытается бить моба больше чем на 5 лвл старше» — Warlock 67 против Tomb Guard 75): цепочка «Охотиться
+  // дальше» подсовывает моба без выбора по карте — выше героя на > lvlAbove (по умолчанию +5) не бьём, идём на карту. Исключения — как в
+  // mobfarm.candidates: ★ квест, источник ресурса, чемпион главы; РБ — свои пределы. Только нетронутый бой (HP ≥ 98 %, соседей нет)
+  { const hl = env.heroLvl() || env.rt.lvl || 0, up = env.cfg.lvlAbove ?? 5, lv = rbLvl || ctx.lvl || 0, farmT = !!nm && (env.farmRules?.() || []).some(x => x.farm && x.name === nm);
+    if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
+        && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
+      env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
   ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;
   if (isRb) {
     ctx.champ = false;                                      // «Оглушення не діє на РБ» (лог 07.10) — стан по РБ не используем

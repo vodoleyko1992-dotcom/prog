@@ -86,13 +86,13 @@ async function activateMode(rtPatch, cfgPatch) {
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'champEvery', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
-const TXT  = ['mmCrafter', 'mmCraftScope', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'bossMark',
+const TXT  = ['mmCrafter', 'mmCraftScope', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'champNoCancel', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
-              taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, champNoCancel: true, champEvery: 20, rec: true, questStop: false, deepEvery: 10,
+              taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
-              lvlMin: 1, lvlMax: 99, lvlAbove: 99, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
+              lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 3, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
               stopHp: 25, skillMpMin: 35, mpPotAt: 70, hpPotAt: 50, stunEvery: 15, buffSec: 118,
               nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
@@ -227,6 +227,7 @@ async function load() {
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
   renderFaDrop(rt);
+  renderCancelList(rt);
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderFight(rt);
   renderEnemies(rt);
@@ -884,14 +885,27 @@ function renderRbSess(rt, d) {
   if (!$('rbSessBox')) return;
   // 9.2.5: «auto» — фулл бафф под класс (fa-full.js), с причиной каждого баффа; пары, что снимают друг друга (rt.faClash), — без второго
   const F = globalThis.L2FaFull, role = heroRole(rt), auto = !F || F.isAuto(d.rbSessBuffs);
-  const raw = F ? F.resolve(d.rbSessBuffs, role) : String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
+  // 10.0.7 (игрок 13.10: «переоценка ценности баффов»): цифры героя из /character (rt.heroStats) → порядок по прибавке ДПС на 1 FA,
+  // у каждого баффа — ≈ прибавка ДПС (герой + кот); «?» — цифра баффа не из игры (догадка по Interlude, замер крита/M.Atk поправит)
+  const V = globalThis.L2BuffVal, HS = V && F ? V.fromRt(rt, d, role) : null;
+  const raw = F ? F.resolve(d.rbSessBuffs, role, HS) : String(d.rbSessBuffs || '').split(/[,\s]+/).map(Number).filter(x => x > 0);
   const ids = F ? F.dropClash(raw, rt.faClash) : raw, S = rt.rbSess, now = Date.now();
   const sum = ids.reduce((a, id) => a + faInfo(rt, id).cost, 0), bal = rt.faBal?.v;
   const why = F && auto ? Object.fromEntries(F.SETS[F.kind(role)].map(([id, , t]) => [id, t])) : {};
-  const L = [auto && F ? `⚡ Фулл бафф под класс (${F.kind(role) === 'mage' ? 'маг' : 'воин'}${role ? '' : ', класс ещё не известен'}):` : 'Баффы (свой список):',
-    ...ids.map(id => `• ${why[id] || faInfo(rt, id).name} · ${faInfo(rt, id).cost} FA`),
+  const val = HS ? Object.fromEntries(V.rank(ids, HS, id => faInfo(rt, id).cost).map(x => [x.id, x])) : {};
+  const gainTxt = id => { const x = val[id]; if (!x || x.k === 'защита') return ''; const f = (HS.fx || V.FX)[id]; return ` · ДПС ${V.pct(x.gain)}${f?.g ? '?' : ''}`; };
+  const skipped = HS && auto ? F.SETS[F.kind(role)].map(x => x[0]).filter(id => !raw.includes(id)) : [];
+  const L = [auto && F ? `⚡ Фулл бафф под класс (${F.kind(role) === 'mage' ? 'маг' : 'воин'}${role ? '' : ', класс ещё не известен'}${HS ? ', порядок по прибавке ДПС на 1 FA' : ''}):` : 'Баффы (свой список):',
+    ...ids.map(id => `• ${why[id] || faInfo(rt, id).name} · ${faInfo(rt, id).cost} FA${gainTxt(id)}`),
+    ...skipped.map(id => `✕ ${faInfo(rt, id).name} — ДПС не прибавит, за FA не беру`),
     ...raw.filter(id => !ids.includes(id)).map(id => `✕ ${faInfo(rt, id).name} — снимает другой бафф из списка, не беру`),
     `Стоимость: ${sum} FA на 3 ч${bal != null ? ` · баланс ${bal} FA${bal < sum ? ' ⚠ не хватает' : ` (хватит на ${Math.floor(bal / Math.max(1, sum))})`}` : ' · баланс FA ещё не видел'}`];
+  if (HS) { const d0 = V.dps(HS, []), d1 = V.dps(HS, ids), H = rt.heroStats || {};
+    L.push(`Прогноз под набором: ДПС ×${(d1.total / Math.max(1, d0.total)).toFixed(2)} (заклинания ×${(d1.own / Math.max(1, d0.own)).toFixed(2)}${HS.cat ? `, кот ×${(d1.cat / Math.max(1, d0.cat)).toFixed(2)}` : ''}) · шанс маг. крита ${Math.round(HS.mcrit * 100)} % → ${Math.round(d1.mcrit * 100)} % при силе ×${HS.mck.toFixed(2)} · цифры героя ${H.t ? new Date(H.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : '?'} (M.Atk ${H.matk}${HS.cat ? `, кот P.Atk ${HS.cat.patk}` : ''})`);
+    const obs = Object.entries(rt.critStat || {}).filter(([, o]) => o.n >= 40);
+    if (obs.length) L.push(`Замер крита в бою: ${obs.map(([sig, o]) => `${sig ? sig.split(',').map(id => faInfo(rt, +id).name).join(' + ') : 'без крит-баффов'} — ${Math.round(o.c / o.n * 100)} % (${o.n} нажатий)`).join('; ')}`);
+    const Lm = V.fxLearn(rt.matkObs); if (Object.keys(Lm).length) L.push(`Выучено по цифрам игры: ${Object.entries(Lm).map(([id, m]) => `${faInfo(rt, +id).name} M.Atk ×${m.toFixed(2)}`).join(', ')}`); }
+  else if (V && F) L.push('Цифры героя для оценки баффов ещё не читал — откройте страницу персонажа в игре');
   if (S?.on && !S.bought) L.push('⏳ Сессия начинается: иду к бафферу за баффами');
   else if (S?.on) { const left = Math.max(0, S.until - now) / 60000, k = (rt.rbKills || 0) - (S.k0 || 0), e = (rt.exp || 0) - (S.e0 || 0);
     L.push(`🔥 Идёт: осталось ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')} · РБ убито ${k} · EXP +${e.toLocaleString('ru')}`); }
@@ -1347,6 +1361,13 @@ function champLearnText(M) {
   return out.join('\n');
 }
 function renderFaDrop(rt) { const el = $('faDropBox'); if (el) el.textContent = faDropText(rt.faDrop) + '\n' + champLearnText(rt.champLearn); }
+// 10.0.7: выученные мобы, снимающие баффы (rt.buffCancel — buffs.cancelNote)
+function cancelListText(C) {
+  const L = Object.values(C || {}).filter(o => o && o.name).sort((a, b) => (b.n || 0) - (a.n || 0));
+  if (!L.length) return 'Снимающих баффы мобов бот пока не встречал.';
+  return 'Снимают баффы (выучено): ' + L.map(o => `${o.name}${o.champ ? ' [чемп]' : ''} — ${o.n} за ${o.k} боёв`).join('; ');
+}
+function renderCancelList(rt) { const el = $('cancelList'); if (el) el.textContent = cancelListText(rt.buffCancel); }
 const ruleOff = r => !r.neg && ((r.champ && !$('searchChamp')?.checked) || (r.quest && !$('searchQuest')?.checked));
 function renderPrio(text) {
   prio = text.split('\n').map(s => s.trim()).filter(Boolean).map(parseLine);
