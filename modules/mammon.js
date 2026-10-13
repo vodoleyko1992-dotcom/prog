@@ -24,6 +24,14 @@ const MM_CRAFT = { 1878: 'Braided Hemp = 5 Stem', 1879: 'Cokes = 3 Charcoal + 3 
   1882: 'Leather = 6 Animal Skin', 1884: 'Cord ×20 = 2 Steel + 25 Thread', 1885: 'High Grade Suede = 1 Coarse Bone Powder + 3 Suede', 1887: 'Varnish of Purity = 1 Stone of Purity + 3 Coarse Bone Powder + 3 Varnish',
   1888: 'Synthetic Cokes = 1 Oriharukon Ore + 3 Cokes', 1889: 'Compound Braid = 5 Braided Hemp + 5 Thread', 1890: 'Mithril Alloy = 1 Mithril Ore + 1 Varnish of Purity + 2 Steel',
   1893: 'Oriharukon = 1 Synthetic Cokes + 4 Oriharukon Ore + 12 Silver Nugget', 5549: 'Metallic Thread = 5 Iron Ore + 10 Thread' };
+// 10.0.7 (игрок 13.10 02:38, скрин: «Кристал: ранг D · нет в фарме», «кристаллы покупаются в магазине»): сырьё, которое продаёт
+// gm-shop (Розхідники › грейд › Ресурси; kb/data/game-shop-drops.json, снимок 11.10): [грейд, цена за штуку в адене — ориентир, в магазине
+// бот читает цену со строки]. Такое сырьё не «нет в фарме», а «магазин»: бот докупает его за адену в обычной закупке (cfg.mmShopBuy)
+const MM_SHOP = { 1458: ['D', 650], 1459: ['C', 3000], 1460: ['B', 9000], 1461: ['A', 15000], 1462: ['S', 25000],
+  2130: ['D', 1000], 2131: ['C', 3000], 2132: ['B', 10000], 2133: ['A', 30000], 2134: ['S', 100000], 1785: ['NG', 250], 3031: ['NG', 300] };
+const MM_SHOP_UK = { 1458: 'Кристал: ранг D', 1459: 'Кристал: ранг C', 1460: 'Кристал: ранг B', 1461: 'Кристал: ранг A', 1462: 'Кристал: ранг S',
+  2130: 'Самоцвіт: ранг D', 2131: 'Самоцвіт: ранг C', 2132: 'Самоцвіт: ранг B', 2133: 'Самоцвіт: ранг A', 2134: 'Самоцвіт: ранг S', 1785: 'Soul Ore', 3031: 'Spirit Ore' };
+const shopBuyOn = () => env.cfg.mmShopBuy !== false;
 let GEAR = null, gearLoading = null, goalT = 0, busy = null;
 // 9.2.2 (лог 12.10 07:22: «заказ торговца не получен: HTTP 429» ×92): метки опроса жили в переменных модуля и обнулялись при каждой
 // загрузке страницы — при частых переходах бот спрашивал заказ на каждой странице. Теперь метки — в sessionStorage вкладки
@@ -218,7 +226,10 @@ function goalAll(upTo) {                          // upTo — только до 
   const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
   for (const t of tl) { t.have = haveOf(t.id); t.miss = t.have == null ? t.need : Math.max(0, t.need - t.have); }
   for (const t of tl) expand(t.id, t.nm, t.need, t.lv);
-  const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id), farm: !!env.FARM?.res?.[r.nm.toLowerCase()] }));
+  // 10.0.7 (скрин 13.10: «Залізна руда · нет в фарме» при «iron ore» в базе): справочник предметов есть не на каждой странице — имя сырья
+  // могло быть украинским, а база фарма — по английским именам. Ищем источник по всем известным именам предмета
+  const farmOf = r => [nameEn(r.id), MM_INAME[r.id], MM_RNAME[r.id], r.nm].filter(Boolean).some(n => env.FARM?.res?.[String(n).toLowerCase()]);
+  const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id), farm: farmOf(r), shop: MM_SHOP[r.id] ? { g: MM_SHOP[r.id][0], a: MM_SHOP[r.id][1] } : null }));
   const nmOf = mid => nameEn(mid) || MM_RNAME[mid] || raw.get(mid)?.nm || `#${mid}`;
   return { id, name, lvl, to, a, col, lv, unk, tot: tl, raw: rl, craft: [...craft.values()].reverse(), est: lv.some(x => x.est), ready: !unk.length && tl.every(t => t.have != null && t.miss === 0),
     snd: [...snd].map(([mid, q]) => ({ id: mid, nm: nmOf(mid), q })), cmiss, ret: Object.fromEntries(ret) };
@@ -228,16 +239,28 @@ function goalAll(upTo) {                          // upTo — только до 
 function mmFarmGoal() {
   if (env.cfg.mmGoalFarm === false) return null;
   const p = goalAll(); if (!p?.raw) return null;
-  const n = p.lvl + 1 < p.to ? goalAll(p.lvl + 1) : null, rn = n?.raw?.find(x => x.miss > 0 && x.farm);   // сначала то, что нужно на ближайший уровень
-  const r = rn ? p.raw.find(x => x.id === rn.id) : p.raw.find(x => x.miss > 0 && x.farm);
+  const fit = x => x.miss > 0 && x.farm && !(x.shop && shopBuyOn());   // 10.0.7: продаётся в магазине и докупка включена — не фармим, купим
+  const n = p.lvl + 1 < p.to ? goalAll(p.lvl + 1) : null, rn = n?.raw?.find(fit);   // сначала то, что нужно на ближайший уровень
+  const r = rn ? p.raw.find(x => x.id === rn.id) : p.raw.find(fit);
   return r ? { key: r.nm.toLowerCase(), name: env.FARM.res[r.nm.toLowerCase()].name || r.nm, left: r.miss, why: `Маммон: ${p.name} до Lv.${p.to} (наперёд)` } : null;
+}
+// 10.0.7: что из недостающего сырья бот докупит в магазине и во сколько это обойдётся (ориентир по kb-ценам)
+const shopNote = miss => { const s = miss.filter(r => r.shop); if (!s.length) return '';
+  return ` · ${shopBuyOn() ? 'докуплю в магазине' : 'продаётся в магазине (докупка выключена)'}: ${s.map(r => `${r.nm} ${fmtA(r.miss)} ≈ ${fmtA(r.miss * r.shop.a)} аден`).join(', ')}`; };
+// 10.0.7: позиции для обычной закупки (economy.shopPlan): недостающее сырьё цели, которое продаёт gm-shop. mm = [нужно всего, нужно всего] —
+// закупка берёт «до максимума», т.е. ровно недостачу; грейд — вкладка магазина, подраздел «Ресурси»
+function mmShopWant() {
+  if (!shopBuyOn() || !+env.cfg.mmGoalItem) return [];
+  let P = null; try { P = goalAll(); } catch (e) { return []; }
+  return (P?.raw || []).filter(r => r.shop && r.miss > 0).map(r => ({ key: `mm${r.id}`, label: `${MM_SHOP_UK[r.id] || r.nm} (Маммон)`, ids: [r.id], grade: r.shop.g, sub: 'resources',
+    name: new RegExp(`^(?:${[MM_SHOP_UK[r.id], nameEn(r.id), r.nm].filter(Boolean).map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})$`, 'i'), mm: [r.need, r.need], unit: r.shop.a }));
 }
 const short = (l, n = 8) => l.slice(0, n).map(m => `${m.nm} ${fmtA(m.miss)}`).join(', ') + (l.length > n ? ` и ещё ${l.length - n}` : '');
 function planOut(P) {                             // компактный план для меню (rt.mmGoalPlan): popup модуль не загружает
   if (!P || P.done) return null;
   return { id: P.id, n: P.name, lvl: P.lvl, to: P.to, a: P.a, c: P.col, unk: P.unk,
     lv: P.lv.map(x => x.unk ? { L: x.L, unk: 1 } : { L: x.L, e: x.est, a: x.a, c: x.c, m: x.m.map(m => [m[1], m[2]]) }),
-    tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0]),
+    tot: P.tot.map(t => [t.nm, t.need, t.have, t.miss]), raw: P.raw.map(r => [r.nm, r.need, r.have, r.miss, r.farm ? 1 : 0, r.shop?.g || '', r.shop?.a || 0]),
     lk: owned(P.id) ? 1 : 0, cr: P.craft.map(c => [c.nm, c.qty, c.runs, c.rec]), snd: (P.snd || []).map(x => [x.nm, x.q]), cm: P.cmiss || 0 };
 }
 function goalNote() {                             // раз на изменение: что дальше по цели (журнал + rt.mmGoalSt / rt.mmGoalPlan для меню)
@@ -251,7 +274,7 @@ function goalNote() {                             // раз на изменен�
     const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — ${env.cfg.mmUpgrade !== false ? 'лечу к кузнецу улучшать' : 'улучшение жмёшь сам у кузнеца'}. ` : '';
     st = next + (P.ready ? `✅ наперёд до Lv.${P.to} собрано всё: ${fmtA(P.a)} адены + ${P.col} Coin of Luck`
       : !miss.length ? `${p.name} до Lv.${P.to}: сырьё есть${P.craft.length ? ', осталось скрафтить: ' + P.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') + (Object.values(atC()).some(v => v > 0) ? ` (сырьё у крафтера ${crafter()}, жду письмо)` : '') : ''}`
-      : `${p.name} Lv.${p.lvl} → Lv.${P.to}: наперёд не хватает ${short(miss)}` + (f ? ` · добываю ${f.name}` : ' · в базе фарма источников нет'))
+      : `${p.name} Lv.${p.lvl} → Lv.${P.to}: наперёд не хватает ${short(miss)}` + (f ? ` · добываю ${f.name}` : '') + shopNote(miss) + (f || miss.some(r => r.shop) ? '' : ' · в базе фарма источников нет'))
       + (P.est ? ' · ≈ часть цен — оценка' : '') + (P.unk.length ? ` · цены Lv.${P.unk.map(L => L + 1).join(', ')} неизвестны` : '');
   }
   const plan = planOut(P), ps = JSON.stringify(plan);
@@ -752,6 +775,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
+return { mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
