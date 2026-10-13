@@ -2818,6 +2818,11 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind .e{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind .e b{color:#f0cf86}
 #l2bot-ind.wide .e{margin-top:auto;padding-top:9px;font-size:15px;flex:0 0 auto}
+#l2bot-ind .b{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
+#l2bot-ind .b .bt{pointer-events:auto;cursor:pointer;font:inherit;font-size:11px;line-height:1.3;padding:3px 9px;margin:1px 6px 1px 0;border-radius:7px;border:1px solid rgba(212,168,86,.55);background:rgba(212,168,86,.14);color:#f0cf86}
+#l2bot-ind .b .bt:hover{background:rgba(212,168,86,.3)}
+#l2bot-ind.wide .b{flex:0 0 auto;font-size:14.5px;padding-top:9px;margin-top:8px}
+#l2bot-ind.wide .b .bt{font-size:14px;padding:4px 12px}
 #l2bot-ind.over{max-width:min(380px,calc(100vw - 60px));opacity:.92}
 #l2bot-ind.hid{display:none!important}`;
 document.documentElement.append(uiCss, ui);
@@ -2851,6 +2856,23 @@ function epicRespTxt(wide, now = Date.now()) {
     if (!wide) return `🐉 Респ эпиков: ${dead.length ? dead[0].replace(/\s*\(через[^)]*\)/, '') + (dead.length > 1 ? ` · ещё убиты ${dead.length - 1}` : '') : 'все живы'}${live.length ? ` · живы ${live.length}` : ''}`;
     return '— 🐉 респ эпиков —\n' + [...dead.map(x => '💀 ' + x), live.length ? '✅ живы: ' + live.join(', ') : ''].filter(Boolean).join('\n');
   } catch (e) { return ''; }
+}
+// 10.0.6: сводка «📦 Серия РБ» раскрыта/свёрнута — на этом устройстве (localStorage), кнопки в окне кликабельны (pointer-events:auto)
+let rbRunOpen = (() => { try { return localStorage.getItem('l2bot-rbrun') === '1'; } catch (e) { return false; } })();
+if (typeof addEventListener === 'function') addEventListener('click', e => {
+  const b = e.target?.closest?.('[data-rbrun]'); if (!b || !ui.contains?.(b)) return; e.preventDefault(); e.stopPropagation();
+  if (b.dataset.rbrun === 'toggle') { rbRunOpen = !rbRunOpen; try { localStorage.setItem('l2bot-rbrun', rbRunOpen ? '1' : '0'); } catch (er) {} try { draw(); } catch (er) {} return; }
+  if (b.dataset.rbrun === 'reset') { if (b.dataset.ask !== '1') { b.dataset.ask = '1'; b.textContent = '⚠ Ещё раз — обнулить'; setTimeout(() => { try { draw(); } catch (er) {} }, 4000); return; }
+    rbRunReset().catch(() => {}); }
+});
+// обнуление — через фон (команда rbRunSet): пишется и когда вкладка не держит замок (бот стоит/на паузе); не вышло — обычный setRt
+async function rbRunReset() {
+  const R = L2V7Modules.rbrun; if (!R) return;
+  const r = R.blank('manual'); let ok = false;
+  try { ok = !!(await chrome.runtime.sendMessage({ cmd: 'rbRunSet', rbRun: r }))?.ok; } catch (e) {}
+  if (ok) { rt = { ...rt, rbRun: r }; rec('B', 'серия РБ', '📦 новая серия (вручную, кнопка «↺ Новая серия» в окне бота) — добыча и награды считаются заново'); }
+  else await R.start('manual', 'кнопка «↺ Новая серия» в окне бота');
+  try { draw(); } catch (e) {}
 }
 function draw() {
   const L = [], now = Date.now();
@@ -2906,6 +2928,9 @@ function draw() {
   const wide = ui.classList.contains('wide');        // 7.2.1: окно на всю высоту — больше истории и длиннее строки
   const rec5 = RECENT.slice(1, wide ? 31 : 6);      // [0] — текущий статус, он уже сверху
   if (rec5.length) L.push('— последние действия —\n' + rec5.map(x => `${new Date(x.t).toLocaleTimeString('ru')} ${x.s.replace(/\[РБ [^\]]*\]/, '[РБ]').slice(0, wide ? 140 : 64)}`).join('\n'));
+  // 10.0.6 (игрок 13.10 02:02, скрин: обвёл пустое место между журналом и «Респ эпиков»): кнопка «📦 Серия РБ» — что выпало с РБ/эпиков
+  // с запуска серии (modules/rbrun.js, rt.rbRun); нажатие раскрывает сводку, «↺ Новая серия» обнуляет
+  let rbRunTxt = ''; try { if (typeof L2V7Modules !== 'undefined' && L2V7Modules.rbrun) { rbRunTxt = '— 📦 серия РБ —\n' + L2V7Modules.rbrun.lines(wide, now).join('\n'); L.push(rbRunTxt); } } catch (e) {}
   // 10.0.2 (игрок 12.10: «слева снизу раздел — респ эпиков»; скрин 13.10 00:14 — обвёл пустой низ окна): блок внизу окна, виден всегда
   const ep = epicRespTxt(wide, now); if (ep) L.push(ep);
   const mode = cfg.indMode || 'full';
@@ -2919,6 +2944,10 @@ function draw() {
     if (t === sess) return `<div class="t">${escH(t)}</div>`;
     if (t.startsWith('— последние действия —')) return `<div class="r">${escH(t.replace(/^— последние действия —\n/, ''))}</div>`;
     if (t.startsWith('— 🐉 респ эпиков —')) return `<div class="e"><b>🐉 Респ эпиков</b>\n${escH(t.replace(/^— 🐉 респ эпиков —\n/, ''))}</div>`;
+    if (rbRunTxt && t === rbRunTxt) { let S = null; try { S = L2V7Modules.rbrun.summary(now); } catch (e) {}
+      const head = `<button type="button" class="bt" data-rbrun="toggle" title="${rbRunOpen ? 'Свернуть сводку' : 'Показать, что выпало с РБ за серию'}">📦 Серия РБ${S ? `: убито ${S.kills}${S.nItems ? ` · вещей ${S.nItems}` : ''}` : ''} ${rbRunOpen ? '▴' : '▾'}</button>`;
+      const body = rbRunOpen ? `${escH(t.replace(/^— 📦 серия РБ —\n/, ''))}\n<button type="button" class="bt" data-rbrun="reset" title="Обнулить сводку и считать заново с этого момента">↺ Новая серия</button>` : '';
+      return `<div class="b">${head}${body ? '\n' + body : ''}</div>`; }
     return `<div>${escH(t)}</div>`;
   }).join('');
   ui.style.borderColor = on ? 'rgba(92,194,122,.55)' : pz ? 'rgba(227,176,75,.55)' : 'rgba(212,168,86,.3)';
@@ -3823,7 +3852,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -4289,7 +4318,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get heroLvl() { return heroLvl; }, get $
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbSet; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },
@@ -4338,7 +4367,7 @@ L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg()
   get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
-L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
+L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return fire; },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
@@ -4350,6 +4379,9 @@ L2V7Modules.champs = L2V7Factories.champs({ get cfg() { return cfg; }, get rt() 
   get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); } });
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });
+// 10.0.6: «📦 Серия РБ» — что выпало с РБ/эпиков с запуска серии (кнопка в окне бота)
+L2V7Modules.rbrun = L2V7Factories.rbrun({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
+  get LOOT_RE() { return LOOT_RE; }, get SPECIAL_RE() { return SPECIAL_RE; } });
 // 9.0: отлучиться от охоты (Маммон, сдача части квеста) — те же условия
 const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»

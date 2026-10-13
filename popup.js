@@ -1639,8 +1639,9 @@ async function setMode(m) {
   else if (m === 'farm') await activateMode({ ...leave, zoneAutoKick: null, zoneGo: null }, { ...MODES_OFF, zoneAuto: false, rbMode: rbB });
   // с автофармом включаем и цепочку «Охотиться дальше»: ≈5,4 с на моба против ≈11,4 с через карту
   else if (m === 'auto') await activateMode({ ...leave, zoneAutoKick: now, zoneGoT: 0, zoneLvlT: 0 }, { ...MODES_OFF, zoneAuto: true, chain: true, rbMode: rbB });
-  else if (m === 'rb') await activateMode({ ...leaveEpic, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
-  else if (m === 'epic') await activateMode({ ...leaveHunt, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
+  // 10.0.6: запуск тура/эпиков — новая «📦 Серия РБ» (что выпало; сводка в окне бота), модуль rbrun дополнит нулями
+  else if (m === 'rb') await activateMode({ ...leaveEpic, rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
+  else if (m === 'epic') await activateMode({ ...leaveHunt, rbRun: { t0: now, mode: 'epic' }, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
   else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
   else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: rbB });
   if (m === 'tasks') { const { on = false } = await chrome.storage.local.get('on'); toast(`${MODE_NAME.tasks}${on ? '' : ' · ▶ Старт запустит их'}`); }
@@ -2137,7 +2138,8 @@ $('rbOneBtn').onclick = async () => {
   const now = Date.now(), tour = !!cfg.rbHuntMode;
   const leaveEpic = cfg.epicMode ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const one = { ...(rt.rbOne || {}), on: true, k0: rt.rbKills || 0, t: now };
-  await activateMode({ ...leaveEpic, rbOne: one, ...(tour ? {} : { rbHunt: { step: 'pick', t: now, last: 'один РБ по команде' }, rbGo: null, rbWant: null, rbListT: 0 }) },
+  // 10.0.6: тур ещё не шёл — новая «📦 Серия РБ»; шёл (следующий РБ по команде) — серия продолжается
+  await activateMode({ ...leaveEpic, rbOne: one, ...(tour ? {} : { rbRun: { t0: now, mode: 'one' }, rbHunt: { step: 'pick', t: now, last: 'один РБ по команде' }, rbGo: null, rbWant: null, rbListT: 0 }) },
     { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   toast('🎯 Иду за одним РБ — после убийства встану на паузу и буду ждать команды');
 };

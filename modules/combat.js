@@ -1695,6 +1695,8 @@ async function battle() {
       heroMaxHp: env.meHp()?.max || d0.heroMaxHp || 0,
       note: `убит за ${env.fmtT(fightS)}` });
     console.log(env.TAG, `РБ ${ctx.name} убит за ${env.fmtT((Date.now() - t0) / 1000)}`);
+    // 10.0.6 (игрок 13.10: «кнопочка — что выпало в результате серии РБ»): награда и вещи этого РБ — в «📦 Серию РБ» (rt.rbRun)
+    try { await env.rbRun?.kill({ id: ctx.rb.id, name: ctx.name, lvl: ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || ctx.lvl || 0, adena, exp, sp: pick(/([\d\s.,]+)\s*SP/i), lines: env.newLines(ctx.logStart || [], env.logLines()), epic: !!env.epicById?.(ctx.rb.id), fightS }); } catch (e) { console.warn(env.TAG, 'серия РБ', e); }
     if (env.rt.rbWound?.[ctx.rb.id]) { const W = { ...env.rt.rbWound }; delete W[ctx.rb.id]; await env.setRt({ rbWound: W }); }   // 7.2.2
   }
   if (env.cfg.campaign) {

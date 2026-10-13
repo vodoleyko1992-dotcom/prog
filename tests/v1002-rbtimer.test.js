@@ -107,7 +107,7 @@ const boss = (id, lvl, alive, extra = {}) => ({ spawnId: 'l2dop_rb_' + id, name:
   assert.match(read('hook.js'), /\(\?:epic\|raid\)-bosses/); assert.match(read('modules/combat.js'), /env\.rbTimerKill\?\.\(ctx\.rb\.id/);
   assert.match(raid, /env\.rbTimer\?\.revivedSince/); assert.match(raid, /env\.rbTimer\?\.domNote\(all\)/); assert.match(raid, /первым воскреснет/);
   assert.match(read('popup.html'), /id="rbTimerTable"/); assert.match(read('popup.html'), /modules\/rbtimer\.js/); assert.match(read('popup.js'), /function renderRbTimer/); assert.match(read('popup.js'), /RT\.merge\(rt\.rbTimer/); assert.match(read('popup.html'), /id="rbtFile"/);
-  assert.match(read('manifest.json'), /"modules\/rbtimer\.js",\s*"content\.js"/);
+  assert.match(read('manifest.json'), /"modules\/rbtimer\.js",\s*(?:"modules\/rbrun\.js",\s*)?"content\.js"/);
   assert.match(c, /rbTimers: true, rbTimerMin: 10, rbRespH: 8/);
   assert.match(c, /const ep = epicRespTxt\(wide, now\); if \(ep\) L\.push\(ep\)/, 'индикатор слева снизу: респ эпиков');
   console.log('PASS: 10.0.2 таймеры боссов — окно смерти, свой килл, замер респа (свой / по всем / догадка 8 ч / игра у эпиков), опрос окна уровней, rbList, журнал, тур');
