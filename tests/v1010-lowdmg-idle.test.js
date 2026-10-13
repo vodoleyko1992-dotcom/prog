@@ -24,13 +24,13 @@ const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 
   // 2. mobfarm: простой без целей — растущая пауза и причина в журнале
   const mf = read('modules/mobfarm.js');
-  assert.ok(/let farRecT = 0, lowRecT = 0, idleN = 0, idleRecT = 0;/.test(mf), 'счётчики простоя объявлены');
-  const blk = mf.match(/if \(!cands\.length\) \{[\s\S]*?\n  \}\n  idleN = 0;/);
-  assert.ok(blk, 'блок «целей нет» сбрасывает idleN после себя');
+  assert.ok(/let farRecT = 0, lowRecT = 0, idleT0 = 0, idleRecT = 0, idleN = 0;/.test(mf), 'счётчики простоя объявлены');
+  const blk = mf.match(/if \(!cands\.length\) \{[\s\S]*?\n  \}\n/);
+  assert.ok(blk && mf.indexOf('idleT0 = 0; idleN = 0;') > mf.indexOf(blk[0]), 'цели нашлись — счётчик простоя сброшен (вместе с idleT0 из PR #89)');
   const b = blk[0];
   assert.ok(/idleN\+\+/.test(b) && /idleN <= 3 \? 15 : idleN <= 8 \? 60 : 180/.test(b), 'пауза 15 → 60 → 180 с');
   assert.ok(/Date\.now\(\) - idleRecT > 600000/.test(b), 'запись раз в 10 мин');
-  assert.ok(/все виды «не по зубам» 2 ч/.test(b) && /Бонус новичка/.test(b) && /проверяю карту раз в \$\{wait\} с/.test(b), 'причина и подсказка в журнале');
+  assert.ok(/«не по зубам» \(2 ч\)/.test(b) && /Бонус новичка/.test(b) && /проверяю карту раз в \$\{wait\} с/.test(b), 'причина и подсказка в журнале');
   assert.ok(/обновлю карту через \$\{wait\} с/.test(b) && /i < wait && env\.on/.test(b), 'ждём именно wait секунд');
   assert.ok(!/через 15 с'/.test(b), 'жёстких 15 с больше нет');
   console.log('v1010-lowdmg-idle: PASS');
