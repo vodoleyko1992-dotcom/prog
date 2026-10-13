@@ -5,11 +5,15 @@ const assert = require('node:assert/strict'), fs = require('node:fs'), path = re
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const content = read('content.js'), combat = read('modules/combat.js'), popup = read('popup.js');
 // 1. умолчания и миграция: +5 в ядре и меню; у кого было шире (20, 99) — один раз сводится к +5
-assert.match(content, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 3,/, 'core default +5');
-assert.match(popup, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 3,/, 'menu default +5');
+assert.match(content, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5,/, 'core default −5…+5');
+assert.match(popup, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5,/, 'menu default −5…+5');
 assert.match(content, /once\('lvlTop1007', \(\) => \{ if \(!\(\+C\('lvlAbove'\) <= 5\)\) cf\.lvlAbove = 5; \}\);/, 'migration');
 assert.ok(content.indexOf("once('lvlTopMig'") < content.indexOf("once('lvlTop1007'"), 'new migration runs after the old «no cap» one');
 assert.match(read('popup.html'), /По умолчанию \+5: мобов выше героя больше чем на N ур\. бот не выбирает/);
+// 1б (игрок 03:19 «в базе выстави вот так»): окно −5…+5 и для источников ресурса/Маммона — умолчания, базовый профиль, миграция
+assert.match(content, /farmLvlBelow: 5, farmLvlAbove: 5,/); assert.match(content, /farmWin = L => \(\{ lo: L - \(cfg\.farmLvlBelow \?\? 5\)/);
+assert.match(content, /once\('win1007', \(\) => Object\.assign\(cf, \{ lvlBelow: 5, farmLvlBelow: 5, farmLvlAbove: 5 \}\)\);/);
+{ const bc = JSON.parse(read('base-profile.json')).cfg; assert.deepEqual([bc.lvlBelow, bc.lvlAbove, bc.farmLvlBelow, bc.farmLvlAbove], [5, 5, 5, 5], 'base profile −5…+5'); }
 // 2. mobfarm: моб +6 при пределе +5 — не кандидат; ★ квест — до +10; предел 99 — без ограничения
 const mf = read('modules/mobfarm.js'), recs = [];
 const menv = { cfg: { priority: '[квест]\n[чемп]\n[все]', searchChamp: true, searchQuest: true, lvlBelow: 3, lvlAbove: 5, lvlMin: 1, lvlMax: 99 },

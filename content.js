@@ -10,13 +10,13 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 3, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
+  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
   autoMagister: false, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, autoRevive: true, campaignEvery: 25,
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
   taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
-  lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 3, maxPages: 3, sealAuto: false, sealMin: 1,
+  lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35,
@@ -1347,7 +1347,7 @@ function farmGoal() {
 // 7.2.1 (игрок 10.10: «чтобы старался выбирать −3…+5 ур. от героя, но с возможностью коррекции»): предпочтительный диапазон уровней
 // мобов-источников — cfg.farmLvlBelow / farmLvlAbove (меню «Фарм ресурса»). Точки, где есть источники в диапазоне, — в первую очередь
 // (inWin), среди них — по шансу; нет таких — лучшая из остальных, чем дальше уровень от диапазона, тем ниже оценка
-const farmWin = L => ({ lo: L - (cfg.farmLvlBelow ?? 3), hi: L + (cfg.farmLvlAbove ?? 5) });
+const farmWin = L => ({ lo: L - (cfg.farmLvlBelow ?? 5), hi: L + (cfg.farmLvlAbove ?? 5) });
 function farmFit(l, L) {
   const w = farmWin(L);
   return l >= w.lo && l <= w.hi ? 1 : l < w.lo ? Math.max(0.15, 1 - (w.lo - l) * 0.12) : Math.max(0.1, 1 - (l - w.hi) * 0.18);
@@ -4700,6 +4700,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 10.0.7 (игрок 13.10 03:16, скрин Warlock 67 против Tomb Guard 75: «бот пытается бить моба больше чем на 5 лвл старше»): верхний предел
   // «до героя +» был 99 (v5.3.1 снял), у игрока 20 — Tomb Guard +8 проходил. Теперь по умолчанию +5 (как и −5); шире — руками в «Охоте»
   once('lvlTop1007', () => { if (!(+C('lvlAbove') <= 5)) cf.lvlAbove = 5; });
+  // 10.0.7 (игрок 13.10 03:19, скрин «Мобы-источники: от −5 до +5»: «в базе выстави вот так»): окно −5…+5 везде — охота и источники ресурса/Маммона
+  once('win1007', () => Object.assign(cf, { lvlBelow: 5, farmLvlBelow: 5, farmLvlAbove: 5 }));
   once('oriOff1005', () => { if (/^oriharukon ore$/i.test(String(C('farmRes') || '').trim())) Object.assign(cf, { farmRes: '', farmNeed: 0 }); });   // 10.0.5 (игрок 12.10 15:54: «убери эту цель… на будущее»): цель фарма Oriharukon Ore снята; в базовом профиле и умолчаниях цели нет
   once('fistOff923', () => { cf.nWeaponBuff = ''; cf.weaponSwap = false; rf.buffSwap = null; });   // 9.2.3: смена оружия ради баффа (кастеты) убрана
   once('ud721', () => { const ps = String(C('nPetBuffs') || '').split(',').map(x => x.trim()).filter(Boolean); if (ps.some(n => /ultimate defen/i.test(n))) cf.nPetBuffs = ps.filter(n => !/ultimate defen/i.test(n)).join(', '); });   // 7.2.1: автороли поставили Ultimate Defense в баффы кота
