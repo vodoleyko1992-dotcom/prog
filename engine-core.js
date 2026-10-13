@@ -157,11 +157,16 @@
   // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры
   // мерится по видимым элементам, а они на разных экранах (бой, победа, карта, загрузка) разные. Запоминаем самое широкое поле
   // для этой ширины окна браузера и не сужаем окно, пока ширина браузера та же (новая ширина — мерим заново)
-  function stickyFree(stick, free, viewport) {
+  // 10.0.5 (игрок 13.10, спойлер WestSPOIL: «левая панель вышла за край»): «самое широкое поле» залезало на игру — на экране, где
+  // рамка игры шире (или замер по узкому блоку дал лишнее поле), окно оставалось прежней ширины и закрывало левый край игры.
+  // Теперь запоминаем самое УЗКОЕ поле, реально измеренное по рамке игры (measured): окно не прыгает и никогда не залезает на игру.
+  // Без замера (игра ещё грузится) — прежнее значение. Старые записи «самого широкого» (без m) заменяются первым замером
+  function stickyFree(stick, free, viewport, measured = true) {
     const cap = Math.max(0, Math.floor(viewport / 2) - 16);   // игра по центру: поле слева не шире половины экрана
     const f = Math.min(Math.max(0, free | 0), cap);
-    const s = stick && stick.vw === viewport ? stick : { vw: viewport, free: 0 };
-    return f > s.free ? { vw: viewport, free: f } : s;
+    const same = stick && stick.vw === viewport ? stick : null;
+    if (!measured) return same || { vw: viewport, free: 0 };
+    return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
   root.L2EngineCore = { stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
