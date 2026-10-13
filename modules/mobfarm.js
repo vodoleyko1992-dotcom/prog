@@ -46,20 +46,40 @@ function markerTypes() {
   return t;
 }
 
+// 10.0.5 (обновление игры 13.10, анонс «Обновление чемпионов»): с чемпиона падает 1 Fast Aden — синий 10 %, оранжевый 20 %, красный 60 %
+// (респ 10/10/15 мин), с обычного моба 1 %; только если моб не ниже героя больше чем на 5 ур. Цвет — championTier в /game/map/spawns
+// (живой ответ 13.10, Wild Beast Pastures: 12 синих dense_*, 4 оранжевых champ_o_*, 2 красных champ_r_*; HP ×1 / ×2 / ×3 синего,
+// EXP ×1 / ≈1,6 / ≈2), в разметке — li.l2-map-mob-item--champion-<цвет>
+const FA_P = { blue: 0.1, orange: 0.2, red: 0.6 }, FA_MOB = 0.01, FA_BELOW = 5;
+const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'красный' };
+function champTier(id, a) {                        // цвет чемпиона: ответ сервера → spawnId champ_r_/champ_o_ → класс строки карты → синий
+  const t = env.NET_SPAWNS?.tier?.[id];
+  if (t) return t;
+  if (/^champ_r_/i.test(id || '')) return 'red';
+  if (/^champ_o_/i.test(id || '')) return 'orange';
+  const li = a?.closest?.('li'), m = (li?.className || '').match(/l2-map-mob-item--champion-(\w+)/);
+  return m ? m[1] : 'blue';
+}
+// шанс 1 FA с этого моба (0 — моб ниже героя больше чем на 5 ур.)
+const faChance = (champ, tier, lvl, hl = env.heroLvl() || env.rt.lvl || 0) => hl && lvl && lvl < hl - FA_BELOW ? 0 : champ ? FA_P[tier] || FA_P.blue : FA_MOB;
+
 async function netSpawns(list) {
-  const kind = {}, sp = { ...(env.rt.spawns || {}) };
+  const kind = {}, tier = {}, sp = { ...(env.rt.spawns || {}) };
   let added = 0;
-  for (const [id, k, name, lvl] of list) {
+  for (const [id, k, name, lvl, , tr] of list) {
     if (!id) continue;
     if (k) kind[id] = k;
+    if (k === 'champion') tier[id] = tr || champTier(id);
     if (name && !env.isRaidId(id) && (!sp[id] || sp[id][0] !== name || sp[id][1] !== lvl)) { sp[id] = [name, lvl]; added++; }
   }
-  env.NET_SPAWNS = { t: Date.now(), kind };
+  env.NET_SPAWNS = { t: Date.now(), kind, tier };
   const ch = list.filter(x => x[1] === 'champion'), key = ch.map(x => x[0]).join(',');
   if (key !== (env.rt.netChampKey || '')) {
     env.rt.netChampKey = key;
     if (!env.tabIdle) env.setRt({ netChampKey: key }).catch(() => {});
-    if (ch.length) env.rec('B', 'чемпионы', `в списке локации (сервер): ${ch.slice(0, 5).map(x => `${x[2]} (${x[3]})`).join(', ')}${ch.length > 5 ? ` …ещё ${ch.length - 5}` : ''}`);
+    // 10.0.5: красные и оранжевые первыми, с цветом — их бот бьёт ради FA
+    const tw = x => ({ red: 0, orange: 1 })[tier[x[0]]] ?? 2;
+    if (ch.length) env.rec('B', 'чемпионы', `в списке локации (сервер): ${[...ch].sort((a, b) => tw(a) - tw(b)).slice(0, 5).map(x => `${x[2]} (${x[3]}${tier[x[0]] && tier[x[0]] !== 'blue' ? ', ' + TIER_RU[tier[x[0]]] : ''})`).join(', ')}${ch.length > 5 ? ` …ещё ${ch.length - 5}` : ''}`);
   }
   if (added && !env.tabIdle) await env.setRt({ spawns: Object.keys(sp).length > 4000 ? Object.fromEntries(list.filter(x => x[2] && !env.isRaidId(x[0])).map(x => [x[0], [x[2], x[3]]])) : sp });
 }
@@ -288,6 +308,10 @@ function candidates(rules, sig, types, limitIdx) {
   // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): пока «Искать чемпионов» выключено (и глава не просит чемпионов),
   // чемпион — обычный моб: без окна до −8 ур. и без особой ценности (бот не тянется к ним сам)
   const champOn = champRuleOn();
+  const hl0 = env.heroLvl() || env.rt.lvl || 0;
+  // 10.0.5: «FA с чемпионов» (cfg.champFa, по умолчанию ВКЛ) — оранжевый/красный чемпион не ниже героя −5 (шанс FA 20/60 %) идёт сразу
+  // после ★ квеста и источников ресурса, даже при выключенном «Искать чемпионов». Только из списка этой локации: бот никуда не летит
+  const pos = rules.filter(x => !x.neg), faRank = pos.findIndex(x => !(x.quest || x.farm));
   sig.ids.forEach((id, idx) => {
     if (idx >= limitIdx || env.isRaidId(id) || types[id] === 'raid' || types[id] === 'epic_guard') return;
     const c = env.rt.spawns?.[id];
@@ -297,6 +321,7 @@ function candidates(rules, sig, types, limitIdx) {
     const name = c ? c[0] : '', lvl = c ? c[1] : 0;
     const r = { id, idx, name, lvl, champ, boss: !!name && env.isBoss(name),
                 quest: !!name && env.isQuestName(name, sig.quest) };
+    if (champ) { r.tier = champTier(id); r.fa = faChance(true, r.tier, lvl, hl0); }
     // моб на 7+ ур. выше: атака почти не попадает (лог 20:20: Bloody Banshee 74 при герое 41 — атака 1–2 урона,
     // бой 26 с вместо 3). Такие — не цели, даже если чемпионы. Цели квеста — до +10
     const hl = env.heroLvl() || env.rt.lvl || 0;   // 8.0.3: уровень в шапке ещё не прочитан — последний известный (без него окно уровня не работало)
@@ -321,8 +346,10 @@ function candidates(rules, sig, types, limitIdx) {
     // Теперь исключение — только ★ квест и чемпион главы (как в бою); источник ресурса «не по зубам» 2 ч не выбираем
     const hard = env.rt.hardMobs?.[(name || '').toLowerCase()];
     if (hard && Date.now() - hard.t < 7200000 && !(r.quest || (champ && env.campActive() && env.campChampOpen()))) return;
-    const k = rank(r, rules);
-    if (k >= 0) out.push({ ...r, rank: k, ql: qLike });
+    let k = rank(r, rules);
+    const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) >= FA_P.orange && faRank >= 0;
+    if (faHot) k = Math.min(k, faRank);
+    if (k >= 0) out.push({ ...r, rank: k, ql: qLike, faHot });
   });
   return mobValRank(out, champOn);
 }
@@ -359,7 +386,8 @@ function mobValRank(out, champOn = champRuleOn()) {
   const keep = out.filter(c => !c.low);
   const list = keep.length ? keep : out;
   const cap = hl ? hl + 5 : 999, lv = c => (c.lvl || 0) <= cap ? c.lvl || 0 : 2 * cap - c.lvl;   // выше героя +5 — чем выше, тем позже
-  return list.sort((a, b) => a.rank - b.rank || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, выгода, уровень, ближе
+  // 10.0.5: в одном приоритете FA-чемпион (оранжевый/красный в окне −5) первым, красный раньше оранжевого
+  return list.sort((a, b) => a.rank - b.rank || (b.faHot ? b.fa : 0) - (a.faHot ? a.fa : 0) || b.val - a.val || lv(b) - lv(a) || a.idx - b.idx);   // приоритет, FA, выгода, уровень, ближе
 }
 // после победы (из trackEfficiency, без ожидания): EXP и время на этот вид — скользящее по ≈30 последним боям
 function mobValNote(name, champ, exp, sec) {
@@ -386,7 +414,8 @@ async function attackSpawn(c, label) {
   console.log(env.TAG, 'цель:', c.id, c.name, '| поз.', c.idx);
   await env.pause();
   if (!env.on) return true;
-  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb }, mobClickAt: Date.now(), via: 'map' });
+  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a) } : {}) }, mobClickAt: Date.now(), via: 'map' });
+  if (c.faHot) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier}) — бью ради FA: шанс ${Math.round(c.fa * 100)} %`);
   env.fire(a);
   if (!(await env.waitFor(env.isBattle, 10000)) && env.on) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
     const n = (env.rt.clickFail || 0) + 1;
@@ -677,6 +706,6 @@ async function map() {
   env.setStatus('Цели исчезли из списка, ищу заново');
   await env.sleep(1500);
 }
- return { pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
+ return { FA_P, FA_MOB, FA_BELOW, champTier, faChance, pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
  };
 })(globalThis);

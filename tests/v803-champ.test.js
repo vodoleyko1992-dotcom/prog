@@ -3,7 +3,8 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), mobfarm = read('modules/mobfarm.js');
-assert.match(content, /chain: true, searchQuest: true, searchChamp: false, deepEvery: 10,/, 'core default: off');
+// 10.0.5: после searchChamp добавлено champFa (FA с чемпионов) — само «Искать чемпионов» по умолчанию по-прежнему ВЫКЛ
+assert.match(content, /chain: true, searchQuest: true, searchChamp: false, (champFa: true, )?deepEvery: 10,/, 'core default: off');
 assert.match(popup, /chain: true, searchQuest: true, searchChamp: false,/, 'menu default: off');
 assert.equal(JSON.parse(read('base-profile.json')).cfg.searchChamp, false, 'base profile: off');
 assert.match(content, /once\('champ803', \(\) => \{ cf\.searchChamp = false; \}\);/, 'existing installs switched off once');
