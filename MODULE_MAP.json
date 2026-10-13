@@ -947,5 +947,22 @@
       "toOutskirts",
       "waitFor"
     ]
+  },
+  "champs": {
+    "exports": [
+      "powNow",
+      "grown",
+      "dpsOn",
+      "limitS",
+      "judge",
+      "fleeCheck",
+      "learn"
+    ],
+    "dependencies": [
+      "rt",
+      "setRt",
+      "heroLvl",
+      "farmRate"
+    ]
   }
 }

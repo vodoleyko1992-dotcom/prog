@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 const mf = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 const featurePaths = mf.content_scripts.find(x => x.js.includes('content.js')).js;
 const modules = featurePaths.filter(x=>x.startsWith('modules/'));
-const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon','story','fightlab','enemies','tvtshop','dailies','rbtimer'];   // 10.0.2: + таймеры боссов   // 9.2: + лист врагов; 10.0: + магазин TvT   // 9.0: + Маммон, + квесты сабкласса/Noblesse
+const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','quests','navigation','buffs','equipment','economy','resources','loot','survival','mammon','story','fightlab','enemies','tvtshop','dailies','champs','rbtimer'];   // 10.0.5: + чемпионы ради FA   // 10.0.2: + таймеры боссов   // 9.2: + лист врагов; 10.0: + магазин TvT   // 9.0: + Маммон, + квесты сабкласса/Noblesse
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
 assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|(?:[89]|10)\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая; 10.0 — десятая
@@ -61,7 +61,10 @@ assert.equal(vm.runInContext(`L2V7Modules.combat.ready({
 assert.equal(vm.runInContext('typeof autonomyMode',ctx),'function');
 // 7.1.31 (игрок: «поставил 99999, а он всё равно проверяет карту»): 0 = карту по плану не проверять никогда (было «каждый бой»)
 const due = (c, r) => vm.runInContext(`cfg = mergeCfg(${JSON.stringify(c)}); rt = { ...DEF_RT, ...${JSON.stringify(r)} }; mapDue(parseRules())`, ctx);
-assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 500, deepHot: true }), false, '0 = never: no planned/champion/hot map');
+// 10.0.5 (игрок 13.10: «автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов — своя частота (champEvery 20) и при «0»; выключить — галкой
+assert.equal(due({ deepEvery: 0, searchChamp: false }, { sinceDeep: 500, deepHot: true }), false, '0 = never: no planned/hot map (champions off)');
+assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 19 }), false, '0 + champions: not before 20 fights');
+assert.equal(due({ deepEvery: 0, searchChamp: true }, { sinceDeep: 20 }), true, '0 + champions: map every 20 fights');
 assert.equal(due({ deepEvery: 99999, searchChamp: true }, { sinceDeep: 25 }), true, 'champions on: map at least every 20 fights');
 assert.equal(due({ deepEvery: 99999, searchChamp: false }, { sinceDeep: 25 }), false, 'champions off: 99999 respected');
 // 8.0 (аудит фарма A3): «каждые 10 боёв» — только когда есть зачем: ★ цель квеста на этой локации (правило [квест] само по себе — не повод)
