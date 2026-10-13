@@ -65,12 +65,12 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     // 10.0.3: Alt+R на странице игры → окно выбора файла → таймеры героя (команда rbtImport в фон)
     {
       const t0 = Math.floor(Date.now() / 1000) - 3600, f = [0, 600].map((dt, i) => JSON.stringify({ t: t0 + dt, st: { l2dop_rb_9: ['Lokness', 70, i === 0, 'raid'] } })).join('\n');
-      const [fc] = await Promise.all([p.waitForEvent('filechooser', { timeout: 5000 }), p.keyboard.press('Alt+KeyR')]);
+      const [fc] = await Promise.all([p.waitForEvent('filechooser', { timeout: 5000 }), p.keyboard.press('Alt+KeyW')]);
       await fc.setFiles({ name: 'rb-poll.jsonl', mimeType: 'application/json', buffer: Buffer.from(f) });
       await p.waitForTimeout(500);
       const r3 = await p.evaluate(() => ({ sent: !!window.__rbtImp?.b?.l2dop_rb_9, keep: !!window.__rbtImp?.b?.l2dop_rb_25103, lok: rt.rbTimer?.b?.l2dop_rb_9?.al, say: document.getElementById('l2bot-rbt-say')?.innerText || '' }));
       if (!(r3.sent && r3.keep && r3.lok === false && /Таймеры загружены: 1 боссов/.test(r3.say))) { console.error('FAIL alt+r game', JSON.stringify(r3)); process.exit(1); }
-      console.log('PASS browser: Alt+R on the game page → file picker → tracking file merged into the hero timers (old timers kept)');
+      console.log('PASS browser: Alt+W on the game page → file picker → tracking file merged into the hero timers (old timers kept)');
     }
     console.log('PASS browser: game list via hook (all 15 RB, not cut to 8) → rbTimer + rbList; RB killed → death window; own poll (GET with token) → window pages + epics; «🐉 Респ эпиков» in the in-game indicator (wide and narrow; bottom of the window, shown with no data, epics from epicDb while paused)');
     await p.close();
@@ -99,7 +99,7 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     const vis = await page.$eval('#rbTimerTable', e => e.getBoundingClientRect().height > 0);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     const rows = t.split('\n').filter(Boolean), at = re => rows.findIndex(r => re.test(r));
-    const ok = /Rahha \(65\)\s+💀 убит мной в \d\d:\d\d\s+≈[\d.: ]+ \(через 5 ч\)\s+≈8 ч · догадка/.test(t) && /Hekaton Prime/.test(t) && /Tiphon \(65\)\s+✅ жив/.test(t)
+    const ok = /Rahha \(65\)\s+💀 убит мной в (?:\d\d\.\d\d )?\d\d:\d\d\s+≈[\d.: ]+ \(через 5 ч\)\s+≈8 ч · догадка/.test(t) && /Hekaton Prime/.test(t) && /Tiphon \(65\)\s+✅ жив/.test(t)
       && /🐉 Zaken \(60\)\s+💀 убит до [\d.: ]+\s+не позже .*36 ч · игра/.test(t) && !/Far Low/.test(t)
       && at(/Rahha/) < at(/Hekaton/) && at(/Hekaton/) < at(/Tiphon/)
       && /Знаю 5 боссов: живых 2, убитых 3/.test(sum) && /пока не замерен — беру 8 ч/.test(sum) && on && resp === '8' && every === '10' && vis && !overflow && !errs.length;
@@ -109,15 +109,15 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       const t0 = Math.floor(now / 1000) - 9 * 3600, snaps = [0, 600, 1200, 8 * 3600 + 1200, 8 * 3600 + 1800].map((dt, i) => JSON.stringify({ t: t0 + dt, st: { l2dop_rb_9: ['Lokness', 70, !(i >= 2 && i <= 3), 'raid'], l2dop_rb_25051: ['Rahha', 65, false, 'raid'] } })).join('\n');
       // 10.0.3: Alt+R в меню открывает то же окно загрузки, что кнопка «📥 Загрузить таймеры из файла слежки»
       await page.evaluate(() => document.querySelector('nav button[data-tab="overview"]')?.click());
-      const [fc] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }), page.keyboard.press('Alt+KeyR')]);
+      const [fc] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }), page.keyboard.press('Alt+KeyW')]);
       const foot = await page.$eval('footer', e => e.innerText), rbTab = await page.$eval('#tab-rb', e => e.classList.contains('act'));
-      if (!/Alt\+R\s*таймеры/.test(foot) || !rbTab) { console.error('FAIL alt+r menu', JSON.stringify({ foot, rbTab })); process.exit(1); }
+      if (!/Alt\+W\s*таймеры/.test(foot) || !rbTab) { console.error('FAIL alt+r menu', JSON.stringify({ foot, rbTab })); process.exit(1); }
       await fc.setFiles({ name: 'rb-poll.jsonl', mimeType: 'application/json', buffer: Buffer.from(snaps) });
       await page.waitForTimeout(800);
       const t2 = await page.$eval('#rbTimerTable', e => e.innerText);
       const ok2 = /Lokness \(70\)\s+✅ жив/.test(t2) && /8 ч–8 ч 20 мин · мой замер \(1\)/.test(t2) && /Rahha \(65\)\s+💀 убит мной/.test(t2);
       if (!ok2) { console.error('FAIL import', JSON.stringify({ t2 })); process.exit(1); }
-      console.log('PASS browser: Alt+R in the menu (hint in the footer) → tracking file import — Lokness alive with respawn measured 8 h–8 h 20 min, own Rahha kill kept');
+      console.log('PASS browser: Alt+W in the menu (hint in the footer) → tracking file import — Lokness alive with respawn measured 8 h–8 h 20 min, own Rahha kill kept');
     }
     if (process.env.SHOT) { await page.$eval('#rbTimerTable', e => e.scrollIntoView()); await page.screenshot({ path: process.env.SHOT + '-' + w + '.png' }); }
     console.log(`PASS browser ${w}px: «👑 РБ» → «⏱ Таймеры боссов»: killed first by respawn time, epic by game hours, window 50–80, settings, no sideways scroll`);

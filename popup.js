@@ -2282,12 +2282,12 @@ $('uiSearch').addEventListener('keydown', e => {
 });
 $('uiResults').addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); goTo($('uiResults')._hits[+d.dataset.i]); } });
 $('uiSearch').addEventListener('blur', () => setTimeout(() => $('uiResults').classList.remove('show'), 150));
-// горячие клавиши: Alt+S — старт/стоп, Alt+R — таймеры боссов из файла, Alt+1…9, 0 — вкладки, Ctrl+K или «/» — поиск
+// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…9, 0 — вкладки, Ctrl+K или «/» — поиск
 document.addEventListener('keydown', async e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' || (!typing && e.key === '/')) { e.preventDefault(); $('uiSearch').focus(); $('uiSearch').select(); return; }
   if (!e.altKey) return;
-  if (e.code === 'KeyR') { e.preventDefault(); showTab('rbtimer'); $('rbtFile').click(); return; }   // 10.0.3: Alt+R — загрузить таймеры боссов из файла
+  if (e.code === 'KeyW') { e.preventDefault(); showTab('rbtimer'); $('rbtFile').click(); return; }   // 10.0.3: Alt+R → 10.0.5 (игрок 13.10): Alt+W — загрузить таймеры боссов из файла
   if (e.code === 'KeyS') { e.preventDefault(); const { on = false } = await chrome.storage.local.get('on'); (on ? $('stop') : $('start')).click(); return; }
   const n = e.code === 'Digit0' ? 10 : +(e.code.match(/^Digit([1-9])$/) || [])[1];
   if (n) { e.preventDefault(); const b = document.querySelectorAll('nav button')[n - 1]; if (b) showTab(b.dataset.tab); }
