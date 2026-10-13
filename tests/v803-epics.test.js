@@ -308,7 +308,7 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     assert.match(content, /if \(epicOn\(\)\) L2V7Modules\.epics\.epicPollTick\(\)\.catch\(\(\) => \{\}\);/);
     assert.match(content, /once\('epicCol803', /); assert.match(content, /once\('epicDeaths803', \(\) => \{ if \(\+C\('epicMaxDeaths'\) === 10\) cf\.epicMaxDeaths = 3; \}\);/);
     const def = content.slice(content.indexOf('const DEF_CFG = {'), content.indexOf('\n', content.indexOf('const DEF_CFG = {')));
-    for (const kv of ['epicCoinPerBoss: 1', 'epicCoinKeep: 0', 'epicMaxFightMin: 30', 'epicMaxRetreats: 8', 'epicMaxDeaths: 5', 'epicCoinDailyMax: 0']) assert.ok(def.includes(kv), kv);
+    for (const kv of ['epicCoinPerBoss: 1', 'epicCoinKeep: 0', 'epicMaxFightMin: 0', 'epicMaxRetreats: 8', 'epicMaxDeaths: 5', 'epicCoinDailyMax: 0']) assert.ok(def.includes(kv), kv);
     assert.match(content, /\{ k: 'frintezza', lvl: 90,/);
     const html = read('popup.html'), popup = read('popup.js'), ui = read('ui-v7.js');
     assert.match(html, /Coin of Luck на эпиков за 24 ч \(0 — НЕ тратить\)/); assert.match(ui, /epicCoinDailyMax:'Coin of Luck — ценная валюта \(донат, немного падает из Old Box и за TvT\)\. Ноль — бот не тратит их никогда/);
@@ -317,7 +317,7 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     for (const id of ['epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats']) { assert.ok(html.includes(`id="${id}"`), id); assert.ok(popup.includes(`'${id}'`), id); assert.ok(def.includes(id), id); assert.ok(ui.includes(id + ":'"), id); }
     assert.match(popup, /epicMaxDeaths: 5, epicCheck: false/);   // 10.0.5: 3 → 5 (игрок 13.10 00:57)
     const bp = JSON.parse(read('base-profile.json')).cfg;
-    assert.deepEqual([bp.epicMaxDeaths, bp.epicCoinDailyMax, bp.epicCoinPerBoss, bp.epicCoinKeep, bp.epicMaxFightMin, bp.epicMaxRetreats], [5, 0, 1, 0, 30, 8]);   // 10.0.5: смертей на эпика 3 → 5
+    assert.deepEqual([bp.epicMaxDeaths, bp.epicCoinDailyMax, bp.epicCoinPerBoss, bp.epicCoinKeep, bp.epicMaxFightMin, bp.epicMaxRetreats], [5, 0, 1, 0, 0, 8]);   // 10.0.5: смертей на эпика 3 → 5, предел боя эпика 30 → 0 (без предела)
     assert.equal((read('base-profile.json').match(/passw|"auth"/gi) || []).length, 0);
     // survival: смерть на эпике считается за его появление; стоп — 2 × «смертей на эпика» (≤20) за час, вне эпика — 3 за 30 мин
     const surv = read('modules/survival.js');

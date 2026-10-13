@@ -409,8 +409,9 @@ function epicVerdict(k, now = Date.now()) {
   const chk = env.rbPreCheck(id, { ...st, hp: curHp, hpExact: true, loss, est: false }, 1, dps, heroMax);   // hpExact: rb[id].hpAfter второй раз не применять
   const out = { ...base, sp: chk.sp, spPct: chk.spPct, tKill: Math.round(curHp / dps), dps, dpsHow: D.how, need: chk.need, pool: chk.pool };
   if (!chk.ok) return { ...out, v: chk.kind === 'pots' ? 'pots' : 'strong', why: chk.why };
-  const maxS = Math.max(300, (+env.cfg.epicMaxFightMin || 30) * 60);
-  if (out.tKill > maxS) return { ...out, v: 'slow', why: `бой ≈${Math.round(out.tKill / 60)} мин > ${Math.round(maxS / 60)} мин (ДПС ≈${dps}: ${D.how})` };
+  // 10.0.5 (игрок 13.10 01:10: «для эпиков лимит по времени не нужен»): 0 / пусто — без предела; своё число игрока работает как прежде (≥ 5 мин)
+  const lim = +env.cfg.epicMaxFightMin || 0, maxS = Math.max(300, lim * 60);
+  if (lim > 0 && out.tKill > maxS) return { ...out, v: 'slow', why: `бой ≈${Math.round(out.tKill / 60)} мин > ${Math.round(maxS / 60)} мин (ДПС ≈${dps}: ${D.how})` };
   return { ...out, v: 'ok', why: chk.why };
 }
 const vPack = v => ({ v: v.v, why: String(v.why || '').slice(0, 220), sp: v.sp || 0, spPct: v.spPct || 0, tKill: v.tKill || 0, dps: v.dps || 0, heroLvl: v.heroLvl || 0, heroMax: v.heroMax || 0, t: v.t || Date.now() });
