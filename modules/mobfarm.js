@@ -375,6 +375,10 @@ function candidates(rules, sig, types, limitIdx) {
       const j = env.champs.judge(r);
       Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
       if (!j.ok) { champSkip(r, j.why); return; }
+      // 10.0.7 (лог 13.10 13:07–13:11): чемпион снимает баффы («зняв з вас 3 бафи»), а у нас платные баффы за FA — два набора по 8–9 FA
+      // ушли за минуту. Такой вид (rt.buffCancel, сутки) при платных баффах с запасом > 10 мин — не цель; без них бьём как прежде
+      const cr = env.cfg.champNoCancel !== false && env.cancelRisk?.(r.name);
+      if (cr && (env.faPaidLeft?.() || 0) > 0) { champSkip(r, `снимает баффы (${cr.n} за ${cr.k} боёв), а у нас баффы за FA`); return; }
     }
     let k = rank(r, rules);
     const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) >= FA_P.orange && faRank >= 0;

@@ -338,8 +338,11 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   // сообщению баффера = 10 мин тишины. Теперь: прошло ≥ 40 с после баффера, а нужное всё ещё не висит — поход не удался,
   // повтор через 1 мин; 3 таких подряд — пауза 10 мин и запись в журнал (чтобы не бегать к бафферу по кругу)
   const since = Date.now() - (env.rt.tbT || 0);
-  let wait = env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
-  if (env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
+  // 10.0.7: баффы снял моб (cancelNote после последнего похода) — это не «поход не удался» и не повод ждать 10 мин: идём сразу
+  const cancelled = (env.rt.tbCancelT || 0) > (env.rt.tbT || 0);
+  let wait = cancelled ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
+  if (cancelled) why += ' — сняты мобом';
+  if (!cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
     const fails = (env.rt.tbFail || 0) + 1;
     await env.setRt({ tbChk: env.rt.tbT, tbOk: false, tbFail: fails });
     env.rec('B', 'бафф', `после баффера баффы так и не появились в шапке (${fails}/3)${fails >= 3 ? ' — пауза 10 мин, проверьте набор баффа в меню' : ' — повторю через 1 мин'}`);
@@ -492,6 +495,32 @@ async function townBuffStep() {
   }
   await env.setRt({ tbuff: null });
 }
- return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep };
+// 10.0.7 (лог 13.10 13:03–13:12, игрок: «куда пропадал бафф в последних минутах боя?»): чемпионы Lost Yeti, Frost Tarantula, Ghost of
+// Rebellion Soldier, Vanor Silenos Shaman, Buffalo, Canyon Antelope снимают баффы — строка боя «[Frost Tarantula] зняв з вас 3 бафи.»
+// (50 раз за 9 мин). Игрок дважды купил баффы за FA (13:07 — 8 FA, 13:10 — 9 FA), и следующий же чемпион снял их за минуту. Бот этого
+// не понимал: писал «после баффера баффы так и не появились в шапке (1/3)», а после снятия ждал к бафферу 10 мин («к бафферу через 571 с»).
+// Теперь: снятие — в журнал и в память rt.buffCancel (по имени вида), к бесплатному бафферу — сразу после боя, не «поход не удался»;
+// чемпион, который снимает баффы, при платных баффах за FA (> 10 мин) — не цель (cfg.champNoCancel, mobfarm)
+const CANCEL_RE = /\[([^\]]+)\]\s*(?:зняв з вас|сн[яи]л с вас|cancell?ed)\s*(\d+)\s*(?:баф|buff)/i;
+function cancelNote(lines, name, opt = {}) {         // после боя: сколько баффов сняла цель → журнал + rt.buffCancel; возвращает число
+  let n = 0, who = '';
+  for (const l of lines || []) { const m = CANCEL_RE.exec(l); if (m) { n += +m[2] || 0; who = who || m[1]; } }
+  if (!n) return 0;
+  const key = String(name || who).toLowerCase(), C = { ...(env.rt.buffCancel || {}) }, o = C[key] || {};
+  C[key] = { t: Date.now(), n: (o.n || 0) + n, k: (o.k || 0) + 1, name: name || who, champ: !!opt.champ, tier: opt.tier || '' };
+  for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 7 * 86400000) delete C[k];
+  env.setRt({ buffCancel: C, tbCancelT: Date.now() });
+  const paid = faPaidLeft(0);
+  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу`);
+  return n;
+}
+const cancelRisk = name => { const o = env.rt.buffCancel?.[String(name || '').toLowerCase()]; return o && Date.now() - (o.t || 0) < 86400000 ? o : null; };
+function faPaidLeft(minMs = 10 * 60000) {           // сколько платных баффов за FA висит с запасом > minMs (кроме Noblesse)
+  let H = null; try { H = hudBuffs(); } catch (e) {}
+  if (!H) return 0;
+  const now = Date.now();
+  return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
+}
+ return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
