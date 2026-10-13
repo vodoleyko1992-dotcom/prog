@@ -40,12 +40,14 @@ const benv = { cfg: { rbSessBuffs: 'auto', rbSessNob: true, faBuffs: '', townBuf
 const bsb = { console, Date, Math, JSON, document: { querySelectorAll: () => [] }, location: { pathname: '/map.html' } };
 bsb.globalThis = bsb; vm.createContext(bsb); vm.runInContext(read('fa-full.js'), bsb); vm.runInContext(read('modules/buffs.js'), bsb);
 const B = bsb.L2V7Factories.buffs(benv);
-assert.deepEqual([...B.faFullIds()], mage, 'auto → mage set');
+// 10.0.7 (игрок 13.10: Magnus и Water не стакаются): из группы Greater в наборе остаётся один (без цифр героя — первый по списку)
+const mageSet = [...F.dropClash(mage, {})]; assert.ok(mageSet.includes(1413) && !mageSet.includes(1357));
+assert.deepEqual([...B.faFullIds()], mageSet, 'auto → mage set');
 assert.deepEqual([...B.faWanted()], [], 'no session, no epic → nothing');
-epicOk = true; assert.deepEqual([...B.faWanted()], mage, 'cleared epic attempt → full FA set');
+epicOk = true; assert.deepEqual([...B.faWanted()], mageSet, 'cleared epic attempt → full FA set');
 benv.cfg.epicFaFull = false; assert.deepEqual([...B.faWanted()], [], 'epic FA set switched off'); delete benv.cfg.epicFaFull;
 // городской набор висит (24 ч, Empower Lv.2): FA Lv.3 всё равно нужен; набор FA на месте — ничего
-hud = Object.fromEntries(mage.map(id => [id, E3])); hud[1059] = T24; lvl = { 1059: 2, 1062: 1 }; hud[1062] = T24;
+hud = Object.fromEntries(mageSet.map(id => [id, E3])); hud[1059] = T24; lvl = { 1059: 2, 1062: 1 }; hud[1062] = T24;
 assert.deepEqual([...(B.townBuffNeed()?.fa || [])].sort(), [1059, 1062], 'town Empower Lv.2 / Berserker Lv.1 under the full set → FA Lv.3 / Lv.2');
 assert.equal(B.faLow(1059), true); lvl = { 1059: 3, 1062: 2 }; assert.equal(B.faLow(1059), false);
 assert.equal(B.townBuffNeed(), null, 'full set on the panel → no trip');

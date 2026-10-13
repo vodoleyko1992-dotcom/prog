@@ -69,10 +69,12 @@
   // список «баффы РБ-сессии / эпиков»: «auto» (или пусто) — набор под класс, иначе номера игрока как есть
   const resolve = (v, role, S) => isAuto(v) ? ids(role, S) : String(v).split(/[,\s]+/).map(x => +x).filter(x => x > 0);
   // покупка X сняла Y (rt.faClash { X: [Y…] }) — из пары оставляем того, кто раньше в списке
+  // 10.0.7 (игрок 13.10: «Magnus и Water не стакаются»): Greater-баффы — одна группа (L2BuffVal.GROUP), в наборе остаётся первый по списку
+  const GROUP = [1356, 1357, 1355, 1363, 1413, 1414];
   function dropClash(list, clash) {
     const C = clash || {}, out = [];
-    for (const id of list) if (!out.some(k => (C[k] || []).includes(id) || (C[id] || []).includes(k))) out.push(id);
+    for (const id of list) if (!out.some(k => (C[k] || []).includes(id) || (C[id] || []).includes(k) || (GROUP.includes(k) && GROUP.includes(id)))) out.push(id);
     return out;
   }
-  G.L2FaFull = { SETS, UP, COST, kind, isAuto, ids, cost, resolve, dropClash };
+  G.L2FaFull = { SETS, UP, COST, GROUP, kind, isAuto, ids, cost, resolve, dropClash };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

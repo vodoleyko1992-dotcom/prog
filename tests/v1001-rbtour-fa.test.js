@@ -15,7 +15,7 @@ const loc = { pathname: '/map.html', href: '/map.html' };
 const bsb = { console, Date, Math, JSON, document: { querySelectorAll: () => [] }, location: loc };
 bsb.globalThis = bsb; vm.createContext(bsb); vm.runInContext(read('fa-full.js'), bsb); vm.runInContext(read('modules/buffs.js'), bsb);
 const B = bsb.L2V7Factories.buffs(benv), F = bsb.L2FaFull;
-const mage = [...F.ids({ mage: true })];
+const mage = [...F.dropClash(F.ids({ mage: true }), {})];   // 10.0.7: из группы Greater (Magnus/Water не стакаются) в наборе один
 benv.faCost = id => F.COST[id] || 1;
 hud = { 1068: now + 20 * 3600000 };   // городской набор на месте
 
