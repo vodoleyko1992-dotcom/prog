@@ -60,6 +60,9 @@ function shopPlan() {
     { key: 'soul', label: 'Soul Ore', ids: [1785], name: /^Soul Ore$/i, grade: 'NG', mm: env.pair(env.cfg.shopSoul, '0/1000') },
     { key: 'bait', label: 'Наживка', ids: [6519], name: /^(Наживка|Fishing Lure|Bait)$/i, grade: 'NG', mm: env.pair(env.cfg.shopBait, '0/0') },   // в сумке — «Fishing Lure» (6519), иконка та же
   ];
+  // 10.0.7 (игрок 13.10: «кристаллы покупаются в магазине»): недостающее сырьё цели Маммона, которое продаёт gm-shop (Кристал: ранг D…) —
+  // в ту же закупку, вкладка грейда предмета, подраздел «Ресурси»; сколько — ровно недостачу по плану (mammon.mmShopWant)
+  try { list.push(...(env.mmShopWant?.() || [])); } catch (e) {}
   // 7.1.30: после покупки «не тех» зарядов — сутки заряды не покупаем, пока игрок не проверит
   // 7.1.30 (лог 10.10 14:11): надетое оружие не прочитано — грейд «по уровню 50» дал C, куплено 3000 C-зарядов при посохе D.
   // Без надетого оружия заряды не покупаем вовсе: сначала чтение инвентаря, потом закупка
@@ -82,6 +85,8 @@ function shopNeedByPanel() {
   // заряды — грейд и тип по надетому оружию (как в закупке); оружие не прочитано — только счётчик на панели
   const sp = shopPlan().find(x => x.key === 'shots');
   chk(env.shotSlot?.(), env.pair(env.cfg.shopShots, '1000/5000'), sp ? sp.label.replace(/^Благосл\. заряды духа/, 'заряды') : 'заряды', sp?.ids[0]);
+  // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
+  for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) chk(null, it.mm, it.label, it.ids[0]);
   return low.join(', ');
 }
 
@@ -143,7 +148,7 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0) {          // на отк
   };
   if (it.grade && (await pick(`[data-grade="${it.grade}"]`)) === false) return { ok: false, why: `не открылась вкладка грейда ${it.grade}` };
   const SUB = { hp: 'vials', mp: 'vials', shots: 'charges', spirit: 'resources', soul: 'resources' };
-  const sub = SUB[it.key] || (/заряд|shot/i.test(String(it.name)) ? 'charges' : /зілл|зель|potion|банк/i.test(String(it.name)) ? 'vials' : 'all');
+  const sub = SUB[it.key] || it.sub || (/заряд|shot/i.test(String(it.name)) ? 'charges' : /зілл|зель|potion|банк/i.test(String(it.name)) ? 'vials' : 'all');
   if ((await pick(`[data-consumablesub="${sub}"]`)) === false) await pick('[data-consumablesub="all"]');
   // v4.22: строки появляются раньше названий — ждём, пока имена заполнятся (иначе «нет в магазине» через 1 мс)
   await env.waitX(() => [...document.querySelectorAll('.l2-gm-shop-name')].some(e => e.textContent.trim().length > 2) && pager().length, 8000, 150);

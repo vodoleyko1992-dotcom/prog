@@ -101,7 +101,7 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
     const U = M.goalAll(); eqJ(U.unk, [0, 1]); assert.equal(U.ready, false);
     // план для меню: компактный, пишется в rt один раз на изменение
     env.cfg.mmGoalItem = 920018; env.cfg.mmGoalLvl = 5; env.rt.mmEq = { belt: [920018, 0] }; M.goalNote();
-    const G = env.rt.mmGoalPlan; assert.equal(G.lv.length, 5); assert.equal(G.cr[0][0], 'Steel'); assert.ok(/наперёд не хватает.*· добываю Mithril Ore · ≈ часть цен — оценка/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);
+    const G = env.rt.mmGoalPlan; assert.equal(G.lv.length, 5); assert.equal(G.cr[0][0], 'Steel'); assert.ok(/наперёд не хватает.*· добываю Mithril Ore · докуплю в магазине: Crystal: D-Grade 1\D500 ≈ 975\D000 аден · ≈ часть цен — оценка/.test(env.rt.mmGoalSt), env.rt.mmGoalSt);   // 10.0.7: кристаллы — из магазина
     const n = env.recs.length; M.goalNote(); assert.equal(env.recs.length, n, 'no journal spam');
     assert.equal(M.mmFarmGoal().left, 1500, 'farm the whole plan ahead'); }
   // 7. цены неизвестны → поход к кузнецу (не чаще раза в 6 ч); список кузнеца запоминает цены и уровни
@@ -135,8 +135,8 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   assert.ok(mf.web_accessible_resources[0].resources.includes('mammon-gear.json'));
   const html = read('popup.html'), pj = read('popup.js');
   for (const id of ['tab-mammon', 'mmOrders', 'mmTpMax', 'mmGoalItem', 'mmGoalLvl', 'mmGoalFarm', 'mmSmithAuto', 'mmOrderBox', 'mmGoalBox']) assert.ok(html.includes(`id="${id}"`), id);
-  assert.match(pj, /const DEF = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true,/);
-  assert.match(c, /const DEF_CFG = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmSmithAuto: true,/);
+  assert.match(pj, /const DEF = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true,/);
+  assert.match(c, /const DEF_CFG = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true,/);
   const bp = JSON.parse(read('base-profile.json')).cfg; assert.equal(bp.mmOrders, true); assert.equal(bp.mmTpMax, 500000);
   console.log('PASS: 9.0 Mammon — order from bag (teleport ≤ limit, «Здати», winner check, back to the spot), never in battle/tours/TvT; goal «save up for an upgrade» (missing materials in order, farm source, craft hint, ready → upgrade at the smith (9.2.5) or the player), smith prices; own GETs with the page token (RB/epics 401 fixed)');
 })().catch(e => { console.error(e); process.exit(1); });

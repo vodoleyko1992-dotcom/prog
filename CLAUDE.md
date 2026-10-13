@@ -48,7 +48,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (207 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (209 PASS), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG.md           оглавление истории версий (ссылки); сами CHANGELOG-X.Y.Z.md — в docs/changelog/ (в zip не входят, код их не читает)
 ```
 
@@ -95,7 +95,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 207 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 209 PASS; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -111,7 +111,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **10.0.7 (в работе; docs/changelog/CHANGELOG-10.0.7.md)**: 69 файлов CHANGELOG-X.Y.Z.md из корня перенесены в `docs/changelog/`, в корне оглавление `CHANGELOG.md`; `docs/` в zip не входит (пакет 128 → 60 файлов). Тест v1007-changelog-layout.
+- **10.0.7 (в работе; docs/changelog/CHANGELOG-10.0.7.md)**: сырьё цели Маммона из магазина (игрок 13.10: «кристаллы покупаются в магазине») — `mammon.MM_SHOP` (Кристал/Самоцвіт D–S, Soul/Spirit Ore по kb-ценам), в меню «·магазин ≈цена» и сумма вместо «нет в фарме», докупка в обычной закупке (`economy.shopPlan` ← `mammon.mmShopWant`, подраздел «Ресурси», галка cfg.mmShopBuy ВКЛ), источник фарма ищется по всем именам предмета; тест v1007-mammon-shop. 69 файлов CHANGELOG-X.Y.Z.md из корня перенесены в `docs/changelog/`, в корне оглавление `CHANGELOG.md`; `docs/` в zip не входит (пакет 128 → 60 файлов). Тест v1007-changelog-layout.
 - **10.0.6 (собрана 13.10 по «сборка»; CHANGELOG-10.0.6.md, PR #66–#67)**: откат приёмов рыбалки по серверу (`fishing.cooldowns` pumpingMs 500 / reelingMs 700 вместо своей модели 1,05 с; запас rt.fishSrvMargin, при отказах — час по модели; cfg.fishSrvCd). Разбор рыбалки 13.10 (notes/fishing-pattern-analysis.md в папке проекта): поклёвка 69 %, виды рыб и урон — независимые случайные, паттерна нет; рыба держит одно состояние не дольше 4 ударов. Тест v1006-fishcd-srv, 207 PASS. В живой игре не проверено.
 - **10.0.6 (та же сборка, PR #66)**: «📦 Серия РБ» (игрок 13.10 02:02, скрин — пустое место между журналом и «Респ эпиков»): modules/rbrun.js, rt.rbRun — награды и дроп с РБ/эпиков с запуска серии (кнопка-сводка в окне бота, «↺ Новая серия», фон rbRunSet). Серия = запуск «Тур РБ»/«Эпики»/«🎯 один РБ» (если тур не шёл)/тур по дейлику; пауза, ▶ Продолжить, перезагрузка не сбрасывают. Тест v1006-rbrun, смоук v1006-rbrun-browser.
 - **10.0.5 (собрана 13.10 по «Сборка»; CHANGELOG-10.0.5.md, PR #54–#64)**: «⏹ Только задачи» бьёт мобов только на точке цели фарма (#54), цель Oriharukon Ore снята миграцией oriOff1005 (#55), FA с чемпионов (синий/оранжевый/красный 10/20/60 %, cfg.champFa, rt.faDrop) и мобы не ниже героя −5 (#57/#59), охота на чемпионов с обучением — modules/champs.js (цена чемпиона в секундах фарма, проба, отход, вердикт до роста силы; поиск ВКЛ раз в 20 боёв, #61), Alt+W для загрузки таймеров (#58), левое инфо-окно не наезжает на игру — stickyFree помнит самое узкое поле (#60), смертей за эпика 3 → 5 (#62), критическое HP: ход только лечению, удар не жмётся при провале HP (#63), у эпиков нет предела по времени боя (0 = без предела, #64). 206 PASS. В живой игре ничего не проверено.
