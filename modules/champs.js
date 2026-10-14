@@ -81,9 +81,13 @@ function limitS(c) {
 // чемпионов бить, а каких нет, особенно на лоу лвлах»): галки по цвету (cfg.champBlue/champOrange/champRed; красные по умолчанию ВЫКЛ) и
 // «чемпионов не бить, пока герой ниже N ур.» (cfg.champMinLvl, по умолчанию 20) → строка причины или null
 const TIER_CFG = { blue: 'champBlue', orange: 'champOrange', red: 'champRed' }, TIER_DEF = { blue: true, orange: true, red: false };
-function tierOff(c) {
-  const t = TIER_RU[c?.tier] ? c.tier : 'blue', v = env.cfg?.[TIER_CFG[t]];
+function tierOff(c, colorsOnly = false) {
+  // 10.0.12: неизвестный цвет нельзя считать синим, когда игрок запретил тёплые цвета; green/yellow — явные алиасы интерфейса.
+  const raw = String(c?.tier || '').toLowerCase(), known = ({ green: 'blue', yellow: 'orange' })[raw] || raw;
+  if (!TIER_RU[known] && ['orange', 'red'].some(t => !(env.cfg?.[TIER_CFG[t]] ?? TIER_DEF[t]))) return 'цвет чемпиона неизвестен — запрещённые цвета исключить не могу';
+  const t = TIER_RU[known] ? known : 'blue', v = env.cfg?.[TIER_CFG[t]];
   if (!(v ?? TIER_DEF[t])) return `${TIER_RU[t]} — таких не бью (настройка «Каких чемпионов бить»)`;
+  if (colorsOnly) return null;
   const minL = +(env.cfg?.champMinLvl ?? 20) || 0, hl = L();
   if (minL > 0 && hl > 0 && hl < minL) return `герой ${hl} ур. — чемпионов бью с ${minL} ур. (настройка)`;
   return null;

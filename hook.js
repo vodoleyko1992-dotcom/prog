@@ -59,7 +59,8 @@
   // список мобов подземелья (/game/dungeon/view|enter → dungeon.mobs) — целиком, кратко: [id, тип, имя, ур., агрессивный]. Тип
   // (champion/raid…) в разметке списка не виден вовсе, а redact режет массивы до 8
   const dungMobs = (u, o) => { try { if (!/^\/game\/dungeon\/(?:view|enter)$/.test(u.pathname)) return undefined; const g = o?.dungeon; const a = g && (Array.isArray(g.mobs) && g.mobs.length ? g.mobs : g.nearbyMobs);
-    return Array.isArray(a) ? { id: String(g.id || ''), mobs: a.slice(0, 2000).map(x => [String(x.id || ''), String(x.kind || ''), String(x.name || '').slice(0, 60), +x.level || 0, x.aggressive ? 1 : 0]) } : undefined; } catch (e) { return undefined; } };
+    return Array.isArray(a) ? { id: String(g.id || ''), mobs: a.slice(0, 2000).map(x => [String(x.id || ''), String(x.kind || ''), String(x.name || '').slice(0, 60), +x.level || 0, x.aggressive ? 1 : 0,
+      ...(x.championTier ? [String(x.championTier).slice(0, 10)] : [])]) } : undefined; } catch (e) { return undefined; } };
   // 9.2 (анализатор боя): ход — из ответа сервера, а не со страницы через 0,9 с (окна соседних ходов перекрывались, урон банки и ходы кота
   // приписывались заклинанию). Кратко и целиком: HP моба/героя, MP, весь лог этого хода (redact режет массивы до 8), конец боя, спойл.
   // Ответ хода: { kind:'delta', delta:{mobHp, logTail, characterHp…}, victory?, defeat? }; начало боя и GET /game/battle — { battle:{…} }
@@ -74,6 +75,7 @@
       log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: !o.delta && !!b,
       end: !!(d.battleEnded || o.victory || o.defeat || d.outcome === 'DEFEAT' || o.lethalMeta?.battleEnded), win: !!o.victory, lose: !!(o.defeat || d.outcome === 'DEFEAT'),
       spawn: String(b?.spawnId || '').slice(0, 80), name: String(b?.mobName || '').slice(0, 80), lvl: n(b?.mobLevel), kind: String(b?.kind || '').slice(0, 30),
+      tier: String(b?.championTier || '').slice(0, 10),
       spoil: sp && typeof sp === 'object' ? { ok: !!(sp.ok ?? sp.success), text: String(sp.messageUk || sp.message || '').slice(0, 120) } : sp == null ? undefined : String(sp).slice(0, 60),
       now: n(d.serverNowMs ?? o.serverNowMs) };
   } catch (e) { return undefined; } };

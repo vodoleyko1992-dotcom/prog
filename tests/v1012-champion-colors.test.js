@@ -1,0 +1,33 @@
+// 10.0.12: цвет текущего чемпиона, а не первого моба цепочки; запрет цветов без квестового обхода.
+const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+const src = read('modules/combat.js'), ch = read('modules/champs.js');
+const env = { cfg: { champBlue: true, champOrange: false, champRed: false }, heroLvl: () => 80, rt: {} };
+const root = { L2V7Factories: {} }; vm.runInNewContext(ch, { window: root, globalThis: root });
+const C = root.L2V7Factories.champs(env);
+assert.match(C.tierOff({ tier: '' }) || '', /цвет.*неизвест|неизвест.*цвет/i, 'unknown must not be treated as enabled blue');
+const i = src.indexOf('function battleColor('), j = src.indexOf('\nfunction mobHp()', i); assert.ok(i >= 0 && j > i, 'real combat color resolver extracted');
+let meta = null; const sb = { env: { ...env, battleInfo: () => meta, champTier: (id, a, fallback) => /^champ_o_/.test(id) ? 'orange' : /^champ_r_/.test(id) ? 'red' : id === 'dense_old' ? 'blue' : fallback }, Date: { now: () => 100000 } };
+vm.runInNewContext(src.slice(i, j) + '\nthis.resolve = battleColor;', sb);
+const resolve = () => sb.resolve('Guard', 'dense_old', 10000, 'chain', { tier: 'blue', champ: true }, true);
+meta = { name: 'Guard', spawn: 'champ_o_new', kind: 'champion', tier: 'orange', lvl: 75, t: 99999 };
+let v = resolve(); assert.equal(v.tier, 'orange'); assert.equal(v.spawn, 'champ_o_new'); assert.equal(v.champ, true); assert.ok(C.tierOff(v));
+meta = { name: 'Guard', spawn: 'champ_o_new', kind: 'champion', lvl: 75, t: 99999 }; assert.equal(resolve().tier, 'orange', 'real server ID recovers color even when battle tier absent');
+meta = { name: 'Guard', spawn: 'dense_old', kind: 'champion', tier: 'blue', max: 5000, t: 99999 }; v = resolve(); assert.equal(v.tier, '', 'same species metadata with another HP pool is rejected'); assert.ok(C.tierOff(v));
+meta = { name: 'Guard', spawn: 'dense_old', kind: 'passive', max: 10000, t: 99999 }; assert.equal(resolve().tier, '', 'ordinary metadata cannot promote an inferred champion to cached blue');
+assert.equal(resolve().ordinary,true,'явный обычный моб не становится чемпионом по старому замеру HP');
+meta = { name: 'Guard', spawn: 'champ_o_new', kind: 'pve', max: 10000, t: 99999 };assert.equal(resolve().tier,'orange','общий тип боя PvE не скрывает цвет чемпиона');
+meta = null; v = resolve(); assert.equal(v.tier, '', 'chain cannot use stale URL or same-name target'); assert.ok(C.tierOff(v));
+meta = { name: 'Different', spawn: 'champ_o_new', kind: 'champion', tier: 'orange', t: 99999 }; assert.equal(resolve().tier, '', 'other mob metadata rejected');
+meta = { name: 'Guard', spawn: 'champ_o_new', kind: 'champion', tier: 'orange', t: 30000 }; assert.equal(resolve().tier, '', 'expired metadata rejected');
+meta = null; v = sb.resolve('Guard', 'champ_o_direct', 10000, 'map', null, false); assert.equal(v.champ, true, 'direct champion prefix detected without known HP'); assert.equal(v.tier, 'orange');
+meta = { name: 'Guard', spawn: 'dense_current', kind: 'champion', tier: 'green', t: 99999 }; assert.equal(resolve().tier, 'blue', 'explicit green is blue alias');
+assert.equal(C.tierOff({ tier: 'green' }), null); assert.ok(C.tierOff({ tier: 'yellow' }), 'explicit yellow is orange alias');
+assert.equal(C.tierOff({ tier: 'blue' }, true), null); env.cfg.champMinLvl = 99; assert.equal(C.tierOff({ tier: 'blue' }, true), null, 'colors-only check leaves level exceptions to caller');
+// Выполняем реальную безусловную защиту боя: даже квест/кампания и уже раненый моб не обходят запрет цвета.
+const guardStart = src.indexOf('  // 10.0.12: выбор цветов —'); const guardEnd = src.indexOf('  // 10.0.5: чемпион — предел', guardStart); assert.ok(guardStart >= 0 && guardEnd > guardStart);
+const guard = src.slice(guardStart, guardEnd); let left = 0, logs = [];
+const ctx = { champ: true, tier: 'orange', name: 'Guard', questKill: true, lvl: 75 };
+const gs = { ctx, isRb: false, env: { champs: C, setRt: async () => {}, toMap: () => left++, rec: (...x) => logs.push(x) } };
+vm.runInNewContext('this.check = async () => {\n' + guard + '\n};', gs);
+(async () => { await gs.check(); assert.equal(left, 1, 'forbidden quest champion leaves before attacks'); console.log('PASS v1012 champion colors'); })().catch(e => { console.error(e); process.exitCode = 1; });

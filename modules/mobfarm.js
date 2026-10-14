@@ -80,13 +80,13 @@ function markerTypes() {
 // EXP ×1 / ≈1,6 / ≈2), в разметке — li.l2-map-mob-item--champion-<цвет>
 const FA_P = { blue: 0.1, orange: 0.2, red: 0.6 }, FA_MOB = 0.01, FA_BELOW = 5;
 const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'красный' };
-function champTier(id, a) {                        // цвет чемпиона: ответ сервера → spawnId champ_r_/champ_o_ → класс строки карты → синий
+function champTier(id, a, unknown = 'blue') {      // в бою неизвестный цвет не разрешаем автоматически как синий
   const t = env.NET_SPAWNS?.tier?.[id];
   if (t) return t;
   if (/^champ_r_/i.test(id || '')) return 'red';
   if (/^champ_o_/i.test(id || '')) return 'orange';
   const li = a?.closest?.('li'), m = (li?.className || '').match(/l2-map-mob-item--champion-(\w+)/);
-  return m ? m[1] : 'blue';
+  return m ? m[1] : unknown;
 }
 // шанс 1 FA с этого моба (0 — моб ниже героя больше чем на 5 ур.)
 // 10.0.5 (игрок 13.10 00:32: «поставь фарм мобов −5 лвл максимум, иначе не падают ФА»): ниже героя больше чем на 5 ур. не бьём никогда —
@@ -421,6 +421,10 @@ function candidates(rules, sig, types, limitIdx) {
     if (hard && Date.now() - hard.t < 7200000 && !(r.quest || (champ && env.campActive() && env.campChampOpen()))) return;
     // 10.0.5 (игрок 13.10: «анализ, кого мы можем убить, а кого нет… проба… отход»): чемпион, которого не успеть убить за его цену в
     // секундах обычного фарма (EXP + FA), или по вердикту прошлых боёв (до роста силы), — не цель; чемпион главы — цель всегда
+    if (champ && env.champs?.tierOff) {
+      const off = env.champs.tierOff(r, true);
+      if (off) { champSkip(r, off); return; }
+    }
     if (champ && !qLike && env.champs) {
       const j = env.champs.judge(r);
       Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
@@ -497,6 +501,11 @@ async function attackSpawn(c, label) {
   if (!a || !env.on) return false;
   const it = pageItems().find(x => x.id === c.id);
   if (it) Object.assign(c, { name: c.name || it.name, lvl: c.lvl || it.lvl, quest: c.quest || it.quest, champ: c.champ || it.champ });
+  if (c.champ) {   // настройки/цвет могли обновиться, пока листали страницы — последняя проверка до клика «Бой»
+    c.tier = champTier(c.id, a, '') || c.tier || '';
+    const off = env.champs?.tierOff?.(c, true);
+    if (off) { champSkip(c, off); return false; }
+  }
   env.setStatus(label(c));
   console.log(env.TAG, 'цель:', c.id, c.name, '| поз.', c.idx);
   await env.pause();

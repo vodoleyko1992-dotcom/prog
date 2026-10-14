@@ -29,8 +29,9 @@ function dungeonMobs() {                          // строки списка �
   return [...document.querySelectorAll('#dungeon-mob-list li')].map(li => {
     const a = li.querySelector('a[href*="battle"], a.l2-map-mob-link, a'), t = (a?.textContent || li.textContent || '').replace(/\s+/g, ' ').trim();
     const m = t.match(/^(★\s*)?(.+?)\s*·\s*ур\.?\s*(\d+)/i);   // 9.0: «★ » — цель квеста профессии (игра ставит перед именем)
-    return a && m ? { a, name: m[2].trim(), lvl: +m[3], quest: !!m[1] || /quest-target/.test(a.className), rb: /рейд|raid/i.test(t) || /--raid/.test(a.className), champ: /чемп|champion/i.test(t) || /--champion/.test(a.className),
-      id: decodeURIComponent((a.getAttribute('href') || '').match(/spawnId=([^&]+)/)?.[1] || ''), info: li.querySelector('[data-spawn-id]') } : null;
+    const id = decodeURIComponent((a?.getAttribute('href') || '').match(/spawnId=([^&]+)/)?.[1] || '');
+    return a && m ? { a, name: m[2].trim(), lvl: +m[3], quest: !!m[1] || /quest-target/.test(a.className), rb: /рейд|raid/i.test(t) || /--raid/.test(a.className), champ: /чемп|champion/i.test(t) || /--champion/.test(a.className) || /^champ_[or]_/.test(id),
+      id, tier: env.champTier?.(id, a, '') || '', info: li.querySelector('[data-spawn-id]') } : null;
   }).filter(Boolean);
 }
 
@@ -43,7 +44,8 @@ function mobList(id) {
   if (N && N.id === id && Date.now() - N.t < 30000 && Array.isArray(N.mobs)) {
     const q = new Set(dom.filter(x => x.quest).map(x => x.id));
     return { net: true, list: N.mobs.map((x, i) => ({ id: x[0], kind: x[1], name: x[2], lvl: +x[3] || 0, aggr: !!x[4], i,
-      rb: BOSS_KIND.test(x[1]), champ: /champ/i.test(x[1]), quest: q.has(x[0]) || dom.some(d => d.quest && d.name === x[2]) })).filter(x => x.id && x.lvl) };
+      rb: BOSS_KIND.test(x[1]), champ: /champ/i.test(x[1]) || /^champ_[or]_/.test(x[0]), tier: x[5] || env.champTier?.(x[0], null, '') || '',
+      quest: q.has(x[0]) || dom.some(d => d.quest && d.name === x[2]) })).filter(x => x.id && x.lvl) };
   }
   return { net: false, list: dom.map((x, i) => ({ ...x, i })) };
 }
@@ -161,7 +163,8 @@ async function catHunt(id) {                      // внутри подземе
   }
   env.setStatus(`Катакомбы ${nm}: бой с ${pick.name} (${pick.lvl})${pick.champ ? ' — чемпион' : ''}`);
   await env.pause(); if (!env.on) return;
-  await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb }, mobClickAt: Date.now(), via: 'dungeon' });
+  await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb,
+    ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
   const a = await showMob(pick.id, net ? pick.i : -1);
   if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
   // ссылка не открыла бой (или моба не нашли на страницах) — через окно моба и «В бой»
@@ -188,7 +191,16 @@ function catWin(L) {
 // (с одним и тем же spawnId чаще сталкиваешься с другими игроками)
 function catPick(list, L) {
   const w = catWin(L);
-  const ok = list.filter(x => (!x.rb || env.cfg.rbMode) && x.lvl >= w.lo && x.lvl <= w.hi);
+  const ok = list.filter(x => {
+    if ((x.rb && !env.cfg.rbMode) || x.lvl < w.lo || x.lvl > w.hi) return false;
+    if (x.champ && env.champs?.tierOff?.(x, true)) return false;   // выбранные цвета соблюдаем и для квестовых чемпионов
+    const quest = x.quest || (x.champ && env.campActive?.() && env.campChampOpen?.());
+    // 14.10: catPick игнорировал запреты карты: «не по зубам» снова начинал бой, а Cancel снова отправлял к бафферу.
+    const hard = env.rt.hardMobs?.[(x.name || '').toLowerCase()];
+    if (!x.rb && !quest && hard && Date.now() - hard.t < 7200000) return false;
+    if (!quest && env.cfg.noCancelMobs !== false && env.cancelRisk?.(x.name, x.champ, x.tier)) return false;
+    return true;
+  });
   if (!ok.length) return null;
   const key = x => [x.quest ? 0 : 1, x.champ ? 0 : 1, Math.abs(x.lvl - L - 1)];
   ok.sort((a, b) => { const A = key(a), B = key(b); return A[0] - B[0] || A[1] - B[1] || A[2] - B[2]; });
