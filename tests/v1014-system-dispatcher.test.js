@@ -24,10 +24,11 @@ function make(mode='auto'){
  const magStart=src.indexOf('const MAG_SKIP_DEF ='),magEnd=src.indexOf('// ---------- выбило из игры:',magStart);
  vm.runInNewContext(src.slice(magStart,magEnd),sb);
  sb.globalThis=sb;sb.autonomyMode=()=>sb.L2EngineCore.chooseMode({epic:cfg.epicMode,raid:cfg.rbHuntMode,fish:cfg.fishMode,cat:cfg.catMode,tasks:cfg.taskOnly});
- for(const m of ['tvt','story','dailies','mammon','enchant','warlock'])vm.runInNewContext(read('modules/'+m+'.js'),sb);
+ for(const m of ['tvt','story','dailies','mammon','enchant','warlock','pvp'])vm.runInNewContext(read('modules/'+m+'.js'),sb);
  const T=sb.L2V7Factories.tvt(sb),D=sb.L2V7Factories.dailies(sb),S=sb.L2V7Factories.story(sb),M=sb.L2V7Factories.mammon(sb);
  sb.awayFree=M.modeFree;sb.tvtStep=T.tvtStep;sb.tvtSoon=T.tvtSoon;
- Object.assign(sb.L2V7Modules,{tvt:T,dailies:D,story:S,mammon:{mmTick:noop,mmStep:noop},raid:{rbOneStep:noop},enemies:{tick:noop,step:noop},rbtimer:{tick:noop},subclass:{tick:noop},tvtshop:{shopStep:noop},epics:{epicPollTick:noop},equipment:{weaponRescanWhy:()=>null}});
+ // Новый PvP executor без явных целей выполняет настоящий guard и не меняет старые цепочки.
+ Object.assign(sb.L2V7Modules,{pvp:sb.L2V7Factories.pvp(sb),tvt:T,dailies:D,story:S,mammon:{mmTick:noop,mmStep:noop},raid:{rbOneStep:noop},enemies:{tick:noop,step:noop},rbtimer:{tick:noop},subclass:{tick:noop},tvtshop:{shopStep:noop},epics:{epicPollTick:noop},equipment:{weaponRescanWhy:()=>null}});
  // 14.10: новая задача заточки выключена/без серии; исполняем её настоящий dispatcher guard.
  const enchantStart=src.indexOf('// Автозаточка: команды меню'),enchantEnd=src.indexOf('chrome.runtime.onMessage.addListener',enchantStart);
  vm.runInNewContext(src.slice(enchantStart,enchantEnd),sb);

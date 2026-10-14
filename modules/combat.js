@@ -278,6 +278,7 @@ function petAdvice(S) {
 }
 // итог боя → rt.petStat[кот]. Больше 2000 боёв — счётчики пополам (свежие замеры весят больше: ранг кота и M.Atk растут)
 async function petFlush(ctx, dealt) {
+  if (env.pvpPending?.()) return;
   const p = ctx.pet;
   if (!p || (!p.hits && !p.crits && !p.misses && !p.deaths && !p.summons && !p.resummons)) return;
   const k = p.key || env.petState?.()?.key || ''; if (!k) return;
@@ -291,6 +292,7 @@ async function petFlush(ctx, dealt) {
     ...(lv ? { lvMin: Math.min(s.lvMin || lv, lv), lvMax: Math.max(s.lvMax || 0, lv) } : {}) };
   S[k] = s;
   await env.setRt({ petStat: S, petAdvice: petAdvice(S) });
+  if (env.pvpPending?.()) return;
   await env.warlock?.noteBattle?.(ctx);
 }
 // бафф кота (роль «Баффы кота»): кот жив, моб не при смерти (на бафф уходит ход), MP хватает с запасом. Бафф держится dur с
@@ -817,11 +819,13 @@ async function lowDmgNote() {
 }
 
 async function battle() {
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.setStatus('Бой: загрузка');
   const bUrl = location.pathname + location.search;   // v4.43: экран поражения — на странице боя; после смерти вернёмся сюда
   if (env.rt.lastBattle !== bUrl) env.setRt({ lastBattle: bUrl });
   const st = await env.waitFor(() => env.serverDown() ? 'down' : victory() ? 'win' : defeat() ? 'dead' : loadErr() ? 'err' : mobHp() ? 'fight' : null, 10000, 50);   // 10.0: опрос 50 мс (было 250 — в среднем +125 мс на бой)
   if (!env.on || st === 'down') return;
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (!st) {                                     // не загрузилась — обновить (2 раза), потом на карту
     const n = (env.rt.battleReload || 0) + 1;
     await env.setRt({ battleReload: n });
@@ -1044,7 +1048,7 @@ async function battle() {
       const need = g.busy ? 40 : Math.max(dT ? dT + lockA - Date.now() : 0, gE ? gE + lockB - Date.now() : 0);
       if (need <= 0 || Date.now() - t0 > 1500) return { dT, gE };
       await env.sleep(Math.min(need, 60));
-      if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return null;
+      if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return null;
     }
   };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
@@ -1052,14 +1056,14 @@ async function battle() {
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
     // Не полагаемся на визуально готовую кнопку, когда сервер сообщил blockedBy=global.
     while (env.combatCooldown.globalWait() > 0) {
-      if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
+      if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
       await env.sleep(Math.min(850, env.combatCooldown.globalWait() + 60));
     }
-    if (!env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
+    if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
     const exact = env.slotAction(b);
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
     const free = await gameFree();
-    if (!free || !env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
+    if (!free || !env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
     if (stillNeeded && !stillNeeded()) return 'lock';
     // 10.0.5 (лог 13.10 10:51:56): удар выбран при HP 55 %, а пока ждали ответ хода после лага, HP стал 19 % — бот всё равно нажал Blaze.
     // Удар (hpGuard) не жмём, если за время ожидания HP упал до опасного: 'lock' — цикл сразу решает заново (банка, вампирик, лечение)
@@ -1134,6 +1138,7 @@ async function battle() {
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
   while (env.on && env.tabOwner) {
+    if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
     if (env.rt.shop?.urgent) {                        // «🛒 Закупить сейчас»: бросаем бой (в игре он идёт дальше без нас)
       env.rec('B', 'закупка', `«Закупить сейчас» — ухожу из боя${ctx.rb ? ' с РБ' : ''} в магазин`);
@@ -1197,6 +1202,7 @@ async function battle() {
       if (ctx.hpSum != null && sum < ctx.hpSum) ctx.dealt = (ctx.dealt || 0) + ctx.hpSum - sum;
       ctx.hpSum = sum; ctx.mobLast = mob?.cur ?? ctx.mobLast; }
     await countExtras();
+    if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (victory()) break;
     if (mob && mob.cur === 0) {                   // главная цель умерла: ждём победу или следующую цель (соседи живы)
       // 14.10, расширенный аудит: 0 HP может опередить итог сервера или смену цели. Дополнительный удар здесь
@@ -1784,13 +1790,16 @@ async function battle() {
   // 14.10, расширенный аудит: нулевое HP — ещё не победа. Сервер может задержать итог, переключить цель или прислать поражение.
   const result = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : null, 3000, 40);
   if (!env.on || !env.tabOwner) return;
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (result === 'dead') return env.onDeath();
   if (result !== 'win') {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
   }
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   await countExtras();
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.trySnap(300);                                   // экран победы (в т.ч. с квестовой строкой) — новый снимок, если структура новая
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду

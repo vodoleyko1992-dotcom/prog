@@ -2,7 +2,7 @@
 // 9.2 «☠ Лист врагов»: браузерный смоук (node tests/v92-enemies-browser.cjs; CHROMIUM=…). Настоящие hook.js и скрипты расширения на подставной
 // https://l2wap.com: 1) ответ /character с pvpDefeat (настоящий, Dremia 11.10 17:39) → враг в листе (через hook → content → modules/enemies);
 // 2) /game/map/sync со списком игроков — Dremia на локации → бот жмёт его ник в списке игроков карты (кнопка игры «Атакувати»), уходит
-// POST /game/battle/pvp/start; 3) меню «⚔ Бой» → «☠ Лист врагов» на 760 и 375 px без горизонтальной прокрутки
+// POST /game/battle/pvp/start; 3) меню «PvP» → «☠ Лист врагов» на 760 и 375 px без горизонтальной прокрутки
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -35,10 +35,11 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
       const u = new URL(r.request().url());
       if (u.pathname.startsWith('/__ext/')) return r.fulfill({ status: 200, contentType: 'application/json', body: read(u.pathname.slice(7)) });
       if (r.request().method() === 'POST') posts.push([u.pathname, r.request().postData()]);
-      const body = u.pathname === '/character' ? { character: { id: 'me', hp: 1874, maxHp: 6220, pvpDefeat: DEFEAT, currentZoneNameUk: 'Монастир Тиші' }, pvpIncoming: [] }
+      const body = u.pathname === '/character' ? { character: { id: 'me', name: 'Warlock', revision: 5, hp: 1874, maxHp: 6220, pvpDefeat: DEFEAT, currentZoneNameUk: 'Монастир Тиші' }, pvpIncoming: [] }
         : u.pathname === '/game/map/sync' ? { changed: true, around: { nearestLabelUk: 'Монастир Тиші', nearbyHeroes: [
           { characterId: 'c1', name: 'Peaceful', level: 60, pvpNickColor: null, battleOnNameClick: false, showPkButton: false },
           { characterId: DID, name: 'Dremia', level: 61, pvpNickColor: 'pk', nickColor: '#e85840', battleOnNameClick: true, showPkButton: true }] }, pvpIncoming: [], pvpDefeat: null }
+        : u.pathname === '/game/battle/return-to-town' ? { character: { id: 'me', name: 'Warlock', revision: 6, hp: 9000, maxHp: 9000 } }
         : u.pathname === '/game/battle/pvp/start' ? { ok: true, character: { id: 'me' } } : null;
       if (body) return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
       return r.fulfill({ status: 200, contentType: 'text/html', body: MAP });
@@ -52,14 +53,22 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
       const wait = async f => { for (let i = 0; i < 50 && !f(); i++) await new Promise(r => setTimeout(r, 50)); return f(); };
       await fetch('/character'); await wait(() => rt.enemies && Object.keys(rt.enemies).length);
       const after1 = JSON.parse(JSON.stringify(rt.enemies || {}));
+      // Мировая смерть теперь блокирует обычную охоту до принятого игрой возврата.
+      const blocked = L2V7Modules.pvp.pending();
+      await fetch('/game/battle/return-to-town', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expectedRevision: 5 }) });
+      await wait(() => rt.pvpRecovery?.phase === 'returned');
+      await L2V7Modules.pvp.recoveryStep();
+      const closed = !L2V7Modules.pvp.pending() && rt.revive?.revived === true;
+      // Здесь карта с уже полным HP; полный маршрут статуя/баффы/восстановление покрыт отдельным MV3 smoke.
+      await setRt({ revive: null });
       await fetch('/game/map/sync'); await new Promise(r => setTimeout(r, 200));
       const acted = await L2V7Modules.enemies.step();
       await wait(() => rt.enemyHunt);
       await new Promise(r => setTimeout(r, 300));
-      return { after1, acted, pvp: window.__pvp || 0, hunt: rt.enemyHunt, e: rt.enemies };
+      return { after1, blocked, closed, acted, pvp: window.__pvp || 0, hunt: rt.enemyHunt, e: rt.enemies };
     });
     const e1 = res.after1[DID], e2 = res.e?.[DID];
-    const ok = e1?.name === 'Dremia' && e1.kills === 1 && e1.hitMax === 2996 && res.acted === true && res.pvp === 1 && res.hunt?.id === DID && e2?.lvl === 61
+    const ok = res.blocked && res.closed && posts.some(x => x[0] === '/game/battle/return-to-town') && e1?.name === 'Dremia' && e1.kills === 1 && e1.hitMax === 2996 && res.acted === true && res.pvp === 1 && res.hunt?.id === DID && e2?.lvl === 61
       && posts.some(x => x[0] === '/game/battle/pvp/start' && x[1].includes(DID)) && !errors.length;
     if (!ok) { console.error('FAIL 1-2', JSON.stringify({ res, posts, errors })); process.exit(1); }
     console.log('PASS browser: pvpDefeat in /character → Dremia in the enemy list (3 hits, max 2996); Dremia in /game/map/sync → nick button pressed, POST /game/battle/pvp/start');
@@ -77,8 +86,9 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const s of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(s) });
-    for (const j of ['modules/enemies.js', 'modules/fightlab.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
-    await page.evaluate(() => document.querySelector('nav button[data-tab="panel"]').click());
+    // 14.10: полные зависимости actual popup, враги перенесены в PvP.
+    for (const j of [...read('popup.html').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1])) await page.addScriptTag({ content: read(j) });
+    await page.evaluate(() => document.querySelector('nav button[data-tab="pvp"]').click());
     await page.waitForTimeout(1000);
     const t = await page.$eval('#enemyBox', e => e.innerText), on = await page.$eval('#enemyHunt', e => e.checked), flag = await page.$eval('#enemyFlagOnly', e => e.checked);
     const hits = await page.$eval('#enemyMinHits', e => e.value), vis = await page.$eval('#enemyBox', e => e.getBoundingClientRect().height > 0);
@@ -86,7 +96,7 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
     const ok = /Dremia \(61 ур\.\): убил нас 2×, последний раз 10 мин назад \(Монастир Тиші\) · ответ: побед 1, поражений 1 · удар до 2/.test(t) && /Не трогать/.test(t) && on && flag && hits === '3' && vis && !overflow && !errs.length;
     if (!ok) { console.error('FAIL 3', JSON.stringify({ w, t, on, flag, hits, vis, overflow, errs })); process.exit(1); }
     if (process.env.SHOT) { await page.$eval('#tab-enemies', e => e.scrollIntoView()); await page.screenshot({ path: process.env.SHOT + '-' + w + '.png' }); }
-    console.log(`PASS browser ${w}px: «⚔ Бой» → «☠ Лист врагов»: Dremia (kills, wins/losses, max hit), buttons, settings on by default, no sideways scroll`);
+    console.log(`PASS browser ${w}px: «PvP» → «☠ Лист врагов»: Dremia (kills, wins/losses, max hit), buttons, settings on by default, no sideways scroll`);
     await page.close();
   }
   await b.close();

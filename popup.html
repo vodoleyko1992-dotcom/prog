@@ -187,6 +187,7 @@
 <link rel="stylesheet" href="ui-game.css">
 <link rel="stylesheet" href="enchant-ui.css">
 <link rel="stylesheet" href="warlock-ui.css">
+<link rel="stylesheet" href="pvp-ui.css">
 </head><body>
 <header>
   <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
@@ -226,7 +227,7 @@
 <button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
   <span class="nav-toggle-icon" aria-hidden="true">▦</span>
   <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 9 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+  <span class="nav-toggle-right">Все 10 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
 </button>
 <nav id="moduleNav" aria-label="Разделы управления">
   <div class="nav-heading">НАВИГАЦИЯ</div>
@@ -237,6 +238,7 @@
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <div class="nav-group">ОБЩЕЕ</div>
   <button data-tab="panel" title="Анализ боя, общие правила, подразделы классов (Warlock и кот, маг, спойлер, воин), герой"><span class="ic">⚔</span>Бой</button>
+  <button data-tab="pvp" title="Явные цели, обычный лист врагов, TvT и магазин"><span class="ic">⚔</span>PvP</button>
   <button data-tab="warlock" title="Призыв, лечение, бафы, полный набор и статистика кота"><span class="ic">🐱</span>Warlock</button>
   <button data-tab="supply" title="Банки, закупка, добыча, эффективность"><span class="ic">🧪</span>Снабжение</button>
   <button data-tab="mammon" title="Заказы торговца Маммона, кузнец, накопление на улучшение"><span class="ic">🏺</span>Маммон</button>
@@ -333,20 +335,7 @@
     <input id="bossMark" class="wide" placeholder="Признак босса (не трогать вне режима РБ)">
   </details>
 
-  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
-  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
-  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
-  <label title="Бой TvT начался, а бот бьёт РБ/эпика — бросить босса и идти на арену (обычного моба бросает всегда)">TvT важнее боя с РБ/эпиком <input id="tvtOverRb" type="checkbox"></label>
-  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
-  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
-  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
-  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
-  <div id="tsBox" class="hint"></div>
-  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
-  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
-  <div id="tsGoalBox" class="hint"></div>
-  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
-  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
+  <div class="hint"><button type="button" data-goto="pvp">⚔ TvT и магазин — в разделе PvP</button></div>
   <div class="subsec-title"><span id="tab-dailies" class="tab-anchor"></span>📅 Дейлики и клановые задания</div>
   <label title="Ежедневные задания игра засчитывает сама. Бот дотягивает то, чего фарм не даёт: «50 рыб» (1 Coin of Luck + 300 000 аден + 50 000 EXP) — идёт на рыбалку и возвращается; «Убей 1 РБ» и «Участие в РБ» — один тур по РБ и назад (раз в день, с 40 ур.)">📅 Дотягивать дейлики: 50 рыб и 1 РБ в день <input id="dailyAuto" type="checkbox"></label>
   <label title="Клановые задания (/clan-tasks): бот сам берёт доступное (500 монстров — 1 Coin of Luck; SP; адена; РБ, если РБ разрешены), помогает соклановцу, сдаёт готовое. Штурм стены не берёт. Свои запросы с токеном страницы, без переходов">🏰 Клановые задания: взять, помочь, сдать <input id="clanTasks" type="checkbox"></label>
@@ -526,18 +515,7 @@
   <label>Сам учить доступные навыки сейчас и после каждого +1 уровня <input id="autoMagister" type="checkbox"></label>
   <div class="hint">Включено по умолчанию. После победы учит доступные ранги с учётом резерва SP и возвращается на прежнюю точку.</div>
 
-  <div class="subsec-title"><span id="tab-enemies" class="tab-anchor"></span>☠ Лист врагов</div>
-  <div class="intro-callout"><b>Кто убил тебя — тот враг.</b><p>Игрок, убивший героя, сам попадает в лист (из ответа игры: ник, сколько раз убил, какими ударами). Пока герой охотится, бот поглядывает, кто на локации (раз в 30 с). Враг из листа появился — бот добивает текущего моба и нападает на него кнопкой игры «Атакувати». Убил — следит дальше: вернётся — нападёт снова. Напал враг из листа — бот отвечает.</p></div>
-  <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
-  <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
-  <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
-  <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
-  <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
-  <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
-  <label>Проиграли подряд — не трогать до нового уровня после, раз <input id="enemyMaxLoss" type="number" min="1" max="10"></label>
-  <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
-  <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
-
+  <div class="hint"><button type="button" data-goto="pvp">☠ Лист врагов — в разделе PvP</button></div>
   <div class="hint"><button type="button" data-goto="warlock">🐱 Настройки Warlock и кота</button></div>
 
   <div class="subsec-title" data-cls="mage"><span id="tab-mage" class="tab-anchor"></span>🔮 Маг — заклинания (Warlock, Sorcerer, SH…)</div>
@@ -611,6 +589,36 @@
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
   <div class="subsec-title"><span id="tab-enchant" class="tab-anchor"></span>Заточка оружия и брони</div>
   <div id="enchantPanel" data-embedded="1"></div>
+</section>
+
+<section id="tab-pvp">
+  <div id="pvpTargetsPanel"></div>
+  <div class="subsec-title"><span id="tab-enemies" class="tab-anchor"></span>☠ Лист врагов</div>
+  <div class="intro-callout"><b>Кто убил тебя — тот враг.</b><p>Игрок, убивший героя, сам попадает в лист (из ответа игры: ник, сколько раз убил, какими ударами). Пока герой охотится, бот поглядывает, кто на локации (раз в 30 с). Враг из листа появился — бот добивает текущего моба и нападает на него кнопкой игры «Атакувати». Убил — следит дальше: вернётся — нападёт снова. Напал враг из листа — бот отвечает.</p></div>
+  <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
+  <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
+  <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
+  <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
+  <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
+  <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
+  <label>Проиграли подряд — не трогать до нового уровня после, раз <input id="enemyMaxLoss" type="number" min="1" max="10"></label>
+  <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
+  <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
+
+  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
+  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
+  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
+  <label title="Бой TvT начался, а бот бьёт РБ/эпика — бросить босса и идти на арену (обычного моба бросает всегда)">TvT важнее боя с РБ/эпиком <input id="tvtOverRb" type="checkbox"></label>
+  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
+  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
+  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
+  <div id="tsBox" class="hint"></div>
+  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
+  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
+  <div id="tsGoalBox" class="hint"></div>
+  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
+  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
 </section>
 
 <section id="tab-warlock">
@@ -841,6 +849,7 @@
 <script src="enchant-ui.js"></script>
 <script src="modules/warlock.js"></script>
 <script src="warlock-ui.js"></script>
+<script src="pvp-ui.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>

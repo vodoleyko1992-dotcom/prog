@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),test=require('node:test'),assert=require('node:assert/strict');
+const ROOT=process.env.L2_REPO||path.resolve(__dirname,'..');
+const SOURCE=process.env.PVP_HOOK_SOURCE||(fs.existsSync(__dirname+'/hook.js')?__dirname+'/hook.js':ROOT+'/hook.js');
+async function hook(payload){const out=[],window={postMessage:x=>out.push(x),alert(){},fetch:async()=>({status:200,headers:{get:()=> 'application/json'},clone:()=>({text:async()=>JSON.stringify(payload)})})};
+ const X=function(){};X.prototype={open(){},send(){},addEventListener(){}};
+ const sb={window,location:{href:'https://l2wap.com/map.html',origin:'https://l2wap.com',host:'l2wap.com',pathname:'/map.html'},URL,URLSearchParams,XMLHttpRequest:X,performance:{now:()=>1},console};
+ vm.runInNewContext(fs.readFileSync(SOURCE,'utf8'),sb);await window.fetch('/character');for(let i=0;i<8;i++)await Promise.resolve();return out.find(x=>x.__l2bot==='net')?.pv}
+test('actual hook preserves victim identity/revision plus complete nearby clan eligibility',async()=>{const heroes=Array.from({length:12},(_,i)=>({characterId:'hero'+i,name:'Hero'+i,clanId:i===11?'our-clan':null,battleOnNameClick:true,pvpAllowed:true}));const pv=await hook({character:{id:'own',name:'Warlock',revision:20,clanId:'our-clan'},around:{nearbyHeroes:heroes}});assert.equal(pv.owner.id,'own');assert.equal(pv.owner.revision,20);assert.equal(pv.heroes.length,12);assert.equal(pv.heroes[11].clanId,'our-clan');assert.equal(pv.heroes[11].clanKnown,true);assert.equal(pv.heroes[0].clanId,'');assert.equal(pv.heroes[0].clanKnown,true)});
+test('absent clan field remains unknown rather than falsely clanless',async()=>{const pv=await hook({nearbyHeroes:[{characterId:'enemy',name:'Dremia',battleOnNameClick:true}]});assert.equal(pv.heroes[0].clanKnown,false)});
+test('explicit world killer remains exact death event; owner is separate from killer',async()=>{const pv=await hook({character:{id:'own',name:'Warlock',revision:20,pvpDefeat:{killerCharacterId:'enemy',killerName:'Dremia',deathEventId:'event',scope:'world',fullLog:['[Dremia] −16441 HP (Вампірні кігті).']}}});assert.equal(pv.defeat.id,'enemy');assert.equal(pv.defeat.ev,'event');assert.equal(pv.owner.id,'own')});

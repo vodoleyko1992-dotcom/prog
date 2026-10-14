@@ -128,6 +128,7 @@ function ensure() {
   return begin({}, spawn, Date.now());
 }
 function onNet(path, d) {
+  if (env.pvpPending?.() || d?.pv?.defeat) { F = null; last = null; return null; } // чужой PvP-урон не принадлежит окну PvE
   const bt = d?.bt; if (!bt || typeof bt !== 'object') return null;
   const now = Date.now(), act = path === '/game/battle/action', fresh = /\/(?:start|hunt-continue)$/.test(path);
   const ok = d.status >= 200 && d.status < 300 && !d.res?.error;

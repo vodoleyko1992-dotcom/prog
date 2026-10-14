@@ -74,7 +74,9 @@ async function statePatch(m, sender) {
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
       return { ok: false, reason: 'ownership_lost' };
     const change = {};
-    if (Object.keys(patch).length) change.rt = { ...(state.rt || {}), ...patch, _src: String(m.src || '').slice(0, 60) };
+    const writePatch=pvpSeedPatch(patch,state.rt||{});
+    // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
+    if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
@@ -82,6 +84,38 @@ async function statePatch(m, sender) {
 }
 // Popup writes also go through the same queue as content-script patches.
 // A stale popup snapshot can no longer roll back unrelated runtime keys.
+// Меняем одну явную PvP-цель внутри serializeLock, не переписывая устаревший список из меню.
+function pvpTargetChange(rt, edit) {
+  const low=x=>String(x||'').trim().toLowerCase(),id=edit?.id,name=edit?.name;
+  if(!['add','enabled','remove'].includes(edit?.action)||typeof id!=='string'||!/^[a-z0-9][a-z0-9_-]{0,99}$/i.test(id)
+      ||['__proto__','constructor','prototype'].includes(id)||typeof name!=='string'||!name.trim()||name.length>100)
+    return {ok:false,reason:'Нужны точный ID и имя известной цели'};
+  const targets={...(rt.pvpTargets||{})},old=targets[id];
+  if(edit.action==='add'){
+    const e=Object.values(rt.enemies||{}).find(e=>e?.id===id&&low(e.name)===low(name));
+    if(!e)return {ok:false,reason:'Запись врага изменилась — обновите список'};
+    if(old)return {ok:false,reason:'Цель уже добавлена — измените её в списке'};
+    targets[id]={id,name:e.name,enabled:true,source:'manual',t:Date.now()};
+  }else{
+    if(!old||old.id!==id||low(old.name)!==low(name))return {ok:false,reason:'Цель изменилась — обновите список'};
+    if(edit.action==='remove')delete targets[id];
+    else {if(typeof edit.enabled!=='boolean')return {ok:false,reason:'Неверное состояние цели'};targets[id]={...old,enabled:edit.enabled};}
+  }
+  return {ok:true,targets,seedHandled:id==='6f573aad-08ee-4713-9d76-33f5fd4afc93'};
+}
+// Одноразовый seed переносит только согласованную цель; поздняя whole-map пачка
+// не восстанавливает удалённые цели и не стирает ручное добавление после её подготовки.
+function pvpSeedPatch(patch,rt) {
+  if(patch.pvpSeedDremia1410!==true)return patch;
+  const D='6f573aad-08ee-4713-9d76-33f5fd4afc93',next={...patch};delete next.pvpTargets;delete next.pvpSeedDremia1410;
+  const e=rt.enemies?.[D],t=patch.pvpTargets?.[D];
+  if(rt.char!=='Warlock'||e?.id!==D||String(e.name).toLowerCase()!=='dremia'||!(e.kills>0)
+    ||(patch.pvpTargets&&(t?.id!==D||String(t.name).toLowerCase()!=='dremia')))return next;
+  const targets={...(rt.pvpTargets||{})};
+  if(!rt.pvpSeedDremia1410&&!targets[D])targets[D]={id:D,name:e.name,enabled:true,source:'user-2026-10-14',t:Number.isFinite(t?.t)?t.t:Date.now()};
+  return {...next,pvpSeedDremia1410:true,pvpTargets:targets};
+}
+
 async function menuPatch(m, sender) {
   const popupUrl = chrome.runtime.getURL('popup.html');
   let fromPopup = false;
@@ -97,6 +131,11 @@ async function menuPatch(m, sender) {
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
     if (m.expectedChar != null && (!m.expectedChar || state.rt?.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+    if (m.pvpTargetEdit) {
+      if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
+      const edit=pvpTargetChange(state.rt||{},m.pvpTargetEdit);if(!edit.ok)return edit;
+      rtPatch.pvpTargets=edit.targets;if(edit.seedHandled)rtPatch.pvpSeedDremia1410=true;
+    }
     // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};

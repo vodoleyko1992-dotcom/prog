@@ -193,9 +193,13 @@ function rank(r, rules) {
 }
 
 async function nextFight(ctx) {
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (env.tvtSoon() && !ctx?.rb) { env.rec('B', 'TvT', 'бой TvT скоро — после этого моба на арену'); location.href = '/tvt-arena.html'; await env.sleep(4000); return; }
   await env.sleep(env.rnd(40, 120));                      // после победы — сразу дальше (v5.4: было 150–350 мс)
-  if (!env.on) return;
+  if (!env.on || !env.tabOwner) return;
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
+  if (env.victory() && await env.pvpStep?.()) return;
+  if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
@@ -223,6 +227,7 @@ async function nextFight(ctx) {
   if (!env.on || env.tabOwner === false) return;
   if (env.magisterAfterWin && env.victory()) {
     if (await env.magisterAfterWin(ctx)) return;
+    if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.tvtSoon() || env.magisterHold?.()) return; // Условия могли измениться во время чтения персонажа.
   }
   if (!env.on || env.tabOwner === false) return;
@@ -230,6 +235,7 @@ async function nextFight(ctx) {
   if (!env.on || env.tabOwner === false) return;
   if (env.victory()) await env.warlock?.step?.({ afterWin: true });
   if (!env.on || env.tabOwner === false) return;
+  if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'fish') return env.goFishing();
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья

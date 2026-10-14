@@ -58,7 +58,8 @@ const flush = () => new Promise(r => setImmediate(r));
     assert.equal(pv1.defeat.name, 'Dremia'); assert.equal(pv1.defeat.id, DID); assert.equal(pv1.defeat.ev, DREMIA.deathEventId); assert.equal(pv1.defeat.scope, 'world');
     assert.equal(pv1.defeat.log.length, 6); assert.equal(pv1.zone, 'Монастир Тиші'); deq(pv1.incoming, []);
     assert.equal(pv2.heroes.length, 12, 'все игроки, а не первые 8 (redact режет массивы)');
-    deq(pv2.heroes[11], { id: 'c11', name: 'P11', lvl: 61, col: 'pk', atk: true, ok: null, why: '', party: false });
+    // PvP friendly guard: отсутствие clanId остаётся неизвестным, не означает «без клана».
+    deq(pv2.heroes[11], { id: 'c11', name: 'P11', lvl: 61, col: 'pk', atk: true, ok: null, why: '', party: false, clanId: '', clanKnown: false });
     assert.equal(pv2.heroes[0].party, true); assert.equal(pv2.heroes[0].atk, false);
     deq(pv2.incoming, [{ id: DID, name: 'Dremia', mode: 'world' }]); assert.equal(pv2.zone, 'Монастир Тиші');
     assert.ok(!JSON.stringify(net).includes('#fff'), 'цвет ника (nickColor) не нужен');
