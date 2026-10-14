@@ -2696,8 +2696,9 @@ async function magisterStep() {
         : { id: c.battleId, name: c.name, rank: c.skillLevel, revision: live.revision, sp: catalog.characterSp, t: Date.now(), phase: 'prepared' };
       if (!replay) magUnsent.add(pending);
       // Сначала сохраняем неопределённый исход. После reload только GET подтвердит, был ли принят запрос.
-      await setRt({ magPending: { ...rt.magPending, [M.key]: pending } });
-      if (!(await rtCommit())) return;
+      const saved = await setRt({ magPending: { ...rt.magPending, [M.key]: pending } });
+      // inactive не ставит patch в очередь: успешный recover пустой очереди ещё не подтверждает receipt.
+      if (saved?.ok !== true || !(await rtCommit())) return;
       if (!magSame(M) || magScore(c) < 0 || c.spCost > catalog.characterSp - Math.max(0, +cfg.magisterSpReserve || 0) || rt.shop?.urgent || (cfg.tvtOn && L2V7Modules.tvt.tvtHold())) {
         if (!replay && tabOwner && rt.magPending?.[M.key] === pending) {
           const P = { ...rt.magPending }; delete P[M.key]; await setRt({ magPending: P });

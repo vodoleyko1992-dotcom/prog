@@ -56,3 +56,14 @@ test('guild navigation waits for durable state',async()=>{const f=fixture({path:
 test('failed state commit after victory does not exit or hunt',async()=>{const f=fixture({path:'/battle.html'});f.ctx.rt.magister=null;f.ctx.rtCommit=async()=>false;assert.equal(await f.start(true),true);assert.equal(f.calls.length,0);assert.ok(f.ctx.rt.magister)});
 
 test('HUD level not loaded: verified character API supplies real level without guessing99',async()=>{const f=fixture({serverLevel:75,rt:{lvl:0}});f.ctx.rt.magister=null;assert.equal(await f.start(),true);assert.equal(f.ctx.rt.magister.lvl,75);await f.step();assert.equal(f.posts().length,2)});
+
+test('actual inactive setRt + empty queue commit cannot authorize SP payment',async()=>{
+ const f=fixture(),{createPatchQueue}=require('../engine-core.js');
+ // setRt обновляет память, но inactive не ставит patch в очередь; recover пустой очереди возвращает ok:true.
+ Object.assign(f.ctx,{tabIdle:true,document:{prerendering:false},RT_BULKY:[],rtSizeT:f.ctx.Date.now(),rtWriter:createPatchQueue(async()=>({ok:true}))});
+ const setStart=content.indexOf('function setRt(p)'),setEnd=content.indexOf('const RECENT',setStart);
+ const commitStart=content.indexOf('async function rtCommit('),commitEnd=content.indexOf('const rodLvlOf',commitStart);
+ vm.runInContext(content.slice(setStart,setEnd)+content.slice(commitStart,commitEnd),f.ctx);
+ assert.equal(await f.ctx.rtCommit(),true);await f.step();assert.equal(Object.keys(f.ctx.rtWriter.peek()).length,0);
+ assert.equal(f.posts().length,0,'успешный commit пустой очереди не подтверждает отклонённый receipt');
+});
