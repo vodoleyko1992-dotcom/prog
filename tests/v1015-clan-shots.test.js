@@ -4,7 +4,7 @@ const source=process.env.L2_RESOURCES_REVIEW||__dirname+'/../modules/resources.j
 function fixture(o={}){
  let modal=false,tab='',slots=[],now=1000000;const calls=[],recs=[];
  const el=(id,grade,qty=1000)=>({title:'#'+id+' — Благословенний заряд духу ×'+qty,isConnected:true,classList:{contains:n=>n==='l2-hotbar-shot--disabled'},querySelector:s=>s==='img'?{getAttribute:()=>'/icons/Etc_spell_shot_'+({A:'silver',S:'gold'}[grade])+'_i01_0.jpg'}:null});
- const A=el(3951,'A'),S=el(3952,'S');slots=o.correct?[A,S]:[A];
+ const A=el(o.oldSoul?1467:3951,o.oldSoul?'S':'A'),S=el(3952,'S');if(o.oldSoul)A.title='#1467 — Заряд душі воїна ×9999';slots=o.correct?[A,S]:[A];
  const empty={title:'empty'},consumable={title:'consumable',classList:{contains:()=>false}},close={title:'close'},pickS=el(3952,'S');
  pickS.title='Благословенний заряд духу ×1000';
  const doc={querySelectorAll:s=>s==='.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled'?slots:s==='.l2-battle-hotbar-slot--empty'?o.empty?[empty]:[]:s==='.l2-battle-hotbar-pick'?modal&&tab==='consumable'&&(o.stock!==false)?[pickS]:[]:[],querySelector:s=>s==='.l2-battle-hotbar-pick'&&modal?pickS:null};
@@ -24,3 +24,5 @@ test('unknown weapon grade preserves existing basic-profile activation',async()=
 
 test('observed new weapon metadata pending blocks old activation even without weaponsT',async()=>{const f=fixture();f.env.rt.weaponsT=0;f.env.shotGrade=()=>({g:null,blocked:true});await f.api.keepShots();assert.equal(f.calls.length,0)});
 test('observed weapon change during slot await blocks final old activation',async()=>{const f=fixture({empty:true});const wait=f.env.waitFor;f.env.waitFor=async fn=>{const out=await wait(fn);f.env.shotGrade=()=>({g:null,blocked:true});return out};await f.api.keepShots();assert.equal(f.calls.filter(x=>x===f.A||x===f.S).length,0)});
+
+test('S-grade soulshots cannot replace S-grade blessed spiritshots for a mage',async()=>{const f=fixture({empty:true,oldSoul:true});await f.api.keepShots();assert.equal(f.calls.filter(x=>x===f.A).length,0);assert.equal(f.calls.filter(x=>x===f.S).length,1)});

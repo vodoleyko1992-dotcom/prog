@@ -14,7 +14,7 @@ function fixture(opt={}){
  const box={console:{log(){},info(){},warn(){}},Date,Math,document:{querySelectorAll:s=>s==='.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled'?[slot]:[],querySelector:()=>null},rt,cfg,itemsDb:()=>gate,itemOf:id=>known[id]||null,setRt:env.setRt,rec(){},L2V7Modules:{}};
  vm.createContext(box);
  vm.runInContext(fs.readFileSync(mod('equipment'),'utf8'),box);box.L2V7Modules.equipment=box.L2V7Factories.equipment(env);
- vm.runInContext(fs.readFileSync(mod('economy'),'utf8'),box);const econ=box.L2V7Factories.economy(env);env.shotGrade=econ.shotGrade;
+ vm.runInContext(fs.readFileSync(mod('economy'),'utf8'),box);const econ=box.L2V7Factories.economy(env);env.shotGrade=econ.shotGrade;env.shotsMage=econ.shotsMage;
  vm.runInContext(fs.readFileSync(process.env.L2_RESOURCES_REVIEW||review+'/modules/resources.js','utf8'),box);const res=box.L2V7Factories.resources(env);
  const content=fs.readFileSync(review+'/content.js','utf8'),start=content.indexOf('async function weaponEquipNote('),end=content.indexOf('\nlet SHOP_BUY',start);assert.ok(start>0&&end>start,'actual core equipment handler anchor');
  vm.runInContext(draft?fs.readFileSync(draft+'/weaponEquipNote.js','utf8'):content.slice(start,end),box);

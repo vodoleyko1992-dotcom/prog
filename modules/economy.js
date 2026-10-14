@@ -86,7 +86,13 @@ function shopNeedByPanel() {
   chk(env.slotsBy(env.cfg.nMpPot).find(b => /велик|больш/i.test(b.title)) || env.slotsBy(env.cfg.nMpPot)[0], env.pair(env.cfg.shopMp, '200/1000'), 'банки MP', 728);
   // заряды — грейд и тип по надетому оружию (как в закупке); оружие не прочитано — только счётчик на панели
   const sp = shopPlan().find(x => x.key === 'shots');
-  if (!shotGrade().blocked) chk(env.shotSlot?.(), env.pair(env.cfg.shopShots, '1000/5000'), sp ? sp.label.replace(/^Благосл\. заряды духа/, 'заряды') : 'заряды', sp?.ids[0]);
+  // 10.0.18 (лог 14.10 22:59): старые заряды на панели не являются запасом для нового оружия.
+  // Если сумка ещё не прочитана, сверяем itemId слота с требуемым; несовпадение = 0 и запускает пересчёт в магазине.
+  if (sp && !shotGrade().blocked) {
+    const id = sp.ids[0], slot = env.shotSlot?.(), slotId = +(String(slot?.title || '').match(/^#(\d+)/)?.[1] || 0);
+    const q = env.invQty?.(id) ?? (slotId === id ? env.qty(slot) : 0);
+    if (q < sp.mm[0]) low.push(`заряды ${sp.grade} ${q} < ${sp.mm[0]}`);
+  }
   // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
   for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) chk(null, it.mm, it.label, it.ids[0]);
   return low.join(', ');

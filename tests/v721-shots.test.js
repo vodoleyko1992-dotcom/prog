@@ -22,7 +22,7 @@ const doc = {
 const sb = { console, Date, Math, document: doc }; sb.globalThis = sb;
 vm.runInNewContext(fs.readFileSync(path.join(root, 'modules/resources.js'), 'utf8'), sb);
 const recs = [];
-const env = { rt: { weaponsT: 1 }, cfg: {}, shotGrade: () => ({ g: 'B' }), setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), sleep: async () => {},
+const env = { rt: { weaponsT: 1 }, cfg: {}, shotsMage: () => true, shotGrade: () => ({ g: 'B' }), setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), sleep: async () => {},
   shown: x => !!x && (x !== env.panelEl || modal), waitFor: async f => { for (let i = 0; i < 3; i++) { const v = f(); if (v) return v; } return null; },
   $q: s => s === '.l2-battle-hotbar-modal #l2-bh-modal-tabs' ? (modal ? {} : null) : s.startsWith('.l2-battle-hotbar-tab[data-tab-key=') ? tabs[s.match(/"(\w+)"/)[1]] : s === '.l2-battle-hotbar-modal__panel' ? (modal ? env.panelEl : null) : s === '#l2-bh-modal-close' ? (modal ? closeBtn : null) : null,
   fire: x => { fired.push(x.title);
@@ -42,7 +42,7 @@ assert.equal(R.shotGradeOf({ title: '#3950 — благословений зар
   assert.ok(fired.includes('Благословенний заряд духу ×3000'), 'picked B shots from consumables');
   assert.ok(!fired.includes('Благословенний заряд духу ×3886'), 'not the C ones');
   assert.ok(fired.includes('Благословенний заряд духу') && !slotC.isConnected, 'old C slot removed');
-  assert.match(recs.join('\n'), /поставил заряды B \(×3000\), старые убрал/);
+  assert.match(recs.join('\n'), /поставил подходящие \(×3000\), старые убрал/);
   // без чтения инвентаря (базовый профиль) грейд не известен — ничего не трогаем
   env.rt = { weaponsT: 0 }; fired.length = 0;
   assert.equal(await R.shotSlotSwap(slotC), false); assert.equal(fired.length, 0);

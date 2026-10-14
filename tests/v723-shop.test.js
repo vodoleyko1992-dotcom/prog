@@ -34,7 +34,7 @@ const env = { cfg: { shopAuto: true, shopShots: '1000/5000', shopHp: '300/1000',
 const E = load('modules/economy.js').L2V7Factories.economy(env);
 assert.equal(E.shopNeedByPanel(), 'заряды B 139 < 1000', 'no hotbar on screen — the bag from the server still triggers the shop');
 net[3950] = 4200; assert.equal(E.shopNeedByPanel(), '');
-env.invQty = () => null; env.shotSlot = () => ({}); env.qty = () => 600;          // сети нет — счётчик кнопки, как раньше
+env.invQty = () => null; env.shotSlot = () => ({title:'#3950 — Благословенний заряд духу ×600'}); env.qty = () => 600;          // сети нет — счётчик кнопки, как раньше
 assert.equal(E.shopNeedByPanel(), 'заряды B 600 < 1000');
 assert.deepEqual(E.shopPlan().find(x => x.key === 'shots').mm, [1000, 5000]);
 
