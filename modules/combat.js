@@ -38,6 +38,13 @@ function logDmg(lines) {
 function extraMobs() {
   const box = env.$q('#battle-whirlwind-extras');
   if (!env.shown(box)) return [];
+  // В текущей панели имя находится в alt иконки, текст строки содержит только HP.
+  const rows = [...(box.querySelectorAll?.('.l2-battle-whirlwind-extra') || [])];
+  if (rows.length) return rows.map(row => {
+    const m = (row.querySelector('.l2-battle-bar-innertext')?.textContent || '').replace(/[\s\u00a0\u202f]/g, '').match(/^(\d+)\/(\d+)$/);
+    const icon = row.querySelector('.l2-battle-whirlwind-extra__icon');
+    return m ? { name: icon?.alt || icon?.title || '', cur: +m[1], max: +m[2] } : null;
+  }).filter(x => x && x.max > 0);
   return [...box.textContent.matchAll(/([^\d\/]+?)\s*(\d+)\s*\/\s*(\d+)/g)]
     .map(m => ({ name: m[1].replace(/\s+/g, ' ').trim(), cur: +m[2], max: +m[3] })).filter(x => x.name);
 }
@@ -473,8 +480,7 @@ function magePlan(ctx, mp) {
   const atk = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака' && ready(b) && (ctx.block.attack || 0) <= Date.now());
   // только по реальному замеру атаки (≥ 3 удара): без замера expDmg даёт 600 по умолчанию, и бот бил атакой (1 урон) по мобу с 134 HP
   const aS = env.rt.skills?.['атака'], atkD = aS?.dmgN >= 3 ? aS.dmg / aS.dmgN : 0;
-  if (atk && mob && mob.cur > 0 && atkD > 0 && mob.cur <= atkD * 0.8 && !ctx.rb)
-    return { key: 'attack', name: 'атака', b: atk, dmg: atkD, why: `магия: добиваю атакой (${mob.cur} HP ≤ атака ≈${Math.round(atkD)})` };
+
   // 7.1.31 (просьба игрока): кот бьёт вместе с хозяином (Kai Lv.3 ≈1500). Моб умрёт от удара кота — жмём бесплатную «Атаку»
   // (кот ударит с ней), заклинание за 22 MP не тратим. Атака на откате — ниже «добивание» само возьмёт самое дешёвое заклинание.
   // Только когда мана тратится (MP < petFinishMp, 80 %): кот промахивается ≈16 % (лог 10.10 19:35–19:45) — при полной мане
@@ -482,8 +488,14 @@ function magePlan(ctx, mp) {
   // По умолчанию ВЫКЛ (просьба игрока: банки MP дешёвые, MP не экономим — важен ДПС). Включить: «Слуга → Учитывать удар кота при добивании»
   const mpLow = !mp?.max || mp.cur / mp.max * 100 < (env.cfg.petFinishMp ?? 80);
   const petN = env.cfg.petFinish === true && !ctx.rb && mpLow ? petExpect(ctx) : 0;
-  if (atk && mob && mob.cur > 0 && petN > 0 && mob.cur <= petN)
-    return { key: 'attack', name: 'атака', b: atk, dmg: petN, pet: true, why: `кот добьёт (${mob.cur} HP ≤ удар кота ≈${Math.round(petN)}) — бесплатная атака` };
+
+  const freeFinish = () => {
+    if (atk && mob && mob.cur > 0 && atkD > 0 && mob.cur <= atkD * 0.8 && !ctx.rb)
+      return { key: 'attack', name: 'атака', b: atk, dmg: atkD, why: `магия: добиваю атакой (${mob.cur} HP ≤ атака ≈${Math.round(atkD)})` };
+    if (atk && mob && mob.cur > 0 && petN > 0 && mob.cur <= petN)
+      return { key: 'attack', name: 'атака', b: atk, dmg: petN, pet: true, why: `кот добьёт (${mob.cur} HP ≤ удар кота ≈${Math.round(petN)}) — бесплатная атака` };
+    return null;
+  };
   // 7.1.30 (ночь 09→10.10): 75 % времени боя маг сидел почти без MP (банки на панели не было) и бил атакой по 1 урону.
   // Реген ≈7 MP/с — когда мана кончилась, урон упирается в «урон за 1 MP»: Energy Bolt ≈60/MP против Blaze ≈35/MP.
   // Поэтому: банки нет и MP < mageEcoPct (30 %) — режим экономии: заклинание с лучшим уроном на 1 MP; ниже порога
@@ -495,6 +507,7 @@ function magePlan(ctx, mp) {
     const cheap = Math.min(Infinity, ...mageSpellSlots().filter(ready).map(b => {
       const il = env.ilOf(b) || {}; return env.skillMp(env.cleanTitle(b.title)) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 30; }));
     if (!(cheap <= mp.cur - 1)) {
+      if (freeFinish()) return freeFinish();
       if (potOk) return null;                     // 7.1.30: ни на что не хватает, банка есть — её выпьет блок банок
       if (atk && mob && mob.cur > 0) return { key: 'attack', name: 'атака', b: atk, dmg: atkD, why: `магия: MP ${mp.cur} — нет маны, бью атакой` };
       return null;
@@ -512,7 +525,21 @@ function magePlan(ctx, mp) {
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
         order:priority.indexOf(n.toLowerCase()) };
     }).filter(o => !mp || o.mpCost <= Math.max(0, mp.cur - 1));
-  if (!opts.length) return null;
+  if (!opts.length) return freeFinish();
+  // Добивание группы важнее экономии одного заклинания: только живые соседи,
+  // изученный массовый удар и надёжное добивание основной цели. Старый splash
+  // подтверждает тип удара, но не доказывает HP/гибель сегодняшних соседей.
+  const near = extraMobs().filter(x => x.cur > 0);
+  if (!ctx.rb && !eco && near.length && mob?.cur > 0) {
+    const group = opts.filter(o => {
+      const p = env.rt.skills?.[o.name.toLowerCase()];
+      const chance = env.fightKillP?.(o.name, hp);
+      return p?.aoe && p.spl > 0 && p.splN > 0 && p.dmgN >= 3 &&
+        (chance != null ? chance >= 0.85 : o.dmg >= hp * 1.08);
+    }).sort((a, b) => a.mpCost - b.mpCost || b.dmg - a.dmg)[0];
+    if (group) return { ...group, why: `магия: АОЕ-добивание (${hp} HP; живых соседей ${near.length})` };
+  }
+  if (freeFinish()) return freeFinish();
   // 7.1.16-fix: новые заклинания — учим в игре. Урон/КД/MP в L2WAP не как в Interlude, а без замера бот брал
   // «≈900 по умолчанию» и мог считать новое заклинание добивающим. Заклинание с < 3 замерами сначала пробуется на «толстом»
   // мобе (HP заметно больше любого известного удара — чтобы урон не обрезался смертью моба), затем встаёт в очередь по замеру
