@@ -28,7 +28,7 @@ with sync_playwright() as p:
   assert menu['tabs']==8,menu   # 7.2+: 7 разделов; 9.0: + «Маммон»
   assert menu['grid']==(2 if mode=='dock' else 4),menu
   assert menu['visible']=='grid',menu
-  page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-menu.png')))
+  page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-menu.png')))
   page.locator('#moduleNav button[data-tab="fish"]').click()
   page.wait_for_timeout(100)
   metrics=page.evaluate('''() => {const act=document.querySelector('section.act'); const fld=act.querySelector('label');const e=document.querySelector('input#rodEnchantTo');return {pageWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,tab:act.id,rod:e.value, labelFont:getComputedStyle(fld).fontSize,buttonHeight:document.querySelector('#navToggle').getBoundingClientRect().height,bodyBg:getComputedStyle(document.body).backgroundColor,searchBg:getComputedStyle(document.querySelector('#uiSearch')).backgroundColor,tabName:document.getElementById('navCurrentName').innerText};}''')
@@ -39,7 +39,7 @@ with sync_playwright() as p:
   assert float(metrics['labelFont'][:-2])>=12
   assert 33 <= metrics['buttonHeight'] <= 41, metrics # compact controls requested
   assert len(errors)==0,errors
-  page.screenshot(path=str(Path('/mnt/data')/('l2bot-v7111-game-'+mode+'-fishing.png')))
+  page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-fishing.png')))
   # 10.0: сетка режимов открыта по умолчанию, «◫ Быстрые режимы» сворачивает и разворачивает её по-настоящему
   assert page.locator('#quickModeGrid').is_visible()
   page.locator('#modeToggle').click()
