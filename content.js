@@ -8,6 +8,7 @@ const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+  "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
   enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
@@ -2265,7 +2266,7 @@ setInterval(async () => {
       if (!r?.ok) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return; }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
   } catch (e) {}
 }, 5000);
@@ -2461,6 +2462,8 @@ async function main() {
       L2V7Modules.dailies.tick().catch(() => {});
       if (await L2V7Modules.dailies.clanStep()) { await sleep(200); continue; }
       if (await L2V7Modules.dailies.dailyStep()) { await sleep(200); continue; }
+      if (rt.petBufferTrip && await warlockTripStep()) { await sleep(200); continue; }
+      if (on && tabOwner && !isBattle() && await L2V7Modules.warlock.step()) { await sleep(200); continue; }
       if (await enchantDispatch()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
@@ -3681,6 +3684,8 @@ addEventListener('message', e => {
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
+  if (path === '/game/world/enter-city') warlockTownReceive(d,path);
+  if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
     Promise.resolve(L2V7Modules.enchant.note(d.req, d.res, d.status)).catch(e => console.warn(TAG, 'заточка: результат', e));
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res) try {
@@ -4135,7 +4140,8 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get faF
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.raid = L2V7Factories.raid({
+  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
@@ -4184,7 +4190,9 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({
+  get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
+  get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
@@ -4354,7 +4362,8 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({
+  get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -4708,7 +4717,8 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
   const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
-L2V7Modules.fightlab = L2V7Factories.fightlab({ get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
+L2V7Modules.fightlab = L2V7Factories.fightlab({
+  get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
 const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.2: лист врагов и ответный PvP (modules/enemies.js)
@@ -4738,7 +4748,7 @@ const classSwitched = () => { PET = null; };
 
 // Автозаточка: команды меню и диспетчер используют одну фабрику, без смены основного режима.
 const enchantFree = () => on && tabOwner && !!heroNick() && heroNick() === rt.char && !antibotState()
-  && awayFree() && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
+  && awayFree() && !rt.petBufferTrip && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
 L2V7Modules.enchant = L2V7Factories.enchant({
   get on() { return on; }, get tabOwner() { return tabOwner; }, get cfg() { return cfg; }, get rt() { return rt; },
   get setRt() { return setRt; }, get rtCommit() { return rtCommit; }, get gameGet() { return gameGet; },
@@ -4803,7 +4813,281 @@ async function enchantDispatch() {
   location.href = back; return true;
 }
 
+// Поход за платным бафом: нативный вход в город, подтверждённый ответ, баффер, возврат.
+const petTripUnstored = new Set();
+const petMoney = v => typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:typeof v==='string'&&/^\d+$/.test(v)&&Number.isSafeInteger(+v)?+v:null;
+const petTripSame = J => !!J && on && tabOwner && cfg.petFullAuto === true && J.char === rt.char && heroNick() === J.char
+  && rt.petBufferTrip?.id === J.id && J.kick === (+rt.manualKickAt || 0) && J.home.mode === autonomyMode()
+  && (J.home.mode !== 'cat' || J.home.catDungeon === (cfg.catDungeon || null));
+const petTripFree = (J, afterWin = false) => petTripSame(J) && warlockCanRun() && !antibotState() && !abHold()
+  && !(cfg.tvtOn && L2V7Modules.tvt.tvtHold()) && !rt.shop && !rt.revive && !(isFishing() && fishState())
+  && (!isBattle() || (afterWin && victory()));
+const warlockTownReady = () => {
+  const J=rt.petBufferTrip,E=J?.entry;
+  return !petTripUnstored.has(J?.id) && petTripFree(J) && J.phase==='pay' && location.pathname==='/town-buffer.html' && E?.job===J.id && E.char===J.char
+    && Number.isSafeInteger(E.revision) && E.revision>=J.revision && Date.now()-E.at<5*60000;
+};
+async function petTripSave(J, patch) {
+  if (!petTripSame(J)) return false;
+  petTripUnstored.add(J.id);
+  const saved=await setRt({petBufferTrip:{...rt.petBufferTrip,...patch}});
+  if (!saved?.ok || !await rtCommit() || !petTripSame(J)) return false;
+  petTripUnstored.delete(J.id);return true;
+}
+async function warlockTownStart({char,revision,price}) {
+  if (rt.petBufferTrip || !on || !tabOwner || cfg.petFullAuto!==true || char!==rt.char || heroNick()!==char
+      || !Number.isSafeInteger(revision) || !Number.isSafeInteger(price) || price<0) return false;
+  const J={id:crypto.randomUUID(),char,revision,price,kick:+rt.manualKickAt||0,t:Date.now(),phase:'city',cityAt:Date.now(),cityReload:0,
+    home:{mode:autonomyMode(),zone:rt.zone||null,catIn:rt.catIn||null,catDungeon:cfg.catDungeon||null,
+      path:location.pathname==='/dungeon.html'?location.pathname+location.search:fishNow()?'/fishing.html':'/map.html'}};
+  // Завершённый бой разрешает только начать поездку; незавершённый не покидаем.
+  if (!warlockCanRun() || antibotState() || abHold() || (cfg.tvtOn&&L2V7Modules.tvt.tvtHold()) || rt.shop || rt.revive
+      || (isBattle()&&!victory()) || (isFishing()&&fishState())) return false;
+  petTripUnstored.add(J.id);
+  const saved=await setRt({petBufferTrip:J});
+  if (!saved?.ok || !await rtCommit() || !petTripFree(J,true)) return false;
+  petTripUnstored.delete(J.id);
+  setStatus('Автобаф кота: иду в город');location.href='/city.html';return true;
+}
+// Ответ может прийти во время первого storage.get после получения замка. Применяем его
+// последовательно в main, иначе старый boot-снимок перетирает уже подтверждённую фазу.
+let petTownReceipt = null;
+function warlockTownReceive(d,path) {
+  const J=rt.petBufferTrip,rev=Number(d.req?.expectedRevision);
+  if(path!=='/game/world/enter-city'||d.method!=='POST'||location.pathname!=='/city.html'||J?.phase!=='city'
+      ||J.char!==rt.char||heroNick()!==J.char||!Number.isSafeInteger(rev)||rev<J.revision)return;
+  const ch=d.res?.character;
+  petTownReceipt={job:J.id,char:J.char,at:Date.now(),d:{method:'POST',status:d.status,req:{expectedRevision:rev},
+    error:!!d.error,res:{error:!!d.res?.error,ok:d.res?.ok,character:ch?{name:ch.name,revision:ch.revision}:null}}};
+}
+async function warlockTownNote(d,path) {
+  const J=rt.petBufferTrip;
+  if (path!=='/game/world/enter-city' || d.method!=='POST' || location.pathname!=='/city.html' || J?.phase!=='city' || !petTripFree(J)) return;
+  const ch=d.res?.character,rev=Number(d.req?.expectedRevision);
+  if (!Number.isSafeInteger(rev) || rev<J.revision) return;
+  if (d.status<200 || d.status>=300 || d.error || d.res?.error || d.res?.ok===false) {
+    await petTripSave(J,{phase:'return',why:'Вход в город не подтверждён; покупка отменена'});return;
+  }
+  if (ch?.name!==J.char || !Number.isSafeInteger(ch.revision) || ch.revision<rev) return;
+  petTripUnstored.add(J.id);
+  const saved=await setRt({petBufferTrip:{...J,phase:'pay',entry:{job:J.id,char:J.char,revision:ch.revision,at:Date.now()}},
+    zone:null,zonePend:null,catIn:null,catBackTried:1});
+  if (saved?.ok && await rtCommit() && petTripSame(J)) petTripUnstored.delete(J.id); // Перейти к бафферу может только следующий проверенный шаг.
+}
+async function warlockTripStep() {
+  const J=rt.petBufferTrip;if(!J)return false;
+  if (!on || !tabOwner || J.char!==rt.char || heroNick()!==J.char) return false;
+  if (cfg.petFullAuto!==true || J.kick!==( +rt.manualKickAt||0) || J.home.mode!==autonomyMode()
+      || (J.home.mode==='cat' && J.home.catDungeon!==(cfg.catDungeon||null))) {
+    await setRt({petBufferTrip:null});return false; // Новая команда игрока не возвращается к старой цели.
+  }
+  if (!petTripFree(J)) return false;
+  // Принятый, но ещё не учтённый платёж сверяем до новых переходов/изменения ревизии.
+  if (rt.petFull?.pending && ['city','pay'].includes(J.phase)) {
+    await L2V7Modules.warlock.step({forceRead:true});
+    if (petTripFree(J)) await petTripSave(J,{phase:'return',why:rt.petFull?.reason||'Сверка покупки'});
+    return true;
+  }
+  if (J.phase==='city') {
+    if (location.pathname!=='/city.html') {
+      if (await petTripSave(J,{cityAt:Date.now(),entry:null}) && petTripFree(J)) location.href='/city.html';
+      return true;
+    }
+    const received=petTownReceipt;
+    if(received) {
+      petTownReceipt=null;
+      if(received.job===J.id&&received.char===J.char&&Date.now()-received.at<5*60000) {
+        await warlockTownNote(received.d,'/game/world/enter-city');return true;
+      }
+    }
+    if (Date.now()-J.cityAt>15000) {
+      if (!J.cityReload) {
+        // Быстрый нативный ответ мог прийти до content listener. Повторяем только бесплатную загрузку города один раз.
+        if (await petTripSave(J,{cityReload:1,cityAt:Date.now()}) && petTripFree(J)) location.reload();
+      } else await petTripSave(J,{phase:'return',why:'Не получено подтверждение входа в город; покупка отменена'});
+    }
+    return true;
+  }
+  if (J.phase==='pay') {
+    if (location.pathname!=='/town-buffer.html') {
+      if (location.pathname==='/city.html' && J.entry && Date.now()-J.entry.at<5*60000) {
+        if (await petTripSave(J,{}) && petTripFree(J)) location.href='/town-buffer.html';
+      } else await petTripSave(J,{phase:'city',entry:null,cityAt:Date.now(),cityReload:0});
+      return true;
+    }
+    if (!warlockTownReady()) {await petTripSave(J,{phase:'city',entry:null,cityAt:Date.now(),cityReload:0});return true;}
+    if (!await petTripSave(J,{}) || !petTripFree(J)) return true;
+    await L2V7Modules.warlock.step({forceRead:true});
+    if (!petTripFree(J)) return true;
+    // Отказ, неизвестный исход и уже действующий набор завершают поездку. Резерв денег живёт отдельно.
+    if (rt.petFull?.status!=='travel') await petTripSave(J,{phase:'return',why:rt.petFull?.reason||'Проверка покупки завершена'});
+    return true;
+  }
+  return warlockTripReturn(J);
+}
+async function petTripNotice(J, why) {
+  if (!petTripSame(J)) return;
+  setStatus('Автобаф кота: '+why);
+  if (rt.petBufferTrip.why!==why) await petTripSave(J,{why});
+}
+const petReturnTarget = J => J.home.mode==='cat'&&J.home.catIn ? {kind:'cat',id:J.home.catIn,page:CAT_URL}
+  : J.home.zone&&!/^out:|^rb:/.test(J.home.zone) ? {kind:'zone',id:J.home.zone,page:'/teleport.html'} : null;
+function petReturnButton(T) {
+  const s=T.kind==='cat'?`.l2-rb-row__tp[data-dungeon-id="${CSS.escape(T.id)}"]`:`.l2-teleport-miru-tp-btn[data-teleport-id="${CSS.escape(T.id)}"]`;
+  const b=$q(s);return b&&shown(b)&&!b.disabled?b:null;
+}
+function petReturnPrice(T,b) {
+  const row=b?.closest(T.kind==='cat'?'.l2-rb-row':'.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row');
+  if(!row)return null;
+  const label=(row.querySelector(T.kind==='cat'?'.l2-rb-row__price-gold':'.l2-teleport-miru-price-adena')?.textContent||'').trim();
+  if(/coin|luck|\bcol\b|fast\s*aden|\bfa\b|монет/i.test(label))return null;
+  const text=T.kind==='cat'?label:row.querySelector('.l2-teleport-miru-price-num')?.textContent||'';
+  const unit=T.kind==='cat'?label:row.querySelector('.l2-teleport-miru-price-currency')?.textContent||'';
+  if(/аден|adena/i.test(unit)&&/\d/.test(text)){const amount=+(text.replace(/[^\d]/g,''));return Number.isSafeInteger(amount)?amount:null;}
+  return /безкоштовно|бесплатно|free/i.test(label)?0:null;
+}
+async function warlockTripReturn(J) {
+  if(!petTripFree(J))return false;
+  const T=petReturnTarget(J);
+  if(J.phase==='returnSent') {
+    if(location.pathname==='/map.html') {
+      if(T?.kind==='cat') {
+        const a=$q('#map-dungeon-enter-link');
+        if(!a||!shown(a)||!String(a.getAttribute('href')||'').includes('dungeonId='+T.id)) {await petTripNotice(J,'Возврат к катакомбам не подтверждён; повторно не плачу');return true;}
+        if(await petTripSave(J,{phase:'returnEnter'})&&petTripFree(J))fire(a);
+      } else if(await petTripSave(J,{phase:'returned'})&&petTripFree(J))await setRt({petBufferTrip:null});
+      return true;
+    }
+    await petTripNotice(J,'Жду подтверждение возврата; повторный платный телепорт запрещён');return true;
+  }
+  if(J.phase==='returnEnter') {
+    if(location.pathname==='/dungeon.html'&&new URLSearchParams(location.search).get('dungeonId')===T?.id) {
+      try {const r=await gameGet('/character'),d=r.ok?await r.json():null;
+        if(petTripFree(J)&&d?.character?.name===J.char&&d.character.activeDungeonId===T.id) {await setRt({petBufferTrip:null});return true;}
+      }catch(_){}
+    }
+    await petTripNotice(J,'Жду подтверждение входа в прежние катакомбы; платный телепорт не повторяю');
+    return true;
+  }
+  if(J.phase==='returned'){await setRt({petBufferTrip:null});return true;}
+  // Неподтверждённый вход не даёт права оплачивать ещё и возврат. Возвращаемся на безопасную карту.
+  if(!J.entry) {
+    if(await petTripSave(J,{phase:'returned'})&&petTripFree(J))location.href=J.home.mode==='fish'?'/fishing.html':'/map.html';
+    return true;
+  }
+  if(!T) {
+    const home=J.home.mode==='fish'?'/fishing.html':'/map.html';
+    if(await petTripSave(J,{phase:'returned'})&&petTripFree(J))location.href=home;
+    return true;
+  }
+  // Свежий снимок всё ещё внутри исходного подземелья: платный возврат не нужен.
+  const at=heroAt();
+  if(T.kind==='cat'&&at?.dung===T.id&&at.t>=J.t) {
+    if(await petTripSave(J,{phase:'returnEnter'})&&petTripFree(J))location.href='/dungeon.html?dungeonId='+encodeURIComponent(T.id);
+    return true;
+  }
+  if(location.pathname!==T.page){if(await petTripSave(J,{})&&petTripFree(J))location.href=T.page;return true;}
+  let b=petReturnButton(T);
+  if(!b&&T.kind==='zone') {
+    const cities=[...document.querySelectorAll('.l2-teleport-miru-city-btn[data-surroundings-key]')].filter(shown),i=J.cityScan||0;
+    if(i<cities.length&&await petTripSave(J,{cityScan:i+1})&&petTripFree(J))fire(cities[i]);
+    else await petTripNotice(J,'Прежней зоны нет в текущем списке телепорта; жду ручного выбора');
+    return true;
+  }
+  if(!b){await petTripNotice(J,'Жду строку прежних катакомб и подтверждённую цену');return true;}
+  const quote=petReturnPrice(T,b);
+  if(quote===null){await petTripNotice(J,'Цена возврата неизвестна или валюта не адена; не плачу');return true;}
+  let ch,rows;
+  try {
+    const responses=await Promise.all([gameGet('/character'),gameGet(T.kind==='cat'?'/game/catacombs':'/game/teleport/locations')]);
+    const body=await Promise.all(responses.map(r=>r.json()));
+    if(!responses.every(r=>r.ok)||body.some(d=>d?.error))return true;
+    ch=body[0].character;rows=T.kind==='cat'?body[1].dungeons:body[1].locations;
+  }catch(_){return true;}
+  if(!petTripFree(J))return true;
+  const row=Array.isArray(rows)?rows.find(x=>String(T.kind==='cat'?x.dungeonId:x.teleportId)===T.id):null;
+  const cost=petMoney(row?.adenaCost),wallet=petMoney(ch?.adena),reserve=petMoney(cfg.petFullReserve??cfg.shopReserve??200000),cap=petMoney(cfg.shopMaxSpend??2000000);
+  if(!row||cost===null||cost!==quote||ch?.name!==J.char||wallet===null||reserve===null||cap===null||cost>cap||wallet-cost<reserve){
+    await petTripNotice(J,'Возврат не проходит свежую цену, лимит снабжения или резерв адены');return true;
+  }
+  b=petReturnButton(T);if(!b||petReturnPrice(T,b)!==cost)return true;
+  if(!await petTripSave(J,{phase:'returnSent',returnQuote:{kind:T.kind,id:T.id,price:cost,revision:ch.revision,t:Date.now()}})||!petTripFree(J))return true;
+  b=petReturnButton(T);if(!b||petReturnPrice(T,b)!==cost){await petTripSave(rt.petBufferTrip,{phase:'return'});return true;}
+  // Нативный обработчик отправляет exact target/expectedAdenaCost; после reload этот click не повторяется.
+  if(!fire(b)&&petTripFree(J))await petTripSave(rt.petBufferTrip,{phase:'return'});
+  return true;
+}
+
+// Автобаф кота: отдельная задача, текущие режимы и сабкласс не переключает.
+// Состояние зарядов только из текущей панели: не угадываем грейд по уровню героя.
+const warlockShotContext = () => {
+  const rows=[...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
+  if (!rows.length) return 'unknown';
+  const parts=[];
+  for (const b of rows) {
+    const src=b.querySelector('img')?.getAttribute('src')||'',id=+(src.match(/\/game\/item-icon\/(\d+)(?:[/?#]|$)/)?.[1]||(b.title||'').match(/^#(\d+)\b/)?.[1]||0);
+    const soul=Object.entries(SHOT_IDS).find(([,v])=>v===id),spirit=Object.entries(BSPS_IDS).find(([,v])=>v===id),grade=(soul||spirit)?.[0],stock=qty(b);
+    if (!grade || stock==null || !Number.isFinite(stock)) return 'unknown';
+    parts.push(`${spirit?'Благ. заряды духа':'Заряды души'} ${grade} (#${id}) · ${shotsOn(b)?'вкл':'выкл'} · ${stock>0?'есть':'нет'}`);
+  }
+  return [...new Set(parts)].sort().join('; ');
+};
+const warlockCanRun = () => !rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
+  && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.tbuff && !rt.enchant?.pending && rt.enchant?.status !== 'running';
+L2V7Modules.warlock = L2V7Factories.warlock({
+  get townBufferReady() { return warlockTownReady; }, get townBufferStart() { return warlockTownStart; },
+  get shotContext() { return warlockShotContext; }, get canRun() { return warlockCanRun; }, get cfg() { return cfg; }, get rt() { return rt; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+  get heroNick() { return heroNick; }, get isBattle() { return isBattle; }, get victory() { return victory; },
+  get fishState() { return () => isFishing() && fishState(); }, get tvtHold() { return () => cfg.tvtOn && L2V7Modules.tvt.tvtHold(); },
+  get abHold() { return abHold; }, get antibotState() { return antibotState; },
+  get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get setRt() { return setRt; }, get rtCommit() { return rtCommit; }, get rec() { return rec; }
+});
+const warlockService = L2V7Modules.warlock;
+L2V7Modules.warlock = { ...warlockService, step: options => warlockCanRun() ? warlockService.step(options) : Promise.resolve(false) };
+let warlockCommandBusy = false;
+async function warlockCommand(m) {
+  if (warlockCommandBusy) return {ok:false,reason:'Предыдущая команда кота ещё выполняется'};
+  if (!['preview','resetBudget','archiveUnknown'].includes(m.action) || !m.id || typeof m.id !== 'string' || m.id.length>80) return {ok:false,reason:'Неизвестная команда'};
+  warlockCommandBusy=true;let manualEpoch=null;
+  try {
+    const state=await chrome.storage.local.get(['cfg','rt','on']);
+    if (!m.char || m.char!==state.rt?.char || m.char!==rt.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился — обновите меню'};
+    if (state.on && (!on || !tabOwner || !leaseEpoch)) return {ok:false,reason:'Управление у другой вкладки'};
+    if (state.rt.warlockCommandAck?.id===m.id) return state.rt.warlockCommandAck;
+    cfg=mergeCfg(state.cfg);
+    if (m.action!=='preview') {
+      if ((state.rt.petFull?.budgetEpoch||0)!==m.budgetEpoch || (state.rt.petFull?.spent||0)!==m.spent) return {ok:false,reason:'Расход уже изменился — проверьте новое состояние'};
+      if (!state.on) { if (!await tabLock()) return {ok:false,reason:'Другая вкладка проверяет состояние'};manualEpoch=leaseEpoch; }
+      if (m.char!==rt.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился'};
+    }
+    let result;
+    if (m.action==='preview') {
+      const r=await gameGet('/character'),body=r.ok?await r.json():null,ch=body?.character;
+      if (!ch || ch.name!==m.char || heroNick()!==m.char || rt.char!==m.char) return {ok:false,reason:'Не прочитан текущий персонаж'};
+      L2V7Modules.warlock.noteSnapshot(ch);
+      const preview=await L2V7Modules.warlock.preview();
+      if (heroNick()!==m.char || rt.char!==m.char) return {ok:false,reason:'Персонаж изменился'};
+      const saved=await setRt({petFullPreview:{char:m.char,t:Date.now(),prof:ch.l2Profession||'',slot:ch.classSlots?.activeSlot,...preview}});
+      result=!!saved?.ok;
+    } else if (m.action==='archiveUnknown') {
+      if (!m.pendingId || rt.petFull?.pending?.id!==m.pendingId) return {ok:false,reason:'Неопределённый запрос уже изменился'};
+      result=await L2V7Modules.warlock.archiveUnknown({char:m.char,pendingId:m.pendingId,budgetEpoch:m.budgetEpoch});
+    } else result=await L2V7Modules.warlock.resetBudget({char:m.char,budgetEpoch:m.budgetEpoch,spent:m.spent});
+    if (heroNick()!==m.char || rt.char!==m.char) return {ok:false,reason:'Персонаж изменился во время команды'};
+    const answer={id:m.id,char:m.char,action:m.action,t:Date.now(),ok:typeof result==='object'?result?.ok===true:!!result,reason:typeof result==='object'?result?.reason||'':result?'':rt.petFull?.reason||'Команда недоступна'};
+    await setRt({warlockCommandAck:answer});return answer;
+  }catch(e){return {ok:false,reason:String(e?.message||e).slice(0,180)};}
+  finally {
+    if (manualEpoch&&!on&&leaseEpoch===manualEpoch) {
+      await rtWriter.recover().catch(()=>{});await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(()=>{});
+      if (!on&&leaseEpoch===manualEpoch) {tabOwner=false;tabIdle=false;leaseEpoch=null;}
+    }
+    warlockCommandBusy=false;
+  }
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
   if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }

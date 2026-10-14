@@ -135,7 +135,8 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   // 9. меню, настройки, ядро
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
   for (const id of ['mmCrafter', 'mmCraftScope', 'mmCraftSend', 'mmMailClaim', 'mmCraftBox', 'mmCraftGo', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
-  assert.match(pj, /const TXT {2}= \['mmCrafter', 'mmCraftScope',/); assert.match(pj, /'mmCraftSend', ('mmCraftNote', )?'mmMailClaim'/);
+  // 14.10: новые поля Warlock могут предшествовать Маммону; проверяем сами оба текстовых поля.
+  assert.match(pj, /const TXT {2}= \[[^\]]*'mmCrafter', 'mmCraftScope',/); assert.match(pj, /'mmCraftSend', ('mmCraftNote', )?'mmMailClaim'/);
   assert.match(pj, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/); assert.match(c, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/);
   assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.match(c, /async function invRefresh\(\)[\s\S]{0,400}inventory\?\.stacks/);
   assert.match(c, /item-transfer\/claim' && d\.status === 200\) \{ L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\); \}/);

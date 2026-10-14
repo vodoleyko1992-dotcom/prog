@@ -219,6 +219,13 @@ function petHits(lines) {
 // новые удары кота в логе с прошлого вызова — в счётчик текущего боя (обычные удары, криты, промахи — раздельно)
 function petTick(ctx) {
   if (!ctx.pet) return;
+  env.warlock?.capture?.(ctx);
+  const act = env.actNet?.(), actor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]);
+  // Все принятые ходы текущего боя, включая ручные; UI-клики и отказанные запросы не считаем.
+  if (ctx.petActsKnown && actor === ctx.petActActor && Number.isSafeInteger(act?.okN) && act.okN >= ctx.petActN) ctx.pet.acts += act.okN - ctx.petActN;
+  else { ctx.petActsKnown = false; ctx.petCohortMixed = true; }
+  ctx.petActN = act?.okN;
+
   const cur = env.logLines(), fresh = env.newLines(ctx.petLines || ctx.logStart || [], cur);
   ctx.petLines = cur;
   for (const h of petHits(fresh)) {
@@ -240,6 +247,8 @@ function petAlive() {
 // промахивается не чаще 25 % (в логе 16 %) и замеров ≥ 5 — иначе 0 (на кота не рассчитываем)
 function petExpect(ctx) {
   if (!petAlive()) return 0;
+  const measured = env.warlock?.petExpected?.(ctx);
+  if (measured != null) return measured;
   const P = env.petState?.(), k = P?.key || ctx?.pet?.key || '', S = env.rt.petStat?.[k] || {}, c = ctx?.pet || {};
   const sum = f => (S[f] || 0) + (c[f] || 0);
   const hits = sum('hits'), acts = sum('acts'), swings = hits + sum('crits') + sum('misses');
@@ -282,6 +291,7 @@ async function petFlush(ctx, dealt) {
     ...(lv ? { lvMin: Math.min(s.lvMin || lv, lv), lvMax: Math.max(s.lvMax || 0, lv) } : {}) };
   S[k] = s;
   await env.setRt({ petStat: S, petAdvice: petAdvice(S) });
+  await env.warlock?.noteBattle?.(ctx);
 }
 // бафф кота (роль «Баффы кота»): кот жив, моб не при смерти (на бафф уходит ход), MP хватает с запасом. Бафф держится dur с
 // (справочник, иначе petBuffSec = 1200) и слетает при новом призыве/смерти кота (rt.petBornT). «В бою эффекта нет» — никогда
@@ -297,6 +307,8 @@ function petBuffPick(ctx, me, mp, mob) {
   for (const n of list) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
+    // Свежий баф слуги важнее локального таймера: не затираем оплаченный Queen и не тратим ход.
+    if (env.slotAction(b) === 'l2_1331' && env.warlock?.petBuffActive?.(4699)) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
     if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     // 10.0 (аудит боя): Blessing of Queen ≈ +40 % урона на 20 мин — резерв 25 % MP не держим (MP не экономим), хватает на сам бафф — ставим
@@ -706,6 +718,30 @@ function frenzyDive(ctx, me) {                    // «сливаться под
   return me.pct > lim && ready(b) && !env.buffActive('frenzy', b) && me.pct > (env.cfg.stopHp || 25);
 }
 
+// Принятый вампирик ждёт реального КД. Потерянный/неподтверждённый клик имеет короткий повтор.
+function drainBackoff(ctx, b, result) {
+  const net = env.actNet?.(), exact = env.slotAction(b);
+  const accepted = result === true && net?.ok && net.done >= net.start && Date.now() - (net.doneT || 0) <= 2000 && (!exact || net.action === exact);
+  const known = exact && env.combatCooldown.skillKnown?.(exact, (env.cdSpawn || env.battleSpawn)(), pressAt.get(env.skKey(b)) || 0) || overlayReadySeen.has(b);
+  const until = result === 'lock' || accepted && known ? 0 : Date.now() + (result === true ? 800 : 500);
+  ctx.block['drain:' + b.title] = until;
+  if (until > Date.now()) lostUntil.set(env.skKey(b), Math.max(lostUntil.get(env.skKey(b)) || 0, until)); // ротация DPS тоже уважает защиту от повторов
+}
+function drainPreferred(ctx, me, b, pot) {
+  if (!pot || !ready(pot) || env.qty(pot) === 0) return true;
+  if (ctx.rb && !ctx.rb.allIn && me.pct > 35 && env.qty(pot) != null && env.qty(pot) <= (env.cfg.rbPotReserve || 0)) return true;
+  const h = env.fightHealOn?.(env.cleanTitle(b.title));
+  const heal = h?.n >= 2 ? Math.max(0, Math.min(me.max-me.cur, h.p20)) : 0;
+  const item = env.hpPots?.().find(x => x.b === pot);
+  const potHeal = Math.max(0, Math.min(me.max-me.cur, item?.heal || 0));
+  if (!(heal > 0)) return false; // неизвестное лечение не вытесняет доступную аварийную банку
+  if (!(potHeal > 0) || heal >= potHeal) return true;
+  const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {};
+  const hits = ctx.rb?.hits || [], p90 = Math.max(d.hitP90 || 0, hits.length ? [...hits].sort((a,b)=>a-b)[Math.floor(hits.length*.9)] : 0);
+  const danger = Math.max(me.max * (env.cfg.stopHp || 25) / 100, d.sp || 0, ctx.rb?.sp || 0) + 2*p90;
+  return me.cur + heal > danger; // достаточно для ближайшего опасного сочетания — сохраняем атакующий ход
+}
+
 function drainPick(ctx, mp) {                     // готовый скилл с поглощением HP из роли «Вампиризм» (порядок = приоритет)
   for (const n of env.names(env.cfg.nDrain)) {
     const b = slotsBy(n)[0];
@@ -1012,7 +1048,7 @@ async function battle() {
     }
   };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
-  const act = async (b, status, hpGuard = false) => {
+  const act = async (b, status, hpGuard = false, stillNeeded = null) => {
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
     // Не полагаемся на визуально готовую кнопку, когда сервер сообщил blockedBy=global.
     while (env.combatCooldown.globalWait() > 0) {
@@ -1023,11 +1059,17 @@ async function battle() {
     const exact = env.slotAction(b);
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
     const free = await gameFree();
-    if (!free) return false;
+    if (!free || !env.on || !env.tabOwner || !env.isBattle() || victory() || defeat()) return false;
+    if (stillNeeded && !stillNeeded()) return 'lock';
     // 10.0.5 (лог 13.10 10:51:56): удар выбран при HP 55 %, а пока ждали ответ хода после лага, HP стал 19 % — бот всё равно нажал Blaze.
     // Удар (hpGuard) не жмём, если за время ожидания HP упал до опасного: 'lock' — цикл сразу решает заново (банка, вампирик, лечение)
     if (hpGuard && !healSlot(b)) { const m2 = env.meHp(), p0 = ctx.mePct0;
       if (m2 && p0 != null && m2.pct <= 50 && m2.pct < p0 - 15) { env.rec('B', 'мало HP', `HP упал ${p0 | 0} → ${m2.pct | 0} % за время ожидания хода — вместо «${env.cleanTitle(b.title)}» лечусь`); return 'lock'; } }
+    // За ожидание gameFree входящий удар мог изменить лучший способ восстановления.
+    if (env.names(env.cfg.nDrain).some(n => slotsBy(n)[0] === b)) {
+      const m2 = env.meHp();
+      if (m2 && m2.pct <= Math.max(env.cfg.stopHp,25) && Date.now() - lastHpPot > 1100 && !drainPreferred(ctx,m2,b,env.hpPotPick(true))) return 'lock';
+    }
     env.observeSlot(b, 'B');
     const before = noticeText();
     const firedAt = Date.now(), slackA = free.dT ? firedAt - (free.dT + lockA) : 1e9, slackB = free.gE ? firedAt - (free.gE + lockB) : 1e9;
@@ -1036,7 +1078,7 @@ async function battle() {
     if (!env.fire(b)) return false;
     lastAct = Date.now();
     if (env.skKey(b)) pressAt.set(env.skKey(b), firedAt);
-    if (ctx.pet && env.petState?.()?.has !== false) ctx.pet.acts++;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
+    const petActAlive = ctx.pet && env.petState?.()?.has !== false;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
     // 7.1.17: ждём, пока игра отправит ход (до 0,6 с) и получит ответ сервера (до 6 с) — иначе следующий клик теряется
     // 8.0.3: запрос уходит сразу после клика — ждём 400 мс (было 600: потерянный клик стоил лишние 0,2 с)
     const sent = !!env.actNet && !!(await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 400, 40));
@@ -1071,6 +1113,7 @@ async function battle() {
       env.setRt({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }
     if (ans) done = ans;
     if (env.combatCooldown.recentlyGlobalRejected(firedAt)) done = 'cd';
+    if (petActAlive && !ctx.petActsKnown && (netOk || (!env.actNet && done === true))) ctx.pet.acts++;
     if (done === true) await rememberCd(b, 'used');
     else if (done === 'cd') {
       if (!env.combatCooldown.recentlyGlobalRejected(firedAt)) await rememberCd(b, 'cd');
@@ -1082,9 +1125,11 @@ async function battle() {
       return 'cd';
     }
     if (!victory() && !((mobHp()?.cur ?? 1) === 0)) await env.pause();   // добили — без «реакции», сразу к итогу
+    if (env.names(env.cfg.nDrain).some(n => slotsBy(n)[0] === b)) drainBackoff(ctx,b,done);
     return done;
   };
 
+  if (ctx.pet) { const n = env.actNet?.(); ctx.petActsKnown = Number.isSafeInteger(n?.okN); ctx.petActN = n?.okN; ctx.petActActor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]); env.warlock?.capture?.(ctx); }
   const t0 = Date.now();
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
@@ -1248,7 +1293,7 @@ async function battle() {
       // банке; игрок жал вампирик руками. Теперь при критическом HP ход — только лечению: у мага сначала вампирик (лечит втрое больше
       // глотка), банка, а пока банка на паузе 1,1 с — вампирик или лечащий скилл, удар — только если лечить нечем
       const emDrain = drainPick(ctx, mp);
-      if (emDrain && mageCombat()) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`); if (r !== 'lock') ctx.block['drain:' + emDrain.title] = Date.now() + 1500; continue; }
+      if (emDrain && mageCombat() && (Date.now() - lastHpPot <= 1100 || drainPreferred(ctx, me, emDrain, pot))) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`);  continue; }
       if (pot && Date.now() - lastHpPot > 1100) {
         // 8.0.3 (лог 11.10 09:59:55 и 10:00:06.8, Тимініель: клик аварийной банки потерян в окне занятости игры, повтор — только через
         // 1,1–1,3 с, за 2,3 с до смерти): потерян в окне ('lock') — отметку банки откатываем, следующий цикл жмёт её снова сразу
@@ -1258,7 +1303,7 @@ async function battle() {
         if (r === 'lock') { lastHpPot = prevPot; ctx.rb?.potT?.pop(); }
         continue;
       }
-      if (emDrain) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`); if (r !== 'lock') ctx.block['drain:' + emDrain.title] = Date.now() + 1500; continue; }
+      if (emDrain) { ctx.seq.push('💉'); const r = await act(emDrain, `Мало HP (${me.pct | 0}%) — вампиризм: ${env.cleanTitle(emDrain.title)}`);  continue; }
       const emHeal = healPick(ctx, mp);
       if (emHeal) { ctx.block['heal:' + emHeal.title] = Date.now() + 2500; const r = await act(emHeal, `Мало HP (${me.pct | 0}%) — лечение скиллом: ${env.cleanTitle(emHeal.title)}`); if (r === 'lock') ctx.block['heal:' + emHeal.title] = 0; continue; }
       if (!pot && !ctx.noPotSaid && !env.hpPots().length) { ctx.noPotSaid = 1; env.rec('B', 'мало HP', `HP ${me.pct | 0}%, банок HP нет — из боя уйти нельзя, бьюсь до конца`); }
@@ -1419,35 +1464,48 @@ async function battle() {
           continue;
         }
       }
-      // 7.1.16-fix: Servitor Heal лечит кота мало (жалоба игрока), а призыв в бою работает и даёт полное HP
-      // (лог 10.10 00:20: «Покликання Mew the Cat — слугу призвано» в бою, MP −19, затем 736/750). Поэтому: HP кота ≤ petHealAt —
-      // перепризыв того же кота; если перепризыв HP не поднял (сервер не обновляет того же слугу) — запоминаем и лечим Servitor Heal
-      // по просьбе игрока: перепризыв — «под конец HP» кота (≤ petResummonAt, 25 %), не раньше; лишних действий на карте нет
-      const petPct = P && P.maxHp ? P.hp / P.maxHp * 100 : 100, reOk = !!P?.key && (env.rt.petResummon || {})[P.key] !== false && env.cfg.petResummon !== false;
-      if (fresh && P.has && P.maxHp && petPct <= (reOk ? (env.cfg.petResummonAt ?? 25) : (env.cfg.petHealAt ?? 50)) && (ctx.block['petheal'] || 0) <= Date.now()) {
+      // Независимые пороги: лечение при petHealAt, перепризыв только при petResummonAt.
+      // 15.10: ручной перепризыв сохранил баффы и поднял HP 2898/7491 → 3805/6528; полного HP не предполагаем.
+      const petPct = P && P.maxHp ? P.hp / P.maxHp * 100 : 100;
+      const healAt = env.cfg.petHealAt ?? 50, summonAt = env.cfg.petResummonAt ?? 25;
+      const re = env.rt.petResummon || {}, reOk = !!P?.key && re[P.key] !== false && env.cfg.petResummon !== false;
+      if (fresh && P.has && P.maxHp && (petPct <= healAt || reOk && petPct <= summonAt) && (ctx.block['petheal'] || 0) <= Date.now()) {
         const slots = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл');
         const want = (P.key || '').replace(/_/g, ' ');
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || slots.find(b => /^summon\b/i.test(env.cleanTitle(b.title)) && want && env.cleanTitle(b.title).toLowerCase().includes(want));
         const hb = slots.find(b => /^(?:servitor heal|heal servitor)/i.test(env.cleanTitle(b.title)) || (env.ilOf(b)?.target === 'PET' && env.ilOf(b)?.c === 'Лечение'));
         const mpOk = b => !mp || mp.cur >= (env.skillMp(env.cleanTitle(b.title)) || 0) + 10;
-        const re = env.rt.petResummon || {};
-        const useSummon = sb && ready(sb) && mpOk(sb) && re[P.key] !== false && env.cfg.petResummon !== false;
-        const pick = useSummon ? sb : hb && ready(hb) && mpOk(hb) ? hb : null;
+        const canHeal = petPct <= healAt && hb && ready(hb) && mpOk(hb);
+        const canSummon = petPct <= summonAt && reOk && sb && ready(sb) && mpOk(sb);
+        const useSummon = !!canSummon && (env.cfg.petHealPrefer === 'resummon' || !canHeal);
+        const pick = useSummon ? sb : canHeal ? hb : null;
         if (pick) {
           ctx.block['petheal'] = Date.now() + 3000;
-          const hp0 = P.hp, max0 = P.maxHp, t0 = Date.now(), name = env.cleanTitle(pick.title);
-          const pr = await act(pick, `${useSummon ? 'Перепризыв' : 'Лечение'} слуги (${hp0}/${max0}): ${name}`);
-          if (pr === 'lock') { ctx.block['petheal'] = 0; continue; }   // 8.0.3: клик потерян в окне занятости игры — повтор сразу, без ожидания слуги 2,5 с
-          if (useSummon && pr === true) { if (ctx.pet) ctx.pet.resummons++; await env.setRt({ petBornT: Date.now() }); }   // 7.1.31: новый кот — без баффов
-          const P2 = await env.waitFor(() => { const q = env.petState?.(); return q && q.t > t0 && q.has ? q : null; }, 2500, 150);
-          if (!P2) ctx.block['petheal'] = Date.now() + 20000;   // 7.1.30: сервер не прислал слугу — не долбим призыв/лечение каждые 3 с
+          const hp0 = P.hp, max0 = P.maxHp, t0 = Date.now(), name = env.cleanTitle(pick.title), key0 = P.key;
+          const needed = () => {
+            let q = env.petState?.();
+            if (P.hud && (!q || Date.now() - q.t >= 10000)) {
+              const box = env.$q('#l2-hud-companion'), tx = box && env.shown(box) ? box.textContent.replace(/\s+/g, '') : '';
+              const m = tx.match(/HP(\d+)\/(\d+)/i);
+              if (m) q = {t: Date.now(), has: +m[1] > 0, key: key0, hp: +m[1], maxHp: +m[2]};
+            }
+            if (env.antibotState?.() || !q || Date.now() - q.t >= 10000 || !q.has || q.hp <= 0 || !q.maxHp || q.key !== key0 || env.cfg.petAuto === false) return false;
+            if (q.hp / q.maxHp * 100 > (useSummon ? (env.cfg.petResummonAt ?? 25) : (env.cfg.petHealAt ?? 50))) return false;
+            return !useSummon || env.cfg.petResummon !== false && (env.rt.petResummon || {})[key0] !== false;
+          };
+          const pr = await act(pick, (useSummon ? 'Перепризыв' : 'Лечение') + ' слуги (' + hp0 + '/' + max0 + '): ' + name, false, needed);
+          if (pr === 'lock') { ctx.block['petheal'] = 0; continue; }
+          if (pr !== true) continue; // Непринятое действие не даёт измерения лечения или запрета перепризыва.
+          if (useSummon) { if (ctx.pet) ctx.pet.resummons++; await env.setRt({ petBornT: Date.now() }); }
+          const P2 = await env.waitFor(() => { const q = env.petState?.(); return q && q.t > t0 && q.has && q.key === key0 && q.maxHp > 0 ? q : null; }, 2500, 150);
+          if (!P2) ctx.block['petheal'] = Date.now() + 20000;
           if (P2) {
             const gain = P2.hp - hp0;
-            if (useSummon && re[P.key] == null) {
-              const works = P2.hp >= max0 * 0.9;
-              await env.setRt({ petResummon: { ...re, [P.key]: works } });
-              env.rec('B', 'питомец', `перепризыв ${name}: HP слуги ${hp0} → ${P2.hp}/${P2.maxHp} — ${works ? 'работает, лечу кота так' : 'не лечит, дальше Servitor Heal'}`);
-            } else if (!useSummon) {
+            if (useSummon) {
+              // Один ранний снимок без роста HP не доказывает, что перепризыв больше никогда не лечит.
+              if (gain > 0 && re[key0] == null) await env.setRt({ petResummon: { ...re, [key0]: true } });
+              env.rec('B', 'питомец', 'перепризыв ' + name + ': HP слуги ' + hp0 + '/' + max0 + ' → ' + P2.hp + '/' + P2.maxHp + ' — ' + (gain > 0 ? 'наблюдаемый прирост +' + gain : 'прирост HP не подтверждён'));
+            } else if (gain > 0) {
               const h = env.rt.petHealGain || [];
               await env.setRt({ petHealGain: [...h, gain].slice(-10) });
             }
@@ -1477,7 +1535,7 @@ async function battle() {
     const drainB = me && me.pct <= (ctx.rb?.potOn ? 100 : env.cfg.drainHp ?? 85) ? drainPick(ctx, mp) : null;
     // 8.0.3 (лог 11.10 09:13–09:16: VT ушёл 4 раза из 60 решений, 17 банок сериями): блок 1,5 с — только по результату; клик, потерянный
     // в окне блокировки ('lock'), повторяется сразу (после окна), а не уступает банке
-    if (drainB) { ctx.seq.push('💉'); const r = await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`); if (r !== 'lock') ctx.block['drain:' + drainB.title] = Date.now() + 1500; continue; }
+    if (drainB && (!ctx.rb || me.cur > Math.max(env.rt.rbDb?.[ctx.rb.id]?.sp || 0, ctx.rb.sp || 0) + 2*(env.rt.rbDb?.[ctx.rb.id]?.hitP90 || 0) || drainPreferred(ctx, me, drainB, Date.now() - lastHpPot > 1100 ? env.hpPotPick(false) : null))) { ctx.seq.push('💉'); const r = await act(drainB, `Вампиризм (HP ${me.pct | 0}%): ${env.cleanTitle(drainB.title)}`);  continue; }
     // банка HP (если задана)
     // v4.46: на РБ — при HP ≤ 45 % и по недостаче (≥1500 — большая); на мобах как было
     // v5.3: на РБ держим HP около 80 % (по просьбе игрока): начинаем пить при HP ≤ «с» (75 %) и пьём, пока не поднимется до «до» (80 %) —
@@ -1785,10 +1843,14 @@ async function battle() {
     // 8.0: РБ был ранен (HP с прошлого захода) — время пересчитываем на полный бой (Госмос: 33 с за 87k из 577k записывались как полный)
     const fightS = (Date.now() - t0) / 1000 * (ctx.hp0 > 0 && ctx.max > ctx.hp0 ? Math.min(20, ctx.max / ctx.hp0) : 1);
     const avg = (old, next) => old > 0 ? Math.round(old * .6 + next * .4) : next;
+    const rc = env.warlock?.raidContext?.(ctx.rb.id, env.rt.rbStats?.[ctx.rb.id] || {});
+    const fightContext = rc?.managed && !ctx.rb.contextMixed && ctx.rb.contextKey === rc.key && rc.key ? rc.key : null;
+    const oldFight = !rc?.managed || (fightContext && d0.fightContext === fightContext) ? d0.fightS : 0;
     await env.rbNote(ctx.rb.id, { verdict: 'ok', kills,
+      ...(rc?.managed ? { fightContext } : {}),
       ...(adena > 0 ? { adenaPerKill: avg(d0.adenaPerKill, adena) } : {}),
       ...(exp > 0 ? { expPerKill: avg(d0.expPerKill, exp) } : {}),
-      fightS: d0.fightS > 0 ? Math.round(d0.fightS * .6 + fightS * .4) : Math.round(fightS),
+      fightS: oldFight > 0 ? Math.round(oldFight * .6 + fightS * .4) : Math.round(fightS),
       heroMaxHp: env.meHp()?.max || d0.heroMaxHp || 0,
       note: `убит за ${env.fmtT(fightS)}` });
     console.log(env.TAG, `РБ ${ctx.name} убит за ${env.fmtT((Date.now() - t0) / 1000)}`);
@@ -1855,6 +1917,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { logDmg, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { logDmg, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

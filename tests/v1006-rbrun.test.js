@@ -47,7 +47,11 @@ function make({ rt = {}, cfg = {} } = {}) {
   const content = read('content.js'), combat = read('modules/combat.js'), popup = read('popup.js'), surv = read('modules/survival.js'), daily = read('modules/dailies.js');
   assert.ok(JSON.parse(read('manifest.json')).content_scripts.some(c => c.js.includes('modules/rbrun.js') && c.js.indexOf('modules/rbrun.js') < c.js.indexOf('content.js')));
   assert.ok(/L2V7Modules\.rbrun = L2V7Factories\.rbrun\(\{ get cfg\(\)[\s\S]{0,400}get LOOT_RE\(\)[^\n]*get SPECIAL_RE\(\)/.test(content), 'регистрация модуля rbrun с геттерами');
-  for (const m of ['combat', 'survival', 'dailies']) assert.ok(new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{ get \\w+\\(\\) \\{ return [^}]+\\}, get rbRun\\(\\) \\{ return L2V7Modules\\.rbrun; \\}`).test(content), m + ': геттер rbRun');
+  // 10.0.15: rbRun остаётся в каждой своей фабрике; порядок дополнительных getters не часть API.
+  for (const m of ['combat', 'survival', 'dailies']) {
+    const factory = content.match(new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{([\\s\\S]*?)\\}\\);`))?.[1] || '';
+    assert.match(factory, /get rbRun\(\) \{ return L2V7Modules\.rbrun; \}/, m + ': геттер rbRun');
+  }
   assert.ok(/await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, name: ctx\.name, [^\n]*adena, exp, sp: pick\([^\n]*lines: env\.newLines\(ctx\.logStart \|\| \[\], env\.logLines\(\)\), epic: !!env\.epicById\?\.\(ctx\.rb\.id\), fightS \}\)/.test(combat), 'combat: /await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, nam');
   assert.ok(combat.indexOf('env.rbRun?.kill(') > combat.indexOf("rbKills: (env.rt.rbKills || 0) + 1"), 'учёт после записи убийства РБ');
   assert.ok(/env\.rec\('B', 'смерть', `смертей за 30 мин: \$\{deaths\.length\}`\);\n  try \{ await env\.rbRun\?\.death\(\); \}/.test(surv), 'surv: /env\.rec\(\'B\', \'смерть\', `смертей за 30 мин: \$\{');

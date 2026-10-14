@@ -186,6 +186,7 @@
 <link rel="stylesheet" href="ui-v7.css">
 <link rel="stylesheet" href="ui-game.css">
 <link rel="stylesheet" href="enchant-ui.css">
+<link rel="stylesheet" href="warlock-ui.css">
 </head><body>
 <header>
   <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
@@ -212,6 +213,7 @@
     <button class="mod" data-task="enemyHunt" title="Лист врагов: нападать на врага на своей локации (с проверкой сил)">☠ Враги</button>
     <button class="mod" data-task="dailyAuto" title="Дейлики: дотянуть «50 рыб» и «1 РБ» за день (раздел «Охота» → «Дейлики и клан»)">📅 Дейлики</button>
     <button class="mod" data-task="clanTasks" title="Клановые задания: взять, помочь соклановцу, сдать — сам (раздел «Охота» → «Дейлики и клан»)">🏰 Клан</button>
+    <button id="petFullToggle" class="mod" aria-pressed="false" title="Дополнительная задача: полный баф живому коту в пределах бюджета. Основной режим не меняется.">🐱 Автобаф кота</button>
     <button id="tvtToggle" class="mod" title="TvT: запись и бой 3 раза в день (прерывает любой режим)">⚔ TvT</button>
     <div class="mode-label">Дополнительно (к фарму):</div>
     <button id="campToggle" class="mod" title="Сюжетные квесты (кампания): бот сам берёт главу, летит к точке, бьёт ★-цели и сдаёт у NPC. У нового героя (< 40 ур.) с непройденным «Путём новичка» включается сама — галка «★ Сюжетные квесты новичка» в «Охоте»">📜 Кампания</button>
@@ -224,7 +226,7 @@
 <button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
   <span class="nav-toggle-icon" aria-hidden="true">▦</span>
   <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 8 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+  <span class="nav-toggle-right">Все 9 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
 </button>
 <nav id="moduleNav" aria-label="Разделы управления">
   <div class="nav-heading">НАВИГАЦИЯ</div>
@@ -235,6 +237,7 @@
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <div class="nav-group">ОБЩЕЕ</div>
   <button data-tab="panel" title="Анализ боя, общие правила, подразделы классов (Warlock и кот, маг, спойлер, воин), герой"><span class="ic">⚔</span>Бой</button>
+  <button data-tab="warlock" title="Призыв, лечение, бафы, полный набор и статистика кота"><span class="ic">🐱</span>Warlock</button>
   <button data-tab="supply" title="Банки, закупка, добыча, эффективность"><span class="ic">🧪</span>Снабжение</button>
   <button data-tab="mammon" title="Заказы торговца Маммона, кузнец, накопление на улучшение"><span class="ic">🏺</span>Маммон</button>
   <button data-tab="svc" title="Журнал, диагностика, автовход, память"><span class="ic">⚙</span>Сервис</button>
@@ -535,31 +538,7 @@
   <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
   <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
 
-  <div class="subsec-title" data-cls="summoner"><span id="tab-pet" class="tab-anchor"></span>🐱 Warlock — маг с котом</div>
-  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот бьёт вместе с тобой на каждое твоё действие (≈35–40 % всего урона). Бот призывает кота первым действием боя, если его нет, держит его HP, ставит баффы кота и считает, сколько урона даёт каждый кот. «Summon Feline Queen» на L2WAP — это бафф кота <b>Blessing of Queen</b> (+30 % шанса крита и +25 % урона крита слуги на 20 мин — кот бьёт примерно вдвое сильнее): бот держит его в «Баффах кота» и обновляет первым же ходом, как только истечёт. Заклинания, дебаффы и вампиризм — в блоке «Маг» ниже.</p></div>
-  <h4 data-cls="summoner">🐱 Кот</h4>
-  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
-  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: Kai → Mew → Kat)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option></select></label>
-  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
-  <label>Лечить кота перепризывом (полное HP) <input id="petResummon" type="checkbox"></label>
-  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
-  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
-  <div class="hint">Перепризыв даёт коту полное HP за один ход. Если сервер не обновит HP при перепризыве, бот это запомнит и будет лечить кота Servitor Heal.</div>
-  <h4 data-cls="summoner">🎯 Добивание</h4>
-  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
-  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но кот промахивается ≈16 %, и тогда ход пропадает. Включай, только если банок нет.</div>
-  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
-  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а кот иногда промахивается (≈16 %), и тогда ход пропадает. Не на РБ.</div>
-  <h4 data-cls="summoner">✨ Баффы кота</h4>
-  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
-  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
-  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
-  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Повторно бафф ставится, когда истечёт его время или кота призовут заново. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
-  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
-  <h4 data-cls="summoner">📊 Статистика котов</h4>
-  <div id="petBox" class="box"></div>
-  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
-
+  <div class="hint"><button type="button" data-goto="warlock">🐱 Настройки Warlock и кота</button></div>
 
   <div class="subsec-title" data-cls="mage"><span id="tab-mage" class="tab-anchor"></span>🔮 Маг — заклинания (Warlock, Sorcerer, SH…)</div>
   <div class="intro-callout"><b>Маг.</b><p>Ротация — по замеру урона каждого заклинания по этой цели: добивание самым дешёвым, которое добьёт наверняка, иначе самое сильное готовое. MP не экономим (банки MP). Новое заклинание сначала замеряется на «толстом» мобе.</p></div>
@@ -632,6 +611,37 @@
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
   <div class="subsec-title"><span id="tab-enchant" class="tab-anchor"></span>Заточка оружия и брони</div>
   <div id="enchantPanel" data-embedded="1"></div>
+</section>
+
+<section id="tab-warlock">
+  <div id="warlockPanel"></div>
+  <div class="subsec-title"><span id="tab-pet" class="tab-anchor"></span>🐱 Warlock — маг с котом</div>
+  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот атакует вместе с героем. Бот призывает выбранного кота, следит за его HP и поддерживает боевые бафы. Сила кота зависит от ранга призыва, характеристик и действующих эффектов; сравнение ниже использует только принятые игровые действия. Заклинания героя — в разделе «Бой» → «Маг».</p></div>
+  <h4>🐱 Кот</h4>
+  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
+  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: Kai → Mew → Kat)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option></select></label>
+  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
+  <label>Разрешить перепризыв при низком HP кота <input id="petResummon" type="checkbox"></label>
+  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
+  <label>Приоритет помощи коту <select id="petHealPrefer"><option value="heal">Сначала лечить</option><option value="resummon">Сначала перепризвать</option></select></label>
+  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
+  <div class="hint">Перепризыв не гарантирует полное HP: бот проверяет состояние после принятого действия. Платные бафы могут сохраниться — повторная покупка проверяет фактические эффекты, а не сам факт перепризыва.</div>
+  <h4>🎯 Добивание</h4>
+  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
+  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но промах кота может потратить ход впустую. Включай, только если банок нет.</div>
+  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
+  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а промах кота может потратить ход впустую. Не на РБ.</div>
+  <h4>✨ Баффы кота</h4>
+  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
+  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
+  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
+  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Blessing of Queen относится к бафам слуги; действующий эффект оплаченного набора бот не перезаписывает. Бот проверяет срок и фактическое действие бафа. Перепризыв сам по себе не доказывает, что эффект исчез. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
+  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
+  <h4>📊 Накопленная статистика котов</h4>
+  <div id="petBox" class="box"></div>
+  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
+
+
 </section>
 
 <!-- 🧪 БАНКИ И РАСХОДНИКИ -->
@@ -829,6 +839,8 @@
 <script src="modules/fightlab.js"></script>
 <script src="modules/enchant.js"></script>
 <script src="enchant-ui.js"></script>
+<script src="modules/warlock.js"></script>
+<script src="warlock-ui.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>

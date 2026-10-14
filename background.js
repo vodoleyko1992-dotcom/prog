@@ -131,6 +131,7 @@ async function switchCharacter(m, sender) {
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
+      Object.assign(nextCfg,{"petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal"}); // Новый герой не наследует разрешение платной задачи.
       nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
       nextCfg.mmGoalItem = '';
