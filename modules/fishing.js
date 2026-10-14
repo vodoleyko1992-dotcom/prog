@@ -877,17 +877,26 @@ async function fishing() {
   await env.sleep(300);
 }
 
+// 10.0.13 (аудит 14.10): у рыболовной вкладки свой pager по 15 строк; первая страница может быть занята материалами.
+async function fishBagPage(next) {
+  const buttons = [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')], b = buttons[next ? 1 : 0];
+  if (!env.on || !b || b.disabled) return false;
+  const sig = () => [...document.querySelectorAll('.l2-char-bag-row[data-fishing-inventory-row]')].map(r => r.dataset.itemJson).join('|'), before = sig();
+  env.fire(b);
+  return !!await env.waitX(() => sig() !== before, 3000, 100);
+}
 async function fishCut() {
   env.setStatus('Рыбалка: разделка улова в инвентаре');
   const tab = await env.waitFor(() => env.$q('button[data-fishing-inventory-tab]'), 10000, 200);
   if (!env.on) return;
   if (!tab) { env.rec('B', 'рыбалка: разделка', 'нет вкладки «Рибалка» в инвентаре'); await env.setRt({ fishService: 'exchange' }); return; }
   if (tab.getAttribute('aria-selected') !== 'true') { env.fire(tab); await env.sleep(env.rnd(900, 1300)); }
+  for (let i = 0; i < 40 && env.on && await fishBagPage(false); i++) {}
   const done = new Set(), got = [];
-  for (let guard = 0; guard < 40 && env.on; guard++) {
+  for (let guard = 0; guard < 120 && env.on; guard++) {
     const row = [...document.querySelectorAll('.l2-char-bag-row[data-fishing-inventory-row]')]
       .find(r => { const j = env.itemJson(r); return j.itemId && !done.has(j.itemId); });
-    if (!row) break;
+    if (!row) { if (await fishBagPage(true)) continue; break; }
     const j = env.itemJson(row); done.add(j.itemId);
     const name = (row.querySelector('.l2-char-bag-name')?.textContent || '').replace(/\s*×\s*\d+.*$/, '').trim();
     if (env.MATERIAL_RE.test(name)) continue;          // материалы и снаряжение не трогаем
@@ -1049,6 +1058,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);

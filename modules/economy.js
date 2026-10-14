@@ -90,12 +90,24 @@ function shopNeedByPanel() {
   return low.join(', ');
 }
 
+// 10.0.13 (аудит 14.10): сумка и магазин перешли на номера страниц и группы по пять; старые стрелки поддерживаем тоже.
+async function pageTurn(scope, legacy, next, sig) {
+  const buttons = [...document.querySelectorAll(`${scope} .l2-compact-pages__btn`)], current = () => +(env.$q(`${scope} [aria-current="page"]`)?.textContent || 0);
+  const p = current(), old = buttons.length ? [] : [...document.querySelectorAll(legacy)];
+  const b = buttons.length ? (next ? buttons.find(x => x.textContent.trim() === String(p + 1)) || buttons.find(x => x.textContent.trim() === '>>')
+    : p > 1 ? buttons.find(x => x.textContent.trim() === '1') || buttons.find(x => x.textContent.trim() === '<<') : null) : old[next ? 1 : 0];
+  if (!b || b.disabled || !env.shown(b)) return false;
+  const before = sig(); env.fire(b);
+  return !!await env.waitX(() => (p && current() !== p) || sig() !== before, 3000, 100);
+}
+
 async function bagCounts() {                     // инвентарь «Все», все страницы: itemId → количество
   await env.waitX(() => env.$q('#char-bag-list'), 8000, 200);
   const all = env.$q('[data-inv-all-items]');
   if (all && all.getAttribute('aria-selected') !== 'true') { env.fire(all); await env.sleep(env.rnd(400, 600)); }
-  const pager = () => [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')];
-  for (let i = 0; i < 30 && pager()[0] && !pager()[0].disabled; i++) { env.fire(pager()[0]); await env.sleep(env.rnd(200, 350)); }
+  const sig = () => [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|');
+  const turn = next => pageTurn('#char-bag-pager', '#char-bag-pager .l2-char-bag-pager__btn', next, sig);
+  for (let i = 0; i < 30 && await turn(false); i++) {}
   const cnt = {};
   await env.itemsDb();                               // v5.2: имя по itemId, если игра показала «#1061» вместо названия
   const bagNm = (r, j) => { const t = (r.querySelector('.l2-char-bag-name')?.textContent || '').replace(/\s*×\s*[\d\s]+$/, '').trim();
@@ -111,11 +123,7 @@ async function bagCounts() {                     // инвентарь «Все�
       if (j.itemId) cnt[j.itemId] = (cnt[j.itemId] || 0) + q;
       if (nm.length > 2) cnt[nm] = (cnt[nm] || 0) + q;
     }
-    const next = pager()[1];
-    if (!next || next.disabled || !env.shown(next)) break;
-    const sig = [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|');
-    env.fire(next);
-    if (!(await env.waitX(() => [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|') !== sig, 3000, 100))) break;
+    if (!await turn(true)) break;
   }
   try { await env.noteBag(cnt); } catch (e) {}
   return cnt;
@@ -136,7 +144,6 @@ const shopShare = (key, rest) => key in SHOP_ORDER ? (rest.some(k => k in SHOP_O
 const packQty = (cap, want) => { if (cap >= want || cap < 10) return cap; const st = cap >= 1000 ? 1000 : cap >= 100 ? 100 : 10; return Math.floor(cap / st) * st; };
 
 async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
-  const pager = () => [...document.querySelectorAll('.l2-gm-shop-pager-btn')];
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
   // искались там — «нет в магазине (видел: Благословенний заряд духу…)» (лог 09.10 23:38, 23:48). Ищем в нужном подразделе:
   // банки — «Банки», заряды — «Заряды», иное — «Все»
@@ -163,9 +170,10 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
   const sub = SUB[it.key] || it.sub || (/заряд|shot/i.test(String(it.name)) ? 'charges' : /зілл|зель|potion|банк/i.test(String(it.name)) ? 'vials' : 'all');
   if ((await pick(`[data-consumablesub="${sub}"]`)) === false) await pick('[data-consumablesub="all"]');
   // v4.22: строки появляются раньше названий — ждём, пока имена заполнятся (иначе «нет в магазине» через 1 мс)
-  await env.waitX(() => [...document.querySelectorAll('.l2-gm-shop-name')].some(e => e.textContent.trim().length > 2) && pager().length, 8000, 150);
+  await env.waitX(namesReady, 8000, 150);
   await env.sleep(env.rnd(300, 500));
-  for (let i = 0; i < 15 && pager()[0] && !pager()[0].disabled; i++) { env.fire(pager()[0]); await env.sleep(env.rnd(300, 450)); }
+  const turn = next => pageTurn('.l2-drops-grade', '.l2-gm-shop-pager-btn', next, sig);
+  for (let i = 0; i < 15 && await turn(false); i++) {}
   for (let page = 0; page < 15; page++) {
     const row = [...document.querySelectorAll('.l2-gm-shop-row')].find(r => it.name.test((r.querySelector('.l2-gm-shop-name')?.textContent || '').trim()));
     if (row) {
@@ -210,11 +218,7 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
       }
       return { ok: !!ok && shopAdena() < a0, qty: cap, unit, spent: a0 - shopAdena(), msg: m, key: nb && nb.t >= a0T ? nb.key : '' };
     }
-    const next = pager()[1];
-    if (!next || next.disabled) break;
-    const sig = [...document.querySelectorAll('.l2-gm-shop-name')].map(e => e.textContent).join('|');
-    env.fire(next);
-    if (!(await env.waitX(() => [...document.querySelectorAll('.l2-gm-shop-name')].map(e => e.textContent).join('|') !== sig, 3000, 100))) break;
+    if (!await turn(true)) break;
   }
   const seen = [...document.querySelectorAll('.l2-gm-shop-name')].map(e => e.textContent.trim()).filter(Boolean);
   return { ok: false, why: `нет в магазине (видел: ${seen.slice(0, 6).join(', ') || 'пусто'})` };

@@ -131,13 +131,13 @@ function smithNote(items) {                      // ответ /upgrades: уро
       m: (i.cost.materials || []).map(x => [+x.itemId, String(x.nameUk || ''), +x.required || 0]), t: Date.now() };
   }
   // 9.2.5 (лог 12.10 11:56–12:00): кузнец сам пишет, хватает ли всего (canAfford, owned у материалов) — это точнее сумки бота
-  const g = items.find(i => +i.itemId === +env.cfg.mmGoalItem && !i.max);
+  const g = upItem(items, +env.cfg.mmGoalItem);
   env.setRt({ mmCost: cost, mmGear: gear, mmGearT: Date.now(), ...(g ? { mmSmithOk: { id: +g.itemId, lvl: +g.level || 0, ok: !!g.canAfford, t: Date.now() } } : {}) });
   return gear.length;
 }
 const costOf = (id, lvl) => env.rt.mmCost?.[`${id}:${lvl}`] || MM_KNOWN[`${id}:${lvl}`] || null;
 function gearLvl(id) {                            // уровень вещи: из списка кузнеца (точный) или из экипировки
-  const g = (env.rt.mmGear || []).find(x => x.id === id);
+  const gs = (env.rt.mmGear || []).filter(x => x.id === id), g = gs.find(x => x.eq) || gs[0];
   if (g) return g.lvl;
   const e = Object.values(env.rt.mmEq || {}).find(x => x[0] === id);
   return e ? e[1] : 0;
@@ -483,7 +483,9 @@ const upMiss = i => [...(+i.cost?.adenaOwned < +i.cost?.adena ? [`адены ${f
   ...(i.cost?.materials || []).filter(m => m.enough === false || +m.owned < +m.required).map(m => `${m.nameUk} ${(+m.required || 0) - (+m.owned || 0)}`)].join(', ');
 async function upgrade(J, items) {
   smithNote(items);
-  const id = +env.cfg.mmGoalItem || 0, to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), it = upItem(items, id);
+  const id = +env.cfg.mmGoalItem || 0, to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
+  const chosen = list => J.target ? (Array.isArray(list) ? list : []).find(i => +i.itemId === id && i.targetInstanceId === J.target) : upItem(list, id);
+  const it = chosen(items);
   if (!id || (env.cfg.mmUpgrade === false && !J.cmd)) return finish(J, false, 'улучшение выключено');   // 9.2.5: кнопка «улучшить сейчас» — команда игрока
   if (!it) return finish(J, false, 'вещи-цели нет у кузнеца в списке (не в сумке и не надета?)');
   const L = +it.level || 0, nm = String(it.nameUk || `#${id}`);
@@ -492,19 +494,27 @@ async function upgrade(J, items) {
   if (J.clicked != null && J.clicked === L && J.tries >= 2) return finish(J, false, `${nm}: после нажатия уровень не вырос (Lv.${L}) ${(env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim().slice(0, 80)}`);
   if (!it.canAfford) return finish(J, false, `${nm} Lv.${L} → ${L + 1}: не хватает ${upMiss(it) || 'чего-то (игра пишет «не хватает»)'}`);
   if (location.pathname !== PAGE.smith) { env.setStatus(`Маммон: улучшаю ${nm} у кузнеца`); location.href = PAGE.smith; await env.sleep(4000); return; }
-  const card = await env.waitX(() => [...document.querySelectorAll('.l2-mammon-upgrade-card')].find(c =>
-    (c.querySelector('.l2-mammon-upgrade-card__name')?.textContent || '').trim() === nm && new RegExp(`Lv\\.?\\s*${L}\\b`).test(c.querySelector('.l2-mammon-upgrade-card__level')?.textContent || '')) || null, 10000, 200);
+  // 10.0.13 (аудит 14.10): одинаковые имя и уровень не определяют экземпляр. Страница связывает кнопку с targetInstanceId,
+  // а в карточке показывает место (надето/сумка). Неоднозначную карточку не нажимаем: иначе CoL уходили на дубликат из сумки.
+  const card = await env.waitX(() => {
+    const cards = [...document.querySelectorAll('.l2-mammon-upgrade-card')].filter(c =>
+      (c.querySelector('.l2-mammon-upgrade-card__name')?.textContent || '').trim() === nm && new RegExp(`Lv\\.?\\s*${L}\\b`).test(c.querySelector('.l2-mammon-upgrade-card__level')?.textContent || ''));
+    const place = String(it.locationLabelUk || '').trim(), meta = c => (c.querySelector('.l2-mammon-upgrade-card__meta')?.textContent || '').split('·').pop().trim();
+    const exact = place ? cards.filter(c => meta(c) === place) : [];
+    return exact.length === 1 ? exact[0] : cards.length === 1 && (!place || !meta(cards[0])) ? cards[0] : null;
+  }, 10000, 200);
   const btn = card?.querySelector('.l2-mammon-upgrade-card__btn');
   if (!btn) return finish(J, false, `${nm} Lv.${L}: карточки улучшения на странице кузнеца нет`);
   if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
   const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
+  J = { ...J, target: it.targetInstanceId || J.target };
   await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
   env.rec('B', 'Маммон', `улучшение: жму «${(btn.textContent || '').trim()}» — ${nm}, ${fmtA(a)} адены + ${col} Coin of Luck + ${(it.cost?.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`);
   try { document.documentElement.dataset.l2botConfirm = String(Date.now()); } catch (e) {}   // окно «точно?» игры — «да» (hook.js, 5 с)
   env.fire(btn);
   await env.waitX(() => (env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim() || null, 6000, 200);
   await env.sleep(500);
-  const r2 = await getJson('/game/mammon/blacksmith/upgrades'), it2 = r2.ok ? upItem(r2.j?.items, id) : null;
+  const r2 = await getJson('/game/mammon/blacksmith/upgrades'), it2 = r2.ok ? chosen(r2.j?.items) : null;
   if (it2 && +it2.level > L) {
     smithNote(r2.j?.items);
     // 10.0 (аудит): цель выше и на следующий уровень игра пишет «хватает» — улучшаем в этот же заход (раньше: домой и снова телепорт за 500 000)
@@ -592,7 +602,7 @@ function mailList(list) {
     const old = new Set((env.rt.mmMail?.unc || []).map(a => a.a)), fresh = unc.filter(a => !old.has(a.a));
     if (fresh.length) env.rec('B', 'Маммон', `почта: пришло ${fresh.map(a => `${a.n} ×${fmtA(a.q)} от ${a.s || '?'}`).join(', ')}`);
   }
-  patch.mmMail = { t: Date.now(), unc: unc.slice(0, 20) };
+  patch.mmMail = { t: Date.now(), unc };
   // учёт возврата: письма от крафтера после отправки, уже забранные в сумку (claimedAt) — кто бы ни нажал «Забрати», бот или игрок
   if (C?.at && to) {
     const seen = new Set(C.seen || []), at = { ...C.at }, got = [], odd = [], want = new Set();
@@ -602,18 +612,22 @@ function mailList(list) {
       if (!a || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
       const k = String(a.attachmentId), t = Date.parse(a.createdAt) || Date.now();
       if (seen.has(k) || t < (C.t0 || 0) - 60000) continue;
-      const before = JSON.stringify(at);
-      seen.add(k); unsend(at, +a.itemId, +a.qty || 0); got.push(`${a.name || '#' + a.itemId} ×${fmtA(a.qty)}`);
+      const before = JSON.stringify(at), expected = !want.size || want.has(+a.itemId) || at[a.itemId] > 0;
+      seen.add(k);
+      // 10.0.13 (аудит 14.10): сначала проверяем возврат. Чужой рецепт мог списать общее сырьё (Steel Mold съедал Iron Ore
+      // из партии на Durable Metal Plate), хотя следующая строка журнала обещала оставить всё сырьё у крафтера.
+      if (expected) unsend(at, +a.itemId, +a.qty || 0);
+      got.push(`${a.name || '#' + a.itemId} ×${fmtA(a.qty)}`);
       // 10.0.2 (лог 12.10 17:47: отправили сырьё на Durable Metal Plate, Skye вернул Steel Mold ×19 — рецепты бота совпадают с игрой,
       // /game/craft/materials): вернулось то, что из отправленного не делается, — «у крафтера» не списываем и пишем, чего ждали
-      if (want.size ? !want.has(+a.itemId) && !(JSON.parse(before)[a.itemId] > 0) : JSON.stringify(at) === before) odd.push(`${a.name || itNm(a.itemId)} ×${fmtA(a.qty)}`);
+      if (!expected || (!want.size && JSON.stringify(at) === before)) odd.push(`${a.name || itNm(a.itemId)} ×${fmtA(a.qty)}`);
     }
     if (got.length) {
       for (const k of Object.keys(at)) if (!(at[k] > 0)) delete at[k];
       const left = Object.keys(at).length;
       if (odd.length) env.rec('B', 'Маммон', `${C.to || crafter()} вернул не то, что нужно: ${odd.join(', ')} — из отправленного это не делается${C.want?.length ? `; ждём: ${C.want.map(([n, q]) => `${n} ×${fmtA(q)}`).join(', ')}` : ''}. Сырьё считаю ещё у крафтера — напиши ему или нажми «↺ Забыть, что у крафтера»`);
       env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${itNm(id)} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
-      patch.mmCraft = left ? { ...C, at, seen: [...seen].slice(-200), gotT: Date.now() } : null;
+      patch.mmCraft = left ? { ...C, at, seen: [...seen], gotT: Date.now() } : null;   // вся активная партия: повторный опрос страниц не списывает старые возвраты снова
       goalT = 0;
     }
   }
@@ -622,8 +636,15 @@ function mailList(list) {
 }
 async function mailPoll() {
   mailT = Date.now(); ssSet('l2bot-mmMailT', mailT);
-  const { ok, j } = await getJson('/game/item-transfer/received?page=1');
-  return ok ? mailList(j?.attachments) : null;
+  // 10.0.13: API возвращает историю вместе с уже забранными вещами; новые/ожидаемые вложения могут быть дальше первой страницы.
+  const all = [];
+  for (let pg = 1, total = 1; pg <= Math.min(total, 30); pg++) {
+    const { ok, j } = await getJson(`/game/item-transfer/received?page=${pg}`);
+    if (!ok || !Array.isArray(j?.attachments)) return null;
+    all.push(...j.attachments); total = Math.max(1, +j.totalPages || 1);
+    if (pg < Math.min(total, 30)) await env.sleep(350);
+  }
+  return mailList(all);
 }
 function mailSeen() { mailT = 0; ssSet('l2bot-mmMailT', 0); }   // игрок/бот забрал вложение — перечитать почту на следующем круге
 // строки «Передачі предмета» (GET /game/item-transfer/candidates — по 20 на страницу): itemKey нужен, чтобы найти строку на странице
@@ -789,6 +810,15 @@ async function claimStep(J) {
   const pane = '#mail-tab-items';
   const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
   const got = J.got || [];
+  if (b === 'none' && got.length < CLAIM_MAX) {
+    const label = () => document.querySelector(`${pane} .l2-mail-page-label`)?.textContent || '';
+    const pages = [...document.querySelectorAll(`${pane} .l2-mail-page-btn`)], next = pages[pages.length - 1], before = label();
+    if (pages.length >= 2 && next && !next.disabled) {
+      env.fire(next);
+      if (await env.waitX(() => label() !== before, 4000, 100)) return;
+      await mailPoll(); return finish(J, false, 'следующая страница почты не открылась');
+    }
+  }
   if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
   // 10.0 (лог 12.10 17:37 «✓ забрал: ? от Skye»): игра красит имя предмета (L2.decorateItemNameEl) и заменяет его класс
   // .l2-mail-item-transfer__name на l2-item-name → имя и число берём из списка почты по attachmentId, иначе из строки «Ви отримали»
@@ -800,6 +830,10 @@ async function claimStep(J) {
   env.fire(b);
   const msg = await env.waitX(() => shownTxt(msgEl()) || null, 6000, 200);
   if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
+  // 10.0.13: ошибка ревизии/сети — не успешное получение. Без сообщения перепроверяем вложение по полному списку сервера.
+  let ok = /предмет\s+(?:у\s+сумці|в\s+сумке|в\s+инвентаре)|item.*(?:bag|inventory)/i.test(msg || '');
+  if (!ok && !msg && aid) { const left = await mailPoll(); ok = !!left && !left.some(a => a.a === aid); }
+  if (!ok) return finish(J, false, `не забрал ${what}: ${String(msg || 'нет подтверждения игры').slice(0, 80)}`);
   await env.setRt({ mmJob: { ...J, got: [...got, `${what}${from ? ' от ' + from : ''}`] } });
   await env.sleep(600);
 }

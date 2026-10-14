@@ -268,6 +268,18 @@ async function equippedWeapon() {                // надетое: иконка
   return w || { id: 0, en: '', wt: '—', g: (name.match(/\b([DCBAS])-grade/i)?.[1] || 'NG').toUpperCase(), pa: null, ma: null, where: 'надето', name, icon: file };
 }
 
+// 10.0.13 (аудит 14.10): char.js теперь рисует номера и переходы между группами по пять вместо двух стрелок.
+async function bagPageTurn(next) {
+  const buttons = [...document.querySelectorAll('#char-bag-pager .l2-compact-pages__btn')], current = () => +(env.$q('#char-bag-pager [aria-current="page"]')?.textContent || 0);
+  const p = current(), old = buttons.length ? [] : [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')];
+  const b = buttons.length ? (next ? buttons.find(x => x.textContent.trim() === String(p + 1)) || buttons.find(x => x.textContent.trim() === '>>')
+    : p > 1 ? buttons.find(x => x.textContent.trim() === '1') || buttons.find(x => x.textContent.trim() === '<<') : null) : old[next ? 1 : 0];
+  if (!b || b.disabled || !env.shown(b)) return false;
+  const sig = () => [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|'), before = sig();
+  env.fire(b);
+  return !!await env.waitX(() => (p && current() !== p) || sig() !== before, 3000, 100);
+}
+
 async function scanInventoryWeapons() {
   await env.itemsDb();
   await env.waitX(() => env.$q('#char-bag-list') || env.$q('img[data-l2-slot="weapon"]'), 8000, 200);
@@ -278,27 +290,21 @@ async function scanInventoryWeapons() {
   if (cat && cat.getAttribute('aria-selected') !== 'true') { env.fire(cat); await env.sleep(env.rnd(400, 600)); }
   const gAll = env.$q('[data-inv-grade="all"]');
   if (gAll && gAll.getAttribute('aria-selected') !== 'true') { env.fire(gAll); await env.sleep(env.rnd(300, 500)); }
-  const pager = () => [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')];
-  for (let i = 0; i < 6 && pager()[0] && !pager()[0].disabled; i++) { env.fire(pager()[0]); await env.sleep(env.rnd(250, 400)); }   // на первую страницу
+  for (let i = 0; i < 30 && await bagPageTurn(false); i++) {}   // на первую страницу
   // 7.1.17: строки сумки дорисовываются после переключения вкладки. Лог 10.10 00:50: прочитали сумку раньше — «найдено 1: Voodoo Doll»,
   // а Staff of Life (D, M.Atk 72) лежал в сумке и бот его не увидел. Ждём, пока число строк перестанет меняться (до 3 с)
   { let n = -1, same = 0; const t0 = Date.now();
     while (Date.now() - t0 < 3000 && same < 3) { const k = document.querySelectorAll('.l2-char-bag-row[data-item-json]').length; same = k === n && k > 0 ? same + 1 : 0; n = k; await env.sleep(150); } }
   for (let page = 0; page < 30; page++) {
     all.push(...await readWeaponsPage());
-    const next = pager()[1];
-    if (!next || next.disabled || !env.shown(next)) break;
-    const sig = [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|');
-    env.fire(next);
-    if (!(await env.waitX(() => [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].map(r => r.dataset.itemJson).join('|') !== sig, 3000, 100))) break;
+    if (!await bagPageTurn(true)) break;
   }
   const seen = new Set(), list = all.filter(w => { const k = w.where + '|' + (w.inst || w.name) + '|' + w.ench; if (seen.has(k)) return false; seen.add(k); return true; });
   return list;
 }
 
 async function wearFromBag(w) {
-  const pager = () => [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')];
-  for (let i = 0; i < 30 && pager()[0] && !pager()[0].disabled; i++) { env.fire(pager()[0]); await env.sleep(env.rnd(250, 400)); }
+  for (let i = 0; i < 30 && await bagPageTurn(false); i++) {}
   for (let page = 0; page < 30; page++) {
     const row = [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].find(r => { const j = env.itemJson(r); return +j.itemId === w.id && (!w.inst || j.targetInstanceId === w.inst); });
     const btn = row?.querySelector('.l2-char-bag-equip--wear');
@@ -309,9 +315,7 @@ async function wearFromBag(w) {
       env.rec('B', 'оружие', `надето из сумки «${w.name}» (${w.wt}, ${w.g})${ok ? '' : ' — без подтверждения игры'}`);
       return !!ok;
     }
-    const next = pager()[1];
-    if (!next || next.disabled) break;
-    env.fire(next); await env.sleep(env.rnd(350, 550));
+    if (!await bagPageTurn(true)) break;
   }
   return false;
 }

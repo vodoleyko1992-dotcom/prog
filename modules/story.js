@@ -28,13 +28,17 @@ function norm(kind, q) {
   if (!q || typeof q !== 'object') return null;
   if (kind === 'noblesse') {
     const tg = (Array.isArray(q.targets) ? q.targets : []).filter(t => t?.name).map(t => ({ name: String(t.name), lvl: +t.level || 0, have: +t.have || 0, need: +t.need || 0, tp: t.teleportId || '' }));
+    // 14.10 (полный аудит, noblesse-quest.js): canAdvance включает близость NPC. Готовую часть надо сначала отвезти к нему;
+    // на основном/слабом сабе не едем. Пустой список нормален только у финальной беседы (часть 4).
+    const readyAway = +q.part > 0 && !q.completed && q.subclassLevel != null && +q.subclassLevel >= (+q.minLevel || 50)
+      && (tg.length > 0 || +q.part === 4) && tg.every(t => t.need > 0 && t.have >= t.need);
     return { part: +q.part || 0, of: +q.totalParts || 4, active: !!q.active || +q.part > 0, completed: !!q.completed, sub: q.subclassLevel ?? null, min: +q.minLevel || 0,
-      targets: tg, ready: !!q.actions?.canAdvance, canAccept: !!q.actions?.canAccept, atNpc: !!q.atNpc, npc: q.npc?.name || '', npcTp: q.npc?.teleportId || '' };
+      targets: tg, ready: !!q.actions?.canAdvance || readyAway, canAccept: !!q.actions?.canAccept, atNpc: !!q.atNpc, npc: q.npc?.name || '', npcTp: q.npc?.teleportId || '' };
   }
   const bosses = (Array.isArray(q.bosses) ? q.bosses : []).filter(b => b?.spawnId).map(b => ({ id: String(b.spawnId), name: String(b.name || b.spawnId), lvl: +b.level || 0, done: !!b.done }));
   const st = String(q.stage || ''), ret = st === 'return_to_ladd';
   return { stage: st, active: !!st && st !== 'not_started', completed: !!q.completed || st === 'completed', min: +q.minLevel || 0, bosses,
-    ready: !!q.actions?.canComplete, canAccept: !!q.actions?.canAccept, atNpc: ret ? !!q.location?.atLadd : !!q.location?.atReorin,
+    ready: !!q.actions?.canComplete || ret, canAccept: !!q.actions?.canAccept, atNpc: ret ? !!q.location?.atLadd : !!q.location?.atReorin,
     npc: ret ? q.npc?.ladd?.name || 'Magister Ladd' : q.npc?.reorin?.name || 'Maestro Reorin', npcTp: (ret ? q.npc?.ladd?.teleportId : q.npc?.reorin?.teleportId) || '' };
 }
 const sigOf = s => JSON.stringify([s.part, s.stage, s.completed, s.ready, s.canAccept, s.atNpc, (s.targets || []).map(t => `${t.name}:${t.have}/${t.need}`), (s.bosses || []).map(b => b.id + (b.done ? '+' : ''))]);
@@ -131,7 +135,7 @@ async function finish(J, ok, why) {
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'квест сдан: обратно на точку' }, zoneGoT: 0 } : {};
   await env.setRt({ storyJob: null, storyLog: log, ...back });
   storyTick(true).catch(() => {});
-  if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
+  if (!back.zoneGo && env.on !== false) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function tpPrice(tp) {                      // цена телепорта к точке NPC (с учётом VIP) или null
   const r = await getJson('/game/teleport/locations');
@@ -139,9 +143,11 @@ async function tpPrice(tp) {                      // цена телепорта
   return x ? +(x.vipFreeApplied ? 0 : x.adenaCost ?? x.baseAdenaCost ?? NaN) : null;
 }
 async function step(J) {
+  if (env.on === false) return;
   const P = Q[J.kind];
   if (location.pathname !== P.page) { env.setStatus(`Квест ${P.name}: иду сдавать часть`); location.href = P.page; await env.sleep(4000); return; }
   const box = await env.waitX(() => { const a = env.$q(`#${P.act}-quest-actions`); return a && a.children.length ? a : null; }, 10000, 200);
+  if (env.on === false) return;              // 14.10: остановили бота, пока страница загружала кнопки.
   const err = () => (env.$q(`#${P.act}-quest-err`)?.textContent || '').trim();
   if (!box) return finish(J, false, err() || 'кнопок квеста нет (страница не загрузилась или часть уже сдана)');
   const btn = a => box.querySelector(`[data-${P.act}-action="${a}"]`);
@@ -157,9 +163,11 @@ async function step(J) {
   if (J.tpT) return finish(J, false, 'после телепорта NPC всё ещё не рядом');
   const id = tp.dataset[`${P.act}Target`] || '';
   const price = await tpPrice(id), max = env.cfg.storyTpMax ?? 100000;
+  if (env.on === false) return;              // цена пришла после «Стоп» — платный переход уже не нужен.
   if (price == null || !isFinite(price)) return finish(J, false, `цена телепорта к ${id || 'NPC'} неизвестна — не лечу вслепую`);
   if (price > max) return finish(J, false, `телепорт к NPC ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
   await env.setRt({ storyJob: { ...J, tpT: Date.now() } });
+  if (env.on === false) return;
   env.rec('B', 'квест', `${P.name}: телепорт к NPC (${id}) за ${price ? fmtA(price) + ' адены' : 'бесплатно'} — сдать часть`);
   env.fire(tp);
   await env.waitX(() => location.pathname !== P.page || err() || null, 8000, 200);
@@ -167,6 +175,7 @@ async function step(J) {
 }
 // шаг в главном цикле. true — занят квестом (цикл идёт на следующий круг)
 async function storyStep() {
+  if (env.on === false) return false;
   const J = env.rt.storyJob;
   if (J) {
     if (env.isBattle()) return false;

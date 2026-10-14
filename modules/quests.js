@@ -190,7 +190,7 @@ async function goCampaign() {
     if (npcCard && n <= 3) {
       env.setStatus('Кампания: открываю главу у NPC');
       env.rec('B', 'кампания', `на странице главы целей нет — нажимаю карточку NPC «${(npcCard.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60)}» (${n}/3)`);
-      await env.pause(); env.fire(npcCard);
+      await env.pause(); if (!env.on) return; env.fire(npcCard);
       if (await env.waitFor(env.isCampaign, 5000, 200)) { await env.setRt({ campOpenTry: 0 }); return campaign(); }
       return;
     }
@@ -223,6 +223,7 @@ async function questsStep() {
   await env.setRt({ questList: list, questListT: Date.now() });
   env.rec('B', 'кампания', `«Мои квесты» → ${link.textContent.trim()}${list[0]?.lines.length ? ' · ' + list[0].lines.join(' · ') : ''}`);
   const href = location.href;
+  if (!env.on) return;
   env.fire(link);
   if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000))) location.href = link.getAttribute('href');
 }
@@ -248,12 +249,13 @@ const actionBtn = () => [...document.querySelectorAll('#starter-story-actions bu
 // 10.0.10: кнопка действия главы («Взять квест», «Поговорить»…): жмём, ждём цели / ошибку / смену текста; ошибка «не у NPC» →
 // кнопка телепорта к точке главы и повтор на следующем проходе. Общий код для goCampaign и campaign
 async function pressAction(actBtn) {
+  if (!env.on) return null;
   const lbl = (actBtn.textContent || '').trim().slice(0, 40), tries = (env.rt.campActTry || 0) + 1;
   await env.setRt({ campActTry: tries });
   env.setStatus(`Кампания: «${lbl}»`);
   env.rec('B', 'кампания', `глава ждёт действия — жму «${lbl}» (${actBtn.dataset.action}, ${tries}/4)`);
   const before = (document.querySelector('[class*="quest-body"]')?.textContent || '').length;
-  await env.pause(); env.fire(actBtn);
+  await env.pause(); if (!env.on) return null; env.fire(actBtn);
   const res = await env.waitFor(() => campaignState().targets.some(t => !t.ok) || env.shown(env.$q('[data-action="complete-chapter"]')) ? 'ok'
     : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })()
     || ((document.querySelector('[class*="quest-body"]')?.textContent || '').length !== before ? 'changed' : null), 6000, 200);
@@ -263,7 +265,7 @@ async function pressAction(actBtn) {
     const tpb = env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]')
       || [...document.querySelectorAll('[data-quest-teleport-id], [data-quest-transport-id]')].find(env.shown);
     env.rec('B', 'кампания', `«${lbl}»: ${err}${tpb ? ' → телепорт к точке главы' : ''}`);
-    if (tpb) { await env.pause(); env.fire(tpb); await env.sleep(env.rnd(1500, 2500)); await env.setRt({ lastTeleport: '' }); if (env.on && !isCampaignPage() && env.rt.campaignUrl) { location.href = env.rt.campaignUrl; await env.sleep(4000); } }
+    if (tpb) { await env.pause(); if (!env.on) return null; env.fire(tpb); await env.sleep(env.rnd(1500, 2500)); await env.setRt({ lastTeleport: '' }); if (env.on && !isCampaignPage() && env.rt.campaignUrl) { location.href = env.rt.campaignUrl; await env.sleep(4000); } }
   }
   return res;
 }
@@ -311,16 +313,41 @@ async function campaign() {
     if (!env.on) return;
   }
   env.setStatus('Кампания: читаю главу');
-  await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources, #starter-story-actions button[data-action]'), 10000, 300);
+  await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources, #starter-story-actions button[data-action], .l2-starter-story-location [data-quest-teleport-id]'), 10000, 300);
   if (!env.on) return;
   let st = campaignState();
+  // 14.10 (полный аудит): «Проверить кампанию» при выключенной автоматике только читает; guard — до accept/перехода к NPC.
+  if (!campEnabled()) {
+    await env.setRt({ campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, campOnce: false, sinceCamp: 0,
+                  campaignUrl: location.pathname + location.search });
+    env.rec('B', 'кампания', `разовая проверка: ${st.title || '?'} · ` + st.targets.map(t => `${t.name} ${t.done}/${t.total}${t.ok ? ' ✓' : ''}`).join(' · '));
+    env.setStatus(`Кампания проверена: ${st.title || '—'}${env.shown(st.complete) ? ' · можно завершить главу' : ''}`);
+    return env.goOutskirts();
+  }
   // 10.0.10 (лог 13.10 18:17:15): страница «Путь новичка» до принятия — целей нет, только «Взять квест» (#starter-story-actions
   // button[data-action=accept]); между этапами — «Поговорить» и т.п. Раньше такая страница считалась «главой без целей» и кампания
   // замирала на 10 мин (кнопку жал только goCampaign, а сюда ведёт сам адрес страницы). Жмём кнопку сами, до 4 раз
   if (!st.targets.some(t => !t.ok) && !env.shown(st.complete)) {
     const btn = actionBtn();
     if (btn && (env.rt.campActTry || 0) < 4) { await pressAction(btn); return; }
-    if (btn) { env.rec('B', 'кампания', 'кнопка действия главы 4 раза не помогла — фармлю, проверю через 10 мин'); await env.setRt({ campActTry: 0, campaignDue: false, campSkipUntil: Date.now() + 10 * 60000 }); return env.goOutskirts(); }
+    // 14.10: starter-story-quest.js вне NPC не рисует кнопку действия. Встреча/возврат — только location-телепорт, без targets.
+    // Отсутствие такой кнопки раньше считалось пустой главой и оставляло квест после hunt_1 навсегда. Четыре отказа — пауза.
+    const saga = env.rt.storySaga, npcStage = /^(not_started|meet_scout|return_scout|return_home)$/.test(saga?.stage || '');
+    const tp = !btn && /\/starter-story-quest\.html$/i.test(location.pathname) && npcStage && !saga?.completed
+      && (env.heroLvl() || saga?.lvl || 0) >= (saga?.minLevel || 0)
+      ? env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]') : null;
+    if (env.shown(tp) && !tp.disabled && (env.rt.campActTry || 0) < 4) {
+      const n = (env.rt.campActTry || 0) + 1;
+      await env.setRt({ campActTry: n, campEmptyPage: 0, campaignUrl: location.pathname + location.search });
+      env.setStatus('Кампания: телепорт к NPC текущего этапа');
+      env.rec('B', 'кампания', `этап ${saga.stage}: к NPC (${n}/4)`);
+      await env.pause(); if (!env.on) return; env.fire(tp);
+      const res = await env.waitFor(() => actionBtn() ? 'ready' : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })(), 8000, 200);
+      if (res === 'ready') await env.setRt({ campActTry: 0, lastTeleport: '' });
+      if (res === 'err') env.rec('B', 'кампания', `телепорт к NPC: ${env.$q('[id$="-err"]').textContent.trim().slice(0, 100)}`);
+      return;
+    }
+    if (btn || env.shown(tp)) { env.rec('B', 'кампания', 'кнопка действия главы 4 раза не помогла — фармлю, проверю через 10 мин'); await env.setRt({ campActTry: 0, campaignDue: false, campSkipUntil: Date.now() + 10 * 60000 }); return env.goOutskirts(); }
   }
   if (env.rt.campOpenTry || env.rt.campActTry) env.setRt({ campOpenTry: 0, campActTry: 0 });
   if (!st.targets.length && !env.shown(st.complete)) {
@@ -331,17 +358,11 @@ async function campaign() {
     return env.goOutskirts();
   }
   if (env.rt.campEmptyPage) await env.setRt({ campEmptyPage: 0, campSkipUntil: 0 });
-  if (!campEnabled()) {                              // разовая проверка из меню: только прочитать и вернуться
-    await env.setRt({ campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, campOnce: false, sinceCamp: 0,
-                  campaignUrl: location.pathname + location.search });
-    env.rec('B', 'кампания', `разовая проверка: ${st.title || '?'} · ` + st.targets.map(t => `${t.name} ${t.done}/${t.total}${t.ok ? ' ✓' : ''}`).join(' · '));
-    env.setStatus(`Кампания проверена: ${st.title || '—'}${env.shown(st.complete) ? ' · можно завершить главу' : ''}`);
-    return env.goOutskirts();
-  }
   if (env.shown(st.complete)) {                      // все цели выполнены → «Завершить главу»
     const was = st.title;
     env.setStatus(`Кампания: завершаю «${was}»`);
     await env.pause();
+    if (!env.on) return;
     env.fire(st.complete);
     let ok = await env.waitFor(() => campaignState().title !== was, 8000, 300);
     if (!ok && env.on) {                              // «вернись к указанному NPC» — телепорт к NPC главы и повтор
@@ -354,7 +375,7 @@ async function campaign() {
         await env.waitFor(() => env.shown(env.$q('[data-action="complete-chapter"]')), 2500, 50);   // телепорт мгновенный — ждём только кнопку
         await env.setRt({ lastTeleport: '' });
         const btn = env.$q('[data-action="complete-chapter"]');
-        if (env.shown(btn)) { env.fire(btn); ok = await env.waitFor(() => campaignState().title !== was, 8000, 300); }
+        if (env.on && env.shown(btn)) { env.fire(btn); ok = await env.waitFor(() => campaignState().title !== was, 8000, 300); }
       }
     }
     env.rec('B', 'кампания', ok ? `глава завершена: ${was} → ${campaignState().title}` : `не удалось завершить «${was}»`);
@@ -379,6 +400,7 @@ async function campaign() {
       await env.setRt({ npcTried: Date.now(), campaignDue: true, lastTeleport: '' });
       env.rec('B', 'кампания', `цели выполнены, кнопки сдачи нет → «${npc.textContent.trim()}»`);
       await env.pause();
+      if (!env.on) return;
       env.fire(npc);
       await env.sleep(env.rnd(150, 300));
       if (env.on) { location.href = env.rt.campaignUrl || location.pathname; await env.sleep(4000); }
@@ -394,6 +416,7 @@ async function campaign() {
     const btn = all.find(b => !/npc/i.test(b.textContent)) || all[0];
     env.setStatus(`Кампания: телепорт → ${open.find(t => t.tp === tp)?.loc || tp}`);
     await env.pause();
+    if (!env.on) return;
     const href = location.href;
     env.fire(btn);
     // телепорт мгновенный и обычно без сообщения: 150 мс хватает, дальше сразу в Окрестности
