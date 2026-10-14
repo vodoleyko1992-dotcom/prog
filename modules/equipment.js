@@ -4,6 +4,52 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.equipment = function create_equipment(env) {
+// 14.10: клановые/новые предметы отсутствуют в историческом items-il.json.
+// Читаем только публичные поля каталога игры; экземпляры и бонусы остаются из inventory.
+const WEAPON_CATALOG_TTL = 30 * 60 * 1000;
+let weaponCatalogLoading = null;
+const nativeWeaponTypes = { sword:'меч', bigsword:'двуруч. меч', blunt:'дубина', bigblunt:'двуруч. дубина', dagger:'кинжал', bow:'лук', pole:'древковое', fist:'кастеты', dual:'дуалы' };
+const finiteStat = n => typeof n === 'number' && Number.isFinite(n) && n >= 0 ? n : null;
+function weaponCatalogFresh() {
+  const c = env.rt.weaponCatalog, age = Date.now() - (+c?.t || 0);
+  return c?.items && age >= 0 && age < WEAPON_CATALOG_TTL ? c : null;
+}
+function weaponItem(id) {
+  const c = weaponCatalogFresh();
+  return c?.items?.[+id] || env.itemOf(+id);
+}
+async function resolveWeaponItem(id) {
+  id = +id;
+  const known = weaponItem(id);
+  // Свежий полный каталог также подтверждает отсутствие неизвестного расходника.
+  if (known || weaponCatalogFresh() || !id || !env.gameGet) return known || null;
+  if (weaponCatalogLoading) { await weaponCatalogLoading; return weaponItem(id); }
+  const char = env.rt.char;
+  weaponCatalogLoading = (async () => {
+    try {
+      const r = await env.gameGet('/character/catalog-hints');
+      if (!r?.ok || env.rt.char !== char) return;
+      const j = await r.json();
+      if (env.rt.char !== char || !Array.isArray(j?.gearCatalog)) return;
+      const items = {};
+      for (const row of j.gearCatalog) {
+        const iid = +row?.itemId, s = row?.stats, g = String(row?.grade || '').toUpperCase();
+        if (!Number.isInteger(iid) || iid < 1) continue;
+        if (!['rhand','lrhand'].includes(row.slot)) { if (typeof row.slot === 'string' && row.slot) items[iid] = {id:iid,k:'A',slot:row.slot,source:'game-catalog'}; continue; }
+        if (!nativeWeaponTypes[row.weaponType] || !/^(NG|D|C|B|A|S)$/.test(g)) continue;
+        const req = row.requiredLevel ?? j.itemRequiredLevelHints?.[iid] ?? j.equipmentGradeMinCharLevel?.[g];
+        items[iid] = { id:iid, k:'W', n:String(row.nameUk || j.itemNamesUk?.[iid] || j.itemNamesEn?.[iid] || '#' + iid),
+          g, wt:nativeWeaponTypes[row.weaponType], pa:finiteStat(s?.pAtk), ma:finiteStat(s?.mAtk), spd:finiteStat(s?.atkSpd), cr:finiteStat(s?.wpnCrit),
+          two:row.blocksShield === true || row.slot === 'lrhand', requiredLevel:Number.isFinite(req) && req > 0 ? req : null,
+          weaponMode:row.weaponMode === 'magic' || row.weaponMode === 'phys' ? row.weaponMode : null, source:'game-catalog' };
+      }
+      if (env.rt.char !== char) return;
+      await env.setRt({ weaponCatalog:{t:Date.now(),version:String(j.catalogVersion || ''),items} });
+    } catch (_) {} // неизвестное оружие удерживаем, не выдаём отсутствие каталога за NG
+  })();
+  try { await weaponCatalogLoading; return env.rt.char === char ? weaponItem(id) : null; }
+  finally { weaponCatalogLoading = null; }
+}
 function equipBy(str) {                         // только слоты снаряжения
   const alts = env.names(str);
   if (!alts.length) return null;
@@ -180,6 +226,7 @@ function shotsForMageWeapon() {
   const W = env.rt.weapons || [], main = String(env.cfg.nWeaponMain || '').toLowerCase().trim();
   const w = W.find(x => x.where === 'надето') || (main && W.find(x => (x.name || x.en || '').toLowerCase().startsWith(main)));
   if (w) {
+    if (w.weaponMode === 'magic' || w.weaponMode === 'phys') return w.weaponMode === 'magic';
     const pa = +w.pa || 0, ma = +w.ma || 0, wt = String(w.wt || '').toLowerCase();
     if (/лук|кастет|дуал|древков|двуруч\S* меч|арбалет|рапир/.test(wt)) return false;
     if (pa >= 30 && ma && w.g && !/^(NG|—)$/i.test(w.g)) return ma / pa >= (/двуруч/.test(wt) ? 0.6 : 0.7);
@@ -204,25 +251,21 @@ function classWeaponTypes() {
 }
 
 function weaponOf(id, extra = {}) {
-  const it = env.itemOf(+id);
+  const it = weaponItem(+id);
   if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) return null;
-  return { id: +id, en: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: (it.pa || 0) + (extra.pb || 0), ma: typeof it.ma === 'number' ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, ...extra };
+  return { id: +id, en: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: Number.isFinite(it.pa) ? it.pa + (extra.pb || 0) : null, ma: Number.isFinite(it.ma) ? it.ma + (extra.mb || 0) : null, spd: it.spd || 0, two: !!it.two, requiredLevel:it.requiredLevel, weaponMode:it.weaponMode, ...extra };
 }
 
 const GRADE_RANK = { NG: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 function rankWeapons(list) {
   const { types, src } = classWeaponTypes(), lv = env.heroLevel() || env.rt.lvl || 99, mage = types[0] === env.MAGE;
-  const score = w => {
-    const okLv = lv >= (env.GRADE_LV[w.g] ?? 0);
-    const ti = mage ? 0 : types.indexOf(w.wt);
-    const atk = mage ? (Number.isFinite(w.ma) ? w.ma : -1) : (Number.isFinite(w.pa) ? w.pa : -1);
-    // 7.1.30: грейд важнее цифр: у надетого оружия статы иногда не читаются (P.Atk null) — и посох D проигрывал кукле NG
-    const gr = GRADE_RANK[String(w.g || 'NG').toUpperCase()] ?? 0;
-    return (okLv ? 1e6 : 0) + (mage || ti >= 0 ? (10 - Math.max(ti, 0)) * 1e4 : 0) + gr * 2000 + atk + (w.ench || 0) * 5;
-  };
-  const sorted = [...list].sort((a, b) => score(b) - score(a));
   const inClass = w => mage ? true : types.includes(w.wt);
-  const main = sorted.find(w => inClass(w) && lv >= (env.GRADE_LV[w.g] ?? 0)) || null;
+  const canWear = w => lv >= (Number.isFinite(w.requiredLevel) ? w.requiredLevel : env.GRADE_LV[w.g] ?? 0);
+  const atk = w => Number.isFinite(mage ? w.ma : w.pa) ? (mage ? w.ma : w.pa) : -1;
+  // Достоверная атака уже включает заточку. Грейд не заменяет характеристики.
+  const sorted = [...list].sort((a,b) => Number(canWear(b)) - Number(canWear(a)) || Number(inClass(b)) - Number(inClass(a))
+    || atk(b) - atk(a) || (GRADE_RANK[b.g] ?? 0) - (GRADE_RANK[a.g] ?? 0));
+  const main = sorted.find(w => inClass(w) && canWear(w) && atk(w) >= 0 && !w.unknown && !w.enchantUnknown) || null;
   return { types, src, mage, main, inClass, lv };
 }
 
@@ -230,6 +273,7 @@ async function readWeaponsPage() {               // текущая страни�
   const out = [];
   for (const r of document.querySelectorAll('.l2-char-bag-row[data-item-json]')) {
     const j = env.itemJson(r);
+    await resolveWeaponItem(j.itemId);
     const w = weaponOf(j.itemId, { ench: +j.enchant || 0, pb: +j.enchantPAtkBonus || 0, mb: +j.enchantMAtkBonus || 0, where: 'сумка',
       name: env.baseName(r.querySelector('.l2-char-bag-name')?.textContent), inst: j.targetInstanceId || '' });
     if (w) out.push(w);
@@ -246,6 +290,7 @@ async function equippedWeapon() {                // надетое: иконка
   } catch (e) {}
   const sid = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
   if (snapshot && !sid) return null;
+  if (sid) await resolveWeaponItem(sid);
   const stats = w => {
     if (!w) return w;
     const ench = snapshot ? +(slot?.enchant || 0) : modalEnchant;
@@ -256,10 +301,10 @@ async function equippedWeapon() {                // надетое: иконка
       ma: known ? w.ma == null ? null : w.ma + (snapshot ? +mb || 0 : 0) : null };
   };
   const img = env.$q('img[data-l2-slot="weapon"]');
-  if (!img || !/--filled/.test(img.className)) return snapshot ? stats(weaponOf(sid, { where: 'надето', name: env.itemOf(sid)?.n || '' }))
+  if (!img || !/--filled/.test(img.className)) return snapshot ? stats(weaponOf(sid, { where: 'надето', name: weaponItem(sid)?.n || '' }))
     || { id: sid, name: '#' + sid, where: 'надето', g: 'NG', pa: null, ma: null, unknown: true, enchantUnknown: true } : null;
   const src = img.getAttribute('src') || '', file = src.split('/').pop();
-  let it = snapshot ? env.itemOf(sid) : env.itemByIcon(src);
+  let it = snapshot ? weaponItem(sid) : env.itemByIcon(src);
   // имя на языке игры: тот же значок на панели навыков («Джамадхр мушлі D-grade.»)
   const onPanel = (env.rt.panel || []).find(s => s.kind === 'снаряжение' && s.img && s.img === file);
   let name = onPanel?.name || '';
@@ -284,7 +329,7 @@ async function equippedWeapon() {                // надетое: иконка
   let w = it ? weaponOf(it.id, { where: 'надето', name }) : null;
   // 7.1.30: значок не нашёлся в базе — берём надетое из запроса к серверу (бот видел, что именно надели)
   if (!w && env.rt.weaponEq?.id && (!snapshot || env.rt.weaponEq.id === sid)) w = weaponOf(env.rt.weaponEq.id, { where: 'надето', name });
-  return stats(w) || { id: sid, en: '', wt: '—', g: (name.match(/\b([DCBAS])-grade/i)?.[1] || 'NG').toUpperCase(), pa: null, ma: null, where: 'надето', name, icon: file };
+  return stats(w) || { id: sid, en: '', wt: '—', g: (name.match(/\b([DCBAS])-grade/i)?.[1] || '?').toUpperCase(), pa: null, ma: null, where: 'надето', name, icon: file, unknown:true, enchantUnknown:true };
 }
 
 // 10.0.13 (аудит 14.10): char.js теперь рисует номера и переходы между группами по пять вместо двух стрелок.
@@ -322,14 +367,16 @@ async function scanInventoryWeapons() {
   return list;
 }
 
-async function wearFromBag(w) {
+async function wearFromBag(w, valid = () => env.on && env.tabOwner !== false) {
+  if (!valid()) return false;
   for (let i = 0; i < 30 && await bagPageTurn(false); i++) {}
   for (let page = 0; page < 30; page++) {
     const row = [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].find(r => { const j = env.itemJson(r); return +j.itemId === w.id && (!w.inst || j.targetInstanceId === w.inst); });
     const btn = row?.querySelector('.l2-char-bag-equip--wear');
-    if (btn) {
+    if (btn && !btn.disabled && env.shown(btn) && valid()) {
       const before = env.$q('img[data-l2-slot="weapon"]')?.getAttribute('src') || '';
-      await env.pause(); env.fire(btn);
+      await env.pause(); if (!valid() || btn.disabled || !env.shown(btn)) return false;
+      if (env.fire(btn) === false) return false;
       const ok = await env.waitX(() => (env.$q('img[data-l2-slot="weapon"]')?.getAttribute('src') || '') !== before || env.EQUIP_OK.test(env.noticeText()), 4000, 150);
       env.rec('B', 'оружие', `надето из сумки «${w.name}» (${w.wt}, ${w.g})${ok ? '' : ' — без подтверждения игры'}`);
       return !!ok;
@@ -342,15 +389,18 @@ async function wearFromBag(w) {
 const invScanActive = st => !!env.rt.invScan && env.rt.invScan.t === st?.t && (env.on ? env.tabOwner !== false : !!st?.manual);
 async function invScanStep() {
   let st = env.rt.invScan;
-  if (!st || !invScanActive(st)) return false;
+  const markKey = () => { const m = env.rt.weaponMetaPending; return m ? [m.char,m.id,m.inst,m.revision,m.t].join('|') : ''; };
+  const char = env.rt.char, prof = env.rt.prof, mark = markKey(), eqT = env.rt.weaponEq?.t, initialMain = env.cfg.nWeaponMain;
+  const active = () => env.rt.char === char && (st.step !== 'inv' || env.rt.prof === prof) && invScanActive(st) && markKey() === mark && env.rt.weaponEq?.t === eqT;
+  if (!st || !active()) return false;
   if (st.step === 'prof') {
     if (!st.back) { st = { ...st, back: location.pathname + location.search }; await env.setRt({ invScan: st }); }
-    if (!invScanActive(st)) return false;
+    if (!active()) return false;
     if (!env.isCharacter()) { location.href = '/character.html'; await env.sleep(4000); return true; }
     const p = await env.waitX(() => env.$q('#character-profession')?.textContent.trim(), 5000, 150);
-    if (!invScanActive(st)) return false;
+    if (!active()) return false;
     await env.setRt({ prof: p || env.rt.prof || '', lvl: env.heroLevel() || env.rt.lvl, invScan: { ...st, step: 'inv' } });
-    if (!invScanActive(st)) return false;
+    if (!active()) return false;
     env.setStatus(`Оружие: профессия ${p || '?'} — смотрю инвентарь`);
     location.href = '/char.html'; await env.sleep(4000); return true;
   }
@@ -358,21 +408,23 @@ async function invScanStep() {
     if (!env.isChar()) { location.href = '/char.html'; await env.sleep(4000); return true; }
     env.setStatus('Оружие: читаю инвентарь');
     const list = await scanInventoryWeapons();
-    if (!invScanActive(st)) return false;
+    if (!active()) return false;
+    const pendingAtScan = env.rt.weaponMetaPending;
+    const pendingItem = pendingAtScan && pendingAtScan.char === char && +pendingAtScan.id ? await resolveWeaponItem(pendingAtScan.id) : null;
+    if (!active()) return false;
     const R = rankWeapons(list);
     const eq = list.find(w => w.where === 'надето');
     const fix = {};
     // надеваем «в класс», только если не теряем больше 15 % атаки (S-копьё не меняем на C-двуручник)
     const atk = w => R.mage ? w.ma : w.pa;
     // 7.1.30 (лог 15:38): статы надетого не прочитались (null) → «28 > null» и бот надел куклу NG вместо посоха D.
-    // Никогда не меняем на оружие ниже грейдом; если статы надетого неизвестны — меняем только на оружие выше грейдом
-    const gR = w => GRADE_RANK[String(w?.g || 'NG').toUpperCase()] ?? 0;
+    // Неизвестные характеристики удерживают надетое. Достоверные числа важнее грейда.
     const eqKnown = eq && Number.isFinite(atk(eq));
-    const better = R.main && !eq?.enchantUnknown && (!eq || (gR(R.main) >= gR(eq) && (gR(R.main) > gR(eq) && !eqKnown
-      || eqKnown && (R.inClass(eq) ? atk(R.main) > atk(eq) * 1.05 : atk(R.main) >= atk(eq) * 0.85))));
+    const better = R.main && !eq?.unknown && !eq?.enchantUnknown && (!eq || eqKnown
+      && (R.inClass(eq) ? atk(R.main) > atk(eq) * 1.05 : atk(R.main) >= atk(eq) * 0.85));
     // выбор в меню: если поле пустое или такого оружия нет — подставляем «в класс» (или надетое, если «в класс» слабее)
     const has = n => n && list.some(w => (w.name || '').toLowerCase().startsWith(String(n).toLowerCase().split(',')[0].trim()));
-    if (env.cfg.weaponClassPick !== false) {
+    if (env.cfg.weaponClassPick !== false && !env.cfg.weaponManual) {
       const mainPick = (better ? R.main : eq) || R.main || eq;
       const curMain = list.find(w => has(env.cfg.nWeaponMain) && (w.name || '').toLowerCase().startsWith(String(env.cfg.nWeaponMain).toLowerCase().split(',')[0].trim()));
       const offClass = curMain && R.main && !R.inClass(curMain) && !env.cfg.weaponManual;   // выбор не «в класс» и игрок его не ставил сам
@@ -383,17 +435,20 @@ async function invScanStep() {
     // ЛС остаётся на старом оружии, умение пропадёт. Рекомендация в меню остаётся, надеть может игрок
     const aw = env.rt.weaponAug, augHold = !!(aw && aw.o && (aw.k === 'active' || aw.k === 'positive') && (!eq?.id || !aw.w || +eq.id === +aw.w));
     // 7.1.30 (лог 15:38:22→24): игрок нажал «Стоп», а бот через 2 с всё равно переодел оружие — после остановки не надеваем
-    if (env.on && env.cfg.weaponClassEquip !== false && R.main && R.main.where !== 'надето' && better && !augHold) {
-      if (await wearFromBag(R.main)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
+    if (env.on && env.cfg.weaponClassEquip !== false && !env.cfg.weaponManual && R.main && R.main.where !== 'надето' && better && !augHold) {
+      if (await wearFromBag(R.main, () => active() && env.on && env.cfg.weaponClassEquip !== false && !env.cfg.weaponManual)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
-    if (!invScanActive(st)) return false;
-    await env.setRt({ weapons: list, weaponsT: Date.now(), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
+    if (!active()) return false;
+    const pending = env.rt.weaponMetaPending;
+    const verifiedPending = eq && !eq.unknown && !eq.enchantUnknown && (!pending || pending.char === char && (+pending.id === +eq.id || pendingItem && pendingItem.k !== 'W'));
+    await env.setRt({ weapons: list, weaponsT: Date.now(), ...(verifiedPending ? {weaponMetaPending:null} : {}), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
       eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better), keptAug: !!(augHold && better && !wore) }, invScan: null });
-    if (Object.keys(fix).length) await env.setCfg(fix);
+    if (env.rt.char !== char) return false;
+    if (Object.keys(fix).length && env.cfg.weaponClassPick !== false && !env.cfg.weaponManual && env.cfg.nWeaponMain === initialMain) await env.setCfg(fix);
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
       + (R.main ? ` · рекомендую: ${R.main.name}` : ' · оружия «в класс» нет') + (wore ? ` · надел ${wore}` : '') + (Object.keys(fix).length ? ` · в меню: ${Object.entries(fix).map(([k, v]) => k + '=' + v).join(', ')}` : ''));
     env.setStatus(`Оружие: ${list.length} шт. · в класс: ${R.main?.name || 'нет'}${wore ? ' · надето' : ''}`);
-    if ((env.on ? env.tabOwner !== false : st.manual) && !env.rt.invScan && st.back && !/\/char\.html/i.test(st.back)) { location.href = st.back; await env.sleep(4000); }
+    if (env.rt.char === char && (env.on ? env.tabOwner !== false : st.manual) && !env.rt.invScan && st.back && !/\/char\.html/i.test(st.back)) { location.href = st.back; await env.sleep(4000); }
     return true;
   }
   await env.setRt({ invScan: null });
@@ -438,6 +493,6 @@ async function invScanStart(back) {
   await env.setRt({ invScan: { step: 'prof', back: back || location.pathname + location.search, t: Date.now() } });
   return invScanStep();
 }
- return { weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
+ return { resolveWeaponItem, weaponItem, weaponRescanWhy, equipBy, equip, suggestRoles, weaponMainSuggest, autoRoles, classWeaponTypes, weaponOf, rankWeapons, readWeaponsPage, equippedWeapon, scanInventoryWeapons, wearFromBag, invScanStep, invScanDrive, invScanStart };
  };
 })(globalThis);

@@ -9,7 +9,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 for (const f of ['content.js', 'popup.js', 'popup.html', 'ui-v7.js', 'modules/combat.js', 'modules/equipment.js', 'base-profile.json'])
   assert.doesNotMatch(read(f).replace(/once\('fistOff923'[^\n]*/, ''), /nWeaponBuff|weaponSwap|buffSwap|canSwap|isFistName/, f + ': остатки смены оружия ради баффа');
 assert.match(read('content.js'), /once\('fistOff923', \(\) => \{ cf\.nWeaponBuff = ''; cf\.weaponSwap = false; rf\.buffSwap = null; \}\)/);
-assert.match(read('content.js'), /ma: typeof it\.ma === 'number' \? it\.ma \+ \(\+req\.enchantMAtkBonus \|\| 0\)/, 'M.Atk заточки при надевании');
+assert.match(read('content.js'), /ma:bonusesKnown && typeof it\.ma === 'number' \? it\.ma \+ \(\+req\.enchantMAtkBonus \|\| 0\)/, 'M.Atk заточки при надевании');
 assert.match(read('popup.js'), /const atkOf = w => \(types\[0\] === '#mage' \? w\.ma : w\.pa\)/, 'меню мага — по M.Atk');
 
 // 2. equipment.weaponRescanWhy

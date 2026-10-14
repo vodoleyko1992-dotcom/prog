@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.0.15 — content script (предварительная сборка исправлений чемпионов и полного аудита) =====
+// ===== L2wap Bot v10.0.16 — content script (предварительная сборка исправлений чемпионов и полного аудита) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3605,21 +3605,41 @@ addEventListener('message', e => {
   if (e.data.rid != null) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
 });
 async function weaponEquipNote(req) {
-  await itemsDb();
-  const W = [...(rt.weapons || [])];
-  if (req.action === 'equip') {
-    const it = itemOf(+req.itemId); if (!it || it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) return;
-    const w = { id: +req.itemId, en: it.n, name: it.n, wt: it.wt || '—', g: it.g || 'NG', pa: (it.pa || 0) + (+req.enchantPAtkBonus || 0), ma: typeof it.ma === 'number' ? it.ma + (+req.enchantMAtkBonus || 0) : null,   // 9.2.3: и M.Atk заточки (магу)
-      spd: it.spd || 0, two: !!it.two, ench: +req.enchant || 0, where: 'надето', inst: req.targetInstanceId || '' };
-    for (const x of W) if (x.where === 'надето') x.where = 'сумка';
-    const i = W.findIndex(x => x.id === w.id && (!x.inst || !w.inst || x.inst === w.inst));
-    if (i >= 0) W[i] = { ...W[i], ...w, name: W[i].name || w.name }; else W.push(w);
-    await setRt({ weapons: W, weaponsT: Date.now(), weaponEq: { id: w.id, g: w.g, t: Date.now() } });
-    rec('B', 'оружие', `надето «${it.n}» (${w.g}, ${w.wt}) — заряды теперь под ${w.g}`);
-  } else if (req.action === 'unequip' && /weapon|rhand|lrhand|^r$/i.test(String(req.slot || ''))) {
-    for (const x of W) if (x.where === 'надето') x.where = 'сумка';
-    await setRt({ weapons: W, weaponEq: null });
+  const char = rt.char, id = +req.itemId;
+  if (req.action !== 'equip') {
+    if (req.action === 'unequip' && /weapon|rhand|lrhand|^r$|^l1$/i.test(String(req.slot || ''))) {
+      await setRt({weapons:(rt.weapons || []).map(w=>w.where==='надето'?{...w,where:'сумка'}:w),weaponsT:0,weaponEq:null,
+        weaponMetaPending:{char,id:0,inst:'',revision:req.expectedRevision,t:Date.now(),status:'empty'}});
+    }
+    return;
   }
+  if (!id) return;
+  const known = L2V7Modules.equipment.weaponItem(id);
+  if (known && (known.k !== 'W' || /удочка|питомца/.test(known.wt || ''))) return;
+  const oldT = rt.weaponsT;
+  const mark = {char,id,inst:String(req.targetInstanceId || ''),revision:req.expectedRevision,t:Date.now(),status:'pending'};
+  const current = () => rt.char === char && ['char','id','inst','revision','t'].every(k=>rt.weaponMetaPending?.[k]===mark[k]);
+  // setRt ядра сразу обновляет память: старые A-заряды блокируются до первого await.
+  const saving = setRt({weaponMetaPending:mark,weaponsT:0});
+  await saving;
+  if (!current()) return;
+  await itemsDb();
+  if (!current()) return;
+  const it = await L2V7Modules.equipment.resolveWeaponItem(id);
+  if (!current()) return;
+  if (!it) { await setRt({weaponMetaPending:{...mark,status:'unknown'},weaponsT:0}); return; }
+  if (it.k !== 'W' || /удочка|питомца/.test(it.wt || '')) { await setRt({weaponMetaPending:null,weaponsT:oldT}); return; }
+  const W = (rt.weapons || []).map(x=>x.where==='надето'?{...x,where:'сумка'}:{...x});
+  const ench = +req.enchant || 0, bonusesKnown = !ench || Number.isFinite(req.enchantPAtkBonus) && Number.isFinite(req.enchantMAtkBonus);
+  const w = {id, en:it.n, name:it.n, wt:it.wt || '—', g:it.g || 'NG',
+    pa:bonusesKnown && Number.isFinite(it.pa) ? it.pa + (+req.enchantPAtkBonus || 0) : null,
+    ma:bonusesKnown && typeof it.ma === 'number' ? it.ma + (+req.enchantMAtkBonus || 0) : null,
+    spd:it.spd || 0,two:!!it.two,requiredLevel:it.requiredLevel,weaponMode:it.weaponMode,
+    ench,enchantUnknown:!bonusesKnown,where:'надето',inst:mark.inst};
+  const index = W.findIndex(x=>x.id===id && (!x.inst || !w.inst || x.inst===w.inst));
+  if (index>=0) W[index] = {...W[index],...w}; else W.push(w);
+  await setRt({weapons:W,weaponsT:Date.now(),weaponEq:{id,g:w.g,t:Date.now()},weaponMetaPending:null});
+  rec('B','оружие',`надето «${it.n}» (${w.g}, ${w.wt}) — заряды теперь под ${w.g}`);
 }
 let SHOP_BUY = null;   // 7.1.30: последняя покупка в магазине вещей (shopKey из запроса)
 function profQuestNote(st) {

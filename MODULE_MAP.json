@@ -757,6 +757,8 @@
   },
   "equipment": {
     "exports": [
+      "resolveWeaponItem",
+      "weaponItem",
       "equipBy",
       "equip",
       "suggestRoles",
@@ -787,6 +789,7 @@
       "cleanTitle",
       "expDmg",
       "fire",
+      "gameGet",
       "heroLevel",
       "iconStem",
       "ilNum",
@@ -804,6 +807,7 @@
       "itemsDb",
       "names",
       "noticeText",
+      "on",
       "panelInventory",
       "pause",
       "rec",
@@ -817,6 +821,7 @@
       "skillCost",
       "sleep",
       "slotsBy",
+      "tabOwner",
       "waitFor",
       "waitX"
     ]
