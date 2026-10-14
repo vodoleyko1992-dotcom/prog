@@ -51,7 +51,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (140 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (142 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG.md           оглавление истории версий (ссылки); сами CHANGELOG-X.Y.Z.md — в docs/changelog/ (в zip не входят, код их не читает)
 ```
 
@@ -98,7 +98,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 140 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 142 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
@@ -114,7 +114,7 @@ Firefox ставится как временное дополнение (`about:
 
 ## Последние версии (что уже сделано)
 
-- **10.0.13 (14.10, по «сборка»)**: исправлены обход запрета цветов ради ресурсов/FA, выбор проблемных целей катакомб, цвет в цепочке, определение страницы и поздние ответы навыков. 140 файлов Node-тестов; живую игру проверяет пользователь.
+- **10.0.13 (14.10, по «сборка»)**: исправлены обход запрета цветов ради ресурсов/FA, выбор проблемных целей катакомб, цвет в цепочке, определение страницы и поздние ответы навыков. 142 файлов Node-тестов; живую игру проверяет пользователь.
 - **10.0.12 (14.10, по «сборка», исправление PR #103, сборка PR #104)**: поддержка новой пагинации карты «1 2 3 4 5 >>». Число страниц и текущая страница — из `data-l2-around-sig`; номера нажимаются напрямую, `>>`/`<<` переключают группы по пять. Старые кнопки поддерживаются. Тесты Node и Chromium DOM прошли; установленный бот в живой игре не проверен.
 
 - **10.0.11 (собрана 13.10 по «сборка»; PR #93, #94; docs/changelog/CHANGELOG-10.0.11.md)**: проба нового удара воина не по кругу (лог alt1 22:03: Drain Health без цифры урона → 24 «пробую новый удар»; combat PROBE_USES 8, 5 нажатий без замера — удара нет в ротации; тест v1011-fighter-probe-stop, PR #94). лог 13.10 22:00 (alt1 Knight 20 на TvT): бот 30 с жёг MP на Power Strike (3 урона), потом 22 с жал его без MP (клик страница не отправляла), «Атака питомца» не жал, после ambi-spoil (27) выбрал Existence (80). tvt.js: скиллы по `GET /game/tvt/skills` (mpCost/readyAt, `TVTS` в content) и ответам ударов (`TVTC.actN/selfMp`), дороже MP — не жмём; клик без ответа ×2 → слот 3 с «залип»; «Атака питомца» (cfg.tvtPet); цель без HP — по уровню. **TvT важнее всего** (игрок): `tvt.tvtHold` — записаны и до старта < cfg.tvtHoldMin (3) мин или бой идёт → ядро не начинает задачи (tvtWait), из PvE-боя при старте — на карту и на арену (РБ/эпик — по cfg.tvtOverRb), tvtStep раньше rbOneStep. Тест v1011-tvt-priority. Не проверено в игре.

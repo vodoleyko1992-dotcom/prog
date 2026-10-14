@@ -16,7 +16,7 @@ const mf = load('modules/mobfarm.js', env);
 
 // 1. хук отдаёт цвет; netSpawns запоминает его
 const hook = read('hook.js');
-assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| 'blue'\)/, 'hook passes championTier');
+assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| ''\)/, 'hook passes optional championTier without inventing blue (14.10 audit)');
 (async () => {
   await mf.netSpawns([
     ['dense_1', 'aggressive', 'Kookaburra', 67, 100, ''],
