@@ -36,9 +36,14 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
     [/if \(r === 'lock'\) ctx\.block\['petbuff:' \+ pb\.n\] = 0;/, 'pet buff'],
     [/else if \(r === 'lock'\) ctx\.block\['buff:' \+ bn\] = 0;/, 'buff'],
     [/if \(dr === 'lock'\) continue;/, 'debuff: no 0.5 s pause on a lost click'],
-    [/if \(drainB\) \{ ctx\.seq\.push\('💉'\); const r = await act\(drainB, [^;]+\); if \(r !== 'lock'\) ctx\.block\['drain:' \+ drainB\.title\] = Date\.now\(\) \+ 1500; continue; \}/, 'vampiric (unchanged)'],
   ];
   for (const [re, what] of checks) assert.match(combat, re, what);
+  // 10.0.15: вампирик использует общий server-CD-aware backoff вместо прежних1500ms.
+  const retry = { ctx: { block: { 'drain:VT': 9999 } }, b: { title: 'VT' }, env: { actNet: () => null, slotAction: () => null, skKey: () => 'vt' }, overlayReadySeen: new WeakSet(), lostUntil: new Map(), Date: { now: () => 5000 } };
+  vm.runInNewContext(combat.slice(combat.indexOf('function drainBackoff('), combat.indexOf('function drainPreferred(')) + "\ndrainBackoff(ctx,b,'lock');", retry);
+  assert.equal(retry.ctx.block['drain:VT'], 0, 'lock отменяет только локальную задержку вампирика');
+  assert.equal(retry.lostUntil.size, 0, 'lock не создаёт новую занятость скилла');
+  assert.match(combat, /drainBackoff\(ctx,b,done\);/, 'actual act uses common drain retry guard');
   // 'lock' по-прежнему отдаётся только для клика, потерянного сразу после освобождения игры
   assert.match(combat, /if \(lockLost\) return 'lock';/);
   console.log('PASS: 8.0.3 lost click in the game busy window (lock) — emergency/band potion, heal skill, MP potion, pet summon/heal, buffs, pet buffs, debuffs retried at once (pre-set block undone)');

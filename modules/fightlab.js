@@ -174,6 +174,10 @@ function onNet(path, d) {
     F.turns++; F.tl = now; F.dealt += own;
     if (name && !/^battle_potion|_toggle$/.test(action)) {
       const a = (F.a[low(name)] ||= { n: 0, s: [], z: 0 });
+      // Реальное восстановление героя из журнала принятого хода; урон по нам учитывается отдельно.
+      const recovery = env.recoveryContext?.();
+      if (a.recovery !== recovery) { a.heals = []; a.recovery = recovery; }
+      if (recovery && L.selfHeal > 0) { (a.heals ||= []).push({hp:L.selfHeal,t:now}); if (a.heals.length > SAMPLES) a.heals.shift(); }
       a.n++; if (own > 0) { a.s.push(own); if (a.s.length > SAMPLES) a.s.shift(); } else a.z++;
     }
     last = turn;
@@ -187,6 +191,12 @@ function onNet(path, d) {
   return turn;
 }
 // точный замер последнего хода этим скиллом (для content.observeSlot): ход ушёл не раньше since − 0,3 с
+function healOn(name) {
+  // Только текущий бой: чужой ранг, цель и прошлые бафы не обещают столько же лечения.
+  const a = F && !F.done ? F.a[low(name)] : null, recovery = env.recoveryContext?.();
+  const h = recovery && a?.recovery === recovery ? (a.heals || []).filter(x => Date.now()-x.t <= 15000).map(x => x.hp) : [];
+  return h.length ? { n: h.length, mean: Math.round(h.reduce((x,y) => x+y,0)/h.length), p20: q(h,0.2) } : null;
+}
 function turnFor(name, since) {
   const t = last; if (!t || low(t.name) !== low(name) || t.t < since - 300 || Date.now() - t.t > 5000) return null;
   return t;
@@ -275,6 +285,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, healOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

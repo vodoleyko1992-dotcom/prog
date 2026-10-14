@@ -10,13 +10,14 @@ const { createBattleCooldown } = require('../battle-cooldown.js');
 // 1. act(): клик только когда игра свободна — нет её запросов в полёте (GET /character после хода) и прошёл запас после последнего ответа /
 // конца запроса; потеря сразу после освобождения → 'lock' (без «занят 0,7 с») и запас больше; быстро дошёл → запас меньше
 const actSrc = combat.slice(combat.indexOf('  let lastHpPot = 0, lastMpPot = 0'), combat.indexOf('  const t0 = Date.now();\n  let progSig'));
-assert.ok(actSrc.includes('const act = async (b, status, hpGuard = false) =>'), 'act() extracted');
+assert.ok(actSrc.includes('const act = async (b, status, hpGuard = false, stillNeeded = null) =>'), 'act() extracted');
 const consts = combat.match(/const LOCK_A = \[60, 500, 120\], LOCK_B = \[30, 200, 50\];/)[0];
 const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   let now = 1_000_000; const fired = [], rtW = [];
   const NET = { start: 1, done: 1, doneT: now - doneAgo, ok: true, action: 'l2_1220' };
   let getEnd = getMs ? now + getMs : 0;          // GET /character игры в полёте до getEnd
-  const env = { on: true, tabOwner: true, isBattle: () => true, rt: lockA ? { clickLockA: lockA } : {}, setRt: p => { rtW.push(p); Object.assign(env.rt, p); return Promise.resolve(); },
+  // 10.0.15: этот стенд проверяет click lock; роль вампирика отдельно покрыта actual decision suite.
+  const env = { cfg: { nDrain: '' }, names: () => [], on: true, tabOwner: true, isBattle: () => true, rt: lockA ? { clickLockA: lockA } : {}, setRt: p => { rtW.push(p); Object.assign(env.rt, p); return Promise.resolve(); },
     gameBusy: () => getEnd && now < getEnd ? { busy: true, end: 0 } : { busy: false, end: getEnd },
     combatCooldown: { globalWait: () => 0, skillWait: () => 0, recentlyGlobalRejected: () => false }, slotAction: () => 'l2_1220', cdSpawn: () => 'sp', battleSpawn: () => 'sp',
     observeSlot: () => {}, actNet: () => NET, fire: () => { fired.push({ afterAnswer: now - NET.doneT, afterGet: getEnd ? now - getEnd : null }); if (accept) { NET.start++; NET.done++; NET.doneT = now + 300; getEnd = 0; } return true; },
@@ -57,8 +58,12 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   { const t = mk({ doneAgo: 5, getMs: 99999 });  // запрос игры «завис» — ждём не больше 1,5 с
     await t.sb.act({ title: 'Blaze' }, 'Blaze');
     assert.ok(t.fired.length === 1, 'stuck request does not block forever'); }
-  // 2. вампирик: блок 1,5 с только по результату (потерян в окне — повторяем, а не банка); дебафф — без паузы 3 с на «lock»
-  assert.match(combat, /if \(drainB\) \{ ctx\.seq\.push\('💉'\); const r = await act\(drainB, [^;]+\); if \(r !== 'lock'\) ctx\.block\['drain:' \+ drainB\.title\] = Date\.now\(\) \+ 1500; continue; \}/);
+  // 10.0.15: общий drainBackoff сохраняет немедленный retry на lock; известный CD теперь управляет повтором.
+  const retry = { ctx: { block: { 'drain:VT': 9999 } }, b: { title: 'VT' }, env: { actNet: () => null, slotAction: () => null, skKey: () => 'vt' }, overlayReadySeen: new WeakSet(), lostUntil: new Map(), Date: { now: () => 5000 } };
+  vm.runInNewContext(combat.slice(combat.indexOf('function drainBackoff('), combat.indexOf('function drainPreferred(')) + "\ndrainBackoff(ctx,b,'lock');", retry);
+  assert.equal(retry.ctx.block['drain:VT'],0,'lost click gets no artificial drain cooldown');
+  assert.equal(retry.lostUntil.size,0,'lock cannot mark the drain busy');
+  assert.match(combat, /drainBackoff\(ctx,b,done\);/, 'actual act routes drain outcomes to the common retry guard');
   assert.doesNotMatch(combat, /if \(drainB\) \{ ctx\.block\['drain:'/);
   assert.match(combat, /else if \(dr !== 'lock'\) ctx\.block\['debuff:' \+ dbf\.k\] = Date\.now\(\) \+ \(ctx\.lastLost \? 700 : 3000\);/);
   // 3. время ответа и «игра занята»: hook сообщает начало/конец GET /character и запросов боя (rid); netStart от GET — не «ход ушёл»

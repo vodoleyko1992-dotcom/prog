@@ -204,20 +204,24 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
 {
   const html = read('popup.html'), js = read('popup.js'), css = read('ui-v7.css'), ui = read('ui-v7.js');
   const sec = html.slice(html.indexOf('<section id="tab-panel">'), html.indexOf('</section>', html.indexOf('<section id="tab-panel">')));
-  const order = ['tab-analyze', 'tab-roles', 'tab-pet', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => sec.indexOf(`id="${id}"`));
+  // 14.10: кот перенесён целиком в отдельный раздел Warlock, остальные классы остаются в Бою.
+  const petSec = html.slice(html.indexOf('<section id="tab-warlock">'), html.indexOf('</section>', html.indexOf('<section id="tab-warlock">')));
+  const order = ['tab-analyze', 'tab-roles', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => sec.indexOf(`id="${id}"`));
   assert.ok(order.every((x, i) => x >= 0 && (i === 0 || x > order[i - 1])), 'subsections in order: ' + order.join(','));
-  assert.match(sec, /<div class="subsec-title" data-cls="summoner"><span id="tab-pet" class="tab-anchor"><\/span>🐱 Warlock — маг с котом<\/div>/);
+  assert.match(petSec, /<div class="subsec-title"><span id="tab-pet" class="tab-anchor"><\/span>🐱 Warlock — маг с котом<\/div>/);
   assert.match(sec, /<div class="subsec-title" data-cls="mage"><span id="tab-mage"/); assert.match(sec, /<div class="subsec-title" data-cls="spoil"><span id="tab-spoil"/); assert.match(sec, /<div class="subsec-title" data-cls="fighter"><span id="tab-fighter"/);
-  for (const id of ['clsBox', 'fightBox', 'fightMemReset', 'dpsBox', 'combatProfile', 'petAuto', 'nDebuff', 'nDrain', 'nSpoil', 'nAttack', 'nStun', 'nCharge', 'nUltra', 'nKeyBuffs', 'fightMode', 'nPower', 'nHeal', 'nBuffs', 'nToggles', 'autoMagister', 'autoRevive', 'nWeaponMain']) assert.match(sec, new RegExp(`id="${id}"`), id);
-  assert.match(sec, /<h4 data-cls="summoner">🐱 Кот<\/h4>/); assert.ok(!/<h4 data-cls="mage">🐱 Кот<\/h4>/.test(sec));
-  assert.ok(sec.indexOf('id="petAuto"') > sec.indexOf('id="tab-pet"') && sec.indexOf('id="petAuto"') < sec.indexOf('id="tab-mage"'), 'cat settings inside the Warlock subsection');
+  for (const id of ['clsBox', 'fightBox', 'fightMemReset', 'dpsBox', 'combatProfile', 'nDebuff', 'nDrain', 'nSpoil', 'nAttack', 'nStun', 'nCharge', 'nUltra', 'nKeyBuffs', 'fightMode', 'nPower', 'nHeal', 'nBuffs', 'nToggles', 'autoMagister', 'autoRevive', 'nWeaponMain']) assert.match(sec, new RegExp(`id="${id}"`), id);
+  assert.match(petSec, /<h4>🐱 Кот<\/h4>/); assert.ok(!/<h4 data-cls="mage">🐱 Кот<\/h4>/.test(sec));
+  assert.ok(petSec.indexOf('id="petAuto"') > petSec.indexOf('id="tab-pet"'), 'cat settings inside separate Warlock section');
+  assert.ok(!sec.includes('id="petAuto"'), 'old combat panel does not duplicate pet controls');
   assert.ok(sec.indexOf('id="nSpoil"') > sec.indexOf('id="tab-spoil"') && sec.indexOf('id="nSpoil"') < sec.indexOf('id="tab-fighter"'));
   assert.ok(sec.indexOf('id="nAttack"') > sec.indexOf('id="tab-fighter"') && sec.indexOf('id="nAttack"') < sec.indexOf('id="tab-fight"'));
   assert.match(html, /<span class="ic">⚔<\/span>Бой<\/button>/); assert.ok(!/Бой и кот/.test(html + ui));
   // 14.10: общая заточка добавляет две зависимости перед popup; fightlab по-прежнему загружается раньше меню.
-  assert.match(html, /<script src="modules\/fightlab\.js"><\/script>\n<script src="modules\/enchant\.js"><\/script>\n<script src="enchant-ui\.js"><\/script>\n<script src="popup\.js"><\/script>/);
+  // 14.10: обе отдельные панели загружаются после fightlab и до popup.
+  assert.match(html, /<script src="modules\/fightlab\.js"><\/script>\n<script src="modules\/enchant\.js"><\/script>\n<script src="enchant-ui\.js"><\/script>\n<script src="modules\/warlock\.js"><\/script>\n<script src="warlock-ui\.js"><\/script>\n<script src="popup\.js"><\/script>/);
   assert.match(css, /html:not\(\.cls-summoner\):not\(\.show-all\)\.cls-mage \[data-cls="summoner"\],html\.cls-fighter:not\(\.show-all\) \[data-cls="summoner"\]\{display:none!important\}/);
-  assert.match(js, /analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel'/);
+  assert.match(js, /analyze: 'panel', roles: 'panel', pet: 'warlock', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel'/);
   assert.match(js, /root\.classList\.toggle\('cls-summoner', summoner\)/); assert.match(js, /function renderFight\(rt\)/); assert.match(js, /confirmClick\('fightMemReset'/);
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]); assert.equal(new Set(ids).size, ids.length, 'duplicate ids');
 }

@@ -1,0 +1,517 @@
+{
+  "source": "Public town-buffer catalog, 2026-10-14; prices and skill contract only, no account data",
+  "sets": [
+    {
+      "id": "basic",
+      "feeAdena": "0",
+      "feeCoinOfLuck": 0,
+      "skills": [
+        {
+          "skillId": 1036,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1040,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1045,
+          "level": 5,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1048,
+          "level": 5,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1059,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1062,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1068,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1077,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1085,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1086,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1240,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1242,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1268,
+          "level": 3,
+          "durationSec": 86400
+        }
+      ]
+    },
+    {
+      "id": "warrior",
+      "feeAdena": "0",
+      "feeCoinOfLuck": 15,
+      "skills": [
+        {
+          "skillId": 1068,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1040,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1036,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1045,
+          "level": 6,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1048,
+          "level": 6,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1062,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1077,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1086,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1240,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1204,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1388,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1389,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 271,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 275,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 272,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 264,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 269,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 267,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 268,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 304,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1268,
+          "level": 4,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 4703,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 4699,
+          "level": 3,
+          "durationSec": 86400
+        }
+      ]
+    },
+    {
+      "id": "mage",
+      "feeAdena": "0",
+      "feeCoinOfLuck": 15,
+      "skills": [
+        {
+          "skillId": 1040,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1036,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1045,
+          "level": 6,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1048,
+          "level": 6,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1062,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1059,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1085,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1204,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1389,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 273,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 276,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1303,
+          "level": 2,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 365,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 264,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 267,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 268,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 304,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 266,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1268,
+          "level": 4,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 4703,
+          "level": 1,
+          "durationSec": 86400
+        }
+      ]
+    },
+    {
+      "id": "resists",
+      "feeAdena": "0",
+      "feeCoinOfLuck": 5,
+      "skills": [
+        {
+          "skillId": 1033,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1182,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1189,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1191,
+          "level": 3,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1352,
+          "level": 1,
+          "durationSec": 86400
+        }
+      ]
+    },
+    {
+      "id": "summon",
+      "feeAdena": "10000000",
+      "feeCoinOfLuck": 0,
+      "skills": [
+        {
+          "skillId": 1068,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1388,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1062,
+          "level": 2,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 271,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1077,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1242,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 274,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 269,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 4699,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1059,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 273,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1303,
+          "level": 2,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 365,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1240,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 272,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1040,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1389,
+          "level": 3,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1036,
+          "level": 2,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1045,
+          "level": 6,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 264,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 267,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 304,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1268,
+          "level": 4,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 310,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1356,
+          "level": 1,
+          "durationSec": 18000
+        },
+        {
+          "skillId": 1413,
+          "level": 1,
+          "durationSec": 18000
+        }
+      ]
+    },
+    {
+      "id": "greater",
+      "feeAdena": "0",
+      "feeCoinOfLuck": 5,
+      "skills": [
+        {
+          "skillId": 1356,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1357,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1355,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1363,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1413,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1414,
+          "level": 1,
+          "durationSec": 86400
+        },
+        {
+          "skillId": 1323,
+          "level": 1,
+          "durationSec": 86400
+        }
+      ]
+    }
+  ]
+}

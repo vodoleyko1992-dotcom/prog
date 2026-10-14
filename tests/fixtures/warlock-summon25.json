@@ -1,0 +1,406 @@
+{
+  "source": "User 15:01 upload, v10.0.14, visible native receipt00:58:51 and pet modal00:58:59/00:59:14; not complete raw JSON",
+  "catalog": {
+    "id": "summon",
+    "feeAdena": "10000000",
+    "feeCoinOfLuck": 0,
+    "skills": [
+      {
+        "skillId": 1068,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1388,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1062,
+        "level": 2,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 271,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1077,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1242,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 274,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 269,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 4699,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1059,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 273,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1303,
+        "level": 2,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 365,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1240,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 272,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1040,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1389,
+        "level": 3,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1036,
+        "level": 2,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1045,
+        "level": 6,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 264,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 267,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 304,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1268,
+        "level": 4,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 310,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1356,
+        "level": 1,
+        "durationSec": 18000
+      },
+      {
+        "skillId": 1413,
+        "level": 1,
+        "durationSec": 18000
+      }
+    ]
+  },
+  "receipt": {
+    "set": "summon",
+    "feeAdena": "10000000",
+    "feeCoinOfLuck": 0,
+    "buffsApplied": [
+      {
+        "skillId": 1068,
+        "level": 3
+      },
+      {
+        "skillId": 1388,
+        "level": 3
+      },
+      {
+        "skillId": 1062,
+        "level": 2
+      },
+      {
+        "skillId": 271,
+        "level": 1
+      },
+      {
+        "skillId": 1077,
+        "level": 3
+      },
+      {
+        "skillId": 1242,
+        "level": 3
+      },
+      {
+        "skillId": 274,
+        "level": 1
+      },
+      {
+        "skillId": 269,
+        "level": 1
+      },
+      {
+        "skillId": 4699,
+        "level": 3
+      },
+      {
+        "skillId": 1059,
+        "level": 3
+      },
+      {
+        "skillId": 273,
+        "level": 1
+      },
+      {
+        "skillId": 1303,
+        "level": 2
+      },
+      {
+        "skillId": 365,
+        "level": 1
+      },
+      {
+        "skillId": 1240,
+        "level": 3
+      },
+      {
+        "skillId": 272,
+        "level": 1
+      },
+      {
+        "skillId": 1040,
+        "level": 3
+      },
+      {
+        "skillId": 1389,
+        "level": 3
+      },
+      {
+        "skillId": 1036,
+        "level": 2
+      },
+      {
+        "skillId": 1045,
+        "level": 6
+      },
+      {
+        "skillId": 264,
+        "level": 1
+      },
+      {
+        "skillId": 267,
+        "level": 1
+      },
+      {
+        "skillId": 304,
+        "level": 1
+      },
+      {
+        "skillId": 1268,
+        "level": 4
+      },
+      {
+        "skillId": 310,
+        "level": 1
+      },
+      {
+        "skillId": 1356,
+        "level": 1
+      }
+    ]
+  },
+  "petBuffsBeforeResummon": [
+    {
+      "skillId": 1068,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1388,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1062,
+      "level": 2,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 271,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1077,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1242,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 274,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 269,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 4699,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1059,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 273,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1303,
+      "level": 2,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 365,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1240,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 272,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1040,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1389,
+      "level": 3,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1036,
+      "level": 2,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1045,
+      "level": 6,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 264,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 267,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 304,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1268,
+      "level": 4,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 310,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    },
+    {
+      "skillId": 1356,
+      "level": 1,
+      "expiresAtMs": 1792007929771
+    }
+  ],
+  "petBuffsAfterResummonIds": [
+    1068,
+    1388,
+    1062,
+    271,
+    1077,
+    1242,
+    274,
+    269,
+    4699,
+    1059,
+    273,
+    1303,
+    365,
+    1240,
+    272,
+    1040,
+    1389,
+    1036,
+    1045,
+    264,
+    267,
+    304,
+    1268,
+    310,
+    1356
+  ],
+  "expiryEvidence": {
+    "visibleApiId": 1068,
+    "visibleApiExpiresAtMs": 1792007929771,
+    "note": "Only1068 and1388 expiry visible in truncated sync; assigning same expiry to all25 in test is modeled from documented5h contract, not full observed API payload"
+  }
+}

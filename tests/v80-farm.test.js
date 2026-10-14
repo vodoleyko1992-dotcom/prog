@@ -152,7 +152,8 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   let started = null, inv = {};
   const plan = [{ key: 'hp', ids: [1061], mm: [300, 1000] }, { key: 'mp', ids: [728], mm: [20, 100] }, { key: 'shots', ids: [3950], mm: [1000, 5000] },
     { key: 'spirit', ids: [3031], mm: [0, 1000] }, { key: 'soul', ids: [1785], mm: [0, 1000] }];
-  const fenv = { tvtSoon: () => false, sleep: async () => {}, rnd: () => 0, on: true, huntOn: () => false, epicOn: () => false, cfg: { shopAuto: true }, rt: {},
+  // 10.0.15: nextFight читает подтверждённую победу перед дополнительным Warlock обслуживанием.
+  const fenv = { victory: () => true, tabOwner: true, tvtSoon: () => false, sleep: async () => {}, rnd: () => 0, on: true, huntOn: () => false, epicOn: () => false, cfg: { shopAuto: true }, rt: {},
     townBuffStart: async () => false, shopNeedByPanel: () => '', shopPlan: () => plan, resQuests: () => [], invQty: id => inv === null ? null : (inv[id] ?? 0),
     shopStart: async why => { started = why; }, autonomyMode: () => 'fish', goFishing: async () => 'fish' };
   const F = loadMod('mobfarm').L2V7Factories.mobfarm(fenv);

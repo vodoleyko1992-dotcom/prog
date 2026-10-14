@@ -226,6 +226,11 @@ async function nextFight(ctx) {
     if (env.tvtSoon() || env.magisterHold?.()) return; // Условия могли измениться во время чтения персонажа.
   }
   if (!env.on || env.tabOwner === false) return;
+  // Автобаф кота — обслуживание между целями, без выхода из выбранной зоны.
+  if (!env.on || env.tabOwner === false) return;
+  if (env.victory()) await env.warlock?.step?.({ afterWin: true });
+  if (!env.on || env.tabOwner === false) return;
+  if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'fish') return env.goFishing();
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).

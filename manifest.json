@@ -91,6 +91,7 @@
         "modules/rbrun.js",
         "modules/subclass.js",
         "modules/enchant.js",
+        "modules/warlock.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -114,7 +115,10 @@
         "mammon-gear.json",
         "enchant-ui.js",
         "enchant-ui.css",
-        "modules/enchant.js"
+        "modules/enchant.js",
+        "modules/warlock.js",
+        "warlock-ui.js",
+        "warlock-ui.css"
       ],
       "matches": [
         "https://l2wap.com/*",

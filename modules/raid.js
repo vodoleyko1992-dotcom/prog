@@ -94,9 +94,21 @@ const isEpicId = id => EPIC_IDS.has(String(id || '').replace(/^l2dop_rb_/i, ''))
 const gapK = () => Math.min(0.1, Math.max(0.01, env.rt.rbGapK || 0.05));
 const gapF = g => g > 0 ? Math.max(0.5, 1 - gapK() * g) : 1;
 const rbLvlOf = id => env.rt.rbList?.[id]?.lvl || env.rt.rbDb?.[id]?.lvl || 0;
+// A full HP/time measurement already includes the summon. Never add pet DPS or
+// rescale it by a global sample from a different class, target, buff or shot state.
+function rbContext(id) {
+  try {
+    if (typeof env.warlock?.raidContext === 'function') return env.warlock.raidContext(id, env.rt.rbStats?.[id]);
+    return /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || env.rt.prof || '') ? { managed: true, key: null } : null;
+  }
+  catch (_) { return { managed: true, key: null }; }
+}
+const rbSameContext = (c, saved) => c?.managed ? !!c.key && saved === c.key : !saved;
 function rbDpsOn(id) {
-  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), base = env.rt.rbDps || 1150;
-  if (d.dps > 0) {
+  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), c = rbContext(id);
+  const base = rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : 1150;
+  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
+  if (d.dps > 0 && rbSameContext(c, d.dpsContext)) {
     const kb = d.dpsBase > 0 ? Math.min(3, Math.max(0.5, base / d.dpsBase)) : 1;
     const kl = lvl && L && d.dpsLvl ? gapF(lvl - L) / gapF(lvl - d.dpsLvl) : 1;
     return Math.max(1, d.dps * kb * kl);
@@ -105,16 +117,22 @@ function rbDpsOn(id) {
 }
 // замер ДПС по РБ в бою: среднее с прежним (приведённым к нынешнему уровню и урону) + урок поправки за уровни (по РБ выше героя)
 async function rbDpsLearn(id, dps) {
-  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), base = env.rt.rbDps || 0, od = d.dps > 0 ? rbDpsOn(id) : 0;
+  const c = rbContext(id);
+  if (!(dps > 0) || !Number.isFinite(dps) || c?.managed && !c.key) return;
+  const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id);
+  const base = rbSameContext(c, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+  const od = d.dps > 0 && rbSameContext(c, d.dpsContext) ? rbDpsOn(id) : 0;
+  if (c?.managed) return rbNote(id, { dps: Math.round(od > 0 ? od * .6 + dps * .4 : dps), dpsLvl: L || null, dpsBase: null, dpsContext: c.key });
   const gap = lvl && L ? lvl - L : 0;
   if (gap >= 3 && base > 0 && dps < base) { const k = Math.min(0.1, Math.max(0.01, (1 - dps / base) / gap)); env.setRt?.({ rbGapK: +(env.rt.rbGapK ? env.rt.rbGapK * 0.8 + k * 0.2 : k).toFixed(4) }); }
-  return rbNote(id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), dpsLvl: L || null, dpsBase: base || null });
+  return rbNote(id, { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), dpsLvl: L || null, dpsBase: base || null, dpsContext: null });
 }
 // 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
 const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id]; return Math.min(hp, env.rt.rb?.[id]?.hpAfter || hp, w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp); };
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
-  const historical = env.rt.rbDb?.[id] || {};
+  const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id);
+  const ownDps = historical.dps > 0 && rbSameContext(context, historical.dpsContext);
   const k = env.rt.rbK || 0.109, base0 = Math.max(0, st.patk || 0) * k;
   // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
   // «обычный ≈218» (rbK выучен на обычных РБ). У эпика, пока на нём нет своего замера (hitP90), обычный удар ≈0,7 × max(P.Atk, M.Atk),
@@ -128,8 +146,9 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
   const sp = historical.sp > 0 ? historical.sp : Math.max(base0 * rbSpK(), (st.matk || 0) * rbSpM());
   const measured = historical.sp > 0;
-  let loss = st.loss || (env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
-  if (epic && !(env.rt.rbStats?.[id]?.loss > 0)) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
+  const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext);
+  let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  if (epic && !ownLoss) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
   const need = loss * t;
   const potRate = pot?.rate || 0;
   const info = `спецудар ${Math.round(sp)} HP${measured ? ' (из боёв)' : ' (оценка)'}, обычный ≈${Math.round(base)}, ` +
@@ -143,7 +162,7 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
   // Эпики (свой ДПС от вызывающего) — по своим правилам
   const maxMin = env.cfg.rbMaxKillMin ?? 20;
-  if (!epic && !dpsOver && maxMin > 0 && t > maxMin * 60) return { ok: false, kind: 'slow', why: `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${historical.dps > 0 ? ', свой замер' : ''}, предел ${maxMin} мин) · ${info}`, ...x };
+  if (!epic && !dpsOver && maxMin > 0 && t > maxMin * 60) return { ok: false, kind: 'slow', why: `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`, ...x };
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
@@ -497,7 +516,7 @@ function rbValueScore(id, x) {
     rate < .30 ? .97 : Math.max(.15, .97 - (rate - .30) / .15 * .82);
   const bossHp = env.rt.rbStats?.[id]?.hp || stats.maxHp || 0;
   const dps = rbDpsOn(id);
-  const tFight = stats.fightS > 0 ? stats.fightS : bossHp > 0 ? bossHp / Math.max(1,dps) : 420;
+  const tFight = stats.fightS > 0 && rbSameContext(rbContext(id), stats.fightContext) ? stats.fightS : bossHp > 0 ? bossHp / Math.max(1,dps) : 420;
   const travel = 90;
   // Valuations are configurable economic assumptions, not server-provided exchange rates.
   const adena = Math.max(0, stats.adenaPerKill ?? stats.adena ?? 196000);
@@ -894,6 +913,7 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
     // 14.10, public battle-log-row-layout: «[Verfa] вдарив тебе: −250 HP» в DOM становится «Verfa ударив тебе −250 HP».
     const m = l.match(/^(?:Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(?:\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i);
     if (m && (m[1] || m[2]).trim().toLowerCase() === nm) {
+      S.hitSeen = (S.hitSeen ?? S.hits?.length ?? 0) + 1;
       (S.hits ||= []).push(Math.round(+m[3].replace(/\s/g, '') * (ogre ? 1.3 : 1)));
       if (S.hits.length > 120) S.hits.splice(0, S.hits.length - 120);
     }
@@ -930,6 +950,23 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
 function rbAssess(ctx, me, mob) {
   const S = ctx.rb, now = Date.now();
   S.t0 ||= now;
+  const context = rbContext(S.id), contextKey = context?.managed ? context.key || '?' : null;
+  // Pause/reload gaps and changed buffs/pet invalidate both the damage and net-HP
+  // window. Keep raw incoming hits/specials: they remain emergency evidence.
+  const changed = S.contextSet ? S.contextKey !== contextKey : !!context?.managed;
+  const interrupted = S.last && now - S.last > 10000;
+  if (changed || interrupted) {
+    S.samples = []; S.last = 0; S.dpsNoteT = 0; S.dpsT = 0; S.lossT = 0;
+    S.badSince = 0; S.forecastAt = 0; S.forecastVerdict = null;
+    S.contextMixed = S.contextSet ? true : false;
+    S.windowHitBase = S.hitSeen ?? (S.hits || []).length;
+    env.rbLive = null;
+    env.setRt({ rbForecast: { id: S.id, name: ctx.name, t: now, status: 'measuring',
+      note: interrupted ? 'После перерыва нужен новый замер' : 'Состав изменился — нужен новый замер',
+      dps: null, tKill: null, hpPct: Math.round(mob.cur / Math.max(1, mob.max) * 100),
+      samples: 0, hits: 0, worstHit: Math.max(0, ...(S.hits || [])), loss: null } });
+  }
+  S.contextSet = true; S.contextKey = contextKey;
   if (!env.rbLive || env.rbLive.name !== ctx.name || env.rbLive.t0 !== S.t0 || now - env.rbLive.t > 60000) env.rbLive = { name: ctx.name, cur: mob.cur, max: mob.max, t0: S.t0, t: now, verdict: 'measuring', win: false };
   else Object.assign(env.rbLive, { cur: mob.cur, max: mob.max, t: now });
   try { rbLearn(ctx); } catch (e) {}
@@ -960,7 +997,8 @@ function rbAssess(ctx, me, mob) {
   const dps  = Math.max(0, dealt / dt);                    // урон по РБ, HP/с
   // 10.0.2: свой ДПС по ЭТОМУ РБ (с котом) — для выбора цели: на 8–14 ур. выше героя урон вдвое меньше (лог 12.10: Рахха 65 ≈4,3k/с,
   // Галлате 73 ≈2,5k/с, Голконда 79 ≈2,4k/с при общем «≈4k/с») — по общему ДПС тур ждал от Голконды 25 мин, реально ≈43 мин и две смерти
-  if (dt >= 8 && dealt > 0 && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; rbDpsLearn(S.id, dps).catch(() => {}); }
+  const damageSamples = S.samples.slice(1).filter((v, i) => S.samples[i].mob > v.mob).length;
+  if (dt >= 20 && damageSamples >= 5 && dealt > 0 && (!context?.managed || context.key) && now - (S.dpsNoteT || 0) > 15000) { S.dpsNoteT = now; rbDpsLearn(S.id, dps).catch(() => {}); }
   // Не объявляем победу по 1–2 случайным значениям HP или кратковременному лечению персонажа.
   // Для эпика прежний аварийный выход по нулевому урону продолжает действовать.
   const reliable = dt >= 15 && S.samples.length >= 5 && dealt >= Math.max(1, mob.max * 0.001);
@@ -970,7 +1008,11 @@ function rbAssess(ctx, me, mob) {
       return { abort: true, hopeless: true, why: `эпик: недостаточный урон, прогноз >30 мин (≈${Math.round(dps)} HP/с)` };
     return { retreat: me.pct <= env.cfg.rbRetreatHp, why: 'данных для достоверного прогноза победы ещё недостаточно' };
   }
-  if (dt >= 20 && dps > 0 && now - (S.dpsT || 0) > 30000) { S.dpsT = now; env.setRt({ rbDps: Math.round(env.rt.rbDps ? env.rt.rbDps * 0.8 + dps * 0.2 : dps) }); }   // v4.46: наш ДПС по РБ — для оценки до боя
+  if (dt >= 20 && damageSamples >= 5 && dps > 0 && (!context?.managed || context.key) && now - (S.dpsT || 0) > 30000) {
+    S.dpsT = now;
+    const old = rbSameContext(context, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null });
+  }   // v4.46: наш ДПС по РБ — для оценки до боя
   // чистая потеря HP героя без банок: банки, выпитые в окне, возвращаем в расчёт (их лечение не «держится» само)
   const pm = env.potModel();
   const potsIn = (S.potT || []).filter(t => t >= a.t).length;
@@ -978,9 +1020,17 @@ function rbAssess(ctx, me, mob) {
   // v5.3: настоящая потеря HP (HP/с с учётом выпитого) на единицу P.Atk РБ — для оценки ДО боя. Лог 08.10 14:13–14:16:
   // оценка брала удар ×0,876 (≈220 HP/с у Берун 50 ур.), а реально с критами и спецударами уходило 300–600 HP/с — две смерти
   const stL = env.rt.rbStats?.[S.id];
-  if (dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
+  if (context?.managed && context.key && dt >= 25 && stL?.patk && (S.hitSeen ?? (S.hits || []).length) - (S.windowHitBase || 0) >= 4 && now - (S.lossT || 0) > 30000) {
+    S.lossT = now;
+    // Net HP already includes vampirism/regeneration. Remove only potion healing
+    // above; never subtract duplicate log messages or assume a proc rate.
+    const old = rbSameContext(context, stL.lossContext) && Number.isFinite(stL.loss) ? stL.loss : null;
+    env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL,
+      loss: Math.round(old == null ? Math.max(0, loss) : old * .6 + Math.max(0, loss) * .4), lossContext: context.key } } });
+  }
+  if (!context?.managed && dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
     S.lossT = now; const k = loss / stL.patk, epicL = isEpicId(S.id);   // 8.0.3: потери на эпике — только в его цифры, не в общий rbLossK
-    env.setRt({ ...(epicL ? {} : { rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4) }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss ? stL.loss * 0.6 + loss * 0.4 : loss) } } });
+    env.setRt({ ...(epicL ? {} : { rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4) }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss && !stL.lossContext ? stL.loss * 0.6 + loss * 0.4 : loss), lossContext: null } } });
   }
   const tKill = dps > 0 ? mob.cur / dps : Infinity;
   const B = me.cur - me.max * env.cfg.stopHp / 100;              // запас HP до аварийного порога
@@ -1002,7 +1052,7 @@ function rbAssess(ctx, me, mob) {
   const unrealisticEpic = epicBoss && (tKill > 1800 || !Number.isFinite(tKill));
   // v7.1.2: прогноз победы нельзя подтверждать без наблюдения ударов босса,
   // включая критические. Даже долгий период с полным HP не означает отсутствие урона.
-  const hitCount = (S.hits || []).length;
+  const hitCount = Math.max(0, (S.hitSeen ?? (S.hits || []).length) - (S.windowHitBase || 0));
   const worstHit = Math.max(0, ...(S.hits || []));
   const observedDamageTicks = S.samples.slice(1).filter((v, i) => S.samples[i].me - v.me >= me.max * 0.02).length;
   const enoughCombatData = dt >= 25 && S.samples.length >= 12 && dealt >= mob.max * 0.01

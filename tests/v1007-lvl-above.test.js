@@ -34,5 +34,6 @@ assert.match(combat, /const hl = env\.heroLvl\(\) \|\| env\.rt\.lvl \|\| 0, up =
 assert.match(combat, /if \(!isRb && hl && lv && up < 99 && lv > hl \+ up && !ctx\.questKill && !farmT && !\(ctx\.champ && env\.campActive\(\) && env\.campChampOpen\(\)\)\n\s+&& mob0 && mob0\.cur >= mob0\.max \* 0\.98 && !extraMobs\(\)\.some\(x => x\.cur > 0\)\) \{/);
 assert.match(combat, /выше героя на \$\{lv - hl\} \(предел \+\$\{up\}\) — не бью, на карту`\); await env\.setRt\(\{ target: null \}\); return env\.toMap\(\);/);
 assert.ok(combat.indexOf('выше героя на ${lv - hl}') < combat.indexOf('ctx.hp0 = mob0?.cur || 0; ctx.hp0T = Date.now(); ctx.hp0N = nm;'), 'guard before the fight starts');
-assert.match(content, /L2V7Modules\.combat = L2V7Factories\.combat\(\{ get champs\(\) \{ return L2V7Modules\.champs; \}, get rbRun\(\) \{ return L2V7Modules\.rbrun; \}, get farmRules\(\) \{ return farmRules; \},/, 'combat: геттер farmRules');
+// 10.0.15: проверяем farmRules внутри нужной фабрики, без зависимости от позиции новых getters.
+assert.match(content.match(/L2V7Modules\.combat = L2V7Factories\.combat\(\{([\s\S]*?)\}\);/)?.[1] || '', /get farmRules\(\) \{ return farmRules; \}/, 'combat: геттер farmRules');
 console.log('PASS: 10.0.7 upper level cap — default +5 (migration from 99/20), candidates and chain fights above hero + N skipped (★ quest, resource source, chapter champion, RB excepted), 99 = no cap');

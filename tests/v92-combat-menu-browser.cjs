@@ -15,15 +15,15 @@ const fightMem = {
 const fightLast = { key: 'rb:l2dop_rb_25050', name: 'Verfa', rb: true, outcome: 'win', sec: 252, turns: 180, dealt: 450000, pet: 180000, pots: 12, lost: 3, dps: 2500, t: 1000 };
 const CASES = [
   { id: 'warlock', rt: { char: 'Warlock', lvl: 61, prof: 'Warlock', classCur: { prof: 'human_warlock', slot: 0 }, classBranch: 'mystic', fightMem, fightLast, petStat: { kai: { fights: 30 } }, skills: { blaze: { name: 'Blaze', dmg: 30000, dmgN: 10, kind: 'скилл' } }, turnMs: 820 },
-    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter', 'cls-spoil'], shown: ['tab-pet', 'tab-mage'], hidden: ['tab-spoil', 'tab-fighter'], box: /Профессия: Warlock 61 ур\. · основной класс · ветка маг\nПрофиль боя: саммонер \(авто\) · кот — основной урон/, fight: /Последний бой: Verfa \(РБ\) — победа за 252 с, ходов 180, урон 450000 \+ кот 180000 \(≈2500\/с\), банок 12, потерянных ходов 3\nЦелей в памяти: 2 \(РБ 1, чемпионов 0, видов мобов 1\)\nРБ:\n• Verfa: боёв 2 \(побед 1\), ДПС ≈2500 · blaze ≈3050, energy bolt ≈2579 · бьёт ≈200 \(P90\) · спецудар до 1995 раз в ≈10 с/ },
+    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter', 'cls-spoil'], shown: ['tab-mage'], hidden: ['tab-spoil', 'tab-fighter'], box: /Профессия: Warlock 61 ур\. · основной класс · ветка маг\nПрофиль боя: саммонер \(авто\) · кот — основной урон/, fight: /Последний бой: Verfa \(РБ\) — победа за 252 с, ходов 180, урон 450000 \+ кот 180000 \(≈2500\/с\), банок 12, потерянных ходов 3\nЦелей в памяти: 2 \(РБ 1, чемпионов 0, видов мобов 1\)\nРБ:\n• Verfa: боёв 2 \(побед 1\), ДПС ≈2500 · blaze ≈3050, energy bolt ≈2579 · бьёт ≈200 \(P90\) · спецудар до 1995 раз в ≈10 с/ },
   { id: 'spoiler', rt: { char: 'WestSPOIL', lvl: 32, classCur: { prof: 'dwarf_bounty_hunter', slot: 0 }, classBranch: 'fighter' },
-    cls: ['cls-fighter', 'cls-spoil'], notCls: ['cls-mage', 'cls-summoner'], shown: ['tab-spoil', 'tab-fighter'], hidden: ['tab-pet', 'tab-mage'], box: /Профиль боя: спойлер \(авто\) · спойл в начале боя/, fight: /Боёв с анализом ещё нет/ },
+    cls: ['cls-fighter', 'cls-spoil'], notCls: ['cls-mage', 'cls-summoner'], shown: ['tab-spoil', 'tab-fighter'], hidden: ['tab-mage'], box: /Профиль боя: спойлер \(авто\) · спойл в начале боя/, fight: /Боёв с анализом ещё нет/ },
   { id: 'spellsinger', rt: { char: 'SS', lvl: 40, classCur: { prof: 'elf_spellsinger', slot: 1 }, classBranch: 'mystic' },
-    cls: ['cls-mage'], notCls: ['cls-summoner', 'cls-fighter', 'cls-spoil'], shown: ['tab-mage'], hidden: ['tab-pet', 'tab-spoil', 'tab-fighter'], box: /· саб 1 · ветка маг\nПрофиль боя: нюкер \(авто\)/ },
+    cls: ['cls-mage'], notCls: ['cls-summoner', 'cls-fighter', 'cls-spoil'], shown: ['tab-mage'], hidden: ['tab-spoil', 'tab-fighter'], box: /· саб 1 · ветка маг\nПрофиль боя: нюкер \(авто\)/ },
   { id: 'destroyer', rt: { char: 'D', lvl: 50, classCur: { prof: 'orc_destroyer', slot: 0 } },
-    cls: ['cls-fighter'], notCls: ['cls-mage', 'cls-spoil'], shown: ['tab-fighter'], hidden: ['tab-pet', 'tab-mage', 'tab-spoil'], box: /Профиль боя: Дестр \(авто\) · Frenzy\/Guts при низком HP/ },
+    cls: ['cls-fighter'], notCls: ['cls-mage', 'cls-spoil'], shown: ['tab-fighter'], hidden: ['tab-mage', 'tab-spoil'], box: /Профиль боя: Дестр \(авто\) · Frenzy\/Guts при низком HP/ },
   { id: 'unknown-mystic', rt: { char: 'X', lvl: 20, classBranch: 'mystic' },
-    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter'], shown: ['tab-mage', 'tab-pet'], hidden: ['tab-fighter'], box: /Профессия: профессия неизвестна 20 ур\. · ветка маг\nПрофиль боя: маг \(по ветке класса\) \(авто\)/ },
+    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter'], shown: ['tab-mage'], hidden: ['tab-fighter'], box: /Профессия: профессия неизвестна 20 ур\. · ветка маг\nПрофиль боя: маг \(по ветке класса\) \(авто\)/ },
 ];
 (async () => {
   const b = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
@@ -35,15 +35,17 @@ const CASES = [
     await page.evaluate(m);
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
-    for (const s of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(s) });
-    for (const j of ['modules/fightlab.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const s of ['ui-v7.css', 'ui-game.css', 'enchant-ui.css', 'warlock-ui.css']) await page.addStyleTag({ content: read(s) });
+    for (const j of ['modules/fightlab.js', 'modules/enchant.js', 'enchant-ui.js', 'modules/warlock.js', 'warlock-ui.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="panel"]').click());
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {
       const vis = id => { const el = document.getElementById(id)?.parentElement; return !!el && getComputedStyle(el).display !== 'none'; };
+      // 14.10: старый якорь кота теперь в отдельном Warlock, не дублируется в Бою.
+      if (!document.querySelector('#tab-warlock #petAuto') || document.querySelector('#tab-panel #petAuto')) throw Error('pet controls must move exactly once');
       return { cls: [...document.documentElement.classList], box: document.getElementById('clsBox').innerText, fight: document.getElementById('fightBox').innerText,
         note: document.getElementById('clsNote').innerText, nav: document.querySelector('nav button[data-tab="panel"]').innerText.trim(),
-        sub: Object.fromEntries(['tab-analyze', 'tab-roles', 'tab-pet', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => [id, vis(id)])),
+        sub: Object.fromEntries(['tab-analyze', 'tab-roles', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => [id, vis(id)])),
         overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth, dps: document.getElementById('dpsBox').innerText.slice(0, 40) };
     });
     const ok = c.cls.every(x => r.cls.includes(x)) && c.notCls.every(x => !r.cls.includes(x)) && c.shown.every(id => r.sub[id]) && c.hidden.every(id => !r.sub[id])
@@ -51,6 +53,6 @@ const CASES = [
     if (!ok) { console.error('FAIL', w, c.id, JSON.stringify({ r, errs }, null, 1)); process.exit(1); }
     await page.close();
   }
-  console.log('PASS browser 760/375px: «⚔ Бой» — Анализ боя (класс/профиль, память боя: Verfa с ритмом спецудара), общие правила; подразделы по классу: Warlock → кот+маг, спойлер → спойл+воин, Spellsinger → маг без кота, Дестр → воин, незнакомая профессия → по ветке; без горизонтальной прокрутки');
+  console.log('PASS browser 760/375px: «⚔ Бой» — Анализ боя (класс/профиль, память боя: Verfa с ритмом спецудара), общие правила; подразделы по классу: Warlock → отдельный кот + маг в Бою, спойлер → спойл+воин, Spellsinger → маг без кота, Дестр → воин, незнакомая профессия → по ветке; без горизонтальной прокрутки');
   await b.close();
 })().catch(e => { console.error(e); process.exit(1); });

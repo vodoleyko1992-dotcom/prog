@@ -71,6 +71,7 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
   // ---------- 4. combat: бой не открылся — текст ошибки игры в журнале; геттеры ----------
   assert.match(COMBAT, /if \(st === 'err'\) \{[\s\S]*?#battle-load-err[\s\S]*?бой не открылся: «\$\{txt\.slice\(0, 120\) \|\| 'без текста'\}»[\s\S]*?return env\.toMap\(\);/, 'load error text goes to the journal before toMap');
   assert.match(content, /L2V7Modules\.navigation = L2V7Factories\.navigation\(\{ get heroAt\(\) \{ return heroAt; \}/, 'navigation gets heroAt');
-  assert.match(content, /L2V7Modules\.mobfarm = L2V7Factories\.mobfarm\(\{ get NET_ERR\(\) \{ return NET_ERR; \}/, 'mobfarm gets NET_ERR');
+  // 10.0.15: Warlock lazy getters добавлены перед NET_ERR; принадлежность фабрике сохраняется.
+  assert.match(content.match(/L2V7Modules\.mobfarm = L2V7Factories\.mobfarm\(\{([\s\S]*?)\}\);/)?.[1] || '', /get NET_ERR\(\) \{ return NET_ERR; \}/, 'mobfarm gets NET_ERR');
   console.log('v1007-catacomb-hunt: PASS');
 })().catch(e => { console.error(e); process.exit(1); });

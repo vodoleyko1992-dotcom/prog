@@ -51,7 +51,8 @@ const mk = rt => {
   // ядро: пауза = как кнопка «⏸ Пауза» (on:false + paused), геттер модуля есть
   const content = read('content.js');
   assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  on = false;\n  await chrome\.storage\.local\.set\(\{ on: false, paused: \{ t: Date\.now\(\), why:/);
-  assert.match(content, /L2V7Modules\.raid = L2V7Factories\.raid\(\{ get pauseBot\(\) \{ return pauseBot; \},/);
+  // 10.0.15: новые lazy getters не меняют контракт pauseBot и не обязаны идти после него.
+  assert.match(content.match(/L2V7Modules\.raid = L2V7Factories\.raid\(\{([\s\S]*?)\}\);/)?.[1] || '', /get pauseBot\(\) \{ return pauseBot; \}/);
   assert.match(content, /am === 'raid' && rt\.rbOne\?\.on && '🎯 по одному РБ'/, 'indicator shows the mode');
   // меню: кнопка в «Центре управления» РБ; повторное нажатие во время работы не сбивает; выбор режима руками — обычный тур
   const html = read('popup.html'), popup = read('popup.js');

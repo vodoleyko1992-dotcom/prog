@@ -12,16 +12,18 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
   const i0 = combat.indexOf('    if (me && me.pct <= Math.max(env.cfg.stopHp, 25)) {'), i1 = combat.indexOf('    ctx.emWait = 0;', i0);
   assert.ok(i0 > 0 && i1 > i0, 'emergency block');
   const block = combat.slice(i0, i1);
+  const drainModel = combat.slice(combat.indexOf('function drainPreferred('), combat.indexOf('function drainPick('));
   const VT = { title: 'Vampiric Touch' }, CLD = { title: 'Corpse Life Drain' }, POT = { title: 'Зілля зцілення' };
   const run = async ({ mage = true, steps = 6, pot = POT, drain = true, heal = true } = {}) => {
-    const calls = []; let now = 5_000_000;
+    // 10.0.15: сохраняем исходный сценарий с серверным CD1.5s, не искусственным block после act.
+    const calls = []; let now = 5_000_000, drainUntil = 0;
     const ctx = { rb: { id: 'x' }, block: {}, seq: [] };
-    const sb = { env: { cfg: { stopHp: 25 }, hpPotPick: () => pot, cleanTitle: s => s, qty: () => 10, hpPots: () => pot ? [pot] : [], rec: () => {} },
+    const sb = { env: { cfg: { stopHp: 25 }, hpPotPick: () => pot, cleanTitle: s => s, qty: () => 10, hpPots: () => pot ? [{ b: pot, heal: 600 }] : [], fightHealOn: () => ({ n: 3, p20: 1880 }), rec: () => {} },
       ctx, me: { pct: 19, cur: 1659, max: 8517 }, mp: { cur: 5000 }, Date: { now: () => now }, Math, mageCombat: () => mage,
-      drainPick: c => drain && (c.block['drain:' + VT.title] || 0) <= now ? VT : null,
+      ready: () => true, drainPick: c => drain && drainUntil <= now ? VT : null,
       healPick: c => heal && (c.block['heal:' + CLD.title] || 0) <= now ? CLD : null,
-      act: async (b, st) => { calls.push(b.title + ' @' + (now - 5_000_000)); return true; } };
-    vm.runInNewContext(`let lastHpPot = 0; this.step = async () => { let fell = true; for (let i = 0; i < 1; i++) {\n${block}\n fell = false; } return fell; };`, sb);
+      act: async (b, st) => { calls.push(b.title + ' @' + (now - 5_000_000)); if (b === VT) drainUntil = now + 1500; return true; } };
+    vm.runInNewContext(`${drainModel}\nlet lastHpPot = 0; this.step = async () => { let fell = true; for (let i = 0; i < 1; i++) {\n${block}\n fell = false; } return fell; };`, sb);
     const falls = [];
     for (let k = 0; k < steps; k++) { falls.push(await sb.step()); now += 400; }
     return { calls, falls };
@@ -49,7 +51,8 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
   const mkAct = (pct0, pctNow) => {
     let now = 1_000_000; const fired = [], recs = [];
     const NET = { start: 1, done: 1, doneT: now - 5000, ok: true, action: 'l2_1220' };
-    const env = { on: true, tabOwner: true, isBattle: () => true, rt: {}, setRt: async () => {}, gameBusy: () => ({ busy: false, end: 0 }),
+    // Этот unit проверяет damage hpGuard; реальные роли/аварийное сравнение VT и банки — v1015-vampiric-decision.
+    const env = { cfg: { nDrain: '' }, names: () => [], on: true, tabOwner: true, isBattle: () => true, rt: {}, setRt: async () => {}, gameBusy: () => ({ busy: false, end: 0 }),
       combatCooldown: { globalWait: () => 0, skillWait: () => 0, recentlyGlobalRejected: () => false }, slotAction: () => 'l2_1220', cdSpawn: () => 'sp', battleSpawn: () => 'sp',
       observeSlot: () => {}, actNet: () => NET, fire: b => { fired.push(b.title); NET.start++; NET.done++; NET.doneT = now + 300; return true; },
       sleep: async ms => { now += ms; }, waitFor: async (fn, ms) => { const r = fn(); if (!r) now += ms; return r; }, setStatus: () => {}, skKey: () => 'k',
@@ -65,7 +68,7 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
   assert.deepEqual(t.fired, []);
   assert.ok(t.recs.some(s => /HP упал 55 → 19 %/.test(s)), 'journal line');
   t = mkAct(55, 19);
-  assert.equal(await t.act({ title: 'Vampiric Touch' }, 'VT', true), true, 'a healing turn is never held back');
+  assert.equal(await t.act({ title: 'Vampiric Touch' }, 'VT', true), true, 'damage hpGuard does not reject a healing turn');
   t = mkAct(55, 19);
   assert.equal(await t.act({ title: 'Blaze' }, 'Blaze'), true, 'without hpGuard (potions, buffs) — as before');
   t = mkAct(55, 45);
