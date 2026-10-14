@@ -64,8 +64,9 @@ const C = load('modules/champs.js', env);
   const mf = read('modules/mobfarm.js'), ct = read('content.js'), pj = read('popup.js'), ph = read('popup.html');
   assert.match(mf, /env\.cancelRisk\?\.\(name, champ, r\.tier\)/);
   assert.match(ct, /get faPaidLeft\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.faPaidLeft\(\.\.\.a\); \} \}\);/);
-  assert.match(ct, /champCancel: 'paid'/); assert.match(pj, /champCancel: 'paid'/); assert.match(pj, /'champCancel', 'mmFarmSpoil'/);
-  assert.match(ph, /<select id="champCancel"><option value="paid">/); assert.match(ph, /синий 3 % \(раз в 30 с\), оранжевый 5 %, красный 7 %/);
+  // 15.10: новый режим по решению игрока; старые режимы проверены выше.
+  assert.match(ct, /champCancel: 'efficiency'/); assert.match(pj, /champCancel: 'efficiency'/); assert.match(pj, /'champCancel', 'mmFarmSpoil'/);
+  assert.match(ph, /<select id="champCancel"><option value="efficiency">/); assert.match(ph, /синий 3 % \(раз в 30 с\), оранжевый 5 %, красный 7 %/);
   assert.match(pj, /red73: 'красные 73\+/);
   console.log('PASS: 10.0.8 champions 73+ (HP ×3, def ×4 → own DPS class, flee at 50 % HP) and Cancel as a price (blue 3 % / orange 5 % / red 7 % per hit × expected hits × 3 buffs × 150 s per FA vs the champion worth; plain mobs by memory as before)');
 })().catch(e => { console.error(e); process.exit(1); });

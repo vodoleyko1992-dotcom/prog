@@ -105,9 +105,30 @@ function held(c) {
   }
   return null;
 }
+// 15.10: оранжевых разрешено брать только с положительным запасом окупаемости.
+// EXP и FA переведены в условные секунды обычного фарма (существующая шкала limitS).
+// 20% резерва — неопределённость/расходники, не измеренная стоимость зелий и зарядов.
+const valueMode = c => env.cfg?.champCancel === 'efficiency' && c?.tier === 'orange';
+function valueJudge(c) {
+  const rate = env.farmRate?.(), d = dpsOn(isHard(c));
+  if (!(rate?.eps > 0 && rate?.sk > 0 && c.hp > 0 && c.exp > 0 && d.dps > 0))
+    return { ok: false, lim: 0, why: 'окупаемость оранжевого: недостаточно данных об HP, награде или темпе фарма' };
+  const fa = c.lvl && L() && c.lvl < L() - 5 ? 0 : Math.max(0, Math.min(1, c.fa ?? FA_P.orange));
+  // Не используем нижний предел15с limitS: он служит пробе, а не доказывает прибыль.
+  const eta = c.hp / d.dps + 2, value = Math.min(300, c.exp / rate.eps + fa * rate.sk / FA_MOB), cancel = cancelCost(c, eta).s;
+  const travel = Math.max(0, (env.rt.eff?.map?.sec || 0) - (env.rt.eff?.chain?.sec || 0));
+  const reserve = value * (d.known ? 0.2 : 0.4), lim = Math.max(0, value - cancel - travel - reserve);
+  const ok = eta < lim;
+  return { ok, eta: Math.ceil(eta), lim, hard: isHard(c), probe: !d.known,
+    why: `окупаемость: награда ≈${Math.round(value)} с фарма; бой ≈${Math.ceil(eta)} с + Cancel ≈${cancel} с + переход ≈${Math.ceil(travel)} с + резерв ${Math.ceil(reserve)} с → ${ok ? 'выгодно' : 'невыгодно'}` };
+}
 // решение до боя: { ok, probe, eta, lim, why }
 function judge(c) {
   { const off = tierOff(c); if (off) return { ok: false, off: true, lim: 0, why: off }; }
+  if (valueMode(c)) {
+    const h = held(c); if (h) return { ok: false, lim: 0, why: h };
+    return valueJudge(c);
+  }
   const tier = TIER_RU[c.tier] ? c.tier : 'blue', lim = limitS(c), gap = (c.lvl || 0) - L(), hard = isHard(c), key = tKey(c);
   const d = dpsOn(hard), hn = hard ? ' (73+: HP ×3, защита ×4)' : '';
   const sec = c.hp > 0 && d.dps > 0 ? Math.min(lim * 2, c.hp / d.dps + 2) : lim;   // ожидаемая длина боя для цены «Cancel»
@@ -130,7 +151,7 @@ function fleeCheck(ctx, me, mob, sec) {
   if (me && me.pct < hpMin && left > 0.35) return { kind: 'danger', why: `моё HP ${Math.round(me.pct)} %${isHard(ctx) ? ' (чемпион 73+, атака ×4)' : ''}, у чемпиона ${Math.round(left * 100)} %` };
   if (sec >= 8 && done < mob.max * 0.03) return { kind: 'weak', why: `не пробиваю: за ${Math.round(sec)} с снято ${Math.round(done / mob.max * 100)} %` };
   const eta = sec + mob.cur / Math.max(done / sec, 1);
-  if (sec >= 10 && eta > lim * 1.3 && left > 0.25) return { kind: 'slow', why: `бой ≈${Math.round(eta)} с при пределе ${lim} с — невыгодно против обычного фарма` };
+  if (sec >= (valueMode(ctx) ? 6 : 10) && eta > lim * (valueMode(ctx) ? 1 : 1.3) && left > 0.25) return { kind: 'slow', why: `бой ≈${Math.round(eta)} с при пределе ${lim} с — невыгодно против обычного фарма` };
   return null;
 }
 // после боя или отхода: замер ДПС, итог по цвету, вердикт (отход/смерть — до роста силы), удача снимает вердикт
@@ -156,6 +177,6 @@ async function learn(ctx, outcome, dealt, sec) {
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
+ return { valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

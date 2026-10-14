@@ -461,7 +461,7 @@ function candidates(rules, sig, types, limitIdx) {
       const off = env.champs?.tierOff?.(r) || env.champs?.held?.(r);
       if (off) { champSkip(r, off); return; }
     }
-    if (champ && !qLike && env.champs) {
+    if (champ && env.champs && (!qLike || env.champs.valueMode?.(r))) {
       const j = env.champs.judge(r);
       Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
       if (!j.ok) { champSkip(r, j.why); return; }
@@ -557,7 +557,8 @@ async function attackSpawn(c, label) {
     const off = champEntryOff(c);
     if (off) { champSkip(c, off); return false; }
   }
-  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
+  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, exp: c.exp || 0, fa: c.fa, valueT: Date.now(), probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
+  if (c.champ && env.champs?.valueMode?.(c)) env.rec('B', 'чемпионы', `${c.name}: ${c.chWhy}`);
   if (c.champ && (c.faHot || c.chProbe)) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier})${c.faHot ? ` — бью ради FA: шанс ${Math.round(c.fa * 100)} %` : ''}${c.chProbe ? ` · проба${c.chEta ? `: жду ≈${c.chEta} с` : ''}, предел ${c.chLim} с (дольше — уйду)` : c.chEta ? ` · ≈${c.chEta} с, предел ${c.chLim} с` : ''}`);
   { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
   env.fire(a);
