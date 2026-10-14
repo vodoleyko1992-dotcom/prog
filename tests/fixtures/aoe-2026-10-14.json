@@ -1,0 +1,117 @@
+{
+  "sourceSha256": "e41cb6e831517c5a25b37f85b627eb9b2ca0d8f224f48bb1de91287f54a1ec06",
+  "casts": [
+    {
+      "actionTime": "02:20:24.409",
+      "mainRawDamage": 12049,
+      "crit": false,
+      "rawTotal": 36147,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12049",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12049, Eva's Seeker −12049."
+      ]
+    },
+    {
+      "actionTime": "02:20:27.576",
+      "mainRawDamage": 12615,
+      "crit": false,
+      "rawTotal": 37845,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12615",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12615, Eva's Seeker −12615."
+      ]
+    },
+    {
+      "actionTime": "02:20:37.647",
+      "mainRawDamage": 12423,
+      "crit": false,
+      "rawTotal": 37269,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12423",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12423, Eva's Seeker −12423."
+      ]
+    },
+    {
+      "actionTime": "02:20:39.737",
+      "mainRawDamage": 12357,
+      "crit": false,
+      "rawTotal": 37071,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12357",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12357, Eva's Seeker −12357."
+      ]
+    },
+    {
+      "actionTime": "02:20:47.380",
+      "mainRawDamage": 12616,
+      "crit": false,
+      "rawTotal": 37848,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12616",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12616, Eva's Seeker −12616."
+      ]
+    },
+    {
+      "actionTime": "02:20:49.170",
+      "mainRawDamage": 12749,
+      "crit": false,
+      "rawTotal": 38247,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я 12749",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −12749, Eva's Seeker −12749."
+      ]
+    },
+    {
+      "actionTime": "02:20:51.350",
+      "mainRawDamage": 25010,
+      "crit": true,
+      "rawTotal": 75030,
+      "mpSpentObserved": 38,
+      "damageLines": [
+        "Удар полум’я · КРИТ 25010",
+        "Удар полум’я: додаткові цілі — Garden Guard Leader −25010, Eva's Seeker −25010."
+      ]
+    }
+  ],
+  "observedLogs": {
+    "flame": [
+      "Red Seal Stone ×51",
+      "Green Seal Stone ×174",
+      "Победа!",
+      "Varnish ×2",
+      "Додаткова ціль повалена: Eva's Seeker.",
+      "Varnish ×6",
+      "Додаткова ціль повалена: Garden Guard Leader.",
+      "Удар полум’я 12049",
+      "Удар полум’я: додаткові цілі — Garden Guard Leader −12049, Eva's Seeker −12049."
+    ],
+    "queen": [
+      "Blue Seal Stone ×93",
+      "Green Seal Stone ×153",
+      "Победа!",
+      "Слуга [Kai the Cat] атакує [Lesser Ancient Shaman] 24 462 урону."
+    ],
+    "vampiric": [
+      "HP +239 (зцілення).",
+      "Вампіризм +239 HP",
+      "Вампірний дотик · КРИТ 2675"
+    ],
+    "vampiricRepeat": [
+      "HP +239 (зцілення).",
+      "Вампіризм +239 HP",
+      "Вампірний дотик · КРИТ 2675"
+    ],
+    "vampiricSecond": [
+      "Слуга [Kai the Cat] завдає критичного удару [Cherub Galaxia] 85 346 урону.",
+      "HP +239 (зцілення).",
+      "Вампіризм +239 HP",
+      "Вампірний дотик · КРИТ 2610"
+    ]
+  }
+}

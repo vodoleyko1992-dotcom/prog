@@ -569,8 +569,8 @@ function panelInventory() {
 const BUFF_RE = /\s+на\s+(\d+)\s*с(?![а-яa-z])/i;               // «Totem Spirit Bear на 120 с.»
 // урон из строк лога: «Iron Punch ⏎ 993» / «Ты нанёс [ моб ] 97 урона»
 const splashDmg = lines => lines.reduce((sum, line) => {
-  // Массовый удар перечисляет нескольких соседей в одной строке; считаем каждое снятие HP, включая разделители тысяч.
-  const tail = String(line).match(/поруч([^⏎]*)/i)?.[1] || '';
+  // Лог 14.10 16:20: считаем отображённый урон каждому соседу, включая разделители тысяч; он может превышать оставшиеся HP.
+  const tail = String(line).match(/(?:поруч|додаткові цілі\s*[—–:-])([^⏎]*)/i)?.[1] || '';
   return sum + [...tail.matchAll(/[−-]\s*(\d[\d \u00a0\u202f]*)/g)].reduce((a, m) => a + +m[1].replace(/\D/g, ''), 0);
 }, 0);
 function dmgFromLog(name, lines, allowAlt = true) {
@@ -579,6 +579,8 @@ function dmgFromLog(name, lines, allowAlt = true) {
     const hits = lines.filter(l => /нан[её]с/i.test(l) && !/поруч|рядом/i.test(l)).map(l => +((l.match(/(\d+)\s*урон/i) || [])[1] || 0));
     return hits.reduce((a, b) => a + b, 0) + splashDmg(lines);   // главная цель + задетые рядом
   }
+  // Лог 14.10 16:20: урон соседям — отдельный канал, даже если его строка идёт перед главным попаданием.
+  lines = lines.filter(l => !/(?:поруч|додаткові цілі\s*[—–:-])/i.test(String(l)));
   // строка этого заклинания: сначала та, что НАЧИНАЕТСЯ с его имени («Полум’я 618», а не «Удар полум’я 610»), потом любая с именем
   const ln = logName(name), eng = apos(name);
   const has = (l, n) => !BUFF_RE.test(l) && apos(l).includes(n);
