@@ -194,7 +194,8 @@ async function step() {
       before:P.item.level,fingerprint:P.item.fingerprint,revision:snap.revision,scrollId:P.scroll.id,scrollBefore:quantity(snap,P.scroll.id),adenaBefore:adena(snap),
       colBefore:quantity(snap,4037),chance:P.scroll.chance,weaponMode:P.item.category==='weapon'?(P.q.weaponMode||'balanced'):null};
     const stored=await save({...s,pending});
-    const durable=stored?.ok===true||!!(env.rtCommit&&await env.rtCommit());
+    // recover пустой очереди не доказывает запись: inactive setRt меняет лишь локальный rt.
+    const durable=stored?.ok===true;
     if(!durable){if(current()?.pending?.id===pending.id)await save({...current(),pending:null,status:'paused',reason:'Не удалось надёжно сохранить попытку; расход не выполнялся'});return false;}
     if(!allowed(s)||!domReady(P)){if(current()?.pending?.id===pending.id)await save({...current(),pending:null,status:'paused',reason:'Остановлено до клика'});return false;}
     const fired=env.fire(Q('#enchant-submit'));
@@ -299,7 +300,7 @@ async function archiveUnknown(args) {
     totals:t,items:clone(items),pending:clone(p),evidence,history:[event,...s.history].slice(0,50)};
   const recovery={char:s.char,t:now(),runId:s.runId,pendingId:p.id,revision:scan.snap.revision,attemptRevision:p.revision,previousKeys:s.items.map(x=>x.key)};
   const patch={enchant:null,enchantArchive:[entry,...(env.rt.enchantArchive||[]).filter(x=>x.runId!==s.runId)].slice(0,20),enchantRecovery:recovery};
-  const stored=await env.setRt(patch),durable=stored?.ok===true||!!(env.rtCommit&&await env.rtCommit());
+  const stored=await env.setRt(patch),durable=stored?.ok===true;
   if(!durable){
     // Не оставляем локально очищенный pending после неуспешной записи. Сохранённое намерение блокирует повтор.
     if(charKey()===s.char&&current()==null&&env.rt.enchantRecovery?.pendingId===p.id)await save({...s,status:'paused',reason:'Не удалось надёжно сохранить завершение серии; неизвестная попытка сохранена'});

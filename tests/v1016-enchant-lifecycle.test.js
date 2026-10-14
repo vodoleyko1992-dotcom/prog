@@ -74,7 +74,7 @@ test('повторный event того же результата не удва�
 test('конфликтующий чужой request не закрывает pending',async()=>{const f=fixture();await f.start();f.mode='timeout';await f.tick();assert.equal(await f.M.note({...f.posts[0],targetInstanceId:'eq:l3'},{},200),false);assert.ok(f.env.rt.enchant.pending)});
 test('режим awayFree блокирует попытку и навигацию',async()=>{const f=fixture();await f.start();f.env.awayFree=()=>false;await f.tick();assert.equal(f.posts.length,0);assert.equal(f.location.href,'')});
 test('недолговечная запись pending не разрешает расход',async()=>{const f=fixture();await f.start();f.env.setRt=async p=>{Object.assign(f.env.rt,p);return {ok:false}};f.env.rtCommit=async()=>false;await f.tick();assert.equal(f.posts.length,0);assert.match(f.env.rt.enchant.reason,/надёжно сохранить/)});
-test('recover storage может подтвердить pending перед расходом',async()=>{const f=fixture();await f.start();f.env.setRt=async p=>{Object.assign(f.env.rt,p);return {ok:false}};f.env.rtCommit=async()=>true;await f.tick();assert.equal(f.posts.length,1)});
+test('пустой успешный recover не подтверждает отклонённую запись pending',async()=>{const f=fixture();await f.start();f.env.setRt=async p=>{Object.assign(f.env.rt,p);return {ok:false}};f.env.rtCommit=async()=>true;await f.tick();assert.equal(f.posts.length,0);assert.match(f.env.rt.enchant.reason,/надёжно сохранить/)});
 test('смена персонажа во время scan не пишет его инвентарь новому',async()=>{const f=fixture();f.env.rt.char='old';let once=false;f.onGet=()=>{if(!once){once=true;f.env.rt={char:'new'}}};assert.equal(await f.M.readItems(),null);assert.equal(f.env.rt.enchantScan,undefined)});
 test('смена персонажа во время settle не записывает старую серию',async()=>{const f=fixture();f.env.rt.char='old';await f.start();f.mode='timeout';await f.tick();const p=f.posts[0];f.onGet=url=>{if(url==='/character')f.env.rt={char:'new'}};await f.M.note(p,{attemptedCount:1,successCount:1,failCount:0,scrollConsumedCount:1,previousEnchantLevel:3,currentEnchantLevel:4,updatedTargetInstanceId:'eq:l1'},200);assert.deepEqual(f.env.rt,{char:'new'})});
 test('новый приоритет daily/magister на pause блокирует click',async()=>{const f=fixture();await f.start();f.onPause=()=>{f.env.awayFree=()=>false};await f.tick();assert.equal(f.posts.length,0)});
@@ -89,4 +89,42 @@ test('unknown archive потерял героя или owner во время GET
 test('unknown archive отказ хранилища сохраняет блокирующий pending',async()=>{const f=fixture();const p=await unknown(f);f.env.setRt=async patch=>{Object.assign(f.env.rt,patch);return {ok:false}};f.env.rtCommit=async()=>false;assert.equal(await f.M.command('archiveUnknown',{pendingId:p.id}),false);assert.equal(f.env.rt.enchant.pending.id,p.id);assert.equal(f.env.rt.enchant.status,'paused');assert.equal(f.posts.length,1)});
 test('unknown archive после fresh GET не удаляет уже заменённый pending',async()=>{const f=fixture();const p=await unknown(f);f.onGet=url=>{if(url==='/character')f.env.rt.enchant.pending={...f.env.rt.enchant.pending,id:'other'}};assert.equal(await f.M.command('archiveUnknown',{pendingId:p.id}),false);assert.equal(f.env.rt.enchant.pending.id,'other');assert.equal(f.env.rt.enchantArchive,undefined)});
 test('итоговый GET не привязывает успех к замене экипированного экземпляра с другим UID',async()=>{const f=fixture();f.snap.inventory.eq.l1.clanWeaponUid='original';await f.start();f.mode='timeout';await f.tick();f.snap.inventory.eq.l1={...f.snap.inventory.eq.l1,enchant:4,enchantMAtkBonus:24,clanWeaponUid:'replacement'};f.snap.inventory.stacks.find(x=>x.itemId===910527).qty--;f.snap.revision++;await f.M.note(f.posts[0],{attemptedCount:1,successCount:1,failCount:0,scrollConsumedCount:1,previousEnchantLevel:3,currentEnchantLevel:4,updatedTargetInstanceId:'eq:l1'},200);assert.equal(f.env.rt.enchant.pending?.state,'unknown');assert.equal(f.env.rt.enchant.totals.attempts,0);assert.ok(f.env.rt.enchant.items[0].fingerprint.includes('original'))});
+// Настоящие setRt/rtCommit/fire и очередь: inactive меняет память, но вообще не enqueue.
+function actualStorage(f, inactive, reject) {
+ const coreSource=fs.readFileSync(path.join(base,'content.js'),'utf8'),sent=[],outcomes=[];
+ const core={console,Date,Math,rt:copy(f.env.rt),RT_BULKY:[],rtSizeT:Date.now(),rtBigWarnT:0,tabIdle:false,document:{prerendering:false},
+  on:true,tabOwner:true,leaseEpoch:'test-lease',TAG:'test',rec(){},sleep:async()=>{},abHold:()=>false,invBusy:false,running:true,window:{},
+  PointerEvent:class{constructor(type){this.type=type}},MouseEvent:class{constructor(type){this.type=type}}};
+ vm.createContext(core);vm.runInContext(fs.readFileSync(path.join(base,'engine-core.js'),'utf8'),core);
+ const stored=copy(core.rt);
+ core.rtWriter=core.L2EngineCore.createPatchQueue(async p=>{sent.push(copy(p));Object.assign(stored,copy(p));return {ok:true}},
+  ()=>!core.tabIdle&&!core.document.prerendering&&(!core.on||(core.tabOwner&&!!core.leaseEpoch)));
+ function native(start,end){const a=coreSource.indexOf(start),b=coreSource.indexOf(end,a);assert.ok(a>=0&&b>a);vm.runInContext(coreSource.slice(a,b),core)}
+ native('function setRt(p) {','const RECENT =');native('async function rtCommit(','const rodLvlOf =');native('function fire(el) {','// Single-writer settings update.');
+ Object.defineProperty(f.env,'rt',{get:()=>core.rt,set:v=>{core.rt=v},configurable:true});
+ Object.defineProperty(f.env,'tabOwner',{get:()=>core.tabOwner,set:v=>{core.tabOwner=v},configurable:true});
+ f.env.setRt=async p=>{if(reject(p)){if(inactive==='lease'){core.tabIdle=true;core.tabOwner=false;core.leaseEpoch=null}else core.document.prerendering=true}const r=await core.setRt(p);outcomes.push({patch:copy(p),result:copy(r)});return r};
+ f.env.rtCommit=()=>core.rtCommit();
+ const oldFire=f.env.fire;
+ f.env.fire=el=>{const target={scrollIntoView(){},getBoundingClientRect:()=>({left:0,top:0,width:10,height:10}),dispatchEvent:e=>{if(e.type==='click')oldFire(el)}};return core.fire(target)};
+ return {core,stored,sent,outcomes,activate(){core.tabIdle=false;core.document.prerendering=false;core.tabOwner=true;core.leaseEpoch='new-test-lease'}};
+}
+test('actual setRt inactive: prerendering не сохраняет pending, пустой recover не разрешает native fire',async()=>{
+ const f=fixture();await f.start();const b=actualStorage(f,'prerender',p=>!!p.enchant?.pending);f.mode='timeout';await f.tick();
+ assert.ok(b.outcomes.some(x=>x.patch.enchant?.pending&&x.result.reason==='inactive'));assert.deepEqual(copy(b.core.rtWriter.peek()),{});assert.equal(await b.core.rtCommit(),true);
+ assert.equal(b.stored.enchant.pending,null);assert.equal(f.posts.length,0);assert.equal(f.env.rt.enchant.status,'paused');
+});
+test('actual fire при потере lease блокирует трату независимо от durability ошибки',async()=>{
+ const f=fixture();await f.start();const b=actualStorage(f,'lease',p=>!!p.enchant?.pending);await f.tick();
+ assert.ok(b.outcomes.some(x=>x.patch.enchant?.pending&&x.result.reason==='inactive'));assert.equal(await b.core.rtCommit(),true);assert.equal(b.core.tabOwner,false);
+ assert.equal(f.posts.length,0);assert.equal(b.stored.enchant.pending,null);
+});
+for(const inactive of ['lease','prerender'])test(`actual setRt ${inactive}: unknown archive не объявляет успех без записи, retry сохраняет один резерв`,async()=>{
+ const f=fixture(),p=await unknown(f);let reject=true;const b=actualStorage(f,inactive,x=>reject&&x.enchant===null&&!!x.enchantArchive);
+ const closed=await f.M.command('archiveUnknown',{pendingId:p.id});
+ assert.ok(b.outcomes.some(x=>x.patch.enchant===null&&x.result.reason==='inactive'));assert.deepEqual(copy(b.core.rtWriter.peek()),{});assert.equal(await b.core.rtCommit(),true);
+ assert.equal(closed,false);assert.equal(f.env.rt.enchant.pending.id,p.id);assert.equal(b.stored.enchant.pending.id,p.id);assert.equal(b.stored.enchantArchive,undefined);
+ b.activate();reject=false;assert.equal(await f.M.command('archiveUnknown',{pendingId:p.id}),true);assert.equal(b.stored.enchant,null);
+ assert.equal(b.stored.enchantArchive.length,1);assert.equal(b.stored.enchantArchive[0].totals.unknown,1);assert.equal(b.stored.enchantArchive[0].totals.reservedScrolls,1);assert.equal(f.posts.length,1);
+});
 (async()=>{let failed=0;for(const[name,fn]of cases)try{await fn();console.log('PASS',name)}catch(e){failed++;console.error('FAIL',name,e.stack)}console.log(`${cases.length-failed}/${cases.length} passed`);if(failed)process.exitCode=1})();
