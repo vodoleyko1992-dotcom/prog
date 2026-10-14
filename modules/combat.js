@@ -1599,8 +1599,11 @@ async function battle() {
       // 9.2 (анализатор боя, повторные бои с тем же РБ): спецудар приходит ровным ритмом (≥ 3 пауз, разброс ≤ 30 %) и до следующего ещё
       // > 3 ходов — в цене хода его не держим (лечимся только от обычных ударов и аварийно); подходит — снова «спецудар + 3 удара»
       const sEta = adaptive && known && env.cfg.rbSpikeRhythm !== false ? env.fightSpikeEta?.() : null;
-      const spikeFar = !!sEta && sEta.eta > 3 * env.turnSec() + 1;
-      if (sEta && !ctx.rb.rhythmNote) { ctx.rb.rhythmNote = 1; env.rec('B', 'РБ', `ритм спецудара: раз в ≈${sEta.gap} с — банки между спецударами только от обычных ударов, перед спецударом — запас`); }
+      // Лог 14.10 23:35, Gorgolos: оценка ритма сочла спецудар далёким, но при HP 3k
+      // следующий вихрь на 2916 HP оставил 621 HP. Цена ошибки прогноза выше цены банки:
+      // держим запас под спецудар даже между замеренными импульсами.
+      const spikeFar = false;
+      if (sEta && !ctx.rb.rhythmNote) { ctx.rb.rhythmNote = 1; env.rec('B', 'РБ', `ритм спецудара: раз в ≈${sEta.gap} с — запас HP держу постоянно`); }
       const price = adaptive && known && env.cfg.rbTurnPrice !== false && me ? rbTurnHeal({ cur: me.cur, max: me.max, spike: spikeFar ? 0 : spike, p90: ordinaryP90, stopPct: env.cfg.stopHp }) : null;
       if (price) {                                // 9.0: знакомый РБ — «цена хода» вместо полосы from…to
         ctx.rb.potOn = price.need;

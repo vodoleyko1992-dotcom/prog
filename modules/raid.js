@@ -682,6 +682,11 @@ async function rbGoStep() {                       // список РБ → ну�
 }
 
 const huntOn = () => !!env.cfg.rbHuntMode;
+function rbBuffShortage(now = Date.now()) {
+  if (env.cfg.rbFaFull === false || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
+  const H = env.hudBuffs?.(), need = env.faFullIds?.() || [];
+  return H && need.filter(id => !H[id] || H[id] < now + 10 * 60000).length || 0;
+}
 
 async function huntSet(p) { await env.setRt({ rbHunt: { ...(env.rt.rbHunt || {}), ...p, t: Date.now() } }); }
 
@@ -891,6 +896,10 @@ async function rbHuntStep() {
   if (await rbShopFirst(p.name)) return;             // v5.2.2: сначала банки (минимум «Банки HP»), потом РБ
   if (!active()) return;
   if (await env.townBuffStart(`перед РБ ${p.name}`, true)) return;   // v5.3: все баффы на месте — перед РБ это важнее всего
+  // Лог 14.10 23:35: FA закончилась после частичной закупки, но тур продолжил РБ без выбранного фулл баффа.
+  // Когда баланс точно нулевой и в шапке видны отсутствующие эффекты, ждём пополнения вместо опасного старта.
+  const missing = rbBuffShortage();
+  if (missing) return env.pauseBot(`Тур РБ: нет FA для выбранного баффа (не хватает ${missing} эффектов). Пополни FA и продолжи`);
   if (!active()) return;
   const me = env.meHp(), mp = env.meMp();                    // перед вылетом — полное HP/MP (баффер «Восстановить»)
   if (me && (me.pct < env.cfg.rbRestHp || (mp && mp.cur < mp.max * 0.6)) && await env.restoreVitals(`перед РБ ${p.name}: HP ${me.pct | 0}%`)) return;
