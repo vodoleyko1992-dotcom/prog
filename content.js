@@ -885,10 +885,8 @@ const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.ne
 // Остаётся только необходимое: цели главы при включённой «Кампании», РБ-режимы, нет кнопки «Охотиться дальше», старт с карты
 const mapOff = () => (+cfg.deepEvery || 0) <= 0;
 const campChampDue = () => campActive() && campChampOpen();
-// 7.2 (игрок: «активная цель „ресурс“ или „рецепт“ сама включает карту, даже при 0»): на точке фарма мобов-источников бот выбирает
-// с карты — раз в 5 боёв при «0», не реже раза в 10 при большем числе (99999 — иначе фарм ресурса бьёт кого попало). Если цепочка
-// сама приносит источники в ≥ 50 % боёв — карта откладывается (chainCarries), как для ★ целей
-const FARM_EVERY = 5;
+// 15.10: на точке ресурса/рецепта единый интервал 50 побед; общие deepEvery/champEvery его не сокращают.
+const FARM_EVERY = 50;
 // 9.2.3 (игрок 12.10: «на спойлере пересматривает карту раз в несколько боёв, вместо того чтобы бить следующего»): цель Маммона
 // «добываю Mithril Ore» включает карту раз в 10 боёв ради источника (Guardian Basilisk), а он «не по зубам» (9.2.2: на карте не выбирается) —
 // карта ходила впустую. Все источники цели на этой точке «не по зубам» → карта по обычному правилу (цепочка)
@@ -899,11 +897,12 @@ const farmMapOn = () => {
   const names = [...farmRules(), ...recipeRules()].map(x => x.name);
   return !names.length || names.some(n => !hardNow(n));
 };
-const deepN = () => campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
-  : farmMapOn() ? Math.min(+cfg.deepEvery > 0 ? +cfg.deepEvery : FARM_EVERY, FARM_EVERY * 2)
+const deepN = () => farmMapOn() ? FARM_EVERY
+  : campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
   : champHunt() ? (mapOff() ? champEvery() : Math.min(cfg.deepEvery, champEvery())) : mapOff() ? Infinity : cfg.deepEvery;
-const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) || (searchActive(rules) &&
-  (campChampDue() || !mapOff() || farmMapOn() || champHunt()) && (rt.deepHot || rt.sinceDeep >= deepN()));
+const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) ||
+  (farmMapOn() ? (rt.sinceDeep || 0) >= FARM_EVERY : (searchActive(rules) &&
+  (campChampDue() || !mapOff() || champHunt()) && (rt.deepHot || rt.sinceDeep >= deepN())));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 

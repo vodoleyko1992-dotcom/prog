@@ -978,14 +978,7 @@ async function battle() {
     if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
         && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
       env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
-  // 14.10, расширенный аудит: случайная цель цепочки тоже соблюдает нижний предел FA. Явные задания и выбранное вручную
-  // подземелье сохраняют собственные окна; начатый игроком или уже повреждённый бой доводим до конца.
-  { const hl = env.heroLvl() || env.rt.lvl || 0, lv = ctx.lvl || 0;
-    const farmT = [...(env.farmRules?.() || []), ...(env.recipeRules?.() || [])].some(x => x.farm && x.name === nm);
-    const manualDungeon = env.cfg.catMode && env.cfg.catDungeon && env.cfg.catDungeon !== 'auto';
-    if (cameVia === 'chain' && !manualDungeon && !isRb && hl && lv && lv < hl - 5 && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
-        && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
-      env.rec('B', 'цели', `${ctx.name} (${lv} ур.): ниже героя на ${hl - lv} — Fast Aden не падает, иду на карту`); await env.setRt({ target: null }); return env.toMap(); } }
+  // 15.10: слабого случайного моба цепочки добиваем, даже без FA; нижний порог остаётся при выборе с карты.
   // 10.0.10 (игрок 13.10 11:33): «Охотиться дальше» подсовывает чемпиона цвета, который выключен в «Каких чемпионов бить» (или герой ниже
   // порога уровня), — нетронутый бой не начинаем, на карту. ★ квест и чемпион главы — бьём
   if (ctx.champ && !isRb && !ctx.questKill && !(env.campActive() && env.campChampOpen()) && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {

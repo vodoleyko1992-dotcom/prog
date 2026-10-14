@@ -290,10 +290,11 @@ async function nextFight(ctx) {
   // 7.2: моб-источник ресурса/рецепта — тоже «цель» (по доле таких в цепочке решаем, нужна ли карта)
   const tgt = !!ctx && (env.isQuestName(ctx.name) || ctx.killed.some(n => env.isQuestName(n)) || (!!ctx.champ && rules.some(x => x.champ && !x.neg))
     || rules.some(x => x.farm && x.name === String(ctx.name || '').toLowerCase()));
+  const resourceFarm = !!env.farmMapOn?.();
   const camp = !!ctx && env.campMobOpen().length > 0;
   if (ctx && (camp || env.searchActive(rules)) && env.rt.via === 'chain') env.setRt({ chainQ: [...(env.rt.chainQ || []), tgt ? 1 : 0].slice(-12) });
   let offQuest = false;
-  if (camp && !tgt) {
+  if (camp && !tgt && !resourceFarm) {
     const q = env.rt.chainQ || [], share = (q.reduce((a, b) => a + b, 0) + 1) / (q.length + 2);
     const cs = env.rt.eff?.chain?.sec || 9, ms = env.rt.eff?.map?.sec || 20, perTgt = cs / share;
     offQuest = q.length >= 6 && perTgt > ms * 1.1;           // решаем по 6+ боям цепочки, не по одному чужому мобу
@@ -307,7 +308,7 @@ async function nextFight(ctx) {
   // и только если правило [квест] вообще может выбрать цель (иначе карта после каждого боя ни к чему)
   const qRule = rules.some(x => x.quest && !x.neg);
   // 7.1.31: «Проверять карту каждые 0 боёв» = никогда — за ★ целью на карту тоже не ходим (бьём то, что даёт цепочка)
-  const qOpen = qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && questHere();
+  const qOpen = !resourceFarm && qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && questHere();
   if (ctx && qOpen && !tgt && !ctx.rb) {
     offQuest = true;
     if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); await env.setRt({ chainWhy: 'qmap' }); }
@@ -315,12 +316,12 @@ async function nextFight(ctx) {
   let due = env.mapDue(rules);
   // v4.28: цель далеко по списку карты (deepHot), но цепочка только что дала цель (★/чемпион) — соседи такие же, продолжаем
   // цепочку. Так было: Leto Lizardman Archer на 8-й странице → после КАЖДОГО боя карта (+5–8 с на бой)
-  if (due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && (+env.cfg.deepEvery > 0 || env.farmMapOn?.())) {
+  if (!resourceFarm && due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && (+env.cfg.deepEvery > 0 || env.farmMapOn?.())) {
     if (env.rt.chainWhy !== 'hot') env.rec('B', 'цепочка', `${ctx.name} — цель; цепочка приносит цели, карту не проверяю`);
     await env.setRt({ chainWhy: 'hot', sinceDeep: Math.min(env.rt.sinceDeep || 0, env.deepN() - 1) });
     due = false;
   }
-  if (due && !env.rbDue() && !env.campRbOpen().length && chainCarries()) {
+  if (!resourceFarm && due && !env.rbDue() && !env.campRbOpen().length && chainCarries()) {
     if (env.rt.chainWhy !== 'carry') env.rec('B', 'цепочка', `цели идут цепочкой (${Math.round((env.rt.chainQ.reduce((a, b) => a + b, 0) / env.rt.chainQ.length) * 100)} % боёв) — плановую проверку карты откладываю`);
     await env.setRt({ chainWhy: 'carry' });
     due = false;
