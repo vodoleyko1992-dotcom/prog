@@ -13,7 +13,7 @@
 
 ---
 
-- 14.10 · Claude · PR #109 · Этот журнал; ссылки на него в AGENTS.md и CLAUDE.md.
+- 14.10 · Claude · PR #110 · Этот журнал; ссылки на него в AGENTS.md и CLAUDE.md.
 - 14.10 · Codex · сборка 10.0.14 (предварительная, Chrome) · включены PR #107 и #108, см. docs/changelog/CHANGELOG-10.0.14.md.
 - 14.10 · Codex · PR #108 · Аудит «Astra Ultra»: пагинация, почта, квесты, остановка бота (docs/FULL-GAME-ULTRA.md).
 - 14.10 · Codex · PR #107 · Закрыты обходы запретов чемпионов по аудиту Astra Ultra.
