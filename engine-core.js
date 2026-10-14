@@ -105,7 +105,8 @@
 
   // One exclusive autonomous mode controls navigation. Manual jobs, PvP and
   // combat remain higher-priority interrupts in the content-script dispatcher.
-  function chooseMode({ epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
+  function chooseMode({ enchant = false, epic = false, raid = false, fish = false, cat = false, campaign = false, tasks = false } = {}) {
+    if (enchant) return 'enchant'; // 15.10: отдельный режим сильнее старых флагов импортированного профиля.
     if (epic) return 'epic';
     if (raid) return 'raid';
     if (fish) return 'fish';

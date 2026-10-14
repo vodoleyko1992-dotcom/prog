@@ -91,7 +91,7 @@ function pick(){
  if(Date.now()-state.heroesT>15000)return null;
  return state.heroes.map(h=>({h,t:targets()[h.id]})).find(x=>!verdict(x.t,x.h))||null;
 }
-function occupied(){const r=env.rt;return pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtSoon?.()}
+function occupied(){const r=env.rt;return env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtSoon?.()}
 async function refresh(){
  const T=token();if(!active(T)||pending())return false;
  if(!state.self||state.self.char!==T.char||Date.now()-state.self.t>30000){

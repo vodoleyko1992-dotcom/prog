@@ -19,7 +19,15 @@ assert.deepEqual(actions, ['retry', 'reload', 'reload', 'halt'], 'retry → relo
 const rc2 = createRecoveryController(clock); rc2.restoreFatal('/map.html', { message: 'x', count: 3, at: now - 11 * 60000 });
 assert.equal(rc2.exportFatal('/map.html'), null, 'older than 10 min is not restored');
 assert.match(content, /sessionStorage\.getItem\('l2bot-fatal'\)[\s\S]{0,200}recovery\.restoreFatal\(route, fatalAll\[route\]\)/);
-assert.match(content, /d\.action === 'reload' && d\.programming && d\.fatalRepeats === 3 && !\/\\\/map\\\.html\/\.test\(location\.pathname\)\)[\s\S]{0,300}location\.href = '\/map\.html'/);
+// 15.10: режим заточки не уводится на карту восстановлением; для обычных режимов третий повтор по-прежнему меняет страницу.
+const mapRecovery = content.match(/if \((d\.action === 'reload' && d\.programming && d\.fatalRepeats === 3[^\n]+)\) \{([\s\S]*?)\n  \}/);
+assert.ok(mapRecovery, 'third-repeat recovery branch exists');
+const recoveryToMap = (mode, page = '/char.html', repeats = 3) => vm.runInNewContext(mapRecovery[1], {
+  d: { action: 'reload', programming: true, fatalRepeats: repeats }, autonomyMode: () => mode, location: { pathname: page }
+});
+assert.equal(recoveryToMap('farm'), true); assert.equal(recoveryToMap('enchant'), false);
+assert.equal(recoveryToMap('farm', '/map.html'), false); assert.equal(recoveryToMap('farm', '/char.html', 2), false);
+assert.match(mapRecovery[2], /if \(on && tabOwner\) location\.href = '\/map\.html'/, 'map fallback still requires active ownership');
 
 // 2. простой сервера не превращается в остановку
 assert.match(content, /if \(!hard && on && !\(await srvUp\(\)\)\) \{[^\n]*return serverWait\(\); \}/, 'soft halts wait for the server');

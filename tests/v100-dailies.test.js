@@ -70,7 +70,30 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
   const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), manifest = read('manifest.json'), fishing = read('modules/fishing.js');
   assert.match(manifest, /"modules\/dailies\.js"/); assert.match(html, /<script src="modules\/dailies\.js"><\/script>/);
   assert.match(content, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks',/);
-  assert.match(content, /async function gamePost\(path, body, ms = 8000\)/); assert.match(content, /L2V7Modules\.dailies\.tick\(\)\.catch\(\(\) => \{\}\);\n\s+if \(await L2V7Modules\.dailies\.clanStep\(\)\) \{ await sleep\(200\); continue; \}\n\s+if \(await L2V7Modules\.dailies\.dailyStep\(\)\) \{ await sleep\(200\); continue; \}/);
+  assert.match(content, /async function gamePost\(path, body, ms = 8000\)/);
+  // 15.10: между await теперь проверяется активность режима; сохраняем порядок tick → клан → дейлик и проверяем отсечение старого цикла.
+  const dispatchStart = content.indexOf('L2V7Modules.dailies.tick().catch(() => {});');
+  const dispatchEnd = content.indexOf('if (rt.petBufferTrip', dispatchStart);
+  assert.ok(dispatchStart >= 0 && dispatchEnd > dispatchStart);
+  for (const changed of ['none', 'handled', 'stop', 'lease', 'enchant']) {
+    const calls = [], box = { on: true, tabOwner: true, mode: 'farm', sleep: async () => {} };
+    box.autonomyMode = () => box.mode;
+    box.L2V7Modules = { dailies: {
+      tick: async () => { calls.push('tick'); },
+      clanStep: async () => {
+        calls.push('clan');
+        if (changed === 'stop') box.on = false;
+        if (changed === 'lease') box.tabOwner = false;
+        if (changed === 'enchant') box.mode = 'enchant';
+        return changed === 'handled';
+      },
+      dailyStep: async () => { calls.push('daily'); return false; }
+    } };
+    vm.createContext(box);
+    vm.runInContext('this.run=async()=>{for(let i=0;i<1;i++){\n' + content.slice(dispatchStart, dispatchEnd) + '\n}};', box);
+    await box.run();
+    assert.deepEqual(calls, changed === 'none' ? ['tick', 'clan', 'daily'] : ['tick', 'clan'], 'daily dispatch after clan await: ' + changed);
+  }
   assert.match(content, /path === '\/game\/daily-quests' && tabOwner && d\.res\?\.tasks\) try \{ L2V7Modules\.dailies\.dailyNote\(d\.res\); \}/); assert.match(content, /path === '\/game\/clan-tasks' && tabOwner/);
   assert.match(content, /get dailyFishNote\(\) \{ return \(\) => L2V7Modules\.dailies\?\.fishNote\?\.\(\); \}/); assert.match(fishing, /if \(env\.dailyFishNote\) bg\(env\.dailyFishNote\(\)\);/);
   assert.match(html, /data-task="dailyAuto"/); assert.match(html, /data-task="clanTasks"/); assert.match(html, /<input id="dailyAuto" type="checkbox">/); assert.match(html, /<input id="clanTasks" type="checkbox">/); assert.match(html, /id="dqBox"/);

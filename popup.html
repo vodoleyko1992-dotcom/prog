@@ -206,7 +206,8 @@
     <button id="epicToggle" data-mode="epic" title="Бот летает к эпик-боссам по списку и добивает их заходами">🐉 Эпики</button>
     <button id="fishToggle" data-mode="fish" title="Рыбалка: заброс, вываживание, разделка и обмен на Proof">🎣 Рыбалка</button>
     <button id="catToggle" data-mode="cat" title="Фарм катакомб и некрополей">🏛 Катакомбы</button>
-    <div class="mode-label">Задачи — работают в любом режиме и без режима:</div>
+    <button id="enchantToggle" data-mode="enchant" title="Отдельный режим: заточка выбранных вещей по очереди. Настройте лимиты и нажмите «Начать серию» в разделе автозаточки">✨ Автозаточка</button>
+    <div class="mode-label">Задачи — при автозаточке ждут завершения режима; TvT сохраняет приоритет:</div>
     <button class="mod" data-task="mmOrders" title="Заказ торговца Маммона: бот сам сдаёт ресурсы, когда они есть (раздел «Маммон»)">📦 Заказ Маммона</button>
     <button class="mod" data-task="mmUpgrade" title="Улучшение вещи-цели у кузнеца Маммона (тратит Coin of Luck; раздел «Маммон»)">⬆ Кузнец</button>
     <button class="mod" data-task="mmCraftSend" title="Сырьё на крафт вещи-цели — крафтеру почтой (раздел «Маммон» → «Крафтер и почта»)">📮 Крафтер</button>
@@ -236,6 +237,7 @@
   <button data-tab="hunt" title="Фарм на месте, автофарм, катакомбы, TvT, ресурсы"><span class="ic">◎</span>Охота</button>
   <button data-tab="rb" title="Рейд-боссы, тур по РБ, эпик-боссы"><span class="ic">♛</span>РБ и эпики</button>
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
+  <button data-tab="enchant" title="Режим заточки оружия и брони, очередь, лимиты и результаты"><span class="ic">✨</span>Автозаточка</button>
   <div class="nav-group">ОБЩЕЕ</div>
   <button data-tab="panel" title="Анализ боя, общие правила, подразделы классов (Warlock и кот, маг, спойлер, воин), герой"><span class="ic">⚔</span>Бой</button>
   <button data-tab="pvp" title="Явные цели, обычный лист врагов, TvT и магазин"><span class="ic">⚔</span>PvP</button>
@@ -587,7 +589,12 @@
   <div class="row"><button id="weapScan">🔍 Проверить инвентарь</button><button id="weapClass">⭐ Поставить «в класс»</button></div>
   <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
-  <div class="subsec-title"><span id="tab-enchant" class="tab-anchor"></span>Заточка оружия и брони</div>
+</section>
+
+<section id="tab-enchant">
+  <h3>✨ Автозаточка оружия и брони</h3>
+  <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
+  <div class="hint">Выберите вещи и лимиты, разрешите попытки, включите режим и нажмите «Начать серию». Пауза и завершение серии оставляют бота в этом режиме: к фарму он сам не переходит. Очередь и результаты сохраняются при смене режима.</div>
   <div id="enchantPanel" data-embedded="1"></div>
 </section>
 

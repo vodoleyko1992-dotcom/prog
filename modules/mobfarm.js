@@ -198,8 +198,11 @@ async function nextFight(ctx) {
   await env.sleep(env.rnd(40, 120));                      // после победы — сразу дальше (v5.4: было 150–350 мс)
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
+  // 15.10: начатый бой доводим до конца, после него отдельная заточка не начинает новую охоту/обслуживание.
+  if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.victory() && await env.pvpStep?.()) return;
   if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
+  if (env.autonomyMode() === 'enchant') return env.toMap();
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
@@ -213,6 +216,7 @@ async function nextFight(ctx) {
   if (env.rt.bagCheck) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Пересчитать в сумке» из меню
   if (env.rt.zoneGo) { location.href = '/teleport.html'; await env.sleep(4000); return; }   // «Лететь» в меню локаций
   if (!ctx?.rb && await env.townBuffStart('баффы кончились')) return;            // городской бафф слетел (смерть/24 ч)
+  if (env.autonomyMode() === 'enchant') return env.toMap();
   const since = Date.now() - (env.rt.shopT || 0);
   const low = since > 600000 ? env.shopNeedByPanel() : '';
   const plan = env.cfg.shopAuto ? env.shopPlan() : [];
@@ -232,17 +236,21 @@ async function nextFight(ctx) {
   }
   if (!env.on || env.tabOwner === false) return;
   // Автобаф кота — обслуживание между целями, без выхода из выбранной зоны.
+  if (env.autonomyMode() === 'enchant') return env.toMap();
   if (!env.on || env.tabOwner === false) return;
   if (env.victory()) await env.warlock?.step?.({ afterWin: true });
   if (!env.on || env.tabOwner === false) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
+  if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.autonomyMode() === 'fish') return env.goFishing();
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
     if (env.cfg.chain !== false && (env.rt.catIn || /spawnId=sdms_/i.test(location.search))) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
+      if (!env.on || env.tabOwner === false) return;
+      if (env.autonomyMode() === 'enchant') return env.toMap();
       if (hunt) {
         env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
         const href = location.href, t0 = Date.now(); env.fire(hunt);
@@ -326,6 +334,8 @@ async function nextFight(ctx) {
     // кнопка «Охотиться дальше» появляется на экране победы не сразу (иногда через 0,3–1 с) —
     // ждём её, а не уходим на карту (v4.6–4.13: бот уходил через 0,2 с, «цепочка не работает»)
     const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
+    if (!env.on || env.tabOwner === false) return;
+    if (env.autonomyMode() === 'enchant') return env.toMap();
     if (hunt) {
       env.setStatus('Охотиться дальше');
       // 10.0 (лог 12.10: от записи «Охотиться дальше» до запроса 273 мс против ≈45 мс у игрока): запись не ждём — rt в памяти уже новый,

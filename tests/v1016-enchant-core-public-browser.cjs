@@ -1,5 +1,5 @@
 'use strict';
-// Реальный popup → content/main → актуальный публичный renderer/submit → hook → память → возврат.
+// Реальный popup → content/main → публичный renderer/submit → hook → память; законченный режим ждёт игрока.
 // Ответы сервера локальные. Ни аккаунта, ни реальной траты.
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
@@ -25,13 +25,13 @@ const unknown=process.argv.includes('--unknown');
   html=html.replace('</body>',`<div id="l2-hud-legacy-name">AuditHero</div><script>${bootstrap}</script>${names.slice(0,-1).map(f=>'<script src="/'+f+'"></script>').join('')}<script>L2EnchantClient.install(L2);</script><script src="/enchant.js"></script></body>`);
   return r.fulfill({contentType:'text/html; charset=utf-8',body:html});
  });
- await h.popup.evaluate(()=>document.querySelector('[data-tab="panel"]').click());
+ await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
  const ui=h.popup.locator('#enchantPanel');await until(()=>ui.locator('[data-command="refresh"]').count());await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
  await ui.locator('[data-candidate]').selectOption('0');await ui.locator('[data-add]').click();await until(()=>ui.locator('[data-key]').count());
  for(const key of ['maxAttempts','maxScrolls']){const el=ui.locator('[data-global][data-field="'+key+'"]');await el.fill('2');await el.dispatchEvent('change');await until(async()=> (await h.get(['cfg'])).cfg.enchant[key]===2);await delay(100);}
  await ui.locator('[data-item="weaponMode"]').selectOption('magic');await until(async()=> (await h.get(['cfg'])).cfg.enchant.queue[0].weaponMode==='magic');
  await ui.locator('[data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
- await h.click('start');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
+ await h.click('enchantToggle');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
  if(unknown){
   await until(async()=> (await h.get(['rt'])).rt.enchant?.pending?.state==='unknown',30000);
   const before=(await h.get(['rt'])).rt.enchant;await h.click('stop');await until(()=>h.g.core('!on && !tabOwner'),15000);
@@ -52,7 +52,8 @@ const unknown=process.argv.includes('--unknown');
  }
  await until(async()=> (await h.get(['rt'])).rt.enchant?.status==='done',30000).catch(async e=>{console.log('STATE',{page:h.g.p.url(),posts,rt:(await h.get(['rt'])).rt.enchant,status:(await h.get(['rt'])).rt.status,errors:h.errors});throw e});
  const state=(await h.get(['rt'])).rt.enchant;assert.equal(posts.length,1);assert.equal(state.totals.attempts,1);assert.equal(state.totals.successes,1);assert.equal(state.totals.scrolls,1);assert.equal(state.totals.adena,0);assert.equal(state.pending,null);assert.equal(state.items[0].level,4);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===4037).qty,99);
- await until(()=>new URL(h.g.p.url()).pathname==='/map.html',20000);assert.equal((await h.get(['cfg'])).cfg.taskOnly,true);await h.click('stop');assert.deepEqual(h.errors,[]);
- console.log('PASS full extension: actual popup queue → real main → current public enchant DOM click → hook response → exact accounting → original mode/page');
+ // 15.10: отдельный режим после серии остаётся на заточке и не возобновляет задачи/охоту.
+ await delay(1000);assert.equal(new URL(h.g.p.url()).pathname,'/enchant.html');assert.equal((await h.get(['cfg'])).cfg.enchantMode,true);assert.equal(posts.length,1);await h.click('stop');assert.deepEqual(h.errors,[]);
+ console.log('PASS full extension: actual popup queue → real main → current public enchant DOM click → hook response → exact accounting → enchant mode/page waits');
  console.log('PASS 1 confirmed scroll, +3→+4, no Adena/CoL, no duplicate POST, no page errors');
 }finally{await h.ctx.close()}})().catch(e=>{console.error('FAIL',e.stack);process.exitCode=1});

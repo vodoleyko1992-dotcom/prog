@@ -13,7 +13,7 @@ assert.doesNotMatch(content, /once\('rbBetween803'/, 'no migration needed: a sto
 // ядро: одна формула; mergeCfg (все чтения хранилища), setCfg и разовые миграции её применяют
 const rbSrc = content.match(/const rbEff = (c => [^;]+);/)[1];
 assert.equal(popup.match(/const rbEff = (d => [^;]+);/)[1].replace(/\bd\b/g, 'c'), rbSrc, 'menu uses the same formula as the core');
-const sb = vm.createContext({ DEF_CFG: { rbMode: false, rbBetween: false, rbHuntMode: false, fishMode: false, epicMode: false, campaign: false } });
+const sb = vm.createContext({ DEF_CFG: { rbMode: false, rbBetween: false, rbHuntMode: false, fishMode: false, epicMode: false, campaign: false, enchantMode: false } });
 vm.runInContext(`const rbEff = ${rbSrc}; ${content.match(/const withRb = [^;]+;/)[0]} ${content.match(/const mergeCfg = [^;]+;/)[0]} this.r = { rbEff, withRb, mergeCfg };`, sb);
 const { mergeCfg, withRb } = sb.r;
 const eff = c => mergeCfg(c).rbMode;
@@ -23,6 +23,7 @@ assert.equal(eff({ rbBetween: true }), true, 'player turned it on');
 assert.equal(eff({ rbBetween: true, fishMode: true }), false, 'fishing suspends it');
 assert.equal(eff({ rbBetween: true, epicMode: true }), false, 'epics suspend it');
 assert.equal(eff({ rbBetween: true, campaign: true }), false, 'campaign suspends it');
+assert.equal(eff({ rbBetween: true, enchantMode: true }), false, 'enchant mode suspends the add-on');
 assert.equal(eff({ rbBetween: true, epicMode: false }), true, 'epics off → the choice is back by itself (was: lost)');
 assert.equal(eff({ rbHuntMode: true }), true, 'RB tour needs it');
 assert.equal(eff({ rbHuntMode: true, rbBetween: false, rbMode: false }), true, 'tour wins over a stale stored value');
@@ -49,7 +50,13 @@ assert.doesNotMatch(popup, /: \{ rbHuntMode: false \}\) \};/, 'turning the add-o
 assert.equal((popup.match(/paintRbToggle\(d\);/g) || []).length, 2);
 assert.match(popup, /b\.classList\.toggle\('on', !!d\.rbBetween\); b\.classList\.toggle\('susp', susp\);/);
 assert.match(popup, /const mods = \[rbEff\(d\) && m !== 'rb' && 'РБ между мобами'/);
-assert.match(popup, /const mods = \[d\.campaign \? '📜 кампания' : \(d\.campAuto !== false && rt\?\.campAutoOn && `📜 кампания \(авто: /);   // 10.0.10: + «кампания (авто)» по сюжетному квесту новичка
+// 15.10: сводка сохраняет ручную/авто-кампанию в обычных режимах и скрывает её во время заточки.
+const modsSrc = popup.match(/const mods = (\[[^\n]+d\.campaign[^\n]+\]\.filter\(Boolean\));/)?.[1];
+assert.ok(modsSrc, 'mode summary modifiers found');
+const mods = (m, d, rt = {}) => Array.from(vm.runInNewContext(modsSrc, { m, d, rt, rbEff: () => false }));
+assert.deepEqual(mods('farm', { campaign: true }), ['📜 кампания']);
+assert.deepEqual(mods('farm', {}, { campAutoOn: 'глава 1' }), ['📜 кампания (авто: глава 1)']);
+assert.deepEqual(mods('enchant', { campaign: true }, { campAutoOn: 'глава 1' }), []);
 assert.match(popup, /tile\('modeRbState', m === 'rb' \|\| rbEff\(d\)\);/);
 assert.doesNotMatch(popup, /d\.rbMode/, 'no summary reads the stored flag');
 assert.match(read('ui-v7.css'), /#rbToggle\.on\.susp\{/);

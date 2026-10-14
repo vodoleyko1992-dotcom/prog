@@ -1,4 +1,5 @@
 'use strict';
+// 15.10: выполнение серии требует явно выбранного отдельного режима заточки.
 // Реальные freshly fetched enchant.js/client/policy/meta и их DOM/submit handler; сервер — локальный mock, без аккаунта и расходов.
 const {chromium}=require(process.env.PLAYWRIGHT_NODE||'/opt/node-tools/node_modules/playwright'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'),modulePath=fs.existsSync(path.join(root,'modules/enchant.js'))?path.join(root,'modules/enchant.js'):path.join(root,'enchant.js');
@@ -43,7 +44,7 @@ async function boot(browser,{target='eq:l1',category='weapon',policy='blessed',l
  await page.waitForSelector('#enchant-submit');
  await page.addScriptTag({path:modulePath});
  await page.evaluate(async({target,policy,multi})=>{
-  window.E={cfg:{enchant:{enabled:true,queue:[],scrollPolicy:policy,maxAttempts:10,maxScrolls:10,maxConsecutiveFails:5,maxDropFromStart:5,maxDropFromPeak:5,delayMs:500}},rt:{},on:true,tabOwner:true,
+  window.E={cfg:{enchantMode:true,enchant:{enabled:true,queue:[],scrollPolicy:policy,maxAttempts:10,maxScrolls:10,maxConsecutiveFails:5,maxDropFromStart:5,maxDropFromPeak:5,delayMs:500}},rt:{},on:true,tabOwner:true,
     setRt:async p=>{Object.assign(E.rt,p);return {ok:true}},gameGet:async p=>({ok:true,json:async()=>structuredClone(p==='/character'?{character:F.snap}:F.hints)}),awayFree:()=>true,rec(){},setStatus(){},pause:async()=>{},
     $q:s=>document.querySelector(s),waitX:async fn=>{for(let i=0;i<100;i++){const x=fn();if(x)return x;await new Promise(r=>setTimeout(r,10))}return null},fire:el=>{if(!E.on||!E.tabOwner)return false;el.click();return true}};
   window.M=L2V7Factories.enchant(E);const scan=await M.readItems();const item=scan.items.find(i=>i.targetInstanceId===target);if(!item)throw Error('candidate missing '+target);
