@@ -78,7 +78,9 @@ function zoneHere() {                             // на карте: подтв
   const names = [...new Set(items.map(i => i.name))];
   if (!names.length) return;
   const mobs = { ...(env.rt.zoneMobs || {}) };
-  const near = +(String(env.$q?.('#map-mob-page-ind')?.textContent || '').match(/(\d+)\s*\//)?.[1] || 1) <= 1;
+  // 14.10: номера «1 2 3 4 5 >>» не содержат '/'. Дальние страницы берём из общего parser, не считаем их первой.
+  const page = env.pagerInfo?.()?.cur ?? +(String(env.$q?.('#map-mob-page-ind')?.textContent || '').match(/(\d+)\s*\//)?.[1] || 0);
+  const near = page === 1;
   const mid = lvMid(items.map(i => i.lvl));
   let lvOf = null;
   // 8.0.3 (ревью): полоса — не мин…макс всех спавнов (одно чужое имя 78–80 в списке Pavel Ruins растягивало её до [46,80] и пропускало

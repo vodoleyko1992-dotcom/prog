@@ -630,7 +630,8 @@ function observeSlot(b, src) {
   if (slotKind(b) === 'предмет' && /зілля|зелье|potion|elixir|еліксир|эликсир/i.test(b.title || '')) potWatch(b).catch(() => {});
   const name = cleanTitle(b.title), key = name.toLowerCase();
   if (!key) return;
-  const before = { mob: mobHp(), me: meHp(), mp: meMp(), arr: logLines(), t: Date.now(), notice: noticeText() };
+  const before = { mob: mobHp(), me: meHp(), mp: meMp(), arr: logLines(), t: Date.now(), notice: noticeText(), netStart: ACT_NET.start, netDone: ACT_NET.done };
+  const action = slotAction(b);
   lastObserve = before.t;
   // реальный КД: от клика до отката слота. Замер, «переехавший» через победу/смену страницы, не считаем
   // (так атака получала «КД 7,4 с», и бот стоял, думая, что атака на откате).
@@ -651,6 +652,13 @@ function observeSlot(b, src) {
     })();
   }
   setTimeout(async () => {
+    // 10.0.12 (лог 14.10 21:43:59): ответ Energy Bolt шёл 1289 мс, а замер в 900 мс учил ложный ноль.
+    // Ждём только свой отправленный ход; следующий клик, чужой ответ или таймаут отменяют замер. Без событий хука — старый fallback.
+    if (ACT_NET.start > before.netStart) {
+      const ownStart = before.netStart + 1;
+      while (ACT_NET.done < ownStart && Date.now() - before.t < 8000 && lastObserve === before.t && ACT_NET.start === ownStart) await sleep(40);
+      if (lastObserve !== before.t || ACT_NET.start !== ownStart || ACT_NET.done !== ownStart || !ACT_NET.ok || (action && ACT_NET.action !== action)) return;
+    } else if (ACT_NET.done !== before.netDone || lastObserve !== before.t) return;
     const mob = mobHp(), me = meHp(), mp = meMp();
     const added = newLines(before.arr, logLines());   // v5.6: с учётом повторов (такой же урон / тот же бафф ещё раз — раньше терялись)
     const txt = added.join(' ⏎ ');
@@ -3381,7 +3389,7 @@ async function invRefresh() {
 const actNet = () => ACT_NET;
 // 9.0 (катакомбы): список мобов подземелья целиком из ответа игры (hook.js поле dm: [id, тип, имя, ур., агр.]) и где герой по последнему
 // снимку персонажа (character.activeDungeonId, locationType — в sessionStorage, переживает переход на другую страницу)
-let DUNG_NET = null;
+let DUNG_NET = null, BATTLE_NET = null;
 let HERO_AT = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-at') || 'null'); } catch (e) { return null; } })();
 const dungNet = () => DUNG_NET, heroAt = () => HERO_AT && Date.now() - (HERO_AT.t || 0) < 10 * 60000 ? HERO_AT : null;
 // 9.0: окно игры alert() на страницах катакомб/подземелья/торговцев (hook.js его не показывает, а пересылает) и ответ обмена камней печати
@@ -3479,6 +3487,9 @@ addEventListener('message', e => {
   // 10.0.7 (ценность баффов): цифры героя из /character (hook.js hero) → rt.heroStats + снимки M.Atk под наборами баффов (rt.matkObs)
   if (d.hero && tabOwner) try { heroNote(d.hero); } catch (e) { console.warn(TAG, 'герой', e); }
   if (d.dm && Array.isArray(d.dm.mobs)) DUNG_NET = { id: d.dm.id, mobs: d.dm.mobs, t: Date.now() };
+  // 14.10: в цепочке адрес может содержать первый spawnId. Для цвета используем актуальную цель принятого ответа игры.
+  if (d.bt?.spawn && d.bt?.name && d.status >= 200 && d.status < 300 && !d.res?.error)
+    BATTLE_NET = { spawn: d.bt.spawn, name: d.bt.name, kind: d.bt.kind, lvl: d.bt.lvl, max: d.bt.mobMax, tier: d.bt.tier || '', t: Date.now() };
   { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
     try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
   if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
@@ -3981,6 +3992,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get battleInfo() { return () => BATTLE_NET; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
@@ -4095,6 +4107,10 @@ L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.ch
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
+  get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
+  get campActive() { return campActive; },
+  get campChampOpen() { return campChampOpen; },
   get CAT_LIST() { return CAT_LIST; }, set CAT_LIST(value) { CAT_LIST = value; },
   get CAT_URL() { return CAT_URL; }, set CAT_URL(value) { CAT_URL = value; },
   get NET_ERR() { return NET_ERR; }, set NET_ERR(value) { NET_ERR = value; },
@@ -4247,6 +4263,7 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
 // 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
 const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
 L2V7Modules.navigation = L2V7Factories.navigation({ get heroAt() { return heroAt; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get pagerInfo() { return pagerInfo; },
   get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },

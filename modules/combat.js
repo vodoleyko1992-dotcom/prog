@@ -6,6 +6,15 @@
  root.L2V7Factories.combat = function create_combat(env) {
 // 8.0.3: шлюз нажатий — запас после ответа на ход (A) и после конца GET /character игры (B), мс: [мин, макс, начальный]
 const LOCK_A = [60, 500, 120], LOCK_B = [30, 200, 50];
+// 10.0.12 (игрок 14.10: разрешены только зелёные/синие): в цепочке URL хранит первого моба, а цвет нужен текущего.
+function battleColor(name, urlSpawn, mobMax, cameVia, target, same) {
+  const m = env.battleInfo?.(), age = Date.now() - (+m?.t || 0), fresh = !!m && age >= 0 && age < 60000 && String(m.name || '').trim().toLowerCase() === String(name || '').trim().toLowerCase() && (!(+m.max > 0 && +mobMax > 0) || +m.max === +mobMax);
+  const spawn = fresh ? String(m.spawn || '') : cameVia !== 'chain' ? urlSpawn : '';
+  const ordinary = fresh && /^(?:normal|passive|neutral|aggressive)$/.test(m.kind || '') && !m.tier && !/^champ_[or]_/i.test(spawn);
+  const raw = ordinary ? '' : (fresh && m.tier) || (spawn && env.champTier?.(spawn, null, '')) || (cameVia !== 'chain' && same && target?.tier) || '';
+  const tier = ({ green: 'blue', yellow: 'orange' })[String(raw).toLowerCase()] || String(raw).toLowerCase();
+  return { spawn, tier, ordinary, lvl: fresh ? +m.lvl || 0 : 0, champ: !ordinary && (!!(fresh && m.kind === 'champion') || /^champ_[or]_/i.test(spawn) || !!tier) };
+}
 function mobHp() {
   const m = (env.$q('#battle-mob-hp-val')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/);
   return m ? { cur: +m[1], max: +m[2], pct: +m[2] ? 100 * m[1] / m[2] : 0 } : null;
@@ -864,11 +873,12 @@ async function battle() {
   const known = env.rt.hpMin?.[nm];
   const t = env.rt.target;
   const same = !!t && nm === t.name.toLowerCase();
+  const color = battleColor(nm, spawnId, mob0?.max, cameVia, t, same);
   const hpChamp = !!known && !!mob0 && mob0.max >= known * env.cfg.champHpMult;
   const blockW = {};
   for (const [k, v] of Object.entries(env.rt.unavailW || {}))
     if (v.w === (env.rt.weaponNow || '?') && Date.now() - v.t < 1800000) blockW[k] = Infinity;
-  const ctx = { lastStun: 0, block: blockW, killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: (same && t.champ) || env.isChamp(title) || hpChamp,
+  const ctx = { lastStun: 0, block: blockW, killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
                 name: mobName(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
   if (mageCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // 7.1.31: замер кота
@@ -878,9 +888,14 @@ async function battle() {
   // 10.0.5 (FA с чемпионов): цвет чемпиона и уровень моба — для учёта выпавших Fast Aden (loot.faNote)
   // (в цепочке «Охотиться дальше» spawnId в адресе — от первого боя: верим ему, только если имя в кэше спавнов совпало)
   const spOk = !!spawnId && (env.rt.spawns?.[spawnId]?.[0] || '').toLowerCase() === nm;
-  ctx.lvl = rbLvl || (spOk ? env.rt.spawns[spawnId][1] : 0) || 0;
-  ctx.spawnId = spOk ? spawnId : '';
-  if (ctx.champ) ctx.tier = (same && t.tier) || (spOk ? env.champTier?.(spawnId) : '') || 'blue';
+  ctx.lvl = rbLvl || color.lvl || (spOk && cameVia !== 'chain' ? env.rt.spawns[spawnId][1] : 0) || 0;
+  ctx.spawnId = color.spawn;
+  if (ctx.champ) ctx.tier = color.tier;
+  // 10.0.12: выбор цветов — жёсткий запрет игрока, действует и на квест/кампанию, и после первого удара слуги.
+  if (ctx.champ && !isRb) {
+    const off = env.champs?.tierOff?.(ctx, true);
+    if (off) { env.rec('B', 'чемпионы', `${ctx.name}${ctx.lvl ? ` (${ctx.lvl})` : ''}: ${off} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
+  }
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
   if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0; ctx.heroLvl0 = env.heroLvl() || env.rt.lvl || 0;   // 10.0.10: уровень героя на входе — для вердикта (champs.learn)
     ctx.chLim = (same && t.lim) || env.champs?.limitS({ tier: ctx.tier, lvl: ctx.lvl, exp: 0 }) || 40; }
