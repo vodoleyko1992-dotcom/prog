@@ -67,6 +67,10 @@ function cancelCost(c, sec) {
 function cancelBlock(c, sec, lim) {
   const mode = env.cfg?.champCancel || 'paid', p = CANCEL_P[c?.tier] || 0;
   if (mode === 'always' || !(p > 0)) return null;
+  // Лог 15.10 09:31–09:39: шесть секунд на синего, но старый жёсткий расчёт
+  // отменял даже короткую пробу из-за пяти платных баффов. В режиме «окупаемость»
+  // синий проверяется по времени боя и выживаемости; строгий режим paid сохраняет защиту.
+  if (mode === 'efficiency' && c?.tier === 'blue' && sec <= 30) return null;
   if (mode === 'never' && p >= CANCEL_P.orange) return { p, paid: 0, s: 0, never: true };
   const cc = cancelCost(c, sec);
   return cc.s > (lim || 0) ? cc : null;
