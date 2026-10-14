@@ -12,7 +12,7 @@
 
 ## Среда и проверки
 
-- Скрипт установки среды: `bash tests/tools/codex-setup.sh` (Playwright + Chromium для смоуков; Node-тестам установка не нужна).
+- Скрипт установки среды: `bash tests/tools/codex-setup.sh` (Playwright + Chromium для смоуков в `~/.local/l2tools`, без sudo; пути — в `~/.local/l2tools/env.sh`; Node-тестам установка не нужна). Для скачивания Chromium сети среды нужен доступ к `cdn.playwright.dev` и `playwright.download.prss.microsoft.com`.
 - Тесты: `node tests/run-all.cjs` — все PASS (на 10.0.11 их 218).
 - Синтаксис: `for f in *.js modules/*.js; do node --check $f; done`.
 - Геттеры модулей: `node tests/tools/envcheck.cjs .` — все `ok`.
