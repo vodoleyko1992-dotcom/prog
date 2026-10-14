@@ -44,7 +44,8 @@ test('потерявшая замок вкладка не может нажат�
   assert.equal(box.fire(button(() => clicks++)), false); assert.equal(clicks, 0);
 });
 test('явная ручная проверка оружия при выключенном боте сохраняет клики', () => {
-  const box = core(); box.on = false; box.running = false; box.invBusy = true; box.rt.invScan = { t: Date.now() }; let clicks = 0;
+  // 14.10: явный off scan имеет manual; остаток автоматического тура после Stop не должен оживать.
+  const box = core(); box.on = false; box.running = false; box.invBusy = true; box.rt.invScan = { t: Date.now(), manual: true }; let clicks = 0;
   assert.equal(box.fire(button(() => clicks++)), true); assert.equal(clicks, 1);
 });
 test('выключенный бот по-прежнему раскрывает три ряда панели без игровых действий', async () => {

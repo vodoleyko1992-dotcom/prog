@@ -142,12 +142,19 @@ async function tpPrice(tp) {                      // цена телепорта
   const x = r.ok && (r.j?.locations || []).find(l => l?.teleportId === tp);
   return x ? +(x.vipFreeApplied ? 0 : x.adenaCost ?? x.baseAdenaCost ?? NaN) : null;
 }
+async function cancel(J) {
+  const tried = { ...(env.rt.storyTried || {}) }; delete tried[J.key];
+  env.rec('B', 'квест', `${Q[J.kind].name}: поход отменён — автосдача выключена`);
+  await env.setRt({ storyJob: null, storyTried: tried });
+}
 async function step(J) {
   if (env.on === false) return;
+  if (env.cfg.storyTurnIn === false) return cancel(J);
   const P = Q[J.kind];
   if (location.pathname !== P.page) { env.setStatus(`Квест ${P.name}: иду сдавать часть`); location.href = P.page; await env.sleep(4000); return; }
   const box = await env.waitX(() => { const a = env.$q(`#${P.act}-quest-actions`); return a && a.children.length ? a : null; }, 10000, 200);
   if (env.on === false) return;              // 14.10: остановили бота, пока страница загружала кнопки.
+  if (env.cfg.storyTurnIn === false) return cancel(J);
   const err = () => (env.$q(`#${P.act}-quest-err`)?.textContent || '').trim();
   if (!box) return finish(J, false, err() || 'кнопок квеста нет (страница не загрузилась или часть уже сдана)');
   const btn = a => box.querySelector(`[data-${P.act}-action="${a}"]`);
@@ -164,13 +171,20 @@ async function step(J) {
   const id = tp.dataset[`${P.act}Target`] || '';
   const price = await tpPrice(id), max = env.cfg.storyTpMax ?? 100000;
   if (env.on === false) return;              // цена пришла после «Стоп» — платный переход уже не нужен.
+  if (env.cfg.storyTurnIn === false) return cancel(J);
   if (price == null || !isFinite(price)) return finish(J, false, `цена телепорта к ${id || 'NPC'} неизвестна — не лечу вслепую`);
   if (price > max) return finish(J, false, `телепорт к NPC ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
-  await env.setRt({ storyJob: { ...J, tpT: Date.now() } });
-  if (env.on === false) return;
+  // 10.0.14: setRt синхронно меняет память/очередь. Резерв и клик — в одном JS-шаге: Stop во время записи
+  // не оставит tpT без отправленного перехода. Отклонённый fire возвращает исходное задание до первого await.
+  const write = env.setRt({ storyJob: { ...J, tpT: Date.now() } });
+  const clicked = env.on !== false && env.cfg.storyTurnIn !== false && env.fire(tp);
+  const rollback = clicked ? null : env.setRt({ storyJob: J });
+  await write; if (rollback) await rollback;
+  if (!clicked) { if (env.on !== false && env.cfg.storyTurnIn === false) await cancel(J); return; }
   env.rec('B', 'квест', `${P.name}: телепорт к NPC (${id}) за ${price ? fmtA(price) + ' адены' : 'бесплатно'} — сдать часть`);
-  env.fire(tp);
+  if (env.on === false) return;
   await env.waitX(() => location.pathname !== P.page || err() || null, 8000, 200);
+  if (env.on === false) return;
   if (location.pathname === P.page && err()) return finish({ ...J, home: null }, false, `не улетели: ${err().slice(0, 80)}`);
 }
 // шаг в главном цикле. true — занят квестом (цикл идёт на следующий круг)
@@ -178,6 +192,7 @@ async function storyStep() {
   if (env.on === false) return false;
   const J = env.rt.storyJob;
   if (J) {
+    if (env.cfg.storyTurnIn === false) { await cancel(J); return true; }
     if (env.isBattle()) return false;
     if (Date.now() - (J.t || 0) > JOB_MAX) { await finish(J, false, 'не уложился в 4 мин'); return true; }
     await step(J); return true;

@@ -58,7 +58,7 @@ function shopPlan() {
       name: mage ? /Благословенн\S* заряд дух|Blessed Spiritshot/i : /Заряд душ\S* во(?:їна|ина)|^Soulshot/i, grade: g, mm: env.pair(env.cfg.shopShots, '1000/5000') },
     { key: 'spirit', label: 'Spirit Ore', ids: [3031], name: /^Spirit Ore$/i, grade: 'NG', mm: env.pair(env.cfg.shopSpirit, '0/1000') },
     { key: 'soul', label: 'Soul Ore', ids: [1785], name: /^Soul Ore$/i, grade: 'NG', mm: env.pair(env.cfg.shopSoul, '0/1000') },
-    { key: 'bait', label: 'Наживка', ids: [6519], name: /^(Наживка|Fishing Lure|Bait)$/i, grade: 'NG', mm: env.pair(env.cfg.shopBait, '0/0') },   // в сумке — «Fishing Lure» (6519), иконка та же
+    // 10.0.14: после обновления 14.10 наживку убрали из GM. Её покупает только отдельный сервис рыбалки по его настройкам.
   ];
   // 10.0.7 (игрок 13.10: «кристаллы покупаются в магазине»): недостающее сырьё цели Маммона, которое продаёт gm-shop (Кристал: ранг D…) —
   // в ту же закупку, вкладка грейда предмета, подраздел «Ресурси»; сколько — ровно недостачу по плану (mammon.mmShopWant)

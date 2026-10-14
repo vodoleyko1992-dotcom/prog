@@ -911,6 +911,14 @@ async function battle() {
     if (!isRb && hl && lv && up < 99 && lv > hl + up && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
         && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
       env.rec('B', 'цели', `${ctx.name} (${lv} ур.): выше героя на ${lv - hl} (предел +${up}) — не бью, на карту`); await env.setRt({ target: null }); return env.toMap(); } }
+  // 14.10, расширенный аудит: случайная цель цепочки тоже соблюдает нижний предел FA. Явные задания и выбранное вручную
+  // подземелье сохраняют собственные окна; начатый игроком или уже повреждённый бой доводим до конца.
+  { const hl = env.heroLvl() || env.rt.lvl || 0, lv = ctx.lvl || 0;
+    const farmT = [...(env.farmRules?.() || []), ...(env.recipeRules?.() || [])].some(x => x.farm && x.name === nm);
+    const manualDungeon = env.cfg.catMode && env.cfg.catDungeon && env.cfg.catDungeon !== 'auto';
+    if (cameVia === 'chain' && !manualDungeon && !isRb && hl && lv && lv < hl - 5 && !ctx.questKill && !farmT && !(ctx.champ && env.campActive() && env.campChampOpen())
+        && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
+      env.rec('B', 'цели', `${ctx.name} (${lv} ур.): ниже героя на ${hl - lv} — Fast Aden не падает, иду на карту`); await env.setRt({ target: null }); return env.toMap(); } }
   // 10.0.10 (игрок 13.10 11:33): «Охотиться дальше» подсовывает чемпиона цвета, который выключен в «Каких чемпионов бить» (или герой ниже
   // порога уровня), — нетронутый бой не начинаем, на карту. ★ квест и чемпион главы — бьём
   if (ctx.champ && !isRb && !ctx.questKill && !(env.campActive() && env.campChampOpen()) && mob0 && mob0.cur >= mob0.max * 0.98 && !extraMobs().some(x => x.cur > 0)) {
@@ -1146,18 +1154,12 @@ async function battle() {
     await countExtras();
     if (victory()) break;
     if (mob && mob.cur === 0) {                   // главная цель умерла: ждём победу или следующую цель (соседи живы)
-      // 7.1.16-fix: временная обходка ошибки сервера (её исправит администрация). Моб 0 HP, а победы нет: бой «висел» 5–6 с,
-      // бот уходил на карту без засчитанного убийства и шёл на того же моба (лог 10.10: 33 из 47 боёв). Ручное нажатие «Атака»
-      // в этот момент завершало бой сразу. Ждём 1 с, потом одна атака (до 2 раз). Выключить: zeroHpNudge: false
-      let nx = await env.waitFor(() => victory() ? 'win' : ((mobHp()?.cur || 0) > 0 ? 'next' : null), env.cfg.zeroHpNudge === false ? 3000 : 1000, 100);
-      for (let k = 0; !nx && k < 2 && env.cfg.zeroHpNudge !== false; k++) {
-        const fin = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака' && uiReady(b));
-        if (!fin) break;
-        if (!ctx.zeroNote) { ctx.zeroNote = 1; env.rec('B', 'бой', 'моб 0 HP, а победы нет — жму «Атака», чтобы сервер завершил бой'); }
-        await act(fin, 'Бой: моб 0 HP — завершаю атакой');
-        nx = await env.waitFor(() => victory() ? 'win' : ((mobHp()?.cur || 0) > 0 ? 'next' : null), 1500, 100);
-      }
-      if (nx === 'win' || !nx) break;
+      // 14.10, расширенный аудит: 0 HP может опередить итог сервера или смену цели. Дополнительный удар здесь
+      // уже относится к неизвестному состоянию боя; только ограниченно ждём победу, поражение или живую следующую цель.
+      const nx = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : ((mobHp()?.cur || 0) > 0 ? 'next' : null), 3000, 100);
+      if (!env.on || !env.tabOwner) return;
+      if (nx === 'dead') return env.onDeath();
+      if (nx !== 'next') break;
       if (mobName() !== ctx.name) {               // бой переключился на соседа
         ctx.name = mobName(); ctx.champ = env.isChamp(mobTitle());
         ctx.questKill = env.isQuestName(ctx.name);
@@ -1718,10 +1720,17 @@ async function battle() {
     }
     await env.sleep(100);
   }
-  if (!env.on) return;
+  if (!env.on || !env.tabOwner) return;
 
   // победа: «+N аден, +N EXP, +N SP»
-  await env.waitFor(() => victory(), 3000, 40);
+  // 14.10, расширенный аудит: нулевое HP — ещё не победа. Сервер может задержать итог, переключить цель или прислать поражение.
+  const result = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : null, 3000, 40);
+  if (!env.on || !env.tabOwner) return;
+  if (result === 'dead') return env.onDeath();
+  if (result !== 'win') {
+    env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
+    return env.toMap();
+  }
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
   await countExtras();
   env.trySnap(300);                                   // экран победы (в т.ч. с квестовой строкой) — новый снимок, если структура новая

@@ -168,7 +168,8 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   // ---------- A5: тур РБ — простой без перечитки списка ----------
   const rsb = loadMod('raid');
   let lvl = 53, pots = 100;
-  const renv = { cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbPotReserve: 0 }, RB_WIN: 15, rt: {}, heroLvl: () => lvl, potModel: () => ({ n: pots }),
+  // 10.0.14: проверяем активный тур владельца вкладки; Stop/потеря lease отдельно покрыты raid-lifecycle.
+  const renv = { on: true, tabOwner: true, cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbPotReserve: 0 }, RB_WIN: 15, rt: {}, heroLvl: () => lvl, potModel: () => ({ n: pots }),
     isMap: () => true, map: async () => 'map', setRt: async p => { Object.assign(renv.rt, p); }, rec: () => {}, recBot: () => {}, setStatus: () => {}, sleep: async () => {} };
   const RB = rsb.L2V7Factories.raid(renv);
   const idleEnd = (mark, extra = {}) => {

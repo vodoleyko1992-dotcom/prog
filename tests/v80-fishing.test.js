@@ -178,7 +178,8 @@ function world(o = {}) {
     let remain = '00:04:00', aden = '8 000 000'; const clicked = [];
     const q = W.env.$q;
     W.env.$q = s => s === '#fishing-time-remaining' ? { textContent: remain } : s === '#fishing-time-adena' ? { textContent: aden }
-      : /data-fishing-time-package="(\w+)"/.test(s) ? { pack: s.match(/"(\w+)"/)[1], disabled: false } : q(s);
+      : /data-fishing-time-package="(\w+)"/.test(s) ? { pack: s.match(/"(\w+)"/)[1], disabled: false,
+        querySelector: () => ({ textContent: ({ '1h': 3000000, '2h': 5500000, '3h': 7500000, '6h': 14000000 })[s.match(/"(\w+)"/)[1]] + ' Adena' }) } : q(s); // 10.0.14: цена из UI.
     W.env.fire = el => { clicked.push(el.pack); remain = '06:04:00'; };
     assert.equal(await W.F.fishTimeTopUp(), true);
     assert.deepEqual(clicked, ['3h'], '8 млн при резерве 0,2 млн: 6 ч (14 млн) не по карману — берём 3 ч (7,5 млн)');
@@ -204,9 +205,9 @@ function world(o = {}) {
     assert.ok(t >= 5000 && t < 5500);
   }
   assert.match(content, /await setRt\(\{ fishService: next, rodGoalWaitingProof: !!rt\.rodGoalActive && !next \}\);\n    await rtCommit\(\);/, 'finish(): ждём запись до перехода');
-  assert.ok((content.match(/await rtCommit\(\); location\.href = /g) || []).length >= 7, 'служебные переходы рыбалки — после записи');
+  assert.ok((content.match(/await rtCommit\(\); (?:if \([^;]+; )?location\.href = /g) || []).length >= 7, 'служебные переходы рыбалки — после записи');
   assert.match(content, /L2V7Modules\.fishing = L2V7Factories\.fishing\(\{[^\n]*get rtCommit\(\)\{return rtCommit\}/, 'геттер rtCommit у модуля рыбалки');
-  assert.ok((code.match(/await commit\(\); location\.href = /g) || []).length >= 4, 'модуль: переходы после записи');
+  assert.ok((code.match(/await commit\(\); (?:if \([^;]+; )?location\.href = /g) || []).length >= 3, 'модуль: переходы после записи; недоступный магазин сохраняет услугу без перехода');
   // ---------- B1: главный цикл после шага рыбалки — 30 мс вместо 200 ----------
   assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); continue; \}/);
   assert.match(code, /const lines = rej \? \[\] : \(await env\.sleep\(20\), fishNewLines\(before\)\);/);

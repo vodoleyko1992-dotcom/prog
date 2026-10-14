@@ -7,12 +7,14 @@
 const tvtNow = () => Date.now() + (env.TVT?.off || 0);
 
 const tvtMs = v => typeof v === 'number' ? v : (v && Date.parse(v)) || 0;
+const canRun = () => env.on !== false && env.tabOwner !== false && !!env.cfg.tvtOn;
 
 function tvtState() {
   const T = env.TVT || env.rt.tvt; if (!T) return null;
   const nx = T.schedule?.next || {}, now = tvtNow();
   return { phase: T.phase || '', reg: !!(T.isRegistered || T.myTeam), team: T.myTeam, id: T.eventId || nx.slotKey || '',
-    start: tvtMs(T.startsAt) || tvtMs(nx.battleStartsAt), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000 };
+    start: tvtMs(T.startsAt) || tvtMs(nx.battleStartsAt), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000,
+    eliminated: !!T.isRegistered && /^(ACTIVE|FINISHED)$/i.test(T.phase || '') && T.selfCombat?.alive === false };
 }
 
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
@@ -26,7 +28,7 @@ const isDead = id => { const t = tvtDead.get(String(id)); return !!t && Date.now
 
 function tvtSoon() {                                // пора на арену: записаны и бой вот-вот / идёт
   if (!env.cfg.tvtOn) return false;
-  const S = tvtState(); if (!S || !S.reg) return false;
+  const S = tvtState(); if (!S || !S.reg || S.eliminated) return false;
   // 7.1.30 (лог 10.10 15:00–15:03): бой закончился (FINISHED), а правило «до старта < 60 с / идёт < 11 мин» по времени держало
   // «пора на арену» — бот 40 раз бегал рыбалка ↔ арена. Закончился/отменён — не на арену, какое бы ни было время
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
@@ -39,7 +41,7 @@ function tvtSoon() {                                // пора на арену:
 // туры РБ/эпиков, телепорты): они длятся минуты и бот опаздывал на арену или уходил с неё
 function tvtHold() {
   if (!env.cfg.tvtOn) return false;
-  const S = tvtState(); if (!S || !S.reg) return false;
+  const S = tvtState(); if (!S || !S.reg || S.eliminated) return false;
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
   if (env.rt.tvtDone && env.rt.tvtDone === (S.id || String(S.start || ''))) return false;
   if (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase)) return true;
@@ -56,7 +58,11 @@ async function tvtWait() {                          // окно TvT, дел на
 }
 
 async function tvtStep() {                          // true — шаг TvT сделан (главный цикл начинает заново)
-  if (!env.cfg.tvtOn) return false;
+  if (!canRun()) return false;
+  // 10.0.14 (public tvt-arena-combat.js, 14.10): павшего участника игра выводит в чат, а не воскрешает.
+  // Статус привязан к событию в TVT/rt.tvt; старый TVTC.self от прошлого боя сюда не подмешиваем.
+  const state = tvtState();
+  if (state?.eliminated) return env.rt.tvtDone === (state.id || String(state.start || '')) ? false : tvtLeave('выбыл из боя');
   tvtStep.leaveT = tvtStep.leaveT || 0;
   if (env.isBattle()) {
     // 10.0.11 (игрок 13.10: «TvT важнее»): бой TvT начался/вот-вот, а бот в PvE-бою — выходим на карту (следующий круг уведёт на арену).
@@ -71,16 +77,19 @@ async function tvtStep() {                          // true — шаг TvT сд�
     await env.toMap(); await env.sleep(500); return true;
   }
   const pr = env.$q('#l2-tvt-registration-prompt'), yes = env.$q('#l2-tvt-registration-prompt-yes');
-  if (pr && !pr.hidden && env.shown(yes)) { env.rec('B', 'TvT', 'окно «Зарегистрироваться на TvT?» — да'); await env.pause(); env.fire(yes); await env.sleep(1200); return true; }
+  if (pr && !pr.hidden && env.shown(yes)) { env.rec('B', 'TvT', 'окно «Зарегистрироваться на TvT?» — да'); await env.pause(); if (!canRun()) return false; env.fire(yes); await env.sleep(1200); return true; }
   const S = tvtState(); if (!S) return false;
   // запись: регистрация открыта, нас нет — на арену, «Зарегистрироваться» (на одно событие — не чаще раза в 2 мин)
   const regN = (env.rt.tvtRegN || {})[S.id] || 0;   // 7.1.30: не больше 3 попыток записи на одно событие (иначе рыбалка ↔ арена каждые 2 мин)
   if (/REGISTRATION/i.test(S.phase) && !S.reg && regN < 3 && Date.now() - ((env.rt.tvtRegT || {})[S.id] || 0) > 120000) {
     if (!isArena()) { env.setStatus('TvT: иду записываться'); location.href = '/tvt-arena.html'; await env.sleep(4000); return true; }
     const b = await env.waitX(() => { const x = env.$q('#tvt-register-btn'); return env.shown(x) ? x : null; }, 6000, 200);
+    if (!canRun()) return false;
     await env.setRt({ tvtRegT: { ...(env.rt.tvtRegT || {}), [S.id]: Date.now() }, tvtRegN: { [S.id]: regN + 1 } });
-    if (b) { await env.pause(); env.fire(b); env.rec('B', 'TvT', `записался на TvT (${S.id})`); await env.sleep(1500); }
+    if (!canRun()) return false;
+    if (b) { await env.pause(); if (!canRun()) return false; env.fire(b); env.rec('B', 'TvT', `записался на TvT (${S.id})`); await env.sleep(1500); }
     else env.rec('B', 'TvT', `кнопки «Зарегистрироваться» нет — ${(env.$q('#tvt-message')?.textContent || env.$q('#tvt-phase-label')?.textContent || '').trim().slice(0, 80)}`);
+    if (!canRun()) return false;
     location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
   }
   if (tvtSoon()) {
@@ -93,13 +102,15 @@ async function tvtStep() {                          // true — шаг TvT сд�
   return false;
 }
 
-async function tvtLeave() {
+async function tvtLeave(why) {
+  if (!canRun()) return false;
   const head = (env.$q('.l2-tvt-result__headline')?.textContent || '').trim(), score = (env.$q('.l2-tvt-result__score')?.textContent || '').replace(/\s+/g, ' ').trim();
   const rew = [...document.querySelectorAll('.l2-tvt-result__reward-text')].map(e => e.textContent.replace(/\s+/g, ' ').trim()).join(', ');
   const st = (env.$q('.l2-tvt-result__stats')?.textContent || '').trim();
-  env.rec('B', 'TvT', `итог: ${head || '—'} ${score} · ${st}${rew ? ' · награда: ' + rew : ''}`);
+  env.rec('B', 'TvT', why ? `${why} — возвращаюсь к прежнему режиму` : `итог: ${head || '—'} ${score} · ${st}${rew ? ' · награда: ' + rew : ''}`);
   await env.setRt({ tvtIn: null, tvtDone: (tvtState()?.id || String(tvtState()?.start || '')) || env.rt.tvtDone || null });   // 7.1.30: отыгранный бой больше не зовёт на арену
-  location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
+  if (canRun() && (isArena() || /\/chat\.html/i.test(location.pathname))) { location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
+  return true;
 }
 
 function tvtEnemies() {                             // живые враги: из ответа игры (HP/CP/стан), иначе — список на странице
@@ -133,11 +144,13 @@ function stuckNote(b, mp) {
 }
 
 async function tvtFight() {
+  if (!canRun()) return false;
   if (!env.rt.tvtIn) { await env.setRt({ tvtIn: tvtState()?.id || 1 }); env.rec('B', 'TvT', 'на арене — жду старт'); }
   let lastPot = 0, lastTgt = 0, lastBack = 0, lastPet = 0, lastMpNote = 0;
   const t0 = Date.now();
-  while (env.on && env.tabOwner && isArena() && Date.now() - t0 < 12 * 60000) {
+  while (canRun() && isArena() && Date.now() - t0 < 12 * 60000) {
     const S = tvtState() || {};
+    if (S.eliminated) return tvtLeave('выбыл из боя');
     if (!/ACTIVE/i.test(S.phase) && !(S.start && tvtNow() >= S.start)) {   // подготовка: ждём, отмечаемся (страница сама шлёт presence)
       env.setStatus(`TvT: подготовка${S.start ? ', до боя ' + Math.max(0, Math.round((S.start - tvtNow()) / 1000)) + ' с' : ''}`); await env.sleep(1000);
       if (S.phase && !/PREPAR|REGISTRATION|ACTIVE/i.test(S.phase) && S.now - (S.start || 0) > 15000) return tvtLeave();
@@ -193,13 +206,15 @@ async function tvtFight() {
     if (!got) stuckNote(b, mp); else misses.set(slotKey(b), 0);
     await env.sleep(env.rnd(120, 220));
     if (env.TVTC?.actErr && Date.now() - env.TVTC.actErr.t < 1500) await env.sleep(300);   // сервер отказал (откат/MP) — не долбим
+    if (!canRun()) return false;
     // 10.0.11: «Атака питомца» — у Warlock кот основной урон, на арене он бьёт только по своей кнопке (#tvt-summon-attack-btn)
     const petBtn = env.$q('#tvt-summon-attack-btn');
     if (env.cfg.tvtPet !== false && env.shown(petBtn) && !petBtn.disabled && env.TVTC?.selfSummon?.alive !== false && Date.now() - lastPet > 1500) {
       lastPet = Date.now(); env.fire(petBtn); await env.sleep(env.rnd(120, 200));
     }
   }
-  return tvtLeave();
+  // Stop, потеря вкладки, смена страницы и предел одного вызова — не серверный итог события.
+  return false;
 }
  return { tvtNow, tvtMs, tvtState, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, skillInfo, mpNow };
  };

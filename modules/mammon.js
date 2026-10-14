@@ -94,7 +94,7 @@ async function mmTick() {
   const wantOrder = (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
   // 9.2.5: сумка по факту — своим GET /character, если ответов игры с сумкой не было > 5 мин (бот считает план по сумке); почта — раз в 10 мин
   const wantInv = !!env.cfg.mmGoalItem && env.invQty(0) == null && now - invT > INV_EVERY && !!env.invRefresh;
-  const wantMail = !!crafter() && (env.cfg.mmMailClaim !== false || !!env.rt.mmCraft) && now - mailT > MAIL_POLL;
+  const wantMail = (env.cfg.mmMailClaim !== false || !!env.rt.mmCraft) && now - mailT > MAIL_POLL;
   if (!wantNpc && !wantOrder && !wantInv && !wantMail) return null;
   busy = (async () => {
     try {
@@ -119,7 +119,8 @@ function eqNote(eq) {
     out[slot] = [id, lvl];
   }
   const old = env.rt.mmEq || {};
-  if (JSON.stringify(old) !== JSON.stringify(out)) env.setRt({ mmEq: out });
+  // 10.0.14: ручной апгрейд между запусками не должен проигрывать вчерашнему списку кузнеца.
+  if (JSON.stringify(old) !== JSON.stringify(out) || !(env.rt.mmEqT > (env.rt.mmGearT || 0))) env.setRt({ mmEq: out, mmEqT: Date.now() });
 }
 function smithNote(items) {                      // ответ /upgrades: уровни вещей и цена следующего уровня
   if (!Array.isArray(items)) return 0;
@@ -138,8 +139,9 @@ function smithNote(items) {                      // ответ /upgrades: уро
 const costOf = (id, lvl) => env.rt.mmCost?.[`${id}:${lvl}`] || MM_KNOWN[`${id}:${lvl}`] || null;
 function gearLvl(id) {                            // уровень вещи: из списка кузнеца (точный) или из экипировки
   const gs = (env.rt.mmGear || []).filter(x => x.id === id), g = gs.find(x => x.eq) || gs[0];
-  if (g) return g.lvl;
   const e = Object.values(env.rt.mmEq || {}).find(x => x[0] === id);
+  if (e && (!g || env.rt.mmEqT > 0 && env.rt.mmEqT >= (env.rt.mmGearT || 0))) return e[1];
+  if (g) return g.lvl;
   return e ? e[1] : 0;
 }
 const owned = id => (env.rt.mmGear || []).some(x => x.id === id) || Object.values(env.rt.mmEq || {}).some(x => x[0] === id);
@@ -238,12 +240,18 @@ function goalAll(upTo) {                          // upTo — только до 
 // затем остальное: первое недостающее сырьё, у которого есть источник в базе фарма форума (дроп/спойл)
 function mmFarmGoal() {
   if (env.cfg.mmGoalFarm === false) return null;
+  if (env.cfg.mmFarmDrop === false && !spoilOn()) return null;
   const p = goalAll(); if (!p?.raw) return null;
   const fit = x => x.miss > 0 && x.farm && !(x.shop && shopBuyOn());   // 10.0.7: продаётся в магазине и докупка включена — не фармим, купим
   if (env.cfg.mmFarmBest !== false) { const b = farmPlanPt(p); if (b) return b.goal; }   // 10.0.7: точка по всем недостающим сразу
   const n = p.lvl + 1 < p.to ? goalAll(p.lvl + 1) : null, rn = n?.raw?.find(fit);   // сначала то, что нужно на ближайший уровень
-  const r = rn ? p.raw.find(x => x.id === rn.id) : p.raw.find(fit);
-  return r ? { key: r.nm.toLowerCase(), name: env.FARM.res[r.nm.toLowerCase()].name || r.nm, left: r.miss, why: `Маммон: ${p.name} до Lv.${p.to} (наперёд)` } : null;
+  const first = rn ? p.raw.find(x => x.id === rn.id) : null;
+  // 10.0.14: простой режим тоже учитывает язык /upgrades и выбранные дроп/спойл. Иначе content.farmPick возвращал отключённые источники.
+  for (const r of [...(first ? [first] : []), ...p.raw.filter(x => x !== first && fit(x))]) {
+    const b = farmPlanPt(p, [r]);
+    if (b) return { ...b.goal, why: `Маммон: ${p.name} до Lv.${p.to} (по одному ресурсу)` };
+  }
+  return null;
 }
 // 10.0.7 (игрок 13.10: «автофарм расходников на апрейд выбранного снаряжения… выбор оптимальных локаций, учитывать дроп и спойл»):
 // раньше бот добывал ОДИН недостающий ресурс и летел к лучшей точке по нему, а соседние нужные ресурсы с тех же мобов не учитывал.
@@ -404,16 +412,16 @@ async function finish(J, ok, why) {
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку' }, zoneGoT: 0 } : {};
   // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
   const extra = {};
-  if (J.up) { const k = String(J.id || '').replace(/^up:/, ''), uf = env.rt.mmUpFail; extra.mmUpFail = ok ? null : { k, n: (uf?.k === k ? uf.n || 0 : 0) + 1, t: Date.now() }; }
+  if (J.up && !J.cancelled) { const k = String(J.id || '').replace(/^up:/, ''), uf = env.rt.mmUpFail; extra.mmUpFail = ok ? null : { k, n: (uf?.k === k ? uf.n || 0 : 0) + 1, t: Date.now() }; }
   if (J.kind === 'claim') extra.mmClaimFail = ok && (J.got || []).length ? null : { sig: (env.rt.mmMail?.unc || []).map(a => a.a).join(','), t: Date.now() };
   if (J.kind === 'send' && env.rt.mmCraft) {
-    const pn = J.pendJob ? (env.rt.mmCraft.pendN || 0) + 1 : 0;   // досылка не прошла 3 раза — бросаем (в журнал), дальше кнопками
+    const pn = J.pendJob ? (env.rt.mmCraft.pendN || 0) + (J.cancelled ? 0 : 1) : 0;   // отмена игроком не считается неудачной досылкой
     const pend = !ok && ((J.done || []).length || J.pendJob) && (J.items || []).length && pn < 3 ? J.items : null;
     if (!ok && J.pendJob && !pend) env.rec('B', 'Маммон', `остаток партии крафтеру не ушёл 3 раза — бросаю: ${J.items.map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}`);
     if (pend || env.rt.mmCraft.pend) extra.mmCraft = { ...env.rt.mmCraft, pend, pendN: pend ? pn : 0, pendNote: pend && J.note ? { ...J.note, prev: [...(J.note.prev || []), ...(J.done || []).map(x => [x[0], x[1]])] } : null };
   }
-  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok ? 0 : Date.now() } : {}),
-    ...(J.kind === 'send' ? { mmSendT: ok ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
+  await env.setRt({ mmJob: null, mmLog: log, ...(J.kind === 'smith' ? { mmSmithReq: null, mmSmithT: Date.now() } : {}), ...(J.up ? { mmUpT: ok || J.cancelled ? 0 : Date.now() } : {}),
+    ...(J.kind === 'send' ? { mmSendT: ok || J.cancelled ? 0 : Date.now() } : {}), ...(J.kind === 'claim' ? { mmClaimT: Date.now() } : {}), ...extra, ...back });
   if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function teleport(J) {                      // страница телепорта к NPC: цена → кнопка → карта
@@ -507,8 +515,11 @@ async function upgrade(J, items) {
   if (!btn) return finish(J, false, `${nm} Lv.${L}: карточки улучшения на странице кузнеца нет`);
   if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
   const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
+  const allowed = () => +env.cfg.mmGoalItem === id && (env.cfg.mmUpgrade !== false || J.cmd) && L < Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
+  if (!allowed()) return finish({ ...J, cancelled: true }, false, 'улучшение отменено: настройка или цель изменена');
   J = { ...J, target: it.targetInstanceId || J.target };
   await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
+  if (!allowed()) return finish({ ...J, cancelled: true }, false, 'улучшение отменено: настройка или цель изменена');
   env.rec('B', 'Маммон', `улучшение: жму «${(btn.textContent || '').trim()}» — ${nm}, ${fmtA(a)} адены + ${col} Coin of Luck + ${(it.cost?.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`);
   try { document.documentElement.dataset.l2botConfirm = String(Date.now()); } catch (e) {}   // окно «точно?» игры — «да» (hook.js, 5 с)
   env.fire(btn);
@@ -558,9 +569,12 @@ function craftWant(now = Date.now()) {
   if (!env.cfg.mmGoalItem) return cmd ? { drop: 'вещь-цель не выбрана в меню' } : null;
   if (env.craftSelf?.()) return cmd ? { drop: 'активный класс крафтит сам (саб крафтера, раздел «Сабклассы») — крафтеру не шлю' } : null;   // 10.0.7
   // 10.0 (аудит): партия ушла не вся (строки нет, форма не открылась) — досылаем остаток, иначе у крафтера неполный набор и автоотправка стоит навсегда
-  const pend = env.rt.mmCraft?.pend;
+  const active = env.rt.mmCraft, pend = active?.pend;
+  // 10.0.14: настройка нового крафтера относится к следующей партии; текущую не делим между людьми.
+  if (cmd && active?.to && active.to.toLowerCase() !== to.toLowerCase() && (pend?.length || Object.values(atC()).some(v => v > 0)))
+    return { drop: `незавершённая партия у ${active.to} — сначала дождись возврата или закончи её учёт` };
   if (!cmd && pend?.length && env.cfg.mmCraftSend !== false && now - (env.rt.mmSendT || 0) >= UP_RETRY)
-    return { kind: 'send', cmd: false, pendJob: true, to, items: pend, ret: {}, retDone: true, note: env.cfg.mmCraftNote !== false ? env.rt.mmCraft?.pendNote || null : null, why: `досылаю остаток партии: ${pend.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
+    return { kind: 'send', cmd: false, pendJob: true, to: active.to || to, items: pend, ret: {}, retDone: true, note: env.cfg.mmCraftNote !== false ? env.rt.mmCraft?.pendNote || null : null, why: `досылаю остаток партии: ${pend.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
   // у крафтера лежит отправленное > 48 ч и ничего не вернулось — пишем в журнал раз в сутки (вдруг он не получил)
   if (!cmd && Object.values(atC()).some(v => v > 0) && now - (env.rt.mmCraft?.gotT || env.rt.mmCraft?.t || now) > 48 * 3600000 && now - (env.rt.mmCraftWarnT || 0) > 86400000) {
     env.setRt({ mmCraftWarnT: now }); env.rec('B', 'Маммон', `${to}: отправленное лежит у крафтера больше 48 ч — проверь почту «Відправлені» или нажми «↺ Забыть, что у крафтера»`);
@@ -597,7 +611,7 @@ function mailList(list) {
   if (!Array.isArray(list)) return null;
   const unc = list.filter(a => a && a.attachmentId != null && a.claimedAt == null)
     .map(a => ({ a: String(a.attachmentId), s: String(a.senderName || ''), id: +a.itemId || 0, n: String(a.name || `#${a.itemId}`), q: +a.qty || 0 }));
-  const patch = {}, C = env.rt.mmCraft, to = crafter().toLowerCase();
+  const patch = {}, C = env.rt.mmCraft, to = String(C?.to || crafter()).trim().toLowerCase();
   if (JSON.stringify(unc) !== JSON.stringify(env.rt.mmMail?.unc || [])) {
     const old = new Set((env.rt.mmMail?.unc || []).map(a => a.a)), fresh = unc.filter(a => !old.has(a.a));
     if (fresh.length) env.rec('B', 'Маммон', `почта: пришло ${fresh.map(a => `${a.n} ×${fmtA(a.q)} от ${a.s || '?'}`).join(', ')}`);
@@ -739,6 +753,8 @@ async function sentOk(J, cur) {
 }
 async function sendStep(J) {
   const to = J.to || crafter();
+  const allowed = () => J.cmd || J.hand || env.cfg.mmCraftSend !== false;
+  if (!allowed() && !J.cur) return finish({ ...J, cancelled: true }, false, 'автоотправка крафтеру выключена');
   // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
   if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
   if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
@@ -783,6 +799,7 @@ async function sendStep(J) {
   setVal(nIn, to);
   const fee = c.unit * n > 0 ? Math.max(1, Math.ceil(c.unit * n * 5 / 100)) : 0, cur = { id, q: n, nm, fee, before: have, t: Date.now() };
   await env.setRt({ mmJob: { ...J, cur } });
+  if (!allowed()) return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена');
   env.setStatus(`Почта: ${nm} ×${fmtA(n)} → ${to}`);
   env.fire(btn);
   const modal = await env.waitX(() => { const md = document.getElementById('item-transfer-confirm-modal'); return md && !md.hidden ? md : null; }, 5000, 100);
@@ -794,6 +811,7 @@ async function sendStep(J) {
     env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); await env.setRt({ mmJob: { ...J, cur: null } });
     return finish(J, false, `${nm}: в окне подтверждения не тот получатель или количество (${body.replace(/\s+/g, ' ').slice(0, 80)}) — отменил`);
   }
+  if (!allowed()) { env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена'); }
   // 10.0 (аудит): старое «успешно» от прошлого предмета не должно засчитать этот — очищаем сообщения перед нажатием
   for (const eid of ['item-transfer-success', 'item-transfer-err']) { const el = document.getElementById(eid); if (el) el.textContent = ''; }
   env.fire(okBtn);
@@ -808,6 +826,17 @@ async function claimStep(J) {
   if (!tab) return finish(J, false, 'вкладки «Предмети» в почте нет');
   if (!tab.classList.contains('is-active')) { env.fire(tab); await env.sleep(800); }
   const pane = '#mail-tab-items';
+  // 10.0.14: игрок мог оставить почту на странице истории. Начинаем с первой, затем продолжаем вперёд по сохранённому заданию.
+  if (!J.mailStarted) {
+    const label = () => document.querySelector(`${pane} .l2-mail-page-label`)?.textContent || '', before = label();
+    const prev = [...document.querySelectorAll(`${pane} .l2-mail-page-btn`)][0];
+    if (+before.match(/^\s*(\d+)/)?.[1] > 1 && prev && !prev.disabled) {
+      env.fire(prev);
+      if (!await env.waitX(() => label() !== before, 4000, 100)) return finish(J, false, 'первая страница почты не открылась');
+      return;
+    }
+    J = { ...J, mailStarted: true }; await env.setRt({ mmJob: J });
+  }
   const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
   const got = J.got || [];
   if (b === 'none' && got.length < CLAIM_MAX) {

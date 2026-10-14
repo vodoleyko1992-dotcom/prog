@@ -45,12 +45,14 @@ function role(prof) {
 // «Слуга [Kai the Cat] завдає критичного удару [X] 5 721 урону.», «… промахнувся», «Зілля +600 HP», «HP +12 (зцілення).»
 const RE_PET = /^Слуга\s*\[(.+?)\]\s*(атакує|завдає критичного удару)\s*\[(.+?)\]\s*([\d\s  ]+?)\s*урону/i;
 const RE_PET_MISS = /^Слуга\s*\[.+?\].*промахну/i;
-const RE_IN = /^\[(.+?)\]\s*ударив тебе\s*(\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
+// 14.10: сервер и компактный DOM используют разные глаголы и убирают скобки вокруг имени в отображении.
+const RE_IN = /^(Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
+const RE_ACTOR_HIT = /^\[([^\]]+)\]\s*(?:(—\s*крит!|критичний\s+удар!)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
 const RE_POT = /^(?:Зілля|Зелье)\s*\+\s*([\d\s]+)\s*HP/i;
 const RE_SELF = /^HP\s*\+\s*([\d\s]+)/i;
 const RE_DOT = /^(.+?)\s*·\s*(.+?)\s+([\d][\d\s  ]*)\s*(?:HP|урона|урону|шкоди)?\.?\s*$/i;
 const RE_PLAIN = /^([^\[\d+×:][^+×:]*?)\s+([\d][\d\s  ]*)\.?\s*$/;
-const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*\[[^\]]+\]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
+const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*(?:\[[^\]]+\]\s*)?([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
 function parseLog(lines, mob) {
   const m = low(mob).replace(/\s*·.*$/, '');
@@ -61,7 +63,9 @@ function parseLog(lines, mob) {
     let x;
     if ((x = l.match(RE_PET))) { r.pet += num(x[4]); r.petN++; if (/критич/i.test(x[2])) r.petCrit++; continue; }
     if (RE_PET_MISS.test(l)) { r.petMiss++; continue; }
-    if ((x = l.match(RE_IN))) { r.hits.push({ who: x[1].trim(), dmg: num(x[3]), crit: !!x[2] }); continue; }
+    if ((x = l.match(RE_IN))) { r.hits.push({ who: (x[2] || x[3]).trim(), dmg: num(x[5]), crit: !!(x[1] || x[4]) }); continue; }
+    // Краткий серверный формат неоднозначен: Actor бывает героем. Без явного глагола входящим считаем только текущего моба.
+    if ((x = l.match(RE_ACTOR_HIT))) { if (m && low(x[1]) === m) r.hits.push({ who: x[1].trim(), dmg: num(x[3]), crit: !!x[2] }); continue; }
     if ((x = l.match(RE_POT))) { r.pot += num(x[1]); continue; }
     if ((x = l.match(RE_SELF))) { r.selfHeal += num(x[1]); continue; }
     if (/опирається ефекту|сопротивл|resist/i.test(l)) { r.resist++; continue; }

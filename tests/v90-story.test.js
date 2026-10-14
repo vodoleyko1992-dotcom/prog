@@ -13,7 +13,8 @@ const mk = (rt = {}, cfg = {}, over = {}) => {
   let sw = 0;
   const env = { rt: { ...rt }, cfg: { storyTurnIn: true, storyTpMax: 100000, ...cfg }, recs, fired,
     setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), setStatus: () => {}, sleep: async () => {},
-    waitX: async fn => fn(), fire: el => { fired.push(el); el.onFire?.(); }, $q: s => els[s] ?? null, isBattle: () => false, fishNow: () => false,
+    // 10.0.14: как core.fire, успешный клик возвращает true; false откатывает резерв неподтверждённого телепорта.
+    waitX: async fn => fn(), fire: el => { fired.push(el); el.onFire?.(); return true; }, $q: s => els[s] ?? null, isBattle: () => false, fishNow: () => false,
     autonomyMode: () => 'hunt', awayFree: () => true, classSwitched: () => { sw++; },
     gameGet: over.gameGet || (async () => ({ ok: false, status: 401, json: async () => ({}) })), ...over.env };
   return { env, S: sb.L2V7Factories.story(env), sw: () => sw, loc };

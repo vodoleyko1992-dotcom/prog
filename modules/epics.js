@@ -848,7 +848,10 @@ async function epicStep() {
         await epicSet({ guardT: E.tries });
         env.rec('B', 'эпики', `${e.nm}: бой не открылся — бью миньона ${g.name} (${g.lvl})`);
         await env.setRt({ target: { name: g.name, champ: true, quest: false, rb: false }, mobClickAt: Date.now(), via: 'map' });
+        if (!env.on || env.tabOwner === false) return;
         if (g.idx >= 0 && await env.attackSpawn({ ...g, champ: true, rank: 0 }, () => `Эпики: миньон ${g.name}`)) return;
+        // attackSpawn мог завершиться из-за Stop/потери вкладки — прямой URL тоже начинает бой.
+        if (!env.on || env.tabOwner === false) return;
         location.href = '/battle.html?spawnId=' + encodeURIComponent(g.id); await env.sleep(4000); return;
       }
     }

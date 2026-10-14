@@ -7,6 +7,13 @@ const src = read('modules/mammon.js');
 const load = (extra = {}) => { const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(src, sb); return sb; };
 const eqJ = (a, b, m) => assert.equal(JSON.stringify(a), JSON.stringify(b), m);
 const GEAR = JSON.parse(read('mammon-gear.json'));
+// 10.0.14: имя в FARM ещё не означает доступный источник. План учитывает уровень героя и реальные drop/spoil через farmZones.
+const farmCode = read('content.js'), farmCut = re => { const m = farmCode.match(re); assert.ok(m, 'farmZones fixture contract'); return m[0]; };
+const zonesSrc = farmCut(/const farmWin = L =>[^\n]+\n/) + farmCut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/) + farmCut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8\) \{[\s\S]*?\n\}\n/);
+const farmRes = {
+  'iron ore': { name: 'Iron Ore', drop: [['Dismal Pole', 58, 16, 1, 3, 'fields_of_massacre', 'Fields of Massacre']], sp: [] },
+  'mithril ore': { name: 'Mithril Ore', drop: [['Dismal Pole', 58, 7, 1, 3, 'fields_of_massacre', 'Fields of Massacre']], sp: [] }
+};
 const mk = (rt = {}, cfg = {}, over = {}) => {
   const recs = [], fired = [], els = over.els || {};
   const sb = load({ location: over.location || { pathname: '/map.html', href: '' } });
@@ -15,8 +22,9 @@ const mk = (rt = {}, cfg = {}, over = {}) => {
     waitX: async fn => fn(), fire: el => fired.push(el), $q: s => els[s] ?? null, isBattle: () => false, isFishing: () => false, fishState: () => null,
     fishNow: () => false, autonomyMode: () => 'hunt', tvtSoon: () => false, heroNick: () => 'Warlock', invQty: id => (over.inv || {})[id] ?? null,
     ITEMS: { 1458: { n: 'Crystal: D-Grade' }, 1869: { n: 'Iron Ore' }, 1876: { n: 'Mithril Ore' }, 1880: { n: 'Steel' } },
-    FARM: { res: { 'iron ore': { name: 'Iron Ore' }, 'mithril ore': { name: 'Mithril Ore' } } },
+    FARM: { res: farmRes }, heroLvl: () => 61, canSpoil: () => false,
     gameGet: over.gameGet || (async () => ({ ok: false, status: 401, json: async () => ({}) })), ...over.env };
+  env.farmZones = vm.runInNewContext(`(cfg => { ${zonesSrc}; return farmZones; })`, { Math, Object })(env.cfg);
   return { env, M: sb.L2V7Factories.mammon(env), sb };
 };
 const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864, resourceNameEn: 'Stem', quantity: 42, reward: { coinOfLuck: 1, adena: 1500000 },
@@ -82,7 +90,7 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   // 6б. 9.2 (игрок 11.10: «собрать ВСЕ ресурсы наперёд», «ресурсы, из которых крафтятся улучшенные — передаю крафтеру»):
   // таблица по уровням до цели (неизвестные — оценка ×(L+1)), итог минус сумка, крафтовое разобрано до сырья, список крафтеру
   { const inv = { 1458: 0, 1869: 908, 1876: 0, 1880: 10, 1865: 0 };
-    const { env, M } = mk({ mmEq: { belt: [920018, 0] } }, { mmGoalItem: 920018, mmGoalLvl: 5 }, { inv, env: { FARM: { res: { 'iron ore': { name: 'Iron Ore' }, 'mithril ore': { name: 'Mithril Ore' }, varnish: { name: 'Varnish' } } } } });
+    const { env, M } = mk({ mmEq: { belt: [920018, 0] } }, { mmGoalItem: 920018, mmGoalLvl: 5 }, { inv, env: { FARM: { res: { ...farmRes, varnish: { name: 'Varnish' } } } } });
     const P = M.goalAll();
     eqJ(P.lv.map(x => [x.L, x.est, x.a, x.m.find(m => m[0] === 1458)[2], x.m.find(m => m[0] === 1880)[2]]), [[0, 0, 250000, 100, 3], [1, 1, 500000, 200, 6], [2, 1, 750000, 300, 9], [3, 1, 1000000, 400, 12], [4, 1, 1250000, 500, 15]]);
     assert.equal(P.a, 3750000); assert.equal(P.col, 5);

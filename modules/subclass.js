@@ -43,6 +43,8 @@ const spoilFirst = () => role() === 'spoiler' && env.cfg.subSpoilFirst !== false
 const mainNick = () => String(env.cfg.subMainNick || '').trim();
 const me = () => String(env.heroNick?.() || '').trim();
 const isHelper = () => !!mainNick() && mainNick().toLowerCase() !== me().toLowerCase();
+// 10.0.14: настройки уже могли сменить основного, а пятиминутный кэш ещё принадлежит прежнему адресату.
+const mainNeed = () => String(env.rt.subNeed?.nick || '').trim().toLowerCase() === mainNick().toLowerCase() ? env.rt.subNeed : null;
 let needT = 0, readT = 0, infoT = 0;
 async function needWrite(now = Date.now()) {
   if (!env.cfg.mmGoalItem || isHelper() || now - needT < NEED_EVERY) return false;
@@ -68,7 +70,7 @@ async function needRead(now = Date.now()) {
 // цель фарма помощника: точка по всем недостающим сразу (mammon.farmPlanPt по списку основного)
 function helpGoal() {
   if (!isHelper() || env.cfg.subHelpMain === false) return null;
-  const need = env.rt.subNeed; if (!need?.items?.length) return null;
+  const need = mainNeed(); if (!need?.items?.length) return null;
   const raws = need.items.map(([id, nm, miss]) => ({ id: +id, nm: String(nm), miss: +miss || 0, need: +miss || 0, farm: 1 })).filter(r => r.miss > 0);
   let B = null; try { B = env.mammon?.farmPlanPt?.(null, raws); } catch (e) { return null; }
   if (!B) return null;
@@ -77,7 +79,7 @@ function helpGoal() {
 // что из недостачи основного лежит в сумке помощника — передать (кнопка «📤 Передать основному сейчас», поход mammon.sendStep с hand: 1)
 function handover() {
   if (!isHelper()) return null;
-  const need = env.rt.subNeed; if (!need?.items) return null;
+  const need = mainNeed(); if (!need?.items) return null;
   const items = need.items.map(([id, nm, miss]) => { const h = env.invQty(+id); return h > 0 ? [+id, Math.min(h, +miss || h), String(nm)] : null; }).filter(Boolean);
   return { to: need.nick, items };
 }
@@ -85,7 +87,7 @@ function handWant(now = Date.now()) {
   const R = env.rt.subHandReq; if (!R?.t) return null;
   if (now - R.t > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
   const h = handover();
-  if (!h) return { drop: 'ник основного не задан или это и есть основной' };
+  if (!h) return { drop: isHelper() ? 'недостача выбранного основного ещё не прочитана' : 'ник основного не задан или это и есть основной' };
   if (env.invQty(0) == null) return null;         // сумка не прочитана — подождём (mmTick читает её)
   if (!h.items.length) return { drop: `в сумке нет сырья, которого не хватает ${h.to}` };
   return { kind: 'send', cmd: true, hand: 1, to: h.to, items: h.items, ret: {}, retDone: true, note: null, why: `передаю ${h.to}: ${h.items.slice(0, 6).map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')}` };
@@ -99,7 +101,7 @@ function text() {
     out.push(env.cfg.subCraftSelf === false ? 'Свой крафт выключен — сырьё уйдёт крафтеру из раздела «Маммон»'
       : C ? `Свой крафт (${C.goal}): ${C.craft.map(c => `${c.nm} ${fmtA(c.qty)}`).join(', ') || 'крафтить нечего'}${C.miss ? ` · сырья не хватает ${fmtA(C.miss)}` : ''} · крафт на странице игры пока жмёшь сам` : 'Свой крафт: цель Маммона не выбрана или уже собрана'); }
   if (r === 'spoiler') out.push(spoilFirst() ? 'Спойл в приоритете: точка фарма считается по дропу + спойлу, спойл в начале каждого боя' : 'Спойл в приоритете выключен');
-  if (isHelper()) { const n = env.rt.subNeed, h = handover();
+  if (isHelper()) { const n = mainNeed(), h = handover();
     out.push(!n ? `Помощник ${mainNick()}: его цель Маммона ещё не прочитана (его вкладка пишет её раз в 5 мин)` : `Помощник ${n.nick} (${n.goal}): не хватает ${n.items.slice(0, 6).map(x => `${x[1]} ${fmtA(x[2])}`).join(', ')}${h?.items?.length ? ` · в сумке есть ${h.items.map(x => `${x[2]} ${fmtA(x[1])}`).join(', ')} — «📤 Передать основному сейчас»` : ''}`); }
   else if (mainNick()) out.push(`Это основной персонаж (${mainNick()}): недостачу цели Маммона пишу помощнику раз в 5 мин`);
   return out.join('\n');

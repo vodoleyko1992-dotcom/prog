@@ -107,7 +107,7 @@ async function menuPatch(m, sender) {
 }
 async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
-  if (!Number.isInteger(tab) || !nick || nick.length > 100) return { ok: false, reason: 'invalid_character' };
+  if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
   return serializeLock(async () => {
     const current = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg', 'rt@' + nick, 'cfg@' + nick]);
     // Даже если вкладка ещё получает события, только владелец вправе менять
