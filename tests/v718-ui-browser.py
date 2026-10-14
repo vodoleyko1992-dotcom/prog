@@ -18,14 +18,15 @@ with sync_playwright() as p:
   page.set_content(html,wait_until='domcontentloaded')
   page.add_style_tag(content=(root/'ui-v7.css').read_text())
   page.add_style_tag(content=(root/'ui-game.css').read_text())
-  page.add_script_tag(content=(root/'popup.js').read_text())
-  page.add_script_tag(content=(root/'ui-v7.js').read_text())
+  # 10.0.17: реальные зависимости и порядок из popup.html.
+  for script in re.findall(r'<script src="([^"]+)"></script>', (root / "popup.html").read_text()):
+    page.add_script_tag(content=(root / script).read_text())
   page.wait_for_timeout(450)
   if mode=='dock':page.evaluate("document.documentElement.classList.add('docked')")
   page.locator('#navToggle').click()
   page.wait_for_timeout(80)
   menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==8,menu   # 7.2+: 7 разделов; 9.0: + «Маммон»
+  assert menu['tabs']==11,menu   # 10.0.17: PvP, подклассы и отдельная автозаточка
   assert menu['grid']==(2 if mode=='dock' else 4),menu
   assert menu['visible']=='grid',menu
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-menu.png')))
@@ -46,7 +47,7 @@ with sync_playwright() as p:
   assert not page.locator('#quickModeGrid').is_visible()
   page.locator('#modeToggle').click()
   assert page.locator('#quickModeGrid').is_visible()
-  assert page.locator('#quickModeGrid button[data-mode]').count()==7   # 7.2+: 6 режимов «Чем занят бот» + 10.0 «Только задачи»
+  assert page.locator('#quickModeGrid button[data-mode]').count()==8   # 10.0.17: + отдельный режим автозаточки
   page.close()
  browser.close()
 print('PASS: Classic in-game layout, 13-module navigation, 375px dock, +10 setting, zero console errors')

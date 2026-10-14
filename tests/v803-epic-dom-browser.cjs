@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: тест загружает фактические зависимости popup, включая новые разделы, как расширение.
 // 8.0.3 (эпики): браузерный смоук (node tests/v803-epic-dom-browser.cjs; CHROMIUM=…). 1) Настоящий DOM: разбор строки .l2-rb-row на
 // фрагменте страницы «Эпик боссы» (снимок 75dac78f) — «Недоступно» у Королевы, чистые имена, респаун, единица Coin of Luck, скрытый
 // пейджер не нажимается, окно босса #rb-modal-stats. 2) Меню: таблица эпиков и кнопка «🔄 Проверить эпиков» (menuPatch epicScanReq)
@@ -49,7 +50,7 @@ let mock = py.slice(py.indexOf('mock=r"""') + 9); mock = mock.slice(0, mock.inde
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
-    for (const j of ['popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
     await page.waitForTimeout(900);
     const t = await page.$eval('#epicTable', e => e.innerText), sum = await page.$eval('#epicSum', e => e.textContent);
     await page.evaluate(() => document.querySelector('#epicScan').click()); await page.waitForTimeout(300);

@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: тест загружает фактические зависимости popup, включая новые разделы, как расширение.
 // 9.0 (Маммон): браузерный смоук (node tests/v90-mammon-browser.cjs; CHROMIUM=…). Настоящие скрипты расширения (порядок из manifest)
 // на подставной https://l2wap.com: 1) свой GET заказа уходит с «Authorization: Bearer <token страницы>» и заказ попадает в rt;
 // 2) страница телепорта к торговцу — цена, кнопка нажата настоящим fire; 3) страница торговца — «Здати» своего заказа, победитель
@@ -94,7 +95,7 @@ const PAGES = {
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
-    for (const j of ['popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="mammon"]').click());
     await page.waitForTimeout(1200);
     const t = await page.$eval('#tab-mammon', e => e.innerText), opts = await page.$$eval('#mmGoalItem option', o => o.length), sel = await page.$eval('#mmGoalItem', e => e.value);

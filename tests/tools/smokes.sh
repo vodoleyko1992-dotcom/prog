@@ -2,6 +2,8 @@
 # 9.2: снимки страниц игры 12.10 (бой с Verfa, панель Warlock 61) — для смоуков боя по настоящему DOM; свои снимки — через L2_PAGES / L2_PAGES_MAGE
 SNAP=/mnt/project-files/snapshots/l2wap-pages-2026-10-11-16-57.html; [ -f "$SNAP" ] && export L2_PAGES="${L2_PAGES:-$SNAP}" L2_PAGES_MAGE="${L2_PAGES_MAGE:-$SNAP}"
 cd "$(dirname "$0")/../.."
+# 10.0.17: Node24 fetch использует настроенный облачный прокси для публичных JS игры.
+if [ -n "${HTTPS_PROXY:-${HTTP_PROXY:-}}" ]; then export NODE_USE_ENV_PROXY="${NODE_USE_ENV_PROXY:-1}"; fi
 # 14.10: среда Codex — пути из env.sh (tests/tools/codex-setup.sh), иначе ищем сами
 for d in "$L2_TOOLS" "$HOME/.local/l2tools" /workspace/.local/l2tools; do [ -n "$d" ] && [ -f "$d/env.sh" ] && { . "$d/env.sh"; break; }; done
 if [ -z "$PLAYWRIGHT_NODE" ] && [ ! -d /opt/node-tools/node_modules/playwright ]; then
