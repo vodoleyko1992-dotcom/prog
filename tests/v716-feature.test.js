@@ -10,7 +10,7 @@ function fishing(mock) {
 }
 (async()=>{
  let remain='00:04:45',aden='5 000 000',clicks=0,active=false,paused=false;
- const btn={disabled:false};
+ const btn={disabled:false,querySelector:()=>({textContent:'3 000 000 Adena'})}; // 10.0.14: цена пакета приходит из UI игры.
  const fake={
   cfg:{fishTimeAuto:true,fishTimeMin:5,fishTimePack:'1h',shopReserve:200000},
   rt:{},on:true,

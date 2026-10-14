@@ -9,7 +9,8 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   assert.match(raidSrc, /if \(!nx \|\| nx\.disabled\) \{ complete = true; break; \}/);
   assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: Date\.now\(\) - 12 \* 60000, rbScan: null \}\);/);
   // 2. после платного телепорта тура зона сбрасывается (EXP/ч не уходит в прежнюю зону)
-  assert.match(raidSrc, /await env\.setRt\(\{ rbWant: H\.id, zoneGoT: Date\.now\(\), zone: null, zonePend: null, rbGoCnt:/);
+  // 10.0.14: резерв передан атомарному helper; очистка зоны по-прежнему идёт до платного клика.
+  assert.match(raidSrc, /rbTeleportFire\(b, \{ rbHunt: \{ \.\.\.H, step: 'arrive', at: Date\.now\(\), t: Date\.now\(\) \}, rbWant: H\.id, zoneGoT: Date\.now\(\), zone: null, zonePend: null, rbGoCnt:/);
   // 3. прогноз «банки не нужны» (usePots=false) — в полосе не пьём, только ниже аварийного порога
   const combat = read('modules/combat.js');
   assert.match(combat, /if \(potAt > 0 && ctx\.rb\.usePots === false && me\.cur > emergencyFloor\) potAt = -1;/);

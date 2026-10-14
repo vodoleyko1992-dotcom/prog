@@ -80,14 +80,16 @@ async function showWakeResult() {
 }
 async function activateMode(rtPatch, cfgPatch) {
   await chrome.storage.local.set({ paused: null });   // 8.0: выбран режим — пауза снята (иначе после остановки меню предлагало «Продолжить»)
-  await menuPatch({ ...rtPatch, manualKickAt: Date.now() }, { cfgPatch, on: true });
+  // 14.10: отдельные кнопки тура/эпиков/кампании тоже заменяют режим. Разовая разделка/обмен без смены cfg сохраняют возврат из дейлика.
+  const modeChanged = ['fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto', 'taskOnly', 'rbBetween'].some(k => Object.hasOwn(cfgPatch || {}, k));
+  await menuPatch({ ...rtPatch, ...(modeChanged ? { dailyFish: null, dailyRb: null } : {}), manualKickAt: Date.now() }, { cfgPatch, on: true });
   return showWakeResult();
 }
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 const TXT  = ['mmCrafter', 'mmCraftScope', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
-              'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'shopBait', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
+              'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtOverRb', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
 const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: false, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'paid', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
@@ -1129,7 +1131,7 @@ function augLine(rt) {
 }
 async function weapScan() {
   const { rt = {} } = await chrome.storage.local.get('rt');
-  await menuPatch({ invScan: { step: 'prof', back: '', t: Date.now() } });
+  await menuPatch({ invScan: { step: 'prof', back: '', t: Date.now(), manual: true } });   // 14.10: только явная команда продолжает чтение при выключенном боте.
   $('weapBox').textContent = '⏳ Проверяю: Персонаж → профессия, Инвентарь → оружие… (вкладка игры перейдёт и вернётся)';
 }
 $('weapScan').onclick = weapScan;
@@ -1222,7 +1224,9 @@ function renderMammon(rt, d) {
     U.length ? `📬 В почте не забрано: ${U.map(a => `${a.n} ×${fmt(a.q)} от ${a.s || '?'}`).join(', ')}` : rt.mmMail?.t ? `📭 Почта проверена ${mmTime(rt.mmMail.t)}: всё забрано` : ''].filter(Boolean).join('\n');
   // вещи: экипировка из ответов игры + список кузнеца + все из справочника (для выбора цели заранее)
   const eq = Object.entries(rt.mmEq || {}), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
-  const lvlOf = id => gear.find(g => g.id === id)?.lvl ?? (eq.find(([, v]) => v[0] === id)?.[1][1] || 0);
+  // 14.10: дубликат в сумке не подменяет надетую цель; свежий /character важнее старого списка кузнеца.
+  const lvlOf = id => { const gs = gear.filter(g => g.id === id), g = gs.find(g => g.eq) || gs[0], e = eq.find(([, v]) => v[0] === id)?.[1];
+    return e && (!g || rt.mmEqT > 0 && rt.mmEqT >= (rt.mmGearT || 0)) ? e[1] : g?.lvl ?? e?.[1] ?? 0; };
   const nm = id => MMG?.[id]?.n || gear.find(g => g.id === id)?.n || '#' + id;
   if (MMG && document.activeElement?.id !== 'mmGoalItem') {
     const all = [...ids, ...Object.keys(MMG).map(Number).filter(id => !ids.includes(id))];
@@ -1455,7 +1459,7 @@ async function setRbOrder(v) {
 }
 
 $('fishRodGoal10').onclick = async () => {
-  await activateMode({ rodGoalActive: true, rodGoalAt: Date.now(), fishService: 'rod', fishTgt: null, fishSvc: null },
+  await activateMode({ rodGoalActive: true, rodGoalAt: Date.now(), fishService: 'rod', fishTgt: null, fishSvc: null, dailyFish: null, dailyRb: null },
     { rodEnchantTo: 10, fishMode: true, fishGoal: '', epicMode: false, rbMode: false, rbHuntMode: false, catMode: false, campaign: false });
   $('rodEnchantTo').value = '10';
   $('fishRodGoalStatus').textContent = 'Цель активна: +10. Проверю удочку, по одному куплю свитки, затем вернусь к рыбалке и Proof.';
@@ -1657,6 +1661,8 @@ $('showAllCls').onclick = async () => {
 const MODES_OFF = { epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false };
 async function setMode(m) {
   await save();
+  // 14.10: ручной режим отменяет возврат из старого дейлика; выполненный прогресс dailyDone сохраняем.
+  await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() });
   { const { rt = {} } = await chrome.storage.local.get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
     if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } });
     if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } }); }   // 8.0.3: режим выбран руками — «🎯 по одному РБ» выключен (тур — без остановок)

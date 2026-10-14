@@ -51,7 +51,8 @@ function make({ rt = {}, cfg = {} } = {}) {
   assert.ok(/await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, name: ctx\.name, [^\n]*adena, exp, sp: pick\([^\n]*lines: env\.newLines\(ctx\.logStart \|\| \[\], env\.logLines\(\)\), epic: !!env\.epicById\?\.\(ctx\.rb\.id\), fightS \}\)/.test(combat), 'combat: /await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, nam');
   assert.ok(combat.indexOf('env.rbRun?.kill(') > combat.indexOf("rbKills: (env.rt.rbKills || 0) + 1"), 'учёт после записи убийства РБ');
   assert.ok(/env\.rec\('B', 'смерть', `смертей за 30 мин: \$\{deaths\.length\}`\);\n  try \{ await env\.rbRun\?\.death\(\); \}/.test(surv), 'surv: /env\.rec\(\'B\', \'смерть\', `смертей за 30 мин: \$\{');
-  assert.ok(/rbHuntMode: true, fishMode: false, epicMode: false, catMode: false \}\);\n    try \{ await env\.rbRun\?\.start\('daily'/.test(daily), 'daily: /rbHuntMode: true, fishMode: false, epicMode: fals');
+  // 10.0.14: вход вынесен в enterDetour, который продолжает сохранённый дейлик после Stop; режим и старт серии остаются связаны.
+  assert.ok(/async function enterDetour[\s\S]*rbHuntMode: true, fishMode: false, epicMode: false, catMode: false \}\);[\s\S]*if \(key === 'dailyRb' && sameDetour\(key, D, kick\)\) try \{ await env\.rbRun\?\.start\('daily'/.test(daily), 'daily: enterDetour включает тур РБ и запускает серию после проверки текущего задания');
   assert.ok(/m === 'rb'\) await activateMode\(\{ \.\.\.leaveEpic, rbRun: \{ t0: now, mode: 'tour' \}/.test(popup), 'popup: /m === \'rb\'\) await activateMode\(\{ \.\.\.leaveEp');
   assert.ok(/m === 'epic'\) await activateMode\(\{ \.\.\.leaveHunt, rbRun: \{ t0: now, mode: 'epic' \}/.test(popup), 'popup: /m === \'epic\'\) await activateMode\(\{ \.\.\.leave');
   assert.ok(/rbOne: one, \.\.\.\(tour \? \{\} : \{ rbRun: \{ t0: now, mode: 'one' \}/.test(popup), '«один РБ»: новая серия только если тур не шёл');

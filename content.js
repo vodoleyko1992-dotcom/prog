@@ -115,7 +115,7 @@ function byText(re, sel = 'a,button,div,span') {
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
   // 10.0.13: Stop отменяет и клики продолжения после await; при выключенном боте оставляем ручной просмотр инвентаря и раскрытие панели.
-  if (!on && !(invBusy && !running && rt.invScan) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
+  if (!on && !(invBusy && !running && rt.invScan?.manual) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
   // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
   // кроме крестика окна «Фарм заблокирован» (тогда проверки уже нет)
   if (abHold() && !el.closest?.('.l2-antibot-card--blocked')) return false;
@@ -565,7 +565,11 @@ function panelInventory() {
 }
 const BUFF_RE = /\s+на\s+(\d+)\s*с(?![а-яa-z])/i;               // «Totem Spirit Bear на 120 с.»
 // урон из строк лога: «Iron Punch ⏎ 993» / «Ты нанёс [ моб ] 97 урона»
-const splashDmg = lines => [...lines.join(' ⏎ ').matchAll(/поруч[^⏎]*?[−-]\s*(\d+)/gi)].reduce((a, m) => a + +m[1], 0);
+const splashDmg = lines => lines.reduce((sum, line) => {
+  // Массовый удар перечисляет нескольких соседей в одной строке; считаем каждое снятие HP, включая разделители тысяч.
+  const tail = String(line).match(/поруч([^⏎]*)/i)?.[1] || '';
+  return sum + [...tail.matchAll(/[−-]\s*(\d[\d \u00a0\u202f]*)/g)].reduce((a, m) => a + +m[1].replace(/\D/g, ''), 0);
+}, 0);
 function dmgFromLog(name, lines, allowAlt = true) {
   if (/^атака$/i.test(name)) {
     // «Атака» кастетами — 1–3 удара за нажатие (в логе 2 строки «Ты нанёс … N урона»): считаем все (до v4.16 — только первый)
@@ -1809,14 +1813,17 @@ async function rodEnchant() {
   }
   if (!on || !tabOwner) return;
   const finish = async (why, next = null) => {
+    if (!on || !tabOwner) return;
     if (why) rec('B','удочка',why);
     fire($q('#char-bag-modal-close')); await sleep(200);
+    if (!on || !tabOwner) return;
     await setRt({ fishService: next, rodGoalWaitingProof: !!rt.rodGoalActive && !next });
     await rtCommit();                              // 8.0: без этого новая страница видела старое fishService:'rod' (круги fishing ↔ char)
+    if (!on || !tabOwner) return;                  // 14.10: Stop/смена вкладки во время записи отменяет следующий переход.
     if (next === 'exchange') { location.href = '/fishing-shop.html'; await sleep(3500); return; }
     if (next === 'rod') { location.href = '/char.html'; await sleep(3500); return; }
     if (await fishSvcDone(why)) return;
-    if (on) { await rtCommit(); location.href = fishNow() ? '/fishing.html' : '/map.html'; await sleep(3500); }
+    if (on && tabOwner) { await rtCommit(); if (!on || !tabOwner) return; location.href = fishNow() ? '/fishing.html' : '/map.html'; await sleep(3500); }
   };
   if (!row) return finish('выбранной удочки в сумке не найдено: никаких покупок');
   const item = itemJson(row);
@@ -1826,9 +1833,11 @@ async function rodEnchant() {
   if (!(await waitFor(() => shown($q('#char-bag-modal-rod-enchant-row')), 4000, 100))) {
     return finish('окно заточки недоступно (возможно, рыба ещё на крючке)');
   }
+  if (!on || !tabOwner) return;
   let lvl = lvlNow();
   if (lvl == null || lvl < 0 || lvl > 10) return finish('реальный уровень заточки неизвестен, покупку отменяю');
   await setRt({ rodLvl: lvl });
+  if (!on || !tabOwner) return;
   if (lvl >= rodTo) {
     await setRt({ rodGoalActive: false, rodGoalWaitingProof: false, rodLvl: lvl });
     return finish(`удочка +${lvl}: цель +${rodTo} достигнута, теперь рыбалка и накопление Proof`);
@@ -1866,8 +1875,10 @@ async function fishTgtReached(...args) { return L2V7Modules.fishing.fishTgtReach
 async function goFishing(...args) { return L2V7Modules.fishing.goFishing(...args); }
 
 // ---------- персонажи: у каждого своё состояние (кампания, квесты, РБ, профили скиллов) и свои роли панели ----------
-const heroNick = () => (($q('#l2-hud-legacy-name .l2-player-identity__nick')?.childNodes[0]?.textContent)
+const heroNick = () => { const nick = (($q('#l2-hud-legacy-name .l2-player-identity__nick')?.childNodes[0]?.textContent)
   || $q('#l2-hud-legacy-name')?.textContent || '').trim();
+  // 14.10: common.js сначала выводит «—». Это ещё не персонаж: иначе загрузка HUD восстанавливает чужой сохранённый режим.
+  return /^[\s.\-–—…]*$/.test(nick) ? '' : nick; };
 const ROLE_KEYS = ['nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nWeaponMain', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'nPetBuffs'];
 // страница переведена браузером (Google Translate): текст искажён — ник «Teddy» превращается в «Тедди»
 const pageTranslated = () => /translated-(ltr|rtl)/.test(document.documentElement.className) || !!$q('font[style*="vertical-align"]');
@@ -1973,7 +1984,7 @@ async function wearFromBag(...args) { return L2V7Modules.equipment.wearFromBag(.
 // полный проход: «Персонаж» (профессия) → «Инвентарь» (оружие) → назад. Запускается кнопкой меню или раз на старте.
 async function invScanStep(...args) { return L2V7Modules.equipment.invScanStep(...args); }
 let invBusy = false;
-async function invScanDrive(...args) { return L2V7Modules.equipment.invScanDrive(...args); }
+async function invScanDrive(...args) { if (!on && !rt.invScan?.manual) return; return L2V7Modules.equipment.invScanDrive(...args); }
 async function invScanStart(...args) { return L2V7Modules.equipment.invScanStart(...args); }
 
 // ---------- закупка расходников в «Магазине вещей» (/gm-shop.html) ----------
@@ -2426,9 +2437,9 @@ async function main() {
       if (rt.fishSvc && !isBattle() && !(isFishing() && fishState())) {
         if (Date.now() - (rt.fishSvc.t || 0) > 15 * 60000) { await setRt({ fishSvc: null, fishService: null }); continue; }
         const svc = rt.fishService || 'cut';
-        if (svc === 'cut') { if (isChar()) await fishCut(); else { setStatus('Разделка рыбы: иду в инвентарь'); await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
-        else if (svc === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(4000); } }
-        else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(4000); } }
+        if (svc === 'cut') { if (isChar()) await fishCut(); else { setStatus('Разделка рыбы: иду в инвентарь'); await rtCommit(); if (!on || !tabOwner || !rt.fishSvc || (rt.fishService || 'cut') !== svc) continue; location.href = '/char.html'; await sleep(4000); } }
+        else if (svc === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); if (!on || !tabOwner || !rt.fishSvc || (rt.fishService || 'cut') !== svc) continue; location.href = '/fishing-shop.html'; await sleep(4000); } }
+        else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); if (!on || !tabOwner || !rt.fishSvc || (rt.fishService || 'cut') !== svc) continue; location.href = '/char.html'; await sleep(4000); } }
         await sleep(200); continue;
       }
       // 9.0: камни печати → Ancient Adena (кнопка «Обменять сейчас» или автообмен) — вне боя, не посреди вываживания рыбы, не в TvT и не посреди
@@ -2459,11 +2470,12 @@ async function main() {
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
       // Читаем на шаге выбора РБ, не чаще раза в 30 мин
+      // 14.10: начатый тур чтения сумки должен закончить prof → inv → back до следующего шага рейда.
+      if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
+      if (rt.invScan) await setRt({ invScan: null });
       if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
           && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); continue; }
       if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); continue; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
-      if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
-      if (rt.invScan) await setRt({ invScan: null });
       if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); continue; }   // 8.0.3: дополнение «РБ между мобами» не отменяет чтение сумки
       // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
       if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) {
@@ -2471,9 +2483,9 @@ async function main() {
         if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); continue; }
       }
       // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
-      if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
-      else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); location.href = '/fishing-shop.html'; await sleep(5000); } }
-      else if (fishNow() && rt.fishService === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); location.href = '/char.html'; await sleep(5000); } }
+      if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'cut') continue; location.href = '/char.html'; await sleep(5000); } }
+      else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'exchange') continue; location.href = '/fishing-shop.html'; await sleep(5000); } }
+      else if (fishNow() && rt.fishService === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'rod') continue; location.href = '/char.html'; await sleep(5000); } }
       // 8.0 (аудит рыбалки, лог 10.10: ≈0,4 с накладных на заброс): после шага рыбалки — 30 мс вместо общих 200 мс. Проверки стопа /
       // паузы (on) / «Закупить сейчас» / TvT / сервера — в начале каждого круга, как и раньше
       else if (fishNow() && isFishing()) { await fishing(); await sleep(30); continue; }
@@ -3562,7 +3574,9 @@ addEventListener('message', e => {
     rec('B', 'эпики', `телепорт к эпику: ${d.method} ${path} → ${d.status || d.error} · запрос ${JSON.stringify(d.req ?? null).slice(0, 200)}${msg ? ' · ' + msg : ''}${!mine ? ' · запрос не к этому эпику — не учитываю' : a.ok === null ? ' · ответ неясен — резерв оставляю' : ''}`);
   } catch (er) {}
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
-    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, t: Date.now() } }); }
+    // 14.10: выбывшего участника игра уводит в чат; после reload нельзя вновь вести его на арену того же события.
+    const alive = TVT.selfCombat?.alive, selfCombat = typeof alive === 'boolean' ? { alive } : null;
+    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 10.0.11 (лог 13.10 22:00): скиллы арены (MP, откат) и ответ на каждый удар — для выбора приёма по MP и для «клик ушёл на сервер?»
@@ -3701,7 +3715,10 @@ function logLines() {                          // строки лога боя (
   const box = $q('#battle-log');
   if (!box && heavyPage()) return [];
   // текст строки собираем из частей через пробел: «Force Burst: сила 171» + «2696» — иначе склеивается в «сила 1712696» (v4.23)
-  const txt = l => { const b = l.querySelector('.l2-battle-log-line__body'); return b && b.children.length > 1 ? [...b.children].map(c => c.textContent.trim()).join(' ') : l.textContent; };
+  const txt = l => { const b = l.querySelector('.l2-battle-log-line__body'); if (!b || b.children.length <= 1) return l.textContent;
+    // 14.10: новый renderer вынес «Спойл:» за body; без префикса добыча не попадает в статистику.
+    const prefix = l.querySelector('.l2-battle-log-line__spoil-prefix')?.textContent.trim();
+    return [prefix, ...[...b.children].map(c => c.textContent.trim())].filter(Boolean).join(' '); };
   const src = box ? [...box.querySelectorAll('.l2-battle-log-line')].map(txt) : document.body.innerText.split('\n');
   return src.map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
 }
@@ -3881,7 +3898,7 @@ function panelReport() {
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -3921,6 +3938,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get dailyFishNote() { return () =>
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get tabOwner() { return tabOwner; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
@@ -3960,6 +3978,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get faF
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
   get RB_TRY_MS() { return RB_TRY_MS; }, set RB_TRY_MS(value) { RB_TRY_MS = value; },
@@ -4007,7 +4026,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get pauseBot() { return pauseBot; }, get
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.combat = L2V7Factories.combat({ get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
@@ -4178,6 +4197,8 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get NET_ERR() { return NET_ERR; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
+  get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get NET_SPAWNS() { return NET_SPAWNS; }, set NET_SPAWNS(value) { NET_SPAWNS = value; },
   get PAGE_SIZE() { return PAGE_SIZE; }, set PAGE_SIZE(value) { PAGE_SIZE = value; },
@@ -4336,7 +4357,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get heroStatsFor() { return heroStatsF
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get toggleState() { return toggleState; }, set toggleState(value) { toggleState = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.equipment = L2V7Factories.equipment({ get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.equipment = L2V7Factories.equipment({ get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CLASS_W() { return CLASS_W; }, set CLASS_W(value) { CLASS_W = value; },
   get EQUIP_OK() { return EQUIP_OK; }, set EQUIP_OK(value) { EQUIP_OK = value; },
   get FREE_HIT() { return FREE_HIT; }, set FREE_HIT(value) { FREE_HIT = value; },
@@ -4537,7 +4558,7 @@ L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg()
   get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
-L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
+L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get on() { return on; }, get tabOwner() { return tabOwner; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return fire; },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },

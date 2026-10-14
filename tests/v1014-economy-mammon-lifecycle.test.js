@@ -1,0 +1,30 @@
+'use strict';
+// 10.0.14: границы полной цепочки Маммона — язык API, источники, свежесть экипировки и незавершённый крафт.
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../modules/mammon.js'),'utf8');
+function fixture(cfg={},rt={},inv={}) {
+ const box={location:{pathname:'/map.html'},sessionStorage:{getItem:()=>null,setItem(){}},console};vm.runInNewContext(source,box);
+ const FARM={res:{'iron ore':{name:'Iron Ore',drop:[['drop']],sp:[]},'mithril ore':{name:'Mithril Ore',drop:[],sp:[['spoil']]},varnish:{name:'Varnish',drop:[['drop']],sp:[]}}};
+ const env={cfg:{mmGoalItem:920018,mmGoalLvl:1,mmCrafter:'Skye',mmOrders:false,...cfg},rt:{mmGear:[{id:920018,lvl:0,eq:true}],...rt},ITEMS:{},FARM,invQty:id=>inv[id]||0,setRt:async p=>Object.assign(env.rt,p),rec(){},heroLvl:()=>61,canSpoil:()=>true,spoilK:()=>1,
+ farmZones:(drop,_lv,_above,sp)=>drop.length||sp.length?[{tp:drop.length?'drop-zone':'spoil-zone',loc:'Test zone',mobs:{Test:{lvl:61,e:1,ch:1,spCh:sp.length?1:0}},e:1,score:1,inWin:true}]:[],heroNick:()=> 'Warlock'};
+ return {M:box.L2V7Factories.mammon(env),env};
+}
+const cases=[];const test=(n,f)=>cases.push([n,f]);
+test('украинские имена /upgrades без ITEMS не ломают простой фарм',()=>{const {M}=fixture({mmFarmBest:false},{mmCost:{'920018:0':{a:250000,c:1,m:[[1869,'Залізна руда',100]]}}});const g=M.mmFarmGoal();assert.equal(g.key,'iron ore');assert.equal(g.pick.tp,'drop-zone');});
+test('простой фарм сохраняет отключённый дроп и включённый спойл',()=>{const {M}=fixture({mmFarmBest:false,mmFarmDrop:false,mmFarmSpoil:'on'});const g=M.mmFarmGoal();assert.equal(g.key,'mithril ore');assert.equal(g.pick.tp,'spoil-zone');});
+test('обе категории источников выключены — цели фарма нет',()=>{assert.equal(fixture({mmFarmDrop:false,mmFarmSpoil:'off'}).M.mmFarmGoal(),null);});
+test('новая экипировка после ручного апгрейда завершает старую цель',()=>{const {M,env}=fixture({}, {mmGearT:Date.now()-86400000});M.eqNote({belt:{itemId:920018,specialGearLevel:1}});assert.ok(M.goalPlan().done);assert.ok(env.rt.mmEqT>env.rt.mmGearT);});
+test('новый ответ кузнеца после старой экипировки остаётся точным',()=>{const {M}=fixture({}, {mmEq:{belt:[920018,0]},mmEqT:Date.now()-86400000});M.smithNote([{itemId:920018,level:1,locationLabelUk:'Одягнено'}]);assert.ok(M.goalPlan().done);});
+test('возврат активной партии учитывается после смены настройки крафтера',()=>{const {M,env}=fixture({mmCrafter:'Other'}, {mmCraft:{to:'Skye',at:{1869:15,1865:15},ret:{1880:3},t0:Date.now()-1000}});M.mailList([{attachmentId:'return1',senderName:'Skye',itemId:1880,qty:3,createdAt:new Date().toISOString(),claimedAt:new Date().toISOString()}]);assert.equal(env.rt.mmCraft,null);});
+test('досыл незавершённой партии сохраняет первоначального адресата',()=>{const {M}=fixture({mmCrafter:'Other'}, {mmCraft:{to:'Skye',at:{1869:15},ret:{1880:3},pend:[[1865,15,'Varnish']]}});assert.equal(M.craftWant().to,'Skye');});
+test('ручная новая партия другому крафтеру не смешивается с незавершённой',()=>{const {M}=fixture({mmCrafter:'Other'}, {mmCraftReq:{t:Date.now()},mmCraft:{to:'Skye',at:{1869:15},ret:{1880:3}}});assert.match(M.craftWant().drop,/Skye/);});
+test('полный план: сырьё → отправка → возврат Steel → готовность апгрейда',()=>{const inv={1458:100,1869:115,1876:100,1865:15,4037:1};const {M,env}=fixture({}, {},inv);assert.equal(M.goalPlan().ready,false);const w=M.craftWant();assert.equal(w.to,'Skye');assert.equal(w.items.find(x=>x[0]===1869)[1],15);assert.equal(w.items.find(x=>x[0]===1865)[1],15);env.rt.mmCraft={to:w.to,at:{1869:15,1865:15},ret:w.ret,t0:Date.now()-1000};inv[1869]-=15;inv[1865]=0;inv[1880]=3;M.mailList([{attachmentId:'crafted',senderName:'Skye',itemId:1880,qty:3,createdAt:new Date().toISOString(),claimedAt:new Date().toISOString()}]);assert.equal(env.rt.mmCraft,null);assert.equal(M.goalPlan().ready,true);assert.equal(M.want().up,true);env.cfg.mmUpgrade=false;assert.equal(M.want(),null);});
+test('автополучение почты работает при пустом имени крафтера',async()=>{const {M,env}=fixture({mmCrafter:'',mmMailClaim:true});const urls=[];env.gameGet=async url=>{urls.push(url);return {ok:true,json:async()=>({attachments:[],totalPages:1})}};await M.mmTick();assert.ok(urls.some(u=>u.includes('/item-transfer/received')));});
+test('почта с последней страницы сначала проверяет предыдущие вложения',async()=>{
+ let page=2,claimed=false;const msg={textContent:''},label=()=>`${page} / 2`,tab={classList:{contains:()=>true}},card={dataset:{attachmentId:'pending'},querySelector:()=>null},claim={closest:()=>card};
+ const prev={disabled:false,prev:true},next={disabled:true},doc={documentElement:{dataset:{}},querySelectorAll:()=>[prev,next],querySelector:s=>s.includes('[data-mail-tab=')?tab:s.includes('page-label')?{textContent:label()}:s.includes('claim:not')?page===1&&!claimed?claim:null:s.includes('l2-mail-items-msg')?msg:s.includes('l2-mail-item,')?{}:null};
+ const box={document:doc,location:{pathname:'/mail.html'},sessionStorage:{getItem:()=>null,setItem(){}},console};vm.runInNewContext(source,box);
+ const pending={a:'pending',s:'Skye',id:1880,n:'Steel',q:3},env={cfg:{mmCrafter:'Skye'},rt:{mmMail:{unc:[pending]},mmJob:{kind:'claim',t:Date.now()}},FARM:{res:{}},ITEMS:{},$q:()=>null,shown:e=>!!e,setStatus(){},sleep:async()=>{},waitX:async f=>f(),setRt:async p=>Object.assign(env.rt,p),rec(){},fishNow:()=>false,fire:b=>{if(b===prev)page=1;if(b===claim){claimed=true;msg.textContent='Предмет у сумці.'}},gameGet:async()=>({ok:true,json:async()=>({attachments:claimed?[]:[{attachmentId:'pending',senderName:'Skye',itemId:1880,qty:3,claimedAt:null}],totalPages:1})})};
+ const M=box.L2V7Factories.mammon(env);for(let i=0;i<4&&env.rt.mmJob;i++)await M.claimStep(env.rt.mmJob);assert.equal(claimed,true);assert.equal(env.rt.mmClaimFail,null);
+});
+(async()=>{let bad=0;for(const[n,f]of cases)try{await f();console.log('PASS:',n)}catch(e){bad++;console.error('FAIL:',n,e.message)}if(bad)process.exitCode=1})();

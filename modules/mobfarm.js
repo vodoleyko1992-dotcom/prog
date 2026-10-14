@@ -652,11 +652,15 @@ async function map() {
       if (done) return;
       // в списке не нашёлся — через метку на карте: «Емісар Нурки · ур. 33 · рейд-босс» → окно → «В бой»
       const pin = env.$q(`.l2-map-mob-pin--raid[data-spawn-id="${CSS.escape(r.id)}"]`);
-      if (pin && env.on) {
-        env.fire(pin);
-        const go = await env.waitFor(() => { const a = env.$q('#map-mob-modal-battle'); return env.shown(a) ? a : null; }, 3000, 100);
+      if (pin && env.on && env.tabOwner !== false) {
+        if (!env.fire(pin)) return;
+        const go = await env.waitFor(() => { const a = env.$q('#map-mob-modal-battle'); return env.rbModalIs?.(r) && env.shown(a) ? a : null; }, 3000, 100);
+        if (!env.on || env.tabOwner === false) return;
         await env.setRt({ target: { name: r.name, champ: true, quest: true, rb: true }, mobClickAt: Date.now(), via: 'map' });
-        if (go) env.fire(go); else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
+        // 14.10: Stop/смена вкладки отменяют и прямой URL боя; старая кнопка окна другого РБ не подходит.
+        if (!env.on || env.tabOwner === false) return;
+        if (go && env.rbModalIs?.(r) && env.shown(go)) { if (!env.fire(go)) return; }
+        else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
         await env.waitFor(env.isBattle, 10000);
         return;
       }

@@ -293,7 +293,8 @@ function faWanted() {
   // «🔥 Начать РБ-сессию» — обычный «Тур РБ» летел к трём РБ без единого баффа за FA. Теперь и тур берёт тот же набор (cfg.rbFaFull),
   // но только перед вылетом к выбранному РБ (townBuffStart «перед РБ …», шаг тура go/fight, rbGo), а не пока тур фармит мобов
   const RH = env.rt.rbHunt || {};
-  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
+  const tourPrep = env.rt.tbuff?.rbTour && now - (env.rt.tbuff.t || 0) < 15 * 60000;
+  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
   // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA
@@ -354,7 +355,7 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < 10 * 60000);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
-  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa' }, tbT: Date.now() });
+  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode) }, tbT: Date.now() });
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
   location.href = n.set ? '/town-buffer.html' : '/fast-aden-buffer.html'; await env.sleep(4000);
   return true;
@@ -472,19 +473,25 @@ async function townBuffStep() {
     const nm = id => env.rt.faCat?.[id]?.name || env.FA_KNOWN[id]?.[0] || id;
     const got = [], gone = { ...(env.rt.faGone || {}) };
     let bought = 0, short = 0, nobT = 0;
+    // 10.0.14: сохранённая очередь переживает reload и ручную покупку; перед каждым списанием проверяем актуальные HUD и выбор.
+    const needed = id => { const H = hudBuffs(); return H && faWanted().includes(id) && (!H[id] || H[id] - Date.now() < 60000 || id === 1323 && nobGone(H) || faLow(id)); };
     for (const id of st.fa || []) {
       if (!env.on) break;
+      if (!needed(id)) continue;
       const bal = balNow(), b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
       if (!b) { got.push(`${nm(id)}: нет у баффера — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
       if (b.disabled) { got.push(`${nm(id)}: кнопка недоступна`); continue; }
       const cost = +(b.dataset.cost || 1);
       if (bal < cost) { got.push(`${nm(id)}: не хватает FA (${bal}/${cost})`); short++; continue; }   // дальше — те, что по карману
       const H0 = hudBuffs() || {};
-      await env.pause(); env.fire(b);
+      await env.pause();
+      if (!env.on || !needed(id)) continue;
+      env.fire(b);
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
       if (ok) bought++;
       if (ok) { const lost = await faClashNote(id, H0); if (lost.length) got.push(`${nm(id)} снял ${lost.map(nm).join(', ')} — вместе не держатся, пару больше не беру`); }
       if (ok && id === 1323) nobT = Date.now();   // 8.0.3: свой Noblesse — куплен после последней смерти (nobGone)
+      if (ok) await env.setRt({ tbuff: { ...env.rt.tbuff, fa: (env.rt.tbuff?.fa || []).filter(x => x !== id) }, ...(nobT ? { nobBuyT: nobT } : {}) });
       got.push(`${nm(id)}: ${ok ? '−' + cost + ' FA' : 'без подтверждения'}`);
       await env.sleep(env.rnd(250, 450));
     }

@@ -48,8 +48,8 @@ const mk = (cfg = {}, rt = {}, over = {}) => {
     const off = mk({ mmFarmSpoil: 'off' }, {}, { spoil: true }).M.mmFarmGoal().pick.res.find(x => x.key === 'mithril ore').e;
     assert.ok(withSp > dropOnly * 3 && Math.abs(withSp - forced) < 1e-9 && Math.abs(off - dropOnly) < 1e-9, `спойл: ${dropOnly.toFixed(2)} → ${withSp.toFixed(2)}`);
     const { M: M2 } = mk({ mmFarmDrop: false, mmFarmSpoil: 'on' }); const g2 = M2.mmFarmGoal(); assert.equal(g2.pick.res.length, 1, 'без дропа — только спойл Mithril');
-    const { M: M3 } = mk({ mmFarmDrop: false, mmFarmSpoil: 'off' }); const g3 = M3.mmFarmGoal(); assert.ok(g3 && !g3.pick, 'дроп и спойл выключены → старый путь по одному ресурсу');
-    const { M: M4 } = mk({ mmFarmBest: false }); assert.ok(!M4.mmFarmGoal().pick, 'галка снята → по одному ресурсу, без точки'); }
+    const { M: M3 } = mk({ mmFarmDrop: false, mmFarmSpoil: 'off' }); assert.equal(M3.mmFarmGoal(), null, '10.0.14: отключённые источники нельзя возвращать через старый путь');
+    const { M: M4 } = mk({ mmFarmBest: false }); assert.equal(M4.mmFarmGoal().pick.res.length, 1, '10.0.14: по одному ресурсу, с точкой по разрешённым источникам'); }
   // 3. content: готовая точка цели важнее своей; тик источников в главном цикле; настройки по умолчанию; меню
   assert.match(content, /function farmPick\(goal\) \{\n  if \(goal\?\.pick\?\.tp\) return goal\.pick;/);
   assert.match(content, /farmGuideTick\(\);/); assert.match(content, /L2V7Modules\.subclass\.tick\(\)/);

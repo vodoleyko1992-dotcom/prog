@@ -42,7 +42,7 @@ function shopNote(res) {
   }
   if (!items.length) return false;
   const sig = items.map(x => `${x.id}:${x.price}:${x.lvl}`).join(',');
-  if (env.rt.tsCat?.sig === sig) return true;
+  if (env.rt.tsCat?.sig === sig && JSON.stringify(env.rt.tsCat.items) === JSON.stringify(items) && Date.now() - (env.rt.tsCat.t || 0) < 86400000) return true;
   env.setRt({ tsCat: { items, sig, t: Date.now() } });
   env.rec('B', 'TvT-магазин', `каталог прочитан: ${items.length} вещей`);
   return true;
@@ -91,9 +91,15 @@ function want() {
   return { kind: 'buy', it: p.it, why: `${p.it.n} за ${p.need} Shil (есть ${p.have})` };
 }
 const isShop = () => location.pathname === SHOP_URL;
+const purchaseAllowed = J => !!env.cfg.tsBuy && +env.cfg.tsGoalItem === +J.it.id;
+async function cancelPurchase(J) {
+  env.rec('B', 'TvT-магазин', `${J.it.n}: покупка отменена — настройка или цель изменена`);
+  await env.setRt({ tsJob: null, tsTryT: 0 });
+}
 async function shopStep() {                              // true — шаг сделан (главный цикл заново)
   const J = env.rt.tsJob;
   if (J) {
+    if (!purchaseAllowed(J)) { await cancelPurchase(J); return true; }
     if (env.isBattle()) return false;
     if (Date.now() - (J.t || 0) > 4 * 60000) { await finish(J, false, 'не уложился в 4 мин'); return true; }
     if (!isShop()) { env.setStatus(`TvT-магазин: иду покупать ${J.it.n}`); location.href = SHOP_URL; await env.sleep(4000); return true; }
@@ -110,6 +116,7 @@ function rowOf(it) {
   return rows.find(r => (r.querySelector('.l2-tvt-shop-row__name')?.textContent || '').trim() === it.n) || null;
 }
 async function buy(J) {
+  if (!purchaseAllowed(J)) return cancelPurchase(J);
   const it = J.it;
   const row = await env.waitX(() => rowOf(it), 8000, 250);
   if (!row) { await finish(J, false, `в магазине нет строки «${it.n}»`); return; }
@@ -120,7 +127,10 @@ async function buy(J) {
   const btn = row.querySelector('.l2-tvt-shop-row__buy');
   if (!btn || btn.disabled) { await finish(J, false, 'кнопки «Купити» нет'); return; }
   const msg = env.$q('#tvt-shop-msg'); if (msg) msg.textContent = '';
-  await env.pause?.(); env.fire(btn);
+  await env.pause?.();
+  // 10.0.14: чекбокс/цель могли измениться, пока искали строку или ждали паузу перед платным кликом.
+  if (!purchaseAllowed(J)) return cancelPurchase(J);
+  env.fire(btn);
   const r = await env.waitX(() => { const t = (env.$q('#tvt-shop-msg')?.textContent || '').trim(); return t && !/Купуємо|Покупаем/i.test(t) ? t : null; }, 12000, 250);
   const ok = /Придбано|Куплено|Приобретено/i.test(r || '');
   await finish(J, ok, r || 'игра не ответила за 12 с');

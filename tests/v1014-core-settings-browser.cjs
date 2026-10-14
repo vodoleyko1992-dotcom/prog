@@ -1,0 +1,31 @@
+'use strict';
+// 14.10: настоящее popup + background + content, только искусственные данные и локальные HTTPS fixtures.
+const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert=require('node:assert/strict'),fs=require('node:fs/promises');
+(async()=>{const h=await harness();try{
+ const savedCfg={shopReserve:234567,nAttack:'Audit Bolt'}, fakeAuth={login:'audit-local-only',pass:'not-a-real-account-password'};
+ await h.sw.evaluate(async({savedCfg})=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,...savedCfg},rt:{...rt,auditKeep:17,epicTpBudget:[{t:Date.now()-1000,k:'audit-old',cost:1,unit:'CoL'}]},'cfg@OtherHero':{...cfg,shopReserve:765432,nAttack:'Other Audit'},'rt@OtherHero':{char:'OtherHero',auditKeep:55}})}, {savedCfg});
+ await h.popup.reload();await until(()=>h.popup.evaluate(()=>!!document.querySelector('#authSave')?.onclick));
+ await h.popup.evaluate(()=>document.querySelector('nav [data-tab="svc"]').click());
+ const cfg0=JSON.stringify((await h.get(['cfg'])).cfg);
+ await h.popup.locator('#authLogin').fill(fakeAuth.login);await h.popup.locator('#authPass').fill(fakeAuth.pass);await h.click('authSave');
+ await until(async()=>await h.sw.evaluate(()=>chrome.storage.local.get('auth').then(s=>!!s.auth?.pass)));
+ assert.equal(await h.sw.evaluate(x=>chrome.storage.local.get('auth').then(s=>s.auth.login===x.login&&s.auth.pass===x.pass),fakeAuth),true);
+ assert.equal(await h.popup.locator('#authPass').inputValue(),'');assert.equal(JSON.stringify((await h.get(['cfg'])).cfg),cfg0);
+ await h.popup.locator('#authLogin').fill('audit-renamed-local');await h.click('authSave');await until(()=>h.sw.evaluate(x=>chrome.storage.local.get('auth').then(s=>s.auth?.login==='audit-renamed-local'&&s.auth.pass===x),fakeAuth.pass));
+ console.log('PASS fake auth save/empty-password update clears field and preserves settings');
+ const download=async id=>{const task=h.popup.waitForEvent('download');await h.click(id);const d=await task;return fs.readFile(await d.path(),'utf8')};
+ const cfgText=await download('cfgExport'), cfgFile=JSON.parse(cfgText);assert.ok(cfgFile.l2botCfg);assert.equal(cfgFile.data.cfg.shopReserve,234567);assert.equal(cfgFile.data['cfg@OtherHero'].shopReserve,765432);assert.equal('rt' in cfgFile.data,false);assert.equal(cfgText.includes(fakeAuth.pass),false);assert.equal('auth' in cfgFile.data,false);
+ const memText=await download('memSave'), memFile=JSON.parse(memText);assert.ok(memFile.l2bot);assert.equal(memFile.data.rt.auditKeep,17);assert.equal(memFile.data['rt@OtherHero'].auditKeep,55);
+ for(const key of ['auth','on','lock','paused','stopMeta'])assert.equal(key in memFile.data,false,key+' must not export');assert.equal(memText.includes(fakeAuth.pass),false);console.log('PASS actual settings/memory downloads preserve separate heroes and exclude auth/runtime controls');
+ const upload=async(button,input,text)=>{const task=h.popup.waitForEvent('filechooser');await h.click(button);const chooser=await task;assert.equal((await chooser.element().getAttribute('id')),input);await chooser.setFiles({name:'audit-local.json',mimeType:'application/json',buffer:Buffer.from(text)})};
+ await h.sw.evaluate(async()=>{const {cfg}=await chrome.storage.local.get('cfg');await chrome.storage.local.set({cfg:{...cfg,shopReserve:1},'cfg@OtherHero':{shopReserve:2}})});
+ await upload('cfgImport','cfgFile',cfgText);await until(async()=> (await h.get(['cfg'])).cfg.shopReserve===234567);
+ let s=await h.get(['cfg','rt','on','cfg@OtherHero']);assert.equal(s.rt.char,'AuditHero');assert.equal(s.rt.auditKeep,17);assert.equal(s['cfg@OtherHero'].shopReserve,765432);assert.equal(s.on,false);console.log('PASS cfg round trip preserves current hero/runtime and stays off');
+ await upload('cfgImport','cfgFile','{}');await until(()=>h.popup.locator('#cfgNote').textContent().then(t=>/Не импортировано/.test(t)));assert.equal((await h.get(['cfg'])).cfg.shopReserve,234567);console.log('PASS invalid settings file leaves configuration unchanged');
+ await h.sw.evaluate(async()=>{const {rt}=await chrome.storage.local.get('rt');await chrome.storage.local.set({rt:{...rt,auditKeep:999,epicTpBudget:[...(rt.epicTpBudget||[]),{t:Date.now(),k:'audit-new',cost:2,unit:'CoL'}]}})});
+ await h.click('start');await until(()=>h.g.core('on && running && tabOwner'));
+ await upload('memLoad','memFile',memText);await until(()=>h.g.core('!on && !running'));s=await h.get(['on','rt','cfg','rt@OtherHero']);assert.equal(s.on,false);assert.equal(s.rt.char,'AuditHero');assert.equal(s.rt.auditKeep,17);assert.equal(s['rt@OtherHero'].auditKeep,55);assert.equal(s.rt.epicTpBudget.length,2,'memory import preserves newer CoL ledger');
+ await delay(600);assert.equal((await h.get(['rt'])).rt.auditKeep,17);console.log('PASS memory round trip stops running loop and retains profile identity plus newer spending ledger');
+ await h.click('authClear');await until(()=>h.sw.evaluate(()=>chrome.storage.local.get('auth').then(s=>!s.auth)));assert.equal(await h.popup.locator('#authLogin').inputValue(),'');assert.equal(await h.popup.locator('#authPass').inputValue(),'');console.log('PASS fake auth clear removes stored values and fields');
+ assert.deepEqual(h.errors,[]);assert.equal(h.requests.some(r=>r.method!=='GET'),false,'no game mutations');
+}finally{await h.ctx.close()}})().catch(e=>{console.error('FAIL',e.stack);process.exitCode=1});

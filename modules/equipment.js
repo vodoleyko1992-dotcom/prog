@@ -238,19 +238,38 @@ async function readWeaponsPage() {               // текущая страни�
 }
 
 async function equippedWeapon() {                // надетое: иконка → база; имя на языке игры — с панели или из окна предмета
+  // 10.0.14: сумка уже учитывала заточку, а надетое считалось как +0 и могло заменяться более слабым оружием.
+  let snapshot = false, slot = null, modalEnchant = null;
+  try {
+    const r = await env.gameGet?.('/character'), j = r?.ok ? await r.json() : null, eq = (j?.character || j)?.inventory?.eq;
+    if (eq && typeof eq === 'object' && !Array.isArray(eq)) { snapshot = true; slot = eq.l1; }
+  } catch (e) {}
+  const sid = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
+  if (snapshot && !sid) return null;
+  const stats = w => {
+    if (!w) return w;
+    const ench = snapshot ? +(slot?.enchant || 0) : modalEnchant;
+    const pb = slot?.enchantPAtkBonus, mb = slot?.enchantMAtkBonus;
+    const known = snapshot ? !ench || Number.isFinite(pb) && Number.isFinite(mb) : ench === 0;
+    return { ...w, ench: ench || 0, enchantUnknown: !known, ...(snapshot ? { inst: 'eq:l1' } : {}),
+      pa: known ? w.pa == null ? null : w.pa + (snapshot ? +pb || 0 : 0) : null,
+      ma: known ? w.ma == null ? null : w.ma + (snapshot ? +mb || 0 : 0) : null };
+  };
   const img = env.$q('img[data-l2-slot="weapon"]');
-  if (!img || !/--filled/.test(img.className)) return null;
+  if (!img || !/--filled/.test(img.className)) return snapshot ? stats(weaponOf(sid, { where: 'надето', name: env.itemOf(sid)?.n || '' }))
+    || { id: sid, name: '#' + sid, where: 'надето', g: 'NG', pa: null, ma: null, unknown: true, enchantUnknown: true } : null;
   const src = img.getAttribute('src') || '', file = src.split('/').pop();
-  let it = env.itemByIcon(src);
+  let it = snapshot ? env.itemOf(sid) : env.itemByIcon(src);
   // имя на языке игры: тот же значок на панели навыков («Джамадхр мушлі D-grade.»)
   const onPanel = (env.rt.panel || []).find(s => s.kind === 'снаряжение' && s.img && s.img === file);
   let name = onPanel?.name || '';
-  if (!name || !it) {
+  if (!name || !it || !snapshot) {
     const hit = img.closest('.l2-char-equip-slot-hit') || img;
     env.fire(hit);
     // окно сначала может показать «#262» (номер предмета) — ждём имя, но номер тоже пригодится
     let t = await env.waitX(() => { const m = env.$q('#char-bag-modal-title'); const x = env.shown(m) && m.textContent.trim(); return x && !/^#\d+$/.test(x) ? x : null; }, 1500, 100);
     const raw = env.$q('#char-bag-modal-title')?.textContent.trim() || '';
+    if (t || raw && !/^#\d+$/.test(raw)) modalEnchant = +((t || raw).match(/(?:^|\s)\+(\d+)/)?.[1] || 0);
     const idm = (t || raw).match(/^#(\d+)$/);
     if (!it && idm) it = env.itemOf(+idm[1]);
     if (!name && t) name = env.baseName(t);
@@ -259,13 +278,13 @@ async function equippedWeapon() {                // надетое: иконка
   if (!name || /^#\d+$/.test(name)) name = it?.n || '';
   if (!name) {   // 7.1.30: не распознано — не «пусто в руке» (иначе надевалась первая попавшаяся из сумки), а надетое с грейдом из последнего запроса/неизвестным
     env.rec('B', 'оружие', `надетое не распознано (значок ${file})`);
-    const eq = env.rt.weaponEq?.id ? weaponOf(env.rt.weaponEq.id, { where: 'надето', name: env.itemOf(env.rt.weaponEq.id)?.n || '' }) : null;
-    return eq || { id: 0, en: '', wt: '—', g: env.rt.weaponEq?.g || 'NG', pa: null, ma: null, where: 'надето', name: '?', icon: file, unknown: true };
+    const eq = env.rt.weaponEq?.id && (!snapshot || env.rt.weaponEq.id === sid) ? weaponOf(env.rt.weaponEq.id, { where: 'надето', name: env.itemOf(env.rt.weaponEq.id)?.n || '' }) : null;
+    return stats(eq) || { id: sid, en: '', wt: '—', g: env.rt.weaponEq?.g || 'NG', pa: null, ma: null, where: 'надето', name: '?', icon: file, unknown: true };
   }
   let w = it ? weaponOf(it.id, { where: 'надето', name }) : null;
   // 7.1.30: значок не нашёлся в базе — берём надетое из запроса к серверу (бот видел, что именно надели)
-  if (!w && env.rt.weaponEq?.id) w = weaponOf(env.rt.weaponEq.id, { where: 'надето', name });
-  return w || { id: 0, en: '', wt: '—', g: (name.match(/\b([DCBAS])-grade/i)?.[1] || 'NG').toUpperCase(), pa: null, ma: null, where: 'надето', name, icon: file };
+  if (!w && env.rt.weaponEq?.id && (!snapshot || env.rt.weaponEq.id === sid)) w = weaponOf(env.rt.weaponEq.id, { where: 'надето', name });
+  return stats(w) || { id: sid, en: '', wt: '—', g: (name.match(/\b([DCBAS])-grade/i)?.[1] || 'NG').toUpperCase(), pa: null, ma: null, where: 'надето', name, icon: file };
 }
 
 // 10.0.13 (аудит 14.10): char.js теперь рисует номера и переходы между группами по пять вместо двух стрелок.
@@ -320,14 +339,18 @@ async function wearFromBag(w) {
   return false;
 }
 
+const invScanActive = st => !!env.rt.invScan && env.rt.invScan.t === st?.t && (env.on ? env.tabOwner !== false : !!st?.manual);
 async function invScanStep() {
   let st = env.rt.invScan;
-  if (!st) return false;
+  if (!st || !invScanActive(st)) return false;
   if (st.step === 'prof') {
     if (!st.back) { st = { ...st, back: location.pathname + location.search }; await env.setRt({ invScan: st }); }
+    if (!invScanActive(st)) return false;
     if (!env.isCharacter()) { location.href = '/character.html'; await env.sleep(4000); return true; }
     const p = await env.waitX(() => env.$q('#character-profession')?.textContent.trim(), 5000, 150);
+    if (!invScanActive(st)) return false;
     await env.setRt({ prof: p || env.rt.prof || '', lvl: env.heroLevel() || env.rt.lvl, invScan: { ...st, step: 'inv' } });
+    if (!invScanActive(st)) return false;
     env.setStatus(`Оружие: профессия ${p || '?'} — смотрю инвентарь`);
     location.href = '/char.html'; await env.sleep(4000); return true;
   }
@@ -335,6 +358,7 @@ async function invScanStep() {
     if (!env.isChar()) { location.href = '/char.html'; await env.sleep(4000); return true; }
     env.setStatus('Оружие: читаю инвентарь');
     const list = await scanInventoryWeapons();
+    if (!invScanActive(st)) return false;
     const R = rankWeapons(list);
     const eq = list.find(w => w.where === 'надето');
     const fix = {};
@@ -344,7 +368,7 @@ async function invScanStep() {
     // Никогда не меняем на оружие ниже грейдом; если статы надетого неизвестны — меняем только на оружие выше грейдом
     const gR = w => GRADE_RANK[String(w?.g || 'NG').toUpperCase()] ?? 0;
     const eqKnown = eq && Number.isFinite(atk(eq));
-    const better = R.main && (!eq || (gR(R.main) >= gR(eq) && (gR(R.main) > gR(eq) && !eqKnown
+    const better = R.main && !eq?.enchantUnknown && (!eq || (gR(R.main) >= gR(eq) && (gR(R.main) > gR(eq) && !eqKnown
       || eqKnown && (R.inClass(eq) ? atk(R.main) > atk(eq) * 1.05 : atk(R.main) >= atk(eq) * 0.85))));
     // выбор в меню: если поле пустое или такого оружия нет — подставляем «в класс» (или надетое, если «в класс» слабее)
     const has = n => n && list.some(w => (w.name || '').toLowerCase().startsWith(String(n).toLowerCase().split(',')[0].trim()));
@@ -362,13 +386,14 @@ async function invScanStep() {
     if (env.on && env.cfg.weaponClassEquip !== false && R.main && R.main.where !== 'надето' && better && !augHold) {
       if (await wearFromBag(R.main)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
+    if (!invScanActive(st)) return false;
     await env.setRt({ weapons: list, weaponsT: Date.now(), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
       eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better), keptAug: !!(augHold && better && !wore) }, invScan: null });
     if (Object.keys(fix).length) await env.setCfg(fix);
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
       + (R.main ? ` · рекомендую: ${R.main.name}` : ' · оружия «в класс» нет') + (wore ? ` · надел ${wore}` : '') + (Object.keys(fix).length ? ` · в меню: ${Object.entries(fix).map(([k, v]) => k + '=' + v).join(', ')}` : ''));
     env.setStatus(`Оружие: ${list.length} шт. · в класс: ${R.main?.name || 'нет'}${wore ? ' · надето' : ''}`);
-    if (st.back && !/\/char\.html/i.test(st.back)) { location.href = st.back; await env.sleep(4000); }
+    if ((env.on ? env.tabOwner !== false : st.manual) && !env.rt.invScan && st.back && !/\/char\.html/i.test(st.back)) { location.href = st.back; await env.sleep(4000); }
     return true;
   }
   await env.setRt({ invScan: null });
@@ -398,10 +423,10 @@ function weaponRescanWhy(bag, lv) {
 }
 
 async function invScanDrive() {                  // кнопка меню при выключенном боте / продолжение после перехода страницы
-  if (env.invBusy || env.running) return;
+  if (env.invBusy || env.running || !invScanActive(env.rt.invScan)) return;
   env.invBusy = true;
   try {
-    for (let i = 0; i < 6 && env.rt.invScan && Date.now() - (env.rt.invScan.t || 0) < 120000 && !env.running; i++) {
+    for (let i = 0; i < 6 && invScanActive(env.rt.invScan) && Date.now() - (env.rt.invScan.t || 0) < 120000 && !env.running; i++) {
       if (!(await invScanStep())) break;
       await env.sleep(300);
     }

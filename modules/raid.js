@@ -42,13 +42,17 @@ function rbCandidates() {                      // окно уровня: ниж�
 
 async function rbPinAttack(r, label) {
   const pin = env.$q(`.l2-map-mob-pin[data-spawn-id="${CSS.escape(r.id)}"]`);   // v5.5: и метка эпика
-  if (!pin || !env.on) return false;
+  if (!pin || !env.on || env.tabOwner === false) return false;
   env.setStatus(label);
   env.rec('B', 'РБ', `${r.name} (${r.lvl}): в списке мобов нет — через метку на карте`);
-  env.fire(pin);
-  const go = await env.waitFor(() => { const a = env.$q('#map-mob-modal-battle'); return env.shown(a) ? a : null; }, 3000, 100);
+  if (!env.fire(pin)) return false;
+  // 14.10: окно может ещё принадлежать прежнему NPC, а Stop/потеря вкладки прерывают ожидание.
+  const go = await env.waitFor(() => { const a = env.$q('#map-mob-modal-battle'); return rbModalIs(r) && env.shown(a) ? a : null; }, 3000, 100);
+  if (!env.on || env.tabOwner === false) return false;
   await env.setRt({ target: { name: r.name, champ: true, quest: false, rb: true }, mobClickAt: Date.now(), via: 'map' });
-  if (go) env.fire(go); else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
+  if (!env.on || env.tabOwner === false) return false;
+  if (go && rbModalIs(r) && env.shown(go)) { if (!env.fire(go)) return false; }
+  else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
   await env.waitFor(env.isBattle, 10000);
   return true;
 }
@@ -197,7 +201,9 @@ async function rbScout(r) {
 const closeMobModal = () => { const c = env.$q('#map-mob-modal-close'); if (env.shown(c)) env.fire(c); };
 
 async function rbEngage(r, label, opt = {}) {
+  if (!env.on || env.tabOwner === false) return false;
   let chk = await rbScout(r);
+  if (!env.on || env.tabOwner === false) return false;
   // v5.5: эпик бьём заходами (смерть → хил → снова) — оценку «не по силам» не применяем, если её не включили
   if (opt.epic && chk && !chk.ok && !env.cfg.epicCheck && chk.kind !== 'strong') { env.rec('B', 'эпики', `${r.name}: предупреждение «${chk.why}» — разрешаю пробный заход`); chk = { ok: true, why: 'эпик: пробный заход' }; }
   if (chk && !chk.ok) {
@@ -214,12 +220,14 @@ async function rbEngage(r, label, opt = {}) {
   if (chk?.probe && !probeFight(r.id)) await rbNote(r.id, { name: r.name, lvl: r.lvl, probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp } });   // 9.2.5: начало пробы
   await env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });
   const go = env.$q('#map-mob-modal-battle');
-  if (chk && env.shown(go)) {
+  if (chk && rbModalIs(r) && env.shown(go)) {
     env.setStatus(label);
     await env.setRt({ target: { name: r.name, champ: true, quest: false, rb: true }, mobClickAt: Date.now(), via: 'map' });
-    await env.pause(); env.fire(go);
-    if (await env.waitFor(env.isBattle, 10000)) return true;
+    await env.pause();
+    if (!env.on || env.tabOwner === false) return false;
+    if (rbModalIs(r) && env.shown(go) && env.fire(go) && await env.waitFor(env.isBattle, 10000)) return true;
   }
+  if (!env.on || env.tabOwner === false) return false;
   closeMobModal();
   if (r.idx >= 0 && await env.attackSpawn({ ...r, rb: true, champ: true, rank: 0 }, () => label)) return true;
   return rbPinAttack(r, label);
@@ -554,8 +562,23 @@ function rbListWhy() {
     + (nx ? ` · первым воскреснет ${nx.n} (${nx.l}): ${nx.txt.replace(/\s*\(через[^)]*\)/, '')}` : '');
 }
 
+async function rbTeleportFire(b, patch) {
+  // setRt меняет память и очередь синхронно; pagehide ядра дописывает очередь при перелёте.
+  // Между резервом и fire нельзя ждать storage: Stop мог бы оставить «оплаченный» шаг без клика.
+  const before = Object.fromEntries(Object.keys(patch).map(k => [k, env.rt[k] ?? null]));
+  const write = env.setRt(patch), accepted = env.fire(b);
+  const rollback = accepted ? null : env.setRt(before);  // fire=false не отправил действие; откатываем только поля резерва
+  await write;
+  if (rollback) await rollback;
+  return accepted;
+}
+
 async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)
   const g = env.rt.rbGo;
+  if (!g || !env.on || env.tabOwner === false) return;
+  const kick = +env.rt.manualKickAt || 0;
+  const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick;
+  const sameJob = () => env.rt.rbGo?.id === g.id && env.rt.rbGo?.t === g.t;
   if (env.cfg.rbValueTour && now_() - (env.rt.rbListT || 0) > 10 * 60000) {
     env.rec('B', 'РБ-тур', `${g.name}: данные списка старше 10 мин — обновляю перед платным телепортом`);
     await env.setRt({ rbGo: null, rbListT: 0 }); return;
@@ -573,10 +596,11 @@ async function rbGoStep() {                       // список РБ → ну�
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); }
     return;
   }
-  if (!isRbPage() || !(await env.waitX(() => rbPageNow() === g.page, 4000, 200))) { env.setStatus(`РБ: лечу к ${g.name} (${g.lvl})`); location.href = `/rb-bosses.html?page=${g.page}`; await env.sleep(4000); return; }
+  const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === g.page, 4000, 200);
+  if (!active() || !sameJob()) return;
+  if (!pageReady) { env.setStatus(`РБ: лечу к ${g.name} (${g.lvl})`); location.href = `/rb-bosses.html?page=${g.page}`; await env.sleep(4000); return; }
   const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${g.id}"]`), 8000, 200);
-  const cnt = [...((env.rt.rbGoCnt || {})[g.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // платные телепорты к этому РБ за час
-  if (b) await env.setRt({ rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now() });   // v5.6: только если кнопка есть (телепорт будет)
+  if (!active() || !sameJob()) return;
   if (!b) { env.rec('B', 'РБ-тур', `${g.name}: на странице ${g.page} нет — обновлю список`); await env.setRt({ rbGo: null, rbListT: 0 }); return; }
   const row = rbRowsParse()[g.id];
   if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
@@ -585,9 +609,14 @@ async function rbGoStep() {                       // список РБ → ну�
   // v4.30: rbGo снимаем ДО нажатия: телепорт уводит со страницы и скрипт умирает, не дойдя до «rbGo: null» внизу.
   // Раньше бот на новой странице видел rbGo, возвращался в список и телепортировался снова — 90 с подряд, за аден.
   // zonePend «rb:<id>» больше не ставим: он создавал мусорную зону, зона определится по мобам на карте
-  await env.setRt({ rbWant: g.id, rbGo: null });
-  await env.pause(); env.fire(b);
+  // 14.10: отмена во время паузы не расходует лимит телепортов и не теряет задание.
+  await env.pause();
+  if (!active() || !sameJob()) return;
+  const cnt = [...((env.rt.rbGoCnt || {})[g.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);
+  if (!await rbTeleportFire(b, { rbWant: g.id, rbGo: null, rbGoTried: { ...(env.rt.rbGoTried || {}), [g.id]: Date.now() }, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [g.id]: cnt }, zoneGoT: Date.now() })) return;
+  if (!active()) return;
   await env.waitX(() => !isRbPage(), 6000, 200);
+  if (!active()) return;
   if (isRbPage()) {
     const msg = (env.$q('#rb-load-err')?.textContent || env.$q('.l2-rb-row__attack-hint, [role="alert"], [class*="toast"]')?.textContent || '').trim().slice(0, 80);
     env.rec('B', 'РБ-тур', `${g.name}: не улетели${msg ? ' — ' + msg : ''}`);
@@ -665,7 +694,10 @@ async function rbOneStep() {
 
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
+  if (!env.on || env.tabOwner === false) return;
   const H = env.rt.rbHunt || { step: 'pick' };
+  const kick = +env.rt.manualKickAt || 0;
+  const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick;
   if (rbOneHit() && H.step !== 'fight') return rbOnePause(H.name);   // 8.0.3: РБ убит по команде «один РБ» (и вне шага боя)
   if (!rbOneHit() && await rbSessTick()) return;    // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм (10.0.2: не после «один РБ убит»)
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
@@ -677,31 +709,39 @@ async function rbHuntStep() {
     return res;
   }
   if (H.step === 'go') {
+    const sameJob = () => env.rt.rbHunt?.step === 'go' && env.rt.rbHunt?.id === H.id && env.rt.rbHunt?.t === H.t;
+    if (!active() || !sameJob()) return;
     const g = env.rt.rbList?.[H.id] || H;
     const reason = rbTeleportCheck(H.id, g);
     if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {
       await env.setRt({ rbListT: 0 });
       return huntDone(H.id, `${H.name}: перед телепортом ${reason || 'список устарел'} — проверю повторно`);
     }
-    if (!isRbPage() || !(await env.waitX(() => rbPageNow() === H.page, 4000, 200))) {
+    const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === H.page, 4000, 200);
+    if (!active() || !sameJob()) return;
+    if (!pageReady) {
       env.setStatus(`Тур РБ: к ${H.name} (${H.lvl}) — список, стр. ${H.page}`);
       location.href = `/rb-bosses.html?page=${H.page}`; await env.sleep(4000); return;
     }
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
+    if (!active() || !sameJob()) return;
     if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`); }
     const row = rbRowsParse()[H.id];
     if (row) env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {});
     if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); }
     if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`);
+    // Stop во время паузы — ещё не попытка телепорта: сохраняем шаг «go» и прежний лимит.
+    await env.pause();
+    if (!active() || !sameJob()) return;
     // шаг «прилёт» записываем ДО нажатия: телепорт уводит со страницы, и скрипт обрывается на полуслове
-    await huntSet({ step: 'arrive', at: Date.now() });
     const cntH = [...((env.rt.rbGoCnt || {})[H.id] || []), Date.now()].filter(t => Date.now() - t < 3600000);   // v5.6: платные телепорты тура — в общий счётчик «≤3 в час»
     // 8.0.3 (лог 11.10 09:16: 26 боёв у Тотема записались в статистику прежней зоны «Vanor Silenos» на 55 ур.): после телепорта зона
     // неизвестна — её определит карта по мобам (zoneHere), а EXP/ч не попадёт в чужую зону
-    await env.setRt({ rbWant: H.id, zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } });
     env.rec('B', 'тур РБ', `телепорт к ${H.name} (${H.lvl})${H.price ? ' · ' + H.price.toLocaleString('ru') + ' аден' : ''}`);
-    await env.pause(); env.fire(b);
+    if (!await rbTeleportFire(b, { rbHunt: { ...H, step: 'arrive', at: Date.now(), t: Date.now() }, rbWant: H.id, zoneGoT: Date.now(), zone: null, zonePend: null, rbGoCnt: { ...(env.rt.rbGoCnt || {}), [H.id]: cntH } })) return;
+    if (!active()) return;
     if (await env.waitX(() => !isRbPage() || (env.$q('#rb-load-err')?.textContent || '').trim() || null, 8000, 200) && !isRbPage()) return;
+    if (!active()) return;
     const msg = (env.$q('#rb-load-err')?.textContent || '').trim().slice(0, 80);
     // 10.0 (аудит фарма): страница не сменилась за 8 с, но ошибки игры нет — переход медленный, а не отказ: шаг «прилёт» (уже записан) сам
     // отведёт на карту и поищет РБ; раньше — «следующий РБ» и второй платный телепорт
@@ -851,9 +891,10 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
   const nm = (ctx.name || '').toLowerCase(), ogre = env.activeBuffs().some(x => x.id === 109 && (!x.exp || x.exp > Date.now()));
   for (const line of fresh) {
     const l = String(line).trim();
-    const m = l.match(/^\[(.+?)\] ударив тебе (?:\(крит!\)\s*)?[−-](\d+) HP/i);
-    if (m && m[1].trim().toLowerCase() === nm) {
-      (S.hits ||= []).push(Math.round(+m[2] * (ogre ? 1.3 : 1)));
+    // 14.10, public battle-log-row-layout: «[Verfa] вдарив тебе: −250 HP» в DOM становится «Verfa ударив тебе −250 HP».
+    const m = l.match(/^(?:Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(?:\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i);
+    if (m && (m[1] || m[2]).trim().toLowerCase() === nm) {
+      (S.hits ||= []).push(Math.round(+m[3].replace(/\s/g, '') * (ogre ? 1.3 : 1)));
       if (S.hits.length > 120) S.hits.splice(0, S.hits.length - 120);
     }
     const sp = l.match(/^(.+?)\s*·\s*(.+?)\s+(\d+)\s*(?:HP|урона|шкоди)?\s*$/i);

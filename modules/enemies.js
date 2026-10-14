@@ -198,8 +198,16 @@ async function step() {
       if (!e || verdict(e, h || {})) continue;
       const btn = env.$q('#l2-pvp-incoming-attack');
       if (!env.shown(btn) || btn.disabled) break;
+      // 14.10, public common.js applyPvpIncoming: единственная кнопка HUD привязана к первому нападающему.
+      // Второй враг в списке не разрешает нападение на первого постороннего; цель могла смениться при await.
+      const sameTarget = () => {
+        const id = String(btn.dataset?.attackerId || btn.getAttribute?.('data-attacker-id') || '');
+        return id ? id === String(x.id || '') : x === INC.list[0];
+      };
+      if (!sameTarget()) continue;
       env.rec('B', 'враги', `${e.name} напал на нас — отвечаю (враг из листа, убивал нас ${e.kills} раз)`);
       await env.setRt({ enemyHunt: { id: e.id || x.id, name: e.name, t: Date.now(), via: 'incoming' } });
+      if (!sameTarget() || !env.shown(btn) || btn.disabled || verdict(e, h || {}) || busy()) { await env.setRt({ enemyHunt: null }); continue; }
       env.fire(btn); INC.t = 0; await env.sleep(4000); return true;
     }
   }

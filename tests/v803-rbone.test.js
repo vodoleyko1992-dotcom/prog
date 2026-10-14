@@ -7,7 +7,8 @@ const load = f => { const sb = { console, Date, Math, JSON, CSS: { escape: s => 
   sb.globalThis = sb; vm.runInNewContext(read(f), sb); return sb; };
 const mk = rt => {
   const log = { pauses: [], done: [] };
-  const env = { cfg: { rbHuntMode: true, rbMode: true, rbMaxBelow: 15, rbMaxAbove: 15, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0,
+  // 10.0.14: проверка команды «один РБ» выполняется активным владельцем вкладки.
+  const env = { on: true, tabOwner: true, cfg: { rbHuntMode: true, rbMode: true, rbMaxBelow: 15, rbMaxAbove: 15, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0,
     setRt: async p => Object.assign(env.rt, p), rec: (...a) => log.done.push(a.join(' ')), recBot: () => {}, setStatus: () => {},
     pauseBot: async msg => { log.pauses.push(msg); }, isMap: () => false, sleep: async () => {}, map: async () => {} };
   return { env, log, R: load('modules/raid.js').L2V7Factories.raid(env) };

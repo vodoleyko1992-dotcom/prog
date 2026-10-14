@@ -16,6 +16,7 @@ const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) {
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
 let dailyT = ssNum('l2bot-dqT'), clanT = ssNum('l2bot-ctT'), postT = 0, busy = null;
 const rbAllowed = () => !!(env.cfg.rbHuntMode || env.cfg.rbBetween || env.cfg.dailyAuto !== false);
+const canRun = () => env.on !== false && env.tabOwner !== false;
 // ---------- заметки из ответов игры (страница или свой GET) ----------
 function dailyNote(res) {
   if (!res || typeof res.tasks !== 'object') return false;
@@ -66,7 +67,7 @@ function clanPlan() {
 }
 const nameOf = (C, type) => C.defs.find(d => d.id === type)?.n || type;
 async function clanStep() {
-  if (env.cfg.clanTasks === false || env.isBattle() || Date.now() - postT < POST_GAP) return false;
+  if (!canRun() || env.cfg.clanTasks === false || env.isBattle() || Date.now() - postT < POST_GAP) return false;
   const F = env.rt.clanTaskFail; if (F && Date.now() - (F.t || 0) < FAIL_WAIT) return false;
   const p = clanPlan(); if (!p) return false;
   postT = Date.now();
@@ -91,13 +92,19 @@ function rbWanted() {
   return !!((a && !a.done) || (b && !b.done) || (mine && mine.type === 'kill_raid_boss' && mine.progress < mine.target));
 }
 async function dailyStep() {
+  if (!canRun()) return false;
+  const kick = +env.rt.manualKickAt || 0;
   const F = env.rt.dailyFish, R = env.rt.dailyRb;
   if (F) {
+    if (env.cfg.dailyAuto === false) { await detourEnd('dailyFish', F, 'дейлики выключены'); return true; }
+    if (F.entering) return enterDetour('dailyFish', F, kick);
     const done = (F.got || 0) >= F.need, late = Date.now() - (F.t || 0) > FISH_MAX, dq = dailyTask('fishing_catch_50');
     if (done || late || (dq && dq.done)) { await detourEnd('dailyFish', F, done || dq?.done ? `рыба на дейлик поймана (${F.got}/${F.need})` : 'рыбалка по дейлику: 45 мин вышли'); return true; }
     return false;
   }
   if (R) {
+    if (env.cfg.dailyAuto === false) { await detourEnd('dailyRb', R, 'дейлики выключены'); return true; }
+    if (R.entering) return enterDetour('dailyRb', R, kick);
     const killed = (env.rt.rbKills || 0) > (R.k0 || 0), late = Date.now() - (R.t || 0) > RB_MAX;
     if (killed || late || !rbWanted()) { await detourEnd('dailyRb', R, killed ? 'РБ по дейлику убит' : late ? 'РБ по дейлику: 90 мин вышли' : 'дейлик по РБ уже засчитан'); return true; }
     return false;
@@ -105,23 +112,38 @@ async function dailyStep() {
   if (env.cfg.dailyAuto === false || !env.rt.daily?.day || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
   const lack = fishLack();
   if (lack && !doneDay('fish') && !env.cfg.fishMode) {
-    await env.setRt({ dailyFish: { day: env.rt.daily.day, need: lack, got: 0, t: Date.now(), prev: snap() }, dailyDone: { ...(env.rt.dailyDone || {}), fish: env.rt.daily.day } });
-    await env.setCfg({ fishMode: true, rbHuntMode: false, epicMode: false, catMode: false, zoneAuto: false });
-    env.rec('B', 'дейлики', `«50 рыб»: не хватает ${lack} — иду на рыбалку (+1 Coin of Luck, 300 000 аден, 50 000 EXP), потом назад`);
+    const J = { day: env.rt.daily.day, need: lack, got: 0, t: Date.now(), prev: snap(), entering: true };
+    await env.setRt({ dailyFish: J, dailyDone: { ...(env.rt.dailyDone || {}), fish: env.rt.daily.day } });
+    if (await enterDetour('dailyFish', J, kick)) env.rec('B', 'дейлики', `«50 рыб»: не хватает ${lack} — иду на рыбалку (+1 Coin of Luck, 300 000 аден, 50 000 EXP), потом назад`);
     return true;
   }
   if (rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
-    await env.setRt({ dailyRb: { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap() }, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
-    await env.setCfg({ rbHuntMode: true, fishMode: false, epicMode: false, catMode: false });
-    try { await env.rbRun?.start('daily', 'дейлик'); } catch (e) {}   // 10.0.6: тур по дейлику — новая «📦 Серия РБ»
-    env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
+    const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true };
+    await env.setRt({ dailyRb: J, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
+    if (await enterDetour('dailyRb', J, kick)) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
     return true;
   }
   return false;
 }
+// 10.0.14: запись задания и переключение режима разделены await. Stop/новый ручной режим не дают старому шагу
+// включить рыбалку/тур. Незавершённый вход переживает перезапуск; ручной выбор в popup отменяет само задание.
+const sameDetour = (key, D, kick) => canRun() && (+env.rt.manualKickAt || 0) === kick && env.rt[key]?.t === D.t && env.rt[key]?.day === D.day;
+async function enterDetour(key, D, kick) {
+  if (!sameDetour(key, D, kick) || env.cfg.dailyAuto === false) return false;
+  await env.setCfg(key === 'dailyFish' ? { fishMode: true, rbHuntMode: false, epicMode: false, catMode: false, zoneAuto: false }
+    : { rbHuntMode: true, fishMode: false, epicMode: false, catMode: false });
+  if (!sameDetour(key, D, kick)) return true;
+  await env.setRt({ [key]: { ...D, entering: false } });
+  if (key === 'dailyRb' && sameDetour(key, D, kick)) try { await env.rbRun?.start('daily', 'дейлик'); } catch (e) {}
+  return true;
+}
 async function detourEnd(key, D, why) {
-  await env.setRt({ [key]: null, ...(key === 'dailyRb' ? { rbHunt: { step: 'pick', t: Date.now(), last: 'дейлик по РБ окончен' }, rbGo: null } : {}) });
+  const kick = +env.rt.manualKickAt || 0;
+  if (!sameDetour(key, D, kick)) return;
   await env.setCfg({ ...(D.prev || {}) });
+  if (!sameDetour(key, D, kick)) return;
+  await env.setRt({ [key]: null, ...(key === 'dailyRb' ? { rbHunt: { step: 'pick', t: Date.now(), last: 'дейлик по РБ окончен' }, rbGo: null } : {}) });
+  if (!canRun() || (+env.rt.manualKickAt || 0) !== kick) return;
   env.rec('B', 'дейлики', `${why} — возвращаюсь к прежнему режиму`);
   env.setStatus?.('Дейлик выполнен — возвращаюсь');
   if (key === 'dailyFish' && /fishing/.test(location.pathname)) { location.href = '/map.html'; await env.sleep(3000); }
