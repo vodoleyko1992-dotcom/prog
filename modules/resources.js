@@ -147,15 +147,16 @@ const slotPicks = () => [...document.querySelectorAll('.l2-battle-hotbar-pick')]
 // слот зарядов не того грейда → «Прибрати» старый, на свободный слот — заряды нужного грейда из «Розхідники» (раз в 2 мин)
 async function shotSlotSwap(b) {
   const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null, have = shotGradeOf(b);
-  if (!want || !have || want === have || shotSlots().some(x => shotGradeOf(x) === want)) return false;
+  const re = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
+  const matches = x => shotGradeOf(x) === want && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, ''));
+  if (!want || !have || matches(b) || shotSlots().some(matches)) return false;
   const now = Date.now();
   if (now - (env.rt.shotSwapT || 0) < 120000) return false;
   env.rt.shotSwapT = now; env.setRt({ shotSwapT: now });
-  const name = String(b.title || '').replace(/^#\d+\s*[—–-]\s*/, '').split(/\s+[—–-]\s+|:/)[0].trim().toLowerCase();
   const close = slotModalClose, openTab = slotModalTab, picks = slotPicks;
   // 1) нужный грейд в сумке есть?
   if (!(await openTab('consumable'))) { await close(); env.rec('B', 'внимание', `заряды на панели ${have}-грейда, а оружие ${want} — свободного слота нет, переставь вручную`); return false; }
-  const good = picks().find(x => shotGradeOf(x) === want && shotQty(x) > 0 && (!name || String(x.title).toLowerCase().startsWith(name.slice(0, 12))));
+  const good = picks().find(x => matches(x) && shotQty(x) > 0);
   if (!good) { await close(); return false; }    // ещё не куплены — докупит магазин, потом поставим
   const gq = shotQty(good);
   env.fire(good);
@@ -164,11 +165,11 @@ async function shotSlotSwap(b) {
   // 2) старые убрать с панели («Прибрати»), чтобы бот не жал их
   let removed = false;
   if (await openTab('remove')) {
-    const old = picks().find(x => shotGradeOf(x) === have);
+    const old = picks().find(x => shotGradeOf(x) === have && !matches(x));
     if (old) { env.fire(old); removed = !!(await env.waitFor(() => !b.isConnected || !env.shown(env.$q('.l2-battle-hotbar-modal__panel')) ? 1 : null, 3000, 100)); }
   }
   await close();
-  env.rec('B', 'панель', `оружие ${want}-грейда, а на панели заряды ${have} — поставил заряды ${want} (×${gq})${removed ? ', старые убрал' : ' (старые убери с панели вручную)'}`);
+  env.rec('B', 'панель', `оружию нужны ${env.shotsMage?.() ? 'заряды духа' : 'заряды души'} ${want}, на панели другие заряды ${have} — поставил подходящие (×${gq})${removed ? ', старые убрал' : ' (старые убери с панели вручную)'}`);
   return true;
 }
 
@@ -199,13 +200,14 @@ const shotSlots = () => [...document.querySelectorAll('.l2-hotbar-shot--enabled,
 async function keepShots() {
   if (env.shotGrade?.()?.blocked) return;
   const wanted = () => env.rt.weaponsT ? env.shotGrade?.()?.g : null;
-  const pick = () => { const g = wanted(); return (g && shotSlots().find(x => shotGradeOf(x) === g)) || env.shotSlot(); };
+  const pick = () => { const g = wanted(), re = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
+    return (g && shotSlots().find(x => shotGradeOf(x) === g && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) || env.shotSlot(); };
   let b = pick();
   if (!b) { await shotSlotAdd(); b = pick(); }
   if (b && !env.shotsOn(b)) { await shotSlotSwap(b); b = pick(); }
   // После неудачной замены слота старый грейд не включаем. Оружие может смениться, пока открыто окно.
-  const want = wanted(), have = shotGradeOf(b);
-  if (env.on === false || env.tabOwner === false || env.shotGrade?.()?.blocked || (want && have && want !== have)) return;
+  const want = wanted(), have = shotGradeOf(b), type = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
+  if (env.on === false || env.tabOwner === false || env.shotGrade?.()?.blocked || (want && have && want !== have) || (want && !type.test(String(b?.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) return;
   if (!b || b.isConnected === false || env.shotsOn(b) || env.qty(b) === 0 || Date.now() - env.lastShotTry < 5000) return;
   env.lastShotTry = Date.now();
   console.log(env.TAG, 'соски выключены → включаю');
