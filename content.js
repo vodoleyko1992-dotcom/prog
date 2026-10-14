@@ -998,21 +998,7 @@ const tags = r => (r.quest ? ' [квест]' : '') + (r.champ ? ' [чемп]' : 
 
 async function mapReady(...args) { return L2V7Modules.mobfarm.mapReady(...args); }
 
-async function gotoPage(n) {                   // листание кнопками < > (без перезагрузки страницы)
-  for (let guard = 0; guard < 40 && on; guard++) {
-    const pg = pagerInfo();
-    if (!pg) return false;
-    n = Math.max(1, Math.min(n, pg.total));
-    if (pg.cur === n) return true;
-    const btn = $q(pg.cur < n ? '#map-mob-page-next' : '#map-mob-page-prev');
-    if (!btn) return false;
-    const before = pageKey();
-    fire(btn);
-    if (!(await waitFor(() => pageKey() !== before && pageItems().length, 4000, 100))) return false;
-    await sleep(rnd(120, 300));
-  }
-  return false;
-}
+async function gotoPage(...args) { return L2V7Modules.mobfarm.gotoPage(...args); }
 
 // кэш «спавн → имя, уровень»: точки спавна постоянны, поэтому список локации изучается один раз
 async function absorb() {

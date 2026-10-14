@@ -23,10 +23,38 @@ function pageItems() {
 
 function pagerInfo() {                         // «5 / 27 (398)»
   const m = (env.$q('#map-mob-page-ind')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)\s*\(\s*(\d+)\s*\)/);
-  return m ? { cur: +m[1], total: +m[2], count: +m[3] } : null;
+  if (m) return { cur: +m[1], total: +m[2], count: +m[3] };
+  // 14.10: «1 2 3 4 5 >>» больше не содержит общее число страниц. Игра пишет count и p (с нуля) в подпись списка.
+  const parts = (env.$q('#map-mob-list')?.dataset.l2AroundSig || '').split('|');
+  const page = parts.slice(2).find(p => /^p\d+$/.test(p));
+  if (!/^\d+$/.test(parts[0]) || !page) return null;
+  const count = +parts[0], cur = +page.slice(1) + 1, total = Math.max(1, Math.ceil(count / env.PAGE_SIZE));
+  return cur <= total ? { cur, total, count } : null;
 }
 
 const pageKey = () => (env.$q('#map-mob-page-ind')?.textContent || '') + '|' + pageItems().map(i => i.id).join(',');
+
+async function gotoPage(n) {
+  n = Math.floor(Number(n));
+  if (!Number.isFinite(n)) return false;
+  for (let guard = 0; guard < 40 && env.on; guard++) {
+    const pg = pagerInfo();
+    if (!pg) return false;
+    n = Math.max(1, Math.min(n, pg.total));
+    if (pg.cur === n) return true;
+    const buttons = [...(env.$q('#map-mob-page-ind')?.querySelectorAll?.('.l2-compact-pages__btn') || [])];
+    // Номер в текущей группе — прямой переход; >>/<< ведут на первую страницу следующей/предыдущей пятёрки.
+    const direct = buttons.find(b => b.textContent.trim() === String(n));
+    const btn = buttons.length ? direct || buttons.find(b => b.textContent.trim() === (pg.cur < n ? '>>' : '<<')) :
+      env.$q(pg.cur < n ? '#map-mob-page-next' : '#map-mob-page-prev');
+    if (!btn || btn.disabled) return false;
+    const before = pageKey();
+    if (!env.fire(btn)) return false;
+    if (!(await env.waitFor(() => pagerInfo()?.cur !== pg.cur && pageKey() !== before && pageItems().length, 4000, 100))) return false;
+    await env.sleep(env.rnd(120, 300));
+  }
+  return false;
+}
 
 function aroundSig() {
   const parts = (env.$q('#map-mob-list')?.dataset.l2AroundSig || '').split('|');
@@ -786,6 +814,6 @@ async function map() {
   env.setStatus('Цели исчезли из списка, ищу заново');
   await env.sleep(1500);
 }
- return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
+ return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
  };
 })(globalThis);
