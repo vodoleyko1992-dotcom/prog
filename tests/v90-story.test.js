@@ -101,7 +101,9 @@ const active = (o = {}) => ({ ...RAW_N, part: 1, active: true, subclassLevel: 52
     assert.match(read('base-profile.json'), /"storyTurnIn":true,"storyTpMax":100000/);
     assert.match(b, /if \(env\.rt\.story\?\.nobleOwn\) ids = ids\.filter\(id => id !== 1323\)/);
     assert.match(b, /env\.rt\.story\?\.nobleOwn && env\.slotsBy\('noblesse blessing'\)\[0\]/);
-    assert.match(rd, /const qIds = env\.storyRbIds \? env\.storyRbIds\(\) : \[\];[\s\S]{0,300}quest: true/);
+    // 14.10: квестовый приоритет теперь внутри одного уровня; поведение проверяет v1016-raid-tour-selection.
+    assert.match(rd, /quests = env\.storyRbIds\?\.\(\) \|\| \[\]/);
+    assert.match(rd, /quests\.includes\(id\) \? \{ quest: true \}/);
     assert.match(c, /get storyRbIds\(\) \{ return \(\) => L2V7Modules\.story\.rbIds\(\); \}/); }
-  console.log('PASS: 9.0 story quests — subclass/Noblesse progress from game answers, ready part turned in at the NPC (teleport within the adena limit, unknown price refused), quest RBs first, own Noblesse not bought for FA, class switch stashes per-class memory');
+  console.log('PASS: 9.0 story quests — subclass/Noblesse progress from game answers, ready part turned in at the NPC (teleport within the adena limit, unknown price refused), quest RBs tagged for same-level priority, own Noblesse not bought for FA, class switch stashes per-class memory');
 })().catch(e => { console.error(e); process.exit(1); });

@@ -1443,23 +1443,30 @@ function renderRb(rt) {
     + (V.length ? `\nЗоны без РБ по силам (не летим 40 мин): ${V.map(([z, t]) => `${rt.zoneCat?.[z]?.name || z} ${new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`).join(', ')}` : '');
 }
 // ---------- 🧭 тур по РБ: состояние ----------
-// очередь тура: те же правила, что у бота (rbListPick): живой, игра разрешает, окно ±15, не «не по силам», не пробовали 30 мин
+// 14.10: показываем последний расчёт ядра; меню не дублирует модель сил, лимиты и причины отказа.
 function renderHuntQueue(rt, d) {
-  const L = rt.lvl || 0, RL = Object.entries(rt.rbList || {}), db = rt.rbDb || {}, tried = rt.rbGoTried || {}, now = Date.now();
-  $('rbOrderUp').classList.toggle('on', d.rbOrder !== 'down'); $('rbOrderDown').classList.toggle('on', d.rbOrder === 'down');
-  if (!RL.length || !L) { $('huntQueue').textContent = RL.length ? '' : 'Список РБ игры ещё не читался — прочитаю при запуске тура'; return; }
+  const L = rt.lvl || 0, RL = Object.entries(rt.rbList || {}), mode = d.rbValueTour ? 'value' : d.rbOrder === 'down' ? 'down' : 'up';
+  $('rbOrderUp').classList.toggle('on', mode === 'up'); $('rbOrderDown').classList.toggle('on', mode === 'down');
+  if (!RL.length || !L) { $('huntQueue').textContent = RL.length ? 'Ожидаю уровень героя для расчёта очереди' : 'Список РБ игры ещё не читался — прочитаю при запуске тура'; return; }
   const lo = L - Math.min(d.rbMaxBelow > 0 ? d.rbMaxBelow : 15, 15), hi = L + Math.min(d.rbMaxAbove ?? 15, 15);
-  const why = (id, x) => !x.alive ? 'мёртв' : x.deny ? 'игра не даёт: ' + x.deny.toLowerCase() : x.lvl < lo ? 'слишком слабый для окна' : x.lvl > hi ? 'слишком сильный' : db[id]?.verdict === 'no' ? '❌ не по силам' : now - (tried[id] || 0) < 30 * 60000 ? `пробовал, ещё ${Math.ceil((30 * 60000 - (now - tried[id])) / 60000)} мин` : '';
-  const dir = d.rbOrder === 'down' ? -1 : 1;
-  const all = RL.map(([id, x]) => ({ id, ...x, why: why(id, x) })).sort((a, b) => dir * (a.lvl - b.lvl));
-  const ok = all.filter(x => !x.why), skip = all.filter(x => x.why && x.lvl >= L - 20 && x.lvl <= hi);
-  // 8.0 (аудит меню): одинаковые причины («игра не даёт: …» ×10) — одной строкой со счётом
-  $('huntQueue').textContent = `Очередь (${d.rbOrder === 'down' ? 'с сильных' : 'со слабых'}, окно ${lo}–${hi}): ` + (ok.length ? ok.slice(0, 6).map(x => `${x.name} ${x.lvl}${db[x.id]?.verdict === 'ok' ? ' ✅' : ''}`).join(' → ') + (ok.length > 6 ? ` … ещё ${ok.length - 6}` : '') : 'подходящих нет')
-    + (skip.length ? `\nПропускаю:\n` + skipGroups(skip).join('\n') : '');
+  const p = rt.rbTourView, matching = p?.at && p.heroLvl === L && p.lo === lo && p.hi === hi && p.mode === mode && p.listT === (rt.rbListT || 0) && Array.isArray(p.ready) && Array.isArray(p.blocked);
+  const names = xs => xs.slice(0, 6).map(x => `${x.name} ${x.lvl}`).join(' → ') + (xs.length > 6 ? ` … ещё ${xs.length - 6}` : '');
+  const order = mode === 'value' ? 'по выгоде' : mode === 'down' ? 'с сильных' : 'со слабых';
+  if (matching) {
+    $('huntQueue').textContent = `Последний расчёт: ${new Date(p.at).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}${p.stale ? ' · список требует обновления' : ''}`
+      + `\nОчередь (${order}, окно ${lo}–${hi}): ${p.ready.length ? names(p.ready) : 'подходящих нет'}`
+      + (p.blocked.length ? '\nПропуски при расчёте:\n' + skipGroups(p.blocked.map(x => ({ ...x, why: x.why + (x.waitMs > 0 ? ` · ещё ${Math.ceil(x.waitMs / 60000)} мин на момент расчёта` : '') }))).join('\n') : '');
+    return;
+  }
+  if (mode === 'value') { $('huntQueue').textContent = 'Тур по выгоде: ожидаю расчёт бота по текущим условиям'; return; }
+  const dir = mode === 'down' ? -1 : 1, preview = RL.map(([id, x]) => ({ id, ...x })).filter(x => x.alive && !x.deny && x.lvl >= lo && x.lvl <= hi).sort((a, b) => dir * (a.lvl - b.lvl));
+  $('huntQueue').textContent = `Предварительный список (${order}, окно ${lo}–${hi}): ${preview.length ? names(preview) : 'живых разрешённых целей нет'}`
+    + '\nПри выборе бот проверит силы, банки, стоимость и лимиты; здесь появится итог расчёта.';
 }
 async function setRbOrder(v) {
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
-  await menuPatch({}, { cfgPatch: { rbOrder: v } });
+  // Явный выбор порядка по уровню выключает отдельный режим выгоды.
+  await menuPatch({ rbTourView: null }, { cfgPatch: { rbOrder: v, rbValueTour: false } });
+  $('rbValueTour').checked = false;
 }
 
 $('fishRodGoal10').onclick = async () => {
@@ -1480,13 +1487,12 @@ function renderHunt(rt, d) {
   renderHuntQueue(rt, d);
   const H = rt.rbHunt, db = rt.rbDb || {};
   const STEP = { pick: 'выбираю следующего', go: 'лечу (список РБ → «Телепорт»)', arrive: 'ищу на карте', fight: 'бой' };
-  const tried = Object.entries(rt.rbGoTried || {}).filter(([, t]) => Date.now() - t < 30 * 60000).length;
   const kills = Object.values(db).reduce((a, x) => a + (x.kills || 0), 0);
   $('huntBox').textContent = !d.rbHuntMode && !H?.t ? 'Тур не запускался — нажмите «🧭 Тур по РБ»'
     : `${d.rbHuntMode ? '▶ Тур идёт' : '■ Тур выключен'}${H?.step ? ' · ' + (STEP[H.step] || H.step) : ''}${H?.name && H.step !== 'pick' ? `: ${H.name} (${H.lvl})` : ''}`
       + (H?.last ? `\nПоследнее: ${H.last}` : '')
-      + `\nУбито РБ (всего по базе): ${kills} · пропущено на 30 мин: ${tried}`
-      + `\nОценка до боя: удар РБ ≈ ${rt.rbK || 0.109} × P.Atk${rt.rbK ? ' (выучено)' : ' (старт)'} · наш ДПС по РБ ≈${rt.rbDps || 1150}${rt.rbDps ? ' (общая статистика, не гарантия)' : ' (ориентир по умолчанию)'} · не лезет, если спецудар ≥40 % HP или банок уйдёт >½ запаса`;
+      + `\nУбито РБ (всего по базе): ${kills}`
+      + `\nОценка до боя: удар РБ ≈ ${rt.rbK || 0.109} × P.Atk${rt.rbK ? ' (выучено)' : ' (старт)'} · наш ДПС по РБ ≈${rt.rbDps || 1150}${rt.rbDps ? ' (общая статистика, не гарантия)' : ' (ориентир по умолчанию)'} · учитываются спецудар, длительность боя и доступные банки с резервом`;
 }
 confirmClick('rbReset', async () => {                 // сбросить вердикты по всем РБ и проверить заново
   const { rt = {} } = await chrome.storage.local.get('rt');
@@ -1663,6 +1669,11 @@ $('showAllCls').onclick = async () => {
 };
 // выбор режима запускает бота (как и прежние кнопки) и выключает остальные режимы; дополнения не трогаем
 const MODES_OFF = { epicMode: false, rbHuntMode: false, fishMode: false, catMode: false, taskOnly: false };
+function rbTourRestart(rt) {
+  // 14.10: ручной запуск отменяет ожидание пустого списка, но не защиту после двух отказов на месте.
+  const now = Date.now(), protective = rt.rbHuntIdle > now && rt.rbRefuse?.n >= 2 && now - (rt.rbRefuse.t || 0) < 10 * 60000;
+  return { rbTourView: null, ...(protective ? {} : { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0 }) };
+}
 async function setMode(m) {
   await save();
   // 14.10: ручной режим отменяет возврат из старого дейлика; выполненный прогресс dailyDone сохраняем.
@@ -1670,7 +1681,7 @@ async function setMode(m) {
   { const { rt = {} } = await chrome.storage.local.get('rt');   // 7.2.1: сменили режим руками — РБ-сессия окончена
     if (rt.rbSess?.on && m !== 'rb') await menuPatch({ rbSess: { ...rt.rbSess, on: false, end: Date.now() } });
     if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } }); }   // 8.0.3: режим выбран руками — «🎯 по одному РБ» выключен (тур — без остановок)
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
+  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
   const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
   const leave = { ...leaveEpic, ...leaveHunt };
@@ -1684,7 +1695,7 @@ async function setMode(m) {
   // с автофармом включаем и цепочку «Охотиться дальше»: ≈5,4 с на моба против ≈11,4 с через карту
   else if (m === 'auto') await activateMode({ ...leave, zoneAutoKick: now, zoneGoT: 0, zoneLvlT: 0 }, { ...MODES_OFF, zoneAuto: true, chain: true, rbMode: rbB });
   // 10.0.6: запуск тура/эпиков — новая «📦 Серия РБ» (что выпало; сводка в окне бота), модуль rbrun дополнит нулями
-  else if (m === 'rb') await activateMode({ ...leaveEpic, rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
+  else if (m === 'rb') await activateMode({ ...leaveEpic, ...rbTourRestart(rt), rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   else if (m === 'epic') await activateMode({ ...leaveHunt, rbRun: { t0: now, mode: 'epic' }, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
   else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
   else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: rbB });
@@ -2153,7 +2164,7 @@ async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
   const v = !cfg.rbHuntMode;
   // включение: с начала — свежий список РБ; рыбалку выключаем (тур её заменяет)
-  const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0 } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
+  const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0, ...rbTourRestart(rt) } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
   const mode = { rbHuntMode: v, ...(v ? { fishMode: false, rbMode: true, epicMode: false, catMode: false, campaign: false } : { rbMode: !!cfg.rbBetween }) };   // 8.0.3: тур выключен — rbMode по выбору игрока
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
