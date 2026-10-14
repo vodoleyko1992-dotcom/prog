@@ -47,7 +47,8 @@ test('потеря замка во время ожидания итога пре
  const f=fixture();let waits=0;f.env.waitFor=async fn=>{if(++waits>=2)f.env.tabOwner=false;return fn()};await f.combat.battle();assert.equal(f.env.rt.kills,0);assert.ok(!f.events.includes('loot'));assert.ok(!f.events.includes('next'));
 });
 async function beforeFight(opt,changes={}){const f=fixture({hp:'1000 / 1000',level:69,...opt});Object.assign(f.env.cfg,changes);f.env.extraKillsInLog=()=>{f.events.push('fight-entered');f.env.on=false;return []};await f.combat.battle();return f;}
-test('автоматическая цепочка исключает обычного моба ниже героя на6',async()=>{const f=await beforeFight();assert.ok(f.events.includes('map'));assert.ok(!f.events.includes('fight-entered'))});
+// 15.10: по решению игрока слабый сосед не прерывает цепочку ради FA.
+test('автоматическая цепочка добивает обычного моба ниже героя на6',async()=>{const f=await beforeFight();assert.ok(!f.events.includes('map'));assert.ok(f.events.includes('fight-entered'))});
 test('граница героя−5 остаётся разрешена',async()=>{const f=await beforeFight({level:70});assert.ok(f.events.includes('fight-entered'))});
 test('квест и источники ресурса/рецепта ниже−5 не теряют явную цель',async()=>{for(const kind of ['quest','resource','recipe']){const f=await beforeFight({[kind]:true});assert.ok(f.events.includes('fight-entered'),kind)}});
 test('вручную выбранное подземелье сохраняет разрешённое собственное окно уровней',async()=>{const f=await beforeFight({}, {catMode:true,catDungeon:'witch'});assert.ok(f.events.includes('fight-entered'))});
