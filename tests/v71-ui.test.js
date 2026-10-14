@@ -9,7 +9,7 @@ const css=fs.readFileSync(path.join(root,'ui-v7.css'),'utf8');
 const mf=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
 const base=JSON.parse(fs.readFileSync(path.join(__dirname,'v71-baseline-ids.json'),'utf8'));
-assert.equal(mf.version,'10.0.11');
+assert.equal(mf.version,'10.0.12');
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 for(const id of base) assert(ids.includes(id),`Legacy control lost: ${id}`);
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
