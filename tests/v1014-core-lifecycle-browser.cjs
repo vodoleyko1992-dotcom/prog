@@ -12,6 +12,8 @@ async function harness(){
  try {
  const errors=[],requests=[]; await ctx.route('https://**/*',r=>{const pathname=new URL(r.request().url()).pathname;requests.push({path:pathname,method:r.request().method()});return r.fulfill({status:200,contentType:/\.html$/.test(pathname)?'text/html':'application/json',body:/\.html$/.test(pathname)?fixture:'{}'});});
  const sw=ctx.serviceWorkers()[0]||await ctx.waitForEvent('serviceworker');const id=new URL(sw.url()).host;
+ // Новая установка сначала завершает запись базового профиля; иначе onInstalled затирает синтетические данные теста.
+ await until(()=>sw.evaluate(async()=>{const s=await chrome.storage.local.get(['cfg','rt']);return !!s.cfg&&!!s.rt;}));await delay(200);
  await sw.evaluate(({flags})=>chrome.storage.local.set({on:false,cfg:{...flags,dock:false,taskOnly:true,weaponScanAuto:false,tvtOn:false,enemyHunt:false,rbTimers:false,clanTasks:false,dailyAuto:false,mmOrders:false,mmUpgrade:false,mmMailClaim:false,mmGoalFarm:false,mmCraftSend:false,mmFarmGuide:false,storyTurnIn:false,campAuto:false,campaign:false,shopAuto:false,autoMagister:false,rec:false,autoSnap:false},rt:{...flags,char:'AuditHero',lvl:75,prof:'Human Warlock',weaponsT:Date.now(),engineRecoveryEpoch:'7.1.13'}}),{flags});
  const get=keys=>sw.evaluate(keys=>chrome.storage.local.get(keys),keys);
  async function game(){const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));const cdp=await ctx.newCDPSession(p),worlds=new Map();cdp.on('Runtime.executionContextCreated',e=>worlds.set(e.context.id,e.context));cdp.on('Runtime.executionContextDestroyed',e=>worlds.delete(e.executionContextId));cdp.on('Runtime.executionContextsCleared',()=>worlds.clear());await cdp.send('Runtime.enable');

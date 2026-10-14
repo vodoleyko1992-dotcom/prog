@@ -96,6 +96,7 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
+    if (m.expectedChar != null && (!m.expectedChar || state.rt?.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
@@ -130,6 +131,7 @@ async function switchCharacter(m, sender) {
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
+      nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
       nextCfg.mmGoalItem = '';
     }

@@ -90,6 +90,7 @@
         "modules/rbtimer.js",
         "modules/rbrun.js",
         "modules/subclass.js",
+        "modules/enchant.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -110,7 +111,10 @@
         "popup.js",
         "icons/*",
         "items-il.json",
-        "mammon-gear.json"
+        "mammon-gear.json",
+        "enchant-ui.js",
+        "enchant-ui.css",
+        "modules/enchant.js"
       ],
       "matches": [
         "https://l2wap.com/*",
