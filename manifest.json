@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.13",
-  "description": "L2wap Bot 10.0.13 — запреты цветов чемпионов, выбор целей катакомб и новая пагинация",
+  "version": "10.0.14",
+  "description": "L2wap Bot 10.0.14 — предварительная сборка: чемпионы, сумка, рыбалка, квесты и остановка",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -122,5 +122,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.13"
+  "version_name": "10.0.14"
 }
