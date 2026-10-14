@@ -83,6 +83,7 @@
         "modules/mammon.js",
         "modules/story.js",
         "modules/fightlab.js",
+        "modules/pvp.js",
         "modules/enemies.js",
         "modules/tvtshop.js",
         "modules/dailies.js",
@@ -118,7 +119,9 @@
         "modules/enchant.js",
         "modules/warlock.js",
         "warlock-ui.js",
-        "warlock-ui.css"
+        "warlock-ui.css",
+        "pvp-ui.js",
+        "pvp-ui.css"
       ],
       "matches": [
         "https://l2wap.com/*",

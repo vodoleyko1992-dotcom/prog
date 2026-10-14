@@ -102,12 +102,14 @@
     const s = (v, n = 60) => v == null ? '' : String(v).slice(0, n);
     const ar = Array.isArray(o.nearbyHeroes) ? o.nearbyHeroes : Array.isArray(o.around?.nearbyHeroes) ? o.around.nearbyHeroes : null;
     const df = [o.pvpDefeat, o.character?.pvpDefeat, o.defeat].find(x => x && typeof x === 'object' && x.killerName);
+    const owner = o.character && typeof o.character === 'object' ? o.character : o.id && o.name && 'revision' in o ? o : null;
     const ic = Array.isArray(o.pvpIncoming) ? o.pvpIncoming : o.pvpIncoming && typeof o.pvpIncoming === 'object' ? [o.pvpIncoming] : null;
-    if (!ar && !df && !ic) return undefined;
+    if (!ar && !df && !ic && !owner) return undefined;
     return {
+      owner: owner ? { id: s(owner.id), name: s(owner.name), revision: Number.isFinite(owner.revision) ? owner.revision : null } : undefined,
       heroes: ar ? ar.slice(0, 200).filter(h => h && typeof h === 'object').map(h => ({ id: s(h.characterId), name: s(h.name), lvl: +h.level || 0, col: s(h.pvpNickColor, 20),
         atk: 'battleOnNameClick' in h || 'showPkButton' in h ? h.battleOnNameClick === true || h.showPkButton === true : null,
-        ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: s(h.pvpBlockedReasonUk, 120), party: !!h.isPartyMember })) : undefined,
+        ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: s(h.pvpBlockedReasonUk, 120), party: !!h.isPartyMember, clanId: h.clanId == null ? '' : s(h.clanId), clanKnown: Object.hasOwn(h,'clanId') })) : undefined,
       zone: s(o.around?.nearestLabelUk || o.nearestLabelUk || o.mapState?.currentZoneNameUk || o.character?.currentZoneNameUk, 80) || undefined,
       defeat: df ? { id: s(df.killerCharacterId), name: s(df.killerName), ev: s(df.deathEventId), scope: s(df.scope, 30), arena: df.arena === true,
         log: Array.isArray(df.fullLog) ? df.fullLog.slice(-40).map(x => s(typeof x === 'string' ? x : x?.text ?? x?.message, 200)) : [] } : undefined,

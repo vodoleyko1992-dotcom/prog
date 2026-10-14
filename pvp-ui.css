@@ -1,0 +1,7 @@
+#pvpTargetsPanel .pvp-targets article{border:1px solid var(--line);border-radius:8px;padding:10px;margin:10px 0;background:var(--inset)}
+#pvpTargetsPanel .pvp-id{font-size:11px;overflow-wrap:anywhere;color:var(--dim);margin:4px 0}
+#pvpTargetsPanel .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#pvpTargetsPanel .row strong{margin-right:auto}
+#pvpTargetsPanel select{min-width:0;width:100%;max-width:100%}
+#pvpTargetsPanel .pvp-confirm{border:1px solid var(--gold);border-radius:8px;padding:10px;margin:10px 0}
+#pvpTargetsPanel .pvp-confirm button{margin:4px 5px 0 0}

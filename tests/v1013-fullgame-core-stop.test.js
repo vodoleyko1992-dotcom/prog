@@ -6,7 +6,8 @@ const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
 function core() {
   const src = read('content.js'), start = src.indexOf('function fire(el)'), end = src.indexOf('// Single-writer settings update.', start);
   assert.ok(start >= 0 && end > start);
-  const box = { console, on: true, running: true, tabOwner: true, invBusy: false, rt: {}, abHold: () => false,
+  // В полном runtime фабрика PvP уже есть; эти проверки сохраняют обычное состояние без смерти.
+  const box = { console, L2V7Modules: { pvp: { pending: () => false } }, on: true, running: true, tabOwner: true, invBusy: false, rt: {}, abHold: () => false,
     PointerEvent: class { constructor(type) { this.type = type; } }, MouseEvent: class { constructor(type) { this.type = type; } } };
   box.window = box; vm.createContext(box); vm.runInContext(src.slice(start, end) + '\nthis.fire = fire;', box);
   return box;
@@ -69,7 +70,7 @@ test('исключения для ручного инвентаря и пане�
 
 function postCore() {
   const src = read('content.js'), start = src.indexOf('async function gamePost('), end = src.indexOf('async function gameGet(', start);
-  const requests = [], box = { console, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
+  const requests = [], box = { console, L2V7Modules: { pvp: { pending: () => false } }, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
     gameAuth: () => ({}), fetch: async (url, init) => { requests.push({ url, method: init.method }); return { ok: true, json: async () => ({ clan: { name: 'Test' }, taskDefinitions: [], activeClanTasks: [], me: {} }) }; } };
   vm.createContext(box); vm.runInContext(src.slice(start, end) + '\nthis.gamePost=gamePost;', box);
   return { box, requests };

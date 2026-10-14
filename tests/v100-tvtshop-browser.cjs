@@ -17,10 +17,11 @@ mock = mock.replace("cfg:{", "cfg:{tsGoalItem:920033,");
     const html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: fs.readFileSync(path.join(root, c), 'utf8') });
-    for (const j of ['zone-db.js', 'zone-kpd.js', 'modules/fightlab.js', 'modules/tvtshop.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
+    // 14.10: используем реальный порядок зависимостей меню с новыми панелями.
+    for (const j of [...fs.readFileSync(path.join(root,'popup.html'),'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1])) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
     await page.waitForTimeout(900);
     const dash = await page.$eval('#dashLines', e => e.textContent);
-    await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="hunt"]').click(); await page.waitForTimeout(400);
+    await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="pvp"]').click(); await page.waitForTimeout(400);
     await page.evaluate(() => document.querySelector('#tsBox').scrollIntoView());
     const box = await page.$eval('#tsBox', e => e.textContent), goal = await page.$eval('#tsGoalBox', e => e.textContent);
     const opts = await page.$$eval('#tsGoalItem option', o => o.map(x => x.textContent)), sel = await page.$eval('#tsGoalItem', e => e.value);

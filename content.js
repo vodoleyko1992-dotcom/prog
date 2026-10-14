@@ -7,7 +7,7 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
   enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
   priority: '[квест]\n[чемп]\n[все]',
@@ -31,7 +31,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
   petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
 };
-const DEF_RT = { status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
+const DEF_RT = { pvpTargets: {}, pvpRecovery: null, pvpResolved: [], status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
                  spawns: {}, questTargets: [], quests: {},
                  rb: {}, rbDb: {}, rbSeen: {}, rbPending: false, rbCur: null, sinceRb: 999,
@@ -116,6 +116,7 @@ function byText(re, sel = 'a,button,div,span') {
 
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
+  if (L2V7Modules.pvp?.pending() && !['#map-defeat-tocity','#battle-defeat-tocity'].some(s => $q(s) === el)) return false;
   // 10.0.13: Stop отменяет и клики продолжения после await; при выключенном боте оставляем ручной просмотр инвентаря и раскрытие панели.
   if (!on && !(invBusy && !running && rt.invScan?.manual) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
   // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
@@ -2343,6 +2344,8 @@ async function main() {
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
       }
       if (heroNick() && rt.char !== heroNick()) { await switchChar(); if (!tabOwner) continue; }
+      // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
+      if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); continue; }
       if (rt.enchant?.pending) await enchantAccounting();
       if (!servicesStarted) {
         servicesStarted = true;
@@ -2378,6 +2381,8 @@ async function main() {
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
       if (cfg.tvtOn && await tvtStep()) { await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
+      await L2V7Modules.pvp.seedConfirmed();
+      if (await L2V7Modules.pvp.step()) { await sleep(200); continue; }
       if (!isBattle() && await L2V7Modules.raid.rbOneStep()) { await sleep(200); continue; }   // 10.0.2 (лог 01:00): «один РБ» убит — пауза раньше сторожа баффов и магазина
       // 9.2 (игрок 11.10: «Лист врагов»): убийцы героя — в лист; враг на локации — нападаем кнопкой игры (с проверкой сил), следим за возвращением
       L2V7Modules.enemies.tick().catch(() => {});
@@ -2809,6 +2814,7 @@ const gameAuth = () => { try { const t = localStorage.getItem('token'); return t
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
 async function gamePost(path, body, ms = 8000) {
   if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
+  if (L2V7Modules.pvp?.pending()) throw new Error('pvp_defeat_pending');
   const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
   try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
 }
@@ -3641,6 +3647,8 @@ const zoneMoveNet = (d, path) => ZONE_MOVE_RE.test(path) && d.method === 'POST' 
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
+  // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
+  try { L2V7Modules.pvp?.onNet(path, d); } catch (e) { console.warn(TAG, 'PvP', e); }
   if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();   // 8.0.3: запрос игры закончился — она снова принимает клики
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
@@ -4306,7 +4314,9 @@ L2V7Modules.combat = L2V7Factories.combat({
   get turnSec() { return turnSec; }, set turnSec(value) { turnSec = value; },
   get uiTimer() { return uiTimer; }, set uiTimer(value) { uiTimer = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
-  get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
+  get waitX() { return waitX; }, set waitX(value) { waitX = value; },
+  get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
+});
 L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -4443,7 +4453,9 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({
   get zoneCatThin() { return zoneCatThin; }, set zoneCatThin(value) { zoneCatThin = value; },
   get zoneForLevel() { return zoneForLevel; }, set zoneForLevel(value) { zoneForLevel = value; },
   get zoneName() { return zoneName; }, set zoneName(value) { zoneName = value; },
-  get zonePick() { return zonePick; }, set zonePick(value) { zonePick = value; } });
+  get zonePick() { return zonePick; }, set zonePick(value) { zonePick = value; },
+  get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }, get antibotState() { return antibotState; }, get pvpStep() { return () => L2V7Modules.pvp.step(); }
+});
 L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
   get QLINE() { return QLINE; }, set QLINE(value) { QLINE = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
@@ -4692,7 +4704,9 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get toOutskirts() { return toOutskirts; }, set toOutskirts(value) { toOutskirts = value; },
-  get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
+  get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
+  get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
+});
 
 L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
   get farmZones() { return farmZones; }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
@@ -4719,7 +4733,9 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
 L2V7Modules.fightlab = L2V7Factories.fightlab({
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
-  get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; } });
+  get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; },
+  get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }
+});
 const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.2: лист врагов и ответный PvP (modules/enemies.js)
 L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get fire() { return fire; },
@@ -4728,6 +4744,32 @@ L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get $q() { return $q; }, get cfg()
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
 L2V7Modules.dailies = L2V7Factories.dailies({ get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get on() { return on; }, get tabOwner() { return tabOwner; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
+// Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
+L2V7Modules.pvp = L2V7Factories.pvp({
+  get rt() { return rt; },
+  get cfg() { return cfg; },
+  get on() { return on; },
+  get tabOwner() { return tabOwner; },
+  get setRt() { return setRt; },
+  get rtCommit() { return rtCommit; },
+  get rec() { return rec; },
+  get setStatus() { return setStatus; },
+  get $q() { return $q; },
+  get shown() { return shown; },
+  get fire() { return fire; },
+  get pause() { return pause; },
+  get sleep() { return sleep; },
+  get waitX() { return waitX; },
+  get gameGet() { return gameGet; },
+  get isMap() { return isMap; },
+  get isBattle() { return isBattle; },
+  get victory() { return victory; },
+  get toMap() { return toMap; },
+  get fishNow() { return fishNow; },
+  get tvtSoon() { return tvtSoon; },
+  get antibotState() { return antibotState; },
+  get abHold() { return abHold; }
+});
 L2V7Modules.enemies = L2V7Factories.enemies({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return fire; },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
@@ -5032,7 +5074,7 @@ const warlockShotContext = () => {
   }
   return [...new Set(parts)].sort().join('; ');
 };
-const warlockCanRun = () => !rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
+const warlockCanRun = () => !L2V7Modules.pvp?.pending() && !rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
   && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.tbuff && !rt.enchant?.pending && rt.enchant?.status !== 'running';
 L2V7Modules.warlock = L2V7Factories.warlock({
   get townBufferReady() { return warlockTownReady; }, get townBufferStart() { return warlockTownStart; },

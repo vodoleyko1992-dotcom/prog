@@ -102,6 +102,9 @@ function domHeroes() {
 // пусто — можно; иначе причина (для журнала и меню)
 function verdict(e, h, me) {
   if (!e) return 'не в листе';
+  const explicit = env.rt.pvpTargets?.[e.id];
+  if (env.cfg.pvpOnSight !== false && explicit?.enabled && explicit.id === e.id && low(explicit.name) === low(e.name))
+    return 'цель ведёт раздел «Атаковать при встрече»'; // Не обходить его клановый/серверный запрет через обычный список.
   if (env.cfg.enemyHunt === false) return 'нападение выключено в меню';
   if (e.ignore) return 'вы отметили «не трогать»';
   const L = heroLvl();

@@ -23,6 +23,7 @@ async function lowHpEscape(me) {
 }
 
 async function onDeath() {
+  if (env.pvpPending?.()) return env.pvpRecoveryStep(); // PvP не учит силу оставшегося в URL РБ
   // 8.0.3 (лог 11.10 11:42:31 и 11:44:43: две смерти на Орфене за 2 мин — обе «1/3 за 30 мин»): «▶ Старт» стирает rt.deaths, а история
   // смертей за час (rt.deathLog) остаётся — счётчик «N/3 за 30 мин» и стоп после 3 смертей считаются по ней
   const now = Date.now(), deathLog = [...new Set([...(env.rt.deathLog || []), ...(env.rt.deaths || [])])].filter(t => now - t < 3600000).concat(now);
