@@ -369,11 +369,26 @@ async function zoneGoStep() {                     // полёт: Телепор�
 // 10.0.7 (лог 13.10 13:21, Necropolis of Devotion): бой в подземелье (spawnId sdms_<подземелье>_NNN) кончился не победой (ошибка загрузки,
 // босс, «не по зубам») — бот шёл «на карту» (/map.html), а оттуда «назад в подземелье» (+2 страницы, ≈3–10 с, и риск входа заново).
 // Код игры (battle.js resolveBattleReturnUrl): «Назад на карту» из боя в подземелье сама игра ведёт на /dungeon.html?dungeonId=…, карту
-// бот бы ждал 8 с впустую. Теперь из боя в подземелье — сразу на страницу подземелья
+// бот бы ждал 8 с впустую. 10.0.13: прямой URL пропускал /game/battle/leave и оставлял незаконченный бой на сервере.
+// Выходим через обработчик игры и ждём его маршрут: подземелье после отхода/победы, город после поражения.
 const dungeonOfBattle = () => { const m = (location.search || '').match(/spawnId=sdms_(.+?)_\d+(?:&|$)/i); return m ? decodeURIComponent(m[1]) : (env.heroAt?.()?.dung || ''); };
 async function toMap() {
   const dg = env.cfg.catMode && /spawnId=sdms_/i.test(location.search) ? dungeonOfBattle() : '';
-  if (dg) { env.setStatus('Возврат в подземелье'); location.href = `/dungeon.html?dungeonId=${encodeURIComponent(dg)}`; await env.sleep(3000); return; }
+  if (dg) {
+    if (!env.on) return;
+    env.setStatus('Возврат в подземелье');
+    const back = await env.waitFor(() => ['#battle-defeat-tocity', '#battle-back-map', '#battle-victory-continue']
+      .map(s => env.$q(s)).find(b => b && (!env.shown || env.shown(b))) || env.byText(env.BACK)
+      || env.$q('#wap-bottom a[href="/city.html"], #l2-nav-bottom a[href="/city.html"]'), 3000);
+    if (!env.on) return;
+    if (back) {
+      env.fire(back);
+      if (await env.waitFor(() => !/\/battle\.html/i.test(location.pathname), 8000)) return;
+    }
+    // Не прячем незавершённый бой сменой URL: следующий тик повторит игровой выход.
+    if (env.on) env.setStatus('Выход из боя не завершён');
+    return;
+  }
   env.setStatus('Возврат на карту');
   const back = env.$q('#battle-back-map') || await env.waitFor(() => env.byText(env.BACK), 3000);
   if (back) env.fire(back); else location.href = '/map.html';

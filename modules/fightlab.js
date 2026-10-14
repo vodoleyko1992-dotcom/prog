@@ -50,12 +50,14 @@ const RE_POT = /^(?:Зілля|Зелье)\s*\+\s*([\d\s]+)\s*HP/i;
 const RE_SELF = /^HP\s*\+\s*([\d\s]+)/i;
 const RE_DOT = /^(.+?)\s*·\s*(.+?)\s+([\d][\d\s  ]*)\s*(?:HP|урона|урону|шкоди)?\.?\s*$/i;
 const RE_PLAIN = /^([^\[\d+×:][^+×:]*?)\s+([\d][\d\s  ]*)\.?\s*$/;
+const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*\[[^\]]+\]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
 function parseLog(lines, mob) {
   const m = low(mob).replace(/\s*·.*$/, '');
   const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], pot: 0, selfHeal: 0, resist: 0, miss: 0 };
   for (const raw of lines || []) {
-    const l = String(raw || '').trim(); if (!l) continue;
+    // 14.10 (живой бой Changed Creation 74): «\u20601220\u200bПолум’я — 5002 урона» раньше давало ноль, особенно на добивании без mobHp.
+    const l = String(raw || '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
     let x;
     if ((x = l.match(RE_PET))) { r.pet += num(x[4]); r.petN++; if (/критич/i.test(x[2])) r.petCrit++; continue; }
     if (RE_PET_MISS.test(l)) { r.petMiss++; continue; }
@@ -65,6 +67,7 @@ function parseLog(lines, mob) {
     if (/опирається ефекту|сопротивл|resist/i.test(l)) { r.resist++; continue; }
     if (/^(?:Ти|Вы|Ты)\s+промахну|промахнулись|промах[!.]?$/i.test(l)) { r.miss++; continue; }
     if (RE_SKIP.test(l)) continue;
+    if ((x = l.match(RE_PHYSICAL))) { r.own += num(x[2]); r.ownN++; if (x[1]) r.crit++; continue; }
     if ((x = l.match(RE_DOT))) {
       const a = low(x[1]), b = x[2].trim();
       if (/^(?:КРИТ|КРИТИЧНО|CRIT)/i.test(b)) { r.own += num(x[3]); r.ownN++; r.crit++; continue; }
@@ -134,7 +137,11 @@ function onNet(path, d) {
     if (F && !F.done && F.turns) finish('left', now);
     if (bt.mob == null && !act) return null;      // ответ без моба (сторонний sync) — боя не начинаем
     begin(bt, spawn, now);
-    if (!act) { if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F; }
+    if (!act) {
+      // 14.10: стартовый лог — уже виденная часть. Иначе после delta финальный fullLog повторно засчитывает первый удар и кота.
+      F.logPrev = (bt.log || []).map(x => String(x ?? '')).slice(-40);
+      if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F;
+    }
   }
   // 9.2 (лог 12.10 02:31–02:56, 242 хода): игра отвечает на ход почти всегда `kind:'full'` (225 из 242) — там `battle.log` —
   // ВЕСЬ лог боя с начала (battle-log-session.getActiveLines), а не хвост; `delta.logTail` (17 ответов) — только новые строки.

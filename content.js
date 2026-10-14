@@ -114,6 +114,8 @@ function byText(re, sel = 'a,button,div,span') {
 
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
+  // 10.0.13: Stop отменяет и клики продолжения после await; при выключенном боте оставляем ручной просмотр инвентаря и раскрытие панели.
+  if (!on && !(invBusy && !running && rt.invScan) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
   // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
   // кроме крестика окна «Фарм заблокирован» (тогда проверки уже нет)
   if (abHold() && !el.closest?.('.l2-antibot-card--blocked')) return false;
@@ -1795,9 +1797,17 @@ async function rodEnchant() {
   // 7.1.30: точим ВЫБРАННУЮ удочку (rt.fishRodName, напр. «Fishing Rod +5»), а не первую попавшуюся в сумке
   const selName = String(rt.fishRodName || '').replace(/\s*(?:\+\d+)?\s*(?:Шанс.*)?$/i, '').trim().toLowerCase();
   const selEnch = +(String(rt.fishRodName || '').match(/\+(\d+)/) || [])[1] || 0;
-  const row = await waitFor(() => { const rows = rodRows(); if (!rows.length) return null;
-    const hit = rows.find(r => { const n = (r.querySelector('.l2-char-bag-name')?.textContent || '').toLowerCase(); const e = +(n.match(/\+(\d+)/) || [])[1] || +itemJson(r).enchant || 0; return selName && n.includes(selName) && e === selEnch; });
-    return hit || rows[0]; }, 5000, 200);
+  // 10.0.13: выбранная удочка бывает за материалами на другой странице. Другую вместо неё не точим.
+  const turn = next => L2V7Modules.fishing.fishBagPage(next);
+  for (let i = 0; i < 40 && on && tabOwner && await turn(false); i++) {}
+  await waitFor(() => document.querySelectorAll('.l2-char-bag-row').length, 5000, 200);
+  let row = null;
+  for (let page = 0; page < 40 && on && tabOwner; page++) {
+    const rows = rodRows();
+    row = selName ? rows.find(r => { const n = (r.querySelector('.l2-char-bag-name')?.textContent || '').toLowerCase(); const e = +(n.match(/\+(\d+)/) || [])[1] || +itemJson(r).enchant || 0; return n.includes(selName) && e === selEnch; }) : rows[0];
+    if (row || !await turn(true)) break;
+  }
+  if (!on || !tabOwner) return;
   const finish = async (why, next = null) => {
     if (why) rec('B','удочка',why);
     fire($q('#char-bag-modal-close')); await sleep(200);
@@ -1808,7 +1818,7 @@ async function rodEnchant() {
     if (await fishSvcDone(why)) return;
     if (on) { await rtCommit(); location.href = fishNow() ? '/fishing.html' : '/map.html'; await sleep(3500); }
   };
-  if (!row) return finish('удочки в сумке не найдено: никаких покупок');
+  if (!row) return finish('выбранной удочки в сумке не найдено: никаких покупок');
   const item = itemJson(row);
   fire(row.querySelector('.l2-char-bag-icon--stats') || row);
   const lvlNow = () => rodLvlOf($q('#char-bag-modal-title')?.textContent) ?? rodLvlOf(row.textContent)
@@ -1838,7 +1848,9 @@ async function rodEnchant() {
   if (!confirmed) return finish('нет подтверждения заточки: повтор позже');
   if (nextLvl != null && nextLvl >= 0 && nextLvl <= 10) lvl = nextLvl;
   rec('B','удочка',`попытка заточки +${item.enchant ?? '?'} → +${lvl}: ${res.slice(0,100)}`);
-  await setRt({rodLvl:lvl});
+  // Следующий свиток ищет ту же удочку уже с новым уровнем, а не устаревшее имя до заточки.
+  const rodName = String(rt.fishRodName || row.querySelector('.l2-char-bag-name')?.textContent || '').replace(/\s*(?:\+\d+)?\s*(?:Шанс.*)?$/i, '').trim();
+  await setRt({rodLvl:lvl, ...(rodName ? { fishRodName: rodName + (lvl ? ' +' + lvl : '') } : {})});
   if (lvl >= rodTo) {
     await setRt({ rodGoalActive:false, rodGoalWaitingProof:false });
     return finish(`удочка +${lvl}: цель достигнута, перехожу на ловлю и накопление Proof`);
@@ -2431,11 +2443,14 @@ async function main() {
       farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
       L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
       if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
+      if (!on || !tabOwner) continue;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
       // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
       L2V7Modules.story.storyTick().catch(() => {});
       if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
+      if (!on || !tabOwner) continue;
       // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
       if (await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
+      if (!on || !tabOwner) continue;
       // 10.0 (игрок 12.10): дейлики и клановые задания — опрос фоном (GET), сдать/взять/помочь (POST), рыба и РБ по дейликам (вне боя и туров)
       L2V7Modules.dailies.tick().catch(() => {});
       if (await L2V7Modules.dailies.clanStep()) { await sleep(200); continue; }
@@ -2622,6 +2637,7 @@ function serverDown() {
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
 async function gamePost(path, body, ms = 8000) {
+  if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
   const c = new AbortController(), tm = setTimeout(() => c.abort(), ms);
   try { return await fetch(path, { method: 'POST', credentials: 'include', cache: 'no-store', headers: { ...gameAuth(), 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}), signal: c.signal }); } finally { clearTimeout(tm); }
 }
@@ -4499,7 +4515,7 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBo
 
 // 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
 L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
-  get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; },
+  get classSwitched() { return classSwitched; }, get fire() { return fire; }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; }, get on() { return on; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 
 // 10.0.7 (игрок 13.10: «заготовка под саб крафтера и спойлера»): роль активного класса, свой крафт вместо крафтера, помощь основному персонажу (modules/subclass.js)

@@ -15,14 +15,15 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
   {
     const loc = { pathname: '/battle.html', search: '?spawnId=sdms_necropolis_of_devotion_078', href: '' };
     const sb = sandbox(loc); vm.runInNewContext(NAV, sb);
-    const st = [], env = { cfg: { catMode: true }, rt: {}, on: true, $q: () => ({ id: 'battle-back-map' }), fire: el => { env.fired = el; return true; }, setStatus: s => st.push(s), sleep: async () => {}, waitFor: async f => f() || null, byText: () => null, BACK: /x/, heroAt: () => ({ dung: 'necropolis_of_devotion', t: Date.now() }) };
+    // 10.0.13: игровая кнопка сначала закрывает бой, затем сама возвращает в подземелье.
+    const st = [], env = { cfg: { catMode: true }, rt: {}, on: true, $q: s => s === '#battle-back-map' ? { id: 'battle-back-map' } : null, fire: el => { env.fired = el; if (env.cfg.catMode && /spawnId=sdms_/.test(loc.search)) { loc.pathname = '/dungeon.html'; loc.href = '/dungeon.html?dungeonId=necropolis_of_devotion'; } return true; }, setStatus: s => st.push(s), sleep: async () => {}, waitFor: async f => f() || null, byText: () => null, BACK: /x/, heroAt: () => ({ dung: 'necropolis_of_devotion', t: Date.now() }) };
     const M = sb.L2V7Factories.navigation(env);
     assert.equal(M.dungeonOfBattle(), 'necropolis_of_devotion', 'dungeon id from the spawnId');
     await M.toMap();
     assert.equal(loc.href, '/dungeon.html?dungeonId=necropolis_of_devotion', 'straight back to the dungeon page');
-    assert.equal(env.fired, undefined, '«Назад на карту» not clicked'); assert.deepEqual(st, ['Возврат в подземелье']);
+    assert.equal(env.fired?.id, 'battle-back-map', '«Назад на карту» closes the battle before returning'); assert.deepEqual(st, ['Возврат в подземелье']);
     // обычный бой (dense_…) — как прежде: кнопка «Назад на карту»
-    loc.search = '?spawnId=dense_25957'; loc.href = ''; env.fired = undefined;
+    loc.pathname = '/battle.html'; loc.search = '?spawnId=dense_25957'; loc.href = ''; env.fired = undefined;
     await M.toMap();
     assert.equal(env.fired?.id, 'battle-back-map', 'ordinary fight → the map button'); assert.equal(loc.href, '/map.html', 'map forced when the page did not change (isMap false in the test)');
     // катакомбы выключены — старое поведение даже при sdms_

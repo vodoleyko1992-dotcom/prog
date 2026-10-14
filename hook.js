@@ -69,10 +69,13 @@
     const d = o.delta && typeof o.delta === 'object' ? o.delta : o, b = o.battle && typeof o.battle === 'object' ? o.battle : null, ch = o.character && typeof o.character === 'object' ? o.character : null;
     const n = v => v == null || v === '' || !Number.isFinite(+v) ? null : +v;
     const line = x => String(typeof x === 'string' ? x : x?.text ?? x?.message ?? x?.line ?? '').slice(0, 200);
-    const lt = Array.isArray(d.logTail) ? d.logTail : b && Array.isArray(b.log) ? b.log : [];
+    // 10.0.13: после последнего удара battle уже может отсутствовать; игра показывает полный журнал из результата боя.
+    const lastLog = Array.isArray(o.victory?.fullLog) ? o.victory.fullLog : Array.isArray(o.defeat?.fullLog) ? o.defeat.fullLog : null;
+    const finalLog = !Array.isArray(d.logTail) && !(b && Array.isArray(b.log)) && !!lastLog;
+    const lt = Array.isArray(d.logTail) ? d.logTail : b && Array.isArray(b.log) ? b.log : lastLog || [];
     const sp = d.spoilAttemptResult;
     return { mob: n(d.mobHp ?? b?.mobHp), mobMax: n(d.mobMaxHp ?? b?.mobMaxHp), hp: n(d.characterHp ?? ch?.hp), hpMax: n(d.characterMaxHp ?? ch?.maxHp), mp: n(d.characterMp ?? ch?.mp), mpMax: n(d.characterMaxMp ?? ch?.maxMp),
-      log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: !o.delta && !!b,
+      log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: (!o.delta && !!b) || finalLog,
       end: !!(d.battleEnded || o.victory || o.defeat || d.outcome === 'DEFEAT' || o.lethalMeta?.battleEnded), win: !!o.victory, lose: !!(o.defeat || d.outcome === 'DEFEAT'),
       spawn: String(b?.spawnId || '').slice(0, 80), name: String(b?.mobName || '').slice(0, 80), lvl: n(b?.mobLevel), kind: String(b?.kind || '').slice(0, 30),
       tier: String(b?.championTier || '').slice(0, 10),

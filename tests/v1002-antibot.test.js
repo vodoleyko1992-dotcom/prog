@@ -27,7 +27,10 @@ vm.createContext(sb); vm.runInContext(content.slice(a, z), sb);
   sb.abNet('/x', { code: 'anti_bot_challenge' }); sb.abNet('/game/battle/action', { code: 'pve_farm_blocked' }); assert.equal(sb.rt.abChal, null);
   // ядро: состояние и клики
   assert.match(content, /if \(rt\.abChal\) return 'check';/);
-  assert.match(content, /function fire\(el\) \{\n\s*if \(!el \|\| \(on && !tabOwner\)\) return false;\n(\s*\/\/.*\n)+\s*if \(abHold\(\) && !el\.closest\?\.\('\.l2-antibot-card--blocked'\)\) return false;/);
+  // 10.0.13: между замком и антиботом добавлен Stop; обе защиты обязаны остаться внутри fire до отправки событий.
+  const fireGuard = content.slice(content.indexOf('function fire(el)'), content.indexOf('  el.scrollIntoView', content.indexOf('function fire(el)')));
+  assert.match(fireGuard, /if \(!el \|\| \(on && !tabOwner\)\) return false;/);
+  assert.match(fireGuard, /if \(abHold\(\) && !el\.closest\?\.\('\.l2-antibot-card--blocked'\)\) return false;/);
   assert.match(content, /try \{ abNet\(path, d\.res\); \}/);
   assert.match(content, /if \(on && ch\.on\.oldValue === false && rt\.abChal\) setRt\(\{ abChal: null \}\);/);
   assert.match(content, /ch\.paused\.oldValue && !ch\.paused\.newValue && rt\.abChal\) setRt\(\{ abChal: null \}\)/);

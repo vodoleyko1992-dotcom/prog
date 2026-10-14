@@ -69,6 +69,7 @@ const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь нови
   // 3. кнопка 4 раза не помогла → кампания на 10 мин в сторону, не вечный цикл
   { const state = { targets: [], actions: [el({ textContent: 'Взять квест', dataset: { action: 'accept' } })], tps: [], body: 'intro' };
     const { q, env } = quests(state);
+    env.cfg.campaign = true;  // 14.10: тест повторов включённой кампании; разовая проверка при выключенной ничего не нажимает.
     env.rt.campActTry = 4;
     await q.campaign();
     assert.ok(env.rt.campSkipUntil > Date.now() + 9 * 60000); assert.equal(env.outs, 1);
