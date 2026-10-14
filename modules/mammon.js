@@ -638,12 +638,15 @@ async function candFind(id) {
   }
   return null;
 }
-const pgNow = () => { const m = (document.querySelector('#item-transfer-pagination .l2-item-transfer-page-label')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); return m ? [+m[1], +m[2]] : null; };
+const pgNow = () => { const active = document.querySelector('#item-transfer-pagination [aria-current="page"]'); if (active && /^\d+$/.test(active.textContent.trim())) return [+active.textContent.trim(), 0]; const m = (document.querySelector('#item-transfer-pagination .l2-item-transfer-page-label')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); return m ? [+m[1], +m[2]] : null; };
 async function pageGo(target) {                   // листать список «Передача предмета» прямо к странице target; ждём смену подписи, не таймаут
   for (let i = 0; i < 30; i++) {
     const p = pgNow(); if (!p) return false;
     if (p[0] === target) return true;
-    const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], b = p[0] > target ? bs[0] : bs[bs.length - 1];
+    // 10.0.13: общий игровой pager — номера и переходы между группами по пять.
+    const compact = [...document.querySelectorAll('#item-transfer-pagination .l2-compact-pages__btn')];
+    const bs = compact.length ? compact : [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')];
+    const b = compact.length ? (bs.find(x => x.textContent.trim() === String(target)) || bs.find(x => x.textContent.trim() === (p[0] > target ? '<<' : '>>'))) : (p[0] > target ? bs[0] : bs[bs.length - 1]);
     if (!b || b.disabled || bs.length < 2) return false;
     env.fire(b);
     if (!await env.waitX(() => { const q = pgNow(); return q && q[0] !== p[0] ? q : null; }, 4000, 100)) return false;
