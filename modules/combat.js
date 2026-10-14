@@ -746,18 +746,24 @@ function chooseAction(ctx, mp) {
 }
 
 async function hotbarRows3() {
-  const hb = env.$q('.l2-battle-hotbar');
-  if (!hb) return;
-  const rows = () => document.querySelectorAll('.l2-battle-hotbar__row').length;
-  const vis = () => +(hb.dataset.visibleRows || 0) || document.querySelectorAll('.l2-battle-hotbar__row:not([hidden])').length;
-  for (let i = 0; i < 3 && vis() < Math.min(3, rows()); i++) {
-    const down = env.$q('.l2-battle-hotbar__row-nav--down');
+  // 14.10: стрелки раскрывают ряды, а ответ игры может заменить всю панель. Старый hb давал два ожидания по 1,5 с.
+  const panel = () => {
+    const hb = env.$q('.l2-battle-hotbar');
+    if (!hb) return null;
+    return { hb, rows: hb.querySelectorAll('.l2-battle-hotbar__row').length,
+      vis: +(hb.dataset.visibleRows || 0) || hb.querySelectorAll('.l2-battle-hotbar__row:not([hidden])').length };
+  };
+  for (let i = 0; i < 3; i++) {
+    const p = panel();
+    if (!p) return;
+    if (p.vis >= Math.min(3, p.rows)) break;
+    const down = p.hb.querySelector('.l2-battle-hotbar__row-nav--down');
     if (!down || down.disabled) return;
-    const v = vis();
-    env.fire(down);
-    await env.waitX(() => vis() > v, 1500, 50);
+    if (!env.fire(down)) return;
+    const changed = await env.waitX(() => { const next = panel(); return !next || next.hb !== p.hb || next.vis > p.vis; }, 1500, 50);
+    if (!changed) return;
   }
-  if (vis() >= 3 && !env.rt.rows3) { env.rec('B', 'панель', 'открыты все 3 ряда панели скиллов'); env.setRt({ rows3: 1 }); }
+  if (panel()?.vis >= 3 && !env.rt.rows3) { env.rec('B', 'панель', 'открыты все 3 ряда панели скиллов'); env.setRt({ rows3: 1 }); }
 }
 
 // 10.0.10 (лог 13.10 19:39–20:57, alt1 18–19 ур.): обычная атака 1 урона 112 ударов из 112, Power Strike 0–3 (Elf Ghost 20, Lesser Dark
