@@ -204,7 +204,9 @@ async function keepShots() {
     return (g && shotSlots().find(x => shotGradeOf(x) === g && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) || env.shotSlot(); };
   let b = pick();
   if (!b) { await shotSlotAdd(); b = pick(); }
-  if (b && !env.shotsOn(b)) { await shotSlotSwap(b); b = pick(); }
+  // 10.0.19 (игрок 15.10: S-кастер, старые заряды на панели): включённый старый слот
+  // тоже нужно заменить. Его состояние ON относится к старому предмету, а не к нужным зарядам.
+  if (b) { await shotSlotSwap(b); b = pick(); }
   // После неудачной замены слота старый грейд не включаем. Оружие может смениться, пока открыто окно.
   const want = wanted(), have = shotGradeOf(b), type = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
   if (env.on === false || env.tabOwner === false || env.shotGrade?.()?.blocked || (want && have && want !== have) || (want && !type.test(String(b?.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) return;

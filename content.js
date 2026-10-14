@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.0.19 — content script (S-заряды духа для кланового кастера) =====
+// ===== L2wap Bot v10.0.20 — content script (сверка S-кастера и замена зарядов) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3647,6 +3647,7 @@ async function weaponEquipNote(req) {
   const known = L2V7Modules.equipment.weaponItem(id);
   if (known && (known.k !== 'W' || /удочка|питомца/.test(known.wt || ''))) return;
   const oldT = rt.weaponsT;
+  const oldEquipped = (rt.weapons || []).find(w => w.where === 'надето');
   const mark = {char,id,inst:String(req.targetInstanceId || ''),revision:req.expectedRevision,t:Date.now(),status:'pending'};
   const current = () => rt.char === char && ['char','id','inst','revision','t'].every(k=>rt.weaponMetaPending?.[k]===mark[k]);
   // setRt ядра сразу обновляет память: старые A-заряды блокируются до первого await.
@@ -3668,8 +3669,27 @@ async function weaponEquipNote(req) {
     ench,enchantUnknown:!bonusesKnown,where:'надето',inst:mark.inst};
   const index = W.findIndex(x=>x.id===id && (!x.inst || !w.inst || x.inst===w.inst));
   if (index>=0) W[index] = {...W[index],...w}; else W.push(w);
-  await setRt({weapons:W,weaponsT:Date.now(),weaponEq:{id,g:w.g,t:Date.now()},weaponMetaPending:null});
+  await setRt({weapons:W,weaponsT:Date.now(),weaponEq:{id,g:w.g,t:Date.now()},weaponMetaPending:null,
+    ...(oldEquipped?.id !== id ? {shopT:0} : {}),
+    ...(rt.shopShotBad?.want && rt.shopShotBad.want !== w.g ? {shopShotBad:null} : {})});
   rec('B','оружие',`надето «${it.n}» (${w.g}, ${w.wt}) — заряды теперь под ${w.g}`);
+}
+// 10.0.19 (игрок 15.10: S-кастер уже надет до обновления расширения): POST смены оружия
+// мог пройти без бота, тогда сохранённый A-кэш живёт весь фарм катакомб. Сверяем GET без выхода на карту.
+async function syncShotWeapon() {
+  if (!on || !tabOwner || Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
+  const char = rt.char;
+  await setRt({shotEquipCheckT:Date.now()});
+  try {
+    const r = await gameGet('/character');
+    if (!r?.ok || !on || !tabOwner || rt.char !== char) return;
+    const j = await r.json(), c = j?.character || j, slot = c?.inventory?.eq?.l1;
+    const id = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
+    if (!id || rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) return;
+    await weaponEquipNote({action:'equip',itemId:id,expectedRevision:c.revision,
+      targetInstanceId:slot?.targetInstanceId,enchant:slot?.enchant,
+      enchantPAtkBonus:slot?.enchantPAtkBonus,enchantMAtkBonus:slot?.enchantMAtkBonus});
+  } catch (e) { rec('B','оружие','не удалось сверить надетое оружие; повторю позже'); }
 }
 let SHOP_BUY = null;   // 7.1.30: последняя покупка в магазине вещей (shopKey из запроса)
 function profQuestNote(st) {
@@ -4423,6 +4443,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.mobfarm = L2V7Factories.mobfarm({
+  get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
   get tabOwner() { return tabOwner; },

@@ -48,6 +48,16 @@ async function test(kind){
   if(kind==='keep'||kind==='equip'){
    assert.equal(eq.id,9002284);assert.equal(eq.g,'S');assert.equal(eq.ma,694,'display bonus is counted exactly once');assert.equal(S.eq.itemId,9002284);assert.equal(equips.length,kind==='equip'?1:0);
    assert.equal(await h.g.core('L2V7Modules.economy.shotGrade().g'),'S');await h.g.core('keepShots()');assert.deepEqual(toggles,[3952]);
+   if(kind==='keep'){
+    // Игрок надел кастер до обновления расширения: сервер S, сохранённая память ещё A.
+    await h.g.core('setRt({weapons:[{id:8688,name:"Daimon Crystal",g:"A",where:"надето"}],weaponsT:1,weaponEq:{id:8688,g:"A"},shotEquipCheckT:0,shopT:Date.now()})');
+    assert.equal(await h.g.core('L2V7Modules.economy.shotGrade().g'),'A');
+    await h.g.core('syncShotWeapon()');
+    assert.equal(await h.g.core('L2V7Modules.economy.shotGrade().g'),'S');
+    assert.equal(await h.g.core('rt.shopT'),0,'после смены оружия закупка нужна сразу');
+    assert.match(await h.g.core('cfg.shopAuto=true; L2V7Modules.economy.shopNeedByPanel()'),/заряды S 0 < 1000/,'нужен пересчёт S-зарядов, старый слот A не скрывает нехватку');
+    assert.equal(equips.length,0,'сверка GET не переодевает оружие');
+   }
   }else if(kind==='ordinary'){
    assert.equal(eq.id,8688);assert.equal(eq.g,'A');assert.equal(eq.ma,215);assert.equal(equips.length,0);assert.equal(await h.g.core('L2V7Modules.economy.shotGrade().g'),'A');await h.g.core('keepShots()');assert.deepEqual(toggles,[3951]);
   }else{
