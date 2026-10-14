@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: тест загружает фактические зависимости popup, включая новые разделы, как расширение.
 // 7.2.1: браузерный смоук списка «что фармить» как на форуме (node tests/v721-tree-browser.cjs; CHROMIUM=…)
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const fs = require('fs'), path = require('path');
@@ -20,7 +21,7 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     let html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: fs.readFileSync(path.join(root, c), 'utf8') });
-    for (const j of ['popup.js', 'ui-v7.js']) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
+    for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
     await page.waitForTimeout(900);
     await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="hunt"]').click(); await page.waitForTimeout(400);
     await page.evaluate(() => { document.querySelector('#farmTree').scrollIntoView(); });

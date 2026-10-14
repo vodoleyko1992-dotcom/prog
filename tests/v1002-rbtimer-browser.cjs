@@ -1,4 +1,6 @@
 'use strict';
+// 10.0.17: время следующего дня допускает дату, как фактический индикатор.
+// 10.0.17: тест загружает фактические зависимости popup, включая новые разделы, как расширение.
 // 10.0.2 «⏱ Таймеры боссов»: браузерный смоук (node tests/v1002-rbtimer-browser.cjs; CHROMIUM=…). Настоящие hook.js и скрипты расширения на
 // подставной https://l2wap.com: 1) страница игры запрашивает /game/raid-bosses (15 РБ — больше предела обрезки hook) → все 15 в rt.rbTimer
 // и rt.rbList; 2) следующий ответ — РБ убит → окно смерти; 3) свой опрос (modules/rbtimer.tick, GET с токеном) — страницы окна уровней
@@ -59,7 +61,7 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       ui.classList.remove('wide'); draw(); const ind2 = document.getElementById('l2bot-ind')?.innerText || '';
       return { al: x.al, win: x.dl > 0 && x.dh >= x.dl, listAlive: rt.rbList.l2dop_rb_25103.alive, polled, zaken: rt.rbTimer.b.l2dop_rb_29022, pg: rt.rbTimer.pg, ind, ind2 };
     });
-    const ok = res.n1 === 15 && res.list1 === 15 && /🐉 Респ эпиков\s+данных пока нет/.test(res.ind0) && res.low && /💀 Zaken \(60\): не позже \d\d:\d\d \(через [45] ч/.test(res.ind1) && /✅ живы: Core/.test(res.ind1) && res2.al === false && res2.win && res2.listAlive === false && res2.polled === true && res2.zaken?.rh === 36
+    const ok = res.n1 === 15 && res.list1 === 15 && /🐉 Респ эпиков\s+данных пока нет/.test(res.ind0) && res.low && /💀 Zaken \(60\): не позже (?:\d\d\.\d\d )?\d\d:\d\d \(через [45] ч/.test(res.ind1) && /✅ живы: Core/.test(res.ind1) && res2.al === false && res2.win && res2.listAlive === false && res2.polled === true && res2.zaken?.rh === 36
       && /🐉 Респ эпиков\s+💀 Zaken \(60\): не позже/.test(res2.ind) && /🐉 Респ эпиков: Zaken \(60\): не позже [\d.: ]+$/.test(res2.ind2) && gets.some(g => /^\/game\/raid-bosses\?page=5 Bearer tok-123$/.test(g)) && gets.some(g => /^\/game\/epic-bosses Bearer tok-123$/.test(g)) && !errors.length;
     if (!ok) { console.error('FAIL 1-3', JSON.stringify({ res, res2, gets, errors })); process.exit(1); }
     // 10.0.3: Alt+R на странице игры → окно выбора файла → таймеры героя (команда rbtImport в фон)
@@ -91,7 +93,7 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const s of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(s) });
-    for (const j of ['modules/rbtimer.js', 'modules/enemies.js', 'modules/fightlab.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="rb"]').click());
     await page.waitForTimeout(1000);
     const t = await page.$eval('#rbTimerTable', e => e.innerText), sum = await page.$eval('#rbTimerSum', e => e.innerText);

@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: тест загружает фактические зависимости popup, включая новые разделы, как расширение.
 // 9.0 (квесты сабкласса/Noblesse): браузерный смоук (node tests/v90-story-browser.cjs; CHROMIUM=…). Настоящие скрипты расширения
 // на подставной https://l2wap.com: 1) свой GET /game/story-quests/* с токеном страницы → rt.story, часть готова → поход;
 // 2) страница квеста далеко от NPC — цена телепорта из /game/teleport/locations, кнопка «Телепорт» нажата; 3) у NPC — «Завершить
@@ -81,7 +82,7 @@ const PAGES = {
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
-    for (const j of ['popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="hunt"]').click());
     await page.waitForTimeout(1000);
     const t = await page.$eval('#storyBox', e => e.innerText), on = await page.$eval('#storyTurnIn', e => e.checked), max = await page.$eval('#storyTpMax', e => e.value);

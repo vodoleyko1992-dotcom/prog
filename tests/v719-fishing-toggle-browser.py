@@ -32,8 +32,9 @@ with sync_playwright() as p:
         page.set_content(html, wait_until='domcontentloaded')
         page.add_style_tag(content=(root / 'ui-v7.css').read_text())
         page.add_style_tag(content=(root / 'ui-game.css').read_text())
-        page.add_script_tag(content=(root / 'popup.js').read_text())
-        page.add_script_tag(content=(root / 'ui-v7.js').read_text())
+        # 10.0.17: реальные зависимости и порядок из popup.html.
+        for script in re.findall(r'<script src="([^"]+)"></script>', (root / "popup.html").read_text()):
+          page.add_script_tag(content=(root / script).read_text())
         page.wait_for_timeout(450)
         # Exposed mode must work from a real user click, not only rod +10.
         page.locator('#navToggle').click()

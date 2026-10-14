@@ -64,8 +64,9 @@ with sync_playwright() as p:
     page.set_content(raw,wait_until='domcontentloaded')
     page.add_style_tag(content=(root/'ui-v7.css').read_text())
     page.add_style_tag(content=(root/'ui-ios.css').read_text())
-    page.add_script_tag(content=(root/'popup.js').read_text())
-    page.add_script_tag(content=(root/'ui-v7.js').read_text())
+    # 10.0.17: реальные зависимости и порядок из popup.html.
+    for script in re.findall(r'<script src="([^"]+)"></script>', (root / "popup.html").read_text()):
+      page.add_script_tag(content=(root / script).read_text())
     page.wait_for_timeout(650)
     if label=='dock': page.evaluate("document.documentElement.classList.add('docked')")
     page.locator('nav button[data-tab="fish"]').click()
@@ -89,7 +90,7 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==8,stats   # 7.2+: 7 разделов; 9.0: + «Маммон»
+    assert stats['tabs']==11,stats   # 10.0.17: PvP, подклассы и отдельная автозаточка
     assert stats['sw']<=stats['cw']+1,stats
     assert stats['navGrid']==(3 if label=='dock' else 5),stats
     for section in ('nav','plain','proof'):
