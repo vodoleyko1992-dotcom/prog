@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   // 1. пауза на 9-й странице из 14: старые записи на месте, список «несвежий» (перечитка через 3 мин)
   const raidSrc = read('modules/raid.js');
   assert.match(raidSrc, /if \(!nx \|\| nx\.disabled\) \{ complete = true; break; \}/);
-  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: Date\.now\(\) - 12 \* 60000, rbScan: null \}\);/);
+  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: rbPartialListT\(\), rbScan: null \}\);/);
   // 2. после платного телепорта тура зона сбрасывается (EXP/ч не уходит в прежнюю зону)
   // 10.0.14: резерв передан атомарному helper; очистка зоны по-прежнему идёт до платного клика.
   assert.match(raidSrc, /rbTeleportFire\(b, \{ rbHunt: \{ \.\.\.H, step: 'arrive', at: Date\.now\(\), t: Date\.now\(\) \}, rbWant: H\.id, zoneGoT: Date\.now\(\), zone: null, zonePend: null, rbGoCnt:/);
