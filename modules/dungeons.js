@@ -162,14 +162,17 @@ async function catHunt(id) {                      // внутри подземе
     await env.sleep(10000); location.reload(); await env.sleep(4000); return;
   }
   env.setStatus(`Катакомбы ${nm}: бой с ${pick.name} (${pick.lvl})${pick.champ ? ' — чемпион' : ''}`);
-  await env.pause(); if (!env.on) return;
+  await env.pause(); if (!env.on || !catPick([pick], env.heroLvl())) return;
   await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb,
-    ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
+    ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
   const a = await showMob(pick.id, net ? pick.i : -1);
+  // Пауза и перелистывание асинхронны: запреты могли измениться до самого клика.
+  if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; }
   if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
   // ссылка не открыла бой (или моба не нашли на страницах) — через окно моба и «В бой»
   const info = a?.closest('li')?.querySelector('[data-spawn-id]') || [...document.querySelectorAll('#dungeon-mob-list [data-spawn-id]')].find(x => x.dataset.spawnId === pick.id);
-  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
+  if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; }
+  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
   // бой не открылся: «подойди ближе» (герой снаружи подземелья) — входим заново; два раза подряд не помогло — через телепорт
   const far = /ближ|too_far|далеко/i.test(env.noticeText() + ' ' + (env.$q('#dungeon-load-err')?.textContent || '')) || env.NET_ERR.err === 'battle_too_far' && Date.now() - env.NET_ERR.t < 8000;
   const n = (env.rt.catFar || 0) + 1;
@@ -195,6 +198,13 @@ function catPick(list, L) {
     if ((x.rb && !env.cfg.rbMode) || x.lvl < w.lo || x.lvl > w.hi) return false;
     if (x.champ && env.champs?.tierOff?.(x, true)) return false;   // выбранные цвета соблюдаем и для квестовых чемпионов
     const quest = x.quest || (x.champ && env.campActive?.() && env.campChampOpen?.());
+    // 14.10, аудит Astra: выбор должен соблюдать отказ боя «жду роста силы» и минимальный уровень героя.
+    if (x.champ && !x.rb && !quest) {
+      if (env.champs?.tierOff?.(x) || env.champs?.held?.(x)) return false;
+      const j = env.champs?.judge?.(x);
+      if (j && !j.ok) return false;
+      if (j) Object.assign(x, { chLim: j.lim || 0, chProbe: !!j.probe });
+    }
     // 14.10: catPick игнорировал запреты карты: «не по зубам» снова начинал бой, а Cancel снова отправлял к бафферу.
     const hard = env.rt.hardMobs?.[(x.name || '').toLowerCase()];
     if (!x.rb && !quest && hard && Date.now() - hard.t < 7200000) return false;

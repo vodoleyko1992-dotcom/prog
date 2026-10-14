@@ -101,7 +101,7 @@ async function netSpawns(list) {
   for (const [id, k, name, lvl, , tr, mh, ex] of list) {
     if (!id) continue;
     if (k) kind[id] = k;
-    if (k === 'champion') { tier[id] = tr || champTier(id); if (mh > 0) hp[id] = mh; if (ex > 0) exp[id] = ex; }
+    if (k === 'champion') { tier[id] = tr || (/^champ_r_/i.test(id) ? 'red' : /^champ_o_/i.test(id) ? 'orange' : champTier(id)); if (mh > 0) hp[id] = mh; if (ex > 0) exp[id] = ex; }
     if (name && !env.isRaidId(id) && (!sp[id] || sp[id][0] !== name || sp[id][1] !== lvl)) { sp[id] = [name, lvl]; added++; }
   }
   env.NET_SPAWNS = { t: Date.now(), kind, tier, hp, exp };
@@ -385,7 +385,9 @@ function candidates(rules, sig, types, limitIdx) {
     if (idx >= limitIdx || env.isRaidId(id) || types[id] === 'raid' || types[id] === 'epic_guard') return;
     const c = env.rt.spawns?.[id] || (onPage[id]?.name && onPage[id].lvl ? [onPage[id].name, onPage[id].lvl] : null);
     const minL = env.campChampMin();
-    const champ = types[id] === 'champion' && !(minL && c && c[1] && c[1] < minL);
+    // Тип сервера не зависит от порога задания главы: иначе теряется запрет цвета.
+    const champ = types[id] === 'champion';
+    const campEligible = champ && !(minL && c && c[1] && c[1] < minL);
     if (!c && !champ) return;                  // имя неизвестно и не чемпион — оценить нельзя
     const name = c ? c[0] : '', lvl = c ? c[1] : 0;
     const r = { id, idx, name, lvl, champ, boss: !!name && env.isBoss(name),
@@ -401,7 +403,7 @@ function candidates(rules, sig, types, limitIdx) {
     // (глава «Champions · Lv.24» при герое 31 — все чемпионы 24–27 отсекались окном lvlBelow 3)
     // 7.2: моб-источник ресурса/рецепта (правило farm) — как цель квеста: зона выбрана под него (до −10 ур.), окно уровней не отсекает
     const farmT = !!name && rules.some(x => x.farm && x.name === name.toLowerCase());
-    const qLike = r.quest || farmT || (champ && env.campActive() && env.campChampOpen());
+    const qLike = r.quest || farmT || (campEligible && env.campActive() && env.campChampOpen());
     // v4.58: «мягкое окно» — улететь в зону своего уровня не вышло, а тут все выше: 20 мин бьём самых слабых из тех, что есть
     const relax = relaxOk(env.rt.lvlRelax) ? env.rt.lvlRelax.up : 0;
     if (hl && lvl && lvl > hl + Math.max(qLike ? 10 : 0, env.cfg.lvlAbove ?? 15, relax)) return;
@@ -418,11 +420,16 @@ function candidates(rules, sig, types, limitIdx) {
     // (combat: «не по зубам» прощает только ★ квест) сразу возвращал на карту — 12 мин по кругу карта → Guardian Basilisk → карта.
     // Теперь исключение — только ★ квест и чемпион главы (как в бою); источник ресурса «не по зубам» 2 ч не выбираем
     const hard = env.rt.hardMobs?.[(name || '').toLowerCase()];
-    if (hard && Date.now() - hard.t < 7200000 && !(r.quest || (champ && env.campActive() && env.campChampOpen()))) return;
+    if (hard && Date.now() - hard.t < 7200000 && !(r.quest || (campEligible && env.campActive() && env.campChampOpen()))) return;
     // 10.0.5 (игрок 13.10: «анализ, кого мы можем убить, а кого нет… проба… отход»): чемпион, которого не успеть убить за его цену в
     // секундах обычного фарма (EXP + FA), или по вердикту прошлых боёв (до роста силы), — не цель; чемпион главы — цель всегда
     if (champ && env.champs?.tierOff) {
       const off = env.champs.tierOff(r, true);
+      if (off) { champSkip(r, off); return; }
+    }
+    // 14.10, аудит Astra: ресурсный приоритет не обходит запрет, который бой применит на входе.
+    if (champ && !r.quest && !(campEligible && env.campActive() && env.campChampOpen())) {
+      const off = env.champs?.tierOff?.(r) || env.champs?.held?.(r);
       if (off) { champSkip(r, off); return; }
     }
     if (champ && !qLike && env.champs) {
@@ -437,7 +444,7 @@ function candidates(rules, sig, types, limitIdx) {
       const cr = env.cancelRisk?.(name, champ, r.tier);
       if (cr) { cancelSkip(r, cr); return; }
     }
-    let k = rank(r, rules);
+    let k = rank({ ...r, champ: campEligible }, rules);
     const faHot = k >= 0 && env.cfg.champFa !== false && (r.fa || 0) >= FA_P.orange && faRank >= 0;
     if (faHot) k = Math.min(k, faRank);
     if (k >= 0) out.push({ ...r, rank: k, ql: qLike, faHot });
@@ -492,6 +499,12 @@ function mobValNote(name, champ, exp, sec) {
   return env.setRt({ mobVal: V });
 }
 
+function champEntryOff(c) {
+  if (!c.champ) return null;
+  const min = env.campChampMin?.() || 0;
+  const chapter = env.campActive() && env.campChampOpen() && !(min && c.lvl && c.lvl < min);
+  return env.champs?.tierOff?.(c, true) || (!c.quest && !chapter && (env.champs?.tierOff?.(c) || env.champs?.held?.(c))) || null;
+}
 async function attackSpawn(c, label) {
   const page = Math.floor(c.idx / env.PAGE_SIZE) + 1;
   const sel = `#map-mob-list a[href*="spawnId=${CSS.escape(c.id)}"]`;
@@ -503,15 +516,21 @@ async function attackSpawn(c, label) {
   if (it) Object.assign(c, { name: c.name || it.name, lvl: c.lvl || it.lvl, quest: c.quest || it.quest, champ: c.champ || it.champ });
   if (c.champ) {   // настройки/цвет могли обновиться, пока листали страницы — последняя проверка до клика «Бой»
     c.tier = champTier(c.id, a, '') || c.tier || '';
-    const off = env.champs?.tierOff?.(c, true);
+    const off = champEntryOff(c);
     if (off) { champSkip(c, off); return false; }
   }
   env.setStatus(label(c));
   console.log(env.TAG, 'цель:', c.id, c.name, '| поз.', c.idx);
   await env.pause();
   if (!env.on) return true;
+  // Настройка могла измениться во время паузы: проверяем непосредственно перед записью цели.
+  if (c.champ) {
+    const off = champEntryOff(c);
+    if (off) { champSkip(c, off); return false; }
+  }
   await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
   if (c.champ && (c.faHot || c.chProbe)) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier})${c.faHot ? ` — бью ради FA: шанс ${Math.round(c.fa * 100)} %` : ''}${c.chProbe ? ` · проба${c.chEta ? `: жду ≈${c.chEta} с` : ''}, предел ${c.chLim} с (дольше — уйду)` : c.chEta ? ` · ≈${c.chEta} с, предел ${c.chLim} с` : ''}`);
+  { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
   env.fire(a);
   if (!(await env.waitFor(env.isBattle, 10000)) && env.on) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
     const n = (env.rt.clickFail || 0) + 1;
