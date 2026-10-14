@@ -203,6 +203,10 @@ async function nextFight(ctx) {
   if (env.victory() && await env.pvpStep?.()) return;
   if (!env.on || !env.tabOwner || env.tvtSoon() || env.antibotState?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
+  // 10.0.19: ручная смена оружия до запуска бота не даёт POST-события расширению.
+  // Сверка по GET один раз в 10 мин не уводит катакомбы на карту.
+  if (env.cfg.shopAuto) await env.syncShotWeapon?.();
+  if (!env.on || !env.tabOwner) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
