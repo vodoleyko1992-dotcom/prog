@@ -358,6 +358,11 @@ async function potSlotRestore(kind) {
 }
 
 function mageCombat() { return env.combatProfileKind?.() === 'mage_summoner'; }
+// Dark Avenger и другие бойцы тоже держат боевого слугу. Управление им зависит от
+// умения призыва на панели, а не от магического профиля хозяина.
+function summonCombat() {
+  return mageCombat() || [...document.querySelectorAll(env.SLOT)].some(b => (!env.slotKind || env.slotKind(b) === 'скилл') && /^summon\b/i.test(env.cleanTitle?.(b.title) || b.title || '') && !isPetBuffSlot(b));
+}
 
 // ---------- дебаффы мага: по механике L2WAP и по ЗАМЕРУ выгоды (7.2.1) ----------
 // L2WAP (скрин магистра 10.10): Surrender to Fire = M.Def −10 %, Curse Chaos = M.Def −10 % и P.Atk −12 %, Curse Weakness = P.Atk −20 % на 10 с,
@@ -948,7 +953,7 @@ async function battle() {
   const ctx = { lastStun: 0, block: blockW, killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
                 name: mobName(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
-  if (mageCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // 7.1.31: замер кота
+  if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // замер слуги, включая пантеру воина
   if (nm && mob0 && !(same && t.champ))
     env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');
@@ -1465,7 +1470,7 @@ async function battle() {
 
     // 7.1.16-fix: слуга мага. Призыв — только если сервер явно сказал «слуги нет» (activeSummon: null) не дольше 10 с назад,
     // не чаще раза в 60 с; лечение слуги — скиллом с целью PET при HP слуги ≤ petHealAt (50 %). Без скилла на панели — ничего
-    if (mageCombat() && env.cfg.petAuto !== false) {
+    if (summonCombat() && env.cfg.petAuto !== false) {
       // HP кота: из ответа сервера (activeSummon), иначе из шапки «Активний слуга» (#l2-hud-companion: «Mew the CatLv.1HP479/750MP320/320»).
       // Окно кота («Відкликати слугу») бот не открывает и не нажимает
       // по просьбе игрока: кот мёртв/не призван — призыв ПЕРВЫМ действием боя. В начале боя ждём до 1,5 с ответа сервера о слуге
