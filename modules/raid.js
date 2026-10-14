@@ -396,7 +396,18 @@ function rbTourPick() {
 
 const isRbPage = () => /\/rb-bosses\.html/i.test(location.pathname);
 
-const rbPageNow = () => +((env.$q('#rb-pager-ind')?.textContent || '').match(/^\s*(\d+)\s*\//)?.[1] || new URLSearchParams(location.search).get('page') || 1);
+const rbPageButtons = () => [...(env.$q('#rb-pager-ind')?.querySelectorAll?.('button, a') || [])];
+const rbPageNow = () => {
+  const active = rbPageButtons().find(b => /^\d+$/.test(b.textContent.trim()) && (b.disabled || b.getAttribute('aria-current') === 'page'));
+  return +(active?.textContent || (env.$q('#rb-pager-ind')?.textContent || '').match(/^\s*(\d+)\s*\//)?.[1] || new URLSearchParams(location.search).get('page') || 1);
+};
+function rbNextPageButton() {
+  const buttons = rbPageButtons(), cur = rbPageNow();
+  if (buttons.length) return buttons.find(b => !b.disabled && b.textContent.trim() === String(cur + 1)) ||
+    buttons.find(b => !b.disabled && b.textContent.trim() === '>>') || null;
+  const next = env.$q('#rb-pager-next');
+  return next && !next.disabled && next.style?.display !== 'none' ? next : null;
+}
 
 // 8.0.3 (эпики, ревью): у страницы «Рейдовые боссы» та же строка, что у эпиков, где цена — «1 Coin of Luck». Цена РБ (снимок 23:00) —
 // «(Аден 100000)». Валюта — как epics.unitOf; телепорт только за адену или бесплатно, иначе не летим (Coin of Luck бот не тратит)
@@ -435,15 +446,18 @@ async function rbListScan() {                     // все страницы с�
   env.setStatus('РБ: читаю список рейд-боссов (Меню → Рейдовые боссы)');
   await env.waitX(() => env.$q('#rb-list .l2-rb-row'), 10000, 200);
   let all = {}, complete = false, pages = 0;
-  for (let i = 0; i < 25 && env.on; i++) {
+  for (let i = 0; i < 25 && env.on && env.tabOwner !== false; i++) {
     all = { ...all, ...rbRowsParse() }; pages++;
-    const nx = env.$q('#rb-pager-next');
-    if (!nx || nx.disabled) { complete = true; break; }
-    const sig = env.$q('#rb-pager-ind')?.textContent;
-    env.fire(nx);
-    if (!(await env.waitX(() => env.$q('#rb-pager-ind')?.textContent !== sig && env.$q('#rb-list .l2-rb-row'), 5000, 150))) break;
+    const nx = rbNextPageButton();
+    if (!nx) { complete = true; break; }
+    const page = rbPageNow(), ids = Object.keys(rbRowsParse()).join('|');
+    if (env.fire(nx) === false) break;
+    // Цифры1…5 одинаковы на соседних страницах: ждём активную кнопку и новые строки.
+    if (!(await env.waitX(() => env.on && env.tabOwner !== false && rbPageNow() === page + 1 &&
+      Object.keys(rbRowsParse()).length > 0 && Object.keys(rbRowsParse()).join('|') !== ids, 10000, 150))) break;
     await env.sleep(env.rnd(150, 300));
   }
+  if (!env.on || env.tabOwner === false) return;
   const L = env.heroLvl(), n = Object.values(all), ok = n.filter(x => x.alive && !x.deny);
   env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15

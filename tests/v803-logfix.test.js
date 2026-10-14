@@ -1,3 +1,4 @@
+// 15.10: helper выбирает доступную кнопку компактной/старой пагинации; disabled проверяется в нём.
 'use strict';
 // 8.0.3 (разбор логов 11.10 09:01–09:17): частичный список РБ, зона после телепорта, банки при «банки не нужны», платные FA-баффы
 // не «городские», чтение оружия в туре, смена режима в журнале
@@ -6,7 +7,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 (async () => {
   // 1. пауза на 9-й странице из 14: старые записи на месте, список «несвежий» (перечитка через 3 мин)
   const raidSrc = read('modules/raid.js');
-  assert.match(raidSrc, /if \(!nx \|\| nx\.disabled\) \{ complete = true; break; \}/);
+  assert.match(raidSrc, /if \(!nx\) \{ complete = true; break; \}/);
   assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: rbPartialListT\(\), rbScan: null \}\);/);
   // 2. после платного телепорта тура зона сбрасывается (EXP/ч не уходит в прежнюю зону)
   // 10.0.14: резерв передан атомарному helper; очистка зоны по-прежнему идёт до платного клика.
