@@ -32,9 +32,9 @@ const ENV = `
     heroNick: () => 'Warlock', invQty: id => bag[id] ?? 0, invRefresh: async () => ({ ...bag }), ITEMS: {}, FARM: { res: {} }, gameGet: p => fetch(p) };
   const M = globalThis.L2V7Factories.mammon(env);`;
 (async () => {
-  const js = await Promise.all(['item-transfer-ui.js', 'item-transfer.js', 'mail-item-render.js', 'mail-item-attachments.js'].map(gameJs));
+  const js = await Promise.all(['l2-compact-pagination.js', 'item-transfer-ui.js', 'item-transfer.js', 'mail-item-render.js', 'mail-item-attachments.js'].map(gameJs));
   if (js.some(x => !x)) { console.log('SKIP: game JS (item-transfer.js / mail) unavailable — no network'); return; }
-  const [tui, tjs, mrender, matt] = js;
+  const [pager, tui, tjs, mrender, matt] = js;
   const b = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
   const p = await b.newPage(); const errors = [], sends = [], claims = []; p.on('pageerror', e => errors.push(String(e)));
   let claimed = false, last = null;
@@ -49,8 +49,8 @@ const ENV = `
     if (u.pathname === '/game/item-transfer/claim') { claims.push(JSON.parse(r.request().postData() || '{}')); claimed = true; return json({ ok: true }); }
     if (u.pathname === '/game/item-transfer/received') return json({ page: 1, totalPages: 1, attachments: [{ attachmentId: 501, senderName: 'Skye', itemId: 1880, name: 'Steel', qty: 3, createdAt: new Date().toISOString(), claimedAt: claimed ? new Date().toISOString() : null }] });
     if (u.pathname === '/map.html') return r.fulfill({ contentType: 'text/html', body: '<!doctype html><p>map</p>' });
-    if (u.pathname === '/item-transfer.html') return r.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${TR_BODY}<script>${L2STUB}</script><script>${tui}</script><script>${tjs}</script></body></html>` });
-    if (u.pathname === '/mail.html') return r.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${MAIL_BODY}<script>${L2STUB}</script><script>${mrender}</script><script>${matt}</script></body></html>` });
+    if (u.pathname === '/item-transfer.html') return r.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${TR_BODY}<script>${L2STUB}</script><script>${pager}</script><script>${tui}</script><script>${tjs}</script></body></html>` });
+    if (u.pathname === '/mail.html') return r.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html><html><head><meta charset="utf-8"></head><body>${MAIL_BODY}<script>${L2STUB}</script><script>${pager}</script><script>${mrender}</script><script>${matt}</script></body></html>` });
     return json({});
   });
   const inject = async extra => { await p.evaluate(([c, m, rt, bag]) => { window.__content = c; window.__mammon = m; window.__rt = rt; window.__bag = bag; }, [read('content.js'), read('modules/mammon.js'), extra.rt, extra.bag]); };
