@@ -9,9 +9,10 @@ set -e
 T="${L2_TOOLS:-$HOME/.local/l2tools}"; mkdir -p "$T/node" "$T/browsers"
 node --version
 npm --prefix "$T/node" install --no-audit --no-fund playwright
-PLAYWRIGHT_BROWSERS_PATH="$T/browsers" "$T/node/node_modules/.bin/playwright" install chromium
+PLAYWRIGHT_BROWSERS_PATH="$T/browsers" "$T/node/node_modules/.bin/playwright" install chromium || echo "Chromium не скачался — проверь доступ к сети (см. начало скрипта)"
 bin=$(ls -d "$T"/browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -1)
-[ -n "$bin" ] || { echo "Chromium не скачался — проверь доступ к сети (см. начало скрипта)"; exit 1; }
+[ -n "$bin" ] || bin=$(command -v chromium || command -v chromium-browser || command -v google-chrome || true)
+[ -n "$bin" ] && echo "Chromium: $bin" || echo "Chromium нет — браузерные смоуки не запустятся"
 python3 -c 'import playwright' 2>/dev/null || python3 -m pip install -q playwright || echo "Python Playwright не встал — Python-смоуки будут пропущены"
 printf 'export PLAYWRIGHT_NODE=%q\nexport CHROMIUM=%q\n' "$T/node/node_modules/playwright" "$bin" > "$T/env.sh"
 echo "Готово ($T/env.sh). Проверка: node tests/run-all.cjs; смоуки: bash tests/tools/smokes.sh"
