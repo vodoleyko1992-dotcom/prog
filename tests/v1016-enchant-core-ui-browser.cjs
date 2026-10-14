@@ -1,4 +1,5 @@
 'use strict';
+// 15.10: выполнение серии требует явно выбранного отдельного режима заточки.
 // Настоящее MV3 расширение в изолированном профиле. Все ответы игры локальные.
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
 const assert=require('node:assert/strict');
@@ -8,8 +9,9 @@ const assert=require('node:assert/strict');
  await h.ctx.route('https://l2wap.com/character',r=>r.fulfill({json:{character}}));
  await h.ctx.route('https://l2wap.com/character/catalog-hints',r=>r.fulfill({json:catalog}));
  const ui=h.popup.locator('#enchantPanel');await until(()=>ui.locator('[data-add]').count());
- await h.popup.evaluate(()=>document.querySelector('[data-tab="panel"]').click());
+ await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
  assert.equal(await ui.locator('[data-key]').count(),0);assert.equal(await ui.locator('[data-cfg="enabled"]').isChecked(),false);
+ assert.equal((await h.get(['on'])).on,false);assert.notEqual((await h.get(['cfg'])).cfg.enchantMode,true);assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS opening separate enchant section never selects mode or starts bot');
  await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===3));
  assert.equal((await h.get(['on'])).on,false);assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS actual popup off refresh → real core/readItems → exact candidate snapshot');
  const labels=await ui.locator('[data-candidate] option').allTextContents();assert.notEqual(labels[1],labels[2]);
@@ -21,7 +23,8 @@ const assert=require('node:assert/strict');
  await ui.locator('[data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);assert.equal((await h.get(['on'])).on,false);assert.equal(await ui.locator('[data-command="start"]').isDisabled(),true);console.log('PASS settings roundtrip, enabled never starts stopped bot, zero initial budgets become explicit');
  // Старый UI снимок нельзя записать другому герою даже при ответе storage между await.
  const denied=await h.popup.evaluate(async()=>chrome.runtime.sendMessage({cmd:'menuPatch',rtPatch:{},cfgPatch:{enchant:{enabled:true,queue:[{key:'wrong'}]}},expectedChar:'OtherHero'}));assert.equal(denied.ok,false);assert.equal((await h.get(['cfg'])).cfg.enchant.queue.length,2);console.log('PASS background transaction rejects stale-character configuration');
- await h.click('start');await until(()=>h.g.core('on && running && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());
+ await h.click('enchantToggle');await until(()=>h.g.core('on && running && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());
+ assert.equal((await h.get(['cfg'])).cfg.enchantMode,true);assert.equal((await h.get(['rt'])).rt.enchant?.runId,undefined);assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS explicit enchant mode starts its dispatcher and waits for separate series command');
  await h.popup.locator('#enchantPanel [data-command="start"]').click();await until(async()=>!!(await h.get(['rt'])).rt.enchant?.runId);
  await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await until(async()=> (await h.get(['rt'])).rt.enchant?.status==='paused');assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS explicit series start → real session; global Stop pauses before any fixture mutation');
  const run=(await h.get(['rt'])).rt.enchant.runId;await h.g.p.reload();await until(()=>h.g.core('typeof on!=="undefined"'));assert.equal((await h.get(['rt'])).rt.enchant.runId,run);assert.equal((await h.get(['on'])).on,false);console.log('PASS stopped session survives document reload without restart');

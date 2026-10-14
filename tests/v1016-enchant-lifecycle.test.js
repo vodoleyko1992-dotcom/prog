@@ -17,7 +17,8 @@ function fixture(opts={}) {
   if(sel==='#enchant-scroll-chance')return {textContent:`Шанс успіху: ${opts.chance??(radios.find(x=>x.name==='pay'&&x.checked)?.value==='scroll:910517'?60:100)}%`};
   const m=sel.match(/input\[name="([^"]+)"\](?:\[value="([^"]+)"\]|:checked)/);if(m)return radios.find(x=>x.name===m[1]&&(m[2]?x.value===m[2]:x.checked));return null;
  };
- const env={cfg:{enchant:{enabled:true,maxAttempts:10,maxScrolls:10,scrollPolicy:opts.policy||'blessed',maxDropFromStart:5,maxDropFromPeak:5,maxConsecutiveFails:5}},rt:{},on:true,tabOwner:true,
+ // 15.10: платёжные сценарии явно выполняются в выбранном режиме заточки.
+ const env={cfg:{enchantMode:true,enchant:{enabled:true,maxAttempts:10,maxScrolls:10,scrollPolicy:opts.policy||'blessed',maxDropFromStart:5,maxDropFromPeak:5,maxConsecutiveFails:5}},rt:{},on:true,tabOwner:true,
   setRt:async p=>{Object.assign(env.rt,p);await afterSet?.(p);return {ok:true}},gameGet:async url=>{await onGet?.(url);return {ok:true,json:async()=>copy(url==='/character'?{character:snap}:hints)}},awayFree:()=>true,rec(){},setStatus:s=>events.push(s),
   waitX:async fn=>fn(),pause:async()=>onPause?.(),$q:q,fire:el=>{
    if(el===button){if(postedMode==='refused')return false;

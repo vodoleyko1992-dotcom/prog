@@ -17,7 +17,8 @@ for(const id of retained) assert(ids.includes(id),`Legacy control lost: ${id}`);
 assert(!ids.includes('shopBait'),'Removed GM bait control must not return');
 assert(html.includes('Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».'));
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,10); // 14.10: все PvP настройки объединены отдельно. // 14.10: отдельный Warlock сохраняет прежние восемь разделов.   // 7.1.31: 15 разделов сведены в 7 (бывшие — подразделы с меткой #tab-<старый>); 9.0: + «Маммон»
+assert.equal(tabs.length,11); // 15.10: автозаточка вынесена из «Боя» в отдельный раздел и режим.
+assert(tabs.includes('enchant') && html.includes('<section id="tab-enchant">'), 'Автозаточка должна иметь собственный раздел');
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);
 assert(html.includes('id="tab-epic"')&&html.includes('id="tab-dungeon"'));   // 7.1.31: подразделы «РБ и эпики» / «Охота»

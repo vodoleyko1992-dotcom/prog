@@ -39,7 +39,7 @@ const kindAt = (level,r) => r.scrollPolicy==='mixed'?(level<r.ordinaryUntil?'ord
 const charKey = () => String(env.rt.char??'');
 const sameChar = s => s?.char===charKey();
 const guard = () => (env.canRun==null || (typeof env.canRun==='function'?env.canRun():env.canRun===true)) && !(typeof env.antibotState==='function'?env.antibotState():env.antibotState);
-const active = () => env.on===true && env.tabOwner!==false && guard();
+const active = () => env.on===true && env.tabOwner!==false && env.cfg?.enchantMode===true && guard();
 const allowed = S => active() && sameChar(S) && (!env.awayFree||env.awayFree()) && normalizeConfig().enabled && env.rt.enchant?.status==='running' && env.rt.enchant?.runId===S?.runId && signature(normalizeConfig())===S.cfgSig;
 const current = () => env.rt.enchant;
 const save = s => sameChar(s)?env.setRt({enchant:s}):Promise.resolve({ok:false,reason:'character changed'});
@@ -173,6 +173,11 @@ async function step() {
   if(busy)return false;busy=true;
   try {
     let s=current();if(!s)return false;
+    // 15.10: старое разрешение не запускает режим; уход/выключение сохраняет pending и требует ручного продолжения.
+    if(s.status==='running'&&env.tabOwner!==false&&sameChar(s)&&(env.cfg?.enchantMode!==true||!normalizeConfig().enabled)) {
+      await pause(env.cfg?.enchantMode!==true?'Выбран другой режим — продолжение заточки только вручную':'Заточка выключена — продолжение только вручную');
+      s=current();if(!s)return false;
+    }
     if(s.pending){if(s.pending.state==='unknown'&&now()-(s.pending.lastCheck||0)<15000)return true;
       const note=observed.get(s.pending.id);if(note)return settle(note);if(s.pending.state==='unknown'||now()-s.pending.t>15000)return reconcile();return true;}
     if(s.status!=='running')return false;

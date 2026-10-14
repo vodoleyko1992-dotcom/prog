@@ -50,11 +50,12 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
     assert.ok(i0 > 0 && i1 > i0, 'catacomb block of nextFight found');
     const block = MOB.slice(i0, i1);
     const loc = { pathname: '/battle.html', search: '?spawnId=sdms_necropolis_of_devotion_078', href: 'https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_devotion_078' };
-    const run = async ({ err, goesTo = 'dungeon' } = {}) => {
+    const run = async ({ err, goesTo = 'dungeon', mode = 'cat' } = {}) => {
       const logs = [], env = { cfg: { catMode: true, chain: true }, rt: { catIn: 'necropolis_of_devotion' }, on: true, campOn: () => false, huntOn: () => false, $q: () => ({ id: 'battle-victory-hunt' }), shown: () => true,
+        autonomyMode: () => mode, toMap: async () => 'map',
         waitFor: async f => f() || null, setStatus() {}, setRt: p => Object.assign(env.rt, p), rec: (...a) => logs.push(a.slice(1).join(': ')), victory: () => true, mobHp: () => null, actNet: () => ({}),
         NET_ERR: err ? { t: Date.now() + 1000, err, path: '/game/battle/hunt-continue' } : { t: 0 }, catGo: async () => { env.cat = (env.cat || 0) + 1; return 'cat'; },
-        fire: () => { if (goesTo === 'dungeon') { loc.pathname = '/dungeon.html'; loc.href = 'https://l2wap.com/dungeon.html?dungeonId=necropolis_of_devotion'; } else { loc.href = 'https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_devotion_090'; } return true; } };
+        fire: () => { env.fired = true; if (goesTo === 'dungeon') { loc.pathname = '/dungeon.html'; loc.href = 'https://l2wap.com/dungeon.html?dungeonId=necropolis_of_devotion'; } else { loc.href = 'https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_devotion_090'; } return true; } };
       const sb = { env, location: loc, Date, String, console }; sb.globalThis = sb;
       vm.runInNewContext(`this.nf = async () => {\n${block}\n return 'fallthrough'; };`, sb);
       const r = await sb.nf(); return { r, logs, env };
@@ -67,6 +68,9 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
     loc.pathname = '/battle.html';
     const b = await run({ goesTo: 'battle' });
     assert.equal(b.r, undefined, 'a new fight started → chain continues'); assert.equal(b.logs.length, 0);
+    // 15.10: выбранная во время ожидания заточка не запускает следующего моба даже при сохранённом catMode.
+    const c = await run({ mode: 'enchant' });
+    assert.equal(c.r, 'map'); assert.equal(c.env.fired, undefined); assert.equal(c.env.cat, undefined);
   }
   // ---------- 4. combat: бой не открылся — текст ошибки игры в журнале; геттеры ----------
   assert.match(COMBAT, /if \(st === 'err'\) \{[\s\S]*?#battle-load-err[\s\S]*?бой не открылся: «\$\{txt\.slice\(0, 120\) \|\| 'без текста'\}»[\s\S]*?return env\.toMap\(\);/, 'load error text goes to the journal before toMap');

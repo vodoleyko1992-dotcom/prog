@@ -341,7 +341,8 @@ function goalNote() {                             // раз на изменен�
   return p;
 }
 // ---- поход к NPC ----
-function modeFree(afterWin = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
+function modeFree(afterWin = false, allowEnchant = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
+  if (env.cfg.enchantMode === true && !allowEnchant) return false; // 15.10: отдельная заточка запрещает новые служебные походы.
   const r = env.rt;                               // afterWin — 10.0: экран победы в цепочке (страница боя, но бой окончен)
   if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc) return false;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return false;

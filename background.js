@@ -140,6 +140,12 @@ async function menuPatch(m, sender) {
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
+    // 15.10: выбор режима не продолжает старую серию; выход сразу запрещает новые попытки.
+    // Берём подтверждённый снимок внутри очереди, чтобы поздний ответ не терял pending/историю.
+    if (Object.hasOwn(cfgPatch, 'enchantMode') && state.rt?.enchant?.status === 'running') {
+      change.rt = { ...(state.rt || {}), ...(change.rt || {}), _src: 'menu', enchant: { ...state.rt.enchant, status: 'paused',
+        reason: cfgPatch.enchantMode === true ? 'Режим выбран — нажмите «Продолжить серию»' : 'Выбран другой режим — продолжение заточки только вручную' } };
+    }
     if (typeof m.on === 'boolean') { change.on = m.on; if (!m.on) change.stopMeta = { source: 'popup-menu', reason: 'Команда остановки из панели', t: Date.now() }; }
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
@@ -171,6 +177,7 @@ async function switchCharacter(m, sender) {
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
       Object.assign(nextCfg,{"petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal"}); // Новый герой не наследует разрешение платной задачи.
+      nextCfg.enchantMode = false; // 15.10: новый герой сам выбирает отдельный режим заточки.
       nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
       nextCfg.mmGoalItem = '';
