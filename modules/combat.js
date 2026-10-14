@@ -966,6 +966,13 @@ async function battle() {
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
   if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0; ctx.heroLvl0 = env.heroLvl() || env.rt.lvl || 0;   // 10.0.10: уровень героя на входе — для вердикта (champs.learn)
     ctx.chLim = (same && t.lim) || env.champs?.limitS({ tier: ctx.tier, lvl: ctx.lvl, exp: 0 }) || 40; }
+  if (ctx.champ && !isRb && env.champs?.valueMode?.(ctx)) {
+    // Экономический допуск с карты не переносим на следующего одноимённого моба цепочки.
+    const fresh = same && ['map', 'dungeon'].includes(cameVia) && Date.now() - (t.valueT || 0) < 60000;
+    const j = env.champs.judge({ ...ctx, hp: mob0?.max || 0, exp: fresh ? t.exp : 0, fa: fresh ? t.fa : undefined });
+    if (!j.ok) { env.rec('B', 'чемпионы', `${ctx.name}: ${j.why} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
+    ctx.chLim = j.lim;
+  }
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
   // 9.2.2: исключения «не по зубам» — как в mobfarm.candidates (★ квест и чемпион главы; источник ресурса — нет)

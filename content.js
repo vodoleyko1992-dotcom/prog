@@ -18,7 +18,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'paid', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -5409,6 +5409,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('epicDeaths1005', () => { if (+C('epicMaxDeaths') === 3) cf.epicMaxDeaths = 5; });   // 10.0.5 (игрок 13.10 00:57: «3 смерти за заход на эпики расширяем до 5»): только прежние заводские 3
   once('epicTime1005', () => { if (+C('epicMaxFightMin') === 30) cf.epicMaxFightMin = 0; });   // 10.0.5 (игрок 13.10 01:10: «для эпиков лимит по времени не нужен»): только прежние заводские 30
   // 10.0.7 (лог 13.10 13:03–13:12): эти чемпионы снимали баффы (50 строк «зняв з вас N бафи») — в память снятий сразу, чтобы не учиться заново
+  // 15.10: решение игрока — оранжевые только при окупаемости; красные остаются запрещены.
+  once('orangeValue1017', () => Object.assign(cf, { champOrange: true, champRed: false, champCancel: 'efficiency' }));
   once('cancel1007', () => { const C = { ...(rt.buffCancel || {}) }, t = Date.now(); for (const [n, k, tier] of [['Lost Yeti', 23, 'red'], ['Frost Tarantula', 17, 'red'], ['Ghost of Rebellion Soldier', 4, 'orange'], ['Vanor Silenos Shaman', 6, 'red'], ['Buffalo', 4, 'orange'], ['Canyon Antelope', 4, 'red']]) if (!C['ч:' + n.toLowerCase()]) C['ч:' + n.toLowerCase()] = { t, n: k * 3, k, name: n, champ: true, tier }; setRt({ buffCancel: C }); });
   // 10.0.7 (игрок 13.10 03:16, скрин Warlock 67 против Tomb Guard 75: «бот пытается бить моба больше чем на 5 лвл старше»): верхний предел
   // «до героя +» был 99 (v5.3.1 снял), у игрока 20 — Tomb Guard +8 проходил. Теперь по умолчанию +5 (как и −5); шире — руками в «Охоте»

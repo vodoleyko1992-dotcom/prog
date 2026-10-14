@@ -164,7 +164,7 @@ async function catHunt(id) {                      // внутри подземе
   env.setStatus(`Катакомбы ${nm}: бой с ${pick.name} (${pick.lvl})${pick.champ ? ' — чемпион' : ''}`);
   await env.pause(); if (!env.on || !catPick([pick], env.heroLvl())) return;
   await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb,
-    ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
+    ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, exp: pick.exp || 0, fa: pick.fa, valueT: Date.now(), probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
   const a = await showMob(pick.id, net ? pick.i : -1);
   // Пауза и перелистывание асинхронны: запреты могли измениться до самого клика.
   if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; }
