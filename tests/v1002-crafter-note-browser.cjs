@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: контекст настоящего fire включает PvP guard; в этом сценарии герой не погибал.
 // 10.0.2 (письмо крафтеру): браузерный смоук с НАСТОЯЩИМ mail-compose.js игры (берётся с l2wap.com при запуске; нет сети — пропуск).
 // Партия ушла → модуль mammon открывает «Нове повідомлення», вводит ник крафтера и текст задания, жмёт «Надіслати» — игра шлёт
 // POST /game/mail/send {recipientName: 'Skye', text} ровно один раз; длинное задание — несколько писем, каждое ≤ 1000 знаков (maxlength поля)
@@ -13,7 +14,7 @@ const MC_BODY = `<p class="err" id="mail-compose-err" hidden></p><main id="mail-
 async function gameJs(f) { try { const r = await fetch('https://l2wap.com/' + f); return r.ok ? await r.text() : null; } catch (e) { return null; } }
 const ENV = `
   const contentSrc = window.__content, fireSrc = contentSrc.slice(contentSrc.indexOf('function fire(el) {'), contentSrc.indexOf('\\n}\\n', contentSrc.indexOf('function fire(el) {')) + 3);
-  const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false; return ' + fireSrc.replace('function fire', 'function') + '; })()');
+  const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt, recs = [];
   const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye' }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},

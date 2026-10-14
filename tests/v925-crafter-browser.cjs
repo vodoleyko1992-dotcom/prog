@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.17: контекст настоящего fire включает PvP guard; в этом сценарии герой не погибал.
 // 9.2.5 (крафтер Skye): браузерный смоук с НАСТОЯЩИМ кодом страниц игры (item-transfer-ui.js + item-transfer.js, mail-item-render.js +
 // mail-item-attachments.js — берутся с l2wap.com при запуске; нет сети — пропуск). 1) «Передача предмета»: модуль mammon находит строку
 // Iron Ore на 2-й странице (листает «Вперед »»), вводит количество и ник, жмёт «Надіслати», проверяет окно подтверждения и жмёт
@@ -23,7 +24,7 @@ const CANDS = Array.from({ length: 25 }, (_, i) => i === 21 ? { itemKey: 'res:18
 // окружение модуля как в content.js (настоящий fire из content.js)
 const ENV = `
   const contentSrc = window.__content, fireSrc = contentSrc.slice(contentSrc.indexOf('function fire(el) {'), contentSrc.indexOf('\\n}\\n', contentSrc.indexOf('function fire(el) {')) + 3);
-  const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false; return ' + fireSrc.replace('function fire', 'function') + '; })()');
+  const on = true, tabOwner = true; const fire = (0, eval)('(function(){ const on = true, tabOwner = true, abHold = () => false, L2V7Modules = { pvp: { pending: () => false } }; return ' + fireSrc.replace('function fire', 'function') + '; })()');
   (0, eval)(window.__mammon);
   const rt = window.__rt || {}, recs = [], bag = window.__bag;
   const env = { rt, cfg: { mmGoalItem: 920018, mmGoalLvl: 1, mmCrafter: 'Skye', mmCraftNote: false }, setRt: async p => { Object.assign(rt, p); await window.__report(JSON.stringify({ rt, recs })); }, rec: (...a) => recs.push(a.join(' ')), setStatus() {},

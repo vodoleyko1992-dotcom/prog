@@ -2,7 +2,9 @@
 // 14.10: команды настоящего popup при off; никакого аккаунта/сетевых мутаций.
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert=require('node:assert/strict'),fs=require('node:fs/promises');
 (async()=>{const h=await harness();try{
- await h.sw.evaluate(async()=>{const {rt,cfg}=await chrome.storage.local.get(['rt','cfg']);await chrome.storage.local.set({cfg:{...cfg,nPower:'',nMpPot:'',nHpPot:'',faBuffs:''},rt:{...rt,panel:[{idx:0,kind:'скилл',name:'Audit Spell',title:'Audit Spell',img:''},{idx:1,kind:'предмет',name:'Audit Mana',title:'Mana potion',img:''},{idx:2,kind:'предмет',name:'Audit Healing',title:'Healing potion',img:''}],skills:{'audit spell':{dmgN:3,dmg:3000}},faCat:{900001:{name:'Audit FA One',cost:1},900002:{name:'Audit FA Two',cost:2}}},learn:{t0:Date.now(),pages:{map:{n:1,tok:{}}},sel:{},api:{},changes:[]}})});
+ await h.sw.evaluate(async()=>{const {rt,cfg}=await chrome.storage.local.get(['rt','cfg']);await chrome.storage.local.set({cfg:{...cfg,nPower:'',nMpPot:'',nHpPot:'',faBuffs:''},rt:{...rt,_src:'menu',panel:[{idx:0,kind:'скилл',name:'Audit Spell',title:'Audit Spell',img:''},{idx:1,kind:'предмет',name:'Audit Mana',title:'Mana potion',img:''},{idx:2,kind:'предмет',name:'Audit Healing',title:'Healing potion',img:''}],skills:{'audit spell':{dmgN:3,dmg:3000}},faCat:{900001:{name:'Audit FA One',cost:1},900002:{name:'Audit FA Two',cost:2}}},learn:{t0:Date.now(),pages:{map:{n:1,tok:{}}},sel:{},api:{},changes:[]}})});
+ // 10.0.17: внешний снимок не наследует _src вкладки — иначе её обработчик справедливо игнорирует собственное эхо.
+ await until(()=>h.g.core('rt.panel?.[0]?.name==="Audit Spell"'));
  await h.popup.reload();await until(()=>h.popup.evaluate(()=>!!document.querySelector('#suggest')?.onclick));
  await h.click('check');await until(()=>h.popup.locator('#slots').textContent().then(t=>/страницу боя/.test(t)));
  await h.click('suggest');await until(()=>h.popup.locator('#slots').textContent().then(t=>t.includes('Audit Spell')),30000);assert.equal((await h.get(['cfg'])).cfg.nPower,'','suggest remains reviewable before Apply');
