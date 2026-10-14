@@ -40,6 +40,8 @@ const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battl
  // UI must not overwrite entire configs/states with stale snapshots.
  assert(!popup.includes('chrome.storage.local.set({ rt: { ...rt'));
  assert(!popup.includes('chrome.storage.local.set({ cfg: { ...cfg'));
- assert(popup.includes('await menuPatch({}, { cfgPatch: n })'));
+ // 14.10: rising-edge автомагистра атомарно сбрасывает только отметку проверки вместе с cfgPatch.
+ assert(popup.includes('await menuPatch(magReset, { cfgPatch: n })'));
+ assert(popup.includes('n.autoMagister === true && cfg.autoMagister !== true'));
  console.log('PASS: popup+inline-dock authentication, serialized UI/bot writes, cfg+rt isolation');
 })().catch(e=>{console.error(e);process.exitCode=1;});

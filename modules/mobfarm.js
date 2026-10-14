@@ -219,6 +219,13 @@ async function nextFight(ctx) {
   if (oreDue && !env.resQuests().length && Date.now() - (env.rt.bagAll?.t || 0) < 5 * 3600000
       && plan.every(x => x.ids?.length && x.ids.every(id => env.invQty?.(id) != null) && x.ids.reduce((a, id) => a + env.invQty(id), 0) >= x.mm[0])) oreDue = false;
   if (low || (oreDue && !ctx?.rb)) { await env.shopStart(low || 'плановая проверка запасов'); location.href = '/char.html'; await env.sleep(4000); return; }
+  // Новый уровень проверяем после подтверждённой победы, до обеих цепочек. Обычный catloop без задачи не меняем.
+  if (!env.on || env.tabOwner === false) return;
+  if (env.magisterAfterWin && env.victory()) {
+    if (await env.magisterAfterWin(ctx)) return;
+    if (env.tvtSoon() || env.magisterHold?.()) return; // Условия могли измениться во время чтения персонажа.
+  }
+  if (!env.on || env.tabOwner === false) return;
   if (env.autonomyMode() === 'fish') return env.goFishing();
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
