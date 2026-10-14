@@ -26,7 +26,10 @@ const content = read('content.js'), bg = read('background.js');
   assert.match(content, /progressMonitor\.tick\(sig, activeJob && !abWait\)/);
   assert.match(content, /const abWait = !!antibotState\(\) \|\| \(rt\.pveBlockUntil \|\| 0\) > Date\.now\(\);/);
   // 5. остановка гасит мигание заголовка
-  assert.match(content, /on = !!ch\.on\.newValue;\n\s*if \(!on\) abBlink\(false\);/);
+  // 14.10: между сменой on и миганием теперь ставится на паузу серия заточки; оба действия остаются в том же обработчике.
+  const onChange = content.slice(content.indexOf("    on = !!ch.on.newValue;"), content.indexOf("    const stopMeta = ch.stopMeta?.newValue;"));
+  assert.match(onChange, /if \(!on\) abBlink\(false\);/);
+  assert.match(onChange, /L2V7Modules\.enchant\.command\('pause'\)/);
   // 6. фон: .then/.catch больше не внутри комментария
   assert.doesNotMatch(bg, /\/\/[^\n]*\.then\(\(\) => \{ hbPersistedAt/);
   assert.match(bg, /wdDown: null \}\)\.then\(\(\) => \{ hbPersistedAt = Date\.now\(\); \}\)\.catch/);

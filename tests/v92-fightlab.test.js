@@ -214,7 +214,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.ok(sec.indexOf('id="nSpoil"') > sec.indexOf('id="tab-spoil"') && sec.indexOf('id="nSpoil"') < sec.indexOf('id="tab-fighter"'));
   assert.ok(sec.indexOf('id="nAttack"') > sec.indexOf('id="tab-fighter"') && sec.indexOf('id="nAttack"') < sec.indexOf('id="tab-fight"'));
   assert.match(html, /<span class="ic">⚔<\/span>Бой<\/button>/); assert.ok(!/Бой и кот/.test(html + ui));
-  assert.match(html, /<script src="modules\/fightlab\.js"><\/script>\n<script src="popup\.js"><\/script>/);
+  // 14.10: общая заточка добавляет две зависимости перед popup; fightlab по-прежнему загружается раньше меню.
+  assert.match(html, /<script src="modules\/fightlab\.js"><\/script>\n<script src="modules\/enchant\.js"><\/script>\n<script src="enchant-ui\.js"><\/script>\n<script src="popup\.js"><\/script>/);
   assert.match(css, /html:not\(\.cls-summoner\):not\(\.show-all\)\.cls-mage \[data-cls="summoner"\],html\.cls-fighter:not\(\.show-all\) \[data-cls="summoner"\]\{display:none!important\}/);
   assert.match(js, /analyze: 'panel', roles: 'panel', pet: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel'/);
   assert.match(js, /root\.classList\.toggle\('cls-summoner', summoner\)/); assert.match(js, /function renderFight\(rt\)/); assert.match(js, /confirmClick\('fightMemReset'/);

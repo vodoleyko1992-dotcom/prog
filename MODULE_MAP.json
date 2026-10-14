@@ -996,5 +996,37 @@
       "sharedGet",
       "sharedSet"
     ]
+  },
+  "enchant": {
+    "exports": [
+      "normalizeConfig",
+      "snapshotItems",
+      "readItems",
+      "command",
+      "step",
+      "note",
+      "plan",
+      "analytics",
+      "expectedAttempts",
+      "reconcile"
+    ],
+    "dependencies": [
+      "$q",
+      "antibotState",
+      "awayFree",
+      "canRun",
+      "cfg",
+      "fire",
+      "gameGet",
+      "on",
+      "pause",
+      "rec",
+      "rt",
+      "rtCommit",
+      "setRt",
+      "setStatus",
+      "tabOwner",
+      "waitX"
+    ]
   }
 }

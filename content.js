@@ -8,6 +8,7 @@ const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
+  enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
@@ -2264,7 +2265,7 @@ setInterval(async () => {
       if (!r?.ok) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return; }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
   } catch (e) {}
 }, 5000);
@@ -2341,6 +2342,7 @@ async function main() {
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
       }
       if (heroNick() && rt.char !== heroNick()) { await switchChar(); if (!tabOwner) continue; }
+      if (rt.enchant?.pending) await enchantAccounting();
       if (!servicesStarted) {
         servicesStarted = true;
         // Справочник предметов — только при работе с сумкой, добычей и оружием.
@@ -2459,6 +2461,7 @@ async function main() {
       L2V7Modules.dailies.tick().catch(() => {});
       if (await L2V7Modules.dailies.clanStep()) { await sleep(200); continue; }
       if (await L2V7Modules.dailies.dailyStep()) { await sleep(200); continue; }
+      if (await enchantDispatch()) { await sleep(200); continue; }
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -3678,6 +3681,8 @@ addEventListener('message', e => {
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
+  if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
+    Promise.resolve(L2V7Modules.enchant.note(d.req, d.res, d.status)).catch(e => console.warn(TAG, 'заточка: результат', e));
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res) try {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
@@ -4731,7 +4736,75 @@ const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
 const classSwitched = () => { PET = null; };
 
+// Автозаточка: команды меню и диспетчер используют одну фабрику, без смены основного режима.
+const enchantFree = () => on && tabOwner && !!heroNick() && heroNick() === rt.char && !antibotState()
+  && awayFree() && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
+L2V7Modules.enchant = L2V7Factories.enchant({
+  get on() { return on; }, get tabOwner() { return tabOwner; }, get cfg() { return cfg; }, get rt() { return rt; },
+  get setRt() { return setRt; }, get rtCommit() { return rtCommit; }, get gameGet() { return gameGet; },
+  get awayFree() { return enchantFree; }, get canRun() { return enchantFree; }, get antibotState() { return antibotState; },
+  get fire() { return fire; }, get $q() { return $q; }, get waitX() { return waitX; }, get pause() { return pause; },
+  get setStatus() { return setStatus; }, get rec() { return rec; }
+});
+let enchantCommandBusy = false, enchantAccountingBusy = null;
+async function enchantAccounting() {
+  if (!rt.enchant?.pending || !tabOwner || heroNick() !== rt.char) return false;
+  if (!enchantAccountingBusy) enchantAccountingBusy = Promise.resolve(L2V7Modules.enchant.step()).finally(() => { enchantAccountingBusy = null; });
+  return enchantAccountingBusy;
+}
+async function enchantCommand(m) {
+  if (enchantCommandBusy) return { ok: false, reason: 'Предыдущая команда заточки ещё выполняется' };
+  const allowed = ['refresh', 'start', 'pause', 'resume', 'reset', 'reconcile', 'archiveUnknown'];
+  if (!allowed.includes(m.action)) return { ok: false, reason: 'Неизвестная команда заточки' };
+  enchantCommandBusy = true;
+  let manualEpoch = null;
+  try {
+    const state = await chrome.storage.local.get(['rt', 'cfg', 'on']);
+    if (!m.char || state.rt?.char !== m.char || heroNick() !== m.char || rt.char !== m.char)
+      return { ok: false, reason: 'Персонаж изменился или ещё не загрузился — обновите меню' };
+    if (state.on && (!on || !tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки игры' };
+    if (['start', 'resume'].includes(m.action) && !state.on) return { ok: false, reason: 'Сначала запустите бота' };
+    if (typeof m.id !== 'string' || !m.id || m.id.length > 80) return { ok: false, reason: 'Не указан номер команды' };
+    if (state.rt.enchantCommandAck?.id === m.id) return state.rt.enchantCommandAck;
+    if (!state.on && ['reconcile', 'archiveUnknown'].includes(m.action)) {
+      if (!await tabLock()) return { ok: false, reason: 'Другая вкладка проверяет состояние — повторите позже' };
+      manualEpoch = leaseEpoch;
+      if (heroNick() !== m.char || rt.char !== m.char) return { ok: false, reason: 'Персонаж изменился' };
+    }
+    cfg = mergeCfg(state.cfg);
+    // Off refresh читает только текущего героя; никаких действий игры при остановленном боте.
+    const result = m.action === 'reconcile' ? await L2V7Modules.enchant.reconcile() : await L2V7Modules.enchant.command(m.action, {pendingId:m.pendingId});
+    if (rt.char !== m.char || heroNick() !== m.char) return { ok: false, reason: 'Персонаж изменился во время команды' };
+    const answer = { id: m.id, char: m.char, action: m.action, t: Date.now(), ok: !!result, reason: result ? '' : rt.enchant?.reason || rt.enchantScan?.reason || 'Команда пока недоступна' };
+    await setRt({ enchantCommandAck: answer });
+    return answer;
+  } catch (e) { return { ok: false, reason: String(e?.message || e).slice(0, 180) }; }
+  finally {
+    if (manualEpoch && !on && leaseEpoch === manualEpoch) {
+      await rtWriter.recover().catch(() => {});
+      await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(() => {});
+      if (!on && leaseEpoch === manualEpoch) { tabOwner = false; tabIdle = false; leaseEpoch = null; }
+    }
+    enchantCommandBusy = false;
+  }
+}
+async function enchantDispatch() {
+  const s = rt.enchant;
+  if (!s || enchantCommandBusy || !enchantFree()) return false;
+  if (s.pending) { await enchantAccounting(); return false; }
+  if (s.status === 'running') return L2V7Modules.enchant.step();
+  // Возврат после законченной серии не делает платного телепорта и не открывает старый бой.
+  if (s.status !== 'done' || s.returned || location.pathname !== '/enchant.html') return false;
+  let back = '/map.html';
+  try { const u = new URL(s.home || '/map.html', location.origin); if (u.origin === location.origin && /^\/[\w-]+\.html$/.test(u.pathname)
+      && !/battle|tvt|arena|enchant|login|auth/i.test(u.pathname)) back = u.pathname + u.search; } catch (e) {}
+  const saved = await setRt({ enchant: { ...s, returned: true } });
+  if (!saved?.ok || !await rtCommit() || !enchantFree() || rt.enchant?.runId !== s.runId || rt.enchant?.status !== 'done') return false;
+  location.href = back; return true;
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
   if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }
   if (m.cmd === 'kick') {
@@ -4781,6 +4854,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.paused && ch.paused.oldValue && !ch.paused.newValue && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок снял паузу — проверку решил
   if (ch.on) {
     on = !!ch.on.newValue;
+    if (!on && rt.enchant?.status === 'running' && rt.char === heroNick()) L2V7Modules.enchant.command('pause').catch(() => {});
     if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
     if (on && ch.on.oldValue === false && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок сам включил бота — значит, проверку решил
     const stopMeta = ch.stopMeta?.newValue;

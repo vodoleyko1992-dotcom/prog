@@ -185,6 +185,7 @@
 </style>
 <link rel="stylesheet" href="ui-v7.css">
 <link rel="stylesheet" href="ui-game.css">
+<link rel="stylesheet" href="enchant-ui.css">
 </head><body>
 <header>
   <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
@@ -629,6 +630,8 @@
   <div class="row"><button id="weapScan">🔍 Проверить инвентарь</button><button id="weapClass">⭐ Поставить «в класс»</button></div>
   <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
+  <div class="subsec-title"><span id="tab-enchant" class="tab-anchor"></span>Заточка оружия и брони</div>
+  <div id="enchantPanel" data-embedded="1"></div>
 </section>
 
 <!-- 🧪 БАНКИ И РАСХОДНИКИ -->
@@ -824,6 +827,8 @@
 <script src="modules/dailies.js"></script>
 <script src="modules/rbtimer.js"></script>
 <script src="modules/fightlab.js"></script>
+<script src="modules/enchant.js"></script>
+<script src="enchant-ui.js"></script>
 <script src="popup.js"></script>
 <script src="ui-v7.js"></script>
 </body></html>
