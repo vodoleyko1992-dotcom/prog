@@ -424,6 +424,10 @@ function rbRowsParse() {
   return out;
 }
 
+// После неполного чтения кэш должен жить ровно 3 мин и в обычном туре (15 мин),
+// и в ценностном (10 мин). Старый возраст12 мин немедленно истекал в ценностном туре.
+const rbPartialListT = () => Date.now() - ((env.cfg.rbValueTour ? 10 : 15) - 3) * 60000;
+
 async function rbListScan() {                     // все страницы списка (≈14), бесплатно
   if (!env.on || env.tabOwner === false) return;
   // 14.10: после отказа на стр. N нельзя выдавать хвост списка за полный и терять младших РБ.
@@ -444,15 +448,15 @@ async function rbListScan() {                     // все страницы с�
   env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
     env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
-    await env.setRt({ rbScan: null, rbListT: Date.now() - 12 * 60000 });
+    await env.setRt({ rbScan: null, rbListT: rbPartialListT() });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   // 8.0.3 (лог 11.10 09:04:36: пауза на 9-й странице из 14 — 135 РБ из 197 записались как полный свежий список на 15 мин): прочитан не до
   // конца (пауза/страница не догрузилась) — дописываем к старому и перечитаем через 3 мин
   if (!complete) {
-    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: Date.now() - 12 * 60000, rbScan: null });
+    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: rbPartialListT(), rbScan: null });
     env.rec('B', 'РБ', `список игры прочитан частично (${pages} стр.) — дописал ${n.length} РБ к прежнему, перечитаю через 3 мин`);
-    return;
+    location.href = '/map.html'; await env.sleep(3000); return;
   }
   await env.setRt({ rbList: all, rbListT: Date.now(), rbScan: null });
   env.rec('B', 'РБ', `список игры: ${n.length} РБ · живых ${n.filter(x => x.alive).length} · доступно мне ${ok.length}`
