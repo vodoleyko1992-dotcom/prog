@@ -49,6 +49,8 @@ const eco = sb.L2V7Factories.economy(env);
   env.$q = s => { const m = s.match(/data-grade="(\w+)"/); return m ? gtabs[m[1]] : q0(s); };
   env.fire = el => { if (el?._grade) grade = el._grade; return f0(el); };
   ITEMS.charges = ITEMS.charges.map(n => n);
+  // Покупка должна соответствовать надетому оружию; здесь проверяется вкладка D.
+  env.rt.weapons = [{ name: 'Staff of Life', g: 'D', where: 'надето' }];
   await eco.shopBuyOne({ key: 'shots', grade: 'D', name: /Благословенн\S* заряд дух/i }, 10);
   assert.equal(grade, 'D', 'shop switches to the D grade tab before buying');
   console.log('PASS: shop switches the grade tab (page remembers the last grade)');

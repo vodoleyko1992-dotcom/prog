@@ -197,11 +197,16 @@ async function shotSlotAdd() {
 
 const shotSlots = () => [...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
 async function keepShots() {
-  const want = env.rt.weaponsT ? env.shotGrade?.()?.g : null, pick = () => (want && shotSlots().find(x => shotGradeOf(x) === want)) || env.shotSlot();
+  if (env.shotGrade?.()?.blocked) return;
+  const wanted = () => env.rt.weaponsT ? env.shotGrade?.()?.g : null;
+  const pick = () => { const g = wanted(); return (g && shotSlots().find(x => shotGradeOf(x) === g)) || env.shotSlot(); };
   let b = pick();
-  if (!b && await shotSlotAdd()) b = pick();
-  if (b && !env.shotsOn(b) && await shotSlotSwap(b)) b = pick();
-  if (!b || env.shotsOn(b) || env.qty(b) === 0 || Date.now() - env.lastShotTry < 5000) return;
+  if (!b) { await shotSlotAdd(); b = pick(); }
+  if (b && !env.shotsOn(b)) { await shotSlotSwap(b); b = pick(); }
+  // После неудачной замены слота старый грейд не включаем. Оружие может смениться, пока открыто окно.
+  const want = wanted(), have = shotGradeOf(b);
+  if (env.on === false || env.tabOwner === false || env.shotGrade?.()?.blocked || (want && have && want !== have)) return;
+  if (!b || b.isConnected === false || env.shotsOn(b) || env.qty(b) === 0 || Date.now() - env.lastShotTry < 5000) return;
   env.lastShotTry = Date.now();
   console.log(env.TAG, 'соски выключены → включаю');
   env.fire(b);

@@ -9,6 +9,7 @@
 // Грейд: надетое оружие → оружие из настроек «Основное» в списке → по уровню героя (D с 20, C с 40…).
 // Маг: класс по профессии/профилю → или на панели/в настройках уже Blessed Spiritshot
 function shotGrade() {
+  if (env.rt.weaponMetaPending) return {g:null, blocked:true, src:'не распознано надетое оружие'};
   // 7.2 (лог 10.10 20:08): после новой установки память об оружии пришла из базового профиля («надето: Посох життя D») — куплено 3000
   // D-зарядов при Demon's Staff C. Списку оружия верим, только если инвентарь читали в этой установке (rt.weaponsT), иначе — сначала чтение
   const W = env.rt.weaponsT ? env.rt.weapons || [] : [], ok = g => g && g !== '—' && /^(NG|D|C|B|A|S)$/i.test(g);
@@ -28,6 +29,7 @@ function shotGrade() {
 // NG-оружие (слабые числа, неразличимо) и неизвестное — по классу персонажа
 function weaponIsMage(w) {
   if (!w) return null;
+  if (w.weaponMode === 'magic' || w.weaponMode === 'phys') return w.weaponMode === 'magic';
   const pa = +w.pa || 0, ma = +w.ma || 0, wt = String(w.wt || '').toLowerCase();
   if (/лук|кастет|дуал|древков|двуруч\S* меч|арбалет|рапир/.test(wt)) return false;
   if (!pa || !ma || pa < 30 || !w.g || /^(NG|—)$/i.test(w.g)) return null;
@@ -70,7 +72,7 @@ function shopPlan() {
   const guess = /^по уровню/.test(sg.src);
   if (guess && env.rt.weaponsT && Date.now() - (env.rt.shotGuessScanT || 0) > 1800000) { env.rt.shotGuessScanT = Date.now(); env.rt.weaponsT = 0; env.setRt({ weaponsT: 0, shotGuessScanT: env.rt.shotGuessScanT }); }   // 7.1.30: не чаще раза в 30 мин
   if (guess && Date.now() - (env.rt.shotGuessLogT || 0) > 600000) { env.rt.shotGuessLogT = Date.now(); env.rec('B', 'закупка', 'заряды пропускаю: надетое оружие ещё не прочитано — сначала смотрю инвентарь'); }
-  return list.filter(x => x.mm[1] > 0 && !((bad || guess) && x.key === 'shots'));
+  return list.filter(x => x.mm[1] > 0 && !((bad || guess || sg.blocked) && x.key === 'shots'));
 }
 
 function shopNeedByPanel() {
@@ -84,7 +86,7 @@ function shopNeedByPanel() {
   chk(env.slotsBy(env.cfg.nMpPot).find(b => /велик|больш/i.test(b.title)) || env.slotsBy(env.cfg.nMpPot)[0], env.pair(env.cfg.shopMp, '200/1000'), 'банки MP', 728);
   // заряды — грейд и тип по надетому оружию (как в закупке); оружие не прочитано — только счётчик на панели
   const sp = shopPlan().find(x => x.key === 'shots');
-  chk(env.shotSlot?.(), env.pair(env.cfg.shopShots, '1000/5000'), sp ? sp.label.replace(/^Благосл\. заряды духа/, 'заряды') : 'заряды', sp?.ids[0]);
+  if (!shotGrade().blocked) chk(env.shotSlot?.(), env.pair(env.cfg.shopShots, '1000/5000'), sp ? sp.label.replace(/^Благосл\. заряды духа/, 'заряды') : 'заряды', sp?.ids[0]);
   // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
   for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) chk(null, it.mm, it.label, it.ids[0]);
   return low.join(', ');
@@ -144,6 +146,8 @@ const shopShare = (key, rest) => key in SHOP_ORDER ? (rest.some(k => k in SHOP_O
 const packQty = (cap, want) => { if (cap >= want || cap < 10) return cap; const st = cap >= 1000 ? 1000 : cap >= 100 ? 100 : 10; return Math.floor(cap / st) * st; };
 
 async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
+  const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(); return !sg.blocked && (!it.grade || sg.g === it.grade); };
+  if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
   // искались там — «нет в магазине (видел: Благословенний заряд духу…)» (лог 09.10 23:38, 23:48). Ищем в нужном подразделе:
   // банки — «Банки», заряды — «Заряды», иное — «Все»
@@ -198,12 +202,14 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
       const adena = shopAdena(), reserve = shopReserve(adena), money = adena - reserve, cap0 = Math.min(qtyWant, 9999, unit ? Math.floor(Math.max(0, money) * (+share > 0 && share < 1 ? share : 1) / unit) : qtyWant, unit ? Math.floor(Math.max(0, (env.cfg.shopMaxSpend ?? 2000000) - spentSoFar) / unit) : qtyWant);
       const cap = cap0 > 0 ? packQty(cap0, qtyWant) : 0;   // 10.0.10: круглая пачка (1000 / 100 / 10)
       if (!(cap > 0)) return { ok: false, why: money < unit ? `не хватает адены (резерв ${reserve.toLocaleString('ru')}${reserve < (env.cfg.shopReserve ?? 200000) ? ' — половина адены, резерв из меню больше' : ''})` : money * share < unit ? 'мало адены — она ушла на более нужное (заряды → банки HP → банки MP)' : 'исчерпан лимит трат за раз' };
+      if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
       env.fire(row.querySelector('.l2-gm-shop-buy'));
       const modal = await env.waitX(() => { const m = env.$q('#l2-drops-shop-buy-qty-modal'); return m && env.shown(m.querySelector('[data-buy-qty-confirm]')) ? m : null; }, 4000, 100);
       if (!modal) return { ok: false, why: 'окно покупки не открылось' };
       const inp = modal.querySelector('#l2-drops-buy-qty-input, [data-buy-qty-input]');
       if (inp) { inp.focus(); env.setVal(inp, String(cap)); }
       await env.sleep(env.rnd(300, 500));
+      if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
       const a0 = shopAdena(), a0T = Date.now(), msg0 = env.$q('#drops-shop-msg')?.textContent || '';
       env.fire(modal.querySelector('[data-buy-qty-confirm]'));
       const ok = await env.waitX(() => shopAdena() < a0 || ((env.$q('#drops-shop-msg')?.textContent || '') !== msg0 && env.shown(env.$q('#drops-shop-msg'))), 5000, 150);
@@ -252,9 +258,10 @@ async function shopStep() {
     for (const n of needs) {
       if (!env.on) return;
       if (done.some(d => d.key === n.key)) continue;
+      const it = plan.find(x => x.key === n.key);
+      if (n.key === 'shots' && (!it || it.grade !== n.grade)) { done.push({key:n.key,ok:false,label:n.label,qty:0,why:'оружие изменилось — сначала пересчитать подходящие заряды'}); continue; }
       const g = (new URLSearchParams(location.search).get('grade') || 'NG').toUpperCase();
       if (g !== n.grade) { await env.setRt({ shop: { ...st, done, spent, t: Date.now() } }); location.href = `/gm-shop.html?cat=consumable&grade=${n.grade}`; await env.sleep(4000); return; }
-      const it = plan.find(x => x.key === n.key);
       if (n.key === 'shots' && !st.gradeNote) { st.gradeNote = 1; const sg = shotGrade(), w = equippedWeapon(), wm = weaponIsMage(w); env.rec('B', 'закупка', `${n.label}: грейд ${sg.g} — ${sg.src}; тип — ${wm == null ? 'по классу персонажа' : (wm ? 'магическое' : 'физическое') + ' оружие ' + (w?.name || w?.en || '')}`); }
       env.setStatus(`Закупка: ${n.label} +${n.buy}`);
       const rest = needs.filter(x => x !== n && !done.some(d => d.key === x.key)).map(x => x.key);

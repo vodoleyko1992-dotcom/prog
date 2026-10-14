@@ -37,7 +37,8 @@ function fixture({ start = 1, total = 8, legacy = false, shop = false, stuck = f
   const box = { document: { querySelectorAll: queryAll, querySelector: query }, location: { pathname: shop ? '/gm-shop.html' : '/char.html', search: '' }, Date: Clock, console, URLSearchParams };
   vm.createContext(box);
   for (const mod of ['economy', 'equipment']) vm.runInContext(fs.readFileSync(path.join(root, 'modules', mod + '.js'), 'utf8'), box);
-  const env = { rt: {}, cfg: { shopReserve: 0, shopMaxSpend: 100000 }, ITEMS: {}, $q: query, shown: x => !!x, itemJson: r => JSON.parse(r.dataset.itemJson),
+  // Надевание требует работающего бота и владения вкладкой.
+  const env = { on: true, tabOwner: true, rt: {}, cfg: { shopReserve: 0, shopMaxSpend: 100000 }, ITEMS: {}, $q: query, shown: x => !!x, itemJson: r => JSON.parse(r.dataset.itemJson),
     waitX: async fn => fn(), sleep: async ms => { clock += ms; }, rnd: a => a, itemsDb: async () => {}, noteBag: async () => {}, setRt: async p => Object.assign(env.rt, p),
     itemOf: id => ({ id, k: 'W', n: 'Item ' + id, wt: 'посох', g: 'NG', pa: id, ma: id }), baseName: s => s, pause: async () => {}, rec: () => {}, EQUIP_OK: /надето/, noticeText: () => worn ? 'надето' : '',
     setVal: (_el, v) => { quantity = +v; }, fire: el => {

@@ -1,0 +1,115 @@
+{
+  "catalogVersion": "20261009-epic-jewelry-stats-valakas-mcrit30-v1",
+  "equipmentGradeMinCharLevel": {
+    "NG": 1,
+    "D": 20,
+    "C": 40,
+    "B": 52,
+    "A": 61,
+    "S": 76
+  },
+  "gearCatalog": [
+    {
+      "itemId": 171,
+      "nameUk": "Слава мертвого B-grade.",
+      "iconUrl": "/icons/drops/weapon_b/deadman_s_glory.jpg",
+      "slot": "rhand",
+      "grade": "B",
+      "weaponType": "blunt",
+      "stats": {
+        "pAtk": 194,
+        "mAtk": 99,
+        "atkSpd": 379,
+        "wpnCrit": 40
+      },
+      "weaponMode": "phys",
+      "masteryFamily": "blunt",
+      "blocksShield": false,
+      "requiresArrows": false
+    },
+    {
+      "itemId": 8688,
+      "nameUk": "Кристал Даймона A-grade. Дворучна магічна зброя.",
+      "iconUrl": "/icons/drops/weapon_a/daimon_crystal.jpg",
+      "slot": "rhand",
+      "grade": "A",
+      "weaponType": "bigblunt",
+      "stats": {
+        "pAtk": 245,
+        "mAtk": 161,
+        "atkSpd": 325,
+        "wpnCrit": 40
+      },
+      "weaponMode": "magic",
+      "masteryFamily": "bigblunt",
+      "blocksShield": true,
+      "requiresArrows": false
+    },
+    {
+      "itemId": 9002284,
+      "nameUk": "Клановий кастер",
+      "iconUrl": "/icons/clan_gear/vesper_caster.png",
+      "slot": "rhand",
+      "grade": "S",
+      "requiredLevel": 76,
+      "weaponType": "blunt",
+      "stats": {
+        "pAtk": 317,
+        "mAtk": 334,
+        "atkSpd": 399,
+        "wpnCrit": 65
+      },
+      "weaponMode": "magic",
+      "masteryFamily": "blunt",
+      "blocksShield": false,
+      "requiresArrows": false
+    }
+  ],
+  "itemRequiredLevelHints": {
+    "9002284": 76
+  },
+  "itemGradeHints": {
+    "171": "B",
+    "8688": "A",
+    "9002284": "S"
+  },
+  "itemSlotHints": {
+    "171": "rhand",
+    "8688": "rhand",
+    "9002284": "rhand"
+  },
+  "itemStatsHints": {
+    "171": {
+      "pAtk": 194,
+      "mAtk": 99,
+      "atkSpd": 379,
+      "weaponMode": "phys",
+      "wpnCrit": 40
+    },
+    "8688": {
+      "pAtk": 245,
+      "mAtk": 161,
+      "atkSpd": 325,
+      "weaponMode": "magic",
+      "wpnCrit": 40
+    },
+    "9002284": {
+      "pAtk": 317,
+      "mAtk": 334,
+      "atkSpd": 399,
+      "weaponMode": "magic",
+      "wpnCrit": 65,
+      "requiredLevel": 76,
+      "grade": "S"
+    }
+  },
+  "itemNamesUk": {
+    "171": "Слава мертвого B-grade.",
+    "8688": "Кристал Даймона A-grade. Дворучна магічна зброя.",
+    "9002284": "Клановий кастер"
+  },
+  "itemNamesEn": {
+    "171": "Deadman S Glory",
+    "8688": "Daimon Crystal"
+  }
+}
