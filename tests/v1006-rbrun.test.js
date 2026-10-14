@@ -57,7 +57,8 @@ function make({ rt = {}, cfg = {} } = {}) {
   assert.ok(/env\.rec\('B', 'смерть', `смертей за 30 мин: \$\{deaths\.length\}`\);\n  try \{ await env\.rbRun\?\.death\(\); \}/.test(surv), 'surv: /env\.rec\(\'B\', \'смерть\', `смертей за 30 мин: \$\{');
   // 10.0.14: вход вынесен в enterDetour, который продолжает сохранённый дейлик после Stop; режим и старт серии остаются связаны.
   assert.ok(/async function enterDetour[\s\S]*rbHuntMode: true, fishMode: false, epicMode: false, catMode: false \}\);[\s\S]*if \(key === 'dailyRb' && sameDetour\(key, D, kick\)\) try \{ await env\.rbRun\?\.start\('daily'/.test(daily), 'daily: enterDetour включает тур РБ и запускает серию после проверки текущего задания');
-  assert.ok(/m === 'rb'\) await activateMode\(\{ \.\.\.leaveEpic, rbRun: \{ t0: now, mode: 'tour' \}/.test(popup), 'popup: /m === \'rb\'\) await activateMode\(\{ \.\.\.leaveEp');
+  // 14.10: сброс обычного простоя добавляется перед новой серией; остальные поля запуска прежние.
+  assert.ok(/m === 'rb'\) await activateMode\(\{ \.\.\.leaveEpic, \.\.\.rbTourRestart\(rt\), rbRun: \{ t0: now, mode: 'tour' \}/.test(popup), 'popup: ручной тур сбрасывает простой и начинает новую серию');
   assert.ok(/m === 'epic'\) await activateMode\(\{ \.\.\.leaveHunt, rbRun: \{ t0: now, mode: 'epic' \}/.test(popup), 'popup: /m === \'epic\'\) await activateMode\(\{ \.\.\.leave');
   assert.ok(/rbOne: one, \.\.\.\(tour \? \{\} : \{ rbRun: \{ t0: now, mode: 'one' \}/.test(popup), '«один РБ»: новая серия только если тур не шёл');
   assert.ok(!/m === 'farm'\) await activateMode\(\{[^\n]*rbRun/.test(popup) && !/\$\('start'\)\.onclick[\s\S]{0,600}rbRun/.test(popup), '«▶ Старт» и другие режимы серию не трогают');

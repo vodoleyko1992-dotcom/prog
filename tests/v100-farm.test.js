@@ -13,9 +13,20 @@ const mob = read('modules/mobfarm.js'), raid = read('modules/raid.js'), nav = re
   env.rt.rbHuntIdle = Date.now() + 60000; assert.equal(rbHold(), false, 'tour idle — autofarm free');
   env.cfg.rbHuntMode = false; env.cfg.rbMode = true; env.rt.rbPending = 1; assert.equal(rbHold(), true, 'RB waiting here still holds'); }
 // 2. тур: «≤ 3 платных телепорта к одному РБ в час» для всех веток выбора; выбор — с карты; медленный телепорт — не второй платный
-assert.match(raid, /const wd = base\.filter\(\(\[id\]\) => rbWounded\(id\) && hourN\(id\) < 3\)/);
-assert.match(raid, /qIds\.includes\(id\) && now - \(tried\[id\] \|\| 0\) > env\.RB_TRY_MS && hourN\(id\) < 3/);
-assert.match(raid, /const fresh = candidates\.filter\(\(\[id\]\) => now - \(tried\[id\] \|\| 0\) > env\.RB_TRY_MS && hourN\(id\) < 3\)/);
+// 14.10: раздельные wd/qb/fresh объединены в rbTourPlan; проверяем сам лимит для каждого вида цели, не имена прежних переменных.
+{ const { mk } = require('./epic-harness.cjs'), now = Date.now();
+  for (const kind of ['ordinary', 'wounded', 'quest', 'value']) {
+    const m = mk({ hero: 55, cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbValueTour: kind === 'value' },
+      rt: { rbListT: now, rbList: { boss: { name: 'РБ', alive: true, lvl: 50, price: 100000, unit: 'аден' } }, rbDb: {}, rbStats: {},
+        rbWound: kind === 'wounded' ? { boss: { cur: 100, max: 1000, t: now } } : {} },
+      env: { RB_WIN: 15, RB_TRY_MS: 600000, RB_RETRY_MS: 120000, storyRbIds: () => kind === 'quest' ? ['boss'] : [] } });
+    assert.equal(m.R.rbListPick()?.id, 'boss', kind + ': eligible before the hourly cap');
+    m.env.rt.rbGoCnt = { boss: [now - 3000, now - 2000, now - 1000] };
+    assert.equal(m.R.rbListPick(), null, kind + ': third paid trip blocks every selection path');
+    m.env.rt.rbGoCnt.boss[0] = now - 3600001;
+    assert.equal(m.R.rbListPick()?.id, 'boss', kind + ': an expired trip releases the cap');
+  }
+}
 assert.match(raid, /if \(!env\.isMap\(\)\) \{ location\.href = '\/map\.html'; await env\.sleep\(3000\); return; \}\n\s*\/\/ 8\.0 \(аудит РБ B1\)/);
 assert.match(raid, /if \(!msg\) return;\n\s*return huntDone\(H\.id, `\$\{H\.name\}: телепорт не сработал — \$\{msg\}`\);/);
 assert.match(raid, /idleMs = RB_IDLE_MS \* \[1, 2, 4\]\[idleN\]/);
