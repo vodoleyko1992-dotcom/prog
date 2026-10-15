@@ -18,7 +18,7 @@ const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualK
 const patch = p => env.setRt({ petFull: { ...state(), ...p } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
-let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
+let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
@@ -287,6 +287,24 @@ function snapshot(ch, shots) {
   return { at: Date.now(), born: +env.rt.petBornT || 0, validUntil: Math.min(Date.now() + 30000, ...active(p.activeBuffs).map(b => b.expiresAtMs), ...(heroBuffs || []).map(heroBuffExpiry)),
     ...data, key: JSON.stringify(data) };
 }
+// Входящий урон не зависит от зарядов/кота, зато меняется от брони, стоек
+// и сопротивлений. Неизвестный бафф включаем; исключаем только чистые усиления атаки.
+const OFFENSE_ONLY = new Set([1077,1240,1068,1086,1059,1085,1078]);
+const DEFENSE_FIELDS = ['level','maxHp','pDef','mDef','evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'];
+function defenseSnapshot(ch) {
+  if (!Array.isArray(ch.activeBuffs) || !Array.isArray(ch.toggleStances) || !ch.inventory?.eq || !Array.isArray(ch.learnedBattleSkillsDetail)
+      || !['level','maxHp','pDef','mDef'].every(k=>Number.isFinite(ch[k])&&ch[k]>0)) return null;
+  const buffs = ch.activeBuffs.filter(b=>heroBuffExpiry(b)>Date.now()&&!OFFENSE_ONLY.has(b.skillId));
+  const data = { char:ch.name,prof:ch.l2Profession,slot:ch.classSlots?.activeSlot,setup:combatSetup(ch),
+    stats:DEFENSE_FIELDS.map(k=>Number.isFinite(ch[k])?ch[k]:null),buffs:buffs.map(b=>[b.skillId,b.level]).sort((a,b)=>a[0]-b[0]),
+    stances:ch.toggleStances.filter(x=>x.active===true).map(x=>[String(x.battleId||''),+x.skillId||0,+x.level||0]).sort((a,b)=>a[0].localeCompare(b[0])) };
+  const proofAt = Number.isFinite(ch.requestStartedAt) ? Math.min(Date.now(),ch.requestStartedAt) : Date.now();
+  return { ...data,key:JSON.stringify(data),until:Math.min(proofAt+30000,Number.isFinite(ch.snapshotGeneratedAt)?ch.snapshotGeneratedAt+30000:Infinity,...buffs.map(heroBuffExpiry)) };
+}
+function defenseContext() {
+  const d=latestDefense;
+  return d && d.char===charName() && d.char===env.heroNick() && d.prof===env.rt.classCur?.prof && d.slot===env.rt.classCur?.slot && d.until>Date.now() ? d.key : null;
+}
 function noteSnapshot(ch, shots) {
   // Вызывается только для полного собственного /character; обрезанный res.activeSummon не годится.
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick()) return;
@@ -304,6 +322,7 @@ function noteSnapshot(ch, shots) {
   const fields = ['level','mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'];
   const buffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => heroBuffExpiry(b) > Date.now()) : null;
   const data = { char: ch.name, setup: combatSetup(ch), prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
+  latestDefense = defenseSnapshot(ch);
   latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(heroBuffExpiry)) } : null;
   latest = snapshot(ch, shots); latestSeen = true;
   if (latest) latest.proofAt = snapshotEvidenceAt || latest.at;
@@ -325,7 +344,7 @@ function noteSnapshot(ch, shots) {
     if (prepared && Number.isFinite(ch.snapshotGeneratedAt)) prepared.validUntil = Math.min(prepared.validUntil, ch.snapshotGeneratedAt + 30000);
   }
 }
-function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; prepared = null; preparedSource = null; }
+function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; latestDefense = null; prepared = null; preparedSource = null; }
 function heroContext() {
   const h = latestHero;
   return h && h.char === charName() && h.char === env.heroNick() && h.prof === env.rt.classCur?.prof && h.slot === env.rt.classCur?.slot && h.until > Date.now()
@@ -401,6 +420,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
