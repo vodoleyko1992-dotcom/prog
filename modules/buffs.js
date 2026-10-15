@@ -240,7 +240,17 @@ function faFullIds() {
   if (!F) return faIdsOf(v);
   let role = null, S = null; try { role = env.heroRole?.() || null; } catch (e) {}
   try { S = env.heroStatsFor?.() || null; } catch (e) {}   // 10.0.7: порядок набора «auto» — по ценности для ДПС (buff-value.js)
-  return F.dropClash(F.resolve(v, role, S), env.rt.faClash);
+  let ids = F.resolve(v, role, S);
+  // 10.0.23 (лог15.10 07:10): смена оценки Magnus/Water не повод снимать действующий
+  // бафф за FA. Автонабор пересматривает конфликтующую пару только после истечения.
+  // Явный список игрока сохраняет свой порядок; смена класса исключает чужой набор.
+  if (F.isAuto(v)) {
+    const H = hudBuffs() || {}, now = Date.now(), C = env.rt.faClash || {};
+    const clashes = (a, b) => a === b || (F.GROUP.includes(a) && F.GROUP.includes(b)) || (C[a] || []).includes(b) || (C[b] || []).includes(a);
+    const keep = F.SETS[F.kind(role)].map(x => x[0]).filter(id => H[id] > now + 60000 && !faLow(id) && ids.some(k => clashes(id, k)));
+    ids = [...keep, ...ids.filter(id => !keep.includes(id))];
+  }
+  return F.dropClash(ids, env.rt.faClash);
 }
 // 8.0.3 (лог 11.10 09:05–10:32): платные баффы за FA на герое — куплены у баффера Fast Aden (цена есть в его каталоге rt.faCat или в
 // FA_KNOWN), действуют 3 ч; те же id у городского баффера (набор на 24 ч: 1059, 1085, 1303 …) не считаем → { id: время конца }
@@ -307,6 +317,8 @@ function faWanted() {
   const paidUp = atRisk > 0 && atRisk >= (env.faCost ? env.faCost(1323) : 5);
   const nob = paidUp && bossOn && env.cfg.rbSessNob !== false ? [1323] : [];
   let ids = [...new Set([...faIdsOf(env.cfg.faBuffs), ...sessWant, ...epicWant, ...tourWant, ...nob])].filter(id => id > 0 && now - (gone[id] || 0) > 6 * 3600000);
+  // Общий явный список имеет приоритет над автонабором; проверка и покупка требуют одну совместимую комбинацию.
+  if (root.L2FaFull) ids = root.L2FaFull.dropClash(ids, env.rt.faClash);
   // 9.0 (квест Noblesse): статус Noblesse — скилл 1323 свой (на всех классах), за FA его не покупаем
   if (env.rt.story?.nobleOwn) ids = ids.filter(id => id !== 1323);
   const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
