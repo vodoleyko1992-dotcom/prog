@@ -11,11 +11,11 @@ const mf = JSON.parse(read('manifest.json')), scripts = mf.content_scripts.find(
 const py = read('tests/v715-ui-browser.py');
 let mock = py.slice(py.indexOf('mock=r"""') + 9); mock = mock.slice(0, mock.indexOf('"""'));
 const quest = { part: 1, totalParts: 4, completed: false, active: true, subclassLevel: 52, minLevel: 50, atNpc: false,
-  npc: { id: 'noblesse_virgil', name: 'Virgil', teleportId: 'rune' }, targets: [{ name: 'Vanor Silenos Chieftain', level: 50, have: 100, need: 100, teleportId: 'coliseum' }, { name: 'Varnish', have: 100, need: 100 }],
-  actions: { canAccept: false, canAdvance: true } };
+  npc: { id: 'noblesse_virgil', name: 'Virgil', worldX: 43835, worldY: -47749, teleportId: 'rune' }, targets: [{ name: 'Vanor Silenos Chieftain', level: 50, have: 100, need: 100, teleportId: 'coliseum' }, { name: 'Varnish', have: 100, need: 100 }],
+  actions: { canAccept: false, canAdvance: false } };
 const coreMock = `(() => { const data = { on: false, cfg: { rec: false, autoLearn: false }, rt: { char: 'Warlock' } };
   window.chrome = { runtime: { id: 'mock', lastError: null, getManifest: () => ({ version: '${mf.version}' }), getURL: p => 'https://l2wap.com/__ext/' + (p || ''), onMessage: { addListener() {} },
-    sendMessage(msg, cb) { let reply = null; if (msg.cmd === 'tabId') reply = 3; if (msg.cmd === 'statePatch') { Object.assign(data.rt, msg.patch || {}); Object.assign(data.cfg, msg.cfgPatch || {}); reply = { ok: true }; }
+    sendMessage(msg, cb) { let reply = null; if (msg.cmd === 'tabId') reply = 3; if (msg.cmd === 'lockRenew' || msg.cmd === 'lockAcquire') reply = { ok: true, epoch: 'e' }; if (msg.cmd === 'statePatch') { Object.assign(data.rt, msg.patch || {}); Object.assign(data.cfg, msg.cfgPatch || {}); reply = { ok: true }; }
       if (typeof cb === 'function') { queueMicrotask(() => cb(reply)); return; } return Promise.resolve(reply); } },
     storage: { onChanged: { addListener() {} }, local: { get: async keys => Object.fromEntries([].concat(keys).map(k => [k, data[k]])), set: async v => Object.assign(data, v) } } };
   localStorage.setItem('token', 'tok-123'); })();`;
@@ -25,20 +25,37 @@ const QPAGE = btn => `<html><body>${HUD}<main id="noblesse-quest-main"><h2 id="n
   <p id="noblesse-quest-err" hidden></p><div id="noblesse-quest-actions">${btn}</div></main></body></html>`;
 const PAGES = {
   '/map.html': `<html><body>${HUD}</body></html>`,
-  far: QPAGE('<button type="button" class="l2-town-btn" data-noblesse-action="teleport" data-noblesse-target="rune" onclick="window.__tp=(window.__tp||0)+1">Телепорт до NPC</button>'),
+  far: QPAGE('<button type="button" class="l2-town-btn" data-noblesse-action="teleport" data-noblesse-target="rune" onclick="window.nativeTeleport(this)">Телепорт до NPC</button>'),
   near: QPAGE('<button type="button" class="l2-town-btn" data-noblesse-action="advance" onclick="window.__adv=(window.__adv||0)+1;this.remove()">Завершити частину</button>'),
 };
 (async () => {
   const b = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
   const auth = [];
-  const run = async (pagePath, html, fn) => {
+  const run = async (pagePath, html, fn, options = {}) => {
     const p = await b.newPage(); const errors = []; p.on('pageerror', e => errors.push(String(e)));
+    // 15.10: живой read-only контракт — {quest,character}, atNpc и npc.teleportId; прежний {} /character
+    // правильно запрещал оплату. Значения синтетические; native POST и durable receipt проходят настоящий hook/core.
+    const character = { id: 'story-fixture-hero', name: 'Warlock', revision: 10, level: 61, cityId: 'rune', locationType: 'city' };
+    const currentQuest = structuredClone(quest); currentQuest.atNpc = html === PAGES.near;
+    currentQuest.actions.canAdvance = currentQuest.atNpc;
+    const posts = [];
+
     await p.route('https://l2wap.com/**', async r => {
       const u = new URL(r.request().url());
-      if (u.pathname.startsWith('/__ext/')) return r.fulfill({ status: 200, contentType: 'application/json', body: read(u.pathname.slice(7)) });
+      if (u.pathname.startsWith('/__ext/')) return r.fulfill({ status: 200, contentType: u.pathname.endsWith('.js') ? 'application/javascript' : 'application/json', body: read(u.pathname.slice(7)) });
       if (u.pathname.startsWith('/game/') || u.pathname === '/character') {
         auth.push([u.pathname, r.request().headers().authorization || '']);
-        const body = u.pathname === '/game/story-quests/noblesse' ? { quest } : u.pathname === '/game/story-quests/subclass' ? { quest: { stage: 'completed', completed: true, bosses: [], actions: {} } }
+        if (u.pathname === '/game/story-quests/noblesse/teleport') {
+          const req = r.request().postDataJSON();
+          const pending = await p.evaluate(() => rt.actionPayments?.pending);
+          posts.push({ req, pending });
+          if (r.request().method() !== 'POST' || req.targetId !== 'rune' || req.expectedRevision !== character.revision)
+            return r.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: 'revision_mismatch', character }) });
+          character.revision++; currentQuest.atNpc = true; currentQuest.actions.canAdvance = true;
+          if (options.loseAck) return r.abort('failed');
+          return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ quest: currentQuest, character }) });
+        }
+        const body = u.pathname === '/character' ? { character } : u.pathname === '/game/story-quests/noblesse' ? { quest: currentQuest, character } : u.pathname === '/game/story-quests/subclass' ? { quest: { stage: 'completed', completed: true, location: { atReorin: false, atLadd: false }, npc: { reorin: { name: 'Maestro Reorin', teleportId: 'oren' }, ladd: { name: 'Magister Ladd', teleportId: 'ivory_tower' } }, bosses: [], actions: {} }, character }
           : u.pathname === '/game/teleport/locations' ? { locations: [{ teleportId: 'rune', labelEn: 'Rune Township', adenaCost: 20000, baseAdenaCost: 20000, vipFreeApplied: false }] } : {};
         return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
       }
@@ -46,10 +63,16 @@ const PAGES = {
     });
     await p.goto('https://l2wap.com' + pagePath);
     await p.evaluate(coreMock);
+    await p.evaluate(() => { window.nativeTeleport = async button => {
+      window.__tp = (window.__tp || 0) + 1;
+      try { await fetch('/game/story-quests/noblesse/teleport', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok-123' },
+        body: JSON.stringify({ targetId: button.dataset.noblesseTarget, expectedRevision: 10 }) }); } catch (_) { /* потерянный ACK — подтверждает только свежий GET */ }
+    }; });
+    await p.addScriptTag({ content: read('hook.js') });
     for (const s of scripts) await p.addScriptTag({ content: read(s) });
     const res = await p.evaluate(fn);
     await p.close();
-    return { res, errors };
+    return { res, errors, posts };
   };
   // 1. опрос квестов — с токеном страницы; часть готова → поход к NPC
   const r1 = await run('/map.html', null, async () => { on = true; tabOwner = true; leaseEpoch = 'e'; rt.zone = 'coliseum'; await L2V7Modules.story.storyTick(true);   // 10.0: без точки возврата бот не уходит сдавать
@@ -61,9 +84,18 @@ const PAGES = {
   // 2. страница квеста, NPC не рядом: цена Rune 20 000 ≤ лимита 100 000 → «Телепорт» нажат один раз
   const r2 = await run('/noblesse-quest.html', PAGES.far, async () => { on = true; tabOwner = true; leaseEpoch = 'e';
     await setRt({ storyJob: { kind: 'noblesse', key: 'noblesse:1', why: 'часть 1/4', home: 'coliseum', t: Date.now() } });
-    await L2V7Modules.story.storyStep(); return { tp: window.__tp || 0, job: rt.storyJob }; });
-  if (!(r2.res.tp === 1 && r2.res.job?.tpT && !r2.errors.length)) { console.error('FAIL 2', JSON.stringify(r2)); process.exit(1); }
-  console.log('PASS browser: far from Virgil → teleport price read (Rune 20 000 within the limit), «Телепорт» pressed once');
+    await L2V7Modules.story.storyStep(); return { tp: window.__tp || 0, job: rt.storyJob, payments: rt.actionPayments, receipt: rt.storyTpReceipt }; });
+  if (!(r2.res.tp === 1 && r2.res.job?.tpT && r2.res.receipt?.outcome === 'arrived' && !r2.res.payments?.pending && r2.res.payments?.history?.[0]?.confirmation.kind === 'npc-arrival' && r2.posts.length === 1 && r2.posts[0].pending?.kind === 'story-teleport' && r2.posts[0].pending?.quote?.amount === 20000 && !r2.errors.length)) { console.error('FAIL 2', JSON.stringify(r2)); process.exit(1); }
+  console.log('PASS browser: far from Virgil → durable 20 000 Adena intent → one native POST → own-character NPC receipt');
+  // Потерянный HTTP-ответ не разрешает повтор: свежий GET той же части подтверждает именно atNpc, не cityId.
+  const lost = await run('/noblesse-quest.html', PAGES.far, async () => { on = true; tabOwner = true; leaseEpoch = 'e';
+    await setRt({ storyJob: { kind: 'noblesse', key: 'noblesse:1', home: 'coliseum', t: Date.now() } });
+    await L2V7Modules.story.storyStep();
+    return { tp: window.__tp || 0, job: rt.storyJob, payments: rt.actionPayments, receipt: rt.storyTpReceipt };
+  }, { loseAck: true });
+  if (!(lost.res.tp === 1 && lost.posts.length === 1 && lost.res.job?.tpT && !lost.res.payments?.pending && lost.res.payments?.history?.[0]?.confirmation.kind === 'npc-arrival' && !lost.res.receipt && !lost.errors.length)) {
+    console.error('FAIL lost ACK', JSON.stringify(lost)); process.exit(1); }
+  console.log('PASS browser: lost teleport ACK → fresh quest atNpc + own revision confirms arrival without a second POST');
   // 3. у NPC: «Завершити частину» нажата, поход закрыт, обратно на точку
   const r3 = await run('/noblesse-quest.html', PAGES.near, async () => { on = true; tabOwner = true; leaseEpoch = 'e';
     await setRt({ storyJob: { kind: 'noblesse', key: 'noblesse:1', why: 'часть 1/4', home: 'coliseum', t: Date.now(), tpT: Date.now() } });
