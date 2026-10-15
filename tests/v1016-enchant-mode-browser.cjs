@@ -40,7 +40,8 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   const noActions=async(label,ms=1300)=>{
    const mark=traffic.length,url=h.g.p.url();await delay(ms);
    assert.equal(h.g.p.url(),url,label+': unexpected navigation');
-   assert.deepEqual(traffic.slice(mark).filter(r=>r.method!=='GET'||/battle|raid|rb-boss|quest|teleport|tvt|fishing|mammon|magister/.test(r.path)),[],label+': unrelated automation');
+   // 10.0.22: включённый TvT проверяет регистрацию даже в заточке; разрешён только GET статуса, не переход/POST/бой.
+   assert.deepEqual(traffic.slice(mark).filter(r=>!(r.method==='GET'&&r.path==='/game/tvt')).filter(r=>r.method!=='GET'||/battle|raid|rb-boss|quest|teleport|tvt|fishing|mammon|magister/.test(r.path)),[],label+': unrelated automation');
    const current=await status();assert.equal(current.mode,'enchant');assert.match(current.status,/^Заточка:/);pass(label);
   };
 
