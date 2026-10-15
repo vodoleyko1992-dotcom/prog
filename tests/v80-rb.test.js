@@ -26,6 +26,8 @@ assert.ok(R.rbPreCheck('y', { hp: 300000, patk: 1084 }).ok);
 
 // 2. «не по силам» — только до нового уровня (rbVerdictBlocks), в т.ч. для раненого РБ
 const { R: R2 } = mk({ rbList: { a: { name: 'A', lvl: 50, alive: true }, b: { name: 'B', lvl: 51, alive: true } },
+  // 15.10: истечение старого запрета не заменяет обязательную разведку точных цифр цели.
+  rbStats: { a: { hp: 1000, patk: 1, matk: 1, src: 'api' }, b: { hp: 1000, patk: 1, matk: 1, src: 'api' } },
   rbDb: { a: { verdict: 'no', heroLvl: 52 }, b: { verdict: 'no', heroLvl: 54 } }, rbWound: { a: { cur: 100, max: 1000, t: Date.now() } } });
 assert.equal(JSON.stringify(R2.rbEligible().map(x => x[0])), '["a"]', "old 'no' (hero 52, now 54) expired; fresh 'no' blocks");
 assert.equal(R2.rbWounded('a'), true, 'wounded boss with expired verdict — finish it');
@@ -85,10 +87,12 @@ const { env: e4, R: R4 } = mk({ rbStats: { l2dop_rb_99050: { loss: 77 }, l2dop_r
     const st = await R8.rbInfoNote(id, { stats: { maxHp: 507285, pAtk: 2894, pDef: 708, mAtk: 2217, mDef: 904 }, drops: [{ kind: 'adena', chance: 1, min: 200000, max: 260000 }, '…ещё 5'], rewardExp: 637000, rewardSp: 150000 }, 'page');
     assert.deepEqual([st.src, st.from, st.loss, st.adena, st.exp, st.sp], ['api', 'page', 77, 230000, 637000, 150000], 'passive note keeps src api, measured loss and parses drops');
     assert.equal(await R8.rbInfoNote(id, { stats: {} }, 'page'), null, 'no stats — nothing written');
-    let n = 0; e8.potModel = () => (++n === 1 ? { pool: 600000, rate: 2000, n: 960 } : { pool: 0, rate: 2000, n: 0 });   // выбор прошёл, проверка до телепорта — нет
+    let n = 0; e8.potModel = () => (++n === 1 ? { pool: 600000, rate: 2000, n: 960 } : { pool: 0, rate: 2000, n: 0 });
+    // 15.10: окончательный выбор выполняется после подготовки; исчезнувшие банки сразу переводят в ожидание.
+    e8.map = async () => {};
     await R8.rbHuntStep();
-    assert.ok(n >= 2, 'checked at pick (rbTeleportCheck) and again before the teleport (src api)');   // 10.0: с карты ещё и проверка «он здесь»
-    assert.match(e8.rt.rbHunt.last || '', /до телепорта по цифрам игры — не полезу/, 'pre-teleport rbPreCheck still runs after a passive note');
+    assert.ok(n >= 2, 'potion stock checked again after preparation, before selecting a paid route');
+    assert.match(e8.rt.rbHunt.last || '', /мало банок/, 'fresh preflight still runs after a passive note');
     assert.notEqual(e8.rt.rbHunt.step, 'go'); }
   console.log('PASS: RB special by M.Atk (Верфа/Голем refused, Селян allowed), verdict only until level-up, skip kinds, spawn info before teleport, map boss without teleport, Noblesse with paid buffs, potion band by measurements, rbPreCheck with DPS/HP, #rb-modal-stats, passive spawn info keeps the pre-teleport check');
 })().catch(e => { console.error(e); process.exit(1); });

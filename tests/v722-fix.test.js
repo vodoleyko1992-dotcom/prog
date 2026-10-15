@@ -19,8 +19,9 @@ assert.match(recs.join('\n'), /не беру — он понизит ваши б
 hud = [[1040, 2, H3], [1068, 2, H3], [1268, 3, H3], [1086, 1, H3]];
 assert.equal(B.townBuffNeed()?.set, 'basic', 'nothing to downgrade, Body Blessing missing → take the set');
 // 2. 14.10: по новой просьбе игрока сначала уровень; недобитый — первым среди равных уровней (rbCur не мешает).
-const R = load('modules/raid.js').L2V7Factories.raid({ ...env, heroLvl: () => 54, cfg: { rbMaxBelow: 15, rbMaxAbove: 15 }, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0, meHp: () => ({ max: 4700 }),
-  rt: { rbCur: 'w', rbList: { a: { name: 'Tarlk', lvl: 50, alive: true }, w: { name: 'Witch', lvl: 50, alive: true } }, rbWound: { w: { cur: 156417, max: 507285, t: Date.now() } }, rbDb: {} } });
+// 15.10: выбираем среди разведанных РБ с запасом банок; ранение не отменяет предбоевую проверку.
+const R = load('modules/raid.js').L2V7Factories.raid({ ...env, heroLvl: () => 54, cfg: { rbMaxBelow: 15, rbMaxAbove: 15 }, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0, meHp: () => ({ max: 4700 }), potModel: () => ({ pool: 600000, rate: 2000, n: 500 }), fmtK: String, fmtT: String,
+  rt: { rbCur: 'w', rbList: { a: { name: 'Tarlk', lvl: 50, alive: true }, w: { name: 'Witch', lvl: 50, alive: true } }, rbStats: { a: { hp: 507285, patk: 1, matk: 1, src: 'api' }, w: { hp: 507285, patk: 1, matk: 1, src: 'api' } }, rbWound: { w: { cur: 156417, max: 507285, t: Date.now() } }, rbDb: {} } });
 const p = R.rbListPick();
 assert.equal(p.id, 'w', 'wounded RB we fought goes first among equal levels'); assert.ok(p.wounded);
 // 3. призыв кота: клик не ушёл — повтор через ≈2 с; убит РБ — рана забыта

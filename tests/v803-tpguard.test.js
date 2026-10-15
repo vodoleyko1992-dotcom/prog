@@ -31,17 +31,18 @@ const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
     assert.ok(recs.some(r => /цифры Новый РБ у игры не получены: HTTP 401/.test(r)), recs.join(' | '));
     assert.equal(await R.rbInfo('x'), null); assert.equal(calls, 1, 'no repeat within 10 min');
     env.rt.rbInfoFail.x = Date.now() - 11 * 60000; await R.rbInfo('x'); assert.equal(calls, 2, 'retried after 10 min'); }
-  // 4. код: цифры окна карты (без src) — тоже цифры; вслепую — только знакомый РБ или раз в 30 мин; два отказа на месте подряд — пауза тура
+  // 4. 15.10: цифры окна карты (без src) — тоже цифры; платный переход без них запрещён даже после старых побед.
   const raid = read('modules/raid.js');
   assert.match(raid, /const st = await rbInfo\(p\.id\), real = !!st && st\.hp > 0 && \(st\.matk > 0 \|\| st\.patk > 0\) && !st\.est;/);
   assert.doesNotMatch(raid, /if \(st\?\.src === 'api' && !rbVerdictBlocks\(p\.id\)\)/);
-  assert.match(raid, /if \(!\(d\?\.verdict === 'ok' \|\| d\?\.kills > 0\)\) \{\n        if \(Date\.now\(\) - \(env\.rt\.rbBlindT \|\| 0\) < 30 \* 60000\) \{/);
+  assert.match(raid, /if \(!real\) \{[\s\S]*?return huntDone\(p\.id, `\$\{p\.name\}: нет точных цифр игры — платный переход не разрешён/);
+  assert.doesNotMatch(raid, /rbBlindT/);
   assert.match(raid, /const run = Date\.now\(\) - \(env\.rt\.rbRefuse\?\.t \|\| 0\) < 10 \* 60000 \? \(env\.rt\.rbRefuse\?\.n \|\| 0\) \+ 1 : 1;/);
   assert.match(raid, /\.\.\.\(run >= 2 \? \{ rbHuntIdle: Date\.now\(\) \+ RB_IDLE_MS,/);
   assert.ok(raid.indexOf('const RB_IDLE_MS') < raid.indexOf('const run = Date.now() - (env.rt.rbRefuse'), 'RB_IDLE_MS defined before use');
   // базовый профиль тоже знает эти цифры (src 'api')
   assert.equal(base.rbStats.l2dop_rb_25158.matk, 7287); assert.equal(base.rbStats.l2dop_rb_25158.src, 'api');
-  console.log('PASS: 8.0.3 teleport guard — built-in RB numbers (Tarlk, RB 55–66, epics) survive reinstall and refuse before paying; failed stats request logged and retried in 10 min; blind paid teleport only for a known RB or once per 30 min; two on-site refusals pause the tour');
+  console.log('PASS: teleport guard — built-in RB numbers survive reinstall; failed stats request logged and retried in 10 min; no blind paid teleport; two on-site refusals pause the tour');
 })().catch(e => { console.error(e); process.exit(1); });
 { // 8.0.3 (ревью): обычный РБ из диапазона 290xx — не эпик
   const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), assert = require('node:assert/strict');

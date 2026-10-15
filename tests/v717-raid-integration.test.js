@@ -43,7 +43,9 @@ const make=(title,key,cd=0)=>({title,key,cdUntil:cd,disabled:false,getAttribute:
 
   const renv={cfg:{rbValueTour:true,rbMaxBelow:15,rbMaxAbove:15,rbPotReserve:10},
     rt:{rbDb:{a:{sp:2500,adenaPerKill:100000,expPerKill:300000,fightS:400},b:{sp:400,adenaPerKill:250000,expPerKill:700000,fightS:240}},
-      rbList:{a:{alive:true,lvl:50,price:100000,name:'A'},b:{alive:true,lvl:50,price:100000,name:'B'}},rbListT:Date.now(),rbGoTried:{},rbGoCnt:{},rbStats:{}},
+      rbList:{a:{alive:true,lvl:50,price:100000,name:'A'},b:{alive:true,lvl:50,price:100000,name:'B'}},rbListT:Date.now(),rbGoTried:{},rbGoCnt:{},
+      // 15.10: очередь платных переходов требует цифры цели; тест сравнивает экономику уже разведанных РБ.
+      rbStats:{a:{hp:100000,patk:100,matk:100,src:'api'},b:{hp:100000,patk:100,matk:100,src:'api'}}},
     meHp:()=>({max:7666}),heroLvl:()=>56,fmtK:x=>String(x),fmtT:x=>String(x),potModel:()=>({pool:500000,rate:280,n:300}),
     rec:()=>{},RB_WIN:15,RB_TRY_MS:0,RB_RETRY_MS:0,logLines:()=>[],newLines:(_,b)=>b,activeBuffs:()=>[],
     rbNote:async(id,patch)=>{renv.rt.rbDb[id]={...renv.rt.rbDb[id],...patch}},setRt:async p=>Object.assign(renv.rt,p)};
