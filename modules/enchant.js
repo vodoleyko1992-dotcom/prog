@@ -188,7 +188,17 @@ async function step() {
     const P=plan();if(P.done){await save({...s,status:'done',reason:'Все цели достигнуты',finishedAt:now()});return true;}
     if(!P.ready)return pause(P.reason);
     if(!catalog){const h=await get('/character/catalog-hints');if(h?.itemSlotHints&&h?.itemGradeHints)catalog=h;}
-    const snap=await snapshot();if(!allowed(s))return false;if(!snap||!catalog)return pause('Не получено свежее состояние героя');
+    const snap=await snapshot();if(current()!==s||!allowed(s))return false;
+    // После перехода каталог загружается заново. Короткий сбой GET не требует ручного
+    // возобновления; повторяем только чтение, до намерения и расхода свитка.
+    if(!snap||!catalog){
+      const readFailures=(s.readFailures||0)+1;
+      const missing=[!snap?'свежее состояние героя с подтверждённой личностью':'',!catalog?'каталог предметов':''].filter(Boolean).join(' и ');
+      const reason=`Не удалось прочитать: ${missing} (проверка ${readFailures}/3)`;
+      if(readFailures>=3)return pause(reason,{readFailures});
+      await save({...s,readFailures,reason,nextAt:now()+2000});env.setStatus?.('Заточка: '+reason+' — повтор через 2 с');return true;
+    }
+    if(s.readFailures){s={...s,readFailures:0,reason:''};await save(s);if(current()!==s||!allowed(s))return false;}
     if(adena(snap)==null)return pause('Баланс Adena не прочитан — расход свитка не выполнялся');
     const row=resolve(snap,P.item);if(!row||row.fingerprint!==P.item.fingerprint)return pause('Выбранный экземпляр изменился вне этой сессии');
     if(quantity(snap,P.scroll.id)<1)return pause('Нет подходящего свитка в сумке');
