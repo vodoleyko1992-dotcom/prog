@@ -56,7 +56,7 @@ const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|зав
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
 function parseLog(lines, mob) {
   const m = low(mob).replace(/\s*·.*$/, '');
-  const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], pot: 0, selfHeal: 0, resist: 0, miss: 0 };
+  const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], splash: [], extraKills: [], rewards: { exp: 0, sp: 0 }, pot: 0, selfHeal: 0, resist: 0, miss: 0 };
   for (const raw of lines || []) {
     // 14.10 (живой бой Changed Creation 74): «\u20601220\u200bПолум’я — 5002 урона» раньше давало ноль, особенно на добивании без mobHp.
     const l = String(raw || '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
@@ -70,6 +70,12 @@ function parseLog(lines, mob) {
     if ((x = l.match(RE_SELF))) { r.selfHeal += num(x[1]); continue; }
     if (/опирається ефекту|сопротивл|resist/i.test(l)) { r.resist++; continue; }
     if (/^(?:Ти|Вы|Ты)\s+промахну|промахнулись|промах[!.]?$/i.test(l)) { r.miss++; continue; }
+    const splash = l.match(/(?:поруч\s*:|додаткові цілі\s*[—–:-])\s*(.+)$/i);
+    if (splash) { for (const hit of splash[1].matchAll(/(?:^|,)\s*(.+?)\s*[−-]\s*(\d[\d\s  ]*)/g)) r.splash.push({ name: hit[1].trim(), damage: num(hit[2]) }); continue; }
+    const extra = l.match(/^(?:Додаткова ціль повалена|Дополнительная цель повержена)\s*:\s*(.+?)\.?$/i);
+    if (extra) { r.extraKills.push(extra[1]); continue; }
+    const reward = l.match(/^(EXP|SP)\s*\+\s*[\d\s  ]+[.!]?$/i);
+    if (reward) { r.rewards[low(reward[1])]++; continue; }
     if (RE_SKIP.test(l)) continue;
     if ((x = l.match(RE_PHYSICAL))) { r.own += num(x[2]); r.ownN++; if (x[1]) r.crit++; continue; }
     if ((x = l.match(RE_DOT))) {
@@ -98,6 +104,29 @@ function keyOf(o) {
   const n = low(o.name); if (!n) return '';
   return (o.champ ? 'ch:' : 'm:') + n;
 }
+// 15.10, лог 04:36: панель соседей может отсутствовать, хотя АОЕ выдаёт две дополнительные добычи.
+// Предсказываем выгоду по принятым ходам в этой зоне/режиме; это ожидание, а не выдуманные живые цели.
+const groupPage = Date.now(); // неизвестная зона: не переносим прогноз через перезагрузку/телепорт
+function groupScope() { return env.cfg?.catMode ? 'cat:' + (env.rt.catIn || env.cfg.catDungeon || 'auto') : 'map:' + (env.rt.zone || 'page-' + groupPage); }
+const groupOwner = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || '', env.rt.classCur?.slot ?? '']);
+function groupNote(name, parsed, mainMax, now) {
+  const skill = low(name), old = env.rt.skills?.[skill];
+  if (F.rb || F.groupOwner !== groupOwner() || !(mainMax > 0) || !(parsed.own > 0) || !(parsed.splash.length || old?.aoe)) return;
+  const key = F.groupScope + '|' + skill, groups = { ...(env.rt.fightGroups || {}) };
+  const rewarded = Math.max(0, parsed.rewards.exp - 1, parsed.rewards.sp - 1);
+  const samples = [...(groups[key]?.samples || []), { t: now, hp: mainMax, kills: Math.max(parsed.extraKills.length, parsed.splash.length ? rewarded : 0),
+    targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
+  groups[key] = { t: now, samples };
+  const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
+  env.setRt({ fightGroups: recent })?.catch?.(() => {});
+}
+function groupOn(name, hp) {
+  const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
+  const s = (g?.samples || []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
+  if (!s.length) return null;
+  const mean = k => s.reduce((n, x) => n + x[k], 0) / s.length;
+  return { n: s.length, kills: mean('kills'), targets: mean('targets'), damage: mean('damage'), t: g.t };
+}
 function begin(bt, spawn, now) {
   const title = env.mobTitle?.() || '';
   const name = bt.name || title.split('·')[0].trim();
@@ -105,7 +134,7 @@ function begin(bt, spawn, now) {
   const champ = /champ/i.test(bt.kind || '') || !!(title && env.isChamp?.(title));
   const rb = /^l2dop_(?:rb|eg)_/i.test(spawn) || /raid|epic|boss/i.test(bt.kind || '') || !!(title && env.isBoss?.(title));
   F = { key: '', spawn, name, lvl, champ, rb, t0: now, tl: now, mob: bt.mob, mob0: bt.mob, mobMax: bt.mobMax, me: bt.hp, mp: bt.mp, seq: bt.seq ?? -1,
-        turns: 0, dealt: 0, petDmg: 0, a: {}, hits: [], sp: [], pots: 0, lost: 0, done: false };
+        turns: 0, dealt: 0, petDmg: 0, a: {}, hits: [], sp: [], pots: 0, lost: 0, done: false, groupOwner: groupOwner(), groupScope: groupScope() };
   F.key = keyOf({ spawn, name, champ, kind: rb ? 'raid' : '' });
   return F;
 }
@@ -163,6 +192,7 @@ function onNet(path, d) {
   let turn = null;
   if (act) {
     const action = String(d.req?.action || ''), name = env.actName?.(action) || action;
+    if (lines.length && name && !/^battle_potion|_toggle$/.test(action)) groupNote(name, L, F.mobMax, now);
     // банка — по нашему же нажатию: строки «Зілля +600 HP» идут импульсами каждую секунду (снимок боя с Verfa 12.10 00:47), это не «ещё банка»
     if (/^battle_potion/.test(action)) F.pots++;
     const drop = F.mob != null && bt.mob != null ? Math.max(0, F.mob - bt.mob) : 0;
@@ -292,6 +322,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, healOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
