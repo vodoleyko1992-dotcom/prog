@@ -2451,6 +2451,8 @@ async function main() {
       if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { await L2V7Modules.tvt.tvtWait(); continue; }
       if (await antibotGuard()) continue;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); continue; }
+      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       // 10.0.24: сохранённый маршрут завершаем прежде запуска другого сервиса.
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); continue; }
       // «🛒 Закупить сейчас» (urgent) — сразу, даже со страницы боя: бросаем моба/РБ/рыбалку
@@ -3685,22 +3687,49 @@ function augNote(a, path) {
   else if (!a.o && p.o && p.w === a.w) rec('S', 'ЛС', `Life Stone снят с ${wn}`, { path });
 }
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
+let INV_READY = '', INV_READ = null, INV_RETRY = { key: '', n: 0, at: 0 };
+const invContext = () => JSON.stringify([rt.char||'',rt.classCur?.prof??null,rt.classCur?.slot??null,leaseEpoch]);
 const invNote = inv => { if (!Array.isArray(inv)) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invQty = id => INV_NET?.char === rt.char && !!rt.char && INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
 async function invRefresh() {
-  const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null);
+  const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now();
   try {
     const r = await gameGet('/character'); if (!r.ok) return null;
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
     if(!char||rt.char!==char||leaseEpoch!==lease||JSON.stringify(rt.classCur||null)!==classKey||c?.name!==char||(heroNick()&&heroNick()!==char))return null;
+    if(c.l2Profession&&rt.classCur?.prof&&c.l2Profession!==rt.classCur.prof||Number.isInteger(c.classSlots?.activeSlot)&&Number.isInteger(rt.classCur?.slot)&&c.classSlots.activeSlot!==rt.classCur.slot)return null;
     const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
     if (!m) return null;
     INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    INV_READY = invContext();
+    if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner && c?.inventory?.eq) L2V7Modules.mammon.eqNote(c.inventory.eq);
     return m;
   } catch (e) { return null; }
+}
+// 15.10, MV3 startup: hook начинает раньше content и первый netStart может быть
+// потерян. Не принимаем чужой/непривязанный ответ: перед маршрутом сами читаем
+// сумку текущего документа. Кэш прошлой страницы не доказывает текущие остатки.
+async function inventoryReady() {
+  if (!on || !tabOwner || !rt.char || heroNick()!==rt.char) return false;
+  // Ручные задачи и сверка уже отправленной оплаты имеют собственный preflight.
+  if (cfg.taskOnly || L2V7Modules.payments?.pending?.()) return true;
+  const key=invContext();
+  if (INV_READY===key && invQty(0)!==null) return true;
+  if (INV_RETRY.key===key && Date.now()<INV_RETRY.at) return false;
+  if (INV_READ) { await INV_READ; return on && tabOwner && key===invContext() && INV_READY===key; }
+  const read=invRefresh(); INV_READ=read;
+  try {
+    const m=await read;
+    if (!on || !tabOwner || key!==invContext()) return false;
+    if (m) { INV_RETRY={key,n:0,at:0}; return INV_READY===key; }
+    const n=INV_RETRY.key===key?INV_RETRY.n+1:1;
+    INV_RETRY={key,n,at:Date.now()+Math.min(30000,2000*2**Math.min(4,n-1))};
+    setStatus('Сверяю сумку с сервером; без подтверждения закупку и маршруты не начинаю');
+    return false;
+  } finally { if (INV_READ===read) INV_READ=null; }
 }
 const actNet = () => ACT_NET;
 // 9.0 (катакомбы): список мобов подземелья целиком из ответа игры (hook.js поле dm: [id, тип, имя, ур., агр.]) и где герой по последнему
@@ -3876,6 +3905,7 @@ addEventListener('message', e => {
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
   { const m = invNote(d.inv); if (m) { INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    INV_READY=invContext();
     if (tabOwner) try { L2V7Modules.tvtshop.shilNote(); } catch (er) {}   // 10.0: Shil Coins в сумке → rt.tsShil
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
     const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
