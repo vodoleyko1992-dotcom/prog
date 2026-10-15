@@ -22,7 +22,10 @@ let readAt = 0, reading = false;
 async function tvtRefresh(force = false) {
   if (!canRun() || !env.gameGet || reading) return;
   const s = tvtState(), now = Date.now(), opening = s?.regOpen && s.now >= s.regOpen - 5000 && s.now <= s.regOpen + 10000;
-  const due = !s || !s.reg && (opening || tvtRegistrationDue());
+  // 10.0.22: после сна вкладки можно пропустить первые10с открытия; продолжаем читать до конца окна.
+  const closes = s && (s.regEnd > s.regOpen ? s.regEnd : s.start > s.regOpen ? s.start : s.regOpen + 10 * 60000);
+  const pendingWindow = s?.regOpen && s.now >= s.regOpen && s.now < closes;
+  const due = !s || !s.reg && (opening || pendingWindow || tvtRegistrationDue());
   if (!force && (!due || now - readAt < (opening ? 1000 : 5000))) return;
   reading = true; readAt = now;
   try {
@@ -80,7 +83,8 @@ async function tvtWait() {                          // окно TvT, дел на
 
 async function tvtStep() {                          // true — шаг TvT сделан (главный цикл начинает заново)
   if (!canRun()) return false;
-  await tvtRefresh();
+  // 10.0.22: GET статуса не блокирует удары при медленном сервере; известная регистрация прерывает бой сразу.
+  if (env.isBattle()) void tvtRefresh(); else await tvtRefresh();
   if (!canRun()) return false;
   // 10.0.14 (public tvt-arena-combat.js, 14.10): павшего участника игра выводит в чат, а не воскрешает.
   // Статус привязан к событию в TVT/rt.tvt; старый TVTC.self от прошлого боя сюда не подмешиваем.

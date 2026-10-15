@@ -2,6 +2,7 @@
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
 
+- [L2wap Bot 10.0.22: общая сборка исправлений РБ, АОЕ и TvT](docs/changelog/CHANGELOG-10.0.22.md)
 - [L2wap Bot 10.0.21: РБ, Dark Panther и синие чемпионы](docs/changelog/CHANGELOG-10.0.21.md)
 - [L2wap Bot 10.0.20: сверка надетого S-кастера и замена зарядов](docs/changelog/CHANGELOG-10.0.20.md)
 - [L2wap Bot 10.0.19: S-заряды духа для кланового кастера](docs/changelog/CHANGELOG-10.0.19.md)
