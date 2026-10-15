@@ -356,7 +356,25 @@ function forumAck(g) {
     return a?.nonce === p.nonce && a.charId === p.charId && a.id === g.id && a.url === p.url ? a.ack : null;
   } catch (_) { return null; }
 }
+// 15.10, ревизия: обычный телепорт тоже переживает unload без второй оплаты.
+const nativeTargetReached=(id,ch)=>!!ch&&!ch.inBattle&&!ch.activeDungeonId&&ch.currentZoneId===id;
+function nativeAck(g) {
+  const p=g?.nativeTp;if(!p||p.char!==env.rt.char||p.kick!==env.rt.manualKickAt||p.id!==g.id)return null;
+  if(p.ack)return p.ack;
+  try{const a=JSON.parse(root.sessionStorage?.getItem('l2bot.nativeTeleportAck')||'null');return a?.nonce===p.nonce?a.ack:null;}catch(_){return null;}
+}
+function onNativeTeleportNet(path,d) {
+  const g=env.rt.zoneGo,p=g?.nativeTp;
+  if(!p||path!=='/game/teleport'||d.method!=='POST'||p.char!==env.rt.char||p.kick!==env.rt.manualKickAt||
+    d.nativeNonce!==p.nonce||d.req?.teleportId!==p.id||d.req?.expectedAdenaCost!==p.cost||!Number.isSafeInteger(d.req?.expectedRevision)||d.req.expectedRevision<p.revision)return;
+  const ch=d.res?.character, good=d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false;
+  if(!good||!ch||ch.name!==p.char||ch.id!==p.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=d.req.expectedRevision)return;
+  p.ack={ok:true,t:Date.now()};
+  try{root.sessionStorage?.setItem('l2bot.nativeTeleportAck',JSON.stringify({nonce:p.nonce,ack:p.ack}));}catch(_){}
+  env.setRt({zoneGo:g}).catch(()=>{});
+}
 function onForumTeleportNet(path, d) {
+  onNativeTeleportNet(path,d);
   const g = env.rt.zoneGo, p = g?.forumTp;
   if (!p || env.on === false || env.tabOwner === false || env.rt.char !== p.char || env.rt.manualKickAt !== p.kick ||
       path !== '/game/farm-guide/resource-teleport' || d.method !== 'POST' || d.req?.teleportId !== p.id ||
@@ -394,6 +412,12 @@ async function zoneGoStep() {                     // полёт: Телепор�
   const kick = env.rt.manualKickAt, char = env.rt.char;
   const active = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
   if (!active()) return;
+  if(g.nativeTp){
+    const p=g.nativeTp,ack=nativeAck(g),ch=ack?.ok?null:await forumCharacter();if(!active())return;
+    if(ack?.ok||(p.char===char&&p.kick===kick&&ch?.name===char&&ch.id===p.charId&&ch.revision>p.revision&&nativeTargetReached(g.id,ch)))await forumFinish(g,active);
+    else await forumUncertain('результат обычного телепорта не подтверждён',active);
+    return;
+  }
   // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
   if (g.id === 'ashen_bastion' && g.returnPath === '/ashen-bastion.html') {
     const fail = async why => { if (active()) { env.rec('B', 'локации', `Ashen Bastion: ${why} — фарм в другой зоне остановлен`); await env.pauseBot(`Возврат в Ashen Bastion: ${why}`); } };
@@ -407,7 +431,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
     const cost = teleportCost(btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'));
     const budget = !cost.why && await teleportBudget(cost.price, active); if (!active()) return;
     if (cost.why || budget) { await fail(cost.why || budget); return; }
-    g.sentAt = Date.now(); await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) }); if (!active()) return;
+    g.sentAt = Date.now(); const saved=await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) }); if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await fail('не удалось сохранить оплату');return;} if (!active()) return;
     env.fire(btn);
     await env.waitX(() => location.pathname === g.returnPath, 8000, 100); if (!active()) return;
     if (location.pathname === g.returnPath) await env.setRt({ zoneGo: null, zonePend: null, zone: 'ashen_bastion' });
@@ -492,26 +516,27 @@ async function zoneGoStep() {                     // полёт: Телепор�
   if (!btn) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта нет — пробую следующую зону`); await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
   // 15.10: цена и валюта нужны из текущей строки перед кликом; отсутствие числа не означает бесплатный телепорт.
   const tr = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'), tc = curOf(tr), cost = teleportCost(tr);
-  const budget = !cost.why && await teleportBudget(cost.price, active);
+  const before=cost.why?null:await forumCharacter();if(!active())return;
+  const budget = !cost.why && await teleportBudget(cost.price, active, before);
   if (!active()) return;
   if (cost.why || budget) {
     env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`);
     await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: cost.price, ...tc } } });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
-  await env.setRt({ zoneTried: tried, zoneGoT: Date.now() });
+  if(!before||before.name!==char||!before.id||!Number.isSafeInteger(before.revision)){await forumUncertain('персонаж перед телепортом не подтверждён',active);return;}
+  g.nativeTp={id:g.id,char,charId:before.id,revision:before.revision,cost:cost.price,kick,sentAt:Date.now(),nonce:Date.now()+':'+Math.random().toString(36).slice(2)};
+  const saved=await env.setRt({zoneGo:g,zoneTried:tried,zoneGoT:Date.now(),...(cost.price>0?{adenaSeen:null}:{})});
+  if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await forumUncertain('не удалось сохранить платёж до клика',active);return;}
   if (!active()) return;
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
-  if (cost.price > 0) { await env.setRt({ adenaSeen: null }); if (!active()) return; }
   env.fire(btn);
   // 10.0 (аудит фарма): переход на карту бывает дольше 2,5 с — удачный платный полёт писался «не улетели» и зона «плохой» на 6 ч. Ждём до 8 с
   await env.waitX(() => !isTeleport() || /недостат|not enough/i.test(document.body.innerText.slice(-4000)) || null, 8000, 200);
-  if (isTeleport()) {                              // остались на месте: не хватило адены или другая причина
-    const msg = /недостат|not enough/i.test(document.body.innerText.slice(-4000)) ? 'не хватает адены' : 'не улетели';
-    env.rec('B', 'локации', `${zoneName(g.id)}: ${msg}`);
-    await env.setRt({ zoneGo: null, zonePend: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } });
-    location.href = '/map.html'; await env.sleep(3000);
-  }
+  if(!active())return;
+  const ack=nativeAck(g),after=ack?.ok?null:await forumCharacter();if(!active())return;
+  if(ack?.ok||(after?.name===char&&after.id===g.nativeTp.charId&&after.revision>g.nativeTp.revision&&nativeTargetReached(g.id,after)))await forumFinish(g,active);
+  else await forumUncertain('прибытие не подтверждено',active);
 }
 
 // 10.0.7 (лог 13.10 13:21, Necropolis of Devotion): бой в подземелье (spawnId sdms_<подземелье>_NNN) кончился не победой (ошибка загрузки,

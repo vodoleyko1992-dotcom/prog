@@ -2,7 +2,9 @@
 // Настоящий MV3/hook/dispatcher: ручной город → запуск → восстановление Cruma → бой. Все HTTP — моки.
 const assert=require('node:assert/strict'),{harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
 (async()=>{const h=await harness();let revision=100,zone='cruma_marshlands',x=6040,y=125713,teleports=0,attacks=0;const visits=[],logs=[];h.g.p.on('console',m=>{if(m.text().includes('кампан'))logs.push(m.text())});
- const character=()=>({id:'fixture-hero',name:'AuditHero',level:35,hp:1000,maxHp:1000,mp:1000,maxMp:1000,revision,worldX:x,worldY:y,currentZoneId:zone,locationType:zone==='dion'?'city':'zone',activeDungeonId:null,adena:1000000});
+ // Синтетический полный снимок: регион dion не равен teleportId Cruma. Receipt опирается на POST + revision + координаты, не на выдуманное равенство zoneId.
+ // 15.10: полноценная сумка для startup preflight, неизвестный запас не подменяем нулём.
+ const character=()=>({inventory:{stacks:[],eq:{}},id:'fixture-hero',name:'AuditHero',level:35,hp:1000,maxHp:1000,mp:1000,maxMp:1000,revision,worldX:x,worldY:y,currentZoneId:'dion',locationType:zone==='dion'?'city':'zone',activeDungeonId:null,adena:1000000});
  const quest=()=>({stage:'active',chapter:5,completed:false,npc:{teleportId:'cruma_marshlands',worldX:6040,worldY:125713}});
  try{
  await h.ctx.route('https://l2wap.com/**',async r=>{const u=new URL(r.request().url()),p=u.pathname;const json=d=>r.fulfill({contentType:'application/json',body:JSON.stringify(d)});

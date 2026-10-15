@@ -159,7 +159,9 @@ async function paymentReconcile() {
   const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
   if(!valid())return false;
   const E=P.evidence || {}, N=env.shopBuyNet?.();
-  let proof=N?.ok && N.t>=P.at && E.shopKey && N.key===E.shopKey && N.qty===E.qty ? {kind:'shop-receipt',key:N.key,qty:N.qty} : null;
+  const bound=N?.paymentId===P.id&&N.t>=P.at&&E.shopKey&&N.key===E.shopKey&&N.qty===E.qty;
+  const rejected=bound&&[400,401,403,404,409,412,422,423,429].includes(N.status);
+  let proof=rejected?{kind:'server-rejected',spent:0,status:N.status}:bound&&N.ok ? {kind:'shop-receipt',key:N.key,qty:N.qty} : null;
   if(!proof && env.gameGet && E.ids?.length && Number.isFinite(E.beforeQty))try {
     const r=await env.gameGet('/character'), data=r.ok?await r.json():null, ch=data?.character||data;
     if(ch?.name===P.char && Array.isArray(ch.inventory?.stacks)) {
@@ -172,14 +174,14 @@ async function paymentReconcile() {
   if(!proof){env.setStatus?.('Закупка: исход оплаты неизвестен; повтор запрещён, сверяю запас');return false;}
   const S=env.rt.shop;
   if(S && Number.isFinite(E.jobT) && S.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick && !(S.done||[]).some(x=>x.paymentId===P.id)) {
-    const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:true,qty:E.qty,paymentId:P.id}],spent:(S.spent||0)+P.quote.amount}});
+    const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:!rejected,qty:rejected?0:E.qty,paymentId:P.id,...(rejected?{why:'Игра отклонила покупку (HTTP '+N.status+')'}:{})}],spent:(S.spent||0)+(rejected?0:P.quote.amount)}});
     if(saved?.ok!==true || !valid())return false;
   }
   return env.payments.confirm(P,proof);
 }
 async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
   if(env.payments?.blocked())return {ok:false,pending:true,why:'исход предыдущей оплаты не подтверждён'};
-  const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(); return !sg.blocked && (!it.grade || sg.g === it.grade); };
+  const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(), id = (shotsMage() ? env.BSPS_IDS : env.SHOT_IDS)[sg.g]; return !sg.blocked && !!id && it.ids?.includes(id) && (!it.grade || sg.g === it.grade); };
   if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
   // искались там — «нет в магазине (видел: Благословенний заряд духу…)» (лог 09.10 23:38, 23:48). Ищем в нужном подразделе:
@@ -263,8 +265,9 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
       }
       if(P){
         // Состояние задачи обновляется сверкой ДО снятия блокировки платежа.
+        const refused=nb?.paymentId===P.id&&nb.t>=P.at&&nb.key===shopKey&&nb.qty===cap&&[400,401,403,404,409,412,422,423,429].includes(nb.status);
         const confirmed=await paymentReconcile();
-        return {ok:confirmed,pending:!confirmed,paymentId:P.id,qty:cap,unit,spent:confirmed?P.quote.amount:0,msg:m,key:nb&&nb.t>=a0T?nb.key:''};
+        return {ok:confirmed&&!refused,pending:!confirmed,paymentId:P.id,qty:refused?0:cap,unit,spent:confirmed&&!refused?P.quote.amount:0,msg:m,...(refused?{why:'Игра отклонила покупку (HTTP '+nb.status+')'}:{}),key:nb&&nb.t>=a0T?nb.key:''};
       }
       return { ok: !!ok && shopAdena() < a0, qty: cap, unit, spent: a0 - shopAdena(), msg: m, key: nb && nb.t >= a0T ? nb.key : '' };
     }
@@ -283,7 +286,7 @@ async function shopStep() {
     const cnt = await bagCounts();
     const have0 = x => x.ids.length ? x.ids.reduce((a, id) => a + (cnt[id] || 0), 0) : Object.entries(cnt).reduce((a, [k, v]) => a + (k.startsWith('n:') && x.name.test(k.slice(2)) ? v : 0), 0);
     const plan0 = shopPlan();
-    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < x.mm[0] || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade }; }).filter(x => x.buy > 0);
+    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < x.mm[0] || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade, itemId: x.ids?.[0] }; }).filter(x => x.buy > 0);
     // 7.1.19: какие заряды бот считает «своими» и сколько их в сумке — всегда в журнал (лог 10.10 01:13: заряды D не купились, а почему — не видно)
     const sh = plan0.find(x => x.key === 'shots'), sg = shotGrade(), w = equippedWeapon();
     const shNote = sh ? ` · заряды: ${sh.label} (id ${sh.ids.join(',')}) в сумке ${have0(sh)} из мин. ${sh.mm[0]} — грейд ${sg.g}: ${sg.src}; оружие ${w ? (w.name || w.en) + ' ' + (w.g || '?') : 'не прочитано'}` : '';
@@ -304,7 +307,7 @@ async function shopStep() {
       if (!env.on) return;
       if (done.some(d => d.key === n.key)) continue;
       const it = plan.find(x => x.key === n.key);
-      if (n.key === 'shots' && (!it || it.grade !== n.grade)) { done.push({key:n.key,ok:false,label:n.label,qty:0,why:'оружие изменилось — сначала пересчитать подходящие заряды'}); continue; }
+      if (n.key === 'shots' && (!it || it.grade !== n.grade || (n.itemId ? n.itemId !== it.ids[0] : n.label !== it.label))) { done.push({key:n.key,ok:false,label:n.label,qty:0,why:'оружие изменилось — сначала пересчитать подходящие заряды'}); continue; }
       const g = (new URLSearchParams(location.search).get('grade') || 'NG').toUpperCase();
       if (g !== n.grade) { await env.setRt({ shop: { ...st, done, spent, t: Date.now() } }); location.href = `/gm-shop.html?cat=consumable&grade=${n.grade}`; await env.sleep(4000); return; }
       if (n.key === 'shots' && !st.gradeNote) { st.gradeNote = 1; const sg = shotGrade(), w = equippedWeapon(), wm = weaponIsMage(w); env.rec('B', 'закупка', `${n.label}: грейд ${sg.g} — ${sg.src}; тип — ${wm == null ? 'по классу персонажа' : (wm ? 'магическое' : 'физическое') + ' оружие ' + (w?.name || w?.en || '')}`); }

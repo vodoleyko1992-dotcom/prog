@@ -34,6 +34,7 @@ assert.equal(C.debuffPlan(ctx, mp, { pct: 60 })?.n, 'Curse Weakness', 'hurt → 
 env.cfg.debuffMode = 'always'; assert.equal(C.debuffPlan(ctx, mp, me)?.n, 'Curse Chaos', '«always» ignores the model'); env.cfg.debuffMode = 'auto';
 // замер показал ×1,25 (6 замеров): 0,25 × 0,73 = 0,18 → от 7 ходов; чемпион на 97 776 HP = 14 ходов → дебафф окупается
 env.rt.debuffGain = [1.25, 1.25, 1.25, 1.25, 1.25, 1.25];
+env.rt.debuffEvidence = { v: 1, ratios: env.rt.debuffGain.slice() };
 assert.equal(C.debuffPlan(ctx, mp, me)?.n, 'Curse Chaos', 'measured ×1.25 → debuff pays back on a 14-turn champion');
 mobTxt = '30000 / 30000'; assert.equal(C.debuffPlan(ctx, mp, me), null, '4.5 turns left — not paid back');
 // без своей статистики попыток шанс пройти = 1, без замера ход ≈1 с: 9 000 HP / 800 = 11 ходов ≥ 11 (как в v7120)

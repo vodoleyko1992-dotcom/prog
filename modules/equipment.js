@@ -63,11 +63,12 @@ function equipBy(str) {                         // только слоты сн�
 
 async function equip(w) {
   if (!w) return false;
-  const before = env.noticeText();
-  env.fire(w);
+  const before = env.noticeText(), char = env.rt.char;
+  if(env.fire(w) === false)return false;
   const ok = !!(await env.waitFor(() => { const n = env.noticeText(); return n !== before && env.EQUIP_OK.test(n); }, 1500, 50));
-  await env.setRt({ weaponNow: env.cleanTitle(w.title) });
-  env.rec('B', 'оружие', `надето «${w.title}»${ok ? '' : ' (без подтверждения игры)'}`);
+  if(env.rt.char !== char)return false;
+  if(ok)await env.setRt({ weaponNow: env.cleanTitle(w.title) });
+  env.rec('B', 'оружие', ok ? `надето «${w.title}»` : `смена на «${w.title}» не подтверждена — прежнее оружие не переименовываю`);
   await env.pause();
   return ok;
 }
@@ -76,7 +77,7 @@ async function equip(w) {
 const POT_MP = /мани|маны|mana|\bmp\b/i, POT_HP = /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i;
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
-  const P = env.rt.skills || {}, pr = n => P[n.toLowerCase()] || {};
+  const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
   const avg = p => p.dmgN ? p.dmg / p.dmgN : 0;
   const skills = inv.filter(s => s.kind === 'скилл');
   const mage = env.combatProfileKind() === 'mage_summoner';

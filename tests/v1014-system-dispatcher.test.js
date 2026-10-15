@@ -15,7 +15,8 @@ function make(mode='auto'){
   setRt:async p=>Object.assign(rt,p),setCfg:async p=>Object.assign(cfg,p),sleep:async()=>{},rnd:()=>0,rec(){},setStatus(){},$q:()=>null,shown:()=>false,
   isBattle:()=>loc.pathname==='/battle.html',isMap:()=>loc.pathname==='/map.html',isFishing:()=>loc.pathname==='/fishing.html',isChar:()=>false,isFishShop:()=>false,isTeleport:()=>false,isCampaign:()=>false,isMail:()=>false,isQuests:()=>false,
   fishState:()=>false,fishNow:()=>cfg.fishMode,epicOn:()=>cfg.epicMode,huntOn:()=>cfg.rbHuntMode,campOn:()=>false,campEnabled:()=>false,heroLevel:()=>75,
-  antibotGuard:noop,sealDue:()=>null,farmGuideTick(){},townBuffStart:noop,gameGet:async()=>({ok:false,json:async()=>({})}),
+  // Сумка текущего документа уже подтверждена; отдельные startup-сценарии ниже закрывают ожидание.
+  inventoryReady:async()=>true,antibotGuard:noop,sealDue:()=>null,farmGuideTick(){},townBuffStart:noop,gameGet:async()=>({ok:false,json:async()=>({})}),
   shopStep:record('shop'),magisterStep:record('magister'),townBuffStep:record('buff'),rbGoStep:record('rbGo'),zoneGoStep:record('zoneGo'),invScanStart:record('invStart'),invScanStep:record('invStep'),rbHuntStep:record('raid'),epicStep:record('epic'),
   fishing:record('fish'),battle:record('battle'),goFishing:record('goFish'),catGo:record('cat'),campaign:record('campaign'),goCampaign:record('goCampaign'),mailStep:record('mail'),questsStep:record('quest'),tasksIdle:record('tasks'),map:record('map'),goOutskirts:record('outskirts'),lootGoal:()=>null,
   invQty:()=>null,INV_NET:{m:{}},rbRun:{start:record('dailySeries')},waitX:async f=>f(),pause:async()=>{},fire(){},toMap:async()=>{calls.push('leaveBattle');loc.pathname='/map.html';loc.href='/map.html'},
@@ -90,4 +91,12 @@ test('main: доступный штурм стены не запускается
 for(const mode of ['auto','raid','fish','cat'])test('15.10 регистрация TvT раньше urgent-закупки и режима '+mode,async()=>{
  const c=make(mode),now=Date.now();c.sb.TVT={eventId:'new-event',phase:'REGISTRATION',isRegistered:false,registeredCount:4,maxPlayers:20,startsAt:now+600000,t:now};
  c.rt.shop={urgent:true,t:Date.now()};await c.step();assert.equal(c.loc.href,'/tvt-arena.html');assert.deepEqual(c.calls,[]);
+});
+for(const change of ['waiting','stop','owner'])test('main: inventory startup '+change+' cannot route or buy',async()=>{
+ const c=make('raid');c.sb.inventoryReady=async()=>{if(change==='stop')c.sb.on=false;if(change==='owner')c.sb.tabOwner=false;return change!=='waiting'};
+ c.rt.shop={t:Date.now()};await c.step();assert.deepEqual(c.calls,[]);assert.equal(c.loc.href,'');
+});
+test('main: inventory startup never delays TvT registration or a live battle',async()=>{
+ const c=make('raid');c.sb.inventoryReady=async()=>{throw Error('inventory must not block priority action')};
+ c.active();await c.step();assert.equal(c.loc.href,'/tvt-arena.html');c.cfg.tvtOn=false;c.loc.pathname='/battle.html';await c.step();assert.deepEqual(c.calls,['battle']);
 });

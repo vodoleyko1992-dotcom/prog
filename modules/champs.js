@@ -32,27 +32,46 @@ const tKey = c => (TIER_RU[c?.tier] ? c.tier : 'blue') + (isHard(c) ? '73' : '')
 // выходил 15–16, и при следующем выборе (разрыв 8) вердикт не действовал; а «сила выросла» срабатывала от скачка среднего ДПС после 1–2 боёв.
 // Теперь: уровень — последний ненулевой (кэш), вердикт не старше 5 мин держит всегда (кроме роста уровня), рост урона считается только
 // по устойчивому замеру (ДПС по РБ или ≥ 10 боёв), ДПС из боя «не пробиваю» не запоминается (удары не попадают — это не наш темп)
-let lvlSeen = 0;
-const L = () => { const v = env.heroLvl?.() || 0; if (v) lvlSeen = v; return v || lvlSeen || env.rt.lvl || 0; };
+let lvlSeen = 0, lvlActor = '';
+const actor = () => JSON.stringify([env.rt.char||'',env.rt.classCur?.slot,env.rt.classCur?.prof]);
+const owner = () => JSON.stringify([actor(),env.leaseEpoch,+env.rt.manualKickAt||0,+env.rt.classSwT||0,+env.rt.classCur?.t||0]);
+const L = () => { const a=actor(); if(a!==lvlActor){lvlActor=a;lvlSeen=0} const v=env.heroLvl?.()||0; if(v)lvlSeen=v; return v||lvlSeen||env.rt.lvl||0; };
 const mem = () => env.rt.champLearn || {};
-const V_HOLD = 5 * 60000;                          // вердикт держит столько, даже если урон «подрос», — только новый уровень снимает раньше
-// «сила» — уровень героя и урон по долгим целям (ДПС по РБ, иначе общий): по ней видно, что стало сильнее (уровень, шмот, тату, баффы)
-const powNow = () => ({ lvl: L(), base: Math.round(env.rt.rbDps || env.rt.dps?.dps || 0), firm: !!(env.rt.rbDps > 0 || (env.rt.dps?.n || 0) >= 10) });
+const composition = (preflight=false) => env.combatContext?.(preflight?{preflight:true}:{}) || null;
+const cohort = key => key ? mem().cohorts?.[key] || {} : {};
+const V_HOLD = 5 * 60000;
+// Без подтверждённого состава legacy rbDps/champLearn остаются только историей.
+const powNow = () => { const key=composition()||composition(true),base=cohort(key).base;return {lvl:L(),base:base?.dps>0?base.dps:0,firm:(base?.n||0)>=10,context:key,actor:actor()}; };
 function grown(p) {
   if (!p) return true;
-  const n = powNow();
-  if (n.lvl && p.lvl && n.lvl > p.lvl) return true;
-  return !!(n.firm && n.base > 0 && p.base > 0 && n.base >= p.base * 1.15);
+  const n=powNow();
+  if (p.actor!==n.actor) return false;
+  if(n.lvl&&p.lvl&&n.lvl>p.lvl)return true;
+  return !!(n.firm&&n.base>0&&p.base>0&&n.base>=p.base*1.15);
 }
-// свой ДПС по чемпионам (замер боёв, приведён к нынешней силе); без замера — ДПС по РБ или общий (тогда только проба).
-// 10.0.8: усиленные 73+ (защита ×4) — свой замер dpsH; без него — общий ÷ 4
 function dpsOn(hard = false) {
-  const m = hard ? mem().dpsH : mem().dps, n = powNow();
-  if (m?.dps > 0) {
-    const kb = m.base > 0 && n.base > 0 ? Math.min(2, Math.max(0.5, n.base / m.base)) : 1;
-    return { dps: m.dps * kb, known: true };
-  }
-  return { dps: (env.rt.rbDps || env.rt.dps?.dps || 0) / (hard ? DEF_K : 1), known: false };
+  const actual=composition(),key=actual||composition(true),m=cohort(key), own=hard?m.dpsH:m.dps;
+  if(own?.dps>0)return {dps:own.dps,known:!!actual};
+  return {dps:(m.base?.dps||0)/(hard?DEF_K:1),known:false};
+}
+// Контекст фиксируется до первого действия. Любой разрыв/смена состава делает
+// весь бой смешанным; возврат прежнего оружия в конце не «исправляет» измерение.
+function observe(ctx) {
+  if(!ctx)return null;
+  const key=composition(),o=owner();
+  if(!ctx.chMeasure)ctx.chMeasure={key,owner:o,actor:actor(),mixed:!key};
+  else if(!key||ctx.chMeasure.key!==key||ctx.chMeasure.owner!==o)ctx.chMeasure.mixed=true;
+  return ctx.chMeasure;
+}
+const validMeasure = ctx => { const m=ctx?.chMeasure;return m&&!m.mixed&&m.key&&m.key===composition()&&m.owner===owner()&&env.tabOwner!==false?m:null; };
+function noteDamage(ctx,dealt,sec) {
+  if(!ctx?.chMeasure)return null;
+  observe(ctx);const m=validMeasure(ctx);
+  if(!m||ctx.chBaseDone||!(dealt>0)||!(sec>=.5)||!Number.isFinite(dealt)||!Number.isFinite(sec))return null;
+  ctx.chBaseDone=true;
+  const M={...mem()},all={...(M.cohorts||{})},c={...(all[m.key]||{})},old=c.base,dps=dealt/sec,k=(old?.n||0)<20?1/((old?.n||0)+1):.05;
+  c.base={dps:Math.round((old?.dps||dps)*(1-k)+dps*k),n:(old?.n||0)+1,t:Date.now()};all[m.key]=c;M.cohorts=all;
+  return env.setRt({champLearn:M});
 }
 // 10.0.8: цена «Cancel» для этого чемпиона — ожидаемо снятые платные баффы за FA и их стоимость в секундах фарма; sec — ожидаемая длина боя
 function cancelCost(c, sec) {
@@ -100,7 +119,7 @@ function tierOff(c, colorsOnly = false) {
 // игрок 13.10 11:33: «уходит от чемпиона и возвращается к нему же»)
 function held(c) {
   const key = tKey(c), gap = (c.lvl || 0) - L();
-  const v = mem().v?.[key];
+  const v = mem().holds?.[actor()]?.[key];
   if (v) {
     const fresh = Date.now() - (+v.t || 0) < V_HOLD, lvlUp = v.pow?.lvl > 0 && L() > v.pow.lvl;
     const sameOrHarder = c.lvl ? gap >= (v.gap ?? -99) : true;   // уровень чемпиона неизвестен — считаем, что это тот же
@@ -161,8 +180,13 @@ function fleeCheck(ctx, me, mob, sec) {
 // после боя или отхода: замер ДПС, итог по цвету, вердикт (отход/смерть — до роста силы), удача снимает вердикт
 async function learn(ctx, outcome, dealt, sec) {
   if (!ctx?.champ || ctx.rb) return null;
-  const tier = tKey(ctx), M = { ...mem() }, pw = powNow(), hard = isHard(ctx), dk = hard ? 'dpsH' : 'dps';   // 10.0.8: 73+ — свой класс (red73)
-  if (sec >= 4 && dealt > 0 && outcome !== 'weak') {   // 10.0.10: «не пробиваю» — удары не попадают, это не замер темпа
+  if(!ctx.chMeasure)return null;
+  observe(ctx); const measurement=validMeasure(ctx);
+  if (ctx.chMeasure.owner!==owner() || env.tabOwner===false || ctx.chLearnDone) return null;
+  ctx.chLearnDone=true;
+  const rootM={...mem()}, cohorts={...(rootM.cohorts||{})}, holds={...(rootM.holds||{})};
+  const tier = tKey(ctx), M = { ...cohort(measurement?.key) }, pw = powNow(), hard = isHard(ctx), dk = hard ? 'dpsH' : 'dps';   // 10.0.8: 73+ — свой класс (red73)
+  if (measurement && sec >= 4 && dealt > 0 && Number.isFinite(dealt) && Number.isFinite(sec) && outcome !== 'weak') {   // 10.0.10: «не пробиваю» — удары не попадают, это не замер темпа
     const dps = dealt / sec, o = M[dk], od = o?.dps > 0 ? dpsOn(hard).dps : 0;
     M[dk] = { dps: Math.round(od > 0 ? od * 0.6 + dps * 0.4 : dps), base: pw.base || null, lvl: pw.lvl || null, n: (o?.n || 0) + 1 };
   }
@@ -170,17 +194,20 @@ async function learn(ctx, outcome, dealt, sec) {
   s[outcome] = (s[outcome] || 0) + 1;
   if (outcome === 'win') s.sec = +(s.sec ? s.sec * 0.7 + sec * 0.3 : sec).toFixed(1);
   S[tier] = s; M.st = S;
-  const V = { ...(M.v || {}) }, hl = ctx.heroLvl0 || L(), gap = (ctx.lvl || 0) - hl;   // 10.0.10: уровень героя — с начала боя (ctx.heroLvl0), шапка на переходе пуста
+  const V = { ...(holds[actor()] || {}) }, hl = ctx.heroLvl0 || L(), gap = (ctx.lvl || 0) - hl;   // 10.0.10: уровень героя — с начала боя (ctx.heroLvl0), шапка на переходе пуста
   if (outcome === 'win' && V[tier] && gap >= (V[tier].gap ?? -99)) delete V[tier];
   if (['death', 'danger', 'weak', 'slow'].includes(outcome)) {
     const why = outcome === 'death' ? 'погиб в бою' : outcome === 'danger' ? 'отход: мало HP' : outcome === 'weak' ? 'не пробиваю' : 'слишком долго';
     V[tier] = { t: Date.now(), why: `${TIER_RU[ctx.tier] || TIER_RU.blue}${hard ? ' 73+' : ''} ${ctx.lvl ? ctx.lvl + ' ур.' : ''}: ${why}`.trim(), gap: Math.min(gap, V[tier]?.gap ?? 99), chLvl: ctx.lvl || 0, pow: { ...pw, lvl: hl || pw.lvl } };
   }
   M.v = V;
-  await env.setRt({ champLearn: M });
+  holds[actor()]=V;
+  if(measurement)cohorts[measurement.key]=M;
+  const legacy=rootM.legacy || (!rootM.context && (rootM.dps||rootM.dpsH||rootM.v) ? {dps:rootM.dps,dpsH:rootM.dpsH,v:rootM.v,st:rootM.st} : undefined);
+  await env.setRt({champLearn:{...rootM,...(measurement?M:{}),context:measurement?.key||rootM.context,cohorts,holds,...(legacy?{legacy}:{})}});
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
+ return { valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

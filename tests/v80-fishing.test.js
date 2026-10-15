@@ -121,14 +121,14 @@ function world(o = {}) {
     assert.equal(W2.env.rt.rodLvl, 3, 'уровень записан на рыбалке — без похода в инвентарь');
   }
   // ---------- A3 + B1 + B5: заброс под лагом ----------
-  // без ответа сервера на заброс: раньше «не клюнула» через 3,5 с; теперь — только по жёсткому пределу 8 с
+  // Без ответа сервера через 8 с исход неизвестен: не выдумываем заброс/поклёвку и не повторяем.
   { const W = world({ rt: { rodLvl: 2 } });
     W.netAt = null; await W.F.fishing();
-    assert.match(W.status, /не клюнула/);
+    assert.match(W.status, /исход заброса неизвестен/);
     assert.ok(W.statusAt - W.castT >= 8000, `без ответа — не раньше 8 с (было ${W.statusAt - W.castT})`);
     assert.ok(W.sleepBeforeCast >= 20 && W.sleepBeforeCast <= 60, `реакция перед забросом 20–60 мс (${W.sleepBeforeCast})`);
-    assert.equal(W.setRt.length, 1, 'одна запись памяти на заброс');
-    assert.equal(W.setRt[0].fish.casts, 1); assert.equal(W.setRt[0].fish.nobite, 1); assert.equal(W.setRt[0].fishBaitStat.basic.casts, 1);
+    assert.ok(W.env.rt.fishCastPending, 'неизвестный запрос сохранён для следующего тика/reload');
+    assert.equal(W.env.rt.fish?.casts||0,0);assert.equal(W.env.rt.fish?.nobite||0,0);
   }
   // лог 19:00:04.677: ответ на заброс через 3,9 с — «не клюнула» только после ответа (+300 мс на перерисовку)
   { const W = world({ rt: { rodLvl: 2 } });

@@ -78,13 +78,14 @@ const active = (o = {}) => ({ ...RAW_N, part: 1, active: true, subclassLevel: 52
     const loc = { pathname: '/noblesse-quest.html', href: '' };
     const adv = { act: 'advance', dataset: {} }, btns = [adv]; adv.onFire = () => btns.splice(0);
     const { env, S } = mk({}, {}, { location: loc, els: page(btns) });
-    await S.step({ kind: 'noblesse', why: 'часть 1', t: Date.now() });
+    env.rt.storyJob = { kind: 'noblesse', why: 'часть 1', t: Date.now() }; await S.step(env.rt.storyJob);
     assert.equal(env.fired.length, 1); assert.ok(env.recs.some(r => /Noblesse: ✓ часть сдана/.test(r)));
     const tpCase = async (cost, max) => {
       const tp = { act: 'teleport', dataset: { noblesseTarget: 'rune' } };
       const gg = async p => ({ ok: p === '/game/teleport/locations' && cost != null, status: 200, json: async () => ({ locations: [{ teleportId: 'rune', adenaCost: cost, vipFreeApplied: false }] }) });
       const r = mk({}, { storyTpMax: max }, { location: { pathname: '/noblesse-quest.html' }, els: page([tp]), gameGet: gg });
-      await r.S.step({ kind: 'noblesse', why: 'часть 1', t: Date.now() });
+      require('./helpers/story-payments.cjs')(r.env);
+      r.env.rt.storyJob = { kind: 'noblesse', key:'noblesse:1', why: 'часть 1', t: Date.now() }; await r.S.step(r.env.rt.storyJob);
       return r; };
     let r = await tpCase(20000, 100000); assert.equal(r.env.fired.length, 1, 'price ok → teleport'); assert.ok(r.env.rt.storyJob?.tpT);
     r = await tpCase(200000, 100000); assert.equal(r.env.fired.length, 0, 'over the limit'); assert.ok(r.env.recs.some(x => /дороже лимита/.test(x)));

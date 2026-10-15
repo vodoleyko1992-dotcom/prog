@@ -17,7 +17,7 @@ function fixture() {
     isRaidId: () => false, isBoss: () => false, isQuestName: () => false,
     farmRules: () => [], recipeRules: () => [],
   };
-  env.champs = box.L2V7Factories.champs(env);
+  env.champs = require('./champs-context-fixture.cjs').freshChamps(box.L2V7Factories.champs,env);
   return { env, d: box.L2V7Factories.dungeons(env), m: box.L2V7Factories.mobfarm(env),
     blue: { id: 'dense_blue', name: 'Lilim Great Mystic', lvl: 75, champ: true, tier: 'blue' },
     ordinary: { id: 'ordinary', name: 'Lilim Slayer', lvl: 74, champ: false } };

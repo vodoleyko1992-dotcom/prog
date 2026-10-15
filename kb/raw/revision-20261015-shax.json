@@ -1,0 +1,543 @@
+{
+  "source": "Actual MV3 Shax retest after HP-only probe fix",
+  "setup": "Previous failed probe archived and only its used-probe marker cleared in cloud test profile. No damage measurements invented.",
+  "result": "Victory in third attempt; first leave identified as offensive Queen buff changing defense key; second missed incoming sample still investigated.",
+  "events": [
+    {
+      "at": 1792074330.6824725,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25282",
+        "mobName": "Death Lord Shax",
+        "mobLevel": 75,
+        "mobHp": 2667837,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074337.2483275,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 2,
+        "logTail": [
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Death Lord Shax]: 489 108 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2178729,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074338.9228246,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2178729,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074340.0750349,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 5,
+        "logTail": [
+          "100​Death Lord Shax · Stun Attack — Спротив",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2178729,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074341.2851155,
+      "path": "/game/battle/leave",
+      "status": 200
+    },
+    {
+      "at": 1792074348.6833808,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25282",
+        "mobName": "Death Lord Shax",
+        "mobLevel": 75,
+        "mobHp": 2178729,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074351.6552606,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "⁠1239​Death Lord Shax · Ураган — 2427 урона.",
+          "⁠1220​Полум’я — 6733 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 54 172 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2117824,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074352.8824496,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 5351 урона",
+          "Вампіризм: +2140 HP.",
+          "HP: +2140 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2112473,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074354.0898926,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 5,
+        "logTail": [
+          "⁠1220​Полум’я · КРИТ — 13840 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2098633,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074381.6590788,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25282",
+        "mobName": "Death Lord Shax",
+        "mobLevel": 75,
+        "mobHp": 2098633,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074384.492798,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "⁠1239​Death Lord Shax · Ураган — 2427 урона.",
+          "⁠1220​Полум’я — 6891 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 48 082 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2043660,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074385.639652,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 5470 урона",
+          "Вампіризм: +2188 HP.",
+          "HP: +2188 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2038190,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074386.5724626,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 5,
+        "logTail": [
+          "⁠1220​Полум’я — 6479 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2031711,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074387.581891,
+      "path": "/game/battle/action",
+      "status": 400
+    },
+    {
+      "at": 1792074388.407423,
+      "path": "/game/battle/action",
+      "status": 400
+    },
+    {
+      "at": 1792074389.381246,
+      "path": "/game/battle/action",
+      "status": 400
+    },
+    {
+      "at": 1792074391.5563183,
+      "path": "/game/battle/action",
+      "status": 400
+    },
+    {
+      "at": 1792074392.5321982,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 7,
+        "logTail": [
+          "⁠100​Death Lord Shax · Stun Attack — Стан 5 сек.",
+          "⁠1239​Death Lord Shax · Ураган — 2427 урона.",
+          "⁠1220​Полум’я — 6659 урона",
+          "Слуга [Feline King] завдає критичного удару [Death Lord Shax]: 661 766 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 1363286,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074394.1633916,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 9,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе — −219 HP.",
+          "⁠1147​Вампірний дотик — 5683 урона",
+          "Вампіризм: +2273 HP.",
+          "HP: +2273 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 1357603,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074395.393482,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 11,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе (крит!) — −415 HP.",
+          "⁠1220​Полум’я — 6699 урона",
+          "Слуга [Feline King] завдає критичного удару [Death Lord Shax]: 692 498 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 658406,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074396.594854,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 12,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 10639 урона",
+          "Вампіризм: +1027 HP.",
+          "HP: +1027 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 647767,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074397.6054862,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 13,
+        "logTail": [
+          "⁠1220​Полум’я — 6712 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 641055,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074398.8527143,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 14,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 5314 урона",
+          "Слуга [Feline King] промахнувся."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 635741,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074400.2769911,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 16,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе (крит!) — −472 HP.",
+          "⁠1147​Вампірний дотик · КРИТ — 11226 урона",
+          "Вампіризм: +224 HP.",
+          "HP: +224 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 624515,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074401.7752495,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 18,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе (крит!) — −433 HP.",
+          "⁠1239​Death Lord Shax · Ураган — 2427 урона.",
+          "⁠1220​Полум’я — 6886 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 51 424 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 566205,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074402.8515172,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 19,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 11115 урона",
+          "Вампіризм: +3108 HP.",
+          "HP: +3108 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 555090,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074403.8695328,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 21,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе (крит!) — −393 HP.",
+          "⁠1220​Полум’я — 6706 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 548384,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074405.206755,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 22,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 11328 урона",
+          "Вампіризм: +393 HP.",
+          "HP: +393 (зцілення).",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 52 282 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 484774,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074406.183632,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 24,
+        "logTail": [
+          "[Death Lord Shax] промахнувся по тобі.",
+          "⁠1220​Полум’я — 6885 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 477889,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074407.21862,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 26,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе — −213 HP.",
+          "⁠1147​Вампірний дотик — 5445 урона",
+          "Вампіризм: +213 HP.",
+          "HP: +213 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 472444,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074408.4625962,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 28,
+        "logTail": [
+          "[Death Lord Shax] ударив тебе (крит!) — −406 HP.",
+          "⁠1220​Полум’я — 7139 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 52 492 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 412813,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074409.6198556,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 29,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 10508 урона",
+          "Вампіризм: +654 HP.",
+          "HP: +654 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 402305,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074410.7827945,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 30,
+        "logTail": [
+          "⁠1220​Полум’я — 6561 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 395744,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792074411.69826,
+      "path": "/game/battle/action",
+      "status": 200,
+      "victory": {
+        "spawnId": "l2dop_rb_25282",
+        "mobName": "Death Lord Shax",
+        "mobLevel": 75,
+        "fullLog": [
+          "Вампіризм: +1027 HP.",
+          "HP: +1027 (зцілення).",
+          "⁠1220​Полум’я — 6712 урона",
+          "⁠1147​Вампірний дотик — 5314 урона",
+          "Слуга [Feline King] промахнувся.",
+          "[Death Lord Shax] ударив тебе (крит!) — −472 HP.",
+          "⁠1147​Вампірний дотик · КРИТ — 11226 урона",
+          "Вампіризм: +224 HP.",
+          "HP: +224 (зцілення).",
+          "[Death Lord Shax] ударив тебе (крит!) — −433 HP.",
+          "⁠1239​Death Lord Shax · Ураган — 2427 урона.",
+          "⁠1220​Полум’я — 6886 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 51 424 урону.",
+          "⁠1147​Вампірний дотик · КРИТ — 11115 урона",
+          "Вампіризм: +3108 HP.",
+          "HP: +3108 (зцілення).",
+          "[Death Lord Shax] ударив тебе (крит!) — −393 HP.",
+          "⁠1220​Полум’я — 6706 урона",
+          "⁠1147​Вампірний дотик · КРИТ — 11328 урона",
+          "Вампіризм: +393 HP.",
+          "HP: +393 (зцілення).",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 52 282 урону.",
+          "[Death Lord Shax] промахнувся по тобі.",
+          "⁠1220​Полум’я — 6885 урона",
+          "[Death Lord Shax] ударив тебе — −213 HP.",
+          "⁠1147​Вампірний дотик — 5445 урона",
+          "Вампіризм: +213 HP.",
+          "HP: +213 (зцілення).",
+          "[Death Lord Shax] ударив тебе (крит!) — −406 HP.",
+          "⁠1220​Полум’я — 7139 урона",
+          "Слуга [Feline King] атакує [Death Lord Shax]: 52 492 урону.",
+          "⁠1147​Вампірний дотик · КРИТ — 10508 урона",
+          "Вампіризм: +654 HP.",
+          "HP: +654 (зцілення).",
+          "⁠1220​Полум’я — 6561 урона",
+          "[Death Lord Shax] ударив тебе — −214 HP.",
+          "⁠1147​Вампірний дотик — 5862 урона",
+          "Слуга [Feline King] завдає критичного удару [Death Lord Shax]: 661 722 урону.",
+          "Перемога!",
+          "EXP + 1830901",
+          "SP + 237779",
+          "+387150 аден"
+        ],
+        "adenaGain": "387150",
+        "expGain": "1867519",
+        "spGain": 237779
+      }
+    }
+  ]
+}

@@ -160,7 +160,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   const s = btOf({ pathname: '/game/battle/start' }, { battle: { spawnId: 'dense_1', mobName: 'Banshee', mobLevel: 63, mobHp: 3060, mobMaxHp: 3060, kind: 'normal', log: ['Бой начат'] } });
   assert.equal(s.spawn, 'dense_1'); assert.equal(s.name, 'Banshee'); assert.equal(s.lvl, 63); assert.equal(s.full, true);
   assert.equal(btOf({ pathname: '/character' }, { character: {} }), undefined);
-  assert.match(hook, /bt: btOf\(u, o\), rid \}\); \}\)/); assert.match(hook, /bt: btOf\(u, o\), error: this\.status/);
+  // 10.0.27: fetch завершение несёт также retryOf; боевые данные и rid сохранены.
+  assert.match(hook, /bt: btOf\(u, o\), rid(?:,retryOf)? \}\); \}\)/); assert.match(hook, /bt: btOf\(u, o\), error: this\.status/);
 }
 
 // 7. проводка: модуль в manifest до content.js, геттеры, память по классам, бой берёт подсказки
@@ -173,7 +174,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.match(content, /get fightDmgOn\(\) \{ return fightDmgOn; \}, get fightKillP\(\) \{ return fightKillP; \}, get fightSpikeEta\(\) \{ return fightSpikeEta; \}/);
   // 15.10: свежая модель групп тоже принадлежит активному классу.
   assert.match(story, /'profQuest', 'fightMem', 'fightLast', 'fightGroups'\]/);
-  assert.match(combat, /env\.fightDmgOn\?\.\(n\)\?\.mean \|\| env\.expDmg\(k\)/);
+  // 15.10: известный нулевой урон после промахов не заменяется общим положительным средним.
+  assert.match(combat, /observed\?\.mean \?\? \(env\.expDmg\(k\)/);
   assert.match(combat, /по этой цели добивает в/);
   assert.match(combat, /spike: spikeFar \? 0 : spike/);
 }

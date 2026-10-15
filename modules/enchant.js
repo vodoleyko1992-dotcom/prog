@@ -78,7 +78,7 @@ function snapshotItems(snap,hints=catalog) {
   return out;
 }
 async function get(path) {try{const r=await env.gameGet(path);if(!r?.ok)return null;return await r.json();}catch(_){return null;}}
-async function snapshot() {const j=await get('/character');return j?.character?.inventory&&Number.isSafeInteger(j.character.revision)?j.character:null;}
+async function snapshot() {const char=charKey(),j=await get('/character'),s=j?.character;return char===charKey()&&s?.inventory&&Number.isSafeInteger(s.revision)&&(s.name===char||!char&&s.name==null)?s:null;}
 async function readItems() {
   const char=charKey();
   const [s,h]=await Promise.all([snapshot(),get('/character/catalog-hints')]);
@@ -89,7 +89,7 @@ async function readItems() {
   await env.setRt({enchantScan:{char,t:now(),ok:true,revision:s.revision,items,scrolls}});return charKey()===char?{snap:s,items,scrolls}:null;
 }
 const quantity=(s,id)=>(s?.inventory?.stacks||[]).filter(x=>+x.itemId===+id).reduce((a,x)=>a+nonneg(x.qty),0);
-const adena=s=>Number.isSafeInteger(s?.adena)&&s.adena>=0?s.adena:null;
+const adena=s=>{const raw=s?.adena,value=typeof raw==='string'&&/^(?:0|[1-9]\d*)$/.test(raw)?Number(raw):raw;return typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;};
 function resolve(s,q,token=q.targetInstanceId) {const list=snapshotItems(s).filter(x=>x.targetInstanceId===token&&x.itemId===+q.itemId);return list.length===1&&!list[0].ambiguous?list[0]:null;}
 async function pause(reason,extra={}) {const s=current();if(!s)return false;await save({...s,status:'paused',reason,...extra});env.rec?.('S','заточка',reason);return true;}
 async function archive(s) {
@@ -188,7 +188,18 @@ async function step() {
     const P=plan();if(P.done){await save({...s,status:'done',reason:'Все цели достигнуты',finishedAt:now()});return true;}
     if(!P.ready)return pause(P.reason);
     if(!catalog){const h=await get('/character/catalog-hints');if(h?.itemSlotHints&&h?.itemGradeHints)catalog=h;}
-    const snap=await snapshot();if(!allowed(s))return false;if(!snap||!catalog)return pause('Не получено свежее состояние героя');
+    const snap=await snapshot();if(current()!==s||!allowed(s))return false;
+    // После перехода каталог загружается заново. Короткий сбой GET не требует ручного
+    // возобновления; повторяем только чтение, до намерения и расхода свитка.
+    if(!snap||!catalog){
+      const readFailures=(s.readFailures||0)+1;
+      const missing=[!snap?'свежее состояние героя с подтверждённой личностью':'',!catalog?'каталог предметов':''].filter(Boolean).join(' и ');
+      const reason=`Не удалось прочитать: ${missing} (проверка ${readFailures}/3)`;
+      if(readFailures>=3)return pause(reason,{readFailures});
+      await save({...s,readFailures,reason,nextAt:now()+2000});env.setStatus?.('Заточка: '+reason+' — повтор через 2 с');return true;
+    }
+    if(s.readFailures){s={...s,readFailures:0,reason:''};await save(s);if(current()!==s||!allowed(s))return false;}
+    if(adena(snap)==null)return pause('Баланс Adena не прочитан — расход свитка не выполнялся');
     const row=resolve(snap,P.item);if(!row||row.fingerprint!==P.item.fingerprint)return pause('Выбранный экземпляр изменился вне этой сессии');
     if(quantity(snap,P.scroll.id)<1)return pause('Нет подходящего свитка в сумке');
     if(location.pathname!=='/enchant.html'||new URLSearchParams(location.search).get('target')!==P.item.targetInstanceId){

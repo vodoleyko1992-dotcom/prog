@@ -9,7 +9,7 @@ const hekaton={hp:5500896,patk:7714,matk:6088,pdef:9511,mdef:10842,src:'api'};
 function make() {
  const f=fixture({cfg:{petFullAuto:false},rt:{classCur:{prof:'human_arcana_lord',slot:0}}}),env=f.env;
  Object.assign(f.ch,{level:77,l2Profession:'human_arcana_lord',mAtk:8000,pAtk:1300,pDef:1400,mDef:1100,maxHp:14917,
-  activeBuffs:[{skillId:1356,level:1,expiresAtMs:f.now()+3600000}]});
+  activeBuffs:[{skillId:1356,level:1,expiresAtMs:f.now()+3600000}],toggleStances:[],inventory:{eq:{}},learnedBattleSkillsDetail:[]});
  env.shotContext=()=> 'BSPS-S:on';f.api().noteSnapshot(f.ch);
  Object.assign(env.cfg,{rbProbe:false,rbRetreatHp:20,stopHp:25,rbRestHp:95,rbMaxKillMin:20});
  Object.assign(env.rt,{rbDb:{},rbStats:{[URUKA]:{...uruka},[HEKATON]:{...hekaton},next:{...uruka,patk:1000,matk:1000}},
@@ -26,7 +26,8 @@ function make() {
 const approx=(a,b)=>assert.ok(Math.abs(a-b)<0.01,`${a} != ${b}`);
 const baseline=()=>1150*.85;
 test('измеренный Uruka снимает ложный отказ Hekaton по времени, не используя неполный fightlab DPS',()=>{
- const f=make(),env=f.env;env.rt.rbDb[HEKATON]={sp:2500,hitP90:200};
+ const f=make(),env=f.env;// 10.0.27: эти входящие удары измерены в текущей защите; legacy без context не доказывает её.
+ env.rt.rbDb[HEKATON]={sp:2500,hitP90:200,incoming:{context:f.R.rbIncomingKey(HEKATON),sp:2500,hitP90:200,base:200,maxHit:200,t:f.now()}};
  assert.equal(f.R.rbPreCheck(HEKATON,hekaton).kind,'unmeasured');f.measure();
  const expected=DPS*.8*Math.min(8600/9511,9949/10842);approx(f.R.rbDpsOn(HEKATON),expected);
  const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.ok(v.t<180);assert.match(v.why,/по другому РБ/);
@@ -131,10 +132,10 @@ for(const [name,pool,rate,allowed] of [['нулевой запас',0,2000,false
 });
 test('первая проба неизвестного Hekaton требует запас на замер, а не на ложные 92 минуты',()=>{
  const f=make();f.env.cfg.rbProbe=true;
- for(const [pool,allowed] of [[0,false],[1000,false],[25000,true]]){f.env.potModel=()=>({pool,rate:2000});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,allowed);assert.equal(!!v.probe,allowed);}
+ for(const pool of [0,1000,25000]){f.env.potModel=()=>({pool,rate:2000});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.equal(!!v.probe,true);assert.ok(v.probeSeconds>0&&v.probeSeconds<=8);}
 });
-test('короткий резерв пробы не отменяет медленные банки или точно измеренный долгий бой',async()=>{
- const f=make();f.env.cfg.rbProbe=true;f.env.potModel=()=>({pool:25000,rate:100});assert.equal(f.R.rbPreCheck(HEKATON,hekaton).ok,false);
+test('короткий резерв HP позволяет замер с медленными банками, но не точно измеренный долгий бой',async()=>{
+ const f=make();f.env.cfg.rbProbe=true;f.env.potModel=()=>({pool:25000,rate:100});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.ok(v.probeSeconds>0&&v.probeSeconds<=8);
  f.env.potModel=()=>({pool:25000,rate:2000});await f.R.rbDpsLearn(HEKATON,1000);assert.equal(f.R.rbPreCheck(HEKATON,hekaton).kind,'slow');
 });
 test('замер сохраняется отдельно при смене класса и восстанавливается со своим классом',()=>{

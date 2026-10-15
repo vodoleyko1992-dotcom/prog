@@ -1,0 +1,445 @@
+{
+  "source": "Live native extension, 2026-10-15 UTC; one start, zero leave, thirteen actions",
+  "boss": "l2dop_rb_25244",
+  "before": {
+    "level": 78,
+    "revision": 294900,
+    "hp": 14862,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "adena": "358806242",
+    "coinOfLuck": 351,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234,
+    "castSpd": 3500,
+    "pAtkSpd": 5000
+  },
+  "after": {
+    "level": 78,
+    "revision": 294916,
+    "hp": 15070,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "adena": "359032905",
+    "coinOfLuck": 351,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234,
+    "castSpd": 3500,
+    "pAtkSpd": 5000
+  },
+  "trace": [
+    {
+      "atUtc": "2026-10-15T14:49:23.545589+00:00",
+      "path": "/game/battle/start",
+      "method": "POST",
+      "status": 200,
+      "battle": {
+        "mobHp": 3320110,
+        "mobMaxHp": 3320110,
+        "log": [
+          "Бій розпочато: [Last Lesser Giant Olkuth] (ур. 75)."
+        ],
+        "spawnId": "l2dop_rb_25244",
+        "mobName": "Last Lesser Giant Olkuth",
+        "mobLevel": 75
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:25.206504+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:25.912947+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075765688,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4626,
+        "characterMaxMp": 4743,
+        "mobHp": 2831866,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 488 244 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:26.749114+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:27.326818+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075766973,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4559,
+        "characterMaxMp": 4743,
+        "mobHp": 2831866,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:28.089396+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:28.482685+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075768285,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4675,
+        "characterMaxMp": 4743,
+        "mobHp": 2831866,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "1349​Останній слуга.",
+          "Feline King: отримав баф."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:29.318795+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:29.725307+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075769509,
+        "characterHp": 11404,
+        "characterMaxHp": 15070,
+        "characterMp": 4646,
+        "characterMaxMp": 4743,
+        "mobHp": 2107642,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "⁠1176​Last Lesser Giant Olkuth · Буря — 3666 урона.",
+          "⁠1220​Полум’я — 8008 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 716 216 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:30.356968+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:30.686793+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075770476,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4724,
+        "characterMaxMp": 4743,
+        "mobHp": 2094970,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 12672 урона",
+          "Вампіризм: +3666 HP.",
+          "HP: +3666 (зцілення)."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:31.355015+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:31.629887+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075771441,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4695,
+        "characterMaxMp": 4743,
+        "mobHp": 2079194,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "⁠1220​Полум’я · КРИТ — 15776 урона"
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:32.220433+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:32.988659+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075772713,
+        "characterHp": 14822,
+        "characterMaxHp": 15070,
+        "characterMp": 4724,
+        "characterMaxMp": 4743,
+        "mobHp": 1239280,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "[Last Lesser Giant Olkuth] промахнувся по тобі.",
+          "⁠1147​Вампірний дотик · КРИТ — 12666 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 827 248 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:33.733655+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:33.981847+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075773769,
+        "characterHp": 14822,
+        "characterMaxHp": 15070,
+        "characterMp": 4714,
+        "characterMaxMp": 4743,
+        "mobHp": 1231477,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "⁠1220​Полум’я — 7803 урона"
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:34.706273+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:35.222792+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075775017,
+        "characterHp": 14822,
+        "characterMaxHp": 15070,
+        "characterMp": 4695,
+        "characterMaxMp": 4743,
+        "mobHp": 1218586,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "[Last Lesser Giant Olkuth] ударив тебе (крит!) — −295 HP.",
+          "⁠1147​Вампірний дотик · КРИТ — 12891 урона",
+          "Вампіризм: +295 HP.",
+          "HP: +295 (зцілення)."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:35.914206+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:36.207534+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075776025,
+        "characterHp": 14526,
+        "characterMaxHp": 15070,
+        "characterMp": 4714,
+        "characterMaxMp": 4743,
+        "mobHp": 471226,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "[Last Lesser Giant Olkuth] ударив тебе (крит!) — −296 HP.",
+          "⁠1220​Полум’я — 7868 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 739 492 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:36.853104+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:37.294798+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075777105,
+        "characterHp": 14822,
+        "characterMaxHp": 15070,
+        "characterMp": 4695,
+        "characterMaxMp": 4743,
+        "mobHp": 465135,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "[Last Lesser Giant Olkuth] ударив тебе — −136 HP.",
+          "⁠1147​Вампірний дотик — 6091 урона",
+          "Вампіризм: +432 HP.",
+          "HP: +432 (зцілення)."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:37.984943+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:38.480542+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792075778248,
+        "characterHp": 14686,
+        "characterMaxHp": 15070,
+        "characterMp": 4714,
+        "characterMaxMp": 4743,
+        "mobHp": 457202,
+        "mobMaxHp": 3320110,
+        "logTail": [
+          "[Last Lesser Giant Olkuth] ударив тебе — −136 HP.",
+          "⁠1220​Полум’я — 7933 урона"
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:39.135909+00:00",
+      "path": "/game/battle/sync",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "atUtc": "2026-10-15T14:49:39.635430+00:00",
+      "path": "/game/battle/action",
+      "method": "POST",
+      "status": 200,
+      "victory": {
+        "spawnId": "l2dop_rb_25244",
+        "mobName": "Last Lesser Giant Olkuth",
+        "mobLevel": 75,
+        "battleType": "pve",
+        "fullLog": [
+          "Бій розпочато: [Last Lesser Giant Olkuth] (ур. 75).",
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 488 244 урону.",
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф.",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф.",
+          "⁠1176​Last Lesser Giant Olkuth · Буря — 3666 урона.",
+          "⁠1220​Полум’я — 8008 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 716 216 урону.",
+          "⁠1147​Вампірний дотик · КРИТ — 12672 урона",
+          "Вампіризм: +3666 HP.",
+          "HP: +3666 (зцілення).",
+          "⁠1220​Полум’я · КРИТ — 15776 урона",
+          "[Last Lesser Giant Olkuth] промахнувся по тобі.",
+          "⁠1147​Вампірний дотик · КРИТ — 12666 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 827 248 урону.",
+          "⁠1220​Полум’я — 7803 урона",
+          "[Last Lesser Giant Olkuth] ударив тебе (крит!) — −295 HP.",
+          "⁠1147​Вампірний дотик · КРИТ — 12891 урона",
+          "Вампіризм: +295 HP.",
+          "HP: +295 (зцілення).",
+          "[Last Lesser Giant Olkuth] ударив тебе (крит!) — −296 HP.",
+          "⁠1220​Полум’я — 7868 урона",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 739 492 урону.",
+          "[Last Lesser Giant Olkuth] ударив тебе — −136 HP.",
+          "⁠1147​Вампірний дотик — 6091 урона",
+          "Вампіризм: +432 HP.",
+          "HP: +432 (зцілення).",
+          "[Last Lesser Giant Olkuth] ударив тебе — −136 HP.",
+          "⁠1220​Полум’я — 7933 урона",
+          "[Last Lesser Giant Olkuth] ударив тебе — −137 HP.",
+          "⁠1147​Вампірний дотик — 6308 урона",
+          "Вампіризм: +273 HP.",
+          "HP: +273 (зцілення).",
+          "Слуга [Feline King] завдає критичного удару [Last Lesser Giant Olkuth]: 826 930 урону.",
+          "Перемога!",
+          "Dark Crystal Gaiters ×1",
+          "Dark Crystal ×1",
+          "EXP + 1691254",
+          "SP + 1695900",
+          "+326663 аден"
+        ],
+        "adenaGain": "326663",
+        "expGain": "1725079",
+        "spGain": 1695900,
+        "items": [
+          {
+            "l2ItemId": 388,
+            "qty": 1,
+            "spoil": false,
+            "label": "Dark Crystal Gaiters"
+          },
+          {
+            "l2ItemId": 2968,
+            "qty": 1,
+            "spoil": false,
+            "label": "Dark Crystal"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T14:49:40.102171+00:00",
+      "path": "/game/battle",
+      "method": "GET",
+      "status": 200
+    }
+  ]
+}

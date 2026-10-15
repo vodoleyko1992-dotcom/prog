@@ -13,6 +13,7 @@ function fixture(change={}) {
   waitX:async f=>{const r=f();change.wait?.(env);return r;},setRt:async p=>{Object.assign(env.rt,p);change.write?.(env,p)},
   gameGet:async url=>{gets.push(url);change.price?.(env);return {ok:true,json:async()=>({locations:[{teleportId:'rune',adenaCost:20000}]})}},
   rec(){},setStatus(){},sleep:async()=>{},fire:b=>fired.push(b)};
+ require('./helpers/story-payments.cjs')(env);
  return {S:sb.L2V7Factories.story(env),env,fired,gets,tp};
 }
 test('сохранённый поход при выключенной автосдаче отменяется до платного перехода',async()=>{
@@ -22,7 +23,7 @@ test('автосдача выключена во время запроса це�
  const f=fixture({price:e=>{e.cfg.storyTurnIn=false}});await f.S.storyStep();assert.equal(f.fired.length,0);assert.equal(f.env.rt.storyJob,null);
 });
 test('автосдача выключена во время сохранения перехода — адена остаётся',async()=>{
- const f=fixture({write:(e,p)=>{if(p.storyJob?.tpT)e.cfg.storyTurnIn=false}});await f.S.storyStep();assert.equal(f.fired.length,0);assert.equal(f.env.rt.storyJob,null);
+ const f=fixture({write:(e,p)=>{if(p.actionPayments?.pending)e.cfg.storyTurnIn=false}});await f.S.storyStep();assert.equal(f.fired.length,0);assert.equal(f.env.rt.storyJob,null);
 });
 test('автосдача выключена при загрузке готовой кнопки — часть не сдаётся',async()=>{
  const f=fixture({done:true,wait:e=>{e.cfg.storyTurnIn=false}});await f.S.storyStep();assert.equal(f.fired.length,0);assert.equal(f.env.rt.storyJob,null);
@@ -34,12 +35,11 @@ test('отклонённый fire не оставляет фиктивный tpT
  const f=fixture(),fire=f.env.fire;f.env.fire=()=>false;await f.S.storyStep();assert.equal(f.fired.length,0);assert.ok(f.env.rt.storyJob);assert.equal(f.env.rt.storyJob.tpT,undefined);
  f.env.fire=fire;await f.S.storyStep();assert.equal(f.fired.length,1);assert.ok(f.env.rt.storyJob.tpT);
 });
-test('резерв и клик не ждут storage между собой; Stop после принятого клика сохраняет защиту от повтора',async()=>{
+test('durable prepare завершается до клика; Stop во время записи не тратит адену',async()=>{
  const f=fixture(),set=f.env.setRt;let release;
- // Контракт core.setRt: память/очередь обновляются сразу, ответ фоновой записи приходит позже.
- f.env.setRt=p=>{const result=set(p);return p.storyJob?.tpT?new Promise(resolve=>{release=resolve}):result};
- const running=f.S.storyStep();for(let i=0;i<20&&!release;i++)await Promise.resolve();assert.ok(release);assert.equal(f.fired.length,1);
- f.env.on=false;release();await running;assert.ok(f.env.rt.storyJob.tpT);assert.equal(f.fired.length,1);assert.equal(f.env.rt.storyLog,undefined);
+ f.env.setRt=p=>{const result=set(p);return p.actionPayments?.pending?new Promise(resolve=>{release=()=>resolve({ok:true})}):result};
+ const running=f.S.storyStep();for(let i=0;i<30&&!release;i++)await Promise.resolve();assert.ok(release);assert.equal(f.fired.length,0);
+ f.env.on=false;release();await running;assert.equal(f.fired.length,0);assert.equal(f.env.payments.pending(),null);assert.equal(f.env.rt.storyLog,undefined);
 });
 test('Stop до принятия fire сохраняет задание без tpT и допускает restart',async()=>{
  const f=fixture(),fire=f.env.fire;f.env.fire=()=>{f.env.on=false;return false};await f.S.storyStep();

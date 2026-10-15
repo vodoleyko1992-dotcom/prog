@@ -56,7 +56,10 @@ for (const reason of ['off', 'spent', 'slowPots', 'noPots', 'lethal', 'noExit'])
  if (reason === 'noPots') m.env.potModel = () => ({ pool: 0, rate: 2000 });
  if (reason === 'lethal') m.env.rt.rbDb.one = { sp: 14000 };
  if (reason === 'noExit') m.env.rt.rbDb.one = { leaveBadUntil: Date.now() + 3600000 };
- const c = m.R.rbPreCheck('one', stats); assert.equal(c.ok, false); if (['off','spent'].includes(reason)) { assert.equal(c.kind, 'unmeasured'); assert.doesNotMatch(m.R.rbListWhy(), /бой дольше|не по силам/); }
+ const c = m.R.rbPreCheck('one', stats);
+ // 10.0.27: без обещанного лечения разрешено только конечное окно за счёт HP.
+ if (['noPots','slowPots'].includes(reason)) { assert.equal(c.ok,true); assert.ok(c.probeSeconds>0&&c.probeSeconds<=8); return; }
+ assert.equal(c.ok, false); if (['off','spent'].includes(reason)) { assert.equal(c.kind, 'unmeasured'); assert.doesNotMatch(m.R.rbListWhy(), /бой дольше|не по силам/); }
 });
 test('старая проба спецудара переходит в ограниченную DPS-пробу, а не остаётся без таймера', async () => {
  const m = fixture({ rt: { rbDpsSample: null, rbDb: { one: { probe: { lvl: 80, sp: 3000, t: Date.now() - 60000 } } } } });

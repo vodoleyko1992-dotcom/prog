@@ -1,0 +1,211 @@
+{
+  "source": "Live native browser and extension, 2026-10-15 UTC",
+  "boss": "l2dop_rb_25233",
+  "before": {
+    "level": 78,
+    "revision": 294802,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234,
+    "hp": 15070,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "castSpd": 3500,
+    "pAtkSpd": 5000,
+    "adena": "357648180",
+    "coinOfLuck": 351
+  },
+  "after": {
+    "level": 78,
+    "revision": 294813,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234,
+    "hp": 15070,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "castSpd": 3500,
+    "pAtkSpd": 5000,
+    "adena": "357864408",
+    "coinOfLuck": 351
+  },
+  "preflight": {
+    "dpsSource": "unknown",
+    "dpsEstimate": 1150,
+    "incomingLossEstimate": 975,
+    "ordinaryEstimate": 1216,
+    "specialEstimate": 5652,
+    "verdict": "no: dangerous combination; pot sustain"
+  },
+  "trace": [
+    {
+      "atUtc": "2026-10-15T13:27:47.466089+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070867212,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4743,
+        "characterMaxMp": 4743,
+        "mobHp": 2123774,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "Благословений заряд духу активний."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:48.426429+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070868188,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4626,
+        "characterMaxMp": 4743,
+        "mobHp": 1547028,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Spirit of Andras the Betrayer]: 576 746 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:50.255102+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070869968,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4676,
+        "characterMaxMp": 4743,
+        "mobHp": 1547028,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:51.522389+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070871228,
+        "characterHp": 12585,
+        "characterMaxHp": 15070,
+        "characterMp": 4675,
+        "characterMaxMp": 4743,
+        "mobHp": 1547028,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "⁠1239​Spirit of Andras the Betrayer · Ураган — 2289 урона.",
+          "[Spirit of Andras the Betrayer] ударив тебе — −196 HP.",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:52.800899+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070872519,
+        "characterHp": 12376,
+        "characterMaxHp": 15070,
+        "characterMp": 4561,
+        "characterMaxMp": 4743,
+        "mobHp": 1547028,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "[Spirit of Andras the Betrayer] ударив тебе — −209 HP.",
+          "1127​Зцілення слуги.",
+          "Feline King зцілено на 936 HP."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:54.024020+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070873644,
+        "characterHp": 15070,
+        "characterMaxHp": 15070,
+        "characterMp": 4724,
+        "characterMaxMp": 4743,
+        "mobHp": 751928,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 14732 урона",
+          "Вампіризм: +2694 HP.",
+          "HP: +2694 (зцілення).",
+          "Слуга [Feline King] завдає критичного удару [Spirit of Andras the Betrayer]: 780 368 урону."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:55.750447+00:00",
+      "status": 200,
+      "delta": {
+        "serverNowMs": 1792070875545,
+        "characterHp": 14822,
+        "characterMaxHp": 15070,
+        "characterMp": 4709,
+        "characterMaxMp": 4743,
+        "mobHp": 751928,
+        "mobMaxHp": 2123774,
+        "logTail": [
+          "[Spirit of Andras the Betrayer] промахнувся по тобі.",
+          "338​Таємна спритність увімкнено."
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T13:27:57.022578+00:00",
+      "status": 200,
+      "delta": {},
+      "victory": {
+        "spawnId": "l2dop_rb_25233",
+        "mobName": "Spirit of Andras the Betrayer",
+        "mobLevel": 69,
+        "fullLog": [
+          "Бій розпочато: [Spirit of Andras the Betrayer] (ур. 69).",
+          "Благословений заряд духу активний.",
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Spirit of Andras the Betrayer]: 576 746 урону.",
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф.",
+          "⁠1239​Spirit of Andras the Betrayer · Ураган — 2289 урона.",
+          "[Spirit of Andras the Betrayer] ударив тебе — −196 HP.",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф.",
+          "[Spirit of Andras the Betrayer] ударив тебе — −209 HP.",
+          "1127​Зцілення слуги.",
+          "Feline King зцілено на 936 HP.",
+          "⁠1147​Вампірний дотик · КРИТ — 14732 урона",
+          "Вампіризм: +2694 HP.",
+          "HP: +2694 (зцілення).",
+          "Слуга [Feline King] завдає критичного удару [Spirit of Andras the Betrayer]: 780 368 урону.",
+          "[Spirit of Andras the Betrayer] промахнувся по тобі.",
+          "338​Таємна спритність увімкнено.",
+          "⁠1220​Полум’я · КРИТ — 17929 урона",
+          "Слуга [Feline King] завдає критичного удару [Spirit of Andras the Betrayer]: 832 822 урону.",
+          "Перемога!",
+          "EXP + 1279311",
+          "SP + 1242992",
+          "+316228 аден"
+        ],
+        "adenaGain": "316228",
+        "expGain": "1304897",
+        "spGain": 1242992,
+        "items": []
+      }
+    }
+  ],
+  "limits": "Manual native entry; bot fought. Buffs and shots changed during encounter, so HP/time is not a stable composition DPS sample. Before snapshot precedes teleport; net Adena includes 100000 teleport and 316228 reward."
+}

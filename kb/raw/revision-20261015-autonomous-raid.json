@@ -1,0 +1,409 @@
+{
+  "source": "Actual MV3 autonomous raid on 2026-10-15, code 86a9e82",
+  "note": "Three victories; Shax probe subsequently left at full HP; investigated separately, not recorded as victory. Public combat fields only.",
+  "events": [
+    {
+      "at": 1792072854.0856063,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25269",
+        "mobName": "Beast Lord Behemoth",
+        "mobLevel": 70,
+        "mobHp": 1501832,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072860.3090997,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 2,
+        "logTail": [
+          "Благословений заряд духу активний."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 1501832,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072861.7608838,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Beast Lord Behemoth]: 561 304 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 940528,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072863.0195553,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 940528,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072864.515139,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 5,
+        "logTail": [
+          "1349​Останній слуга.",
+          "Feline King: отримав баф."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 940528,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072866.0910435,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 7,
+        "logTail": [
+          "⁠1340​Beast Lord Behemoth · Крижаний вихор — 2189 урона.",
+          "⁠1220​Полум’я — 8698 урона",
+          "Слуга [Feline King] атакує [Beast Lord Behemoth]: 61 322 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 870508,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072867.33331,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 9,
+        "logTail": [
+          "[Beast Lord Behemoth] промахнувся по тобі.",
+          "1127​Зцілення слуги.",
+          "Feline King зцілено на 936 HP."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 870508,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072868.3718317,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 10,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 6718 урона",
+          "Вампіризм: +2189 HP.",
+          "HP: +2189 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 863790,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072869.8834238,
+      "path": "/game/battle/action",
+      "status": 200,
+      "victory": {
+        "spawnId": "l2dop_rb_25269",
+        "mobName": "Beast Lord Behemoth",
+        "mobLevel": 70,
+        "fullLog": [
+          "Бій розпочато: [Beast Lord Behemoth] (ур. 70).",
+          "Благословений заряд духу активний.",
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Beast Lord Behemoth]: 561 304 урону.",
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф.",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф.",
+          "⁠1340​Beast Lord Behemoth · Крижаний вихор — 2189 урона.",
+          "⁠1220​Полум’я — 8698 урона",
+          "Слуга [Feline King] атакує [Beast Lord Behemoth]: 61 322 урону.",
+          "[Beast Lord Behemoth] промахнувся по тобі.",
+          "1127​Зцілення слуги.",
+          "Feline King зцілено на 936 HP.",
+          "⁠1147​Вампірний дотик — 6718 урона",
+          "Вампіризм: +2189 HP.",
+          "HP: +2189 (зцілення).",
+          "⁠1220​Полум’я · КРИТ — 16493 урона",
+          "Слуга [Feline King] завдає критичного удару [Beast Lord Behemoth]: 891 584 урону.",
+          "Перемога!",
+          "Elysian Head ×1",
+          "EXP + 2067775",
+          "SP + 1555986",
+          "+375030 аден"
+        ],
+        "adenaGain": "375030",
+        "expGain": "2109130",
+        "spGain": 1555986
+      }
+    },
+    {
+      "at": 1792072898.6703784,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25092",
+        "mobName": "Korim",
+        "mobLevel": 70,
+        "mobHp": 1501832,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072901.763949,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 2,
+        "logTail": [
+          "⁠1220​Полум’я · КРИТ — 14442 урона",
+          "Слуга [Feline King] завдає критичного удару [Korim]: 881 808 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 605582,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072903.0634005,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 6301 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 599281,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072904.2538843,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "⁠1220​Полум’я — 8009 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 591272,
+        "mobMaxHp": 1501832
+      }
+    },
+    {
+      "at": 1792072906.0008929,
+      "path": "/game/battle/action",
+      "status": 200,
+      "victory": {
+        "spawnId": "l2dop_rb_25092",
+        "mobName": "Korim",
+        "mobLevel": 70,
+        "fullLog": [
+          "Бій розпочато: [Korim] (ур. 70).",
+          "⁠1220​Полум’я · КРИТ — 14442 урона",
+          "Слуга [Feline King] завдає критичного удару [Korim]: 881 808 урону.",
+          "⁠1147​Вампірний дотик — 6301 урона",
+          "⁠1220​Полум’я — 8009 урона",
+          "⁠1339​Korim · Вогняний вихор — 1531 урона.",
+          "⁠1147​Вампірний дотик · КРИТ — 12738 урона",
+          "Вампіризм: +1283 HP.",
+          "HP: +1283 (зцілення).",
+          "Слуга [Feline King] завдає критичного удару [Korim]: 797 392 урону.",
+          "Перемога!",
+          "Blood Tornado Edge ×1",
+          "EXP + 1929916",
+          "SP + 1476862",
+          "+324250 аден"
+        ],
+        "adenaGain": "324250",
+        "expGain": "1968514",
+        "spGain": 1476862
+      }
+    },
+    {
+      "at": 1792072919.388134,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25447",
+        "mobName": "Immortal Savior Mardil",
+        "mobLevel": 71,
+        "mobHp": 1091661,
+        "mobMaxHp": 1091661
+      }
+    },
+    {
+      "at": 1792072922.4573498,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 2,
+        "logTail": [
+          "⁠1220​Полум’я — 6890 урона",
+          "Слуга [Feline King] завдає критичного удару [Immortal Savior Mardil]: 775 736 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 309035,
+        "mobMaxHp": 1091661
+      }
+    },
+    {
+      "at": 1792072923.3539224,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "⁠1147​Вампірний дотик · КРИТ — 10575 урона",
+          "Вампіризм: +8 HP.",
+          "HP: +8 (зцілення)."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 298460,
+        "mobMaxHp": 1091661
+      }
+    },
+    {
+      "at": 1792072924.5110834,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "⁠1220​Полум’я — 7149 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 291311,
+        "mobMaxHp": 1091661
+      }
+    },
+    {
+      "at": 1792072925.585372,
+      "path": "/game/battle/action",
+      "status": 200,
+      "victory": {
+        "spawnId": "l2dop_rb_25447",
+        "mobName": "Immortal Savior Mardil",
+        "mobLevel": 71,
+        "fullLog": [
+          "Бій розпочато: [Immortal Savior Mardil] (ур. 71).",
+          "⁠1220​Полум’я — 6890 урона",
+          "Слуга [Feline King] завдає критичного удару [Immortal Savior Mardil]: 775 736 урону.",
+          "⁠1147​Вампірний дотик · КРИТ — 10575 урона",
+          "Вампіризм: +8 HP.",
+          "HP: +8 (зцілення).",
+          "⁠1220​Полум’я — 7149 урона",
+          "⁠1220​Immortal Savior Mardil · Полум’я — 1641 урона.",
+          "⁠1147​Вампірний дотик · КРИТ — 11369 урона",
+          "Вампіризм: +1393 HP.",
+          "HP: +1393 (зцілення).",
+          "Слуга [Feline King] завдає критичного удару [Immortal Savior Mardil]: 677 038 урону.",
+          "Перемога!",
+          "Meteor Shower Head ×1",
+          "EXP + 723888",
+          "SP + 735284",
+          "+355404 аден"
+        ],
+        "adenaGain": "355404",
+        "expGain": "738365",
+        "spGain": 735284
+      }
+    },
+    {
+      "at": 1792072955.5993092,
+      "path": "/game/battle/start",
+      "status": 200,
+      "start": {
+        "spawnId": "l2dop_rb_25282",
+        "mobName": "Death Lord Shax",
+        "mobLevel": 75,
+        "mobHp": 3320110,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792072958.192021,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 2,
+        "logTail": [
+          "⁠1220​Полум’я — 7137 урона",
+          "Слуга [Feline King] завдає критичного удару [Death Lord Shax]: 626 176 урону."
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2686797,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792072959.1920865,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 3,
+        "logTail": [
+          "⁠1147​Вампірний дотик — 5595 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2681202,
+        "mobMaxHp": 3320110
+      }
+    },
+    {
+      "at": 1792072960.4769902,
+      "path": "/game/battle/action",
+      "status": 200,
+      "delta": {
+        "battleVersion": 4,
+        "logTail": [
+          "⁠1220​Полум’я · КРИТ — 13365 урона"
+        ],
+        "battleEnded": false,
+        "outcome": null,
+        "mobHp": 2667837,
+        "mobMaxHp": 3320110
+      }
+    }
+  ]
+}

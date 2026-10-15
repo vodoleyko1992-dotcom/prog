@@ -23,6 +23,8 @@ with sync_playwright() as p:
         page.evaluate('''() => {
           window.__wakeChecks = { kicks: 0, reloads: 0 };
           chrome.tabs.query = async () => [{id: 45, url: 'https://l2wap.com/map.html'}];
+          // 15.10: wakeGame повторно проверяет тот же загруженный документ перед reload.
+          chrome.tabs.get = async () => ({id: 45, url: 'https://l2wap.com/map.html', status: 'complete'});
           chrome.tabs.sendMessage = async () => { __wakeChecks.kicks++; return {ok:true,v:'7.1.10',running:true}; };
           chrome.tabs.reload = async () => { __wakeChecks.reloads++; };
         }''')

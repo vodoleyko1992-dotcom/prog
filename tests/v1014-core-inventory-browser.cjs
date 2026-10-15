@@ -1,6 +1,9 @@
 'use strict';
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'), assert=require('node:assert/strict');
 (async()=>{const h=await harness();try{
+ // 15.10: рейд сначала сверяет собственную сумку. Общий lifecycle harness даёт
+ // пустой JSON; здесь нужен контракт /character, а не обход startup-проверки.
+ await h.ctx.route('https://l2wap.com/character',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({character:{id:'audit-hero',name:'AuditHero',revision:1,inventory:{stacks:[],eq:{}}}})}));
  await h.sw.evaluate(async()=>{const {rt}=await chrome.storage.local.get('rt');await chrome.storage.local.set({rt:{...rt,weaponsT:0,invScan:{step:'prof',back:'/map.html',t:Date.now()}}})});
  await h.g.p.goto('https://l2wap.com/fishing.html');await until(()=>h.g.core('typeof invScanDrive==="function"'));await delay(1800);
  assert.equal(new URL(h.g.p.url()).pathname,'/fishing.html','off automatic scan не должен увести рыбалку после reload');assert.equal((await h.get(['rt'])).rt.weaponsT,0);

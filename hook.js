@@ -35,11 +35,22 @@
     const p = c.activeSummon, n = v => Number.isFinite(v) ? v : null;
     return { name: c.name.slice(0,120), level: n(c.level), l2Profession: String(c.l2Profession || '').slice(0,60), revision: c.revision, classSlots: { activeSlot: n(c.classSlots?.activeSlot) },
       ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'].map(k => [k,n(c[k])])),
+      ...Object.fromEntries(['evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'].map(k=>[k,n(c[k])])),
+      toggleStances: Array.isArray(c.toggleStances) ? c.toggleStances.slice(0,80).map(x=>({battleId:String(x.battleId||'').slice(0,80),skillId:n(x.skillId),level:n(x.level),active:x.active===true})) : null,
       // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
       activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
+      // Публичный состав модели урона: UID/имена владельцев и динамические HP/MP сюда не попадают.
+      snapshotGeneratedAt: n(c.snapshotGeneratedAt), inBattle:typeof c.inBattle==='boolean'?c.inBattle:null,
+      battleHotbarSlots:Array.isArray(c.battleHotbarSlots)?c.battleHotbarSlots.slice(0,80).map(x=>x?{k:String(x.k||'').slice(0,8),id:n(x.id)}:null):null,
+      inventory: c.inventory?.eq && typeof c.inventory.eq === 'object' ? { eq: Object.fromEntries(Object.entries(c.inventory.eq).slice(0,40).map(([slot,v]) => {
+        const x = v && typeof v === 'object' ? v : {itemId:v}, attrs = a => Array.isArray(a) ? a.slice(0,20).map(y=>({attributeId:String(y.attributeId||'').slice(0,80),level:n(y.level)})) : [];
+        return [slot,{...Object.fromEntries(['itemId','enchant','specialGearLevel','enchantPAtkBonus','enchantMAtkBonus'].map(k=>[k,n(x[k])])),
+          augmentation:{outcomeId:String(x.augmentation?.outcomeId||'').slice(0,80)},clanWeaponAttrs:attrs(x.clanWeaponAttrs),clanArmorAttrs:attrs(x.clanArmorAttrs)}];
+      })), stacks:Array.isArray(c.inventory.stacks)?c.inventory.stacks.slice(0,2000).map(x=>({itemId:n(x.itemId),qty:n(x.qty)})):null } : null,
+      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level)})) : null,
       activeSummon: p && typeof p === 'object' ? { kind: String(p.kind || '').slice(0,30), key: String(p.key || '').slice(0,60),
-        ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
-        activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : null };
+        ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','mAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
+        activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : p===null?null:undefined };
   } catch (_) { return undefined; } };
   const augOf = o => { try { const eq = o?.character?.inventory?.eq || o?.inventory?.eq; if (!eq || typeof eq !== 'object' || !Object.keys(eq).length) return undefined; const l = eq.l1, a = l && typeof l === 'object' ? l.augmentation : null;
     return { w: l == null ? 0 : typeof l === 'number' ? l : +l.itemId || 0, e: l && typeof l === 'object' ? +l.enchant || 0 : 0, o: a && typeof a.outcomeId === 'string' ? a.outcomeId.slice(0, 40) : null, g: a && a.grade ? String(a.grade).slice(0, 2) : null }; } catch (e) { return undefined; } };
@@ -139,9 +150,21 @@
 
   // 8.0.3 (логи 11.10: 1302 потерянных нажатия за 10 боёв с РБ): пока игра ждёт свой GET /character (уходит ≈8 мс после ответа на ход,
   // идёт 0,25–0,56 с) и ≈30 мс после — клик по панели игра молча теряет. Боту нужны начало и конец этих запросов (rid, путь без query)
-  const TRACK = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
-  let ridN = 0;
-  const start = (u, method) => { if (!TRACK.test(u.pathname)) return undefined; const rid = ++ridN; try { window.postMessage({ __l2bot: 'netStart', path: u.pathname, method, rid }, location.origin); } catch (e) {} return rid; };
+  // 15.10: все игровые ответы привязаны к контексту начала запроса; busy-фильтр остаётся в content.
+  const TRACK = /^\/(?:character|game)(?:\/|$)/;
+  let ridN = 0, mutationN = 0, storyRetry = null;
+  const STORY_TP = /^\/game\/story-quests\/(?:noblesse|subclass)\/teleport$/;
+  // Native quest UI держит busy на весь409→resync→retry. Сопоставляем только
+  // один такой retry; иной POST/истечение окна разрывает связь, GET её не забирает.
+  function start(u, method, req) {
+    if (!TRACK.test(u.pathname)) return {};
+    const rid=++ridN, story=method==='POST'&&STORY_TP.test(u.pathname), r=storyRetry;
+    const detail=story&&typeof req?.targetId==='string'&&Number.isSafeInteger(req.expectedRevision)?{targetId:req.targetId.slice(0,120),expectedRevision:req.expectedRevision}:null;
+    const retryOf=story&&detail&&r&&r.path===u.pathname&&r.targetId===detail.targetId&&detail.expectedRevision>=r.revision&&Date.now()-r.at<=10000?r.rid:0;
+    if(method==='POST'){mutationN++;storyRetry=null;}
+    try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}
+    return {rid,retryOf,mutation:mutationN,detail};
+  }
   const ofetch = window.fetch;
   if (ofetch) window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : input?.url || String(input);
@@ -149,12 +172,14 @@
     const p = ofetch.apply(this, arguments);
     if (!u) return p;
     const method = String(init?.method || input?.method || 'GET').toUpperCase(), t0 = performance.now(), req = reqBody(init?.body);
-    const rid = start(u, method);   // 7.1.17: ход ушёл на сервер; 8.0.3: и GET /character, начало/конец боя
+    const request = start(u, method, req), {rid,retryOf}=request;
     p.then(res => {
+      if(res.status===409&&!retryOf&&request.detail&&request.mutation===mutationN)
+        storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
-      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid }); })
-        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
+      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid,retryOf });
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
+        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid,retryOf }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
   };
@@ -165,7 +190,7 @@
     const info = this.__l2, u = info && same(info.url);
     if (u) {
       const t0 = performance.now(), req = reqBody(body);
-      const rid = start(u, info.method);
+      const {rid} = start(u, info.method, req);
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}

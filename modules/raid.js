@@ -152,9 +152,55 @@ async function rbDpsLearn(id, dps) {
 }
 // 10.0.2: недобитый — HP с последнего замера в бою (rbWound, 30 мин), а не только после своего отхода
 const rbHpNow = (id, hp) => { const w = env.rt.rbWound?.[id]; return Math.min(hp, env.rt.rb?.[id]?.hpAfter || hp, w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur > 0 ? w.cur : hp); };
+// 15.10, живой Andras: старая броня не описывает текущий входящий урон.
+// Ключ включает героя, подкласс, защиту, экипировку/баффы и цель. Legacy остаётся
+// осторожной оценкой; наблюдением текущего состава оно не становится.
+function rbIncomingKey(id, context = rbContext(id, true)) {
+  if (typeof env.warlock?.defenseContext !== 'function') return context?.key || null;
+  const key = env.warlock.defenseContext(), st=rbStatsOf(id);
+  return key && st ? JSON.stringify([key,id,st.patk,st.matk,st.lvl||st.level||rbLvlOf(id)]) : null;
+}
+function rbIncoming(id, context = rbContext(id, true)) {
+  const d = env.rt.rbDb?.[id] || {}, n = d.incoming;
+  if (!context?.managed) return { ...d, source: 'legacy' };
+  const key = rbIncomingKey(id,context);
+  return key && n?.context === key && Number.isFinite(n.t) && Date.now()-n.t >= 0 && Date.now()-n.t < 30*60000
+    ? { ...n, source: 'observed' } : { sp: d.sp, hitP90: d.hitP90, p90: d.p90, maxHit: d.maxHit, source: 'prior' };
+}
+// Разведка оплачивается конечным резервом HP, а не требованием бесконечно
+// перекрывать неизвестный урон банками. Это не разрешение полного боя.
+function rbProbePots(pot) {
+  const items = pot?.items?.filter(x=>x.est === false && Number.isFinite(x.n) && x.n>0 && Number.isFinite(x.heal) && x.heal>0);
+  if (!items?.length) return null;
+  const n = items.reduce((n,x)=>n+x.n,0), pool = items.reduce((n,x)=>n+x.n*x.heal,0);
+  const rate = Math.max(...items.map(x=>x.heal/Math.max(2.2,x.cd||0)));
+  return { items, n, pool, rate, H: pool/n, C: pool/n/rate, est: false };
+}
+function rbProbeBudget({ me, sp, p90, loss, pot, seconds = 8, entry = true }) {
+  // Запас в сумке не обещает лечение в бою. Засчитываем только готовую
+  // кнопку с измеренным эффектом; иначе окно целиком оплачивается текущим HP.
+  pot = rbProbePots({ items: (pot?.items || []).filter(x=>x.b && x.ready===true) });
+  if (!(me?.max > 0) || !(me.cur > 0) || entry && me.pct < Math.max(95, env.cfg.rbRestHp || 95)
+      || ![sp,p90,loss].every(x=>Number.isFinite(x)&&x>=0) || sp >= me.max*.45) return null;
+  const items = pot?.items || [];
+  const reserve = Math.max(me.max*Math.max(25,env.cfg.stopHp||0)/100,sp*1.1+2*p90);
+  // Одна большая банка не даёт её скорость на всё окно. Считаем конечные
+  // приёмы после GCD; неизвестные банки и мгновенное первое лечение не обещаем.
+  const cadence = Math.max(2.2,...items.map(x=>x.cd||0));
+  for (let duration=Math.floor(Math.min(8,seconds)); duration>=3; duration--) {
+    let slots=Math.floor(duration/cadence), healing=0;
+    for (const item of [...items].sort((a,b)=>b.heal-a.heal)) {
+      const n=Math.min(slots,Math.floor(item.n)); healing+=n*item.heal; slots-=n;
+    }
+    const deficit=Math.max(0,loss*duration-healing*.8);
+    if (me.cur-reserve>=deficit*1.15)
+      return { seconds:duration,reserve:Math.ceil(reserve),healing };
+  }
+  return null;
+}
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
-  const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id, true);
+  const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id, true), incoming = rbIncoming(id, context);
   const ownDps = historical.dps > 0 && rbSameContext(context, historical.dpsContext);
   const transferred = !dpsOver && !ownDps && !(env.rt.rbDps > 0 && rbSameContext(context, env.rt.rbDpsContext)) && rbTransferredDps(id, context);
   const evidence = rbDpsEvidence(id), unknownDps = !dpsOver && evidence.source === 'unknown' && !!context?.managed;
@@ -162,15 +208,18 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
   // «обычный ≈218» (rbK выучен на обычных РБ). У эпика, пока на нём нет своего замера (hitP90), обычный удар ≈0,7 × max(P.Atk, M.Atk),
   // разброс ×1,1, потеря ≈ удар раз в 4 с (реально ≈650 HP/с: удар раз в 1,6–2,5 с, ≈60 % попаданий)
-  const epic = isEpicId(id), epicHit = epic ? (historical.hitP90 > 0 ? historical.hitP90 : 0.7 * Math.max(st.patk || 0, st.matk || 0)) : 0;
-  const base = Math.max(base0, epicHit);
+  const epic = isEpicId(id), epicHit = epic ? (incoming.source !== 'prior' && incoming.hitP90 > 0 ? incoming.hitP90 : 0.7 * Math.max(st.patk || 0, st.matk || 0)) : 0;
+  const base = incoming.source === 'observed' && incoming.base > 0 ? incoming.base : Math.max(base0, epicHit);
   const curHp = st.hpExact ? st.hp || 0 : rbHpNow(id, st.hp || 0);   // 8.0.3: эпики передают HP сами (свежесть раны — epicWoundHp)
   const dps = Math.max(1, dpsOver || rbDpsOn(id)), t = curHp / dps;
   const pot = env.potModel(), pool = pot?.pool || 0;
-  const p90 = historical.hitP90 || historical.p90 || (epic ? Math.max(150, base * 1.1) : Math.max(150, base * 1.65));
+  const p90Prior = epic ? Math.max(150,base*1.1) : Math.max(150,base*1.65);
+  const p90Observed = incoming.hitP90 || incoming.p90 || (incoming.source === 'observed' && incoming.maxHit>0 ? incoming.maxHit*1.15 : 0);
+  const p90 = incoming.source === 'prior' ? Math.max(p90Prior,p90Observed||0) : p90Observed || p90Prior;
   // An observed special is authoritative; otherwise use a deliberately conservative estimate.
-  const sp = historical.sp > 0 ? historical.sp : Math.max(base0 * rbSpK(), (st.matk || 0) * rbSpM());
-  const measured = historical.sp > 0;
+  const spPrior = Math.max(base0*rbSpK(),(st.matk||0)*rbSpM());
+  const sp = incoming.source === 'prior' ? Math.max(incoming.sp||0,spPrior) : incoming.sp>0 ? incoming.sp : spPrior;
+  const measured = incoming.sp > 0 && incoming.source !== 'prior';
   const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext);
   let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
   if (epic && !ownLoss) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
@@ -181,7 +230,7 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
     `банки ≈${env.fmtK(need)} из ${env.fmtK(pool)}`;
   // по прикидке (РБ ни разу не видели — цифры по другим РБ) отсекаем только явно неподъёмных; на месте решат настоящие цифры из окна карты
   const lim = st.est ? 1.5 : 1;
-  const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool, source: evidence.source, planned: evidence.planned };
+  const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool, source: evidence.source, planned: evidence.planned, incomingSource: incoming.source };
   if (!epic && context?.managed && !evidence.prepared) return { ok: false, kind: 'context', action: 'prepare', why: 'нужна свежая сверка состава и зарядов; запасной DPS не определяет силу РБ', ...x };
   // 10.0.2 (игрок 12.10: «плохо фармит РБ, особенно сильных»; лог 22:16–22:46: Галлате 73 и Голконда 79 — по ≈25–43 мин боя каждый, ни один
   // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
@@ -192,7 +241,9 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // 15.10 (лог 00:42): 997/с по неизмеренному Warlock обещали 92 мин, а Hekaton пал за 2:26.
   // Даём только штатную однократную пробу; проверку спецудара, HP и банок ниже не пропускаем.
   const probeKey = context?.powerKey || context?.key || `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}:${env.heroLvl()}:${env.rt.petBornT || 0}`;
-  const pr = historical.probe, used = pr?.kind === 'dps' && pr.key === probeKey && Date.now() - pr.t < 30 * 60000;
+  const pr = historical.probe, victory = historical.victoryEvidence;
+  const wonSinceProbe = victory?.at > pr?.t && victory.char === env.rt.char && victory.classKey === `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`;
+  const used = !wonSinceProbe && pr?.kind === 'dps' && pr.key === probeKey && Date.now() - pr.t < 30 * 60000;
   const oldProbeUsed = pr && pr.kind !== 'dps' && pr.lvl >= env.heroLvl() && Date.now() - pr.t > PROBE_MS;
   const exitBlocked = historical.leaveBadUntil > Date.now();
   const measuring = unknownDps && !epic && !st.est && evidence.prepared && env.cfg.rbProbe !== false && !used && !oldProbeUsed && !exitBlocked && !rbVerdictBlocks(id);
@@ -204,12 +255,15 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // Для разрешённой пробы неизвестного DPS резервируем первые 30 с до замера rbAssess, не весь ложный прогноз 92 мин.
   const entryNeed = slowProbe ? loss * Math.min(t, 30) : need;
   const probeSupplied = loss <= potRate * 0.8 * slack && entryNeed * 1.15 <= pool * slack;
-  const no = r => probeSupplied && probeOk(id, st, sp, maxHp, measured, epic, r) ? (slowProbe || probeOk(id, st, sp, maxHp, measured, epic, r)) : r;
+  const finite = slowProbe && incoming.source === 'prior' && context?.key && rbIncomingKey(id,context) && !epic && rbProbeBudget({ me, sp, p90, loss, pot });
+  const reconnaissance = finite ? { ...slowProbe, probeSeconds: finite.seconds, probeReserve: finite.reserve, probeLoss: loss, probeP90: p90, probeDefense: rbIncomingKey(id,context),
+    why: `🧪 разведка: сверяю входящий урон каждые ${finite.seconds} с, максимум 30 с; запас HP ≥${finite.reserve}. Старые коэффициенты не описывают текущую защиту · ${info}` } : null;
+  const no = r => reconnaissance || (probeSupplied && probeOk(id, st, sp, maxHp, measured, epic, r) ? (slowProbe || probeOk(id, st, sp, maxHp, measured, epic, r)) : r);
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
-  if (entryNeed * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
-  return slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
+  if (entryNeed * 1.15 > pool * slack) return reconnaissance || { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
+  return reconnaissance || slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
 }
 
 // 9.2.5 (игрок 12.10: «скинул список РБ, в которых бот не уверен, а он всё равно не шёл всех проверять»): «не по силам» по ОЦЕНКЕ спецудара
@@ -230,8 +284,8 @@ function probeOk(id, st, sp, maxHp, measured, epic, r) {
 const probeFight = id => { const d = env.rt.rbDb?.[id] || {}, pr = d.probe; return !!pr && !pr.done && (pr.kind === 'dps' || !(d.sp > 0)) && Date.now() - (pr.t || 0) < PROBE_MS; };
 // бой-проба: спецудар этого РБ ещё не замерен — порог HP героя (оценка × 1,1), ниже — выходим из боя
 function probeGuard(id) {
-  const d = env.rt.rbDb?.[id] || {}, pr = d.probe;
-  return pr && !(d.sp > 0) && Date.now() - (pr.t || 0) < PROBE_MS && pr.sp > 0 ? Math.round(pr.sp * 1.1) : 0;
+  const d = env.rt.rbDb?.[id] || {}, pr = d.probe, incoming = rbIncoming(id, rbContext(id));
+  return pr && !(incoming.source !== 'prior' && incoming.sp > 0) && Date.now() - (pr.t || 0) < PROBE_MS && pr.sp > 0 ? Math.round(pr.sp * 1.1) : 0;
 }
 
 // 7.2.1 (лог 10.10 21:32:54–21:33:09, смерть): окно карты ещё показывало «Розпалений Голем · ур. 44 · NPC 25431» (HP 273k, удар ≈110),
@@ -284,7 +338,7 @@ async function rbEngage(r, label, opt = {}) {
   }
   if (chk) env.rec('B', 'РБ', `${r.name} (${r.lvl}): иду — ${chk.why}`);
   if (chk?.probe && (chk.measure || !probeFight(r.id))) await rbNote(r.id, { name: r.name, lvl: r.lvl,
-    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey } : {}) } });
+    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey, ...(chk.probeSeconds ? { checkpointSeconds: chk.probeSeconds, reserve: chk.probeReserve, loss: chk.probeLoss, p90: chk.probeP90, defense: chk.probeDefense } : {}) } : {}) } });
   await env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });
   const go = env.$q('#map-mob-modal-battle');
   if (chk && rbModalIs(r) && env.shown(go)) {
@@ -415,7 +469,12 @@ const rbZoneNow = () => !(env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 
 async function rbNote(id, patch) {
   const prev = env.rt.rbDb?.[id] || { tries: 0, kills: 0 };
   const won = patch.kills > (prev.kills || 0), at = Date.now();
-  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(won ? { lastWin: at } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
+  // Даже короткая победа с меняющимися баффами — факт победы, но не стабильный
+  // DPS: хранится отдельно и не попадает в rbDpsSample/перенос на другого РБ.
+  const victoryEvidence = won ? { at, char: env.rt.char, classKey: `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`,
+    endingContext: rbContext(id)?.key || null, stableContext: patch.fightContext || null,
+    targetMaxHp: rbStatsOf(id)?.hp || null, fightS: patch.fightS || null } : null;
+  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
     ...(won && env.cfg.rbHuntMode && !isEpicId(id) ? { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, rbRefuse: null } : {}) });
 }
 
@@ -555,7 +614,7 @@ function rbPreSkipWhy(id) {
   const observed = ps.observed || /^аварийный выход:/.test(env.rt.rbDb?.[id]?.note || '');
   if (!observed && real && ['pots', 'slow', 'strong', 'unknown', 'context', 'unmeasured'].includes(ps.kind) && !rbVerdictBlocks(id)) {
     const check = rbPreCheck(id, st);
-    if (check.ok && (!check.probe || ['slow','context','unmeasured'].includes(ps.kind))) return '';
+    if (check.ok && (!check.probe || ['slow','context','unmeasured'].includes(ps.kind) || check.probeSeconds && ps.kind === 'strong')) return '';
   }
   return ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : ps.kind === 'slow' ? 'долгий бой (недавно)' : ['context','unmeasured'].includes(ps.kind) ? 'нужен замер текущего состава' : 'пропуск после осмотра (недавно)';
 }
@@ -1049,15 +1108,30 @@ async function rbHuntStep() {
       if (Date.now() - (H.at || 0) > 60000) return huntDone(H.id, `${H.name}: после телепорта не попал на карту`);
       location.href = '/map.html'; await env.sleep(3000); return;
     }
-    await env.mapReady(15000, `Тур РБ: ищу ${H.name} на карте`);
+    const ready = await env.mapReady(15000, `Тур РБ: ищу ${H.name} на карте`);
     if (!active() || !sameJob()) return;
+    if (ready !== true) {
+      const since = H.mapLoadT || Date.now();
+      if (!H.mapLoadT) await huntSet({ mapLoadT: since });
+      if (!active() || env.rt.rbHunt?.id !== H.id) return;
+      if (Date.now() - since < 30000) { env.setStatus(`Тур РБ: карта ещё не загружена — жду ${H.name}`); await env.sleep(1500); return; }
+      if (!H.mapLoadReloads) {
+        await huntSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
+        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      }
+      await huntSet({ mapLoadT: 0, mapLoadReloads: 0 });
+      if (!active()) return;
+      return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`);
+    }
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;
     if (!r) {
       if (Date.now() - (H.at || 0) < 25000) { await env.sleep(1500); return; }   // карта ещё догружается
-      if (env.rt.rbList?.[H.id]) await env.setRt({ rbList: { ...env.rt.rbList, [H.id]: { ...env.rt.rbList[H.id], alive: false } } });   // v5.6: до перечитки списка — мёртв
-      env.rbTimer?.domNote({ [H.id]: { name: H.name, lvl: H.lvl, alive: false } }, 'нет на карте')?.catch?.(() => {});   // 10.0.2: убит другими — окно смерти «видел живым → нет на карте»
-      return huntDone(H.id, `${H.name}: на карте нет (убит другими?)`);
+      // Отсутствующий пин не доказывает смерть: мог не состояться перелёт или
+      // открыться другая зона. Смерть/таймер подтверждает серверный список.
+      await env.setRt({ rbListT: 0 });
+      if (!active() || !sameJob()) return;
+      return huntDone(H.id, `${H.name}: на карте нет — перечитаю список РБ`);
     }
     if (rbVerdictBlocks(r.id)) return huntDone(H.id, `${H.name}: в базе «не по силам» — пропускаю`);
     const bw = env.buffWaitBeforeRb();                  // v4.41: тотем на откате ≤60 с — ждём, бой с РБ начинаем с баффом
@@ -1067,7 +1141,7 @@ async function rbHuntStep() {
     if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
-    await huntSet({ step: 'fight', phase: 'engage', next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
+    await huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;
@@ -1241,6 +1315,17 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
   try { rbWoundNote(ctx); } catch (e) {}
   const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
   S.lp = lines;
+  const incomingContext = rbContext(S.id), incomingKey = incomingContext?.managed ? rbIncomingKey(S.id,incomingContext) : null;
+  const changedIncoming = !!S.incomingWindow && S.incomingWindow.context !== incomingKey;
+  if (!S.incomingWindow || changedIncoming) S.incomingWindow = { context: incomingKey, at: Date.now(), hits: [], sp: 0 };
+  const W = S.incomingWindow;
+  const rememberHit = (amount, special) => {
+    if (!incomingKey || changedIncoming) return; // первый смешанный пакет после смены состава — только аварийные сырые данные
+    (S.incomingEvents ||= []).push({ t: Date.now(), context: incomingKey, amount, special });
+    S.incomingEvents = S.incomingEvents.filter(x=>Date.now()-x.t<=30000);
+    if (special) W.sp = Math.max(W.sp, amount); else W.hits.push(amount);
+    if (W.hits.length>120) W.hits.splice(0,W.hits.length-120);
+  };
   const nm = (ctx.name || '').toLowerCase(), ogre = env.activeBuffs().some(x => x.id === 109 && (!x.exp || x.exp > Date.now()));
   for (const line of fresh) {
     const l = String(line).trim();
@@ -1248,12 +1333,13 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
     const m = l.match(/^(?:Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(?:\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i);
     if (m && (m[1] || m[2]).trim().toLowerCase() === nm) {
       S.hitSeen = (S.hitSeen ?? S.hits?.length ?? 0) + 1;
-      (S.hits ||= []).push(Math.round(+m[3].replace(/\s/g, '') * (ogre ? 1.3 : 1)));
+      const hit = Math.round(+m[3].replace(/\s/g, '') * (ogre ? 1.3 : 1));
+      (S.hits ||= []).push(hit); rememberHit(hit, false);
       if (S.hits.length > 120) S.hits.splice(0, S.hits.length - 120);
     }
     const sp = l.match(/^(.+?)\s*·\s*(.+?)\s+(\d+)\s*(?:HP|урона|шкоди)?\s*$/i);
     if (sp && sp[1].trim().toLowerCase() === nm && !/^(?:ударив|ударил)$/i.test(sp[2].trim())) {
-      const spike = Math.round(+sp[3] * (ogre ? 1.3 : 1));
+      const spike = Math.round(+sp[3] * (ogre ? 1.3 : 1)); rememberHit(spike, true);
       if (spike > (S.sp || 0)) {
         S.sp = spike; S.spName = sp[2].trim();
         if (spike > (env.rt.rbDb?.[S.id]?.sp || 0))
@@ -1263,6 +1349,13 @@ function rbLearn(ctx) {                          // v4.46: k = обычный у
   }
   const p90 = S.hits?.length >= 3 ? [...S.hits].sort((a,b)=>a-b)[Math.min(S.hits.length-1,Math.floor(S.hits.length*.9))] : 0;
   const db = env.rt.rbDb?.[S.id] || {};
+  if (incomingKey && !changedIncoming && fresh.length && (W.hits.length || W.sp)) {
+    const hits = [...W.hits].sort((a,b)=>a-b), old = db.incoming?.context === incomingKey ? db.incoming : {};
+    env.rbNote(S.id, { incoming: { context: incomingKey, t: Date.now(), n: Math.max(old.n||0,hits.length),
+      base: hits.length ? hits[hits.length>>1] : old.base||0,
+      sp: Math.max(old.sp||0,W.sp), maxHit: Math.max(old.maxHit||0,...hits),
+      hitP90: hits.length>=3 ? hits[Math.min(hits.length-1,Math.floor(hits.length*.9))] : old.hitP90||0 } });
+  }
   // 8.0.3 (лог 11.10 11:42, Орфен): hitP90 — только от ≥ 3 ударов, и бой после 1–2 ударов (выход, смерть) знание о 57 % ударе терял —
   // самый сильный одиночный обычный удар помним отдельно (maxHit), по нему аварийный выход в следующем бою с этим боссом
   const mx = S.hits?.length ? Math.max(...S.hits) : 0;
@@ -1299,7 +1392,7 @@ function rbAssess(ctx, me, mob) {
   const probingDps = measurement?.kind === 'dps' && !S.probeConfirmed && probeFight(S.id);
   if (probingDps && !(measurement.startedAt > 0)) {
     // Дедлайн попытки переживает reload/новый ctx; время ожидания окна карты в 30 с боя не входит.
-    measurement = { ...measurement, startedAt: now, deadlineAt: now + 30000 };
+    measurement = { ...measurement, startedAt: now, deadlineAt: now + 30000, ...(measurement.checkpointSeconds ? { checkpointAt: now + measurement.checkpointSeconds*1000 } : {}) };
     rbNote(S.id, { probe: measurement }).catch(() => {});
   }
   const elapsed = (now - (probingDps ? measurement.startedAt : S.t0)) / 1000;
@@ -1327,6 +1420,22 @@ function rbAssess(ctx, me, mob) {
     S.samples.push({ t: now, me: me.cur, mob: mob.cur });
     S.last = now;
     S.samples = S.samples.filter(x => now - x.t <= 30000);
+  }
+  if (probingDps && measurement.checkpointSeconds && now >= measurement.checkpointAt && elapsed < 30) {
+    const defense = rbIncomingKey(S.id,context);
+    if (!defense || defense !== measurement.defense) return { abort: true, why: 'разведка: защита изменилась или свежий состав неизвестен — штатный выход' };
+    const events = (S.incomingEvents || []).filter(x=>x.context===defense && x.t >= Math.max(measurement.startedAt,now-8000) && x.t<=now);
+    const normal = events.filter(x=>!x.special), special = events.filter(x=>x.special);
+    const seconds = Math.min(8,30-elapsed), span = Math.min(8,elapsed);
+    const p90 = normal.length ? Math.max(...normal.map(x=>x.amount))*1.15 : measurement.p90;
+    const spike = special.length ? Math.max(...special.map(x=>x.amount)) : measurement.sp;
+    // Редкие/отсутствующие попадания не означают нулевой риск: сохраняем prior.
+    // Новые удары могут увеличить потерю; ограничение по текущему HP пересчитываем.
+    const loss = Math.max(measurement.loss,events.reduce((n,x)=>n+x.amount,0)/Math.max(1,span)*1.25);
+    const budget = rbProbeBudget({ me, sp: spike, p90, loss, pot: env.potModel(), seconds, entry: false });
+    if (!budget) return { abort: true, why: 'разведка: не подтверждён конечный запас HP/лечения до следующей проверки — штатный выход' };
+    measurement = { ...measurement, checkpointAt: Math.min(measurement.deadlineAt,now+budget.seconds*1000) };
+    rbNote(S.id, { probe: measurement }).catch(() => {});
   }
   const a = S.samples[0], b = S.samples[S.samples.length - 1];
   const dt = (b.t - a.t) / 1000;
@@ -1415,7 +1524,7 @@ function rbAssess(ctx, me, mob) {
   const observedDamageTicks = S.samples.slice(1).filter((v, i) => S.samples[i].me - v.me >= me.max * 0.02).length;
   const enoughCombatData = dt >= 25 && S.samples.length >= 12 && dealt >= mob.max * 0.01
     && (hitCount >= 3 || observedDamageTicks >= 4);
-  const historicalSpike = env.rt.rbDb?.[S.id]?.sp || S.sp || 0;
+  const historicalSpike = rbIncoming(S.id, context).sp || S.sp || 0;
   const spikeRisk = worstHit >= me.max * 0.35 || worstHit >= me.cur * 0.65 ||
     historicalSpike >= me.max * 0.33;
   // Реальное лечение должно быть измерено: оценка расхода неизвестной банки не подтверждает победу.
@@ -1505,7 +1614,7 @@ function rbAssess(ctx, me, mob) {
 function rbFlee(ctx, me, mob) {
   const S = ctx?.rb; if (!S || !(me?.max > 0) || !(me.cur > 0) || !(mob?.max > 0) || mob.cur <= mob.max * 0.05) return null;
   try { rbLearn(ctx); } catch (e) {}
-  const d = env.rt.rbDb?.[S.id] || {};
+  const d = rbIncoming(S.id, rbContext(S.id));
   const hit = Math.round(Math.max(0, ...(S.hits || []), d.hitP90 || 0, d.maxHit || 0));
   const worst = Math.max(hit, Math.round(Math.max(S.sp || 0, d.sp || 0)));
   // 9.2.5: бой-проба — спецудар не замерен, HP героя ниже оценки × 1,1 → выходим (пропуск 30 мин, не «не по силам»)
@@ -1566,6 +1675,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

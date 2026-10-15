@@ -24,7 +24,8 @@ description: Проверенные факты об игре l2wap.com для б
 - Эпики: `GET /game/epic-bosses` → `bosses[] {spawnId, level, isAlive, canAttack, attackBlockedReasonUk, coinOfLuckCost, respawnHours}`, `minRaidBossLevel` = герой − 9. Телепорт: `POST /game/epic-boss/teleport {spawnId, expectedRevision, expectedCoinOfLuckCost:1}` → 200 + {character} (явного ok нет). 8 эпиков: 29001 Королева 40, 29006 Ядро 50, 29014 Орфен 50, 29022 Закен 60, 29020 Баюм 75, 29019 Антарас 79, 29028 Валакас 85, 29045 Фринтеза 90.
 
 ## Коты (Warlock)
-- P.Atk кота = % от M.Atk хозяина: Kai +25 % (основной DD), Mew +20 %, Kat +15 %, «Summon Feline Queen» (l2_1331) с 11.10 — НЕ кот, а бафф кота Blessing of Queen: с 11.10 21:21 (переделан админом) шанс физ. крита +30 % и урон крита +25 % на 20 мин → с 12.10 снова **2 мин** (новость игры 11.10, код l2-hud-companion.js; 10.0 IL_FIX 1331 dur 120); у всех слуг точность 70 %, шанс крита 50 % (до того +20 % крит-урона на 2 мин), MP 87, «застосовано до героя та активного слуги» (IL_FIX 1331, роль «Баффы кота»; было: Feline Queen +10 %, бафф физ. крита «Blessing of Queen» — магу бесполезен). Kai Lv.5 P.Atk ≈1381, удар ≈1870.
+- Актуальная проверка 15.10: изучен Feline King; баффы Servitor Warrior, Final Servitor и Blessing of Queen совместимы и действуют **20 минут**. На King эффект Queen подтверждён в `activeSummon.activeBuffs`: critRate 600→780, critDmgMul 2,4→3. Слот1331 применяет бафф, не меняет активного слугу. Старые сведения о двух минутах и отсутствии эффекта у Kai не переносить на King. Подробности и измерения: `docs/WARLOCK-KING-2026-10-15.md`. Полный платный набор суммона — отдельная функция, не включать автоматически.
+- Боевой состав и фактические характеристики брать из свежего полного `/character`: питомец, оружие, ранги навыков и баффы меняют прогноз; старый DPS другого состава не является текущим замером.
 - Слоты панели: заголовки призывов английские («Summon Kai the Cat») при любом языке.
 
 ## Язык интерфейса
@@ -33,7 +34,7 @@ description: Проверенные факты об игре l2wap.com для б
 - Значит регулярки — двуязычные; поиск элементов — по id/классам/data-атрибутам, не по тексту.
 
 ## Рыбалка
-- `POST /game/fishing/action` (cast/pumping/reeling…), ответ с `fishing.serverNowMs`, `fishing.cooldowns` (структура пока неизвестна). Откат действия ≥≈0,9–1,05 с; лаг сервера даёт ложные `action_cooldown` — откат считать от времени сервера.
+- `POST /game/fishing/action` (cast/pumping/reeling…), ответ с `fishing.serverNowMs`, `fishing.cooldowns`. Проверено 15.10: `pumpingMs:500`, `reelingMs:700`, `pumpingUntil`/`reelingUntil` — серверные timestamp в мс. Старый интервал 0,9–1,05 с был наблюдаемым темпом, а не постоянным откатом; лаг сервера даёт ложные `action_cooldown` — откат считать от времени сервера.
 - Наживка: `buy-starter {offerKey:"bait_x10", amount}` — 1 пакет = 10 шт. = 1000 аден; по умолчанию 100 пакетов.
 - В фоне вкладки игра оживляет кнопки раз в 1 с — окно рыбалки держать видимым.
 

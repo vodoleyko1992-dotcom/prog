@@ -4,7 +4,7 @@
 // возвращается к нему же… добавь опции, каких чемпионов бить, особенно на лоу лвлах».
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const load = (file, env) => { const c = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise, URLSearchParams, document: { querySelector: () => null, querySelectorAll: () => [] }, location: { pathname: '/', search: '' } }; c.window = c; c.globalThis = c; vm.runInNewContext(read(file), c); return c.L2V7Factories[path.basename(file, '.js')](env); };
+const load = (file, env) => { const c = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise, URLSearchParams, document: { querySelector: () => null, querySelectorAll: () => [] }, location: { pathname: '/', search: '' } }; c.window = c; c.globalThis = c; vm.runInNewContext(read(file), c); return file.endsWith('/champs.js') ? require('./champs-context-fixture.cjs').freshChamps(c.L2V7Factories.champs,env) : c.L2V7Factories[path.basename(file, '.js')](env); };
 (async () => {
   // 1. закупка: порядок, доли, круглые пачки
   const E = load('modules/economy.js', { cfg: {}, rt: {} });

@@ -72,7 +72,7 @@ function groupPlan(ctx, opts, eco = false) {
   const ranked = [];
   for (const o of opts) {
     if (o.charge || o.force || !(o.dmg > 0)) continue;
-    const name = o.name.replace(/\s*\(.*$/, '').toLowerCase(), p = env.rt.skills?.[name];
+    const name = o.name.replace(/\s*\(.*$/, '').toLowerCase(), p = (env.damageSkills || env.rt.skills)?.[name];
     const model = env.fightGroupOn?.(name, mob.max);
     if (!(p?.aoe || model?.targets > 0)) continue;
     const probability = env.fightKillP?.(o.name, mob.cur);
@@ -390,17 +390,20 @@ function petBuffPick(ctx, me, mp, mob) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
+    let confirmedMissing = false;
     if (env.slotAction(b) === 'l2_1331') {
       // Подтверждённый бафф слуги важнее локального таймера, в том числе оплаченный набор.
-      const petBuff = env.warlock?.petBuffState?.(4699) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
+      const petBuff = env.warlock?.petBuffState?.(4699, at) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
       if (petBuff === true) continue;
+      confirmedMissing = petBuff === false;
       // 15.10: эффект4699 героя после слота1331 живёт20мин. Его наличие останавливает
       // повтор при неизвестном состоянии слуги; подтверждённое отсутствие у пета или новый призыв требует баффа.
       const hero = env.activeBuffs?.().find(x => +x.id === 4699 && +x.exp > now + 5000);
       const born = +env.rt.petBornT || 0, applied = Math.max(at, hero ? +hero.exp - dur : 0);
       if (petBuff == null && hero && (!born || applied >= born && applied <= now + 5000)) continue;
     }
-    if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
+    // Свежий полный снимок после Cancel важнее старой локальной отметки успешного баффа.
+    if (!confirmedMissing && at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     // 10.0 (аудит боя): Blessing of Queen ≈ +40 % урона на 20 мин — резерв 25 % MP не держим (MP не экономим), хватает на сам бафф — ставим
     if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0)) continue;
     return { b, n };
@@ -461,22 +464,31 @@ function dbfOn(ctx) {                                      // атакующий
   return Object.entries(ctx?.debuffed || {}).some(([k, t]) => { const il = dbfIl(k); return il.off && now - t < (il.dur || 15) * 1000; });
 }
 // урон заклинания в этом бою — с M.Def-дебаффом и без (зовётся из observeSlot ядра)
+const spellOwner = () => env.evidenceOwner?.() ?? JSON.stringify([env.rt.char || '', env.rt.classCur?.prof || '', env.rt.classCur?.slot ?? '', env.rt.classSwT || env.rt.classCur?.t || 0]);
 function spellSample(ctx, key, dmg) {
   if (!ctx || !(dmg > 0) || !key) return;
+  const owner = spellOwner();
+  if (ctx.spellOwner == null) ctx.spellOwner = owner;
+  if (ctx.spellOwner !== owner) ctx.spellInvalid = true;
+  if (ctx.spellInvalid) return;
   const s = ((ctx.spellDmg ||= {})[key] ||= { off: [0, 0], on: [0, 0] }), w = dbfOn(ctx) ? s.on : s.off;
   w[0] += dmg; w[1]++;
 }
 // итог боя: отношение «под дебаффом / без» по каждому заклинанию, где есть оба замера → rt.debuffGain
 async function debuffGainFlush(ctx) {
+  if (!ctx || ctx.spellInvalid) return;
+  if (ctx.spellOwner !== spellOwner()) { ctx.spellInvalid = true; return; }
   const r = Object.values(ctx?.spellDmg || {}).filter(s => s.off[1] && s.on[1]).map(s => (s.on[0] / s.on[1]) / (s.off[0] / s.off[1]));
   if (!r.length) return;
-  const all = [...(env.rt.debuffGain || []), ...r.map(x => Math.round(x * 1000) / 1000)].slice(-30);
-  await env.setRt({ debuffGain: all });
+  const samples = r.map(x => Math.round(x * 1000) / 1000);
+  const all = [...(Array.isArray(env.rt.debuffGain) ? env.rt.debuffGain : []), ...samples].slice(-30);
+  const fresh = env.rt.debuffEvidence?.v === 1 ? env.rt.debuffEvidence.ratios || [] : [];
+  await env.setRt({ debuffGain: all, debuffEvidence: { v: 1, ratios: [...fresh, ...samples].slice(-30) } });
   const g = debuffGain();
   if (g) env.rec('B', 'дебафф', `замер выгоды: урон заклинаний под M.Def-дебаффом ×${g.ratio.toFixed(2)} (${g.n} замеров) → ${g.ratio < 1.03 ? 'прибавки нет — атакующие дебаффы выключены' : 'окупается, если бою ещё ≥ ' + g.minActs + ' действий'}`);
 }
 function debuffGain() {                                   // медиана отношений; null — замеров меньше 6
-  const a = [...(env.rt.debuffGain || [])].filter(x => x > 0).sort((x, y) => x - y);
+  const a = [...(env.rt.debuffEvidence?.v === 1 ? env.rt.debuffEvidence.ratios || [] : [])].filter(x => x > 0).sort((x, y) => x - y);
   if (a.length < 6) return null;
   const ratio = a[a.length >> 1];
   return { ratio, n: a.length, minActs: ratio > 1.001 ? Math.ceil(1 / (ratio - 1)) + 1 : Infinity };
@@ -538,7 +550,7 @@ const DBF_MODEL = 1.11;
 
 // средний замеренный урон заклинаний с панели (≥ 2 замера), без замеров — 600
 function spellAvg() {
-  const known = mageSpellSlots().map(b => env.rt.skills?.[env.cleanTitle(b.title).toLowerCase()]).filter(p => p?.dmgN >= 2).map(p => p.dmg / p.dmgN);
+  const known = mageSpellSlots().map(b => (env.damageSkills || env.rt.skills)?.[env.cleanTitle(b.title).toLowerCase()]).filter(p => p?.dmgN >= 2).map(p => p.dmg / p.dmgN);
   return known.length ? known.reduce((a, b) => a + b, 0) / known.length : 600;
 }
 
@@ -551,11 +563,11 @@ function mageSpellSlots() {
     // 7.1.31 (скрин магистра 10.10): Corpse Life Drain на L2WAP лечит («Power 0»), урона нет; по справочнику — «Маг. атака» по трупу.
     // Не в ротацию: цель-труп, «в бою эффекта нет», или 5+ нажатий без единого замера урона
     if (il.target === 'CORPSE_MOB' || /труп моба/.test(il.L || '') || env.noEffect?.(b)) return false;
-    const p = env.rt.skills?.[n.toLowerCase()];
+    const p = (env.damageSkills || env.rt.skills)?.[n.toLowerCase()];
     if (p && (p.uses || 0) - (p.unknown || 0) >= 5 && !p.dmgN) return false;
     if (il.c && il.c !== 'Маг. атака' && il.t !== 'MDAM' && il.t !== 'MDAMDOT') return false;
     return il.c === 'Маг. атака' || il.t === 'MDAM' || il.t === 'MDAMDOT' ||
-      ((env.rt.skills?.[n.toLowerCase()]?.dmgN || 0) >= 2 && !il.c);
+      (((env.damageSkills || env.rt.skills)?.[n.toLowerCase()]?.dmgN || 0) >= 2 && !il.c);
   });
 }
 
@@ -565,7 +577,7 @@ function magePlan(ctx, mp) {
   // добиваем атакой. И если маны нет совсем (банки нет/на откате) — атака лучше, чем стоять
   const atk = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака' && ready(b) && (ctx.block.attack || 0) <= Date.now());
   // только по реальному замеру атаки (≥ 3 удара): без замера expDmg даёт 600 по умолчанию, и бот бил атакой (1 урон) по мобу с 134 HP
-  const aS = env.rt.skills?.['атака'], atkD = aS?.dmgN >= 3 ? aS.dmg / aS.dmgN : 0;
+  const aS = (env.damageSkills || env.rt.skills)?.['атака'], atkD = aS?.dmgN >= 3 ? aS.dmg / aS.dmgN : 0;
 
   // 7.1.31 (просьба игрока): кот бьёт вместе с хозяином (Kai Lv.3 ≈1500). Моб умрёт от удара кота — жмём бесплатную «Атаку»
   // (кот ударит с ней), заклинание за 22 MP не тратим. Атака на откате — ниже «добивание» само возьмёт самое дешёвое заклинание.
@@ -605,9 +617,10 @@ function magePlan(ctx, mp) {
       const n = env.cleanTitle(b.title), il = env.ilOf(b) || {}, k = env.skKey(b);
       const mpCost = env.skillMp(n) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
       // 9.2: урон по ЭТОЙ цели (анализатор боя: прошлые бои с ней + этот бой) важнее общего среднего по всем мобам
-      const dmg = env.fightDmgOn?.(n)?.mean || env.expDmg(k) || env.expDmg(n) || 0;
+      const observed = env.fightDmgOn?.(n);
+      const dmg = observed?.mean ?? (env.expDmg(k) || env.expDmg(n) || 0);
       const base = Array.isArray(il.pow) ? il.pow[0] : il.pow || 0;
-      return { key:'power:' + b.title, name:n, b, dmg:dmg || base, mpCost,
+      return { key:'power:' + b.title, name:n, b, dmg:observed ? dmg : dmg || base, mpCost,
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
         order:priority.indexOf(n.toLowerCase()) };
     }).filter(o => !mp || o.mpCost <= Math.max(0, mp.cur - 1));
@@ -620,7 +633,7 @@ function magePlan(ctx, mp) {
   // 7.1.16-fix: новые заклинания — учим в игре. Урон/КД/MP в L2WAP не как в Interlude, а без замера бот брал
   // «≈900 по умолчанию» и мог считать новое заклинание добивающим. Заклинание с < 3 замерами сначала пробуется на «толстом»
   // мобе (HP заметно больше любого известного удара — чтобы урон не обрезался смертью моба), затем встаёт в очередь по замеру
-  const meas = o => env.rt.skills?.[o.name.toLowerCase()]?.dmgN || 0;
+  const meas = o => (env.damageSkills || env.rt.skills)?.[o.name.toLowerCase()]?.dmgN || 0;
   const known = opts.filter(o => meas(o) >= 3), maxKnown = Math.max(0, ...known.map(o => o.dmg));
   if (env.cfg.mageProbe !== false && !ctx.rb && mob && mob.cur > 0) {
     const probe = opts.filter(o => meas(o) < 3).sort((a, b) => meas(a) - meas(b) || a.mpCost - b.mpCost)[0];
@@ -645,7 +658,8 @@ function magePlan(ctx, mp) {
     if (soon && !nowKill && !ctx.rb) { ctx.waitKillT ||= Date.now(); ctx.waitWhy = `жду ${soon.n}: откатится через полхода и добьёт (${Math.round(soon.p * 100)} %)`; return null; }
     if (!expired) ctx.waitKillT = 0;               // ждём не дольше 1,5 с на моба — дальше бьём тем, что готово
   }
-  const kill = (known.length ? known : opts).filter(o => o.dmg && o.dmg >= hpK * 1.08)
+  // Подтверждённые промахи не обходятся запасным правилом среднего урона.
+  const kill = (known.length ? known : opts).filter(o => { const p = env.fightKillP?.(o.name, hpK); return p != null ? p >= 0.85 : o.dmg && o.dmg >= hpK * 1.08; })
     .sort((a,b)=>a.mpCost-b.mpCost || b.dmg-a.dmg)[0];
   if (kill) return { ...kill, why: petN > 0 && hpK < hp ? `магия: добивание вместе с котом (${hp} HP, кот ≈${Math.round(petN)})` : `магия: добивание (${hp} HP)` };
   if (eco) {
@@ -675,7 +689,7 @@ function raidDrainPlan(ctx, opts, best) {
   if (!(potHeal > 0)) return null;
   const drains = env.names(env.cfg.nDrain), now = Date.now();
   const candidates = opts.filter(o => o.b !== best.b && drains.includes(o.name.toLowerCase()) &&
-    (ctx.block['drain:' + o.b.title] || 0) <= now && (env.rt.skills?.[o.name.toLowerCase()]?.dmgN || 0) >= 3).map(o => {
+    (ctx.block['drain:' + o.b.title] || 0) <= now && ((env.damageSkills || env.rt.skills)?.[o.name.toLowerCase()]?.dmgN || 0) >= 3).map(o => {
     // 40 % VT подтверждены каталогом игры (kb/data/game-skills-warlock.json). Это только оценка
     // для безопасного раннего хода; аварийную банку по-прежнему заменяет лишь фактическое лечение.
     const desc = env.rt.skillDb?.[o.name.toLowerCase()]?.desc || '';
@@ -708,13 +722,13 @@ function dpsPlan(ctx, mp) {
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
       // 10.0.11 (лог 13.10 22:03–22:12, Knight alt1): Drain Health — в логе игры без цифры урона («Витягування життя: темний урон…»),
       // 26 нажатий, урон засчитан 1 раз. Как у мага (mageSpellSlots): 5+ нажатий без единого замера урона — удара в ротации нет
-      { const k = env.skKey(b), pS = env.rt.skills?.[k];
+      { const k = env.skKey(b), pS = (env.damageSkills || env.rt.skills)?.[k];
         if (il?.l2Damage && !pS?.dmgN) { // старые нули были следствием ошибочного типа «дебафф»; даём до трёх новых замеров в бою
           const starts = ctx.damageProbeStart ||= {}, start = starts[k] ??= pS?.uses || 0;
           if (Math.max((pS?.uses || 0) - start, ctx.damageProbeActs?.[k] || 0) >= 3) continue;
         } else if (pS && (pS.uses || 0) - (pS.unknown || 0) >= 5 && !pS.dmgN) continue;
       }
-      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !env.rt.skills?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
+      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !(env.damageSkills || env.rt.skills)?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean ?? env.expDmg(env.skKey(b)), cd: (env.damageSkills || env.rt.skills)?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
@@ -774,11 +788,11 @@ function dpsPlan(ctx, mp) {
   // 9.2 (незнакомый класс/новый удар): удар с < 3 замерами урона сначала пробуем на «толстом» мобе (HP заметно больше любого
   // известного удара), как у мага (mageProbe) — иначе новый удар стоял бы в ротации с уроном «по справочнику» или не жался вовсе
   if (env.cfg.mageProbe !== false && !ctx.rb && hp > 0) {
-    const meas = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.dmgN || 0;
+    const meas = o => (env.damageSkills || env.rt.skills)?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.dmgN || 0;
     const known = opts.filter(o => o.key !== 'attack' && !o.charge && meas(o) >= 3), maxKnown = Math.max(env.expDmg('атака') || 0, ...known.map(o => o.dmg));
     // 10.0.11 (лог 13.10 22:03–22:12): «пробую новый удар (замер 1/3)» 16 раз подряд — Drain Health не даёт цифры урона в логе игры,
     // замер не растёт. Проба — не больше PROBE_USES нажатий: дальше удар живёт по тому, что намерено (или по справочнику)
-    const used = o => env.rt.skills?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.uses || 0;
+    const used = o => (env.damageSkills || env.rt.skills)?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.uses || 0;
     const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3 && used(o) < PROBE_USES).sort((a, b) => meas(a) - meas(b))[0];
     if (probe && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
   }
@@ -792,7 +806,7 @@ function dpsPlan(ctx, mp) {
     // v4.46: на РБ — без скиллов с уроном < 1,6 атаки (Force Buster: урона почти как атака, а MP вдвое больше)
     for (let i = opts.length - 1; i >= 0; i--) if (opts[i].key !== 'attack' && !opts[i].force &&
       !/^(burning fist|soul breaker|iron punch)$/i.test(opts[i].name) &&
-      !(env.ilOf(opts[i].b)?.l2Damage && !env.rt.skills?.[env.skKey(opts[i].b)]?.dmgN) &&
+      !(env.ilOf(opts[i].b)?.l2Damage && !(env.damageSkills || env.rt.skills)?.[env.skKey(opts[i].b)]?.dmgN) &&
       atkD > 0 && opts[i].dmg < atkD * 1.6) opts.splice(i, 1);
     // v4.46: HP < 60 % — бьём обычной атакой: она лечит вампиризмом (~8 % урона), скиллы — нет
     const a0 = opts.find(o => o.key === 'attack');
@@ -819,7 +833,7 @@ function dpsPlan(ctx, mp) {
   }
   // 3) максимум урона из готового; рядом ещё мобы — массовые удары считаем с уроном по соседям
   const near = extraMobs().filter(x => x.cur > 0).length;
-  const total = o => { const p = env.rt.skills?.[(o.name || '').replace(/\s*\(.*$/, '').toLowerCase()]; return o.dmg + (near && p?.aoe && p.splN ? p.spl / p.splN : 0); };
+  const total = o => { const p = (env.damageSkills || env.rt.skills)?.[(o.name || '').replace(/\s*\(.*$/, '').toLowerCase()]; return o.dmg + (near && p?.aoe && p.splN ? p.spl / p.splN : 0); };
   const best = opts.sort((a, b) => total(b) - total(a) || (b.cd || 0) - (a.cd || 0))[0];   // при равенстве — скилл с КД (раньше откатится)
   // готова только атака, а заряд ценнее удара (моб сильно выше по уровню: атака 1–3 урона) — копим энергию
   if (best?.key === 'attack' && chargeAct) {
@@ -964,7 +978,7 @@ async function hotbarRows3() {
 // Horror 15) — кончился «Бонус новичка» (так же лог 08.10 16:31), герой с NG-оружием не пробивает мобов 15–20 ур. Бот метил виды «не по зубам»
 // по одному и молчал о причине. Теперь при «не по зубам» раз в час — понятная строка: что с уроном и что делать (оружие бот сам не покупает)
 async function lowDmgNote() {
-  const aS = env.rt.skills?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
+  const aS = (env.damageSkills || env.rt.skills)?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
   if (!atk || atk > 5 || Date.now() - (env.rt.lowDmgNoteT || 0) < 3600000) return;
   await env.setRt({ lowDmgNoteT: Date.now() });
   env.rec('B', 'цели', `⚠ обычная атака ≈${atk.toFixed(0)} урона за удар (${aS.dmgN} ударов) — герой почти не пробивает: кончился «Бонус новичка» или оружие слабое/снято. `
@@ -1291,11 +1305,13 @@ async function battle() {
   };
 
   if (ctx.pet) { const n = env.actNet?.(); ctx.petActsKnown = Number.isSafeInteger(n?.okN); ctx.petActN = n?.okN; ctx.petActActor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]); env.warlock?.capture?.(ctx); }
+  env.champs?.observe?.(ctx);
   const t0 = Date.now();
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
   const strength = strengthSample(t0, env.actNet?.() || {});
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
   while (env.on && env.tabOwner) {
+    env.champs?.observe?.(ctx);
     strengthReliable(strength, Date.now(), env.actNet?.() || {});
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
@@ -1975,14 +1991,16 @@ async function battle() {
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
   const rewardLines = freshBattleLines(ctx.logStart || [], env.logLines());
   const rewards = battleRewards(rewardLines, loot, ctx.extraCredited);
+  env.champs?.observe?.(ctx);
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду
     const ttk = (Date.now() - t0) / 1000;
     // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
     // у раненого РБ снято не полное HP, а то, что было на входе
-    const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.max;
+    const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.champ && ctx.chHp0 > 0 ? Math.min(ctx.max,ctx.chHp0) : ctx.max;
     const measured = env.fightDamage?.(ctx.name, ctx.spawnId || spawnId, t0);
     const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0), measured?.removed || 0);   // победа — главный добит (соседи живы — их остаток не наш)
     const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
+    env.champs?.noteDamage?.(ctx,base,ttk)?.catch?.(e=>console.warn(env.TAG,'состав боя',e));
     const d = env.rt.dps?.singleTarget ? env.rt.dps : { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
     // записи; память вкладки обновлена сразу, очередь сохраняет порядок, при уходе со страницы недописанное уходит по pagehide

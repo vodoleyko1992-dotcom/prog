@@ -37,8 +37,23 @@ async function wakeGame() {
     chrome.tabs.sendMessage(tab.id, { cmd: 'kick' }).catch(() => null),
     new Promise(resolve => setTimeout(() => resolve(null), 5500))
   ]);
+  // 15.10: on=true уже запускает main. Его переход может закрыть канал kick;
+  // потерянный ACK не означает старый content и не разрешает перезагрузить новую страницу.
+  let navigated = tab.status === 'loading' || !!tab.pendingUrl;
+  const moved = (id, change) => { if (id === tab.id && (change.url || change.status === 'loading')) navigated = true; };
+  chrome.tabs.onUpdated?.addListener(moved);
   try {
     let pong = await ask();
+    const deadline = Date.now() + 12000;
+    for (let attempt = 0; pong?.v !== expected && Date.now() < deadline && (navigated || attempt < 2); attempt++) {
+      if ((await chrome.storage.local.get('on')).on !== true) return { ok: false, reason: 'Запуск был отменён (бот выключен)' };
+      const current = await chrome.tabs.get(tab.id);
+      if (!/^https?:\/\/(?:www\.)?l2wap\.com\//i.test(current.url || '')) return { ok: false, reason: 'Вкладка игры закрыта или открыта другая страница' };
+      if (current.url !== tab.url || current.status === 'loading' || current.pendingUrl) navigated = true;
+      await new Promise(resolve => setTimeout(resolve, 900));
+      if ((await chrome.storage.local.get('on')).on !== true) return { ok: false, reason: 'Запуск был отменён (бот выключен)' };
+      pong = await ask();
+    }
     if (pong?.v === expected) {
       if (pong.ok === true && pong.running === true && pong.owner === true)
         return { ok: true, status: 'Движок запущен и управляет вкладкой' };
@@ -50,7 +65,11 @@ async function wakeGame() {
       };
       return { ok: false, reason: hints[pong.reason] || ('Движок не подтвердил запуск: ' + (pong.reason || 'неизвестно')) };
     }
-    // Only reload for a missing or outdated document; never reload on an explicit lease denial.
+    // Обновляем только неподвижную страницу без рабочего content, после повторной проверки.
+    if (navigated) return { ok: false, reason: 'Вкладка перешла на другую страницу; подтверждение запуска пока не получено. Повторите Старт после загрузки.' };
+    const current = await chrome.tabs.get(tab.id);
+    if ((await chrome.storage.local.get('on')).on !== true) return { ok: false, reason: 'Запуск был отменён (бот выключен)' };
+    if (navigated || current.url !== tab.url || current.status === 'loading' || current.pendingUrl) return { ok: false, reason: 'Вкладка загружается; повторите Старт после загрузки.' };
     await chrome.tabs.reload(tab.id);
     const until = Date.now() + 12000;
     while (Date.now() < until) {
@@ -66,6 +85,7 @@ async function wakeGame() {
     }
     return { ok: false, reason: 'Не получено подтверждение после обновления вкладки. Проверьте активную версию расширения.' };
   } catch (e) { return { ok: false, reason: 'Не удалось запустить вкладку: ' + String(e?.message || e) }; }
+  finally { chrome.tabs.onUpdated?.removeListener(moved); }
 }
 async function showWakeResult() {
   const result = await wakeGame();

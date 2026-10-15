@@ -124,13 +124,16 @@ function faNote(lines, mob, info) {
 }
 
 async function trackLoot(lines, mob, info) {
+  const char=env.rt.char,lease=env.leaseEpoch;
   await env.itemsDb();
+  if(env.rt.char!==char||env.leaseEpoch!==lease||env.tabOwner===false)return;
   const faDrop = faNote(lines, mob, info);
   const L = { ...(env.rt.loot || {}) }, S = { ...(env.rt.lootSpecial || {}) };
   const LS = { ...(env.rt.lootStat || {}) }, MK = { ...(env.rt.mobKills || {}) }, RG = { ...(env.rt.resGot || {}) };
   const mk = (mob || '?').trim();
   MK[mk] = (MK[mk] || 0) + 1;
-  const rq = resQuests(), camp = env.cfg.campaign ? (env.rt.campaign?.targets || []).filter(t => t.res && !t.ok) : [];
+  const rq = resQuests(), campaign=env.cfg.campaign&&env.rt.campaign?{...env.rt.campaign,targets:(env.rt.campaign.targets||[]).map(t=>({...t}))}:null, camp = campaign ? campaign.targets.filter(t => t.res && !t.ok) : [];
+  const farmGot={...(env.rt.farmGot||{})},recipeGot={...(env.rt.recipeGot||{})};let farmChanged=false,recipeChanged=false;
   let campCh = false;
   let got = 0, value = 0;
   for (const l of lines) {
@@ -155,11 +158,11 @@ async function trackLoot(lines, mob, info) {
       const ct = camp.find(t => t.name.toLowerCase() === fk);     // ресурс главы («Нужно сдать») — прибавляем сразу, не ждём проверки главы
       if (ct) { ct.done = Math.min(ct.total, ct.done + q); ct.est = true; campCh = true; if (ct.done >= ct.total) { ct.ok = true; env.rec('B', 'кампания', `${ct.name}: ${ct.done}/${ct.total} — собрано, иду сдавать`); } }
       if (env.cfg.farmRes && fk === env.cfg.farmRes.trim().toLowerCase()) {
-        const fg = { ...(env.rt.farmGot || {}) }; fg[fk] = (fg[fk] || 0) + +m[2]; await env.setRt({ farmGot: fg });
+        const fg=farmGot; fg[fk] = (fg[fk] || 0) + +m[2]; farmChanged=true;
         if (env.cfg.farmNeed && fg[fk] >= env.cfg.farmNeed && fg[fk] - +m[2] < env.cfg.farmNeed) env.rec('B', 'фарм', `${m[1].trim()}: собрано ${fg[fk]}/${env.cfg.farmNeed} — цель выполнена`);
       }
       if (env.cfg.recipeRes && env.recipeKey(fk) === env.recipeKey(env.cfg.recipeRes)) {   // охота на рецепт: считаем выпавшие
-        const rg = { ...(env.rt.recipeGot || {}) }, rk = env.recipeKey(fk); rg[rk] = (rg[rk] || 0) + q; await env.setRt({ recipeGot: rg });
+        const rg=recipeGot, rk = env.recipeKey(fk); rg[rk] = (rg[rk] || 0) + q; recipeChanged=true;
         env.rec('B', 'рецепт', `📜 ${m[1].trim()} +${q} (всего ${rg[rk]}${env.cfg.recipeNeed ? '/' + env.cfg.recipeNeed : ''})`);
       }
       const it = env.itemOf(m[1].trim());
@@ -173,7 +176,8 @@ async function trackLoot(lines, mob, info) {
   const cv = x => typeof x === 'number' ? x : +x?.n || 0;
   const cap = (o, n) => { const k = Object.keys(o); if (k.length <= n) return o; return Object.fromEntries(Object.entries(o).sort((a, b) => cv(b[1]) - cv(a[1])).slice(0, n)); };   // v5.6: без бесконечного роста
   if (got) Object.assign(patch, { loot: cap(L, 200), lootSpecial: cap(S, 120), lootValue: (env.rt.lootValue || 0) + value, resGot: RG });
-  if (campCh) Object.assign(patch, { campaign: { ...env.rt.campaign, live: Date.now() }, campaignDue: env.rt.campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
+  if(farmChanged)patch.farmGot=farmGot;if(recipeChanged)patch.recipeGot=recipeGot;
+  if (campCh) Object.assign(patch, { campaign: { ...campaign, live: Date.now() }, campaignDue: campaign.targets.some(t => t.res && t.ok && t.est) || env.rt.campaignDue });
   await env.setRt(patch);
 }
  return { faKind, faNote, spoilPick, massSpoilPick, festivalParse, massSpoilStep, spoilStep, sweepStep, resQuests, resHave, trackLoot };

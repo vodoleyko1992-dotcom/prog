@@ -18,10 +18,14 @@ const jobGuards = new WeakMap();
 function guard(J) {
   if (J && jobGuards.has(J)) return jobGuards.get(J);
   const c = J?.context || context(), epoch = env.leaseEpoch;
-  const active = () => env.on !== false && env.tabOwner !== false && epoch === env.leaseEpoch && sameContext(c);
+  const same = () => env.tabOwner !== false && epoch === env.leaseEpoch && sameContext(c);
+  const active = () => env.on !== false && same();
+  active.same = same;
   if (J) jobGuards.set(J, active);
   return active;
 }
+// Локальная копия задания продолжает исходное действие, не захватывает новую аренду после await.
+function copyJob(J, patch) { const next = { ...J, ...patch }; jobGuards.set(next, guard(J)); return next; }
 const waitPayment = () => { env.setStatus('Маммон: исход оплаты неизвестен — жду подтверждения игры, повтор запрещён'); };
 const NEAR = 12000 * 0.9;                       // радиус NPC с карты (mapRadii.npcInteractionRadius 12000), с запасом
 const POLL = 90000, NPC_POLL = 30 * 60000, JOB_MAX = 4 * 60000, SMITH_EVERY = 6 * 3600000;
@@ -83,13 +87,15 @@ function orderNote(req) {
   }
   return o;
 }
-async function orderPoll(strict = false, active = () => true) {
+async function orderPoll(strict = false, active = guard()) {
+  if(!active())return null;
   const { ok, status, j } = await getJson('/game/mammon/merchant/request');
   if (!active()) return null;
   if (!ok) { if (strict) throw Error(`заказ торговца: HTTP ${status}`); if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
   return orderNote(j?.request);
 }
-async function npcPoll(strict = false, active = () => true) {
+async function npcPoll(strict = false, active = guard()) {
+  if(!active())return null;
   const out = { ...(env.rt.mmNpc || {}) };
   for (const k of ['order', 'smith']) {
     const { ok, status, j } = await getJson(STATE[k][0]);
@@ -246,8 +252,10 @@ function goalAll(upTo) {                          // upTo — только до 
     if (!R || depth > 6) { addRaw(mid, nm, left, n, L); if (depth > 0) cmiss += left; return; }
     if (!left) return;
     const k = Math.ceil(left / R[0]), cr = craft.get(mid) || { id: mid, nm: MM_RNAME[mid] || nameEn(mid) || nm, qty: 0, runs: 0, rec: R[1].map(x => `${x[2]} ${x[1]}`).join(' + ') + (R[0] > 1 ? ` (выход ${R[0]})` : '') };
-    cr.qty += left; cr.runs += k; craft.set(mid, cr);
-    if (!depth) ret.set(mid, (ret.get(mid) || 0) + left);
+    // Рецепты Cord/Fiber дают по20: просим вернуть весь оплаченный сырьём выход,
+    // даже если кузнецу сейчас нужно меньше. Остаток остаётся собственностью героя.
+    cr.qty += k * R[0]; cr.runs += k; craft.set(mid, cr);
+    if (!depth) ret.set(mid, (ret.get(mid) || 0) + k * R[0]);
     for (const [iid, inm, q] of R[1]) expand(iid, inm, q * k, L, depth + 1);
   };
   const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
@@ -426,8 +434,10 @@ function want() {
 }
 async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); return c && Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
 async function isNear(kind) {
-  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades'); if (r.ok) smithNote(r.j?.items); return r.ok; }
-  const [me, n] = [await heroXY(), (await npcPoll())[kind]];
+  const active=guard();if(!active())return false;
+  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok)smithNote(r.j?.items);return r.ok; }
+  const me=await heroXY();if(!active())return false;
+  const positions=await npcPoll(false,active);if(!active())return false;const n=positions?.[kind];
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
@@ -457,6 +467,13 @@ async function finish(J, ok, why) {
   if (!active()) return;
   if (!back.zoneGo) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
+// 15.10: сохранённое задание не должно хранить отменённую квитанцию после Stop до клика.
+async function cancelUnsent(ticket, original, sent = false) {
+  if(!ticket || !await env.payments.cancel(ticket, sent ? {notSent:true} : {}))return false;
+  if(guard(original).same() && env.rt.char===ticket.char && env.rt.mmJob?.payment?.id===ticket.id)
+    await env.setRt({mmJob:{...original,payment:null,paymentAction:null}});
+  return true;
+}
 async function teleport(J) {                      // страница телепорта к NPC: цена → сохранённое намерение → кнопка
   const active = guard(J); if (!active()) return;
   if (J.payment || env.payments?.blocked()) { waitPayment(); return; }
@@ -475,12 +492,12 @@ async function teleport(J) {                      // страница телеп
   if (!active()) { if (ticket) await env.payments.cancel(ticket); return; }
   const next = { ...J, step: 'act', tpT: Date.now(), ...(ticket ? { payment: ticket, paymentAction: 'teleport' } : {}) };
   await env.setRt({ mmJob: next });
-  if (ticket && !await env.rtCommit?.()) return;
-  if (!active()) { if (ticket) await env.payments.cancel(ticket); return; }
+  if (ticket && !await env.rtCommit?.()) { await cancelUnsent(ticket,J); return; }
+  if (!active()) { await cancelUnsent(ticket,J); return; }
   env.rec('B', 'Маммон', `телепорт к ${J.kind === 'order' ? 'торговцу' : 'кузнецу'}: ${price ? fmtA(price) + ' адены' : 'бесплатно'} · ${J.why}`);
-  if (ticket && !env.payments.sent(ticket)) { await env.payments.cancel(ticket); return; }
+  if (ticket && !env.payments.sent(ticket)) { await cancelUnsent(ticket,J); return; }
   const fired = env.fire(btn);
-  if (fired === false && ticket) { await env.payments.cancel(ticket, { notSent: true }); if (active()) await env.setRt({ mmJob: J }); return; }
+  if (fired === false && ticket) { await cancelUnsent(ticket,J,true); return; }
   await env.waitX(() => location.pathname !== LOC[J.kind] || null, 8000, 200);
   if (!active()) return;
   // Смена URL сама по себе не подтверждает платный телепорт. Следующий шаг сверит NPC с сервером.
@@ -491,12 +508,41 @@ async function teleport(J) {                      // страница телеп
 }
 // 10.0.24: общая диспетчеризация сверяет неизвестный платёж даже после отмены похода/смены режима.
 // Здесь только GET и память: не возрождаем mmJob, не возвращаем прежний home, не нажимаем кнопку.
+function paymentNote(path,d) {
+  const p=env.payments?.pending(),e=p?.evidence,ch=d.res?.character;
+  if(p?.kind!=='mammon'||e?.action!=='transfer'||p.char!==env.rt.char||path!=='/game/item-transfer/send'||d.method!=='POST'||!Number.isInteger(d.status)||d.error)return;
+  if(!Number.isSafeInteger(d.req?.expectedRevision)||d.req.itemKey!==e.itemKey||d.req.recipientName!==e.to||(d.req.qty??1)!==e.qty)return;
+  const refused=d.paymentId===p.id&&[400,401,403,404,409,412,422,423,429].includes(d.status);
+  if(!refused&&(d.status<200||d.status>=300||d.res?.error||d.res?.ok===false||ch?.name!==p.char||ch.id!==e.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=e.revision||d.req.expectedRevision!==e.revision))return;
+  const receipt={paymentId:p.id,char:p.char,charId:e.charId,revision:ch?.revision,...(refused?{refused:d.status}:{})};
+  try{root.sessionStorage?.setItem('l2bot.mammonPayment',JSON.stringify(receipt));}catch(_){}
+  if(env.tabOwner!==false)env.setRt({mmPaymentReceipt:receipt});
+}
 async function paymentReconcile() {
   const p = env.payments?.pending();
   if (p?.kind !== 'mammon' || p.char !== (env.rt.char || '') || env.tabOwner === false) return false;
   const epoch = env.leaseEpoch, char = env.rt.char || '', active = () => env.tabOwner !== false && epoch === env.leaseEpoch && char === (env.rt.char || '') && env.payments.pending()?.id === p.id;
   const e = p.evidence || {}; let proof = null;
-  if (e.action === 'upgrade' && e.target && Number.isFinite(e.level)) {
+  if(e.action === 'transfer' && e.itemId && Number.isFinite(e.before) && e.qty>0) {
+    let receipt=env.rt.mmPaymentReceipt;
+    try{const r=JSON.parse(root.sessionStorage?.getItem('l2bot.mammonPayment')||'null');if(r?.paymentId===p.id)receipt=r;}catch(_){}
+    if(receipt?.paymentId===p.id&&receipt.char===p.char&&receipt.charId===e.charId&&receipt.refused){
+      if(env.rt.mmJob?.cur?.paymentId===p.id){const saved=await env.setRt({mmJob:{...env.rt.mmJob,cur:null}});if(saved?.ok===false||!active())return false;}
+      await env.payments.confirm(p,{kind:'server-rejected',status:receipt.refused,spent:0});
+      env.setStatus(`Почта: сервер отклонил отправку (${receipt.refused}); перечитываю состояние`);return false;
+    }
+    if(receipt?.paymentId===p.id&&receipt.char===p.char&&receipt.charId===e.charId&&receipt.revision>e.revision)proof={kind:'server-receipt',action:'transfer',revision:receipt.revision};
+    const r=proof?null:await getJson('/character');if(!active())return false;const ch=r?.ok&&(r.j?.character||r.j);
+    const rows=ch?.inventory?.stacks;
+    if(ch?.name===p.char&&ch.id===e.charId&&ch.revision>e.revision&&Array.isArray(rows)&&rows.every(x=>Number.isSafeInteger(x.qty)&&x.qty>=0)) {
+      const left=rows.filter(x=>+x.itemId===e.itemId).reduce((n,x)=>n+x.qty,0);
+      if(left<=e.before-e.qty) {
+        const sent=await getJson('/game/mail/sent?page=1');if(!active())return false;
+        const row=sent.ok&&Array.isArray(sent.j?.items)&&sent.j.items.find(x=>x.kind==='ITEM_TRANSFER'&&x.messageId&&!(e.sentIds||[]).includes(x.messageId)&&Date.parse(x.createdAt)>=p.at-60000&&x.recipientName===e.to&&+x.itemTransfer?.itemId===e.itemId&&x.itemTransfer?.qty===e.qty);
+        if(row)proof={kind:'server-receipt',action:'transfer',messageId:row.messageId,itemId:e.itemId,qty:e.qty};
+      }
+    }
+  } else if (e.action === 'upgrade' && e.target && Number.isFinite(e.level)) {
     const r = await getJson('/game/mammon/blacksmith/upgrades'); if (!active()) return false;
     const item = r.ok && (r.j?.items || []).find(i => +i.itemId === +e.itemId && i.targetInstanceId === e.target);
     if (item && +item.level > e.level) { smithNote(r.j.items); proof = { kind: 'server-receipt', itemId: +e.itemId, target: e.target, level: +item.level }; }
@@ -511,6 +557,9 @@ async function paymentReconcile() {
   }
   if (!proof || !active()) { waitPayment(); return false; }
   const J = env.rt.mmJob;
+  if(e.action==='transfer' && J?.cur?.paymentId===p.id && J.t===e.jobT && (+env.rt.manualKickAt||0)===p.kick) {
+    if(await sentOk(J,J.cur)===false||!active())return false;
+  }
   if (J?.payment?.id === p.id) await env.setRt({ mmJob: { ...J, payment: null, paymentAction: null, ...(e.action === 'teleport' ? { step: 'act' } : {}) } });
   if (!active()) return false;
   return env.payments.confirm(p, proof);
@@ -522,20 +571,25 @@ async function visit(J) {
   if (location.pathname !== page) { env.setStatus(`Маммон: открываю ${NPC_NAME[J.kind]}`); location.href = page; await env.sleep(4000); return; }
   const log = [{ kind: 'visit', id: J.kind, ok: true, why: `пришёл к ${NPC_NAME[J.kind]}`, t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   await env.setRt({ mmJob: null, mmLog: log });
+  if(!active())return;
   await env.pauseBot(`пришёл к ${NPC_NAME[J.kind]} Маммона (по кнопке в окне бота) — жду команды: ▶ Продолжить в меню`);
 }
 async function claim(J) {
   const active = guard(J); if (!active()) return;
   if (location.pathname !== PAGE.order) { env.setStatus('Маммон: сдаю заказ'); location.href = PAGE.order; await env.sleep(4000); return; }
   const btn = await env.waitX(() => env.$q('.l2-mammon-order-submit'), 10000, 200);
-  if (!btn) { const o = await orderPoll(); return finish(J, false, o?.st === 'CLAIMED' ? `заказ уже забрал ${o.win || 'другой игрок'}` : 'кнопки «Здати» нет'); }
+  if(!active())return;
+  if (!btn) { const o = await orderPoll(false,active);if(!active())return;return finish(J, false, o?.st === 'CLAIMED' ? `заказ уже забрал ${o.win || 'другой игрок'}` : 'кнопки «Здати» нет'); }
   if (btn.dataset.requestId && btn.dataset.requestId !== J.id) return finish(J, false, 'заказ сменился, пока летели');
   if (btn.disabled) return finish(J, false, (btn.textContent || 'кнопка недоступна').trim().slice(0, 60));
   env.fire(btn);
   await env.waitX(() => (env.$q('#mammon-merchant-shop-msg')?.textContent || '').trim() || null, 6000, 200);
+  if(!active())return;
   const msg = (env.$q('#mammon-merchant-shop-msg')?.textContent || '').trim();
   await env.sleep(500);
-  const o = await orderPoll(), me = env.heroNick?.() || env.rt.char || '';
+  if(!active())return;
+  const o = await orderPoll(false,active), me = env.heroNick?.() || env.rt.char || '';
+  if(!active())return;
   const won = o?.id === J.id && o.st === 'CLAIMED' && (!me || o.win === me);
   return finish(J, won, won ? `сдал ${o.res} ×${o.qty} → +${o.col} Coin of Luck, +${fmtA(o.adena)} адены` : o?.st === 'CLAIMED' && o.win ? `опередил ${o.win}` : msg.slice(0, 80) || 'ответа нет');
 }
@@ -549,8 +603,8 @@ async function smith(J) {
   // 9.2.5: у кузнеца, а вещь-цель уже можно улучшить (игра пишет «хватает») — улучшаем в этот же заход, без второго телепорта
   const g = upItem(items, +env.cfg.mmGoalItem || 0), to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
   if (g && g.canAfford && !g.max && (+g.level || 0) < to && env.cfg.mmUpgrade !== false) {
-    const U = { ...J, up: true, why: `улучшить ${g.nameUk} Lv.${g.level} → ${+g.level + 1}` };
-    await env.setRt({ mmJob: U }); env.rec('B', 'Маммон', `кузнец: на ${g.nameUk} Lv.${+g.level + 1} всего хватает — улучшаю сразу`);
+    const U = copyJob(J, { up: true, why: `улучшить ${g.nameUk} Lv.${g.level} → ${+g.level + 1}` });
+    await env.setRt({ mmJob: U }); if(!active())return; env.rec('B', 'Маммон', `кузнец: на ${g.nameUk} Lv.${+g.level + 1} всего хватает — улучшаю сразу`);
     return upgrade(U, items);
   }
   const mat = m => `${m.nameUk} ${m.owned != null ? `${fmtA(m.owned)}/` : ''}${fmtA(m.required)}`;
@@ -596,20 +650,21 @@ async function upgrade(J, items) {
   if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
   const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
   const allowed = () => active() && +env.cfg.mmGoalItem === id && (env.cfg.mmUpgrade !== false || J.cmd) && L < Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
-  if (!allowed()) return finish({ ...J, cancelled: true }, false, 'улучшение отменено: настройка или цель изменена');
+  if (!allowed()) return finish(copyJob(J, { cancelled: true }), false, 'улучшение отменено: настройка или цель изменена');
   if (env.payments && (!it.targetInstanceId || !Number.isFinite(+it.cost?.adena) || !Number.isFinite(+it.cost?.coinOfLuck) || a < 0 || col < 0)) return finish(J, false, 'неизвестны экземпляр или точная цена улучшения');
   const ticket = env.payments ? await env.payments.prepare({ key: `mammon:up:${it.targetInstanceId}:${L}:${J.t}`, kind: 'mammon', quote: { amount: col, currency: 'coin_of_luck' }, evidence: { action: 'upgrade', itemId: id, target: it.targetInstanceId, level: L, adena: a, materials: it.cost?.materials || [] } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!allowed()) { if (ticket) await env.payments.cancel(ticket); return; }
-  J = { ...J, target: it.targetInstanceId || J.target, ...(ticket ? { payment: ticket, paymentAction: 'upgrade' } : {}) };
+  const beforePayment = J;
+  J = copyJob(J, { target: it.targetInstanceId || J.target, ...(ticket ? { payment: ticket, paymentAction: 'upgrade' } : {}) });
   await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
-  if (ticket && !await env.rtCommit?.()) return;
-  if (!allowed()) return finish({ ...J, cancelled: true }, false, 'улучшение отменено: настройка или цель изменена');
+  if (ticket && !await env.rtCommit?.()) { await cancelUnsent(ticket,beforePayment); return; }
+  if (!allowed()) { if(ticket)await cancelUnsent(ticket,beforePayment); return; }
   env.rec('B', 'Маммон', `улучшение: жму «${(btn.textContent || '').trim()}» — ${nm}, ${fmtA(a)} адены + ${col} Coin of Luck + ${(it.cost?.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`);
   try { document.documentElement.dataset.l2botConfirm = String(Date.now()); } catch (e) {}   // окно «точно?» игры — «да» (hook.js, 5 с)
-  if (ticket && !env.payments.sent(ticket)) { await env.payments.cancel(ticket); return; }
+  if (ticket && !env.payments.sent(ticket)) { await cancelUnsent(ticket,beforePayment); return; }
   const fired = env.fire(btn);
-  if (fired === false && ticket) { await env.payments.cancel(ticket, { notSent: true }); if (active()) await env.setRt({ mmJob: { ...J, payment: null, clicked: null } }); return; }
+  if (fired === false && ticket) { await cancelUnsent(ticket,beforePayment,true); return; }
   await env.waitX(() => (env.$q('#mammon-blacksmith-upgrade-msg')?.textContent || '').trim() || null, 6000, 200);
   await env.sleep(500);
   const r2 = await getJson('/game/mammon/blacksmith/upgrades'), it2 = r2.ok ? chosen(r2.j?.items) : null;
@@ -625,7 +680,7 @@ async function upgrade(J, items) {
     }
     // clicked и точный target уже сохранены: reload сверит выросший уровень и не нажмёт повторно.
     if (ticket && !await env.payments.confirm(ticket, { kind: 'server-receipt', itemId: id, target: J.target, level: +it2.level })) return;
-    return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`);
+    return finish(copyJob(J, { clicked: L }), true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`);
   }
   // уровень не подтвердился — следующий круг цикла перечитает список (J.clicked) и решит: вырос / ещё попытка / неудача
 }
@@ -692,11 +747,17 @@ function craftWant(now = Date.now()) {
 }
 // вернулось от крафтера: id × q — то же, что отправили (не пригодилось), или скрафченное — списываем его сырьё по рецепту
 function unsend(at, id, q, depth = 0) {
-  if (!(q > 0) || depth > 6) return;
-  if (at[id] > 0) { const u = Math.min(at[id], q); at[id] -= u; q -= u; }
-  const R = MM_RECIPES[id]; if (!q || !R) return;
+  if (!(q > 0) || depth > 6) return 0;
+  let used=0;
+  if (at[id] > 0) { used = Math.min(at[id], q); at[id] -= used; q -= used; }
+  const R = MM_RECIPES[id]; if (!q || !R) return used;
   const runs = Math.ceil(q / R[0]);
-  for (const [iid, , n] of R[1]) unsend(at, iid, n * runs, depth + 1);
+  const funded=Math.min(runs,...R[1].map(([iid,,n])=>Math.floor(unsend(at,iid,n*runs,depth+1)/n)));
+  const output=funded*R[0], remainder=Math.max(0,output-q);
+  // Частичное письмо не означает ещё один крафт при следующем письме.
+  // Уже произведённый остаток учитывается рядом с прочими промежуточными материалами.
+  if(remainder)at[id]=(at[id]||0)+remainder;
+  return used+Math.min(q,output);
 }
 function mailList(list) {
   if (!Array.isArray(list)) return null;
@@ -710,11 +771,11 @@ function mailList(list) {
   patch.mmMail = { t: Date.now(), unc };
   // учёт возврата: письма от крафтера после отправки, уже забранные в сумку (claimedAt) — кто бы ни нажал «Забрати», бот или игрок
   if (C?.at && to) {
-    const seen = new Set(C.seen || []), at = { ...C.at }, got = [], odd = [], want = new Set();
+    const seen = new Set([...(env.rt.mmCraftSeen || []), ...(C.seen || [])]), at = { ...C.at }, got = [], odd = [], want = new Set();
     const tree = (id, d = 0) => { if (want.has(id) || d > 6) return; want.add(id); for (const [iid] of MM_RECIPES[id]?.[1] || []) tree(iid, d + 1); };
     for (const k of Object.keys(C.ret || {})) tree(+k);   // ждём готовое и его промежуточное
     for (const a of list) {
-      if (!a || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
+      if (!a || a.attachmentId == null || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
       const k = String(a.attachmentId), t = Date.parse(a.createdAt) || Date.now();
       if (seen.has(k) || t < (C.t0 || 0) - 60000) continue;
       const before = JSON.stringify(at), expected = !want.size || want.has(+a.itemId) || at[a.itemId] > 0;
@@ -733,6 +794,8 @@ function mailList(list) {
       if (odd.length) env.rec('B', 'Маммон', `${C.to || crafter()} вернул не то, что нужно: ${odd.join(', ')} — из отправленного это не делается${C.want?.length ? `; ждём: ${C.want.map(([n, q]) => `${n} ×${fmtA(q)}`).join(', ')}` : ''}. Сырьё считаю ещё у крафтера — напиши ему или нажми «↺ Забыть, что у крафтера»`);
       env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${itNm(id)} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
       patch.mmCraft = left ? { ...C, at, seen: [...seen], gotT: Date.now() } : null;   // вся активная партия: повторный опрос страниц не списывает старые возвраты снова
+      // Список переживает завершение партии: свежее старое письмо не оплачивает новую.
+      patch.mmCraftSeen = [...seen].slice(-2000);
       goalT = 0;
     }
   }
@@ -740,14 +803,17 @@ function mailList(list) {
   return unc;
 }
 async function mailPoll() {
+  const active=guard();if(!active())return null;
   mailT = Date.now(); ssSet('l2bot-mmMailT', mailT);
   // 10.0.13: API возвращает историю вместе с уже забранными вещами; новые/ожидаемые вложения могут быть дальше первой страницы.
   const all = [];
   for (let pg = 1, total = 1; pg <= Math.min(total, 30); pg++) {
     const { ok, j } = await getJson(`/game/item-transfer/received?page=${pg}`);
+    if(!active())return null;
     if (!ok || !Array.isArray(j?.attachments)) return null;
     all.push(...j.attachments); total = Math.max(1, +j.totalPages || 1);
     if (pg < Math.min(total, 30)) await env.sleep(350);
+    if(!active())return null;
   }
   return mailList(all);
 }
@@ -812,12 +878,13 @@ async function noteStep(J) {
   const active = guard(J); if (!active()) return;
   const to = J.to || crafter();
   const left = J.notes || noteText(J.note, [...(J.note.prev || []), ...(J.done || []).map(x => [x[0], x[1]])], String(env.heroNick?.() || '').trim());
-  const end = why => env.setRt({ mmJob: { ...J, notes: null, noteCur: null, noteEnd: why } });   // итог — в строку «отправил …» (finish)
+  const end = why => active()&&env.setRt({ mmJob: { ...J, notes: null, noteCur: null, noteEnd: why } });   // итог — в строку «отправил …» (finish)
   if (!left.length) return end('письмо с заданием отправил');
   // прошлое нажатие «Надіслати» без ответа (страница перезагрузилась) — считаем ушедшим: лучше без одного письма, чем два одинаковых
   if (J.noteCur) { await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
-  if (location.pathname !== PAGE_MC) { await env.setRt({ mmJob: { ...J, notes: left } }); env.setStatus(`Почта: письмо крафтеру ${to}`); location.href = PAGE_MC; await env.sleep(4000); return; }
+  if (location.pathname !== PAGE_MC) { await env.setRt({ mmJob: { ...J, notes: left } });if(!active())return;env.setStatus(`Почта: письмо крафтеру ${to}`);location.href = PAGE_MC;await env.sleep(4000);return; }
   const form = await env.waitX(() => document.getElementById('mail-compose-form') || null, 10000, 200);
+  if(!active())return;
   if (!form) return end('страница письма не открылась — письмо не ушло');
   if (form.hidden) { location.href = PAGE_MC; await env.sleep(4000); return; }      // после «надіслано» форма скрыта — следующее письмо с новой страницы
   const toIn = document.getElementById('mail-compose-to'), tx = document.getElementById('mail-compose-text'), btn = document.getElementById('mail-compose-submit');
@@ -826,37 +893,44 @@ async function noteStep(J) {
   setVal(tx, left[0]);
   for (const eid of ['mail-compose-success', 'mail-compose-err']) { const el = document.getElementById(eid); if (el) { el.textContent = ''; el.hidden = true; } }
   await env.setRt({ mmJob: { ...J, notes: left, noteCur: Date.now() } });
+  if(!active())return;
   env.setStatus(`Почта: письмо крафтеру ${to}`);
   env.fire(btn);
   const res = await env.waitX(() => shownTxt(document.getElementById('mail-compose-success')) ? 'ok' : shownTxt(document.getElementById('mail-compose-err')) ? 'err' : null, 10000, 200);
+  if(!active())return;
   if (res === 'ok') { env.rec('B', 'Маммон', `письмо крафтеру ${to}: ${left[0].replace(/\s+/g, ' ').slice(0, 160)}`); await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
   if (res === 'err') return end(`письмо не ушло (${shownTxt(document.getElementById('mail-compose-err')).slice(0, 80)})`);
   // ответа нет — следующий круг считает письмо ушедшим (noteCur)
 }
 async function sentOk(J, cur) {
-  if (J.hand) { await env.setRt({ mmJob: { ...J, cur: null, items: J.items.slice(1), done: [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]] } }); env.rec('B', 'саб', `основному ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`); return; }   // 10.0.7
+  if (J.hand) { const saved=await env.setRt({ mmJob: { ...J, cur: null, items: J.items.slice(1), done: [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]] } });if(saved?.ok===false)return false; env.rec('B', 'саб', `основному ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`); return; }   // 10.0.7
   const C = env.rt.mmCraft || {}, at = { ...(C.at || {}) };
   at[cur.id] = (at[cur.id] || 0) + cur.q;
   const ret = { ...(C.ret || {}) }; for (const [k, n] of Object.entries(J.ret || {})) if (!J.retDone) ret[k] = (ret[k] || 0) + n;
   const done = [...(J.done || []), [cur.nm, cur.q, cur.fee || 0]];
   const want = J.note?.ret?.length ? J.note.ret : Object.entries(ret).map(([k, n]) => [itNm(k), n]);
-  await env.setRt({ mmCraft: { to: J.to, t0: C.t0 || Date.now(), t: Date.now(), at, ret, want, seen: C.seen || [] }, mmJob: { ...J, cur: null, retDone: true, items: J.items.slice(1), done } });
+  const saved=await env.setRt({ mmCraft: { to: J.to, t0: C.t0 || Date.now(), t: Date.now(), at, ret, want, seen: C.seen || [] }, mmJob: { ...J, cur: null, retDone: true, items: J.items.slice(1), done } });
+  if(saved?.ok===false)return false;
   env.rec('B', 'Маммон', `крафтеру ${J.to}: отправил ${cur.nm} ×${fmtA(cur.q)}${cur.fee ? ` (комиссия ${fmtA(cur.fee)} адены)` : ''}`);
 }
 async function sendStep(J) {
+  if(env.payments?.blocked()){await paymentReconcile();return;}
   const active = guard(J); if (!active()) return;
   const to = J.to || crafter();
   const allowed = () => J.cmd || J.hand || env.cfg.mmCraftSend !== false;
-  if (!allowed() && !J.cur) return finish({ ...J, cancelled: true }, false, 'автоотправка крафтеру выключена');
+  if (!allowed() && !J.cur) return finish(copyJob(J, { cancelled: true }), false, 'автоотправка крафтеру выключена');
   // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
   if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
   if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
   // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
   if (J.cur) {
     const m = await env.invRefresh?.(), h = m ? m[J.cur.id] || 0 : null;
+    if(!active())return;
     if (h == null) return finish(J, false, `сумка не прочиталась — не знаю, ушло ли ${J.cur.nm} ×${J.cur.q}; проверь почту «Відправлені»`);
-    if (h <= J.cur.before - J.cur.q) return sentOk(J, J.cur);
-    J = { ...J, cur: null }; await env.setRt({ mmJob: J });
+    if(env.payments && J.cur.state!=='prepared'){env.setStatus('Почта: исход прежней отправки неизвестен; повтор запрещён, проверь отправленные предметы');return;}
+    if (!env.payments && h <= J.cur.before - J.cur.q) return sentOk(J, J.cur);
+    J = copyJob(J, { cur: null }); await env.setRt({ mmJob: J });
+    if(!active())return;
   }
   if (!J.items?.length) {
     const d = J.done || [], fee = d.reduce((a, x) => a + (x[2] || 0), 0);
@@ -864,38 +938,44 @@ async function sendStep(J) {
   }
   const [id, want, nm] = J.items[0];
   const m = J.inv ? null : await env.invRefresh?.();    // сумка по факту — один раз на поход
-  if (m) J = { ...J, inv: 1 };
+  if(!active())return;
+  if (m) J = copyJob(J, { inv: 1 });
   const have = env.invQty(id), q = Math.min(want, have ?? 0);
   if (!(q > 0)) { env.rec('B', 'Маммон', `крафтеру: ${nm} в сумке нет — пропускаю`); await env.setRt({ mmJob: { ...J, items: J.items.slice(1) } }); return; }
   const c = await candFind(id);
+  if(!active())return;
   if (!c || c.err) return finish(J, false, c?.err || `${nm}: нет в списке «Передача предмета»`);
   const n = c.stack ? Math.min(q, c.avail || q) : 1;
   const rowOf = () => [...document.querySelectorAll('.l2-item-transfer-row-wrap')].find(w => w.dataset.itemKey === c.key) || null;
   await env.waitX(() => document.querySelector('.l2-item-transfer-row-wrap') || null, 10000, 200);
+  if(!active())return;
   // строка на другой странице: после передачи игра остаётся на той же странице списка — сначала «« Назад» до первой, затем «Вперед »»
   // 10.0 (лог 12.10 17:28–17:38): листали «« Назад» до первой страницы и потом вперёд, ожидая строку 3 с на каждой — Thread со стр. 6
   // после Iron Ore со стр. 5: 9 страниц ≈ 34 с. Номер страницы строки уже известен (candFind) → листаем прямо к ней по подписи «Страница N / M»
   let wrap = rowOf();
-  if (!wrap && c.page) { await pageGo(c.page); wrap = await env.waitX(rowOf, 1500, 100); }
+  if (!wrap && c.page) { await pageGo(c.page);if(!active())return;wrap = await env.waitX(rowOf, 1500, 100);if(!active())return; }
   // запасной путь (подписи нет, список сдвинулся): «« Назад» до первой, затем «Вперед »»
   for (const dir of [0, 1]) for (let i = 0; !wrap && i < 30; i++) {
     const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], nx = dir ? bs[bs.length - 1] : bs[0];
     if (!nx || nx.disabled || bs.length < 2) break;
-    env.fire(nx); await env.sleep(700); wrap = await env.waitX(rowOf, 3000, 200);
+    env.fire(nx);await env.sleep(700);if(!active())return;wrap = await env.waitX(rowOf, 3000, 200);if(!active())return;
   }
   if (!wrap) return finish(J, false, `${nm}: строки на странице передачи нет`);
   if (!wrap.querySelector('form')) { env.fire(wrap.querySelector('.l2-item-transfer-row')); }
   const form = await env.waitX(() => wrap.querySelector('form.l2-item-transfer-form') || null, 4000, 100);
+  if(!active())return;
   const qIn = form?.querySelector('input[type="number"]'), nIn = form?.querySelector('input[type="text"]'), btn = form?.querySelector('button[type="submit"]');
   if (!nIn || !btn || (c.stack && !qIn)) return finish(J, false, `${nm}: форма передачи не открылась`);
   if (qIn) setVal(qIn, n);
   setVal(nIn, to);
-  const fee = c.unit * n > 0 ? Math.max(1, Math.ceil(c.unit * n * 5 / 100)) : 0, cur = { id, q: n, nm, fee, before: have, t: Date.now() };
+  const fee = c.unit * n > 0 ? Math.max(1, Math.ceil(c.unit * n * 5 / 100)) : 0, cur = { id, q: n, nm, fee, before: have, t: Date.now(), state:'prepared' };
   await env.setRt({ mmJob: { ...J, cur } });
-  if (!allowed()) return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена');
+  if(!active())return;
+  if (!allowed()) return finish(copyJob(J, { cur: null, cancelled: true }), false, 'автоотправка крафтеру выключена');
   env.setStatus(`Почта: ${nm} ×${fmtA(n)} → ${to}`);
   env.fire(btn);
   const modal = await env.waitX(() => { const md = document.getElementById('item-transfer-confirm-modal'); return md && !md.hidden ? md : null; }, 5000, 100);
+  if(!active())return;
   if (!modal) { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')) || 'окно подтверждения не открылось'}`); }
   // окно игры: «Надіслати «предмет» гравцю «ник»?», «Кількість: N» — жмём «Підтвердити» только если там наш крафтер и наше количество
   const body = (modal.querySelector('#item-transfer-confirm-body')?.textContent || ''), nums = (body.match(/\d[\d\s ]*/g) || []).map(x => +x.replace(/\D/g, ''));
@@ -904,11 +984,29 @@ async function sendStep(J) {
     env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); await env.setRt({ mmJob: { ...J, cur: null } });
     return finish(J, false, `${nm}: в окне подтверждения не тот получатель или количество (${body.replace(/\s+/g, ' ').slice(0, 80)}) — отменил`);
   }
-  if (!allowed()) { env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена'); }
+  if (!allowed()) { env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); return finish(copyJob(J, { cur: null, cancelled: true }), false, 'автоотправка крафтеру выключена'); }
   // 10.0 (аудит): старое «успешно» от прошлого предмета не должно засчитать этот — очищаем сообщения перед нажатием
   for (const eid of ['item-transfer-success', 'item-transfer-err']) { const el = document.getElementById(eid); if (el) el.textContent = ''; }
-  env.fire(okBtn);
+  let ticket=null;
+  if(env.payments){
+    const r=await getJson('/character'),ch=r.ok&&(r.j?.character||r.j);if(!active()||!allowed())return;
+    const stocks=ch?.inventory?.stacks,actual=Array.isArray(stocks)?stocks.filter(x=>+x.itemId===id).reduce((a,x)=>a+x.qty,0):null;
+    if(ch?.name!==env.rt.char||!ch.id||!Number.isSafeInteger(ch.revision)||actual!==cur.before){env.setStatus('Почта: инвентарь изменился — сначала сверю партию');return;}
+    const history=await getJson('/game/mail/sent?page=1');if(!active()||!allowed()||!history.ok||!Array.isArray(history.j?.items))return;
+    ticket=await env.payments.prepare({key:`mammon:send:${to}:${id}:${J.t}`,kind:'mammon',quote:{amount:fee,currency:'Adena'},evidence:{action:'transfer',jobT:J.t,charId:ch.id,revision:ch.revision,itemId:id,itemKey:c.key,before:actual,qty:n,to,sentIds:history.j.items.map(x=>x.messageId).filter(Boolean)}});
+    if(!ticket)return;
+    if(!active()){await env.payments.cancel(ticket);return;}
+    cur.state='sent';cur.paymentId=ticket.id;
+    await env.setRt({mmJob:{...J,cur}});
+    if(!await env.rtCommit?.()||!active()||!allowed()||!env.payments.sent(ticket)){
+      if(await env.payments.cancel(ticket)&&active.same()&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;
+    }
+  }
+  const fired=env.fire(okBtn);
+  if(ticket&&fired===false){if(await env.payments.cancel(ticket,{notSent:true})&&active.same()&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;}
   const res = await env.waitX(() => shownTxt(document.getElementById('item-transfer-success')) ? 'ok' : shownTxt(document.getElementById('item-transfer-err')) ? 'err' : null, 10000, 200);
+  if(ticket){await paymentReconcile();return;}
+  if(!active())return;
   if (res === 'ok') return sentOk({ ...J, cur: null }, cur);
   if (res === 'err') { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')).slice(0, 100)}`); }
   // ответа нет — следующий круг проверит сумку (J.cur): ушло или нет
@@ -917,8 +1015,10 @@ async function claimStep(J) {
   const active = guard(J); if (!active()) return;
   if (location.pathname !== PAGE_MAIL) { env.setStatus('Почта: забираю предметы'); location.href = PAGE_MAIL; await env.sleep(4000); return; }
   const tab = await env.waitX(() => document.querySelector('#mail-tabs [data-mail-tab="items"]') || null, 8000, 200);
+  if(!active())return;
   if (!tab) return finish(J, false, 'вкладки «Предмети» в почте нет');
   if (!tab.classList.contains('is-active')) { env.fire(tab); await env.sleep(800); }
+  if(!active())return;
   const pane = '#mail-tab-items';
   // 10.0.14: игрок мог оставить почту на странице истории. Начинаем с первой, затем продолжаем вперёд по сохранённому заданию.
   if (!J.mailStarted) {
@@ -929,9 +1029,11 @@ async function claimStep(J) {
       if (!await env.waitX(() => label() !== before, 4000, 100)) return finish(J, false, 'первая страница почты не открылась');
       return;
     }
-    J = { ...J, mailStarted: true }; await env.setRt({ mmJob: J });
+    J = copyJob(J, { mailStarted: true }); await env.setRt({ mmJob: J });
+    if(!active())return;
   }
   const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
+  if(!active())return;
   const got = J.got || [];
   if (b === 'none' && got.length < CLAIM_MAX) {
     const label = () => document.querySelector(`${pane} .l2-mail-page-label`)?.textContent || '';
@@ -939,10 +1041,11 @@ async function claimStep(J) {
     if (pages.length >= 2 && next && !next.disabled) {
       env.fire(next);
       if (await env.waitX(() => label() !== before, 4000, 100)) return;
-      await mailPoll(); return finish(J, false, 'следующая страница почты не открылась');
+      if(!active())return;
+      await mailPoll(); if(!active())return; return finish(J, false, 'следующая страница почты не открылась');
     }
   }
-  if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
+  if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); if(!active())return; return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
   // 10.0 (лог 12.10 17:37 «✓ забрал: ? от Skye»): игра красит имя предмета (L2.decorateItemNameEl) и заменяет его класс
   // .l2-mail-item-transfer__name на l2-item-name → имя и число берём из списка почты по attachmentId, иначе из строки «Ви отримали»
   const card = b.closest('.l2-mail-item'), aid = String(card?.dataset?.attachmentId ?? ''), a = aid ? (env.rt.mmMail?.unc || []).find(x => x.a === aid) : null;
@@ -952,10 +1055,12 @@ async function claimStep(J) {
   if (msgEl()) msgEl().textContent = '';
   env.fire(b);
   const msg = await env.waitX(() => shownTxt(msgEl()) || null, 6000, 200);
-  if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
+  if(!active())return;
+  if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); if(!active())return; return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
   // 10.0.13: ошибка ревизии/сети — не успешное получение. Без сообщения перепроверяем вложение по полному списку сервера.
   let ok = /предмет\s+(?:у\s+сумці|в\s+сумке|в\s+инвентаре)|item.*(?:bag|inventory)/i.test(msg || '');
   if (!ok && !msg && aid) { const left = await mailPoll(); ok = !!left && !left.some(a => a.a === aid); }
+  if(!active())return;
   if (!ok) return finish(J, false, `не забрал ${what}: ${String(msg || 'нет подтверждения игры').slice(0, 80)}`);
   await env.setRt({ mmJob: { ...J, got: [...got, `${what}${from ? ' от ' + from : ''}`] } });
   await env.sleep(600);
@@ -975,6 +1080,7 @@ async function mmStep() {
     }
     if (env.payments?.blocked() && !J.payment) { waitPayment(); return true; }
     if (J.paymentAction === 'upgrade' && J.payment) { await smith(J); return true; }
+    if(J.kind==='send'&&J.cur&&env.payments){await sendStep(J);return true;}
     const mx = J.kind === 'send' ? SEND_MAX : JOB_MAX;
     if (Date.now() - (J.t || 0) > mx) { await finish(J, false, `не уложился в ${mx / 60000} мин`); return true; }
     if (J.kind === 'send') { await sendStep(J); return true; }
@@ -1010,6 +1116,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
+return { paymentNote, paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
