@@ -15,6 +15,18 @@ function battleColor(name, urlSpawn, mobMax, cameVia, target, same) {
   const tier = ({ green: 'blue', yellow: 'orange' })[String(raw).toLowerCase()] || String(raw).toLowerCase();
   return { spawn, tier, ordinary, lvl: fresh ? +m.lvl || 0 : 0, champ: !ordinary && (!!(fresh && m.kind === 'champion') || /^champ_[or]_/i.test(spawn) || !!tier) };
 }
+// 10.0.22 (лог 15.10 05:17): три минуты простоя и один удар слуги после 167 с
+// не доказывают нехватку урона. Силу оцениваем только по непрерывно принятым ходам.
+function strengthSample(now, net = {}) {
+  return { start: now, lastT: now, firstN: net.okN, lastN: net.okN, stalled: false };
+}
+function strengthReliable(sample, now, net = {}) {
+  const known = Number.isSafeInteger(net.okN) && Number.isSafeInteger(sample.firstN);
+  if (!known || net.okN < sample.lastN || now - sample.lastT > 20000 || (net.slowT || 0) >= sample.start) sample.stalled = true;
+  if (known && net.okN > sample.lastN) sample.lastT = now;
+  sample.lastN = net.okN;
+  return known && !sample.stalled && net.okN - sample.firstN >= 5;
+}
 function mobHp() {
   const m = (env.$q('#battle-mob-hp-val')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/);
   return m ? { cur: +m[1], max: +m[2], pct: +m[2] ? 100 * m[1] / m[2] : 0 } : null;
@@ -1257,8 +1269,10 @@ async function battle() {
   if (ctx.pet) { const n = env.actNet?.(); ctx.petActsKnown = Number.isSafeInteger(n?.okN); ctx.petActN = n?.okN; ctx.petActActor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]); env.warlock?.capture?.(ctx); }
   const t0 = Date.now();
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
+  const strength = strengthSample(t0, env.actNet?.() || {});
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
   while (env.on && env.tabOwner) {
+    strengthReliable(strength, Date.now(), env.actNet?.() || {});
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
     if (env.rt.shop?.urgent) {                        // «🛒 Закупить сейчас»: бросаем бой (в игре он идёт дальше без нас)
@@ -1517,6 +1531,11 @@ async function battle() {
       const N = env.actNet?.() || {}, okHits = (N.okN || 0) - (ctx.okN0 || 0), lagged = (N.slowT || 0) >= ctx.hp0T;
       const hopeless = el >= 15 && okHits >= 5 && !lagged && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
       if (hopeless || Date.now() - t0 > 180000) {
+        if (!strengthReliable(strength, Date.now(), env.actNet?.() || {})) {
+          env.rec('B', 'бой', `${mobName()}: бой затянулся без непрерывных принятых ходов — возвращаюсь на карту, силу моба не оцениваю`);
+          await env.setRt({ target: null });
+          return env.toMap();
+        }
         const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
         // 10.0.10 (лог 13.10 18:31:07, Elven Ruins): красный Tracker Skeleton 17 (29 880 HP, предел чемпиона 188 с) через 15 с получил общее «не пробиваю
         // (убить ≈134 с)» с меткой «этот вид 2 ч не бью» по ИМЕНИ — и обычные Tracker Skeleton 996 HP (цель ★ квеста рядом) бот дважды отказался бить.
@@ -1947,7 +1966,7 @@ async function battle() {
     // 10.0.5: чемпион — свой учёт (champs.learn: ДПС, итог по цвету, вердикт снимается); метка «не по зубам» по имени вида закрыла бы
     // и обычных мобов того же вида (красный Kookaburra ≈145 тыс. HP → обычные Kookaburra 3,4 тыс. HP на 2 ч не цели)
     if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, victory() ? 'win' : 'left', dealt, ttk)?.catch?.(e => console.warn(env.TAG, 'чемпионы', e));
-    else if (!ctx.rb && ttkOne > 45) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
+    else if (!ctx.rb && ttkOne > 45 && strengthReliable(strength, Date.now(), env.actNet?.() || {})) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
       await lowDmgNote();
@@ -2055,6 +2074,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

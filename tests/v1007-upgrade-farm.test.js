@@ -8,7 +8,8 @@ const content = read('content.js'), pj = read('popup.js'), ph = read('popup.html
 const load = (file, extra = {}) => { const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(read(file), sb); return sb; };
 // farmWin/farmFit/farmZones — вырезка из content.js (как в v721-farmwin)
 const cut = (re, tag) => { const m = content.match(re); assert.ok(m, 'вырезка ' + tag); return m[0]; };
-const zonesSrc = cut(/const farmWin = L =>[^\n]+\n/, 'farmWin') + cut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/, 'farmFit') + cut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8\) \{[\s\S]*?\n\}\n/, 'farmZones');
+// 10.0.22: необязательный фильтр доступности источников; прежние расчёты без фильтра сохраняются.
+const zonesSrc = cut(/const farmWin = L =>[^\n]+\n/, 'farmWin') + cut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/, 'farmFit') + cut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8, accept = \(\) => true\) \{[\s\S]*?\n\}\n/, 'farmZones');
 const mkZones = cfg => vm.runInNewContext(`(cfg => { ${zonesSrc}; return farmZones; })`, { Math, Object })(cfg);
 const FOM = 'fields_of_massacre', FOD = 'forest_of_dead', EV = 'enchanted_valley';
 const FARM = { res: {
