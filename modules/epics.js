@@ -355,8 +355,9 @@ async function epicTpBudgetReserve(k, price, opt = {}) {
   if (q.cost > 0) {
     const at = Date.now();
     q.reservationAt = at;
-    await env.setRt({ epicTpBudget: [...q.records, { t: at, k, cost: q.cost, unit: q.unit, kind: q.kind }] });
-    if (q.unit === 'Coin of Luck' && q.kind !== 'buff') await epicDbSet(k, { paidN: ((env.rt.epicDb || {})[k]?.paidN || 0) + 1, paidT: at });
+    const db = env.rt.epicDb || {};
+    await env.setRt({ epicTpBudget: [...q.records, { t: at, k, cost: q.cost, unit: q.unit, kind: q.kind }],
+      ...(q.unit === 'Coin of Luck' && q.kind !== 'buff' ? { epicDb: { ...db, [k]: { ...db[k], paidN: (db[k]?.paidN || 0) + 1, paidT: at } } } : {}) });
     env.rec('B', 'эпики', `бюджет: резерв ${q.cost} ${q.unit}${q.kind === 'buff' ? ' (платный городской бафф)' : q.kind === 'lair' ? ' (логово)' : ''}${q.limit ? ` · за 24 ч ${q.used + q.cost}/${q.limit}` : ''}`);
   }
   return q;
@@ -366,8 +367,9 @@ async function epicTpBudgetReserve(k, price, opt = {}) {
 async function epicTpBudgetRelease(k, reservedAt, why) {
   if (!reservedAt) return;
   const L = env.rt.epicTpBudget || [], r = L.find(x => x && x.k === k && x.t === reservedAt);
-  await env.setRt({ epicTpBudget: L.filter(x => x !== r) });
-  if (r?.unit === 'Coin of Luck' && r.kind !== 'buff') await epicDbSet(k, { paidN: Math.max(0, ((env.rt.epicDb || {})[k]?.paidN || 0) - 1) });
+  const db = env.rt.epicDb || {};
+  await env.setRt({ epicTpBudget: L.filter(x => x !== r),
+    ...(r?.unit === 'Coin of Luck' && r.kind !== 'buff' ? { epicDb: { ...db, [k]: { ...db[k], paidN: Math.max(0, (db[k]?.paidN || 0) - 1) } } } : {}) });
   env.rec('B', 'эпики', `телепорт к ${k} не состоялся (${why || 'нет подтверждения'}) — резерв бюджета снят`);
 }
 
@@ -630,8 +632,17 @@ async function epicArriveFail(E, e, why) {
 }
 
 async function epicStep() {
+  // Ожидания подготовки и карты могут пережить Stop, TvT или ручной выбор.
+  // Central fire защищает клик; здесь защищаем также состояние старого маршрута.
+  const context = () => JSON.stringify([env.rt.char, env.rt.manualKickAt, env.cfg.epicMode, env.cfg.epicList, env.rt.epic?.k]);
+  const captured = context(), actor = env.rt.char, selected = env.rt.epic?.k;
+  const active = () => env.on !== false && env.tabOwner !== false && env.cfg.epicMode !== false
+    && env.canAct?.() !== false && env.canRun?.() !== false && context() === captured;
+  const cancelUnsent = async res => { if (env.rt.char === actor) await epicTpBudgetRelease(selected, res?.reservationAt, 'маршрут отменён до нажатия'); };
+  if (!active()) return;
   const E = env.rt.epic || { step: 'pick' }, e = E.k ? epicOf(E.k) : null, now = Date.now();
   if (!env.cfg.autoRevive && !E.warned) { env.rec('B', 'эпики', 'внимание: «После смерти — в город и продолжать» выключено — после первой смерти бот остановится'); await epicSet({ warned: true }); }
+  if (!active()) return;
   if (E.step === 'retreatVerify' && e) {
     let ack = null;
     try { ack = JSON.parse(sessionStorage.getItem('l2bot.epicLeave') || 'null'); } catch (er) {}
@@ -701,6 +712,7 @@ async function epicStep() {
     // 8.0.3: список — из ответа сервера (фоном epicPollTick, по окнам появления); страницу «Эпик боссы» больше не открываем каждые
     // 10 мин (рвала цепочку «Охотиться дальше») — только если сервер 3 раза подряд не ответил, и не чаще раза в 30 мин
     if (epicApiDue()) await epicApiScan('выбор эпика');
+    if (!active()) return;
     if (epicApiDown() && (!env.rt.epicListT || now - env.rt.epicListT > 30 * MIN) && !(env.isFishing() && env.fishState())) {
       if (!isEpicPage()) { env.setStatus('Эпики: открываю «Эпик боссы»'); location.href = env.EPIC_URL; await env.sleep(4000); return; }
       return epicListScan();
@@ -709,13 +721,16 @@ async function epicStep() {
     const need = epicWant().find(k => { const d = (env.rt.epicDb || {})[k] || {}, st = env.rt.rbStats?.[epicIdOf(k)];
       return !epicLvlWhy(k) && d.alive !== false && !(st?.hp > 0 && st?.matk > 0) && Date.now() - ((env.rt.rbInfoFail || {})[epicIdOf(k)] || 0) > 6 * H; });
     if (need) await env.rbInfo(epicIdOf(need));
+    if (!active()) return;
     if (need || now - vAllT > MIN) { vAllT = now; await epicVerdictAll(); }   // 8 вердиктов — не чаще раза в минуту (шаг выбора идёт каждый круг)
+    if (!active()) return;
     const p = epicPick();
     if (!p) {
       if (!env.isMap() && !env.cfg.fishMode) { location.href = '/map.html'; await env.sleep(3000); return; }   // с рыбалкой — не на карту (было: карта ↔ рыбалка по кругу)
       // «мало банок» у живого эпика — докупить (потом вердикт пересчитается)
       const pots = epicWant().find(k => (env.rt.epicDb || {})[k]?.verdict?.v === 'pots' && (env.rt.epicDb || {})[k]?.alive === true);
       if (pots && await env.rbShopFirst(epicOf(pots).nm)) return;
+      if (!active()) return;
       const why = epicWant().length ? `подходящих эпиков нет — ${epicWhyNone()}` : 'в меню не выбран ни один эпик';
       if (E.last !== why) { await epicSet({ last: why }); env.recBot(`Эпики: ${why} — ${env.cfg.fishMode ? 'рыбачу' : 'фармлю мобов'}, список проверяю по окнам появления`); }
       if (env.cfg.fishMode) {
@@ -736,12 +751,16 @@ async function epicStep() {
   // ---- подготовка: банки → бафф → хил (полные HP/MP) ----
   if (E.step === 'prep') {
     if (await env.rbShopFirst(e.nm)) return;
+    if (!active()) return;
     // 8.0.3 (ревью): платный набор разрешён только по свежему (≤3 мин) ответу сервера «жив» — спросим заранее (GET, бесплатно)
     if (['warrior', 'mage'].includes(env.cfg.townBuffSet) && Math.floor(+env.cfg.epicCoinDailyMax || 0) >= TB_COL && !(now - ((env.rt.epicDb || {})[E.k]?.apiT || 0) < 2 * MIN)
       && !epicApiDown() && now - (env.rt.epicApiFail?.t || 0) > MIN) await epicApiScan('перед платным баффом');
-    if (await env.townBuffStart(`перед эпиком ${e.nm}`, true)) return;   // платный набор — через бюджет CoL (buffs: epicBuffCol/epicBuffPay)
+    if (!active()) return;
+    if (await env.townBuffStart(`перед эпиком ${e.nm}`, true)) return;
+    if (!active()) return;   // платный набор — через бюджет CoL (buffs: epicBuffCol/epicBuffPay)
     const me = env.meHp(), mp = env.meMp(), need = Math.max(90, env.cfg.rbRestHp || 95);
     if (me && (me.pct < need || (mp && mp.cur < mp.max * 0.8)) && await env.restoreVitals(`хил перед эпиком ${e.nm}: HP ${me.pct | 0}%`)) return;
+    if (!active()) return;
     if (me && me.pct < 70) {                        // баффер не вылечил (откат) — подлечиваемся на мобах
       if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
       env.setStatus(`Эпики: HP ${me.pct | 0}% — подлечиваюсь на мобах, потом ${e.nm}`);
@@ -756,22 +775,29 @@ async function epicStep() {
   if (E.step === 'go') {
     if (env.isMap()) {
       const here = await env.waitX(() => epicPins().find(x => x.k === E.k), 3000, 300);
+      if (!active()) return;
       if (here) { env.rec('B', 'эпики', `${e.nm}: он здесь, на этой карте — без телепорта`); await epicSet({ step: 'arrive', at: Date.now(), via: 'here', mapChecked: true, seenSaved: false }); return; }
       if (!E.mapChecked) await epicSet({ mapChecked: true });
+      if (!active()) return;
     } else if (!E.mapChecked) { env.setStatus(`Эпики: смотрю карту — вдруг ${e.nm} рядом (бесплатно)`); location.href = '/map.html'; await env.sleep(3000); return; }
     // перед любой дорогой (логово стоит адену, страница — Coin of Luck): жив ли он сейчас — свежий ответ сервера (≤3 мин), и по силам ли
     if (!(Date.now() - ((env.rt.epicDb || {})[E.k]?.apiT || 0) < 3 * MIN)) await epicApiScan('перед дорогой');
+    if (!active()) return;
     const dz = (env.rt.epicDb || {})[E.k] || {};
     if (dz.alive === false) return epicGiveUpNext(E.k, `мёртв (по серверу), появится ${epicUntilTxt(dz.until)}`);
     if (dz.alive !== true) return epicGiveUp(E.k, 15, 'сервер не подтвердил, что он жив — в дорогу не иду');
     const v = epicVerdict(E.k); await epicVerdictSave(E.k, v);
+    if (!active()) return;
     if (v.v !== 'ok') return epicGiveUp(E.k, 30, `в дорогу не иду — ${VLBL[v.v] || v.v}: ${v.why}`);
     const lz = epicLair(E.k);
     if (lz.ok) {
       const res = await epicTpBudgetReserve(E.k, { known: true, col: 0, adena: lz.price }, { kind: 'lair' });
+      if (!active()) { await cancelUnsent(res); return; }
       if (!res.ok) return epicGiveUp(E.k, 60, `логово: ${res.why}`);
       await epicSet({ step: 'arrive', at: Date.now(), via: 'zone', lair: lz.zone, seenSaved: false });   // lair — куда летим (rt.zone обновится только на карте)
+      if (!active()) { await cancelUnsent(res); return; }
       await env.setRt({ zoneGo: { id: lz.zone, t: Date.now(), why: `эпик ${e.nm}` }, zoneGoT: 0 });
+      if (!active()) { await cancelUnsent(res); return; }
       env.rec('B', 'эпики', `${e.nm}: лечу в логово ${lz.zone}${lz.price ? ' · ' + lz.price.toLocaleString('ru') + ' аден' : ''}`);
       location.href = '/teleport.html'; await env.sleep(4000);
       return;
@@ -781,8 +807,10 @@ async function epicStep() {
     if (!pre.ok && !pre.unknown) return epicGiveUp(E.k, 60, `платный телепорт не разрешён: ${pre.why}`);
     if (!isEpicPage()) { env.setStatus(`Эпики: к ${e.nm} — страница «Эпик боссы»`); location.href = env.EPIC_URL; await env.sleep(4000); return; }
     const b = await env.waitX(() => epicTpBtn(E.k), 8000, 200);
+    if (!active()) return;
     const row = epicRowsParse()[E.k];
     if (row) { const db = { ...(env.rt.epicDb || {}) }, turn = lifeTurn(db[E.k], row) ? [row.id || db[E.k]?.id || E.id] : []; db[E.k] = epicSeen(db[E.k], { id: row.id || db[E.k]?.id || '', alive: row.alive, status: row.status, deny: row.deny, respH: row.respH || db[E.k]?.respH || 0, price: row.price, priceUnit: row.priceUnit, priceText: row.priceText, tp: row.tp, domT: now }, now); await env.setRt({ epicDb: db, ...lifeResetPatch(turn) }); }
+    if (!active()) return;
     if (row && !row.alive) return epicGiveUpNext(E.k, `мёртв (${row.status || 'по списку'})`);
     if (row?.deny) return epicGiveUp(E.k, 60, row.deny);
     if (!b) return epicGiveUp(E.k, 60, 'кнопки «Телепорт» нет — платно не иду');
@@ -793,18 +821,24 @@ async function epicStep() {
       if (!pots || pots.n < minPots) return epicGiveUp(E.k, 30, `до телепорта нужно ≥${minPots} банок HP сверх резерва, известно ${pots?.n ?? 'неизвестно'}`);
     }
     const gate = await epicPayGate(E.k, row);
+    if (!active()) return;
     if (!gate.ok) return epicGiveUp(E.k, 60, `платный телепорт не разрешён: ${gate.why}`);
     const res = await epicTpBudgetReserve(E.k, gate.price);
+    if (!active()) { await cancelUnsent(res); return; }
     if (!res.ok) return epicGiveUp(E.k, 60, `платный телепорт не разрешён: ${res.why}`);
     const tpT = Date.now();
     await epicSet({ step: 'arrive', at: tpT, via: 'page', id: row?.id || E.id, tpT, tpRes: res.reservationAt || 0, seenSaved: false });   // до нажатия: телепорт уводит со страницы
+    if (!active()) { await cancelUnsent(res); return; }
     await env.setRt({ rbWant: row?.id || E.id || null, zoneGoT: Date.now() });
+    if (!active()) { await cancelUnsent(res); return; }
     env.rec('B', 'эпики', `телепорт к ${e.nm}${res.cost ? ` · ${res.cost} ${res.unit}` : ' · бесплатно'} · ${String(gate.v?.why || '').slice(0, 120)}`);
     try { sessionStorage.removeItem('l2bot.epicTp'); } catch (er) {}
     await env.pause();
+    if (!active()) { await cancelUnsent(res); return; }
     if (!env.fire(b)) { await epicTpBudgetRelease(E.k, res.reservationAt, 'кнопка не нажалась'); return epicGiveUp(E.k, 10, 'кнопка «Телепорт» не нажалась'); }
     env.transitionMonitor.expect('epicTp', location.pathname, 8000);
     if (await env.waitX(() => env.transitionMonitor.check('epicTp', location.pathname) === 'complete', 8000, 200)) return;
+    if (!active()) return;
     env.transitionMonitor.clear('epicTp');
     const ack = epicTpAck({ tpT });
     if (ack && ack.ok === false) { await epicTpBudgetRelease(E.k, res.reservationAt, 'сервер отказал'); return epicGiveUp(E.k, 60, `сервер отказал в телепорте${ack.msg ? ': ' + ack.msg : ''}`); }
@@ -828,8 +862,24 @@ async function epicStep() {
       if (now - (E.at || 0) > 90000) return epicArriveFail(E, e, 'карта не открылась');
       location.href = '/map.html'; await env.sleep(3000); return;
     }
-    await env.mapReady(15000, `Эпики: ищу ${e.nm} на карте`);
+    const ready = await env.mapReady(15000, `Эпики: ищу ${e.nm} на карте`);
+    if (!active()) return;
+    if (ready !== true) {
+      const since = E.mapLoadT || Date.now();
+      if (!E.mapLoadT) await epicSet({ mapLoadT: since });
+      if (!active()) return;
+      if (Date.now() - since < 30000) { await env.sleep(1500); return; }
+      if (!E.mapLoadReloads) {
+        await epicSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
+        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      }
+      await epicSet({ mapLoadT: 0, mapLoadReloads: 0 });
+      if (!active()) return;
+      return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`);
+    }
+    if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
     const r = await env.waitX(() => epicPins().find(x => x.k === E.k), 5000, 300);
+    if (!active()) return;
     if (!r) {
       if (now - (E.at || 0) < 25000) { await env.sleep(1500); return; }
       return epicArriveFail(E, e, 'на карте его нет');
@@ -841,7 +891,9 @@ async function epicStep() {
       const zp = env.rt.zonePend && now - (env.rt.zonePend.t || 0) < 120000, zh = E.via === 'here' && !zp ? env.rt.zone : '';
       const sz = E.via === 'zone' ? E.lair || '' : zh && env.rt.zoneCat?.[zh]?.city ? zh : '';
       await epicDbSet(E.k, { id: r.id, ...(r.lvl ? { lvl: r.lvl } : {}), ...(sz ? { seenZone: sz } : {}), ...(E.via === 'zone' ? { lairOkT: now, lairMiss: 0, lairBadT: 0 } : {}) });
+      if (!active()) return;
       await epicSet({ seenSaved: true });
+      if (!active()) return;
     }
     if ((E.tries || 0) >= 4) return epicGiveUp(E.k, 30, 'бой с ним 4 раза не открылся');
     // бой не открылся раньше — мешают миньоны зоны: бьём ближайшего и пробуем снова
@@ -849,12 +901,13 @@ async function epicStep() {
       const g = epicGuards().filter(x => x.idx >= 0).sort((a, b) => a.idx - b.idx)[0] || epicGuards()[0];
       if (g) {
         await epicSet({ guardT: E.tries });
+        if (!active()) return;
         env.rec('B', 'эпики', `${e.nm}: бой не открылся — бью миньона ${g.name} (${g.lvl})`);
         await env.setRt({ target: { name: g.name, champ: true, quest: false, rb: false }, mobClickAt: Date.now(), via: 'map' });
-        if (!env.on || env.tabOwner === false) return;
-        if (g.idx >= 0 && await env.attackSpawn({ ...g, champ: true, rank: 0 }, () => `Эпики: миньон ${g.name}`)) return;
+        if (!active()) return;
+        if (g.idx >= 0 && await env.attackSpawn({ ...g, champ: true, rank: 0 }, () => `Эпики: миньон ${g.name}`, { active })) return;
         // attackSpawn мог завершиться из-за Stop/потери вкладки — прямой URL тоже начинает бой.
-        if (!env.on || env.tabOwner === false) return;
+        if (!active()) return;
         location.href = '/battle.html?spawnId=' + encodeURIComponent(g.id); await env.sleep(4000); return;
       }
     }
@@ -862,8 +915,11 @@ async function epicStep() {
     if (bw) { env.setStatus(`Эпики: жду откат «${bw.who}» ${bw.s} с, потом ${e.nm}`); await env.sleep(Math.min(bw.s, 10) * 1000); return; }
     const kills0 = env.rt.rbDb?.[r.id]?.kills || 0;
     await epicSet({ step: 'fight', id: r.id, kills0, died: false, retreatT: 0, leaveChecked: false });
+    if (!active()) return;
     await env.setRt({ rbCur: r.id, rbWant: r.id });
-    const res = await env.rbEngage(r, `Эпик: бой с ${e.nm}${E.deaths ? ` (заход ${E.deaths + 1})` : ''}`, { epic: true });
+    if (!active()) return;
+    const res = await env.rbEngage(r, `Эпик: бой с ${e.nm}${E.deaths ? ` (заход ${E.deaths + 1})` : ''}`, { epic: true, active });
+    if (!active()) return;
     if (res === 'skip') {                           // 8.0.3: окно на месте сказало «не полезу» — вердикт держится до нового уровня (а не 180 мин и снова платить)
       const ps = env.rt.rbPreSkip?.[r.id], so = { v: ps?.kind === 'pots' ? 'pots' : 'strong', why: String(env.rt.rbPlan?.why || env.rt.rbDb?.[r.id]?.note || 'оценка по окну босса').slice(0, 200), heroLvl: env.heroLvl(), heroMax: env.meHp()?.max || 0, t: now };
       await epicDbSet(E.k, { scoutNo: so });

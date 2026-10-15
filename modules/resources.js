@@ -14,12 +14,15 @@ const meHp = () => bar('#l2-hud-hp-cur', '#l2-hud-hp-max');
 const meMp = () => bar('#l2-hud-mp-cur', '#l2-hud-mp-max');
 
 async function potWatch(b) {                     // после глотка 4,5 с собираем строки лечения из журнала
+  const context = () => JSON.stringify([env.rt.char, env.rt.classCur]);
+  const captured = context();
   const key = env.potKey(b), name = env.potName(b), t0 = Date.now(), before = env.logLines();
   if (!key) return;
   env.POT_LAST = t0;
   let sum = 0, pulses = 0, pulse = 0, every = 0, kind = /мани|маны|mana|\bmp\b/i.test(name) ? 'mp' : 'hp';
   while (Date.now() - t0 < 4500 && env.isBattle() && env.POT_LAST === t0) {
     await env.sleep(300);
+    if (context() !== captured) return;
     for (const l of env.newLines(before, env.logLines())) {
       let m = l.match(/(?:імпульсами по|импульсами по|by)\s*(\d+)\s*(HP|MP)\s*(?:кожні|каждые|every)\s*(\d+)/i);
       if (m && l.toLowerCase().includes(key.split(' (')[0].slice(0, 8))) { pulse = +m[1]; kind = m[2].toLowerCase(); every = +m[3]; }
@@ -28,6 +31,7 @@ async function potWatch(b) {                     // после глотка 4,5 
     }
     before.length = 0; before.push(...env.logLines());
   }
+  if (context() !== captured) return;
   const heal = Math.max(sum, pulse);
   if (!heal) return;
   const P = env.rt.pots?.[key] || {};

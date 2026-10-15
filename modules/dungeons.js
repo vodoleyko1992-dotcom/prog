@@ -10,6 +10,59 @@ const isCatPage = () => location.pathname === env.CAT_URL;
 const isDungeon = () => /\/dungeon\.html/i.test(location.pathname);
 
 const dungeonHere = () => new URLSearchParams(location.search).get('dungeonId') || '';
+// 15.10, ревизия: таймаут native-телепорта не доказывает отказ. Только точный
+// ответ отправленного запроса снимает запрет повторной оплаты после reload.
+async function paymentReconcile() {
+  const P = env.payments?.pending(); if (!P || P.kind !== 'cat-teleport') return !P;
+  const A = env.catPaymentNet?.();
+  if (!A || A.t < P.at || A.id !== P.evidence.id || A.paymentId !== P.id || A.expectedAdenaCost !== P.quote.amount) {
+    env.setStatus('Катакомбы: результат телепорта неизвестен; повторно не плачу'); return false;
+  }
+  if ((A.ok && A.characterName !== P.char) || (A.characterId && P.evidence.actorId && A.characterId !== P.evidence.actorId)) return false;
+  if (!A.ok && ![400, 401, 403, 404, 409, 412, 422].includes(A.status)) return false;
+  return env.payments.confirm(P, { kind: A.ok ? 'server-receipt' : 'server-rejected', id: A.id, status: A.status });
+}
+
+async function catTeleport(id, active) {
+  // У старых автономных DOM-fixture нет платежного модуля; основной runtime всегда передаёт его.
+  if (!env.payments) return null;
+  let ch, row;
+  try {
+    const [cr, lr] = await Promise.all([env.gameGet('/character'), env.gameGet('/game/catacombs')]);
+    const [c, l] = await Promise.all([cr.json(), lr.json()]);
+    if (!active()) return false;
+    ch = cr.ok && c?.character; row = lr.ok && l?.dungeons?.find(x => x?.dungeonId === id);
+  } catch (_) { if (active()) env.setStatus('Катакомбы: не удалось проверить цену и персонажа'); return false; }
+  const price = row?.adenaCost, adena = typeof ch?.adena === 'string' && /^\d+$/.test(ch.adena) ? +ch.adena : ch?.adena;
+  if (!ch || ch.name !== env.rt.char || !ch.id || !Number.isSafeInteger(ch.revision) || ch.inBattle !== false || !Number.isSafeInteger(price) || price < 0
+      || !Number.isSafeInteger(adena) || price > 0 && (adena - price < Math.max(0, env.cfg.shopReserve ?? 200000) || price > (env.cfg.shopMaxSpend ?? 2000000))) {
+    env.setStatus('Катакомбы: цена, запас адены или состояние героя не подтверждены'); return false;
+  }
+  const button = () => env.$q(`.l2-rb-row__tp[data-dungeon-id="${CSS.escape(id)}"]`);
+  const quoted = el => {
+    const txt = el?.closest('.l2-rb-row')?.querySelector('.l2-rb-row__price-gold, .l2-rb-row__price')?.textContent || '';
+    if (/coin|luck|монет|удач|\bcol\b/i.test(txt)) return false;
+    const m = txt.match(/\d[\d\s\u00a0\u202f]*/);
+    return !!el && !el.disabled && env.shown(el) && (price === 0 && /бесплат|безкоштов|\bfree\b/i.test(txt) || /аден|adena/i.test(txt) && m && +m[0].replace(/\s/g, '') === price);
+  };
+  if (!quoted(button())) return false;
+  const P = await env.payments.prepare({ key: `cat:${id}`, kind: 'cat-teleport', quote: { amount: price, currency: 'Adena' }, evidence: { id, revision: ch.revision, actorId: ch.id } });
+  if (!P) return false;
+  const patch = { catTpT: Date.now(), catCur: id, catBackTried: 0 };
+  const before = Object.fromEntries(Object.keys(patch).map(k => [k, env.rt[k] ?? null]));
+  const rollback = async () => { if (env.payments.matchesContext(P) && Object.keys(patch).every(k => env.rt[k] === patch[k])) await env.setRt(before); };
+  const saved = await env.setRt(patch);
+  if (saved?.ok !== true || !await env.rtCommit() || !active() || !quoted(button()) || !env.payments.sent(P)) { await rollback(); await env.payments.cancel(P); return false; }
+  if (env.fire(button()) === false) { await rollback(); await env.payments.cancel(P, { notSent: true }); return false; }
+  // Запись и разрешение отправки завершены до native-клика: сама страница может сразу исчезнуть.
+  return true;
+}
+
+const catGuard = () => {
+  const context = () => JSON.stringify([env.rt.char, env.rt.manualKickAt, env.cfg.catMode, env.cfg.catDungeon]);
+  const saved = context();
+  return () => env.on !== false && env.tabOwner !== false && env.cfg.catMode !== false && env.canAct?.() !== false && env.canRun?.() !== false && context() === saved;
+};
 
 const catLv = id => { const k = env.rt.catLv?.[id]; return k?.n >= 3 ? [k.lo, k.hi, true] : [env.CAT_LIST[id]?.[1] || 0, env.CAT_LIST[id]?.[2] || 0, false]; };
 
@@ -54,24 +107,31 @@ const mobLink = sid => [...document.querySelectorAll('#dungeon-mob-list a[href*=
 // 9.0: ссылка на моба — свежая, прямо перед кликом. Игра перерисовывает список каждые 5 с (опрос /game/dungeon/view, innerHTML = ''), а клик по
 // старой, уже удалённой из страницы ссылке не делает ничего («клик не открыл бой», 6 с впустую и вход заново). Моб на другой странице
 // списка — листаем «‹ / ›» (#dungeon-mob-page-prev/next) до нужной (≤ 20 нажатий)
-async function showMob(sid, idx) {
-  for (let k = 0; k < 20; k++) {
+async function showMob(sid, idx, active = catGuard()) {
+  for (let k = 0; k < 20 && active(); k++) {
     const a = mobLink(sid); if (a) return a;
     const ind = (env.$q('#dungeon-mob-page-ind')?.textContent || '').match(/(\d+)\s*\/\s*(\d+)/), cur = ind ? +ind[1] - 1 : 0, want = idx >= 0 ? Math.floor(idx / 15) : -1;
     const btn = want >= 0 && want < cur ? env.$q('#dungeon-mob-page-prev') : env.$q('#dungeon-mob-page-next');
     if (!btn || btn.disabled || !env.shown(btn) || (want >= 0 && want === cur)) return null;
     env.fire(btn); await env.sleep(120);
   }
-  return mobLink(sid);
+  return active() ? mobLink(sid) : null;
 }
 
 async function catGo(id) {                        // в подземелье: если уже стоим у входа — «Войти», иначе телепорт со страницы катакомб
-  const kick = env.rt.manualKickAt, char = env.rt.char;
-  const active = () => env.on !== false && env.tabOwner !== false && env.cfg.catMode !== false
-    && env.rt.manualKickAt === kick && env.rt.char === char;
+  if (env.payments?.blocked()) { await paymentReconcile(); return; }
+  const active = catGuard();
   if (!active()) return;
   id ||= catTarget(); if (!id) { env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return; }
   const nm = env.CAT_LIST[id]?.[0] || id;
+  // Квитанция пришла, но native redirect мог потеряться. Не оплачиваем снова
+  // при следующем тике/перезагрузке той же страницы: сначала смотрим вход на карте.
+  const receipt = env.rt.actionPayments?.history?.[0];
+  if (isCatPage() && receipt?.kind === 'cat-teleport' && receipt.evidence?.id === id
+      && receipt.char === env.rt.char && receipt.kick === (+env.rt.manualKickAt || 0)
+      && receipt.confirmation?.kind === 'server-receipt' && Date.now() - receipt.confirmedAt < 60000) {
+    location.href = '/map.html'; await env.sleep(3000); return;
+  }
   // v5.6: выбранное вручную подземелье недоступно (нет в списке / ошибка входа 2 раза) — не летаем по кругу за адену, ждём
   if (Date.now() - ((env.rt.catBad || {})[id] || 0) < 3600000 && env.cfg.catDungeon === id) { await env.idle(60000, `Катакомбы: «${nm}» сейчас недоступно (${env.rt.catBadWhy?.[id] || 'см. журнал'}) — выберите другое или «авто»`); return; }
   if (isDungeon() && dungeonHere() === id) return catHunt(id);
@@ -114,6 +174,12 @@ async function catGo(id) {                        // в подземелье: е
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   env.rec('B', 'катакомбы', `телепорт в ${nm}${price ? ' (' + price + ')' : ''}`);
+  if (env.payments) {
+    await env.pause(); if (!active()) return;
+    if (!await catTeleport(id, active)) return;
+    await env.waitX(() => !isCatPage() || env.catPaymentNet?.()?.t >= (env.payments.pending()?.at || Infinity), 8000, 200);
+    await paymentReconcile(); return;
+  }
   await env.setRt({ catTpT: Date.now(), catCur: id, catBackTried: 0 });
   if (!active()) return;
   const t0 = Date.now(); await env.pause(); if (!active() || !env.fire(b)) return;
@@ -128,10 +194,12 @@ async function catGo(id) {                        // в подземелье: е
   if ((env.rt.catTpErr || {})[id]) env.setRt({ catTpErr: { ...env.rt.catTpErr, [id]: 0 } });
 }
 
-async function catHunt(id) {                      // внутри подземелья: список мобов → бой
+async function catHunt(id) {
+  const active = catGuard(); if (!active()) return;                      // внутри подземелья: список мобов → бой
   const nm = env.CAT_LIST[id]?.[0] || id;
   const netOk = () => { const N = env.dungNet?.(); return N && N.id === id && Date.now() - N.t < 30000; };
   const ok = await env.waitX(() => netOk() || dungeonMobs().length || env.shown(env.$q('#dungeon-load-err')) ? 1 : 0, 10000, 250);
+  if (!active()) return;
   const err = env.shown(env.$q('#dungeon-load-err')) ? (env.$q('#dungeon-load-err').textContent || '').trim() : '';
   if (err) {                                       // «вы не в подземелье» и т.п. — входим заново через телепорт
     // v5.6: та же ошибка 2 раза подряд — подземелье недоступно на 1 ч (раньше: платный телепорт каждые 15–20 с бесконечно)
@@ -139,21 +207,22 @@ async function catHunt(id) {                      // внутри подземе
     if (en >= 2) {
       env.rec('B', 'катакомбы', `${nm}: ${err.slice(0, 100)} — ${en}-й раз подряд, подземелье пропускаю на 1 ч`);
       await env.setRt({ catErrN: { ...(env.rt.catErrN || {}), [id]: 0 }, catIn: null, catGoneT: Date.now(), catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: err.slice(0, 60) } });
-      location.href = env.cfg.catDungeon === id ? '/map.html' : env.CAT_URL; await env.sleep(4000); return;
+      if (!active()) return; location.href = env.cfg.catDungeon === id ? '/map.html' : env.CAT_URL; await env.sleep(4000); return;
     }
     env.rec('B', 'катакомбы', `${nm}: ${err.slice(0, 100)} — вхожу заново`);
-    await env.setRt({ catIn: null, catGoneT: Date.now(), catBackTried: 1, catTpT: 0, catErrN: { ...(env.rt.catErrN || {}), [id]: en } }); location.href = env.CAT_URL; await env.sleep(4000); return;
+    await env.setRt({ catIn: null, catGoneT: Date.now(), catBackTried: 1, catTpT: 0, catErrN: { ...(env.rt.catErrN || {}), [id]: en } }); if (!active()) return; location.href = env.CAT_URL; await env.sleep(4000); return;
   }
   if ((env.rt.catErrN || {})[id]) env.setRt({ catErrN: { ...env.rt.catErrN, [id]: 0 } });
   await env.setRt({ catIn: id, catInT: Date.now(), catBackTried: 0, catCur: id });
+  if (!active()) return;
   const { net, list } = mobList(id), L = env.heroLvl();
   if (!ok || !list.length) {
     const n = (env.rt.catEmpty || 0) + 1; await env.setRt({ catEmpty: n });
     env.setStatus(`Катакомбы ${nm}: мобов нет — жду респаун (${n})`);
-    if (n >= 6) { env.rec('B', 'катакомбы', `${nm}: мобов нет 6 раз подряд — другое подземелье на 1 ч`); await env.setRt({ catEmpty: 0, catBad: { ...(env.rt.catBad || {}), [id]: Date.now() } }); location.href = env.CAT_URL; await env.sleep(4000); return; }
+    if (n >= 6) { env.rec('B', 'катакомбы', `${nm}: мобов нет 6 раз подряд — другое подземелье на 1 ч`); await env.setRt({ catEmpty: 0, catBad: { ...(env.rt.catBad || {}), [id]: Date.now() } }); if (!active()) return; location.href = env.CAT_URL; await env.sleep(4000); return; }
     // 9.0: игра сама обновляет список раз в 5 с — ждём новый ответ, без перезагрузки страницы
     const t0 = env.dungNet?.()?.t || 0;
-    if (!(await env.waitX(() => (env.dungNet?.()?.t || 0) > t0 && env.dungNet().mobs.length ? 1 : 0, 12000, 300))) { location.reload(); await env.sleep(4000); }
+    if (!(await env.waitX(() => (env.dungNet?.()?.t || 0) > t0 && env.dungNet().mobs.length ? 1 : 0, 12000, 300))) { if (!active()) return; location.reload(); await env.sleep(4000); }
     return;
   }
   if (env.rt.catEmpty) await env.setRt({ catEmpty: 0 });
@@ -162,32 +231,35 @@ async function catHunt(id) {                      // внутри подземе
   if (lv.length) { const k = env.rt.catLv?.[id] || { n: 0 }, lo = Math.min(...lv), hi = Math.max(...lv);
     if (k.lo !== lo || k.hi !== hi || (k.n || 0) < 3) { await env.setRt({ catLv: { ...(env.rt.catLv || {}), [id]: { lo: net ? lo : Math.min(lo, k.lo ?? lo), hi: net ? hi : Math.max(hi, k.hi ?? hi), n: net ? Math.max(3, (k.n || 0) + 1) : (k.n || 0) + 1, t: Date.now() } } });
       if (!k.n || (net && (k.lo !== lo || k.hi !== hi))) env.rec('B', 'катакомбы', `${nm}: мобы ${lo}–${hi} ур.${net ? `, ${list.length} шт.` : ''} (${[...new Set(list.map(x => x.name))].slice(0, 8).join(', ')})`); } }
+  if (!active()) return;
   const pick = catPick(list, L);
   if (!pick) {
     const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto', w = catWin(L);
     env.setStatus(`Катакомбы ${nm}: мобов ${w.lo}–${w.hi} ур. нет (есть ${Math.min(...list.map(x => x.lvl))}–${Math.max(...list.map(x => x.lvl))})${auto ? ' — ищу другое подземелье' : ' — жду'}`);
-    if (auto) { if (net) env.rec('B', 'катакомбы', `${nm}: мобов ${w.lo}–${w.hi} ур. нет — другое подземелье на 1 ч`); await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: 'нет мобов по уровню' }, catIn: null }); location.href = env.CAT_URL; await env.sleep(4000); return; }
-    await env.sleep(10000); location.reload(); await env.sleep(4000); return;
+    if (auto) { if (net) env.rec('B', 'катакомбы', `${nm}: мобов ${w.lo}–${w.hi} ур. нет — другое подземелье на 1 ч`); await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: 'нет мобов по уровню' }, catIn: null }); if (!active()) return; location.href = env.CAT_URL; await env.sleep(4000); return; }
+    await env.sleep(10000); if (!active()) return; location.reload(); await env.sleep(4000); return;
   }
   env.setStatus(`Катакомбы ${nm}: бой с ${pick.name} (${pick.lvl})${pick.champ ? ' — чемпион' : ''}`);
-  await env.pause(); if (!env.on || !catPick([pick], env.heroLvl())) return;
+  await env.pause(); if (!active() || !catPick([pick], env.heroLvl())) return;
   await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb,
     ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, exp: pick.exp || 0, fa: pick.fa, valueT: Date.now(), probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
-  const a = await showMob(pick.id, net ? pick.i : -1);
+  if (!active()) return;
+  const a = await showMob(pick.id, net ? pick.i : -1, active);
   // Пауза и перелистывание асинхронны: запреты могли измениться до самого клика.
-  if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; }
-  if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
+  if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
+  if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (!active()) return; if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
   // ссылка не открыла бой (или моба не нашли на страницах) — через окно моба и «В бой»
   const info = a?.closest('li')?.querySelector('[data-spawn-id]') || [...document.querySelectorAll('#dungeon-mob-list [data-spawn-id]')].find(x => x.dataset.spawnId === pick.id);
-  if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; }
-  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if (!env.on || !catPick([pick], env.heroLvl())) { await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
+  if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
+  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
+  if (!active()) return;
   // бой не открылся: «подойди ближе» (герой снаружи подземелья) — входим заново; два раза подряд не помогло — через телепорт
   const far = /ближ|too_far|далеко/i.test(env.noticeText() + ' ' + (env.$q('#dungeon-load-err')?.textContent || '')) || env.NET_ERR.err === 'battle_too_far' && Date.now() - env.NET_ERR.t < 8000;
   const n = (env.rt.catFar || 0) + 1;
-  if (n >= 3) { env.rec('B', 'катакомбы', `${nm}: бой не открывается${far ? ' («подойди ближе»)' : ''} — захожу заново через телепорт`); await env.setRt({ catFar: 0, catIn: null, catGoneT: Date.now(), catTpT: 0, catBackTried: 1 }); location.href = env.CAT_URL; await env.sleep(4000); return; }
+  if (n >= 3) { env.rec('B', 'катакомбы', `${nm}: бой не открывается${far ? ' («подойди ближе»)' : ''} — захожу заново через телепорт`); await env.setRt({ catFar: 0, catIn: null, catGoneT: Date.now(), catTpT: 0, catBackTried: 1 }); if (!active()) return; location.href = env.CAT_URL; await env.sleep(4000); return; }
   await env.setRt({ catFar: n });
   env.rec('B', 'катакомбы', `${nm}: ${a ? `клик по «${pick.name}» не открыл бой` : `«${pick.name}» нет в списке на странице`}${far ? ' — «подойди ближе»: вхожу в подземелье заново' : ' — обновляю'} (${n}/2)`);
-  location.href = `/dungeon.html?dungeonId=${encodeURIComponent(id)}&enter=1`; await env.sleep(5000);
+  if (!active()) return; location.href = `/dungeon.html?dungeonId=${encodeURIComponent(id)}&enter=1`; await env.sleep(5000);
 }
 
 // 9.0: окно уровней. «Авто» — от героя −«ниже» до +«выше» (меню «Желаемый уровень мобов»); подземелье выбрано вручную — его мобы любого уровня
@@ -288,6 +360,6 @@ async function sealStep() {
   await sealDone(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);
