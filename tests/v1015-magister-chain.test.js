@@ -8,7 +8,7 @@ const {fixture}=load(root+'/tests/v1015-magister.test.js','{fixture}');
 function integrated(o={}){
  const f=flowFixture('mage'),m=fixture({max:1,path:'/battle.html',cfg:{catMode:!!o.cat,catDungeon:'witch'},rt:{lvl:74,magChecked:{'0:human_warlock':{lvl:74}}}});
  Object.assign(f.env.rt,m.ctx.rt,{kills:0,magister:null,catIn:o.cat?'witch':null});Object.assign(f.env.cfg,m.ctx.cfg,{deepEvery:0});
- m.ctx.rt=f.env.rt;m.ctx.cfg=f.env.cfg;m.ctx.location=f.location;f.location.search='?spawnId=first-mob';
+ m.ctx.rt=f.env.rt;m.ctx.cfg=f.env.cfg;m.ctx.location=f.location;f.location.search=o.cat?'?spawnId=sdms_witch_001':'?spawnId=first-mob';
  for(const key of ['on','tabOwner'])Object.defineProperty(m.ctx,key,{get:()=>f.env[key],set:v=>f.env[key]=v});
  f.env.heroLvl=m.ctx.heroLevel;m.ctx.victory=f.combat.victory;m.ctx.toMap=async()=>{f.events.push('map');f.location.pathname='/map.html'};
  m.ctx.catGo=async id=>{f.events.push('cat:'+id);f.location.href='/dungeon.html?dungeonId='+id};f.env.autonomyMode=m.ctx.autonomyMode;

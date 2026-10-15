@@ -25,6 +25,12 @@
 
 ---
 
+## 2026-10-15 11:18 Asia/Vladivostok (UTC+10) — Codex
+
+- **PR:** [#144](https://github.com/vodoleyko1992-dotcom/prog/pull/144), ветка `codex/ashen-not-catacombs`.
+- **Что сделано:** цепочка «Катакомбы: охотиться дальше» опирается на текущий ID моба подземелья, а не на сохранённый `catIn`; Ashen Bastion остаётся отдельной зоной прокачки без адены.
+- **Что осталось:** проверить поведение после обновления расширения; режим катакомб по решению пользователя остаётся приоритетным.
+
 ## 2026-10-15 11:14 Asia/Vladivostok (UTC+10) — Codex
 
 - **PR:** [#142](https://github.com/vodoleyko1992-dotcom/prog/pull/142), ветка `codex/ashen-bastion-farm`.

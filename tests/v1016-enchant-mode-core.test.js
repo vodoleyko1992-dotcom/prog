@@ -45,7 +45,7 @@ for(const [key,label] of [['recovery','recovery'],['revive','revive'],['tvt','Tv
 test('ожидание чужой задачи не вызывает watchdog и объясняет причину',async()=>{const c=mainFixture();c.rt.magister={t:Date.now()};c.rt.enchant={status:'running'};await vm.runInContext('main()',c);assert.deepEqual(c.calls.filter(Array.isArray).map(x=>x[1]),[false]);assert.ok(c.calls.some(x=>typeof x==='string'&&/магистр/i.test(x)),JSON.stringify(c.calls));assert.ok(!c.calls.includes('magister start'))});
 test('готовая серия не уводит со страницы заточки',async()=>{const c=coreFixture();c.rt.enchant={runId:'run',status:'done',home:'/map.html'};c.location.pathname='/enchant.html';await vm.runInContext('enchantDispatch()',c);assert.equal(c.location.href,'');assert.equal(c.rt.enchant.returned,undefined)});
 function chainFixture({cat=false,changeAt='',mode='farm'}={}) {
- const calls=[],box={console,Date,URLSearchParams,location:{pathname:'/battle.html',search:'',href:'/battle.html'}};
+ const calls=[],box={console,Date,URLSearchParams,location:{pathname:'/battle.html',search:cat?'?spawnId=sdms_crypt_001':'?spawnId=dense_001',href:'/battle.html'}};
  vm.runInNewContext(read('modules/mobfarm.js'),box);
  const env={on:true,tabOwner:true,cfg:{chain:true,catMode:cat,priority:'[все]',shopAuto:false},rt:{catIn:cat?'crypt':null},
   autonomyMode:()=>mode,tvtSoon:()=>false,rnd:()=>0,sleep:async()=>{if(changeAt==='sleep')mode='enchant'},victory:()=>true,pvpPending:()=>false,

@@ -125,11 +125,11 @@ test('остановка во время продолжения не запус�
  assert.equal(f.events.filter(x=>x==='hunt').length,1);assert.ok(!f.events.includes('map'));
 });
 test('успешная цепочка подземелья сохраняет место и не вызывает платный вход',async()=>{
- const f=flowFixture('mage');Object.assign(f.env.cfg,{catMode:true,catDungeon:'witch'});f.env.rt.catIn='witch';await f.combat.battle();
+ const f=flowFixture('mage');Object.assign(f.env.cfg,{catMode:true,catDungeon:'witch'});f.env.rt.catIn='witch';f.location.search='?spawnId=sdms_witch_001';await f.combat.battle();
  assert.equal(f.env.rt.kills,1);assert.equal(f.env.rt.catIn,'witch');assert.ok(f.env.rt.catInT);assert.equal(f.events.filter(x=>x==='hunt').length,1);assert.equal(f.location.href,undefined);
 });
 test('отказ цепочки подземелья → настоящий catGo → список текущего подземелья без телепорта',async()=>{
- const f=flowFixture('mage',{huntFail:true});Object.assign(f.env.cfg,{catMode:true,catDungeon:'witch'});f.env.rt.catIn='witch';
+ const f=flowFixture('mage',{huntFail:true});Object.assign(f.env.cfg,{catMode:true,catDungeon:'witch'});f.env.rt.catIn='witch';f.location.search='?spawnId=sdms_witch_001';
  Object.assign(f.env,{CAT_LIST:{witch:['Catacomb of the Witch',60,72]},heroAt:()=>({t:Date.now(),dung:'witch'}),isMap:()=>false});
  vm.runInContext(fs.readFileSync(root+'/modules/dungeons.js','utf8'),f.box);f.env.catGo=f.box.L2V7Factories.dungeons(f.env).catGo;
  await f.combat.battle();assert.equal(f.env.rt.kills,1);assert.equal(f.events.filter(x=>x==='hunt').length,1);
