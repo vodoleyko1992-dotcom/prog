@@ -759,6 +759,31 @@ function rbBuffShortage(now = Date.now()) {
   return H && need.filter(id => !H[id] || H[id] < now + 10 * 60000).length || 0;
 }
 
+// 15.10, лог 14:20:58: townBuffStart(false) означает и «бафф уже есть», и «повтор через 40 с».
+// Перед платным перелётом и атакой отдельно проверяем, что отложенных баффов больше нет.
+async function rbBuffHold(name, active) {
+  if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
+  if (!active()) return true;
+  if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
+    env.setStatus(`Тур РБ: жду подтверждения баффов перед ${name}`);
+    if (active()) await env.sleep(3000);
+    return true;
+  }
+  const missing = rbBuffShortage();
+  if (missing) { await env.pauseBot(`Тур РБ: нет FA для выбранного баффа (не хватает ${missing} эффектов). Пополни FA и продолжи`); return true; }
+  const need = env.townBuffNeed?.();
+  if (!need) return false;
+  env.setStatus(`Тур РБ: жду баффера перед ${name}${need.fa?.length ? ` (FA: ${need.fa.length})` : ''}`);
+  if (active()) await env.sleep(3000);
+  return true;
+}
+
+function rbSummonBuffReady() {
+  if (env.cfg.petFullAuto !== true || !/^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || '')) return true;
+  const s = env.warlock?.summary?.();
+  return s?.status === 'active' && s.expiresAt > Date.now() + 60000;
+}
+
 async function huntSet(p) { await env.setRt({ rbHunt: { ...(env.rt.rbHunt || {}), ...p, t: Date.now() } }); }
 
 // 15.10, логи 00:42–01:01: подготовка — отдельный этап, а не награда уже прошедшему оценку РБ.
@@ -894,6 +919,8 @@ async function rbHuntStep() {
       return;
     }
     if (!active() || !sameJob()) return;
+    if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
+      return huntDone(H.id, `${H.name}: баффы изменились перед перелётом — подготовлю снова`, false);
     const reason = rbTeleportCheck(H.id, g);
     if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {
       // Изменение силы/банок не делает прочитанный список мёртвым: повторная подготовка без 14 новых страниц.
@@ -958,8 +985,9 @@ async function rbHuntStep() {
     if (rbVerdictBlocks(r.id)) return huntDone(H.id, `${H.name}: в базе «не по силам» — пропускаю`);
     const bw = env.buffWaitBeforeRb();                  // v4.41: тотем на откате ≤60 с — ждём, бой с РБ начинаем с баффом
     if (bw) { env.setRt({ status: `Тур РБ: жду откат «${bw.who}» ${bw.s} с, потом ${H.name}` }); env.draw(); await env.sleep(Math.min(bw.s, 10) * 1000); await huntSet({ at: Date.now() }); return; }
-    if (await env.townBuffStart(`перед РБ ${H.name}`, true)) { if (active() && sameJob()) await huntSet({ at: Date.now() + 30000 }); return; }
+    if (await rbBuffHold(H.name, active)) { if (active() && sameJob()) await huntSet({ at: Date.now() }); return; }
     if (!active() || !sameJob()) return;
+    if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
     await huntSet({ step: 'fight', phase: 'engage', next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
@@ -1028,10 +1056,18 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await rbShopFirst(preparing.name)) return;
     if (!active()) return;
-    if (await env.townBuffStart(`перед РБ ${preparing.name}`, true)) return;
+    if (await rbBuffHold(preparing.name, active)) return;
     if (!active()) return;
-    const missing = rbBuffShortage();
-    if (missing) return env.pauseBot(`Тур РБ: нет FA для выбранного баффа (не хватает ${missing} эффектов). Пополни FA и продолжи`);
+    if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || '')) {
+      await env.warlock?.step?.({ forceRead: true });
+      if (!active()) return;
+      if (!rbSummonBuffReady()) {
+        const s = env.warlock?.summary?.();
+        await rbHuntPhase('prepare', `жду полный бафф кота: ${s?.reason || 'нет подтверждения'}; к РБ пока не иду`);
+        if (active()) await env.sleep(3000);
+        return;
+      }
+    }
     const me = env.meHp(), mp = env.meMp();
     if (me && (me.pct < env.cfg.rbRestHp || (mp && mp.cur < mp.max * .6)) && await env.restoreVitals(`перед РБ ${preparing.name}: HP ${me.pct | 0}%`)) return;
     if (!active()) return;
@@ -1304,6 +1340,12 @@ function rbAssess(ctx, me, mob) {
   const win = candidateWin && enoughCombatData && !spikeRisk && potReliable && enoughReserve
     && enduranceMargin && (loss > 0 || hitCount >= 4);
   const pending = candidateWin && !win && !spikeRisk && enoughReserve;
+  // Лог 14:21:45: победа уже доказана, но через секунду истекла свежесть снимка состава.
+  // Завершаем пробу сразу после достаточного замера, пока доказательства ещё доступны.
+  if (probingDps && win) {
+    rbNote(S.id, { probe: { ...measurement, done: now } }).catch(() => {});
+    env.rec('B', 'РБ', `${ctx.name}: проба подтверждена, полный DPS ≈${Math.round(dps)}/с; продолжаю бой`);
+  }
   if (probingDps && elapsed >= 30) {
     const tooLong = (env.cfg.rbMaxKillMin ?? 20) > 0 && tKill > (env.cfg.rbMaxKillMin ?? 20) * 60;
     if (tooLong || !enoughCombatData || spikeRisk || !potReliable || !enoughReserve || !candidateWin || context?.managed && !context.key)

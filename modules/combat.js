@@ -1421,7 +1421,7 @@ async function battle() {
         const leave = env.$q('#battle-back-map');
         if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
           ctx.rb.retreated = true;
-          env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти (сервер должен подтвердить завершение боя)`);
+          env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти — ${v.why || (v.lethal ? 'опасный удар' : 'прогноз боя требует отхода')} (сервер должен подтвердить завершение боя)`);
           env.leaveMark?.(ctx.rb.id, ctx.name);
           env.fire(leave);
           const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);

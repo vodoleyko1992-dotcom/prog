@@ -7,7 +7,7 @@ const load = (f, extra = {}) => { const sb = { console, Date, Math, JSON, CSS: {
 const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
 // 10.0.14: шаги тура исполняются только включённым владельцем вкладки; fixture проверяет именно разрешённый preflight.
 const mk = (rt, extra = {}) => { const env = { on: true, tabOwner: true, cfg: { rbProbe: false, rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
-  meHp: () => ({ max: 4710, cur: 4710, pct: 100 }), potModel: () => ({ pool: 600000, rate: 2000, n: 960 }), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),
+  meHp: () => ({ max: 4710, cur: 4710, pct: 100 }), potModel: () => ({ pool: 600000, rate: 2000, n: 960 }), hudBuffs: () => ({}), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),
   setRt: async p => Object.assign(env.rt, p), rec: () => {}, ...extra }; return { env, R: load('modules/raid.js', extra.sb || {}).L2V7Factories.raid(env) }; };
 
 // 1. спецудар — от M.Atk: множитель по своим боям (базовый профиль: 0,71–0,90) ≥ 0,9
