@@ -37,6 +37,16 @@ function teleportCost(row) {
   return { price, cur: cur.cur, why: price == null ? 'цена не прочитана' : cur.cur === 'Coin of Luck' ? 'Coin of Luck бот не тратит'
     : price > 0 && cur.cur !== 'аден' ? 'валюта не подтверждена как адена' : price === 0 && !free && cur.cur !== 'аден' ? 'бесплатный переход не подтверждён' : '' };
 }
+function forumTeleportCost(button) {
+  const base = button?.dataset?.baseAdenaCost, current = button?.dataset?.adenaCost, label = button?.textContent || '';
+  if (!/^\d+$/.test(base || '') || !/^\d+$/.test(current || '')) return { price: null, why: 'цена телепорта с форума не подтверждена' };
+  const price = Math.max(Number(base), Number(current));
+  if (!Number.isSafeInteger(price)) return { price: null, why: 'цена телепорта с форума неверна' };
+  if (/coin|luck|монет|удач|\bcol\b/i.test(label)) return { price, why: 'Coin of Luck бот не тратит' };
+  if (price > 0 && !/аден|adena|безкоштов|бесплат|\bfree\b/i.test(label)) return { price, why: 'валюта телепорта с форума не подтверждена' };
+  if (price === 0 && !/безкоштов|бесплат|\bfree\b|аден|adena/i.test(label)) return { price, why: 'бесплатный переход с форума не подтверждён' };
+  return { price, why: '' };
+}
 async function teleportBudget(price, active) {
   if (price === 0) return '';
   if (typeof env.gameGet !== 'function') return 'нет свежего запаса адены';
@@ -350,7 +360,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
     await env.setRt({ zoneGoT: Date.now(), zoneTried: { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() } });
     if (!fb) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта на форуме нет`); await env.setRt({ zoneGo: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
     if (!active()) return;
-    const cost = teleportCost(fb.closest('.l2-farm-source, li, [class*="row"]'));
+    const cost = forumTeleportCost(fb);
     const budget = !cost.why && await teleportBudget(cost.price, active);
     if (!active()) return;
     if (cost.why || budget) { env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`); await env.setRt({ zoneGo: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } }); return; }

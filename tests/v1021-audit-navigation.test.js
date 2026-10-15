@@ -5,13 +5,25 @@ const moduleOf = (name, extra = {}) => { const box = { console, URLSearchParams,
 const noop = () => {}, done = async () => {};
 for (const cancel of [false, true]) test(`форумный телепорт: ${cancel ? 'смена режима отменяет' : 'CoL без числа запрещена'}`, async () => {
   const loc = { pathname: '/forum/farm-resources.html', search: '', href: '' }; let clicks = 0;
-  const row = { textContent: 'Стоимость: Coin of Luck', querySelector: s => s.includes('currency') ? { textContent: 'Coin of Luck', querySelectorAll: () => [] } : null };
+  const btn = { textContent: 'Телепорт · Coin of Luck', dataset: { baseAdenaCost: '50000', adenaCost: '50000' } };
   const env = { cfg: { catMode: false }, rt: { zoneGo: { id: 'danger', url: loc.pathname, forum: true }, zoneCat: { danger: { name: 'Danger' } } }, on: true, tabOwner: true,
     setStatus: noop, rec: noop, heroLvl: () => 76, isFarmPage: () => false, sleep: done, setRt: async p => Object.assign(env.rt, p),
-    $q: () => ({ closest: () => row }), fire: () => { clicks++; loc.pathname = '/map.html'; },
+    $q: () => btn, fire: () => { clicks++; loc.pathname = '/map.html'; },
     waitX: async fn => { if (cancel) { env.cfg.catMode = true; env.rt.zoneGo = null; env.rt.manualKickAt = 99; } return fn(); } };
   await moduleOf('navigation', { location: loc, document: { querySelectorAll: () => [] } })(env).zoneGoStep();
   assert.equal(clicks, 0);
+});
+test('телепорт с форума читает цену кнопки Adena и проверяет баланс', async () => {
+  for (const balance of [249999, 1000000]) {
+    const loc = { pathname: '/forum-farm-resources.html', search: '', href: '' }; let clicks = 0;
+    const btn = { textContent: 'Телепорт · 50 000 Adena', dataset: { baseAdenaCost: '50000', adenaCost: '50000' } };
+    const env = { cfg: { shopReserve: 200000 }, rt: { char: 'Warlock', zoneGo: { id: 'ore', url: loc.pathname, forum: true }, zoneCat: { ore: { name: 'Ore' } } }, on: true, tabOwner: true,
+      setStatus: noop, rec: noop, heroLvl: () => 76, isFarmPage: () => false, sleep: done, setRt: async p => Object.assign(env.rt, p), $q: () => btn,
+      fire: () => { clicks++; loc.pathname = '/map.html'; return true; }, waitX: async fn => fn(),
+      gameGet: async () => ({ ok: true, json: async () => ({ character: { name: 'Warlock', adena: balance } }) }) };
+    await moduleOf('navigation', { location: loc, document: { querySelectorAll: () => [], body: { innerText: '' } } })(env).zoneGoStep();
+    assert.equal(clicks, balance >= 250000 ? 1 : 0);
+  }
 });
 test('обычный телепорт с CoL без числа запрещён, подтверждённый бесплатный за адену доступен', async () => {
   for (const free of [false, true]) {
