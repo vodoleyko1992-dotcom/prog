@@ -2534,6 +2534,7 @@ async function main() {
       // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
       else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
       else if (autonomyMode() === 'tasks' && (tasksGoalNote(lootGoal()), isMap())) await map();   // 10.0.5: на чужой точке map() не бьёт, ждёт перелёта
+      else if (location.pathname === '/ashen-bastion.html' && autonomyMode() === 'farm') await L2V7Modules.mobfarm.ashenStep();
       else if (isMap()) {
         if (campOn() && (rt.campaignDue || !rt.campaign)) await goCampaign();
         else await map();
