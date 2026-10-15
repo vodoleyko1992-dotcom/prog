@@ -571,8 +571,15 @@ async function attackSpawn(c, label, opt = {}) {
     const off = champEntryOff(c);
     if (off) { champSkip(c, off); return false; }
   }
+  // Лог 15.10 04:31: тур выбрал Lokness, а карта запустила бой с Sheshark.
+  // Проверяем актуальную цель тура непосредственно перед кликом по ссылке.
+  if (env.cfg.rbHuntMode && env.rt.rbHunt?.step === 'fight' && c.id !== env.rt.rbHunt.id) {
+    env.rec('B', 'тур РБ', `карта предложила ${c.name}, но цель тура ${env.rt.rbHunt.name} — чужую ссылку не нажимаю`);
+    return false;
+  }
   await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, exp: c.exp || 0, fa: c.fa, valueT: Date.now(), probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
   if (!active()) return false;
+  if (env.cfg.rbHuntMode && env.rt.rbHunt?.step === 'fight' && c.id !== env.rt.rbHunt.id) return false;
   if (c.champ && env.champs?.valueMode?.(c)) env.rec('B', 'чемпионы', `${c.name}: ${c.chWhy}`);
   if (c.champ && (c.faHot || c.chProbe)) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier})${c.faHot ? ` — бью ради FA: шанс ${Math.round(c.fa * 100)} %` : ''}${c.chProbe ? ` · проба${c.chEta ? `: жду ≈${c.chEta} с` : ''}, предел ${c.chLim} с (дольше — уйду)` : c.chEta ? ` · ≈${c.chEta} с, предел ${c.chLim} с` : ''}`);
   { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
