@@ -390,17 +390,20 @@ function petBuffPick(ctx, me, mp, mob) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
+    let confirmedMissing = false;
     if (env.slotAction(b) === 'l2_1331') {
       // Подтверждённый бафф слуги важнее локального таймера, в том числе оплаченный набор.
-      const petBuff = env.warlock?.petBuffState?.(4699) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
+      const petBuff = env.warlock?.petBuffState?.(4699, at) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
       if (petBuff === true) continue;
+      confirmedMissing = petBuff === false;
       // 15.10: эффект4699 героя после слота1331 живёт20мин. Его наличие останавливает
       // повтор при неизвестном состоянии слуги; подтверждённое отсутствие у пета или новый призыв требует баффа.
       const hero = env.activeBuffs?.().find(x => +x.id === 4699 && +x.exp > now + 5000);
       const born = +env.rt.petBornT || 0, applied = Math.max(at, hero ? +hero.exp - dur : 0);
       if (petBuff == null && hero && (!born || applied >= born && applied <= now + 5000)) continue;
     }
-    if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
+    // Свежий полный снимок после Cancel важнее старой локальной отметки успешного баффа.
+    if (!confirmedMissing && at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     // 10.0 (аудит боя): Blessing of Queen ≈ +40 % урона на 20 мин — резерв 25 % MP не держим (MP не экономим), хватает на сам бафф — ставим
     if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0)) continue;
     return { b, n };
@@ -605,9 +608,10 @@ function magePlan(ctx, mp) {
       const n = env.cleanTitle(b.title), il = env.ilOf(b) || {}, k = env.skKey(b);
       const mpCost = env.skillMp(n) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
       // 9.2: урон по ЭТОЙ цели (анализатор боя: прошлые бои с ней + этот бой) важнее общего среднего по всем мобам
-      const dmg = env.fightDmgOn?.(n)?.mean || env.expDmg(k) || env.expDmg(n) || 0;
+      const observed = env.fightDmgOn?.(n);
+      const dmg = observed?.mean ?? (env.expDmg(k) || env.expDmg(n) || 0);
       const base = Array.isArray(il.pow) ? il.pow[0] : il.pow || 0;
-      return { key:'power:' + b.title, name:n, b, dmg:dmg || base, mpCost,
+      return { key:'power:' + b.title, name:n, b, dmg:observed ? dmg : dmg || base, mpCost,
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
         order:priority.indexOf(n.toLowerCase()) };
     }).filter(o => !mp || o.mpCost <= Math.max(0, mp.cur - 1));
@@ -645,7 +649,8 @@ function magePlan(ctx, mp) {
     if (soon && !nowKill && !ctx.rb) { ctx.waitKillT ||= Date.now(); ctx.waitWhy = `жду ${soon.n}: откатится через полхода и добьёт (${Math.round(soon.p * 100)} %)`; return null; }
     if (!expired) ctx.waitKillT = 0;               // ждём не дольше 1,5 с на моба — дальше бьём тем, что готово
   }
-  const kill = (known.length ? known : opts).filter(o => o.dmg && o.dmg >= hpK * 1.08)
+  // Подтверждённые промахи не обходятся запасным правилом среднего урона.
+  const kill = (known.length ? known : opts).filter(o => { const p = env.fightKillP?.(o.name, hpK); return p != null ? p >= 0.85 : o.dmg && o.dmg >= hpK * 1.08; })
     .sort((a,b)=>a.mpCost-b.mpCost || b.dmg-a.dmg)[0];
   if (kill) return { ...kill, why: petN > 0 && hpK < hp ? `магия: добивание вместе с котом (${hp} HP, кот ≈${Math.round(petN)})` : `магия: добивание (${hp} HP)` };
   if (eco) {
@@ -714,7 +719,7 @@ function dpsPlan(ctx, mp) {
           if (Math.max((pS?.uses || 0) - start, ctx.damageProbeActs?.[k] || 0) >= 3) continue;
         } else if (pS && (pS.uses || 0) - (pS.unknown || 0) >= 5 && !pS.dmgN) continue;
       }
-      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !env.rt.skills?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
+      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !env.rt.skills?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean ?? env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();

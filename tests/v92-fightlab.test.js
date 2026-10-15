@@ -173,7 +173,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.match(content, /get fightDmgOn\(\) \{ return fightDmgOn; \}, get fightKillP\(\) \{ return fightKillP; \}, get fightSpikeEta\(\) \{ return fightSpikeEta; \}/);
   // 15.10: свежая модель групп тоже принадлежит активному классу.
   assert.match(story, /'profQuest', 'fightMem', 'fightLast', 'fightGroups'\]/);
-  assert.match(combat, /env\.fightDmgOn\?\.\(n\)\?\.mean \|\| env\.expDmg\(k\)/);
+  // 15.10: известный нулевой урон после промахов не заменяется общим положительным средним.
+  assert.match(combat, /observed\?\.mean \?\? \(env\.expDmg\(k\)/);
   assert.match(combat, /по этой цели добивает в/);
   assert.match(combat, /spike: spikeFar \? 0 : spike/);
 }

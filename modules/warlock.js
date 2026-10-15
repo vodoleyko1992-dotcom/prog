@@ -18,7 +18,7 @@ const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualK
 const patch = p => env.setRt({ petFull: { ...state(), ...p } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
-let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, prepared = null, preparedSource = null;
+let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
@@ -68,7 +68,8 @@ function receipt(body, P) {
   return { price: P.price, kind: 'server', at: Date.now() };
 }
 async function read(path) {
-  const r = await env.gameGet(path), d = await r.json();
+  const requestStartedAt = Date.now(), r = await env.gameGet(path), d = await r.json();
+  if (path === '/character' && d && typeof d === 'object') (d.character || d).requestStartedAt = requestStartedAt;
   if (!r.ok || !d || d.error) throw Error('read_failed'); return d;
 }
 async function status(T, code, reason, extra = {}) {
@@ -260,6 +261,17 @@ async function resetBudget(expected = {}) {
 const modelManaged = () => /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || env.rt.prof || '');
 // 15.10, живой /character: срок героя expiresAt; hook нормализует в expiresAtMs, прямой GET оставляет исходное поле.
 const heroBuffExpiry = b => Number.isFinite(b?.expiresAtMs) ? b.expiresAtMs : Number.isFinite(b?.expiresAt) ? b.expiresAt : 0;
+// Только устойчивые публичные свойства: без UID, HP/MP и откатов. При равных M/P.Atk
+// клановый процент урона, аугментация и новый ранг умения всё равно меняют состав.
+function combatSetup(ch) {
+  const eq = ch.inventory?.eq;
+  const attrs = a => (a || []).map(x => [String(x.attributeId || ''), +x.level || 0]).sort((a,b) => a[0].localeCompare(b[0]));
+  return { gear: eq && typeof eq === 'object' ? Object.entries(eq).sort(([a],[b]) => a.localeCompare(b)).map(([slot,v]) => {
+    const x = v && typeof v === 'object' ? v : { itemId:v };
+    return [slot,+x.itemId||0,+x.enchant||0,+x.specialGearLevel||0,+x.enchantPAtkBonus||0,+x.enchantMAtkBonus||0,
+      String(x.augmentation?.outcomeId || ''),attrs(x.clanWeaponAttrs),attrs(x.clanArmorAttrs)];
+  }) : null, skills: Array.isArray(ch.learnedBattleSkillsDetail) ? ch.learnedBattleSkillsDetail.map(x => [String(x.battleId || ''),+x.level||0]).sort((a,b) => a[0].localeCompare(b[0])) : null };
+}
 function snapshot(ch, shots) {
   const I = identity(ch), p = summon(ch); if (!I || !p) return null;
   const active = a => (a || []).filter(b => b.expiresAtMs > Date.now());
@@ -267,6 +279,7 @@ function snapshot(ch, shots) {
   const heroFields = ['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'];
   const hero = Object.fromEntries(heroFields.map(k => [k, Number.isFinite(ch[k]) ? ch[k] : null]));
   const heroBuffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => heroBuffExpiry(b) > Date.now()) : null;
+  hero.setup = combatSetup(ch);
   hero.buffs = heroBuffs?.map(b => `${b.skillId}:${b.level}`).sort() ?? null;
   const data = { char: I.char, classKey: I.key, level: +ch.level || 0, petKey: p.key, petLevel: p.summonSkillLevel,
     pAtk: +p.pAtk || 0, accuracy: +p.accuracy || 0, critRate: +p.critRate || 0, critDmgMul: +p.critDmgMul || 0, buffs, hero,
@@ -277,11 +290,23 @@ function snapshot(ch, shots) {
 function noteSnapshot(ch, shots) {
   // Вызывается только для полного собственного /character; обрезанный res.activeSummon не годится.
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick()) return;
+  // 15.10, аудит: два полных GET одного героя могут вернуться в обратном порядке.
+  if (ch.l2Profession !== env.rt.classCur?.prof || ch.classSlots?.activeSlot !== env.rt.classCur?.slot) return;
+  if (Number.isFinite(ch.snapshotGeneratedAt) && (Date.now()-ch.snapshotGeneratedAt > 30000 || ch.snapshotGeneratedAt-Date.now() > 5000)) return;
+  if (snapshotOwner !== ch.name) { snapshotOwner = ch.name; snapshotRevision = -1; snapshotEvidenceAt = 0; }
+  if (Number.isSafeInteger(ch.revision)) {
+    if (ch.revision < snapshotRevision) return;
+    const proofAt = Number.isFinite(ch.requestStartedAt) ? Math.min(Date.now(), ch.requestStartedAt) : Date.now();
+    if (ch.revision > snapshotRevision) snapshotEvidenceAt = proofAt;
+    else snapshotEvidenceAt = Math.min(snapshotEvidenceAt, proofAt);
+    snapshotRevision = ch.revision;
+  }
   const fields = ['level','mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'];
   const buffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => heroBuffExpiry(b) > Date.now()) : null;
-  const data = { char: ch.name, prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
+  const data = { char: ch.name, setup: combatSetup(ch), prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
   latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(heroBuffExpiry)) } : null;
   latest = snapshot(ch, shots); latestSeen = true;
+  if (latest) latest.proofAt = snapshotEvidenceAt || latest.at;
   // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
   // расходников, не выдавая его за реально включённые заряды и не подмешивая в обучение боя.
   prepared = null; preparedSource = null;
@@ -341,9 +366,12 @@ function petExpected(ctx) {
   return avg > 0 ? avg * 0.85 : 0; // крит не обещаем для следующего добивания
 }
 // 15.10: отсутствие эффекта в свежем полном снимке отличается от неизвестного состояния.
-function petBuffState(id) {
+function petBuffState(id, appliedAt = 0) {
   const s = currentSnapshot();
-  return s ? s.buffs.some(b => +b.split(':')[0] === +id) : null;
+  if (!s) return null;
+  if (s.buffs.some(b => +b.split(':')[0] === +id)) return true;
+  // Отсутствие до принятого каста не доказывает отсутствие после него.
+  return (s.proofAt ?? s.at) > appliedAt ? false : null;
 }
 function petBuffActive(id) { return petBuffState(id) === true; }
 function raidContext(id, st = {}, options = {}) {

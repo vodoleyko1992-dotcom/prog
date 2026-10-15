@@ -68,7 +68,7 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   assert.match(combat, /else if \(dr !== 'lock'\) ctx\.block\['debuff:' \+ dbf\.k\] = Date\.now\(\) \+ \(ctx\.lastLost \? 700 : 3000\);/);
   // 3. время ответа и «игра занята»: hook сообщает начало/конец GET /character и запросов боя (rid); netStart от GET — не «ход ушёл»
   const hook = read('hook.js');
-  assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\\\/battle\\\/\(\?:action\|start\|hunt-continue\)\)\$\/;/);
+  assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\)\(\?:\\\/\|\$\)\/;/);
   assert.equal((hook.match(/, rid \}\)/g) || []).length >= 4, true, 'every end message carries the rid');
   assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); \}/);
   assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) GAME_END = Date\.now\(\);/);

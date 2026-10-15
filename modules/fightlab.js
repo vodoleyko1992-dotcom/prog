@@ -47,7 +47,7 @@ function role(prof) {
 const RE_PET = /^Слуга\s*\[(.+?)\]\s*(атакує|завдає критичного удару)\s*\[(.+?)\]\s*:?\s*([\d\s  ]+?)\s*урону/i;
 const RE_PET_MISS = /^Слуга\s*\[.+?\].*промахну/i;
 // 14.10: сервер и компактный DOM используют разные глаголы и убирают скобки вокруг имени в отображении.
-const RE_IN = /^(Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
+const RE_IN = /^(Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(\(крит!\)\s*)?(?:[—–]\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
 const RE_ACTOR_HIT = /^\[([^\]]+)\]\s*(?:(—\s*крит!|критичний\s+удар!)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
 const RE_POT = /^(?:Зілля|Зелье)\s*\+\s*([\d\s]+)\s*HP/i;
 const RE_SELF = /^HP\s*\+\s*([\d\s]+)/i;
@@ -96,8 +96,14 @@ function parseLog(lines, mob, actor = '') {
 
 // ---------- текущий бой ----------
 const seenRequests = new Set();
-let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null;
+let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false;
+// 15.10, аудит: класс/персонаж сменился без reload — незавершённый старый бой не пишется в новую память.
+function syncOwner() {
+  const current = groupOwner(); if (owner === current) return;
+  ownerAwaiting = !!owner; owner = current; F = null; last = null; cache = null; cacheCls = ''; dirty = false; lastFight = null; flushT = 0;
+}
 function mem() {
+  syncOwner();
   const cls = env.rt.classCur?.prof || '';
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
     cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
@@ -157,6 +163,7 @@ const urlSpawn = () => { try { return new URLSearchParams(location.search).get('
 // бой открыт со страницы карты (POST /game/battle/start ушёл ещё там) — на странице боя первый ответ придёт только после хода;
 // подсказка нужна до него: бой по заголовку страницы
 function ensure() {
+  syncOwner();
   if (F && !F.done) return F;
   const title = env.mobTitle?.() || ''; if (!title) return null;
   const spawn = urlSpawn();
@@ -164,11 +171,15 @@ function ensure() {
   return begin({}, spawn, Date.now());
 }
 function onNet(path, d) {
+  syncOwner();
   if (env.pvpPending?.() || d?.pv?.defeat) { F = null; last = null; return null; } // чужой PvP-урон не принадлежит окну PvE
   const bt = d?.bt; if (!bt || typeof bt !== 'object') return null;
   const now = Date.now(), act = path === '/game/battle/action', fresh = /\/(?:start|hunt-continue)$/.test(path);
+  // После смены класса нужен старт/снимок нового боя; запоздалый ход старого класса не открывает его.
+  if (ownerAwaiting && act) return null;
   const ok = d.status >= 200 && d.status < 300 && !d.res?.error;
   if (!ok || d.res?.blockedBy) { if (act && F && !F.done) F.lost++; return null; }
+  if (!act) ownerAwaiting = false;
   if (d.rid != null) { if (seenRequests.has(d.rid)) return null; seenRequests.add(d.rid); if (seenRequests.size > 128) seenRequests.delete(seenRequests.values().next().value); }
   // spawnId боя — из самого боя (начало, GET /game/battle); в ходе цепочки «Охотиться дальше» игра шлёт battleSpawnId первого боя
   // (7.2.1), поэтому у хода он не повод начинать новый бой
@@ -250,6 +261,12 @@ function onNet(path, d) {
       const recovery = env.recoveryContext?.();
       if (a.recovery !== recovery) { a.heals = []; a.recovery = recovery; }
       if (recovery && L.selfHeal > 0) { (a.heals ||= []).push({hp:L.selfHeal,t:now}); if (a.heals.length > SAMPLES) a.heals.shift(); }
+      // 15.10, аудит: промах — наблюдаемый ноль, неизвестный ответ не входит в вероятность добивания.
+      if (own > 0 || L.miss) {
+        const context = env.recoveryContext?.() || null;
+        if (a.context !== context) { a.context = context; a.rolls = []; }
+        (a.rolls ||= []).push(own); if (a.rolls.length > SAMPLES) a.rolls.shift();
+      }
       a.n++; if (own > 0) { a.s.push(own); if (a.s.length > SAMPLES) a.s.shift(); } else if (ownKnown) a.z++; else a.unknown = (a.unknown || 0) + 1;
     }
     last = turn;
@@ -266,24 +283,28 @@ function onNet(path, d) {
 }
 // точный замер последнего хода этим скиллом (для content.observeSlot): ход ушёл не раньше since − 0,3 с
 function healOn(name) {
+  syncOwner();
   // Только текущий бой: чужой ранг, цель и прошлые бафы не обещают столько же лечения.
   const a = F && !F.done ? F.a[low(name)] : null, recovery = env.recoveryContext?.();
   const h = recovery && a?.recovery === recovery ? (a.heals || []).filter(x => Date.now()-x.t <= 15000).map(x => x.hp) : [];
   return h.length ? { n: h.length, mean: Math.round(h.reduce((x,y) => x+y,0)/h.length), p20: q(h,0.2) } : null;
 }
 function turnFor(name, since, action, rid) {
+  syncOwner();
   const t = last; if (!t || (action && t.action !== action) || (rid != null && t.rid !== rid) || low(t.name) !== low(name) || t.t < since - 300 || Date.now() - t.t > 5000) return null;
   return t;
 }
 
 // Только текущий подтверждённый бой: после reload прошлые HP не восстанавливаем из догадок.
 function damageFor(name, spawn, since = 0) {
+  syncOwner();
   if (!F || low(name) !== low(F.name) || (spawn && F.spawn && spawn !== F.spawn) || F.tl < since - 500) return null;
   return { removed: F.removed + F.sideRemoved, main: F.removed, side: F.sideRemoved, unknownSides: F.unknownSides };
 }
 
 // ---------- итог боя → память на цель ----------
 function finish(outcome, now = Date.now()) {
+  syncOwner();
   if (!F || F.done) return null;
   F.done = true;
   try { env.critFlush?.(); } catch (e) {}     // 10.0.7: замер крита — в память по концу боя
@@ -304,6 +325,10 @@ function finish(outcome, now = Date.now()) {
   if (sum.hpDps > 0 && sec >= 2) m.hpDps = ew(m.hpDps, sum.hpDps);
   for (const [k, a] of Object.entries(F.a)) {
     const o = { ...(m.a[k] || { n: 0, s: [] }) };
+    if (a.rolls?.length) {
+      o.rolls = [...((o.context ?? null) === a.context ? (o.rolls || o.s || []) : []), ...a.rolls].slice(-SAMPLES);
+      o.context = a.context;
+    }
     o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z; o.unknown = (o.unknown || 0) + (a.unknown || 0);
     m.a[k] = o;
   }
@@ -325,6 +350,7 @@ function finish(outcome, now = Date.now()) {
   return sum;
 }
 function flush() {
+  syncOwner();
   if (!dirty || !cache) return;
   dirty = false; flushT = Date.now();
   const out = { ...cache };
@@ -336,7 +362,12 @@ function flush() {
 function samplesOn(name) {
   if (!ensure()) return null;
   const k = low(name), m = mem()[F.key]?.a?.[k], f = F.a[k];
-  const s = [...(m?.s || []), ...(f?.s || [])].slice(-SAMPLES);
+  // Старый точный замер другой силы/баффов не перекрывает новый общий прогноз.
+  // Положительные s и счётчики остаются общей аналитикой, rolls — последняя однородная выборка.
+  const context = env.recoveryContext?.() || null, managed = typeof env.recoveryContext === 'function';
+  if (managed && !context) return null;
+  const compatible = a => !managed || a?.context === context;
+  const s = [...(compatible(m) ? (m?.rolls || m?.s || []) : []), ...(compatible(f) ? (f?.rolls || []) : [])].slice(-SAMPLES);
   return s.length ? s : null;
 }
 // урон скилла по ЭТОЙ цели (замеры прошлых боёв с ней + этот бой); меньше 3 замеров — null (тогда общее среднее)
@@ -360,9 +391,9 @@ function spikeEta(now = Date.now()) {
   const lastT = F.sp.length ? F.sp[F.sp.length - 1].t : F.t0;
   return { gap: Math.round(med * 10) / 10, eta: Math.round((med - (now - lastT) / 1000) * 10) / 10, minGap: Math.min(...g) };
 }
-const fight = () => F;
+const fight = () => { syncOwner(); return F; };
 const recall = key => mem()[key] || null;
-const lastSum = () => lastFight;
+const lastSum = () => { syncOwner(); return lastFight; };
 // для меню и журнала: что бот знает о цели одной строкой
 function brief(key) {
   const m = mem()[key]; if (!m) return '';
