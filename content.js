@@ -451,7 +451,7 @@ const NAME_ALIAS = { 'force buster': 'force burst',
   // 7.1.16-fix: в логе боя заклинания мага — по-украински («Вампірний дотик 596», «Полум’я 618»). Без этого урон Vampiric Touch
   // и Blaze не узнавался (урон 0, «урон ≈2»), и бот выбирал заклинания вслепую
   'vampiric touch': 'вампірний дотик', 'aura burn': 'опік аури', 'energy bolt': 'енергетична блискавка', 'blaze': 'полум’я',
-  'flame strike': 'удар полум’я' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
+  'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
 const apos = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '’');
 const logName = n => apos(rt.logAlias?.[(n || '').toLowerCase()] || NAME_ALIAS[(n || '').toLowerCase()] || n);
 for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL_BY_NAME[a] == null) IL_BY_NAME[a] = IL_BY_NAME[b];
@@ -465,6 +465,7 @@ function ilOf(x) {                               // x: кнопка слота, 
     const m = String(k).match(/l2_(\d+)/);
     name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
     if (m) id = +m[1];
+    else if (k === 'corpse_plague' || k === 'hamstring_slash') id = k === 'corpse_plague' ? 103 : 127;
     // 10.0.2: умение Life Stone на панели — data-slot-cd="ls_prominence" (без номера). Имя слота (labelUk игры) запоминаем:
     // замеры и план боя ищут скилл по имени
     else if (AUG?.isLs(k)) { id = AUG.SKILL_IL[k] ?? null; const nm = String(name || '').trim().toLowerCase(); if (id != null && nm && !AUG.isLs(nm)) LS_BY_NAME[nm] = id; }
@@ -479,6 +480,10 @@ function ilOf(x) {                               // x: кнопка слота, 
 // pAtkDown — защита (моб бьёт слабее). Curse Poison в справочнике — «Яд», на L2WAP это −12 % P.Atk
 const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
+  // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
+  // Тип защиты и АОЕ не подтверждены; урон/MP/КД берём из наблюдений и ответа сервера.
+  103: { c: 'Прямая атака', t: 'DAM', target: 'ONE', pow: 0, mag: null, eff: null, dur: 0, l2Damage: true, L: 'L2WAP: прямой урон живой цели; величина и откат — по замеру' },
+  127: { c: 'Прямая атака', t: 'DAM', target: 'ONE', pow: 0, mag: null, eff: null, st: null, dur: 0, l2Damage: true, L: 'L2WAP: прямой урон живой цели; величина и откат — по замеру' },
   1083: { st: 'mDefDown', L: 'Дебафф · L2WAP: M.Def цели −10 %' },
   1222: { st: 'mDefDown', st2: 'pAtkDown', L: 'Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %' },
   1164: { st: 'pAtkDown', dur: 10, L: 'Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %' },

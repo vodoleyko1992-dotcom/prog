@@ -690,8 +690,13 @@ function dpsPlan(ctx, mp) {
       if (!b || !ready(b) || !free('power:' + b.title) || env.isChargeName(env.cleanTitle(b.title)) || env.isForceName(env.cleanTitle(b.title))) continue;
       // 10.0.11 (лог 13.10 22:03–22:12, Knight alt1): Drain Health — в логе игры без цифры урона («Витягування життя: темний урон…»),
       // 26 нажатий, урон засчитан 1 раз. Как у мага (mageSpellSlots): 5+ нажатий без единого замера урона — удара в ротации нет
-      { const pS = env.rt.skills?.[env.skKey(b)]; if (pS && (pS.uses || 0) >= 5 && !pS.dmgN) continue; }
-      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
+      { const k = env.skKey(b), pS = env.rt.skills?.[k];
+        if (il?.l2Damage && !pS?.dmgN) { // старые нули были следствием ошибочного типа «дебафф»; даём до трёх новых замеров в бою
+          const starts = ctx.damageProbeStart ||= {}, start = starts[k] ??= pS?.uses || 0;
+          if (Math.max((pS?.uses || 0) - start, ctx.damageProbeActs?.[k] || 0) >= 3) continue;
+        } else if (pS && (pS.uses || 0) >= 5 && !pS.dmgN) continue;
+      }
+      opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !env.rt.skills?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
@@ -769,6 +774,7 @@ function dpsPlan(ctx, mp) {
     // v4.46: на РБ — без скиллов с уроном < 1,6 атаки (Force Buster: урона почти как атака, а MP вдвое больше)
     for (let i = opts.length - 1; i >= 0; i--) if (opts[i].key !== 'attack' && !opts[i].force &&
       !/^(burning fist|soul breaker|iron punch)$/i.test(opts[i].name) &&
+      !(env.ilOf(opts[i].b)?.l2Damage && !env.rt.skills?.[env.skKey(opts[i].b)]?.dmgN) &&
       atkD > 0 && opts[i].dmg < atkD * 1.6) opts.splice(i, 1);
     // v4.46: HP < 60 % — бьём обычной атакой: она лечит вампиризмом (~8 % урона), скиллы — нет
     const a0 = opts.find(o => o.key === 'attack');
@@ -1846,7 +1852,8 @@ async function battle() {
       const logArr = env.logLines();
       const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true,
         a.raidDrain ? () => magePlan(ctx, env.meMp())?.b === a.b : null);
-      if (a.probe && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
+      if (a.damageProbe && done === true) { const k = env.skKey(a.b), counts = ctx.damageProbeActs ||= {}; counts[k] = (counts[k] || 0) + 1; }
+      if ((a.probe || a.damageProbe) && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
       if (a.charge || a.cost) {                     // энергия силы: по новым строкам лога, иначе свой учёт
         await env.sleep(150);
