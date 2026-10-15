@@ -3725,7 +3725,7 @@ const NET_CONTEXT = new Map();
 const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
 function netContextStart(d) {
   if(d.rid==null)return;
-  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.pending?.()?.id||'',nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
 function netContextTake(d) {
@@ -4023,7 +4023,7 @@ addEventListener('message', e => {
   // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
   if (/\/game\/fishing\/action$/.test(path)) {
     const fz = d.res?.fishing && typeof d.res.fishing === 'object' ? d.res.fishing : null;
-    NET_FISH = { t: Date.now(), ok: !d.error && /^2/.test(String(d.status)), act: d.req?.action || '', err: d.error ? String(d.error) : '', code: String(d.res?.error || ''), srv: +fz?.serverNowMs || 0, ms: +d.ms || 0, cds: fz?.cooldowns };
+    NET_FISH = { t: Date.now(), status:+d.status||0, ok: !d.error && /^2/.test(String(d.status)), act: d.req?.action || '', err: d.error ? String(d.error) : '', code: String(d.res?.error || ''), srv: +fz?.serverNowMs || 0, ms: +d.ms || 0, cds: fz?.cooldowns };
     try { L2V7Modules.fishing.fishNet(NET_FISH); } catch (er) {}
   }
   // 7.1.30: квест профессии (Алхімік Орфеус: «★ Giant Fungus ×100 і ★ Dire Wyrm ×15»). Сервер отдаёт счётчики убийств —
