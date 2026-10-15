@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const file=path.join(__dirname,'v1021-raid-farm-lifecycle.test.js'),source=fs.readFileSync(file,'utf8'),box={require:require('node:module').createRequire(file),__dirname,console,process};vm.runInNewContext(source.slice(0,source.indexOf('\ntest('))+'\nthis.make=fixture;',box);
 test('one living but unsafe preparation candidate cannot starve fresh Gordon page13 during idle',async()=>{
- const f=box.make(),g='l2dop_rb_29095',now=Date.now();
+ const f=box.make({cfg:{rbHuntMode:false}}),g='l2dop_rb_29095',now=Date.now();
  f.env.cfg.rbMaxBelow=9;f.env.cfg.rbMaxAbove=15;
  f.env.rt.rbList={unsafe:{name:'Unsafe',lvl:80,page:13,alive:true,price:100000,unit:'аден',t:now-180000},[g]:{name:'Gordon',lvl:80,page:13,alive:false,price:100000,unit:'аден',t:now-180000}};
  f.env.rt.rbStats.unsafe={hp:6000000,patk:1000000,matk:1000000,pdef:9000,mdef:10000};

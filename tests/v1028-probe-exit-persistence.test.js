@@ -2,9 +2,10 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=f=>fs.readFileSync(require('node:path').join(__dirname,'..',f),'utf8');
 function fixture(ok=true){const rt={rbDb:{boss:{probe:{kind:'dps',t:Date.now(),startedAt:Date.now()-10000}}}},writes=[];const box={console,Date,Math,location:{pathname:'/battle.html'}};vm.runInNewContext(read('modules/combat.js')+read('modules/raid.js'),box);const env={rt,cfg:{rbHuntMode:true},heroLvl:()=>78,epicById:()=>null,setRt:async p=>{writes.push(p);Object.assign(rt,p);return{ok}}};return{rt,writes,env,C:box.L2V7Factories.combat(env),R:box.L2V7Factories.raid(env)}}
-test('probe abort stores current wound and hard skip before navigation, surviving a fresh module',async()=>{
+// 10.0.29: обычный тур сохраняет запрет только по фактической опасности.
+test('actual danger stores current wound and safety skip before navigation, surviving a fresh module',async()=>{
  const f=fixture(),ctx={name:'Rudelto',rb:{id:'boss'}};
- assert.equal(await f.C.probeExitCommit(ctx,{cur:80402,max:2480352},'защита неизвестна'),true);
+ assert.equal(await f.C.probeExitCommit(ctx,{cur:80402,max:2480352},'низкий текущий HP',true),true);
  assert.equal(f.rt.rbPreSkip.boss.probeExit,true);assert.equal(f.rt.rbPreSkip.boss.observed,true);assert.equal(f.rt.rbPending,false);
  assert.equal(f.rt.rbWound.boss.cur,80402);assert.equal(f.R.rbWounded('boss'),false);
  assert.equal(f.R.rbEntryDecision('boss',{price:0,unit:'аден',lvl:69}).ok,false);

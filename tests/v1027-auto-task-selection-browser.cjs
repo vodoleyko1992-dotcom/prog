@@ -8,7 +8,19 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs'), assert
     await h.popup.goto('chrome-extension://' + h.id + '/popup.html?dock=1');
     await until(() => h.popup.locator('#autoTaskSelection [data-auto-task="tvt"]').isChecked());
     assert.equal(await h.popup.locator('#autoTaskSelection input:checked').count(), 1);
-    const check = key => h.popup.locator('#autoTaskSelection [data-auto-task="' + key + '"]');
+    // load() может завершить старый снимок между кликом и async menuPatch: Playwright check()
+    // проверяет мгновенное состояние. Команда уже сохранена; ждём commit и окончательную отрисовку.
+    // Клик ровно один: повтор мог бы инвертировать уже принятое изменение.
+    const check = key => {
+      const el = h.popup.locator('#autoTaskSelection [data-auto-task="' + key + '"]');
+      const set = async enabled => {
+        assert.equal(await el.isChecked(), !enabled, 'исходное состояние ' + key);
+        await el.click();
+        await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes(key) === enabled);
+        await until(async () => await el.isChecked() === enabled);
+      };
+      return { check: () => set(true), uncheck: () => set(false) };
+    };
     await check('fish').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('fish'));
     await check('enchant').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));
     await until(async () => /Следующая задача: Рыбалка/.test(await h.popup.locator('#modeSummary').innerText()));

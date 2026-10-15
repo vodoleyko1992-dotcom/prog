@@ -987,10 +987,10 @@ async function lowDmgNote() {
 
 // 16.10, Rudelto: реальная смена документа после leave уничтожает продолжение battle().
 // Запрет повторного захода и актуальные HP должны попасть в storage ДО нажатия выхода.
-async function probeExitCommit(ctx, mob, why) {
+async function probeExitCommit(ctx, mob, why, safety = false) {
   const id = ctx.rb.id, at = Date.now();
   const result = await env.setRt({ rbPending: false,
-    rbPreSkip: { ...(env.rt.rbPreSkip || {}), [id]: { t: at, kind: 'strong', observed: true, probeExit: true, why } },
+    rbPreSkip: { ...(env.rt.rbPreSkip || {}), [id]: { t: at, kind: safety ? 'safety' : 'strong', observed: true, probeExit: true, ...(safety ? {safety:true} : {}), why } },
     rbWound: { ...(env.rt.rbWound || {}), [id]: { cur: mob.cur, max: mob.max, name: ctx.name, t: at } } });
   return result?.ok === true;
 }
@@ -999,13 +999,14 @@ async function rbTryExit(ctx, me, mob, v, ep) {
   const actor = () => env.battleExitContext?.() ?? JSON.stringify([env.rt.char || '', env.rt.manualKickAt || 0]);
   const beforeActor = actor(), identity = () => JSON.stringify([actor(), location.pathname, location.search]);
   const before = identity();
-  const probe = !ep && !!env.probeFight?.(ctx.rb.id);   // 9.2.5: бой-проба — плохой прогноз = выход (пропуск 30 мин), не бой до конца
-  const canAttrit = !ep && (env.cfg.rbChipRetreat === true || probe) && (v.abort || v.retreat || v.lethal);
+  const ordinary = !ep && env.ordinaryLiveTour?.(ctx.rb.id), safety = ordinary && v.safety === true;
+  const probe = !ordinary && !ep && !!env.probeFight?.(ctx.rb.id);   // 9.2.5: бой-проба — плохой прогноз = выход (пропуск 30 мин), не бой до конца
+  const canAttrit = !ep && (ordinary ? safety : env.cfg.rbChipRetreat === true || probe) && (v.abort || v.retreat || v.lethal);
   if (canAttrit && !ctx.rb.retreated && me && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
     const attempts = (env.rt.rbGoCnt?.[ctx.rb.id] || []).filter(t => Date.now() - t < 3600000).length;
     const leave = env.$q('#battle-back-map');
-    if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
-      const committed = !probe || await probeExitCommit(ctx, mob, v.why || 'разведка завершена');
+    if ((safety || probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
+      const committed = !(probe || safety) || await probeExitCommit(ctx, mob, v.why || 'опасность в бою', safety);
       if (!env.on || env.tabOwner === false || !env.isBattle() || identity() !== before) return 'done';
       if (!committed) { await env.sleep(250); return identity() === before ? 'wait' : 'done'; }
       ctx.rb.retreated = true;
@@ -1015,7 +1016,7 @@ async function rbTryExit(ctx, me, mob, v, ep) {
       const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
       if (!env.on || env.tabOwner === false || actor() !== beforeActor) return 'done';
       if (ended) {
-        await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), probe ? 'skip' : undefined);
+        await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), safety ? 'danger' : probe ? 'skip' : undefined);
         return 'done';
       }
       env.leaveMark?.(null);
@@ -1212,7 +1213,7 @@ async function battle() {
     if (prev?.hpAfter != null) {
       const regen = mob0.cur - prev.hpAfter;                // сколько РБ отхилился, пока мы отдыхали
       console.log(env.TAG, `РБ ${ctx.name}: был ${prev.hpAfter}, сейчас ${mob0.cur} (реген ${regen}), прошлый заход снял ${prev.chip}`);
-      if (prev.attempts >= 2 && prev.chip > 0 && regen >= prev.chip * 0.9 && !env.epicById(ctx.rb.id)) {   // эпик: решает epicStep
+      if (!env.ordinaryLiveTour?.(ctx.rb.id) && prev.attempts >= 2 && prev.chip > 0 && regen >= prev.chip * 0.9 && !env.epicById(ctx.rb.id)) {   // эпик: решает epicStep
         await env.rbNote(ctx.rb.id, { verdict: 'no', note: `отхиливается быстрее (реген ${regen} ≥ снимаем ${prev.chip})` });
         await env.setRt({ rbCur: null, target: null });
         env.setStatus(`РБ ${ctx.name}: ❌ отхиливается быстрее, чем мы бьём — в базу «не по силам»`);
@@ -1489,7 +1490,11 @@ async function battle() {
     if (ctx.rb && me && mob && !ctx.rb.retreated) {
       const epChain = env.epicOn() && env.epicById(ctx.rb.id) && env.rt.epic?.k === env.epicById(ctx.rb.id).k && env.rt.epic?.step === 'fight';
       const fl = !epChain && env.rbFlee ? env.rbFlee(ctx, me, mob) : null;
-      if (fl) {
+      if (fl && env.ordinaryLiveTour?.(ctx.rb.id)) {
+        const exit=await rbTryExit(ctx,me,mob,{...fl,abort:true},false);
+        if(exit==='wait')continue;
+        if(exit==='done')return;
+      } else if (fl) {
         const leave = env.$q('#battle-back-map');
         if (env.shown(leave) && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
           ctx.rb.retreated = true;

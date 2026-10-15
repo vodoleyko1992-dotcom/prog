@@ -35,7 +35,7 @@ const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
   const raid = read('modules/raid.js');
   assert.match(raid, /const st = await rbInfo\(p\.id\), real = !!st && st\.hp > 0 && \(st\.matk > 0 \|\| st\.patk > 0\) && !st\.est;/);
   assert.doesNotMatch(raid, /if \(st\?\.src === 'api' && !rbVerdictBlocks\(p\.id\)\)/);
-  assert.match(raid, /if \(!real\) \{[\s\S]*?return huntDone\(p\.id, `\$\{p\.name\}: нет точных цифр игры — платный переход не разрешён/);
+  assert.match(raid, /if \(!real && !ordinaryLiveTour\(p\.id\)\) \{[\s\S]*?return huntDone\(p\.id, `\$\{p\.name\}: нет точных цифр игры — платный переход не разрешён/);
   assert.doesNotMatch(raid, /rbBlindT/);
   assert.match(raid, /const run = Date\.now\(\) - \(env\.rt\.rbRefuse\?\.t \|\| 0\) < 10 \* 60000 \? \(env\.rt\.rbRefuse\?\.n \|\| 0\) \+ 1 : 1;/);
   assert.match(raid, /\.\.\.\(run >= 2 \? \{ rbHuntIdle: Date\.now\(\) \+ RB_IDLE_MS,/);

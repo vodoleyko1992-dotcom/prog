@@ -68,7 +68,7 @@ const mkK = (o = {}) => mk({ hero: 61, meHp: () => me, ...o, rt: { rbStats: { ..
   assert.match(content, /get probeFight\(\) \{ return \(\.\.\.a\) => L2V7Modules\.raid\.probeFight\(\.\.\.a\); \}/);
   assert.match(content, /epicFaFull: true, rbFaFull: true, rbProbe: true,/);
   assert.match(content, /once\('rbStats925', \(\) => \{/);
-  assert.match(combat, /const probe = !ep && !!env\.probeFight\?\.\(ctx\.rb\.id\);/);
+  assert.match(combat, /const probe = !ordinary && !ep && !!env\.probeFight\?\.\(ctx\.rb\.id\);/);
   assert.match(combat, /env\.cfg\.rbChipRetreat === true \|\| probe/);
   assert.match(combat, /probe \? 'skip' : undefined/);
   assert.match(combat, /d\.probe\?\.sp \|\| 0/);
