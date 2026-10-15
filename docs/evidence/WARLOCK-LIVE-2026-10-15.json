@@ -1,0 +1,249 @@
+{
+  "method": "Native game UI without bot extension; manual mechanics tests",
+  "actions": [
+    {
+      "timeUtc": "2026-10-15T10:55:21.209636+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Nephilim Praetorian] (ур. 72).",
+        "⁠1147​Вампірний дотик — 19758 урона",
+        "Перемога!",
+        "Green Seal Stone ×183",
+        "Blue Seal Stone ×102",
+        "Red Seal Stone ×63",
+        "EXP + 101709",
+        "SP + 4623",
+        "+23425 аден"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "23425",
+        "expGain": "103743",
+        "spGain": 4623
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T10:56:28.725620+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Lilim Slayer] (ур. 75).",
+        "Удар полум’я: додаткові цілі — Taik Orc Supply Leader −19098, Farcran −19098.",
+        "⁠1181​Удар полум’я — 19098 урона",
+        "Додаткова ціль повалена: Taik Orc Supply Leader.",
+        "Silver Nugget ×2",
+        "Armor Piece B ×3",
+        "EXP + 16020",
+        "SP + 2586",
+        "Додаткова ціль повалена: Farcran.",
+        "Asofe ×9",
+        "EXP + 14439",
+        "SP + 2268",
+        "+13719 аден",
+        "Перемога!",
+        "Green Seal Stone ×192",
+        "Blue Seal Stone ×99",
+        "EXP + 106437",
+        "SP + 4836",
+        "+37966 аден"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "37966",
+        "expGain": "139633",
+        "spGain": 9690
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T10:57:13.999220+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Lilim Knight Banneret] (ур. 72).",
+        "1331​Blessing of Queen.",
+        "Слуга [Kai the Cat] завдає критичного удару [Lilim Knight Banneret]: 112 670 урону.",
+        "Перемога!",
+        "EXP + 10800",
+        "SP + 6480",
+        "Олимпиада: Кубок +1",
+        "Відважний мисливець: мисливська шкура +1"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "0",
+        "expGain": "11016",
+        "spGain": 6480
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T10:58:43.364869+00:00",
+      "httpStatus": 200,
+      "log": [
+        "1127​Зцілення слуги.",
+        "Kai the Cat зцілено на 936 HP.",
+        "[Nephilim Praetorian] промахнувся по тобі."
+      ],
+      "serverNowMs": 1792061923185,
+      "skillCooldowns": {
+        "l2_1127": 1792061951493
+      },
+      "rewards": {}
+    },
+    {
+      "timeUtc": "2026-10-15T10:59:10.101553+00:00",
+      "httpStatus": 200,
+      "log": [
+        "1349​Останній слуга.",
+        "Kai the Cat: отримав баф.",
+        "[Nephilim Praetorian] ударив тебе — −6 HP."
+      ],
+      "serverNowMs": 1792061949889,
+      "skillCooldowns": {
+        "l2_1127": 1792061951493,
+        "l2_1349": 1792061950378
+      },
+      "rewards": {}
+    },
+    {
+      "timeUtc": "2026-10-15T11:00:11.201277+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Nephilim Praetorian] (ур. 72).",
+        "1127​Зцілення слуги.",
+        "Kai the Cat зцілено на 936 HP.",
+        "[Nephilim Praetorian] промахнувся по тобі.",
+        "1349​Останній слуга.",
+        "Kai the Cat: отримав баф.",
+        "[Nephilim Praetorian] ударив тебе — −6 HP.",
+        "338​Таємна спритність увімкнено.",
+        "Слуга [Kai the Cat] завдає критичного удару [Nephilim Praetorian]: 109 078 урону.",
+        "Перемога!",
+        "Green Seal Stone ×204",
+        "Red Seal Stone ×81",
+        "EXP + 101709",
+        "SP + 4623",
+        "Олимпиада: Кубок +1"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "0",
+        "expGain": "103743",
+        "spGain": 4623
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T11:00:52.117872+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Lesser Ancient Scout] (ур. 74).",
+        "338​Таємна спритність вимкнено.",
+        "Слуга [Kai the Cat] атакує [Lesser Ancient Scout]: 25 100 урону.",
+        "Перемога!",
+        "Green Seal Stone ×183",
+        "Blue Seal Stone ×99",
+        "Red Seal Stone ×75",
+        "EXP + 71283",
+        "SP + 3240",
+        "+25138 аден"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "25138",
+        "expGain": "72708",
+        "spGain": 3240
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T11:01:45.176191+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Sepulcher Guard] (ур. 75).",
+        "1222​Прокляття хаосу. Ефект пройшов (61%).",
+        "Слуга [Kai the Cat] атакує [Sepulcher Guard]: 23 952 урону.",
+        "Перемога!",
+        "Green Seal Stone ×195",
+        "Blue Seal Stone ×108",
+        "EXP + 77187",
+        "SP + 3507",
+        "+24226 аден"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "24226",
+        "expGain": "78730",
+        "spGain": 3507
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T11:03:19.319290+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Guardian Spirit of Ancient Holy Ground] (ур. 78).",
+        "Battle Trance: HP знижено до 3767.",
+        "Слуга [Kai the Cat] завдає критичного удару [Guardian Spirit of Ancient Holy Ground]: 117 038 урону.",
+        "Перемога!",
+        "Green Seal Stone ×195",
+        "Blue Seal Stone ×126",
+        "Red Seal Stone ×84",
+        "EXP + 85641",
+        "SP + 3891"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "0",
+        "expGain": "87353",
+        "spGain": 3891
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T11:03:44.335519+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Nephilim Royal Guard] (ур. 75).",
+        "⁠1147​Вампірний дотик — 20371 урона",
+        "Вампіризм: +8148 HP.",
+        "HP: +8148 (зцілення).",
+        "Перемога!",
+        "Green Seal Stone ×213",
+        "Blue Seal Stone ×105",
+        "EXP + 106437",
+        "SP + 4836",
+        "Олимпиада: Кубок +1"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "0",
+        "expGain": "108565",
+        "spGain": 4836
+      }
+    },
+    {
+      "timeUtc": "2026-10-15T11:04:49.050591+00:00",
+      "httpStatus": 200,
+      "log": [
+        "Бій розпочато: [Nephilim Commander] (ур. 78).",
+        "⁠1147​Вампірний дотик · КРИТ — 38693 урона",
+        "Вампіризм: +2115 HP.",
+        "HP: +2115 (зцілення).",
+        "Перемога!",
+        "Green Seal Stone ×189",
+        "Red Seal Stone ×78",
+        "EXP + 125568",
+        "SP + 5706"
+      ],
+      "serverNowMs": null,
+      "skillCooldowns": null,
+      "rewards": {
+        "adenaGain": "0",
+        "expGain": "128079",
+        "spGain": 5706
+      }
+    }
+  ]
+}
