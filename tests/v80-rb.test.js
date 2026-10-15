@@ -85,7 +85,8 @@ const { env: e4, R: R4 } = mk({ rbStats: { l2dop_rb_99050: { loss: 77 }, l2dop_r
     const { env: e8, R: R8 } = mk({ rbHunt: { step: 'pick' }, rbListT: Date.now(), rbList: { [id]: { name: 'Селян', lvl: 50, alive: true, page: 2, ord: 1 } },
       rbStats: { ...base.rbStats, [id]: { hp: 507285, patk: 2894, matk: 2217, mdef: 904, src: 'api', loss: 77 } }, rbDb: JSON.parse(JSON.stringify(base.rbDb)), rbK: base.rbK, rbDps: base.rbDps, rbLossK: base.rbLossK },
       { meHp: () => ({ max: 6500, cur: 6500, pct: 100 }), isMap: () => true, aroundSig: () => ({ ids: [] }), sb: { document: { querySelectorAll: () => [], querySelector: () => null } }, townBuffStart: async () => false, restoreVitals: async () => false, meMp: () => ({ cur: 100, max: 100 }), recBot: () => {}, setStatus: () => {}, sleep: async () => {}, pair: () => [0, 0] });   // 10.0: выбор — с карты
-    e8.cfg.rbHuntMode = true; e8.cfg.rbMode = true; e8.cfg.shopAuto = false;
+    // Legacy preflight remains covered outside the ordinary live-target policy.
+    e8.cfg.rbHuntMode = false; e8.cfg.rbMode = true; e8.cfg.shopAuto = false;
     const st = await R8.rbInfoNote(id, { stats: { maxHp: 507285, pAtk: 2894, pDef: 708, mAtk: 2217, mDef: 904 }, drops: [{ kind: 'adena', chance: 1, min: 200000, max: 260000 }, '…ещё 5'], rewardExp: 637000, rewardSp: 150000 }, 'page');
     assert.deepEqual([st.src, st.from, st.loss, st.adena, st.exp, st.sp], ['api', 'page', 77, 230000, 637000, 150000], 'passive note keeps src api, measured loss and parses drops');
     assert.equal(await R8.rbInfoNote(id, { stats: {} }, 'page'), null, 'no stats — nothing written');

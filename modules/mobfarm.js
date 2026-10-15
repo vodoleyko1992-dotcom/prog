@@ -575,7 +575,8 @@ function mobValNote(name, champ, exp, sec) {
 }
 
 function champEntryOff(c) {
-  if (!c.champ) return null;
+  // 16.10: исторический champ=true у РБ/эпиков не делает их цветными чемпионами.
+  if (c.rb || !c.champ) return null;
   const min = env.campChampMin?.() || 0;
   const chapter = env.campActive() && env.campChampOpen() && !(min && c.lvl && c.lvl < min);
   return env.champs?.tierOff?.(c, true) || (!c.quest && !chapter && (env.champs?.tierOff?.(c) || env.champs?.held?.(c))) || null;

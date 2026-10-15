@@ -59,7 +59,12 @@ async function onDeath() {
       await env.rbNote(rbId, { name: nm, lvl, note: `погиб при зависании сервера (${hang.why || 'ход без ответа'}) ${hm} — не «не по силам»` });
       if(!active())return false;
       env.rec('B', 'смерть', `${nm}: герой погиб, пока сервер не отвечал (${hang.why || 'ход без ответа'}) — «не по силам» не пишу, недобитого РБ добью позже`);
-    } else await env.rbNote(rbId, { verdict: 'no', name: nm, lvl, note: `убил героя ${hm}` });
+    } else {
+      await env.rbNote(rbId, { verdict: 'no', name: nm, lvl, note: `убил героя ${hm}` });
+      if(!active())return false;
+      // 16.10: фактическая смерть запрещает немедленный повтор обычного РБ на30мин; модель силы такого запрета не даёт.
+      if(!env.epicById(rbId))await env.setRt({rbPreSkip:{...(env.rt.rbPreSkip||{}),[rbId]:{t:Date.now(),kind:'death',safety:true}}});
+    }
   }
   if(!active())return false;
   // 8.0.3 (лог 11.10 11:44:43): после смерти герой в городе, дальше — «Окрестности» другого места: прежняя зона и «мягкое окно» уровней

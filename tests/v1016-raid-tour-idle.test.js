@@ -38,7 +38,7 @@ test('короткий повтор истёк — простой не доси�
  const m = fixture({ rt: { rbGoTried: { low: Date.now() - 3 * MIN } } }); await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0);
 });
 for (const kind of ['живой', 'воскрес', 'уровень', 'магазин']) test(`два отказа сохраняют защитную паузу: ${kind}`, async () => {
- const m = fixture({ rt: { rbRefuse: { n: 2, t: Date.now() } }, env: { rbTimer: { revivedSince: () => kind === 'воскрес' ? ['low'] : [] } } });
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbRefuse: { n: 2, t: Date.now() } }, env: { rbTimer: { revivedSince: () => kind === 'воскрес' ? ['low'] : [] } } });
  if (kind === 'уровень') m.env.rt.rbIdleMark.lvl = 54;
  if (kind === 'магазин') m.env.rt.shopT = Date.now();
  await m.R.rbHuntStep(); assert.ok(m.env.rt.rbHuntIdle > Date.now()); assert.equal(m.env.rt.rbRefuse.n, 2); assert.equal(m.maps, 1);

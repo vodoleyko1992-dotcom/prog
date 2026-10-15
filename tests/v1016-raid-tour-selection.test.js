@@ -92,17 +92,17 @@ test('точные характеристики пересчитывают пр�
  }
 });
 test('отказ без точных характеристик остаётся до истечения паузы', () => {
- const m = fixture({ rt: { rbStats: { high: { ...stats } }, rbPreSkip: { low: { t: Date.now(), kind: 'pots' } } } }); assert.equal(m.R.rbListPick().id, 'high');
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbStats: { high: { ...stats } }, rbPreSkip: { low: { t: Date.now(), kind: 'pots' } } } }); assert.equal(m.R.rbListPick().id, 'high');
 });
 test('аварийный отход не снимается успешной предбоевой оценкой', () => {
  for (const legacy of [false, true]) {
-  const m = fixture({ rt: { rbPreSkip: { low: { t: Date.now(), kind: 'strong', ...(!legacy ? { observed: true } : {}) } }, rbDb: legacy ? { low: { note: 'аварийный выход: следующий удар убьёт' } } : {} } });
+  const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbPreSkip: { low: { t: Date.now(), kind: 'strong', ...(!legacy ? { observed: true } : {}) } }, rbDb: legacy ? { low: { note: 'аварийный выход: следующий удар убьёт' } } : {} } });
   assert.equal(m.R.rbListPick().id, 'high');
  }
 });
 test('измеренный опасный спецудар и доказанное поражение не снимаются пересчётом', () => {
  for (const db of [{ verdict: 'no', heroLvl: 55 }, { sp: 5000 }]) {
-  const m = fixture({ rt: { rbDb: { low: db }, rbPreSkip: { low: { t: Date.now(), kind: 'strong' } } } }); assert.equal(m.R.rbListPick().id, 'high');
+  const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbDb: { low: db }, rbPreSkip: { low: { t: Date.now(), kind: 'strong' } } } }); assert.equal(m.R.rbListPick().id, 'high');
  }
 });
 test('серверный запрет, валюта и предел 3 переходов продолжают исключать босса', () => {
@@ -112,12 +112,12 @@ test('серверный запрет, валюта и предел 3 перех
  const m = fixture({ rt: { rbGoCnt: { low: [Date.now(), Date.now(), Date.now()] }, rbWound: { low: wound() } } }); assert.equal(m.R.rbListPick().id, 'high');
 });
 test('объяснение пустой очереди отражает лимит переходов, ожидание и режим выгоды', () => {
- const m = fixture({ rt: { rbList: { low }, rbGoCnt: { low: [Date.now(), Date.now(), Date.now()] } } }); assert.match(m.R.rbListWhy(), /3.*телепорт|лимит.*телепорт/);
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbList: { low }, rbGoCnt: { low: [Date.now(), Date.now(), Date.now()] } } }); assert.match(m.R.rbListWhy(), /3.*телепорт|лимит.*телепорт/);
  m.env.rt.rbGoCnt = {}; m.env.rt.rbGoTried = { low: Date.now() }; assert.match(m.R.rbListWhy(), /пробовал|повтор/);
  m.env.rt.rbGoTried = {}; m.env.cfg.rbValueTour = true; m.env.rt.rbDb.low = { adenaPerKill: 0, expPerKill: 0 }; assert.equal(m.R.rbListPick(), null); assert.match(m.R.rbListWhy(), /выгод/);
 });
 test('явный режим выгоды может выбрать старшего и не меняет настройку порядка', () => {
- const m = fixture({ cfg: { rbValueTour: true }, rt: { rbDb: { low: { adenaPerKill: 110000, expPerKill: 0 }, high: { adenaPerKill: 1000000, expPerKill: 0 } } } });
+ const m = fixture({ cfg: { rbHuntMode: false, rbValueTour: true }, rt: { rbDb: { low: { adenaPerKill: 110000, expPerKill: 0 }, high: { adenaPerKill: 1000000, expPerKill: 0 } } } });
  assert.equal(m.R.rbListPick().id, 'high'); assert.equal(m.env.cfg.rbOrder, 'up');
 });
 test('единый план отдаёт ту же очередь и причины, что реальный selector', () => {
@@ -128,4 +128,10 @@ test('единый план отдаёт ту же очередь и причи�
 test('чтение плана не меняет память и не пишет журнал отказов', () => {
  const m = fixture({ rt: { rbDb: { low: { sp: 5000 } } } }), before = JSON.stringify(m.env.rt);
  m.R.rbTourPlan(); m.R.rbListPick(); m.R.rbListWhy(); assert.equal(JSON.stringify(m.env.rt), before); assert.equal(m.logs.length, 0);
+});
+
+
+test('обычный тур сохраняет младшего несмотря на старый приговор, отсутствие цифр и невыгодность', () => {
+ const m = fixture({ cfg: { rbValueTour: true }, rt: { rbStats: { high: { ...stats } }, rbDb: { low: { verdict: 'no', heroLvl: 55, sp: 50000, adenaPerKill: 0, expPerKill: 0 }, high: { adenaPerKill: 1000000, expPerKill: 0 } }, rbPreSkip: { low: { kind: 'strong', observed: true, probeExit: true, t: Date.now() } } } });
+ assert.equal(m.R.rbListPick().id, 'low'); assert.equal(m.env.cfg.rbOrder, 'up');
 });

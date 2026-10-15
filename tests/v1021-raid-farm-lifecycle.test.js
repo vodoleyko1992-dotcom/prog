@@ -30,26 +30,26 @@ test('после доказанной победы полный DPS ведёт �
  assert.equal(m.env.rt.rbTourView.ready[0].id, 'one'); assert.equal(m.R.rbDpsEvidence('one').source, 'transfer'); assert.ok(m.R.rbPreCheck('one', stats).t < 180);
 });
 test('подготовка выполняется до окончательного решения, даже когда все РБ сначала отсечены банками', async () => {
- const m = fixture(); let supplied = false, buffs = 0; m.env.potModel = () => ({ pool: supplied ? 600000 : 0, rate: 2000, n: supplied ? 500 : 0 });
+ const m = fixture({ cfg: { rbHuntMode: false } }); let supplied = false, buffs = 0; m.env.potModel = () => ({ pool: supplied ? 600000 : 0, rate: 2000, n: supplied ? 500 : 0 });
  m.env.townBuffStart = async () => { buffs++; supplied = true; return false; };
  assert.equal(m.R.rbTourPlan().ready.length, 0); await m.R.rbHuntStep(); assert.equal(buffs, 1); assert.equal(m.env.rt.rbHunt.step, 'go'); assert.equal(m.maps(), 0);
 });
 test('сбой сверки состава имеет backoff и явное следующее действие, без нового сканирования', async () => {
- const m = fixture({ fresh: false }); let requests = 0; m.env.gameGet = async () => { requests++; throw Error('offline'); };
+ const m = fixture({ fresh: false, cfg: { rbHuntMode: false } }); let requests = 0; m.env.gameGet = async () => { requests++; throw Error('offline'); };
  const listT = m.env.rt.rbListT; for (let i = 0; i < 4; i++) await m.R.rbHuntStep();
  assert.equal(requests, 1); assert.equal(m.env.rt.rbListT, listT); assert.equal(m.env.rt.rbHunt.phase, 'prepare'); assert.match(m.env.rt.rbHunt.next, /свер.*снова/); assert.equal(m.fires.length, 0); assert.equal(m.loc.href, '');
  assert.ok(m.env.rt.rbHuntIdle > Date.now(), 'до повторной сверки nextFight сохраняет цепочку мобов');
 });
 test('готовый состав с неизвестным DPS и уже виденным безопасным спецударом получает30с пробу', () => {
- const m = fixture({ rt: { rbDpsSample: null, rbDb: { one: { sp: 2000, hitP90: 200, kills: 1 } } } });
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbDpsSample: null, rbDb: { one: { sp: 2000, hitP90: 200, kills: 1 } } } });
  const c = m.R.rbPreCheck('one', stats); assert.equal(c.ok, true); assert.equal(c.measure, true); assert.equal(c.source, 'unknown'); assert.match(c.why, /30 с/);
 });
 test('неоднозначные заряды дают только ограниченную пробу, не заимствуют известный DPS', () => {
- const m = fixture({ env: { warlock: { raidContext: () => ({ managed: true, key: null, prepared: true, planned: true }) } } });
+ const m = fixture({ cfg: { rbHuntMode: false }, env: { warlock: { raidContext: () => ({ managed: true, key: null, prepared: true, planned: true }) } } });
  const c = m.R.rbPreCheck('one', stats); assert.equal(c.source, 'unknown'); assert.equal(c.measure, true); assert.ok(m.R.rbDpsOn('one') < 1200);
 });
 for (const reason of ['off', 'spent', 'slowPots', 'noPots', 'lethal', 'noExit']) test(`проба сохраняет ограничения: ${reason}`, () => {
- const m = fixture({ rt: { rbDpsSample: null } });
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbDpsSample: null } });
  if (reason === 'off') m.env.cfg.rbProbe = false;
  if (reason === 'spent') m.env.rt.rbDb.one = { probe: { kind: 'dps', key: 'P', t: Date.now(), lvl: 80 } };
  if (reason === 'slowPots') m.env.potModel = () => ({ pool: 600000, rate: 10 });
@@ -61,11 +61,11 @@ for (const reason of ['off', 'spent', 'slowPots', 'noPots', 'lethal', 'noExit'])
  if (['noPots','slowPots'].includes(reason)) { assert.equal(c.ok,true); assert.ok(c.probeSeconds>0&&c.probeSeconds<=8); return; }
  assert.equal(c.ok, false); if (['off','spent'].includes(reason)) { assert.equal(c.kind, 'unmeasured'); assert.doesNotMatch(m.R.rbListWhy(), /бой дольше|не по силам/); }
 });
-test('старая проба спецудара переходит в ограниченную DPS-пробу, а не остаётся без таймера', async () => {
+test('старый probe не ограничивает обычный тур после включения новой политики', async () => {
  const m = fixture({ rt: { rbDpsSample: null, rbDb: { one: { probe: { lvl: 80, sp: 3000, t: Date.now() - 60000 } } } } });
  m.setDoc(docOf(pin('one', 'Первый')));
- assert.equal(m.R.rbPreCheck('one', stats).measure, true); await m.R.rbEngage({ id: 'one', name: 'Первый', lvl: 80, idx: -1 }, 'Проба');
- assert.equal(m.env.rt.rbDb.one.probe.kind, 'dps'); assert.equal(m.env.rt.rbDb.one.probe.key, 'P'); assert.equal(m.R.probeFight('one'), true);
+ assert.equal(m.R.rbPreCheck('one', stats).measure, false); await m.R.rbEngage({ id: 'one', name: 'Первый', lvl: 80, idx: -1 }, 'Бой');
+ assert.equal(m.R.probeFight('one'), false); assert.ok(m.env.rt.target);
 });
 test('оплаченный переход → бой → новая победа → следующий РБ, без повторного списка', async () => {
  const m = fixture(); await m.R.rbHuntStep(); const listT = m.env.rt.rbListT;
@@ -140,11 +140,11 @@ for (const stage of ['page', 'pause', 'target']) for (const stop of ['manual', '
  assert.equal(m.fires.length, 0); assert.equal(m.loc.href, '');
 });
 test('нет точных цифр — разведка с backoff, платный полёт даже к старой победе не разрешён', async () => {
- const m = fixture({ rt: { rbStats: {}, rbList: { one: row('Неизвестный', 80) }, rbDb: { one: { kills: 10, verdict: 'ok' } }, rbInfoFail: { one: Date.now() } } });
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbStats: {}, rbList: { one: row('Неизвестный', 80) }, rbDb: { one: { kills: 10, verdict: 'ok' } }, rbInfoFail: { one: Date.now() } } });
  await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHunt.phase, 'wait'); assert.equal(m.fires.length, 0); assert.match(m.env.rt.rbHunt.next, /разведка/);
 });
 test('сбой цифр первого РБ не мешает разведать и выбрать второго живого', async () => {
- const m = fixture({ rt: { rbStats: {}, rbInfoFail: { one: Date.now() } }, net: url => url.endsWith('/two/info') ? { stats: { maxHp: stats.hp, pAtk: stats.patk, mAtk: stats.matk, pDef: stats.pdef, mDef: stats.mdef } } : null });
+ const m = fixture({ cfg: { rbHuntMode: false }, rt: { rbStats: {}, rbInfoFail: { one: Date.now() } }, net: url => url.endsWith('/two/info') ? { stats: { maxHp: stats.hp, pAtk: stats.patk, mAtk: stats.matk, pDef: stats.pdef, mDef: stats.mdef } } : null });
  await m.R.rbHuntStep(); assert.deepEqual(m.calls, ['/game/spawn/two/info']); assert.equal(m.env.rt.rbHunt.step, 'go'); assert.equal(m.env.rt.rbHunt.id, 'two');
 });
 
@@ -158,7 +158,7 @@ function assessment(o = {}) {
 }
 test('полный HP-delta текущего боя учит модель, завершает пробу и принимает ручной бой в lifecycle', () => {
  const m = assessment(); for (let i = 0; i <= 30; i++) m.sample(i);
- assert.equal(m.env.rt.rbDpsSample.dps, 67000); assert.ok(m.env.rt.rbDb.one.probe.done); assert.equal(m.env.rt.rbHunt.phase, 'fight'); assert.equal(m.env.rt.rbHunt.id, 'one');
+ assert.equal(m.env.rt.rbDpsSample.dps, 67000); assert.equal(m.R.probeFight('one'), false); assert.equal(m.env.rt.rbHunt.phase, 'fight'); assert.equal(m.env.rt.rbHunt.id, 'one');
  assert.equal(m.R.rbDpsEvidence('two').source, 'transfer'); assert.doesNotMatch(m.ctx.rb.note, /заходами/);
 });
 test('доказанная победа закрывает пробу до истечения 30с и не вызывает лишний выход после потери свежести снимка', async () => {
@@ -168,11 +168,11 @@ test('доказанная победа закрывает пробу до ис�
  v = m.sample(31); assert.equal(v.abort, undefined); assert.equal(m.R.probeFight('one'), false);
 });
 for (const damage of [0, 100]) test(`30с пробы без достаточного DPS (${damage}) требует штатный выход, не победу`, () => {
- const m = assessment(); let v; for (let i = 0; i <= 30; i++) v = m.sample(i, damage);
+ const m = assessment({ cfg: { rbHuntMode: false } }); let v; for (let i = 0; i <= 30; i++) v = m.sample(i, damage);
  assert.equal(v.abort, true); assert.match(v.why, /30 с/); assert.equal(m.R.probeFight('one'), true); assert.equal(m.env.rt.rbDb.one.verdict, undefined);
 });
 test('дедлайн30с пробы сохраняется при новом ctx после reload, не начинается заново', () => {
- const m = assessment(); for (let i = 0; i <= 20; i++) m.sample(i, 0);
+ const m = assessment({ cfg: { rbHuntMode: false } }); for (let i = 0; i <= 20; i++) m.sample(i, 0);
  const started = m.env.rt.rbDb.one.probe.startedAt; assert.equal(m.env.rt.rbDb.one.probe.deadlineAt, started + 30000);
  for (const k of Object.keys(m.ctx.rb)) if (k !== 'id') delete m.ctx.rb[k]; Object.assign(m.ctx.rb, { samples: [], hits: [], persist: true });
  let v; for (let i = 21; i <= 31; i++) v = m.sample(i, 0);
@@ -227,4 +227,16 @@ test('настоящие warlock + shot provider: перезагрузка по�
  // /character возвращает адену десятичной строкой, как в серверном контракте Warlock.
  m.env.rt.adenaSeen = null; m.loc.pathname = '/rb-bosses.html'; m.loc.search = '?page=1'; m.setDoc(docOf(page('one', 'Первый')));
  await m.R.rbHuntStep(); assert.equal(m.env.rt.adenaSeen.v, 20000000); assert.equal(m.env.rt.rbHunt.step, 'arrive'); assert.equal(m.fires.length, 1); assert.equal(f.calls.length, 0);
+});
+
+test('обычный тур выбирает живого РБ при недоступных цифрах силы и старом отказе модели', async () => {
+ const m = fixture({ cfg: { rbProbe: false, rbMaxKillMin: 1, rbValueTour: true }, rt: { rbStats: {}, rbDpsSample: null, rbInfoFail: { one: Date.now(), two: Date.now() }, rbDb: { one: { verdict: 'no', heroLvl: 80, sp: 90000 } }, rbPreSkip: { one: { kind: 'strong', observed: true, probeExit: true, t: Date.now() } } } });
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHunt.step, 'go'); assert.equal(m.env.rt.rbHunt.id, 'one'); assert.equal(m.fires.length, 0);
+});
+
+
+test('старые два отказа модели не держат обычный тур в глобальной паузе', async () => {
+ const m = fixture({ rt: { rbRefuse: { n: 2, t: Date.now() }, rbHuntIdle: Date.now() + 300000, rbIdleMark: { lvl: 80, pots: 500, t: Date.now(), adena: 1000000 }, rbHunt: { step: 'pick', phase: 'wait' } } });
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0);
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHunt.step, 'go'); assert.equal(m.env.rt.rbHunt.id, 'one');
 });
