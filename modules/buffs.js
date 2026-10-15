@@ -5,6 +5,11 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.buffs = function create_buffs(env) {
 const location = env.routeLocation || root.location;
+function contextGuard() {
+  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt;
+  const same=()=>env.tabOwner!==false&&env.rt.char===char&&env.leaseEpoch===lease&&env.rt.manualKickAt===kick;
+  const active=()=>env.on!==false&&same();active.same=same;return active;
+}
 function activeBuffs() {
   return [...document.querySelectorAll('#l2-hud-active-buffs [data-skill-id]')]
     .map(e => ({ id: +e.dataset.skillId, title: e.getAttribute('title') || '', exp: +(e.dataset.expiresAt || 0) }));
@@ -347,6 +352,7 @@ function faCatalogNote() {                        // страница /fast-aden
 
 let rbAskT = 0;                                     // 10.0.1: когда тур РБ последний раз спрашивал «баффы перед РБ …» (faWanted → tourWant)
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
+  const active=contextGuard();if(!active())return false;
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   const n = townBuffNeed();
   if (!n) { if (env.rt.tbFail) env.setRt({ tbFail: 0 }); return false; }
@@ -361,15 +367,18 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if (!cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
     const fails = (env.rt.tbFail || 0) + 1;
     await env.setRt({ tbChk: env.rt.tbT, tbOk: false, tbFail: fails });
+    if(!active())return false;
     env.rec('B', 'бафф', `после баффера баффы так и не появились в шапке (${fails}/3)${fails >= 3 ? ' — пауза 10 мин, проверьте набор баффа в меню' : ' — повторю через 1 мин'}`);
     wait = fails >= 3 ? 10 * 60000 : 60000;
     if (fails >= 3) await env.setRt({ tbFail: 0, tbOk: true, tbPauseUntil: Date.now() + 10 * 60000 });   // v5.6: пауза и для «срочных» (перед РБ) — раньше они шли каждую минуту
   }
+  if(!active())return false;
   if ((env.rt.tbPauseUntil || 0) > Date.now()) return false;
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < 10 * 60000);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
   await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode) }, tbT: Date.now() });
+  if(!active())return false;
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
   location.href = n.set ? '/town-buffer.html' : '/fast-aden-buffer.html'; await env.sleep(4000);
   return true;
@@ -379,8 +388,10 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
 // появился на панели (≈3 ч), а другой бафф, которому оставалось > 2 мин, с панели пропал — покупка его сняла → rt.faClash { новый: [снятые] }.
 // Панель не обновилась — ничего не решаем (нет ложных пар). Тот же номер (FA Lv.3 поверх городского Lv.2) — не пара
 async function faClashNote(id, H0, now = Date.now()) {
+  const active=contextGuard();if(!active())return [];
   const fresh = () => { const H = hudBuffs(); return H && H[id] > now + 2 * 3600000 ? H : null; };
   if (!(await env.waitX(fresh, 3000, 200))) return [];
+  if(!active())return [];
   const H1 = fresh() || {};
   const lost = Object.entries(H0).map(([k, e]) => [+k, e]).filter(([k, e]) => k !== id && e !== Infinity && e - now > 2 * 60000 && !(k in H1)).map(([k]) => k);
   if (lost.length) {
@@ -415,11 +426,14 @@ async function paymentReconcile() {
 }
 async function townBuffStep() {
   if(env.payments?.blocked()){await paymentReconcile();return;}
+  const active=contextGuard();if(!active())return;
   const st = env.rt.tbuff;
+  if(!st)return;
   const done = async msg => {
+    if(!active())return;
     env.rec('B', 'бафф', msg);
     if (st.then) { await env.setRt({ tbuff: { ...st.then, t: Date.now() } }); return; }   // бафф был перед «Восстановить» — теперь восстановление
-    await env.setRt({ tbuff: null }); location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(4000);
+    await env.setRt({ tbuff: null });if(!active())return;location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html';await env.sleep(4000);
   };
   if (st.step === 'restore') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
@@ -429,22 +443,26 @@ async function townBuffStep() {
     if (n && (n.set || n.fa.length)) { await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', reviveTried: st.reviveTried, then: { ...st, buffDone: true } }, tbT: Date.now() }); return; }
     env.setStatus('Восстановление: баффер «Восстановить HP|MP|CP»');
     const rb = await env.waitX(() => env.$q('#town-buffer-restore-btn'), 10000, 200);
+    if(!active())return;
     const hpPct = () => env.meHp()?.pct ?? 0, msg = () => (env.$q('#town-buffer-msg')?.textContent || '').trim();
     let ok = false;
     if (rb) {
       const hp0 = hpPct() | 0;
       await env.sleep(env.rnd(1300, 1800));                 // кнопка появляется раньше, чем страница готова: ранний клик → «Не удалось восстановить»
+      if(!active())return;
       // v4.36: сразу после боя/смерти/отхода игра восстановление не даёт («Не удалось…» или молчит) — по журналам
       // все неудачи были через 1–6 с после боя. Повторяем с растущей паузой: ≈1 мин на всё
       const waits = [0, 5000, 8000, 12000, 15000];
-      for (let i = 1; i <= waits.length && env.on && !ok; i++) {
+      for (let i = 1; i <= waits.length && active() && !ok; i++) {
         const w = waits[i - 1];
-        for (let t0 = Date.now(); w && env.on && Date.now() - t0 < w;) { env.setRt({ status: `Восстановление: игра пока не даёт (после боя) — попытка ${i}/${waits.length} через ${Math.ceil((w - (Date.now() - t0)) / 1000)} с` }); env.draw(); await env.sleep(1000); }
-        if (!env.on) break;
+        for (let t0 = Date.now(); w && active() && Date.now() - t0 < w;) { env.setRt({ status: `Восстановление: игра пока не даёт (после боя) — попытка ${i}/${waits.length} через ${Math.ceil((w - (Date.now() - t0)) / 1000)} с` }); env.draw(); await env.sleep(1000); }
+        if (!active()) return;
         const m = env.$q('#town-buffer-msg'); if (m) m.textContent = '';
         env.fire(rb);
         await env.waitX(() => hpPct() >= 99 || /не удалось|не вдалося|failed|восстановлен[оыа]|відновлен[оі]|restored/i.test(msg()), 7000, 200);
+        if(!active())return;
         if (hpPct() < 90) await env.waitX(() => hpPct() >= 99, 3000, 250);
+        if(!active())return;
         ok = hpPct() >= 90;
         if (!ok) env.rec('B', 'восстановление', `попытка ${i}/${waits.length}: ${msg() || 'игра не ответила'} (HP ${hpPct() | 0}%)`);
         if (!ok && env.DEAD_RE.test(msg()) && !st.reviveTried) {   // «Ти знепритомнів. Сначала натисни «В город»» — сначала воскрешение, потом сюда же
@@ -456,6 +474,7 @@ async function townBuffStep() {
       env.rec('B', 'восстановление', ok ? `HP ${hp0}% → ${hpPct() | 0}%` : `не удалось за ${waits.length} попыток (HP ${hpPct() | 0}%) — лечусь на мобах, к бафферу снова через 3 мин`);
     } else env.rec('B', 'восстановление', 'нет кнопки «Восстановить» — баффер не открылся');
     await env.setRt({ tbuff: null, restoreRes: { t: Date.now(), ok } });
+    if(!active())return;
     location.href = st.back || '/map.html'; await env.sleep(4000); return;
   }
   if (st.step === 'town') {
@@ -468,52 +487,66 @@ async function townBuffStep() {
     if (set !== 'basic' && env.epicBuffCol?.() === false) set = 'basic';
     env.setStatus(`Бафф: городской баффер (${set})`);
     const btn = await env.waitX(() => env.$q(`#town-buffer-sets .l2-town-buffer-set-apply[data-set-id="${set}"]`), 10000, 200);
+    if(!active())return;
     if (!btn) return done(`баффер не открылся (${env.shown(env.$q('#town-buffer-load-err')) ? env.$q('#town-buffer-load-err').textContent.trim().slice(0, 80) : 'нет кнопки'})`);
     tbLevelsNote();
     const dn = tbDowngrade(set, hudBuffs() || {});
     if (dn.length) return done(`городской набор «${set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
     let payAt = 0, paidSet=null;
+    const releaseUnsent=async()=>{if(payAt&&active.same())await env.epicBuffRelease?.(payAt,'покупка не отправлена');};
     if(set!=='basic' && env.payments)try {
       const r=await env.gameGet('/character/town/buffer/catalog'),d=r.ok?await r.json():null;
+      if(!active())return;
       paidSet=d?.sets?.find(x=>x.id===set);
       if(!paidSet || +paidSet.feeAdena!==0 || +paidSet.feeCoinOfLuck!==15 || !paidSet.skills?.length)return done('цена платного набора не подтверждена — не оплачиваю');
     }catch(_){return done('каталог платного набора не получен — не оплачиваю');}
     if (set !== 'basic') { const p = await env.epicBuffPay?.(set); if (p === false) return done(`«${set}» за Coin of Luck не разрешён — в следующий раз бесплатный «basic»`); if (typeof p === 'number') payAt = p; }
+    if(!active()){await releaseUnsent();return;}
     const H0 = hudBuffs() || {};
     await env.pause();
+    if(!active()){await releaseUnsent();return;}
     const P=paidSet?await env.payments.prepare({key:`town:${set}`,kind:'town-buff',quote:{amount:+paidSet.feeCoinOfLuck,currency:'Coin of Luck'},
       evidence:{jobT:st.t,set,ids:[...new Set(env.TB_KEYS[set]||[])],before:H0}}):null;
-    if(paidSet && (!P || !env.payments.sent(P))){if(P)await env.payments.cancel(P);if(payAt)await env.epicBuffRelease?.(payAt,'покупка не отправлена');return;}
+    if(paidSet && (!P || !active() || !env.payments.sent(P))){if(P)await env.payments.cancel(P);await releaseUnsent();return;}
     const clicked=env.fire(btn);
-    if(clicked===false){if(P)await env.payments.cancel(P,{notSent:true});if(payAt)await env.epicBuffRelease?.(payAt,'кнопка не нажалась');return done(`городской «${set}»: кнопка не нажалась`);}
+    if(clicked===false){if(P)await env.payments.cancel(P,{notSent:true});await releaseUnsent();return done(`городской «${set}»: кнопка не нажалась`);}
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
     const ok = await env.waitX(() => /накладено|наложен|applied/i.test(res()), 6000, 200);
+    if(!active()){if(P)await paymentReconcile();return;}
     if (ok) {                                       // v5.3: запоминаем, какие баффы даёт набор (новые и обновлённые в шапке)
       await env.waitX(() => Object.keys(hudBuffs() || {}).some(id => !(id in H0) || (hudBuffs()[id] || 0) > (H0[id] || 0) + 60000), 3000, 200);
+      if(!active()){if(P)await paymentReconcile();return;}
       const H1 = hudBuffs() || {}, got = Object.keys(H1).map(Number).filter(id => H1[id] !== Infinity && (!(id in H0) || H1[id] > (H0[id] || 0) + 60000) && !faWanted().includes(id));
       await env.setRt({ hudLong: {} });
+      if(!active())return;
       if (got.length) await env.setRt({ tbSetIds: { ...(env.rt.tbSetIds || {}), [set]: [...new Set([...(env.rt.tbSetIds?.[set] || []), ...got])] } });
+      if(!active())return;
     }
     const fail = !ok && res().replace(/\s+/g, ' ').trim().slice(0, 100);
     if(P && !await paymentReconcile())return;
+    if(!active())return;
     if (!ok && (env.DEAD_RE.test(res()) || env.DEAD_RE.test(env.$q('#town-buffer-msg')?.textContent || '') || !res().trim())) {
       // «без подтверждения» у баффера = скорее всего «без сознания» (лог 01:33): сначала воскрешение
       if (!st.reviveTried) { env.rec('B', 'бафф', 'баффер не отвечает — похоже, персонаж «без сознания»: сначала «Вернуться в город»'); await env.setRt({ tbuff: null, revive: { t: Date.now(), url: env.rt.lastBattle } }); return; }
     }
     // явный отказ баффера (текст есть, не «наложено», не «без сознания») — 15 CoL не списаны: резерв снимаем; без ответа — оставляем
     if (payAt && !ok && fail && !env.DEAD_RE.test(res())) await env.epicBuffRelease?.(payAt, fail);
+    if(!active())return;
     const cl = env.$q('#town-buffer-result-overlay [class*="close"], #town-buffer-result-overlay');   // закрыть окно результата
     if (ok && cl) { try { env.fire(cl); } catch (e) {} }
     env.rec('B', 'бафф', ok ? `городской «${set}» — наложен` : `городской «${set}»: ${fail || 'без подтверждения'}`);
     await env.setRt({ tbOk: !!ok });
-    if (st.fa?.length) { await env.setRt({ tbuff: { ...st, step: 'fa' } }); location.href = '/fast-aden-buffer.html'; await env.sleep(4000); return; }
+    if(!active())return;
+    if (st.fa?.length) { await env.setRt({ tbuff: { ...st, step: 'fa' } });if(!active())return;location.href = '/fast-aden-buffer.html';await env.sleep(4000);return; }
     return done('готово — возвращаюсь');
   }
   if (st.step === 'fa') {
     if (!/\/fast-aden-buffer\.html/.test(location.pathname)) { location.href = '/fast-aden-buffer.html'; await env.sleep(4000); return; }
     env.setStatus('Бафф: Fast Aden');
     await env.waitX(() => env.$q('.l2-fa-buy[data-skill-id]'), 10000, 200);
+    if(!active())return;
     await env.waitX(() => /\d/.test(env.$q('#fast-aden-balance')?.textContent || ''), 4000, 200);   // баланс дорисовывается позже кнопок
+    if(!active())return;
     faCatalogNote();
     const balNow = () => +((env.$q('#fast-aden-balance')?.textContent || '0').replace(/\D/g, '') || 0);
     const nm = id => env.rt.faCat?.[id]?.name || env.FA_KNOWN[id]?.[0] || id;
@@ -522,7 +555,7 @@ async function townBuffStep() {
     // 10.0.14: сохранённая очередь переживает reload и ручную покупку; перед каждым списанием проверяем актуальные HUD и выбор.
     const needed = id => { const H = hudBuffs(); return H && faWanted().includes(id) && (!H[id] || H[id] - Date.now() < 60000 || id === 1323 && nobGone(H) || faLow(id)); };
     for (const id of st.fa || []) {
-      if (!env.on) break;
+      if (!active()) return;
       if (!needed(id)) continue;
       const bal = balNow(), b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
       if (!b) { got.push(`${nm(id)}: нет у баффера — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
@@ -531,19 +564,24 @@ async function townBuffStep() {
       if (bal < cost) { got.push(`${nm(id)}: не хватает FA (${bal}/${cost})`); short++; continue; }   // дальше — те, что по карману
       const H0 = hudBuffs() || {};
       await env.pause();
-      if (!env.on || !needed(id)) continue;
+      if (!active())return;
+      if (!needed(id)) continue;
       const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,ids:[id],before:H0,balance:bal}}):null;
-      if(env.payments && (!P || !needed(id) || +(b.dataset.cost||1)!==cost || balNow()!==bal || !env.payments.sent(P))){if(P)await env.payments.cancel(P);return;}
+      if(env.payments && (!P || !active() || !needed(id) || +(b.dataset.cost||1)!==cost || balNow()!==bal || !env.payments.sent(P))){if(P)await env.payments.cancel(P);return;}
       const clicked=env.fire(b);if(P && clicked===false){await env.payments.cancel(P,{notSent:true});return;}
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
       if(P && !await paymentReconcile())return;
+      if(!active())return;
       if (ok) bought++;
       if (ok) { const lost = await faClashNote(id, H0); if (lost.length) got.push(`${nm(id)} снял ${lost.map(nm).join(', ')} — вместе не держатся, пару больше не беру`); }
+      if(!active())return;
       if (ok && id === 1323) nobT = Date.now();   // 8.0.3: свой Noblesse — куплен после последней смерти (nobGone)
       if (ok) await env.setRt({ tbuff: { ...env.rt.tbuff, fa: (env.rt.tbuff?.fa || []).filter(x => x !== id) }, ...(nobT ? { nobBuyT: nobT } : {}) });
+      if(!active())return;
       got.push(`${nm(id)}: ${ok ? '−' + cost + ' FA' : 'без подтверждения'}`);
       await env.sleep(env.rnd(250, 450));
     }
+    if(!active())return;
     const left = balNow();
     const patch = { faGone: gone, faBal: { v: left, t: Date.now() }, ...(nobT ? { nobBuyT: nobT } : {}) };
     if (short && !bought) { patch.faSkipUntil = Date.now() + 60 * 60000; got.push('FA не хватает — к бафферу FA не хожу 60 мин (или пока баланс не вырастет)'); }
