@@ -5021,7 +5021,7 @@ async function warlockTownStart({char,revision,price}) {
   const saved=await setRt({petBufferTrip:J});
   if (!saved?.ok || !await rtCommit() || !petTripFree(J,true)) return false;
   petTripUnstored.delete(J.id);
-  setStatus('Автобаф кота: иду в город');location.href='/city.html';return true;
+  setStatus('Автобаф суммона: иду в город');location.href='/city.html';return true;
 }
 // Ответ может прийти во время первого storage.get после получения замка. Применяем его
 // последовательно в main, иначе старый boot-снимок перетирает уже подтверждённую фазу.
@@ -5101,7 +5101,7 @@ async function warlockTripStep() {
 }
 async function petTripNotice(J, why) {
   if (!petTripSame(J)) return;
-  setStatus('Автобаф кота: '+why);
+  setStatus('Автобаф суммона: '+why);
   if (rt.petBufferTrip.why!==why) await petTripSave(J,{why});
 }
 const petReturnTarget = J => J.home.mode==='cat'&&J.home.catIn ? {kind:'cat',id:J.home.catIn,page:CAT_URL}
@@ -5192,7 +5192,7 @@ async function warlockTripReturn(J) {
   return true;
 }
 
-// Автобаф кота: отдельная задача, текущие режимы и сабкласс не переключает.
+// Автобаф суммона: отдельная задача, текущие режимы и сабкласс не переключает.
 // В бою — состояние текущей панели. Перед РБ — отдельно помеченный план штатного keepShots:
 // /character сообщает слот и запас, но не ON; грейд проверяем по реально надетому оружию.
 const warlockShotContext = (ch, options = {}) => {
