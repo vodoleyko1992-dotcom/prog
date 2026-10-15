@@ -243,11 +243,12 @@ function faFullIds() {
   let ids = F.resolve(v, role, S);
   // 10.0.23 (лог15.10 07:10): смена оценки Magnus/Water не повод снимать действующий
   // бафф за FA. Автонабор пересматривает конфликтующую пару только после истечения.
-  // Явный список игрока сохраняет свой порядок; смена класса исключает чужой набор.
+  // 15.10: уже купленного Greater от ПП достаточно и танку; не меняем его на орочий за5FA.
+  // Явный список игрока сохраняет приоритет; класс определяет новый выбор после истечения.
   if (F.isAuto(v)) {
     const H = hudBuffs() || {}, now = Date.now(), C = env.rt.faClash || {};
     const clashes = (a, b) => a === b || (F.GROUP.includes(a) && F.GROUP.includes(b)) || (C[a] || []).includes(b) || (C[b] || []).includes(a);
-    const keep = F.SETS[F.kind(role)].map(x => x[0]).filter(id => H[id] > now + 60000 && !faLow(id) && ids.some(k => clashes(id, k)));
+    const keep = [...new Set([...F.SETS[F.kind(role)].map(x => x[0]), ...F.GROUP])].filter(id => H[id] > now + 60000 && !faLow(id) && ids.some(k => clashes(id, k)));
     ids = [...keep, ...ids.filter(id => !keep.includes(id))];
   }
   return F.dropClash(ids, env.rt.faClash);
