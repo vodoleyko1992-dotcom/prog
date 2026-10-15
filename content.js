@@ -4939,7 +4939,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get tabOwner(){return tabOwner},get leas
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.survival = L2V7Factories.survival({ get routeLocation(){return actionLocation}, get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },
