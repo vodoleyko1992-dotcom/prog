@@ -1,0 +1,660 @@
+{
+  "source": "Final integrated bce267d, live extension, 2026-10-15 UTC",
+  "requests": {
+    "battleStart": 1,
+    "huntContinue": 18,
+    "battleActions": 22,
+    "battleLeave": 0
+  },
+  "before": {
+    "level": 78,
+    "revision": 294916,
+    "hp": 15070,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "inBattle": false,
+    "adena": "359032905",
+    "coinOfLuck": 351,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234
+  },
+  "after": {
+    "level": 78,
+    "revision": 294957,
+    "hp": 15070,
+    "maxHp": 15070,
+    "mp": 4743,
+    "maxMp": 4743,
+    "inBattle": false,
+    "adena": "359327275",
+    "coinOfLuck": 351,
+    "pAtk": 2218,
+    "mAtk": 29668,
+    "pDef": 4081,
+    "mDef": 4234
+  },
+  "newDamageEvidence": {
+    "blaze": {
+      "dmg": 266862,
+      "dmgN": 5,
+      "spl": 0,
+      "splN": 5,
+      "unknown": 0,
+      "uses": 5,
+      "v": 1
+    },
+    "final servitor": {
+      "dmg": 0,
+      "dmgN": 0,
+      "spl": 0,
+      "splN": 0,
+      "unknown": 0,
+      "uses": 1,
+      "v": 1
+    },
+    "flame strike": {
+      "dmg": 49899,
+      "dmgN": 2,
+      "spl": 99798,
+      "splN": 2,
+      "unknown": 0,
+      "uses": 2,
+      "v": 1
+    },
+    "summon feline queen": {
+      "dmg": 0,
+      "dmgN": 0,
+      "spl": 0,
+      "splN": 0,
+      "unknown": 0,
+      "uses": 1,
+      "v": 1
+    },
+    "vampiric touch": {
+      "dmg": 374706,
+      "dmgN": 11,
+      "spl": 0,
+      "splN": 11,
+      "unknown": 0,
+      "uses": 11,
+      "v": 1
+    },
+    "warrior servitor": {
+      "dmg": 0,
+      "dmgN": 0,
+      "spl": 0,
+      "splN": 0,
+      "unknown": 0,
+      "uses": 1,
+      "v": 1
+    }
+  },
+  "groupEvidence": {
+    "map:out:Forgotten Ancient People / Changed Creation|l2_1181": {
+      "evidence": 1,
+      "samples": [
+        {
+          "damage": 25238,
+          "hp": 3972,
+          "kills": 2,
+          "t": 1792077671257,
+          "targets": 2
+        },
+        {
+          "damage": 24661,
+          "hp": 3732,
+          "kills": 2,
+          "t": 1792077680622,
+          "targets": 2
+        }
+      ],
+      "t": 1792077680622
+    }
+  },
+  "victories": [
+    {
+      "atUtc": "2026-10-15T15:21:00.392697+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12276",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "Благословений заряд духу активний.",
+          "[Giant's Shadow] ударив тебе — −6 HP.",
+          "1331​Blessing of Queen.",
+          "Слуга [Feline King] завдає критичного удару [Giant's Shadow]: 1 049 366 урону.",
+          "Перемога!",
+          "Asofe ×3",
+          "Charcoal ×1",
+          "EXP + 13043",
+          "SP + 2892",
+          "+16726 аден"
+        ],
+        "adenaGain": "16726",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 4043,
+            "qty": 3,
+            "spoil": false,
+            "label": "Asofe"
+          },
+          {
+            "l2ItemId": 1871,
+            "qty": 1,
+            "spoil": false,
+            "label": "Charcoal"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:05.611989+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12060",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "1346​Підсилення воїна.",
+          "Feline King: отримав баф.",
+          "[Changed Creation] ударив тебе — −6 HP.",
+          "1349​Останній слуга.",
+          "Feline King: отримав баф.",
+          "[Changed Creation] ударив тебе (крит!) — −13 HP.",
+          "⁠1147​Вампірний дотик — 24314 урона",
+          "Вампіризм: +193 HP.",
+          "HP: +193 (зцілення).",
+          "Перемога!",
+          "EXP + 15493",
+          "SP + 3232",
+          "+14881 аден"
+        ],
+        "adenaGain": "14881",
+        "expGain": "15802",
+        "spGain": 3232,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:08.144165+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12034",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1220​Полум’я · КРИТ — 57875 урона",
+          "Перемога!",
+          "Animal Bone ×2",
+          "Mithril Ore ×2",
+          "EXP + 13043",
+          "SP + 2892",
+          "+13790 аден"
+        ],
+        "adenaGain": "13790",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 1872,
+            "qty": 2,
+            "spoil": false,
+            "label": "Animal Bone"
+          },
+          {
+            "l2ItemId": 1876,
+            "qty": 2,
+            "spoil": false,
+            "label": "Mithril Ore"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:11.271549+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12230",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "Удар полум’я: додаткові цілі — Forgotten Ancient People −25238, Changed Creation −25238.",
+          "⁠1181​Удар полум’я — 25238 урона",
+          "Додаткова ціль повалена: Forgotten Ancient People.",
+          "EXP + 16958",
+          "SP + 3672",
+          "+12878 аден",
+          "Додаткова ціль повалена: Changed Creation.",
+          "EXP + 15493",
+          "SP + 3232",
+          "+13754 аден",
+          "Перемога!",
+          "Silver Nugget ×3",
+          "EXP + 13043",
+          "SP + 2892",
+          "+47272 аден"
+        ],
+        "adenaGain": "47272",
+        "expGain": "46403",
+        "spGain": 9796,
+        "items": [
+          {
+            "l2ItemId": 1873,
+            "qty": 3,
+            "spoil": false,
+            "label": "Silver Nugget"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:13.956417+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12259",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1147​Вампірний дотик · КРИТ — 49881 урона",
+          "Перемога!",
+          "Silver Nugget ×2",
+          "EXP + 13043",
+          "SP + 2892",
+          "+18151 аден"
+        ],
+        "adenaGain": "18151",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 1873,
+            "qty": 2,
+            "spoil": false,
+            "label": "Silver Nugget"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:17.810321+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12094",
+        "mobName": "Forgotten Ancient People",
+        "mobLevel": 77,
+        "fullLog": [
+          "Бій розпочато: [Forgotten Ancient People] (ур. 77).",
+          "⁠1220​Полум’я · КРИТ — 62388 урона",
+          "Перемога!",
+          "EXP + 16958",
+          "SP + 3672",
+          "+17350 аден"
+        ],
+        "adenaGain": "17350",
+        "expGain": "17297",
+        "spGain": 3672,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:20.692509+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12270",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "Удар полум’я: додаткові цілі — Forgotten Ancient People −24661, Changed Creation −24661.",
+          "⁠1181​Удар полум’я — 24661 урона",
+          "Додаткова ціль повалена: Forgotten Ancient People.",
+          "EXP + 16958",
+          "SP + 3672",
+          "+13415 аден",
+          "Додаткова ціль повалена: Changed Creation.",
+          "Oriharukon Ore ×3",
+          "EXP + 15493",
+          "SP + 3232",
+          "+29052 аден",
+          "Перемога!",
+          "Iron Ore ×2",
+          "EXP + 15493",
+          "SP + 3232"
+        ],
+        "adenaGain": "29052",
+        "expGain": "48902",
+        "spGain": 10136,
+        "items": [
+          {
+            "l2ItemId": 1869,
+            "qty": 2,
+            "spoil": false,
+            "label": "Iron Ore"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:23.168080+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12084",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1147​Вампірний дотик — 24248 урона",
+          "Перемога!",
+          "EXP + 13043",
+          "SP + 2892",
+          "+15437 аден"
+        ],
+        "adenaGain": "15437",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:25.643538+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12169",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "⁠1147​Вампірний дотик — 26236 урона",
+          "Перемога!",
+          "EXP + 15493",
+          "SP + 3232",
+          "+13417 аден"
+        ],
+        "adenaGain": "13417",
+        "expGain": "15802",
+        "spGain": 3232,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:27.406390+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12122",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "⁠1147​Вампірний дотик — 24896 урона",
+          "Перемога!",
+          "Stone of Purity ×1",
+          "EXP + 15493",
+          "SP + 3232"
+        ],
+        "adenaGain": "0",
+        "expGain": "15802",
+        "spGain": 3232,
+        "items": [
+          {
+            "l2ItemId": 1875,
+            "qty": 1,
+            "spoil": false,
+            "label": "Stone of Purity"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:29.505246+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12205",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "⁠1147​Вампірний дотик — 26563 урона",
+          "Перемога!",
+          "EXP + 15493",
+          "SP + 3232",
+          "+14899 аден"
+        ],
+        "adenaGain": "14899",
+        "expGain": "15802",
+        "spGain": 3232,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:30.746675+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12055",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1220​Полум’я — 30653 урона",
+          "Перемога!",
+          "EXP + 13043",
+          "SP + 2892",
+          "+15108 аден"
+        ],
+        "adenaGain": "15108",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:33.194836+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12220",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1147​Вампірний дотик · КРИТ — 49140 урона",
+          "Перемога!",
+          "Enria ×1",
+          "Varnish ×1",
+          "EXP + 13043",
+          "SP + 2892"
+        ],
+        "adenaGain": "0",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 4042,
+            "qty": 1,
+            "spoil": false,
+            "label": "Enria"
+          },
+          {
+            "l2ItemId": 1865,
+            "qty": 1,
+            "spoil": false,
+            "label": "Varnish"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:35.374576+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12274",
+        "mobName": "Changed Creation",
+        "mobLevel": 74,
+        "fullLog": [
+          "Бій розпочато: [Changed Creation] (ур. 74).",
+          "⁠1147​Вампірний дотик — 25732 урона",
+          "Перемога!",
+          "Adamantite Nugget ×2",
+          "Mithril Ore ×3",
+          "EXP + 15493",
+          "SP + 3232",
+          "+14018 аден"
+        ],
+        "adenaGain": "14018",
+        "expGain": "15802",
+        "spGain": 3232,
+        "items": [
+          {
+            "l2ItemId": 1877,
+            "qty": 2,
+            "spoil": false,
+            "label": "Adamantite Nugget"
+          },
+          {
+            "l2ItemId": 1876,
+            "qty": 3,
+            "spoil": false,
+            "label": "Mithril Ore"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:37.583109+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12144",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1147​Вампірний дотик — 25432 урона",
+          "Перемога!",
+          "EXP + 13043",
+          "SP + 2892",
+          "+18218 аден"
+        ],
+        "adenaGain": "18218",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:39.147874+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12136",
+        "mobName": "Forgotten Ancient People",
+        "mobLevel": 77,
+        "fullLog": [
+          "Бій розпочато: [Forgotten Ancient People] (ур. 77).",
+          "⁠1220​Полум’я · КРИТ — 58002 урона",
+          "Перемога!",
+          "Animal Bone ×3",
+          "EXP + 16958",
+          "SP + 3672",
+          "+15640 аден"
+        ],
+        "adenaGain": "15640",
+        "expGain": "17297",
+        "spGain": 3672,
+        "items": [
+          {
+            "l2ItemId": 1872,
+            "qty": 3,
+            "spoil": false,
+            "label": "Animal Bone"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:40.602761+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12166",
+        "mobName": "Forgotten Ancient People",
+        "mobLevel": 77,
+        "fullLog": [
+          "Бій розпочато: [Forgotten Ancient People] (ур. 77).",
+          "⁠1147​Вампірний дотик · КРИТ — 47417 урона",
+          "Перемога!",
+          "EXP + 16958",
+          "SP + 3672",
+          "+15549 аден"
+        ],
+        "adenaGain": "15549",
+        "expGain": "17297",
+        "spGain": 3672,
+        "items": []
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:41.862473+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12181",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1220​Полум’я · КРИТ — 57944 урона",
+          "Перемога!",
+          "Varnish ×3",
+          "EXP + 13043",
+          "SP + 2892"
+        ],
+        "adenaGain": "0",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 1865,
+            "qty": 3,
+            "spoil": false,
+            "label": "Varnish"
+          }
+        ]
+      }
+    },
+    {
+      "atUtc": "2026-10-15T15:21:43.712484+00:00",
+      "status": 200,
+      "victory": {
+        "spawnId": "dense_12243",
+        "mobName": "Giant's Shadow",
+        "mobLevel": 79,
+        "fullLog": [
+          "Бій розпочато: [Giant's Shadow] (ур. 79).",
+          "⁠1147​Вампірний дотик · КРИТ — 50847 урона",
+          "Перемога!",
+          "Charcoal ×3",
+          "EXP + 13043",
+          "SP + 2892",
+          "+14862 аден"
+        ],
+        "adenaGain": "14862",
+        "expGain": "13303",
+        "spGain": 2892,
+        "items": [
+          {
+            "l2ItemId": 1871,
+            "qty": 3,
+            "spoil": false,
+            "label": "Charcoal"
+          }
+        ]
+      }
+    }
+  ]
+}
