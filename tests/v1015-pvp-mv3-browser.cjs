@@ -7,7 +7,8 @@ async function test(opt={}){
  const h=await harness(),calls=[],paths=[];let held=false,release;const gate=new Promise(r=>release=r);
  const S={revision:10,dead:!opt.target&&!opt.paidAwait,returned:false,restored:false,hp:opt.target||opt.paidAwait?9785:1434,returns:0,attacks:[],paid:0};
  const df=()=>({killerCharacterId:DID,killerName:'Dremia',deathEventId:EV,scope:'world',fullLog:['[Dremia] −16441 HP.']});
- const char=()=>({id:SELF,name:'AuditHero',revision:S.revision,level:75,l2Profession:'human_warlock',classSlots:{activeSlot:0},clanId:'our-clan',hp:S.hp,maxHp:9785,mp:1000,maxMp:1000,inBattle:false,adena:'30000000',...(S.dead?{pvpDefeat:df()}:{}),activeSummon:{kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:1000,maxHp:1000,pAtk:3000,activeBuffs:[]}});
+ // 15.10: полноценная сумка для startup preflight, неизвестный запас не подменяем нулём.
+ const char=()=>({inventory:{stacks:[],eq:{}},id:SELF,name:'AuditHero',revision:S.revision,level:75,l2Profession:'human_warlock',classSlots:{activeSlot:0},clanId:'our-clan',hp:S.hp,maxHp:9785,mp:1000,maxMp:1000,inBattle:false,adena:'30000000',...(S.dead?{pvpDefeat:df()}:{}),activeSummon:{kind:'servitor',key:'kai_the_cat',summonSkillId:1276,summonSkillLevel:10,hp:1000,maxHp:1000,pAtk:3000,activeBuffs:[]}});
  const target=()=>({characterId:DID,name:'Dremia',level:77,clanId:opt.clan?'our-clan':'their-clan',isPartyMember:!!opt.party,pvpAllowed:!opt.denial,pvpBlockedReasonUk:opt.denial?'Зона без PvP':'',battleOnNameClick:true,pvpNickColor:''});
  function html(path){
   const defeat=S.dead?'<section id="map-defeat-root"><div id="map-defeat-shout">Вас вбив гравець [Dremia]!</div><button id="map-defeat-tocity">Повернутися в місто</button></section>':'';
