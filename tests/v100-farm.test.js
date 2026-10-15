@@ -28,8 +28,9 @@ const mob = read('modules/mobfarm.js'), raid = read('modules/raid.js'), nav = re
     assert.equal(m.R.rbListPick()?.id, 'boss', kind + ': an expired trip releases the cap');
   }
 }
-// 15.10: после точной оценки всё так же проверяем местную метку до создания платного маршрута.
-assert.match(raid, /if \(!env\.isMap\(\)\) \{ location\.href = '\/map\.html'; await env\.sleep\(3000\); return; \}\n\s*const h = raidList\(\)\.find\(r => r\.id === p\.id\)/);
+// 15.10, журнал18:36: местную метку проверяем только на обычной карте; Ashen выходит штатно до оплаты.
+assert.match(raid, /const h = env\.isMap\(\) \? raidList\(\)\.find\(r => r\.id === p\.id\) : null;/);
+assert.match(raid, /if \(h\) \{[\s\S]*?без телепорта[\s\S]*?step: 'arrive'/);
 assert.match(raid, /if \(!msg\) return;\n\s*return huntDone\(H\.id, `\$\{H\.name\}: телепорт не сработал — \$\{msg\}`\);/);
 assert.match(raid, /idleMs = RB_IDLE_MS \* \[1, 2, 4\]\[idleN\]/);
 // 3. лечение на мобах — цепочкой; после выбора зоны метка «при старте» снята; телепорт в зону — ждём до 8 с

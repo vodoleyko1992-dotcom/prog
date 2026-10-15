@@ -922,6 +922,39 @@ async function rbOneStep() {
   return true;
 }
 
+// 15.10, журнал18:35–18:36: /map.html не выводит из Ashen, сервер возвращает назад.
+// Выход — отдельное сохранённое продолжение; город готов только после native enter-city.
+async function rbExitAshen(H, active) {
+  const same=()=>active() && env.canAct?.()!==false && env.rt.rbHunt?.step==='exit' && env.rt.rbHunt?.id===H.id;
+  if(!same())return;
+  const expired=Date.now()-(H.exitAt||H.t||0)>60000;
+  if(/\/ashen-bastion\.html$/i.test(location.pathname)) {
+    if(expired){await env.pauseBot('Тур РБ: выход из Ashen Bastion не подтверждён за минуту; проверь город и продолжи');return;}
+    if(H.exitClickAt){env.setStatus('Тур РБ: жду подтверждения выхода из Ashen Bastion');await env.sleep(1000);return;}
+    const link=await env.waitX(()=>!same()||env.$q('a#ashen-exit-city[href="/city.html"]'),8000,150);
+    if(!same())return;
+    if(!link || link===true){await env.pauseBot('Тур РБ: не найдена штатная кнопка выхода из Ashen Bastion в город');return;}
+    const clickAt=Date.now(),char=env.rt.char;
+    await huntSet({exitClickAt:clickAt,next:'жду подтверждения штатного входа в город'});
+    // В этой вкладке точно знаем, что fire ещё не был вызван; после reload такого знания нет.
+    const unsent=async()=>{const J=env.rt.rbHunt;if(env.rt.char===char&&J?.step==='exit'&&J.id===H.id&&J.exitAt===H.exitAt&&J.exitClickAt===clickAt)await env.setRt({rbHunt:{...J,exitClickAt:0}});};
+    if(!await env.rtCommit?.()||!same()){await unsent();return;}
+    if(env.fire(link)===false)await unsent();
+    return;
+  }
+  if(H.exitReadAt && Date.now()-H.exitReadAt<1500){await env.sleep(500);return;}
+  await huntSet({exitReadAt:Date.now()});if(!same())return;
+  let ch=null;
+  try{const r=await env.gameGet('/character');const d=r.ok?await r.json():null;ch=d?.character||d;}catch(_){}
+  if(!same())return;
+  // Первая загрузка /city.html ещё может отдавать прежнее cityId: URL не доказывает выход.
+  if(ch?.name!==env.rt.char || !/^l2dop_[a-z0-9_]+$/.test(ch.cityId||'') || ch.inBattle!==false){
+    if(expired){await env.pauseBot('Тур РБ: сервер не подтвердил выход из Ashen Bastion; проверь город и продолжи');return;}
+    env.setStatus('Тур РБ: город ещё не подтверждён сервером; жду без новых переходов');await env.sleep(1000);return;
+  }
+  await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
+}
+
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
@@ -940,6 +973,7 @@ async function rbHuntStep() {
     if (rbOneHit()) return rbOnePause(H.name);       // 8.0.3: «один РБ» — убит, ждём команды
     return res;
   }
+  if (H.step === 'exit') return rbExitAshen(H,active);
   if (H.step === 'go') {
     const sameJob = () => env.rt.rbHunt?.step === 'go' && env.rt.rbHunt?.id === H.id && env.rt.rbHunt?.t === H.t;
     if (!active() || !sameJob()) return;
@@ -1160,8 +1194,12 @@ async function rbHuntStep() {
     return huntDone(p.id, `${p.name} (${p.lvl}): до телепорта по цифрам игры — не полезу: ${chk.why}`, false);
   }
   if (!active() || rbTourPlan().ready[0]?.id !== p.id) return;
-  if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
-  const h = raidList().find(r => r.id === p.id);
+  if (/\/ashen-bastion\.html$/i.test(location.pathname)) {
+    await huntSet({step:'exit',phase:'exit-ashen',id:p.id,name:p.name,lvl:p.lvl,page:p.page,price:p.price,exitAt:Date.now(),exitClickAt:0,next:`штатный выход из Ashen перед ${p.name}`});
+    return;
+  }
+  // Из города/списка не требуется обычная карта: цель сохраняется до любого перехода.
+  const h = env.isMap() ? raidList().find(r => r.id === p.id) : null;
   if (h) {
     await env.setRt({ rbWant: h.id });
     if (!active() || rbTourPlan().ready[0]?.id !== p.id) return;
@@ -1513,6 +1551,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
