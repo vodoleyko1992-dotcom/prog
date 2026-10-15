@@ -35,6 +35,8 @@
     const p = c.activeSummon, n = v => Number.isFinite(v) ? v : null;
     return { name: c.name.slice(0,120), level: n(c.level), l2Profession: String(c.l2Profession || '').slice(0,60), revision: c.revision, classSlots: { activeSlot: n(c.classSlots?.activeSlot) },
       ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'].map(k => [k,n(c[k])])),
+      ...Object.fromEntries(['evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'].map(k=>[k,n(c[k])])),
+      toggleStances: Array.isArray(c.toggleStances) ? c.toggleStances.slice(0,80).map(x=>({battleId:String(x.battleId||'').slice(0,80),skillId:n(x.skillId),level:n(x.level),active:x.active===true})) : null,
       // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
       activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
       // Публичный состав модели урона: UID/имена владельцев и динамические HP/MP сюда не попадают.
