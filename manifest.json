@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.26",
-  "description": "L2wap Bot 10.0.26 — атака с пикой и подтверждение обучения",
+  "version": "10.0.27",
+  "description": "L2wap Bot 10.0.27 — переходы квестов и навыки воина с пикой",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.26"
+  "version_name": "10.0.27"
 }
