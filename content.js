@@ -5150,8 +5150,26 @@ async function warlockTripReturn(J) {
 }
 
 // Автобаф кота: отдельная задача, текущие режимы и сабкласс не переключает.
-// Состояние зарядов только из текущей панели: не угадываем грейд по уровню героя.
-const warlockShotContext = () => {
+// В бою — состояние текущей панели. Перед РБ — отдельно помеченный план штатного keepShots:
+// /character сообщает слот и запас, но не ON; грейд проверяем по реально надетому оружию.
+const warlockShotContext = (ch, options = {}) => {
+  if (options.preflight === true) {
+    if (isBattle() || !on || !tabOwner || ch?.inBattle !== false || ch.name !== rt.char || heroNick() !== rt.char
+      || ch.l2Profession !== rt.classCur?.prof || ch.classSlots?.activeSlot !== rt.classCur?.slot || rt.shotMismatchPending || rt.weaponMetaPending) return 'unknown';
+    const slot=ch.inventory?.eq?.l1,id=+(slot && typeof slot==='object'?slot.itemId:slot)||0;
+    const weapon=rt.weaponsT && (rt.weapons||[]).find(w=>w.where==='надето' && +w.id===id);
+    if (!id || !weapon || !/^(NG|D|C|B|A|S)$/.test(weapon.g||'')) return 'unknown';
+    const grade=L2V7Modules.economy?.shotGrade?.(),mage=L2V7Modules.economy?.shotsMage?.();
+    if (grade?.blocked || grade?.g!==weapon.g || typeof mage!=='boolean') return 'unknown';
+    if (!Array.isArray(ch.battleHotbarSlots) || !Array.isArray(ch.inventory?.stacks)) return 'unknown';
+    const known=new Set([...Object.values(SHOT_IDS),...Object.values(BSPS_IDS)]),want=(mage?BSPS_IDS:SHOT_IDS)[weapon.g];
+    const slots=[...new Set(ch.battleHotbarSlots.filter(s=>s?.k==='u' && known.has(+s.id)).map(s=>+s.id))];
+    // Несколько разных зарядов: состояние остальных ON/OFF неизвестно, общую выборку не подбираем догадкой.
+    if (slots.length!==1 || slots[0]!==want) return 'unknown';
+    const stacks=ch.inventory.stacks.filter(s=>+s?.itemId===want);
+    if (!stacks.length || stacks.some(s=>!Number.isSafeInteger(s.qty)||s.qty<0) || !stacks.some(s=>s.qty>0)) return 'unknown';
+    return `${mage?'Благ. заряды духа':'Заряды души'} ${weapon.g} (#${want}) · вкл · есть`;
+  }
   const rows=[...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
   if (!rows.length) return 'unknown';
   const parts=[];
@@ -5163,6 +5181,15 @@ const warlockShotContext = () => {
   }
   return [...new Set(parts)].sort().join('; ');
 };
+// Свежесть плана не переживает изменение панели/оружия/расходников. Ответ GET подготовит его заново.
+if (typeof addEventListener==='function') addEventListener('message',e=>{
+  if (e.source!==window || e.origin!==location.origin || e.data?.__l2bot!=='net') return;
+  const d=e.data,path=apiPath(String(d.url||''));
+  const shot=/^\/(?:character\/equip|character\/subclasses(?:\/\w+)?|game\/battle\/hotbar|game\/(?:inventory|shop|drops-shop)\/[^?]+)$/.test(path)
+    || path==='/game/battle/action' && /^(?:fighter_soulshot|mystic_spiritshot)_toggle$/.test(d.req?.action||'');
+  if (d.method==='POST' && shot && d.status>=200 && d.status<300 && !d.error && !d.res?.error
+    || path==='/game/battle/action' && /^(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error||'')) L2V7Modules.warlock?.invalidateSnapshot?.();
+});
 const warlockCanRun = () => cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
   && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.tbuff && !rt.enchant?.pending && rt.enchant?.status !== 'running';
 L2V7Modules.warlock = L2V7Factories.warlock({

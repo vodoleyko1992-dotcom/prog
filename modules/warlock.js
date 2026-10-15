@@ -17,7 +17,7 @@ const token = () => ({ char: charName(), kick: +env.rt.manualKickAt || 0, config
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
 const patch = p => env.setRt({ petFull: { ...state(), ...p } });
 const pendingSame = P => state().pending?.id === P?.id;
-let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null;
+let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, prepared = null, preparedSource = null;
 const unsent = new Set();
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
@@ -257,7 +257,25 @@ function noteSnapshot(ch, shots) {
   const data = { char: ch.name, prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
   latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(b => b.expiresAtMs)) } : null;
   latest = snapshot(ch, shots); latestSeen = true;
+  // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
+  // расходников, не выдавая его за реально включённые заряды и не подмешивая в обучение боя.
+  prepared = null; preparedSource = null;
+  const p = summon(ch);
+  if (ch.inBattle === false && !env.isBattle() && Array.isArray(ch.activeBuffs) && p
+    && Number.isFinite(ch.level) && ch.level>0 && ['maxHp','pAtk','critDmgMul'].every(k=>Number.isFinite(p[k]) && p[k]>0)
+    && ['accuracy','critRate'].every(k=>Number.isFinite(p[k]) && p[k]>=0)
+    && ['mAtk','pAtk','pDef','mDef','maxHp'].every(k=>Number.isFinite(ch[k]) && ch[k]>0)
+    && (!Number.isFinite(ch.snapshotGeneratedAt) || Date.now()-ch.snapshotGeneratedAt>=-5000 && Date.now()-ch.snapshotGeneratedAt<=30000)) {
+    const weapon=ch.inventory?.eq?.l1;
+    preparedSource = { name: ch.name, l2Profession: ch.l2Profession, classSlots: { activeSlot: ch.classSlots?.activeSlot }, inBattle: false,
+      inventory: { eq: { l1: weapon && typeof weapon==='object'?{itemId:weapon.itemId}:weapon },
+        stacks: Array.isArray(ch.inventory?.stacks)?ch.inventory.stacks.map(s=>({itemId:s?.itemId,qty:s?.qty})):null },
+      battleHotbarSlots: Array.isArray(ch.battleHotbarSlots)?ch.battleHotbarSlots.map(s=>s?{k:s.k,id:s.id}:null):null };
+    prepared = snapshot(ch, env.shotContext?.(preparedSource,{preflight:true}) || 'unknown');
+    if (prepared && Number.isFinite(ch.snapshotGeneratedAt)) prepared.validUntil = Math.min(prepared.validUntil, ch.snapshotGeneratedAt + 30000);
+  }
 }
+function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; prepared = null; preparedSource = null; }
 function heroContext() {
   const h = latestHero;
   return h && h.char === charName() && h.char === env.heroNick() && h.prof === env.rt.classCur?.prof && h.slot === env.rt.classCur?.slot && h.until > Date.now()
@@ -301,14 +319,20 @@ function petBuffActive(id) {
   const s = currentSnapshot();
   return !!s && s.buffs.some(b => +b.split(':')[0] === +id);
 }
-function raidContext(id, st = {}) {
+function raidContext(id, st = {}, options = {}) {
   if (!modelManaged()) return null;
-  const s = currentSnapshot(), h = s?.hero;
-  if (!s || !h?.buffs || !(h.mAtk > 0 || h.pAtk > 0) || s.shots === 'unknown' || !id) return { managed: true, key: null };
+  const planning = options.preflight === true && !env.isBattle();
+  const p = prepared, fresh = p && p.char===charName() && p.char===env.heroNick() && p.classKey===`${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`
+    && p.validUntil>Date.now() && Date.now()-p.at>=0 && Date.now()-p.at<=30000 && p.born===(+env.rt.petBornT||0);
+  const s = planning ? fresh ? p : null : currentSnapshot(), h = s?.hero;
+  const flags = planning ? { prepared: !!s, planned: true, reason: s ? 'Заряды для следующего боя не подтверждены' : 'Нужен свежий полный состав персонажа и кота' } : {};
+  if (!s || !h?.buffs || !(h.mAtk > 0 || h.pAtk > 0) || s.shots === 'unknown' || !id
+    || planning && env.shotContext?.(preparedSource,{preflight:true})!==s.shots) return { managed: true, key: null, ...flags };
   const target = [String(id), ...[['lvl','level'],['hp','maxHp'],['pDef','pdef'],['mDef','mdef'],['pAtk','patk'],['mAtk','matk']].map(keys => keys.map(k => st[k]).find(Number.isFinite) ?? null)];
   // 10.0.21 (лог 15.10 00:49): сила состава общая для РБ, точный замер потерь/урона остаётся привязан к цели.
   // Перепризыв меняет powerKey даже после свежего /character с теми же цифрами кота.
-  return { managed: true, key: JSON.stringify([s.key,target,s.born]), powerKey: JSON.stringify([s.key,s.born]), validUntil: s.validUntil };
+  return { managed: true, key: JSON.stringify([s.key,target,s.born]), powerKey: JSON.stringify([s.key,s.born]), validUntil: s.validUntil,
+    ...(planning ? { prepared: true, planned: true, reason: 'Заряды на панели и в сумке; бот включит их в начале боя' } : {}) };
 }
 async function noteBattle(ctx) {
   const p = ctx?.pet, c = ctx?.petCohort, T = token();
@@ -322,6 +346,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffActive, catalogSet, coverage, DEF };
+return { step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
