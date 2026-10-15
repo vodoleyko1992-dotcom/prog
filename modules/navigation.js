@@ -335,6 +335,26 @@ async function zoneGoStep() {                     // полёт: Телепор�
   const kick = env.rt.manualKickAt, char = env.rt.char;
   const active = () => env.on !== false && env.tabOwner !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
   if (!active()) return;
+  // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
+  if (g.id === 'ashen_bastion' && g.returnPath === '/ashen-bastion.html') {
+    const fail = async why => { if (active()) { env.rec('B', 'локации', `Ashen Bastion: ${why} — фарм в другой зоне остановлен`); await env.pauseBot(`Возврат в Ashen Bastion: ${why}`); } };
+    if (location.pathname === g.returnPath) { await env.setRt({ zoneGo: null, zonePend: null, zone: 'ashen_bastion' }); return; }
+    if (g.sentAt) { await fail('результат телепорта не подтверждён; повторная оплата запрещена'); return; }
+    if (!isTeleport()) { env.setStatus('Маммон: возвращаюсь в Ashen Bastion'); location.href = '/teleport.html'; await env.sleep(4000); return; }
+    await tpCitiesReady(); if (!active()) return;
+    const btn = await env.waitX(() => { const b = env.$q('.l2-teleport-miru-tp-btn[data-teleport-id="ashen_bastion"]'); return env.shown(b) && !b.disabled ? b : null; }, 8000, 100);
+    if (!active()) return;
+    if (!btn) { await fail('кнопка телепорта не найдена'); return; }
+    const cost = teleportCost(btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'));
+    const budget = !cost.why && await teleportBudget(cost.price, active); if (!active()) return;
+    if (cost.why || budget) { await fail(cost.why || budget); return; }
+    g.sentAt = Date.now(); await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) }); if (!active()) return;
+    env.fire(btn);
+    await env.waitX(() => location.pathname === g.returnPath, 8000, 100); if (!active()) return;
+    if (location.pathname === g.returnPath) await env.setRt({ zoneGo: null, zonePend: null, zone: 'ashen_bastion' });
+    else await fail('игра не подтвердила возвращение');
+    return;
+  }
   // телепорта нет в «Телепорте», но есть кнопка на странице форума (как «Фарм ресурсов» → pavel_ruins)
   const viaUrl = g.url || (env.rt.zoneCat?.[g.id]?.forum && env.rt.zoneCat[g.id].url);
   if (viaUrl && (g.forum || !env.rt.zoneCat?.[g.id]?.city)) {
