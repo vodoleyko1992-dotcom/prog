@@ -35,7 +35,8 @@
     const p = c.activeSummon, n = v => Number.isFinite(v) ? v : null;
     return { name: c.name.slice(0,120), level: n(c.level), l2Profession: String(c.l2Profession || '').slice(0,60), revision: c.revision, classSlots: { activeSlot: n(c.classSlots?.activeSlot) },
       ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'].map(k => [k,n(c[k])])),
-      activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) })) : null,
+      // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
+      activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
       activeSummon: p && typeof p === 'object' ? { kind: String(p.kind || '').slice(0,30), key: String(p.key || '').slice(0,60),
         ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
         activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : null };

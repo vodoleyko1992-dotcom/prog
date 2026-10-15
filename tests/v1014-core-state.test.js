@@ -88,6 +88,7 @@ function directModeBox() {
   vm.runInNewContext(slice(popup, 'async function activateMode(', 'const NUM '), b);
   vm.runInNewContext(read('modules/dailies.js'), b);
   const daily = b.L2V7Factories.dailies({ on: true, tabOwner: true, cfg: b.cfg, rt: b.rt, setRt: b.menuPatch,
+    isBattle:()=>false,fishState:()=>null,gameGet:async()=>({ok:true,json:async()=>({unlocked:true,fishingSpot:{purchased:true},fishingTime:{canFish:true,remainingMs:3600000}})}),
     setCfg: async p => Object.assign(b.cfg, p), rec() {}, setStatus() {}, sleep: async () => {} });
   return { b, elements, daily };
 }

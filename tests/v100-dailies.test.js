@@ -5,6 +5,8 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 const src = read('modules/dailies.js'), clanRaw = JSON.parse(read('kb/data/game-clan-tasks.json')), dailyRaw = JSON.parse(read('kb/raw/daily-quests.json')).data;
 const clanView = () => ({ clan: clanRaw.clan, me: { characterId: 'me1', activeTaskId: null }, taskDefinitions: JSON.parse(JSON.stringify(clanRaw.taskDefinitions)), activeClanTasks: [] });
 const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
+  // 15.10: ежедневный detour разрешён только на уже открытой и оплаченной рыбалке.
+  gets = { '/game/fishing/state': { unlocked:true, fishingSpot:{purchased:true}, fishingTime:{canFish:true,remainingMs:3600000} }, ...gets };
   const recs = [], posted = [], cfgs = [], loc = { pathname: '/map.html', href: '' };
   const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, location: loc, sessionStorage: { getItem: () => null, setItem: () => {} } };
   sb.globalThis = sb; vm.runInNewContext(src, sb);

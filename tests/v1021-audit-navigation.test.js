@@ -20,7 +20,7 @@ test('телепорт с форума читает цену кнопки Adena 
     const env = { cfg: { shopReserve: 200000 }, rt: { char: 'Warlock', zoneGo: { id: 'ore', url: loc.pathname, forum: true }, zoneCat: { ore: { name: 'Ore' } } }, on: true, tabOwner: true,
       setStatus: noop, rec: noop, heroLvl: () => 76, isFarmPage: () => false, sleep: done, setRt: async p => Object.assign(env.rt, p), $q: () => btn,
       fire: () => { clicks++; loc.pathname = '/map.html'; return true; }, waitX: async fn => fn(),
-      gameGet: async () => ({ ok: true, json: async () => ({ character: { name: 'Warlock', adena: balance } }) }) };
+      gameGet: async () => ({ ok: true, json: async () => ({ character: { id: 'fixture-hero', revision: 10, name: 'Warlock', adena: balance } }) }) };
     await moduleOf('navigation', { location: loc, document: { querySelectorAll: () => [], body: { innerText: '' } } })(env).zoneGoStep();
     assert.equal(clicks, balance >= 250000 ? 1 : 0);
   }

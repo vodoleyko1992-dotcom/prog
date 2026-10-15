@@ -48,12 +48,12 @@ function forumTeleportCost(button) {
   if (price === 0 && !/безкоштов|бесплат|\bfree\b|аден|adena/i.test(label)) return { price, why: 'бесплатный переход с форума не подтверждён' };
   return { price, why: '' };
 }
-async function teleportBudget(price, active) {
+async function teleportBudget(price, active, snapshot) {
   if (price === 0) return '';
   if (typeof env.gameGet !== 'function') return 'нет свежего запаса адены';
   let wallet;
   try {
-    const response = await env.gameGet('/character'), ch = response.ok ? (await response.json())?.character : null;
+    const response = snapshot ? null : await env.gameGet('/character'), ch = snapshot || (response.ok ? (await response.json())?.character : null);
     if (!active()) return 'задание отменено';
     const adena = typeof ch?.adena === 'string' && /^\d+$/.test(ch.adena) ? Number(ch.adena) : ch?.adena;
     if (!ch || ch.name !== env.rt.char || !Number.isSafeInteger(adena) || adena < 0) return 'запас адены не подтверждён';
@@ -335,11 +335,64 @@ function zonePick() {
   return null;
 }
 
+// 15.10 (лог 11:39): форум пять раз списал по 50 000 — переход страницы не завершал zoneGo.
+// Платёж помечается ДО клика. ACK привязан к персонажу, ревизии, маршруту и точному запросу.
+const FORUM_TP_ACK = 'l2bot.forumTeleportAck';
+const FORUM_CITY = { heine: 'l2dop_heine' }; // Подтверждено ответом resource-teleport; прочие города не угадываем.
+function forumTargetReached(id, ch) {
+  if (!ch || ch.inBattle || ch.activeDungeonId) return false;
+  if (ch.currentZoneId) return ch.currentZoneId === id;
+  return !!FORUM_CITY[id] && ch.cityId === FORUM_CITY[id];
+}
+function forumPendingFor(g) {
+  const p = g?.forumTp;
+  return !!p && p.char === env.rt.char && p.kick === env.rt.manualKickAt && p.id === g.id &&
+    p.url === (g.url || env.rt.zoneCat?.[g.id]?.url);
+}
+function forumAck(g) {
+  const p = g.forumTp; if (!forumPendingFor(g)) return null;
+  if (p.ack) return p.ack;
+  try { const a = JSON.parse(root.sessionStorage?.getItem(FORUM_TP_ACK) || 'null');
+    return a?.nonce === p.nonce && a.charId === p.charId && a.id === g.id && a.url === p.url ? a.ack : null;
+  } catch (_) { return null; }
+}
+function onForumTeleportNet(path, d) {
+  const g = env.rt.zoneGo, p = g?.forumTp;
+  if (!p || env.on === false || env.tabOwner === false || env.rt.char !== p.char || env.rt.manualKickAt !== p.kick ||
+      path !== '/game/farm-guide/resource-teleport' || d.method !== 'POST' || d.req?.teleportId !== p.id ||
+      d.req?.expectedRevision !== p.revision || d.req?.expectedAdenaCost !== p.cost ||
+      g.id !== p.id || (g.url || env.rt.zoneCat?.[g.id]?.url) !== p.url || location.pathname + location.search !== p.url) return;
+  const ch = d.res?.character, good = !d.error && d.status >= 200 && d.status < 300 && d.res && !d.res.error && d.res.ok !== false;
+  // Отказом считаем лишь явный ответ сервера. 5xx/обрыв не освобождает повторную оплату.
+  const refused = !d.error && d.res && (d.res.error || d.res.ok === false) && d.status >= 200 && d.status < 500;
+  if (good && (!ch || ch.name !== p.char || ch.id !== p.charId || !Number.isSafeInteger(ch.revision) || ch.revision <= p.revision)) return;
+  if (ch && (ch.name !== p.char || ch.id !== p.charId)) return;
+  if (!good && !refused) return;
+  p.ack = { ok: good && forumTargetReached(p.id, ch), refused: !!refused, t: Date.now() };
+  try { root.sessionStorage?.setItem(FORUM_TP_ACK, JSON.stringify({ nonce: p.nonce, id: p.id, charId: p.charId, url: p.url, ack: p.ack })); } catch (_) {}
+  // sessionStorage синхронен: native переход может выгрузить страницу раньше chrome.storage.
+  env.setRt({ zoneGo: g }).catch(() => {});
+}
+async function forumCharacter() {
+  try { const r = await env.gameGet('/character'); return r.ok ? (await r.json())?.character : null; } catch (_) { return null; }
+}
+async function forumFinish(g, active) {
+  if (!active()) return;
+  await env.setRt({ zoneGo: null, zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
+  try { root.sessionStorage?.removeItem(FORUM_TP_ACK); } catch (_) {}
+  env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером`);
+}
+async function forumUncertain(why, active) {
+  if (!active()) return;
+  env.rec('B', 'локации', `${why}; повторная оплата телепорта запрещена`);
+  await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`);
+}
+
 async function zoneGoStep() {                     // полёт: Телепорт → раскрыть город → «Телепорт» у нужной зоны
   const g = env.rt.zoneGo;
   if (!g) return;
   const kick = env.rt.manualKickAt, char = env.rt.char;
-  const active = () => env.on !== false && env.tabOwner !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
+  const active = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
   if (!active()) return;
   // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
   if (g.id === 'ashen_bastion' && g.returnPath === '/ashen-bastion.html') {
@@ -364,6 +417,15 @@ async function zoneGoStep() {                     // полёт: Телепор�
   // телепорта нет в «Телепорте», но есть кнопка на странице форума (как «Фарм ресурсов» → pavel_ruins)
   const viaUrl = g.url || (env.rt.zoneCat?.[g.id]?.forum && env.rt.zoneCat[g.id].url);
   if (viaUrl && (g.forum || !env.rt.zoneCat?.[g.id]?.city)) {
+    if (g.forumTp && !forumPendingFor(g)) { await forumUncertain('сохранённый платёж относится к другому персонажу или маршруту', active); return; }
+    const ack = forumAck(g), snapshot = ack?.ok ? null : await forumCharacter();
+    if (!active()) return;
+    const mine = !!snapshot && !!char && snapshot.name === char && (!g.forumTp || snapshot.id === g.forumTp.charId && snapshot.revision > g.forumTp.revision);
+    if (ack?.ok || (mine && forumTargetReached(g.id, snapshot))) { await forumFinish(g, active); return; }
+    if (g.forumTp || (isMap() && g.t && env.rt.zoneGoT >= g.t)) {
+      await forumUncertain(ack?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active); return;
+    }
+    if (!mine || !snapshot.id || !Number.isSafeInteger(snapshot.revision)) { await forumUncertain('не удалось сверить персонажа и локацию', active); return; }
     if (location.pathname + location.search !== viaUrl) { env.setStatus(`Локации: лечу в ${zoneName(g.id)} (через форум)`); location.href = viaUrl; await env.sleep(4000); return; }
     let fb = await env.waitX(() => env.$q(`[data-teleport-id="${g.id}"]`), env.isFarmPage() ? 2000 : 8000, 200);
     if (!active()) return;
@@ -386,24 +448,28 @@ async function zoneGoStep() {                     // полёт: Телепор�
     await env.setRt({ zoneGoT: Date.now(), zoneTried: { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() } });
     if (!fb) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта на форуме нет`); await env.setRt({ zoneGo: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
     if (!active()) return;
+    const beforePay = await forumCharacter(); if (!active()) return;
+    if (!beforePay || beforePay.name !== char || beforePay.id !== snapshot.id || !Number.isSafeInteger(beforePay.revision)) { await forumUncertain('персонаж перед оплатой не подтверждён', active); return; }
+    if (forumTargetReached(g.id, beforePay)) { await forumFinish(g, active); return; }
     const cost = forumTeleportCost(fb);
-    const budget = !cost.why && await teleportBudget(cost.price, active);
+    const budget = !cost.why && await teleportBudget(cost.price, active, beforePay);
     if (!active()) return;
     if (cost.why || budget) { env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`); await env.setRt({ zoneGo: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } }); return; }
     env.rec('B', 'локации', `телепорт с форума → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
     if (!active()) return;
-    if (cost.price > 0) { await env.setRt({ adenaSeen: null }); if (!active()) return; }
+    g.forumTp = { id: g.id, url: viaUrl, char, charId: beforePay.id, revision: beforePay.revision,
+      cost: Number(fb.dataset.adenaCost), sentAt: Date.now(), nonce: Date.now() + ':' + Math.random().toString(36).slice(2), kick };
+    const saved = await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) });
+    if (env.rtCommit ? !(await env.rtCommit()) : saved?.ok === false) { await forumUncertain('не удалось сохранить платёж до клика', active); return; }
+    if (!active()) return;
     env.fire(fb);
-    await env.waitX(() => !/\/forum/i.test(location.pathname), 6000, 200);
-    if (/\/forum/i.test(location.pathname)) {      // страница не сменилась: ошибка рядом с кнопкой — не улетели; иначе — на карту
-      const msg = [fb.closest('.l2-farm-source, li, [class*="row"]'), ...document.querySelectorAll('[role="alert"], [class*="toast"], [class*="notice"], [class*="-msg"]')]
-        .map(x => x?.textContent || '').join(' ');
-      if (/недостат|не хвата|not enough|помилк|ошибк/i.test(msg)) {
-        env.rec('B', 'локации', `${zoneName(g.id)}: не улетели (${msg.match(/[^.]*(недостат|не хвата|not enough|помилк|ошибк)[^.]*/i)?.[0].trim().slice(0, 80) || 'ошибка'})`);
-        await env.setRt({ zoneGo: null, zonePend: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } });
-      } else await env.setRt({ zoneGo: null });
-      location.href = '/map.html'; await env.sleep(3000);
-    }
+    await env.waitX(() => forumAck(g) || location.pathname + location.search !== viaUrl, 6000, 200);
+    if (!active()) return;
+    const result = forumAck(g), after = result?.ok ? null : await forumCharacter();
+    if (!active()) return;
+    if (result?.ok || (after?.name === char && after.id === g.forumTp.charId && after.revision > g.forumTp.revision && forumTargetReached(g.id, after))) {
+      await forumFinish(g, active);
+    } else await forumUncertain(result?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active);
     return;
   }
   if (!isTeleport()) { env.setStatus(`Локации: лечу в ${zoneName(g.id)}`); location.href = '/teleport.html'; await env.sleep(4000); return; }
@@ -502,6 +568,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { onForumTeleportNet, curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);

@@ -67,7 +67,7 @@ function fishingTimeRemainingMs(raw) {
   return ((+m[1] || 0) * 3600 + (+m[2]) * 60 + (+m[3])) * 1000;
 }
 async function fishTimeTopUp() {
-  if (!env.cfg.fishTimeAuto || !env.on) return false;
+  if (!env.cfg.fishTimeAuto || !env.on || env.rt.dailyFish) return false; // 15.10: попутный дейлик использует только уже оплаченное время.
   const ms = fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent);
   if (ms == null || ms > Math.min(60, Math.max(0, +env.cfg.fishTimeMin || 0)) * 60000) return false;
   if (fishState() && ms > 0) return false;          // 10.0.14: истекло во время вываживания — время можно купить с рыбой на крючке
@@ -101,7 +101,7 @@ async function fishTimeTopUp() {
   const button = env.$q(`[data-fishing-time-package="${pack}"]`);
   if (!button || button.disabled) return false;
   await env.setRt({ fishTimeBuyAt: now });  // persist before click: guards reloads and races
-  if (!fishOwn()) return false;
+  if (!fishOwn() || env.rt.dailyFish) return false;
   env.setStatus(`Рыбалка: докупаю время (${pack})`);
   env.fire(button);
   const ok = await env.waitFor(() => {
@@ -795,10 +795,11 @@ async function fishFightLoop() {
 // у рыбака (по 100 000 SP), купить рыболовное место (10 000 000 Adena, один раз — только если после покупки останется резерв
 // закупок). Удочку, наживку, заряды и время бот уже покупает сам. Выключить: fishAutoSetup: false
 async function fishSetup() {
-  if (env.cfg.fishAutoSetup === false || !/\/fishing\.html/.test(location.pathname)) return false;
+  if (env.rt.dailyFish || env.cfg.fishAutoSetup === false || !/\/fishing\.html/.test(location.pathname)) return false;
   if (env.rt.fishSetupDone && Date.now() - env.rt.fishSetupDone < 6 * 3600000) return false;   // 7.1.30: не каждый заброс
   if (!(await env.waitX(() => env.$q('button.l2-fishing-trainer-learn-btn, #fishing-spot-buy, [data-slot="fishing"]'), 8000, 200))) return false;
   await env.sleep(1500);                                   // блоки дорисовываются по данным сервера — решаем по устоявшейся картине
+  if (!fishOwn() || env.rt.dailyFish) return false;
   const anyLearn = [...document.querySelectorAll('button.l2-fishing-trainer-learn-btn')].some(b => env.shown(b));
   if (!anyLearn && !env.shown(env.$q('#fishing-spot-buy'))) { await env.setRt({ fishSetupDone: Date.now() }); return false; }
   const learn = [...document.querySelectorAll('button.l2-fishing-trainer-learn-btn')].find(b => env.shown(b) && !b.disabled);

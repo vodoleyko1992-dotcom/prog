@@ -194,7 +194,7 @@ const uiReady = b => !!b && !b.disabled && b.getAttribute('aria-disabled') !== '
 const potionSlot = b => !!b && env.slotKind(b) === 'предмет' &&
   /зілля|зелье|potion|elixir|еліксир|эликсир/i.test(b.title || '') &&
   (env.HP_POT_RE.test(b.title || '') || /ман[аиы]|mana|\bmp\b|elixir|еліксир|эликсир/i.test(b.title || ''));
-const ready  = b => uiReady(b) && (potionSlot(b) || localCdLeft(b) <= 0) &&
+const ready  = b => uiReady(b) && env.ilOf?.(b)?.autoUse !== false && (potionSlot(b) || localCdLeft(b) <= 0) &&
   (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) <= 0);
 
 function cdLeft(b) {
@@ -256,6 +256,7 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
 function nonOffenseSkill(b) {
   if (!b) return true;
   const il = env.ilOf(b) || {};
+  if (il.autoUse === false || env.slotAction?.(b) === 'battle_trance' || /^battle trance(?:\s|$)/i.test(env.cleanTitle(b.title || ''))) return true;
   if (il.c === 'Призыв' || il.t === 'SUMMON' || il.target === 'PET' || il.o === 'PASSIVE' || il.o === 'TOGGLE') return true;
   const n = env.cleanTitle(b.title || '').toLowerCase();
   return /^(?:summon\b|mass summon\b|servitor\b|warrior servitor\b|final servitor\b|transfer pain\b|arcane agility\b|cubic mastery\b|mage bane\b|warrior bane\b|skill mastery\b|spell force\b|heal\b|battle heal\b|servitor bless)/i.test(n);
@@ -274,7 +275,7 @@ const petKeyOf = n => String(n || '').trim().toLowerCase().replace(/\s+/g, '_');
 // смерть, перезагрузка), бот брал первым на панели — теперь это королева. Порядок: выбор в меню → кот этой страницы → последний живой
 // кот (rt.petLast — в т. ч. призванный игроком руками) → лучший по замерам (petAdvice) → множитель магистра L2WAP «+N % от M.Atk хозяина»
 // 9.2 (игрок 11.10): Feline Queen больше не кот — слот «Summon Feline Queen» стал баффом кота Blessing of Queen (IL_FIX 1331, роль «Баффы кота»)
-const PET_MUL = { kai_the_cat: 25, mew_the_cat: 20, kat_the_cat: 15 };
+const PET_MUL = { feline_king: 55, kai_the_cat: 25, mew_the_cat: 20, kat_the_cat: 15 };
 const isPetBuffSlot = b => env.ilOf?.(b)?.target === 'PET';
 const summonKey = b => petKeyOf(env.cleanTitle(b?.title || '').replace(/^summon\s+/i, ''));
 function petMul(k) {
@@ -388,9 +389,17 @@ function petBuffPick(ctx, me, mp, mob) {
   for (const n of list) {
     const b = slotsBy(n)[0];
     if (!b || env.noEffect?.(b) || !ready(b) || (ctx.block['petbuff:' + n] || 0) > now) continue;
-    // Свежий баф слуги важнее локального таймера: не затираем оплаченный Queen и не тратим ход.
-    if (env.slotAction(b) === 'l2_1331' && env.warlock?.petBuffActive?.(4699)) continue;
     const at = (env.rt.petBuffAt || {})[n] || 0, dur = ((env.ilOf(b) || {}).dur || env.cfg.petBuffSec || 1200) * 1000;
+    if (env.slotAction(b) === 'l2_1331') {
+      // Подтверждённый бафф слуги важнее локального таймера, в том числе оплаченный набор.
+      const petBuff = env.warlock?.petBuffState?.(4699) ?? (env.warlock?.petBuffActive?.(4699) ? true : null);
+      if (petBuff === true) continue;
+      // 15.10: эффект4699 героя после слота1331 живёт20мин. Его наличие останавливает
+      // повтор при неизвестном состоянии слуги; подтверждённое отсутствие у пета или новый призыв требует баффа.
+      const hero = env.activeBuffs?.().find(x => +x.id === 4699 && +x.exp > now + 5000);
+      const born = +env.rt.petBornT || 0, applied = Math.max(at, hero ? +hero.exp - dur : 0);
+      if (petBuff == null && hero && (!born || applied >= born && applied <= now + 5000)) continue;
+    }
     if (at > (env.rt.petBornT || 0) && now - at < dur - 5000) continue;
     // 10.0 (аудит боя): Blessing of Queen ≈ +40 % урона на 20 мин — резерв 25 % MP не держим (MP не экономим), хватает на сам бафф — ставим
     if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0)) continue;
