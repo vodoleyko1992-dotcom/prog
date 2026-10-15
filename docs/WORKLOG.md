@@ -25,6 +25,12 @@
 
 ---
 
+## 2026-10-15 10:04 Asia/Vladivostok (UTC+10) — Codex
+
+- **PR:** в подготовке.
+- **Что сделано:** по команде «Сборка» подготовлена Chrome10.0.21 с PR #132–134: FA-бафф и запас HP на РБ, автопризыв Dark Panther, проба быстрых синих чемпионов. Обновлены версия, changelog и ZIP.
+- **Что осталось:** живые бои после установки игроком не проверены; Firefox не запрошен.
+
 ## 2026-10-15 09:52 Asia/Vladivostok (UTC+10) — Codex
 
 - **PR:** [#134](https://github.com/vodoleyko1992-dotcom/prog/pull/134), ветка `codex/champion-blue-cancel`.
