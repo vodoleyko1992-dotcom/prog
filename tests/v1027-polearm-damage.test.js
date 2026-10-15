@@ -102,7 +102,7 @@ async function observe({turn,domDamage=0,accepted=true,sent=true,hpAfter=1572}={
   setTimeout:f=>{callback=f},sleep:async()=>{},newLines:()=>[],BUFF_RE:/x^/,ilOf:()=>null,isChargeName:()=>false,dmgFromLog:()=>domDamage,
   L2V7Modules:{fightlab:{turnFor:(name,t,action,rid)=>turn&&turn.rid===rid&&turn.action===action?turn:null}},rt,
   fightNote:(...a)=>notes.push(a),splashDmg:()=>0,BUFF_CTX:null,UNAVAIL:/x^/,setRt:async p=>Object.assign(rt,p),rec:(...a)=>logs.push(a)};
- vm.runInNewContext(content.slice(content.indexOf('let lastObserve = 0;'),content.indexOf('// роли по панели'))+';this.observeSlot=observeSlot',box);
+ vm.runInNewContext(content.slice(content.indexOf('function observeOwner()'),content.indexOf('// роли по панели'))+';this.observeSlot=observeSlot',box);
  box.observeSlot(b,'B');if(sent){net.start=net.done=3;net.rid=2;net.ok=accepted;}now+=900;await callback();return{rt,notes,logs};
 }
 test('real observeSlot keeps accepted raw physical damage, unknown is not recorded as zero, genuine miss is zero',async()=>{
@@ -158,4 +158,11 @@ test('explicit new character start has its own revision sequence; old character 
  f.send('/game/battle/start',{character:{id:'new-character',name:'Alt',revision:1,hp:1000,mp:100},battle:{spawnId:'alt-mob',mobName:'Rat',mobHp:100,mobMaxHp:100,log:[]}});
  assert.equal(f.lab.fight().actorId,'new-character');assert.equal(f.lab.fight().rev,1);
  const old=f.hit(['[Hero] −100 HP.'],{name:'Main',spawn:'main',rev:51});assert.equal(old,null);assert.equal(f.lab.fight().actorId,'new-character');
+});
+test('legacy AoE group averages are retained as history, never merged into new prediction',()=>{
+ const f=fixture(),key='map:cruma|атака';f.rt.fightGroups={[key]:{t:f.now(),samples:[{t:f.now(),hp:1572,kills:20,targets:20,damage:999999}]}};
+ f.start();assert.equal(f.lab.groupOn('атака',1572),null);
+ f.hit(['[Hero] −1572 HP.','Древко розсікло ворогів поруч: Side −1000.','Додаткова ціль повалена: Side.']);
+ assert.equal(f.lab.groupOn('атака',1572).damage,1000);assert.equal(f.lab.groupOn('атака',1572).kills,1);
+ assert.equal(f.rt.fightGroups[key].legacySamples[0].damage,999999);
 });

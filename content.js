@@ -372,12 +372,18 @@ function learnSkillDb() {
 //  3) иначе — максимум урона из готового (длинные КД запускаем сразу, чтобы они быстрее откатились);
 //  4) пока атака и скиллы на КД — копим энергию (бесплатный ход).
 const turnSec = () => (rt.turnMs || 1000) / 1000;
+// Выборка прогноза v1 начинается после исправления истории sync. Общая статистика сохраняется.
+function damageSkill(p) {
+  const e = p?.damageEvidence?.v === 1 ? p.damageEvidence : {};
+  return { ...p, dmg: e.dmg || 0, dmgN: e.dmgN || 0, uses: e.uses || 0, unknown: e.unknown || 0, spl: e.spl || 0, splN: e.splN || 0 };
+}
+function damageSkills() { return Object.fromEntries(Object.entries(rt.skills || {}).map(([k, p]) => [k, damageSkill(p)])); }
 function expDmg(name) {
   const k = (name || '').toLowerCase(), f = fightDmg(k);
   if (f != null) return f;                       // замер текущего боя важнее среднего
-  const p = rt.skills?.[k];
-  if (p?.dmgN) return p.dmg / p.dmgN;
-  const atk = rt.skills?.['атака'], base = atk?.dmgN ? atk.dmg / atk.dmgN : 600;
+  const p = damageSkill(rt.skills?.[k]);
+  if (p.dmgN) return p.dmg / p.dmgN;
+  const atk = damageSkill(rt.skills?.['атака']), base = atk.dmgN ? atk.dmg / atk.dmgN : 600;
   if (k === 'атака') return base;
   // ещё не применялся: урон ≈ «сила» × коэффициент героя. Коэффициент — по уже изученным скиллам
   // (Hurricane Assault: сила 535 → 3247 урона ≈ ×6). Сила — из описания магистра или из лога «…: сила N»
@@ -401,7 +407,7 @@ function powerOf(k) {
   return ls != null ? ilNum(IL_FIX[ls]?.pow) || 0 : 0;
 }
 function powerK() {                              // медиана «урон / сила» по скиллам, где известно и то и другое
-  const r = Object.entries(rt.skills || {}).filter(([k, p]) => p.dmgN >= 2 && powerOf(k)).map(([k, p]) => p.dmg / p.dmgN / powerOf(k)).sort((a, b) => a - b);
+  const r = Object.entries(damageSkills()).filter(([k, p]) => p.dmgN >= 2 && powerOf(k)).map(([k, p]) => p.dmg / p.dmgN / powerOf(k)).sort((a, b) => a - b);
   return r.length ? r[r.length >> 1] : 0;
 }
 // «цена» действия в секундах: КД, который сгорит, + заряды (1 заряд = 1 ход)
@@ -635,11 +641,12 @@ const cdWatch = new Set();
 let fightLearn = { id: '', d: {} };
 function fightNote(key, dmg) {
   const id = location.search;
-  if (fightLearn.id !== id) fightLearn = { id, d: {} };
+  const owner = observeOwner();
+  if (fightLearn.id !== id || fightLearn.owner !== owner) fightLearn = { id, owner, d: {} };
   (fightLearn.d[key] ||= []).push(dmg);
 }
 function fightDmg(key) {
-  if (fightLearn.id !== location.search) return null;
+  if (fightLearn.id !== location.search || fightLearn.owner !== observeOwner()) return null;
   const a = fightLearn.d[key];
   return a && a.length >= 2 ? a.reduce((x, y) => x + y, 0) / a.length : null;
 }
@@ -656,6 +663,15 @@ async function learnCd(key, name, sec, b) {
   p.cdS = S; p.cd = med;
   await setRt({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
 }
+function observeOwner() { return JSON.stringify([rt.char || '', rt.classCur?.prof || '', rt.classCur?.slot ?? '', rt.classSwT || rt.classCur?.t || 0, typeof leaseEpoch === 'undefined' ? null : leaseEpoch]); }
+function damageSample(p, dmg, known, splash) {
+  const e = p.damageEvidence?.v === 1 ? { ...p.damageEvidence } : { v: 1, dmg: 0, dmgN: 0, uses: 0, unknown: 0, spl: 0, splN: 0 };
+  e.uses++; if (!known) e.unknown++;
+  if (dmg > 0) { e.dmg += dmg; e.dmgN++; }
+  if (e.dmgN > 60) { e.dmg = Math.round(e.dmg / e.dmgN * 40); e.dmgN = 40; }
+  if (splash != null) { e.spl += splash; e.splN++; }
+  p.damageEvidence = e;
+}
 let lastObserve = 0;                             // время последнего нажатия слота (для честного «запасного» урона)
 function observeSlot(b, src) {
   if (!isBattle() || !b) return;
@@ -663,7 +679,7 @@ function observeSlot(b, src) {
   const name = cleanTitle(b.title), key = name.toLowerCase();
   if (!key) return;
   const before = { mob: mobHp(), me: meHp(), mp: meMp(), arr: logLines(), t: Date.now(), notice: noticeText(), netStart: ACT_NET.start, netDone: ACT_NET.done };
-  const action = slotAction(b);
+  const action = slotAction(b), observedOwner = observeOwner();
   lastObserve = before.t;
   // реальный КД: от клика до отката слота. Замер, «переехавший» через победу/смену страницы, не считаем
   // (так атака получала «КД 7,4 с», и бот стоял, думая, что атака на откате).
@@ -680,10 +696,11 @@ function observeSlot(b, src) {
         await sleep(100);
       }
       cdWatch.delete(key);
-      if (went && !spoiled) await learnCd(key, name, (Date.now() - t0) / 1000, b);
+      if (went && !spoiled && observeOwner() === observedOwner) await learnCd(key, name, (Date.now() - t0) / 1000, b);
     })();
   }
   setTimeout(async () => {
+    if (observeOwner() !== observedOwner) return;
     // 10.0.12 (лог 14.10 21:43:59): ответ Energy Bolt шёл 1289 мс, а замер в 900 мс учил ложный ноль.
     // Ждём только свой отправленный ход; следующий клик, чужой ответ или таймаут отменяют замер. Без событий хука — старый fallback.
     if (ACT_NET.start > before.netStart) {
@@ -691,6 +708,7 @@ function observeSlot(b, src) {
       while (ACT_NET.done < ownStart && Date.now() - before.t < 8000 && lastObserve === before.t && ACT_NET.start === ownStart) await sleep(40);
       if (lastObserve !== before.t || ACT_NET.start !== ownStart || ACT_NET.done !== ownStart || !ACT_NET.ok || (action && ACT_NET.action !== action)) return;
     } else if (before.netStart > 0 || ACT_NET.done !== before.netDone || lastObserve !== before.t) return;
+    if (observeOwner() !== observedOwner) return;
     const mob = mobHp(), me = meHp(), mp = meMp();
     const added = newLines(before.arr, logLines());   // v5.6: с учётом повторов (такой же урон / тот же бафф ещё раз — раньше терялись)
     const txt = added.join(' ⏎ ');
@@ -742,6 +760,7 @@ function observeSlot(b, src) {
     if (unav) { p.unavail = (p.unavail || 0) + 1; p.unavailT = Date.now(); }
     p.kind = slotKind(b); p.img = (b.querySelector('img')?.getAttribute('src') || '').split('/').pop();
     p.last = txt.slice(0, 160);
+    damageSample(p, dmg, damageKnown, slotKind(b) === 'скилл' && dmg > 0 ? splashDmg(added) : null);
     await setRt({ skills: { ...(rt.skills || {}), [key]: p } });
     rec(src, 'скилл', `«${name}»: урон ${damageKnown ? dmg : 'не измерен'} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
       + `${hpd > 15 ? ' · HP +' + hpd : ''}${buff ? ' · бафф ' + buff[1] + ' с' : ''}${stun ? ' · стан' : ''}`
@@ -3663,15 +3682,17 @@ function heroStatsFor() {
   return V.fromRt(rt, cfg, role);
 }
 // замер крита в бою (fightlab → critNote): нажатий n, из них критов c — под набором крит-баффов, что сейчас на герое (шапка)
-let CRIT_ACC = null, critAccN = 0;
+let CRIT_ACC = null, critAccN = 0, critOwner = '';
 function critNote(n, c) {
   if (!tabOwner || !(n > 0) || combatProfileKind() !== 'mage_summoner') return;
   const V = globalThis.L2BuffVal; if (!V) return;
   let ids = []; try { ids = Object.keys(L2V7Modules.buffs.hudBuffs() || {}).map(Number); } catch (e) {}
+  const owner = observeOwner();
+  if (critOwner !== owner) { CRIT_ACC = null; critAccN = 0; critOwner = owner; }
   CRIT_ACC = V.obsAdd(CRIT_ACC || rt.critStat, ids, n, c); critAccN += n;
   if (critAccN >= 20) critFlush();
 }
-function critFlush() { if (!CRIT_ACC || !critAccN) return; const o = CRIT_ACC; CRIT_ACC = null; critAccN = 0; setRt({ critStat: o }); }
+function critFlush() { if (critOwner !== observeOwner()) { CRIT_ACC = null; critAccN = 0; return; } if (!CRIT_ACC || !critAccN) return; const o = CRIT_ACC; CRIT_ACC = null; critAccN = 0; setRt({ critStat: o }); }
 // 10.0.2 (Life Stone): надетое оружие и его ЛС из ответов сервера (hook.js aug). rt.weaponAug {w, e, o, g, k, n, t} —
 // меню показывает бонус, equipment не меняет само оружие с полезным ЛС, бой узнаёт умение ls_* на панели (ilOf)
 function augNote(a, path) {
@@ -4484,7 +4505,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get tourReadReady(){return ()=>!rt.reviv
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
@@ -4660,7 +4681,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -4827,7 +4848,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get tabOwner(){return tabOwner}, get l
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get toggleState() { return toggleState; }, set toggleState(value) { toggleState = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.equipment = L2V7Factories.equipment({ get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.equipment = L2V7Factories.equipment({ get damageSkills() { return damageSkills(); }, get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CLASS_W() { return CLASS_W; }, set CLASS_W(value) { CLASS_W = value; },
   get EQUIP_OK() { return EQUIP_OK; }, set EQUIP_OK(value) { EQUIP_OK = value; },
   get FREE_HIT() { return FREE_HIT; }, set FREE_HIT(value) { FREE_HIT = value; },

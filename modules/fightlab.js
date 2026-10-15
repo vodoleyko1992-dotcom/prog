@@ -13,7 +13,7 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.fightlab = function create_fightlab(env) {
 const location = env.routeLocation || root.location;
-const MEM_MAX = 80, SAMPLES = 12, HITS = 30, GAPS = 6, FLUSH_MS = 30000;
+const MEM_MAX = 80, SAMPLES = 12, HITS = 30, GAPS = 6, FLUSH_MS = 30000, EVIDENCE = 1;
 const num = s => +String(s).replace(/[\s  ]/g, '');
 const low = s => String(s || '').trim().toLowerCase();
 const ew = (old, v, a = 0.3) => old > 0 ? Math.round((old * (1 - a) + v * a) * 10) / 10 : Math.round(v * 10) / 10;
@@ -126,15 +126,15 @@ function groupNote(name, parsed, mainMax, now) {
   if (F.rb || F.groupOwner !== groupOwner() || !(mainMax > 0) || !(parsed.own > 0) || !(parsed.splash.length || old?.aoe)) return;
   const key = F.groupScope + '|' + skill, groups = { ...(env.rt.fightGroups || {}) };
   const rewarded = Math.max(0, parsed.rewards.exp - 1, parsed.rewards.sp - 1);
-  const samples = [...(groups[key]?.samples || []), { t: now, hp: mainMax, kills: Math.max(parsed.extraKills.length, parsed.splash.length ? rewarded : 0),
+  const samples = [...(groups[key]?.evidence === EVIDENCE ? groups[key].samples || [] : []), { t: now, hp: mainMax, kills: Math.max(parsed.extraKills.length, parsed.splash.length ? rewarded : 0),
     targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
-  groups[key] = { t: now, samples };
+  groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: EVIDENCE, t: now, samples };
   const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
   env.setRt({ fightGroups: recent })?.catch?.(() => {});
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
-  const s = (g?.samples || []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
+  const s = (g?.evidence === EVIDENCE ? g.samples || [] : []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
   if (!s.length) return null;
   const mean = k => s.reduce((n, x) => n + x[k], 0) / s.length;
   return { n: s.length, kills: mean('kills'), targets: mean('targets'), damage: mean('damage'), t: g.t };
@@ -175,6 +175,11 @@ function onNet(path, d) {
   if (env.pvpPending?.() || d?.pv?.defeat) { F = null; last = null; return null; } // чужой PvP-урон не принадлежит окну PvE
   const bt = d?.bt; if (!bt || typeof bt !== 'object') return null;
   const now = Date.now(), act = path === '/game/battle/action', fresh = /\/(?:start|hunt-continue)$/.test(path);
+  // Native /sync часто содержит только serverNowMs. Это не снимок боя:
+  // иначе следующий action заменял logPrev пустым журналом и итоговый fullLog
+  // повторно начислял уже учтённые удары, лечение и спецудары (Olkuth 15.10).
+  if (!act && !fresh && bt.mob == null && bt.mobMax == null && bt.hp == null && bt.mp == null
+      && bt.seq == null && !bt.log?.length && !bt.end) return null;
   // После смены класса нужен старт/снимок нового боя; запоздалый ход старого класса не открывает его.
   if (ownerAwaiting && act) return null;
   const ok = d.status >= 200 && d.status < 300 && !d.res?.error;
@@ -326,7 +331,9 @@ function finish(outcome, now = Date.now()) {
   for (const [k, a] of Object.entries(F.a)) {
     const o = { ...(m.a[k] || { n: 0, s: [] }) };
     if (a.rolls?.length) {
-      o.rolls = [...((o.context ?? null) === a.context ? (o.rolls || o.s || []) : []), ...a.rolls].slice(-SAMPLES);
+      if (o.evidence !== EVIDENCE && o.rolls) o.legacyRolls = o.rolls;
+      o.rolls = [...(o.evidence === EVIDENCE && (o.context ?? null) === a.context ? (o.rolls || []) : []), ...a.rolls].slice(-SAMPLES);
+      o.evidence = EVIDENCE;
       o.context = a.context;
     }
     o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z; o.unknown = (o.unknown || 0) + (a.unknown || 0);
@@ -335,7 +342,8 @@ function finish(outcome, now = Date.now()) {
   if (F.hits.length) m.h = [...(m.h || []), ...F.hits].slice(-HITS);
   if (F.sp.length) {
     const g = F.sp.slice(1).map((s, i) => Math.round((s.t - F.sp[i].t) / 100) / 10).filter(x => x > 0.5);
-    m.sp = { mx: Math.max(m.sp?.mx || 0, ...F.sp.map(s => s.dmg)), nm: F.sp[F.sp.length - 1].name, g: [...(m.sp?.g || []), ...g].slice(-GAPS), n: (m.sp?.n || 0) + F.sp.length };
+    const prediction = { v: EVIDENCE, g: [...(m.sp?.prediction?.v === EVIDENCE ? m.sp.prediction.g || [] : []), ...g].slice(-GAPS) };
+    m.sp = { prediction, mx: Math.max(m.sp?.mx || 0, ...F.sp.map(s => s.dmg)), nm: F.sp[F.sp.length - 1].name, g: [...(m.sp?.g || []), ...g].slice(-GAPS), n: (m.sp?.n || 0) + F.sp.length };
   }
   if (F.rb || F.champ) m.pot = ew(m.pot, F.pots, 0.4);
   M[F.key] = m;
@@ -367,7 +375,7 @@ function samplesOn(name) {
   const context = env.recoveryContext?.() || null, managed = typeof env.recoveryContext === 'function';
   if (managed && !context) return null;
   const compatible = a => !managed || a?.context === context;
-  const s = [...(compatible(m) ? (m?.rolls || m?.s || []) : []), ...(compatible(f) ? (f?.rolls || []) : [])].slice(-SAMPLES);
+  const s = [...(m?.evidence === EVIDENCE && compatible(m) ? (m.rolls || []) : []), ...(compatible(f) ? (f?.rolls || []) : [])].slice(-SAMPLES);
   return s.length ? s : null;
 }
 // урон скилла по ЭТОЙ цели (замеры прошлых боёв с ней + этот бой); меньше 3 замеров — null (тогда общее среднее)
@@ -384,7 +392,7 @@ function killP(name, hp) {
 function spikeEta(now = Date.now()) {
   if (!ensure() || !F.rb) return null;
   const m = mem()[F.key], own = F.sp.slice(1).map((s, i) => (s.t - F.sp[i].t) / 1000).filter(x => x > 0.5);
-  const g = [...(m?.sp?.g || []), ...own].slice(-GAPS);
+  const g = [...(m?.sp?.prediction?.v === EVIDENCE ? m.sp.prediction.g || [] : []), ...own].slice(-GAPS);
   if (g.length < 3) return null;
   const med = median(g), dev = Math.max(...g.map(x => Math.abs(x - med))) / med;
   if (!(med > 0) || dev > 0.3) return null;

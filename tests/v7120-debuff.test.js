@@ -65,6 +65,7 @@ env.cfg.nDebuff = ''; env.rt.debuffGain = [];
   assert.deepEqual([...env.rt.debuffGain], [1.111], 'Blaze 1000 under debuff vs 900 without → ×1.111');
   // замер показал «прибавки нет» (как на логах 10.10: 1447 под дебаффами против 1535 без) — атакующие дебаффы выключены
   env.rt.debuffGain = [0.94, 0.97, 1.0, 1.01, 0.99, 0.95];
+env.rt.debuffEvidence = { v: 1, ratios: env.rt.debuffGain.slice() };
   mobTxt = '20000 / 20000';
   assert.equal(C.debuffGain().ratio < 1.03, true);
   assert.equal(C.debuffPlan({ block: {} }, mp, me), null, 'measured no gain → no M.Def debuffs even on a long fight');
@@ -72,6 +73,7 @@ env.cfg.nDebuff = ''; env.rt.debuffGain = [];
   env.cfg.debuffMode = 'always'; assert.equal(C.debuffPlan({ block: {} }, mp, me)?.n, 'Curse Chaos', '«always» ignores the measurement'); env.cfg.debuffMode = 'auto';
   // прибавка ×1.11 → окупается от ceil(1/0.11)+1 = 11 действий
   env.rt.debuffGain = [1.11, 1.11, 1.11, 1.11, 1.11, 1.11];
+env.rt.debuffEvidence = { v: 1, ratios: env.rt.debuffGain.slice() };
   assert.equal(C.debuffGain().minActs, 11);
   mobTxt = '9200 / 9200'; assert.equal(C.debuffPlan({ block: {} }, mp, me)?.n, 'Curse Chaos', '11.5 actions left ≥ 11');
   mobTxt = '8400 / 8400'; assert.equal(C.debuffPlan({ block: {} }, mp, me), null, '10.5 actions left < 11');

@@ -1,20 +1,21 @@
 // 10.0.12: замер навыка ждёт свой ответ, а не фиксированные 900 мс.
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 const src = fs.readFileSync(require('node:path').join(__dirname, '..', 'content.js'), 'utf8');
-const fn = src.slice(src.indexOf('let lastObserve = 0;'), src.indexOf('// роли по панели', src.indexOf('let lastObserve = 0;')));
-async function scenario({ delay = 1300, sent = true, refused = false, supersede = false, wrongAction = false, hookActive = true } = {}) {
+const fn = src.slice(src.indexOf('function observeOwner()'), src.indexOf('// роли по панели', src.indexOf('function observeOwner()')));
+async function scenario({ delay = 1300, sent = true, refused = false, supersede = false, wrongAction = false, hookActive = true, ownerChange = false, switchBack = false, stop = false, changeWhileWaiting = false } = {}) {
   let now = 10000, callback, mp = 100, hp = 100, writes = [], logs = [], arr = [], trigger = false;
   const NET = { start: hookActive ? 2 : 0, done: hookActive ? 2 : 0, ok: true, action: 'l2_1220' };
   const update = () => { if (sent && now >= 10000 + delay) { NET.done = 3; NET.ok = !refused; if (wrongAction) NET.action = 'l2_1274'; if (!refused) { mp = 70; hp = 0; arr = ['Полум’я 100']; } } };
   const b = { title: 'Blaze', querySelector: () => null };
   const sb = { Date: { now: () => now }, ACT_NET: NET, slotAction: () => 'l2_1220', isBattle: () => true, slotKind: () => 'скилл', cleanTitle: x => x,
     mobHp: () => ({ cur: hp, max: 100 }), meHp: () => ({ cur: 100 }), meMp: () => ({ cur: mp }), logLines: () => arr, noticeText: () => '',
-    slotCd: () => null, setTimeout: f => { callback = f; }, sleep: async ms => { now += ms; update(); if (supersede && !trigger) { trigger = true; vm.runInContext('lastObserve++', ctx); } },
+    slotCd: () => null, setTimeout: f => { callback = f; }, sleep: async ms => { now += ms; update(); if (changeWhileWaiting) sb.rt.classSwT=999; if (supersede && !trigger) { trigger = true; vm.runInContext('lastObserve++', ctx); } },
     newLines: (a, z) => z.slice(a.length), BUFF_RE: /x^/, ilOf: () => null, isChargeName: () => false, dmgFromLog: () => arr.length ? 100 : 0,
     L2V7Modules: { fightlab: { turnFor: () => null } }, rt: {}, fightNote: () => {}, splashDmg: () => 0, BUFF_CTX: null, UNAVAIL: /x^/, setRt: async p => writes.push(p), rec: (...a) => logs.push(a),
   };
   const ctx = vm.createContext(sb); vm.runInContext(fn + '\nthis.observeSlot = observeSlot;', ctx);
-  sb.observeSlot(b, 'B'); if (sent) NET.start = 3; now += 900; update(); await callback();
+  sb.rt.char='Hero'; sb.rt.classCur={prof:'Warlock',slot:0}; sb.leaseEpoch='lease1'; sb.on=true;
+  sb.observeSlot(b, 'B'); if(ownerChange) sb.rt.classCur={prof:'Tank',slot:1}; if(switchBack) sb.rt.classSwT=123; if(stop) sb.on=false; if (sent) NET.start = 3; now += 900; update(); await callback();
   return { writes, logs, elapsed: now - 10000 };
 }
 (async () => {
@@ -26,5 +27,7 @@ async function scenario({ delay = 1300, sent = true, refused = false, supersede 
   const denied = await scenario({ refused: true }); assert.equal(denied.writes.length, 0, 'rejected action is not learned as a use');
   const lost = await scenario({ sent: false }); assert.equal(lost.logs.length, 0, '15.10: known hook with no sent request is a lost click, not a damage sample');
   const fallback = await scenario({ sent: false, hookActive: false }); assert.equal(fallback.logs.length, 1, 'legacy/manual observation without network events remains available');
+  for(const option of [{ownerChange:true},{switchBack:true},{changeWhileWaiting:true}]){const stale=await scenario(option);assert.equal(stale.writes.length,0,'old callback cannot teach new class/epoch');}
+  const stopped=await scenario({stop:true}); assert.equal(stopped.writes.length,1,'accepted own hit remains evidence after Stop');
   console.log('PASS v1012 observe response');
 })().catch(e => { console.error(e); process.exitCode = 1; });

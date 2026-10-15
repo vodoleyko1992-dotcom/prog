@@ -80,7 +80,7 @@ const hero = { lv: 67, matk: 9014, patk: 1678, mcrit: 17, mck: 2.0, crit: 68, ck
   deq(V.fxLearn(obs), { 1413: 1.3, 1357: 1.2 }, 'learned: Magnus ×1,3, Water ×1,2');
   const o2 = V.snapAdd(obs, { lv: 68, matk: 6100, buffs: [] }); deq(Object.keys(o2), [''], 'new level → old snapshots dropped');
   // fromRt: выученный множитель заменяет догадку; замер урона заклинания → spell; свой бафф Королевы при petBuffAuto
-  const rt = { heroStats: { ...hero, buffs: [] }, matkObs: obs, critStat: {}, skills: { blaze: { name: 'Blaze', dmg: 100000, dmgN: 10 } } };
+  const rt = { heroStats: { ...hero, buffs: [] }, matkObs: obs, critStat: {}, skills: { blaze: { name: 'Blaze', dmg: 100000, dmgN: 10, damageEvidence: { v: 1, dmg: 100000, dmgN: 10 } } } };
   const S = V.fromRt(rt, { petBuffAuto: true }, { mage: true });
   assert.equal(S.fx[1413].matk, 1.3); assert.equal(S.fx[1413].g, 0); assert.equal(S.fx[365].mcrit, 2);
   near(S.spell, 10000 / 1.17, 1, 'spell avg de-critted (17 % shown without crit buffs = base)'); assert.equal(S.cat.queen, true);
