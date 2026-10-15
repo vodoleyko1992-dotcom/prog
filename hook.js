@@ -84,13 +84,17 @@
     const line = x => String(typeof x === 'string' ? x : x?.text ?? x?.message ?? x?.line ?? '').slice(0, 200);
     // 10.0.13: после последнего удара battle уже может отсутствовать; игра показывает полный журнал из результата боя.
     const lastLog = Array.isArray(o.victory?.fullLog) ? o.victory.fullLog : Array.isArray(o.defeat?.fullLog) ? o.defeat.fullLog : null;
-    const finalLog = !Array.isArray(d.logTail) && !(b && Array.isArray(b.log)) && !!lastLog;
-    const lt = Array.isArray(d.logTail) ? d.logTail : b && Array.isArray(b.log) ? b.log : lastLog || [];
-    const sp = d.spoilAttemptResult;
-    return { mob: n(d.mobHp ?? b?.mobHp), mobMax: n(d.mobMaxHp ?? b?.mobMaxHp), hp: n(d.characterHp ?? ch?.hp), hpMax: n(d.characterMaxHp ?? ch?.maxHp), mp: n(d.characterMp ?? ch?.mp), mpMax: n(d.characterMaxMp ?? ch?.maxMp),
+    const tail = Array.isArray(d.logTail) && d.logTail.length ? d.logTail : null;
+    const battleLog = b && Array.isArray(b.log) && b.log.length ? b.log : null;
+    const finalLog = !tail && !battleLog && !!lastLog;
+    const lt = tail || battleLog || lastLog || [];
+    const sp = d.spoilAttemptResult, extras = d.whirlwindExtras ?? b?.whirlwindExtras;
+    return { actor: String(ch?.name || '').slice(0, 80), actorId: String(ch?.id || o.characterId || '').slice(0, 80), rev: n(o.revision ?? ch?.revision),
+      extras: Array.isArray(extras) ? extras.slice(0, 30).map(x => ({ id: String(x.spawnId || x.id || ''), name: String(x.name || '').slice(0, 80), hp: n(x.mobHp), max: n(x.mobMaxHp) })) : null,
+      mob: n(d.mobHp ?? b?.mobHp ?? (o.victory ? 0 : null)), mobMax: n(d.mobMaxHp ?? b?.mobMaxHp), hp: n(d.characterHp ?? ch?.hp), hpMax: n(d.characterMaxHp ?? ch?.maxHp), mp: n(d.characterMp ?? ch?.mp), mpMax: n(d.characterMaxMp ?? ch?.maxMp),
       log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: (!o.delta && !!b) || finalLog,
       end: !!(d.battleEnded || o.victory || o.defeat || d.outcome === 'DEFEAT' || o.lethalMeta?.battleEnded), win: !!o.victory, lose: !!(o.defeat || d.outcome === 'DEFEAT'),
-      spawn: String(b?.spawnId || '').slice(0, 80), name: String(b?.mobName || '').slice(0, 80), lvl: n(b?.mobLevel), kind: String(b?.kind || '').slice(0, 30),
+      spawn: String(b?.spawnId || o.victory?.spawnId || o.defeat?.spawnId || '').slice(0, 80), name: String(b?.mobName || o.victory?.mobName || o.defeat?.mobName || '').slice(0, 80), lvl: n(b?.mobLevel), kind: String(b?.kind || '').slice(0, 30),
       tier: String(b?.championTier || '').slice(0, 10),
       spoil: sp && typeof sp === 'object' ? { ok: !!(sp.ok ?? sp.success), text: String(sp.messageUk || sp.message || '').slice(0, 120) } : sp == null ? undefined : String(sp).slice(0, 60),
       now: n(d.serverNowMs ?? o.serverNowMs) };
