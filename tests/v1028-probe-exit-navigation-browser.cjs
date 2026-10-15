@@ -1,0 +1,16 @@
+'use strict';
+// Настоящее расширение и новая страница: продолжение после fire/leave исчезает с документом.
+const {harness,until}=require('./v1014-core-lifecycle-browser.cjs'),assert=require('node:assert/strict');
+(async()=>{const h=await harness();try{
+ const boss='l2dop_rb_25073';let leavePosts=0;
+ await h.ctx.route('https://l2wap.com/battle.html*',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><div id="l2-hud-legacy-name">AuditHero</div><div id="l2-nav-bottom"></div><button id="battle-back-map">Назад на карту</button><script>document.getElementById("battle-back-map").onclick=async()=>{await fetch("/game/battle/leave",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({battleSpawnId:"l2dop_rb_25073"})});location.href="/map.html?probe-return=1"}</script>'}));
+ await h.ctx.route('https://l2wap.com/game/battle/leave',async r=>{leavePosts++;const {rt}=await h.get(['rt']);assert.equal(rt.rbPreSkip[boss].probeExit,true,'storage ACK предшествует реальному leave POST');return r.fulfill({contentType:'application/json',body:JSON.stringify({inBattle:false})});});
+ await h.sw.evaluate(async boss=>{const {rt}=await chrome.storage.local.get('rt');await chrome.storage.local.set({rt:{...rt,rbDb:{[boss]:{probe:{kind:'dps',t:Date.now(),startedAt:Date.now()-10000}}},rbHunt:{step:'fight',id:boss,name:'Rudelto',kills0:0,fightAt:Date.now()-10000},rbWound:{[boss]:{cur:1562264,max:2480352,t:Date.now()}}}})},boss);
+ await h.g.p.goto('https://l2wap.com/battle.html?spawnId='+boss);await until(()=>h.g.core('typeof L2V7Modules!=="undefined"&&!!L2V7Modules.combat'));
+ // Запускается настоящий rbTryExit, которым пользуется battle(). Ответ waitFor старого документа навигация уничтожит.
+ const run=h.g.core(`(async()=>{const env={get rt(){return rt},cfg, on:true,tabOwner:true,setRt,probeFight:()=>true,$q:s=>document.querySelector(s),shown:()=>true,isBattle:()=>location.pathname==='/battle.html',rec:()=>{},sleep,fire:b=>b.click(),waitFor:()=>new Promise(()=>{}),rbRetreat:()=>{throw Error('старый документ не должен дожить до rbRetreat')},rbNote:()=>{}};return L2V7Factories.combat(env).rbTryExit({name:'Rudelto',rb:{id:'${boss}'}},{cur:16365,max:16365},{cur:80402,max:2480352},{abort:true,why:'свежая защита неизвестна'},false)})()`).catch(()=>null);
+ await h.g.p.waitForURL('**/map.html?probe-return=1');await until(()=>h.g.core('typeof L2V7Modules!=="undefined"&&!!L2V7Modules.raid'));
+ const after=await h.g.core(`(async()=>{const messages=[],env={get rt(){return rt},cfg:{rbHuntMode:true},on:true,tabOwner:true,setRt,heroLvl:()=>78,rec:(a,b,m)=>messages.push(m),epicById:()=>null};const raid=L2V7Factories.raid(env);const wounded=raid.rbWounded('${boss}');await raid.rbHuntStep();return {wounded,messages,step:rt.rbHunt.step,skip:rt.rbPreSkip['${boss}'],hp:rt.rbWound['${boss}'].cur}})()`);
+ assert.equal(leavePosts,1);assert.equal(after.wounded,false);assert.equal(after.hp,80402);assert.equal(after.step,'pick');assert.match(after.messages.join(' '),/пропуск 30 мин/);assert.doesNotMatch(after.messages.join(' '),/возвращаюсь добить/);await run;
+ console.log('PASS реальный leave POST + навигация: сохранён skip и HP, новая страница не возвращает к остановленной пробе');
+}finally{await h.ctx.close()}})().catch(e=>{console.error(e.stack);process.exitCode=1});

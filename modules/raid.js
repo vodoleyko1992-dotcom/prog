@@ -728,8 +728,15 @@ function rbPreparationCandidates() {
     return !(at - ps.t < 30 * 60000 && (ps.observed || /^аварийный выход:/.test(env.rt.rbDb?.[id]?.note || '')));
   }).map(([id, x]) => ({ id, ...x })).sort((a, b) => (env.cfg.rbOrder === 'down' ? -1 : 1) * (a.lvl - b.lvl) || (a.ord ?? 1e9) - (b.ord ?? 1e9));
 }
-let rbTourViewSig = '';
+let rbTourViewSig = '', rbTourBlockedSig = '', rbTourBlockedAt = 0;
 function rbTourPublish(plan) {
+  // 16.10, вопрос про Gordon: счётчик «не по силам 1» скрывал имя и основание отказа.
+  const unsafe = !plan.ready.length ? plan.blocked.filter(x => x.kind === 'no').slice(0, 5) : [];
+  const details = unsafe.map(x => `${x.name} (${x.lvl}): ${String(x.detail || x.why || 'нужна оценка').slice(0, 220)}`).join('; ');
+  if (details && details !== rbTourBlockedSig && Date.now() - rbTourBlockedAt >= 30000) {
+    rbTourBlockedSig = details; rbTourBlockedAt = Date.now();
+    env.rec?.('B', 'РБ-тур', `Живые РБ отклонены: ${details}`);
+  }
   const ready = plan.ready.map(({ id, name, lvl, wounded, quest, retry, evidence }) => ({ id, name, lvl, evidence, ...(wounded ? { wounded: true } : {}), ...(quest ? { quest: true } : {}), ...(retry ? { retry: true } : {}) }));
   const view = { ...plan, ready }, sig = JSON.stringify({ ...view, at: 0, blocked: view.blocked.map(({ waitMs, ...x }) => x) });
   if (sig === rbTourViewSig && Date.now() - (env.rt.rbTourView?.at || 0) < 30000) return;
@@ -862,7 +869,9 @@ async function rbBuffHold(name, active) {
   if (missing) { await env.pauseBot(`Тур РБ: нет FA для выбранного баффа (не хватает ${missing} эффектов). Пополни FA и продолжи`); return true; }
   const need = env.townBuffNeed?.();
   if (!need) return false;
-  env.setStatus(`Тур РБ: жду баффера перед ${name}${need.fa?.length ? ` (FA: ${need.fa.length})` : ''}`);
+  const names = (need.fa || []).map(id => env.IL?.[id]?.n || env.rt.faCat?.[id]?.name || `#${id}`).join(', ');
+  const wait = Math.max(0, Math.ceil((Math.max(env.rt.tbWaitUntil || 0, env.rt.tbPauseUntil || 0) - Date.now()) / 1000));
+  env.setStatus(`Тур РБ: жду баффера перед ${name}${names ? ` · нужны: ${names}` : ''}${wait ? ` · повтор через ${wait} с` : ''}`);
   if (active()) await env.sleep(3000);
   return true;
 }
@@ -913,7 +922,8 @@ function rbTravelBudget(row) {
 
 async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
-  if (H.phase !== phase || H.next !== next || Object.keys(extra).length) await huntSet({ phase, next, ...extra });
+  if (H.phase === phase && H.next === next && !Object.keys(extra).length) return;
+  await huntSet({ phase, next, ...extra });
   env.setStatus(`Тур РБ: ${next}`);
 }
 
@@ -1015,8 +1025,10 @@ async function rbExitAshen(H, active) {
 }
 
 // 15.10, журнал18:59: на точке могут остаться только РБ; без автофарма не обещаем добычу мобов.
+const rbIdleFarmAllowed = () => env.idleFarmAllowed?.() ?? !Array.isArray(env.cfg.autoTasks);
 async function rbIdleMap(text,active) {
   if(!active())return;
+  if(!rbIdleFarmAllowed()){env.setStatus(text);await env.sleep(1000);return;}
   if(!env.isMap()){location.href='/map.html';await env.sleep(3000);return;}
   const mob=env.$q('#map-mob-list .l2-map-mob-link:not(.l2-map-mob-link--raid):not(.l2-map-mob-link--epic)');
   if(!env.cfg.zoneAuto && !mob){
@@ -1039,8 +1051,9 @@ async function rbHuntStep() {
     const d = env.rt.rbDb?.[H.id] || {}, w = env.rt.rb?.[H.id];
     // 7.2.3: недобитый РБ (пауза/отход/магазин) — не «следующий»: rbListPick вернёт к нему первым
     const wd = rbWounded(H.id) ? env.rt.rbWound[H.id] : null, pct = wd ? Math.round(wd.cur / wd.max * 100) : 0;
+    const stopped = preSkip(H.id), probeStop = stopped.probeExit && Date.now() - stopped.t < 30 * 60000;
     const won = Number.isFinite(H.kills0) && (d.kills || 0) > H.kills0 || H.fightAt > 0 && d.lastWin >= H.fightAt;
-    const res = await huntDone(H.id, `${H.name}: ${won ? `✅ победа этой попытки (всего ${d.kills}×) → следующий` : d.verdict === 'no' ? '❌ не по силам → следующий' : w ? `отошёл, у него ${w.hpAfter}/${w.max}${wd ? ' — вернусь добить' : ' → следующий'}` : wd ? `бой прерван, у него ${pct}% — возвращаюсь добить` : 'результат попытки не подтверждён → следующий'}`);
+    const res = await huntDone(H.id, `${H.name}: ${won ? `✅ победа этой попытки (всего ${d.kills}×) → следующий` : probeStop ? 'разведка остановлена — пропуск 30 мин, без возврата к этому РБ' : d.verdict === 'no' ? '❌ не по силам → следующий' : w ? `отошёл, у него ${w.hpAfter}/${w.max}${wd ? ' — вернусь добить' : ' → следующий'}` : wd ? `бой прерван, у него ${pct}% — возвращаюсь добить` : 'результат попытки не подтверждён → следующий'}`);
     if (rbOneHit()) return rbOnePause(H.name);       // 8.0.3: «один РБ» — убит, ждём команды
     return res;
   }
@@ -1167,7 +1180,9 @@ async function rbHuntStep() {
   const mark = env.rt.rbIdleMark || {}, idle = env.rt.rbHuntIdle || 0;
   const refusalPause = idle > Date.now() && env.rt.rbRefuse?.n >= 2 && Date.now() - (env.rt.rbRefuse.t || 0) < RB_IDLE_MS;
   // Пустую очередь обновляем чтением страниц своего окна, не ждём старый TTL15мин/таймер10мин.
-  if(!refusalPause && !plan.ready.length && !rbPreparationCandidates().length && env.rbTimer?.tourTick){
+  // 16.10, Gordon: кандидат подготовки ещё может быть опасен по окончательной оценке.
+  // Такой единственный живой РБ не блокирует перечитывание остальных мёртвых строк.
+  if(!refusalPause && !plan.ready.length && env.rbTimer?.tourTick){
     const readActive=()=>active()&&env.canAct?.()!==false&&env.tourReadReady?.()!==false;
     await env.rbTimer.tourTick({active:readActive});if(!readActive())return;
     plan=rbTourPlan();rbTourPublish(plan);
@@ -1260,7 +1275,7 @@ async function rbHuntStep() {
     const why = `подходящих РБ нет по последнему списку — ${rbListWhy(plan)}`;
     const idleN = H.last === why ? Math.min(2, (env.rt.rbIdleN || 0) + 1) : 0, idleMs = RB_IDLE_MS * [1, 2, 4][idleN];
     const retry = plan.blocked.map(x => x.waitMs).filter(x => x > 0), wait = Math.min(idleMs, ...(retry.length ? retry : [idleMs]));
-    const next = `${why}; жду новые РБ, фарм на месте при наличии мобов; повторная оценка через ${Math.ceil(wait / 60000)} мин`;
+    const next = `${why}; жду новые РБ${rbIdleFarmAllowed() ? ', фарм на месте при наличии мобов' : ', фарм мобов сейчас не выбран'}; повторная оценка через ${Math.ceil(wait / 60000)} мин`;
     if (H.last !== why) env.recBot(`Тур РБ: ${next}`);
     await rbHuntPhase('wait', next, { last: why });
     if (!active()) return;
@@ -1310,7 +1325,7 @@ function rbWoundNote(ctx) {
   W[S.id] = { cur: mob.cur, max: mob.max, t: Date.now(), name: ctx.name };
   env.setRt({ rbWound: W });
 }
-const rbWounded = id => { const w = env.rt.rbWound?.[id]; return !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.99 && !rbVerdictBlocks(id); };   // 10.0.2: 95 → 99 % (лог 12.10 22:16: Рахха 96,7 % — «бой окончен → следующий», урон по 4 РБ вразброс)
+const rbWounded = id => { const w = env.rt.rbWound?.[id], skip = preSkip(id); return !(skip.probeExit && Date.now() - skip.t < 30 * 60000) && !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.99 && !rbVerdictBlocks(id); };   // 10.0.2: 95 → 99 % (лог 12.10 22:16: Рахха 96,7 % — «бой окончен → следующий», урон по 4 РБ вразброс)
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
   try { rbWoundNote(ctx); } catch (e) {}
   const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
@@ -1423,7 +1438,7 @@ function rbAssess(ctx, me, mob) {
   }
   if (probingDps && measurement.checkpointSeconds && now >= measurement.checkpointAt && elapsed < 30) {
     const defense = rbIncomingKey(S.id,context);
-    if (!defense || defense !== measurement.defense) return { abort: true, why: 'разведка: защита изменилась или свежий состав неизвестен — штатный выход' };
+    if (!defense || defense !== measurement.defense) return { abort: true, why: !defense ? 'разведка: свежий состав защиты неизвестен — штатный выход' : 'разведка: состав защиты изменился — штатный выход' };
     const events = (S.incomingEvents || []).filter(x=>x.context===defense && x.t >= Math.max(measurement.startedAt,now-8000) && x.t<=now);
     const normal = events.filter(x=>!x.special), special = events.filter(x=>x.special);
     const seconds = Math.min(8,30-elapsed), span = Math.min(8,elapsed);
@@ -1636,7 +1651,7 @@ async function rbRetreat(ctx, mob, why, verdict) {
   const rec = { ...prev, name: ctx.name, max: mob.max, hpAfter: mob.cur, chip: ctx.rb.start - mob.cur,
                 attempts: prev.attempts + 1, t: Date.now() };
   await env.setRt({ rb: { ...(env.rt.rb || {}), [ctx.rb.id]: rec }, target: null, rbPending: !verdict,
-    ...(verdict ? { rbPreSkip: { ...(env.rt.rbPreSkip || {}), [ctx.rb.id]: { t: Date.now(), kind: 'strong', observed: true } } } : {}) });
+    ...(verdict ? { rbPreSkip: { ...(env.rt.rbPreSkip || {}), [ctx.rb.id]: { ...(env.rt.rbPreSkip?.[ctx.rb.id] || {}), t: Date.now(), kind: 'strong', observed: true } } } : {}) });
   await rbNote(ctx.rb.id, { verdict: verdict === 'no' ? 'no' : env.rt.rbDb?.[ctx.rb.id]?.verdict === 'ok' ? 'ok' : 'chip',
                             note: `${verdict ? 'аварийный выход: ' + why + ' · ' : ''}отход: снято ${rec.chip}, у него ${mob.cur}/${mob.max}${ctx.rb.stat ? ' · ' + ctx.rb.stat : ''}` });
   env.setStatus(`РБ ${ctx.name}: ${why} · снято ${rec.chip}, у него ${mob.cur}/${mob.max}`);

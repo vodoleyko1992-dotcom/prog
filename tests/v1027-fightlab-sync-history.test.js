@@ -76,7 +76,7 @@ test('legacy damage and spike history stay visible but cannot predict; fresh coh
  assert.equal(f.L.dmgOn('test-action').mean,100);assert.equal(f.L.killP('test-action',200),0);
  f.L.finish('left');f.L.flush();const m=f.rt.fightMem[key];
  assert.equal(m.a['test-action'].legacyRolls[0],999999);assert.equal(m.a['test-action'].s[0],999999);assert.equal(m.sp.g[0],2);
- assert.equal(m.a['test-action'].evidence,1);assert.equal(m.a['test-action'].rolls.length,4);
+ assert.equal(m.a['test-action'].evidence,2); // 10.0.28: полные окна с ранним префиксом требуют новой когорты.assert.equal(m.a['test-action'].rolls.length,4);
  const reload=fixture();reload.rt.fightMem=JSON.parse(JSON.stringify(f.rt.fightMem));
  reload.send('/game/battle/start',{character:{name:'Hero',revision:20},battle:{spawnId:spawn,mobName:boss,mobHp:10000,mobMaxHp:10000,log:[],logSeq:0}});
  assert.equal(reload.L.dmgOn('test-action').mean,100);assert.equal(reload.L.spikeEta(),null);
