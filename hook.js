@@ -151,8 +151,19 @@
   // идёт 0,25–0,56 с) и ≈30 мс после — клик по панели игра молча теряет. Боту нужны начало и конец этих запросов (rid, путь без query)
   // 15.10: все игровые ответы привязаны к контексту начала запроса; busy-фильтр остаётся в content.
   const TRACK = /^\/(?:character|game)(?:\/|$)/;
-  let ridN = 0;
-  const start = (u, method) => { if (!TRACK.test(u.pathname)) return undefined; const rid = ++ridN; try { window.postMessage({ __l2bot: 'netStart', path: u.pathname, method, rid }, location.origin); } catch (e) {} return rid; };
+  let ridN = 0, mutationN = 0, storyRetry = null;
+  const STORY_TP = /^\/game\/story-quests\/(?:noblesse|subclass)\/teleport$/;
+  // Native quest UI держит busy на весь409→resync→retry. Сопоставляем только
+  // один такой retry; иной POST/истечение окна разрывает связь, GET её не забирает.
+  function start(u, method, req) {
+    if (!TRACK.test(u.pathname)) return {};
+    const rid=++ridN, story=method==='POST'&&STORY_TP.test(u.pathname), r=storyRetry;
+    const detail=story&&typeof req?.targetId==='string'&&Number.isSafeInteger(req.expectedRevision)?{targetId:req.targetId.slice(0,120),expectedRevision:req.expectedRevision}:null;
+    const retryOf=story&&detail&&r&&r.path===u.pathname&&r.targetId===detail.targetId&&detail.expectedRevision>=r.revision&&Date.now()-r.at<=10000?r.rid:0;
+    if(method==='POST'){mutationN++;storyRetry=null;}
+    try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}
+    return {rid,retryOf,mutation:mutationN,detail};
+  }
   const ofetch = window.fetch;
   if (ofetch) window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : input?.url || String(input);
@@ -160,12 +171,14 @@
     const p = ofetch.apply(this, arguments);
     if (!u) return p;
     const method = String(init?.method || input?.method || 'GET').toUpperCase(), t0 = performance.now(), req = reqBody(init?.body);
-    const rid = start(u, method);   // 7.1.17: ход ушёл на сервер; 8.0.3: и GET /character, начало/конец боя
+    const request = start(u, method, req), {rid,retryOf}=request;
     p.then(res => {
+      if(res.status===409&&!retryOf&&request.detail&&request.mutation===mutationN)
+        storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
-      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid }); })
-        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid }));   // 8.0.3: конец запроса не теряем
+      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid,retryOf });
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
+        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid,retryOf }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
   };
@@ -176,7 +189,7 @@
     const info = this.__l2, u = info && same(info.url);
     if (u) {
       const t0 = performance.now(), req = reqBody(body);
-      const rid = start(u, info.method);
+      const {rid} = start(u, info.method, req);
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}

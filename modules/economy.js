@@ -159,7 +159,9 @@ async function paymentReconcile() {
   const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
   if(!valid())return false;
   const E=P.evidence || {}, N=env.shopBuyNet?.();
-  let proof=N?.ok && N.t>=P.at && E.shopKey && N.key===E.shopKey && N.qty===E.qty ? {kind:'shop-receipt',key:N.key,qty:N.qty} : null;
+  const bound=N?.paymentId===P.id&&N.t>=P.at&&E.shopKey&&N.key===E.shopKey&&N.qty===E.qty;
+  const rejected=bound&&[400,401,403,404,409,412,422,423,429].includes(N.status);
+  let proof=rejected?{kind:'server-rejected',spent:0,status:N.status}:bound&&N.ok ? {kind:'shop-receipt',key:N.key,qty:N.qty} : null;
   if(!proof && env.gameGet && E.ids?.length && Number.isFinite(E.beforeQty))try {
     const r=await env.gameGet('/character'), data=r.ok?await r.json():null, ch=data?.character||data;
     if(ch?.name===P.char && Array.isArray(ch.inventory?.stacks)) {
@@ -172,7 +174,7 @@ async function paymentReconcile() {
   if(!proof){env.setStatus?.('Закупка: исход оплаты неизвестен; повтор запрещён, сверяю запас');return false;}
   const S=env.rt.shop;
   if(S && Number.isFinite(E.jobT) && S.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick && !(S.done||[]).some(x=>x.paymentId===P.id)) {
-    const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:true,qty:E.qty,paymentId:P.id}],spent:(S.spent||0)+P.quote.amount}});
+    const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:!rejected,qty:rejected?0:E.qty,paymentId:P.id,...(rejected?{why:'Игра отклонила покупку (HTTP '+N.status+')'}:{})}],spent:(S.spent||0)+(rejected?0:P.quote.amount)}});
     if(saved?.ok!==true || !valid())return false;
   }
   return env.payments.confirm(P,proof);
@@ -263,8 +265,9 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
       }
       if(P){
         // Состояние задачи обновляется сверкой ДО снятия блокировки платежа.
+        const refused=nb?.paymentId===P.id&&nb.t>=P.at&&nb.key===shopKey&&nb.qty===cap&&[400,401,403,404,409,412,422,423,429].includes(nb.status);
         const confirmed=await paymentReconcile();
-        return {ok:confirmed,pending:!confirmed,paymentId:P.id,qty:cap,unit,spent:confirmed?P.quote.amount:0,msg:m,key:nb&&nb.t>=a0T?nb.key:''};
+        return {ok:confirmed&&!refused,pending:!confirmed,paymentId:P.id,qty:refused?0:cap,unit,spent:confirmed&&!refused?P.quote.amount:0,msg:m,...(refused?{why:'Игра отклонила покупку (HTTP '+nb.status+')'}:{}),key:nb&&nb.t>=a0T?nb.key:''};
       }
       return { ok: !!ok && shopAdena() < a0, qty: cap, unit, spent: a0 - shopAdena(), msg: m, key: nb && nb.t >= a0T ? nb.key : '' };
     }
