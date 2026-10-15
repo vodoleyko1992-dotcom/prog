@@ -69,6 +69,8 @@ async function statePatch(m, sender) {
   return serializeLock(async () => {
     const now = Date.now();
     const state = await chrome.storage.local.get(['lock', 'on', 'rt', 'cfg']);
+    // Поздний ответ со старой страницы не вправе дописать задания/покупки в профиль нового героя.
+    if (String(m.expectedChar || '') !== String(state.rt?.char || '')) return { ok: false, reason: 'character_changed' };
     if (state.on && (state.lock?.k !== 'tab' + tab || !m.epoch || state.lock.epoch !== m.epoch ||
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
@@ -130,7 +132,7 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
-    if (m.expectedChar != null && (!m.expectedChar || state.rt?.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+    if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (m.pvpTargetEdit) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
       const edit=pvpTargetChange(state.rt||{},m.pvpTargetEdit);if(!edit.ok)return edit;
@@ -441,19 +443,27 @@ async function srvProbe(origin) {
 chrome.runtime.onStartup.addListener(() => { void ensureWatchdogAlarm(); });
 chrome.alarms?.onAlarm.addListener(async a => {
   if (a.name !== 'l2watch') return;
-  const { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']);
-  const hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
+  const before = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']);
+  let { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = before;
+  let hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
   // Не перезагружать вкладку-ожидателя: сторож следит только за владельцем замка.
   if (!on || !Number.isInteger(hb?.tab) || lock?.k !== 'tab' + hb.tab) return;
-  const now = Date.now(), quiet = now - hb.t;
+  let now = Date.now(), quiet = now - hb.t;
   if (quiet < 150000) { if (wdDown) await chrome.storage.local.set({ wdDown: null }); return; }   // 7.2.5: вкладка ожила сама — простой окончен
-  const recent = wdog.filter(t => now - t < 20 * 60000);
   let tab = null;
   try { tab = await chrome.tabs.get(hb.tab); } catch (e) {}
   if (!tab || !/l2wap\.com/.test(tab.url || tab.pendingUrl || '')) return;     // вкладку закрыли или ушли с сайта — не трогаем
   const ev = { t: now, src: 'S', kind: 'сторож', what: '', st: '' };
   const origin = new URL(tab.url || tab.pendingUrl).origin;
-  const plan = wdPlan({ quiet, recent, fish: !!cfg.fishMode, srv: await srvProbe(origin), downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
+  const server = await srvProbe(origin);
+  // 15.10: сетевой probe может занять 8 с. Stop, новый хозяин или свежий heartbeat отменяют прежнее решение.
+  ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']));
+  hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
+  if (!on || lock?.k !== before.lock?.k || lock?.epoch !== before.lock?.epoch || lock?.k !== 'tab' + tab.id || hb?.tab !== tab.id) return;
+  now = Date.now(); quiet = now - hb.t;
+  if (quiet < 150000) return;
+  const recent = wdog.filter(t => now - t < 20 * 60000);
+  const plan = wdPlan({ quiet, recent, fish: !!cfg.fishMode, srv: server, downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
   if (plan.down) {                                     // сервер лежит: не попытка, не остановка
     if (plan.act !== 'reload') return;
     ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), сервер игры не отвечает — перезагружаю вкладку раз в 2 мин, бота не останавливаю`;

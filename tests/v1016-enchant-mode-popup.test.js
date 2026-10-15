@@ -6,7 +6,7 @@ function part(a, b) { const i = src.indexOf(a), j = src.indexOf(b, i); assert.ok
 function fixture() {
   const cfg = { enchantMode: true, enchant: { enabled: true, queue: [{ key: 'exact', targetLevel: 8 }], maxAttempts: 5, maxScrolls: 5, colBudget: 0 } },
     rt = { char: 'Hero', enchant: { runId: 'run', status: 'paused', pending: { id: 'pending' }, history: [{ before: 2 }] }, enchantArchive: [{ runId: 'old' }] };
-  const b = { Date, Object, cfg, rt, modeTab: '', on: false, MODE_NAME: {}, toast() {}, save: async () => {}, showTab: t => { b.modeTab = t; }, showWakeResult: async () => ({ ok: true }),
+  const b = { Date, Object, cfg, rt, formChar: 'Hero', modeTab: '', on: false, MODE_NAME: {}, toast() {}, save: async () => {}, showTab: t => { b.modeTab = t; }, showWakeResult: async () => ({ ok: true }),
     chrome: { storage: { local: { get: async () => ({ cfg, rt, on: b.on }), set: async () => {} } } },
     menuPatch: async (p, extra = {}) => { Object.assign(rt, p); Object.assign(cfg, extra.cfgPatch || {}); if ('on' in extra) b.on = extra.on; } };
   vm.runInNewContext(part('async function activateMode(', 'const NUM ') + part('function currentMode(', 'const MODE_NAME =')

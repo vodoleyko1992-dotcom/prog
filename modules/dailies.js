@@ -31,7 +31,8 @@ function dailyNote(res) {
 }
 function clanNote(res) {
   if (!res || typeof res !== 'object') return false;
-  if (res.error === 'clan_required' || (!res.clan && !Array.isArray(res.taskDefinitions))) { env.setRt({ clanTasks: { t: Date.now(), noClan: true } }); return true; }
+  if (res.error === 'clan_required') { env.setRt({ clanTasks: { t: Date.now(), noClan: true } }); return true; }
+  if (!res.clan && !Array.isArray(res.taskDefinitions)) return false;
   const defs = (res.taskDefinitions || []).map(d => ({ id: d.id, n: d.nameRu || d.name || d.id, target: +d.target || 0, canTake: !!d.canTake, why: d.blockedReason || null, cdAt: d.cooldownEndsAt ? Date.parse(d.cooldownEndsAt) : null,
     reward: d.personalReward || {}, diamonds: +d.clanRewardDiamonds || 0 }));
   const active = (res.activeClanTasks || []).map(t => ({ id: t.id, type: t.taskType, progress: +t.progress || 0, target: +t.target || 0, owner: t.owner?.name || t.owner?.characterName || '', ownerId: t.owner?.id || t.owner?.characterId || '',
@@ -44,13 +45,18 @@ function clanNote(res) {
 // ---------- фоновый опрос (только GET) ----------
 async function tick() {
   if (busy) return busy;
-  const now = Date.now(), wantDaily = env.cfg.dailyAuto !== false && now - dailyT > DAILY_POLL, wantClan = env.cfg.clanTasks !== false && now - clanT > CLAN_POLL && !env.rt.clanTasks?.noClan;
+  const char = env.rt.char, active = () => canRun() && env.rt.char === char;
+  const now = Date.now(), wantDaily = env.cfg.dailyAuto !== false && now - dailyT > DAILY_POLL,
+    wantClan = env.cfg.clanTasks !== false && now - clanT > CLAN_POLL && (!env.rt.clanTasks?.noClan || now - (env.rt.clanTasks.t || 0) >= 6 * 3600000);
   if (!wantDaily && !wantClan) return null;
   busy = (async () => {
     try {
-      if (wantDaily) { dailyT = Date.now(); ssSet('l2bot-dqT', dailyT); const r = await env.gameGet('/game/daily-quests'); if (r?.ok) dailyNote(await r.json().catch(() => null)); }
-      if (wantClan) { clanT = Date.now(); ssSet('l2bot-ctT', clanT); const r = await env.gameGet('/game/clan-tasks'); if (r) { const b = await r.json().catch(() => null); if (r.ok || r.status === 403) clanNote(r.ok ? b : { error: 'clan_required' }); } }
-    } catch (e) {} finally { busy = null; }
+      if (wantDaily) { dailyT = Date.now(); ssSet('l2bot-dqT', dailyT); const r = await env.gameGet('/game/daily-quests'); const body = r?.ok ? await r.json().catch(() => null) : null; if (!active()) return; if (body) dailyNote(body); }
+      if (wantClan) { clanT = Date.now(); ssSet('l2bot-ctT', clanT); const r = await env.gameGet('/game/clan-tasks'); const body = r ? await r.json().catch(() => null) : null; if (!active()) return;
+        if (r?.ok && body || r?.status === 403 && body?.error === 'clan_required') clanNote(body);
+        else env.rec('B', 'клан', `опрос заданий не принят: HTTP ${r?.status || '?'}${body?.error ? ' · ' + String(body.error).slice(0, 70) : ''}`);
+      }
+    } catch (e) { if (active()) env.rec('B', 'задания', `опрос не удался: ${String(e?.message || e).slice(0, 100)}`); } finally { busy = null; }
   })();
   return busy;
 }

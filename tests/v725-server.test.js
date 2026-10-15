@@ -15,7 +15,7 @@ assert.deepEqual({ ...wdPlan({ quiet: 200000, recent: R(1), srv: 'up', now }) },
 assert.equal(wdPlan({ quiet: 200000, recent: R(3), srv: 'up', now }).act, 'stop');
 assert.equal(wdPlan({ quiet: 200000, recent: [now - 6 * 60000, now - 7 * 60000, now - 8 * 60000], fish: true, srv: 'up', now }).act, 'fishReload');
 // проводка в обработчике будильника
-assert.match(bg, /const plan = wdPlan\(\{ quiet, recent, fish: !!cfg\.fishMode, srv: await srvProbe\(origin\), downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now \}\);/);
+assert.match(bg, /const server = await srvProbe\(origin\);[\s\S]*const plan = wdPlan\(\{ quiet, recent, fish: !!cfg\.fishMode, srv: server, downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now \}\);/);
 assert.match(bg, /if \(plan\.down\) \{[\s\S]{0,900}chrome\.tabs\.reload\(hb\.tab\)[\s\S]{0,40}return;\s+\}\s+if \(plan\.back\)/);
 assert.match(bg, /if \(quiet < 150000\) \{ if \(wdDown\) await chrome\.storage\.local\.set\(\{ wdDown: null \}\); return; \}/);
 assert.match(bg, /fetch\(origin \+ '\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500 && !\(r\.status === 200 && !\/json\/i\.test/);   // 8.0: 200 + HTML = техработы

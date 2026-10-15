@@ -44,7 +44,7 @@ async function checkLocks() {
   assert.equal((await bctx.lockCommand({ cmd: 'lockRenew', epoch: first.epoch }, sender(owner))).ok, false);
   assert.equal(saved.lock.k, 'tab' + other);
   assert.equal((await bctx.lockCommand({ cmd: 'lockRelease', epoch: first.epoch }, sender(owner))).ok, false);
-  const patch = await bctx.statePatch({ patch: { kills: 123 }, epoch: taken.epoch, src: 'test' }, sender(other));
+  const patch = await bctx.statePatch({ patch: { kills: 123 }, epoch: taken.epoch, src: 'test', expectedChar: 'West' }, sender(other));
   assert.equal(patch.ok, true);
   assert.equal(saved.rt.kills, 123);
   assert.equal(saved.rt.xp, 500, 'Unrelated storage key preserved');

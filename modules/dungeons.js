@@ -65,6 +65,10 @@ async function showMob(sid, idx) {
 }
 
 async function catGo(id) {                        // в подземелье: если уже стоим у входа — «Войти», иначе телепорт со страницы катакомб
+  const kick = env.rt.manualKickAt, char = env.rt.char;
+  const active = () => env.on !== false && env.tabOwner !== false && env.cfg.catMode !== false
+    && env.rt.manualKickAt === kick && env.rt.char === char;
+  if (!active()) return;
   id ||= catTarget(); if (!id) { env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return; }
   const nm = env.CAT_LIST[id]?.[0] || id;
   // v5.6: выбранное вручную подземелье недоступно (нет в списке / ошибка входа 2 раза) — не летаем по кругу за адену, ждём
@@ -77,17 +81,19 @@ async function catGo(id) {                        // в подземелье: е
     if (at.dung === id) { env.setStatus(`Катакомбы: назад в ${nm}`); location.href = `/dungeon.html?dungeonId=${encodeURIComponent(id)}`; await env.sleep(4000); return; }
     if (!at.dung && env.rt.catIn === id && !env.rt.catBackTried && at.t > (env.rt.catInT || 0)) await env.setRt({ catBackTried: 1 });   // игра: герой уже снаружи — сразу телепорт
   }
+  if (!active()) return;
   const enter = env.$q('#map-dungeon-enter:not([hidden]) #map-dungeon-enter-link, #map-dungeon-enter-link');
   if (env.isMap() && enter && env.shown(enter) && (enter.getAttribute('href') || '').includes('dungeonId=' + id)) {
-    env.setStatus(`Катакомбы: вхожу в ${nm}`); await env.pause(); env.fire(enter);
-    if (!(await env.waitFor(isDungeon, 8000))) location.href = `/dungeon.html?dungeonId=${id}&enter=1`;
+    env.setStatus(`Катакомбы: вхожу в ${nm}`); await env.pause();
+    if (!active() || !env.fire(enter)) return;
+    if (!(await env.waitFor(isDungeon, 8000)) && active()) location.href = `/dungeon.html?dungeonId=${id}&enter=1`;
     await env.sleep(1500); return;
   }
   // уже внутри (после боя): сначала пробуем вернуться прямо в подземелье — без телепорта
   if (env.rt.catIn === id && Date.now() - (env.rt.catInT || 0) < 15 * 60000 && !env.rt.catBackTried) {
     // v5.3.1: назад — всегда с «&enter=1» (вход заново). Без него после магазина/баффера сервер считал героя снаружи:
     // «Підійди ближче до моба на карті» (battle_too_far), бот стоял (лог 08.10 15:03–15:04)
-    await env.setRt({ catBackTried: 1 }); env.setStatus(`Катакомбы: назад в ${nm}`); location.href = `/dungeon.html?dungeonId=${id}&enter=1`; await env.sleep(4000); return;
+    await env.setRt({ catBackTried: 1 }); if (!active()) return; env.setStatus(`Катакомбы: назад в ${nm}`); location.href = `/dungeon.html?dungeonId=${id}&enter=1`; await env.sleep(4000); return;
   }
   if (Date.now() - (env.rt.catTpT || 0) < 25000 && env.isMap()) {            // только что прилетели — вход ещё не прорисовался
     if (Date.now() - env.rt.catTpT > 12000) { location.href = `/dungeon.html?dungeonId=${id}&enter=1`; await env.sleep(4000); return; }
@@ -95,12 +101,12 @@ async function catGo(id) {                        // в подземелье: е
   }
   if (!isCatPage()) { env.setStatus(`Катакомбы: лечу в ${nm}`); location.href = env.CAT_URL; await env.sleep(4000); return; }
   const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-dungeon-id="${CSS.escape(id)}"]`), 8000, 200);
+  if (!active()) return;
   if (!b) { env.rec('B', 'катакомбы', `${nm}: нет в списке «Катакомбы — Некрополи»`); await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: 'нет в списке катакомб' } }); location.href = '/map.html'; await env.sleep(3000); return; }
   const price = (b.closest('.l2-rb-row')?.querySelector('.l2-rb-row__price-gold, .l2-rb-row__price')?.textContent || '').replace(/\s+/g, ' ').trim();
-  // 8.0.3 (эпики, ревью): та же строка .l2-rb-row, что на странице эпиков, где цена — «1 Coin of Luck». Телепорт только за адену или
-  // бесплатно (цифр нет); Coin of Luck или непонятная валюта — не летим (повторный вход после ошибки раньше платил каждые 15–20 с)
+  // 15.10: отсутствие цифр не означает бесплатный вход; Coin of Luck и неизвестную валюту не оплачиваем.
   const unit = /coin|luck|монет|удач|\bcol\b/i.test(price) ? 'Coin of Luck' : /аден|adena/i.test(price) ? 'аден' : '';   // как epics.unitOf
-  if (/\d/.test(price) && unit !== 'аден') {
+  if (unit === 'Coin of Luck' || unit !== 'аден' && !/бесплат|безкоштов|\bfree\b/i.test(price)) {
     const why = `телепорт не за адену («${price.slice(0, 40)}») — Coin of Luck бот не тратит`;
     env.rec('B', 'катакомбы', `${nm}: ${why}`);
     await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: why.slice(0, 60) }, catIn: null });
@@ -108,7 +114,8 @@ async function catGo(id) {                        // в подземелье: е
   }
   env.rec('B', 'катакомбы', `телепорт в ${nm}${price ? ' (' + price + ')' : ''}`);
   await env.setRt({ catTpT: Date.now(), catCur: id, catBackTried: 0 });
-  const t0 = Date.now(); await env.pause(); env.fire(b);
+  if (!active()) return;
+  const t0 = Date.now(); await env.pause(); if (!active() || !env.fire(b)) return;
   if (!(await env.waitX(() => !isCatPage(), 8000, 200))) {
     // 9.0: отказ телепорта игра показывает окном alert (hook.js пересылает его текст). 3 отказа подряд — подземелье пропускаю на час
     const A = env.gameAlert?.(), why = (A?.t >= t0 ? A.text : '') || (env.$q('#catacombs-load-err')?.textContent || '').trim() || 'без ответа';

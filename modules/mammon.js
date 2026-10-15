@@ -38,6 +38,7 @@ let GEAR = null, gearLoading = null, goalT = 0, busy = null;
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
 let pollT = ssNum('l2bot-mmPollT'), npcT = ssNum('l2bot-mmNpcT');
+let pollRetryAt = ssNum('l2bot-mmPollRetryAt'), npcRetryAt = ssNum('l2bot-mmNpcRetryAt');
 // 9.2.5 (игрок 12.10: «ник кланового крафтера Skye — отправлять ему ресурсы для очередного / всех повышений вещи у Маммона, а он вернёт
 // улучшенные ресурсы почтой; учитывать ресурсы, полученные по почте, и проверять, что в рюкзаке по факту»): почта и сумка
 const MAIL_POLL = 10 * 60000, INV_EVERY = 5 * 60000, SEND_MAX = 8 * 60000, CLAIM_MAX = 30, PAGE_TR = '/item-transfer.html', PAGE_MAIL = '/mail.html', PAGE_MC = '/mail-compose.html', NOTE_MAX = 990;
@@ -69,41 +70,52 @@ function orderNote(req) {
   }
   return o;
 }
-async function orderPoll() {
+async function orderPoll(strict = false, active = () => true) {
   const { ok, status, j } = await getJson('/game/mammon/merchant/request');
-  if (!ok) { if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
+  if (!active()) return null;
+  if (!ok) { if (strict) throw Error(`заказ торговца: HTTP ${status}`); if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
   return orderNote(j?.request);
 }
-async function npcPoll() {
+async function npcPoll(strict = false, active = () => true) {
   const out = { ...(env.rt.mmNpc || {}) };
   for (const k of ['order', 'smith']) {
-    const { ok, j } = await getJson(STATE[k][0]);
+    const { ok, status, j } = await getJson(STATE[k][0]);
+    if (!active()) return null;
+    if (!ok && strict) throw Error(`положение ${k}: HTTP ${status}`);
     const s = ok && j?.[STATE[k][1]];
     if (s?.current) out[k] = { loc: s.current.labelEn || s.current.id, id: s.current.id, x: +s.current.worldX, y: +s.current.worldY,
       next: s.next?.labelEn || s.next?.id || '', at: +s.rotatesAtMs || 0, price: j.teleport?.vipFreeApplied ? 0 : +(j.teleport?.adenaCost ?? 500000) };
   }
   out.t = Date.now();
+  if (!active()) return null;
   await env.setRt({ mmNpc: out });
   return out;
 }
 // 9.0: фоновый опрос (только GET): заказ раз в 90 с, где стоят NPC — раз в 30 мин и после смены места
 async function mmTick() {
   if (busy) return busy;
+  const char = env.rt.char, active = () => env.on !== false && env.tabOwner !== false && env.rt.char === char;
   const now = Date.now(), np = env.rt.mmNpc;
-  const wantNpc = now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > (now - np.order.at < 10 * 60000 ? 60000 : 5 * 60000)) || env.rt.mmPollReq;
-  const wantOrder = (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
+  const wantNpc = now >= npcRetryAt && (now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > (now - np.order.at < 10 * 60000 ? 60000 : 5 * 60000)) || env.rt.mmPollReq);
+  const wantOrder = now >= pollRetryAt && (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
   // 9.2.5: сумка по факту — своим GET /character, если ответов игры с сумкой не было > 5 мин (бот считает план по сумке); почта — раз в 10 мин
   const wantInv = !!env.cfg.mmGoalItem && env.invQty(0) == null && now - invT > INV_EVERY && !!env.invRefresh;
   const wantMail = (env.cfg.mmMailClaim !== false || !!env.rt.mmCraft) && now - mailT > MAIL_POLL;
   if (!wantNpc && !wantOrder && !wantInv && !wantMail) return null;
   busy = (async () => {
     try {
-      if (wantInv) { invT = Date.now(); ssSet('l2bot-mmInvT', invT); await env.invRefresh(); }
-      if (wantMail) await mailPoll();
-      if (wantOrder) { pollT = Date.now(); ssSet('l2bot-mmPollT', pollT); await orderPoll(); }
-      if (wantNpc) { npcT = Date.now(); ssSet('l2bot-mmNpcT', npcT); await npcPoll(); }
-      if (env.rt.mmPollReq) await env.setRt({ mmPollReq: null });
-    } catch (e) {} finally { busy = null; }
+      if (wantInv && active()) { invT = Date.now(); ssSet('l2bot-mmInvT', invT); await env.invRefresh(); }
+      if (wantMail && active()) await mailPoll();
+      if (wantOrder && active()) {
+        try { await orderPoll(true, active); if (active()) { pollT = Date.now(); ssSet('l2bot-mmPollT', pollT); pollRetryAt = 0; ssSet('l2bot-mmPollRetryAt', 0); } }
+        catch (e) { if (active()) { pollRetryAt = Date.now() + POLL; ssSet('l2bot-mmPollRetryAt', pollRetryAt); env.rec('B', 'Маммон', `опрос заказа: ${String(e?.message || e).slice(0, 100)} — повтор через 90 с`); } }
+      }
+      if (wantNpc && active()) {
+        try { await npcPoll(true, active); if (active()) { npcT = Date.now(); ssSet('l2bot-mmNpcT', npcT); npcRetryAt = 0; ssSet('l2bot-mmNpcRetryAt', 0); } }
+        catch (e) { if (active()) { npcRetryAt = Date.now() + 60000; ssSet('l2bot-mmNpcRetryAt', npcRetryAt); env.rec('B', 'Маммон', `опрос положения NPC: ${String(e?.message || e).slice(0, 100)} — повтор через 60 с`); } }
+      }
+      if (active() && env.rt.mmPollReq && !npcRetryAt && !pollRetryAt && (!wantNpc || npcT >= now) && (!wantOrder || pollT >= now)) await env.setRt({ mmPollReq: null });
+    } catch (e) { if (active()) env.rec('B', 'Маммон', `фоновый опрос: ${String(e?.message || e).slice(0, 100)}`); } finally { busy = null; }
   })();
   return busy;
 }
