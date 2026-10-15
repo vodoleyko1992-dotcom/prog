@@ -1,7 +1,7 @@
-const { chromium } = require('playwright');
+const { chromium } = require(process.env.PLAYWRIGHT_NODE || 'playwright');
 (async () => {
   const dir = process.argv[2];
-  const ctx = await chromium.launchPersistentContext('', { headless: true, executablePath: '/opt/pw-browsers/chromium', args: [`--disable-extensions-except=${dir}`, `--load-extension=${dir}`] });
+  const ctx = await chromium.launchPersistentContext('', { headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium', args: [`--disable-extensions-except=${dir}`, `--load-extension=${dir}`] });
   let sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 15000 });
   const id = sw.url().split('/')[2];
   const errs = []; const p = await ctx.newPage(); p.on('pageerror', e => errs.push(String(e)));

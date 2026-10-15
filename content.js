@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.0.21 — content script (устойчивость РБ, пантера и чемпионы) =====
+// ===== L2wap Bot v10.0.22 — content script (рейдовый тур, АОЕ и TvT) =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
