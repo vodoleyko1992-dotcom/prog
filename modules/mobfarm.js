@@ -922,7 +922,7 @@ async function map() {
       const hl = env.heroLvl(), items = pageItems().filter(i => !i.boss && i.lvl), hard = env.rt.hardMobs || {}, now = Date.now();
       const nHard = items.filter(i => hard[String(i.name || '').toLowerCase().trim()] && now - (hard[String(i.name || '').toLowerCase().trim()].t || 0) < 2 * 3600000).length;
       const nLow = items.filter(i => hl && i.lvl < hl - FA_BELOW).length, nHigh = items.filter(i => hl && i.lvl > hl + (env.cfg.lvlAbove ?? 5)).length;
-      const aS = env.rt.skills?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
+      const aS = (env.damageSkills || env.rt.skills)?.['атака'], atk = aS?.dmgN >= 5 ? aS.dmg / aS.dmgN : 0;
       env.rec('B', 'локации', `целей нет уже ${Math.round((now - idleT0) / 60000)} мин: на карте ${items.length} мобов — ${nHard} «не по зубам» (2 ч), ${nLow} ниже героя −5, ${nHigh} выше окна`
         + (env.cfg.zoneAuto ? ' — автофарм ищет зону' : ' — подбор локации ВЫКЛ: включите «🗺 Автофарм» или смените оружие/зону сами')
         + (atk && atk <= 5 ? ` · обычная атака ≈${atk.toFixed(0)} урона за удар — герой почти не пробивает (кончился «Бонус новичка» / слабое или снятое оружие): нужны оружие по уровню и заряды, пока — мобы слабее или другая зона` : '')

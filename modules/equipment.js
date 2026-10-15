@@ -77,7 +77,7 @@ async function equip(w) {
 const POT_MP = /мани|маны|mana|\bmp\b/i, POT_HP = /зцілен|исцелен|здоров|лікув|лечен|healing|life|scarlet|\bhp\b/i;
 function suggestRoles() {
   const inv = env.rt.panel?.length && !env.isBattle() ? env.rt.panel : env.panelInventory();
-  const P = env.rt.skills || {}, pr = n => P[n.toLowerCase()] || {};
+  const P = (env.damageSkills || env.rt.skills) || {}, pr = n => P[n.toLowerCase()] || {};
   const avg = p => p.dmgN ? p.dmg / p.dmgN : 0;
   const skills = inv.filter(s => s.kind === 'скилл');
   const mage = env.combatProfileKind() === 'mage_summoner';

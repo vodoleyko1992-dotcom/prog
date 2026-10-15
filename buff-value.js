@@ -133,7 +133,10 @@
   // замер крита: нажатий n, критов c под набором ids → критический статистик в rt.critStat (ключ — подпись набора)
   function obsAdd(critObs, ids, n, c) {
     const sig = critSig(ids), o = { ...(critObs || {}) }, p = o[sig] || { n: 0, c: 0 };
-    o[sig] = { n: p.n + n, c: p.c + c, t: Date.now() };
+    const fresh = p.evidence?.v === 1 ? p.evidence : { n: 0, c: 0 };
+    const evidence = { v: 1, n: fresh.n + n, c: fresh.c + c };
+    if (evidence.n > 2000) { evidence.n = Math.round(evidence.n / 2); evidence.c = Math.round(evidence.c / 2); }
+    o[sig] = { n: p.n + n, c: p.c + c, t: Date.now(), evidence };
     if (o[sig].n > 2000) { o[sig].n = Math.round(o[sig].n / 2); o[sig].c = Math.round(o[sig].c / 2); }   // скользящее — баффы и шмот меняются
     return o;
   }
@@ -164,9 +167,9 @@
     const H = rt?.heroStats; if (!H) return null;
     const k = kind(role), learned = fxLearn(rt.matkObs);
     const fx = Object.keys(learned).length ? Object.fromEntries(Object.entries(FX).map(([id, f]) => [id, learned[id] ? { ...f, matk: learned[id], g: 0, L: 1 } : f])) : null;
-    const S = stats(role, { ...H, cat: H.cat ? { ...H.cat, queen: k === 'mage' && cfg?.petBuffAuto !== false } : (k === 'mage' ? undefined : null) }, { critObs: rt.critStat || {}, fx });
+    const S = stats(role, { ...H, cat: H.cat ? { ...H.cat, queen: k === 'mage' && cfg?.petBuffAuto !== false } : (k === 'mage' ? undefined : null) }, { critObs: Object.fromEntries(Object.entries(rt.critStat || {}).filter(([, p]) => p.evidence?.v === 1).map(([key, p]) => [key, p.evidence])), fx });
     // средний урон лучшего заклинания (замер содержит и криты — убираем их по текущему шансу)
-    const best = Object.values(rt.skills || {}).filter(p => p?.dmgN >= 5 && !/атака/i.test(p.name || '')).map(p => p.dmg / p.dmgN).sort((a, b) => b - a)[0];
+    const best = Object.values(rt.skills || {}).filter(p => p?.damageEvidence?.v === 1 && p.damageEvidence.dmgN >= 5 && !/атака/i.test(p.name || '')).map(p => p.damageEvidence.dmg / p.damageEvidence.dmgN).sort((a, b) => b - a)[0];
     if (k === 'mage' && best > 0) { const pm = mcritOf(S, S.have); S.spell = best / (1 + pm * (S.mck - 1)); }
     return S;
   }

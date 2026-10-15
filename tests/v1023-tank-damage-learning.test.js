@@ -5,7 +5,7 @@ const root = path.resolve(__dirname, '..'), src = fs.readFileSync(path.join(root
 const part = (from, to) => { const a = src.indexOf(from), b = src.indexOf(to, a); assert.ok(a >= 0 && b > a); return src.slice(a, b); };
 const metadata = part("const IL = typeof IL_DB", '// ---------- база предметов Interlude');
 const damage = part('const splashDmg =', 'const cdWatch =');
-const observe = part('let lastObserve = 0;', '// роли по панели');
+const observe = part('function observeOwner()', '// роли по панели');
 const cases = [
   { name: 'Corpse Plague', action: 'corpse_plague', id: 103, line: 'Чума трупа 14889', dmg: 14889, mp: 45 },
   { name: 'Hamstring', action: 'hamstring_slash', id: 127, line: 'Підріз сухожилля 16269', dmg: 16269, mp: 39 },
