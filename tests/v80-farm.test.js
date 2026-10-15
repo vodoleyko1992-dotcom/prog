@@ -171,7 +171,7 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   let lvl = 53, pots = 100;
   // 10.0.14: проверяем активный тур владельца вкладки; Stop/потеря lease отдельно покрыты raid-lifecycle.
   const renv = { on: true, tabOwner: true, cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbPotReserve: 0 }, RB_WIN: 15, rt: {}, heroLvl: () => lvl, potModel: () => ({ n: pots }),
-    isMap: () => true, map: async () => 'map', setRt: async p => { Object.assign(renv.rt, p); }, rec: () => {}, recBot: () => {}, setStatus: () => {}, sleep: async () => {} };
+    meHp: () => ({ max: 5000, cur: 5000, pct: 100 }), isMap: () => true, map: async () => 'map', setRt: async p => { Object.assign(renv.rt, p); }, rec: () => {}, recBot: () => {}, setStatus: () => {}, sleep: async () => {} };
   const RB = rsb.L2V7Factories.raid(renv);
   const idleEnd = (mark, extra = {}) => {
     rsb.location.href = '';
@@ -182,10 +182,11 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   assert.ok(renv.rt.rbListT > 0 && rsb.location.href === '', 'idle over, nothing changed: RB list cache kept (no rescan every 105 s)');
   assert.ok(renv.rt.rbHuntIdle - Date.now() > 4 * 60000, 'next idle — 5 min');
   assert.equal(renv.rt.rbIdleMark.lvl, 53); assert.equal(renv.rt.rbIdleMark.pots, 100);
-  await idleEnd({ lvl: 52 }); assert.equal(renv.rt.rbListT, 0, 'hero level changed: rescan'); assert.match(rsb.location.href, /rb-bosses/);
-  pots = 150; await idleEnd({}); assert.equal(renv.rt.rbListT, 0, 'more potions: rescan'); pots = 100;
-  await idleEnd({}, { shopT: Date.now() - 60000 }); assert.equal(renv.rt.rbListT, 0, 'shop visited during idle: rescan');
-  console.log('PASS: RB tour idle — list kept for its 15 min, rescan early only on level up or more potions');
+  // 15.10: пробуждение отдельно от следующего действия; банки/магазин не меняют живой список РБ.
+  await idleEnd({ lvl: 52 }); assert.equal(renv.rt.rbListT, 0, 'hero level changed: rescan'); await RB.rbHuntStep(); assert.match(rsb.location.href, /rb-bosses/);
+  pots = 150; await idleEnd({}); assert.ok(renv.rt.rbListT > 0, 'more potions: reassess without rescan'); assert.equal(renv.rt.rbHuntIdle, 0); pots = 100;
+  await idleEnd({}, { shopT: Date.now() - 60000 }); assert.ok(renv.rt.rbListT > 0, 'shop visited during idle: reassess without rescan'); assert.equal(renv.rt.rbHuntIdle, 0);
+  console.log('PASS: RB tour idle — list kept for its 15 min, level changes invalidate it, more potions wake without rescanning');
 
   // ---------- A3 + B1 в ядре: карта по плану только по делу; ценность моба пишется после победы ----------
   const mfst = JSON.parse(read('manifest.json'));

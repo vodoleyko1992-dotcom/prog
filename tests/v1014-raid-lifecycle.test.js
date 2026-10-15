@@ -90,10 +90,11 @@ test('РБ: отход сохраняет снятое HP и попытку, з�
  assert.equal(m.env.rt.rb[boss.id].chip,300);assert.equal(m.env.rt.rb[boss.id].attempts,1);assert.equal(m.env.rt.rbPending,true);assert.equal(out,1);
  await m.R.rbHuntStep();assert.equal(m.env.rt.rbHunt.step,'pick');assert.ok(m.env.rt.rbHunt.last.includes('вернусь добить'));assert.equal(m.R.rbWounded(boss.id),true);
 });
+// 15.10: платный переход требует свежий подтверждённый кошелёк, независимо от кнопки.
 function teleportFixture(tour=false){
  const id='l2dop_rb_99999',g={id,name:'Audit Raid',lvl:54,page:1,price:1000,unit:'аден',alive:true,t:Date.now()};
  const doc=docOf(`<div id="rb-list"><div class="l2-rb-row"><span class="l2-rb-row__label">Audit Raid</span><span class="l2-rb-row__level">54</span><span class="l2-rb-row__status l2-rb-row__status--alive">Живой</span><span class="l2-rb-row__price">1000 аден</span><button class="l2-rb-row__tp" data-spawn-id="${id}">Телепорт</button></div></div>`);
- const m=mk({path:'/rb-bosses.html',search:'?page=1',doc,cfg:{epicMode:false},rt:{rbGo:tour?null:g,rbHunt:tour?{...g,step:'go'}:null,rbList:{[id]:g},rbStats:{[id]:{hp:1000,patk:1,matk:1,mdef:1,pdef:1,src:'api'}},rbDb:{}},env:{tabOwner:true}});
+ const m=mk({path:'/rb-bosses.html',search:'?page=1',doc,cfg:{epicMode:false},rt:{adenaSeen:{v:1000000,t:Date.now()},rbGo:tour?null:g,rbHunt:tour?{...g,step:'go'}:null,rbList:{[id]:g},rbStats:{[id]:{hp:1000,patk:1,matk:1,mdef:1,pdef:1,src:'api'}},rbDb:{}},env:{tabOwner:true}});
  m.env.fire=el=>{if(!m.env.on||!m.env.tabOwner)return false;m.fires.push(el);return true};m.run=()=>tour?m.R.rbHuntStep():m.R.rbGoStep();m.id=id;return m;
 }
 for(const tour of [false,true])for(const field of ['on','tabOwner'])test(`${tour?'тур':'разовый'} РБ: потеря ${field} перед телепортом сохраняет job и не считает платный переход`,async()=>{

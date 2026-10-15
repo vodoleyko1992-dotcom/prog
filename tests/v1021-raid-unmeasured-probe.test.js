@@ -19,9 +19,9 @@ test('повторная проба на том же уровне и опасн�
  assert.equal(raid.rbPreCheck('hekaton',stats).ok,false);
  delete env.rt.rbDb.hekaton;assert.equal(raid.rbPreCheck('hekaton',{...stats,matk:20000}).ok,false);
 });
-test('без ключа состава и при отключённой пробе прежний предел действует',()=>{
- assert.equal(fixture(null).raid.rbPreCheck('hekaton',stats).kind,'slow');
- const {env,raid}=fixture();env.cfg.rbProbe=false;assert.equal(raid.rbPreCheck('hekaton',stats).kind,'slow');
+test('нет состава и выключенная проба объясняются без ложного приговора по времени',()=>{
+ assert.equal(fixture(null).raid.rbPreCheck('hekaton',stats).kind,'context');
+ const {env,raid}=fixture();env.cfg.rbProbe=false;assert.equal(raid.rbPreCheck('hekaton',stats).kind,'unmeasured');
 });
 test('старый отказ из-за времени не скрывает новую разрешённую пробу',()=>{
  const {env,raid}=fixture();env.rt.rbStats.hekaton=stats;

@@ -39,9 +39,9 @@ test('actual level66 Utenus is in level75 default window and requires adequate p
  const st={hp:1012137,patk:4949,matk:3292,pdef:5924,mdef:5517};f.env.rt.rbStats.boss=st;f.env.potModel=()=>({H:600,n:811,C:2.2,rate:273,pool:487000,est:false,items:[]});
  // 10.0.21: прежняя проба обходила медленные банки (потери ≈383 HP/с); отказ и разрешение проверяем раздельно.
  assert.equal(f.R.rbPreCheck('boss',st).ok,false);f.env.potModel=()=>({H:1200,n:811,C:2.2,rate:545,pool:973200,est:false,items:[]});
- const first=f.R.rbPreCheck('boss',st);assert.equal(first.ok,true);assert.equal(first.confidence,'estimated');assert.ok(first.t<1200);await f.R.rbDpsLearn('boss',10000);assert.equal(f.R.rbDpsOn('boss'),10000);assert.equal(f.R.rbPreCheck('boss',st).t,101);
+ const first=f.R.rbPreCheck('boss',st);assert.equal(first.ok,true);assert.equal(first.confidence,'probe');assert.ok(first.t<1200);await f.R.rbDpsLearn('boss',10000);assert.equal(f.R.rbDpsOn('boss'),10000);assert.equal(f.R.rbPreCheck('boss',st).t,101);
 });
-test('unmeasured large target explicitly explains conservative time rejection',()=>{const f=fixture();const r=f.R.rbPreCheck('boss',f.env.rt.rbStats.boss);assert.equal(r.kind,'slow');assert.match(r.why,/текущий состав ещё не измерен/);});
+test('unmeasured target requests measurement instead of a false time verdict',()=>{const f=fixture();const r=f.R.rbPreCheck('boss',f.env.rt.rbStats.boss);assert.equal(r.kind,'unmeasured');assert.match(r.why,/не измерен/);});
 test('one isolated pet crit followed by no damage is not a persistent DPS sample',async()=>{const f=fixture();for(let i=0;i<=29;i++)f.sample(i,i===0?0:100000/i);await Promise.resolve();assert.equal(f.env.rt.rbDb.boss.dps,3000);assert.equal(f.env.rt.rbDps,3000);});
 test('matched target-specific scalar does not apply level penalty twice',()=>{const f=fixture();f.env.rt.rbDb={};f.env.rt.rbList.boss.lvl=90;f.env.rt.rbDpsContext='new';f.env.rt.rbDps=3000;assert.equal(f.R.rbDpsOn('boss'),3000);});
 test('known Warlock with unavailable provider fails closed to unmeasured context',()=>{const f=fixture();f.env.warlock=null;f.env.rt.classCur={prof:'human_warlock',slot:0};assert.equal(f.R.rbDpsOn('boss'),1150);});

@@ -92,7 +92,7 @@ test('точные характеристики пересчитывают пр�
  }
 });
 test('отказ без точных характеристик остаётся до истечения паузы', () => {
- const m = fixture({ rt: { rbStats: {}, rbPreSkip: { low: { t: Date.now(), kind: 'pots' } } } }); assert.equal(m.R.rbListPick().id, 'high');
+ const m = fixture({ rt: { rbStats: { high: { ...stats } }, rbPreSkip: { low: { t: Date.now(), kind: 'pots' } } } }); assert.equal(m.R.rbListPick().id, 'high');
 });
 test('аварийный отход не снимается успешной предбоевой оценкой', () => {
  for (const legacy of [false, true]) {

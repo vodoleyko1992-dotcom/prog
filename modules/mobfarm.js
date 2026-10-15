@@ -7,7 +7,7 @@
 // Рейдовый тур и ожидаемый бой удерживают текущую локацию. Обычный фарм может менять зону и выполнять ресурсную цель.
 // 10.0 (лог 12.10 11:16–11:52: тур 36 мин без единого РБ — «все не по силам», а автофарм стоял в зоне 8,8 M EXP/ч при замере 32 M в Silent Valley):
 // тур в простое (подходящих РБ нет, rbHuntIdle) больше не держит автофарм и фарм ресурса на месте
-const rbHold = () => !!((env.cfg.rbHuntMode && !((env.rt.rbHuntIdle || 0) > Date.now())) || (env.cfg.rbMode && env.rt.rbPending));
+const rbHold = () => !!((env.cfg.rbHuntMode && !((env.rt.rbHuntIdle || 0) > Date.now())) || (!env.cfg.rbHuntMode && env.cfg.rbMode && env.rt.rbPending));
 // 7.1.30: «Риба · ур. 48 · миньоны зоны эпика» (spawnId l2dop_eg_…) — охрана эпика, не обычный моб
 const EPIC_GUARD = /миньон|мін[ьй]он|epic guard|зоны эпика|зони епіка/i;
 function pageItems() {
@@ -212,7 +212,7 @@ async function nextFight(ctx) {
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
-  const healing = env.rt.rbHunt?.last === 'лечусь на мобах' && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
+  const healing = (env.rt.rbHunt?.phase === 'prepare' || env.rt.rbHunt?.last === 'лечусь на мобах') && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
   if (env.epicOn() && env.rt.epic?.step && env.rt.epic.step !== 'pick') return env.toMap();
   if (env.autonomyMode() === 'tasks' && !tasksGoalHere()) return env.toMap();   // 10.0: без режима — бой (начатый игроком или по задаче) довели, дальше не охотимся   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
@@ -545,13 +545,16 @@ function champEntryOff(c) {
   const chapter = env.campActive() && env.campChampOpen() && !(min && c.lvl && c.lvl < min);
   return env.champs?.tierOff?.(c, true) || (!c.quest && !chapter && (env.champs?.tierOff?.(c) || env.champs?.held?.(c))) || null;
 }
-async function attackSpawn(c, label) {
+async function attackSpawn(c, label, opt = {}) {
+  // 15.10: рейд передаёт свою отмену; смена режима/ручная команда во время листания не открывает прежнюю цель.
+  const active = () => env.on && env.tabOwner !== false && (!opt.active || opt.active());
+  if (!active()) return false;
   const page = Math.floor(c.idx / env.PAGE_SIZE) + 1;
   const sel = `#map-mob-list a[href*="spawnId=${CSS.escape(c.id)}"]`;
-  if (!(await env.gotoPage(page)) || !env.on) return false;
+  if (!(await env.gotoPage(page)) || !active()) return false;
   let a = env.$q(sel);
-  for (const d of [1, -1]) { if (a || !env.on) break; if (await env.gotoPage(page + d)) a = env.$q(sel); }
-  if (!a || !env.on) return false;
+  for (const d of [1, -1]) { if (a || !active()) break; if (await env.gotoPage(page + d)) a = env.$q(sel); }
+  if (!a || !active()) return false;
   const it = pageItems().find(x => x.id === c.id);
   if (it) Object.assign(c, { name: c.name || it.name, lvl: c.lvl || it.lvl, quest: c.quest || it.quest, champ: c.champ || it.champ });
   if (c.champ) {   // настройки/цвет могли обновиться, пока листали страницы — последняя проверка до клика «Бой»
@@ -562,21 +565,23 @@ async function attackSpawn(c, label) {
   env.setStatus(label(c));
   console.log(env.TAG, 'цель:', c.id, c.name, '| поз.', c.idx);
   await env.pause();
-  if (!env.on) return true;
+  if (!active()) return false;
   // Настройка могла измениться во время паузы: проверяем непосредственно перед записью цели.
   if (c.champ) {
     const off = champEntryOff(c);
     if (off) { champSkip(c, off); return false; }
   }
   await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, exp: c.exp || 0, fa: c.fa, valueT: Date.now(), probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
+  if (!active()) return false;
   if (c.champ && env.champs?.valueMode?.(c)) env.rec('B', 'чемпионы', `${c.name}: ${c.chWhy}`);
   if (c.champ && (c.faHot || c.chProbe)) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier})${c.faHot ? ` — бью ради FA: шанс ${Math.round(c.fa * 100)} %` : ''}${c.chProbe ? ` · проба${c.chEta ? `: жду ≈${c.chEta} с` : ''}, предел ${c.chLim} с (дольше — уйду)` : c.chEta ? ` · ≈${c.chEta} с, предел ${c.chLim} с` : ''}`);
   { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
   env.fire(a);
-  if (!(await env.waitFor(env.isBattle, 10000)) && env.on) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
+  if (!(await env.waitFor(env.isBattle, 10000)) && active()) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
     const n = (env.rt.clickFail || 0) + 1;
     if (n >= 3) { await env.setRt({ clickFail: 0 }); await env.halt('Клик по мобу 3 раза подряд не открыл бой — проверьте игру'); return true; }
     await env.setRt({ clickFail: n });
+    if (!active()) return false;
     env.rec('B', 'карта', `клик по «${c.name}» не открыл бой — обновляю карту (${n}/3)`);
     location.reload(); await env.sleep(8000);
   } else if (env.rt.clickFail) await env.setRt({ clickFail: 0 });
@@ -629,7 +634,8 @@ async function map() {
   }
   if (env.rt.mapReload || env.rt.mapDownT) await env.setRt({ mapReload: 0, mapDownT: 0 });
 
-  if (env.cfg.rbMode || env.farmRbOn()) {
+  // 15.10 (лог 01:01): фарм мобов во время подготовки/ожидания рейда не запускает второй выбор РБ и старый rt.rbGo.
+  if (!env.cfg.rbHuntMode && (env.cfg.rbMode || env.farmRbOn())) {
     // все РБ локации — в базу (видно игроку, даже вне уровня)
     // 8.0.3: зона РБ — только определённая на месте (сразу после перелёта «Телепортом» rt.zone ещё прежняя; телепорт к РБ и смерть её сбрасывают)
     const seen = { ...(env.rt.rbSeen || {}) }, zNow = !(env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000) && env.rt.zone || null;

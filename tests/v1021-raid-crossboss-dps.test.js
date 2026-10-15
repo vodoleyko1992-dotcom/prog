@@ -27,7 +27,7 @@ const approx=(a,b)=>assert.ok(Math.abs(a-b)<0.01,`${a} != ${b}`);
 const baseline=()=>1150*.85;
 test('измеренный Uruka снимает ложный отказ Hekaton по времени, не используя неполный fightlab DPS',()=>{
  const f=make(),env=f.env;env.rt.rbDb[HEKATON]={sp:2500,hitP90:200};
- assert.equal(f.R.rbPreCheck(HEKATON,hekaton).kind,'slow');f.measure();
+ assert.equal(f.R.rbPreCheck(HEKATON,hekaton).kind,'unmeasured');f.measure();
  const expected=DPS*.8*Math.min(8600/9511,9949/10842);approx(f.R.rbDpsOn(HEKATON),expected);
  const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.ok(v.t<180);assert.match(v.why,/по другому РБ/);
  env.rt.rbPreSkip={[HEKATON]:{t:f.now(),kind:'slow'}};assert.equal(f.R.rbTeleportCheck(HEKATON,{lvl:80},true),null);

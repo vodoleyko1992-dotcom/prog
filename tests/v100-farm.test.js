@@ -10,14 +10,15 @@ const mob = read('modules/mobfarm.js'), raid = read('modules/raid.js'), nav = re
   const env = { cfg: { rbHuntMode: true }, rt: {} };
   const rbHold = vm.runInNewContext(`(env => { ${m}; return rbHold; })`, ctx)(env);
   assert.equal(rbHold(), true, 'tour picking an RB holds');
-  env.rt.rbHuntIdle = Date.now() + 60000; assert.equal(rbHold(), false, 'tour idle — autofarm free');
+  env.rt.rbHuntIdle = Date.now() + 60000; env.cfg.rbMode = true; env.rt.rbPending = 1; assert.equal(rbHold(), false, 'tour idle — stale rbPending does not hold autofarm');
   env.cfg.rbHuntMode = false; env.cfg.rbMode = true; env.rt.rbPending = 1; assert.equal(rbHold(), true, 'RB waiting here still holds'); }
 // 2. тур: «≤ 3 платных телепорта к одному РБ в час» для всех веток выбора; выбор — с карты; медленный телепорт — не второй платный
 // 14.10: раздельные wd/qb/fresh объединены в rbTourPlan; проверяем сам лимит для каждого вида цели, не имена прежних переменных.
 { const { mk } = require('./epic-harness.cjs'), now = Date.now();
   for (const kind of ['ordinary', 'wounded', 'quest', 'value']) {
     const m = mk({ hero: 55, cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbValueTour: kind === 'value' },
-      rt: { rbListT: now, rbList: { boss: { name: 'РБ', alive: true, lvl: 50, price: 100000, unit: 'аден' } }, rbDb: {}, rbStats: {},
+      // 15.10: лимит переходов проверяется на разведанной цели; неизвестные цифры теперь требуют разведку до выбора.
+      rt: { rbListT: now, rbList: { boss: { name: 'РБ', alive: true, lvl: 50, price: 100000, unit: 'аден' } }, rbDb: {}, rbStats: { boss: { hp: 1000, patk: 1, matk: 1, src: 'api' } },
         rbWound: kind === 'wounded' ? { boss: { cur: 100, max: 1000, t: now } } : {} },
       env: { RB_WIN: 15, RB_TRY_MS: 600000, RB_RETRY_MS: 120000, storyRbIds: () => kind === 'quest' ? ['boss'] : [] } });
     assert.equal(m.R.rbListPick()?.id, 'boss', kind + ': eligible before the hourly cap');
@@ -27,11 +28,13 @@ const mob = read('modules/mobfarm.js'), raid = read('modules/raid.js'), nav = re
     assert.equal(m.R.rbListPick()?.id, 'boss', kind + ': an expired trip releases the cap');
   }
 }
-assert.match(raid, /if \(!env\.isMap\(\)\) \{ location\.href = '\/map\.html'; await env\.sleep\(3000\); return; \}\n\s*\/\/ 8\.0 \(аудит РБ B1\)/);
+// 15.10: после точной оценки всё так же проверяем местную метку до создания платного маршрута.
+assert.match(raid, /if \(!env\.isMap\(\)\) \{ location\.href = '\/map\.html'; await env\.sleep\(3000\); return; \}\n\s*const h = raidList\(\)\.find\(r => r\.id === p\.id\)/);
 assert.match(raid, /if \(!msg\) return;\n\s*return huntDone\(H\.id, `\$\{H\.name\}: телепорт не сработал — \$\{msg\}`\);/);
 assert.match(raid, /idleMs = RB_IDLE_MS \* \[1, 2, 4\]\[idleN\]/);
 // 3. лечение на мобах — цепочкой; после выбора зоны метка «при старте» снята; телепорт в зону — ждём до 8 с
-assert.match(mob, /const healing = env\.rt\.rbHunt\?\.last === 'лечусь на мобах'/);
+// 15.10: фаза подготовки сохраняет цепочку лечения независимо от текста статуса.
+assert.match(mob, /const healing = \(env\.rt\.rbHunt\?\.phase === 'prepare' \|\| env\.rt\.rbHunt\?\.last === 'лечусь на мобах'\)/);
 assert.match(mob, /zoneGo: \{ \.\.\.pick, t: Date\.now\(\) \}, zoneGoT: 0, zoneAutoKick: null \}/);
 assert.match(nav, /await env\.waitX\(\(\) => !isTeleport\(\) \|\| \/недостат\|not enough\/i\.test/);
 // 4. ресурс «только с РБ» — список раз в 60 мин, если подходящего не было; добыча после 200 видов пишется; враг — не жать кнопку каждые 4 с; TvT без id

@@ -15,7 +15,7 @@ for (const kind of ['уровень', 'банки', 'магазин']) test(`о�
  if (kind === 'уровень') m.env.rt.rbIdleMark.lvl = 54;
  if (kind === 'банки') m.env.rt.rbIdleMark.pots = 900;
  if (kind === 'магазин') m.env.rt.shopT = Date.now();
- await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0); assert.equal(m.env.rt.rbListT, 0); assert.equal(m.maps, 0);
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0); assert.equal(m.env.rt.rbListT === 0, kind === 'уровень'); assert.equal(m.maps, 0); // 15.10: банки не требуют повторного чтения14 страниц.
 });
 test('свежий живой доступный босс будит тур без события dead→alive', async () => {
  const m = fixture({ env: { rbTimer: { revivedSince: () => [] } } }); await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0); assert.equal(m.maps, 0);
