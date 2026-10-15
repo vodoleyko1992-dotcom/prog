@@ -159,6 +159,8 @@ async function epicListScan() {                    // запасной путь 
     db[x.k] = epicSeen(db[x.k], { id, name: x.name, lvl: x.lvl || db[x.k]?.lvl || 0, alive: x.alive, status: x.status, deny: x.deny,
     respH: x.respH || db[x.k]?.respH || 0, price: x.price, priceUnit: x.priceUnit, priceText: x.priceText, page: x.page, tp: x.tp, domT: now }, now); }
   await env.setRt({ epicDb: db, epicListT: now, epicPageOk: n.length > 0, ...lifeResetPatch(turn) });
+  // 15.10: при ручном открытии страницы обновляем и часы «Респ эпиков», даже если сетевой hook пропустил ответ.
+  if (n.length) await env.rbTimerListNote?.({ bosses: n.filter(x => x.id).map(x => ({ spawnId:x.id, name:x.name, level:x.lvl, isAlive:x.alive, bossType:'epic', respawnHours:x.respH })) }, 'страница DOM');
   if (!n.length) {
     // разметку не узнали — пишем кусок страницы в журнал (по нему разметку доучим)
     const main = ((['main', '#app', '.l2-page'].map(x => env.$q(x)).find(Boolean) || document.body)?.innerHTML || '').replace(/\s+/g, ' ').slice(0, 1500);   // v5.6: раньше всегда body (шапка и меню)

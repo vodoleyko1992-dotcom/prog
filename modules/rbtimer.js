@@ -150,7 +150,10 @@ function upTxt(tm, now = Date.now()) {
   if (!tm) return '';
   if (tm.al) return tm.up ? `жив (воскрес между ${hm(tm.up[0], now)} и ${hm(tm.up[1], now)})` : 'жив';
   const a = tm.at;
-  if (tm.late) return `уже должен воскреснуть (${a.lo ? 'окно до' : 'не позже'} ${hm(a.hi, now)}) — жду список`;
+  // 15.10: прогноз уже прошёл, но свежий список всё ещё показывает «убит». Сервер не отдаёт нового времени смерти/респа.
+  if (tm.late) return tm.ls >= a.hi && now - tm.ls < 30 * MIN
+    ? `всё ещё убит по списку игры (проверено ${hm(tm.ls, now)}); новый респ неизвестен`
+    : `прогноз респа истёк (${hm(a.hi, now)}); жду свежий список${tm.ls ? `, проверено ${hm(tm.ls, now)}` : ''}`;
   if (!a.lo) return `не позже ${hm(a.hi, now)} (через ${dur(a.hi - now)})`;
   if (a.hi - a.lo < 15 * MIN) return `≈${hm(a.hi, now)} (через ${dur(a.hi - now)})`;
   return tm.soon ? `в любую минуту до ${hm(a.hi, now)}` : `${hm(a.lo, now)}–${hm(a.hi, now)} (через ${dur(a.lo - now)})`;
