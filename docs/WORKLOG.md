@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 16.10.2026 — Codex — PR в подготовке
+## 16.10.2026 — Codex — [PR #176](https://github.com/vodoleyko1992-dotcom/prog/pull/176)
 
 - Сделано: исправлена выдача Chrome10.0.28 после PR175. GitHub uploads.github.com отказал401 при загрузке release asset; ZIP опубликован отдельным artifact commit3623f9283e5be96a9ca3cf7444e797cc9254fe66 в build-assets-10.0.28, ссылка raw привязана к неизменяемому коммиту. Release и документация ссылаются на этот файл.
 - Проверки: анонимное обратное скачивание1279337 байт, SHA256 и побайтовое сравнение с проверенным ZIP PASS; сборочные323 Node/Chromium63/zipload результаты PR175 сохраняются. Документация не меняет runtime/ZIP. Полный Node/envcheck повторены перед коммитами.
