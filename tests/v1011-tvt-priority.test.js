@@ -25,7 +25,7 @@ const baseEnv = () => ({ cfg: { tvtOn: true, tvtHoldMin: 3 }, rt: {}, on: true, 
   env.TVT = { ...base, startsAt: now + 300000 }; assert.equal(T.tvtHold(), false, 'за 5 мин — обычная работа');
   env.TVT = { ...base, phase: 'ACTIVE', startsAt: now - 10000 }; assert.equal(T.tvtHold(), true, 'бой идёт — окно');
   env.TVT = { ...base, phase: 'FINISHED', startsAt: now - 10000 }; assert.equal(T.tvtHold(), false, 'бой кончился — окна нет');
-  env.TVT = { ...base, isRegistered: false, myTeam: null, startsAt: now + 60000 }; assert.equal(T.tvtHold(), false, 'не записаны — окна нет');
+  env.TVT = { ...base, isRegistered: false, myTeam: null, startsAt: now + 60000 }; assert.equal(T.tvtHold(), true, '15.10: ещё не записаны — регистрация уже приоритетна');
 }
 // ---- 2) PvE-бой, бой TvT через 30 с → выход на карту (моб — всегда, РБ — по галке tvtOverRb)
 {
@@ -34,10 +34,10 @@ const baseEnv = () => ({ cfg: { tvtOn: true, tvtHoldMin: 3 }, rt: {}, on: true, 
   const T = load({ querySelectorAll: () => [] }, { pathname: '/battle.html', search: '?spawnId=dense_17910' }).L2V7Factories.tvt(env);
   (async () => {
     assert.equal(await T.tvtStep(), true, 'из боя с мобом — шаг TvT сделан'); assert.equal(left, 1, 'ушли на карту (следующий круг уведёт на арену)');
-    env.cfg.tvtOverRb = false; env.rt.rbHunt = { step: 'fight' };
-    assert.equal(await T.tvtStep(), false, 'бой с РБ при выключенной «TvT важнее боя с РБ» не бросаем'); assert.equal(left, 1);
+    env.cfg.tvtOverRb = false; env.rt.rbHunt = { step: 'fight' }; T.tvtStep.leaveT = 0;
+    assert.equal(await T.tvtStep(), true, '15.10: TvT всегда важнее РБ, старая галка не отменяет'); assert.equal(left, 2);
     env.cfg.tvtOverRb = true; assert.equal(await T.tvtStep(), false, 'сервер мог не подтвердить выход — повтор не раньше чем через 30 с');
-    T.tvtStep.leaveT = 0; assert.equal(await T.tvtStep(), true, 'галка включена — бросаем и босса'); assert.equal(left, 2);
+    T.tvtStep.leaveT = 0; assert.equal(await T.tvtStep(), true, 'галка включена — бросаем и босса'); assert.equal(left, 3);
     env.TVT.startsAt = now + 300000; env.TVT.phase = 'REGISTRATION';
     assert.equal(await T.tvtStep(), false, 'до боя 5 мин — моба добиваем');
   })().catch(e => { console.error(e); process.exit(1); });
@@ -85,8 +85,8 @@ const baseEnv = () => ({ cfg: { tvtOn: true, tvtHoldMin: 3 }, rt: {}, on: true, 
     assert.match(src, /path === '\/game\/tvt\/skills'/); assert.match(src, /TVTC\.actN = \(TVTC\.actN \|\| 0\) \+ 1/);
     assert.match(src, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/);
     const pj = fs.readFileSync(path.join(root, 'popup.js'), 'utf8'), ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
-    assert.match(pj, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/); assert.match(pj, /const NUM  = \[[^\]]*'tvtHoldMin'/); assert.match(pj, /const BOOL = \[[^\]]*'tvtOverRb', 'tvtPet'/);
-    for (const id of ['tvtHoldMin', 'tvtOverRb', 'tvtPet']) assert.ok(ph.includes(`id="${id}"`), 'popup.html: ' + id);
+    assert.match(pj, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/); assert.match(pj, /const NUM  = \[[^\]]*'tvtHoldMin'/); assert.match(pj, /const BOOL = \[[^\]]*'tvtPet'/);
+    for (const id of ['tvtHoldMin', 'tvtPet']) assert.ok(ph.includes(`id="${id}"`), 'popup.html: ' + id);
     const bp = JSON.parse(fs.readFileSync(path.join(root, 'base-profile.json'), 'utf8')).cfg;
     assert.equal(bp.tvtHoldMin, 3); assert.equal(bp.tvtOverRb, true); assert.equal(bp.tvtPet, true);
     console.log('PASS: 10.0.11 TvT — окно TvT, выход из PvE-боя, удары по MP и ответам сервера, питомец, цель по уровню');

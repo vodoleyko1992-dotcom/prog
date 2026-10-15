@@ -740,6 +740,8 @@ async function fishFightLoop() {
   const react = () => env.rnd(env.cfg.reactMin * 0.3, env.cfg.reactMax * 0.3);
   let reactMs = react();
   for (let guard = 0; guard < 300 && fishOwn() && !env.rt.shop?.urgent; guard++) {   // «Закупить сейчас» — бросаем рыбу
+    if (await env.tvtStep?.()) return;
+    if (!fishOwn()) return;
     const f = fishState();
     if (!f) {                                    // рыба вытащена или сорвалась — цель скрылась
       const fresh = guard && env.fishLastPre ? fishNewLines(env.fishLastPre) : [];

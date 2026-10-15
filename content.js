@@ -3852,11 +3852,14 @@ addEventListener('message', e => {
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
     // 14.10: выбывшего участника игра уводит в чат; после reload нельзя вновь вести его на арену того же события.
     const alive = TVT.selfCombat?.alive, selfCombat = typeof alive === 'boolean' ? { alive } : null;
-    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
+    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, registrationEndsAt: TVT.registrationEndsAt, registeredCount: TVT.registeredCount, maxPlayers: TVT.maxPlayers, off: TVT.off, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 10.0.11 (лог 13.10 22:00): скиллы арены (MP, откат) и ответ на каждый удар — для выбора приёма по MP и для «клик ушёл на сервер?»
-  if (path === '/game/tvt/skills' && Array.isArray(d.res?.skills)) TVTS = { skills: d.res.skills.map(x => ({ ...x })), t: Date.now() };
+  if (path === '/game/tvt/skills' && Array.isArray(d.res?.skills)) {
+    const complete = d.res.skills.every(x => x && typeof x === 'object');
+    if (complete || !TVTS?.complete || TVTS.event !== tvtState()?.id) TVTS = { skills: d.res.skills.filter(x => x && typeof x === 'object').map(x => ({ ...x })), complete, event: tvtState()?.id, t: Date.now() };
+  }
   if (path === '/game/tvt/action') { TVTC = TVTC || { t: 0 }; TVTC.actT = Date.now(); TVTC.actN = (TVTC.actN || 0) + 1;
     const r = d.res && !d.res.error ? d.res : null, sk = r?.skillId ?? d.req?.skillId;
     if (r) { if (r.combatVersion) TVTC.combatVersion = r.combatVersion; if (r.selfMp != null) { TVTC.selfMp = r.selfMp; TVTC.mpT = Date.now(); } if (r.nextBasicAttackAt) TVTC.nextBasicAttackAt = r.nextBasicAttackAt; TVTC.actErr = null; }
@@ -4174,7 +4177,7 @@ function panelReport() {
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -4304,7 +4307,7 @@ L2V7Modules.raid = L2V7Factories.raid({
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({
+L2V7Modules.combat = L2V7Factories.combat({ get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
@@ -4450,6 +4453,7 @@ L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; 
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get gameGet() { return gameGet; }, get victory() { return victory; }, get leaveMark() { return leaveMark; },
   get TVT() { return TVT; }, set TVT(value) { TVT = value; },
   get TVTC() { return TVTC; }, set TVTC(value) { TVTC = value; },
   get TVTS() { return TVTS; }, set TVTS(value) { TVTS = value; },
@@ -4479,7 +4483,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get autonomyMode() { return autonomyMode; 
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },

@@ -49,9 +49,9 @@ test('main: окно TvT откладывает обычную закупку и
  const c=make();c.hold();c.rt.shop={t:Date.now()};await c.step();assert.deepEqual(c.calls,[]);assert.equal(c.loc.href,'');
  c.rt.shop.urgent=true;await c.step();assert.deepEqual(c.calls,['shop']);
 });
-test('main: TvT важнее PvE-РБ только по tvtOverRb, затем штатный выход и арена',async()=>{
+test('main: 15.10 TvT всегда важнее PvE-РБ, затем штатный выход и арена',async()=>{
  const c=make('raid');c.active();c.loc.pathname='/battle.html';c.loc.search='?spawnId=l2dop_rb_test';c.cfg.tvtOverRb=false;
- await c.step();assert.deepEqual(c.calls,['battle']);c.calls.length=0;c.cfg.tvtOverRb=true;await c.step();assert.deepEqual(c.calls,['leaveBattle']);await c.step();assert.equal(c.loc.href,'/tvt-arena.html');
+ await c.step();assert.deepEqual(c.calls,['leaveBattle']);await c.step();assert.equal(c.loc.href,'/tvt-arena.html');
 });
 test('main: ready story из авто начинает NPC job; raid сохраняет приоритет тура',async()=>{
  for(const mode of ['auto','raid']){const c=make(mode);c.cfg.storyTurnIn=true;c.rt.story={subclass:{ready:true,completed:false,stage:'return_to_ladd'}};
@@ -84,4 +84,8 @@ test('main: доступный штурм стены не запускается
  const c=make();c.cfg.clanTasks=true;let posts=0;c.sb.gamePost=async()=>{posts++;throw Error('unexpected post')};
  c.D.clanNote({clan:{name:'TestClan'},me:{characterId:'self'},taskDefinitions:[{id:'damage_siege_wall',target:50000,canTake:true}],activeClanTasks:[]});
  await c.step();assert.equal(posts,0);assert.deepEqual(c.calls,['map']);
+});
+for(const mode of ['auto','raid','fish','cat'])test('15.10 регистрация TvT раньше urgent-закупки и режима '+mode,async()=>{
+ const c=make(mode),now=Date.now();c.sb.TVT={eventId:'new-event',phase:'REGISTRATION',isRegistered:false,registeredCount:4,maxPlayers:20,startsAt:now+600000,t:now};
+ c.rt.shop={urgent:true,t:Date.now()};await c.step();assert.equal(c.loc.href,'/tvt-arena.html');assert.deepEqual(c.calls,[]);
 });

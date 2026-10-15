@@ -1325,6 +1325,7 @@ async function battle() {
     await countExtras();
     if (!env.on || !env.tabOwner) return;
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
+    if (!victory() && await env.tvtStep?.()) return;
     if (victory()) break;
     if (mob && mob.cur === 0) {                   // главная цель умерла: ждём победу или следующую цель (соседи живы)
       // 14.10, расширенный аудит: 0 HP может опередить итог сервера или смену цели. Дополнительный удар здесь
