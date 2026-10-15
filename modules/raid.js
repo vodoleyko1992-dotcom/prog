@@ -177,22 +177,23 @@ function rbProbePots(pot) {
   return { items, n, pool, rate, H: pool/n, C: pool/n/rate, est: false };
 }
 function rbProbeBudget({ me, sp, p90, loss, pot, seconds = 8, entry = true }) {
-  pot = rbProbePots(pot);
+  // Запас в сумке не обещает лечение в бою. Засчитываем только готовую
+  // кнопку с измеренным эффектом; иначе окно целиком оплачивается текущим HP.
+  pot = rbProbePots({ items: (pot?.items || []).filter(x=>x.b && x.ready===true) });
   if (!(me?.max > 0) || !(me.cur > 0) || entry && me.pct < Math.max(95, env.cfg.rbRestHp || 95)
-      || !pot || pot.est !== false || !Array.isArray(pot.items) || pot.items.some(x=>x.est)
-      || ![pot.H,pot.C,pot.n,pot.rate,pot.pool].every(x=>Number.isFinite(x)&&x>0)
       || ![sp,p90,loss].every(x=>Number.isFinite(x)&&x>=0) || sp >= me.max*.45) return null;
+  const items = pot?.items || [];
   const reserve = Math.max(me.max*Math.max(25,env.cfg.stopHp||0)/100,sp*1.1+2*p90);
   // Одна большая банка не даёт её скорость на всё окно. Считаем конечные
   // приёмы после GCD; неизвестные банки и мгновенное первое лечение не обещаем.
-  const cadence = Math.max(2.2,...pot.items.map(x=>x.cd||0));
+  const cadence = Math.max(2.2,...items.map(x=>x.cd||0));
   for (let duration=Math.floor(Math.min(8,seconds)); duration>=3; duration--) {
     let slots=Math.floor(duration/cadence), healing=0;
-    for (const item of [...pot.items].sort((a,b)=>b.heal-a.heal)) {
+    for (const item of [...items].sort((a,b)=>b.heal-a.heal)) {
       const n=Math.min(slots,Math.floor(item.n)); healing+=n*item.heal; slots-=n;
     }
     const deficit=Math.max(0,loss*duration-healing*.8);
-    if (me.cur-reserve>=deficit*1.15 && loss*duration*1.15<=pot.pool)
+    if (me.cur-reserve>=deficit*1.15)
       return { seconds:duration,reserve:Math.ceil(reserve),healing };
   }
   return null;
@@ -261,8 +262,8 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
-  if (entryNeed * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
-  return slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
+  if (entryNeed * 1.15 > pool * slack) return reconnaissance || { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
+  return reconnaissance || slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
 }
 
 // 9.2.5 (игрок 12.10: «скинул список РБ, в которых бот не уверен, а он всё равно не шёл всех проверять»): «не по силам» по ОЦЕНКЕ спецудара

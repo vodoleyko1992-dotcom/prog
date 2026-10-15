@@ -132,10 +132,10 @@ for(const [name,pool,rate,allowed] of [['нулевой запас',0,2000,false
 });
 test('первая проба неизвестного Hekaton требует запас на замер, а не на ложные 92 минуты',()=>{
  const f=make();f.env.cfg.rbProbe=true;
- for(const [pool,allowed] of [[0,false],[1000,false],[25000,true]]){f.env.potModel=()=>({pool,rate:2000});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,allowed);assert.equal(!!v.probe,allowed);}
+ for(const pool of [0,1000,25000]){f.env.potModel=()=>({pool,rate:2000});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.equal(!!v.probe,true);assert.ok(v.probeSeconds>0&&v.probeSeconds<=8);}
 });
-test('короткий резерв пробы не отменяет медленные банки или точно измеренный долгий бой',async()=>{
- const f=make();f.env.cfg.rbProbe=true;f.env.potModel=()=>({pool:25000,rate:100});assert.equal(f.R.rbPreCheck(HEKATON,hekaton).ok,false);
+test('короткий резерв HP позволяет замер с медленными банками, но не точно измеренный долгий бой',async()=>{
+ const f=make();f.env.cfg.rbProbe=true;f.env.potModel=()=>({pool:25000,rate:100});const v=f.R.rbPreCheck(HEKATON,hekaton);assert.equal(v.ok,true);assert.ok(v.probeSeconds>0&&v.probeSeconds<=8);
  f.env.potModel=()=>({pool:25000,rate:2000});await f.R.rbDpsLearn(HEKATON,1000);assert.equal(f.R.rbPreCheck(HEKATON,hekaton).kind,'slow');
 });
 test('замер сохраняется отдельно при смене класса и восстанавливается со своим классом',()=>{
