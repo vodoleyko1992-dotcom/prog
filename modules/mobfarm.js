@@ -251,9 +251,24 @@ async function nextFight(ctx) {
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.autonomyMode() === 'fish') return env.goFishing();
-  // Ashen Bastion has no /map.html and no map hunt chain. A victory started there
-  // must return to its own paginated monster list before choosing another target.
+  // 10.0.22 (лог15.10 05:06): Ashen поддерживает штатную цепочку; список — только запасной путь.
   if (/^ashen_bastion_mob_/i.test(new URLSearchParams(location.search).get('spawnId') || '') && env.autonomyMode() === 'farm') {
+    if (env.cfg.chain !== false) {
+      const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) && !h.disabled ? h : null; }, 2500, 50);
+      if (!env.on || env.tabOwner === false || env.autonomyMode() !== 'farm' || env.antibotState?.()) return;
+      if (hunt) {
+        const t0 = Date.now(); env.setStatus('Ashen Bastion: охотиться дальше'); env.setRt({ via: 'chain' }); env.fire(hunt);
+        const started = () => !env.victory() && (env.mobHp()?.cur || 0) > 0;
+        let ok = await env.waitFor(started, 8000, 50);
+        const net = env.actNet?.();
+        if (!ok && env.on && env.tabOwner !== false && net && net.huntT >= t0 && !((net.huntDoneT || 0) >= net.huntT)) ok = await env.waitFor(started, 7000, 50);
+        if (ok || !env.on || env.tabOwner === false || env.autonomyMode() !== 'farm' || env.antibotState?.()) return;
+        // Игра может уже перейти к новому бою; не перекрываем навигацию старого документа.
+        if (!env.victory() || !/\/battle\.html/i.test(location.pathname)) return;
+        env.rec('B', 'цепочка', 'Ashen Bastion: следующий бой не подтвердился — возвращаюсь к местному списку');
+      }
+    }
+    if (!env.on || env.tabOwner === false || env.autonomyMode() !== 'farm') return;
     location.href = '/ashen-bastion.html'; await env.sleep(3000); return;
   }
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
