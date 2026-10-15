@@ -37,6 +37,14 @@
       ...Object.fromEntries(['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'].map(k => [k,n(c[k])])),
       // 15.10: /character отдаёт герою expiresAt, слуге expiresAtMs. Сохраняем оба формата в одном поле.
       activeBuffs: Array.isArray(c.activeBuffs) ? c.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId:b.skillId, level:n(b.level), expiresAtMs:n(b.expiresAtMs) ?? n(b.expiresAt) })) : null,
+      // Публичный состав модели урона: UID/имена владельцев и динамические HP/MP сюда не попадают.
+      snapshotGeneratedAt: n(c.snapshotGeneratedAt),
+      inventory: c.inventory?.eq && typeof c.inventory.eq === 'object' ? { eq: Object.fromEntries(Object.entries(c.inventory.eq).slice(0,40).map(([slot,v]) => {
+        const x = v && typeof v === 'object' ? v : {itemId:v}, attrs = a => Array.isArray(a) ? a.slice(0,20).map(y=>({attributeId:String(y.attributeId||'').slice(0,80),level:n(y.level)})) : [];
+        return [slot,{...Object.fromEntries(['itemId','enchant','specialGearLevel','enchantPAtkBonus','enchantMAtkBonus'].map(k=>[k,n(x[k])])),
+          augmentation:{outcomeId:String(x.augmentation?.outcomeId||'').slice(0,80)},clanWeaponAttrs:attrs(x.clanWeaponAttrs),clanArmorAttrs:attrs(x.clanArmorAttrs)}];
+      })) } : null,
+      learnedBattleSkillsDetail: Array.isArray(c.learnedBattleSkillsDetail) ? c.learnedBattleSkillsDetail.slice(0,300).map(x=>({battleId:String(x.battleId||'').slice(0,80),level:n(x.level)})) : null,
       activeSummon: p && typeof p === 'object' ? { kind: String(p.kind || '').slice(0,30), key: String(p.key || '').slice(0,60),
         ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
         activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : null };
@@ -139,7 +147,8 @@
 
   // 8.0.3 (логи 11.10: 1302 потерянных нажатия за 10 боёв с РБ): пока игра ждёт свой GET /character (уходит ≈8 мс после ответа на ход,
   // идёт 0,25–0,56 с) и ≈30 мс после — клик по панели игра молча теряет. Боту нужны начало и конец этих запросов (rid, путь без query)
-  const TRACK = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
+  // 15.10: все игровые ответы привязаны к контексту начала запроса; busy-фильтр остаётся в content.
+  const TRACK = /^\/(?:character|game)(?:\/|$)/;
   let ridN = 0;
   const start = (u, method) => { if (!TRACK.test(u.pathname)) return undefined; const rid = ++ridN; try { window.postMessage({ __l2bot: 'netStart', path: u.pathname, method, rid }, location.origin); } catch (e) {} return rid; };
   const ofetch = window.fetch;
