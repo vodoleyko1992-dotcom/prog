@@ -202,6 +202,11 @@ async function autoRoles() {
       if (add.length) fix[k] = [env.cfg[k], ...add.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');
     }
   }
+  // 10.0.23: уже виденные Corpse Plague/Hamstring раньше считались поддержкой.
+  // Добавляем исправленную роль один раз; последующее ручное удаление не отменяем.
+  const repaired = env.names(sug.nPower || '').filter(n => env.ilOf(env.panelInventory().find(x => x.name.toLowerCase() === n))?.l2Damage && !(env.rt.damageRoles1023 || []).includes(n));
+  const missing = repaired.filter(n => !env.names(fix.nPower ?? env.cfg.nPower).includes(n));
+  if (missing.length) fix.nPower = [fix.nPower ?? env.cfg.nPower, ...missing.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');
   if (JSON.stringify(env.rt.panelKnown) !== JSON.stringify(panelNames)) await env.setRt({ panelKnown: panelNames });
   // v4.16: удары, которые раньше считались «за энергию», но её не тратят (Burning Fist, Soul Breaker) — в силовые
   const freeHits = env.names(sug.nPower || '').filter(n => (env.FREE_HIT.test(n) || env.rt.forceFree?.[n]) && !env.names(fix.nPower || env.cfg.nPower || '').includes(n));
@@ -218,6 +223,7 @@ async function autoRoles() {
     env.rec('B', 'автороли', Object.entries(fix).map(([k, v]) => `${k}=${v}`).join(' · '));
     console.log(env.TAG, 'автоназначение ролей:', fix);
   }
+  if (repaired.length) await env.setRt({ damageRoles1023: [...new Set([...(env.rt.damageRoles1023 || []), ...repaired])] });
 }
 
 // 7.1.16-fix: заряды под надетое оружие. Магическое: M.Atk/P.Atk ≥ 0,7 (посохи ≥ 0,6); физическое ≤ 0,65; луки, кастеты, дуалы,
