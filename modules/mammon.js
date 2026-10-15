@@ -246,8 +246,10 @@ function goalAll(upTo) {                          // upTo — только до 
     if (!R || depth > 6) { addRaw(mid, nm, left, n, L); if (depth > 0) cmiss += left; return; }
     if (!left) return;
     const k = Math.ceil(left / R[0]), cr = craft.get(mid) || { id: mid, nm: MM_RNAME[mid] || nameEn(mid) || nm, qty: 0, runs: 0, rec: R[1].map(x => `${x[2]} ${x[1]}`).join(' + ') + (R[0] > 1 ? ` (выход ${R[0]})` : '') };
-    cr.qty += left; cr.runs += k; craft.set(mid, cr);
-    if (!depth) ret.set(mid, (ret.get(mid) || 0) + left);
+    // Рецепты Cord/Fiber дают по20: просим вернуть весь оплаченный сырьём выход,
+    // даже если кузнецу сейчас нужно меньше. Остаток остаётся собственностью героя.
+    cr.qty += k * R[0]; cr.runs += k; craft.set(mid, cr);
+    if (!depth) ret.set(mid, (ret.get(mid) || 0) + k * R[0]);
     for (const [iid, inm, q] of R[1]) expand(iid, inm, q * k, L, depth + 1);
   };
   const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
@@ -732,11 +734,17 @@ function craftWant(now = Date.now()) {
 }
 // вернулось от крафтера: id × q — то же, что отправили (не пригодилось), или скрафченное — списываем его сырьё по рецепту
 function unsend(at, id, q, depth = 0) {
-  if (!(q > 0) || depth > 6) return;
-  if (at[id] > 0) { const u = Math.min(at[id], q); at[id] -= u; q -= u; }
-  const R = MM_RECIPES[id]; if (!q || !R) return;
+  if (!(q > 0) || depth > 6) return 0;
+  let used=0;
+  if (at[id] > 0) { used = Math.min(at[id], q); at[id] -= used; q -= used; }
+  const R = MM_RECIPES[id]; if (!q || !R) return used;
   const runs = Math.ceil(q / R[0]);
-  for (const [iid, , n] of R[1]) unsend(at, iid, n * runs, depth + 1);
+  const funded=Math.min(runs,...R[1].map(([iid,,n])=>Math.floor(unsend(at,iid,n*runs,depth+1)/n)));
+  const output=funded*R[0], remainder=Math.max(0,output-q);
+  // Частичное письмо не означает ещё один крафт при следующем письме.
+  // Уже произведённый остаток учитывается рядом с прочими промежуточными материалами.
+  if(remainder)at[id]=(at[id]||0)+remainder;
+  return used+Math.min(q,output);
 }
 function mailList(list) {
   if (!Array.isArray(list)) return null;
@@ -750,11 +758,11 @@ function mailList(list) {
   patch.mmMail = { t: Date.now(), unc };
   // учёт возврата: письма от крафтера после отправки, уже забранные в сумку (claimedAt) — кто бы ни нажал «Забрати», бот или игрок
   if (C?.at && to) {
-    const seen = new Set(C.seen || []), at = { ...C.at }, got = [], odd = [], want = new Set();
+    const seen = new Set([...(env.rt.mmCraftSeen || []), ...(C.seen || [])]), at = { ...C.at }, got = [], odd = [], want = new Set();
     const tree = (id, d = 0) => { if (want.has(id) || d > 6) return; want.add(id); for (const [iid] of MM_RECIPES[id]?.[1] || []) tree(iid, d + 1); };
     for (const k of Object.keys(C.ret || {})) tree(+k);   // ждём готовое и его промежуточное
     for (const a of list) {
-      if (!a || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
+      if (!a || a.attachmentId == null || a.claimedAt == null || String(a.senderName || '').trim().toLowerCase() !== to) continue;
       const k = String(a.attachmentId), t = Date.parse(a.createdAt) || Date.now();
       if (seen.has(k) || t < (C.t0 || 0) - 60000) continue;
       const before = JSON.stringify(at), expected = !want.size || want.has(+a.itemId) || at[a.itemId] > 0;
@@ -773,6 +781,8 @@ function mailList(list) {
       if (odd.length) env.rec('B', 'Маммон', `${C.to || crafter()} вернул не то, что нужно: ${odd.join(', ')} — из отправленного это не делается${C.want?.length ? `; ждём: ${C.want.map(([n, q]) => `${n} ×${fmtA(q)}`).join(', ')}` : ''}. Сырьё считаю ещё у крафтера — напиши ему или нажми «↺ Забыть, что у крафтера»`);
       env.rec('B', 'Маммон', `${C.to || crafter()} вернул: ${got.join(', ')}${left ? ` · у крафтера ещё ${Object.entries(at).map(([id, n]) => `${itNm(id)} ${fmtA(n)}`).join(', ')}` : ' · всё отправленное вернулось'}`);
       patch.mmCraft = left ? { ...C, at, seen: [...seen], gotT: Date.now() } : null;   // вся активная партия: повторный опрос страниц не списывает старые возвраты снова
+      // Список переживает завершение партии: свежее старое письмо не оплачивает новую.
+      patch.mmCraftSeen = [...seen].slice(-2000);
       goalT = 0;
     }
   }
@@ -780,14 +790,17 @@ function mailList(list) {
   return unc;
 }
 async function mailPoll() {
+  const active=guard();if(!active())return null;
   mailT = Date.now(); ssSet('l2bot-mmMailT', mailT);
   // 10.0.13: API возвращает историю вместе с уже забранными вещами; новые/ожидаемые вложения могут быть дальше первой страницы.
   const all = [];
   for (let pg = 1, total = 1; pg <= Math.min(total, 30); pg++) {
     const { ok, j } = await getJson(`/game/item-transfer/received?page=${pg}`);
+    if(!active())return null;
     if (!ok || !Array.isArray(j?.attachments)) return null;
     all.push(...j.attachments); total = Math.max(1, +j.totalPages || 1);
     if (pg < Math.min(total, 30)) await env.sleep(350);
+    if(!active())return null;
   }
   return mailList(all);
 }
