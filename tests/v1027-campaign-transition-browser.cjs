@@ -19,7 +19,10 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  await h.sw.evaluate(async()=>{const {cfg}=await chrome.storage.local.get('cfg');await chrome.storage.local.set({cfg:{...cfg,campaign:true}})});
  await until(()=>h.g.core('rt.campaign?.targets?.[0]?.name === "Enku Orc Shaman"'),20000);
  console.log('PASS MV3 native quest response → new chapter → correct target, no starter loop');
- await h.click('stop');chapter=3;await h.g.p.evaluate(()=>fetch('/game/story-quests/dion-campaign/complete-chapter',{method:'POST'}));
+ // 15.10: targets записываются до goOutskirts; ждём конец этапа и доставки Stop, прежде чем выполнять ручной POST.
+ await until(()=>h.g.p.url().endsWith('/map.html'),15000);
+ await h.click('stop');await until(()=>h.g.core('!on && !running && document.readyState === "complete"'));
+ chapter=3;await h.g.p.evaluate(()=>fetch('/game/story-quests/dion-campaign/complete-chapter',{method:'POST'}));
  // Чтение ручного перехода запоминается и на паузе, управление остаётся выключено.
  const before=visits.length;await delay(800);assert.equal(visits.length,before);
  await h.g.p.reload();await h.click('start');await until(()=>h.g.core('on && tabOwner'));
