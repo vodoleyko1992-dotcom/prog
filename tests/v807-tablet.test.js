@@ -11,7 +11,7 @@ assert.match(c, /if \(dockOver\) \{ try \{ localStorage\.setItem\('l2bot-dockOpe
 assert.match(c, /ui\.classList\.toggle\('hid', dockOver && !min\)/, 'indicator hidden while the menu is open over the game');
 assert.match(c, /mode === 'mini' \|\| ui\.classList\.contains\('over'\) \? L\.slice\(0, 3\)/, 'indicator 3 lines over the game');
 assert.match(c, /#l2bot-ind\{-moz-text-size-adjust:none/, 'no font inflation in the indicator');
-assert.match(c, /const w = bounds\.right > 0 && available >= 300 \? available : Math\.min\(dockOver \? 460 : 380,/, 'PC: compact 380 as before; Android: up to 460');
+assert.match(c, /const normalWidth = bounds\.right > 0 && available >= 300 \? available : Math\.min\(dockOver \? 460 : 380,/, 'PC: compact 380 as before; Android: up to 460');
 assert.match(ph, /<meta name="viewport" content="width=device-width, initial-scale=1">/, 'menu as a tab: mobile viewport');
 assert.match(ph, /-moz-text-size-adjust:none/, 'menu: no font inflation');
 assert.match(pj, /if \(!DOCKED && \/Android\/i\.test\(navigator\.userAgent \|\| ''\)\) chrome\.tabs\?\.getCurrent\?\.\(\)\?\.then\(t => \{ if \(t\) document\.documentElement\.classList\.add\('docked', 'tabbed'\)/, 'menu as a tab → full-tab layout; toolbar popup unchanged');

@@ -25,6 +25,10 @@
 
 ---
 
+## 2026-10-15 14:46 Asia/Vladivostok (UTC+10) — Codex
+
+- **PR:** [#150](https://github.com/vodoleyko1992-dotcom/prog/pull/150). **Сделано:** дополнительный переключатель ×2 для встроенной панели справа от игры, локальное сохранение и ограничение шириной окна; добавлена проверка. **Осталось:** проверить в установленном расширении.
+
 ## 2026-10-15 14:38 Asia/Vladivostok (UTC+10) — Codex
 
 - **PR:** [#149](https://github.com/vodoleyko1992-dotcom/prog/pull/149), ветка `codex/fix-raid-preflight-pingpong`.
