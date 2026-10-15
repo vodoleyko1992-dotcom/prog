@@ -32,8 +32,9 @@ test('общий явный список исключает конфликт и�
  const f=fixture();f.H[1413]=f.now+3600000;f.env.cfg.faBuffs='1357';const ids=Array.from(f.B.faWanted());
  assert.ok(ids.includes(1357));assert.ok(!ids.includes(1413));f.H[1357]=f.now+3600000;delete f.H[1413];assert.ok(!f.B.townBuffNeed().fa.includes(1413));
 });
-test('смена класса не сохраняет Greater из чужого автонабора',()=>{
- const f=fixture();f.H[1413]=f.now+3600000;f.role('fighter');assert.deepEqual(f.group(),[1414]);
+// 10.0.23: по решению игрока смена класса не оправдывает замену оплаченного Greater.
+test('смена класса сохраняет действующий Greater без повторной оплаты',()=>{
+ const f=fixture();f.H[1413]=f.now+3600000;f.role('fighter');assert.deepEqual(f.group(),[1413]);
 });
 test('выученный конфликт сохраняет активный бафф; низкий уровень допускает улучшение',()=>{
  const f=fixture();f.env.rt.faClash={1059:[273]};f.H[273]=f.now+3600000;let ids=Array.from(f.B.faFullIds());assert.ok(ids.includes(273));assert.ok(!ids.includes(1059));
