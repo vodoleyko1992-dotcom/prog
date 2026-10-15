@@ -245,5 +245,248 @@
         "spGain": 5706
       }
     }
-  ]
+  ],
+  "snapshots": {
+    "before-tests": {
+      "hp": 15070,
+      "maxHp": 15070,
+      "mp": 4743,
+      "maxMp": 4743,
+      "inBattle": true,
+      "adena": "364477657",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 7383,
+        "maxHp": 8859,
+        "pAtk": 7816,
+        "pDef": 1641,
+        "pAtkSpd": 468,
+        "activeBuffs": [
+          {
+            "skillId": 4699,
+            "level": 3,
+            "expiresAtMs": 1792061814977,
+            "nameUk": "Blessing of Queen",
+            "descriptionUk": "+30% Crit слуги; +25% Crit Damage слуги",
+            "iconUrl": "/skills/skill1331.gif",
+            "remainingSec": 157
+          },
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 1055
+          }
+        ]
+      }
+    },
+    "after-queen": {
+      "hp": 15070,
+      "maxHp": 15070,
+      "mp": 4626,
+      "maxMp": 4743,
+      "inBattle": false,
+      "adena": "364539048",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 7383,
+        "maxHp": 8859,
+        "pAtk": 7816,
+        "pDef": 1641,
+        "pAtkSpd": 468,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 879
+          }
+        ]
+      }
+    },
+    "after-pet-heal": {
+      "hp": 15070,
+      "maxHp": 15070,
+      "mp": 4629,
+      "maxMp": 4743,
+      "inBattle": true,
+      "adena": "364539048",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 8319,
+        "maxHp": 8859,
+        "pAtk": 7816,
+        "pDef": 1641,
+        "pAtkSpd": 468,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 789
+          }
+        ]
+      }
+    },
+    "after-final-servitor": {
+      "hp": 15064,
+      "maxHp": 15070,
+      "mp": 4675,
+      "maxMp": 4743,
+      "inBattle": true,
+      "adena": "364539048",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 8319,
+        "maxHp": 10630,
+        "pAtk": 8597,
+        "pDef": 1969,
+        "pAtkSpd": 561,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 763
+          },
+          {
+            "skillId": 1349,
+            "level": 1,
+            "expiresAtMs": 1792063149757,
+            "nameUk": "Final Servitor",
+            "descriptionUk": "+20% Max HP слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% P.Def слуги; +20% Atk.Speed слуги; +20% Crit слуги; +20% Crit Damage слуги; +20% M.Def слуги; +20% M.Atk слуги; +20% Cast.Speed слуги; +20 опір дебафам слуги; -20% Speed слуги",
+            "iconUrl": "/skills/skill1349.gif",
+            "remainingSec": 1200
+          }
+        ]
+      }
+    },
+    "after-battle-trance": {
+      "hp": 3767,
+      "maxHp": 15070,
+      "mp": 4743,
+      "maxMp": 4743,
+      "inBattle": false,
+      "adena": "364588412",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 8319,
+        "maxHp": 10630,
+        "pAtk": 8597,
+        "pDef": 1969,
+        "pAtkSpd": 561,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 513
+          },
+          {
+            "skillId": 1349,
+            "level": 1,
+            "expiresAtMs": 1792063149757,
+            "nameUk": "Final Servitor",
+            "descriptionUk": "+20% Max HP слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% P.Def слуги; +20% Atk.Speed слуги; +20% Crit слуги; +20% Crit Damage слуги; +20% M.Def слуги; +20% M.Atk слуги; +20% Cast.Speed слуги; +20 опір дебафам слуги; -20% Speed слуги",
+            "iconUrl": "/skills/skill1349.gif",
+            "remainingSec": 950
+          }
+        ]
+      }
+    },
+    "after-vamp-heal": {
+      "hp": 12355,
+      "maxHp": 15070,
+      "mp": 4724,
+      "maxMp": 4743,
+      "inBattle": false,
+      "adena": "364588412",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 8319,
+        "maxHp": 10630,
+        "pAtk": 8597,
+        "pDef": 1969,
+        "pAtkSpd": 561,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 489
+          },
+          {
+            "skillId": 1349,
+            "level": 1,
+            "expiresAtMs": 1792063149757,
+            "nameUk": "Final Servitor",
+            "descriptionUk": "+20% Max HP слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% P.Def слуги; +20% Atk.Speed слуги; +20% Crit слуги; +20% Crit Damage слуги; +20% M.Def слуги; +20% M.Atk слуги; +20% Cast.Speed слуги; +20 опір дебафам слуги; -20% Speed слуги",
+            "iconUrl": "/skills/skill1349.gif",
+            "remainingSec": 926
+          }
+        ]
+      }
+    },
+    "final": {
+      "hp": 15070,
+      "maxHp": 15070,
+      "mp": 4743,
+      "maxMp": 4743,
+      "inBattle": false,
+      "adena": "364588412",
+      "coinOfLuck": 349,
+      "summon": {
+        "key": "kai_the_cat",
+        "hp": 8319,
+        "maxHp": 10630,
+        "pAtk": 8597,
+        "pDef": 1969,
+        "pAtkSpd": 561,
+        "activeBuffs": [
+          {
+            "skillId": 1346,
+            "level": 1,
+            "expiresAtMs": 1792062712863,
+            "nameUk": "Warrior Servitor",
+            "descriptionUk": "+20% Max HP слуги; +20% hpRegen слуги; +20% P.Def слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% Atk.Speed слуги; +10 опір дебафам слуги; -10% Speed слуги",
+            "iconUrl": "/skills/Skill1346.jpg",
+            "remainingSec": 391
+          },
+          {
+            "skillId": 1349,
+            "level": 1,
+            "expiresAtMs": 1792063149757,
+            "nameUk": "Final Servitor",
+            "descriptionUk": "+20% Max HP слуги; +4 Accuracy слуги; +10% P.Atk слуги; +20% P.Def слуги; +20% Atk.Speed слуги; +20% Crit слуги; +20% Crit Damage слуги; +20% M.Def слуги; +20% M.Atk слуги; +20% Cast.Speed слуги; +20 опір дебафам слуги; -20% Speed слуги",
+            "iconUrl": "/skills/skill1349.gif",
+            "remainingSec": 828
+          }
+        ]
+      }
+    }
+  }
 }
