@@ -75,7 +75,8 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
   assert.equal(await t.act({ title: 'Blaze' }, 'Blaze', true), true, '55 → 45 %: ordinary hit, attack goes on');
   t = mkAct(90, 60);
   assert.equal(await t.act({ title: 'Blaze' }, 'Blaze', true), true, 'HP still above 50 % — attack');
-  assert.match(combat, /const done = await act\(a\.b, `Бой\$\{tc\}: \$\{a\.name\}[^`]*`, true\);/, 'main hit uses hpGuard');
+  // 10.0.21: после hpGuard добавлена повторная проверка раннего VT; третий аргумент остаётся true.
+  assert.match(combat, /const done = await act\(a\.b, `Бой\$\{tc\}: \$\{a\.name\}[^`]*`, true(?:,|\);)/, 'main hit uses hpGuard');
   assert.match(combat, /ctx\.mePct0 = me \? me\.pct : null;/);
   console.log('v1005-lowhp-heal: OK');
 })();

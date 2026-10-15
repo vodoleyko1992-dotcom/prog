@@ -583,7 +583,42 @@ function magePlan(ctx, mp) {
   }
   const best = opts.sort((a,b) => b.dmg-a.dmg || b.cd-a.cd ||
     (a.order === -1 ? 999 : a.order)-(b.order === -1 ? 999 : b.order))[0];
+  const sustain = raidDrainPlan(ctx, opts, best);
+  if (sustain) return sustain;
   return { ...best, why:`магия: цепочка · урон ≈${Math.round(best.dmg)}` };
+}
+
+// 10.0.21, лог 15.10 10:40–10:42: Hekaton вручную убит через VT без банок, HP не падало ниже 87 %.
+// Порог 85 % пропускал полезное раннее восстановление. Сравниваем потерю урона с ценой отдельного
+// хода банки; кот на атакующем ходу сохраняется, но его крит/урон не прибавляем к выгоде повторно.
+function raidDrainPlan(ctx, opts, best) {
+  if (!ctx.rb || ctx.rb.usePots === false || env.cfg.rbTurnPrice === false || env.cfg.rbUsePots === false || (env.cfg.drainHp ?? 85) <= 0 || !(best?.dmg > 0)) return null;
+  const me = env.meHp(), missing = me ? me.max - me.cur : 0;
+  if (!(missing > 0)) return null;
+  // Заканчиваем короткий остаток боя уроном. Слуга здесь — только подтверждённый обычный удар.
+  if ((mobHp()?.cur || 0) <= 3 * (best.dmg + petExpect(ctx))) return null;
+  const pots = (env.hpPots?.() || []).filter(p => env.potBag(p.b) > (ctx.rb.allIn ? 0 : env.cfg.rbPotReserve || 0));
+  // Для цены банки учитываем всё известное лечение, а не только один импульс регенерации.
+  const potHeal = Math.max(0, ...pots.map(p => Math.max(p.heal || 0, env.rt.pots?.[p.key]?.heal || 0)));
+  if (!(potHeal > 0)) return null;
+  const drains = env.names(env.cfg.nDrain), now = Date.now();
+  const candidates = opts.filter(o => o.b !== best.b && drains.includes(o.name.toLowerCase()) &&
+    (ctx.block['drain:' + o.b.title] || 0) <= now && (env.rt.skills?.[o.name.toLowerCase()]?.dmgN || 0) >= 3).map(o => {
+    // 40 % VT подтверждены каталогом игры (kb/data/game-skills-warlock.json). Это только оценка
+    // для безопасного раннего хода; аварийную банку по-прежнему заменяет лишь фактическое лечение.
+    const desc = env.rt.skillDb?.[o.name.toLowerCase()]?.desc || '';
+    const ratio = env.slotAction(o.b) === 'l2_1147' ? 0.4 : +(desc.match(/вамп[иі]ризм\s*(\d+(?:[.,]\d+)?)\s*%/i)?.[1]?.replace(',', '.') || 0) / 100;
+    const observed = env.fightHealOn?.(o.name), damage = env.fightDmgOn?.(o.name);
+    const estimated = ratio > 0 && ratio <= 1 ? (damage?.p20 || o.dmg) * ratio : 0;
+    const heal = observed?.n >= 2 ? observed.p20 : estimated;
+    // Малые фактические +HP у полной полоски не делают частичный долив бесплатным: ждём
+    // места под полный ожидаемый вампирик, чтобы ранний каст не создавал лишних лечащих ходов.
+    const capacity = Math.max(heal || 0, ratio > 0 && ratio <= 1 ? o.dmg * ratio : 0);
+    const loss = best.dmg - o.dmg, saved = best.dmg * Math.min(1, heal / potHeal);
+    return heal > 0 && missing >= capacity && loss <= saved ? { ...o, heal, gain: saved - loss } : null;
+  }).filter(Boolean).sort((a,b) => b.gain - a.gain || b.dmg - a.dmg);
+  const pick = candidates[0];
+  return pick ? { ...pick, raidDrain: true, why: `РБ: ранний вампиризм (≈${Math.round(pick.heal)} HP), выгоднее отдельного хода банки` } : null;
 }
 
 function dpsPlan(ctx, mp) {
@@ -1734,7 +1769,8 @@ async function battle() {
       if (a.key.startsWith('stun')) ctx.lastStun = Date.now();
       const logBefore = new Set(env.logLines());
       const logArr = env.logLines();
-      const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true);
+      const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true,
+        a.raidDrain ? () => magePlan(ctx, env.meMp())?.b === a.b : null);
       if (a.probe && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
       if (a.charge || a.cost) {                     // энергия силы: по новым строкам лога, иначе свой учёт
