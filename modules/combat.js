@@ -139,7 +139,15 @@ function cdBusy(b) {
   if (overlaySpawn !== spawn) { overlaySpawn = spawn; overlayBusySeen = new WeakMap(); overlayReadySeen = new WeakSet(); }
   const cd = env.slotCd(b);
   const t = parseFloat((cd?.querySelector('.l2-battle-hotbar-slot-cd__timer')?.textContent || '').replace(',', '.'));
-  const busy = !!cd && !cd.hidden && cd.classList.contains('l2-battle-hotbar-slot-cd--on') && !(t <= 0.1);
+  let busy = !!cd && !cd.hidden && cd.classList.contains('l2-battle-hotbar-slot-cd--on') && !(t <= 0.1);
+  // 15.10 (лог09:46): RAF таймер панели может застыть после перерисовки/в фоне.
+  // Только свежий серверный дедлайн именно атаки разрешает игнорировать рисунок КД.
+  // disabled/aria-disabled проверяет uiReady; неподтверждённый ход и старый ответ не подходят.
+  if (busy && env.slotAction(b) === 'attack') {
+    const net = env.actNet?.(), since = Math.max(pressAt.get(env.skKey(b)) || 0, net?.doneT || 0);
+    if (!(net && net.start > net.done) && env.combatCooldown.skillKnown?.('attack', spawn, since)
+        && env.combatCooldown.skillWait('attack', spawn) <= 0) busy = false;
+  }
   if (busy) { overlayBusySeen.set(b, true); overlayReadySeen.delete(b); }
   else if (overlayBusySeen.get(b)) { overlayBusySeen.delete(b); overlayReadySeen.add(b); }
   return busy;

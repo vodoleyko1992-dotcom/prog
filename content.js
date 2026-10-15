@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.0.25 — выход из Ashen и обновление очереди РБ =====
+// ===== L2wap Bot v10.0.26 — атака с пикой и подтверждение обучения =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3922,7 +3922,7 @@ addEventListener('message', e => {
   // Mage rotations must respect server GCD from background battle sync.
   // The page hotbar often reports a spell ready while globalCooldownUntilMs
   // still prohibits every action (observed Wind Strike HTTP 400).
-  if ((path === '/game/battle/sync' || path === '/game/battle') && d.res && !d.res.error) {
+  if (['/game/battle/sync', '/game/battle', '/game/battle/start', '/game/battle/hunt-continue'].includes(path) && d.res && !d.res.error && d.status >= 200 && d.status < 300) {
     combatCooldown.observeSync(d.res, cdSpawn());
   }
   if (/^\/game\/battle(?:\/(?:sync|action))?$/.test(path) && d.res) alignServerSkillCooldowns();
@@ -3936,7 +3936,7 @@ addEventListener('message', e => {
   // отвечала «ещё на перезарядке», а бот из-за ошибки памяти КД ждал 5–6 с между выстрелами. Сервер в ответе на удар пишет,
   // когда можно бить снова (nextPhysicalAttackAt / attackIntervalMs, при отказе — remainingMs / readyAtMs) — по нему и бьём
   if (path === '/game/battle/action' && d.res && (d.req?.action === 'attack' || d.res.requestedAction === 'attack')) try {
-    const r = d.res, b = r.battle && typeof r.battle === 'object' ? r.battle : {}, nowS = r.serverNowMs || r.nowMs || b.serverNowMs;
+    const r = d.res, b = r.delta && typeof r.delta === 'object' ? r.delta : r.battle && typeof r.battle === 'object' ? r.battle : {}, nowS = r.serverNowMs || r.nowMs || b.serverNowMs;
     const nx = r.nextPhysicalAttackAt || b.nextPhysicalAttackAt || r.readyAtMs, iv = r.attackIntervalMs || b.attackIntervalMs;
     let wait = r.remainingMs != null && !/^2/.test(String(d.status)) ? +r.remainingMs : nx && nowS ? nx - nowS : /^2/.test(String(d.status)) && iv ? +iv : null;
     if (wait != null && isFinite(wait) && wait >= 0 && wait < 15000) {
