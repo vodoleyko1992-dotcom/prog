@@ -28,6 +28,7 @@ function capture(pd,owner){
 }
 function selfNote(c){
  if(!c||!c.id||(c.name?low(c.name)!==low(env.rt.char):String(c.id)!==state.selfIdentity?.id))return;
+ if(state.selfIdentity?.char===env.rt.char&&state.selfIdentity.id===String(c.id)&&Number.isFinite(c.revision)&&Number.isFinite(state.selfIdentity.revision)&&c.revision<state.selfIdentity.revision)return;
  state.selfIdentity={char:env.rt.char,id:String(c.id),name:c.name||env.rt.char,revision:Number.isFinite(c.revision)?c.revision:null,t:Date.now()};
  if(!Object.hasOwn(c,'clanId'))return;
  state.self={...state.selfIdentity,clanId:c.clanId==null?'':String(c.clanId)};
@@ -50,7 +51,7 @@ function rawHeroes(rows){return rows.filter(Boolean).map(h=>({id:String(h.charac
  atk:h.battleOnNameClick===true||h.showPkButton===true,ok:h.pvpAllowed,why:String(h.pvpBlockedReasonUk||''),col:h.pvpNickColor||''}))}
 function onNet(path,d){
  const owner=d.pv?.owner||d.res?.character||(path==='/character'?d.res:null);if(owner?.name&&low(owner.name)!==low(env.rt.char))return;
- if(d.pv?.defeat)capture(d.pv.defeat,owner);
+ if(d.pv?.defeat&&(d.status==null||d.status>=200&&d.status<300))capture(d.pv.defeat,owner);
  const c=d.res?.character||(path==='/character'?d.res:null);selfNote(c);
  if(d.pv?.heroes)heroesNote(d.pv.heroes);
  if(/pvp_defeat_pending/.test(String(d.res?.error||'')+' '+String(d.res?.message||''))&&!pending())
@@ -91,7 +92,7 @@ function pick(){
  if(Date.now()-state.heroesT>15000)return null;
  return state.heroes.map(h=>({h,t:targets()[h.id]})).find(x=>!verdict(x.t,x.h))||null;
 }
-function occupied(){const r=env.rt;return env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtSoon?.()}
+function occupied(){const r=env.rt;return env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtHold?.()||env.tvtSoon?.()}
 async function refresh(){
  const T=token();if(!active(T)||pending())return false;
  if(!state.self||state.self.char!==T.char||Date.now()-state.self.t>30000){

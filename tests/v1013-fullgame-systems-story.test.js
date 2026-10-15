@@ -56,7 +56,7 @@ test('стоп во время загрузки кнопок отменяет с
   // step сначала переводит на страницу; для этого теста нужен именно шаг на ней.
   const sb = { console, Date, location: { pathname: '/noblesse-quest.html' }, sessionStorage: { getItem() {}, setItem() {} } }; sb.globalThis = sb;
   vm.runInNewContext(src, sb);
-  await sb.L2V7Factories.story(env).step({ kind: 'noblesse', why: 'часть 1' });
+  env.rt.storyJob = { kind: 'noblesse', why: 'часть 1', t: Date.now() }; await sb.L2V7Factories.story(env).step(env.rt.storyJob);
   assert.deepEqual(fired, []);
 });
 test('стоп во время чтения цены отменяет платный телепорт', async () => {
@@ -67,7 +67,7 @@ test('стоп во время чтения цены отменяет платн
   env.gameGet = async () => { env.on = false; return { ok: true, json: async () => ({ locations: [{ teleportId: 'rune', adenaCost: 20000 }] }) }; };
   const sb = { console, Date, location: { pathname: '/noblesse-quest.html' }, sessionStorage: { getItem() {}, setItem() {} } }; sb.globalThis = sb;
   vm.runInNewContext(src, sb);
-  await sb.L2V7Factories.story(env).step({ kind: 'noblesse', why: 'часть 1' });
+  env.rt.storyJob = { kind: 'noblesse', why: 'часть 1', t: Date.now() }; await sb.L2V7Factories.story(env).step(env.rt.storyJob);
   assert.deepEqual(fired, []);
 });
 (async () => { let fail = 0; for (const [name, f] of cases) {

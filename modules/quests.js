@@ -61,10 +61,10 @@ function campReached(tp, s) {
   if (s.zone || s.dung || /^(?:city|dungeon)$/.test(s.loc)) return false;
   return null;
 }
-function campGuard() {
+function campGuard(requireEnabled = true) {
   const char = env.rt.char, kick = +env.rt.manualKickAt || 0, chapter = chapterKey(), enabled = !!env.cfg.campaign, auto = env.cfg.campAuto;
   return () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && char === env.rt.char &&
-    kick === (+env.rt.manualKickAt || 0) && chapter === chapterKey() && enabled === !!env.cfg.campaign && auto === env.cfg.campAuto && campEnabled();
+    kick === (+env.rt.manualKickAt || 0) && chapter === chapterKey() && enabled === !!env.cfg.campaign && auto === env.cfg.campAuto && (!requireEnabled || campEnabled());
 }
 async function campReadAt(active, force = false) {
   const key = JSON.stringify([env.rt.char, +env.rt.manualKickAt || 0]);
@@ -92,7 +92,18 @@ async function campLocationStep() {
   env.rec('B', 'кампания', `проверяю точку главы: ${s.zone || s.loc || '?'} → ${tp}`);
   await goCampaign(); return true;
 }
-async function campTeleport(tp, btn, active) {
+// NPC: совпадение города/зоны не означает близость к конкретному квестовому NPC.
+function campNpcReached(tp, s) {
+  if (!s || s.char !== env.rt.char || s.dung) return false;
+  const a = env.rt.campaignAnchor;
+  return !!(a?.npc && a.tp === tp && samePoint(a.at, s) || env.rt.campaignPoints?.some(p => p.tp === tp && p.x === s.x && p.y === s.y));
+}
+async function campNpcTeleport(btn, active) {
+  const tp = btn?.dataset?.questTeleportId || btn?.dataset?.questTransportId;
+  if (!tp || !active()) return false;
+  return campTeleport(tp, btn, active, { npc: true });
+}
+async function campTeleport(tp, btn, active, options = {}) {
   let p = env.rt.campaignTp;
   if (p) {
     try { const cancelled = JSON.parse(root.sessionStorage?.getItem('l2bot.campaignTpCancelled') || 'null');
@@ -108,15 +119,15 @@ async function campTeleport(tp, btn, active) {
   let s = await campReadAt(active, true); if (!active()) return false;
   const sameRoute = !p || p.id === tp && p.kick === (+env.rt.manualKickAt || 0) && p.chapter === chapterKey();
   if (sameRoute && p?.ack && (!s || p.ack.rev >= s.rev) && (!liveAt || liveAt.char !== p.char || p.ack.rev >= liveAt.rev)) s = p.ack;
-  const destination = p?.id || tp;
-  const confirmed = s && (!p || s.id === p.charId && s.rev > p.rev) && (campReached(destination, s) === true ||
+  const destination = p?.id || tp, npc = p ? !!p.npc : !!options.npc;
+  const confirmed = s && (!p || s.id === p.charId && s.rev > p.rev) && ((npc ? campNpcReached(destination, s) : campReached(destination, s)) === true ||
     p?.ack && p.ack.id === s.id && !s.dung && (locationKey(p.ack) === locationKey(s) || samePoint(p.ack, s)));
   if (confirmed) {
     // После Stop/смены главы только сверяем уже выполненное намерение; старую команду не повторяем.
-    await env.setRt({ lastTeleport: destination, campaignAnchor: { tp: destination, at: s }, campaignTp: null, chainQ: [], chainWhy: '' });
+    await env.setRt({ lastTeleport: destination, campaignAnchor: { tp: destination, at: s, ...(npc ? { npc: true } : {}) }, campaignTp: null, chainQ: [], chainWhy: '' });
     try { root.sessionStorage?.removeItem('l2bot.campaignTp'); } catch (_) {}
     if (!active()) return false;
-    return destination === tp ? true : campTeleport(tp, btn, active);
+    return destination === tp ? true : campTeleport(tp, btn, active, options);
   }
   if (p?.refused) {
     await env.setRt({ campaignTp: null, campaignTpRetry: { id: p.id, until: Date.now() + 30000, reason: p.refused.reason } });
@@ -127,7 +138,7 @@ async function campTeleport(tp, btn, active) {
   if (env.rt.campaignTpRetry?.id === tp && env.rt.campaignTpRetry.until > Date.now()) { env.setStatus('Кампания: жду повторной проверки после отказа телепорта'); return false; }
   if (!s || !btn || btn.disabled) { env.setStatus('Кампания: нет подтверждения позиции или доступной кнопки телепорта'); return false; }
   await env.pause(); if (!active()) return false;
-  p = { nonce: Date.now() + ':' + Math.random().toString(36).slice(2), id: tp, char: s.char, charId: s.id, rev: s.rev, kick: +env.rt.manualKickAt || 0, chapter: chapterKey(), url: location.pathname, t: Date.now() };
+  p = { ...(options.npc ? { npc: true } : {}), nonce: Date.now() + ':' + Math.random().toString(36).slice(2), id: tp, char: s.char, charId: s.id, rev: s.rev, kick: +env.rt.manualKickAt || 0, chapter: chapterKey(), url: location.pathname, t: Date.now() };
   const written = await env.setRt({ campaignTp: p });
   const notSent = async () => { // Достоверно знаем: fire ещё не вызывался (либо вернул false).
     try { root.sessionStorage?.setItem('l2bot.campaignTpCancelled', JSON.stringify(p)); } catch (_) {}
@@ -139,7 +150,7 @@ async function campTeleport(tp, btn, active) {
   await env.waitFor(() => env.rt.campaignTp?.ack || env.rt.campaignTp?.refused || !active(), 8000, 100);
   if (!active()) return false;
   // Повторный проход лишь сверяет ACK/GET; отправка уже сохранённого намерения невозможна.
-  return campTeleport(tp, btn, active);
+  return campTeleport(tp, btn, active, options);
 }
 
 function questLinesInLog() {
@@ -324,6 +335,7 @@ const isQuests = () => /\/character-quests\.html/i.test(location.pathname);
 const campOn = () => (campEnabled() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
 
 async function goCampaign() {
+  const active = campGuard(false); if (!active()) return;
   if (staleCampaignPage()) return leaveOldCampaign();
   if (activeDion() && campPath() !== DION) await env.setRt(resetChapter(DION));
   if (env.isCampaign() || /\/starter-story-quest\.html$/i.test(location.pathname)) return campaign();
@@ -338,7 +350,7 @@ async function goCampaign() {
   }
   const pathOf = h => { try { return new URL(h, location.origin).pathname; } catch (e) { return String(h || '').split('?')[0]; } };
   const QL = env.rt.questList || [], inList = !!env.rt.campaignUrl && QL.some(q => q.href && pathOf(env.rt.campaignUrl) === pathOf(q.href));
-  if (activeDion() && campPath() === DION && location.pathname !== DION) { if (!env.on) return; location.href = DION; await env.sleep(1000); return; }
+  if (activeDion() && campPath() === DION && location.pathname !== DION) { if (!active()) return; location.href = DION; await env.sleep(1000); return; }
   if (!env.rt.questListT || Date.now() - env.rt.questListT > 10 * 60000 || (env.rt.campaignUrl && !inList)) {
     env.setStatus('Кампания: открываю «Персонаж → Мои квесты»'); location.href = '/character-quests.html'; await env.sleep(4000); return;
   }
@@ -347,6 +359,7 @@ async function goCampaign() {
   // Теперь: уже на странице главы — ждём цели, жмём карточку NPC; не вышло 3 раза — фармим дальше, глава подождёт 10 мин
   if (env.rt.campaignUrl && location.pathname === env.rt.campaignUrl.split('?')[0]) {
     const got = await env.waitFor(env.isCampaign, 4000, 200);
+    if (!active()) return;
     if (got) return campaign();
     // v5.5.2 (лог 08.10 21:14): «Первая цель выполнена. Найди полевого разведчика…» — глава ждёт кнопку действия
     // (#starter-story-actions: «Поговорить» data-action="meet-scout" и т.п.). Жмём её; игра ответила ошибкой (не у NPC) —
@@ -364,8 +377,8 @@ async function goCampaign() {
     if (npcCard && n <= 3) {
       env.setStatus('Кампания: открываю главу у NPC');
       env.rec('B', 'кампания', `на странице главы целей нет — нажимаю карточку NPC «${(npcCard.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60)}» (${n}/3)`);
-      await env.pause(); if (!env.on) return; env.fire(npcCard);
-      if (await env.waitFor(env.isCampaign, 5000, 200)) { await env.setRt({ campOpenTry: 0 }); return campaign(); }
+      await env.pause(); if (!active()) return; env.fire(npcCard);
+      if (await env.waitFor(env.isCampaign, 5000, 200) && active()) { await env.setRt({ campOpenTry: 0 }); return campaign(); }
       return;
     }
     if (n > 3) {
@@ -381,12 +394,14 @@ async function goCampaign() {
 }
 
 async function questsStep() {
+  const active = campGuard(false); if (!active()) return;
   env.setStatus('Кампания: читаю «Мои квесты»');
   const links = await env.waitFor(() => { const a = [...document.querySelectorAll('a.l2-character-quests-entry__title')].filter(env.shown); return a.length ? a : null; }, 8000, 300);
-  if (!env.on) return;
+  if (!active()) return;
   const link = links && (links.find(a => /campaign/i.test(a.getAttribute('href') || '') && a.closest('[class*="entry--ready"]')) || links.find(a => /campaign/i.test(a.getAttribute('href') || '')) || links[0]);
   if (!link) {                                   // список пуст — старый путь через почту
     await env.setRt({ campaignViaMail: true, questList: [], questListT: Date.now() });   // v5.6: отметка «смотрели» — иначе снова сюда
+    if (!active()) return;
     location.href = '/mail.html'; await env.sleep(5000); return;
   }
   // прогресс прямо со страницы: «★ Cave Servant · Lv.46 — 0 / 80 (осталось 80)»
@@ -397,15 +412,16 @@ async function questsStep() {
   await env.setRt({ questList: list, questListT: Date.now() });
   env.rec('B', 'кампания', `«Мои квесты» → ${link.textContent.trim()}${list[0]?.lines.length ? ' · ' + list[0].lines.join(' · ') : ''}`);
   const href = location.href;
-  if (!env.on) return;
+  if (!active()) return;
   env.fire(link);
-  if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000))) location.href = link.getAttribute('href');
+  if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000)) && active()) location.href = link.getAttribute('href');
 }
 
-async function mailStep() {                      // почта → карточка сюжетного квеста → страница кампании
+async function mailStep() {
+  const active = campGuard(false); if (!active()) return;                      // почта → карточка сюжетного квеста → страница кампании
   env.setStatus('Почта: ищу сюжетный квест');
   const cta = await env.waitFor(() => { const a = env.$q('a.l2-mail-starter-quest__cta, .l2-mail-starter-quest a, [class*="starter-quest"] a'); return env.shown(a) ? a : null; }, 8000, 300);
-  if (!env.on) return;
+  if (!active()) return;
   if (!cta) {
     await env.setRt({ campaignDue: false, sinceCamp: 0 });
     env.rec('B', 'кампания', 'в почте нет карточки сюжетного квеста');
@@ -414,7 +430,7 @@ async function mailStep() {                      // почта → карточ�
   }
   const href = location.href;
   env.fire(cta);
-  if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000))) return env.goOutskirts();
+  if (!(await env.waitFor(() => location.href !== href || env.isCampaign(), 8000)) && active()) return env.goOutskirts();
 }
 
 const actionBtn = () => [...document.querySelectorAll('#starter-story-actions button[data-action], [id$="-actions"] button[data-action], .l2-captain-andrei-btn[data-action]')]
@@ -423,23 +439,25 @@ const actionBtn = () => [...document.querySelectorAll('#starter-story-actions bu
 // 10.0.10: кнопка действия главы («Взять квест», «Поговорить»…): жмём, ждём цели / ошибку / смену текста; ошибка «не у NPC» →
 // кнопка телепорта к точке главы и повтор на следующем проходе. Общий код для goCampaign и campaign
 async function pressAction(actBtn) {
-  if (!env.on) return null;
+  const active = campGuard();
+  if (!active()) return null;
   const lbl = (actBtn.textContent || '').trim().slice(0, 40), tries = (env.rt.campActTry || 0) + 1;
   await env.setRt({ campActTry: tries });
   env.setStatus(`Кампания: «${lbl}»`);
   env.rec('B', 'кампания', `глава ждёт действия — жму «${lbl}» (${actBtn.dataset.action}, ${tries}/4)`);
   const before = (document.querySelector('[class*="quest-body"]')?.textContent || '').length;
-  await env.pause(); if (!env.on) return null; env.fire(actBtn);
+  await env.pause(); if (!active()) return null; env.fire(actBtn);
   const res = await env.waitFor(() => campaignState().targets.some(t => !t.ok) || env.shown(env.$q('[data-action="complete-chapter"]')) ? 'ok'
     : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })()
     || ((document.querySelector('[class*="quest-body"]')?.textContent || '').length !== before ? 'changed' : null), 6000, 200);
+  if (!active()) return null;
   if (res === 'ok') { await env.setRt({ campActTry: 0, campOpenTry: 0 }); return 'ok'; }
   if (res === 'err') {
     const err = env.$q('[id$="-err"]').textContent.trim().slice(0, 100);
     const tpb = env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]')
       || [...document.querySelectorAll('[data-quest-teleport-id], [data-quest-transport-id]')].find(env.shown);
     env.rec('B', 'кампания', `«${lbl}»: ${err}${tpb ? ' → телепорт к точке главы' : ''}`);
-    if (tpb) { await env.pause(); if (!env.on) return null; env.fire(tpb); await env.sleep(env.rnd(1500, 2500)); await env.setRt({ lastTeleport: '' }); if (env.on && !isCampaignPage() && env.rt.campaignUrl) { location.href = env.rt.campaignUrl; await env.sleep(4000); } }
+    if (tpb && await campNpcTeleport(tpb, active) && active() && !isCampaignPage() && env.rt.campaignUrl) { location.href = env.rt.campaignUrl; await env.sleep(4000); }
   }
   return res;
 }
@@ -480,16 +498,18 @@ function campaignState() {
 }
 
 async function campaign() {
+  const active = campGuard(false);
+  if (!active()) return;
   if (staleCampaignPage()) return leaveOldCampaign();
   if (/teleport=/i.test(location.search)) {
     env.setStatus('Кампания: жду телепорт к NPC (страница перезагрузится)');
     await env.waitFor(() => !/teleport=/i.test(location.search), 6000, 100);
     await env.sleep(env.rnd(200, 400));
-    if (!env.on) return;
+    if (!active()) return;
   }
   env.setStatus('Кампания: читаю главу');
   await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources, #starter-story-actions button[data-action], .l2-starter-story-location [data-quest-teleport-id]'), 10000, 300);
-  if (!env.on) return;
+  if (!active()) return;
   if (staleCampaignPage()) return leaveOldCampaign();
   const chapterMark = JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter]);
   let st = campaignState();
@@ -513,13 +533,14 @@ async function campaign() {
     const tp = !btn && /\/starter-story-quest\.html$/i.test(location.pathname) && npcStage && !saga?.completed
       && (env.heroLvl() || saga?.lvl || 0) >= (saga?.minLevel || 0)
       ? env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]') : null;
-    if (env.shown(tp) && !tp.disabled && (env.rt.campActTry || 0) < 4) {
-      const n = (env.rt.campActTry || 0) + 1;
+    if (env.shown(tp) && !tp.disabled && ((env.rt.campActTry || 0) < 4 || env.rt.campaignTp)) {
+      const n = (env.rt.campActTry || 0) + (env.rt.campaignTp ? 0 : 1);
       await env.setRt({ campActTry: n, campEmptyPage: 0, campaignUrl: location.pathname + location.search });
       env.setStatus('Кампания: телепорт к NPC текущего этапа');
       env.rec('B', 'кампания', `этап ${saga.stage}: к NPC (${n}/4)`);
-      await env.pause(); if (!env.on) return; env.fire(tp);
+      if (!await campNpcTeleport(tp, active) || !active()) return;
       const res = await env.waitFor(() => actionBtn() ? 'ready' : (() => { const e = env.$q('[id$="-err"]'); return env.shown(e) && e.textContent.trim() ? 'err' : null; })(), 8000, 200);
+      if (!active()) return;
       if (res === 'ready') await env.setRt({ campActTry: 0, lastTeleport: '' });
       if (res === 'err') env.rec('B', 'кампания', `телепорт к NPC: ${env.$q('[id$="-err"]').textContent.trim().slice(0, 100)}`);
       return;
@@ -539,38 +560,41 @@ async function campaign() {
     const was = st.title;
     env.setStatus(`Кампания: завершаю «${was}»`);
     await env.pause();
-    if (!env.on) return;
+    if (!active()) return;
     env.fire(st.complete);
     let ok = await env.waitFor(() => campaignState().title !== was, 8000, 300);
-    if (!ok && env.on) {                              // «вернись к указанному NPC» — телепорт к NPC главы и повтор
+    if (!ok && active()) {                              // «вернись к указанному NPC» — телепорт к NPC главы и повтор
       const err = env.$q('[id$="-campaign-err"]');
       const npc = env.$q('.l2-starter-story-location [data-quest-teleport-id], .l2-starter-story-location [data-quest-transport-id]');
       env.rec('B', 'кампания', `глава не завершилась${env.shown(err) ? ': ' + err.textContent.trim() : ''} → к NPC`);
       if (npc) {
         env.setStatus('Кампания: телепорт к NPC главы');
-        env.fire(npc);
+        if (!await campNpcTeleport(npc, active) || !active()) return;
         await env.waitFor(() => env.shown(env.$q('[data-action="complete-chapter"]')), 2500, 50);   // телепорт мгновенный — ждём только кнопку
+        if (!active()) return;
         await env.setRt({ lastTeleport: '' });
         const btn = env.$q('[data-action="complete-chapter"]');
-        if (env.on && env.shown(btn)) { env.fire(btn); ok = await env.waitFor(() => campaignState().title !== was, 8000, 300); }
+        if (active() && env.shown(btn)) { env.fire(btn); ok = await env.waitFor(() => campaignState().title !== was, 8000, 300); }
       }
     }
+    if (!active()) return;
     env.rec('B', 'кампания', ok ? `глава завершена: ${was} → ${campaignState().title}` : `не удалось завершить «${was}»`);
     if (ok) await env.setRt({ npcTried: 0, lastTeleport: '', quests: {} });   // учёт прошлой главы больше не нужен
     await env.sleep(env.rnd(800, 1500));
     st = campaignState();
-    if (!env.on) return;
+    if (!active()) return;
     if (staleCampaignPage()) return leaveOldCampaign();
     if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter])) return;
     if (!ok) { await env.setRt({ campaignDue: false, sinceCamp: 0 }); env.setStatus('Кампания: главу завершить не удалось — продолжаю фарм'); return env.goOutskirts(); }
   }
-  if (!env.on) return;
+  if (!active()) return;
   if (staleCampaignPage()) return leaveOldCampaign();
   if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter])) return; // ответ новой главы важнее старого DOM
   const open = st.targets.filter(t => !t.ok);
   if (env.rt.campaign?.title && env.rt.campaign.title !== st.title) env.rec('B', 'кампания', `новая глава: «${env.rt.campaign.title}» → «${st.title}» — учёт прошлой главы сброшен`);
   await env.setRt({ needChamps: open.some(t => t.champ), quests: questsFor(st.targets), campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, sinceCamp: 0,
                 campaignUrl: location.pathname + location.search });
+  if (!active()) return;
   if (!st.targets.length) { env.setStatus('Кампания: целей нет (кампания пройдена?)'); return env.goOutskirts(); }
   if (!open.length) {
     // всё выполнено, а «Завершить этап» нет — кнопка появляется только у NPC главы: «К NPC» → снова открыть главу
@@ -580,11 +604,9 @@ async function campaign() {
       env.setStatus('Кампания: всё выполнено — телепорт к NPC, чтобы сдать главу');
       await env.setRt({ npcTried: Date.now(), campaignDue: true, lastTeleport: '' });
       env.rec('B', 'кампания', `цели выполнены, кнопки сдачи нет → «${npc.textContent.trim()}»`);
-      await env.pause();
-      if (!env.on) return;
-      env.fire(npc);
+      if (!await campNpcTeleport(npc, active) || !active()) return;
       await env.sleep(env.rnd(150, 300));
-      if (env.on) { location.href = env.rt.campaignUrl || location.pathname; await env.sleep(4000); }
+      if (active()) { location.href = env.rt.campaignUrl || location.pathname; await env.sleep(4000); }
       return;
     }
     env.setStatus('Кампания: цели выполнены, кнопки завершения нет — проверю позже'); return env.goOutskirts();

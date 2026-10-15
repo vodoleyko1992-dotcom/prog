@@ -16,9 +16,14 @@ function faFixture({ids=[1059,1085],H={},interrupt=false,pauseChange=null}={}) {
 }
 function tvtFixture(change) {
  const bought=[],msg={textContent:''},btn={disabled:false},it={id:920043,n:'Vesper Singer',price:200,lvl:70};
- const row={querySelector:s=>s==='.l2-tvt-shop-row__name'?{textContent:it.n}:s==='.l2-tvt-shop-row__buy'?btn:null,closest:()=>null};
+ const row={querySelector:s=>s==='.l2-tvt-shop-row__name'?{textContent:it.n}:s==='.l2-tvt-shop-row__buy'?btn:s==='.l2-tvt-shop-row__price'?{textContent:'200'}:null,closest:()=>null};
  const box={location:{pathname:'/tvt-shop.html'},document:{querySelectorAll:()=>[row]}};vm.runInNewContext(read('tvtshop'),box);
  const env={cfg:{tsBuy:true,tsGoalItem:it.id},rt:{tsJob:{kind:'buy',it,t:Date.now()}},isBattle:()=>false,$q:s=>s==='#tvt-shop-shil-balance'?{textContent:'200'}:s==='#tvt-shop-msg'?msg:null,waitX:async f=>f(),shown:()=>true,pause:async()=>change?.(env),sleep:async()=>{},rec(){},setStatus(){},fishNow:()=>false,setRt:async p=>Object.assign(env.rt,p),fire:b=>{assert.equal(b,btn);bought.push(it.id);msg.textContent='Придбано: Vesper Singer';}};
+ // 15.10: подтверждение покупки — fresh inventory, не надпись страницы; реальная защита платежа.
+ env.rt.char='Hero'; env.rtCommit=async()=>true; env.setRt=async p=>{Object.assign(env.rt,p);return {ok:true}};
+ vm.runInNewContext(read('payments'),box);env.payments=box.L2V7Factories.payments(env);
+ env.gameGet=async url=>({ok:true,json:async()=>url==='/character'?{character:{id:'hero',name:'Hero',revision:bought.length?2:1,inventory:{stacks:[{itemId:920030,qty:bought.length?0:200},...(bought.length?[{itemId:it.id,qty:1}]:[])],eq:{}}}}:{categories:[{key:'weapon',items:[{itemId:it.id,nameRu:it.n,priceShil:200}]}]}});
+ const fire=env.fire;env.fire=b=>{assert.ok(env.payments.consumePermit());fire(b);return true};
  return {M:box.L2V7Factories.tvtshop(env),env,bought};
 }
 const cases=[];const test=(n,f)=>cases.push([n,f]);
