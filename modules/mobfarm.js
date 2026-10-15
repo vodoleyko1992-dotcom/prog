@@ -248,6 +248,11 @@ async function nextFight(ctx) {
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.autonomyMode() === 'fish') return env.goFishing();
+  // Ashen Bastion has no /map.html and no map hunt chain. A victory started there
+  // must return to its own paginated monster list before choosing another target.
+  if (/^ashen_bastion_mob_/i.test(new URLSearchParams(location.search).get('spawnId') || '') && env.autonomyMode() === 'farm') {
+    location.href = '/ashen-bastion.html'; await env.sleep(3000); return;
+  }
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
@@ -880,6 +885,33 @@ async function map() {
   env.setStatus('Цели исчезли из списка, ищу заново');
   await env.sleep(1500);
 }
- return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map };
+function ashenRows() {
+  return [...document.querySelectorAll('#ashen-mobs .ashen-mob')].map(row => {
+    const fight = row.querySelector('button.ashen-fight');
+    const name = row.querySelector('.ashen-name')?.textContent?.trim() || '';
+    const lvl = +(name.match(/(?:Lv|ур\.)\s*(\d+)/i)?.[1] || 0);
+    return { row, fight, name, lvl, ready: !!fight && !fight.disabled && !row.classList.contains('is-dead') && !/\d+\s*(?:с|s)\b/i.test(fight.textContent || '') };
+  });
+}
+async function ashenStep() {
+  if (!env.on || env.tabOwner === false || env.autonomyMode() !== 'farm') return;
+  const rows = ashenRows(), min = +env.cfg.lvlMin || 1, max = +env.cfg.lvlMax || 99;
+  const target = rows.find(r => r.ready && r.lvl >= min && r.lvl <= max);
+  if (target) {
+    env.setStatus(`Ashen Bastion: ${target.name}`);
+    const href = location.href;
+    if (!env.fire(target.fight)) return;
+    const opened = await env.waitFor(() => location.href !== href, 4000, 100);
+    if (!opened && env.on) { env.setStatus('Ashen Bastion: бой не открылся, обновляю список'); location.reload(); }
+    return;
+  }
+  const next = document.querySelector('#ashen-next');
+  if (next && !next.disabled) { env.setStatus('Ashen Bastion: следующая страница'); env.fire(next); await env.sleep(700); return; }
+  const first = document.querySelector('#ashen-prev');
+  if (first && !first.disabled) { env.setStatus('Ashen Bastion: все страницы просмотрены, жду возрождения'); await env.sleep(19000); if (env.on && env.tabOwner !== false) location.href = '/ashen-bastion.html'; return; }
+  env.setStatus(rows.length ? 'Ashen Bastion: подходящие мобы возрождаются' : 'Ashen Bastion: жду список мобов');
+  await env.sleep(2000);
+}
+ return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep };
  };
 })(globalThis);
