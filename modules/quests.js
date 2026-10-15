@@ -423,9 +423,9 @@ async function mailStep() {
   const cta = await env.waitFor(() => { const a = env.$q('a.l2-mail-starter-quest__cta, .l2-mail-starter-quest a, [class*="starter-quest"] a'); return env.shown(a) ? a : null; }, 8000, 300);
   if (!active()) return;
   if (!cta) {
-    await env.setRt({ campaignDue: false, sinceCamp: 0 });
+    await env.setRt({ campaignDue: false, sinceCamp: 0, ...(Array.isArray(env.cfg.autoTasks) ? {campNoTasksUntil: Date.now() + 10 * 60000} : {}) });
     env.rec('B', 'кампания', 'в почте нет карточки сюжетного квеста');
-    env.setStatus('В почте нет сюжетного квеста — фармлю');
+    env.setStatus(Array.isArray(env.cfg.autoTasks) ? 'Доступных сюжетных квестов нет — следующая выбранная задача, проверка через 10 мин' : 'В почте нет сюжетного квеста — фармлю');
     return env.goOutskirts();
   }
   const href = location.href;

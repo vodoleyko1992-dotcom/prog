@@ -7,7 +7,7 @@ const fixtureBox={require,__dirname:path.join(base,'tests'),console,URLSearchPar
 vm.runInNewContext(lifecycle.slice(0,lifecycle.indexOf("test('по умолчанию"))+';this.fixture=fixture;',fixtureBox);
 function fixture(opts){const f=fixtureBox.fixture(opts);f.env.cfg.enchantMode=true;return f;}
 function coreFixture(){
- const calls=[],c=vm.createContext({console,URL,Date,Promise,Math,location:{origin:'https://fixture.invalid',pathname:'/map.html',search:'',href:''},
+ const calls=[],c=vm.createContext({console,URL,Date,Promise,Math,L2EngineCore:require('../engine-core.js'),taskPolicyNote(){},location:{origin:'https://fixture.invalid',pathname:'/map.html',search:'',href:''},
   on:true,tabOwner:true,cfg:{enchantMode:true,enchant:{enabled:true},tvtOn:true},rt:{char:'Hero'},hero:'Hero',battleNow:false,fishCaught:false,nearTvt:false,ab:false,calls,
   L2V7Factories:{enchant:env=>({step:async()=>{calls.push('enchant');return true},command:async cmd=>{calls.push(cmd);if(cmd==='pause')c.rt.enchant={...c.rt.enchant,status:'paused'};return true}}),warlock:()=>({})},L2V7Modules:{}});
  vm.runInContext(`const heroNick=()=>hero,antibotState=()=>ab,autonomyMode=()=>cfg.enchantMode===true?'enchant':'farm';
@@ -66,12 +66,12 @@ test('конфликт ревизии после выхода из режима 
 test('новый профиль не включает заточку автоматически',()=>{const profile=JSON.parse(read('base-profile.json'));assert.equal(profile.cfg.enchantMode,false)});
 // Настоящий участок main: выбор заточки приходит во время чужого await, до следующей задачи.
 for(const interrupted of ['mammon','story','shop','clan','daily','trip','warlock'])test('смена режима во время '+interrupted+' не запускает следующую задачу',async()=>{
- const calls=[],c=vm.createContext({on:true,tabOwner:true,cfg:{enchantMode:false},rt:{petBufferTrip:{}},calls});
+ const calls=[],c=vm.createContext({L2EngineCore:require('../engine-core.js'),on:true,tabOwner:true,cfg:{enchantMode:false},rt:{petBufferTrip:{}},calls});
  const step=name=>async()=>{calls.push(name);await Promise.resolve();if(name===interrupted)c.cfg.enchantMode=true;return false};
  Object.assign(c,{autonomyMode:()=>c.cfg.enchantMode?'enchant':'farm',isBattle:()=>false,sleep:async()=>{},farmGuideTick(){},enchantDispatch:async()=>false,epicOn:()=>{calls.push('fallback');return false},warlockTripStep:step('trip'),
   L2V7Modules:{mammon:{mmTick:async()=>{},mmStep:step('mammon')},subclass:{tick:async()=>{}},story:{storyTick:async()=>{},storyStep:step('story')},
   tvtshop:{shopStep:step('shop')},dailies:{tick:async()=>{},clanStep:step('clan'),dailyStep:step('daily')},warlock:{step:step('warlock')}}});
- const start=core.indexOf('      L2V7Modules.mammon.mmTick().catch'),end=core.indexOf('\n',core.indexOf('      if (epicOn())',start));assert.ok(start>0&&end>start);
+ const start=core.indexOf("      if (L2EngineCore.taskAllowed(cfg,'mammon')) L2V7Modules.mammon.mmTick().catch"),end=core.indexOf('\n',core.indexOf('      if (epicOn())',start));assert.ok(start>0&&end>start);
  await vm.runInContext('(async()=>{while(on){if(autonomyMode()==="enchant")break;'+core.slice(start,end)+'\nbreak;}})()',c);
  assert.equal(calls.at(-1),interrupted,JSON.stringify(calls));
 });

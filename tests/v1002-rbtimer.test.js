@@ -86,8 +86,10 @@ const boss = (id, lvl, alive, extra = {}) => ({ spawnId: 'l2dop_rb_' + id, name:
   const p1 = { page: 4, totalPages: 14, bosses: [boss(1, 40, true), boss(2, 52, false)] }, p5 = { page: 5, totalPages: 14, bosses: [boss(3, 60, true), boss(4, 85, true, { canAttack: false, attackBlockedReasonUk: 'Недоступно: x' })] };
   const ep = { total: 1, bosses: [{ spawnId: 'l2dop_rb_29001', name: 'Queen Ant', level: 40, bossType: 'epic', isAlive: false, respawnHours: 12 }] };
   const { T, env, recs, gets } = make({ rt: { rbTimer: { b: {}, pg: { 1: [20, 25], 4: [38, 52], 5: [60, 85] } } }, lists: { '/game/raid-bosses?page=4': p1, '/game/raid-bosses?page=5': p5, '/game/epic-bosses': ep } });
-  assert.equal(await T.tick(), true);
-  assert.deepEqual(gets, ['/game/raid-bosses?page=4', '/game/raid-bosses?page=5', '/game/epic-bosses'], 'страницы с окна 50–80 и эпики');
+  // 15.10: фон отключён; уже прочитанные страницы активного тура/игры сохраняются.
+  assert.equal(await T.tick(), false);
+  assert.deepEqual(gets, [], 'фон не обращается к игровому аккаунту');
+  await T.listNote(p1); await T.listNote(p5); await T.listNote(ep);
   assert.equal(env.rt.rbList.l2dop_rb_2.alive, false); assert.equal(env.rt.rbList.l2dop_rb_3.page, 5); assert.equal(env.rt.rbList.l2dop_rb_4.deny, 'x');
   assert.equal(env.rt.rbList.l2dop_rb_3.unit, 'аден'); assert.equal(env.rt.rbList['l2dop_rb_29001'], undefined, 'эпики не в списке тура');
   assert.equal(env.rt.rbTimer.b['l2dop_rb_29001'].rh, 12);
@@ -104,7 +106,7 @@ const boss = (id, lvl, alive, extra = {}) => ({ spawnId: 'l2dop_rb_' + id, name:
   deq(tab.slice(0, 2).map(t => t.id), ['l2dop_rb_3', 'l2dop_rb_29001'], 'убитые первыми, по времени воскрешения (РБ 8 ч раньше эпика 12 ч)'); assert.ok(tab.every(t => t.e || (t.l >= 50 && t.l <= 80)));
   // 6. подключение: content, hook, raid, combat, меню
   const c = read('content.js'), raid = read('modules/raid.js');
-  assert.match(c, /L2V7Modules\.rbtimer\.tick\(\)/); assert.match(c, /raid\|epic\)-bosses\$\/\.test\(path\) && Array\.isArray\(d\.eb\)/);
+  assert.doesNotMatch(c, /L2V7Modules\.rbtimer\.tick\(\)/); assert.match(c, /raid\|epic\)-bosses\$\/\.test\(path\) && Array\.isArray\(d\.eb\)/);
   assert.match(read('hook.js'), /\(\?:epic\|raid\)-bosses/); assert.match(read('modules/combat.js'), /env\.rbTimerKill\?\.\(ctx\.rb\.id/);
   assert.match(raid, /env\.rbTimer\?\.revivedSince/); assert.match(raid, /env\.rbTimer\?\.domNote\(all\)/); assert.match(raid, /первым воскреснет/);
   assert.match(read('popup.html'), /id="rbTimerTable"/); assert.match(read('popup.html'), /modules\/rbtimer\.js/); assert.match(read('popup.js'), /function renderRbTimer/); assert.match(read('popup.js'), /RT\.merge\(rt\.rbTimer/); assert.match(read('popup.html'), /id="rbtFile"/);

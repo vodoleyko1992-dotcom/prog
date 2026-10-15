@@ -11,18 +11,18 @@ function fixture(){
 }
 const reply=()=>({page:1,totalPages:1,bosses:[{spawnId:'l2dop_rb_9',name:'Boss',level:75,bossType:'raid',isAlive:true,adenaCost:100000,canAttack:true}]});
 for(const phase of ['fetch','json'])for(const change of ['hero','subclass','disabled'])test('timer poll discards '+phase+' response after '+change,async()=>{
- const f=fixture();let release;const gate=new Promise(r=>release=r);
+ const f=fixture();f.env.rt.rbList={old:{lvl:75,page:1}};let active=true,release;const gate=new Promise(r=>release=r);
  f.env.gameGet=async p=>{f.calls.push(p);if(p.includes('epic'))return {ok:false};if(phase==='fetch')await gate;return {ok:true,json:async()=>{if(phase==='json')await gate;return reply()}}};
- const pending=f.T.tick();await Promise.resolve();
+ const pending=f.T.tourTick({active:()=>active});await Promise.resolve();
  if(change==='hero')f.env.rt={char:'Second',lvl:25,classCur:{prof:'warrior',slot:0}};
  if(change==='subclass')f.env.rt.classCur={prof:'dark_avenger',slot:1};
- if(change==='disabled')f.env.cfg.rbTimers=false;
+ if(change==='disabled')active=false;
  release();assert.equal(await pending,false);assert.equal(f.writes.length,0);assert.equal(f.calls.length,1,'no further pages or epic GET after cancellation');
- f.env.cfg.rbTimers=true;assert.equal(await f.T.tick(),true,'new context can poll without inheriting old ten-minute cooldown');
+ active=true;f.env.rt.lvl=75;f.env.rt.rbList={old:{lvl:75,page:1}};assert.equal(await f.T.tourTick({active:()=>active}),true,'новый контекст активного тура может читать свои цели');
 });
-test('same-profile timer poll still refreshes list and epics',async()=>{
+test('15.10: timer background does not request game lists even when old setting is enabled',async()=>{
  const f=fixture();f.env.gameGet=async p=>{f.calls.push(p);return {ok:true,json:async()=>p.includes('epic')?{bosses:[{spawnId:'l2dop_rb_29001',name:'Queen',level:40,bossType:'epic',isAlive:false,respawnHours:12}]}:reply()}};
- assert.equal(await f.T.tick(),true);assert.equal(f.env.rt.rbList.l2dop_rb_9.alive,true);assert.equal(f.env.rt.rbTimer.b.l2dop_rb_29001.rh,12);assert.equal(f.calls.length,2);
+ assert.equal(await f.T.tick(),false);assert.equal(f.calls.length,0);assert.equal(f.writes.length,0);
 });
 test('tour polling also rejects subclass change even if caller stays active',async()=>{
  const f=fixture();f.env.rt.rbList={old:{lvl:75,page:1}};let release;const gate=new Promise(r=>release=r);

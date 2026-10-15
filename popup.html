@@ -198,7 +198,26 @@
     <span class="mode-toggle-title">◫ Быстрые режимы</span><span id="modeSummary">Настроить режимы</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
   </button>
   <div id="quickModeGrid" class="modes">
-    <div class="mode-label">Чем занят бот — один режим или ни одного (повторное нажатие снимает режим):</div>
+    <fieldset id="autoTaskSelection" style="grid-column:1/-1"><legend>Разрешённые задачи авторежима</legend>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="tvt">TvT</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="enchant">Автозаточка</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="epic">Эпики</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="raid">Тур по РБ</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="quests">Квесты и кампания</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="fish">Рыбалка</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="cat">Катакомбы</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="auto">Автофарм</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="farm">Фарм на месте</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="mammon">Маммон</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="dailies">Дейлики</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="clan">Клан</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="pvp">Враги</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="petbuff">Автобаф суммона</label>
+      <label style="display:inline-flex;margin:4px 8px 4px 0;gap:4px"><input type="checkbox" data-auto-task="resources">Ресурсы и рецепты</label>
+      <div id="autoTaskStatus" class="hint" aria-live="polite"></div>
+      <p class="hint">Можно выбрать одну или несколько задач. Изменения сохраняются без запуска. TvT имеет высший приоритет; затем заточка → эпики → РБ → квесты → рыбалка → катакомбы → автофарм → фарм. Непрерывные задачи (например, рыбалка и фарм) не чередуются: следующая ждёт завершения или снятия предыдущей. Пустой список — ожидание. Детальные настройки и лимиты расходов сохраняются.</p>
+    </fieldset>
+    <div class="mode-label">Быстрые переключатели (при выбранном списке добавляют или снимают задачу):</div>
     <button id="tasksToggle" data-mode="tasks" title="Без режима: бот делает только включённые задачи — Маммон (заказ, кузнец, крафтер, почта), квесты сабкласса/Noblesse, цель фарма ресурса или рецепта (на её точке бьёт мобов-источники; снять — ✓ у цели в «Фарм ресурсов»), TvT. Между ними стоит там, где стоит, мобов не бьёт">⏹ Только задачи</button>
     <button id="farmToggle" data-mode="farm" title="Стоять там, где оставили: ★ цели квестов и мобы этой локации (чемпионы — если включено «Искать чемпионов» в «Охоте»)">⚔ Фарм на месте</button>
     <button id="autoFarmToggle" data-mode="auto" title="Бот сам подбирает лучшую по опыту локацию своего уровня">🗺 Автофарм</button>
@@ -444,13 +463,13 @@
 
   <div class="subsec-title"><span id="tab-rbtimer" class="tab-anchor"></span>⏱ Таймеры боссов</div>
   <div class="hint">Игра показывает у РБ только «Живой / Убит» (у эпиков ещё «респ. N ч»), времени смерти и воскрешения не отдаёт. Бот запоминает сам: своего убитого — точно, чужого — между «видел живым» и «увидел убитым». Длительность респа обычного РБ бот учит по своим наблюдениям (босс убит → воскрес), пока замеров нет — берёт число ниже. «Тур РБ» к убитым не летает, а простой заканчивает, как только подходящий РБ воскрес.</div>
-  <label title="Раз в N минут бот читает у игры список РБ своего окна уровней и список эпиков (только чтение, бесплатно)">Следить за боссами (опрос списка) <input id="rbTimers" type="checkbox"></label>
-  <label>Опрос списка раз в, мин <input id="rbTimerMin" type="number" min="5" step="1"></label>
+  <div class="hint">Фоновая слежка через игровые аккаунты отключена. Загрузите файл таймеров; активный тур читает свои цели как обычно.</div>
+  <input id="rbTimers" type="checkbox" hidden disabled><input id="rbTimerMin" type="number" hidden disabled>
   <label title="Пока бот сам не замерил респ, он берёт это число (со слов игрока — около 8 ч)">Респ обычного РБ, пока не замерен, ч <input id="rbRespH" type="number" min="1" max="72" step="0.5"></label>
   <label>Показать всех РБ, а не только своего окна уровней <input id="rbTimerAll" type="checkbox"></label>
   <div class="row"><button id="rbtImport" title="Alt+W. Файл слежки из облака (по строке на опрос) или таймеры другого персонажа — сольются с таймерами этого">📥 Загрузить таймеры из файла слежки</button><input id="rbtFile" type="file" accept=".json,.jsonl,.txt,application/json" hidden></div>
   <div id="rbTimerSum" class="hint" style="white-space:pre-line"></div>
-  <div id="rbTimerTable" class="zbox"><div class="hint">Пока пусто — бот должен быть запущен: список боссов он прочитает в течение 10 мин</div></div>
+  <div id="rbTimerTable" class="zbox"><div class="hint">Пока пусто — загрузите файл таймеров.</div></div>
 
   <div class="subsec-title"><span id="tab-epic" class="tab-anchor"></span>🐉 Эпик-боссы</div>
   <h4>🐉 Фарм эпиков</h4>
@@ -851,6 +870,7 @@
 <script src="modules/tvtshop.js"></script>
 <script src="modules/dailies.js"></script>
 <script src="modules/rbtimer.js"></script>
+<script src="engine-core.js"></script>
 <script src="modules/fightlab.js"></script>
 <script src="modules/enchant.js"></script>
 <script src="enchant-ui.js"></script>

@@ -102,6 +102,15 @@ async function activateMode(rtPatch, cfgPatch) {
   await chrome.storage.local.set({ paused: null });   // 8.0: выбран режим — пауза снята (иначе после остановки меню предлагало «Продолжить»)
   // 14.10: отдельные кнопки тура/эпиков/кампании тоже заменяют режим. Разовая разделка/обмен без смены cfg сохраняют возврат из дейлика.
   const modeChanged = ['enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto', 'taskOnly'].some(k => Object.hasOwn(cfgPatch || {}, k));
+  if (modeChanged) {
+    const { cfg = {} } = await chrome.storage.local.get('cfg');
+    if (Array.isArray(cfg.autoTasks) && !Object.hasOwn(cfgPatch, 'autoTasks')) {
+      const map = { enchantMode: 'enchant', epicMode: 'epic', rbHuntMode: 'raid', campaign: 'quests', fishMode: 'fish', catMode: 'cat', zoneAuto: 'auto' };
+      const selected = new Set(cfg.autoTasks);
+      for (const [flag, key] of Object.entries(map)) if (cfgPatch[flag] === true) selected.add(key);
+      cfgPatch = { ...cfgPatch, autoTasks: [...selected] };
+    }
+  }
   // 15.10: любой явный выбор другого режима снимает заточку; разовые службы без смены режима сохраняют её.
   if (modeChanged) cfgPatch = { enchantMode: false, ...cfgPatch };
   await menuPatch({ ...rtPatch, ...(modeChanged ? { dailyFish: null, dailyRb: null } : {}), manualKickAt: Date.now() }, { cfgPatch, on: true });
@@ -116,7 +125,7 @@ const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'champB
 const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
               enchantMode: false, enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
-              taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
+              autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
               priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
               lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
               stopHp: 25, skillMpMin: 35, mpPotAt: 70, hpPotAt: 50, stunEvery: 15, buffSec: 118,
@@ -1433,11 +1442,11 @@ function renderRbTimer(rt, d) {
   $('rbTimerSum').textContent = `Знаю ${all.length} боссов: живых ${all.filter(x => x.al).length}, убитых ${all.filter(x => x.al === false).length}`
     + `${L && !d.rbTimerAll ? ` · показаны ${L - 15}–${L + 15} ур. и эпики` : ''}`
     + `\nРесп обычного РБ: ${g ? RT.respTxt({ ...g, src: 'all' }) : `пока не замерен — беру ${+d.rbRespH || 8} ч`}`
-    + (last ? ` · список видел ${RT.hm(last, now)}` : '') + (d.rbTimers === false ? ' · опрос выключен' : '');
+    + (last ? ` · список видел ${RT.hm(last, now)}` : '') + ' · фоновая слежка отключена';
   $('rbTimerTable').innerHTML = list.length ? `<table><tr><th>Босс (ур.)</th><th>Сейчас</th><th>Воскреснет</th><th>Респ</th></tr>${list.map(t =>
     `<tr${t.soon || t.late ? ' class="cur"' : ''}><td>${t.e ? '🐉 ' : ''}${e(t.n)} (${t.l || '?'})</td><td>${t.al ? '✅ жив' : '💀 ' + e(RT.deathTxt(t, now))}</td>`
     + `<td>${t.al ? (t.up ? e(`воскрес ${RT.hm(t.up[0], now)}–${RT.hm(t.up[1], now)}`) : '—') : e(RT.upTxt(t, now))}</td><td>${e(RT.respTxt(t.R))}</td></tr>`).join('')}</table>`
-    : '<div class="hint">Пока пусто — бот должен быть запущен: список боссов он прочитает в течение 10 мин</div>';
+    : '<div class="hint">Пока пусто — загрузите файл таймеров. Активный тур также запоминает прочитанные цели.</div>';
 }
 function renderRb(rt) {
   const db = rt.rbDb || {}, seen = rt.rbSeen || {};
@@ -1562,33 +1571,59 @@ $('apply').onclick = async () => {
 };
 // ---------- 7.1.31: «Чем занят бот» — ровно один режим (движок и так исполняет один: эпики → тур РБ → рыбалка → катакомбы → кампания → фарм) ----------
 // Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
+const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', epic: 'Эпики', raid: 'Тур по РБ', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
+const AUTO_MAIN_TASKS = ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
+const AUTO_TASK_GROUP = { mmOrders: 'mammon', mmUpgrade: 'mammon', mmCraftSend: 'mammon', storyTurnIn: 'quests', enemyHunt: 'pvp', dailyAuto: 'dailies', clanTasks: 'clan' };
+function selectedAutoTasks(d) {
+  if (Array.isArray(d.autoTasks)) return d.autoTasks.filter(k => Object.hasOwn(AUTO_TASK_LABELS, k));
+  const flags = { tvt: d.tvtOn, enchant: d.enchantMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmCraftSend || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
+  return Object.keys(AUTO_TASK_LABELS).filter(k => flags[k]);
+}
+function autoTaskPatch(d, key, enabled) {
+  const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
+  const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto' };
+  return { autoTasks: [...tasks], ...(flags[key] ? { [flags[key]]: enabled } : {}), ...(key === 'quests' ? { storyTurnIn: enabled } : {}) };
+}
+let autoTaskEditQueue = Promise.resolve();
+function editAutoTask(key, enabled) {
+  const edit = autoTaskEditQueue.catch(() => {}).then(async () => {
+  const { cfg = {} } = await chrome.storage.local.get('cfg');
+  await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
+  await load();
+  });
+  autoTaskEditQueue = edit; return edit;
+}
 function currentMode(d) {
+  if (Array.isArray(d.autoTasks)) { const k = AUTO_MAIN_TASKS.find(k => d.autoTasks.includes(k)); return k === 'raid' ? 'rb' : k === 'quests' ? 'quests' : k || 'tasks'; }
   return d.enchantMode === true ? 'enchant' : d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
 }
-const MODE_NAME = { tasks: '⏹ Без режима — только задачи', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
+const MODE_NAME = { quests: '📜 Квесты и кампания', tasks: '⏹ Без режима — только задачи', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
 function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампания (авто)»
-  const m = currentMode(d);
+  const strict = Array.isArray(d.autoTasks), selected = selectedAutoTasks(d), active = strict && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) : null, m = active ? (active === 'raid' ? 'rb' : active) : currentMode(d);
+  document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.checked = selected.includes(el.dataset.autoTask); });
+  const note = $('autoTaskStatus'); if (note) note.textContent = strict ? (selected.length ? 'Разрешено: ' + selected.map(k => AUTO_TASK_LABELS[k]).join(', ') : 'Ничего не выбрано — бот ждёт') : 'Показаны прежние настройки. Измените список, чтобы разрешить только выбранные задачи.';
   $('rbSessStart').onclick = async () => {
   await save();
   await menuPatch({ rbSess: { on: true, start: Date.now(), bought: false } });   // сначала сессия, потом режим (запуск ждёт ответа игры)
-  await setMode('rb');
+  await setMode('rb', true);
   toast('🔥 РБ-сессия: бот идёт к бафферу за баффами, потом — тур по РБ');
 };
 $('rbSessAuto').onclick = async () => { $('rbSessBuffs').value = 'auto'; await save(); toast('⚡ Фулл бафф под класс: список подставлен'); };
 $('rbSessStop').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ rbSess: { ...(rt.rbSess || {}), on: false, end: Date.now(), sum: rt.rbSess?.sum || null } });
-  await setMode('auto');
-  toast('РБ-сессия остановлена — автофарм');
+  const { cfg: current = {} } = await chrome.storage.local.get('cfg');
+  if (Array.isArray(current.autoTasks)) { await editAutoTask('raid', false); toast('РБ-сессия остановлена — только оставшиеся выбранные задачи'); }
+  else { await setMode('auto', true); toast('РБ-сессия остановлена — автофарм'); }
 };
-document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.classList.toggle('stopped', b.dataset.mode === m && !on); });
+document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', (strict ? selected.includes(b.dataset.mode === 'rb' ? 'raid' : b.dataset.mode) : b.dataset.mode === m)); b.classList.toggle('stopped', b.classList.contains('on') && !on); });
   $('enchantModeToggle').textContent = m === 'enchant' ? '✨ Режим автозаточки выбран' : '✨ Включить режим автозаточки';
   $('enchantModeToggle').classList.toggle('on', m === 'enchant');
   $('enchantModeToggle').setAttribute('aria-pressed', String(m === 'enchant'));
-  $('campToggle').classList.toggle('on', !!d.campaign); $('tvtToggle').classList.toggle('on', !!d.tvtOn);
-  document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => b.classList.toggle('on', d[b.dataset.task] !== false));
+  $('campToggle').classList.toggle('on', strict ? selected.includes('quests') : !!d.campaign); $('tvtToggle').classList.toggle('on', strict ? selected.includes('tvt') : !!d.tvtOn);
+  document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => b.classList.toggle('on', d[b.dataset.task] !== false && (!strict || selected.includes(AUTO_TASK_GROUP[b.dataset.task]))));
   const mods = [m !== 'enchant' && (d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`)), d.tvtOn && '⚔ TvT'].filter(Boolean);
-  const ms = $('modeSummary'); if (ms) ms.textContent = `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
+  const ms = $('modeSummary'); if (ms) ms.textContent = strict ? `${on ? 'Основная задача' : 'Следующая задача'}: ${AUTO_TASK_LABELS[active] || 'ожидание'}${selected.includes('tvt') ? ' · TvT выше всех' : ''}${selected.filter(k => k !== active && k !== 'tvt').length ? ' · Ожидают: ' + selected.filter(k => k !== active && k !== 'tvt').map(k => AUTO_TASK_LABELS[k]).join(', ') : ''}${on ? '' : ' (бот стоит)'}` : `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
 // Класс — как у движка (combatProfileKind): профиль из «Боя» или профессия героя. «👁 Показать настройки всех классов» — всё сразу
@@ -1700,7 +1735,13 @@ function rbTourRestart(rt) {
   const now = Date.now(), protective = rt.rbHuntIdle > now && rt.rbRefuse?.n >= 2 && now - (rt.rbRefuse.t || 0) < 10 * 60000;
   return { rbTourView: null, ...(protective ? {} : { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0 }) };
 }
-async function setMode(m) {
+async function setMode(m, enabled) {
+  const { cfg: selectedCfg = {} } = await chrome.storage.local.get('cfg');
+  if (Array.isArray(selectedCfg.autoTasks)) {
+    if (m === 'tasks') await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: { autoTasks: selectedCfg.autoTasks.filter(k => !AUTO_MAIN_TASKS.includes(k)) } });
+    else await editAutoTask(m === 'rb' ? 'raid' : m, enabled ?? !selectedCfg.autoTasks.includes(m === 'rb' ? 'raid' : m));
+    await load(); return;
+  }
   await save();
   // 14.10: ручной режим отменяет возврат из старого дейлика; выполненный прогресс dailyDone сохраняем.
   await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() });
@@ -1731,22 +1772,24 @@ async function setMode(m) {
 // 10.0: повторное нажатие на включённый режим снимает его («без режима — только задачи»)
 document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  const m = b.dataset.mode !== 'tasks' && currentMode({ ...DEF, ...cfg }) === b.dataset.mode ? 'tasks' : b.dataset.mode;
+  const m = !Array.isArray(cfg.autoTasks) && b.dataset.mode !== 'tasks' && currentMode({ ...DEF, ...cfg }) === b.dataset.mode ? 'tasks' : b.dataset.mode;
   return setMode(m).catch(e => toast(String(e?.message || e)));
 }; });
 $('enchantModeToggle').onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  return setMode(cfg.enchantMode === true ? 'tasks' : 'enchant').catch(e => toast(String(e?.message || e)));
+  return setMode(!Array.isArray(cfg.autoTasks) && cfg.enchantMode === true ? 'tasks' : 'enchant').catch(e => toast(String(e?.message || e)));
 };
 // 10.0 (игрок 12.10: «ребилд быстрых режимов»): задачи вне режимов — тоже быстрыми кнопками (те же галочки, что в разделах)
 document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => { b.onclick = async () => {
-  const k = b.dataset.task, { cfg = {} } = await chrome.storage.local.get('cfg'), v = !({ ...DEF, ...cfg })[k];
-  await menuPatch({}, { cfgPatch: { [k]: v } });
+  const k = b.dataset.task, { cfg = {} } = await chrome.storage.local.get('cfg'), group = AUTO_TASK_GROUP[k], v = !(({ ...DEF, ...cfg })[k] && (!Array.isArray(cfg.autoTasks) || cfg.autoTasks.includes(group)));
+  await menuPatch({ manualKickAt: Date.now() }, { cfgPatch: { [k]: v, ...(Array.isArray(cfg.autoTasks) && v ? autoTaskPatch(cfg, group, true) : {}) } });
   if ($(k) && 'checked' in $(k)) $(k).checked = v;
   b.classList.toggle('on', v); toast(`${b.textContent.trim()}: ${v ? 'включено' : 'выключено'}`);
 }; });
+document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.onchange = () => editAutoTask(el.dataset.autoTask, el.checked).catch(e => { toast(String(e?.message || e)); load(); }); });
 $('tvtToggle').onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
+  if (Array.isArray(cfg.autoTasks)) return editAutoTask('tvt', !cfg.autoTasks.includes('tvt'));
   await menuPatch({}, { cfgPatch: { tvtOn: !cfg.tvtOn } });
   toast(cfg.tvtOn ? '⚔ TvT выключен' : '⚔ TvT включён');
 };
@@ -1807,6 +1850,7 @@ $('fishReset').onclick = async () => {
 };
 $('campToggle').onclick = async () => {
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  if (Array.isArray(cfg.autoTasks)) return editAutoTask('quests', !cfg.autoTasks.includes('quests'));
   if (!cfg.campaign) await activateMode({ campaignDue: true }, { campaign: true, fishMode: false, epicMode: false, rbHuntMode: false, rbMode: false, catMode: false });
   else await menuPatch({ campaignDue: false }, { cfgPatch: { campaign: false } });
 };
@@ -2192,6 +2236,7 @@ confirmClick('recClear', async () => {                // удалить весь
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  if (Array.isArray(cfg.autoTasks)) return editAutoTask('raid', !cfg.autoTasks.includes('raid'));
   const v = !cfg.rbHuntMode;
   // включение: с начала — свежий список РБ; рыбалку выключаем (тур её заменяет)
   const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0, ...rbTourRestart(rt) } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
@@ -2200,6 +2245,7 @@ async function huntToggle() {
 }
 async function epicToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+  if (Array.isArray(cfg.autoTasks)) return editAutoTask('epic', !cfg.autoTasks.includes('epic'));
   const v = !cfg.epicMode;
   const patch = { epic: { step: 'pick', t: Date.now(), last: v ? 'режим запущен' : 'режим выключен' }, epicListT: 0, rbWant: null };
   const mode = { epicMode: v, ...(v ? { fishMode: false, rbHuntMode: false, rbMode: false, catMode: false, campaign: false } : {}) };
@@ -2399,7 +2445,7 @@ foldHints();
 // Настройки отдельного режима сохраняют только свой вложенный cfg; открытие раздела не запускает бота.
 async function enchantMenuCommand(action, context = {}) {
   const { cfg = {}, rt = {}, on = false, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'lock']);
-  if (['start', 'resume'].includes(action) && cfg.enchantMode !== true) throw new Error('Сначала выберите режим «Автозаточка»');
+  if (['start', 'resume'].includes(action) && !(Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes('enchant') : cfg.enchantMode === true)) throw new Error('Сначала выберите режим «Автозаточка»');
   const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
   if (!tab?.id || !rt.char) throw new Error('Откройте вкладку игры и дождитесь загрузки персонажа');
   if (!context.char || context.char !== rt.char) throw new Error('Персонаж изменился — обновите меню и выберите его вещи');
@@ -2443,7 +2489,7 @@ async function warlockMenuCommand(action,context={}) {
 }
 const warlockUI=L2WarlockUI.mount($('warlockPanel'),$('petFullToggle'),{
   getState:async()=>{const s=await chrome.storage.local.get(['cfg','rt','on']);s.summary=L2V7Factories.warlock({cfg:s.cfg||{},rt:s.rt||{}}).summary();return s;},
-  saveConfig:(patch,context)=>menuPatch({},{cfgPatch:patch,expectedChar:context.char}),
+  saveConfig:async(patch,context)=>{ const {cfg={}}=await chrome.storage.local.get('cfg'); return menuPatch({manualKickAt:Date.now()},{cfgPatch:{...patch,...(Array.isArray(cfg.autoTasks)&&Object.hasOwn(patch,'petFullAuto')?autoTaskPatch(cfg,'petbuff',patch.petFullAuto):{})},expectedChar:context.char}); },
   command:warlockMenuCommand
 });
 let warlockRefreshT=null;

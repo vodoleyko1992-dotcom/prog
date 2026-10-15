@@ -192,7 +192,7 @@ const flush = () => new Promise(r => setImmediate(r));
     assert.ok(js.indexOf('modules/enemies.js') >= 0 && js.indexOf('modules/enemies.js') < js.indexOf('content.js'));
     const content = read('content.js');
     assert.match(content, /if \(d\.pv \|\| d\.bt\?\.win \|\| path === '\/game\/battle\/pvp\/start'\) try \{ L2V7Modules\.enemies\?\.onNet\(path, d\);/);
-    assert.match(content, /if \(await L2V7Modules\.enemies\.step\(\)\) \{ await sleep\(200\); continue; \}/);
+    assert.match(content, /if \(L2EngineCore\.taskAllowed\(cfg,'pvp'\) && await L2V7Modules\.enemies\.step\(\)\) \{ await sleep\(200\); continue; \}/);
     // 15.10: заточка раньше доводит уже открытый бой; обычный поиск врагов остаётся после TvT и до общего боевого dispatcher.
     const enemiesAt = content.indexOf('L2V7Modules.enemies.step()'), routeAt = content.indexOf('else if (fishNow() && isFishing())');
     const regularBattleAt = content.indexOf('else if (isBattle()) await battle();', routeAt);

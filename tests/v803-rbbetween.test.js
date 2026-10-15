@@ -5,6 +5,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const content=read('content.js'),popup=read('popup.js'),html=read('popup.html'),mobfarm=read('modules/mobfarm.js');
 const src=content.match(/const rbEff = (c => [^;]+);/)?.[1];assert.ok(src);
 const box=vm.createContext({DEF_CFG:{rbHuntMode:false,enchantMode:false}});
+vm.runInContext(read('engine-core.js'),box); // 10.0.27: общий policy нужен mergeCfg.
 vm.runInContext(`const rbEff=${src};${content.match(/const withRb = [^;]+;/)[0]}${content.match(/const mergeCfg = [^;]+;/)[0]}this.mergeCfg=mergeCfg;`,box);
 assert.equal(box.mergeCfg({rbBetween:true,rbMode:true}).rbMode,false,'legacy add-on cannot revive ordinary RB hunting');
 assert.equal(box.mergeCfg({rbHuntMode:true,rbBetween:false,rbMode:false}).rbMode,true,'raid tour still permits its battles');

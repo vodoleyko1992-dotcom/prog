@@ -8,7 +8,7 @@ const location = env.routeLocation || root.location;
 const fishOwn = () => env.on && env.tabOwner !== false && !env.antibotState?.();
 async function fishSoft(msg) {
   if (!fishOwn()) return;
-  if (!fishNow()) return env.halt(msg);
+  if (!fishNow()) return Array.isArray(env.cfg.autoTasks) ? false : env.halt(msg);
   const n = Date.now() - (env.rt.fishSoftT || 0) < 15 * 60000 ? (env.rt.fishSoftN || 0) + 1 : 1;
   const STEPS = [5, 10, 20, 30, 40, 60, 120, 180, 240, 300];   // с: 5 → 10 → 20 → 30 → 40 с → 1 → 2 → 3 → 4 → 5 мин (дальше 5 мин)
   const wait = STEPS[Math.min(n - 1, STEPS.length - 1)] * 1000;
@@ -949,7 +949,10 @@ async function fishSetup() {
 }
 
 async function fishing() {
+  const kick=+env.rt.manualKickAt||0,char=env.rt.char;
+  const still=()=>fishOwn() && fishNow() && kick===(+env.rt.manualKickAt||0) && char===env.rt.char;
   if(await castReconcile())return;
+  if (!still()) return;
   if (!fishOwn()) return;
   if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
   if (await fishSetup()) return;
@@ -960,16 +963,16 @@ async function fishing() {
     : env.shown(env.$q('#fishing-locked-msg')) ? 'Рыбалка недоступна: ' + env.$q('#fishing-locked-msg').textContent.trim().slice(0, 80)
     : (env.shown(env.$q('#fishing-trainer-details')) && /\d+\s*\/\s*\d+/.test(env.$q('#fishing-trainer-progress')?.textContent || '')
        && !/(\d+)\s*\/\s*\1\b/.test(env.$q('#fishing-trainer-progress').textContent)) ? 'Рыбалка: изучите Fishing, Pumping и Reeling у рыбака' : null;
-  const ready = await env.waitFor(() => fSlot('fishing') || fishState(), 15000, 200);
-  if (!env.on) return;
+  const ready = await env.waitFor(() => !still() || fSlot('fishing') || fishState(), 15000, 200);
+  if (!still()) return;
   if (!ready) {
     await env.sleep(3000);                            // помеха должна держаться, а не мелькнуть
-    if (!env.on || fSlot('fishing')) return;
+    if (!still() || fSlot('fishing')) return;
     return fishSoft(blocker() || 'Рыбалка: панель рыбалки не загрузилась');
   }
   if (fishState()) return fishFight();
   await fishTimeTopUp();
-  if (!env.on) return;
+  if (!still()) return;
   if (fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent) === 0) return fishSoft('Рыбалка: оплаченное время закончилось');
   const T = env.rt.fishTgt && !env.rt.fishTgt.done ? env.rt.fishTgt : null;
   if (T && (T.got || 0) >= T.n) return fishTgtReached();
@@ -986,14 +989,14 @@ async function fishing() {
     await env.setRt({ fishService: 'cut' });
     return;
   }
-  if (!(await fishPrepare()) || !env.on) return;
+  if (!(await fishPrepare()) || !still()) return;
   const fb = fSlot('fishing');
   if (!fOk(fb)) { await env.sleep(300); return; }
   if (env.cfg.fishMaxCasts && (env.rt.fish?.casts || 0) >= env.cfg.fishMaxCasts) return env.halt(`Рыбалка: сделано ${env.rt.fish.casts} забросов — лимит`, true);
   env.setStatus('Рыбалка: заброс');
   // 8.0 (аудит рыбалки, лог 10.10: ≈0,4 с накладных на заброс): «реакция» перед забросом 20–60 мс (было 50–150 мс)
   await env.sleep(env.rnd(20, 60));
-  if (!fishOwn()) return;
+  if (!still()) return;
   // снимок журнала и счётчика ДО нажатия: быстрый «Рыба не клюнула» может прийти вместе с забросом
   fishWatch();
   const pre = fishLog(), m0 = env.fishMut, castT = Date.now();
@@ -1292,6 +1295,7 @@ async function fishTgtReached() {
   const msg = T.type === 'fish' ? `поймано ${T.got} рыб (цель ${T.n})` : `собрано ${T.got} Proof (цель ${T.n}), всего Proof: ${env.rt.fishProof ?? '?'}`;
   await env.setRt({ fishTgt: { ...T, done: true, doneT: Date.now() } });
   env.rec('B', 'рыбалка', `🎯 цель выполнена: ${msg}`);
+  if (Array.isArray(env.cfg.autoTasks)) { env.setStatus(`🎯 Рыбалка: цель выполнена — ${msg}; следующая выбранная задача`); return true; }
   return env.halt(`🎯 Рыбалка: цель выполнена — ${msg}`, true);
 }
 

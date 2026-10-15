@@ -28,7 +28,7 @@ assert.equal(migApplied(deferred, {}, { champ803: 1 }), true, 'flag stored in rt
 assert.equal(migApplied(deferred, { searchChamp: true }, {}), false, 'not applied yet — the patch is still written');
 // 8.0.3 (вторая проверка): устаревание пакета настроек считается ДО записи rt и только по свежим cfg — иначе флаги, которые эта же
 // вкладка только что записала в rt (setRt сразу кладёт их в память), выбрасывали ещё не применённые правки настроек
-const cfgStaleAt = content.indexOf('const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, cfg);');
+const cfgStaleAt = content.indexOf('const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, L2EngineCore.rawTaskConfig(cfg));');
 const rtWriteAt = content.indexOf('const result = await setRt(patch);', cfgStaleAt);
 assert.ok(cfgStaleAt > 0 && rtWriteAt > cfgStaleAt, 'staleness of the cfg batch is computed before the rt batch is written');
 assert.match(content, /if \(cfgStale\) deferredMigrations\.cfg = \{\};/);

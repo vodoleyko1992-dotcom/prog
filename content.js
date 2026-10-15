@@ -18,7 +18,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -46,9 +46,9 @@ let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ow
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
 // Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
 const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
-const withRb = c => ({ ...c, rbMode: rbEff(c) });
-const mergeCfg = c => withRb({ ...DEF_CFG, ...(c || {}) });
-const modeSig = c => c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
+const withRb = c => L2EngineCore.taskConfig({ ...L2EngineCore.rawTaskConfig(c), rbMode: rbEff(c) }, () => rt);
+const mergeCfg = c => withRb({ ...DEF_CFG, ...L2EngineCore.rawTaskConfig(c || {}) });
+const modeSig = c => Array.isArray(c.autoTasks) ? 'выбрано: ' + L2EngineCore.taskList(c).join(', ') : c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
   c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
 
 // ---------- утилиты ----------
@@ -143,7 +143,7 @@ async function setCfg(patch) {
   const response = await ipc({ cmd: 'statePatch', patch: {}, cfgPatch: patch,
     src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' });
   if (!response?.ok) throw new Error('settings_patch_failed: ' + (response?.reason || 'unknown'));
-  cfg = withRb({ ...cfg, ...patch });
+  cfg = withRb({ ...L2EngineCore.rawTaskConfig(cfg), ...patch });
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -1392,7 +1392,7 @@ function farmGoal() {
   }
   // 9.0 (игрок 11.10: «копить на определённую задачу и последовательно идти её делать»): цель «Маммон» — недостающий материал
   // улучшения у кузнеца (по одному, по порядку списка цены). Ресурс, выбранный в «Фарм ресурса», главнее
-  if (!(cfg.farmRes || '').trim() && cfg.mmGoalItem) { const m = L2V7Modules.mammon.mmFarmGoal(); if (m) return m; }
+  if (L2EngineCore.taskAllowed(cfg,'resources') && !(cfg.farmRes || '').trim() && cfg.mmGoalItem) { const m = L2V7Modules.mammon.mmFarmGoal(); if (m) return m; }
   // 7.2.1 (игрок: «на точку квеста летаю сам и квесты выполняю сам»): «Квесты на ресурсы» — только счётчик, бот к источнику не летит
   const k = (cfg.farmRes || '').trim().toLowerCase();
   if (k && FARM?.res?.[k]) {
@@ -1606,7 +1606,7 @@ const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 5],
 const faCost = id => rt.faCat?.[id]?.cost || FA_KNOWN[id]?.[1] || 1;
 function faWanted(...args) { return L2V7Modules.buffs.faWanted(...args); }
 function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args); }
-async function townBuffStart(...args) { return L2V7Modules.buffs.townBuffStart(...args); }
+async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; return L2V7Modules.buffs.townBuffStart(...args); }
 async function townBuffStep(...args) { return L2V7Modules.buffs.townBuffStep(...args); }
 
 async function rest(...args) { return L2V7Modules.resources.rest(...args); }
@@ -1617,7 +1617,10 @@ const fmtT = sec => { if (!isFinite(sec)) return '∞'; const s = Math.max(0, Ma
 // перейти на страницу спавна и кликнуть его строку (через обработчик карты)
 async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...args); }
 
-async function map(...args) { return L2V7Modules.mobfarm.map(...args); }
+async function map(...args) {
+  if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
+  return L2V7Modules.mobfarm.map(...args);
+}
 
 // ---------- бой ----------
 let lastShotTry = 0;
@@ -1710,7 +1713,7 @@ async function goOutskirts(...args) { return L2V7Modules.navigation.goOutskirts(
 const isCampaignPage = (...args) => L2V7Modules.quests.isCampaignPage(...args);
 const isQuests = (...args) => L2V7Modules.quests.isQuests(...args);
 // «Проверить кампанию сейчас» при выключенной Кампании — разовое чтение главы (campOnce): без телепортов и сдачи, потом обратно на охоту
-const campOn = (...args) => L2V7Modules.quests.campOn(...args);
+const campOn = (...args) => (!Array.isArray(cfg.autoTasks) || L2EngineCore.selectedTask(cfg,rt) === 'quests') && L2V7Modules.quests.campOn(...args);
 async function goCampaign(...args) { return L2V7Modules.quests.goCampaign(...args); }
 // «Персонаж → Мои квесты»: список активных кампаний (Клятва Гирана, Тень над Дионом…) — надёжнее письма в почте
 async function questsStep(...args) { return L2V7Modules.quests.questsStep(...args); }
@@ -2151,10 +2154,20 @@ function tasksGoalNote(g) {
   window.__tasksGoalK = k; window.__tasksGoalT = Date.now();
   rec('S', 'режим', `только задачи: цель ${g.kind === 'farm' ? 'фарма' : 'охоты на рецепт'} «${g.name}» — бью мобов-источники на её точке (снимите ✓ у «${g.name}» в «${g.kind === 'farm' ? 'Фарм ресурсов' : 'Охота на рецепты'}», чтобы бот не бил мобов)`);
 }
-const autonomyMode = () => L2EngineCore.chooseMode({
+const autonomyMode = () => L2EngineCore.selectedTask(cfg, rt) === 'quests' ? 'campaign' : L2EngineCore.selectedTask(cfg, rt) === 'auto' ? 'farm' : L2EngineCore.selectedTask(cfg, rt) || L2EngineCore.chooseMode({
   enchant: cfg.enchantMode === true, epic: epicOn(), raid: huntOn(), fish: !!cfg.fishMode,
   cat: !!cfg.catMode, campaign: campEnabled(), tasks: !!cfg.taskOnly
 });
+// 15.10: диагностика меняется вместе с выбором/задачей, а не на каждом тике.
+function taskPolicyNote(active = autonomyMode()) {
+  if (!Array.isArray(cfg.autoTasks) || !tabOwner) return;
+  const labels = {tvt:'TvT',quests:'квесты',campaign:'квесты',fish:'рыбалка',cat:'катакомбы',raid:'тур РБ',epic:'эпики',farm:'фарм',auto:'автофарм',enchant:'заточка',mammon:'Маммон',dailies:'дейлики',clan:'клан',pvp:'враги',petbuff:'автобаф суммона',resources:'ресурсы',tasks:'ожидание'};
+  const selected = L2EngineCore.taskList(cfg), key = JSON.stringify([selected,active]), now = Date.now();
+  const previous = window.__taskPolicyNote;
+  if (previous?.key === key || previous && now - previous.at < 5000) return;
+  window.__taskPolicyNote = {key,at:now};
+  rec('S','авторежим', `разрешены: ${selected.map(k=>labels[k]).join(', ') || 'нет'}; сейчас: ${labels[active] || active}; другие задачи запрещены`);
+}
 // эпики + рыбалка: эпиков подходящих нет (выбор цели) — бот рыбачит; места «куда вернуться» и «мягкая ошибка» считают это рыбалкой
 const fishNow = (...args) => L2V7Modules.fishing.fishNow(...args);
 const epicNum = (...args) => L2V7Modules.epics.epicNum(...args);
@@ -2385,7 +2398,7 @@ async function main() {
       // Apply to the saved current character before switching to a new one.
       // 8.0.3 (проверка правки): устаревание пакета настроек — ДО записи rt и только по свежим настройкам: раньше проверка видела
       // флаг, который эта же вкладка строкой выше записала в rt, и выбрасывала ещё не применённые правки настроек
-      const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, cfg);
+      const cfgStale = Object.keys(deferredMigrations.cfg).length > 0 && migApplied(deferredMigrations.cfg, L2EngineCore.rawTaskConfig(cfg));
       if (Object.keys(deferredMigrations.rt).length) {
         // 7.1.30: пока ждали замок, хозяин мог уже применить эти миграции — снимок не затирает свежие данные
         if (migApplied(deferredMigrations.rt, rt)) deferredMigrations.rt = {};
@@ -2439,7 +2452,22 @@ async function main() {
       if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
-      if (cfg.tvtOn && await tvtStep()) { await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
+      if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
+      // 15.10: сохранённые маршруты не обходят новый список задач; квитанции оплат не удаляем.
+      if (Array.isArray(cfg.autoTasks)) {
+        taskPolicyNote();
+        const blocked = {};
+        for (const key of ['tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
+          if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) blocked[key] = null;
+        if (Object.keys(blocked).length) { await setRt(blocked); rec('S','авторежим', 'отменены несовместимые маршруты: ' + Object.keys(blocked).join(', ') + '; квитанции оплат сохранены'); continue; }
+        if (autonomyMode() === 'tasks' && !L2EngineCore.taskList(cfg).some(k => ['mammon','quests','dailies','clan','pvp','petbuff','resources'].includes(k))) {
+          if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); continue; }
+          if (isBattle()) await battle();
+          else if (isFishing() && fishState()) await fishFight();
+          else await tasksIdle();
+          continue;
+        }
+      }
       // 15.10: заточка — отдельный режим. Доводим текущий бой/улов, затем ждём выбранную серию.
       if (autonomyMode() === 'enchant') {
         if (L2V7Modules.actions && (rt.actionOwner || L2V7Modules.actions.hasPending()) && await L2V7Modules.actions.dispatch()) { await sleep(200); continue; }
@@ -2452,22 +2480,21 @@ async function main() {
         else await enchantDispatch();
         await sleep(200); continue;
       }
-      await L2V7Modules.pvp.seedConfirmed();
+      if (L2EngineCore.taskAllowed(cfg,'pvp')) await L2V7Modules.pvp.seedConfirmed();
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
-      if (await L2V7Modules.pvp.step()) { await sleep(200); continue; }
+      if (L2EngineCore.taskAllowed(cfg,'pvp') && await L2V7Modules.pvp.step()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (!isBattle() && await L2V7Modules.raid.rbOneStep()) { await sleep(200); continue; }   // 10.0.2 (лог 01:00): «один РБ» убит — пауза раньше сторожа баффов и магазина
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       // 9.2 (игрок 11.10: «Лист врагов»): убийцы героя — в лист; враг на локации — нападаем кнопкой игры (с проверкой сил), следим за возвращением
-      L2V7Modules.enemies.tick().catch(() => {});
-      // 10.0.2 (игрок 12.10: «таймеры боссов»): раз в 10 мин — список РБ своего окна уровней и эпиков (только GET): кто жив, кто убит и когда воскреснет
-      L2V7Modules.rbtimer.tick().catch(() => {});
-      if (await L2V7Modules.enemies.step()) { await sleep(200); continue; }
+      if (L2EngineCore.taskAllowed(cfg,'pvp')) L2V7Modules.enemies.tick().catch(() => {});
+      // 15.10: фоновая слежка РБ отключена; таймеры импортируются, цели читает активный тур.
+      if (L2EngineCore.taskAllowed(cfg,'pvp') && await L2V7Modules.enemies.step()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       // 10.0.11 (игрок 13.10 22:00: «команды других задач подавляют TvT»): окно TvT (записаны, до старта < tvtHoldMin мин или бой идёт) —
       // закупку, магистра, баффы, Маммона, квесты, дейлики, туры и телепорты не начинаем; бой с мобом и заброс рыбалки доводим,
       // «🛒 Закупить сейчас» (urgent) — как и раньше. На арену уводит tvtStep выше (за минуту до старта)
-      if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { await L2V7Modules.tvt.tvtWait(); continue; }
+      if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { taskPolicyNote('tvt'); await L2V7Modules.tvt.tvtWait(); continue; }
       if (await antibotGuard()) continue;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); continue; }
@@ -2546,17 +2573,17 @@ async function main() {
       }
       // 9.0 (игрок 11.10: «функция исполнения заказов» + раздел «Маммон»): заказ торговца и где стоят NPC — фоном (только GET);
       // поход к торговцу/кузнецу — вне боя и туров, с возвратом на точку охоты
-      L2V7Modules.mammon.mmTick().catch(() => {});
+      if (L2EngineCore.taskAllowed(cfg,'mammon')) L2V7Modules.mammon.mmTick().catch(() => {});
       farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
       L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
-      if (await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
+      if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
       // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
-      L2V7Modules.story.storyTick().catch(() => {});
-      if (await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
+      if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(() => {});
+      if (L2EngineCore.taskAllowed(cfg,'quests') && await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
-      if (await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
+      if (!Array.isArray(cfg.autoTasks) && await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       // 10.0 (игрок 12.10): дейлики и клановые задания — опрос фоном (GET), сдать/взять/помочь (POST), рыба и РБ по дейликам (вне боя и туров)
       L2V7Modules.dailies.tick().catch(() => {});
@@ -2602,6 +2629,7 @@ async function main() {
       else if (campOn() && isQuests() && rt.campaignDue) await questsStep();
       // 10.0 (игрок 12.10: «кнопка старт без быстрого режима… не все задачи стоят на быстром режиме»): режим не выбран — бот делает только
       // включённые задачи (Маммон, крафтер и почта, квесты сабкласса/Noblesse, TvT, цель фарма ресурса/рецепта), между ними стоит, где стоял
+      else if (Array.isArray(cfg.autoTasks) && autonomyMode() === 'campaign' && !campOn()) await tasksIdle();
       else if (autonomyMode() === 'tasks' && !lootGoal()) await tasksIdle();
       else if (autonomyMode() === 'tasks' && (tasksGoalNote(lootGoal()), isMap())) await map();   // 10.0.5: на чужой точке map() не бьёт, ждёт перелёта
       else if (location.pathname === '/ashen-bastion.html' && autonomyMode() === 'farm') await L2V7Modules.mobfarm.ashenStep();
@@ -3248,7 +3276,7 @@ function epicRespTxt(wide, now = Date.now()) {
       const u = d.until, txt = d.alive ? '' : !u?.hi ? 'когда — неизвестно' : u.late ? `уже должен воскреснуть (не позже ${RT.hm(u.hi, now)})` : u.lo && u.hi - u.lo > 15 * 60000 ? `${RT.hm(u.lo, now)}–${RT.hm(u.hi, now)}` : `${u.lo ? '≈' : 'не позже '}${RT.hm(u.hi, now)} (через ${RT.dur(u.hi - now)})`;
       E.push({ n, l: d.lvl || 0, al: d.alive, txt, at: d.alive ? Infinity : u?.lo || u?.hi || Infinity }); seen.add(n.toLowerCase());
     }
-    if (!E.length) return wide ? '— 🐉 респ эпиков —\nданных пока нет: бот читает список эпиков раз в 10 мин, пока работает (на паузе — нет); можно открыть в игре «Эпик боссы» — бот запомнит' : '';
+    if (!E.length) return wide ? '— 🐉 респ эпиков —\nданных пока нет: загрузите файл таймеров (Alt+W) или откройте в игре «Эпик боссы»' : '';
     E.sort((a, b) => a.at - b.at);
     const dead = E.filter(t => !t.al).map(t => `${t.n} (${t.l}): ${t.txt}`), live = E.filter(t => t.al).map(t => t.n);
     if (!wide) return `🐉 Респ эпиков: ${dead.length ? dead[0].replace(/\s*\(через[^)]*\)/, '') + (dead.length > 1 ? ` · ещё убиты ${dead.length - 1}` : '') : 'все живы'}${live.length ? ` · живы ${live.length}` : ''}`;
@@ -3392,9 +3420,11 @@ async function rbtImportText(txt) {
   const RT = L2V7Modules.rbtimer, T2 = RT?.parseFile(txt);
   if (!T2 || !Object.keys(T2.b || {}).length) throw new Error('в файле нет таймеров боссов');
   const { rt: s = {} } = await chrome.storage.local.get('rt'), M = RT.merge(s.rbTimer || rt.rbTimer || { b: {} }, T2);
-  const r = await chrome.runtime.sendMessage({ cmd: 'rbtImport', rbTimer: M });
+  const r = await chrome.runtime.sendMessage({ cmd: 'rbtImport', rbTimer: M, expectedChar: String(s.char || '') });
   if (!r?.ok) throw new Error(r?.reason || 'фон недоступен');
-  rt = { ...rt, rbTimer: M };
+  if (String(rt.char || '') !== String(s.char || '')) throw new Error('Персонаж изменился — повторите импорт');
+  rt = { ...rt, rbTimer: RT.merge(r.rbTimer || M, rt.rbTimer || { b: {} }) };
+  try { draw(); } catch (e) {}
   const n = Object.keys(T2.b).length, ob = Object.values(T2.b).reduce((a, x) => a + (x.ob?.length || 0), 0);
   return `Таймеры загружены: ${n} боссов${ob ? `, замеров респа ${ob}` : ''}`;
 }
@@ -4386,7 +4416,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get payments(){return L2V7Modules.
   get autonomyMode() { return autonomyMode; }, set autonomyMode(value) { autonomyMode = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
   get cdBusy() { return cdBusy; }, set cdBusy(value) { cdBusy = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get fishCdMsg() { return fishCdMsg; }, set fishCdMsg(value) { fishCdMsg = value; },
   get fishGearMsg() { return fishGearMsg; }, set fishGearMsg(value) { fishGearMsg = value; },
@@ -4422,7 +4452,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get aroundSig() { return aroundSig; }, set aroundSig(value) { aroundSig = value; },
   get attackSpawn() { return attackSpawn; }, set attackSpawn(value) { attackSpawn = value; },
   get buffWaitBeforeRb() { return buffWaitBeforeRb; }, set buffWaitBeforeRb(value) { buffWaitBeforeRb = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get fishCut() { return fishCut; }, set fishCut(value) { fishCut = value; },
   get fishExchange() { return fishExchange; }, set fishExchange(value) { fishExchange = value; },
@@ -4468,7 +4498,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get tourReadReady(){return ()=>!rt.reviv
   get attackSpawn() { return attackSpawn; }, set attackSpawn(value) { attackSpawn = value; },
   get buffWaitBeforeRb() { return buffWaitBeforeRb; }, set buffWaitBeforeRb(value) { buffWaitBeforeRb = value; },
   get campActive() { return campActive; }, set campActive(value) { campActive = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get draw() { return draw; }, set draw(value) { draw = value; },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },
   get epicOn() { return epicOn; }, set epicOn(value) { epicOn = value; },
@@ -4530,7 +4560,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get evidenceOwner() { return observe
   get campActive() { return campActive; }, set campActive(value) { campActive = value; },
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get chargeValue() { return chargeValue; }, set chargeValue(value) { chargeValue = value; },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get combatCooldown() { return combatCooldown; }, set combatCooldown(value) { combatCooldown = value; },
@@ -4633,7 +4663,7 @@ L2V7Modules.dungeons = L2V7Factories.dungeons({ get payments(){return L2V7Module
   get CAT_LIST() { return CAT_LIST; }, set CAT_LIST(value) { CAT_LIST = value; },
   get CAT_URL() { return CAT_URL; }, set CAT_URL(value) { CAT_URL = value; },
   get NET_ERR() { return NET_ERR; }, set NET_ERR(value) { NET_ERR = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get heroLvl() { return heroLvl; }, set heroLvl(value) { heroLvl = value; },
   get idle() { return idle; }, set idle(value) { idle = value; },
@@ -4655,7 +4685,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get TVT() { return TVT; }, set TVT(value) { TVT = value; },
   get TVTC() { return TVTC; }, set TVTC(value) { TVTC = value; },
   get TVTS() { return TVTS; }, set TVTS(value) { TVTS = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get meMp() { return meMp; }, get slotAction() { return slotAction; }, get toMap() { return toMap; },
@@ -4701,7 +4731,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get damageSkills() { return damage
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
   get catGo() { return catGo; }, set catGo(value) { catGo = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get deepN() { return deepN; }, set deepN(value) { deepN = value; },
   get draw() { return draw; }, set draw(value) { draw = value; },
   get epicOn() { return epicOn; }, set epicOn(value) { epicOn = value; },
@@ -4769,7 +4799,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get damageSkills() { return damage
 L2V7Modules.quests = L2V7Factories.quests({ get gameGet(){return gameGet}, get rtCommit(){return rtCommit}, get tabOwner(){return tabOwner}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
   get QLINE() { return QLINE; }, set QLINE(value) { QLINE = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get goOutskirts() { return goOutskirts; }, set goOutskirts(value) { goOutskirts = value; },
   get isCampaign() { return isCampaign; }, set isCampaign(value) { isCampaign = value; },
@@ -4795,7 +4825,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtComm
   get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get farmRowParse() { return farmRowParse; }, set farmRowParse(value) { farmRowParse = value; },
   get farmSave() { return farmSave; }, set farmSave(value) { farmSave = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
@@ -4823,7 +4853,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get tabOwner(){return tabOwner}, get l
   get IL_BY_NAME() { return IL_BY_NAME; }, set IL_BY_NAME(value) { IL_BY_NAME = value; },
   get TB_KEYS() { return TB_KEYS; }, set TB_KEYS(value) { TB_KEYS = value; },
   get TOTEM_MIN() { return TOTEM_MIN; }, set TOTEM_MIN(value) { TOTEM_MIN = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get draw() { return draw; }, set draw(value) { draw = value; },
   get faCost() { return faCost; }, set faCost(value) { faCost = value; },
@@ -4857,7 +4887,7 @@ L2V7Modules.equipment = L2V7Factories.equipment({ get damageSkills() { return da
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
   get baseName() { return baseName; }, set baseName(value) { baseName = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get expDmg() { return expDmg; }, set expDmg(value) { expDmg = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
@@ -4900,7 +4930,7 @@ L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, g
   get ITEMS() { return ITEMS; }, set ITEMS(value) { ITEMS = value; },
   get MAGE() { return MAGE; }, set MAGE(value) { MAGE = value; },
   get SHOT_IDS() { return SHOT_IDS; }, set SHOT_IDS(value) { SHOT_IDS = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get classWeaponTypes() { return classWeaponTypes; }, set classWeaponTypes(value) { classWeaponTypes = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get fishNow() { return fishNow; }, set fishNow(value) { fishNow = value; },
@@ -4930,7 +4960,7 @@ L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_PO
   get POT_LAST() { return POT_LAST; }, set POT_LAST(value) { POT_LAST = value; },
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get expDmg() { return expDmg; }, set expDmg(value) { expDmg = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
   get forceCosts() { return forceCosts; }, set forceCosts(value) { forceCosts = value; },
@@ -4968,7 +4998,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get tabOwner(){return tabOwner},get leas
   get SPOIL_LOOT() { return SPOIL_LOOT; }, set SPOIL_LOOT(value) { SPOIL_LOOT = value; },
   get SPOIL_OK() { return SPOIL_OK; }, set SPOIL_OK(value) { SPOIL_OK = value; },
   get SWEEP_OK() { return SWEEP_OK; }, set SWEEP_OK(value) { SWEEP_OK = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get cleanTitle() { return cleanTitle; }, set cleanTitle(value) { cleanTitle = value; },
   get extraMobs() { return extraMobs; }, set extraMobs(value) { extraMobs = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
@@ -4995,7 +5025,7 @@ L2V7Modules.loot = L2V7Factories.loot({ get tabOwner(){return tabOwner},get leas
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get epicDbSet() { return epicDbSet; }, get rbRun() { return L2V7Modules.rbrun; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get byText() { return byText; }, set byText(value) { byText = value; },
-  get cfg() { return cfg; }, set cfg(value) { cfg = value; },
+  get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get epicById() { return epicById; }, set epicById(value) { epicById = value; },
   get epicOn() { return epicOn; }, set epicOn(value) { epicOn = value; },
   get fire() { return fire; }, set fire(value) { fire = value; },
@@ -5136,7 +5166,7 @@ async function enchantCommand(m) {
       return { ok: false, reason: 'Персонаж изменился или ещё не загрузился — обновите меню' };
     if (state.on && (!on || !tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки игры' };
     if (['start', 'resume'].includes(m.action) && !state.on) return { ok: false, reason: 'Сначала запустите бота' };
-    if (['start', 'resume'].includes(m.action) && state.cfg?.enchantMode !== true) return { ok: false, reason: 'Сначала выберите режим «Заточка»' };
+    if (['start', 'resume'].includes(m.action) && !(Array.isArray(state.cfg?.autoTasks) ? state.cfg.autoTasks.includes('enchant') : state.cfg?.enchantMode === true)) return { ok: false, reason: 'Сначала выберите режим «Заточка»' };
     if (typeof m.id !== 'string' || !m.id || m.id.length > 80) return { ok: false, reason: 'Не указан номер команды' };
     if (state.rt.enchantCommandAck?.id === m.id) return state.rt.enchantCommandAck;
     if (!state.on && ['reconcile', 'archiveUnknown'].includes(m.action)) {
@@ -5145,6 +5175,10 @@ async function enchantCommand(m) {
       if (heroNick() !== m.char || rt.char !== m.char) return { ok: false, reason: 'Персонаж изменился' };
     }
     cfg = mergeCfg(state.cfg);
+    // 15.10: явный новый Start возвращает завершённую задачу в очередь, сохранив её архив.
+    if (m.action === 'start' && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) {
+      if (!await L2V7Modules.enchant.command('reset')) return {ok:false,reason:'Не удалось сохранить предыдущую серию'};
+    }
     // Off refresh читает только текущего героя; никаких действий игры при остановленном боте.
     const result = m.action === 'reconcile' ? await L2V7Modules.enchant.reconcile() : await L2V7Modules.enchant.command(m.action, {pendingId:m.pendingId});
     if (rt.char !== m.char || heroNick() !== m.char) return { ok: false, reason: 'Персонаж изменился во время команды' };
@@ -5527,7 +5561,14 @@ chrome.storage.onChanged.addListener(ch => {
     const m0 = modeSig(cfg); cfg = mergeCfg(ch.cfg.newValue); const m1 = modeSig(cfg);
     if (m0 !== m1 && tabOwner) try { rec('U', 'меню', `режим: ${m0} → ${m1}`); } catch (e) {}
   }
+  const timerPrevious = rt;
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES
+  if (ch.rt?.newValue?.rbTimer) {
+    const saved = ch.rt.newValue, sameChar = String(saved.char || '') === String(timerPrevious.char || ''), pending = rtWriter.peek();
+    const timers = L2V7Modules.rbtimer?.merge(saved.rbTimer, sameChar ? (pending.rbTimer || timerPrevious.rbTimer || { b: {} }) : { b: {} });
+    // Свежий импорт сильнее старого pending; canonical echo учитываем и у вкладки-писателя.
+    if (timers) rt = { ...rt, rbTimer: timers };
+  }
   if (ch.cfg || ch.rt) enchantModePause().catch(() => {});
   if (ch.paused && ch.paused.oldValue && !ch.paused.newValue && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок снял паузу — проверку решил
   if (ch.on) {
@@ -5562,7 +5603,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     Object.assign(rf, { engineRecoveryEpoch: '7.1.13', engineFailures: {}, errs: [], health: null });
     Object.assign(rt, rf);
   }
-  const C = k => (k in cf ? cf[k] : cfg[k]);
+  const C = k => (k in cf ? cf[k] : L2EngineCore.rawTaskConfig(cfg)[k]);
   // 7.1.30: флаг и в cfg — иначе при смене персонажа (rt новый) все разовые правки настроек применялись заново
   const once = (flag, fn) => { if (!rt[flag] && !rf[flag] && !cfg[flag] && !cf[flag]) { rf[flag] = 1; cf[flag] = 1; fn(); } };
   // v3.5: Focused Force / Hurricane Assault попали в «силовые» (автороли v3.3) — убираем, у них свои роли
@@ -5727,7 +5768,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
   if (sk) rf.skills = S;
   if (Object.keys(cf).length) {
-    cfg = withRb({ ...cfg, ...cf });
+    cfg = withRb({ ...L2EngineCore.rawTaskConfig(cfg), ...cf });
     if (on && !tabOwner) deferredMigrations.cfg = { ...deferredMigrations.cfg, ...cf };
     else setCfg(cf).catch(() => {});
   }
