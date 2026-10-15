@@ -3,7 +3,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.payments = function create_payments(env) {
-  let serial = 0, writing = false, permit = null;
+  let serial = 0, writing = false, permit = null, requestPermit = null;
   const unsettled = new Map();
   const local = new Map();
   const state = () => env.rt.actionPayments || {};
@@ -39,7 +39,19 @@
     if (!same(p) || !active() || context() !== p.context || local.get(p.id) !== 'ready') return false;
     local.set(p.id,'sent'); permit=p.id; return true;
   }
-  function consumePermit() { const p=pending(); if (!p || permit!==p.id || !same(p) || !active() || context()!==p.context) return false; permit=null; return true; }
+  function consumePermit() { const p=pending(); if (!p || permit!==p.id || !same(p) || !active() || context()!==p.context) return false; permit=null; requestPermit={id:p.id,context:p.context,at:Date.now()}; return true; }
+  // 15.10, ревью: pending сам по себе не доказывает происхождение запроса. Один native POST
+  // связывается только с использованным разрешением клика; служебные GET его не забирают.
+  function claimRequest(d) {
+    const p=pending(),a=requestPermit;if(!a||!p||a.id!==p.id||!same(p)||!active()||a.context!==context()||Date.now()-a.at>30000){requestPermit=null;return '';}
+    if(d?.method!=='POST')return '';
+    const e=p.evidence||{},expected=p.kind==='fishing'&&/^\/game\/fishing\/(?:action|buy-starter|buy-gear)$/.test(e.path||'')?e.path:
+      p.kind==='cat-teleport'?'/game/catacombs/teleport':p.kind==='raid-teleport'?'/game/raid-boss/teleport':
+      p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
+      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':null;
+    if(!expected||d.path!==expected)return '';
+    requestPermit=null;return p.id;
+  }
   async function cancelReady(p, options = {}) {
     if (!same(p) || (local.get(p.id) !== 'ready' && !(local.get(p.id) === 'sent' && options.notSent === true))) return false;
     if (!await save({...state(),pending:null})) return false;
@@ -71,6 +83,6 @@
       return true;
     } finally { if(durable&&unsettled.get(p.char)?.id===p.id)unsettled.delete(p.char); writing = false; }
   }
-  return {prepare,sent,cancel,confirm,pending,consumePermit,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>writing||!!pending()};
+  return {prepare,sent,cancel,confirm,pending,consumePermit,claimRequest,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>writing||!!pending()};
  };
 })(globalThis);
