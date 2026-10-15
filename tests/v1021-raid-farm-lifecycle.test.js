@@ -18,7 +18,7 @@ function fixture(o = {}) {
   env: { RB_WIN: 15, RB_RETRY_MS: 120000, RB_TRY_MS: 600000, tabOwner: true, isBattle: () => inBattle, epicOn: () => false,
    warlock: { raidContext: (id, st, opts) => ({ managed: true, key: fresh ? key(id) : null, powerKey: fresh ? power() : null, prepared: fresh, planned: !!opts?.preflight && !inBattle }), noteSnapshot: () => { fresh = true; } },
    gameGet: async () => { reads++; return { ok: true, json: async () => ({ character: { name: 'TestHero', inBattle: false, adena: 1000000 } }) }; },
-   potModel: () => ({ pool: 600000, rate: 2000, n: 500, H: 1200, C: 1, est: false, items: [] }),
+   hudBuffs: () => ({}), potModel: () => ({ pool: 600000, rate: 2000, n: 500, H: 1200, C: 1, est: false, items: [] }),
    waitFor: async fn => fn(), logLines: () => [], newLines: () => [], activeBuffs: () => [], ...o.env } });
  let maps = 0; m.env.map = async () => { maps++; }; m.env.rbNote = m.R.rbNote;
  return { ...m, key, power, reads: () => reads, maps: () => maps, fresh: x => { fresh = x; }, battle: x => { inBattle = x; } };
@@ -157,6 +157,12 @@ test('полный HP-delta текущего боя учит модель, за�
  const m = assessment(); for (let i = 0; i <= 30; i++) m.sample(i);
  assert.equal(m.env.rt.rbDpsSample.dps, 67000); assert.ok(m.env.rt.rbDb.one.probe.done); assert.equal(m.env.rt.rbHunt.phase, 'fight'); assert.equal(m.env.rt.rbHunt.id, 'one');
  assert.equal(m.R.rbDpsEvidence('two').source, 'transfer'); assert.doesNotMatch(m.ctx.rb.note, /заходами/);
+});
+test('доказанная победа закрывает пробу до истечения 30с и не вызывает лишний выход после потери свежести снимка', async () => {
+ const m = assessment(); let v; for (let i = 0; i <= 27; i++) v = m.sample(i);
+ await Promise.resolve(); assert.equal(m.R.probeFight('one'), false); assert.equal(v.retreat, false);
+ m.env.warlock.raidContext = () => ({ managed: true, key: null });
+ v = m.sample(31); assert.equal(v.abort, undefined); assert.equal(m.R.probeFight('one'), false);
 });
 for (const damage of [0, 100]) test(`30с пробы без достаточного DPS (${damage}) требует штатный выход, не победу`, () => {
  const m = assessment(); let v; for (let i = 0; i <= 30; i++) v = m.sample(i, damage);
