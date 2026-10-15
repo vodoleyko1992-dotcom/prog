@@ -18,10 +18,14 @@ const jobGuards = new WeakMap();
 function guard(J) {
   if (J && jobGuards.has(J)) return jobGuards.get(J);
   const c = J?.context || context(), epoch = env.leaseEpoch;
-  const active = () => env.on !== false && env.tabOwner !== false && epoch === env.leaseEpoch && sameContext(c);
+  const same = () => env.tabOwner !== false && epoch === env.leaseEpoch && sameContext(c);
+  const active = () => env.on !== false && same();
+  active.same = same;
   if (J) jobGuards.set(J, active);
   return active;
 }
+// Локальная копия задания продолжает исходное действие, не захватывает новую аренду после await.
+function copyJob(J, patch) { const next = { ...J, ...patch }; jobGuards.set(next, guard(J)); return next; }
 const waitPayment = () => { env.setStatus('Маммон: исход оплаты неизвестен — жду подтверждения игры, повтор запрещён'); };
 const NEAR = 12000 * 0.9;                       // радиус NPC с карты (mapRadii.npcInteractionRadius 12000), с запасом
 const POLL = 90000, NPC_POLL = 30 * 60000, JOB_MAX = 4 * 60000, SMITH_EVERY = 6 * 3600000;
@@ -83,13 +87,15 @@ function orderNote(req) {
   }
   return o;
 }
-async function orderPoll(strict = false, active = () => true) {
+async function orderPoll(strict = false, active = guard()) {
+  if(!active())return null;
   const { ok, status, j } = await getJson('/game/mammon/merchant/request');
   if (!active()) return null;
   if (!ok) { if (strict) throw Error(`заказ торговца: HTTP ${status}`); if (status !== 401) env.rec('B', 'Маммон', `заказ торговца не получен: HTTP ${status}`); return null; }
   return orderNote(j?.request);
 }
-async function npcPoll(strict = false, active = () => true) {
+async function npcPoll(strict = false, active = guard()) {
+  if(!active())return null;
   const out = { ...(env.rt.mmNpc || {}) };
   for (const k of ['order', 'smith']) {
     const { ok, status, j } = await getJson(STATE[k][0]);
@@ -428,8 +434,10 @@ function want() {
 }
 async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); return c && Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
 async function isNear(kind) {
-  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades'); if (r.ok) smithNote(r.j?.items); return r.ok; }
-  const [me, n] = [await heroXY(), (await npcPoll())[kind]];
+  const active=guard();if(!active())return false;
+  if (kind === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades');if(!active())return false;if(r.ok)smithNote(r.j?.items);return r.ok; }
+  const me=await heroXY();if(!active())return false;
+  const positions=await npcPoll(false,active);if(!active())return false;const n=positions?.[kind];
   return !!(me && n && Number.isFinite(n.x) && Math.hypot(me.x - n.x, me.y - n.y) <= NEAR);
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
@@ -462,7 +470,7 @@ async function finish(J, ok, why) {
 // 15.10: сохранённое задание не должно хранить отменённую квитанцию после Stop до клика.
 async function cancelUnsent(ticket, original, sent = false) {
   if(!ticket || !await env.payments.cancel(ticket, sent ? {notSent:true} : {}))return false;
-  if(env.rt.char===ticket.char && env.tabOwner!==false && env.rt.mmJob?.payment?.id===ticket.id)
+  if(guard(original).same() && env.rt.char===ticket.char && env.rt.mmJob?.payment?.id===ticket.id)
     await env.setRt({mmJob:{...original,payment:null,paymentAction:null}});
   return true;
 }
@@ -563,20 +571,25 @@ async function visit(J) {
   if (location.pathname !== page) { env.setStatus(`Маммон: открываю ${NPC_NAME[J.kind]}`); location.href = page; await env.sleep(4000); return; }
   const log = [{ kind: 'visit', id: J.kind, ok: true, why: `пришёл к ${NPC_NAME[J.kind]}`, t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   await env.setRt({ mmJob: null, mmLog: log });
+  if(!active())return;
   await env.pauseBot(`пришёл к ${NPC_NAME[J.kind]} Маммона (по кнопке в окне бота) — жду команды: ▶ Продолжить в меню`);
 }
 async function claim(J) {
   const active = guard(J); if (!active()) return;
   if (location.pathname !== PAGE.order) { env.setStatus('Маммон: сдаю заказ'); location.href = PAGE.order; await env.sleep(4000); return; }
   const btn = await env.waitX(() => env.$q('.l2-mammon-order-submit'), 10000, 200);
-  if (!btn) { const o = await orderPoll(); return finish(J, false, o?.st === 'CLAIMED' ? `заказ уже забрал ${o.win || 'другой игрок'}` : 'кнопки «Здати» нет'); }
+  if(!active())return;
+  if (!btn) { const o = await orderPoll(false,active);if(!active())return;return finish(J, false, o?.st === 'CLAIMED' ? `заказ уже забрал ${o.win || 'другой игрок'}` : 'кнопки «Здати» нет'); }
   if (btn.dataset.requestId && btn.dataset.requestId !== J.id) return finish(J, false, 'заказ сменился, пока летели');
   if (btn.disabled) return finish(J, false, (btn.textContent || 'кнопка недоступна').trim().slice(0, 60));
   env.fire(btn);
   await env.waitX(() => (env.$q('#mammon-merchant-shop-msg')?.textContent || '').trim() || null, 6000, 200);
+  if(!active())return;
   const msg = (env.$q('#mammon-merchant-shop-msg')?.textContent || '').trim();
   await env.sleep(500);
-  const o = await orderPoll(), me = env.heroNick?.() || env.rt.char || '';
+  if(!active())return;
+  const o = await orderPoll(false,active), me = env.heroNick?.() || env.rt.char || '';
+  if(!active())return;
   const won = o?.id === J.id && o.st === 'CLAIMED' && (!me || o.win === me);
   return finish(J, won, won ? `сдал ${o.res} ×${o.qty} → +${o.col} Coin of Luck, +${fmtA(o.adena)} адены` : o?.st === 'CLAIMED' && o.win ? `опередил ${o.win}` : msg.slice(0, 80) || 'ответа нет');
 }
@@ -590,8 +603,8 @@ async function smith(J) {
   // 9.2.5: у кузнеца, а вещь-цель уже можно улучшить (игра пишет «хватает») — улучшаем в этот же заход, без второго телепорта
   const g = upItem(items, +env.cfg.mmGoalItem || 0), to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
   if (g && g.canAfford && !g.max && (+g.level || 0) < to && env.cfg.mmUpgrade !== false) {
-    const U = { ...J, up: true, why: `улучшить ${g.nameUk} Lv.${g.level} → ${+g.level + 1}` };
-    await env.setRt({ mmJob: U }); env.rec('B', 'Маммон', `кузнец: на ${g.nameUk} Lv.${+g.level + 1} всего хватает — улучшаю сразу`);
+    const U = copyJob(J, { up: true, why: `улучшить ${g.nameUk} Lv.${g.level} → ${+g.level + 1}` });
+    await env.setRt({ mmJob: U }); if(!active())return; env.rec('B', 'Маммон', `кузнец: на ${g.nameUk} Lv.${+g.level + 1} всего хватает — улучшаю сразу`);
     return upgrade(U, items);
   }
   const mat = m => `${m.nameUk} ${m.owned != null ? `${fmtA(m.owned)}/` : ''}${fmtA(m.required)}`;
@@ -637,13 +650,13 @@ async function upgrade(J, items) {
   if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
   const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
   const allowed = () => active() && +env.cfg.mmGoalItem === id && (env.cfg.mmUpgrade !== false || J.cmd) && L < Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
-  if (!allowed()) return finish({ ...J, cancelled: true }, false, 'улучшение отменено: настройка или цель изменена');
+  if (!allowed()) return finish(copyJob(J, { cancelled: true }), false, 'улучшение отменено: настройка или цель изменена');
   if (env.payments && (!it.targetInstanceId || !Number.isFinite(+it.cost?.adena) || !Number.isFinite(+it.cost?.coinOfLuck) || a < 0 || col < 0)) return finish(J, false, 'неизвестны экземпляр или точная цена улучшения');
   const ticket = env.payments ? await env.payments.prepare({ key: `mammon:up:${it.targetInstanceId}:${L}:${J.t}`, kind: 'mammon', quote: { amount: col, currency: 'coin_of_luck' }, evidence: { action: 'upgrade', itemId: id, target: it.targetInstanceId, level: L, adena: a, materials: it.cost?.materials || [] } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!allowed()) { if (ticket) await env.payments.cancel(ticket); return; }
   const beforePayment = J;
-  J = { ...J, target: it.targetInstanceId || J.target, ...(ticket ? { payment: ticket, paymentAction: 'upgrade' } : {}) };
+  J = copyJob(J, { target: it.targetInstanceId || J.target, ...(ticket ? { payment: ticket, paymentAction: 'upgrade' } : {}) });
   await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
   if (ticket && !await env.rtCommit?.()) { await cancelUnsent(ticket,beforePayment); return; }
   if (!allowed()) { if(ticket)await cancelUnsent(ticket,beforePayment); return; }
@@ -667,7 +680,7 @@ async function upgrade(J, items) {
     }
     // clicked и точный target уже сохранены: reload сверит выросший уровень и не нажмёт повторно.
     if (ticket && !await env.payments.confirm(ticket, { kind: 'server-receipt', itemId: id, target: J.target, level: +it2.level })) return;
-    return finish({ ...J, clicked: L }, true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`);
+    return finish(copyJob(J, { clicked: L }), true, `${nm}: Lv.${L} → Lv.${it2.level} (${fmtA(a)} адены, ${col} Coin of Luck)`);
   }
   // уровень не подтвердился — следующий круг цикла перечитает список (J.clicked) и решит: вырос / ещё попытка / неудача
 }
@@ -865,12 +878,13 @@ async function noteStep(J) {
   const active = guard(J); if (!active()) return;
   const to = J.to || crafter();
   const left = J.notes || noteText(J.note, [...(J.note.prev || []), ...(J.done || []).map(x => [x[0], x[1]])], String(env.heroNick?.() || '').trim());
-  const end = why => env.setRt({ mmJob: { ...J, notes: null, noteCur: null, noteEnd: why } });   // итог — в строку «отправил …» (finish)
+  const end = why => active()&&env.setRt({ mmJob: { ...J, notes: null, noteCur: null, noteEnd: why } });   // итог — в строку «отправил …» (finish)
   if (!left.length) return end('письмо с заданием отправил');
   // прошлое нажатие «Надіслати» без ответа (страница перезагрузилась) — считаем ушедшим: лучше без одного письма, чем два одинаковых
   if (J.noteCur) { await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
-  if (location.pathname !== PAGE_MC) { await env.setRt({ mmJob: { ...J, notes: left } }); env.setStatus(`Почта: письмо крафтеру ${to}`); location.href = PAGE_MC; await env.sleep(4000); return; }
+  if (location.pathname !== PAGE_MC) { await env.setRt({ mmJob: { ...J, notes: left } });if(!active())return;env.setStatus(`Почта: письмо крафтеру ${to}`);location.href = PAGE_MC;await env.sleep(4000);return; }
   const form = await env.waitX(() => document.getElementById('mail-compose-form') || null, 10000, 200);
+  if(!active())return;
   if (!form) return end('страница письма не открылась — письмо не ушло');
   if (form.hidden) { location.href = PAGE_MC; await env.sleep(4000); return; }      // после «надіслано» форма скрыта — следующее письмо с новой страницы
   const toIn = document.getElementById('mail-compose-to'), tx = document.getElementById('mail-compose-text'), btn = document.getElementById('mail-compose-submit');
@@ -879,9 +893,11 @@ async function noteStep(J) {
   setVal(tx, left[0]);
   for (const eid of ['mail-compose-success', 'mail-compose-err']) { const el = document.getElementById(eid); if (el) { el.textContent = ''; el.hidden = true; } }
   await env.setRt({ mmJob: { ...J, notes: left, noteCur: Date.now() } });
+  if(!active())return;
   env.setStatus(`Почта: письмо крафтеру ${to}`);
   env.fire(btn);
   const res = await env.waitX(() => shownTxt(document.getElementById('mail-compose-success')) ? 'ok' : shownTxt(document.getElementById('mail-compose-err')) ? 'err' : null, 10000, 200);
+  if(!active())return;
   if (res === 'ok') { env.rec('B', 'Маммон', `письмо крафтеру ${to}: ${left[0].replace(/\s+/g, ' ').slice(0, 160)}`); await env.setRt({ mmJob: { ...J, notes: left.slice(1), noteCur: null } }); return; }
   if (res === 'err') return end(`письмо не ушло (${shownTxt(document.getElementById('mail-compose-err')).slice(0, 80)})`);
   // ответа нет — следующий круг считает письмо ушедшим (noteCur)
@@ -902,17 +918,19 @@ async function sendStep(J) {
   const active = guard(J); if (!active()) return;
   const to = J.to || crafter();
   const allowed = () => J.cmd || J.hand || env.cfg.mmCraftSend !== false;
-  if (!allowed() && !J.cur) return finish({ ...J, cancelled: true }, false, 'автоотправка крафтеру выключена');
+  if (!allowed() && !J.cur) return finish(copyJob(J, { cancelled: true }), false, 'автоотправка крафтеру выключена');
   // 10.0.2 (игрок 12.10: «приписывать последним письмом … какие ресурсы нам нужны на крафт и сколько, чтобы игрок знал что делать и что возвращать»)
   if (!J.items?.length && !J.cur && (J.done || []).length && J.note && !J.noteEnd) return noteStep(J);
   if (location.pathname !== PAGE_TR && (J.items?.length || J.cur)) { env.setStatus(`Почта: отправляю сырьё крафтеру ${to}`); location.href = PAGE_TR; await env.sleep(4000); return; }
   // прошлое нажатие без ответа (страница перезагрузилась, письмо могло уйти) — правда у сервера: сумка уменьшилась → ушло, иначе шлём снова
   if (J.cur) {
     const m = await env.invRefresh?.(), h = m ? m[J.cur.id] || 0 : null;
+    if(!active())return;
     if (h == null) return finish(J, false, `сумка не прочиталась — не знаю, ушло ли ${J.cur.nm} ×${J.cur.q}; проверь почту «Відправлені»`);
     if(env.payments && J.cur.state!=='prepared'){env.setStatus('Почта: исход прежней отправки неизвестен; повтор запрещён, проверь отправленные предметы');return;}
     if (!env.payments && h <= J.cur.before - J.cur.q) return sentOk(J, J.cur);
-    J = { ...J, cur: null }; await env.setRt({ mmJob: J });
+    J = copyJob(J, { cur: null }); await env.setRt({ mmJob: J });
+    if(!active())return;
   }
   if (!J.items?.length) {
     const d = J.done || [], fee = d.reduce((a, x) => a + (x[2] || 0), 0);
@@ -920,38 +938,44 @@ async function sendStep(J) {
   }
   const [id, want, nm] = J.items[0];
   const m = J.inv ? null : await env.invRefresh?.();    // сумка по факту — один раз на поход
-  if (m) J = { ...J, inv: 1 };
+  if(!active())return;
+  if (m) J = copyJob(J, { inv: 1 });
   const have = env.invQty(id), q = Math.min(want, have ?? 0);
   if (!(q > 0)) { env.rec('B', 'Маммон', `крафтеру: ${nm} в сумке нет — пропускаю`); await env.setRt({ mmJob: { ...J, items: J.items.slice(1) } }); return; }
   const c = await candFind(id);
+  if(!active())return;
   if (!c || c.err) return finish(J, false, c?.err || `${nm}: нет в списке «Передача предмета»`);
   const n = c.stack ? Math.min(q, c.avail || q) : 1;
   const rowOf = () => [...document.querySelectorAll('.l2-item-transfer-row-wrap')].find(w => w.dataset.itemKey === c.key) || null;
   await env.waitX(() => document.querySelector('.l2-item-transfer-row-wrap') || null, 10000, 200);
+  if(!active())return;
   // строка на другой странице: после передачи игра остаётся на той же странице списка — сначала «« Назад» до первой, затем «Вперед »»
   // 10.0 (лог 12.10 17:28–17:38): листали «« Назад» до первой страницы и потом вперёд, ожидая строку 3 с на каждой — Thread со стр. 6
   // после Iron Ore со стр. 5: 9 страниц ≈ 34 с. Номер страницы строки уже известен (candFind) → листаем прямо к ней по подписи «Страница N / M»
   let wrap = rowOf();
-  if (!wrap && c.page) { await pageGo(c.page); wrap = await env.waitX(rowOf, 1500, 100); }
+  if (!wrap && c.page) { await pageGo(c.page);if(!active())return;wrap = await env.waitX(rowOf, 1500, 100);if(!active())return; }
   // запасной путь (подписи нет, список сдвинулся): «« Назад» до первой, затем «Вперед »»
   for (const dir of [0, 1]) for (let i = 0; !wrap && i < 30; i++) {
     const bs = [...document.querySelectorAll('#item-transfer-pagination .l2-item-transfer-page-btn')], nx = dir ? bs[bs.length - 1] : bs[0];
     if (!nx || nx.disabled || bs.length < 2) break;
-    env.fire(nx); await env.sleep(700); wrap = await env.waitX(rowOf, 3000, 200);
+    env.fire(nx);await env.sleep(700);if(!active())return;wrap = await env.waitX(rowOf, 3000, 200);if(!active())return;
   }
   if (!wrap) return finish(J, false, `${nm}: строки на странице передачи нет`);
   if (!wrap.querySelector('form')) { env.fire(wrap.querySelector('.l2-item-transfer-row')); }
   const form = await env.waitX(() => wrap.querySelector('form.l2-item-transfer-form') || null, 4000, 100);
+  if(!active())return;
   const qIn = form?.querySelector('input[type="number"]'), nIn = form?.querySelector('input[type="text"]'), btn = form?.querySelector('button[type="submit"]');
   if (!nIn || !btn || (c.stack && !qIn)) return finish(J, false, `${nm}: форма передачи не открылась`);
   if (qIn) setVal(qIn, n);
   setVal(nIn, to);
   const fee = c.unit * n > 0 ? Math.max(1, Math.ceil(c.unit * n * 5 / 100)) : 0, cur = { id, q: n, nm, fee, before: have, t: Date.now(), state:'prepared' };
   await env.setRt({ mmJob: { ...J, cur } });
-  if (!allowed()) return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена');
+  if(!active())return;
+  if (!allowed()) return finish(copyJob(J, { cur: null, cancelled: true }), false, 'автоотправка крафтеру выключена');
   env.setStatus(`Почта: ${nm} ×${fmtA(n)} → ${to}`);
   env.fire(btn);
   const modal = await env.waitX(() => { const md = document.getElementById('item-transfer-confirm-modal'); return md && !md.hidden ? md : null; }, 5000, 100);
+  if(!active())return;
   if (!modal) { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')) || 'окно подтверждения не открылось'}`); }
   // окно игры: «Надіслати «предмет» гравцю «ник»?», «Кількість: N» — жмём «Підтвердити» только если там наш крафтер и наше количество
   const body = (modal.querySelector('#item-transfer-confirm-body')?.textContent || ''), nums = (body.match(/\d[\d\s ]*/g) || []).map(x => +x.replace(/\D/g, ''));
@@ -960,7 +984,7 @@ async function sendStep(J) {
     env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); await env.setRt({ mmJob: { ...J, cur: null } });
     return finish(J, false, `${nm}: в окне подтверждения не тот получатель или количество (${body.replace(/\s+/g, ' ').slice(0, 80)}) — отменил`);
   }
-  if (!allowed()) { env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); return finish({ ...J, cur: null, cancelled: true }, false, 'автоотправка крафтеру выключена'); }
+  if (!allowed()) { env.fire(modal.querySelector('.l2-item-transfer-form__btn--ghost')); return finish(copyJob(J, { cur: null, cancelled: true }), false, 'автоотправка крафтеру выключена'); }
   // 10.0 (аудит): старое «успешно» от прошлого предмета не должно засчитать этот — очищаем сообщения перед нажатием
   for (const eid of ['item-transfer-success', 'item-transfer-err']) { const el = document.getElementById(eid); if (el) el.textContent = ''; }
   let ticket=null;
@@ -971,16 +995,18 @@ async function sendStep(J) {
     const history=await getJson('/game/mail/sent?page=1');if(!active()||!allowed()||!history.ok||!Array.isArray(history.j?.items))return;
     ticket=await env.payments.prepare({key:`mammon:send:${to}:${id}:${J.t}`,kind:'mammon',quote:{amount:fee,currency:'Adena'},evidence:{action:'transfer',jobT:J.t,charId:ch.id,revision:ch.revision,itemId:id,itemKey:c.key,before:actual,qty:n,to,sentIds:history.j.items.map(x=>x.messageId).filter(Boolean)}});
     if(!ticket)return;
+    if(!active()){await env.payments.cancel(ticket);return;}
     cur.state='sent';cur.paymentId=ticket.id;
     await env.setRt({mmJob:{...J,cur}});
     if(!await env.rtCommit?.()||!active()||!allowed()||!env.payments.sent(ticket)){
-      if(await env.payments.cancel(ticket)&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;
+      if(await env.payments.cancel(ticket)&&active.same()&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;
     }
   }
   const fired=env.fire(okBtn);
-  if(ticket&&fired===false){if(await env.payments.cancel(ticket,{notSent:true})&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;}
+  if(ticket&&fired===false){if(await env.payments.cancel(ticket,{notSent:true})&&active.same()&&env.rt.mmJob?.cur?.paymentId===ticket.id)await env.setRt({mmJob:{...J,cur:null}});return;}
   const res = await env.waitX(() => shownTxt(document.getElementById('item-transfer-success')) ? 'ok' : shownTxt(document.getElementById('item-transfer-err')) ? 'err' : null, 10000, 200);
   if(ticket){await paymentReconcile();return;}
+  if(!active())return;
   if (res === 'ok') return sentOk({ ...J, cur: null }, cur);
   if (res === 'err') { await env.setRt({ mmJob: { ...J, cur: null } }); return finish(J, false, `${nm}: ${shownTxt(document.getElementById('item-transfer-err')).slice(0, 100)}`); }
   // ответа нет — следующий круг проверит сумку (J.cur): ушло или нет
@@ -989,8 +1015,10 @@ async function claimStep(J) {
   const active = guard(J); if (!active()) return;
   if (location.pathname !== PAGE_MAIL) { env.setStatus('Почта: забираю предметы'); location.href = PAGE_MAIL; await env.sleep(4000); return; }
   const tab = await env.waitX(() => document.querySelector('#mail-tabs [data-mail-tab="items"]') || null, 8000, 200);
+  if(!active())return;
   if (!tab) return finish(J, false, 'вкладки «Предмети» в почте нет');
   if (!tab.classList.contains('is-active')) { env.fire(tab); await env.sleep(800); }
+  if(!active())return;
   const pane = '#mail-tab-items';
   // 10.0.14: игрок мог оставить почту на странице истории. Начинаем с первой, затем продолжаем вперёд по сохранённому заданию.
   if (!J.mailStarted) {
@@ -1001,9 +1029,11 @@ async function claimStep(J) {
       if (!await env.waitX(() => label() !== before, 4000, 100)) return finish(J, false, 'первая страница почты не открылась');
       return;
     }
-    J = { ...J, mailStarted: true }; await env.setRt({ mmJob: J });
+    J = copyJob(J, { mailStarted: true }); await env.setRt({ mmJob: J });
+    if(!active())return;
   }
   const b = await env.waitX(() => document.querySelector(`${pane} .l2-mail-item__claim:not([disabled])`) || (document.querySelector(`${pane} .l2-mail-item, ${pane} .l2-mail-empty, ${pane} .err`) ? 'none' : null), 8000, 200);
+  if(!active())return;
   const got = J.got || [];
   if (b === 'none' && got.length < CLAIM_MAX) {
     const label = () => document.querySelector(`${pane} .l2-mail-page-label`)?.textContent || '';
@@ -1011,10 +1041,11 @@ async function claimStep(J) {
     if (pages.length >= 2 && next && !next.disabled) {
       env.fire(next);
       if (await env.waitX(() => label() !== before, 4000, 100)) return;
-      await mailPoll(); return finish(J, false, 'следующая страница почты не открылась');
+      if(!active())return;
+      await mailPoll(); if(!active())return; return finish(J, false, 'следующая страница почты не открылась');
     }
   }
-  if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
+  if (!b || b === 'none' || got.length >= CLAIM_MAX) { await mailPoll(); if(!active())return; return finish(J, true, got.length ? `забрал: ${got.join(', ')}` : 'забирать нечего'); }
   // 10.0 (лог 12.10 17:37 «✓ забрал: ? от Skye»): игра красит имя предмета (L2.decorateItemNameEl) и заменяет его класс
   // .l2-mail-item-transfer__name на l2-item-name → имя и число берём из списка почты по attachmentId, иначе из строки «Ви отримали»
   const card = b.closest('.l2-mail-item'), aid = String(card?.dataset?.attachmentId ?? ''), a = aid ? (env.rt.mmMail?.unc || []).find(x => x.a === aid) : null;
@@ -1024,10 +1055,12 @@ async function claimStep(J) {
   if (msgEl()) msgEl().textContent = '';
   env.fire(b);
   const msg = await env.waitX(() => shownTxt(msgEl()) || null, 6000, 200);
-  if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
+  if(!active())return;
+  if (/переповн|переполн/i.test(msg || '')) { await mailPoll(); if(!active())return; return finish(J, false, `инвентарь переполнен — ${what} от ${from} осталось в почте`); }
   // 10.0.13: ошибка ревизии/сети — не успешное получение. Без сообщения перепроверяем вложение по полному списку сервера.
   let ok = /предмет\s+(?:у\s+сумці|в\s+сумке|в\s+инвентаре)|item.*(?:bag|inventory)/i.test(msg || '');
   if (!ok && !msg && aid) { const left = await mailPoll(); ok = !!left && !left.some(a => a.a === aid); }
+  if(!active())return;
   if (!ok) return finish(J, false, `не забрал ${what}: ${String(msg || 'нет подтверждения игры').slice(0, 80)}`);
   await env.setRt({ mmJob: { ...J, got: [...got, `${what}${from ? ' от ' + from : ''}`] } });
   await env.sleep(600);
