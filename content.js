@@ -3677,7 +3677,7 @@ async function weaponEquipNote(req) {
 // 10.0.19 (игрок 15.10: S-кастер уже надет до обновления расширения): POST смены оружия
 // мог пройти без бота, тогда сохранённый A-кэш живёт весь фарм катакомб. Сверяем GET без выхода на карту.
 async function syncShotWeapon() {
-  if (!on || !tabOwner || Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
+  if (!on || !tabOwner || !rt.shotMismatchPending && Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
   const char = rt.char;
   await setRt({shotEquipCheckT:Date.now()});
   try {
@@ -3685,10 +3685,12 @@ async function syncShotWeapon() {
     if (!r?.ok || !on || !tabOwner || rt.char !== char) return;
     const j = await r.json(), c = j?.character || j, slot = c?.inventory?.eq?.l1;
     const id = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
-    if (!id || rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) return;
+    if (!id) return;
+    if (!rt.shotMismatchPending && rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) return;
     await weaponEquipNote({action:'equip',itemId:id,expectedRevision:c.revision,
       targetInstanceId:slot?.targetInstanceId,enchant:slot?.enchant,
       enchantPAtkBonus:slot?.enchantPAtkBonus,enchantMAtkBonus:slot?.enchantMAtkBonus});
+    if (rt.weaponsT && (rt.weapons || []).some(w => w.where === 'надето' && +w.id === id)) await setRt({shotMismatchPending:false});
   } catch (e) { rec('B','оружие','не удалось сверить надетое оружие; повторю позже'); }
 }
 let SHOP_BUY = null;   // 7.1.30: последняя покупка в магазине вещей (shopKey из запроса)
@@ -3726,6 +3728,11 @@ addEventListener('message', e => {
   if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || '';
     if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
+  // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
+  if (path === '/game/battle/action' && /^(?:mystic_spiritshot|soulshot)_grade_mismatch$/.test(d.res?.error || '') && !rt.shotMismatchPending) {
+    setRt({shotMismatchPending:true,shotEquipCheckT:0});
+    rec('B','заряды','сервер отклонил грейд зарядов — сверяю надетое оружие перед следующим боем');
+  }
   // 9.0 (лог 12.10 01:08:30, Fairy Queen Timiniel 7 092 из 1,9 млн): ход → 400 «Немає активного бою» (battle_none / not_in_battle) — боя на
   // сервере уже нет (РБ добили другие), а страница боя осталась. Бот 23 мин жал вслепую. Метка для боя (combat), снимает её любой принятый ход/новый бой
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path) && d.status >= 200 && d.status < 300 && !d.res?.error) ACT_NET.gone = null;
