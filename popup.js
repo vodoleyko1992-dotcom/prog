@@ -137,6 +137,7 @@ if (DOCKED) {
 // 738×600 в углу и пустота ниже. Во вкладке — раскладка встроенной панели на всю высоту. Только на Android (на ПК ничего не меняем)
 if (!DOCKED && /Android/i.test(navigator.userAgent || '')) chrome.tabs?.getCurrent?.()?.then(t => { if (t) document.documentElement.classList.add('docked', 'tabbed'); }).catch(() => {});
 
+let formChar = null; // герой, чьи значения сейчас реально показаны в общей форме
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
   const d = { ...DEF, ...cfg };
@@ -145,6 +146,7 @@ async function load() {
     TXT.forEach(k => { if (!/^nWeapon/.test(k)) $(k).value = d[k] ?? ''; });
     NUM.forEach(k => $(k).value = d[k]);
     BOOL.forEach(k => $(k).checked = !!d[k]);
+    formChar = rt.char || '';
   }
   recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
   // v5: шапка — герой, версия, состояние; статус и итоги — «чипами»
@@ -1158,6 +1160,7 @@ $('authClear').onclick = async () => {
 };
 
 async function save(e) {
+  if (formChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   const n = {};
   if (/^nWeapon/.test(e?.target?.id || '')) n.weaponManual = true;   // игрок выбрал оружие сам — проверка инвентаря его не перепишет
@@ -1178,7 +1181,7 @@ async function save(e) {
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
-  try { await menuPatch(magReset, { cfgPatch: n }); }
+  try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
   catch (error) {
     const why = String(error?.message || error);
     $('status').textContent = 'Не удалось сохранить настройки: ' + why;

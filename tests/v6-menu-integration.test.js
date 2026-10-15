@@ -23,7 +23,7 @@ const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battl
  // The docked and normal menus must both authenticate by extension origin/path.
  assert.equal((await ctx.menuPatch({rtPatch:{epicListT:1}},editor)).ok,true);
  assert.equal((await ctx.menuPatch({rtPatch:{epicListT:1}}, {url:'https://l2wap.com/popup.html'})).ok,false);
- const p1=ctx.statePatch({patch:{kills:44},epoch:owner.epoch,src:'bot-2'},sender(2));
+ const p1=ctx.statePatch({patch:{kills:44},epoch:owner.epoch,src:'bot-2',expectedChar:'West'},sender(2));
  const p2=ctx.menuPatch({rtPatch:{shop:{step:'count'}},cfgPatch:{fishMode:true},on:true},editor);
  const [r1,r2]=await Promise.all([p1,p2]);
  assert(r1.ok&&r2.ok);
@@ -33,7 +33,7 @@ const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battl
  assert.equal(obj.rt.shop.step,'count');
  assert.equal(obj.cfg.fishMode,true);
  assert.equal(obj.cfg.nAttack,'Iron Punch');
- const config=await ctx.statePatch({cfgPatch:{nAttack:'Soul Breaker'},epoch:owner.epoch},sender(2));
+ const config=await ctx.statePatch({cfgPatch:{nAttack:'Soul Breaker'},epoch:owner.epoch,expectedChar:'West'},sender(2));
  assert(config.ok);
  assert.equal(obj.cfg.nAttack,'Soul Breaker');
  assert.equal(obj.rt.kills,44);
@@ -41,7 +41,7 @@ const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battl
  assert(!popup.includes('chrome.storage.local.set({ rt: { ...rt'));
  assert(!popup.includes('chrome.storage.local.set({ cfg: { ...cfg'));
  // 14.10: rising-edge автомагистра атомарно сбрасывает только отметку проверки вместе с cfgPatch.
- assert(popup.includes('await menuPatch(magReset, { cfgPatch: n })'));
+ assert(popup.includes('await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar })'));
  assert(popup.includes('n.autoMagister === true && cfg.autoMagister !== true'));
  console.log('PASS: popup+inline-dock authentication, serialized UI/bot writes, cfg+rt isolation');
 })().catch(e=>{console.error(e);process.exitCode=1;});

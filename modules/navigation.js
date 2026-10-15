@@ -8,7 +8,7 @@ const isMap = () => /\/map\.html/i.test(location.pathname);
 
 // 8.0.3 (эпики, ревью): валюта цены телепорта (.l2-teleport-miru-price-currency, «аден»). Раньше читалось только число — логово за
 // Coin of Luck оплатилось бы мимо лимита. curT — подпись как есть (нет элемента — undefined: старая разметка/каталог), cur — как epics.unitOf
-const curOf = row => { const el = row?.querySelector('.l2-teleport-miru-price-currency'); if (!el) return {};
+const curOf = row => { const el = row?.querySelector?.('.l2-teleport-miru-price-currency'); if (!el) return {};
   const t = [el.textContent, ...[...(el.querySelectorAll?.('img, [title]') || [])].map(i => [i.getAttribute('alt'), i.getAttribute('title')].join(' '))].join(' ').replace(/\s+/g, ' ').trim();
   const src = [...(el.querySelectorAll?.('img') || [])].map(i => i.getAttribute('src') || '').join(' ');
   return { cur: /coin|luck|монет|удач|\bcol\b/i.test(t) || /(^|\D)4037(\D|$)|luck/i.test(src) ? 'Coin of Luck' : /аден|adena/i.test(t) ? 'аден' : '', curT: t.slice(0, 20) }; };
@@ -28,6 +28,32 @@ function zoneRows() {                             // видимые строки
 }
 
 const isTeleport = () => /\/teleport\.html/i.test(location.pathname);
+// Неизвестная цена/валюта не доказывает бесплатный переход: значок CoL часто идёт без числа.
+function teleportCost(row) {
+  const cur = curOf(row), raw = row?.querySelector?.('.l2-teleport-miru-price-num')?.textContent?.trim();
+  const txt = (row?.textContent || '').replace(/\s+/g, ' ');
+  const free = /бесплат|безкоштов|\bfree\b/i.test(txt);
+  const price = raw != null && /^\s*[\d\s.,]+\s*$/.test(raw) ? Number(raw.replace(/\D/g, '')) : free ? 0 : null;
+  return { price, cur: cur.cur, why: price == null ? 'цена не прочитана' : cur.cur === 'Coin of Luck' ? 'Coin of Luck бот не тратит'
+    : price > 0 && cur.cur !== 'аден' ? 'валюта не подтверждена как адена' : price === 0 && !free && cur.cur !== 'аден' ? 'бесплатный переход не подтверждён' : '' };
+}
+async function teleportBudget(price, active) {
+  if (price === 0) return '';
+  if (typeof env.gameGet !== 'function') return 'нет свежего запаса адены';
+  let wallet;
+  try {
+    const response = await env.gameGet('/character'), ch = response.ok ? (await response.json())?.character : null;
+    if (!active()) return 'задание отменено';
+    const adena = typeof ch?.adena === 'string' && /^\d+$/.test(ch.adena) ? Number(ch.adena) : ch?.adena;
+    if (!ch || ch.name !== env.rt.char || !Number.isSafeInteger(adena) || adena < 0) return 'запас адены не подтверждён';
+    wallet = { v: adena, t: Date.now() }; await env.setRt({ adenaSeen: wallet });
+  } catch (_) { return 'не удалось прочитать запас адены'; }
+  if (!active()) return 'задание отменено';
+  const reserve = Math.max(0, +env.cfg.shopReserve || 0), cap = +env.cfg.shopMaxSpend || 0;
+  if (cap > 0 && price > cap) return `цена ${price} выше лимита ${cap}`;
+  if (!Number.isSafeInteger(wallet.v) || wallet.v - price < reserve) return `на телепорт ${price} не хватает адены сверх резерва ${reserve}`;
+  return '';
+}
 
 async function tpCitiesReady() {
   const cities = () => document.querySelectorAll('.l2-teleport-miru-city-btn[data-surroundings-key]').length;
@@ -295,27 +321,42 @@ function zonePick() {
 
 async function zoneGoStep() {                     // полёт: Телепорт → раскрыть город → «Телепорт» у нужной зоны
   const g = env.rt.zoneGo;
+  if (!g) return;
+  const kick = env.rt.manualKickAt, char = env.rt.char;
+  const active = () => env.on !== false && env.tabOwner !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
+  if (!active()) return;
   // телепорта нет в «Телепорте», но есть кнопка на странице форума (как «Фарм ресурсов» → pavel_ruins)
   const viaUrl = g.url || (env.rt.zoneCat?.[g.id]?.forum && env.rt.zoneCat[g.id].url);
   if (viaUrl && (g.forum || !env.rt.zoneCat?.[g.id]?.city)) {
     if (location.pathname + location.search !== viaUrl) { env.setStatus(`Локации: лечу в ${zoneName(g.id)} (через форум)`); location.href = viaUrl; await env.sleep(4000); return; }
     let fb = await env.waitX(() => env.$q(`[data-teleport-id="${g.id}"]`), env.isFarmPage() ? 2000 : 8000, 200);
+    if (!active()) return;
     if (!fb && env.isFarmPage()) {                     // кнопка — внутри строки ресурса: раскрываем нужную (или по очереди все)
       await env.waitX(() => env.$q('.l2-farm-row__toggle'), 15000, 300);
+      if (!active()) return;
       const rows = [...document.querySelectorAll('.l2-farm-row')];
       const want = rows.filter(r => g.res && (r.querySelector('.l2-farm-row__name')?.textContent || '').trim().toLowerCase() === g.res.toLowerCase());
       for (const row of [...want, ...rows.filter(r => !want.includes(r))]) {
+        if (!active()) return;
         const t = row.querySelector('.l2-farm-row__toggle');
-        if (!row.querySelector('.l2-farm-source')) { env.fire(t); await env.waitX(() => row.querySelector('.l2-farm-source'), 4000, 100); }
+        if (!row.querySelector('.l2-farm-source')) { env.fire(t); await env.waitX(() => row.querySelector('.l2-farm-source'), 4000, 100); if (!active()) return; }
         const r = env.farmRowParse(row); if (r) env.farmSave([r]).catch(() => {});
         fb = row.querySelector(`[data-teleport-id="${g.id}"]`);
         if (fb) break;
         env.fire(t); await env.sleep(150);
       }
     }
+    if (!active()) return;
     await env.setRt({ zoneGoT: Date.now(), zoneTried: { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() } });
     if (!fb) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта на форуме нет`); await env.setRt({ zoneGo: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
+    if (!active()) return;
+    const cost = teleportCost(fb.closest('.l2-farm-source, li, [class*="row"]'));
+    const budget = !cost.why && await teleportBudget(cost.price, active);
+    if (!active()) return;
+    if (cost.why || budget) { env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`); await env.setRt({ zoneGo: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } }); return; }
     env.rec('B', 'локации', `телепорт с форума → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
+    if (!active()) return;
+    if (cost.price > 0) { await env.setRt({ adenaSeen: null }); if (!active()) return; }
     env.fire(fb);
     await env.waitX(() => !/\/forum/i.test(location.pathname), 6000, 200);
     if (/\/forum/i.test(location.pathname)) {      // страница не сменилась: ошибка рядом с кнопкой — не улетели; иначе — на карту
@@ -331,6 +372,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
   }
   if (!isTeleport()) { env.setStatus(`Локации: лечу в ${zoneName(g.id)}`); location.href = '/teleport.html'; await env.sleep(4000); return; }
   await tpCitiesReady();                          // v4.58: раньше кнопку искали в недорисованном списке → «кнопки телепорта нет»
+  if (!active()) return;
   const tpBtn = () => { const b = env.$q(`.l2-teleport-miru-tp-btn[data-teleport-id="${g.id}"]`); return env.shown(b) ? b : null; };
   let btn = tpBtn();
   if (!btn) {
@@ -340,21 +382,25 @@ async function zoneGoStep() {                     // полёт: Телепор�
       const cb = env.$q(`.l2-teleport-miru-city-btn[data-surroundings-key="${k}"]`); if (!cb) continue;
       env.fire(cb);
       btn = await env.waitX(tpBtn, k === city ? 4000 : 2000, 100);
+      if (!active()) return;
       if (btn) break;
     }
   }
   const tried = { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() };
   if (!btn) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта нет — пробую следующую зону`); await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
-  // 8.0.3 (эпики, ревью): перед нажатием — валюта в строке. Явно не адена (Coin of Luck, значок 4037) — не летим; подпись есть, но
-  // непонятная — тоже нет. Элемента валюты нет или он без подписи (старая разметка, значок) — как раньше (логово эпика строже: epicLair)
-  const tr = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'), tc = curOf(tr), tp = +((tr?.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0);
-  if (tp > 0 && (tc.cur === 'Coin of Luck' || (tc.curT && tc.cur !== 'аден'))) {
-    env.rec('B', 'локации', `${zoneName(g.id)}: телепорт не за адену (${tp.toLocaleString('ru')} ${tc.curT || 'валюта не подписана'}) — Coin of Luck бот не тратит`);
-    await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: tp, ...tc } } });
+  // 15.10: цена и валюта нужны из текущей строки перед кликом; отсутствие числа не означает бесплатный телепорт.
+  const tr = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'), tc = curOf(tr), cost = teleportCost(tr);
+  const budget = !cost.why && await teleportBudget(cost.price, active);
+  if (!active()) return;
+  if (cost.why || budget) {
+    env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`);
+    await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: cost.price, ...tc } } });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   await env.setRt({ zoneTried: tried, zoneGoT: Date.now() });
+  if (!active()) return;
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
+  if (cost.price > 0) { await env.setRt({ adenaSeen: null }); if (!active()) return; }
   env.fire(btn);
   // 10.0 (аудит фарма): переход на карту бывает дольше 2,5 с — удачный платный полёт писался «не улетели» и зона «плохой» на 6 ч. Ждём до 8 с
   await env.waitX(() => !isTeleport() || /недостат|not enough/i.test(document.body.innerText.slice(-4000)) || null, 8000, 200);

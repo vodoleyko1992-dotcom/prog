@@ -137,7 +137,7 @@ function fire(el) {
 // Single-writer settings update. Avoid whole-cfg races with the popup.
 async function setCfg(patch) {
   const response = await ipc({ cmd: 'statePatch', patch: {}, cfgPatch: patch,
-    src: TAB_ID, epoch: leaseEpoch });
+    src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' });
   if (!response?.ok) throw new Error('settings_patch_failed: ' + (response?.reason || 'unknown'));
   cfg = withRb({ ...cfg, ...patch });
 }
@@ -917,7 +917,7 @@ const TAB_ID = Math.random().toString(36).slice(2);
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
 let rtBigWarnT = 0, rtSizeT = 0, rtRetryT = null;
 const rtWriter = L2EngineCore.createPatchQueue(
-  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch }),
+  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }),
   () => !tabIdle && !document.prerendering && (!on || (tabOwner && !!leaseEpoch)),
   e => {
     console.warn(TAG, 'запись состояния отложена', e);
@@ -933,7 +933,7 @@ addEventListener('pagehide', () => {
   try {
     try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
     const p = rtWriter.peek();
-    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch }, () => void chrome.runtime.lastError);
+    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }, () => void chrome.runtime.lastError);
   } catch (e) {}
 });
 function setRt(p) {
@@ -4401,6 +4401,7 @@ L2V7Modules.combat = L2V7Factories.combat({
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
 L2V7Modules.dungeons = L2V7Factories.dungeons({ get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
   get campActive() { return campActive; },
@@ -4563,6 +4564,8 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
 // 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
 const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
 L2V7Modules.navigation = L2V7Factories.navigation({ get heroAt() { return heroAt; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get tabOwner() { return tabOwner; },
+  get gameGet() { return gameGet; },
   get pagerInfo() { return pagerInfo; },
   get kpd() { return globalThis.L2Kpd; }, get kpdMage() { return kpdMage; },
   get BACK() { return BACK; }, set BACK(value) { BACK = value; },
@@ -4792,7 +4795,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
 
-L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; },
+L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get farmZones() { return farmZones; }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
