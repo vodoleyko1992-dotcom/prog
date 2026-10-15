@@ -419,10 +419,15 @@ async function isNear(kind) {
 }
 const KIND = { order: 'заказ', send: 'крафтеру', claim: 'почта' };
 const NPC_NAME = { order: 'торговцу', smith: 'кузнецу' };
+// 10.0.22 (лог05:08): страница Ashen важнее старого кэша обычной карты.
+function homePoint() {
+  if (/\/ashen-bastion\.html$/i.test(location.pathname) || /[?&]spawnId=ashen_bastion_mob_/i.test(location.search || '')) return 'ashen_bastion';
+  return env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000 ? env.rt.zonePend.id : env.rt.zone || null;
+}
 async function finish(J, ok, why) {
   const log = [{ kind: J.kind, id: J.id || '', ok: !!ok, why: String(why || '').slice(0, 120), t: Date.now() }, ...(env.rt.mmLog || [])].slice(0, 20);
   env.rec('B', 'Маммон', `${KIND[J.kind] || (J.up ? 'улучшение' : 'кузнец')}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
-  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку' }, zoneGoT: 0 } : {};
+  const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'Маммон: обратно на точку', ...(J.home === 'ashen_bastion' ? { returnPath: '/ashen-bastion.html' } : {}) }, zoneGoT: 0 } : {};
   // 10.0 (аудит): счётчик неудач улучшения на уровне (want: после 2 — пауза 6 ч), отметка «почта не забирается», недосланный остаток партии крафтеру
   const extra = {};
   if (J.up && !J.cancelled) { const k = String(J.id || '').replace(/^up:/, ''), uf = env.rt.mmUpFail; extra.mmUpFail = ok ? null : { k, n: (uf?.k === k ? uf.n || 0 : 0) + 1, t: Date.now() }; }
@@ -910,8 +915,7 @@ async function mmStep() {
   // почта и передача предметов — без телепорта, со своей страницы игры (после — на карту, точка та же)
   const mail = w.kind === 'send' || w.kind === 'claim';
   // 10.0 (лог 12.10 12:00:05–12:00:13): перелёт в новую зону ещё в пути (zonePend, 2 мин) — возвращаемся туда, а не в старую rt.zone
-  const zp = env.rt.zonePend && Date.now() - (env.rt.zonePend.t || 0) < 120000 ? env.rt.zonePend.id : null;
-  const home = !mail && !w.visit && !env.fishNow() && env.autonomyMode() !== 'cat' ? zp || env.rt.zone || null : null;   // 10.0.9: визит кончается паузой — домой не летим
+  const home = !mail && !w.visit && !env.fishNow() && env.autonomyMode() !== 'cat' ? homePoint() : null;
   await env.setRt({ mmJob: { ...w, step: mail ? 'act' : 'go', home, t: Date.now() }, ...(w.cmd ? (w.hand ? { subHandReq: null, subHandSay: null } : w.kind === 'send' ? { mmCraftReq: null, mmCraftSay: null } : { mmGoReq: null, mmGoSay: null }) : {}), ...(w.id ? { mmTried: { ...Object.fromEntries(Object.entries(env.rt.mmTried || {}).filter(([, t]) => Date.now() - t < 86400000)), [w.id]: Date.now() } } : {}) });
   env.rec('B', 'Маммон', mail ? `${w.kind === 'send' ? `отправляю крафтеру ${w.to}` : 'забираю почту'}: ${w.why}` : `иду к ${NPC_NAME[w.kind]}: ${w.why}`);
   return true;
@@ -919,6 +923,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
+return { homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -2456,6 +2456,7 @@ async function main() {
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { location.href = '/teleport.html'; await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
+        if (rt.zoneGo.id === 'ashen_bastion' && rt.zoneGo.returnPath === '/ashen-bastion.html') { await zoneGoStep(); continue; }
         const onSrc = isTeleport() || (rt.zoneGo.url && location.pathname + location.search === rt.zoneGo.url);
         if (Date.now() - (rt.zoneGo.t || 0) < 120000 && (onSrc || !rt.zoneGoT || Date.now() - rt.zoneGoT > 120000)) { await zoneGoStep(); continue; }
         await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
@@ -4590,7 +4591,7 @@ L2V7Modules.quests = L2V7Factories.quests({ get $q() { return $q; }, set $q(valu
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 // 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
 const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
-L2V7Modules.navigation = L2V7Factories.navigation({ get heroAt() { return heroAt; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.navigation = L2V7Factories.navigation({ get heroAt() { return heroAt; }, get pauseBot() { return pauseBot; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get gameGet() { return gameGet; },
   get pagerInfo() { return pagerInfo; },
