@@ -1,10 +1,17 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 16.10.2026 — Codex — PR в подготовке
+
+- Сделано: исправлена выдача Chrome10.0.28 после PR175. GitHub uploads.github.com отказал401 при загрузке release asset; ZIP опубликован отдельным artifact commit3623f9283e5be96a9ca3cf7444e797cc9254fe66 в build-assets-10.0.28, ссылка raw привязана к неизменяемому коммиту. Release и документация ссылаются на этот файл.
+- Проверки: анонимное обратное скачивание1279337 байт, SHA256 и побайтовое сравнение с проверенным ZIP PASS; сборочные323 Node/Chromium63/zipload результаты PR175 сохраняются. Документация не меняет runtime/ZIP. Полный Node/envcheck повторены перед коммитами.
+- Осталось: ограничения живого подтверждения10.0.28 как в changelog. /mnt/data недоступен на запись в этой среде; основной канал — проверенная публичная ссылка.
+
+
 ## 16.10.2026, 08:43 UTC+10 — Codex — [PR #175](https://github.com/vodoleyko1992-dotcom/prog/pull/175)
 
 - Сделано: по явному запросу «Сборка» подготовлен Chrome10.0.28 из baseline PR173–174; manifest/заголовок/версионные тесты, changelog/CLAUDE/README актуализированы. ZIP содержит64 tracked runtime/readme файла, без тестов/документации/базы знаний/служебных файлов и секретов.
 - Проверки: 323 Node-файла PASS, синтаксис runtime JS и изменённых тестов/envcheck30/secret-pattern scan PASS;59 ссылок manifest присутствуют, целостность ZIP PASS. Распакованный ZIP загружен в Chromium: version10.0.28, cfg209, errors0. Chromium63 файла:62 PASS общим прогоном, rbrun PASS повторно после стартового net::ERR_ABORTED; runner exit1 только из-за этого первого старта.
-- Осталось: живое подтверждение установленной10.0.28; в ходе сборки игру не открывали. Firefox не запрошен; два исторических DOM-сценария без снимков пропущены. Пакет: [Chrome10.0.28](https://github.com/vodoleyko1992-dotcom/prog/releases/download/v10.0.28/l2wap-bot-v10.0.28.zip). SHA256: `d56984240b0ff79acd4701e185330cf45b9b0e67f91b55e8af7060421f6311c8`.
+- Осталось: живое подтверждение установленной10.0.28; в ходе сборки игру не открывали. Firefox не запрошен; два исторических DOM-сценария без снимков пропущены. Пакет: [Chrome10.0.28](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/3623f9283e5be96a9ca3cf7444e797cc9254fe66/l2wap-bot-v10.0.28.zip). SHA256: `d56984240b0ff79acd4701e185330cf45b9b0e67f91b55e8af7060421f6311c8`.
 
 
 ## 16.10.2026, 02:42 UTC+10 — Codex — [PR #174](https://github.com/vodoleyko1992-dotcom/prog/pull/174)
