@@ -988,7 +988,8 @@ async function rbHuntStep() {
   const mark = env.rt.rbIdleMark || {}, idle = env.rt.rbHuntIdle || 0;
   const refusalPause = idle > Date.now() && env.rt.rbRefuse?.n >= 2 && Date.now() - (env.rt.rbRefuse.t || 0) < RB_IDLE_MS;
   const early = !!idle && ((!!mark.lvl && !!plan.heroLvl && plan.heroLvl !== mark.lvl) || (env.potModel()?.n || 0) > (mark.pots || 0) || (env.rt.shopT || 0) > (mark.t || 0)
-    || (env.rt.rbDpsSample?.t || 0) > (mark.sampleT || mark.t || 0) || (env.rt.rbKills || 0) > (mark.kills ?? env.rt.rbKills ?? 0));
+    || (env.rt.rbDpsSample?.t || 0) > (mark.sampleT || mark.t || 0) || (env.rt.rbKills || 0) > (mark.kills ?? env.rt.rbKills ?? 0)
+    || Number.isFinite(mark.adena) && Number.isFinite(env.rt.adenaSeen?.v) && env.rt.adenaSeen.v > mark.adena);
   if (early && !refusalPause) {
     await env.setRt({ rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, ...((!!mark.lvl && plan.heroLvl !== mark.lvl) ? { rbListT: 0 } : {}) });
     return;
@@ -1049,7 +1050,7 @@ async function rbHuntStep() {
       if (!active()) return;
       // До срока повторного чтения обычная цепочка мобов продолжается без карты после каждой победы.
       await env.setRt({ rbHuntIdle: env.rt.rbStateRead?.nextAt || Date.now() + 15000,
-        rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0 } });
+        rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null } });
       if (!active()) return;
       // Фарм даёт вызвать слугу и обновить панель, но не запускает платный переход или новое сканирование.
       if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
@@ -1073,7 +1074,7 @@ async function rbHuntStep() {
     await rbHuntPhase('wait', next, { last: why });
     if (!active()) return;
     await env.setRt({ rbHuntIdle: Date.now() + wait, rbIdleN: idleN,
-      rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0 } });
+      rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null } });
     if (!active()) return;
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
     return env.map();

@@ -107,6 +107,13 @@ test('живой подходящий РБ уже на карте доступе
  const m = fixture({ rt: { adenaSeen: { v: 0, t: Date.now() } } }); m.setDoc(docOf(pin('one', 'Первый')));
  await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHunt.step, 'arrive'); assert.equal(m.env.rt.rbHunt.id, 'one'); assert.equal(m.env.rt.rbGoCnt?.one, undefined); assert.equal(m.fires.length, 0);
 });
+for (const expired of [false, true]) test(`реальный wait из-за бюджета → пополнение без shopT будит тур; состав устарел=${expired}`, async () => {
+ const m = fixture({ rt: { adenaSeen: { v: 250000, t: Date.now() } } }); await m.R.rbHuntStep();
+ assert.equal(m.env.rt.rbHunt.phase, 'wait'); assert.ok(m.env.rt.rbHuntIdle > Date.now()); assert.ok(m.env.rt.rbTourView.blocked.some(x => x.kind === 'funds'));
+ const shop = m.env.rt.shopT; m.env.rt.adenaSeen = { v: 1000000, t: Date.now() }; if (expired) m.fresh(false);
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHuntIdle, 0); assert.equal(m.env.rt.shopT, shop);
+ await m.R.rbHuntStep(); assert.equal(m.env.rt.rbHunt.step, 'go'); assert.equal(m.env.rt.rbHunt.id, 'one'); assert.equal(m.reads(), expired ? 1 : 0);
+});
 for (const stop of ['on', 'tabOwner', 'mode', 'manual']) test(`прибытие не атакует после отмены во время mapReady: ${stop}`, async () => {
  const m = fixture({ rt: { rbHunt: { step: 'arrive', id: 'one', name: 'Первый', at: Date.now() } } }); m.setDoc(docOf(pin('one', 'Первый')));
  m.env.mapReady = async () => { if (stop === 'mode') m.env.cfg.rbHuntMode = false; else if (stop === 'manual') m.env.rt.manualKickAt = Date.now(); else m.env[stop] = false; };
