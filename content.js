@@ -2559,6 +2559,7 @@ async function main() {
         const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
         if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); continue; }
       }
+      if (isMap() && campOn() && !fishNow() && !rt.actionOwner && await L2V7Modules.quests.campLocationStep()) { await sleep(200); continue; }
       // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
       if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'cut') continue; (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(5000); } }
       else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'exchange') continue; (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/fishing-shop.html')); await sleep(5000); } }
@@ -3850,6 +3851,7 @@ addEventListener('message', e => {
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
+  if (meNow) L2V7Modules.quests?.campLocationNote(path, d);
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
@@ -4666,7 +4668,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get routeLocation(){return actionL
   get zonePick() { return zonePick; }, set zonePick(value) { zonePick = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }, get antibotState() { return antibotState; }, get pvpStep() { return () => L2V7Modules.pvp.step(); }
 });
-L2V7Modules.quests = L2V7Factories.quests({ get routeLocation(){return actionLocation}, get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
+L2V7Modules.quests = L2V7Factories.quests({ get gameGet(){return gameGet}, get rtCommit(){return rtCommit}, get tabOwner(){return tabOwner}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
   get QLINE() { return QLINE; }, set QLINE(value) { QLINE = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },
