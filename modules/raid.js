@@ -93,8 +93,7 @@ const isEpicId = id => EPIC_IDS.has(String(id || '').replace(/^l2dop_rb_/i, ''))
 const gapK = () => Math.min(0.1, Math.max(0.01, env.rt.rbGapK || 0.05));
 const gapF = g => g > 0 ? Math.max(0.5, 1 - gapK() * g) : 1;
 const rbLvlOf = id => env.rt.rbList?.[id]?.lvl || env.rt.rbDb?.[id]?.lvl || 0;
-// A full HP/time measurement already includes the summon. Never add pet DPS or
-// rescale it by a global sample from a different class, target, buff or shot state.
+// Полный замер HP/время уже включает слугу. Кота повторно не добавляем; другой состав не переносим.
 function rbContext(id) {
   try {
     if (typeof env.warlock?.raidContext === 'function') return env.warlock.raidContext(id, env.rt.rbStats?.[id]);
@@ -103,10 +102,25 @@ function rbContext(id) {
   catch (_) { return { managed: true, key: null }; }
 }
 const rbSameContext = (c, saved) => c?.managed ? !!c.key && saved === c.key : !saved;
+function rbDpsTarget(id) {
+  const s = rbStatsOf(id), lvl = s?.lvl || s?.level || rbLvlOf(id), pdef = s?.pdef ?? s?.pDef, mdef = s?.mdef ?? s?.mDef;
+  return !isEpicId(id) && s && !s.est && [lvl,pdef,mdef].every(x => Number.isFinite(x) && x > 0) ? { lvl, pdef, mdef } : null;
+}
+// 10.0.21 (лог 15.10 00:49): Uruka ≈49,8k полного DPS, но следующий РБ снова получал запасные ≈1k.
+// Переносим только исходное HP-delta окно того же состава. Неизвестные доли мага/кота учитываем худшим
+// отношением P/M.Def; слабая цель и меньшая разница уровней не повышают прогноз. Ещё 20 % — резерв.
+function rbTransferredDps(id, c) {
+  const s = env.rt.rbDpsSample, target = rbDpsTarget(id), L = env.heroLvl();
+  if (!c?.managed || !c.key || !c.powerKey || s?.powerKey !== c.powerKey || !s.id || s.id === id || isEpicId(s.id) || !target || !(L > 0)
+    || ![s.dps,s.target?.lvl,s.target?.pdef,s.target?.mdef].every(x => Number.isFinite(x) && x > 0)) return 0;
+  const defense = Math.min(1, s.target.pdef / target.pdef, s.target.mdef / target.mdef);
+  const level = Math.min(1, gapF(target.lvl - L) / gapF(s.target.lvl - L));
+  return Math.max(1, s.dps * defense * level * .8);
+}
 function rbDpsOn(id) {
   const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), c = rbContext(id);
   const base = rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : 1150;
-  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
+  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : rbTransferredDps(id, c) || Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
   if (d.dps > 0 && rbSameContext(c, d.dpsContext)) {
     const kb = d.dpsBase > 0 ? Math.min(3, Math.max(0.5, base / d.dpsBase)) : 1;
     const kl = lvl && L && d.dpsLvl ? gapF(lvl - L) / gapF(lvl - d.dpsLvl) : 1;
@@ -132,6 +146,7 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id);
   const ownDps = historical.dps > 0 && rbSameContext(context, historical.dpsContext);
+  const transferred = !dpsOver && !ownDps && !(env.rt.rbDps > 0 && rbSameContext(context, env.rt.rbDpsContext)) && rbTransferredDps(id, context);
   const k = env.rt.rbK || 0.109, base0 = Math.max(0, st.patk || 0) * k;
   // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
   // «обычный ≈218» (rbK выучен на обычных РБ). У эпика, пока на нём нет своего замера (hitP90), обычный удар ≈0,7 × max(P.Atk, M.Atk),
@@ -151,26 +166,30 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const need = loss * t;
   const potRate = pot?.rate || 0;
   const info = `спецудар ${Math.round(sp)} HP${measured ? ' (из боёв)' : ' (оценка)'}, обычный ≈${Math.round(base)}, ` +
-    `потеря ≈${Math.round(loss)} HP/с, РБ HP ${env.fmtK(curHp)} ≈${env.fmtT(t)}, ` +
+    `потеря ≈${Math.round(loss)} HP/с, РБ HP ${env.fmtK(curHp)} ≈${env.fmtT(t)}${transferred ? ' (по другому РБ с запасом)' : ''}, ` +
     `банки ≈${env.fmtK(need)} из ${env.fmtK(pool)}`;
   // по прикидке (РБ ни разу не видели — цифры по другим РБ) отсекаем только явно неподъёмных; на месте решат настоящие цифры из окна карты
   const lim = st.est ? 1.5 : 1;
   const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool };   // 8.0.3: цифры — для таблицы эпиков
-  const no = r => probeOk(id, st, sp, maxHp, measured, epic, r) || r;
   // 10.0.2 (игрок 12.10: «плохо фармит РБ, особенно сильных»; лог 22:16–22:46: Галлате 73 и Голконда 79 — по ≈25–43 мин боя каждый, ни один
   // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
   // Эпики (свой ДПС от вызывающего) — по своим правилам
   const maxMin = env.cfg.rbMaxKillMin ?? 20;
   const slow = !epic && !dpsOver && maxMin > 0 && t > maxMin * 60;
-  const slowWhy = `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`;
+  const slowWhy = `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : transferred ? ', по другому РБ с запасом' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`;
   // 15.10 (лог 00:42): 997/с по неизмеренному Warlock обещали 92 мин, а Hekaton пал за 2:26.
   // Даём только штатную однократную пробу; проверку спецудара, HP и банок ниже не пропускаем.
   const slowProbe = slow && context?.managed && context.key && !ownDps && probeOk(id, st, sp, maxHp, measured, epic, {ok:false,kind:'slow',why:slowWhy,...x});
   if (slow && !slowProbe) return { ok: false, kind: 'slow', why: slowWhy, ...x };
+  // 10.0.21 (ревью 15.10): ранняя проба по спецудару прежде обходила банки, даже при нулевом запасе.
+  // Для разрешённой пробы неизвестного DPS резервируем первые 30 с до замера rbAssess, не весь ложный прогноз 92 мин.
+  const entryNeed = slowProbe ? loss * Math.min(t, 30) : need;
+  const probeSupplied = loss <= potRate * 0.8 * slack && entryNeed * 1.15 <= pool * slack;
+  const no = r => probeSupplied && probeOk(id, st, sp, maxHp, measured, epic, r) || r;
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
-  if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
+  if (entryNeed * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
   return slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
 }
 
@@ -1080,7 +1099,10 @@ function rbAssess(ctx, me, mob) {
   if (dt >= 20 && damageSamples >= 5 && dps > 0 && (!context?.managed || context.key) && now - (S.dpsT || 0) > 30000) {
     S.dpsT = now;
     const old = rbSameContext(context, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
-    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null });
+    const target = rbDpsTarget(S.id);
+    // Источник переноса создаётся только здесь: полный урон по HP за проверенное окно, не fightlab и не прогноз другого РБ.
+    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null,
+      rbDpsSample: context?.powerKey && target ? { id: S.id, powerKey: context.powerKey, dps: Math.round(dps), target, t: now } : null });
   }   // v4.46: наш ДПС по РБ — для оценки до боя
   // чистая потеря HP героя без банок: банки, выпитые в окне, возвращаем в расчёт (их лечение не «держится» само)
   const pm = env.potModel();

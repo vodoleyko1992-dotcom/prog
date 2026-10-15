@@ -306,7 +306,9 @@ function raidContext(id, st = {}) {
   const s = currentSnapshot(), h = s?.hero;
   if (!s || !h?.buffs || !(h.mAtk > 0 || h.pAtk > 0) || s.shots === 'unknown' || !id) return { managed: true, key: null };
   const target = [String(id), ...[['lvl','level'],['hp','maxHp'],['pDef','pdef'],['mDef','mdef'],['pAtk','patk'],['mAtk','matk']].map(keys => keys.map(k => st[k]).find(Number.isFinite) ?? null)];
-  return { managed: true, key: JSON.stringify([s.key,target]), validUntil: s.validUntil };
+  // 10.0.21 (лог 15.10 00:49): сила состава общая для РБ, точный замер потерь/урона остаётся привязан к цели.
+  // Перепризыв меняет powerKey даже после свежего /character с теми же цифрами кота.
+  return { managed: true, key: JSON.stringify([s.key,target,s.born]), powerKey: JSON.stringify([s.key,s.born]), validUntil: s.validUntil };
 }
 async function noteBattle(ctx) {
   const p = ctx?.pet, c = ctx?.petCohort, T = token();
