@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.raid = function create_raid(env) {
+const location = env.routeLocation || root.location;
 // 15.10: основной рейд сам выбирает следующий шаг; старый счётчик «между мобами» не гоняет его ожидание через карту.
 const rbDue = () => env.cfg.rbMode && !env.cfg.rbHuntMode && ((env.rt.rbPending && (env.meHp()?.pct ?? 0) >= env.cfg.rbRestHp) || (env.rt.sinceRb ?? 999) >= 20
   || (env.cfg.rbTour !== false && !env.campActive() && Date.now() >= (env.rt.rbTourNext || 0)));
@@ -491,24 +492,27 @@ function rbRowsParse() {
 const rbPartialListT = () => Date.now() - ((env.cfg.rbValueTour ? 10 : 15) - 3) * 60000;
 
 async function rbListScan() {                     // все страницы списка (≈14), бесплатно
-  if (!env.on || env.tabOwner === false) return;
+  const active = () => env.on && env.tabOwner !== false && env.canAct?.() !== false;
+  if (!active()) return;
   // 14.10: после отказа на стр. N нельзя выдавать хвост списка за полный и терять младших РБ.
   if (rbPageNow() !== 1) { location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return; }
   env.setStatus('РБ: читаю список рейд-боссов (Меню → Рейдовые боссы)');
-  await env.waitX(() => env.$q('#rb-list .l2-rb-row'), 10000, 200);
+  await env.waitX(() => !active() || env.$q('#rb-list .l2-rb-row'), 10000, 200);
+  if (!active()) return;
   let all = {}, complete = false, pages = 0;
-  for (let i = 0; i < 25 && env.on && env.tabOwner !== false; i++) {
+  for (let i = 0; i < 25 && active(); i++) {
     all = { ...all, ...rbRowsParse() }; pages++;
     const nx = rbNextPageButton();
     if (!nx) { complete = true; break; }
     const page = rbPageNow(), ids = Object.keys(rbRowsParse()).join('|');
     if (env.fire(nx) === false) break;
     // Цифры1…5 одинаковы на соседних страницах: ждём активную кнопку и новые строки.
-    if (!(await env.waitX(() => env.on && env.tabOwner !== false && rbPageNow() === page + 1 &&
+    if (!(await env.waitX(() => !active() || rbPageNow() === page + 1 &&
       Object.keys(rbRowsParse()).length > 0 && Object.keys(rbRowsParse()).join('|') !== ids, 10000, 150))) break;
+    if (!active()) return;
     await env.sleep(env.rnd(150, 300));
   }
-  if (!env.on || env.tabOwner === false) return;
+  if (!active()) return;
   const L = env.heroLvl(), n = Object.values(all), ok = n.filter(x => x.alive && !x.deny);
   env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
@@ -688,6 +692,22 @@ function rbListWhy(plan = rbTourPlan()) {
 }
 
 async function rbTeleportFire(b, patch) {
+  if(env.payments){
+    const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price;
+    if(!id || !Number.isFinite(price) || price<0)return false;
+    const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id}});
+    if(!P){env.setStatus('РБ: платный переход ждёт подтверждения предыдущей оплаты');return false;}
+    const before=Object.fromEntries(Object.keys(patch).map(k=>[k,env.rt[k]??null]));
+    // Откат относится только к нашему снимку: новая ручная цель не должна исчезнуть после await.
+    const rollback=async()=>{if(env.payments.matchesContext(P)&&Object.keys(patch).every(k=>JSON.stringify(env.rt[k])===JSON.stringify(patch[k])))await env.setRt(before);};
+    const saved=await env.setRt(patch);
+    if(saved?.ok!==true || typeof env.rtCommit!=='function' || !await env.rtCommit() || !env.payments.sent(P)){
+      await rollback();await env.payments.cancel(P);return false;
+    }
+    const clicked=env.fire(b);
+    if(clicked===false){await rollback();await env.payments.cancel(P,{notSent:true});return false;}
+    return true;
+  }
   // setRt меняет память и очередь синхронно; pagehide ядра дописывает очередь при перелёте.
   // Между резервом и fire нельзя ждать storage: Stop мог бы оставить «оплаченный» шаг без клика.
   const before = Object.fromEntries(Object.keys(patch).map(k => [k, env.rt[k] ?? null]));
@@ -697,8 +717,18 @@ async function rbTeleportFire(b, patch) {
   if (rollback) await rollback;
   return accepted;
 }
+async function paymentReconcile() {
+  const P=env.payments?.pending();if(!P || P.kind!=='raid-teleport')return !P;
+  const receipt=env.raidPaymentNet?.();
+  if(receipt?.ok && receipt.id===P.evidence?.id && receipt.t>=P.at)return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
+  if(!env.isMap()) {env.setStatus?.('РБ: платный переход не подтверждён; повтор запрещён');return false;}
+  const target=raidList().find(x=>x.id===P.evidence?.id);
+  if(!target){env.setStatus?.('РБ: жду подтверждение прибытия к выбранной цели, повторно не плачу');return false;}
+  return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+}
 
 async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)
+  if(env.payments?.blocked()){await paymentReconcile();return;}
   const g = env.rt.rbGo;
   if (!g || !env.on || env.tabOwner === false) return;
   // 15.10: сохранённое задание прежнего режима не обходит бюджет/фазы основного рейда после обновления.
@@ -895,6 +925,7 @@ async function rbOneStep() {
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
+  if(env.payments?.blocked()){await paymentReconcile();return;}
   const H = env.rt.rbHunt || { step: 'pick' };
   const kick = +env.rt.manualKickAt || 0, mode = env.cfg.rbHuntMode, char = env.rt.char, cls = JSON.stringify(env.rt.classCur || null);
   const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick && env.cfg.rbHuntMode === mode && env.rt.char === char && JSON.stringify(env.rt.classCur || null) === cls;
@@ -1482,6 +1513,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

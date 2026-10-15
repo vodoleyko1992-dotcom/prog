@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.enchant = function create_enchant(env) {
+const location = env.routeLocation || root.location;
 const DEFAULTS = Object.freeze({ enabled:false, queue:[], scrollPolicy:'blessed', ordinaryUntil:3, maxAttempts:0, maxScrolls:0, maxAdena:0,
   maxConsecutiveFails:2, maxDropFromStart:1, maxDropFromPeak:2, delayMs:1500, purchase:false, colBudget:0 });
 const SCROLLS = Object.freeze(Object.fromEntries(['D','C','B','A','S'].flatMap((grade,i)=>['ordinary','blessed'].flatMap((kind,k)=>['armor','weapon'].map((target,j)=>

@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.equipment = function create_equipment(env) {
+const location = env.routeLocation || root.location;
 // 14.10: клановые/новые предметы отсутствуют в историческом items-il.json.
 // Читаем только публичные поля каталога игры; экземпляры и бонусы остаются из inventory.
 const WEAPON_CATALOG_TTL = 30 * 60 * 1000;
@@ -399,19 +400,21 @@ async function invScanStep() {
   const char = env.rt.char, prof = env.rt.prof, mark = markKey(), eqT = env.rt.weaponEq?.t, initialMain = env.cfg.nWeaponMain;
   const active = () => env.rt.char === char && (st.step !== 'inv' || env.rt.prof === prof) && invScanActive(st) && markKey() === mark && env.rt.weaponEq?.t === eqT;
   if (!st || !active()) return false;
+  // Явный просмотр сумки при Stop имеет отдельное разрешение только на этот read-only маршрут.
+  const scanLocation=env.scanLocation?.(st,char)||location;
   if (st.step === 'prof') {
     if (!st.back) { st = { ...st, back: location.pathname + location.search }; await env.setRt({ invScan: st }); }
     if (!active()) return false;
-    if (!env.isCharacter()) { location.href = '/character.html'; await env.sleep(4000); return true; }
+    if (!env.isCharacter()) { scanLocation.href = '/character.html'; await env.sleep(4000); return true; }
     const p = await env.waitX(() => env.$q('#character-profession')?.textContent.trim(), 5000, 150);
     if (!active()) return false;
     await env.setRt({ prof: p || env.rt.prof || '', lvl: env.heroLevel() || env.rt.lvl, invScan: { ...st, step: 'inv' } });
     if (!active()) return false;
     env.setStatus(`Оружие: профессия ${p || '?'} — смотрю инвентарь`);
-    location.href = '/char.html'; await env.sleep(4000); return true;
+    scanLocation.href = '/char.html'; await env.sleep(4000); return true;
   }
   if (st.step === 'inv') {
-    if (!env.isChar()) { location.href = '/char.html'; await env.sleep(4000); return true; }
+    if (!env.isChar()) { scanLocation.href = '/char.html'; await env.sleep(4000); return true; }
     env.setStatus('Оружие: читаю инвентарь');
     const list = await scanInventoryWeapons();
     if (!active()) return false;
@@ -454,7 +457,7 @@ async function invScanStep() {
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
       + (R.main ? ` · рекомендую: ${R.main.name}` : ' · оружия «в класс» нет') + (wore ? ` · надел ${wore}` : '') + (Object.keys(fix).length ? ` · в меню: ${Object.entries(fix).map(([k, v]) => k + '=' + v).join(', ')}` : ''));
     env.setStatus(`Оружие: ${list.length} шт. · в класс: ${R.main?.name || 'нет'}${wore ? ' · надето' : ''}`);
-    if (env.rt.char === char && (env.on ? env.tabOwner !== false : st.manual) && !env.rt.invScan && st.back && !/\/char\.html/i.test(st.back)) { location.href = st.back; await env.sleep(4000); }
+    if (env.rt.char === char && (env.on ? env.tabOwner !== false : st.manual) && !env.rt.invScan && st.back && !/\/char\.html/i.test(st.back)) { scanLocation.href = st.back; await env.sleep(4000); }
     return true;
   }
   await env.setRt({ invScan: null });

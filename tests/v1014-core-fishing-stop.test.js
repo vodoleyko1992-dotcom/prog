@@ -4,7 +4,7 @@ const test = require('node:test'), assert = require('node:assert/strict'), fs = 
 const src = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
 const part = (a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); assert.ok(i >= 0 && j > i); return src.slice(i, j); };
 for (const manual of [false, true]) for (const service of ['cut', 'exchange', 'rod']) for (const interrupt of ['stop', 'lease', 'none']) test(`${manual ? 'ручная' : 'авто'} ${service}: commit → ${interrupt}`, async () => {
-  const loc = { href: '' }, b = { on: true, tabOwner: true, rt: { fishService: service, fishSvc: manual ? { t: Date.now() } : null }, Date, location: loc,
+  const loc = { href: '' }, b = { on: true, tabOwner: true, rt: { fishService: service, fishSvc: manual ? { t: Date.now() } : null }, Date, location: loc, L2V7Modules:{},
     isBattle: () => false, isFishing: () => false, fishState: () => null, isChar: () => false, isFishShop: () => false, fishNow: () => true,
     setStatus() {}, setRt: async p => Object.assign(b.rt, p), sleep: async () => {}, rtCommit: async () => { if (interrupt === 'stop') b.on = false; if (interrupt === 'lease') b.tabOwner = false; } };
   const code = manual ? part('      if (rt.fishSvc && !isBattle()', '      // 9.0: камни печати') : part("      if (fishNow() && rt.fishService === 'cut')", '      // 8.0 (аудит рыбалки, лог 10.10:');

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.0.23",
-  "description": "L2wap Bot 10.0.23 — автофарм, цепочка Ashen Bastion и возврат после Маммона",
+  "version": "10.0.24",
+  "description": "L2wap Bot 10.0.24 — единый маршрут действий и защита от повторных платежей",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -93,6 +93,8 @@
         "modules/subclass.js",
         "modules/enchant.js",
         "modules/warlock.js",
+        "modules/actions.js",
+        "modules/payments.js",
         "content.js"
       ],
       "run_at": "document_idle"
@@ -133,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.0.23"
+  "version_name": "10.0.24"
 }

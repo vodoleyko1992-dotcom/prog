@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.navigation = function create_navigation(env) {
+const location = env.routeLocation || root.location;
 const isMap = () => /\/map\.html/i.test(location.pathname);
 
 // 8.0.3 (эпики, ревью): валюта цены телепорта (.l2-teleport-miru-price-currency, «аден»). Раньше читалось только число — логово за
@@ -65,10 +66,10 @@ async function teleportBudget(price, active) {
   return '';
 }
 
-async function tpCitiesReady() {
+async function tpCitiesReady(active = () => true) {
   const cities = () => document.querySelectorAll('.l2-teleport-miru-city-btn[data-surroundings-key]').length;
   let n0 = -1, stable = 0;
-  for (let t0 = Date.now(); Date.now() - t0 < 12000 && stable < 3; ) { const n = cities(); stable = n && n === n0 ? stable + 1 : 0; n0 = n; await env.sleep(250); }
+  for (let t0 = Date.now(); active() && Date.now() - t0 < 12000 && stable < 3; ) { const n = cities(); stable = n && n === n0 ? stable + 1 : 0; n0 = n; await env.sleep(250); }
   return cities();
 }
 
@@ -76,18 +77,22 @@ async function zoneCatalogScan() {                // раскрыть все г�
   // v4.57: журнал 07:27 — скан занял 50 мс и нашёл 1 зону: список городов ещё дорисовывался скриптом страницы,
   // а Окрестности города подгружаются только по нажатию (и могут очищаться, когда раскрыт другой город).
   // Теперь: ждём, пока список городов перестанет меняться; раскрываем каждый город и читаем его зоны сразу.
+  const active = () => env.on && env.tabOwner !== false && env.canAct?.() !== false;
+  if (!active()) return;
   env.setStatus('Локации: составляю список зон телепорта');
   const cities = () => [...document.querySelectorAll('.l2-teleport-miru-city-btn[data-surroundings-key]')];
-  await tpCitiesReady();
+  await tpCitiesReady(active);
+  if (!active()) return;
   const cat = { ...(env.rt.zoneCat || {}) };
   let opened = 0;
   for (const b of cities()) {
-    if (!env.on) return;
+    if (!active()) return;
     const key = b.dataset.surroundingsKey;
     const blk = b.closest('.l2-teleport-miru-city-block') || document.querySelector(`.l2-teleport-miru-city-block[data-surroundings-key="${key}"]`);
     const sur = () => blk?.querySelector('.l2-teleport-miru-surroundings');
     const rows = () => blk?.querySelectorAll('.l2-teleport-miru-surroundings-row [data-teleport-id]').length || 0;
-    if (!rows() || sur()?.hidden) { env.fire(b); opened++; await env.waitX(() => rows() > 0 && !sur()?.hidden, 4000, 100); }
+    if (!rows() || sur()?.hidden) { env.fire(b); opened++; await env.waitX(() => !active() || rows() > 0 && !sur()?.hidden, 4000, 100); }
+    if (!active()) return;
     Object.assign(cat, zoneRows());               // читаем после каждого города: раскрытие другого может их скрыть
     // v5.1: и сам город — тоже цель телепорта («Town of Giran», «Rune Township» — так их называет форум рецептов)
     const cr = blk?.querySelector('.l2-teleport-miru-city-row'), ctb = cr?.querySelector('.l2-teleport-miru-tp-btn[data-teleport-id]');
@@ -95,6 +100,7 @@ async function zoneCatalogScan() {                // раскрыть все г�
     if (ctb && cl) cat[ctb.dataset.teleportId] = { ...(cat[ctb.dataset.teleportId] || {}), name: cl, city: key, town: true, price: +((cr.querySelector('.l2-teleport-miru-price-num')?.textContent || '').replace(/\D/g, '') || 0), ...curOf(cr) };
     await env.sleep(env.rnd(120, 250));
   }
+  if (!active()) return;
   const withLv = Object.values(cat).filter(c => c.lo && c.city).length;
   // мало зон — каталог неполный: не ставим отметку «прочитан», чтобы бот перечитал «Телепорт» позже
   await env.setRt({ zoneCat: cat, zoneCatT: withLv >= 5 ? Date.now() : 0, zoneScan: null, zoneCatFail: withLv >= 5 ? 0 : (env.rt.zoneCatFail || 0) + 1, zoneCatFailT: Date.now() });

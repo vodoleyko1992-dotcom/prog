@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.tvtshop = function create_tvtshop(env) {
+const location = env.routeLocation || root.location;
 // Shil Coins — предмет 920030 в сумке (/character inventory.stacks), 2 за победу в TvT (kb/raw/tvt-result-latest.json)
 const SHIL_ID = 920030, SHOP_URL = '/tvt-shop.html';
 // Каталог /game/tvt/shop/catalog (снят 12.10, все вещи S-grade с 70 ур.; расходники не цель). Живой каталог (shopNote) важнее встроенного

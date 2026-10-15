@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.mobfarm = function create_mobfarm(env) {
+const location = env.routeLocation || root.location;
 // Рейдовый тур и ожидаемый бой удерживают текущую локацию. Обычный фарм может менять зону и выполнять ресурсную цель.
 // 10.0 (лог 12.10 11:16–11:52: тур 36 мин без единого РБ — «все не по силам», а автофарм стоял в зоне 8,8 M EXP/ч при замере 32 M в Silent Valley):
 // тур в простое (подходящих РБ нет, rbHuntIdle) больше не держит автофарм и фарм ресурса на месте

@@ -12,6 +12,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.fightlab = function create_fightlab(env) {
+const location = env.routeLocation || root.location;
 const MEM_MAX = 80, SAMPLES = 12, HITS = 30, GAPS = 6, FLUSH_MS = 30000;
 const num = s => +String(s).replace(/[\s  ]/g, '');
 const low = s => String(s || '').trim().toLowerCase();

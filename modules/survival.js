@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.survival = function create_survival(env) {
+const location = env.routeLocation || root.location;
 async function restoreVitals(why) {
   if (Date.now() - (env.rt.restoreT || 0) < (env.rt.restoreRes?.ok ? 10000 : 45000)) return false;   // v4.41: прошлое удалось — снова можно через 10 с (раньше 45 с, и бот лечился на мобах)
   if (env.rt.restoreRes && !env.rt.restoreRes.ok && Date.now() - env.rt.restoreRes.t < 180000) return false;   // не вышло — 3 мин лечимся иначе

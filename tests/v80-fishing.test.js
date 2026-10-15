@@ -205,7 +205,8 @@ function world(o = {}) {
     assert.ok(t >= 5000 && t < 5500);
   }
   assert.match(content, /await setRt\(\{ fishService: next, rodGoalWaitingProof: !!rt\.rodGoalActive && !next \}\);\n    await rtCommit\(\);/, 'finish(): ждём запись до перехода');
-  assert.ok((content.match(/await rtCommit\(\); (?:if \([^;]+; )?location\.href = /g) || []).length >= 7, 'служебные переходы рыбалки — после записи');
+  // 10.0.24: между commit и навигацией добавлена общая проверка владельца действия.
+  assert.ok((content.match(/await rtCommit\(\); [^\n]*location\.href = /g) || []).length >= 7, 'служебные переходы рыбалки — после записи');
   assert.match(content, /L2V7Modules\.fishing = L2V7Factories\.fishing\(\{[^\n]*get rtCommit\(\)\{return rtCommit\}/, 'геттер rtCommit у модуля рыбалки');
   assert.ok((code.match(/await commit\(\); (?:if \([^;]+; )?location\.href = /g) || []).length >= 3, 'модуль: переходы после записи; недоступный магазин сохраняет услугу без перехода');
   // ---------- B1: главный цикл после шага рыбалки — 30 мс вместо 200 ----------

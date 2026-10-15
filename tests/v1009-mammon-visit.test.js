@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.24: дополнительные геттеры владельца перед прежними зависимостями допустимы.
 // 10.0.9 (игрок 13.10 07:22, скрин: «где отметил красным, добавь кнопку — открыть Маммона/прийти к Маммону — на выбор торговец или кузнец»):
 // кнопки «🛒 Торговец Маммона» / «⚒ Кузнец Маммона» справа от «🐉 Респ эпиков» в окне бота. Бот работает → rt.mmGoReq {kind:'visit', npc}
 // через фон (mmGoSet, без замка), модуль Маммона: телепорт за адену → страница NPC → пауза. Бот стоит → сразу страница телепорта к NPC
@@ -43,7 +44,7 @@ const now = Date.now();
     assert.equal(await M.mmStep(), false); assert.equal(env.rt.mmGoReq, null); assert.match(env.rt.mmGoSay.why, /устарела/); assert.match(recs.join('\n'), /кнопка «прийти к кузнецу сейчас»: команда устарела/); }
   // 5. проводка: окно бота (кнопки справа от «Респ эпиков», кликабельны, блок есть и без эпиков), фон mmGoSet только с l2wap.com, геттер pauseBot, меню
   const c = read('content.js'), bg = read('background.js'), pp = read('popup.js');
-  assert.match(c, /L2V7Modules\.mammon = L2V7Factories\.mammon\(\{ get \$q\(\) \{ return \$q; \}, get pauseBot\(\) \{ return pauseBot; \}/, 'mammon: геттер pauseBot');
+  assert.match(c, /L2V7Modules\.mammon = L2V7Factories\.mammon\(\{[^\n]* get \$q\(\) \{ return \$q; \}, get pauseBot\(\) \{ return pauseBot; \}/, 'mammon: геттер pauseBot');
   assert.match(c, /data-mmgo="order"[^\n]*🛒 Торговец Маммона<\/button><button type="button" class="bt" data-mmgo="smith"[^\n]*⚒ Кузнец Маммона<\/button>/, 'две кнопки рядом');
   assert.match(c, /<div class="e"><div class="et"><b>🐉 Респ эпиков<\/b>[^\n]*<div class="mm">\$\{mmGoBtns\(\)\}<\/div><\/div>/, 'кнопки в блоке «Респ эпиков»');
   assert.match(c, /if \(t === '— 🏛 маммон —'\) return `<div class="e"><div class="mm">\$\{mmGoBtns\(\)\}<\/div><\/div>`/, 'без эпиков — только кнопки');

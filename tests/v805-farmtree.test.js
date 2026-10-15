@@ -19,7 +19,8 @@ assert.equal(sb.farmIconOf(row([img('/game/item-icon/1864')])), '/game/item-icon
 assert.match(cjs, /return \{ name, n: [^\n]*bosses, icon: farmIconOf\(row\) \};/, 'farmRowParse keeps the icon');
 assert.match(cjs, /db\.res\[k\] = \{ \.\.\.r, cat: r\.cat \|\| old\.cat \|\| '', icon: r\.icon \|\| old\.icon \|\| '', t: Date\.now\(\) \};/, 'row opened by the player keeps old category/icon');
 assert.match(cjs, /if \(r\) \{ r\.cat = farmCatOf\(row\); farmSave\(\[r\]\)/, 'row opened by the player gets its category');
-assert.match(cjs, /await farmIcons\(\)\.catch\(\(\) => \{\}\);\n  const done/, 'base scan picks icons of all visible rows first');
+// 10.0.24: между сбором и обходом строк проверяем прерывание маршрута.
+assert.match(cjs, /await farmIcons\(\)\.catch\(\(\) => \{\}\);\n  if \(!active\(\)\) return;\n  const done/, 'base scan picks icons of all visible rows first');
 console.log('PASS: farm DB — game icon per row (no mob pictures, game paths only), category/icon not wiped by a player click');
 
 // ---------- popup: порядок разделов и иконки ----------

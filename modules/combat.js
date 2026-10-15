@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.combat = function create_combat(env) {
+const location = env.routeLocation || root.location;
 // 8.0.3: шлюз нажатий — запас после ответа на ход (A) и после конца GET /character игры (B), мс: [мин, макс, начальный]
 const LOCK_A = [60, 500, 120], LOCK_B = [30, 200, 50];
 // 10.0.12 (игрок 14.10: разрешены только зелёные/синие): в цепочке URL хранит первого моба, а цвет нужен текущего.

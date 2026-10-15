@@ -110,6 +110,6 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
   const hk = read('hook.js');
   assert.match(hk, /location\.pathname === '\/mammon-blacksmith\.html'[\s\S]{0,200}window\.confirm = function/, 'confirm() only on the smith page');
   assert.match(hk, /Date\.now\(\) - t < 5000\) \{ delete h\.dataset\.l2botConfirm/, 'yes only right after the bot click, once');
-  assert.match(src, /document\.documentElement\.dataset\.l2botConfirm = String\(Date\.now\(\)\)[^\n]*\n\s*env\.fire\(btn\)/);
+  assert.match(src, /document\.documentElement\.dataset\.l2botConfirm = String\(Date\.now\(\)\)[^\n]*\n\s*if \(ticket && !env\.payments\.sent\(ticket\)\)[^\n]*\n\s*const fired = env\.fire\(btn\)/);
   console.log('PASS: 9.2.5 Mammon smith — goal item upgraded by the «Покращити» button when everything is collected (Coin of Luck allowed), own card only, one click, verified; off/short/goal reached → no click');
 })().catch(e => { console.error(e); process.exit(1); });

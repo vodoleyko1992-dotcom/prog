@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.quests = function create_quests(env) {
+const location = env.routeLocation || root.location;
 function questLinesInLog() {
   return env.logLines().map(l => l.match(env.QLINE)).filter(Boolean)
     .map(m => ({ label: m[1].replace(/[★·\s]+$/, '').trim(), done: +m[2], total: +m[3], left: m[4] != null ? +m[4] : Math.max(0, +m[3] - +m[2]) }));

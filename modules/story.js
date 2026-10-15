@@ -6,6 +6,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.story = function create_story(env) {
+const location = env.routeLocation || root.location;
 // 9.0 (новости игры 11.10, API 11.10 14:30): POST <root>/<accept|advance|complete|teleport> {expectedRevision, targetId} — жмём кнопки страницы,
 // как игрок; ★ квестовых мобов на карте игра ставит сама (map-profession-quest-markers.js опрашивает и noblesse, и subclass)
 const Q = {

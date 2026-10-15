@@ -8,15 +8,16 @@ const number = x => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 ?
 const option = k => env.cfg[k] ?? DEF[k];
 const state = () => env.rt.petFull || {};
 const charName = () => String(env.rt.char || '');
-const mine = T => env.tabOwner === true && !!T?.char && charName() === T.char && env.heroNick() === T.char;
+const mine = T => env.tabOwner === true && T?.lease === env.leaseEpoch && !!T?.char && charName() === T.char && env.heroNick() === T.char;
 const active = () => env.on === true && env.tabOwner === true && option('petFullAuto') === true;
 const priority = afterWin => env.canRun?.() !== false && (!env.isBattle() || (afterWin && env.victory())) && !env.fishState()
   && !env.tvtHold() && !env.abHold() && !env.antibotState() && !env.rt.revive && !env.rt.shop?.urgent;
 const signature = () => JSON.stringify([option('petFullAuto'), option('petFullBudget'), option('petFullMaxPrice'), option('petFullReserve'), env.cfg.shopReserve, option('petFullRenew')]);
-const token = () => ({ char: charName(), kick: +env.rt.manualKickAt || 0, config: signature() });
+const token = () => ({ char: charName(), lease: env.leaseEpoch, kick: +env.rt.manualKickAt || 0, config: signature() });
 const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualKickAt || 0) && T.config === signature() && priority(afterWin);
 const patch = p => env.setRt({ petFull: { ...state(), ...p } });
 const pendingSame = P => state().pending?.id === P?.id;
+let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, prepared = null, preparedSource = null;
 const unsent = new Set();
 function identity(ch) {
@@ -93,7 +94,7 @@ async function reconcile(T, ch, afterWin, confirmedWrite) {
   const P = state().pending; if (!P) return false;
   if (P.char !== T.char) { await status(T, 'unknown', 'Сохранённый запрос относится к другому персонажу'); return true; }
   if (P.phase === 'prepared' && unsent.has(P.id)) {
-    if (same(T, afterWin) && pendingSame(P)) { unsent.delete(P.id); await patch({ pending: null, nextCheckAt: 0, status: 'ready', reason: 'Неотправленный запрос отменён; проверю условия заново' }); }
+    if (mine(T) && pendingSame(P)) { unsent.delete(P.id); await patch({ pending: null, nextCheckAt: 0, status: 'ready', reason: 'Неотправленный запрос отменён; проверю условия заново' }); }
     return true;
   }
   const effects = freshEffects(ch, P);
@@ -115,6 +116,26 @@ async function reconcile(T, ch, afterWin, confirmedWrite) {
   }
   await status(T, 'unknown', contradicts ? 'Цена, валюта или баланс противоречат квитанции; повторная оплата запрещена' : effects ? 'Эффекты есть, расход не подтверждён; повторная покупка запрещена' : 'Исход покупки не подтверждён; проверяю бафы без повторной оплаты', { nextCheckAt: Date.now() + 15000 });
   return true;
+}
+// 10.0.24: сверка уже отправленного платежа не зависит от нового режима/очереди магазина.
+// Только GET: ни каталог, ни переход к бафферу, ни новая покупка здесь невозможны.
+async function paymentReconcile() {
+  const P = state().pending;
+  if (!P || busy) return false;
+  const T = token(); if (!mine(T) || P.char !== T.char) return false;
+  const now = Date.now();
+  if (paymentPoll?.id === P.id && now - paymentPoll.at < 15000) return false;
+  paymentPoll = { id: P.id, at: now }; busy = true;
+  try {
+    const data = await read('/character'); if (!mine(T) || !pendingSame(P)) return false;
+    const ch = data.character || data;
+    if (ch?.name !== T.char || !Number.isSafeInteger(ch.revision)) return false;
+    await reconcile(T, ch, false);
+    return mine(T) && !state().pending;
+  } catch (_) {
+    if (mine(T) && pendingSame(P)) await status(T, 'unknown', 'Не удалось сверить оплату бафа суммона; повторная покупка запрещена', { nextCheckAt: Date.now() + 15000 });
+    return false;
+  } finally { busy = false; }
 }
 async function step({ afterWin = false, forceRead = false } = {}) {
   if (busy || !active() || !priority(afterWin)) return false;
@@ -347,6 +368,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffActive, catalogSet, coverage, DEF };
+return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
