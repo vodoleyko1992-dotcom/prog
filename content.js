@@ -3019,6 +3019,7 @@ function layoutInd(bounds) {
 const ANDROID = /Android/i.test(navigator.userAgent || '');
 let dockOver = false;
 const dockOverOpen = () => { try { return localStorage.getItem('l2bot-dockOpen') === '1'; } catch (e) { return false; } };
+const dockWideOpen = () => { try { return localStorage.getItem('l2bot-dockWide') === '1'; } catch (e) { return false; } };
 function dock() {
   if (window.top !== window) return;
   if (!cfg.dock) try { layoutInd(dockGameBounds(document.documentElement.clientWidth || innerWidth)); } catch (e) {}
@@ -3047,13 +3048,24 @@ function dock() {
       if (dockOver) { try { localStorage.setItem('l2bot-dockOpen', dockOverOpen() ? '0' : '1'); } catch (er) {} dock(); return; }
       await setCfg({ dockMin: !cfg.dockMin });
     });
-    wrap.append(tg, fr);
+    const wide = document.createElement('button');
+    wide.id = 'l2bot-dock-wide';
+    wide.type = 'button';
+    wide.style.cssText = 'position:absolute;top:62px;left:0;width:26px;height:36px;z-index:2;border:1px solid #56452f;border-radius:0 6px 6px 0;background:linear-gradient(180deg,#2e261e,#231d17);color:#f0cf86;font:12px system-ui;cursor:pointer;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.4)';
+    wide.addEventListener('click', e => {
+      e.stopPropagation();
+      try { localStorage.setItem('l2bot-dockWide', dockWideOpen() ? '0' : '1'); } catch (er) {}
+      dock();
+    });
+    wrap.append(tg, wide, fr);
     document.documentElement.appendChild(wrap);
   }
   layoutInd(bounds);
   try { ui.classList.toggle('over', dockOver); ui.classList.toggle('hid', dockOver && !min); draw(); } catch (e) {}   // индикатор ещё не создан
   // Если рядом места нет (узкое окно или ещё не загрузилась игра) — компактная панель поверх игры (8.0.7: на Android до 460 px)
-  const w = bounds.right > 0 && available >= 300 ? available : Math.min(dockOver ? 460 : 380, Math.max(0, viewport - 16));
+  const normalWidth = bounds.right > 0 && available >= 300 ? available : Math.min(dockOver ? 460 : 380, Math.max(0, viewport - 16));
+  const wideOn = dockWideOpen() && !dockOver;
+  const w = wideOn ? Math.min(normalWidth * 2, Math.max(0, viewport - 16)) : normalWidth;
   wrap.style.cssText = `position:fixed;top:8px;right:${min ? -w : 8}px;bottom:8px;width:${w}px;z-index:2147483646;`
     + 'box-sizing:border-box;border:1px solid #56452f;border-radius:12px;background:#14100d;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:right .2s';
   const toggle = wrap.querySelector('#l2bot-dock-toggle'), tw = dockOver ? 36 : 26;
@@ -3063,6 +3075,12 @@ function dock() {
   toggle.textContent = min ? '◀' : '▶';
   toggle.title = min ? 'Показать меню бота' : 'Свернуть меню бота';
   toggle.setAttribute('aria-expanded', String(!min));
+  const wideButton = wrap.querySelector('#l2bot-dock-wide');
+  wideButton.style.display = min || dockOver ? 'none' : 'block';
+  wideButton.textContent = wideOn ? '½' : '×2';
+  wideButton.title = wideOn ? 'Вернуть обычную ширину меню' : 'Расширить меню вдвое';
+  wideButton.setAttribute('aria-label', wideButton.title);
+  wideButton.setAttribute('aria-pressed', String(wideOn));
   if (!bounds.right && document.body && !dockWaiter && typeof MutationObserver !== 'undefined') {
     dockWaiter = new MutationObserver(scheduleDock);
     dockWaiter.observe(document.body, { childList: true, subtree: true });
