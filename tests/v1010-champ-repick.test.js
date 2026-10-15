@@ -6,7 +6,7 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const mk = extra => { const c = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise, CSS: { escape: s => s }, document: { querySelectorAll: () => [] }, ...extra }; c.globalThis = c; return c; };
-const load = (file, env, extra) => { const ctx = mk(extra); vm.runInNewContext(read(file), ctx); return ctx.L2V7Factories[path.basename(file, '.js')](env); };
+const load = (file, env, extra) => { const ctx = mk(extra); vm.runInNewContext(read(file), ctx); return file.endsWith('/champs.js') ? require('./champs-context-fixture.cjs').freshChamps(ctx.L2V7Factories.champs,env) : ctx.L2V7Factories[path.basename(file, '.js')](env); };
 (async () => {
   // 1. champs: уровень героя на переходе = 0 → вердикт всё равно по настоящему разрыву (ctx.heroLvl0 / кэш), держит 5 мин
   let lvl = 8;

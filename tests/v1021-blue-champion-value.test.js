@@ -7,7 +7,7 @@ function fixture(mode = 'efficiency') {
   const env = { cfg: { champBlue: true, champOrange: true, champRed: false, champCancel: mode },
     rt: { lvl: 77, dps: { dps: 2534, n: 100 } }, heroLvl: () => 77,
     farmRate: () => ({ eps: 40000, sk: 2.9 }), faPaidLeft: () => 5 };
-  return box.L2V7Factories.champs(env);
+  return require('./champs-context-fixture.cjs').freshChamps(box.L2V7Factories.champs,env);
 }
 const blue = { tier: 'blue', lvl: 76, hp: 10000, exp: 30000, fa: 0.1 };
 test('short blue fight from 23:41 log is tried in efficiency mode despite FA buffs', () => {

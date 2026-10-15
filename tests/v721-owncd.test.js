@@ -41,5 +41,5 @@ console.log('PASS: own press cooldown is not overridden by a stale server «read
   console.log('PASS: lost click marks the spell busy for 0.7 s (RB log 22:31)');
 }
 // 7.2.2 (лог 22:38): итог боя с раненым РБ — снятое HP от входа, а не полное (было «ДПС 18026» при 87 359 HP на входе)
-assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /const base = ctx\.rb && ctx\.hp0 > 0 \? Math\.min\(ctx\.max, ctx\.hp0\) : ctx\.max;/);
+assert.match(fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), /const base = ctx\.rb && ctx\.hp0 > 0 \? Math\.min\(ctx\.max, ctx\.hp0\) : ctx\.champ && ctx\.chHp0 > 0 \? Math\.min\(ctx\.max,ctx\.chHp0\) : ctx\.max;/);
 console.log('PASS: wounded RB fight summary counts HP from entry');

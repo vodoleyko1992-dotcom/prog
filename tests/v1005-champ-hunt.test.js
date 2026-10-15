@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const load = (file, env) => { const ctx = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, Promise }; ctx.globalThis = ctx;
-  vm.runInNewContext(read(file), ctx); return ctx.L2V7Factories[path.basename(file, '.js')](env); };
+  vm.runInNewContext(read(file), ctx); return file.endsWith('/champs.js') ? require('./champs-context-fixture.cjs').freshChamps(ctx.L2V7Factories.champs,env) : ctx.L2V7Factories[path.basename(file, '.js')](env); };
 let lvl = 66;
 const env = { cfg: { champRed: true, champMinLvl: 0 }, rt: { lvl: 66, rbDps: 3000 }, heroLvl: () => lvl, farmRate: () => ({ eps: 5600, sk: 1.5 }), setRt: async p => Object.assign(env.rt, p) };
 const C = load('modules/champs.js', env);

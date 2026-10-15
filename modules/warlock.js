@@ -18,7 +18,7 @@ const same = (T, afterWin) => mine(T) && active() && T.kick === (+env.rt.manualK
 const patch = p => env.setRt({ petFull: { ...state(), ...p } });
 const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
-let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
+let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
@@ -289,7 +289,7 @@ function snapshot(ch, shots) {
 }
 // Входящий урон не зависит от зарядов/кота, зато меняется от брони, стоек
 // и сопротивлений. Неизвестный бафф включаем; исключаем только чистые усиления атаки.
-const OFFENSE_ONLY = new Set([1077,1240,1068,1086,1059,1085,1078]);
+const OFFENSE_ONLY = new Set([1077,1240,1068,1086,1059,1085,1078,4699]);
 const DEFENSE_FIELDS = ['level','maxHp','pDef','mDef','evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'];
 function defenseSnapshot(ch) {
   if (!Array.isArray(ch.activeBuffs) || !Array.isArray(ch.toggleStances) || !ch.inventory?.eq || !Array.isArray(ch.learnedBattleSkillsDetail)
@@ -324,6 +324,19 @@ function noteSnapshot(ch, shots) {
   const data = { char: ch.name, setup: combatSetup(ch), prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
   latestDefense = defenseSnapshot(ch);
   latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(heroBuffExpiry)) } : null;
+  latestCombat = combatSnapshot(ch);
+  latestCombatPlan=null;
+  if(ch.inBattle===false && !env.isBattle() && latestHero){
+    const plannedShots=env.shotContext?.(ch,{preflight:true});
+    if(plannedShots && plannedShots!=='unknown'){
+      const plannedHero={...data,shots:String(plannedShots)};
+      const plan=combatSnapshot(ch,{...plannedHero,key:JSON.stringify(plannedHero),until:latestHero.until});
+      const weapon=ch.inventory?.eq?.l1;
+      if(plan)latestCombatPlan={...plan,actualHero:latestHero.key,source:{name:ch.name,l2Profession:ch.l2Profession,classSlots:{activeSlot:ch.classSlots?.activeSlot},inBattle:false,
+        inventory:{eq:{l1:weapon&&typeof weapon==='object'?{itemId:weapon.itemId}:weapon},stacks:ch.inventory?.stacks?.map(x=>({itemId:x?.itemId,qty:x?.qty}))},
+        battleHotbarSlots:ch.battleHotbarSlots?.map(x=>x?{k:x.k,id:x.id}:null)},shots:String(plannedShots)};
+    }
+  }
   latest = snapshot(ch, shots); latestSeen = true;
   if (latest) latest.proofAt = snapshotEvidenceAt || latest.at;
   // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
@@ -344,11 +357,36 @@ function noteSnapshot(ch, shots) {
     if (prepared && Number.isFinite(ch.snapshotGeneratedAt)) prepared.validUntil = Math.min(prepared.validUntil, ch.snapshotGeneratedAt + 30000);
   }
 }
-function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; latestDefense = null; prepared = null; preparedSource = null; }
+function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; latestCombat = null; latestCombatPlan = null; latestDefense = null; prepared = null; preparedSource = null; }
 function heroContext() {
   const h = latestHero;
   return h && h.char === charName() && h.char === env.heroNick() && h.prof === env.rt.classCur?.prof && h.slot === env.rt.classCur?.slot && h.until > Date.now()
     && String(env.shotContext?.() ?? 'unknown') === h.shots ? h.key : null;
+}
+// Полный состав для общего обучения боя: отсутствие суммона должно быть явным.
+function combatSnapshot(ch,h=latestHero) {
+  const p=ch.activeSummon;
+  if (!h || !h.setup.gear || !h.setup.skills || !Array.isArray(ch.toggleStances)
+      || !Object.prototype.hasOwnProperty.call(ch,'activeSummon') || p === undefined || h.shots==='unknown') return null;
+  let pet=null, expires=[];
+  if (p !== null) {
+    if (!p || typeof p.key!=='string' || !p.kind || !Array.isArray(p.activeBuffs)
+        || !['hp','maxHp','pAtk','accuracy','critRate','critDmgMul','summonSkillId','summonSkillLevel'].every(k=>Number.isFinite(p[k]))) return null;
+    const buffs=p.activeBuffs.filter(b=>heroBuffExpiry(b)>Date.now()); expires=buffs.map(heroBuffExpiry);
+    pet={kind:p.kind,key:p.key,alive:p.hp>0,level:p.summonSkillLevel,skill:p.summonSkillId,
+      stats:['maxHp','pAtk','mAtk','accuracy','critRate','critDmgMul'].map(k=>Number.isFinite(p[k])?p[k]:null),
+      buffs:buffs.map(b=>[b.skillId,b.level]).sort((a,b)=>a[0]-b[0]),born:+env.rt.petBornT||0};
+  }
+  const stances=ch.toggleStances.filter(x=>x.active===true).map(x=>[String(x.battleId||''),+x.skillId||0,+x.level||0]).sort((a,b)=>a[0].localeCompare(b[0]));
+  const proof=Number.isFinite(ch.requestStartedAt)?Math.min(Date.now(),ch.requestStartedAt):Date.now();
+  return {hero:h.key,key:JSON.stringify([h.key,stances,pet]),born:+env.rt.petBornT||0,
+    until:Math.min(h.until,proof+30000,Number.isFinite(ch.snapshotGeneratedAt)?ch.snapshotGeneratedAt+30000:Infinity,...expires)};
+}
+function combatContext(options={}) {
+  const planning=options.preflight===true&&!env.isBattle(), c=planning?latestCombatPlan:latestCombat;
+  if(!c||c.until<=Date.now()||c.born!==( +env.rt.petBornT||0))return null;
+  if(planning)return c.actualHero===heroContext()&&env.shotContext?.(c.source,{preflight:true})===c.shots?c.key:null;
+  return c.hero===heroContext()?c.key:null;
 }
 function currentSnapshot() {
   const s = latestSeen ? latest : state().snapshot;
@@ -420,6 +458,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
