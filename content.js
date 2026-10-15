@@ -5036,7 +5036,7 @@ L2V7Modules.enemies = L2V7Factories.enemies({ get on(){return on},get tabOwner()
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
 // 10.0.2: таймеры боссов (modules/rbtimer.js): когда убит и когда воскреснет РБ / эпик
 // 10.0.5: чемпионы ради FA — оценка до боя, проба, отход, обучение (rt.champLearn)
-L2V7Modules.champs = L2V7Factories.champs({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
+L2V7Modules.champs = L2V7Factories.champs({ get combatContext(){return options=>L2V7Modules.warlock.combatContext(options)}, get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; },
   get heroLvl() { return heroLvl; }, get farmRate() { return (...a) => L2V7Modules.mobfarm.farmRate(...a); }, get faPaidLeft() { return (...a) => L2V7Modules.buffs.faPaidLeft(...a); } });   // 10.0.8: платные баффы за FA — «Cancel» чемпионов
 L2V7Modules.rbtimer = L2V7Factories.rbtimer({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get gameGet() { return gameGet; },
   get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get RB_WIN() { return RB_WIN; } });

@@ -1296,11 +1296,13 @@ async function battle() {
   };
 
   if (ctx.pet) { const n = env.actNet?.(); ctx.petActsKnown = Number.isSafeInteger(n?.okN); ctx.petActN = n?.okN; ctx.petActActor = JSON.stringify([env.rt.char || '',env.rt.classCur?.slot,env.rt.classCur?.prof,(env.cdSpawn || env.battleSpawn)?.()]); env.warlock?.capture?.(ctx); }
+  env.champs?.observe?.(ctx);
   const t0 = Date.now();
   let progSig = '', progT = Date.now();          // последний «признак жизни» боя: HP моба/героя, журнал
   const strength = strengthSample(t0, env.actNet?.() || {});
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
   while (env.on && env.tabOwner) {
+    env.champs?.observe?.(ctx);
     strengthReliable(strength, Date.now(), env.actNet?.() || {});
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
@@ -1980,14 +1982,16 @@ async function battle() {
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
   const rewardLines = freshBattleLines(ctx.logStart || [], env.logLines());
   const rewards = battleRewards(rewardLines, loot, ctx.extraCredited);
+  env.champs?.observe?.(ctx);
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду
     const ttk = (Date.now() - t0) / 1000;
     // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
     // у раненого РБ снято не полное HP, а то, что было на входе
-    const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.max;
+    const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.champ && ctx.chHp0 > 0 ? Math.min(ctx.max,ctx.chHp0) : ctx.max;
     const measured = env.fightDamage?.(ctx.name, ctx.spawnId || spawnId, t0);
     const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0), measured?.removed || 0);   // победа — главный добит (соседи живы — их остаток не наш)
     const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
+    env.champs?.noteDamage?.(ctx,base,ttk)?.catch?.(e=>console.warn(env.TAG,'состав боя',e));
     const d = env.rt.dps?.singleTarget ? env.rt.dps : { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
     // записи; память вкладки обновлена сразу, очередь сохраняет порядок, при уходе со страницы недописанное уходит по pagehide

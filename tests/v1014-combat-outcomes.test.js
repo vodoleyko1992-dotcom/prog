@@ -149,7 +149,7 @@ test('0 HP → живая следующая цель того же боя → �
 function championFixture(tier){
  const f=flowFixture('mage');Object.assign(f.env.cfg,{champBlue:true,champOrange:false,champRed:false,champMinLvl:20,champCancel:'always'});
  f.env.isChamp=()=>true;f.env.battleInfo=()=>({t:Date.now(),name:'Safe Mob',kind:'champion',tier,lvl:74,max:1000,spawn:'champ_'+tier+'_test'});
- vm.runInContext(fs.readFileSync(root+'/modules/champs.js','utf8'),f.box);f.env.champs=f.box.L2V7Factories.champs(f.env);return f;
+ vm.runInContext(fs.readFileSync(root+'/modules/champs.js','utf8'),f.box);f.env.champs=require('./champs-context-fixture.cjs').freshChamps(f.box.L2V7Factories.champs,f.env);return f;
 }
 test('разрешённый синий чемпион: настоящий battle → learn(win) → FA blue → цепочка',async()=>{
  const f=championFixture('blue');await f.combat.battle();assert.equal(f.env.rt.kills,1);assert.equal(f.env.rt.champLearn.st.blue.win,1);assert.equal(f.env.rt.faDrop.f.blue,1);assert.equal(f.events.filter(x=>x==='Blaze').length,1);assert.equal(f.events.filter(x=>x==='hunt').length,1);
