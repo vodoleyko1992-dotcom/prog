@@ -290,7 +290,8 @@ function snapshot(ch, shots) {
 // Входящий урон не зависит от зарядов/кота, зато меняется от брони, стоек
 // и сопротивлений. Неизвестный бафф включаем; исключаем только чистые усиления атаки.
 const OFFENSE_ONLY = new Set([1077,1240,1068,1086,1059,1085,1078,4699]);
-const DEFENSE_FIELDS = ['level','maxHp','pDef','mDef','evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'];
+// 16.10: maxHp — резерв для rbProbeBudget, не коэффициент входящего урона.
+const DEFENSE_FIELDS = ['level','pDef','mDef','evasion','magicEvasion','shieldDef','shieldRate','fireResist','waterResist','windResist','earthResist','holyResist','darkResist'];
 function defenseSnapshot(ch) {
   if (!Array.isArray(ch.activeBuffs) || !Array.isArray(ch.toggleStances) || !ch.inventory?.eq || !Array.isArray(ch.learnedBattleSkillsDetail)
       || !['level','maxHp','pDef','mDef'].every(k=>Number.isFinite(ch[k])&&ch[k]>0)) return null;

@@ -55,3 +55,15 @@ test('live Shax: real potModel changes from learned bag potions to unmeasured ba
 });
 
 test('only accessible ready measured potions earn finite healing credit',()=>{const f=fixture(),args={me:{cur:15070,max:15070,pct:100},sp:5000,p90:2550,loss:1200};for(const item of [{n:1000,heal:600,est:false},{b:{},ready:false,n:1000,heal:600,est:false},{b:{},ready:true,n:1000,heal:600,est:true}]){const v=f.R.rbProbeBudget({...args,pot:{items:[item]}});assert.ok(!v||v.healing===0)}const v=f.R.rbProbeBudget({...args,pot:{items:[{b:{},ready:true,n:1000,heal:600,est:false}]}});assert.ok(v.healing>0);assert.ok(v.seconds<=8)});
+
+// 16.10, Rudelto: maxHp меняется между ответами игры; резерв всё равно проверяется по живому HP.
+test('maxHp-only oscillation does not invalidate defense fingerprint; actual armor weakening still does',()=>{
+ const f=defenseFixture();f.ch.maxHp=16365;f.api().noteSnapshot(f.ch);const key=f.api().defenseContext();
+ f.ch.maxHp=16660;f.api().noteSnapshot(f.ch);assert.equal(f.api().defenseContext(),key);
+ f.ch.maxHp=16365;f.api().noteSnapshot(f.ch);assert.equal(f.api().defenseContext(),key);
+ f.ch.pDef--;f.api().noteSnapshot(f.ch);assert.notEqual(f.api().defenseContext(),key);
+});
+test('lower current and maximum HP still abort finite probe even with identical defense fingerprint',()=>{
+ const f=fixture(),t=trial(f);t.assess();f.time(t.start+8000);f.env.meHp=()=>({cur:3000,max:4000,pct:75});
+ const v=t.assess();assert.equal(v.abort,true);assert.match(v.why,/запас HP|удар|HP/);
+});

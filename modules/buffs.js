@@ -165,7 +165,9 @@ async function totemNote(ctx, dps) {
   await env.setRt({ totemDps: T, buffEff: eff });
 }
 
+let planningSnapshot = null;
 function hudBuffs() {                              // skillId → истекает (мс); null — шапки с баффами нет
+  if(planningSnapshot)return planningSnapshot.H;
   const box = env.$q('#l2-hud-active-buffs');
   if (!box) return null;
   const m = {};
@@ -179,6 +181,7 @@ function hudBuffs() {                              // skillId → истекае
 // уровни набора — со страницы баффера, «Щит — lvl 2»; заводские — по снимку 10.10)
 const TB_LVL_DEF = { basic: { 1036: 1, 1040: 2, 1045: 5, 1048: 5, 1059: 2, 1062: 1, 1068: 2, 1077: 2, 1085: 2, 1086: 1, 1240: 2, 1242: 2, 1268: 3 } };
 function hudLevels() {                             // skillId → уровень (из подсказки «… · Lv.3»)
+  if(planningSnapshot)return planningSnapshot.levels;
   const m = {};
   env.$q('#l2-hud-active-buffs')?.querySelectorAll('.l2-hud-active-buff[data-skill-id]').forEach(b => { const l = (b.getAttribute('title') || '').match(/Lv\.?\s*(\d+)/i); if (l) m[+b.dataset.skillId] = +l[1]; });
   return m;
@@ -350,21 +353,51 @@ function faCatalogNote() {                        // страница /fast-aden
   return n;
 }
 
+// Только свежий полный снимок своего персонажа пригоден для перепланирования оплат.
+async function freshBuffPlan(){
+  const active=contextGuard(),char=env.rt.char;
+  try{const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
+    if(!active() || ch?.name!==char || !Array.isArray(ch.activeBuffs))return null;
+    const H={},levels={};
+    for(const b of ch.activeBuffs){const id=+b.skillId,exp=b.expiresAtMs??b.expiresAt;if(!(id>0)||!Number.isFinite(exp))return null;H[id]=exp;if(+b.level>0)levels[id]=+b.level;}
+    return {H,levels};
+  }catch(_){return null;}
+}
+function planWith(snapshot){try{planningSnapshot=snapshot;return townBuffNeed();}finally{planningSnapshot=null;}}
+
 let rbAskT = 0;                                     // 10.0.1: когда тур РБ последний раз спрашивал «баффы перед РБ …» (faWanted → tourWant)
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
   const active=contextGuard();if(!active())return false;
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
-  const n = townBuffNeed();
-  if (!n) { if (env.rt.tbFail) env.setRt({ tbFail: 0 }); return false; }
+  // Отмена маршрута не равна неудачной покупке. Перед новым планом читаем сервер:
+  // HUD после ответа/перезагрузки может ещё не показывать уже оплаченные эффекты.
+  const interrupted=env.rt.tbInterrupted;
+  let snapshot=null;
+  if(interrupted){
+    if(env.payments?.blocked())return true;
+    snapshot=await freshBuffPlan();
+    if(!active())return false;
+    if(env.payments?.blocked())return true;
+    if(!snapshot){env.setStatus?.('Бафф: после отмены сверяю эффекты с сервером; повторно не покупаю');await env.sleep(3000);return true;}
+  }
+  const n=planWith(snapshot);
+  if (!n) {
+    if(interrupted && townBuffNeed()){
+      env.setStatus?.('Бафф: сервер подтвердил эффекты, жду обновления шапки; повторно не покупаю');
+      await env.sleep(3000);return true;
+    }
+    if(interrupted)await env.setRt({tbInterrupted:null,tbWaitUntil:0});
+    if(env.rt.tbFail)env.setRt({tbFail:0});return false;
+  }
   // v5.5: после баффера баффов в шапке так и нет (скрин 08.10 15:29: остался один, бот «не видит») — раньше «наложен» по
   // сообщению баффера = 10 мин тишины. Теперь: прошло ≥ 40 с после баффера, а нужное всё ещё не висит — поход не удался,
   // повтор через 1 мин; 3 таких подряд — пауза 10 мин и запись в журнал (чтобы не бегать к бафферу по кругу)
   const since = Date.now() - (env.rt.tbT || 0);
   // 10.0.7: баффы снял моб (cancelNote после последнего похода) — это не «поход не удался» и не повод ждать 10 мин: идём сразу
   const cancelled = (env.rt.tbCancelT || 0) > (env.rt.tbT || 0);
-  let wait = cancelled ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
+  let wait = cancelled || interrupted ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
   if (cancelled) why += ' — сняты мобом';
-  if (!cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
+  if (!interrupted && !cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
     const fails = (env.rt.tbFail || 0) + 1;
     await env.setRt({ tbChk: env.rt.tbT, tbOk: false, tbFail: fails });
     if(!active())return false;
@@ -374,10 +407,10 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   }
   if(!active())return false;
   if ((env.rt.tbPauseUntil || 0) > Date.now()) return false;
-  if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
+  if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < 10 * 60000);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
-  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode) }, tbT: Date.now() });
+  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode) }, tbT: Date.now(), tbInterrupted:null, tbWaitUntil:0 });
   if(!active())return false;
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
   location.href = n.set ? '/town-buffer.html' : '/fast-aden-buffer.html'; await env.sleep(4000);
@@ -408,13 +441,13 @@ async function paymentReconcile() {
   const lease=env.leaseEpoch, char=env.rt.char;
   const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
   if(!valid())return false;
-  const E=P.evidence || {};let H=hudBuffs();
+  const E=P.evidence || {};let H=hudBuffs(), levels=null;
   if(env.gameGet)try {const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
-    if(ch?.name===P.char && Array.isArray(ch.activeBuffs))H=Object.fromEntries(ch.activeBuffs.map(x=>[+x.skillId,Number.isFinite(x.expiresAtMs)?x.expiresAtMs:x.expiresAt]).filter(([,exp])=>Number.isFinite(exp)));
+    if(ch?.name===P.char && Array.isArray(ch.activeBuffs)){H=Object.fromEntries(ch.activeBuffs.map(x=>[+x.skillId,Number.isFinite(x.expiresAtMs)?x.expiresAtMs:x.expiresAt]).filter(([,exp])=>Number.isFinite(exp)));levels=Object.fromEntries(ch.activeBuffs.filter(x=>+x.level>0).map(x=>[+x.skillId,+x.level]));}
   }catch(_){}
   if(!valid())return false;
   const ids=E.ids||[],fresh=H && ids.length && ids.every(id=>Number.isFinite(H[id]) && H[id]>Date.now()+60000)
-    && ids.some(id=>!E.before?.[id] || H[id]>E.before[id]+60000);
+    && ids.some(id=>!E.before?.[id] || H[id]>E.before[id]+60000 || (Number.isFinite(E.beforeLevels?.[id]) && E.expectedLevels?.[id]>E.beforeLevels[id] && levels?.[id]>=E.expectedLevels[id]));
   if(!fresh){env.setStatus?.('Бафф: исход оплаты неизвестен; повтор запрещён, сверяю эффекты');return false;}
   const current=env.rt.tbuff, S=current && Number.isFinite(E.jobT) && current.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick ? current : null, patch={};
   if(P.kind==='fa-buff') {
@@ -566,7 +599,7 @@ async function townBuffStep() {
       await env.pause();
       if (!active())return;
       if (!needed(id)) continue;
-      const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,ids:[id],before:H0,balance:bal}}):null;
+      const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,ids:[id],before:H0,beforeLevels:hudLevels(),expectedLevels:{[id]:root.L2FaFull?.UP?.[id]||0},balance:bal}}):null;
       if(env.payments && (!P || !active() || !needed(id) || +(b.dataset.cost||1)!==cost || balNow()!==bal || !env.payments.sent(P))){if(P)await env.payments.cancel(P);return;}
       const clicked=env.fire(b);if(P && clicked===false){await env.payments.cancel(P,{notSent:true});return;}
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
@@ -586,6 +619,17 @@ async function townBuffStep() {
     const patch = { faGone: gone, faBal: { v: left, t: Date.now() }, ...(nobT ? { nobBuyT: nobT } : {}) };
     if (short && !bought) { patch.faSkipUntil = Date.now() + 60 * 60000; got.push('FA не хватает — к бафферу FA не хожу 60 мин (или пока баланс не вырастет)'); }
     await env.setRt(patch);
+    if(!active())return;
+    // Набор мог измениться/дойти до порога обновления во время покупки. Новые ID
+    // добавляем в этот же визит один раз; прежние/неподтверждённые не повторяем.
+    const snapshot=await freshBuffPlan();if(!active() || env.payments?.blocked())return;
+    const considered=new Set([...(st.faConsidered||[]),...(st.fa||[])]);
+    const more=snapshot && considered.size<64 ? [...new Set(planWith(snapshot)?.fa||[])].filter(id=>!considered.has(id)&&!gone[id]).slice(0,64-considered.size) : [];
+    if(more.length && !short){
+      await env.setRt({tbuff:{...env.rt.tbuff,fa:more,faConsidered:[...considered,...more]}});
+      env.rec('B','бафф',`Fast Aden: текущий набор дополнен ${more.map(nm).join(', ')}; продолжаю у баффера без нового похода`);
+      return;
+    }
     return done(`Fast Aden (баланс ${left} FA): ${got.join(' · ') || 'нечего брать'}`);
   }
   await env.setRt({ tbuff: null });

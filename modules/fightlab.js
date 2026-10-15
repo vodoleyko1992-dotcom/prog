@@ -13,7 +13,7 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.fightlab = function create_fightlab(env) {
 const location = env.routeLocation || root.location;
-const MEM_MAX = 80, SAMPLES = 12, HITS = 30, GAPS = 6, FLUSH_MS = 30000, EVIDENCE = 1;
+const MEM_MAX = 80, SAMPLES = 12, HITS = 30, GAPS = 6, FLUSH_MS = 30000, EVIDENCE = 2, GROUP_EVIDENCE = 1;
 const num = s => +String(s).replace(/[\s  ]/g, '');
 const low = s => String(s || '').trim().toLowerCase();
 const ew = (old, v, a = 0.3) => old > 0 ? Math.round((old * (1 - a) + v * a) * 10) / 10 : Math.round(v * 10) / 10;
@@ -126,15 +126,15 @@ function groupNote(name, parsed, mainMax, now) {
   if (F.rb || F.groupOwner !== groupOwner() || !(mainMax > 0) || !(parsed.own > 0) || !(parsed.splash.length || old?.aoe)) return;
   const key = F.groupScope + '|' + skill, groups = { ...(env.rt.fightGroups || {}) };
   const rewarded = Math.max(0, parsed.rewards.exp - 1, parsed.rewards.sp - 1);
-  const samples = [...(groups[key]?.evidence === EVIDENCE ? groups[key].samples || [] : []), { t: now, hp: mainMax, kills: Math.max(parsed.extraKills.length, parsed.splash.length ? rewarded : 0),
+  const samples = [...(groups[key]?.evidence === GROUP_EVIDENCE ? groups[key].samples || [] : []), { t: now, hp: mainMax, kills: Math.max(parsed.extraKills.length, parsed.splash.length ? rewarded : 0),
     targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
-  groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: EVIDENCE, t: now, samples };
+  groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === GROUP_EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: GROUP_EVIDENCE, t: now, samples };
   const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
   env.setRt({ fightGroups: recent })?.catch?.(() => {});
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
-  const s = (g?.evidence === EVIDENCE ? g.samples || [] : []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
+  const s = (g?.evidence === GROUP_EVIDENCE ? g.samples || [] : []).filter(x => now - x.t < 300000 && x.hp > 0 && hp >= x.hp * .5 && hp <= x.hp * 2);
   if (!s.length) return null;
   const mean = k => s.reduce((n, x) => n + x[k], 0) / s.length;
   return { n: s.length, kills: mean('kills'), targets: mean('targets'), damage: mean('damage'), t: g.t };
@@ -154,10 +154,18 @@ function begin(bt, spawn, now) {
 // новые строки полного лога: прошлый ответ кончался на prev, новый — cur; cur = prev.slice(k) + новое (лог игры растёт, старое уходит)
 function newLines(F, cur) {
   const prev = F.logPrev || [], c = Array.isArray(cur) ? cur.map(x => String(x ?? '')) : [];
-  let k = 0;
-  for (; k < prev.length; k++) { const n = prev.length - k; if (n <= c.length && prev.slice(k).every((s, i) => s === c[i])) break; }
+  // 16.10, лог23:10: после подключения к бою delta может не содержать его начало,
+  // а финальный full возвращает этот старший префикс. Ищем виденный хвост внутри
+  // полного окна; одинаковые новые удары после него сохраняем, по тексту не дедупим.
+  let end = 0;
+  outer: for (let k = 0; k < prev.length; k++) {
+    const n = prev.length - k;
+    for (let start = 0; start + n <= c.length; start++) {
+      if (prev.slice(k).every((s, i) => s === c[start + i])) { end = start + n; break outer; }
+    }
+  }
   F.logPrev = c.slice(-40);
-  return c.slice(prev.length - k);
+  return c.slice(end);
 }
 const urlSpawn = () => { try { return new URLSearchParams(location.search).get('spawnId') || ''; } catch (e) { return ''; } };
 // бой открыт со страницы карты (POST /game/battle/start ушёл ещё там) — на странице боя первый ответ придёт только после хода;

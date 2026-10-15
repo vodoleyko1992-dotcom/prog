@@ -16,6 +16,7 @@
   // Ручная смена режима отменяет старые маршруты, но никогда не удаляет квитанции платежей.
   if(why)for(const j of jobs){const value=env.rt[j.key];if(value&&(+value.t||+value.at||0)<=(+env.rt.manualKickAt||Date.now()))patch[j.key]=null;}
   if(why&&env.rt[O.key]&&stamp(env.rt[O.key])===O.stamp)patch[O.key]=null;
+  if(why && patch.tbuff===null && env.rt.tbuff)patch.tbInterrupted={t:Date.now(),jobT:env.rt.tbuff.t};
   if(why)patch.actionLast={key:O.key,reason:why,at:Date.now()};
   if(await save(patch))env.rec('B','действия',why?`${O.key}: ${why}; старый маршрут отменён`:`${O.key}: маршрут завершён`);
  }

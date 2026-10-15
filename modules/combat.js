@@ -985,6 +985,47 @@ async function lowDmgNote() {
     + `Нужны оружие по уровню (с 20 ур. — D-grade) и заряды под него; пока — мобы слабее или другая зона. Оружие бот сам не покупает`);
 }
 
+// 16.10, Rudelto: реальная смена документа после leave уничтожает продолжение battle().
+// Запрет повторного захода и актуальные HP должны попасть в storage ДО нажатия выхода.
+async function probeExitCommit(ctx, mob, why) {
+  const id = ctx.rb.id, at = Date.now();
+  const result = await env.setRt({ rbPending: false,
+    rbPreSkip: { ...(env.rt.rbPreSkip || {}), [id]: { t: at, kind: 'strong', observed: true, probeExit: true, why } },
+    rbWound: { ...(env.rt.rbWound || {}), [id]: { cur: mob.cur, max: mob.max, name: ctx.name, t: at } } });
+  return result?.ok === true;
+}
+
+async function rbTryExit(ctx, me, mob, v, ep) {
+  const actor = () => env.battleExitContext?.() ?? JSON.stringify([env.rt.char || '', env.rt.manualKickAt || 0]);
+  const beforeActor = actor(), identity = () => JSON.stringify([actor(), location.pathname, location.search]);
+  const before = identity();
+  const probe = !ep && !!env.probeFight?.(ctx.rb.id);   // 9.2.5: бой-проба — плохой прогноз = выход (пропуск 30 мин), не бой до конца
+  const canAttrit = !ep && (env.cfg.rbChipRetreat === true || probe) && (v.abort || v.retreat || v.lethal);
+  if (canAttrit && !ctx.rb.retreated && me && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
+    const attempts = (env.rt.rbGoCnt?.[ctx.rb.id] || []).filter(t => Date.now() - t < 3600000).length;
+    const leave = env.$q('#battle-back-map');
+    if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
+      const committed = !probe || await probeExitCommit(ctx, mob, v.why || 'разведка завершена');
+      if (!env.on || env.tabOwner === false || !env.isBattle() || identity() !== before) return 'done';
+      if (!committed) { await env.sleep(250); return identity() === before ? 'wait' : 'done'; }
+      ctx.rb.retreated = true;
+      env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти — ${v.why || (v.lethal ? 'опасный удар' : 'прогноз боя требует отхода')} (сервер должен подтвердить завершение боя)`);
+      env.leaveMark?.(ctx.rb.id, ctx.name);
+      env.fire(leave);
+      const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
+      if (!env.on || env.tabOwner === false || actor() !== beforeActor) return 'done';
+      if (ended) {
+        await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), probe ? 'skip' : undefined);
+        return 'done';
+      }
+      env.leaveMark?.(null);
+      await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
+      env.rec('B', 'РБ', `${ctx.name}: выход не подтверждён, повторный выход запрещён на 1 час`);
+    }
+  }
+  return null;
+}
+
 async function battle() {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.setStatus('Бой: загрузка');
@@ -1524,26 +1565,9 @@ async function battle() {
       }
       // Optional attrition retreat on normal RBs. Navigation is permitted only
       // after an explicit leave acknowledgement from the game's API/DOM.
-      const probe = !ep && !!env.probeFight?.(ctx.rb.id);   // 9.2.5: бой-проба — плохой прогноз = выход (пропуск 30 мин), не бой до конца
-      const canAttrit = !ep && (env.cfg.rbChipRetreat === true || probe) && (v.abort || v.retreat || v.lethal);
-      if (canAttrit && !ctx.rb.retreated && me && Date.now() > (env.rt.rbDb?.[ctx.rb.id]?.leaveBadUntil || 0)) {
-        const attempts = (env.rt.rbGoCnt?.[ctx.rb.id] || []).filter(t => Date.now() - t < 3600000).length;
-        const leave = env.$q('#battle-back-map');
-        if ((probe || attempts < Math.max(1, env.cfg.rbChipMaxAttempts || 3)) && env.shown(leave)) {
-          ctx.rb.retreated = true;
-          env.rec('B', 'РБ', `${ctx.name}: пытаюсь выйти — ${v.why || (v.lethal ? 'опасный удар' : 'прогноз боя требует отхода')} (сервер должен подтвердить завершение боя)`);
-          env.leaveMark?.(ctx.rb.id, ctx.name);
-          env.fire(leave);
-          const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
-          if (ended) {
-            await env.rbRetreat(ctx, mob, (probe ? 'пробный заход: ' : '') + (v.why || 'отступление'), probe ? 'skip' : undefined);
-            return;
-          }
-          env.leaveMark?.(null);
-          await env.rbNote(ctx.rb.id, { leaveBadUntil: Date.now() + 3600000 });
-          env.rec('B', 'РБ', `${ctx.name}: выход не подтверждён, повторный выход запрещён на 1 час`);
-        }
-      }
+      const exit = await rbTryExit(ctx, me, mob, v, ep);
+      if (exit === 'wait') continue;
+      if (exit === 'done') return;
       if ((v.abort || v.retreat) && !ctx.rb.allIn) {
         ctx.rb.allIn = true;
         env.rec('B', 'РБ', `${ctx.name}: ${v.why} — ${ep ? 'выход не подтверждён, бой продолжается' : 'из боя уйти нельзя, бьюсь до конца на банках (резерв тоже)'}`);
@@ -2118,6 +2142,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
