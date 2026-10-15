@@ -2678,7 +2678,18 @@ async function magConfirm(M, catalog, revision) {
   if (!p) return true;
   const c = catalog.skills.find(x => x.battleId === p.id);
   // Только конкретный ранг того же навыка. Ни списание SP, ни исчезновение карточки не являются подтверждением.
-  if (!c || !Number.isFinite(c.skillLevel)) return false;
+  if (!c || !Number.isFinite(c.skillLevel)) {
+    // 15.10 (альт с пикой, лог09:46): выученный до максимума пассив исчезает
+    // из каталога доступного обучения. Подтверждаем точный ранг свежим /character,
+    // а не исчезновением карточки или списанием SP.
+    const data = await magRead('/character');
+    if (!magSame(M)) return false;
+    const ch = data.character || data, who = magChar(ch);
+    if (!who || who.key !== M.key || !(who.revision > p.revision)) return false;
+    const learned = ch.learnedBattleSkillsDetail?.find(x => x.battleId === p.id);
+    if (!Number.isInteger(learned?.level) || learned.level <= p.rank) return false;
+    return magConfirm(M, { ...catalog, skills: [...catalog.skills.filter(x => x.battleId !== p.id), { battleId: p.id, skillLevel: learned.level }] });
+  }
   if (c.skillLevel <= p.rank) {
     if (c.skillLevel !== p.rank) return false;
     // character прочитан ДО каталога: при большей revision старый expectedRevision уже не может примениться.
