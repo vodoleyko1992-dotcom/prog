@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.buffs = function create_buffs(env) {
+const location = env.routeLocation || root.location;
 function activeBuffs() {
   return [...document.querySelectorAll('#l2-hud-active-buffs [data-skill-id]')]
     .map(e => ({ id: +e.dataset.skillId, title: e.getAttribute('title') || '', exp: +(e.dataset.expiresAt || 0) }));
@@ -391,7 +392,29 @@ async function faClashNote(id, H0, now = Date.now()) {
   return lost;
 }
 
+async function paymentReconcile() {
+  const P=env.payments?.pending();if(!P || !['fa-buff','town-buff'].includes(P.kind))return !P;
+  const lease=env.leaseEpoch, char=env.rt.char;
+  const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
+  if(!valid())return false;
+  const E=P.evidence || {};let H=hudBuffs();
+  if(env.gameGet)try {const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
+    if(ch?.name===P.char && Array.isArray(ch.activeBuffs))H=Object.fromEntries(ch.activeBuffs.filter(x=>Number.isFinite(x.expiresAtMs)).map(x=>[+x.skillId,x.expiresAtMs]));
+  }catch(_){}
+  if(!valid())return false;
+  const ids=E.ids||[],fresh=H && ids.length && ids.every(id=>Number.isFinite(H[id]) && H[id]>Date.now()+60000)
+    && ids.some(id=>!E.before?.[id] || H[id]>E.before[id]+60000);
+  if(!fresh){env.setStatus?.('Бафф: исход оплаты неизвестен; повтор запрещён, сверяю эффекты');return false;}
+  const current=env.rt.tbuff, S=current && Number.isFinite(E.jobT) && current.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick ? current : null, patch={};
+  if(P.kind==='fa-buff') {
+    if(S)patch.tbuff={...S,fa:(S.fa||[]).filter(id=>!ids.includes(id))};
+    if(ids.includes(1323))patch.nobBuyT=P.at;
+  }else if(S?.step==='town' && S.set===E.set){patch.tbuff=S.fa?.length?{...S,step:'fa'}:S.then?{...S.then,t:Date.now()}:null;patch.tbOk=true;}
+  if(Object.keys(patch).length && ((await env.setRt(patch))?.ok!==true || !valid()))return false;
+  return env.payments.confirm(P,{kind:'effects-satisfied',ids,expires:Math.min(...ids.map(id=>H[id]))});
+}
 async function townBuffStep() {
+  if(env.payments?.blocked()){await paymentReconcile();return;}
   const st = env.rt.tbuff;
   const done = async msg => {
     env.rec('B', 'бафф', msg);
@@ -449,11 +472,20 @@ async function townBuffStep() {
     tbLevelsNote();
     const dn = tbDowngrade(set, hudBuffs() || {});
     if (dn.length) return done(`городской набор «${set}» не наложен — понизил бы ${dn.length} бафф(ов) (Lv.${dn[0].have}→${dn[0].give})`);   // 7.2.2
-    let payAt = 0;
+    let payAt = 0, paidSet=null;
+    if(set!=='basic' && env.payments)try {
+      const r=await env.gameGet('/character/town/buffer/catalog'),d=r.ok?await r.json():null;
+      paidSet=d?.sets?.find(x=>x.id===set);
+      if(!paidSet || +paidSet.feeAdena!==0 || +paidSet.feeCoinOfLuck!==15 || !paidSet.skills?.length)return done('цена платного набора не подтверждена — не оплачиваю');
+    }catch(_){return done('каталог платного набора не получен — не оплачиваю');}
     if (set !== 'basic') { const p = await env.epicBuffPay?.(set); if (p === false) return done(`«${set}» за Coin of Luck не разрешён — в следующий раз бесплатный «basic»`); if (typeof p === 'number') payAt = p; }
     const H0 = hudBuffs() || {};
     await env.pause();
-    if (!env.fire(btn) && payAt) { await env.epicBuffRelease?.(payAt, 'кнопка не нажалась'); return done(`городской «${set}»: кнопка не нажалась`); }
+    const P=paidSet?await env.payments.prepare({key:`town:${set}`,kind:'town-buff',quote:{amount:+paidSet.feeCoinOfLuck,currency:'Coin of Luck'},
+      evidence:{jobT:st.t,set,ids:[...new Set(env.TB_KEYS[set]||[])],before:H0}}):null;
+    if(paidSet && (!P || !env.payments.sent(P))){if(P)await env.payments.cancel(P);if(payAt)await env.epicBuffRelease?.(payAt,'покупка не отправлена');return;}
+    const clicked=env.fire(btn);
+    if(clicked===false){if(P)await env.payments.cancel(P,{notSent:true});if(payAt)await env.epicBuffRelease?.(payAt,'кнопка не нажалась');return done(`городской «${set}»: кнопка не нажалась`);}
     const res = () => (env.$q('#town-buffer-result-title')?.textContent || '') + ' ' + (env.$q('#town-buffer-result-text')?.textContent || '');
     const ok = await env.waitX(() => /накладено|наложен|applied/i.test(res()), 6000, 200);
     if (ok) {                                       // v5.3: запоминаем, какие баффы даёт набор (новые и обновлённые в шапке)
@@ -463,6 +495,7 @@ async function townBuffStep() {
       if (got.length) await env.setRt({ tbSetIds: { ...(env.rt.tbSetIds || {}), [set]: [...new Set([...(env.rt.tbSetIds?.[set] || []), ...got])] } });
     }
     const fail = !ok && res().replace(/\s+/g, ' ').trim().slice(0, 100);
+    if(P && !await paymentReconcile())return;
     if (!ok && (env.DEAD_RE.test(res()) || env.DEAD_RE.test(env.$q('#town-buffer-msg')?.textContent || '') || !res().trim())) {
       // «без подтверждения» у баффера = скорее всего «без сознания» (лог 01:33): сначала воскрешение
       if (!st.reviveTried) { env.rec('B', 'бафф', 'баффер не отвечает — похоже, персонаж «без сознания»: сначала «Вернуться в город»'); await env.setRt({ tbuff: null, revive: { t: Date.now(), url: env.rt.lastBattle } }); return; }
@@ -499,8 +532,11 @@ async function townBuffStep() {
       const H0 = hudBuffs() || {};
       await env.pause();
       if (!env.on || !needed(id)) continue;
-      env.fire(b);
+      const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,ids:[id],before:H0,balance:bal}}):null;
+      if(env.payments && (!P || !needed(id) || +(b.dataset.cost||1)!==cost || balNow()!==bal || !env.payments.sent(P))){if(P)await env.payments.cancel(P);return;}
+      const clicked=env.fire(b);if(P && clicked===false){await env.payments.cancel(P,{notSent:true});return;}
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
+      if(P && !await paymentReconcile())return;
       if (ok) bought++;
       if (ok) { const lost = await faClashNote(id, H0); if (lost.length) got.push(`${nm(id)} снял ${lost.map(nm).join(', ')} — вместе не держатся, пару больше не беру`); }
       if (ok && id === 1323) nobT = Date.now();   // 8.0.3: свой Noblesse — куплен после последней смерти (nobGone)
@@ -556,6 +592,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

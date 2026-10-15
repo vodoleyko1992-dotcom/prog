@@ -27,7 +27,7 @@ const recoveryToMap = (mode, page = '/char.html', repeats = 3) => vm.runInNewCon
 });
 assert.equal(recoveryToMap('farm'), true); assert.equal(recoveryToMap('enchant'), false);
 assert.equal(recoveryToMap('farm', '/map.html'), false); assert.equal(recoveryToMap('farm', '/char.html', 2), false);
-assert.match(mapRecovery[2], /if \(on && tabOwner\) location\.href = '\/map\.html'/, 'map fallback still requires active ownership');
+assert.match(mapRecovery[2], /if \(on && tabOwner\)[^;]*canAct[^;]*location\.href = '\/map\.html'/, 'map fallback still requires active ownership');
 
 // 2. простой сервера не превращается в остановку
 assert.match(content, /if \(!hard && on && !\(await srvUp\(\)\)\) \{[^\n]*return serverWait\(\); \}/, 'soft halts wait for the server');

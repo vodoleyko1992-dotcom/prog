@@ -13,6 +13,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.enemies = function create_enemies(env) {
+const location = env.routeLocation || root.location;
 const MIN = 60000;
 const HERO = { t: 0, list: [], zone: '' };   // игроки на локации — последний ответ игры (или список на странице карты)
 const INC = { t: 0, list: [] };              // кто напал на нас сейчас

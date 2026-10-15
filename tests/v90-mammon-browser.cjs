@@ -19,6 +19,7 @@ const coreMock = `(() => { const data = { on: false, cfg: { rec: false, autoLear
     storage: { onChanged: { addListener() {} }, local: { get: async keys => Object.fromEntries([].concat(keys).map(k => [k, data[k]])), set: async v => Object.assign(data, v) } } };
   localStorage.setItem('token', 'tok-123'); })();`;
 const HUD = '<div id="l2-hud-legacy-name"><span class="l2-player-identity__nick">Warlock</span></div>';
+// 10.0.24: реальная игра UTF-8; без charset Chromium портил «Адена», новая проверка валюты правильно отказывала.
 const PAGES = {
   '/map.html': `<html><body>${HUD}</body></html>`,
   '/mammon-merchant-loc.html': `<html><body>${HUD}<p id="mammon-loc-cost">Ціна телепорту: 500000 Адена</p><button id="mammon-loc-teleport-btn" onclick="window.__tp=(window.__tp||0)+1">Телепорт до Торговця Маммона</button><p id="mammon-loc-err" hidden></p></body></html>`,
@@ -41,7 +42,7 @@ const PAGES = {
           : u.pathname === '/character' ? { character: { worldX: 114736, worldY: -2316 } } : {};
         return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
       }
-      return r.fulfill({ status: 200, contentType: 'text/html', body: PAGES[u.pathname] || PAGES['/map.html'] });
+      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: PAGES[u.pathname] || PAGES['/map.html'] });
     });
     await p.goto('https://l2wap.com' + pagePath);
     await p.evaluate(coreMock);
@@ -62,7 +63,7 @@ const PAGES = {
   const r2 = await run('/mammon-merchant-loc.html', async () => { on = true; tabOwner = true; leaseEpoch = 'e';
     await setRt({ mmJob: { kind: 'order', id: 'r-77', step: 'go', home: 'ancient_battleground', t: Date.now(), why: 'заказ Stem ×42' } });
     await L2V7Modules.mammon.mmStep();
-    return { tp: window.__tp || 0, job: rt.mmJob }; });
+    return { tp: window.__tp || 0, job: rt.mmJob, log: rt.mmLog, payment: rt.actionPayments }; });
   if (!(r2.res.tp === 1 && r2.res.job?.step === 'act' && !r2.errors.length)) { console.error('FAIL 2', JSON.stringify(r2)); process.exit(1); }
   console.log('PASS browser: far from the merchant → teleport page, price 500 000 within the limit, button pressed once');
   // 3. у торговца: «Здати» своего заказа → победитель Warlock → поход закрыт, обратно на точку

@@ -5,6 +5,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.dailies = function create_dailies(env) {
+const location = env.routeLocation || root.location;
 const DAILY_POLL = 10 * 60000, CLAN_POLL = 10 * 60000, FRESH = 20 * 60000, POST_GAP = 60000, FAIL_WAIT = 30 * 60000;
 const FISH_MAX = 45 * 60000, RB_MAX = 90 * 60000;
 const MODE_KEYS = ['fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'zoneAuto'];

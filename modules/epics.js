@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.epics = function create_epics(env) {
+const location = env.routeLocation || root.location;
 // 8.0.3 (эпики, разбор 11.10 — логи 4ee00a04/d089c7e2, снимок 75dac78f): сначала безопасность. Coin of Luck (предмет 4037) — ценная
 // валюта (донат, немного падает из Old Box и за TvT): «0» = не тратить никогда; любая трата CoL — только через epicPayGate
 // (свежий список с сервера, жив, игра пускает, цифры босса и вердикт «по силам», известная цена, лимиты). Путь: эпик на этой карте —

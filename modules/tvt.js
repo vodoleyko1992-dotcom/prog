@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.tvt = function create_tvt(env) {
+const location = env.routeLocation || root.location;
 const tvtNow = () => Date.now() + (env.TVT?.off ?? env.rt.tvt?.off ?? 0);
 
 const tvtMs = v => typeof v === 'number' ? v : (v && Date.parse(v)) || 0;

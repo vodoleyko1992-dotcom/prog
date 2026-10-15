@@ -1,4 +1,5 @@
 'use strict';
+// 10.0.24: дополнительные геттеры владельца перед прежними зависимостями допустимы.
 // 10.0.7 (игрок 13.10 03:20: «в катакомбах не работает кнопка охотиться дальше»; лог 13.10 13:21: «Возврат на карту» из боя
 // sdms_necropolis_of_devotion_078 → /map.html → «назад в Necropolis of Devotion»): код игры battle.js — в подземелье отказ сервера на
 // hunt-continue игра не показывает, а молча уводит на /dungeon.html; «Назад на карту» из боя в подземелье тоже ведёт на /dungeon.html.
@@ -78,7 +79,7 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
   }
   // ---------- 4. combat: бой не открылся — текст ошибки игры в журнале; геттеры ----------
   assert.match(COMBAT, /if \(st === 'err'\) \{[\s\S]*?#battle-load-err[\s\S]*?бой не открылся: «\$\{txt\.slice\(0, 120\) \|\| 'без текста'\}»[\s\S]*?return env\.toMap\(\);/, 'load error text goes to the journal before toMap');
-  assert.match(content, /L2V7Modules\.navigation = L2V7Factories\.navigation\(\{ get heroAt\(\) \{ return heroAt; \}/, 'navigation gets heroAt');
+  assert.match(content, /L2V7Modules\.navigation = L2V7Factories\.navigation\(\{[^\n]* get heroAt\(\) \{ return heroAt; \}/, 'navigation gets heroAt');
   // 10.0.15: Warlock lazy getters добавлены перед NET_ERR; принадлежность фабрике сохраняется.
   assert.match(content.match(/L2V7Modules\.mobfarm = L2V7Factories\.mobfarm\(\{([\s\S]*?)\}\);/)?.[1] || '', /get NET_ERR\(\) \{ return NET_ERR; \}/, 'mobfarm gets NET_ERR');
   console.log('v1007-catacomb-hunt: PASS');

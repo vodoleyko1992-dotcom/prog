@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.fishing = function create_fishing(env) {
+const location = env.routeLocation || root.location;
 const fishOwn = () => env.on && env.tabOwner !== false && !env.antibotState?.();
 async function fishSoft(msg) {
   if (!fishOwn()) return;

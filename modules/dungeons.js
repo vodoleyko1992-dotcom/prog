@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.dungeons = function create_dungeons(env) {
+const location = env.routeLocation || root.location;
 const isCatPage = () => location.pathname === env.CAT_URL;
 
 const isDungeon = () => /\/dungeon\.html/i.test(location.pathname);

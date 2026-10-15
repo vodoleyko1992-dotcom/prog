@@ -4,6 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.economy = function create_economy(env) {
+const location = env.routeLocation || root.location;
 // 7.1.16-fix: какие заряды и какого грейда. Скриншот 10.10 00:19: маг с Staff of Life (D) купил «Заряды души NG +3000» —
 // в момент закупки не было данных о надетом оружии (список оружия пуст после смены персонажа/перезапуска) и профессии.
 // Грейд: надетое оружие → оружие из настроек «Основное» в списке → по уровню героя (D с 20, C с 40…).
@@ -151,7 +152,33 @@ const SHOP_ORDER = { shots: 0, hp: 1, mp: 2 };
 const shopShare = (key, rest) => key in SHOP_ORDER ? (rest.some(k => k in SHOP_ORDER && SHOP_ORDER[k] > SHOP_ORDER[key]) ? 0.5 : 1) : 1;
 const packQty = (cap, want) => { if (cap >= want || cap < 10) return cap; const st = cap >= 1000 ? 1000 : cap >= 100 ? 100 : 10; return Math.floor(cap / st) * st; };
 
+// 15.10: потерянный ответ закупки сверяем чтением сумки; неизвестный исход не превращается в новую покупку.
+async function paymentReconcile() {
+  const P=env.payments?.pending(); if(!P || P.kind!=='shop')return !P;
+  const lease=env.leaseEpoch, char=env.rt.char;
+  const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
+  if(!valid())return false;
+  const E=P.evidence || {}, N=env.shopBuyNet?.();
+  let proof=N?.ok && N.t>=P.at && E.shopKey && N.key===E.shopKey && N.qty===E.qty ? {kind:'shop-receipt',key:N.key,qty:N.qty} : null;
+  if(!proof && env.gameGet && E.ids?.length && Number.isFinite(E.beforeQty))try {
+    const r=await env.gameGet('/character'), data=r.ok?await r.json():null, ch=data?.character||data;
+    if(ch?.name===P.char && Array.isArray(ch.inventory?.stacks)) {
+      const rows=ch.inventory.stacks.filter(x=>E.ids.includes(+x.itemId));
+      if(rows.every(x=>Number.isSafeInteger(x.qty)&&x.qty>=0) && rows.reduce((n,x)=>n+x.qty,0)>=E.beforeQty+E.qty)
+        proof={kind:'stock-satisfied',qty:rows.reduce((n,x)=>n+x.qty,0)};
+    }
+  }catch(_){}
+  if(!valid())return false;
+  if(!proof){env.setStatus?.('Закупка: исход оплаты неизвестен; повтор запрещён, сверяю запас');return false;}
+  const S=env.rt.shop;
+  if(S && Number.isFinite(E.jobT) && S.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick && !(S.done||[]).some(x=>x.paymentId===P.id)) {
+    const saved=await env.setRt({shop:{...S,done:[...(S.done||[]),{key:E.itemKey,label:E.label,ok:true,qty:E.qty,paymentId:P.id}],spent:(S.spent||0)+P.quote.amount}});
+    if(saved?.ok!==true || !valid())return false;
+  }
+  return env.payments.confirm(P,proof);
+}
 async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
+  if(env.payments?.blocked())return {ok:false,pending:true,why:'исход предыдущей оплаты не подтверждён'};
   const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(); return !sg.blocked && (!it.grade || sg.g === it.grade); };
   if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
@@ -217,7 +244,13 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
       await env.sleep(env.rnd(300, 500));
       if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
       const a0 = shopAdena(), a0T = Date.now(), msg0 = env.$q('#drops-shop-msg')?.textContent || '';
-      env.fire(modal.querySelector('[data-buy-qty-confirm]'));
+      const ids=it.ids || [], quantities=ids.map(id=>env.invQty?.(id));
+      const shopKey=row.querySelector('.l2-gm-shop-buy')?.dataset?.shopKey || row.dataset?.shopKey || '';
+      const P=env.payments ? await env.payments.prepare({key:`shop:${it.key}:${it.grade||''}`,kind:'shop',quote:{amount:unit*cap,currency:'Adena'},
+        evidence:{jobT:env.rt.shop?.t,ids,beforeQty:ids.length&&quantities.every(Number.isFinite)?quantities.reduce((a,b)=>a+b,0):null,qty:cap,itemKey:it.key,label:it.label,shopKey,adena:a0}}) : null;
+      if(env.payments && (!P || !shotsAllowed() || shopAdena()!==a0 || typeof inp?.value==='string' && +inp.value!==cap || !env.payments.sent(P))) {if(P)await env.payments.cancel(P);return {ok:false,pending:env.payments.blocked(),why:'оплата не сохранена или задача изменилась'};}
+      const clicked=env.fire(modal.querySelector('[data-buy-qty-confirm]'));
+      if(P && clicked===false){await env.payments.cancel(P,{notSent:true});return {ok:false,why:'покупка отменена до отправки'};}
       const ok = await env.waitX(() => shopAdena() < a0 || ((env.$q('#drops-shop-msg')?.textContent || '') !== msg0 && env.shown(env.$q('#drops-shop-msg'))), 5000, 150);
       const m = env.shown(env.$q('#drops-shop-msg')) ? env.$q('#drops-shop-msg').textContent.trim().slice(0, 100) : '';
       if (env.shown(env.$q('#l2-drops-shop-buy-qty-modal [data-buy-qty-confirm]'))) { env.fire(env.$q('#l2-drops-shop-buy-qty-modal .l2-drops-stats-modal__close')); await env.sleep(300); }
@@ -228,6 +261,11 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
         env.rec('B', 'закупка', `⚠ куплено не то: ${nb.key} ×${nb.qty}, нужны ${it.label} — заряды больше не покупаю до проверки`);
         await env.setRt({ shopShotBad: { t: Date.now(), key: nb.key, want: it.grade } });
       }
+      if(P){
+        // Состояние задачи обновляется сверкой ДО снятия блокировки платежа.
+        const confirmed=await paymentReconcile();
+        return {ok:confirmed,pending:!confirmed,paymentId:P.id,qty:cap,unit,spent:confirmed?P.quote.amount:0,msg:m,key:nb&&nb.t>=a0T?nb.key:''};
+      }
       return { ok: !!ok && shopAdena() < a0, qty: cap, unit, spent: a0 - shopAdena(), msg: m, key: nb && nb.t >= a0T ? nb.key : '' };
     }
     if (!await turn(true)) break;
@@ -237,6 +275,7 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
 }
 
 async function shopStep() {
+  if(env.payments?.blocked()){await paymentReconcile();return;}
   const st = env.rt.shop;
   if (st.step === 'count') {
     if (!env.isChar()) { location.href = '/char.html'; await env.sleep(4000); return; }
@@ -272,9 +311,10 @@ async function shopStep() {
       env.setStatus(`Закупка: ${n.label} +${n.buy}`);
       const rest = needs.filter(x => x !== n && !done.some(d => d.key === x.key)).map(x => x.key);
       const r = it ? await shopBuyOne(it, n.buy, spent, shopShare(n.key, rest)) : { ok: false, why: 'нет в списке' };
+      if(r.pending)return;
       if (r.ok) spent += r.spent || 0;
       env.rec('B', 'закупка', `${n.label}: ${r.ok ? `куплено ${r.qty} × ${r.unit} = ${r.spent.toLocaleString('ru')} аден` : 'не куплено — ' + (r.why || r.msg || '?')}`);
-      done.push({ key: n.key, ok: r.ok, label: n.label, qty: r.qty, why: r.ok ? '' : (r.why || r.msg || '?') });
+      done.push({ key: n.key, ok: r.ok, label: n.label, qty: r.qty, ...(r.paymentId?{paymentId:r.paymentId}:{}), why: r.ok ? '' : (r.why || r.msg || '?') });
       await env.setRt({ shop: { ...st, done, spent, t: Date.now() } });   // v5.6: сразу — иначе после сбоя/перезагрузки покупка повторится
       await env.sleep(env.rnd(500, 900));
     }
@@ -296,6 +336,6 @@ async function shopStart(why, force) {
   await env.setRt({ shop: { step: 'count', back: env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html', t: Date.now(), force: !!force } });
   env.rec('B', 'закупка', `иду за расходниками: ${why}`);
 }
- return { SHOP_ORDER, shopShare, packQty, shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
+ return { paymentReconcile, SHOP_ORDER, shopShare, packQty, shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
  };
 })(globalThis);
