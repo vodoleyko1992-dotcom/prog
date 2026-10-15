@@ -49,6 +49,57 @@ function extraMobs() {
     .map(m => ({ name: m[1].replace(/\s+/g, ' ').trim(), cur: +m[2], max: +m[3] })).filter(x => x.name);
 }
 
+// Общая оценка группового хода для мага и бойца. Оверкилл основной цели не даёт
+// преимущества над дополнительными убийствами; личный откат готового умения — не время каста.
+function groupPlan(ctx, opts, eco = false) {
+  const mob = mobHp();
+  if (ctx.rb || eco || !(mob?.cur > 0)) return null;
+  const targets = extraMobs(), visible = targets.length > 0;
+  const near = targets.filter(x => x.cur > 0), bestSingle = Math.max(0, ...opts.map(o => Math.min(mob.cur, o.dmg || 0)));
+  const ranked = [];
+  for (const o of opts) {
+    if (o.charge || o.force || !(o.dmg > 0)) continue;
+    const name = o.name.replace(/\s*\(.*$/, '').toLowerCase(), p = env.rt.skills?.[name];
+    const model = env.fightGroupOn?.(name, mob.max);
+    if (!(p?.aoe || model?.targets > 0)) continue;
+    const probability = env.fightKillP?.(o.name, mob.cur);
+    const reliable = probability != null ? probability >= .85 : (p?.dmgN || 0) >= 3 && o.dmg >= mob.cur * 1.08;
+    const each = Math.min(o.dmg, model?.damage || (near.length && p?.splN ? p.spl / p.splN / near.length : 0));
+    const sideKills = visible ? near.filter(x => each * .85 >= x.cur).length : model?.kills || 0;
+    const useful = Math.min(mob.cur, o.dmg) + (visible ? near.reduce((s, x) => s + Math.min(x.cur, each), 0) : 0);
+    const probe = !visible && !model && reliable && !!p?.aoe;
+    if (!(reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * .6 || probe)) continue;
+    ranked.push({ ...o, group: true, sideKills, useful, probe,
+      why: probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
+        : `АОЕ: ${visible ? 'живых соседей ' + near.length : 'по свежим боям'} · доп. убийств ≈${sideKills.toFixed(1)} · полезный урон ≈${Math.round(useful)}` });
+  }
+  return ranked.sort((a, b) => b.sideKills - a.sideKills || b.useful - a.useful || (a.mpCost || 0) - (b.mpCost || 0))[0] || null;
+}
+
+// Награды всех целей из свежего журнала — один итог. Lootline служит запасным
+// источником, а уже зачисленные награды соседей вычитаются при финальном учёте.
+function battleRewards(lines, loot = '', credited = {}) {
+  const result = {};
+  for (const [key, label] of [['exp', 'EXP'], ['sp', 'SP'], ['adena', 'аден(?:а|и)?']]) {
+    const before = new RegExp('^' + label + '\\s*\\+\\s*([\\d\\s  ]+)[.!]?$', 'i');
+    const after = new RegExp('^\\+?\\s*([\\d\\s  ]+)\\s*' + label + '[.!]?$', 'i');
+    const values = lines.map(x => String(x).trim().match(before) || String(x).trim().match(after)).filter(Boolean).map(m => dmgNum(m[1]));
+    const fallback = dmgNum(loot.match(new RegExp('([\\d\\s.,]+)\\s*' + label, 'i'))?.[1]);
+    const total = values.length ? Math.max(fallback, values.reduce((s, n) => s + n, 0)) : fallback + (credited[key] || 0);
+    result[key] = Math.max(0, total - (credited[key] || 0));
+  }
+  return result;
+}
+// Сохраняем одинаковые новые EXP/предметы в цепочке: разность множеств/счётчиков
+// теряет их, когда из ограниченного хвоста одновременно выпали такие же старые строки.
+function freshBattleLines(before, after) {
+  for (let n = Math.min(before.length, after.length); n > 0; n--) {
+    if (after.slice(-n).every((x, i) => x === before[i])) return after.slice(0, after.length - n);
+    if (before.slice(-n).every((x, i) => x === after[i])) return after.slice(n);
+  }
+  return after.slice();
+}
+
 const noticeText = () => ['#battle-toast', '#l2-hud-notice'].map(x => env.$q(x)).filter(env.shown).map(e => e.textContent.trim()).join(' | ');
 
 const mobTitle = () => env.$q('#battle-mob-title')?.textContent.trim() || '';
@@ -531,19 +582,10 @@ function magePlan(ctx, mp) {
         order:priority.indexOf(n.toLowerCase()) };
     }).filter(o => !mp || o.mpCost <= Math.max(0, mp.cur - 1));
   if (!opts.length) return freeFinish();
-  // Добивание группы важнее экономии одного заклинания: только живые соседи,
-  // изученный массовый удар и надёжное добивание основной цели. Старый splash
-  // подтверждает тип удара, но не доказывает HP/гибель сегодняшних соседей.
-  const near = extraMobs().filter(x => x.cur > 0);
-  if (!ctx.rb && !eco && near.length && mob?.cur > 0) {
-    const group = opts.filter(o => {
-      const p = env.rt.skills?.[o.name.toLowerCase()];
-      const chance = env.fightKillP?.(o.name, hp);
-      return p?.aoe && p.spl > 0 && p.splN > 0 && p.dmgN >= 3 &&
-        (chance != null ? chance >= 0.85 : o.dmg >= hp * 1.08);
-    }).sort((a, b) => a.mpCost - b.mpCost || b.dmg - a.dmg)[0];
-    if (group) return { ...group, why: `магия: АОЕ-добивание (${hp} HP; живых соседей ${near.length})` };
-  }
+  // До одиночного добивания сравниваем дополнительную добычу: текущие HP соседей
+  // либо свежую подтверждённую отдачу АОЕ в этой же зоне.
+  const group = groupPlan(ctx, opts, eco);
+  if (group) return group;
   if (freeFinish()) return freeFinish();
   // 7.1.16-fix: новые заклинания — учим в игре. Урон/КД/MP в L2WAP не как в Interlude, а без замера бот брал
   // «≈900 по умолчанию» и мог считать новое заклинание добивающим. Заклинание с < 3 замерами сначала пробуется на «толстом»
@@ -656,6 +698,12 @@ function dpsPlan(ctx, mp) {
       dmg: env.expDmg(env.skKey(b)) || env.expDmg(n) || 0,
       cd: env.rt.skills?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 11000) / 1000 });
   }
+  // Готовый откат ещё не означает доступный каст: проверяем стоимость каждого кандидата.
+  for (let i = opts.length - 1; i >= 0; i--) {
+    const o = opts[i], il = env.ilOf(o.b) || {};
+    o.mpCost = o.key === 'attack' ? 0 : env.skillMp?.(o.name.replace(/\s*\(.*$/, '')) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
+    if (mp && o.mpCost > Math.max(0, mp.cur - 1)) opts.splice(i, 1);
+  }
   // РБ без банок MP: дорогие удары — только из излишка маны (см. longFightMp)
   const lf = env.longFightMp(ctx, mp, hp);
   let lfCut = '';
@@ -680,6 +728,8 @@ function dpsPlan(ctx, mp) {
     opts.every(o => !/burning fist|soul breaker|iron punch/i.test(o.name))))
     && env.cfg.fightMode !== 'kpd' && !!chargeB && (!env.forceMax() || fN < env.forceMax()) && env.forceCosts().some(c => slotsBy(c.name).length);
   const chargeAct = canCharge ? { key: 'charge', name: `${env.cleanTitle(chargeB.title)} (+1 эн., ${fN}→${fN + 1})`, b: chargeB, charge: true } : null;
+  const group = groupPlan(ctx, opts, !!mp && mp.cur < mp.max * .35 && !(env.mpPotSlot?.() && env.qty(env.mpPotSlot()) !== 0));
+  if (group) return group;
   // v5.5: режим «КПД» (симуляция 1 008 000 боёв Тирана): моба добивает одна атака — бьём атакой (ждём её отката, скилл бережём);
   // энергию не копим. Темп −12 %, MP на моба −36 %, банок MP −53 %. «ДПС» (по умолчанию) — как было: самый быстрый
   if (env.cfg.fightMode === 'kpd' && !ctx.rb) {
@@ -1080,16 +1130,20 @@ async function battle() {
     }
   }
 
-  let extraSeen = env.extraKillsInLog().length;       // уже в логе до начала (бой без перезагрузки страницы)
+  // Сравниваем сами строки, а не число маркеров: хвост журнала ограничен,
+  // и новый сосед мог заменить старого при неизменном количестве строк.
+  let extraLog = ctx.logStart || [];
   const countExtras = async () => {
-    const ks = env.extraKillsInLog();
-    if (ks.length <= extraSeen) return;
-    const fresh = ks.slice(0, ks.length - extraSeen);   // новые — сверху
-    extraSeen = ks.length;
+    const current = env.logLines(), added = freshBattleLines(extraLog, current);
+    extraLog = current;
+    const fresh = env.extraKillsInLog(added);
+    if (!fresh.length) return;
     const sum = f => fresh.reduce((a, k) => a + k[f], 0);
+    ctx.extraCredited ||= { exp: 0, sp: 0, adena: 0 };
+    for (const k of ['exp', 'sp', 'adena']) ctx.extraCredited[k] += sum(k);
     await env.setRt({ kills: env.rt.kills + fresh.length, exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
     for (const k of fresh) {
-      env.rec('B', 'доп. цель', `${k.name}: EXP +${k.exp} · SP +${k.sp} · аден +${k.adena}${k.items.length ? ' · ' + k.items.join(', ') : ''}`);
+      env.rec('B', 'доп. цель', `${k.name}: ${k.exp || k.sp || k.adena ? `EXP +${k.exp} · SP +${k.sp} · аден +${k.adena}` : 'повержена; награды учитываю в общем итоге боя'}${k.items.length ? ' · ' + k.items.join(', ') : ''}`);
       if (env.isQuestName(k.name)) await env.trackQuest(k.name, true);
       ctx.killed.push(k.name);
     }
@@ -1269,6 +1323,7 @@ async function battle() {
       if (ctx.hpSum != null && sum < ctx.hpSum) ctx.dealt = (ctx.dealt || 0) + ctx.hpSum - sum;
       ctx.hpSum = sum; ctx.mobLast = mob?.cur ?? ctx.mobLast; }
     await countExtras();
+    if (!env.on || !env.tabOwner) return;
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (victory()) break;
     if (mob && mob.cur === 0) {                   // главная цель умерла: ждём победу или следующую цель (соседи живы)
@@ -1873,6 +1928,8 @@ async function battle() {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.trySnap(300);                                   // экран победы (в т.ч. с квестовой строкой) — новый снимок, если структура новая
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';
+  const rewardLines = freshBattleLines(ctx.logStart || [], env.logLines());
+  const rewards = battleRewards(rewardLines, loot, ctx.extraCredited);
   if (ctx.max) {                                  // расчёт ДПС: время до убийства и урон в секунду
     const ttk = (Date.now() - t0) / 1000;
     // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
@@ -1898,12 +1955,12 @@ async function battle() {
   debuffGainFlush(ctx).catch(e => console.warn(env.TAG, 'выгода дебаффов', e));   // 7.2.1
   if (ctx.pet) { try { petTick(ctx); petFlush(ctx, Math.max(ctx.max || 0, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0))).catch(e => console.warn(env.TAG, 'статистика кота', e)); } catch (e) { console.warn(env.TAG, 'статистика кота', e); } }   // 7.1.31
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
-  env.trackEfficiency(pick(/([\d\s.,]+)\s*EXP/i), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
-  env.trackLoot(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
+  env.trackEfficiency(rewards.exp + (ctx.extraCredited?.exp || 0), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
+  env.trackLoot(rewardLines, ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
   try { env.cancelNote?.(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, { champ: !!ctx.champ, tier: ctx.tier || '' }); } catch (e) { console.warn(env.TAG, 'снятие баффов', e); }   // 10.0.7: «[моб] зняв з вас N бафи»
   env.setRt({
     kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
-    adena: env.rt.adena + pick(/([\d\s.,]+)\s*аден/i), exp: env.rt.exp + pick(/([\d\s.,]+)\s*EXP/i), sp: env.rt.sp + pick(/([\d\s.,]+)\s*SP/i)
+    adena: env.rt.adena + rewards.adena, exp: env.rt.exp + rewards.exp, sp: env.rt.sp + rewards.sp
   });
 
   if (ctx.rb && env.campRbOpen().some(t => env.nameLike(t.name, ctx.name))) {   // РБ главы убит — отметить и сверить главу
@@ -1997,6 +2054,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { logDmg, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

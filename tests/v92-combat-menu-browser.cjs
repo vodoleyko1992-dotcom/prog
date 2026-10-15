@@ -15,7 +15,7 @@ const fightMem = {
 const fightLast = { key: 'rb:l2dop_rb_25050', name: 'Verfa', rb: true, outcome: 'win', sec: 252, turns: 180, dealt: 450000, pet: 180000, pots: 12, lost: 3, dps: 2500, t: 1000 };
 const CASES = [
   { id: 'warlock', rt: { char: 'Warlock', lvl: 61, prof: 'Warlock', classCur: { prof: 'human_warlock', slot: 0 }, classBranch: 'mystic', fightMem, fightLast, petStat: { kai: { fights: 30 } }, skills: { blaze: { name: 'Blaze', dmg: 30000, dmgN: 10, kind: 'скилл' } }, turnMs: 820 },
-    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter', 'cls-spoil'], shown: ['tab-mage'], hidden: ['tab-spoil', 'tab-fighter'], box: /Профессия: Warlock 61 ур\. · основной класс · ветка маг\nПрофиль боя: саммонер \(авто\) · кот — основной урон/, fight: /Последний бой: Verfa \(РБ\) — победа за 252 с, ходов 180, урон 450000 \+ кот 180000 \(≈2500\/с\), банок 12, потерянных ходов 3\nЦелей в памяти: 2 \(РБ 1, чемпионов 0, видов мобов 1\)\nРБ:\n• Verfa: боёв 2 \(побед 1\), ДПС ≈2500 · blaze ≈3050, energy bolt ≈2579 · бьёт ≈200 \(P90\) · спецудар до 1995 раз в ≈10 с/ },
+    cls: ['cls-mage', 'cls-summoner'], notCls: ['cls-fighter', 'cls-spoil'], shown: ['tab-mage'], hidden: ['tab-spoil', 'tab-fighter'], box: /Профессия: Warlock 61 ур\. · основной класс · ветка маг\nПрофиль боя: саммонер \(авто\) · кот — основной урон/, fight: /Последний бой: Verfa \(РБ\) — победа за 252 с, ходов 180, урон 450000 \+ кот 180000 \(≈2500\/с\), банок 12, потерянных ходов 3\nЦелей в памяти: 2 \(РБ 1, чемпионов 0, видов мобов 1\)[\s\S]*\nРБ:\n• Verfa: боёв 2 \(побед 1\), ДПС ≈2500 · blaze ≈3050, energy bolt ≈2579 · бьёт ≈200 \(P90\) · спецудар до 1995 раз в ≈10 с/ },
   { id: 'spoiler', rt: { char: 'WestSPOIL', lvl: 32, classCur: { prof: 'dwarf_bounty_hunter', slot: 0 }, classBranch: 'fighter' },
     cls: ['cls-fighter', 'cls-spoil'], notCls: ['cls-mage', 'cls-summoner'], shown: ['tab-spoil', 'tab-fighter'], hidden: ['tab-mage'], box: /Профиль боя: спойлер \(авто\) · спойл в начале боя/, fight: /Боёв с анализом ещё нет/ },
   { id: 'spellsinger', rt: { char: 'SS', lvl: 40, classCur: { prof: 'elf_spellsinger', slot: 1 }, classBranch: 'mystic' },
@@ -30,7 +30,7 @@ const CASES = [
   for (const w of [760, 375]) for (const c of CASES) {
     const page = await b.newPage({ viewport: { width: w, height: 1100 } }); const errs = []; page.on('pageerror', e => errs.push(String(e)));
     await page.goto('about:blank');
-    const m = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:5}}", `rt:${JSON.stringify(c.rt)}`);
+    const m = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:5}}", `rt:${JSON.stringify({ ...c.rt, fightGroups: c.id === 'warlock' ? { 'cat:disciples|flame strike': { t: Date.now(), samples: [{ kills: 2 }] } } : {} })}`);
     if (m === mock) { console.error('FAIL: popup mock not patched'); process.exit(1); }
     await page.evaluate(m);
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
@@ -49,7 +49,7 @@ const CASES = [
         overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth, dps: document.getElementById('dpsBox').innerText.slice(0, 40) };
     });
     const ok = c.cls.every(x => r.cls.includes(x)) && c.notCls.every(x => !r.cls.includes(x)) && c.shown.every(id => r.sub[id]) && c.hidden.every(id => !r.sub[id])
-      && r.sub['tab-analyze'] && r.sub['tab-roles'] && r.sub['tab-fight'] && c.box.test(r.box) && (!c.fight || c.fight.test(r.fight)) && /Бой$/.test(r.nav) && !r.overflow && !errs.length;
+      && (c.id !== 'warlock' || /дополнительных убийств 2/.test(r.fight)) && r.sub['tab-analyze'] && r.sub['tab-roles'] && r.sub['tab-fight'] && c.box.test(r.box) && (!c.fight || c.fight.test(r.fight)) && /Бой$/.test(r.nav) && !r.overflow && !errs.length;
     if (!ok) { console.error('FAIL', w, c.id, JSON.stringify({ r, errs }, null, 1)); process.exit(1); }
     await page.close();
   }

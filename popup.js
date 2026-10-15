@@ -1633,12 +1633,18 @@ function renderFight(rt) {
   const L = rt.fightLast, out = [];
   if (L) out.push(`Последний бой: ${L.name}${L.rb ? ' (РБ)' : L.champ ? ' (чемпион)' : ''} — ${L.outcome === 'win' ? 'победа' : L.outcome === 'lose' ? 'смерть' : 'бой окончен'} за ${L.sec} с, ходов ${L.turns}, урон ${L.dealt}${L.pet ? ' + кот ' + L.pet : ''}${L.dps ? ` (≈${L.dps}/с)` : ''}${L.pots ? `, банок ${L.pots}` : ''}${L.lost ? `, потерянных ходов ${L.lost}` : ''}`);
   out.push(`Целей в памяти: ${keys.length} (РБ ${rb.length}, чемпионов ${ch.length}, видов мобов ${mob.length})`);
+  const groups = Object.entries(rt.fightGroups || {}).filter(([, g]) => Date.now() - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 5);
+  if (groups.length) out.push('АОЕ — последние принятые ходы:\n' + groups.map(([key, g]) => {
+    const s = g.samples || [], kills = s.reduce((n, x) => n + x.kills, 0);
+    const skill = key.slice(key.lastIndexOf('|') + 1), mode = key.startsWith('cat:') ? 'катакомбы' : 'карта';
+    return `• ${skill} · ${mode}: замеров ${s.length}, дополнительных убийств ${kills} (≈${(kills / Math.max(1, s.length)).toFixed(1)} за ход)`;
+  }).join('\n'));
   const byT = a => a.sort((x, y) => (M[y].t || 0) - (M[x].t || 0));
   const line = k => FL ? FL.brief(k) : `${M[k].nm}: боёв ${M[k].n}`;
   if (rb.length) out.push('РБ:\n' + byT(rb).slice(0, 8).map(k => '• ' + line(k)).join('\n'));
   if (ch.length) out.push('Чемпионы:\n' + byT(ch).slice(0, 5).map(k => '• ' + line(k)).join('\n'));
   if (mob.length) out.push('Мобы (последние):\n' + byT(mob).slice(0, 8).map(k => '• ' + line(k)).join('\n'));
-  box.textContent = keys.length || L ? out.join('\n') : 'Боёв с анализом ещё нет — появится после первых боёв на 9.2';
+  box.textContent = keys.length || L || groups.length ? out.join('\n') : 'Боёв с анализом ещё нет — появится после первых боёв на 9.2';
 }
 // 9.2: «☠ Лист врагов» — rt.enemies (кто убил героя); у каждого: не трогать / убрать из листа
 const EN = typeof L2V7Factories !== 'undefined' && L2V7Factories.enemies ? L2V7Factories.enemies({ rt: {}, cfg: {} }) : null;
@@ -1660,7 +1666,7 @@ function renderEnemies(rt) {
   }
 }
 confirmClick('fightMemReset', async () => {
-  await menuPatch({ fightMem: {}, fightLast: null });
+  await menuPatch({ fightMem: {}, fightLast: null, fightGroups: {} });
   toast('Память боя этого класса очищена');
 });
 $('showAllCls').onclick = async () => {

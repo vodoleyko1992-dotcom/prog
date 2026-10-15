@@ -17,7 +17,7 @@ test('панель игры: имена в alt, HP отдельных строк
 test('слабая группа: готовый Flame Strike вместо дешёвого одиночного Blaze',()=>{const f=setup();assert.equal(f.pick().name,'Flame Strike');assert.match(f.pick().why,/АОЕ/)});
 test('надёжность по текущей цели поддерживает групповое добивание',()=>{const f=setup();f.env.fightKillP=()=>1;assert.equal(f.pick().name,'Flame Strike')});
 test('ненадёжный АОЕ не заменяет гарантированное одиночное добивание',()=>{const f=setup();f.env.fightKillP=n=>n==='Flame Strike'?0.5:1;assert.equal(f.pick().name,'Blaze')});
-for(const kind of ['hidden','dead','unknown','blocked','mana','raid','economy'])test('нет приоритета АОЕ: '+kind,()=>{
+for(const kind of ['dead','unknown','blocked','mana','raid','economy'])test('нет приоритета АОЕ: '+kind,()=>{
  const f=setup();let ctx={block:{}},mp={cur:5370,max:5408};
  if(kind==='hidden')f.env.shown=x=>!!x&&x!==f.panel;
  if(kind==='dead')f.panel.querySelectorAll=()=>[{querySelector:s=>s.includes('__icon')?{alt:'Dead'}:{textContent:'0 / 3828'}}];
@@ -28,6 +28,8 @@ for(const kind of ['hidden','dead','unknown','blocked','mana','raid','economy'])
  if(kind==='economy')mp.cur=100;
  assert.equal(f.pick(ctx,mp).name,'Blaze');
 });
+// 15.10: скрытая панель разрешает ограниченную пробу известного АОЕ при безопасном добивании.
+test('скрытая панель не запрещает пробу дополнительной добычи',()=>{const f=setup();f.env.shown=x=>!!x&&x!==f.panel;assert.equal(f.pick().name,'Flame Strike');assert.equal(f.pick().probe,true)});
 test('АОЕ на локальном откате не задерживает готовое добивание',()=>{const f=setup();f.env.memLeft=b=>b===f.flame?10:0;assert.equal(f.pick().name,'Blaze')});
 test('без изученных попаданий splash не делает заклинание надёжным',()=>{const f=setup();f.env.rt.skills['flame strike'].dmgN=1;assert.equal(f.pick().name,'Blaze')});
 test('пробелы в HP соседей и отсутствие имени не теряют живую цель',()=>{const f=setup();f.panel.querySelectorAll=()=>[{querySelector:s=>s.includes('__icon')?{alt:''}:{textContent:'3 366 / 3\u00a0366'}}];assert.equal(f.combat.extraMobs()[0].cur,3366);assert.equal(f.pick().name,'Flame Strike')});
