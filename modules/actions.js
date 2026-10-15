@@ -27,8 +27,9 @@
    const jobs=env.jobs();let O=env.rt.actionOwner;
    const pending=env.paymentPending();
    if(pending){
-    // Не задерживаем защиту в уже начатом бою сетевой сверкой магазина.
-    if(env.isBattle()){await env.runCombat();return true;}
+    // Не задерживаем защиту в живом бою. После победы сверяем оплату здесь:
+    // следующая охота запрещена pending, а страница всё ещё считается боевой.
+    if(env.isBattle()&&!env.victory?.()){await env.runCombat();return true;}
     const key=String(pending.id||pending.kind)+':'+env.page(),now=Date.now();
     if(!reconciliation||reconciliation.key!==key||now-reconciliation.at>=15000){reconciliation={key,at:now};await env.reconcile(pending);}
     return true;

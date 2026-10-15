@@ -7,6 +7,7 @@ function make(){
  const sb={console,Date,location:loc,sessionStorage:{getItem(){return null},setItem(){}}};sb.globalThis=sb;
  vm.runInNewContext(read('modules/dailies.js'),sb);
  const env={cfg:{dailyAuto:true,clanTasks:true,zoneAuto:true,fishMode:false,rbHuntMode:false,epicMode:false,catMode:false},rt:{daily:{day:'audit-day',t:Date.now(),tasks:{fishing_catch_50:{have:49,need:50,done:false}}}},on:true,tabOwner:true,
+ gameGet:async()=>({ok:true,json:async()=>({unlocked:true,fishingSpot:{purchased:true},fishingTime:{canFish:true,remainingMs:3600000}})}),
  isBattle:()=>false,awayFree:()=>true,fishNow:()=>env.cfg.fishMode,heroLevel:()=>75,rec(){},setStatus(){},sleep:async()=>{},setRt:async p=>Object.assign(env.rt,p),setCfg:async p=>{cfgs.push(p);Object.assign(env.cfg,p)},rbRun:{start:async x=>series.push(x)},gamePost:async p=>{posts.push(p);return {ok:true,json:async()=>({})}}};
  sb.save=async()=>{};sb.chrome={storage:{local:{get:async()=>({cfg:env.cfg,rt:env.rt,on:env.on})}}};
  sb.menuPatch=async(p,o={})=>{Object.assign(env.rt,p);Object.assign(env.cfg,o.cfgPatch||{});if(o.on!==undefined)env.on=o.on;};

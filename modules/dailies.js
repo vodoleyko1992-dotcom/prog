@@ -92,6 +92,41 @@ async function clanStep() {
 const snap = () => Object.fromEntries(MODE_KEYS.map(k => [k, !!env.cfg[k]]));
 const dailyTask = id => { const D = env.rt.daily; return D && Date.now() - (D.t || 0) < FRESH ? D.tasks?.[id] || null : null; };
 const doneDay = kind => env.rt.dailyDone?.[kind] === env.rt.daily?.day;
+// 15.10, лог 10:52: дейлик сам включил рыбалку посреди главы Диона (24/40 и 28/40).
+// Кампания владеет задачей и между боями, при чтении/сдаче главы и после reload — не только при наличии открытых целей.
+const campaignBusy = () => !!env.cfg.campaign || !!env.campEnabled?.() || !!(env.rt.campOnce && env.rt.campaignDue) || !!env.rt.storyJob;
+const fishTakenOver = D => env.cfg.fishMode && (D.prev?.fishMode || (env.rt.fishTgt && !env.rt.fishTgt.done && (env.rt.fishTgt.t || 0) >= D.t));
+// Дейлик использует уже подготовленную рыбалку. Открывать её за 10 млн/300 тыс. SP ради награды нельзя.
+// Отрицательный ответ помним 5 минут; положительный содержит срок уже оплаченного времени.
+async function fishReady(kick) {
+  const char = env.rt.char, day = env.rt.daily?.day;
+  const active = () => canRun() && (+env.rt.manualKickAt || 0) === kick && env.rt.char === char && env.rt.daily?.day === day;
+  const check = env.rt.dailyFishCheck;
+  if (check?.day === day && Date.now() - check.t < 5 * 60000) return null;
+  let data = null;
+  try { const r = await env.gameGet('/game/fishing/state'); if (r?.ok) data = await r.json(); } catch (e) {}
+  if (!active()) return null;
+  const ms = Number(data?.fishingTime?.remainingMs);
+  const why = !data || typeof data.unlocked !== 'boolean' ? 'готовность рыбалки не подтверждена'
+    : !data.unlocked ? 'рыболовные навыки ещё не изучены'
+    : data.fishingSpot?.purchased !== true ? 'рыболовное место ещё не куплено'
+    : data.fishingTime?.canFish !== true || !Number.isFinite(ms) || ms <= 0 ? 'нет оплаченного времени рыбалки' : '';
+  if (!why) return { until: Date.now() + ms };
+  await env.setRt({ dailyFishCheck: { day, t: Date.now(), why } });
+  if (active()) env.rec('B', 'дейлики', `«50 рыб»: ${why} — пропускаю без покупок и обучения`);
+  return null;
+}
+async function yieldCampaign(key, D, kick) {
+  if (!campaignBusy()) return false;
+  // Явная рыболовная цель/режим не принадлежат дейлику. Отцепляем лишь его таймер возврата.
+  const ownFish = key === 'dailyFish' && fishTakenOver(D);
+  if (ownFish) { if (sameDetour(key, D, kick)) await env.setRt({ [key]: null }); return true; }
+  // Уже принятый бой/вываживание завершаем, новый не начинаем: следующий проход вернёт прежний режим.
+  const timeExpired = key === 'dailyFish' && D.readyUntil && Date.now() >= D.readyUntil;
+  if (env.isBattle() || (key === 'dailyFish' && env.fishState?.() && !timeExpired)) return false;
+  await detourEnd(key, D, 'кампания не завершена — дейлик отложен');
+  return true;
+}
 function fishLack() { const t = dailyTask('fishing_catch_50'); return t && !t.done ? Math.max(1, t.need - t.have) : 0; }
 function rbWanted() {
   const a = dailyTask('strong_enemy_20'), b = dailyTask('raid_boss_participate');
@@ -102,44 +137,67 @@ async function dailyStep() {
   if (!canRun()) return false;
   const kick = +env.rt.manualKickAt || 0;
   const F = env.rt.dailyFish, R = env.rt.dailyRb;
+  // Прерванный старый detour не имеет права возвращать настройки поверх более нового ручного выбора.
+  for (const [key, D] of [['dailyFish', F], ['dailyRb', R]]) if (D && D.kick != null && D.kick !== kick) { await env.setRt({ [key]: null }); return true; }
   if (F) {
+    if (fishTakenOver(F)) { await env.setRt({ dailyFish: null }); return true; }
+    if (campaignBusy() && (F.readyUntil || !env.fishState?.())) return yieldCampaign('dailyFish', F, kick);
     if (env.cfg.dailyAuto === false) { await detourEnd('dailyFish', F, 'дейлики выключены'); return true; }
-    if (F.entering) return enterDetour('dailyFish', F, kick);
     const done = (F.got || 0) >= F.need, late = Date.now() - (F.t || 0) > FISH_MAX, dq = dailyTask('fishing_catch_50');
     if (done || late || (dq && dq.done)) { await detourEnd('dailyFish', F, done || dq?.done ? `рыба на дейлик поймана (${F.got}/${F.need})` : 'рыбалка по дейлику: 45 мин вышли'); return true; }
+    // Старое/прерванное задание после reload сначала подтверждает готовность, не попадает в fishSetup.
+    if (!F.readyUntil) {
+      // GET безопасен и с рыбой на крючке: legacy без срока иначе застрянет при нулевом времени.
+      if (env.isBattle()) return false;
+      const ready = await fishReady(kick);
+      if (!sameDetour('dailyFish', F, kick)) return false;
+      if (!ready) { await detourEnd('dailyFish', F, 'рыбалка не подготовлена — дейлик отложен'); return true; }
+      await env.setRt({ dailyFish: { ...F, readyUntil: ready.until } });
+      return true;
+    }
+    // Без времени вываживание уже невозможно: не зацикливаем fishSoft/reload в ожидании исчезновения рыбы.
+    if (Date.now() >= F.readyUntil && !env.isBattle()) { await detourEnd('dailyFish', F, 'оплаченное время рыбалки закончилось — дейлик отложен'); return true; }
+    if (F.entering) return enterDetour('dailyFish', F, kick);
     return false;
   }
   if (R) {
+    if (campaignBusy()) return yieldCampaign('dailyRb', R, kick);
     if (env.cfg.dailyAuto === false) { await detourEnd('dailyRb', R, 'дейлики выключены'); return true; }
     if (R.entering) return enterDetour('dailyRb', R, kick);
     const killed = (env.rt.rbKills || 0) > (R.k0 || 0), late = Date.now() - (R.t || 0) > RB_MAX;
     if (killed || late || !rbWanted()) { await detourEnd('dailyRb', R, killed ? 'РБ по дейлику убит' : late ? 'РБ по дейлику: 90 мин вышли' : 'дейлик по РБ уже засчитан'); return true; }
     return false;
   }
-  if (env.cfg.dailyAuto === false || !env.rt.daily?.day || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
+  if (env.cfg.dailyAuto === false || !env.rt.daily?.day || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
   const lack = fishLack();
   if (lack && !doneDay('fish') && !env.cfg.fishMode) {
-    const J = { day: env.rt.daily.day, need: lack, got: 0, t: Date.now(), prev: snap(), entering: true };
-    await env.setRt({ dailyFish: J, dailyDone: { ...(env.rt.dailyDone || {}), fish: env.rt.daily.day } });
-    if (await enterDetour('dailyFish', J, kick)) env.rec('B', 'дейлики', `«50 рыб»: не хватает ${lack} — иду на рыбалку (+1 Coin of Luck, 300 000 аден, 50 000 EXP), потом назад`);
-    return true;
+    const char = env.rt.char, ready = await fishReady(kick);
+    if (!canRun() || (+env.rt.manualKickAt || 0) !== kick || env.rt.char !== char || env.cfg.dailyAuto === false || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
+    if (ready) {
+      const J = { day: env.rt.daily.day, need: lack, got: 0, t: Date.now(), prev: snap(), entering: true, kick, readyUntil: ready.until };
+      await env.setRt({ dailyFish: J, dailyDone: { ...(env.rt.dailyDone || {}), fish: env.rt.daily.day } });
+      if (await enterDetour('dailyFish', J, kick) && env.rt.dailyFish && !campaignBusy()) env.rec('B', 'дейлики', `«50 рыб»: не хватает ${lack} — иду на рыбалку (+1 Coin of Luck, 300 000 аден, 50 000 EXP), потом назад`);
+      return true;
+    }
   }
   if (rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
-    const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true };
+    const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true, kick };
     await env.setRt({ dailyRb: J, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
-    if (await enterDetour('dailyRb', J, kick)) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
+    if (await enterDetour('dailyRb', J, kick) && env.rt.dailyRb && !campaignBusy()) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
     return true;
   }
   return false;
 }
 // 10.0.14: запись задания и переключение режима разделены await. Stop/новый ручной режим не дают старому шагу
 // включить рыбалку/тур. Незавершённый вход переживает перезапуск; ручной выбор в popup отменяет само задание.
-const sameDetour = (key, D, kick) => canRun() && (+env.rt.manualKickAt || 0) === kick && env.rt[key]?.t === D.t && env.rt[key]?.day === D.day;
+const sameDetour = (key, D, kick) => canRun() && (+env.rt.manualKickAt || 0) === kick && (D.kick == null || D.kick === kick) && env.rt[key]?.t === D.t && env.rt[key]?.day === D.day;
 async function enterDetour(key, D, kick) {
   if (!sameDetour(key, D, kick) || env.cfg.dailyAuto === false) return false;
+  if (campaignBusy()) return yieldCampaign(key, D, kick);
   await env.setCfg(key === 'dailyFish' ? { fishMode: true, rbHuntMode: false, epicMode: false, catMode: false, zoneAuto: false }
     : { rbHuntMode: true, fishMode: false, epicMode: false, catMode: false });
   if (!sameDetour(key, D, kick)) return true;
+  if (campaignBusy()) return yieldCampaign(key, D, kick);
   await env.setRt({ [key]: { ...D, entering: false } });
   if (key === 'dailyRb' && sameDetour(key, D, kick)) try { await env.rbRun?.start('daily', 'дейлик'); } catch (e) {}
   return true;
@@ -152,8 +210,8 @@ async function detourEnd(key, D, why) {
   await env.setRt({ [key]: null, ...(key === 'dailyRb' ? { rbHunt: { step: 'pick', t: Date.now(), last: 'дейлик по РБ окончен' }, rbGo: null } : {}) });
   if (!canRun() || (+env.rt.manualKickAt || 0) !== kick) return;
   env.rec('B', 'дейлики', `${why} — возвращаюсь к прежнему режиму`);
-  env.setStatus?.('Дейлик выполнен — возвращаюсь');
-  if (key === 'dailyFish' && /fishing/.test(location.pathname)) { location.href = '/map.html'; await env.sleep(3000); }
+  env.setStatus?.(`Дейлик: ${why} — возвращаюсь`);
+  if (key === 'dailyFish' && !env.cfg.fishMode && /fishing/.test(location.pathname)) { location.href = '/map.html'; await env.sleep(3000); }
 }
 async function fishNote() { const F = env.rt.dailyFish; if (!F) return; await env.setRt({ dailyFish: { ...F, got: (F.got || 0) + 1 } }); }
 // ---------- текст для меню ----------

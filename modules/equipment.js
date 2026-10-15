@@ -95,7 +95,7 @@ function suggestRoles() {
   const isIdle = s => ['PASSIVE', 'TOGGLE', 'CHANCE'].includes(il(s)?.o);
   const isUltra = s => { const v = il(s); const p = Array.isArray(v?.pow) ? v.pow[v.pow.length - 1] : v?.pow || 0; return !!v && /атака/.test(v.c) && ((v.reuse || 0) >= 25000 && (p >= 3000 || /vortex/i.test(v.n)) || /of doom/i.test(v.n)); };   // пассив/тоггл/проц — не «силовой»
   // 7.1.31: «в бою эффекта нет» (L2WAP: Servitor Wind Walk, Body To Mind) — ни в одну роль; труп-цель (Corpse Life Drain) — не удар
-  const live = s => !env.noEffect?.(s.name);
+  const live = s => il(s)?.autoUse !== false && !env.noEffect?.(s.name);
   const buffsAll = skills.filter(isBuff).filter(live);
   const buffsMine = buffsAll.filter(s => pr(s.name).usesU > 0);
   const items = inv.filter(s => s.kind === 'предмет');
@@ -132,10 +132,10 @@ function suggestRoles() {
   for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
     out[k] = [...new Set((out[k] || '').split(',').map(x => x.trim()).filter(Boolean))].join(', ');
   const why = skills.map(s => { const p = pr(s.name);
-    return `• ${s.name} (слот ${s.idx}): ${isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
-      + (il(s) ? ` · [IL #${il(s).id} ${il(s).n}: ${il(s).c}${il(s).reuse ? ', откат ' + il(s).reuse / 1000 + ' с' : ''}${il(s).dur ? ', ' + il(s).dur + ' с' : ''}${il(s).w ? ', ' + il(s).w : ''}]` : '')
+    return `• ${s.name} (слот ${s.idx}): ${il(s)?.autoUse === false ? 'снижает HP до 25%, только вручную' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
+      + (il(s) ? ` · [${il(s).id != null ? 'IL #' + il(s).id : 'L2WAP'} ${il(s).n}: ${il(s).c}${il(s).reuse ? ', откат ' + il(s).reuse / 1000 + ' с' : ''}${il(s).dur ? ', ' + il(s).dur + ' с' : ''}${il(s).w ? ', ' + il(s).w : ''}]` : '')
       + (p.uses ? ` · исп. ${p.uses} (ваших ${p.usesU || 0})` : ' · ещё не применялся')
-      + (p.dmgN ? ` · урон ≈${Math.round(avg(p))}` : '') + (p.mpN ? ` · MP ≈${Math.round(p.mp / p.mpN)}` : '')
+      + (p.dmgN && il(s)?.autoUse !== false ? ` · урон ≈${Math.round(avg(p))}` : '') + (p.mpN ? ` · MP ≈${Math.round(p.mp / p.mpN)}` : '')
       + (p.cd ? ` · КД ${p.cd} с` : '') + (p.buffSec ? ` · бафф ${p.buffSec} с` : '') + (p.stun ? ' · станит' : ''); });
   return { roles: out, why, buffsNote: buffsMine.length ? 'баффы — по вашему использованию' : 'баффы — все найденные (вы их ещё не применяли)' };
 }

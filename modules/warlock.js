@@ -30,7 +30,7 @@ function identity(ch) {
 // 10.0.23 (лог 15.10 07:18): полный городской набор доступен и Dark Panther (283).
 function summon(ch) {
   const p = ch?.activeSummon;
-  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^human_(?:dark_avenger|hell_knight)$/.test(ch.l2Profession || '') ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key))
+  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^human_(?:dark_avenger|hell_knight)$/.test(ch.l2Profession || '') ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key) || p.key === 'feline_king' && number(p.summonSkillId) === 1406)
     && p.hp > 0 && number(p.summonSkillId) > 0 && number(p.summonSkillLevel) > 0 && Array.isArray(p.activeBuffs) ? p : null;
 }
 function catalogSet(data) {
@@ -258,26 +258,29 @@ async function resetBudget(expected = {}) {
   return durableOrRestore(T, before, ['spent','budgetEpoch','status','reason','nextCheckAt'], saved);
 }
 const modelManaged = () => /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || env.rt.prof || '');
+// 15.10, живой /character: срок героя expiresAt; hook нормализует в expiresAtMs, прямой GET оставляет исходное поле.
+const heroBuffExpiry = b => Number.isFinite(b?.expiresAtMs) ? b.expiresAtMs : Number.isFinite(b?.expiresAt) ? b.expiresAt : 0;
 function snapshot(ch, shots) {
   const I = identity(ch), p = summon(ch); if (!I || !p) return null;
   const active = a => (a || []).filter(b => b.expiresAtMs > Date.now());
   const buffs = active(p.activeBuffs).map(b => `${b.skillId}:${b.level}`).sort();
   const heroFields = ['mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'];
   const hero = Object.fromEntries(heroFields.map(k => [k, Number.isFinite(ch[k]) ? ch[k] : null]));
-  hero.buffs = Array.isArray(ch.activeBuffs) ? active(ch.activeBuffs).map(b => `${b.skillId}:${b.level}`).sort() : null;
+  const heroBuffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => heroBuffExpiry(b) > Date.now()) : null;
+  hero.buffs = heroBuffs?.map(b => `${b.skillId}:${b.level}`).sort() ?? null;
   const data = { char: I.char, classKey: I.key, level: +ch.level || 0, petKey: p.key, petLevel: p.summonSkillLevel,
     pAtk: +p.pAtk || 0, accuracy: +p.accuracy || 0, critRate: +p.critRate || 0, critDmgMul: +p.critDmgMul || 0, buffs, hero,
     shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
-  return { at: Date.now(), born: +env.rt.petBornT || 0, validUntil: Math.min(Date.now() + 30000, ...active(p.activeBuffs).map(b => b.expiresAtMs), ...active(ch.activeBuffs).map(b => b.expiresAtMs)),
+  return { at: Date.now(), born: +env.rt.petBornT || 0, validUntil: Math.min(Date.now() + 30000, ...active(p.activeBuffs).map(b => b.expiresAtMs), ...(heroBuffs || []).map(heroBuffExpiry)),
     ...data, key: JSON.stringify(data) };
 }
 function noteSnapshot(ch, shots) {
   // Вызывается только для полного собственного /character; обрезанный res.activeSummon не годится.
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick()) return;
   const fields = ['level','mAtk','pAtk','pDef','mDef','maxHp','mCritPct','magicCritDamageMultiplier','critRate','critDmgMul','castSpd','pAtkSpd','castSpeed','attackSpeed'];
-  const buffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => b.expiresAtMs > Date.now()) : null;
+  const buffs = Array.isArray(ch.activeBuffs) ? ch.activeBuffs.filter(b => heroBuffExpiry(b) > Date.now()) : null;
   const data = { char: ch.name, prof: ch.l2Profession, slot: ch.classSlots?.activeSlot, stats: fields.map(k => Number.isFinite(ch[k]) ? ch[k] : null), buffs: buffs?.map(b => `${b.skillId}:${b.level}`).sort(), shots: String(shots ?? env.shotContext?.() ?? 'unknown') };
-  latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(b => b.expiresAtMs)) } : null;
+  latestHero = buffs && (ch.mAtk > 0 || ch.pAtk > 0) ? { ...data, key: JSON.stringify(data), until: Math.min(Date.now()+30000,...buffs.map(heroBuffExpiry)) } : null;
   latest = snapshot(ch, shots); latestSeen = true;
   // 10.0.21: вне боя hotbar отсутствует. Сохраняем отдельный план включения подтверждённых
   // расходников, не выдавая его за реально включённые заряды и не подмешивая в обучение боя.
@@ -337,10 +340,12 @@ function petExpected(ctx) {
   const avg = p.hits >= 2 ? p.hitDmg / p.hits : sum('hitDmg') / hits;
   return avg > 0 ? avg * 0.85 : 0; // крит не обещаем для следующего добивания
 }
-function petBuffActive(id) {
+// 15.10: отсутствие эффекта в свежем полном снимке отличается от неизвестного состояния.
+function petBuffState(id) {
   const s = currentSnapshot();
-  return !!s && s.buffs.some(b => +b.split(':')[0] === +id);
+  return s ? s.buffs.some(b => +b.split(':')[0] === +id) : null;
 }
+function petBuffActive(id) { return petBuffState(id) === true; }
 function raidContext(id, st = {}, options = {}) {
   if (!modelManaged()) return null;
   const planning = options.preflight === true && !env.isBattle();
@@ -368,6 +373,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffActive, catalogSet, coverage, DEF };
+return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, heroContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);

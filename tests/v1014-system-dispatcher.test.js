@@ -59,6 +59,8 @@ test('main: ready story из авто начинает NPC job; raid сохра�
 });
 test('main: auto → dailyFish → TvT → FINISHED → dailyFish → auto сохраняет цепочку',async()=>{
  const c=make();c.cfg.dailyAuto=true;c.rt.daily={day:'d1',t:Date.now(),tasks:{fishing_catch_50:{have:49,need:50,done:false}}};
+ // 15.10: этот сценарий использует уже открытую и оплаченную рыбалку; остальные GET остаются отказами.
+ const get=c.sb.gameGet;c.sb.gameGet=async p=>p==='/game/fishing/state'?{ok:true,json:async()=>({unlocked:true,fishingSpot:{purchased:true},fishingTime:{canFish:true,remainingMs:3600000}})}:get(p);
  await c.step();assert.equal(c.cfg.fishMode,true);assert.ok(c.rt.dailyFish);c.active();await c.step();assert.equal(c.loc.href,'/tvt-arena.html');
  c.loc.pathname='/tvt-arena.html';c.rt.tvtIn='tvt-e1';c.sb.TVT.phase='FINISHED';await c.step();assert.equal(c.loc.href,'/fishing.html');assert.ok(c.rt.dailyFish);
  c.loc.pathname='/fishing.html';await c.D.fishNote();await c.step();assert.equal(c.rt.dailyFish,null);assert.equal(c.cfg.zoneAuto,true);assert.equal(c.cfg.fishMode,false);assert.equal(c.loc.href,'/map.html');

@@ -465,12 +465,20 @@ for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL
 const AUG = typeof L2Aug !== 'undefined' ? L2Aug : null;
 const LS_BY_NAME = Object.create(null);
 // 10.0.27: штатные actionId панели Warrior, снимки/карточки 15.10 10:26.
+// 15.10, живая проверка: Battle Trance расходует HP, это не атака и не автоматический бафф.
+const NATIVE_SKILL_META = { battle_trance: { n: 'Battle Trance', c: 'Расход HP', t: 'HP_SELF_COST', o: 'ACTIVE', target: 'SELF', autoUse: false, L: 'L2WAP: снижает текущее HP до 25% максимума; только вручную' } };
+const NATIVE_SKILL_NAMES = { 'battle trance': 'battle_trance' };
 const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312 };
 IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
   if (x && typeof x === 'object') {
-    const k = x.cdKey ?? x.querySelector?.('[data-slot-cd]')?.dataset.slotCd ?? '';
+    const k = x.cdKey ?? x.getAttribute?.('data-slot-cd') ?? x.querySelector?.('[data-slot-cd]')?.dataset.slotCd ?? '';
+    if (Object.hasOwn(NATIVE_SKILL_META, k)) {
+      const nm = String(x.name || (x.title || '').split(/\s+[—–-]\s+|\n|\s*\(/)[0]).trim().toLowerCase();
+      if (nm) NATIVE_SKILL_NAMES[nm] = k;
+      return { ...NATIVE_SKILL_META[k] };
+    }
     const m = String(k).match(/l2_(\d+)/);
     name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
     if (m) id = +m[1];
@@ -480,6 +488,7 @@ function ilOf(x) {                               // x: кнопка слота, 
     // замеры и план боя ищут скилл по имени
     else if (AUG?.isLs(k)) { id = AUG.SKILL_IL[k] ?? null; const nm = String(name || '').trim().toLowerCase(); if (id != null && nm && !AUG.isLs(nm)) LS_BY_NAME[nm] = id; }
   } else name = x || '';
+  if (id == null && NATIVE_SKILL_NAMES[String(name).trim().toLowerCase()]) return { ...NATIVE_SKILL_META[NATIVE_SKILL_NAMES[String(name).trim().toLowerCase()]] };
   if (id == null && name) id = IL_BY_NAME[name.trim().toLowerCase()] ?? LS_BY_NAME[name.trim().toLowerCase()] ?? AUG?.SKILL_IL[name.trim().toLowerCase()];
   return id != null && IL[id] ? { id, ...IL[id], ...(IL_FIX[id] || {}) } : null;
 }
@@ -499,12 +508,9 @@ const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 мин�
   1222: { st: 'mDefDown', st2: 'pAtkDown', L: 'Дебафф · L2WAP: P.Atk цели −12 %, M.Def −10 %' },
   1164: { st: 'pAtkDown', dur: 10, L: 'Дебафф · L2WAP: P.Atk моба −20 % на 10 с, шанс 80 %' },
   1168: { c: 'Дебафф', t: 'DEBUFF', st: 'pAtkDown', dur: 15, L: 'Дебафф · L2WAP: P.Atk цели −12 %' },
-  // 9.2 (игрок 11.10, скрин окна кота + лог 12.10 02:44:49 «Blessing of Queen застосовано до героя та активного слуги»): слот «Summon Feline Queen»
-  // (l2_1331) на L2WAP больше не призывает королеву — это бафф кота Blessing of Queen. 9.2.2 (игрок 11.10 21:21, ответ админа): админ переделал
-  // бафф — «Фіз. Crit Rate +30% і урон фіз. крита +25%», 20 мин (было +20 % крит-урона, 2 мин). Роль «Баффы кота», ставим всегда, как истёк
-  // 10.0 (данные игры 12.10: новость 11.10 «WARLOCK, СУММОНЫ И SPOIL», код игры l2-hud-companion.js «Blessing of Queen накладено на 2 хв.»):
-  // длительность снова 2 мин. Ставим, как истёк (лишний повтор стоит 87 MP — дешевле, чем 18 мин без +40 % урона кота)
-  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 120, reuse: 2000, mp: 87, eff: 'Buff', L: 'Бафф кота · L2WAP: Blessing of Queen — герою и слуге, шанс физ. крита +30 % и урон крита +25 % на 2 мин · MP 87' },
+  // 15.10, живая проверка: слот1331 сохраняет Kai, эффект4699 у героя держится20мин.
+  // Роль PET сохраняем для поддержки слуги; бафф героя сам по себе не доказывает бафф питомца.
+  1331: { c: 'Бафф', t: 'BUFF', o: 'ACTIVE', target: 'PET', dur: 1200, reuse: 2000, mp: 87, eff: 'Buff', L: 'L2WAP: Blessing of Queen — физ. крит +30%, урон физ. крита +25%; у героя 20 мин, эффект у слуги проверяется отдельно · MP 87' },
   // 10.0.2: умения Life Stone (есть, пока надето оружие с этим ЛС). Power 109 у всех ударных — замер урона заменит оценку после 1–2 нажатий
   ...Object.fromEntries(Object.values(AUG?.OUT || {}).filter(o => o.k === 'active' && o.il !== 1401).map(o => [o.il, { pow: AUG.POWER, ls: 1, L: `Life Stone · L2WAP: ${o.d}` }])),
   1401: { ls: 1, L: 'Life Stone · L2WAP: сильное лечение HP' } };
@@ -2488,6 +2494,7 @@ async function main() {
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/teleport.html')); await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
         if (rt.zoneGo.id === 'ashen_bastion' && rt.zoneGo.returnPath === '/ashen-bastion.html') { await zoneGoStep(); continue; }
+        if (rt.zoneGo.forumTp) { await zoneGoStep(); continue; } // Не терять незавершённую оплату по таймауту маршрута.
         const onSrc = isTeleport() || (rt.zoneGo.url && location.pathname + location.search === rt.zoneGo.url);
         if (Date.now() - (rt.zoneGo.t || 0) < 120000 && (onSrc || !rt.zoneGoT || Date.now() - rt.zoneGoT > 120000)) { await zoneGoStep(); continue; }
         await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
@@ -3884,6 +3891,7 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 10:32:50, 11:43:34, 11:44:46): телепорт к РБ/эпику (бот или игрок) и «Вернуться в город» после смерти уносят героя —
   // прежняя зона больше не та: EXP/ч и «зона РБ» писались в чужую (Ядро@bee_hive), автофарм решал «остаюсь здесь» по ней. Зону и «мягкое
   // окно» уровней определит карта заново
+  try { L2V7Modules.navigation.onForumTeleportNet(path, d); } catch (er) { console.warn(TAG, 'телепорт ресурсов', er); }
   if (zoneMoveNet(d, path) && (rt.zone || rt.zonePend || rt.lvlRelax || rt.lvlRelaxDown)) setRt({ zone: null, zonePend: null, lvlRelax: null, lvlRelaxDown: null });
   { const m = path.match(/^\/game\/spawn\/(l2dop_rb_\d+)\/info$/);
     if (m && d.res?.stats?.maxHp > 0 && !d.res.error) try { L2V7Modules.raid.rbInfoNote(m[1], d.res, 'page').then(() => epicById(m[1]) && L2V7Modules.epics.epicVerdictAll()).catch(() => {}); } catch (er) {} }
@@ -4248,7 +4256,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get id(){return ()=>crypto.randomUUID()},get setRt(){return setRt},get rtCommit(){return rtCommit},get rec(){return rec},get setStatus(){return setStatus},get halt(){return halt},get isBattle(){return isBattle},
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
  get paymentPending(){return ()=>L2V7Modules.payments?.pending?.()||(rt.petFull?.pending?{...rt.petFull.pending,kind:'summon-buff'}:rt.enchant?.pending?{...rt.enchant.pending,kind:'enchant'}:null)},
- get runCombat(){return battle},
+ get runCombat(){return battle},get victory(){return victory},
  get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
  get jobs(){return ()=>[
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
@@ -4397,7 +4405,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get tourReadReady(){return ()=>!rt.reviv
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
@@ -4680,7 +4688,7 @@ L2V7Modules.quests = L2V7Factories.quests({ get routeLocation(){return actionLoc
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
 // 9.0: модель КПД локаций (zone-kpd.js + встроенная база zone-db.js) для автокача; маг ли герой — по оружию/классу (защита моба: M.Def или P.Def)
 const kpdMage = () => { try { return L2V7Modules.economy.shotsMage() !== false; } catch { return true; } };
-L2V7Modules.navigation = L2V7Factories.navigation({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get routeLocation(){return actionLocation}, get heroAt() { return heroAt; }, get pauseBot() { return pauseBot; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtCommit}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get routeLocation(){return actionLocation}, get heroAt() { return heroAt; }, get pauseBot() { return pauseBot; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get gameGet() { return gameGet; },
   get pagerInfo() { return pagerInfo; },
@@ -4948,6 +4956,7 @@ L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get routeLocation(){return actionL
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
 L2V7Modules.dailies = L2V7Factories.dailies({ get routeLocation(){return actionLocation}, get cfg() { return cfg; }, get rbRun() { return L2V7Modules.rbrun; }, get on() { return on && cfg.enchantMode !== true; }, get tabOwner() { return tabOwner; }, get rt() { return rt; }, get setRt() { return setRt; }, get setCfg() { return setCfg; }, get rec() { return rec; }, get gameGet() { return gameGet; }, get gamePost() { return gamePost; },
+  get campEnabled() { return campEnabled; }, get fishState() { return fishState; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 // Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
 L2V7Modules.pvp = L2V7Factories.pvp({ get routeLocation(){return actionLocation},

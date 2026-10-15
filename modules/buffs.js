@@ -399,7 +399,7 @@ async function paymentReconcile() {
   if(!valid())return false;
   const E=P.evidence || {};let H=hudBuffs();
   if(env.gameGet)try {const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
-    if(ch?.name===P.char && Array.isArray(ch.activeBuffs))H=Object.fromEntries(ch.activeBuffs.filter(x=>Number.isFinite(x.expiresAtMs)).map(x=>[+x.skillId,x.expiresAtMs]));
+    if(ch?.name===P.char && Array.isArray(ch.activeBuffs))H=Object.fromEntries(ch.activeBuffs.map(x=>[+x.skillId,Number.isFinite(x.expiresAtMs)?x.expiresAtMs:x.expiresAt]).filter(([,exp])=>Number.isFinite(exp)));
   }catch(_){}
   if(!valid())return false;
   const ids=E.ids||[],fresh=H && ids.length && ids.every(id=>Number.isFinite(H[id]) && H[id]>Date.now()+60000)
