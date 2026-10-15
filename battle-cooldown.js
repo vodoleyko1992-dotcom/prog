@@ -35,6 +35,15 @@
       if (prev && server < prev.server) return;
       skills[key] = { until: t, server, observed: received };
     }
+    // 15.10, альт с пикой: attack имеет отдельный дедлайн, в том числе в delta.
+    // Отсутствующее поле не означает готовность; время всегда переводим от часов сервера.
+    function physical(res, server, received) {
+      const layers = [res, res.delta, res.battle].filter(x => x && typeof x === 'object');
+      for (const row of layers) {
+        const until = num(row.nextPhysicalAttackAt ?? row.nextAutoAttackAt);
+        if (until !== null && until >= 0) { updateSkill('attack', until, server, received); return; }
+      }
+    }
     function observe(req = {}, res = {}, status = 0, activeSpawn = '') {
       if (!res || typeof res !== 'object' || !req.action) return;
       // Delayed response from a previous opponent must not reset the new fight.
@@ -59,6 +68,12 @@
         const until = res.cooldownUntilMs ?? res.readyAtMs;
         for (const id of new Set([req.action, res.normalizedSkillId, res.skillId].filter(Boolean))) updateSkill(id, until, server, now);
       }
+      const attackRejected = failure && req.action === 'attack' && /^attack_cooldown$/i.test(String(res.code || res.error || ''));
+      if (server !== null && (!failure || blockedBy === 'skill' || attackRejected) && blockedBy !== 'global') {
+        if (attackRejected && num(res.remainingMs) !== null)
+          updateSkill('attack', server + Math.max(0, num(res.remainingMs)), server, now);
+        physical(res, server, now);
+      }
       const sc = res.skillCooldowns || src.skillCooldowns;
       if (server !== null && sc && typeof sc === 'object' && !Array.isArray(sc))
         for (const [id, until] of Object.entries(sc)) updateSkill(id, until, server, now);
@@ -73,6 +88,7 @@
       const now = clock();
       if (has(src, 'globalCooldownUntilMs') || has(res, 'globalCooldownUntilMs'))
         updateGlobal(src.globalCooldownUntilMs ?? res.globalCooldownUntilMs, server, now);
+      if (server !== null) physical(res, server, now);
       const sc = src.skillCooldowns || res.skillCooldowns;
       if (sc && typeof sc === 'object' && !Array.isArray(sc))
         for (const [skill, when] of Object.entries(sc)) updateSkill(skill, when, server, now);
