@@ -2694,8 +2694,6 @@ async function magisterStep() {
     if (!magSame(M)) return;
     if (catalog.profession?.l2Profession !== M.prof || !Array.isArray(catalog.skills) || !Number.isFinite(catalog.characterSp))
       return magPause(M, 'каталог текущего класса не подтверждён');
-    if (!await magConfirm(M, catalog, who.revision) && !magReplay(M, catalog, who.revision)) return magPause(M, 'исход прошлого обучения пока не подтверждён — повторно SP не трачу');
-    if (!magSame(M)) return;
     const npc = +catalog.npc?.npcId;
     if (!Number.isInteger(npc) || npc <= 0) return magPause(M, 'гильдия не указала учителя');
     if (location.pathname !== '/magister.html' || new URLSearchParams(location.search).get('npcId') !== String(npc)
@@ -2703,6 +2701,13 @@ async function magisterStep() {
       if (await rtCommit() && magSame(M)) location.href = `/magister.html?npcId=${npc}`;
       return;
     }
+    // Общий endpoint может возвращать skills:[]; полный каталог доступен по npcId.
+    catalog = await magRead(`/character/magister?npcId=${npc}`);
+    if (!magSame(M)) return;
+    if (catalog.profession?.l2Profession !== M.prof || !Array.isArray(catalog.skills) || !Number.isFinite(catalog.characterSp))
+      return magPause(M, 'каталог учителя не подтверждён');
+    if (!await magConfirm(M, catalog, who.revision) && !magReplay(M, catalog, who.revision)) return magPause(M, 'исход прошлого обучения пока не подтверждён — повторно SP не трачу');
+    if (!magSame(M)) return;
     // Короткий батч, чтобы main снова проверил TvT/Stop/срочную закупку. Остальные ранги остаются в job.
     for (let i = 0; i < 8 && magSame(M); i++) {
       if (rt.shop?.urgent || (cfg.tvtOn && L2V7Modules.tvt.tvtHold())) return;
@@ -2713,7 +2718,7 @@ async function magisterStep() {
       const live = magChar(snapshot.character || snapshot);
       if (!magSame(M)) return;
       if (!live || live.key !== M.key || live.lvl !== who.lvl) return magPause(M, 'класс/уровень изменился — перечитаю каталог');
-      catalog = await magRead('/character/magister');
+      catalog = await magRead(`/character/magister?npcId=${npc}`);
       if (!magSame(M)) return;
       if (catalog.profession?.l2Profession !== M.prof || !Array.isArray(catalog.skills) || !Number.isFinite(catalog.characterSp))
         return magPause(M, 'каталог текущего класса не подтверждён');
@@ -2771,7 +2776,7 @@ async function magisterStep() {
         return magPause(M, `обучение отклонено (${response.status}) — перечитаю состояние`);
       }
       if (!response.ok) return magPause(M, `исход обучения неизвестен (${response.status}) — проверю ранг`);
-      catalog = await magRead('/character/magister');
+      catalog = await magRead(`/character/magister?npcId=${npc}`);
       if (!magSame(M)) return;
       if (catalog.profession?.l2Profession !== M.prof || !Array.isArray(catalog.skills) || !Number.isFinite(catalog.characterSp)
           || !await magConfirm(M, catalog)) return magPause(M, 'ранг ещё не подтверждён — следующий запрос не отправляю');
