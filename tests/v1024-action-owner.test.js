@@ -79,3 +79,7 @@ test('отмена старого владельца не стирает нов�
 test('Stop блокирует автоматический переход, но допускает отдельное разрешение ручного просмотра',()=>{
  const f=fixture(),native={href:'/map.html'};f.env.on=false;f.A.locationProxy(native).href='/automatic';assert.equal(native.href,'/map.html');let manual=true;const loc=f.A.locationProxy(native,()=>manual);loc.href='/char.html';assert.equal(native.href,'/char.html');manual=false;loc.href='/late';assert.equal(native.href,'/char.html');
 });
+
+test('цикл A→B→A с изменением фазы также ограничен и переживает reload',async()=>{
+ let f=fixture({petBufferTrip:{id:'cycle',phase:'city'}});for(let i=0;i<14&&f.env.on;i++){f.env.rt.petBufferTrip.phase=i%2?'pay':'city';f.page(i%2?'/town-buffer.html':'/city.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}assert.ok(f.calls.includes('halt'));
+});

@@ -73,3 +73,8 @@ test('рейд: наличие другого босса не подтвержд
  const box={env:f.env,raidList:()=>rows};vm.runInNewContext(source.slice(start,end)+'\nthis.reconcile=paymentReconcile;',box);
  assert.equal(await box.reconcile(),false);assert.ok(f.env.payments.blocked());rows=[{id:'boss'}];assert.ok(await box.reconcile());assert.equal(f.env.payments.blocked(),false);
 });
+
+test('рейд: отменённый перед отправкой перелёт не восстанавливает старую цель поверх новой',async()=>{
+ const f=raid();let n=0;f.env.rtCommit=async()=>{if(++n===2){f.env.rt.manualKickAt++;f.env.rt.rbHunt={step:'pick',id:'new-boss'};f.env.rt.rbWant='new-boss';}return true};
+ assert.equal(await f.fire(),false);assert.equal(f.fires(),0);assert.equal(f.env.rt.rbWant,'new-boss');assert.equal(f.env.rt.rbHunt.id,'new-boss');assert.equal(f.env.payments.blocked(),false);
+});

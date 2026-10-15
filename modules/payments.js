@@ -55,6 +55,6 @@
     env.rec?.('B','оплата',`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
     return true;
   }
-  return {prepare,sent,cancel,confirm,pending,consumePermit,blocked:()=>!!pending()};
+  return {prepare,sent,cancel,confirm,pending,consumePermit,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>!!pending()};
  };
 })(globalThis);

@@ -698,12 +698,14 @@ async function rbTeleportFire(b, patch) {
     const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id}});
     if(!P){env.setStatus('РБ: платный переход ждёт подтверждения предыдущей оплаты');return false;}
     const before=Object.fromEntries(Object.keys(patch).map(k=>[k,env.rt[k]??null]));
+    // Откат относится только к нашему снимку: новая ручная цель не должна исчезнуть после await.
+    const rollback=async()=>{if(env.payments.matchesContext(P)&&Object.keys(patch).every(k=>JSON.stringify(env.rt[k])===JSON.stringify(patch[k])))await env.setRt(before);};
     const saved=await env.setRt(patch);
     if(saved?.ok!==true || typeof env.rtCommit!=='function' || !await env.rtCommit() || !env.payments.sent(P)){
-      await env.setRt(before);await env.payments.cancel(P);return false;
+      await rollback();await env.payments.cancel(P);return false;
     }
     const clicked=env.fire(b);
-    if(clicked===false){await env.setRt(before);await env.payments.cancel(P,{notSent:true});return false;}
+    if(clicked===false){await rollback();await env.payments.cancel(P,{notSent:true});return false;}
     return true;
   }
   // setRt меняет память и очередь синхронно; pagehide ядра дописывает очередь при перелёте.

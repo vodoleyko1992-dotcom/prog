@@ -50,10 +50,13 @@
     if(O&&O.key!=='shop'){await clear(O);O=null;}job=jobs.find(j=>j.key==='shop');
    }
    const now=Date.now(),value=env.rt[job.key],p=phase(value),page=env.page();
-   if(!O){O={id:env.id(),key:job.key,context:context(),stamp:stamp(value),at:now,phase:p,progressAt:now,page,visits:1};if(!await save({actionOwner:O})||!canAct())return true;env.rec('B','действия',`${job.key}: владелец маршрута (${env.mode()})`);}
+   if(!O){O={id:env.id(),key:job.key,context:context(),stamp:stamp(value),at:now,phase:p,progressAt:now,page,visits:1,seen:{[JSON.stringify([page,p])]:1}};if(!await save({actionOwner:O})||!canAct())return true;env.rec('B','действия',`${job.key}: владелец маршрута (${env.mode()})`);}
    else{
     const changed=p!==O.phase;
-    const next={...O,phase:p,progressAt:changed?now:O.progressAt,page,visits:changed?1:(O.visits||1)+(page!==O.page?1:0)};
+    const node=JSON.stringify([page,p]),seen={...(O.seen||{})};
+    if(changed||page!==O.page)seen[node]=(seen[node]||0)+1;
+    const next={...O,phase:p,progressAt:changed?now:O.progressAt,page,visits:changed?1:(O.visits||1)+(page!==O.page?1:0),seen:Object.fromEntries(Object.entries(seen).slice(-64))};
+    if(seen[node]>5){await env.halt(`Маршрут ${job.key}: повторяется цикл страниц и этапов; остановлено после 5 возвратов`,true);return true;}
     // Время ожидания TvT/сервера не ограничиваем. Ловим именно переходы без изменения этапа.
     if(next.visits>10){await env.halt(`Маршрут ${job.key}: более 10 переходов без продвижения этапа ${value.phase||value.step||''}`,true);return true;}
     if(JSON.stringify(next)!==JSON.stringify(O)){if(!await save({actionOwner:next}))return true;O=next;}
