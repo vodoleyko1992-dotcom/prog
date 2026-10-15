@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.0.26 — атака с пикой и подтверждение обучения =====
+// ===== L2wap Bot v10.0.27 — атака с пикой и подтверждение обучения =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -350,8 +350,8 @@ function learnSkillDb() {
     const info = { name,
       force: +(t.match(/(\d+)\s*(?:энерги|енергі)\S*\s+сил/i)?.[1] || 0), spends: /трат|витрач/i.test(t),
       charge: /(?:накаплива|копит|набира|заряжа)\S*[^.]{0,30}(?:энерги|енергі)/i.test(t) && !/нужн|потрібн/i.test(t),
-      mp: +(t.match(/MP\s*(\d+)/)?.[1] || 0), power: +(t.match(/сил[аи]\s*(\d+)/i)?.[1] || 0),
-      cd: +(t.match(/Перезарядк\S*\s*(\d+)/i)?.[1] || 0),
+      mp: +(t.match(/MP\s*(\d+)/)?.[1] || 0), mpKnown: /MP\s*\d+/.test(t), power: +(t.match(/(?:сил[аи]|power)\s*:?\s*(\d+)/i)?.[1] || 0),
+      cd: +(t.match(/(?:Перезарядк\S*|Откат|Відкат|Cooldown)\s*:?\s*(\d+(?:[.,]\d+)?)/i)?.[1]?.replace(',', '.') || 0),
       fists: /кастет/i.test(t), passive: /пассив|пасив/i.test(t + ' ' + meta),
       rank: meta.match(/ранг:\s*(\d+\s*\/\s*\d+)/i)?.[1]?.replace(/\s/g, '') || '', desc: t.slice(0, 220) };
     if (JSON.stringify(db[k]) !== JSON.stringify(info)) { db[k] = info; fresh.push(info); }
@@ -388,10 +388,12 @@ function expDmg(name) {
 function skillMp(name) {                        // MP за применение: замер или справочник Interlude
   const k = (name || '').replace(/\s*\(.*$/, '').toLowerCase(), p = rt.skills?.[k];
   if (p?.mpN) return p.mp / p.mpN;
+  const learned = rt.skillDb?.[k] || rt.skillDb?.[ilOf(k)?.n?.toLowerCase()];
+  if (learned && (learned.mpKnown || learned.mp > 0) && Number.isFinite(learned.mp)) return learned.mp;
   const v = ilOf(k)?.mp; return Array.isArray(v) ? v[Math.min(v.length - 1, 10)] : (v || 30);
 }
 function powerOf(k) {
-  const db = rt.skillDb?.[k];
+  const db = rt.skillDb?.[k] || rt.skillDb?.[ilOf(k)?.n?.toLowerCase()];
   if (db?.power) return db.power;
   const m = (rt.skills?.[k]?.last || '').match(/сил[аи]\s*(\d+)/i);
   if (m) return +m[1];
@@ -462,6 +464,9 @@ for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL
 // 10.0.2: Life Stone (augment.js) — активные умения оружия. На L2WAP все Power 109 (код игры, weapon-augmentation-display.js)
 const AUG = typeof L2Aug !== 'undefined' ? L2Aug : null;
 const LS_BY_NAME = Object.create(null);
+// 10.0.27: штатные actionId панели Warrior, снимки/карточки 15.10 10:26.
+const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312 };
+IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
   if (x && typeof x === 'object') {
@@ -469,6 +474,7 @@ function ilOf(x) {                               // x: кнопка слота, 
     const m = String(k).match(/l2_(\d+)/);
     name = x.name || (x.title || '').split(/\s+[—–-]\s+|\s*\(/)[0];
     if (m) id = +m[1];
+    else if (Object.hasOwn(NATIVE_SKILL_IL, k)) { id = NATIVE_SKILL_IL[k]; if (name.trim()) IL_BY_NAME[name.trim().toLowerCase()] = id; }
     else if (k === 'corpse_plague' || k === 'hamstring_slash') id = k === 'corpse_plague' ? 103 : 127;
     // 10.0.2: умение Life Stone на панели — data-slot-cd="ls_prominence" (без номера). Имя слота (labelUk игры) запоминаем:
     // замеры и план боя ищут скилл по имени
@@ -482,7 +488,8 @@ function ilOf(x) {                               // x: кнопка слота, 
 // HP = уровень×3 + ранг×5 = 178 на 51 ур./ранге 5, MP 0, повтор через ≈2 с; кот бьёт и на этот ход). В Interlude — «маг. атака по трупу»
 // 7.2.1 (скрин магистра 10.10): дебаффы L2WAP — не как в Interlude. mDefDown — +урон заклинаний мага (кот бьёт физикой, ему не помогает),
 // pAtkDown — защита (моб бьёт слабее). Curse Poison в справочнике — «Яд», на L2WAP это −12 % P.Atk
-const IL_FIX = { 1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
+const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 минут · MP 10 · откат 180 с' },
+  1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
   // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
   // Тип защиты и АОЕ не подтверждены; урон/MP/КД берём из наблюдений и ответа сервера.
@@ -3850,7 +3857,8 @@ addEventListener('message', e => {
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
-    if (/^\/game\/story-quests\/starter-saga(?:\/\w+)?$/.test(path) && d.res.quest) L2V7Modules.quests.sagaNote(d.res.quest);   // 10.0.10: сюжетный квест новичка → rt.storySaga (кампания авто)
+    if (/^\/game\/story-quests\/starter-saga(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.sagaNote(d.res.quest);   // 10.0.10: сюжетный квест новичка → rt.storySaga (кампания авто)
+    if (/^\/game\/story-quests\/dion-campaign(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.dionNote(d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
     const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch), L2V7Modules.subclass.charNote(ch);   // 10.0.7: + слоты классов (заготовка под сабы)
   } catch (e) {}

@@ -15,17 +15,50 @@ function questLinesInLog() {
 // Теперь: сюжетный квест новичка (GET /game/story-quests/starter-saga — карта опрашивает сама) не пройден, уровень подходит и герой
 // ещё молодой (< 40) → кампания включается сама (cfg.campAuto, галка «★ Сюжетные квесты новичка — вести самому»); у Warlock 67 ничего не меняется
 const CAMP_AUTO_MAX_LVL = 40;
+// 10.0.27 (лог 15.10 20:25): принятая новая кампания отменяет адрес и цели старой.
+const STARTER = '/starter-story-quest.html', DION = '/dion-campaign.html';
+const campPath = () => (env.rt.campaignUrl || '').split('?')[0];
+const activeDion = () => env.rt.dionCampaign?.stage === 'active' && !env.rt.dionCampaign.completed;
+function resetChapter(url) {
+  return { campaign: null, campaignUrl: url, campaignDue: true, sinceCamp: 0, questListT: 0,
+    qAlias: {}, quests: {}, questTargets: [], questSeen: {}, needChamps: false, lastTeleport: '',
+    campEmptyPage: 0, campSkipUntil: 0, campActTry: 0, campOpenTry: 0, npcTried: 0 };
+}
+function dionNote(q) {
+  if (!q || !['not_started', 'active', 'completed'].includes(q.stage)) return;
+  const old = env.rt.dionCampaign, chapter = Number(q.chapter);
+  if (!Number.isInteger(chapter) || chapter < 1) return;
+  // Поздний ответ карты не возвращает уже сданную главу и завершённую цепочку.
+  if (old && (chapter < old.chapter || old.completed && !(q.completed || q.stage === 'completed') || old.stage === 'active' && q.stage === 'not_started')) return;
+  const S = { stage: q.stage, completed: !!q.completed || q.stage === 'completed', chapter,
+    title: q.chapterTitleRu || q.chapterTitleUk || q.titleRu || '', minLevel: +q.minLevel || 20, t: Date.now() };
+  const changed = !old || old.stage !== S.stage || old.chapter !== chapter || old.completed !== S.completed;
+  const take = S.stage === 'active' && !S.completed && (changed || campPath() !== DION);
+  env.setRt({ dionCampaign: S, ...(take ? resetChapter(DION) : S.completed && campPath() === DION ? resetChapter('') : {}) });
+}
+function staleCampaignPage() {
+  return location.pathname === STARTER && (activeDion() || env.rt.storySaga?.completed || env.rt.storySaga?.stage === 'completed');
+}
+async function leaveOldCampaign() {
+  if (!env.on) return;
+  const url = activeDion() ? DION : '/character-quests.html';
+  env.setStatus('Кампания: сверяю следующую главу');
+  location.href = url; await env.sleep(1000);
+}
 function sagaNote(q) {                            // ответ /game/story-quests/starter-saga → rt.storySaga
   if (!q || typeof q !== 'object') return;
   const S = { id: q.questId || '', title: q.titleRu || q.titleUk || q.title || '', stage: q.stage || '', completed: !!q.completed,
               minLevel: +q.minLevel || 0, lvl: +q.effectiveLevel || 0, tp: q.scout?.teleportId || '', t: Date.now() };
   const o = env.rt.storySaga;
   if (o && o.stage === S.stage && o.completed === S.completed && o.minLevel === S.minLevel && o.lvl === S.lvl && Date.now() - (o.t || 0) < 600000) return;
-  env.setRt({ storySaga: S });
+  if (o?.completed && !S.completed) return;
+  const owns = !campPath() || campPath() === STARTER;
+  const changed = !o || o.stage !== S.stage || o.completed !== S.completed;
+  env.setRt({ storySaga: S, ...(owns && changed ? resetChapter(activeDion() ? DION : S.completed ? '' : STARTER) : {}) });
 }
 function campAuto() {
   if (env.cfg.campAuto === false || env.cfg.campaign) return false;
-  const S = env.rt.storySaga; if (!S || S.completed || S.stage === 'completed') return false;
+  const S = activeDion() ? env.rt.dionCampaign : env.rt.storySaga; if (!S || S.completed || S.stage === 'completed') return false;
   const lvl = env.heroLvl() || S.lvl || 0;
   if (!lvl || lvl < (S.minLevel || 0) || lvl >= CAMP_AUTO_MAX_LVL) return false;
   if (env.rt.campAutoOn !== S.title) { env.setRt({ campAutoOn: S.title, campaignDue: true }); env.rec('B', 'квест', `сюжетный квест «${S.title}» не пройден (${S.stage || '?'}), герой ${lvl} ур. → веду кампанию сам (авто; снять: галка в «Охоте»)`); }
@@ -154,6 +187,8 @@ const isQuests = () => /\/character-quests\.html/i.test(location.pathname);
 const campOn = () => (campEnabled() && Date.now() >= (env.rt.campSkipUntil || 0)) || (!!env.rt.campOnce && !!env.rt.campaignDue);
 
 async function goCampaign() {
+  if (staleCampaignPage()) return leaveOldCampaign();
+  if (activeDion() && campPath() !== DION) await env.setRt(resetChapter(DION));
   if (env.isCampaign() || /\/starter-story-quest\.html$/i.test(location.pathname)) return campaign();
   // v5.5.4 (лог 08.10 21:38): бот помнил адрес пройденной цепочки («Путь новичка», /starter-story-quest.html) и открывал
   // его по кругу, а активный квест — «Тень над Дионом» (/dion-campaign.html). Источник правды — «Персонаж → Мои квесты»:
@@ -166,6 +201,7 @@ async function goCampaign() {
   }
   const pathOf = h => { try { return new URL(h, location.origin).pathname; } catch (e) { return String(h || '').split('?')[0]; } };
   const QL = env.rt.questList || [], inList = !!env.rt.campaignUrl && QL.some(q => q.href && pathOf(env.rt.campaignUrl) === pathOf(q.href));
+  if (activeDion() && campPath() === DION && location.pathname !== DION) { if (!env.on) return; location.href = DION; await env.sleep(1000); return; }
   if (!env.rt.questListT || Date.now() - env.rt.questListT > 10 * 60000 || (env.rt.campaignUrl && !inList)) {
     env.setStatus('Кампания: открываю «Персонаж → Мои квесты»'); location.href = '/character-quests.html'; await env.sleep(4000); return;
   }
@@ -307,6 +343,7 @@ function campaignState() {
 }
 
 async function campaign() {
+  if (staleCampaignPage()) return leaveOldCampaign();
   if (/teleport=/i.test(location.search)) {
     env.setStatus('Кампания: жду телепорт к NPC (страница перезагрузится)');
     await env.waitFor(() => !/teleport=/i.test(location.search), 6000, 100);
@@ -316,6 +353,8 @@ async function campaign() {
   env.setStatus('Кампания: читаю главу');
   await env.waitFor(() => env.$q('li.l2-starter-story-target, [data-action="complete-chapter"], .l2-starter-story-objective-line, .l2-starter-story-resources, #starter-story-actions button[data-action], .l2-starter-story-location [data-quest-teleport-id]'), 10000, 300);
   if (!env.on) return;
+  if (staleCampaignPage()) return leaveOldCampaign();
+  const chapterMark = JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter]);
   let st = campaignState();
   // 14.10 (полный аудит): «Проверить кампанию» при выключенной автоматике только читает; guard — до accept/перехода к NPC.
   if (!campEnabled()) {
@@ -383,13 +422,17 @@ async function campaign() {
     if (ok) await env.setRt({ npcTried: 0, lastTeleport: '', quests: {} });   // учёт прошлой главы больше не нужен
     await env.sleep(env.rnd(800, 1500));
     st = campaignState();
+    if (!env.on) return;
+    if (staleCampaignPage()) return leaveOldCampaign();
+    if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter])) return;
     if (!ok) { await env.setRt({ campaignDue: false, sinceCamp: 0 }); env.setStatus('Кампания: главу завершить не удалось — продолжаю фарм'); return env.goOutskirts(); }
   }
+  if (!env.on) return;
+  if (staleCampaignPage()) return leaveOldCampaign();
+  if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter])) return; // ответ новой главы важнее старого DOM
   const open = st.targets.filter(t => !t.ok);
-  await env.setRt({ needChamps: open.some(t => t.champ) });
   if (env.rt.campaign?.title && env.rt.campaign.title !== st.title) env.rec('B', 'кампания', `новая глава: «${env.rt.campaign.title}» → «${st.title}» — учёт прошлой главы сброшен`);
-  await env.setRt({ quests: questsFor(st.targets) });
-  await env.setRt({ campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, sinceCamp: 0,
+  await env.setRt({ needChamps: open.some(t => t.champ), quests: questsFor(st.targets), campaign: { title: st.title, targets: st.targets, t: Date.now() }, campaignDue: false, sinceCamp: 0,
                 campaignUrl: location.pathname + location.search });
   if (!st.targets.length) { env.setStatus('Кампания: целей нет (кампания пройдена?)'); return env.goOutskirts(); }
   if (!open.length) {
@@ -418,6 +461,7 @@ async function campaign() {
     env.setStatus(`Кампания: телепорт → ${open.find(t => t.tp === tp)?.loc || tp}`);
     await env.pause();
     if (!env.on) return;
+    if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter]) || staleCampaignPage()) return;
     const href = location.href;
     env.fire(btn);
     // телепорт мгновенный и обычно без сообщения: 150 мс хватает, дальше сразу в Окрестности
@@ -428,6 +472,6 @@ async function campaign() {
   }
   return env.goOutskirts();
 }
- return { questLinesInLog, sagaNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
+ return { questLinesInLog, sagaNote, dionNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
  };
 })(globalThis);

@@ -208,6 +208,20 @@ async function autoRoles() {
   const repaired = env.names(sug.nPower || '').filter(n => env.ilOf(env.panelInventory().find(x => x.name.toLowerCase() === n))?.l2Damage && !(env.rt.damageRoles1023 || []).includes(n));
   const missing = repaired.filter(n => !env.names(fix.nPower ?? env.cfg.nPower).includes(n));
   if (missing.length) fix.nPower = [fix.nPower ?? env.cfg.nPower, ...missing.map(n => env.panelInventory().find(x => x.name.toLowerCase() === n)?.name || n)].filter(Boolean).join(', ');
+  // 10.0.27: именованные actionId Warrior ранее теряли тип. Исправляем только эти навыки один раз.
+  const warrior = env.panelInventory().filter(x => [78, 100, 245, 255, 312].includes(env.ilOf(x)?.id)
+    && !(env.rt.warriorRoles1027 || []).includes(x.name.toLowerCase()));
+  for (const x of warrior) {
+    const n = x.name.toLowerCase();
+    for (const k of ['nPower', 'nStun', 'nBuffs', 'nToggles']) {
+      const recommended = env.names(sug[k] || '').includes(n), current = fix[k] ?? env.cfg[k] ?? '';
+      const values = current.split(',').map(v => v.trim()).filter(Boolean);
+      if (recommended && !env.names(current).includes(n)) fix[k] = [...values, x.name].join(', ');
+      // Лишь заведомо ошибочная боевая роль баффа/тоггла; свои прочие назначения сохраняем.
+      if (k === 'nPower' && [78, 312].includes(env.ilOf(x)?.id) && env.names(current).includes(n))
+        fix[k] = values.filter(v => v.toLowerCase() !== n).join(', ');
+    }
+  }
   if (JSON.stringify(env.rt.panelKnown) !== JSON.stringify(panelNames)) await env.setRt({ panelKnown: panelNames });
   // v4.16: удары, которые раньше считались «за энергию», но её не тратят (Burning Fist, Soul Breaker) — в силовые
   const freeHits = env.names(sug.nPower || '').filter(n => (env.FREE_HIT.test(n) || env.rt.forceFree?.[n]) && !env.names(fix.nPower || env.cfg.nPower || '').includes(n));
@@ -224,6 +238,7 @@ async function autoRoles() {
     env.rec('B', 'автороли', Object.entries(fix).map(([k, v]) => `${k}=${v}`).join(' · '));
     console.log(env.TAG, 'автоназначение ролей:', fix);
   }
+  if (warrior.length) await env.setRt({ warriorRoles1027: [...new Set([...(env.rt.warriorRoles1027 || []), ...warrior.map(x => x.name.toLowerCase())])] });
   if (repaired.length) await env.setRt({ damageRoles1023: [...new Set([...(env.rt.damageRoles1023 || []), ...repaired])] });
 }
 
