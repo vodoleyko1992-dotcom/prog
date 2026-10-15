@@ -198,7 +198,7 @@ async function shotSlotAdd() {
 
 const shotSlots = () => [...document.querySelectorAll('.l2-hotbar-shot--enabled, .l2-hotbar-shot--disabled')];
 async function keepShots() {
-  if (env.shotGrade?.()?.blocked) return;
+  if (env.rt.shotMismatchPending || env.shotGrade?.()?.blocked) return;
   const wanted = () => env.rt.weaponsT ? env.shotGrade?.()?.g : null;
   const pick = () => { const g = wanted(), re = env.shotsMage?.() ? SHOT_BSPS_RE : SHOT_SS_RE;
     return (g && shotSlots().find(x => shotGradeOf(x) === g && re.test(String(x.title || '').replace(/^#\d+\s*[—–-]\s*/, '')))) || env.shotSlot(); };

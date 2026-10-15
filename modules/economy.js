@@ -9,7 +9,7 @@
 // Грейд: надетое оружие → оружие из настроек «Основное» в списке → по уровню героя (D с 20, C с 40…).
 // Маг: класс по профессии/профилю → или на панели/в настройках уже Blessed Spiritshot
 function shotGrade() {
-  if (env.rt.weaponMetaPending) return {g:null, blocked:true, src:'не распознано надетое оружие'};
+  if (env.rt.weaponMetaPending || env.rt.shotMismatchPending) return {g:null, blocked:true, src:'сверка оружия после отказа сервера'};
   // 7.2 (лог 10.10 20:08): после новой установки память об оружии пришла из базового профиля («надето: Посох життя D») — куплено 3000
   // D-зарядов при Demon's Staff C. Списку оружия верим, только если инвентарь читали в этой установке (rt.weaponsT), иначе — сначала чтение
   const W = env.rt.weaponsT ? env.rt.weapons || [] : [], ok = g => g && g !== '—' && /^(NG|D|C|B|A|S)$/i.test(g);
