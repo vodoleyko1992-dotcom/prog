@@ -1,0 +1,5 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+function fixture(change){let time=10000,lines=[];const env={rt:{char:'Hero',classCur:{prof:'mage',slot:0}},potKey:()=> 'Potion',potName:()=> 'Potion',potBag:()=>5,logLines:()=>[...lines],newLines:(a,b)=>b.slice(a.length),isBattle:()=>time<11000,setRt:async p=>Object.assign(env.rt,p),rec:()=>{},sleep:async()=>{time+=1000;lines.push('Potion + 500 HP');change?.(env)}};const b={Date:{now:()=>time}};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../modules/resources.js'),'utf8'),b);return {env,R:b.L2V7Factories.resources(env)}}
+for(const [name,change]of [['character',e=>e.rt.char='Other'],['subclass',e=>e.rt.classCur={prof:'tank',slot:1}]])test('potion observation does not write into another '+name,async()=>{const f=fixture(change);await f.R.potWatch({});assert.equal(f.env.rt.pots,undefined)});
+test('accepted potion observation is retained in unchanged profile',async()=>{const f=fixture();await f.R.potWatch({});assert.equal(f.env.rt.pots.Potion.heal,500);assert.equal(f.env.rt.pots.Potion.uses,1)});

@@ -1049,15 +1049,30 @@ async function rbHuntStep() {
       if (Date.now() - (H.at || 0) > 60000) return huntDone(H.id, `${H.name}: после телепорта не попал на карту`);
       location.href = '/map.html'; await env.sleep(3000); return;
     }
-    await env.mapReady(15000, `Тур РБ: ищу ${H.name} на карте`);
+    const ready = await env.mapReady(15000, `Тур РБ: ищу ${H.name} на карте`);
     if (!active() || !sameJob()) return;
+    if (ready !== true) {
+      const since = H.mapLoadT || Date.now();
+      if (!H.mapLoadT) await huntSet({ mapLoadT: since });
+      if (!active() || env.rt.rbHunt?.id !== H.id) return;
+      if (Date.now() - since < 30000) { env.setStatus(`Тур РБ: карта ещё не загружена — жду ${H.name}`); await env.sleep(1500); return; }
+      if (!H.mapLoadReloads) {
+        await huntSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
+        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      }
+      await huntSet({ mapLoadT: 0, mapLoadReloads: 0 });
+      if (!active()) return;
+      return env.pauseBot(`Тур РБ: карта не загрузилась после обновления; цель ${H.name} сохранена. Проверь игру и продолжи`);
+    }
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;
     if (!r) {
       if (Date.now() - (H.at || 0) < 25000) { await env.sleep(1500); return; }   // карта ещё догружается
-      if (env.rt.rbList?.[H.id]) await env.setRt({ rbList: { ...env.rt.rbList, [H.id]: { ...env.rt.rbList[H.id], alive: false } } });   // v5.6: до перечитки списка — мёртв
-      env.rbTimer?.domNote({ [H.id]: { name: H.name, lvl: H.lvl, alive: false } }, 'нет на карте')?.catch?.(() => {});   // 10.0.2: убит другими — окно смерти «видел живым → нет на карте»
-      return huntDone(H.id, `${H.name}: на карте нет (убит другими?)`);
+      // Отсутствующий пин не доказывает смерть: мог не состояться перелёт или
+      // открыться другая зона. Смерть/таймер подтверждает серверный список.
+      await env.setRt({ rbListT: 0 });
+      if (!active() || !sameJob()) return;
+      return huntDone(H.id, `${H.name}: на карте нет — перечитаю список РБ`);
     }
     if (rbVerdictBlocks(r.id)) return huntDone(H.id, `${H.name}: в базе «не по силам» — пропускаю`);
     const bw = env.buffWaitBeforeRb();                  // v4.41: тотем на откате ≤60 с — ждём, бой с РБ начинаем с баффом
@@ -1067,7 +1082,7 @@ async function rbHuntStep() {
     if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
-    await huntSet({ step: 'fight', phase: 'engage', next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
+    await huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;

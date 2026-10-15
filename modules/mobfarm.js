@@ -582,7 +582,9 @@ function champEntryOff(c) {
 }
 async function attackSpawn(c, label, opt = {}) {
   // 15.10: рейд передаёт свою отмену; смена режима/ручная команда во время листания не открывает прежнюю цель.
-  const active = () => env.on && env.tabOwner !== false && (!opt.active || opt.active());
+  const context = () => JSON.stringify([env.rt.char, env.rt.manualKickAt, env.cfg.rbHuntMode, env.cfg.epicMode, env.cfg.catMode, env.cfg.zoneAuto, env.cfg.farmHere]);
+  const captured = context();
+  const active = () => env.on && env.tabOwner !== false && context() === captured && (!opt.active || opt.active());
   if (!active()) return false;
   const page = Math.floor(c.idx / env.PAGE_SIZE) + 1;
   const sel = `#map-mob-list a[href*="spawnId=${CSS.escape(c.id)}"]`;
@@ -612,13 +614,19 @@ async function attackSpawn(c, label, opt = {}) {
     env.rec('B', 'тур РБ', `карта предложила ${c.name}, но цель тура ${env.rt.rbHunt.name} — чужую ссылку не нажимаю`);
     return false;
   }
-  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, exp: c.exp || 0, fa: c.fa, valueT: Date.now(), probe: !!c.chProbe } : {}) }, mobClickAt: Date.now(), via: 'map' });
+  a = env.$q(sel); if (!a || env.shown?.(a) === false) return false;
+  const clickAt = Date.now(), before = { target: env.rt.target || null, mobClickAt: env.rt.mobClickAt || 0 };
+  const rollback = async () => { if (active() && env.rt.mobClickAt === clickAt && env.rt.target?.name === c.name) await env.setRt(before); };
+  await env.setRt({ target: { name: c.name, champ: c.champ, quest: c.quest, rb: !!c.rb, ...(c.champ ? { tier: c.tier || champTier(c.id, a), lvl: c.lvl || 0, lim: c.chLim || 0, exp: c.exp || 0, fa: c.fa, valueT: Date.now(), probe: !!c.chProbe } : {}) }, mobClickAt: clickAt, via: 'map' });
   if (!active()) return false;
   if (env.cfg.rbHuntMode && env.rt.rbHunt?.step === 'fight' && c.id !== env.rt.rbHunt.id) return false;
   if (c.champ && env.champs?.valueMode?.(c)) env.rec('B', 'чемпионы', `${c.name}: ${c.chWhy}`);
   if (c.champ && (c.faHot || c.chProbe)) env.rec('B', 'чемпионы', `${c.name} (${c.lvl}, ${TIER_RU[c.tier] || c.tier})${c.faHot ? ` — бью ради FA: шанс ${Math.round(c.fa * 100)} %` : ''}${c.chProbe ? ` · проба${c.chEta ? `: жду ≈${c.chEta} с` : ''}, предел ${c.chLim} с (дольше — уйду)` : c.chEta ? ` · ≈${c.chEta} с, предел ${c.chLim} с` : ''}`);
   { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
-  env.fire(a);
+  // Список перерисовывается во время паузы и сохранения цели. Detached link
+  // не получит native обработчик; отказ fire не является отправленной атакой.
+  a = env.$q(sel);
+  if (!a || env.shown?.(a) === false || env.fire(a) === false) { await rollback(); return false; }
   if (!(await env.waitFor(env.isBattle, 10000)) && active()) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
     const n = (env.rt.clickFail || 0) + 1;
     if (n >= 3) { await env.setRt({ clickFail: 0 }); await env.halt('Клик по мобу 3 раза подряд не открыл бой — проверьте игру'); return true; }
