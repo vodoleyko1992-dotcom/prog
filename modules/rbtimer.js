@@ -23,6 +23,8 @@ const defH = () => { const v = +env.cfg?.rbRespH; return v > 0 && v < 200 ? v : 
 const state = () => env.rt?.rbTimer && typeof env.rt.rbTimer === 'object' ? env.rt.rbTimer : { b: {} };
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 let pollT = ssNum('l2bot-rbtT'), tourPollT = ssNum('l2bot-rbtTourT'), busy = false;
+// Свой GET обходит hook: его персональные цены/доступность нельзя писать после смены героя или сабкласса.
+const pollContext = () => JSON.stringify([env.rt?.char || '', env.rt?.classCur?.prof ?? null, env.rt?.classCur?.slot ?? null]);
 
 // ---------- чистые функции (их же берёт меню) ----------
 // новые сведения: rows [{id, n, l, al, e, rh, pg}] → { T, ev }. Своё состояние не трогает
@@ -42,7 +44,7 @@ function observe(T0, rows, now = Date.now()) {
       Object.assign(x, { al: false, ch: now, pv: last, dl: k || last, dh: k || now });
       ev.push({ id: r.id, kind: 'dead', x });
     } else if (p.al !== r.al) {                         // был мёртв → воскрес
-      if (p.dh && now - p.dh < LAG_MS) continue;        // только что убит (свой килл), а список ещё «жив» — не верим
+      if (p.k > 0 && now >= p.k && now - p.k < LAG_MS) continue;        // только что убит (свой килл), а список ещё «жив» — не верим
       const last = p.ls || now;
       if (p.dl > 0 && p.dh > 0) { const lo = Math.max(0, last - p.dh), hi = now - p.dl; if (hi > 0 && hi - lo <= OB_WIDE) x.ob = [...(p.ob || []), [lo, hi]].slice(-OB_MAX); }
       Object.assign(x, { al: true, ch: now, pv: last }); delete x.dl; delete x.dh; delete x.k;
@@ -76,9 +78,15 @@ function merge(A, Bt) {
     const fresh = !x || (y.ls || 0) > (x.ls || 0) ? { ...(x || {}), ...y } : { ...y, ...x };
     const ob = [...(x?.ob || []), ...(y.ob || [])].filter((o, i, a) => Array.isArray(o) && a.findIndex(z => z[0] === o[0] && z[1] === o[1]) === i).slice(-OB_MAX);
     if (ob.length) fresh.ob = ob; else delete fresh.ob;
-    // обе стороны видят его убитым — берём точное окно смерти (свой килл, узкое окно), а не «не позже»
-    if (x && x.al === false && y.al === false) { const w = z => z.dl > 0 ? z.dh - z.dl : Infinity, best = w(x) <= w(y) ? x : y;
-      Object.assign(fresh, { dl: best.dl || 0, dh: best.dh || fresh.dh }); if (best.k) fresh.k = best.k; else delete fresh.k; }
+    // Уточнять можно только пересекающиеся окна одной смерти. Старый точный
+    // килл не заменяет более новое окно следующего цикла респа.
+    if (x && x.al === false && y.al === false) {
+      const overlap = x.dh > 0 && y.dh > 0 && Math.max(x.dl || 0, y.dl || 0) <= Math.min(x.dh, y.dh);
+      const width = z => z.dl > 0 ? z.dh - z.dl : Infinity;
+      const best = overlap ? (width(x) <= width(y) ? x : y) : ((y.ls || 0) > (x.ls || 0) ? y : x);
+      for (const key of ['dl', 'dh', 'k']) { if (best[key] != null) fresh[key] = best[key]; else delete fresh[key]; }
+    }
+    if (fresh.al === true) { delete fresh.dl; delete fresh.dh; delete fresh.k; }
     out.b[id] = fresh;
   }
   return out;
@@ -206,7 +214,7 @@ async function listNote(j, src = 'page') {
     const L = { ...(env.rt.rbList || {}) }, now = Date.now(); let ch = 0;
     raid.forEach((r, i) => { if (r.al == null) return; const p = L[r.id], b = r.b, ad = +b.adenaCost, col = +b.coinOfLuckCost > 0;
       // После недавнего убийства список игры может отставать: очередь и таймер верят одной смерти.
-      const previous = T0.b?.[r.id], alive = r.al && previous?.al === false && previous.dh && now - previous.dh < LAG_MS ? false : r.al;
+      const previous = T0.b?.[r.id], alive = r.al && previous?.al === false && previous.k > 0 && now >= previous.k && now - previous.k < LAG_MS ? false : r.al;
       L[r.id] = { ...(p || {}), name: String(b.name || p?.name || '').slice(0, 60), lvl: r.l || p?.lvl || 0, alive, status: alive ? 'Живой' : 'Убит',
         price: col ? +b.coinOfLuckCost : Number.isFinite(ad) ? ad : p?.price || 0, unit: col ? 'Coin of Luck' : 'аден', priceText: col ? `(${+b.coinOfLuckCost} Coin of Luck)` : Number.isFinite(ad) ? `(Аден ${ad})` : p?.priceText || '',
         deny: b.canAttack === false ? String(b.attackBlockedReasonUk || 'игра не пускает').replace(/^Недоступно:\s*/i, '').slice(0, 60) : '', page, ord: page * 1000 + i, t: now };
@@ -228,8 +236,8 @@ async function kill(id, n, l) {
 }
 
 // ---------- опрос списка (только GET, страницы своего окна уровней + эпики) ----------
-async function getJson(path) {
-  try { const r = await env.gameGet(path); if (!r?.ok) return null; const j = await r.json(); return Array.isArray(j?.bosses) ? j : null; } catch (e) { return null; }
+async function getJson(path, active) {
+  try { const r = await env.gameGet(path); if (!active() || !r?.ok) return null; const j = await r.json(); return active() && Array.isArray(j?.bosses) ? j : null; } catch (e) { return null; }
 }
 // Пустая очередь тура проверяется чаще общего наблюдения: только страницы своего окна.
 function tourPages() {
@@ -244,8 +252,9 @@ function tourPages() {
   const first = Math.min(...pages), last = Math.max(...pages);
   return Array.from({ length: last - first + 1 }, (_, i) => first + i);
 }
-async function tourTick({ active } = {}) {
-  if (typeof active !== 'function' || !active() || busy || Date.now() - tourPollT < 30000) return false;
+async function tourTick({ active: callerActive } = {}) {
+  const context = pollContext(), active = () => pollContext() === context && !!callerActive?.();
+  if (typeof callerActive !== 'function' || !active() || busy || Date.now() - tourPollT < 30000) return false;
   const pages = tourPages();
   if (!pages.length || !active()) return false;
   tourPollT = Date.now(); busy = true;
@@ -267,11 +276,15 @@ async function tourTick({ active } = {}) {
       updated = true;
       if (!active()) break;
     }
-  } finally { busy = false; }
+  } finally {
+    busy = false;
+    if (!active()) { tourPollT = 0; try { sessionStorage.setItem('l2bot-rbtTourT', '0'); } catch (e) {} }
+  }
   return updated;
 }
 async function tick() {
   if (env.cfg.rbTimers === false || busy) return false;
+  const context = pollContext(), active = () => env.cfg.rbTimers !== false && pollContext() === context;
   const every = Math.max(5, +env.cfg.rbTimerMin || 10) * MIN;
   if (Date.now() - pollT < every) return false;
   pollT = Date.now(); busy = true; try { sessionStorage.setItem('l2bot-rbtT', String(pollT)); } catch (e) {}
@@ -280,16 +293,20 @@ async function tick() {
     const [lo, hi] = winOf(), pg = state().pg || {};
     // первая страница, где есть РБ не слабее окна (список игры — по возрастанию уровня); не знаем — с первой
     let p = +Object.keys(pg).map(Number).sort((a, b) => a - b).find(k => (pg[k]?.[1] || 0) >= lo) || 1;
-    for (let i = 0; i < 16 && p; i++) {
-      const j = await getJson(`/game/raid-bosses?page=${p}`); if (!j) break;
+    for (let i = 0; i < 16 && p && active(); i++) {
+      const j = await getJson(`/game/raid-bosses?page=${p}`, active); if (!j || !active()) break;
       await listNote(j, 'опрос'); pages++;
+      if (!active()) break;
       const lv = j.bosses.map(b => +b.level || 0).filter(Boolean);
       if (!lv.length || Math.max(...lv) > hi || p >= (+j.totalPages || p)) break;
       p++; await env.sleep(800 + Math.random() * 700);
     }
-    const e = await getJson('/game/epic-bosses');
-    if (e) { await listNote(e, 'опрос'); pages++; }
-  } finally { busy = false; }
+    const e = active() ? await getJson('/game/epic-bosses', active) : null;
+    if (e && active()) { await listNote(e, 'опрос'); pages++; }
+  } finally {
+    busy = false;
+    if (!active()) { pollT = 0; try { sessionStorage.setItem('l2bot-rbtT', '0'); } catch (e) {} }
+  }
   return pages > 0;
 }
 
