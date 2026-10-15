@@ -3,7 +3,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.payments = function create_payments(env) {
-  let serial = 0, writing = false, permit = null, requestPermit = null;
+  let serial = 0, writing = false, permit = null, requestPermit = null, nativeClaim = null;
   const unsettled = new Map();
   const local = new Map();
   const state = () => env.rt.actionPayments || {};
@@ -43,13 +43,17 @@
   // 15.10, ревью: pending сам по себе не доказывает происхождение запроса. Один native POST
   // связывается только с использованным разрешением клика; служебные GET его не забирают.
   function claimRequest(d) {
+    const prior=nativeClaim,p0=pending();
+    if(d?.method==='POST'&&prior&&d.retryOf===prior.rid&&p0?.id===prior.id&&p0.kind==='story-teleport'&&same(p0)&&context()===prior.context&&Number.isFinite(d.retryAt)&&d.retryAt<=Date.now()&&Date.now()-d.retryAt<=10000&&d.path===prior.path&&d.req?.targetId===p0.target&&Number.isSafeInteger(d.req?.expectedRevision)&&d.req.expectedRevision>=prior.revision){nativeClaim=null;return p0.id;}
+    if(d?.method==='POST')nativeClaim=null;
     const p=pending(),a=requestPermit;if(!a||!p||a.id!==p.id||!same(p)||!active()||a.context!==context()||Date.now()-a.at>30000){requestPermit=null;return '';}
     if(d?.method!=='POST')return '';
     const e=p.evidence||{},expected=p.kind==='fishing'&&/^\/game\/fishing\/(?:action|buy-starter|buy-gear)$/.test(e.path||'')?e.path:
       p.kind==='cat-teleport'?'/game/catacombs/teleport':p.kind==='raid-teleport'?'/game/raid-boss/teleport':
-      p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
+      p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='shop'?'/game/drops-shop/buy':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
       p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':null;
     if(!expected||d.path!==expected)return '';
+    if(p.kind==='story-teleport'&&Number.isSafeInteger(d.rid)&&d.req?.targetId===p.target&&Number.isSafeInteger(d.req?.expectedRevision))nativeClaim={id:p.id,context:p.context,rid:d.rid,path:d.path,revision:d.req.expectedRevision,at:Date.now()};
     requestPermit=null;return p.id;
   }
   async function cancelReady(p, options = {}) {

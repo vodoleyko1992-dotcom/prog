@@ -164,7 +164,7 @@ function onNet(path, d) {
   if (d.status >= 200 && d.status < 300 && !d.error && !d.res?.error && ownCharacter(ch) && String(ch.id) === p.heroId && ch.revision > d.req.expectedRevision)
     env.setRt({ storyTpReceipt: { id: p.id, outcome: 'arrived', revision: ch.revision } });
   // Native UI после первого 409 сама повторяет один запрос с новой revision: это ещё не окончательный отказ.
-  else if (d.status >= 400 && d.status < 500 && ![408,409].includes(d.status) && (!ch || ownCharacter(ch) && String(ch.id) === p.heroId) && env.rt.storyTpReceipt?.id !== p.id)
+  else if (d.status >= 400 && d.status < 500 && d.status!==408&&(d.status!==409||d.retryOf>0) && (!ch || ownCharacter(ch) && String(ch.id) === p.heroId) && env.rt.storyTpReceipt?.id !== p.id)
     env.setRt({ storyTpReceipt: { id: p.id, outcome: 'rejected', why: String(d.res?.error || 'HTTP ' + d.status).slice(0,100) } });
 }
 let reconciling = false, reconcileAt = 0, reconcileId = '';

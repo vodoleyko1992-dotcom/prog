@@ -3754,7 +3754,7 @@ const NET_CONTEXT = new Map();
 const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
 function netContextStart(d) {
   if(d.rid==null)return;
-  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
 function netContextTake(d) {
@@ -3843,6 +3843,7 @@ async function syncShotWeapon() {
 }
 let RAID_PAY_NET = null;
 let SHOP_BUY = null;   // 7.1.30: последняя покупка в магазине вещей (shopKey из запроса)
+function shopBuyReceipt(){const p=L2V7Modules.payments?.pending();if(SHOP_BUY?.paymentId===p?.id)return SHOP_BUY;try{const r=JSON.parse(sessionStorage.getItem('l2bot.shopReceipt')||'null');if(p&&r?.paymentId===p.id)return r;}catch(_){}return SHOP_BUY;}
 function profQuestNote(st) {
   if (!st.accepted) { if (rt.profQuest?.open?.length) { const qs = { ...(rt.questSeen || {}) }; for (const n of rt.profQuest.open) delete qs[n]; setRt({ profQuest: { ...rt.profQuest, open: [], t: Date.now() }, questSeen: qs }); } return; }   // 7.1.30: квест сброшен
   const kills = (Array.isArray(st.kills) ? st.kills : []).filter(k => k?.name).map(k => ({ name: String(k.name), need: +k.need || 0, have: +k.have || 0 }));
@@ -3873,6 +3874,7 @@ addEventListener('message', e => {
   catPaymentNote(path,d,netContext);
   d.nativeNonce=netContext.nativeNonce||'';
   d.paymentId=netContext.paymentId||'';
+  d.retryOf=netContext.retryOf||0;
   if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
   // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
   try { L2V7Modules.pvp?.onNet(path, d); } catch (e) { console.warn(TAG, 'PvP', e); }
@@ -4048,7 +4050,8 @@ addEventListener('message', e => {
   // Надевание оружия видно по запросу к серверу — сразу обновляем «надетое» по базе предметов (грейд, тип, P/M.Atk)
   if (path === '/character/equip' && d.method === 'POST' && d.req && !d.error && /^2/.test(String(d.status)) && !d.res?.error) try { weaponEquipNote(d.req); } catch (er) {}
   if (path === '/game/raid-boss/teleport' && d.method === 'POST') RAID_PAY_NET = { t: Date.now(), id: String(d.req?.spawnId || ''), ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
-  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
+  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
+  if(path==='/game/drops-shop/buy'&&d.method==='POST'&&d.paymentId)try{sessionStorage.setItem('l2bot.shopReceipt',JSON.stringify(SHOP_BUY));}catch(_){}
   // v5.3: для сторожа рыбалки. 8.0.3 (лог 11.10): + обрыв запроса (err — fishAct сразу жмёт снова, а не ждёт 15 с), отметка сервера
   // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
   if (/\/game\/fishing\/action$/.test(path)) {
@@ -4869,7 +4872,7 @@ L2V7Modules.equipment = L2V7Factories.equipment({ get scanLocation(){return (st,
   get slotKind() { return slotKind; }, set slotKind(value) { slotKind = value; }, get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return () => SHOP_BUY}, get invQty() { return invQty; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BSPS_IDS() { return BSPS_IDS; }, set BSPS_IDS(value) { BSPS_IDS = value; },
   get HP_BIG_RE() { return HP_BIG_RE; }, set HP_BIG_RE(value) { HP_BIG_RE = value; },
   get HP_SHOP_RE() { return HP_SHOP_RE; }, set HP_SHOP_RE(value) { HP_SHOP_RE = value; },

@@ -69,7 +69,8 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   // 3. время ответа и «игра занята»: hook сообщает начало/конец GET /character и запросов боя (rid); netStart от GET — не «ход ушёл»
   const hook = read('hook.js');
   assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\)\(\?:\\\/\|\$\)\/;/);
-  assert.equal((hook.match(/, rid \}\)/g) || []).length >= 4, true, 'every end message carries the rid');
+  // 10.0.27: fetch также передаёт retryOf; rid остаётся во всех ответах.
+  assert.equal((hook.match(/, rid(?:,retryOf)? \}\)/g) || []).length >= 4, true, 'every end message carries the rid');
   assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); \}/);
   assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) GAME_END = Date\.now\(\);/);
   assert.match(content, /get gameBusy\(\) \{ return gameBusy; \}/);
