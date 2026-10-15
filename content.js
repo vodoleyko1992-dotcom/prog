@@ -4235,6 +4235,7 @@ L2V7Modules.actions = L2V7Factories.actions({
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
   {key:'magister',run:async()=>{await magisterDisable();if(rt.magister)await magisterStep();}},{key:'invScan',run:invScanStep},{key:'mmJob',run:()=>L2V7Modules.mammon.mmStep()},
   {key:'storyJob',run:()=>L2V7Modules.story.storyStep()},{key:'tsJob',run:()=>L2V7Modules.tvtshop.shopStep()},
+  ...(rt.rbHunt?.step==='exit'?[{key:'rbHunt',run:()=>L2V7Modules.raid.rbHuntStep()}]:[]),
   {key:'rbGo',run:rbGoStep},{key:'zoneGo',run:zoneGoStep},
   ...['bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc',...(fishNow()&&['cut','exchange','rod'].includes(rt.fishService)?['fishService']:[])].map(key=>({key,run:()=>actionScanStep(key)}))
  ]}
