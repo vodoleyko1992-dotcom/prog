@@ -994,7 +994,7 @@ async function rbHuntStep() {
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;
-    const res = await rbEngage(r, `Тур РБ: бой с ${r.name} (${r.lvl})`, { active });
+    const res = await rbEngage(r, `Тур РБ: бой с ${r.name} (${r.lvl})`, { active: () => active() && env.rt.rbHunt?.step === 'fight' && env.rt.rbHunt?.id === H.id });
     if (!active()) return;
     // 8.0.3 (лог 11.10 10:32:30–10:32:53: четыре платных телепорта подряд, каждый — «не по силам» на месте): два отказа на месте подряд за
     // 10 мин — тур 5 мин фармит мобов здесь, а не платит дальше
@@ -1210,7 +1210,9 @@ function rbAssess(ctx, me, mob) {
       next: 'бой: замеряю полный урон по HP РБ и запас лечения', t: now } });
   }
   let measurement = env.rt.rbDb?.[S.id]?.probe;
-  const probingDps = measurement?.kind === 'dps' && probeFight(S.id);
+  // Лог 15.10 04:31: подтверждённая победа успела появиться раньше записи rt,
+  // а старый дедлайн пробы затем отправил героя с 29% HP РБ на карту.
+  const probingDps = measurement?.kind === 'dps' && !S.probeConfirmed && probeFight(S.id);
   if (probingDps && !(measurement.startedAt > 0)) {
     // Дедлайн попытки переживает reload/новый ctx; время ожидания окна карты в 30 с боя не входит.
     measurement = { ...measurement, startedAt: now, deadlineAt: now + 30000 };
@@ -1343,10 +1345,11 @@ function rbAssess(ctx, me, mob) {
   // Лог 14:21:45: победа уже доказана, но через секунду истекла свежесть снимка состава.
   // Завершаем пробу сразу после достаточного замера, пока доказательства ещё доступны.
   if (probingDps && win) {
+    S.probeConfirmed = true;
     rbNote(S.id, { probe: { ...measurement, done: now } }).catch(() => {});
     env.rec('B', 'РБ', `${ctx.name}: проба подтверждена, полный DPS ≈${Math.round(dps)}/с; продолжаю бой`);
   }
-  if (probingDps && elapsed >= 30) {
+  if (probingDps && !win && elapsed >= 30) {
     const tooLong = (env.cfg.rbMaxKillMin ?? 20) > 0 && tKill > (env.cfg.rbMaxKillMin ?? 20) * 60;
     if (tooLong || !enoughCombatData || spikeRisk || !potReliable || !enoughReserve || !candidateWin || context?.managed && !context.key)
       return { abort: true, why: `проба 30 с завершена: ${tooLong ? 'измеренный бой дольше предела' : 'урон и лечение ещё не подтверждают безопасное продолжение'}; полный DPS ≈${Math.round(dps)}/с` };
