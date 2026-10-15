@@ -12,7 +12,7 @@ function fixture(){
  $q:s=>s==='.l2-gm-shop-adena__amount'?{textContent:String(money)}:s==='.l2-gm-shop-row'?row:s==='#l2-drops-shop-buy-qty-modal'?modalOpen?modal:null:s.startsWith('[data-')?tab:null,shown:x=>!!x,waitX:async f=>f(),sleep:async()=>{},rnd:a=>a,setVal(){},setRt:async p=>Object.assign(env.rt,p),rec(){},setStatus(){},autonomyMode:()=> 'farm',fire:b=>{calls.push(b);if(b===buy)modalOpen=true;if(b===confirm){money-=500;modalOpen=false}return true}};
  return {env,M:box.L2V7Factories.economy(env),calls,buy,confirm};
 }
-const descriptor={key:'shots',grade:'A',name:/Благословенн\S* заряд дух/i,label:'Благосл. заряды духа A'};
+const descriptor={key:'shots',grade:'A',ids:[3951],name:/Благословенн\S* заряд дух/i,label:'Благосл. заряды духа A'};
 test('pending or failed metadata excludes shots from purchase plan and panel demand',()=>{for(const status of ['pending','unknown']){const f=fixture();f.env.rt.weaponMetaPending={status,id:9002284};assert.equal(f.M.shotGrade().blocked,true);assert.ok(!f.M.shopPlan().some(x=>x.key==='shots'));assert.equal(f.M.shopNeedByPanel(),'')}});
 test('pending metadata refuses an already prepared A purchase',async()=>{const f=fixture();f.env.rt.weaponMetaPending={id:9002284};assert.equal((await f.M.shopBuyOne(descriptor,10)).ok,false);assert.equal(f.calls.length,0)});
 test('weapon change while confirmation sleeps prevents A purchase',async()=>{const f=fixture();f.env.sleep=async()=>{if(f.calls.includes(f.buy))f.env.rt.weaponMetaPending={id:9002284}};assert.equal((await f.M.shopBuyOne(descriptor,10)).ok,false);assert.equal(f.calls.filter(x=>x===f.confirm).length,0)});

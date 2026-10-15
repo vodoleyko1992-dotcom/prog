@@ -179,7 +179,7 @@ async function paymentReconcile() {
 }
 async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // на открытой вкладке грейда: найти строку по имени (листая), купить qtyWant
   if(env.payments?.blocked())return {ok:false,pending:true,why:'исход предыдущей оплаты не подтверждён'};
-  const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(); return !sg.blocked && (!it.grade || sg.g === it.grade); };
+  const shotsAllowed = () => { if (it.key !== 'shots') return true; const sg = shotGrade(), id = (shotsMage() ? env.BSPS_IDS : env.SHOT_IDS)[sg.g]; return !sg.blocked && !!id && it.ids?.includes(id) && (!it.grade || sg.g === it.grade); };
   if (!shotsAllowed()) return {ok:false,why:'оружие изменилось или не распознано — заряды не покупаю'};
   // 7.1.16-fix: магазин помнит последний подраздел «Розхідників». После покупки зарядов он открывался на «Заряды», и банки HP
   // искались там — «нет в магазине (видел: Благословенний заряд духу…)» (лог 09.10 23:38, 23:48). Ищем в нужном подразделе:
@@ -283,7 +283,7 @@ async function shopStep() {
     const cnt = await bagCounts();
     const have0 = x => x.ids.length ? x.ids.reduce((a, id) => a + (cnt[id] || 0), 0) : Object.entries(cnt).reduce((a, [k, v]) => a + (k.startsWith('n:') && x.name.test(k.slice(2)) ? v : 0), 0);
     const plan0 = shopPlan();
-    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < x.mm[0] || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade }; }).filter(x => x.buy > 0);
+    const need = plan0.map(x => { const have = have0(x); return { key: x.key, label: x.label, have, buy: have < x.mm[0] || (st.force && x.mm[1] - have >= Math.max(5, x.mm[1] * 0.1)) ? x.mm[1] - have : 0, grade: x.grade, itemId: x.ids?.[0] }; }).filter(x => x.buy > 0);
     // 7.1.19: какие заряды бот считает «своими» и сколько их в сумке — всегда в журнал (лог 10.10 01:13: заряды D не купились, а почему — не видно)
     const sh = plan0.find(x => x.key === 'shots'), sg = shotGrade(), w = equippedWeapon();
     const shNote = sh ? ` · заряды: ${sh.label} (id ${sh.ids.join(',')}) в сумке ${have0(sh)} из мин. ${sh.mm[0]} — грейд ${sg.g}: ${sg.src}; оружие ${w ? (w.name || w.en) + ' ' + (w.g || '?') : 'не прочитано'}` : '';
@@ -304,7 +304,7 @@ async function shopStep() {
       if (!env.on) return;
       if (done.some(d => d.key === n.key)) continue;
       const it = plan.find(x => x.key === n.key);
-      if (n.key === 'shots' && (!it || it.grade !== n.grade)) { done.push({key:n.key,ok:false,label:n.label,qty:0,why:'оружие изменилось — сначала пересчитать подходящие заряды'}); continue; }
+      if (n.key === 'shots' && (!it || it.grade !== n.grade || (n.itemId ? n.itemId !== it.ids[0] : n.label !== it.label))) { done.push({key:n.key,ok:false,label:n.label,qty:0,why:'оружие изменилось — сначала пересчитать подходящие заряды'}); continue; }
       const g = (new URLSearchParams(location.search).get('grade') || 'NG').toUpperCase();
       if (g !== n.grade) { await env.setRt({ shop: { ...st, done, spent, t: Date.now() } }); location.href = `/gm-shop.html?cat=consumable&grade=${n.grade}`; await env.sleep(4000); return; }
       if (n.key === 'shots' && !st.gradeNote) { st.gradeNote = 1; const sg = shotGrade(), w = equippedWeapon(), wm = weaponIsMage(w); env.rec('B', 'закупка', `${n.label}: грейд ${sg.g} — ${sg.src}; тип — ${wm == null ? 'по классу персонажа' : (wm ? 'магическое' : 'физическое') + ' оружие ' + (w?.name || w?.en || '')}`); }

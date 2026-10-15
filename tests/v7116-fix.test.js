@@ -21,7 +21,8 @@ const eco = sb.L2V7Factories.economy(env);
   assert.equal(active, 'vials', 'HP potions are searched in «Банки»');
   assert.equal(bought, 'Зілля зцілення');
   active = 'vials'; bought = null;
-  await eco.shopBuyOne({ key: 'shots', name: /Благословенн\S* заряд дух/i }, 10);
+  Object.assign(env,{MAGE:'#mage',classWeaponTypes:()=>({types:['#mage']}),BSPS_IDS:{NG:3947},SHOT_IDS:{NG:1835}});
+  await eco.shopBuyOne({ key: 'shots', ids:[3947], grade:'NG', name: /Благословенн\S* заряд дух/i }, 10);
   assert.equal(active, 'charges'); assert.equal(bought, 'Благословенний заряд духу');
   console.log('PASS: shop opens the right consumable sub-tab (vials / charges)');
   // заряды мага: грейд по надетому оружию, иначе по уровню; маг — по профилю/настройкам, даже если профессия ещё не прочитана
@@ -51,7 +52,7 @@ const eco = sb.L2V7Factories.economy(env);
   ITEMS.charges = ITEMS.charges.map(n => n);
   // Покупка должна соответствовать надетому оружию; здесь проверяется вкладка D.
   env.rt.weapons = [{ name: 'Staff of Life', g: 'D', where: 'надето' }];
-  await eco.shopBuyOne({ key: 'shots', grade: 'D', name: /Благословенн\S* заряд дух/i }, 10);
+  await eco.shopBuyOne({ key: 'shots', grade: 'D', ids:[3948], name: /Благословенн\S* заряд дух/i }, 10);
   assert.equal(grade, 'D', 'shop switches to the D grade tab before buying');
   console.log('PASS: shop switches the grade tab (page remembers the last grade)');
   console.log('PASS: mage buys Blessed Spiritshot of the equipped weapon grade (level fallback when unknown)');

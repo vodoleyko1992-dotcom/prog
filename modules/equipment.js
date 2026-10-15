@@ -63,11 +63,12 @@ function equipBy(str) {                         // только слоты сн�
 
 async function equip(w) {
   if (!w) return false;
-  const before = env.noticeText();
-  env.fire(w);
+  const before = env.noticeText(), char = env.rt.char;
+  if(env.fire(w) === false)return false;
   const ok = !!(await env.waitFor(() => { const n = env.noticeText(); return n !== before && env.EQUIP_OK.test(n); }, 1500, 50));
-  await env.setRt({ weaponNow: env.cleanTitle(w.title) });
-  env.rec('B', 'оружие', `надето «${w.title}»${ok ? '' : ' (без подтверждения игры)'}`);
+  if(env.rt.char !== char)return false;
+  if(ok)await env.setRt({ weaponNow: env.cleanTitle(w.title) });
+  env.rec('B', 'оружие', ok ? `надето «${w.title}»` : `смена на «${w.title}» не подтверждена — прежнее оружие не переименовываю`);
   await env.pause();
   return ok;
 }
