@@ -1,6 +1,6 @@
 'use strict';
 const {spawnSync}=require('node:child_process');
-for(const test of ['v1027-polearm-damage.test.js','v1026-attack-deadline.test.js',
+for(const test of ['v1027-enchant-adena-string.test.js','v1027-fishing-cast-unknown.test.js','v1027-economy-payment-revision.test.js','v1027-economy-cancellation.test.js','v1027-mail-unknown-payment.test.js','v1027-shop-weapon-kind.test.js','v1027-enchant-actor.test.js','v1027-loot-actor.test.js','v1027-polearm-damage.test.js','v1026-attack-deadline.test.js',
   'v1027-campaign-transition.test.js',
   'v1027-campaign-chain-decision.test.js',
   'v1027-campaign-location.test.js',

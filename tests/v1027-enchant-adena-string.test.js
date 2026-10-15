@@ -1,0 +1,5 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {fixture}=require('./v1016-enchant-independent-fixture.cjs');
+for(const balance of ['357864408','0',357864408,0])test(`enchant: exact native Adena ${JSON.stringify(balance)} confirms successful scroll`,async()=>{const f=fixture({target:4});f.snap.adena=balance;await f.start();await f.tick();assert.equal(f.posts.length,1);assert.equal(f.env.rt.enchant.pending,null);assert.equal(f.env.rt.enchant.totals.successes,1);assert.equal(f.env.rt.enchant.totals.adena,0);assert.equal(f.env.rt.enchant.status,'done');});
+for(const balance of [undefined,null,'',' ',' 1','1 ','01','+1','1.5','-1','1e6','9007199254740992',1.5,-1,Infinity,NaN])test(`enchant: invalid or missing Adena ${String(balance)} blocks preflight`,async()=>{const f=fixture();f.snap.adena=balance;await f.start();await f.tick();assert.equal(f.posts.length,0);assert.equal(f.env.rt.enchant.pending,null);assert.equal(f.env.rt.enchant.status,'paused');assert.match(f.env.rt.enchant.reason,/Adena/);});

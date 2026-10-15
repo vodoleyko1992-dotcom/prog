@@ -82,7 +82,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
   assert.match(read('modules/mobfarm.js'), /if \(!ctx\?\.rb && \(env\.mmChainWant\?\.\(\) \|\| env\.storyChainWant\?\.\(\)(?: \|\| env\.tsChainWant\?\.\(\))?\)\)/);
   assert.match(read('content.js'), /get mmChainWant\(\) \{ return \(\) => L2V7Modules\.mammon\?\.chainWant\?\.\(\); \}/);
   const bg = read('background.js'); assert.match(bg, /nextCfg\.mmGoalItem = ''/);
-  assert.match(src, /'item-transfer-success', 'item-transfer-err'\]\) \{ const el = document\.getElementById\(eid\); if \(el\) el\.textContent = ''; \}\s*\n\s*env\.fire\(okBtn\)/);
+  assert.match(src, /'item-transfer-success', 'item-transfer-err'\]\) \{ const el = document\.getElementById\(eid\); if \(el\) el\.textContent = ''; \}[\s\S]*?const fired=env\.fire\(okBtn\)/);
   assert.match(src, /if \(pg < tp\) await env\.sleep\(350\)/);
   assert.match(src, /now - np\.order\.at < 10 \* 60000 \? 60000 : 5 \* 60000/);
   console.log('PASS: 10.0 Mammon guards — 2 failed upgrades pause 6 h, smith «not enough» beats the bag, several levels in one visit, equipped copy, stuck mail not retried every 10 min, only goal mail calls the smith, crafter remainder resent (3 tries), self-send only with a known item level, goal item per hero');

@@ -10,15 +10,16 @@ async function downloadPublic(){
  }));
  console.log('PUBLIC '+(process.env.L2_ENCHANT_PUBLIC?'explicit cache ':'current TLS ')+pub+'; enchant.js SHA256 '+crypto.createHash('sha256').update(fs.readFileSync(path.join(pub,'enchant.js'))).digest('hex'));
 }
-async function boot(browser,{target='eq:l1',category='weapon',policy='blessed',level=3,outcomes=[true,true],multi=false}={}) {
+async function boot(browser,{target='eq:l1',category='weapon',policy='blessed',level=3,outcomes=[true,true],multi=false,nativeHelmet=false}={}) {
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const html=fs.readFileSync(path.join(pub,'enchant.html'),'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'').replace(/<link\b[^>]*>/gi,'');
  await page.route('**/*',route=>route.request().isNavigationRequest()?route.fulfill({contentType:'text/html',body:html}):route.abort());
  await page.goto('https://enchant.fixture/enchant.html?target='+encodeURIComponent(target)+'&mode=magic');
- await page.evaluate(({target,category,level,outcomes,multi})=>{
-  const id=category==='weapon'?8688:2376,slot=category==='weapon'?'rhand':'chest';
+ await page.evaluate(({target,category,level,outcomes,multi,nativeHelmet})=>{
+  const id=nativeHelmet?20003:category==='weapon'?8688:2376,slot=nativeHelmet?'head':category==='weapon'?'rhand':'chest';
   window.F={posts:[],tasks:[],outcomes,errors:[],hints:{itemSlotHints:{8688:'rhand',2376:'chest'},itemGradeHints:{8688:'A',2376:'B'},itemNamesEn:{8688:'Daimon Crystal',2376:'Avadon Breastplate'}},
    snap:{revision:20,adena:1000000,inventory:{eq:{},stacks:[{itemId:910517,qty:20},{itemId:910527,qty:20},{itemId:910514,qty:20},{itemId:910524,qty:20},{itemId:4037,qty:99}]}}};
+  if(nativeHelmet){Object.assign(F.hints.itemSlotHints,{20003:'head'});Object.assign(F.hints.itemGradeHints,{20003:'C'});Object.assign(F.hints.itemNamesEn,{20003:'Synthetic spare helmet'});Object.assign(F.snap,{name:'SyntheticHero',id:'synthetic-hero',revision:294813,adena:'357864408'});F.snap.inventory.stacks.push({itemId:910512,qty:14});}
   const row={itemId:id,enchant:level,enchantPAtkBonus:0,enchantMAtkBonus:category==='weapon'?level*6:0,qty:1,weaponEnchantHistory:category==='weapon'?Array(level).fill('magic'):[]};
   if(target.startsWith('eq:'))F.snap.inventory.eq[target.slice(3)]=row;else F.snap.inventory.stacks.push(row,{itemId:id,enchant:9,enchantPAtkBonus:0,enchantMAtkBonus:54,qty:1,weaponEnchantHistory:Array(9).fill('magic')});
   if(multi)F.snap.inventory.eq.l3={itemId:2376,enchant:0,qty:1};
@@ -37,21 +38,22 @@ async function boot(browser,{target='eq:l1',category='weapon',policy='blessed',l
     const res={character:structuredClone(F.snap),attemptedCount:1,successCount:+ok,failCount:+!ok,scrollConsumedCount:1,coinConsumed:false,previousEnchantLevel:before,currentEnchantLevel:row.enchant,updatedTargetInstanceId:updated,messageUk:ok?'Заточка вдала':'Заточка не вдалася'};
     if(window.M)F.tasks.push(M.note(req,res,200));return new Response(JSON.stringify(res),{status:200,headers:{'Content-Type':'application/json'}});
    }};
- },{target,category,level,outcomes,multi});
+ },{target,category,level,outcomes,multi,nativeHelmet});
  for(const name of ['l2-enchant-client.js','l2-enchant-policy.js','enchant-scroll-meta.js','enchant-render-categories.js','enchant-weapon-mode-ui.js'])await page.addScriptTag({path:path.join(pub,name)});
  await page.evaluate(()=>L2EnchantClient.install(L2));
  await page.addScriptTag({path:path.join(pub,'enchant.js')});
  await page.waitForSelector('#enchant-submit');
  await page.addScriptTag({path:modulePath});
- await page.evaluate(async({target,policy,multi})=>{
+ await page.evaluate(async({target,policy,multi,nativeHelmet})=>{
   window.E={cfg:{enchantMode:true,enchant:{enabled:true,queue:[],scrollPolicy:policy,maxAttempts:10,maxScrolls:10,maxConsecutiveFails:5,maxDropFromStart:5,maxDropFromPeak:5,delayMs:500}},rt:{},on:true,tabOwner:true,
     setRt:async p=>{Object.assign(E.rt,p);return {ok:true}},gameGet:async p=>({ok:true,json:async()=>structuredClone(p==='/character'?{character:F.snap}:F.hints)}),awayFree:()=>true,rec(){},setStatus(){},pause:async()=>{},
     $q:s=>document.querySelector(s),waitX:async fn=>{for(let i=0;i<100;i++){const x=fn();if(x)return x;await new Promise(r=>setTimeout(r,10))}return null},fire:el=>{if(!E.on||!E.tabOwner)return false;el.click();return true}};
+  if(nativeHelmet){E.rt.char='SyntheticHero';E.cfg.enchant.maxAttempts=1;E.cfg.enchant.maxScrolls=1;}
   window.M=L2V7Factories.enchant(E);const scan=await M.readItems();const item=scan.items.find(i=>i.targetInstanceId===target);if(!item)throw Error('candidate missing '+target);
-  E.cfg.enchant.queue=[{...item,key:'chosen',targetLevel:item.level+2,weaponMode:'magic'}];
+  E.cfg.enchant.queue=[{...item,key:'chosen',targetLevel:item.level+(nativeHelmet?1:2),weaponMode:'magic'}];
   if(multi)E.cfg.enchant.queue.push({...scan.items.find(x=>x.targetInstanceId==='eq:l3'),key:'armor',targetLevel:1});
   if(!await M.command('start'))throw Error('start refused');
- },{target,policy,multi});
+ },{target,policy,multi,nativeHelmet});
  return {page,errors,tick:async()=>{await page.evaluate(async()=>{E.rt.enchant.nextAt=0;await M.step();await Promise.all(F.tasks.splice(0))});await page.waitForTimeout(30)}};
 }
 module.exports={pub,downloadPublic,boot};
