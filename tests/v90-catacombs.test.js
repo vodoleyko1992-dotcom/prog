@@ -158,7 +158,7 @@ const page = (mobs, p, star = '') => docOf(`<div id="dungeon-content"><ul id="du
     const r = dungMobs({ pathname: '/game/dungeon/view' }, { dungeon: { id: 'catacomb_of_the_witch', mobs: [{ id: 'sdms_x_1', name: 'Crypt Sage', level: 62, kind: 'aggressive', aggressive: true }] } });
     assert.equal(JSON.stringify(r), '{"id":"catacomb_of_the_witch","mobs":[["sdms_x_1","aggressive","Crypt Sage",62,1]]}');
     assert.equal(dungMobs({ pathname: '/game/map/spawns' }, {}), undefined);
-    assert.match(content, /'activeDungeonId' in ch\) \{ HERO_AT = \{ dung:/);
+    assert.match(content, /'activeDungeonId' in ch\) \{ HERO_AT = \{ char:rt.char, dung:/);
     assert.match(content, /path === '\/game\/ancient-trader\/exchange' && d\.method === 'POST'\) SEAL_NET =/);
     assert.match(content, /const sd = sealDue\(\);/);
     assert.match(content, /sealAuto: false, sealMin: 1,/);

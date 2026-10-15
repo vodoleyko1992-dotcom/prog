@@ -2289,13 +2289,13 @@ document.addEventListener('visibilitychange', () => {
   if (!on || !tabOwner || !/\/fishing\.html/i.test(location.pathname)) return;
   rec('S', 'вкладка', document.hidden ? 'рыбалка ушла в фон — кнопки игры оживают раз в 1 с, темп ниже (держите окно рыбалки видимым)' : 'рыбалка снова на экране');
 });
-let lockMine = 0;
+let lockMine = 0, documentLease = null;
 async function tabLock() {
   await TAB_KEY_READY;
-  const r = await ipc({ cmd: 'lockAcquire', epoch: leaseEpoch, page: location.pathname,
+  const r = await ipc({ cmd: 'lockAcquire', epoch: leaseEpoch || documentLease, page: location.pathname,
     vis: tabVis(), focus: !!document.hasFocus?.() });
   tabOwner = r?.ok === true; tabIdle = !tabOwner; leaseEpoch = tabOwner ? r.epoch : null;
-  if (tabOwner) lockMine = Date.now();
+  if (tabOwner) { lockMine = Date.now(); documentLease = leaseEpoch; }
   return tabOwner;
 }
 setInterval(async () => {
@@ -3627,7 +3627,12 @@ function observeGameHttp(path, status, now = Date.now()) {
 let pageLeaving = false;
 addEventListener('beforeunload', () => { pageLeaving = true; });
 addEventListener('pagehide', () => { pageLeaving = true; });
-addEventListener('pageshow', () => { pageLeaving = false; });
+addEventListener('pageshow', e => {
+  pageLeaving = false;
+  // Восстановленный BFCache несёт замок и незавершённые async старого документа.
+  // Возобновляем через чистый документ, а не выдаём старым продолжениям новый lease.
+  if(e.isTrusted&&e.persisted){tabOwner=false;tabIdle=true;leaseEpoch=null;rtWriter.clear();location.reload();}
+});
 const NET_NOISE = /unread|\/chat\/|\/tvt\b|\/time$|\/online$|party\/hud|news|profession-quest|story-quests|\/sync$|\/raid-bosses$/;
 // 7.1.17: ходы боя по сети — ушёл / ответ пришёл. Лог 10.10 01:07: ответ на ход шёл 1,1–2,8 с, а бот жал следующее через 1 с —
 // игра такие нажатия не принимала («урон 0 · MP 0» ×6 подряд, бой с чемпионом 33 с). Теперь следующий ход — после ответа
@@ -3680,17 +3685,19 @@ function augNote(a, path) {
   else if (!a.o && p.o && p.w === a.w) rec('S', 'ЛС', `Life Stone снят с ${wn}`, { path });
 }
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
-const invNote = inv => { if (!Array.isArray(inv) || !inv.length) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
-const invQty = id => INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
+const invNote = inv => { if (!Array.isArray(inv)) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
+const invQty = id => INV_NET?.char === rt.char && !!rt.char && INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
 async function invRefresh() {
+  const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null);
   try {
     const r = await gameGet('/character'); if (!r.ok) return null;
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
+    if(!char||rt.char!==char||leaseEpoch!==lease||JSON.stringify(rt.classCur||null)!==classKey||c?.name!==char||(heroNick()&&heroNick()!==char))return null;
     const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
     if (!m) return null;
-    INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     if (tabOwner && c?.inventory?.eq) L2V7Modules.mammon.eqNote(c.inventory.eq);
     return m;
   } catch (e) { return null; }
@@ -3700,7 +3707,7 @@ const actNet = () => ACT_NET;
 // снимку персонажа (character.activeDungeonId, locationType — в sessionStorage, переживает переход на другую страницу)
 let DUNG_NET = null, BATTLE_NET = null;
 let HERO_AT = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-at') || 'null'); } catch (e) { return null; } })();
-const dungNet = () => DUNG_NET, heroAt = () => HERO_AT && Date.now() - (HERO_AT.t || 0) < 10 * 60000 ? HERO_AT : null;
+const dungNet = () => DUNG_NET, heroAt = () => HERO_AT?.char === rt.char && !!rt.char && HERO_AT && Date.now() - (HERO_AT.t || 0) < 10 * 60000 ? HERO_AT : null;
 // 9.0: окно игры alert() на страницах катакомб/подземелья/торговцев (hook.js его не показывает, а пересылает) и ответ обмена камней печати
 let GAME_ALERT = { t: 0 }, SEAL_NET = { t: 0 };
 const gameAlert = () => GAME_ALERT, sealNet = () => SEAL_NET;
@@ -3712,13 +3719,39 @@ addEventListener('message', e => {
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
 // его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
 const GAME_REQ = new Map(); let GAME_END = 0;
+// 15.10, ревизия: ответ без имени героя (TvT/карта/дейлики) принадлежит контексту начала запроса.
+// Отдельно от трёхсекундного busy: поздний ответ не становится ответом нового персонажа.
+const NET_CONTEXT = new Map();
+const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
+function netContextStart(d) {
+  if(d.rid==null)return;
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.pending?.()?.id||'',nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
+}
+function netContextTake(d) {
+  const c=NET_CONTEXT.get(d.rid);NET_CONTEXT.delete(d.rid);
+  if(!c&&d.rid!=null)return false;
+  const names=[d.hero?.name,d.res?.character?.name,d.pv?.owner?.name,d.pet?.name].filter(Boolean), char=rt.char||'',hud=heroNick()||'';
+  if(c&&((c.char&&c.char!==char)||(c.hud&&c.hud!==char)||(c.lease&&c.lease!==leaseEpoch)||c.classKey!==JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null])))return false;
+  if(char&&names.some(n=>n!==char)||hud&&char&&hud!==char)return false;
+  return c||{};
+}
+function catPaymentReceipt(){try{return JSON.parse(sessionStorage.getItem('l2bot.catTpReceipt')||'null');}catch(_){return null;}}
+function catPaymentNote(path,d,c){
+  if(path!=='/game/catacombs/teleport'||d.method!=='POST'||!c?.paymentId)return;
+  const req=d.req||{},ch=d.res?.character||{},a={t:Date.now(),id:req.dungeonId,expectedRevision:req.expectedRevision,expectedAdenaCost:req.expectedAdenaCost,
+    characterId:ch.id,characterName:d.hero?.name||ch.name||'',ok:d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false,status:d.status,paymentId:c.paymentId};
+  try{sessionStorage.setItem('l2bot.catTpReceipt',JSON.stringify(a));}catch(_){}
+}
+
 const gameBusy = () => { const now = Date.now(); for (const [rid, t] of GAME_REQ) { if (now - t > 3000) GAME_REQ.delete(rid); else return { busy: true, end: GAME_END }; } return { busy: false, end: GAME_END }; };
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
+  netContextStart(e.data);
   const p = e.data.path || '/game/battle/action';
   if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); }   // 8.0.3: GET /character — не «ход ушёл»
   if (p === '/game/battle/hunt-continue') ACT_NET.huntT = Date.now();             // 10.0: «Охотиться дальше» в полёте (сервер замирает до ≈8,4 с)
-  if (e.data.rid != null) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
+  if (e.data.rid != null && BUSY_PATH.test(p)) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
 });
 async function weaponEquipNote(req) {
   const char = rt.char, id = +req.itemId;
@@ -3806,9 +3839,15 @@ const zoneMoveNet = (d, path) => ZONE_MOVE_RE.test(path) && d.method === 'POST' 
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
+  if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();
+  const netContext=netContextTake(d);if(netContext===false)return;
+  catPaymentNote(path,d,netContext);
+  d.nativeNonce=netContext.nativeNonce||'';
+  d.paymentId=netContext.paymentId||'';
+  if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
   // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
   try { L2V7Modules.pvp?.onNet(path, d); } catch (e) { console.warn(TAG, 'PvP', e); }
-  if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();   // 8.0.3: запрос игры закончился — она снова принимает клики
+     // 8.0.3: запрос игры закончился — она снова принимает клики
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
@@ -3836,7 +3875,7 @@ addEventListener('message', e => {
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
-  { const m = invNote(d.inv); if (m) { INV_NET = { m, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+  { const m = invNote(d.inv); if (m) { INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     if (tabOwner) try { L2V7Modules.tvtshop.shilNote(); } catch (er) {}   // 10.0: Shil Coins в сумке → rt.tsShil
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
     const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
@@ -3849,14 +3888,14 @@ addEventListener('message', e => {
   // 14.10: в цепочке адрес может содержать первый spawnId. Для цвета используем актуальную цель принятого ответа игры.
   if (d.bt?.spawn && d.bt?.name && d.status >= 200 && d.status < 300 && !d.res?.error)
     BATTLE_NET = { spawn: d.bt.spawn, name: d.bt.name, kind: d.bt.kind, lvl: d.bt.lvl, max: d.bt.mobMax, tier: d.bt.tier || '', t: Date.now() };
-  { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
+  { const ch = d.res?.character; if (ch && typeof ch === 'object' && 'activeDungeonId' in ch) { HERO_AT = { char:rt.char, dung: ch.activeDungeonId ? String(ch.activeDungeonId) : null, loc: String(ch.locationType || ''), t: Date.now() };
     try { sessionStorage.setItem('l2bot-at', JSON.stringify(HERO_AT)); } catch (er) {} } }
   if (path === '/game/ancient-trader/exchange' && d.method === 'POST') SEAL_NET = { t: Date.now(), status: d.status, ok: d.status >= 200 && d.status < 300 && !d.error && !d.res?.error,
     msg: String(d.res?.messageRu || d.res?.messageUk || d.res?.error || d.error || '').slice(0, 160), stone: d.req?.stone, qty: +d.req?.qty || 0 };
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
-  if (meNow) L2V7Modules.quests?.campLocationNote(path, d);
+  if (meNow) { L2V7Modules.quests?.campLocationNote(path, d); L2V7Modules.fishing?.paymentNote?.(path,d); L2V7Modules.mammon?.paymentNote?.(path,d); L2V7Modules.tvtshop?.onNet?.(path,d); L2V7Modules.story?.onNet?.(path,d); }
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
@@ -4264,7 +4303,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
  get paymentPending(){return ()=>L2V7Modules.payments?.pending?.()||(rt.petFull?.pending?{...rt.petFull.pending,kind:'summon-buff'}:rt.enchant?.pending?{...rt.enchant.pending,kind:'enchant'}:null)},
  get runCombat(){return battle},get victory(){return victory},
- get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
+ get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':P.kind==='cat-teleport'?'dungeons':P.kind==='fishing'?'fishing':P.kind==='tvt-shop'?'tvtshop':P.kind==='story-teleport'?'story':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
  get jobs(){return ()=>[
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
   {key:'magister',run:async()=>{await magisterDisable();if(rt.magister)await magisterStep();}},{key:'invScan',run:invScanStep},{key:'mmJob',run:()=>L2V7Modules.mammon.mmStep()},
@@ -4277,12 +4316,12 @@ L2V7Modules.actions = L2V7Factories.actions({
 const actionLocation=L2V7Modules.actions.locationProxy(location);
 L2V7Modules.payments = L2V7Factories.payments({
  get rt(){return rt},get setRt(){return setRt},get rtCommit(){return rtCommit},get on(){return on},get tabOwner(){return tabOwner},get rec(){return rec},get autonomyMode(){return autonomyMode},
- get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending}
+ get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending}
 });
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -4321,7 +4360,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get routeLocation(){return actionL
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get routeLocation(){return actionLocation}, get shown() { return shown; }, get rbTimerListNote() { return (...a) => L2V7Modules.rbtimer.listNote(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get routeLocation(){return actionLocation}, get shown() { return shown; }, get rbTimerListNote() { return (...a) => L2V7Modules.rbtimer.listNote(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
@@ -4531,7 +4570,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get activeBuffs(){return activeBuffs
   get waitX() { return waitX; }, set waitX(value) { waitX = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -4868,7 +4907,7 @@ L2V7Modules.resources = L2V7Factories.resources({ get HP_POT_RE() { return HP_PO
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.loot = L2V7Factories.loot({ get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.loot = L2V7Factories.loot({ get tabOwner(){return tabOwner},get leaseEpoch(){return leaseEpoch}, get heroLvl() { return heroLvl; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get LOOT_RE() { return LOOT_RE; }, set LOOT_RE(value) { LOOT_RE = value; },
   get SPECIAL_RE() { return SPECIAL_RE; }, set SPECIAL_RE(value) { SPECIAL_RE = value; },
   get SPOIL_FAIL() { return SPOIL_FAIL; }, set SPOIL_FAIL(value) { SPOIL_FAIL = value; },
@@ -4935,7 +4974,7 @@ L2V7Modules.mammon = L2V7Factories.mammon({ get payments(){return L2V7Modules.pa
   get tvtSoon() { return tvtSoon; }, get waitX() { return waitX; } });
 
 // 9.0: сюжетные квесты сабкласса и Noblesse, смена класса (modules/story.js)
-L2V7Modules.story = L2V7Factories.story({ get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
+L2V7Modules.story = L2V7Factories.story({ get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get leaseEpoch(){return leaseEpoch}, get tabOwner(){return tabOwner}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get awayFree() { return awayFree; }, get cfg() { return cfg; },
   get classSwitched() { return classSwitched; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get isBattle() { return isBattle; }, get on() { return on; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; }, get waitX() { return waitX; } });
 
@@ -4958,7 +4997,7 @@ L2V7Modules.fightlab = L2V7Factories.fightlab({ get routeLocation(){return actio
 });
 const fightDmgOn = n => L2V7Modules.fightlab.dmgOn(n), fightKillP = (n, hp) => L2V7Modules.fightlab.killP(n, hp), fightSpikeEta = () => L2V7Modules.fightlab.spikeEta();
 // 9.2: лист врагов и ответный PvP (modules/enemies.js)
-L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get routeLocation(){return actionLocation}, get $q() { return $q; }, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
+L2V7Modules.tvtshop = L2V7Factories.tvtshop({ get leaseEpoch(){return leaseEpoch}, get on(){return on},get tabOwner(){return tabOwner},get payments(){return L2V7Modules.payments},get rtCommit(){return rtCommit},get gameGet(){return gameGet},get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
   get waitX() { return waitX; }, get sleep() { return sleep; }, get shown() { return shown; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get setStatus() { return setStatus; },
   get heroLevel() { return heroLevel; }, get invQty() { return invQty; }, get awayFree() { return awayFree; }, get pause() { return pause; } });
 // 10.0 (игрок 12.10: «клановые задания — на авто; дейлики»): опрос дейликов и клановых заданий (GET), взять/помочь/сдать (POST), рыба и РБ по дейликам
@@ -4966,7 +5005,7 @@ L2V7Modules.dailies = L2V7Factories.dailies({ get routeLocation(){return actionL
   get campEnabled() { return campEnabled; }, get fishState() { return fishState; },
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 // Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
-L2V7Modules.pvp = L2V7Factories.pvp({ get routeLocation(){return actionLocation},
+L2V7Modules.pvp = L2V7Factories.pvp({ get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation},
   get rt() { return rt; },
   get cfg() { return cfg; },
   get on() { return on; },
@@ -4991,7 +5030,7 @@ L2V7Modules.pvp = L2V7Factories.pvp({ get routeLocation(){return actionLocation}
   get antibotState() { return antibotState; },
   get abHold() { return abHold; }
 });
-L2V7Modules.enemies = L2V7Factories.enemies({ get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
+L2V7Modules.enemies = L2V7Factories.enemies({ get on(){return on},get tabOwner(){return tabOwner},get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });
