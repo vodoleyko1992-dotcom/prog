@@ -148,7 +148,7 @@ assert.ok(!/^\s*renderRes\(rt, d\);\s*$/m.test(fnSrc(js, 'async function load(')
   };
   let r = mk({ on: true, cfg: { zoneAuto: true, rbMode: true }, rt: { sessT0: Date.now() - 3600000, exp: 3500000, adena: 400000, health: { action: 'retry', failures10m: 2, updatedAt: Date.now() },
     pots: { m: { kind: 'mp', n: 983 } }, bagAll: { n: { 'Благословенний заряд духу': 11596 } } } });
-  assert.match(r.text, /^L2wap Bot · работает · 🗺 автофарм \+ РБ между мобами, TvT/);
+  assert.match(r.text, /^L2wap Bot · работает · 🗺 автофарм \+ TvT/);
   assert.match(r.text, /▶ Бой: Hatar/);
   assert.match(r.text, /⏱ 1 ч 00 мин · EXP 3,5 млн\/ч · адена 400 тыс\.\/ч · 💧 банок MP 983 · ✨ зарядов 11 596/);
   assert.match(r.text, /🛠 Сбой — повтор действия · сбоев за 10 мин: 2/); assert.ok(!/retry|Восстановление:/.test(r.text), 'no raw English recovery words');

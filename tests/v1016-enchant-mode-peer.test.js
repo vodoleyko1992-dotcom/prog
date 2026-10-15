@@ -41,7 +41,7 @@ test('реальный PvP не начинает новую атаку в реж
 });
 test('смена режима при очистке устаревшего rbGo не начинает следующий zoneScan',async()=>{
  const calls=[],c={Date,on:true,tabOwner:true,cfg:{enchantMode:false},rt:{rbGo:{t:Date.now()-120000},zoneScan:true},location:{href:''},
-  isBattle:()=>false,isTeleport:()=>false,sleep:async()=>{},rbGoStep:async()=>{calls.push('rbGo')},zoneCatalogScan:async()=>{calls.push('zoneScan')}};
+  isBattle:()=>false,isTeleport:()=>false,huntOn:()=>false,farmRbOn:()=>false,sleep:async()=>{},rbGoStep:async()=>{calls.push('rbGo')},zoneCatalogScan:async()=>{calls.push('zoneScan')}};
  c.autonomyMode=()=>c.cfg.enchantMode?'enchant':'farm';
  c.setRt=async patch=>{calls.push('clear');Object.assign(c.rt,patch);c.cfg.enchantMode=true;return {ok:true}};
  const start=core.indexOf('      if (rt.rbGo && !isBattle()) {'),end=core.indexOf('      if (rt.zoneGo && !isBattle()) {',start);assert.ok(start>0&&end>start);

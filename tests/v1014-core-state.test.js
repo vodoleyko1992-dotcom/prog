@@ -96,7 +96,6 @@ for (const [name, start, end, invoke] of [
   ['тур РБ', 'async function huntToggle()', 'async function epicToggle()', (_e, b) => b.huntToggle()],
   ['эпики', 'async function epicToggle()', "$('epicToggle2').onclick", (_e, b) => b.epicToggle()],
   ['один РБ', "$('rbOneBtn').onclick =", 'function paintRbOne(', e => e.rbOneBtn.onclick()],
-  ['РБ между мобами', "$('rbToggle').onclick =", '// перерисовка меню', e => e.rbToggle.onclick()],
 ]) test('отдельная кнопка «' + name + '» не даёт старому daily завершению заменить ручной режим', async () => {
   const { b, elements, daily } = directModeBox(); vm.runInNewContext(slice(popup, start, end), b);
   await invoke(elements, b); const selected = JSON.stringify(b.cfg);

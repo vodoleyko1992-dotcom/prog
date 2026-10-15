@@ -20,10 +20,11 @@ test('режим заточки распознаётся отдельно от �
 test('небулевый флаг из импорта не выдаётся за выбранный режим', () => {
   const b = fixture(); for (const enchantMode of [false, undefined, 'false', 'true', 1]) assert.equal(b.currentMode({ enchantMode, taskOnly: true }), 'tasks');
 });
-test('дополнение РБ в меню при заточке ждёт, его выбор сохраняется', () => {
-  const b = fixture(); vm.runInNewContext(part('const rbEff =', 'function paintRbToggle(') + '\nthis.rbEffective=rbEff;', b);
-  const cfg = { rbBetween: true, enchantMode: true }; assert.equal(b.rbEffective(cfg), false); assert.equal(cfg.rbBetween, true);
-  cfg.enchantMode = false; assert.equal(b.rbEffective(cfg), true);
+test('старый флаг РБ между мобами не включает рейдовый бой', () => {
+  const b = fixture(); vm.runInNewContext(part('const rbEff =', 'function ') + '\nthis.rbEffective=rbEff;', b);
+  const cfg = { rbBetween: true, enchantMode: true }; assert.equal(b.rbEffective(cfg), false);
+  cfg.enchantMode = false; assert.equal(b.rbEffective(cfg), false);
+  cfg.rbHuntMode = true; assert.equal(b.rbEffective(cfg), true);
 });
 test('вход выбирает только заточку, открывает раздел и не создаёт попытку', async () => {
   const b = fixture(); Object.assign(b.cfg, { enchantMode: false, epicMode: true, rbHuntMode: true, fishMode: true, catMode: true, zoneAuto: true, campaign: true, taskOnly: true, rbBetween: true });
@@ -38,7 +39,7 @@ for (const mode of ['tasks', 'farm', 'auto', 'rb', 'epic', 'fish', 'cat']) test(
   const b = fixture(), before = saved(b); await b.setMode(mode); assert.equal(b.cfg.enchantMode, false); assert.equal(saved(b), before);
 });
 for (const [name, run] of [['тур из раздела', b => b.huntToggle()], ['эпики из раздела', b => b.epicToggle()],
-  ['кампания', b => b.activateMode({}, { campaign: true })], ['РБ между мобами', b => b.activateMode({}, { rbBetween: true })]]) test(name + ': отдельная кнопка тоже выключает заточку', async () => {
+  ['кампания', b => b.activateMode({}, { campaign: true })]]) test(name + ': отдельная кнопка тоже выключает заточку', async () => {
   const b = fixture(), before = saved(b); await run(b); assert.equal(b.cfg.enchantMode, false); assert.equal(saved(b), before);
 });
 test('разовая служба без изменения режима сохраняет выбранную заточку', async () => {

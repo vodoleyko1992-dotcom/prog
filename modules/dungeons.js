@@ -189,13 +189,13 @@ function catWin(L) {
   return auto ? { lo: L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5),   // 10.0.5: не ниже героя −5 (FA)
      hi: L + (env.cfg.lvlAbove ?? 99) } : { lo: 0, hi: 999 };
 }
-// 9.0: кого бить. РБ (тип raid/epic — раньше в подземелье не распознавался: в разметке его нет) — только с «РБ между мобами»;
+// 9.0: кого бить. В катакомбах РБ нет; неожиданные raid/epic-строки здесь не выбираем, РБ — только в туре;
 // первыми ★-цели квеста, затем чемпионы (≈×10 EXP и адены за ×2 HP — kb/README), затем ближе к «герой +1». Среди равных — случайный
 // (с одним и тем же spawnId чаще сталкиваешься с другими игроками)
 function catPick(list, L) {
   const w = catWin(L);
   const ok = list.filter(x => {
-    if ((x.rb && !env.cfg.rbMode) || x.lvl < w.lo || x.lvl > w.hi) return false;
+    if (x.rb || x.lvl < w.lo || x.lvl > w.hi) return false;
     if (x.champ && env.champs?.tierOff?.(x, true)) return false;   // выбранные цвета соблюдаем и для квестовых чемпионов
     const quest = x.quest || (x.champ && env.campActive?.() && env.campChampOpen?.());
     // 14.10, аудит Astra: выбор должен соблюдать отказ боя «жду роста силы» и минимальный уровень героя.

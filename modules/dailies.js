@@ -15,7 +15,7 @@ const DAILY_RU = { hunt_start_500: 'Убей 500 монстров', strong_enemy
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
 let dailyT = ssNum('l2bot-dqT'), clanT = ssNum('l2bot-ctT'), postT = 0, busy = null;
-const rbAllowed = () => !!(env.cfg.rbHuntMode || env.cfg.rbBetween || env.cfg.dailyAuto !== false);
+const rbAllowed = () => !!(env.cfg.rbHuntMode || env.cfg.dailyAuto !== false);
 const canRun = () => env.on !== false && env.tabOwner !== false;
 // ---------- заметки из ответов игры (страница или свой GET) ----------
 function dailyNote(res) {

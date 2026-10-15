@@ -17,7 +17,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
-  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBetween: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
+  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
   taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
@@ -44,14 +44,12 @@ let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
 let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
-// 8.0.3 (игрок 11.10: «РБ между мобами по умолчанию выкл, с возможностью включения»; проверка правки): rbMode больше не хранимый
-// флаг, который каждый режим должен держать в согласии (выход из эпиков/кампании, импорт старых настроек, миграции его теряли), а
-// ВЫЧИСЛЯЕМЫЙ: тур по РБ — да; иначе выбор игрока rbBetween (по умолчанию выкл), если не мешает рыбалка/эпики/кампания
-const rbEff = c => c.enchantMode !== true && !!(c.rbHuntMode || (c.rbBetween && !c.fishMode && !c.epicMode && !c.campaign));
+// Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
+const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
 const withRb = c => ({ ...c, rbMode: rbEff(c) });
 const mergeCfg = c => withRb({ ...DEF_CFG, ...(c || {}) });
 const modeSig = c => c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
-  !c.rbHuntMode && rbEff(c) && 'РБ между мобами', c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
+  c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
 
 // ---------- утилиты ----------
 // v5.1 автообучение: каждый поиск элемента запоминается — «на этой странице нашёлся / нет» (за заход на страницу).
@@ -2448,7 +2446,13 @@ async function main() {
       // На рыбалке и на странице боя — фоном, не останавливая вываживание и бой (≈6–10 с запросов с паузами). 8.0.3 (ревью): раньше в бою
       // ждали ухода со страницы боя, а цепочка «Охотиться дальше» с неё не уходит — «⏳ проверка запрошена» висела часами
       if (rt.epicScanReq) { if (fishNow() || isBattle()) L2V7Modules.epics.epicScanAll('по кнопке').catch(() => {}); else { await L2V7Modules.epics.epicScanAll('по кнопке'); continue; } }
-      if (rt.rbGo && !isBattle()) { if (Date.now() - (rt.rbGo.t || 0) < 90000) { await rbGoStep(); continue; } await setRt({ rbGo: null }); }
+      if (rt.rbGo && !isBattle()) {
+        // Legacy rbBetween jobs must not spend a teleport after the add-on is retired.
+        // An explicit resource-boss job still owns its matching destination.
+        if (!huntOn() && !(farmRbOn() && rt.rbGo.id === rt.farmRb?.id)) { await setRt({ rbGo: null, rbWant: null, rbPending: false }); continue; }
+        if (Date.now() - (rt.rbGo.t || 0) < 90000) { await rbGoStep(); continue; }
+        await setRt({ rbGo: null });
+      }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { location.href = '/teleport.html'; await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
@@ -2510,7 +2514,7 @@ async function main() {
       if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
           && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); continue; }
       if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); continue; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
-      if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); continue; }   // 8.0.3: дополнение «РБ между мобами» не отменяет чтение сумки
+      if (cfg.weaponScanAuto !== false && !rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) { await invScanStart(); continue; }   // 8.0.3: рейдовый тур не отменяет чтение сумки
       // 9.2.3: новое оружие в сумке или открылся новый грейд — перечитать сумку (equipment.weaponRescanWhy)
       if (cfg.weaponScanAuto !== false && rt.weaponsT && !isBattle() && !fishNow() && !(cfg.rbMode && rt.rbPending) && !huntOn()) {
         const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
@@ -3195,7 +3199,7 @@ function draw() {
   // «автофарма» и TvT, а при паузе индикатор писал «остановлен»
   let am = 'farm'; try { am = autonomyMode(); } catch (e) {}
   const modeTxt = ({ enchant: '⚒ заточка', epic: '🐉 эпики', raid: '👑 тур по РБ', fish: '🎣 рыбалка', cat: '🏛 катакомбы', campaign: '📜 кампания' })[am] || (cfg.zoneAuto ? '🗺 автофарм' : '⚔ фарм на месте');
-  const adds = [am === 'raid' && rt.rbOne?.on && '🎯 по одному РБ', cfg.rbMode && !['raid','enchant'].includes(am) && 'РБ между мобами', cfg.tvtOn && 'TvT'].filter(Boolean);
+  const adds = [am === 'raid' && rt.rbOne?.on && '🎯 по одному РБ', cfg.tvtOn && 'TvT'].filter(Boolean);
   const pz = !on && !!indPaused, stTxt = on ? 'работает' : pz ? '⏸ пауза' : 'остановлен';
   L.push(`L2wap Bot · ${stTxt} · ${modeTxt}${adds.length ? ' + ' + adds.join(', ') : ''}${cfg.rec ? ' · ⏺' : ''}${fz}`);
   L.push(on ? `▶ ${rt.status || '—'}` : `последнее: ${rt.status || '—'}`);
