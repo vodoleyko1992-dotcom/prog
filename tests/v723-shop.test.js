@@ -19,9 +19,9 @@ assert.equal(invOf({ ok: true }), undefined);
 assert.match(hook, /sp: spawns\(o\), inv: invOf\(o\), len: t\.length/);
 assert.match(hook, /req, res, sp: spawns\(o\), inv: invOf\(o\), len,/);
 const content = read('content.js');
-assert.match(content, /const m = invNote\(d\.inv\); if \(m\) \{ INV_NET = \{ m, t: Date\.now\(\) \}; try \{ sessionStorage\.setItem\('l2bot-inv'/);
+assert.match(content, /const m = invNote\(d\.inv\); if \(m\) \{ INV_NET = \{ m, char:rt.char, t: Date\.now\(\) \}; try \{ sessionStorage\.setItem\('l2bot-inv'/);
 const invNote = vm.runInNewContext(`(${content.match(/const invNote = (inv => \{.*?return m; \});/)[1]})`);
-assert.deepEqual(invNote(inv)[3950], 139); assert.equal(invNote([]), null);
+assert.deepEqual(invNote(inv)[3950], 139); assert.equal(Object.keys(invNote([])).length, 0); // 15.10: полный пустой snapshot обнуляет остатки
 
 // 2. проверка запасов — по сумке из сети, даже когда панели боя на экране нет; заряды — грейд надетого оружия (B → 3950)
 const net = { 3950: 139, 1061: 921, 728: 900 };

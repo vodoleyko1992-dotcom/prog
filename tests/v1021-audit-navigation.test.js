@@ -30,9 +30,11 @@ test('обычный телепорт с CoL без числа запрещён,
     const loc = { pathname: '/teleport.html', search: '', href: '' }; let clicks = 0;
     const currency = { textContent: free ? 'аден' : 'Coin of Luck', querySelectorAll: () => [] };
     const row = { textContent: free ? '0 аден' : 'Coin of Luck', querySelector: s => s.includes('currency') ? currency : s.includes('price-num') && free ? { textContent: '0' } : null };
-    const btn = { closest: () => row }, env = { cfg: {}, rt: { zoneGo: { id: 'danger' }, zoneCat: { danger: { name: 'Danger' } } }, on: true, tabOwner: true,
+    const btn = { closest: () => row }, env = { cfg: {}, rt: { char:'Warlock',zoneGo: { id: 'danger' }, zoneCat: { danger: { name: 'Danger' } } }, on: true, tabOwner: true,
       setStatus: noop, rec: noop, heroLvl: () => 76, sleep: done, setRt: async p => Object.assign(env.rt, p), $q: () => btn, shown: () => true,
-      fire: () => { clicks++; loc.pathname = '/map.html'; }, waitX: async fn => fn() };
+      fire: () => { clicks++; loc.pathname = '/map.html'; }, waitX: async fn => fn(),
+      // 15.10: даже бесплатный переход связан с проверенным персонажем.
+      gameGet:async()=>({ok:true,json:async()=>({character:{id:'hero',name:'Warlock',revision:10}})}) };
     await moduleOf('navigation', { location: loc, document: { querySelectorAll: () => [{}], body: { innerText: '' } } })(env).zoneGoStep();
     assert.equal(clicks, free ? 1 : 0);
   }
@@ -43,9 +45,10 @@ test('платный телепорт за адену проверяет све�
     const currency = { textContent: 'аден', querySelectorAll: () => [] }, row = { textContent: '100000 аден', querySelector: s => s.includes('currency') ? currency : s.includes('price-num') ? { textContent: '100000' } : null };
     const env = { cfg: { shopReserve: 200000, shopMaxSpend: 2000000 }, rt: { char: 'Warlock', zoneGo: { id: 'danger' }, zoneCat: { danger: { name: 'Danger' } } }, on: true, tabOwner: true,
       setStatus: noop, rec: noop, heroLvl: () => 76, sleep: done, setRt: async p => Object.assign(env.rt, p), $q: () => ({ closest: () => row }), shown: () => true,
-      fire: () => { clicks++; loc.pathname = '/map.html'; }, waitX: async fn => fn(), gameGet: async () => { reads++; return { ok: true, json: async () => ({ character: { name: 'Warlock', adena: String(balance) } }) }; } };
+      fire: () => { clicks++; loc.pathname = '/map.html'; }, waitX: async fn => fn(), gameGet: async () => { reads++; return { ok: true, json: async () => ({ character: { id:'hero',revision:10,name: 'Warlock', adena: String(balance) } }) }; } };
     await moduleOf('navigation', { location: loc, document: { querySelectorAll: () => [{}], body: { innerText: '' } } })(env).zoneGoStep();
-    assert.equal(reads, 1); assert.equal(clicks, balance >= 300000 ? 1 : 0);
+    // 15.10: разрешённая оплата дополнительно сверяет прибытие.
+    assert.equal(reads, balance>=300000?2:1); assert.equal(clicks, balance >= 300000 ? 1 : 0);
   }
 });
 test('Stop у входа в катакомбы не запускает запасной прямой переход', async () => {

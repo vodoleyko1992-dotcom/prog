@@ -36,6 +36,10 @@ async function lockCommand(m, sender) {
       return { ok: true, epoch: lock.epoch };
     }
     if (m.cmd !== 'lockAcquire') return { ok: false, reason: 'invalid_operation' };
+    // Старый документ той же вкладки не может вернуть себе замок после reload нового документа.
+    // У новой страницы epoch ещё нет; протухший, но совпадающий epoch остаётся допустимым.
+    if (mine && m.epoch && lock?.epoch && m.epoch !== lock.epoch)
+      return { ok: false, reason: 'ownership_lost' };
     if (lock && !mine && now - lock.t < LOCK_TTL &&
         !(lock.vis === false && m.vis === true && m.focus === true))
       return { ok: false, reason: 'other_tab', owner: lock.k };

@@ -4,12 +4,13 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.payments = function create_payments(env) {
   let serial = 0, writing = false, permit = null;
+  const unsettled = new Map();
   const local = new Map();
   const state = () => env.rt.actionPayments || {};
   const context = () => JSON.stringify([env.rt.char || '', +env.rt.manualKickAt || 0,
-    env.autonomyMode?.() || '', env.rt.classCur || null, env.paymentContext?.() ?? null]);
+    env.autonomyMode?.() || '', env.rt.classCur || null, env.paymentContext?.() ?? null, env.lease?.() ?? null]);
   const active = () => env.on !== false && env.tabOwner !== false && env.canRun?.() !== false;
-  const pending = key => { const p = state().pending; return p && (!key || p.key === key) ? p : null; };
+  const pending = key => { const p = state().pending || unsettled.get(env.rt.char || '') || null; return p && (!key || p.key === key) ? p : null; };
   const same = p => !!p && pending()?.id === p.id && (env.rt.char || '') === p.char && env.tabOwner !== false;
   async function save(next) {
     try { const r = await env.setRt({actionPayments:next}); return r?.ok === true && typeof env.rtCommit === 'function' && await env.rtCommit() === true; }
@@ -28,7 +29,7 @@
       if (pending()) return null;
       const p = {...spec, id:`${Date.now()}:${Math.random().toString(36).slice(2)}:${++serial}`, at:Date.now(), char:env.rt.char || '', kick:+env.rt.manualKickAt || 0, context:context(), phase:'prepared'};
       local.set(p.id,'ready');
-      if (!await save({...state(),pending:p}) || !same(p) || !active() || context() !== p.context) { await cancel(p); return null; }
+      if (!await save({...state(),pending:p}) || !same(p) || !active() || context() !== p.context) { await cancelReady(p); return null; }
       return p;
     } finally { writing = false; }
   }
@@ -39,22 +40,37 @@
     local.set(p.id,'sent'); permit=p.id; return true;
   }
   function consumePermit() { const p=pending(); if (!p || permit!==p.id || !same(p) || !active() || context()!==p.context) return false; permit=null; return true; }
-  async function cancel(p, options = {}) {
+  async function cancelReady(p, options = {}) {
     if (!same(p) || (local.get(p.id) !== 'ready' && !(local.get(p.id) === 'sent' && options.notSent === true))) return false;
     if (!await save({...state(),pending:null})) return false;
     local.delete(p.id); if(permit===p.id)permit=null; return true;
   }
-  async function confirm(p, evidence) {
-    if (!same(p) || !evidence?.kind) return false;
-    const before = state(), row = {...p,phase:'confirmed',confirmedAt:Date.now(),confirmation:evidence};
-    if (!await save({...before,pending:null,history:[row,...(before.history || [])].slice(0,40)})) {
-      // setRt может обновить память до неудачного flush: неизвестный исход обязан остаться блокирующим.
-      try { await env.setRt({actionPayments:before}); } catch (_) {} return false;
-    }
-    local.delete(p.id); if(permit===p.id)permit=null;
-    env.rec?.('B','оплата',`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
-    return true;
+  async function cancel(p, options = {}) {
+    if (writing) return false;
+    writing = true;
+    try { return await cancelReady(p, options); } finally { writing = false; }
   }
-  return {prepare,sent,cancel,confirm,pending,consumePermit,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>!!pending()};
+  async function confirm(p, evidence) {
+    if (writing || !same(p) || !evidence?.kind) return false;
+    // 15.10, ревизия: setRt меняет память до flush. До durable квитанции сохраняем блокировку
+    // и не выдаём новый prepare; откат старого flush не должен менять профиль другого героя.
+    writing = true; unsettled.set(p.char,p); let durable=false;
+    const lease = env.lease?.(), mine = () => (env.rt.char || '') === p.char && env.tabOwner !== false && env.lease?.() === lease;
+    try {
+      const before = state(), row = {...p,phase:'confirmed',confirmedAt:Date.now(),confirmation:evidence};
+      if (!await save({...before,pending:null,history:[row,...(before.history || [])].slice(0,40)})) {
+        if (mine() && !state().pending && state().history?.[0]?.id === p.id) {
+          try { await env.setRt({actionPayments:before}); } catch (_) {}
+        }
+        return false;
+      }
+      durable=true;
+      if (!mine()) return false;
+      local.delete(p.id); if(permit===p.id)permit=null;
+      env.rec?.('B','оплата',`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
+      return true;
+    } finally { if(durable&&unsettled.get(p.char)?.id===p.id)unsettled.delete(p.char); writing = false; }
+  }
+  return {prepare,sent,cancel,confirm,pending,consumePermit,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>writing||!!pending()};
  };
 })(globalThis);
