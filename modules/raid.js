@@ -110,8 +110,9 @@ function rbDpsTarget(id) {
 // Переносим только исходное HP-delta окно того же состава. Неизвестные доли мага/кота учитываем худшим
 // отношением P/M.Def; слабая цель и меньшая разница уровней не повышают прогноз. Ещё 20 % — резерв.
 function rbTransferredDps(id, c) {
-  const s = env.rt.rbDpsSample, target = rbDpsTarget(id), L = env.heroLvl();
+  const s = env.rt.rbDpsSample, target = rbDpsTarget(id), L = env.heroLvl(), age = Date.now() - s?.t;
   if (!c?.managed || !c.key || !c.powerKey || s?.powerKey !== c.powerKey || !s.id || s.id === id || isEpicId(s.id) || !target || !(L > 0)
+    || !Number.isFinite(s.t) || age < 0 || age > 30 * 60000
     || ![s.dps,s.target?.lvl,s.target?.pdef,s.target?.mdef].every(x => Number.isFinite(x) && x > 0)) return 0;
   const defense = Math.min(1, s.target.pdef / target.pdef, s.target.mdef / target.mdef);
   const level = Math.min(1, gapF(target.lvl - L) / gapF(s.target.lvl - L));

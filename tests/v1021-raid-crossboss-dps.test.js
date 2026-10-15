@@ -71,6 +71,14 @@ for(const kind of ['hero','class','slot','level','heroBuff','heroStats','petType
 test('истёкший бафф без нового GET немедленно блокирует перенос',()=>{
  const f=make();f.ch.activeBuffs[0].expiresAtMs=f.now()+26000;f.measure();f.tick(1001);approx(f.R.rbDpsOn('next'),baseline());
 });
+test('свежий снимок прежнего состава не оживляет межбоссовый источник старше 30 минут',()=>{
+ const f=make().measure();f.tick(f.env.rt.rbDpsSample.t+30*60000-f.now());f.api().noteSnapshot(f.ch);approx(f.R.rbDpsOn('next'),DPS*.8);
+ f.tick(1);f.api().noteSnapshot(f.ch);approx(f.R.rbDpsOn('next'),baseline());approx(f.R.rbDpsOn(URUKA),DPS);
+});
+test('источник без времени или с будущим/нечисловым временем не переносится',()=>{
+ for(const bad of [undefined,NaN,Infinity,'wrong','1792000000000']){const f=make().measure();f.env.rt.rbDpsSample.t=bad;assert.ok(f.R.rbDpsOn('next')<1200);}
+ const f=make().measure();f.env.rt.rbDpsSample.t=f.now()+1;approx(f.R.rbDpsOn('next'),baseline());
+});
 for(const kind of ['sourceDefense','targetDefense','sourceLevel','targetLevel','sourceEstimated','targetEstimated','sourceEpic','targetEpic'])test('неполные цифры и эпики исключены: '+kind,()=>{
  const f=make(),env=f.env;
  if(kind==='sourceDefense')delete env.rt.rbStats[URUKA].mdef;

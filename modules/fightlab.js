@@ -209,8 +209,12 @@ function finish(outcome, now = Date.now()) {
   F.done = true;
   try { env.critFlush?.(); } catch (e) {}     // 10.0.7: замер крита — в память по концу боя
   const sec = Math.max(0.1, (F.tl - F.t0) / 1000);
+  // 15.10 (логи 00:49/01:01): строки ударов кота не всегда попадают в компактный bt.log.
+  // Падение HP РБ показывает полный темп боя, но может включать удары других игроков; не называем его личным уроном.
+  const hpLoss = F.rb && Number.isFinite(F.mob0) && Number.isFinite(F.mob) ? Math.max(0, F.mob0 - F.mob) : 0;
   const sum = { key: F.key, name: F.name, lvl: F.lvl, rb: F.rb, champ: F.champ, outcome, sec: Math.round(sec * 10) / 10, turns: F.turns,
-    dealt: F.dealt, pet: F.petDmg, pots: F.pots, lost: F.lost, dps: F.dealt + F.petDmg > 0 && sec >= 1 ? Math.round((F.dealt + F.petDmg) / sec) : 0, t: now };
+    dealt: F.dealt, pet: F.petDmg, hpLoss, hpDps: hpLoss > 0 && sec >= 1 ? Math.round(hpLoss / sec) : 0,
+    pots: F.pots, lost: F.lost, dps: F.dealt + F.petDmg > 0 && sec >= 1 ? Math.round((F.dealt + F.petDmg) / sec) : 0, t: now };
   lastFight = sum;
   if (!F.key || (!F.turns && outcome !== 'lose')) return sum;
   const M = mem(), m = M[F.key] ? { ...M[F.key], a: { ...(M[F.key].a || {}) } } : { nm: F.name, k: F.rb ? 'rb' : F.champ ? 'ch' : 'm', n: 0, w: 0, l: 0, a: {} };
@@ -218,6 +222,7 @@ function finish(outcome, now = Date.now()) {
   m.n++; if (outcome === 'win') m.w++; if (outcome === 'lose') m.l = (m.l || 0) + 1; m.t = now;
   if (outcome === 'win' && F.mob0 === F.mobMax) { m.sec = ew(m.sec, sec); m.tu = ew(m.tu, F.turns); }   // время — только целого боя
   if (sum.dps > 0 && sec >= 2) m.dps = ew(m.dps, sum.dps);
+  if (sum.hpDps > 0 && sec >= 2) m.hpDps = ew(m.hpDps, sum.hpDps);
   for (const [k, a] of Object.entries(F.a)) {
     const o = { ...(m.a[k] || { n: 0, s: [] }) };
     o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z;
@@ -235,7 +240,8 @@ function finish(outcome, now = Date.now()) {
   dirty = true;
   if (F.rb || outcome === 'lose' || now - flushT > FLUSH_MS) flush();
   if (F.rb) env.rec?.('B', 'анализ', `${F.name}: ${outcome === 'win' ? 'победа' : outcome === 'lose' ? 'смерть' : 'бой окончен'} за ${env.fmtT ? env.fmtT(sec) : Math.round(sec) + ' с'}, ходов ${F.turns}`
-    + `, урон ${F.dealt}${F.petDmg ? ' + кот ' + F.petDmg : ''} (≈${sum.dps}/с), банок ${F.pots}${F.sp.length ? `, спецударов ${F.sp.length} (макс. ${Math.max(...F.sp.map(s => s.dmg))})` : ''}`
+    + `, распознано ударов ${F.dealt}${F.petDmg ? ' + кот ' + F.petDmg : ''} (≈${sum.dps}/с)`
+    + `${sum.hpDps ? `, HP РБ уменьшилось на ${sum.hpLoss} (≈${sum.hpDps}/с, включая возможный урон других игроков)` : ''}, банок ${F.pots}${F.sp.length ? `, спецударов ${F.sp.length} (макс. ${Math.max(...F.sp.map(s => s.dmg))})` : ''}`
     + `${m.sp?.g?.length >= 3 ? `, пауза между спецударами ≈${median(m.sp.g)} с` : ''} · боёв с ним ${m.n}`);
   return sum;
 }
