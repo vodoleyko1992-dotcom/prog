@@ -866,7 +866,7 @@ async function map() {
     if (hl && lv.length && Math.max(...lv) < hl - FA_BELOW) {
       if (Date.now() - lowRecT > 600000) { lowRecT = Date.now(); env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., герой ${hl}: все ниже героя больше чем на 5 ур. — не бью (FA с них не падает). Включите «Автофарм» или перелетите в зону от ${hl - FA_BELOW} ур.`); }
     } else if (hl && lv.length && lv.some(l => l < lo) && lo > hl - FA_BELOW && !downOn) {
-      env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур. (герой ${hl}) — подбор локации выключен, остаюсь и бью тех, что не ниже ${hl - FA_BELOW} ур.`);
+      env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур. (герой ${hl}) — ${env.cfg.zoneAuto ? env.lootGoal?.() ? 'сохраняю точку фарма ресурса' : 'подходящей новой зоны нет' : 'подбор локации выключен'}, остаюсь и бью тех, что не ниже ${hl - FA_BELOW} ур.`);
       await env.setRt({ lvlRelaxDown: { t: Date.now(), zone: env.rt.zone || null, auto: !!env.cfg.zoneAuto } });
       return;
     }

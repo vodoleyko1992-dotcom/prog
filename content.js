@@ -1359,10 +1359,11 @@ function farmFit(l, L) {
   const w = farmWin(L);
   return l >= w.lo && l <= w.hi ? 1 : l < w.lo ? Math.max(0.15, 1 - (w.lo - l) * 0.12) : Math.max(0.1, 1 - (l - w.hi) * 0.18);
 }
-function farmZones(drop, L, above, sp = [], spK = 0.8) {
+function farmZones(drop, L, above, sp = [], spK = 0.8, accept = () => true) {
   const fit = l => farmFit(l, L), w = farmWin(L);
   const by = {};
   for (const [src, k] of [[drop, 1], [sp, spK]]) for (const [mob, lvl, ch, a, b, tp, loc] of src || []) {
+    if (!accept(mob)) continue; // 10.0.22: план и боевой выбор должны учитывать одни запреты.
     if (lvl > Math.max(L + above, w.hi) || lvl < Math.min(L - 10, w.lo)) continue;
     const e = ch / 100 * (a + b) / 2 * k, z = (by[tp] ||= { tp, loc, mobs: {} }), kind = k === 1 ? 'd' : 's';
     const x = (z.mobs[mob] ||= { lvl, e: 0, ch: 0, d: 0, s: 0 });
@@ -1387,7 +1388,7 @@ function farmPick(goal) {
   const r = FARM?.res?.[goal.key], L = heroLvl();
   if (!r || !L) return null;
   const spK = spoilK();
-  const zones = farmZones(r.drop, L, cfg.lvlAbove ?? 6, canSpoil() ? r.sp || [] : [], spK);
+  const zones = farmZones(r.drop, L, cfg.lvlAbove ?? 6, canSpoil() ? r.sp || [] : [], spK, n => !hardNow(n));
   const best = zones[0];
   return best ? { ...best, names: Object.keys(best.mobs) } : null;
 }
@@ -4824,7 +4825,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get epicDbSet() { return epicDbS
 });
 
 L2V7Modules.mammon = L2V7Factories.mammon({ get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
-  get farmZones() { return farmZones; }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
+  get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
   get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get sleep() { return sleep; },
@@ -4838,7 +4839,7 @@ L2V7Modules.story = L2V7Factories.story({ get $q() { return $q; }, get autonomyM
 // 10.0.7 (игрок 13.10: «заготовка под саб крафтера и спойлера»): роль активного класса, свой крафт вместо крафтера, помощь основному персонажу (modules/subclass.js)
 L2V7Modules.subclass = L2V7Factories.subclass({ get cfg() { return cfg; }, get rt() { return rt; }, get setRt() { return setRt; }, get rec() { return rec; }, get FARM() { return FARM; },
   get heroNick() { return heroNick; }, get heroLvl() { return heroLvl; }, get mammon() { return L2V7Modules.mammon; }, get canSpoil() { return canSpoil; },
-  get farmZones() { return farmZones; }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
+  get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get spoilK() { return spoilK; }, get invQty() { return invQty; }, get gameGet() { return gameGet; },
   get sharedGet() { return k => chrome.storage.local.get(k).then(s => s[k]); }, get sharedSet() { return (k, v) => chrome.storage.local.set({ [k]: v }); } });
 // 9.2: анализатор боя. Имя действия хода = ключ замера скилла (rt.skills): l2_<id> → название слота панели, attack → «атака»
 const actName = a => { a = String(a || ''); if (a === 'attack') return 'атака'; if (/^battle_potion/.test(a)) return 'банка';

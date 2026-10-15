@@ -9,7 +9,8 @@ const eqJ = (a, b, m) => assert.equal(JSON.stringify(a), JSON.stringify(b), m);
 const GEAR = JSON.parse(read('mammon-gear.json'));
 // 10.0.14: имя в FARM ещё не означает доступный источник. План учитывает уровень героя и реальные drop/spoil через farmZones.
 const farmCode = read('content.js'), farmCut = re => { const m = farmCode.match(re); assert.ok(m, 'farmZones fixture contract'); return m[0]; };
-const zonesSrc = farmCut(/const farmWin = L =>[^\n]+\n/) + farmCut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/) + farmCut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8\) \{[\s\S]*?\n\}\n/);
+// 10.0.22: необязательный фильтр доступности источников; прежние расчёты без фильтра сохраняются.
+const zonesSrc = farmCut(/const farmWin = L =>[^\n]+\n/) + farmCut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/) + farmCut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8, accept = \(\) => true\) \{[\s\S]*?\n\}\n/);
 const farmRes = {
   'iron ore': { name: 'Iron Ore', drop: [['Dismal Pole', 58, 16, 1, 3, 'fields_of_massacre', 'Fields of Massacre']], sp: [] },
   'mithril ore': { name: 'Mithril Ore', drop: [['Dismal Pole', 58, 7, 1, 3, 'fields_of_massacre', 'Fields of Massacre']], sp: [] }
