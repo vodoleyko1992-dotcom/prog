@@ -44,7 +44,7 @@ function role(prof) {
 // Строки игры (лог 11.10, 12.10; серверные — всегда по-украински): «Енергетична блискавка 2579», «Полум’я · КРИТ 6975»,
 // «Verfa · Гідроудар 1995» (спецудар), «[Verfa] ударив тебе −180 HP.», «Слуга [Kai the Cat] атакує [Verfa] 2 263 урону.»,
 // «Слуга [Kai the Cat] завдає критичного удару [X] 5 721 урону.», «… промахнувся», «Зілля +600 HP», «HP +12 (зцілення).»
-const RE_PET = /^Слуга\s*\[(.+?)\]\s*(атакує|завдає критичного удару)\s*\[(.+?)\]\s*([\d\s  ]+?)\s*урону/i;
+const RE_PET = /^Слуга\s*\[(.+?)\]\s*(атакує|завдає критичного удару)\s*\[(.+?)\]\s*:?\s*([\d\s  ]+?)\s*урону/i;
 const RE_PET_MISS = /^Слуга\s*\[.+?\].*промахну/i;
 // 14.10: сервер и компактный DOM используют разные глаголы и убирают скобки вокруг имени в отображении.
 const RE_IN = /^(Крит!\s*)?(?:\[([^\]]+)\]|(.+?))\s*(?:ударив тебе|вдарив тебе|ударил тебя|завдав тобі|нан[её]с тебе)\s*:?\s*(\(крит!\)\s*)?[−-]\s*([\d\s  ]+)\s*HP/i;
@@ -55,22 +55,26 @@ const RE_DOT = /^(.+?)\s*·\s*(.+?)\s+([\d][\d\s  ]*)\s*(?:HP|урона|ур
 const RE_PLAIN = /^([^\[\d+×:][^+×:]*?)\s+([\d][\d\s  ]*)\.?\s*$/;
 const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*(?:\[[^\]]+\]\s*)?([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
-function parseLog(lines, mob) {
+function parseLog(lines, mob, actor = '') {
+  const player = low(actor);
   const m = low(mob).replace(/\s*·.*$/, '');
   const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], splash: [], extraKills: [], rewards: { exp: 0, sp: 0 }, pot: 0, selfHeal: 0, resist: 0, miss: 0 };
   for (const raw of lines || []) {
     // 14.10 (живой бой Changed Creation 74): «\u20601220\u200bПолум’я — 5002 урона» раньше давало ноль, особенно на добивании без mobHp.
-    const l = String(raw || '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
+    const l = String(raw || '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
     let x;
     if ((x = l.match(RE_PET))) { r.pet += num(x[4]); r.petN++; if (/критич/i.test(x[2])) r.petCrit++; continue; }
     if (RE_PET_MISS.test(l)) { r.petMiss++; continue; }
-    if ((x = l.match(RE_IN))) { r.hits.push({ who: (x[2] || x[3]).trim(), dmg: num(x[5]), crit: !!(x[1] || x[4]) }); continue; }
+    if ((x = l.match(RE_IN))) {
+      // 15.10, лог11:11: игра переименовывает [герой] в «Ты нанёс» только при отрисовке.
+      if (player && low(x[2] || x[3]) === player) { r.own += num(x[5]); r.ownN++; if (x[1] || x[4]) r.crit++; continue; }
+      r.hits.push({ who: (x[2] || x[3]).trim(), dmg: num(x[5]), crit: !!(x[1] || x[4]) }); continue; }
     // Краткий серверный формат неоднозначен: Actor бывает героем. Без явного глагола входящим считаем только текущего моба.
-    if ((x = l.match(RE_ACTOR_HIT))) { if (m && low(x[1]) === m) r.hits.push({ who: x[1].trim(), dmg: num(x[3]), crit: !!x[2] }); continue; }
+    if ((x = l.match(RE_ACTOR_HIT))) { if (player && low(x[1]) === player) { r.own += num(x[3]); r.ownN++; if (x[2]) r.crit++; } else if (m && low(x[1]) === m) r.hits.push({ who: x[1].trim(), dmg: num(x[3]), crit: !!x[2] }); continue; }
     if ((x = l.match(RE_POT))) { r.pot += num(x[1]); continue; }
     if ((x = l.match(RE_SELF))) { r.selfHeal += num(x[1]); continue; }
     if (/опирається ефекту|сопротивл|resist/i.test(l)) { r.resist++; continue; }
-    if (/^(?:Ти|Вы|Ты)\s+промахну|промахнулись|промах[!.]?$/i.test(l)) { r.miss++; continue; }
+    if ((player && (x = l.match(/^\[([^\]]+)\]\s*промахнувся\.?$/i)) && low(x[1]) === player) || /^(?:Ти|Вы|Ты)\s+промахну|промахнулись|промах[!.]?$/i.test(l)) { r.miss++; continue; }
     const splash = l.match(/(?:поруч\s*:|додаткові цілі\s*[—–:-])\s*(.+)$/i);
     if (splash) { for (const hit of splash[1].matchAll(/(?:^|,)\s*(.+?)\s*[−-]\s*(\d[\d\s  ]*)/g)) r.splash.push({ name: hit[1].trim(), damage: num(hit[2]) }); continue; }
     const extra = l.match(/^(?:Додаткова ціль повалена|Дополнительная цель повержена)\s*:\s*(.+?)\.?$/i);
@@ -91,6 +95,7 @@ function parseLog(lines, mob) {
 }
 
 // ---------- текущий бой ----------
+const seenRequests = new Set();
 let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null;
 function mem() {
   const cls = env.rt.classCur?.prof || '';
@@ -135,6 +140,7 @@ function begin(bt, spawn, now) {
   const champ = /champ/i.test(bt.kind || '') || !!(title && env.isChamp?.(title));
   const rb = /^l2dop_(?:rb|eg)_/i.test(spawn) || /raid|epic|boss/i.test(bt.kind || '') || !!(title && env.isBoss?.(title));
   F = { key: '', spawn, name, lvl, champ, rb, t0: now, tl: now, mob: bt.mob, mob0: bt.mob, mobMax: bt.mobMax, me: bt.hp, mp: bt.mp, seq: bt.seq ?? -1,
+        actor: bt.actor || '', actorId: bt.actorId || '', rev: bt.rev, extras: (bt.extras || []).map(x => ({...x})), removed: 0, sideRemoved: 0, unknownSides: 0,
         turns: 0, dealt: 0, petDmg: 0, a: {}, hits: [], sp: [], pots: 0, lost: 0, done: false, groupOwner: groupOwner(), groupScope: groupScope() };
   F.key = keyOf({ spawn, name, champ, kind: rb ? 'raid' : '' });
   return F;
@@ -162,10 +168,23 @@ function onNet(path, d) {
   const bt = d?.bt; if (!bt || typeof bt !== 'object') return null;
   const now = Date.now(), act = path === '/game/battle/action', fresh = /\/(?:start|hunt-continue)$/.test(path);
   const ok = d.status >= 200 && d.status < 300 && !d.res?.error;
-  if (!ok) { if (act && F && !F.done) F.lost++; return null; }
+  if (!ok || d.res?.blockedBy) { if (act && F && !F.done) F.lost++; return null; }
+  if (d.rid != null) { if (seenRequests.has(d.rid)) return null; seenRequests.add(d.rid); if (seenRequests.size > 128) seenRequests.delete(seenRequests.values().next().value); }
   // spawnId боя — из самого боя (начало, GET /game/battle); в ходе цепочки «Охотиться дальше» игра шлёт battleSpawnId первого боя
   // (7.2.1), поэтому у хода он не повод начинать новый бой
   const spawnB = String(bt.spawn || '');
+  // Старый ответ прошлого боя/героя не начинает новый бой и не обучает текущий.
+  if (F && (!bt.actorId || !F.actorId || bt.actorId === F.actorId) && bt.rev != null && F.rev != null && bt.rev < F.rev) return null;
+  if (!fresh && F && ((bt.actorId && F.actorId && bt.actorId !== F.actorId) || (bt.rev != null && F.rev != null && bt.rev < F.rev)
+      || (act && spawnB && F.spawn && spawnB !== F.spawn))) return null;
+  if (act && F && bt.rev != null && F.rev != null && bt.rev === F.rev) return null;
+  if (!act && !fresh && F && (!spawnB || spawnB === F.spawn)) {
+    // GET может обогнать ответ нашего хода. Сохраняем отдельно: та же ревизия принадлежит
+    // этому action, более ранняя — исходное состояние следующего action (в том числе чужой урон).
+    if (F.mob == null && !F.turns) { begin(bt, spawnB || F.spawn, now); F.logPrev = (bt.log || []).slice(-40); }
+    else if (!F.pendingSnapshot || (bt.rev != null && bt.rev >= (F.pendingSnapshot.rev ?? -1))) F.pendingSnapshot = bt;
+    return null;
+  }
   const spawn = spawnB || (F && !F.done ? F.spawn : '') || String(d.req?.battleSpawnId || urlSpawn() || '');
   if (!fresh && F?.done && (!spawn || spawn === F.spawn)) return null;   // ответ о бое, который уже подведён (GET /game/battle после победы)
   if (fresh || !F || F.done || (spawnB && F.spawn && spawnB !== F.spawn)) {
@@ -178,13 +197,24 @@ function onNet(path, d) {
       if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F;
     }
   }
+  const snapshot = F.pendingSnapshot;
+  if (act && snapshot && (bt.rev == null || snapshot.rev == null || snapshot.rev < bt.rev)) {
+    if (snapshot.mob != null) F.mob = snapshot.mob;
+    if (snapshot.mp != null) F.mp = snapshot.mp;
+    if (snapshot.hp != null) F.me = snapshot.hp;
+    if (Array.isArray(snapshot.extras)) F.extras = snapshot.extras.map(x => ({...x}));
+    F.logPrev = (snapshot.log || []).map(x => String(x ?? '')).slice(-40);
+    if (snapshot.seq != null) F.seq = Math.max(F.seq ?? -1, snapshot.seq);
+    F.pendingSnapshot = null;
+  } else if (act && snapshot && bt.rev != null && snapshot.rev === bt.rev) F.pendingSnapshot = null;
   // 9.2 (лог 12.10 02:31–02:56, 242 хода): игра отвечает на ход почти всегда `kind:'full'` (225 из 242) — там `battle.log` —
   // ВЕСЬ лог боя с начала (battle-log-session.getActiveLines), а не хвост; `delta.logTail` (17 ответов) — только новые строки.
   // Полный лог режем по уже виденным строкам (наложение хвоста прошлого ответа на начало нового), иначе каждый ход считался бы заново
   const lines = bt.full || bt.seq == null ? newLines(F, bt.log) : bt.seq > (F.seq ?? -1) ? bt.log : [];
   // 10.0 (аудит боя): хвост delta тоже «виден» — иначе следующий полный лог отдал бы его второй раз (урон в чужой ход, ≈7 % ходов)
   if (!(bt.full || bt.seq == null) && lines.length) F.logPrev = [...(F.logPrev || []), ...lines.map(x => String(x ?? ''))].slice(-40);
-  const L = parseLog(lines, F.name);
+  F.actor = bt.actor || F.actor; F.actorId = bt.actorId || F.actorId;
+  const L = parseLog(lines, F.name, F.actor);
   if (bt.seq != null) F.seq = Math.max(F.seq ?? -1, bt.seq);
   if (bt.mobMax) F.mobMax = bt.mobMax;
   for (const h of L.hits) { F.hits.push(h.dmg); if (F.hits.length > HITS) F.hits.shift(); }
@@ -200,8 +230,18 @@ function onNet(path, d) {
     let own = L.own;
     if (!own && !F.rb && drop > L.pet) own = drop - L.pet;           // строки урона нет (атака) — по HP моба; на РБ бьют и другие игроки
     if (/^battle_potion|_toggle$/.test(action)) own = 0;
+    const ownKnown = !!(L.ownN || L.miss || (!F.rb && drop > L.pet) || /^battle_potion|_toggle$/.test(action));
+    // Снятые HP отдельно от силы удара: 12024 по соседу с1668HP — это1668, не12024.
+    F.removed += drop;
+    const used = new Set();
+    for (const hit of L.splash) {
+      const candidates = (F.extras || []).map((x,i) => ({...x,i})).filter(x => !used.has(x.i) && low(x.name) === low(hit.name) && x.hp != null);
+      const sameHp = candidates.length && candidates.every(x => x.hp === candidates[0].hp);
+      if (candidates.length === 1 || sameHp) { const x = candidates[0]; used.add(x.i); const removed = Math.min(Math.max(0,x.hp),hit.damage); F.sideRemoved += removed; F.extras[x.i].hp -= removed; }
+      else F.unknownSides++;
+    }
     const mpd = F.mp != null && bt.mp != null ? F.mp - bt.mp : null;
-    turn = { t: now, action, name, own, crit: L.crit, pet: L.pet, petMiss: L.petMiss, hitIn: L.hits.reduce((s, h) => s + h.dmg, 0),
+    turn = { t: now, action, name, own, ownKnown, rid: d.rid, spawn: F.spawn, crit: L.crit, pet: L.pet, petMiss: L.petMiss, hitIn: L.hits.reduce((s, h) => s + h.dmg, 0),
              spike: L.spikes[0]?.dmg || 0, pot: L.pot, selfHeal: L.selfHeal, mpd, mob: bt.mob, me: bt.hp };
     F.turns++; F.tl = now; F.dealt += own;
     if (name && !/^battle_potion|_toggle$/.test(action)) {
@@ -210,12 +250,14 @@ function onNet(path, d) {
       const recovery = env.recoveryContext?.();
       if (a.recovery !== recovery) { a.heals = []; a.recovery = recovery; }
       if (recovery && L.selfHeal > 0) { (a.heals ||= []).push({hp:L.selfHeal,t:now}); if (a.heals.length > SAMPLES) a.heals.shift(); }
-      a.n++; if (own > 0) { a.s.push(own); if (a.s.length > SAMPLES) a.s.shift(); } else a.z++;
+      a.n++; if (own > 0) { a.s.push(own); if (a.s.length > SAMPLES) a.s.shift(); } else if (ownKnown) a.z++; else a.unknown = (a.unknown || 0) + 1;
     }
     last = turn;
     // 10.0.7 (ценность баффов): доля критов заклинаний под текущими крит-баффами → content.critNote (rt.critStat)
     if (L.ownN > 0 && !/^battle_potion|_toggle$|^attack$/.test(action)) try { env.critNote?.(L.ownN, Math.min(L.ownN, L.crit)); } catch (e) {}
   }
+  if (bt.rev != null) F.rev = bt.rev;
+  if (Array.isArray(bt.extras)) F.extras = bt.extras.map(x => ({...x}));
   if (bt.mob != null) F.mob = bt.mob;
   if (bt.hp != null) F.me = bt.hp;
   if (bt.mp != null) F.mp = bt.mp;
@@ -229,9 +271,15 @@ function healOn(name) {
   const h = recovery && a?.recovery === recovery ? (a.heals || []).filter(x => Date.now()-x.t <= 15000).map(x => x.hp) : [];
   return h.length ? { n: h.length, mean: Math.round(h.reduce((x,y) => x+y,0)/h.length), p20: q(h,0.2) } : null;
 }
-function turnFor(name, since) {
-  const t = last; if (!t || low(t.name) !== low(name) || t.t < since - 300 || Date.now() - t.t > 5000) return null;
+function turnFor(name, since, action, rid) {
+  const t = last; if (!t || (action && t.action !== action) || (rid != null && t.rid !== rid) || low(t.name) !== low(name) || t.t < since - 300 || Date.now() - t.t > 5000) return null;
   return t;
+}
+
+// Только текущий подтверждённый бой: после reload прошлые HP не восстанавливаем из догадок.
+function damageFor(name, spawn, since = 0) {
+  if (!F || low(name) !== low(F.name) || (spawn && F.spawn && spawn !== F.spawn) || F.tl < since - 500) return null;
+  return { removed: F.removed + F.sideRemoved, main: F.removed, side: F.sideRemoved, unknownSides: F.unknownSides };
 }
 
 // ---------- итог боя → память на цель ----------
@@ -256,7 +304,7 @@ function finish(outcome, now = Date.now()) {
   if (sum.hpDps > 0 && sec >= 2) m.hpDps = ew(m.hpDps, sum.hpDps);
   for (const [k, a] of Object.entries(F.a)) {
     const o = { ...(m.a[k] || { n: 0, s: [] }) };
-    o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z;
+    o.n += a.n; o.s = [...(o.s || []), ...a.s].slice(-SAMPLES); o.z = (o.z || 0) + a.z; o.unknown = (o.unknown || 0) + (a.unknown || 0);
     m.a[k] = o;
   }
   if (F.hits.length) m.h = [...(m.h || []), ...F.hits].slice(-HITS);
@@ -323,6 +371,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

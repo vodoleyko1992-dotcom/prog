@@ -552,7 +552,7 @@ function mageSpellSlots() {
     // Не в ротацию: цель-труп, «в бою эффекта нет», или 5+ нажатий без единого замера урона
     if (il.target === 'CORPSE_MOB' || /труп моба/.test(il.L || '') || env.noEffect?.(b)) return false;
     const p = env.rt.skills?.[n.toLowerCase()];
-    if (p && (p.uses || 0) >= 5 && !p.dmgN) return false;
+    if (p && (p.uses || 0) - (p.unknown || 0) >= 5 && !p.dmgN) return false;
     if (il.c && il.c !== 'Маг. атака' && il.t !== 'MDAM' && il.t !== 'MDAMDOT') return false;
     return il.c === 'Маг. атака' || il.t === 'MDAM' || il.t === 'MDAMDOT' ||
       ((env.rt.skills?.[n.toLowerCase()]?.dmgN || 0) >= 2 && !il.c);
@@ -712,7 +712,7 @@ function dpsPlan(ctx, mp) {
         if (il?.l2Damage && !pS?.dmgN) { // старые нули были следствием ошибочного типа «дебафф»; даём до трёх новых замеров в бою
           const starts = ctx.damageProbeStart ||= {}, start = starts[k] ??= pS?.uses || 0;
           if (Math.max((pS?.uses || 0) - start, ctx.damageProbeActs?.[k] || 0) >= 3) continue;
-        } else if (pS && (pS.uses || 0) >= 5 && !pS.dmgN) continue;
+        } else if (pS && (pS.uses || 0) - (pS.unknown || 0) >= 5 && !pS.dmgN) continue;
       }
       opts.push({ key: 'power:' + b.title, name: env.cleanTitle(b.title), b, damageProbe: !!il?.l2Damage && !env.rt.skills?.[env.skKey(b)]?.dmgN, dmg: env.fightDmgOn?.(env.cleanTitle(b.title))?.mean || env.expDmg(env.skKey(b)), cd: env.rt.skills?.[env.skKey(b)]?.cd || env.rt.skillDb?.[env.skKey(b)]?.cd || (env.ilOf(b)?.reuse || 5000) / 1000 });
     }
@@ -1980,17 +1980,18 @@ async function battle() {
     // 7.2.2 (лог 10.10 22:38: «Орк Тимак Госмос: 576831 HP за 32 с · ДПС 18026» — у РБ оставалось 87 359 HP с прошлого захода):
     // у раненого РБ снято не полное HP, а то, что было на входе
     const base = ctx.rb && ctx.hp0 > 0 ? Math.min(ctx.max, ctx.hp0) : ctx.max;
-    const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0));   // победа — главный добит (соседи живы — их остаток не наш)
-    const dps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
-    const d = env.rt.dps || { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
+    const measured = env.fightDamage?.(ctx.name, ctx.spawnId || spawnId, t0);
+    const dealt = Math.max(base, (ctx.dealt || 0) + (victory() ? ctx.mobLast || 0 : 0), measured?.removed || 0);   // победа — главный добит (соседи живы — их остаток не наш)
+    const dps = Math.round(base / Math.max(ttk, 0.5)), totalDps = Math.round(dealt / Math.max(ttk, 0.5)), ttkOne = ctx.max / Math.max(dps, 1);   // время на одного такого моба
+    const d = env.rt.dps?.singleTarget ? env.rt.dps : { n: 0 }, k = d.n < 20 ? 1 / (d.n + 1) : 0.05;
     // 8.0 (аудит боя/ядра: 6–8 записей подряд по ≈0,1 с перед «Охотиться дальше», −0,6 с на моба): учёт после победы — без ожидания
     // записи; память вкладки обновлена сразу, очередь сохраняет порядок, при уходе со страницы недописанное уходит по pagehide
-    env.setRt({ dps: { n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
-    env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${base < ctx.max ? `${base} из ${ctx.max}` : ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt})` : ''} · ${ctx.seq.join('→')}`);
+    env.setRt({ dps: { singleTarget: true, all: totalDps, allPartial: !!measured?.unknownSides, n: d.n + 1, dps: Math.round((d.dps || dps) * (1 - k) + dps * k), ttk: +((d.ttk || ttk) * (1 - k) + ttk * k).toFixed(1), last: dps, lastTtk: +ttk.toFixed(1) } });
+    env.rec('B', 'итог боя', `${ctx.name}${ctx.champ ? ' [чемп]' : ''}: ${base < ctx.max ? `${base} из ${ctx.max}` : ctx.max} HP за ${ttk.toFixed(1)} с · ДПС ${dps}${dealt > ctx.max * 1.05 ? ` (урон по всем мобам ${dealt}, ДПС ${totalDps})` : ''}${measured?.unknownSides ? ' · HP части соседей неизвестны' : ''} · ${ctx.seq.join('→')}`);
     if (ctx.tot) await env.totemNote(ctx, dps);
     // 10.0.5: чемпион — свой учёт (champs.learn: ДПС, итог по цвету, вердикт снимается); метка «не по зубам» по имени вида закрыла бы
     // и обычных мобов того же вида (красный Kookaburra ≈145 тыс. HP → обычные Kookaburra 3,4 тыс. HP на 2 ч не цели)
-    if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, victory() ? 'win' : 'left', dealt, ttk)?.catch?.(e => console.warn(env.TAG, 'чемпионы', e));
+    if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, victory() ? 'win' : 'left', base, ttk)?.catch?.(e => console.warn(env.TAG, 'чемпионы', e));
     else if (!ctx.rb && ttkOne > 45 && strengthReliable(strength, Date.now(), env.actNet?.() || {})) {                  // обычный моб дольше 45 с (на одного, без соседей) — не по зубам, 2 часа не выбираем
       await env.setRt({ hardMobs: { ...(env.rt.hardMobs || {}), [ctx.name.toLowerCase()]: { t: Date.now(), ttk: +ttkOne.toFixed(0), lvl: env.heroLvl() } } });
       env.rec('B', 'цели', `${ctx.name}: ≈${ttkOne.toFixed(0)} с на моба — слишком долго, 2 часа не выбираю`);
