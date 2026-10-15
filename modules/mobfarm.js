@@ -321,14 +321,13 @@ async function nextFight(ctx) {
   const resourceFarm = !!env.farmMapOn?.();
   const camp = !!ctx && env.campMobOpen().length > 0;
   if (ctx && (camp || env.searchActive(rules)) && env.rt.via === 'chain') env.setRt({ chainQ: [...(env.rt.chainQ || []), tgt ? 1 : 0].slice(-12) });
-  let offQuest = false;
+  let offQuest = false, campChain = null;
   if (camp && !tgt && !resourceFarm) {
     const q = env.rt.chainQ || [], share = (q.reduce((a, b) => a + b, 0) + 1) / (q.length + 2);
     const cs = env.rt.eff?.chain?.sec || 9, ms = env.rt.eff?.map?.sec || 20, perTgt = cs / share;
     offQuest = q.length >= 6 && perTgt > ms * 1.1;           // решаем по 6+ боям цепочки, не по одному чужому мобу
     const why = `цепочка: целей ${Math.round(share * 100)} % · ≈${perTgt.toFixed(0)} с на цель против ≈${ms.toFixed(0)} с через карту`;
-    if (env.rt.chainWhy !== (offQuest ? 'map' : 'chain')) env.rec('B', 'цепочка', `${ctx.name} — не цель главы; ${why} → ${offQuest ? 'на карту за целью' : 'продолжаю цепочку'}`);
-    await env.setRt({ chainWhy: offQuest ? 'map' : 'chain' });
+    campChain = { why, viable: q.length >= 6 && Number.isFinite(perTgt) && perTgt > 0 && Number.isFinite(ms) && ms > 0 && !offQuest };
   }
   // 7.1.30 (10.10 14:01): ★ квестовые мобы на локации (квест профессии: Giant Fungus/Dire Wyrm), а «Охотиться дальше» дал чужого —
   // цепочка 10 боёв била кого попало до плановой проверки карты. Есть открытые ★ цели и этот моб не цель — сразу на карту за целью
@@ -342,6 +341,11 @@ async function nextFight(ctx) {
     if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); await env.setRt({ chainWhy: 'qmap' }); }
   } else if (ctx && qOpen && tgt && env.rt.chainWhy === 'qmap') await env.setRt({ chainWhy: 'chain' });
   let due = env.mapDue(rules);
+  // 15.10 (лог11:11,21:06:12): 43% целей давали ≈6 с/цель против ≈10 с через карту,
+  // но deepHot после дальней страницы отменял решение. Убираем только внеплановый hot-выход;
+  // срок проверки карты, чемпионы главы, РБ и ресурсные 50 боёв сохраняют приоритет.
+  if (due && !resourceFarm && campChain?.viable && env.rt.deepHot && !env.campChampOpen() && !env.campRbOpen().length
+      && !env.mapDue(rules, true)) due = false;
   // v4.28: цель далеко по списку карты (deepHot), но цепочка только что дала цель (★/чемпион) — соседи такие же, продолжаем
   // цепочку. Так было: Leto Lizardman Archer на 8-й странице → после КАЖДОГО боя карта (+5–8 с на бой)
   if (!resourceFarm && due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && (+env.cfg.deepEvery > 0 || env.farmMapOn?.())) {
@@ -359,13 +363,25 @@ async function nextFight(ctx) {
     env.rec('B', 'цепочка', `после боя — дело вне боя (${env.mmChainWant?.()?.why || env.storyChainWant?.()?.why || env.tsChainWant?.()?.why || ''}), иду на карту`);
     return env.toMap();
   }
+  const intent = { mode: env.autonomyMode(), kick: +env.rt.manualKickAt || 0, char: env.rt.char, chain: env.cfg.chain };
+  const sameIntent = () => env.on && env.tabOwner !== false && env.cfg.chain === intent.chain && env.autonomyMode() === intent.mode
+    && (+env.rt.manualKickAt || 0) === intent.kick && env.rt.char === intent.char;
+  const chainNote = async (continuing, reason = '') => {
+    if (!campChain) return;
+    const key = continuing ? 'chain' : 'map';
+    if (env.rt.chainWhy !== key) env.rec('B', 'цепочка', `${ctx.name} — не цель главы; ${campChain.why} → ${continuing ? 'продолжаю цепочку' : `на карту${reason ? ': ' + reason : ' за целью'}`}`);
+    await env.setRt({ chainWhy: key });
+  };
   if (env.cfg.chain && !offQuest && !due) {
     // кнопка «Охотиться дальше» появляется на экране победы не сразу (иногда через 0,3–1 с) —
     // ждём её, а не уходим на карту (v4.6–4.13: бот уходил через 0,2 с, «цепочка не работает»)
     const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
     if (!env.on || env.tabOwner === false) return;
     if (env.autonomyMode() === 'enchant') return env.toMap();
+    if (!sameIntent()) return;
     if (hunt) {
+      await chainNote(true);
+      if (!sameIntent() || env.tvtSoon() || env.antibotState?.()) return;
       env.setStatus('Охотиться дальше');
       // 10.0 (лог 12.10: от записи «Охотиться дальше» до запроса 273 мс против ≈45 мс у игрока): запись не ждём — rt в памяти уже новый,
       // хвост очереди досылается при уходе со страницы (pagehide); опрос 50 мс вместо 250
@@ -382,6 +398,8 @@ async function nextFight(ctx) {
       console.info(env.TAG, '«Охотиться дальше» не сработало — иду на карту');
     }
   }
+  await chainNote(false, !env.cfg.chain ? 'цепочка выключена' : offQuest ? '' : due ? 'проверка приоритетных целей' : 'следующий бой не подтвердился');
+  if (!sameIntent()) return;
   await env.toMap();
 }
 

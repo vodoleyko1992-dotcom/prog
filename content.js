@@ -690,7 +690,7 @@ function observeSlot(b, src) {
       const ownStart = before.netStart + 1;
       while (ACT_NET.done < ownStart && Date.now() - before.t < 8000 && lastObserve === before.t && ACT_NET.start === ownStart) await sleep(40);
       if (lastObserve !== before.t || ACT_NET.start !== ownStart || ACT_NET.done !== ownStart || !ACT_NET.ok || (action && ACT_NET.action !== action)) return;
-    } else if (ACT_NET.done !== before.netDone || lastObserve !== before.t) return;
+    } else if (before.netStart > 0 || ACT_NET.done !== before.netDone || lastObserve !== before.t) return;
     const mob = mobHp(), me = meHp(), mp = meMp();
     const added = newLines(before.arr, logLines());   // v5.6: с учётом повторов (такой же урон / тот же бафф ещё раз — раньше терялись)
     const txt = added.join(' ⏎ ');
@@ -702,28 +702,33 @@ function observeSlot(b, src) {
     const solo = lastObserve === before.t, petHit = added.some(l => /^Слуга\s*\[|Servitor\s*\[/i.test(l));
     const support = /^(?:(?:mass )?summon|servitor|transfer pain|heal\b|battle heal|cubic)/i.test(name) || ['Призыв', 'Дебафф', 'Бафф', 'Лечение'].includes(ilOf(b)?.c);
     let dmg = buff || support || isChargeName(name) || slotKind(b) === 'предмет' ? 0 : dmgFromLog(name, added, solo);
+    // У атаки DOM-парсер исторически суммирует соседей; модель основного удара хранит их отдельно.
+    if (slotKind(b) === 'атака' && dmg > 0) dmg = Math.max(0, dmg - splashDmg(added));
     // 9.2: ответ сервера на этот ход уже разобран анализатором боя — его цифры точные (окно 0,9 с захватывает соседние ходы:
     // лог 11.10 00:49:23 «Blaze: урон 3062 · HP +420» — это банка; 09.10 «Summon Kat» получил урон Vampiric Touch)
-    const ex = L2V7Modules.fightlab?.turnFor(key, before.t);
-    if (ex && !buff && !support && slotKind(b) !== 'предмет') dmg = ex.own;
+    const ex = L2V7Modules.fightlab?.turnFor(key, before.t, action, ACT_NET.rid);
+    if (ex && ex.ownKnown !== false && !buff && !support && slotKind(b) !== 'предмет') dmg = ex.own;
     // запасной способ — падение HP моба, только если в окне не было других нажатий
-    if (!dmg && !buff && !support && solo && !petHit && before.mob && mob && before.mob.cur > mob.cur) dmg = before.mob.cur - mob.cur;
+    if (!dmg && !ex && !buff && !support && solo && !petHit && before.mob && mob && before.mob.cur > mob.cur) dmg = before.mob.cur - mob.cur;
     // мусорное число в логе («Force Burst: сила 1713488» при 2580 HP у моба) — урон не может быть больше ~1,5 HP моба:
     // берём реально снятые HP (v4.23)
     // v4.27: только явный мусор (>3× HP моба и >100 тыс.) — добивающий удар 4620 по мобу с 2388 HP настоящий
     if (dmg > 100000 && before.mob?.max && dmg > before.mob.max * 3) dmg = Math.max(0, before.mob.cur - (mob?.cur ?? before.mob.cur));
+    // Нет цифры в принятом ответе — неизвестный урон, а не подтверждённый промах.
+    const damageKnown = dmg > 0 || !!(buff || support || slotKind(b) === 'предмет' || isChargeName(name))
+      || (ex ? ex.ownKnown !== false : /^(?:Ти|Вы|Ты)\s+промахну|промахнулись/i.test(txt));
     const mpd = ex && ex.mpd != null ? ex.mpd : before.mp && mp ? before.mp.cur - mp.cur : 0;
     const hpd = ex ? ex.selfHeal : before.me && me ? me.cur - before.me.cur : 0;
     const stun = /оглуш|приголомш|stun/i.test(txt);
     const p = { name, uses: 0, usesU: 0, dmg: 0, dmgN: 0, mp: 0, mpN: 0, heal: 0, mpGain: 0, buffSec: 0, stun: 0,
                 ...(rt.skills?.[key] || {}) };
-    p.uses++; if (src === 'U') p.usesU++;
+    p.uses++; if (!damageKnown) p.unknown = (p.unknown || 0) + 1; if (src === 'U') p.usesU++;
     if (dmg > 0) { p.dmg += dmg; p.dmgN++; }
     // 7.2.1 (лог 10.10 21:08): Sprite's Staff (B) вместо Demon's Staff (C) — Blaze бьёт ≈1800, а среднее из 5 373 старых замеров
     // показывало ≈900 (по нему считаются добивание, окупаемость дебаффов, ДПС-план). Среднее — по последним ≈40–60 замерам
     if (p.dmgN > 60) { p.dmg = Math.round(p.dmg / p.dmgN * 40); p.dmgN = 40; }
     if (dmg > 0 && slotKind(b) === 'скилл' && BUFF_CTX) try { L2V7Modules.combat.spellSample(BUFF_CTX, key, dmg); } catch (e) {}   // 7.2.1: выгода дебаффов
-    if (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0) fightNote(key, dmg);   // промахи атаки тоже считаем
+    if (damageKnown && (slotKind(b) === 'атака' ? !/перезаряд/i.test(noticeText()) : dmg > 0)) fightNote(key, dmg);   // промахи атаки тоже считаем
     // массовые удары: урон по соседям («… поруч: Моб −N») — отдельно, для выбора удара, когда рядом 2–3 моба
     if (slotKind(b) === 'скилл' && dmg > 0) { const spl = splashDmg(added); p.spl = (p.spl || 0) + spl; p.splN = (p.splN || 0) + 1; if (spl) p.aoe = 1; }
     if ((solo || ex) && mpd > 0 && mpd < 200 && !/Зілля\s*\+\d+\s*MP|Зелье\s*\+\d+\s*MP/i.test(txt)) { p.mp += mpd; p.mpN++; }
@@ -738,7 +743,7 @@ function observeSlot(b, src) {
     p.kind = slotKind(b); p.img = (b.querySelector('img')?.getAttribute('src') || '').split('/').pop();
     p.last = txt.slice(0, 160);
     await setRt({ skills: { ...(rt.skills || {}), [key]: p } });
-    rec(src, 'скилл', `«${name}»: урон ${dmg} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
+    rec(src, 'скилл', `«${name}»: урон ${damageKnown ? dmg : 'не измерен'} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
       + `${hpd > 15 ? ' · HP +' + hpd : ''}${buff ? ' · бафф ' + buff[1] + ' с' : ''}${stun ? ' · стан' : ''}`
       + `${p.cd ? ' · КД ' + p.cd + ' с' : ''}${unav ? ' · ⚠ недоступен' : ''}`, { added: added.slice(0, 8) });
   }, 900);
@@ -920,9 +925,9 @@ const farmMapOn = () => {
 const deepN = () => farmMapOn() ? FARM_EVERY
   : campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
   : champHunt() ? (mapOff() ? champEvery() : Math.min(cfg.deepEvery, champEvery())) : mapOff() ? Infinity : cfg.deepEvery;
-const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) ||
+const mapDue = (rules, ignoreHot = false) => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) ||
   (farmMapOn() ? (rt.sinceDeep || 0) >= FARM_EVERY : (searchActive(rules) &&
-  (campChampDue() || !mapOff() || champHunt()) && (rt.deepHot || rt.sinceDeep >= deepN())));
+  (campChampDue() || !mapOff() || champHunt()) && ((!ignoreHot && rt.deepHot) || rt.sinceDeep >= deepN())));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 
@@ -2559,6 +2564,7 @@ async function main() {
         const why = L2V7Modules.equipment.weaponRescanWhy(invQty(0) === null ? null : INV_NET.m, heroLevel());
         if (why) { rec('B', 'оружие', `перечитываю сумку: ${why}`); await setRt({ weapRescan: { sig: why, t: Date.now() } }); await invScanStart(); continue; }
       }
+      if (isMap() && campOn() && !fishNow() && !rt.actionOwner && await L2V7Modules.quests.campLocationStep()) { await sleep(200); continue; }
       // 8.0 (аудит рыбалки): служебный переход — только после того, как fishService дошёл до хранилища (rtCommit)
       if (fishNow() && rt.fishService === 'cut') { if (isChar()) await fishCut(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'cut') continue; (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(5000); } }
       else if (fishNow() && rt.fishService === 'exchange') { if (isFishShop()) await fishExchange(); else { await rtCommit(); if (!on || !tabOwner || !fishNow() || rt.fishService !== 'exchange') continue; (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/fishing-shop.html')); await sleep(5000); } }
@@ -3806,7 +3812,7 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
-  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || '';
+  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
     if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
@@ -3850,6 +3856,7 @@ addEventListener('message', e => {
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
+  if (meNow) L2V7Modules.quests?.campLocationNote(path, d);
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
@@ -4407,7 +4414,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get tourReadReady(){return ()=>!rt.reviv
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.combat = L2V7Factories.combat({ get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
-  get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
   get ATK_NET() { return ATK_NET; }, set ATK_NET(value) { ATK_NET = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
@@ -4666,7 +4673,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get routeLocation(){return actionL
   get zonePick() { return zonePick; }, set zonePick(value) { zonePick = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }, get antibotState() { return antibotState; }, get pvpStep() { return () => L2V7Modules.pvp.step(); }
 });
-L2V7Modules.quests = L2V7Factories.quests({ get routeLocation(){return actionLocation}, get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
+L2V7Modules.quests = L2V7Factories.quests({ get gameGet(){return gameGet}, get rtCommit(){return rtCommit}, get tabOwner(){return tabOwner}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, set $q(value) { $q = value; }, get heroLvl() { return heroLvl; },
   get QLINE() { return QLINE; }, set QLINE(value) { QLINE = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
   get cfg() { return cfg; }, set cfg(value) { cfg = value; },

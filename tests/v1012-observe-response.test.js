@@ -2,9 +2,9 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 const src = fs.readFileSync(require('node:path').join(__dirname, '..', 'content.js'), 'utf8');
 const fn = src.slice(src.indexOf('let lastObserve = 0;'), src.indexOf('// роли по панели', src.indexOf('let lastObserve = 0;')));
-async function scenario({ delay = 1300, sent = true, refused = false, supersede = false, wrongAction = false } = {}) {
+async function scenario({ delay = 1300, sent = true, refused = false, supersede = false, wrongAction = false, hookActive = true } = {}) {
   let now = 10000, callback, mp = 100, hp = 100, writes = [], logs = [], arr = [], trigger = false;
-  const NET = { start: 2, done: 2, ok: true, action: 'l2_1220' };
+  const NET = { start: hookActive ? 2 : 0, done: hookActive ? 2 : 0, ok: true, action: 'l2_1220' };
   const update = () => { if (sent && now >= 10000 + delay) { NET.done = 3; NET.ok = !refused; if (wrongAction) NET.action = 'l2_1274'; if (!refused) { mp = 70; hp = 0; arr = ['Полум’я 100']; } } };
   const b = { title: 'Blaze', querySelector: () => null };
   const sb = { Date: { now: () => now }, ACT_NET: NET, slotAction: () => 'l2_1220', isBattle: () => true, slotKind: () => 'скилл', cleanTitle: x => x,
@@ -24,6 +24,7 @@ async function scenario({ delay = 1300, sent = true, refused = false, supersede 
   const pending = await scenario({ delay: 20000 }); assert.equal(pending.writes.length, 0, 'pending request cannot teach a zero'); assert.equal(pending.logs.length, 0); assert.ok(pending.elapsed < 10000, 'waiting is bounded');
   const newer = await scenario({ supersede: true }); assert.equal(newer.writes.length, 0, 'newer click cannot contaminate the sample');
   const denied = await scenario({ refused: true }); assert.equal(denied.writes.length, 0, 'rejected action is not learned as a use');
-  const fallback = await scenario({ sent: false }); assert.equal(fallback.logs.length, 1, 'legacy/manual observation without network events remains available');
+  const lost = await scenario({ sent: false }); assert.equal(lost.logs.length, 0, '15.10: known hook with no sent request is a lost click, not a damage sample');
+  const fallback = await scenario({ sent: false, hookActive: false }); assert.equal(fallback.logs.length, 1, 'legacy/manual observation without network events remains available');
   console.log('PASS v1012 observe response');
 })().catch(e => { console.error(e); process.exitCode = 1; });
