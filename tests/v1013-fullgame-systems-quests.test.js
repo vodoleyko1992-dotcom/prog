@@ -19,18 +19,24 @@ function setup(stage, cfg = {}) {
   const location = { pathname: '/starter-story-quest.html', search: '', href: 'https://l2wap.com/starter-story-quest.html', origin: 'https://l2wap.com' };
   const sb = { document, location, console, Date, URL }; sb.globalThis = sb;
   vm.runInNewContext(src, sb);
-  const fired = [], logs = [];
+  const fired = [], logs = []; let q;
+  const ch = {name:'Hero',id:'hero',revision:1,currentZoneId:'town',locationType:'city',worldX:10,worldY:20};
   const env = { cfg: { campaign: true, campAuto: false, ...cfg }, rt: {
-    storySaga: { stage, title: 'Путь новичка', completed: false, minLevel: 10, lvl: 15 },
+    char: 'Hero', storySaga: { stage, title: 'Путь новичка', completed: false, minLevel: 10, lvl: 15 },
     campaignDue: true, campOnce: !cfg.campaign,
-  }, on: true, heroLvl: () => 15, setRt: async p => Object.assign(env.rt, p),
+  }, on: true, heroLvl: () => 15, setRt: async p => {Object.assign(env.rt, p);return {ok:true}}, rtCommit: async()=>true, gameGet:async()=>({ok:true,json:async()=>({character:{...ch}})}),
     shown: e => !!e && !e.hidden, $q: s => document.querySelector(s),
     setStatus() {}, rec: (...a) => logs.push(a.join(' ')), pause: async () => {}, sleep: async () => {}, rnd: () => 0,
     waitFor: async f => { for (let i = 0; i < 3; i++) { const r = f(); if (r) return r; } return null; },
-    fire: e => { assert.ok(e, 'кнопка существует'); fired.push(e.dataset.action || e.dataset.questTeleportId); e.onFire?.(); },
+    fire: e => { assert.ok(e, 'кнопка существует'); fired.push(e.dataset.action || e.dataset.questTeleportId); e.onFire?.();
+      if(e.dataset.questTeleportId){const req={teleportId:e.dataset.questTeleportId,expectedRevision:ch.revision};
+        if(!state.err.hidden)q.campLocationNote('/game/story-quests/starter-saga/teleport',{method:'POST',status:400,req,res:{error:'insufficient_adena'}});
+        else {ch.revision++;ch.worldX++;q.campLocationNote('/game/story-quests/starter-saga/teleport',{method:'POST',status:200,req,res:{character:{...ch}}});}}
+      return true; },
     goOutskirts: async () => { env.outs = (env.outs || 0) + 1; }, noticeText: () => '', isCampaign: () => true,
   };
-  return { q: sb.L2V7Factories.quests(env), env, state, fired, logs };
+  q = sb.L2V7Factories.quests(env);
+  return { q, env, state, fired, logs, ch, location, reload:()=>q=sb.L2V7Factories.quests(env) };
 }
 const cases = [];
 function test(name, f) { cases.push([name, f]); }

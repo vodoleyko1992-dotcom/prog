@@ -76,11 +76,14 @@ const nameOf = (C, type) => C.defs.find(d => d.id === type)?.n || type;
 async function clanStep() {
   if (!canRun() || env.cfg.clanTasks === false || env.isBattle() || Date.now() - postT < POST_GAP) return false;
   const F = env.rt.clanTaskFail; if (F && Date.now() - (F.t || 0) < FAIL_WAIT) return false;
+  const char = env.rt.char, kick = +env.rt.manualKickAt || 0;
+  const active = () => canRun() && env.rt.char === char && (+env.rt.manualKickAt || 0) === kick && env.cfg.clanTasks !== false;
   const p = clanPlan(); if (!p) return false;
   postT = Date.now();
   const path = p.kind === 'take' ? `/game/clan-tasks/${encodeURIComponent(p.def.id)}/take` : `/game/clan-tasks/${encodeURIComponent(p.task.id)}/${p.kind}`;
   const r = await env.gamePost(path, {}).catch(() => null);
   const body = r ? await r.json().catch(() => ({})) : {};
+  if (!active()) return false;
   if (r?.ok) { clanNote(body); clanT = Date.now(); env.rec('B', 'клан', `✓ ${p.why}${p.kind === 'claim' ? ` — клану +${p.task.diamonds} алмазов` : ''}`); return true; }
   const msg = body?.messageRu || body?.messageUk || body?.error || (r ? 'HTTP ' + r.status : 'нет ответа');
   env.rec('S', 'клан', `✗ ${p.why}: ${msg} — повтор через 30 мин`);

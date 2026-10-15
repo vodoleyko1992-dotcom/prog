@@ -42,6 +42,14 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
     const row = { querySelector: s => s === '.l2-tvt-shop-row__name' ? { textContent: 'Тату Души' } : s === '.l2-tvt-shop-row__buy' ? btn : null, closest: () => null };
     const { env, T, loc, fired } = mk({ inv: { 920030: 300 }, pn: '/tvt-shop.html', rows: [row], bal: 300 });
     env.$q = s => s === '#tvt-shop-msg' ? msgEl : s === '#tvt-shop-shil-balance' ? { textContent: '300' } : null;
+    // 15.10: реальная durable-оплата; строка DOM и свежий каталог согласуют цену, результат — в сумке.
+    env.rt.char = 'Hero'; env.rtCommit = async () => true;
+    const paymentBox = { console, Date }; vm.runInNewContext(read('modules/payments.js'), paymentBox);
+    env.setRt = async p => { Object.assign(env.rt,p); return {ok:true}; };
+    env.payments = paymentBox.L2V7Factories.payments(env);
+    const oldQuery = row.querySelector; row.querySelector = s => s === '.l2-tvt-shop-row__price' ? {textContent:'260'} : oldQuery(s);
+    env.gameGet = async url => ({ok:true,json:async()=>url === '/character' ? {character:{id:'hero',name:'Hero',revision:fired.length ? 2 : 1,inventory:{stacks:[{itemId:920030,qty:fired.length?40:300},...(fired.length?[{itemId:920033,qty:1}]:[])],eq:{}}}} : raw});
+    const oldFire = env.fire; env.fire = b => { assert.ok(env.payments.consumePermit()); oldFire(b); return true; };
     env.rt.tsJob = { kind: 'buy', it: T.itemOf(920033), t: Date.now() };
     assert.equal(await T.shopStep(), true); assert.deepEqual(fired, [btn]); assert.equal(env.rt.tsJob, null); assert.equal(env.rt.tsLog[0].ok, true); assert.equal(env.rt.tsGoalDone.id, 920033); assert.equal(loc.href, '/map.html');
     assert.equal(T.want(), null, 'bought once — not again'); }

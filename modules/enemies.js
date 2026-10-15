@@ -25,6 +25,10 @@ const low = s => String(s || '').trim().toLowerCase();
 const keyOf = (id, name) => id ? String(id) : 'n:' + low(name);
 const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
 const heroLvl = () => +env.heroLevel?.() || +env.rt.lvl || 0;
+const token = () => ({ char: env.rt.char, kick: +env.rt.manualKickAt || 0 });
+const active = T => env.on !== false && env.tabOwner !== false && T.char === env.rt.char && T.kick === (+env.rt.manualKickAt || 0);
+let cacheChar = env.rt.char;
+function ownCache() { if (cacheChar !== env.rt.char) { cacheChar = env.rt.char; HERO.t = INC.t = scanT = 0; HERO.list = []; INC.list = []; HERO.zone = ''; DONE.clear(); } }
 const list = () => env.rt.enemies && typeof env.rt.enemies === 'object' ? env.rt.enemies : {};
 // враг из листа по id или по имени (ник в игре уникален; id надёжнее — ник можно сменить)
 function find(id, name) {
@@ -44,6 +48,7 @@ function hitsOf(log, name) {
 }
 // ---------- смерть от игрока → в лист врагов ----------
 async function noteDefeat(pd) {
+  ownCache();
   if (!pd || !pd.name) return;
   if (pd.arena || (pd.scope && pd.scope !== 'world') || /tvt|arena/i.test(location.pathname)) return;   // TvT, арена, осада — не враги
   const ev = pd.ev || `${pd.name}:${Math.floor(Date.now() / MIN)}`;
@@ -74,6 +79,7 @@ async function noteDefeat(pd) {
 }
 // ---------- игроки на локации ----------
 function noteHeroes(heroes, zone) {
+  ownCache();
   HERO.t = Date.now(); HERO.list = Array.isArray(heroes) ? heroes.filter(h => h && h.name) : []; if (zone) HERO.zone = zone;
   const E = list(); if (!Object.keys(E).length) return;
   let ch = null;
@@ -126,6 +132,7 @@ function verdict(e, h, me) {
 }
 // враг на локации, на которого можно напасть (больше убийств — первым)
 function pick() {
+  ownCache();
   if (Date.now() - HERO.t > 90000) return null;
   const me = env.meHp?.();
   return HERO.list.map(h => ({ h, e: find(h.id, h.name) })).filter(x => x.e && !verdict(x.e, x.h, me))
@@ -138,13 +145,16 @@ function busy() {
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return true;
   if (['epic', 'raid', 'fish', 'cat'].includes(env.autonomyMode())) return true;
   if (env.fishNow()) return true;
-  if (env.cfg.tvtOn && env.tvtSoon?.()) return true;
+  if (env.cfg.tvtOn && (env.tvtHold?.() || env.tvtSoon?.())) return true;
   return false;
 }
 const pvpPage = () => env.isBattle() && /[?&]pvpTargetId=/.test(location.search);
 // ---------- ответы игры (hook.js → поле pv) ----------
 function onNet(path, d) {
-  const pv = d.pv;
+  ownCache();
+  const owner = d.pv?.owner || d.res?.character || (path === '/character' ? d.res : null);
+  if (owner?.name && env.rt.char && low(owner.name) !== low(env.rt.char)) return;
+  const pv = d.status != null && (d.status < 200 || d.status >= 300) ? null : d.pv;
   if (pv?.defeat) noteDefeat(pv.defeat).catch(() => {});
   if (pv?.heroes) noteHeroes(pv.heroes, pv.zone);
   if (pv?.incoming) { INC.t = Date.now(); INC.list = pv.incoming; }
@@ -172,6 +182,9 @@ async function onWin(tid) {
 }
 // ---------- следим за локацией (фоном, только GET) ----------
 async function tick() {
+  ownCache();
+  const T0 = token();
+  if (!active(T0)) return;
   if (env.cfg.enemyHunt === false || scanBusy || !Object.keys(list()).length) return;
   const every = Math.max(15, +env.cfg.enemyScanS || 30) * 1000;
   if (Date.now() - scanT < every || Date.now() - HERO.t < every) return;   // на карте игра сама опрашивает /game/map/sync раз в 15 с
@@ -181,6 +194,7 @@ async function tick() {
     const r = await env.gameGet('/game/map/around');
     if (!r?.ok) return;
     const j = await r.json(), a = Array.isArray(j?.nearbyHeroes) ? j.nearbyHeroes : null;
+    if (!active(T0)) return;
     if (a) noteHeroes(a.map(h => ({ id: String(h.characterId || ''), name: String(h.name || ''), lvl: +h.level || 0, col: String(h.pvpNickColor || ''),
       atk: 'battleOnNameClick' in h || 'showPkButton' in h ? h.battleOnNameClick === true || h.showPkButton === true : null,
       ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: String(h.pvpBlockedReasonUk || ''), party: !!h.isPartyMember })), String(j.nearestLabelUk || ''));
@@ -188,10 +202,13 @@ async function tick() {
 }
 // ---------- шаг главного цикла: true — бот занят врагом ----------
 async function step() {
+  ownCache();
+  const T0 = token();
+  if (!active(T0)) return false;
   // конец ответного боя: экран итога PvP или поражение — на карту (там же и следим дальше)
   if (pvpPage()) {
     const res = env.$q('#battle-pvp-result-root');
-    if (env.shown(res) || env.victory?.()) { await env.setRt({ enemyHunt: null }); env.setStatus('Враги: бой окончен — на карту'); await env.sleep(1500); await env.toMap(); return true; }
+    if (env.shown(res) || env.victory?.()) { await env.setRt({ enemyHunt: null }); env.setStatus('Враги: бой окончен — на карту'); await env.sleep(1500); if (!active(T0)) return false; await env.toMap(); return true; }
     return false;
   }
   if (env.cfg.enemyHunt === false || !Object.keys(list()).length) return false;
@@ -211,6 +228,7 @@ async function step() {
       if (!sameTarget()) continue;
       env.rec('B', 'враги', `${e.name} напал на нас — отвечаю (враг из листа, убивал нас ${e.kills} раз)`);
       await env.setRt({ enemyHunt: { id: e.id || x.id, name: e.name, t: Date.now(), via: 'incoming' } });
+      if (!active(T0)) return false;
       if (!sameTarget() || !env.shown(btn) || btn.disabled || verdict(e, h || {}) || busy()) { await env.setRt({ enemyHunt: null }); continue; }
       env.fire(btn); INC.t = 0; await env.sleep(4000); return true;
     }
@@ -225,6 +243,7 @@ async function step() {
   if (!env.isMap()) return false;                          // не на локации (город, магазин…) — обычный путь бота вернёт на карту
   const sel = `#map-hero-list li[data-character-id="${CSS.escape(p.h.id || p.e.id || '')}"] .l2-map-hero-name-link--battle`;
   const btn = (p.h.id || p.e.id) ? await env.waitX(() => { const b = env.$q(sel); return env.shown(b) ? b : null; }, 3000, 150) : null;
+  if (!active(T0) || busy() || verdict(find(p.e.id, p.e.name), p.h)) return false;
   if (!btn) {
     const E = { ...list() }; E[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нет кнопки атаки в списке игроков' };
     await env.setRt({ enemies: E }); return false;
@@ -235,6 +254,7 @@ async function step() {
   // 10.0 (аудит): кнопка не запустила бой — не жать её каждые 4 с: этот враг 2 мин не выбирается (бой начался — неважно)
   const E2 = { ...list() }; E2[keyOf(p.e.id, p.e.name)] = { ...p.e, skipT: Date.now() + 2 * MIN, skipWhy: 'нажал «напасть», жду боя' };
   await env.setRt({ enemyHunt: { id: p.e.id || p.h.id, name: p.e.name, t: Date.now(), via: 'map' }, enemies: E2 });
+  if (!active(T0) || busy() || !env.shown(btn) || btn.disabled || env.cfg.enemyHunt === false || find(p.e.id, p.e.name)?.ignore) return false;
   env.fire(btn);
   await env.sleep(4000);
   return true;

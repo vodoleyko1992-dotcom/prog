@@ -85,19 +85,68 @@ function readyNote() {
 }
 // покупка: галочка, монет хватает, уровень есть, не куплено, не чаще раза в час (ошибка игры — через час снова)
 function want() {
-  if (!env.cfg.tsBuy) return null;
+  if (!env.cfg.tsBuy || env.payments?.pending()) return null;
   const p = plan(); if (!p || p.have == null || p.lack !== 0 || !p.lvlOk) return null;
   if ((env.rt.tsLog || []).some(x => x.id === p.it.id && x.ok)) return null;
   if (Date.now() - (env.rt.tsTryT || 0) < 3600000) return null;
   return { kind: 'buy', it: p.it, why: `${p.it.n} за ${p.need} Shil (есть ${p.have})` };
 }
+const token = () => ({ char: env.rt.char, kick: +env.rt.manualKickAt || 0 });
+const active = T => env.on !== false && env.tabOwner !== false && T.char === env.rt.char && T.kick === (+env.rt.manualKickAt || 0) && !env.tvtHold?.();
+const sameJob = J => !!J && env.rt.tsJob?.t === J.t && +env.rt.tsJob?.it?.id === +J.it.id;
 const isShop = () => location.pathname === SHOP_URL;
 const purchaseAllowed = J => !!env.cfg.tsBuy && +env.cfg.tsGoalItem === +J.it.id;
 async function cancelPurchase(J) {
+  if (!sameJob(J)) return;
   env.rec('B', 'TvT-магазин', `${J.it.n}: покупка отменена — настройка или цель изменена`);
   await env.setRt({ tsJob: null, tsTryT: 0 });
 }
-async function shopStep() {                              // true — шаг сделан (главный цикл заново)
+let armedPayment = null;
+const pending = () => { const p = env.payments?.pending(); return p?.kind === 'tvt-shop' ? p : null; };
+const own = ch => ch && String(ch.name || '').toLowerCase() === String(env.rt.char || '').toLowerCase() && Number.isSafeInteger(ch.revision);
+const amount = (ch, id) => {
+  if (!Array.isArray(ch?.inventory?.stacks)) return null;
+  const qty = x => +x?.itemId === +id ? (x.qty == null ? 1 : Math.max(0, +x.qty || 0)) : 0;
+  return ch.inventory.stacks.reduce((n,x) => n + qty(x), 0) + Object.values(ch.inventory.eq || {}).reduce((n,x) => n + (typeof x === 'number' ? +(x === +id) : qty(x)), 0);
+};
+async function json(path) { try { const r = await env.gameGet(path); return r?.ok ? await r.json() : null; } catch (_) { return null; } }
+// Квитанция именно нашей команды. Текст страницы не доказывает покупку: catch игры показывает тот же текст при потере ответа.
+function onNet(path, d) {
+  const p = pending(), ch = d.res?.character;
+  if (!p || p.char !== (env.rt.char || '') || d.paymentId !== p.id || armedPayment !== p.id || path !== '/game/tvt/shop/purchase' || d.method !== 'POST' || +d.req?.itemId !== p.itemId || !Number.isSafeInteger(d.req?.expectedRevision)) return;
+  if (d.status >= 200 && d.status < 300 && !d.res?.error && own(ch) && String(ch.id || '') === p.heroId && ch.revision > d.req.expectedRevision)
+    env.setRt({ tsReceipt: { id: p.id, revision: ch.revision, outcome: 'purchased', t: Date.now() } });
+  else if (d.status >= 400 && d.status < 500 && d.status !== 408 && (!ch || own(ch) && String(ch.id || '') === p.heroId) && env.rt.tsReceipt?.id !== p.id)
+    env.setRt({ tsReceipt: { id: p.id, outcome: 'rejected', why: String(d.res?.error || 'HTTP ' + d.status).slice(0,100), t: Date.now() } });
+}
+let reconciling = false, reconcileReadId = '', reconcileReadAt = 0;
+async function paymentReconcile() {
+  const p = pending(); if (!p || reconciling || p.char !== (env.rt.char || '') || env.tabOwner === false) return false;
+  reconciling = true;
+  const lease = env.leaseEpoch;
+  const same = () => pending()?.id === p.id && p.char === (env.rt.char || '') && env.tabOwner !== false && env.leaseEpoch === lease;
+  try {
+    let receipt = env.rt.tsReceipt?.id === p.id ? env.rt.tsReceipt : null;
+    if (!receipt) {
+      if (reconcileReadId === p.id && Date.now() - reconcileReadAt < 5000) return false;
+      reconcileReadId = p.id; reconcileReadAt = Date.now();
+      const j = await json('/character'), ch = j?.character || j;
+      if (!same() || !own(ch) || String(ch.id || '') !== p.heroId || ch.revision <= p.revision) return false;
+      // Сумка + надетое: экипировка купленной вещи между ответами не разрешает вторую покупку.
+      if (amount(ch, p.itemId) > p.before) receipt = { outcome: 'satisfied', revision: ch.revision };
+    }
+    if (!receipt || !same()) return false;
+    const ok = receipt.outcome !== 'rejected', J = env.rt.tsJob;
+    const log = [{ t: Date.now(), payment: p.id, id: p.itemId, n: p.name, price: p.quote.amount, ok, why: ok ? 'покупка подтверждена' : receipt.why }, ...(env.rt.tsLog || []).filter(x => x.payment !== p.id)].slice(0,20);
+    const saved = await env.setRt({ tsLog: log, ...(ok ? { tsGoalDone: { id: p.itemId, t: Date.now() } } : {}),
+      ...(J?.t === p.jobT && +J.it?.id === p.itemId ? { tsJob: null } : {}) });
+    if (!same() || saved?.ok !== true || await env.rtCommit() !== true || !same()) return false;
+    return await env.payments.confirm(p, { kind: receipt.outcome === 'satisfied' ? 'item-satisfied' : 'server-' + receipt.outcome, revision: receipt.revision, why: receipt.why });
+  } finally { reconciling = false; }
+}
+async function shopStep() {
+  if (pending()) { await paymentReconcile(); return true; }
+  const T0 = token(); if (!active(T0)) return false;
   const J = env.rt.tsJob;
   if (J) {
     if (!purchaseAllowed(J)) { await cancelPurchase(J); return true; }
@@ -108,7 +157,7 @@ async function shopStep() {                              // true — шаг сд
   }
   const w = want(); if (!w || !env.awayFree?.()) return false;
   await env.setRt({ tsJob: { ...w, t: Date.now() }, tsTryT: Date.now() });
-  env.rec('B', 'TvT-магазин', `иду покупать: ${w.why}`);
+  if (active(T0)) env.rec('B', 'TvT-магазин', `иду покупать: ${w.why}`);
   return true;
 }
 function chainWant() { const w = want(); return w && env.awayFree?.(true) ? w : null; }
@@ -117,31 +166,53 @@ function rowOf(it) {
   return rows.find(r => (r.querySelector('.l2-tvt-shop-row__name')?.textContent || '').trim() === it.n) || null;
 }
 async function buy(J) {
+  const T0 = token(), allowed = () => active(T0) && sameJob(J);
+  if (!allowed()) return;
   if (!purchaseAllowed(J)) return cancelPurchase(J);
-  const it = J.it;
-  const row = await env.waitX(() => rowOf(it), 8000, 250);
-  if (!row) { await finish(J, false, `в магазине нет строки «${it.n}»`); return; }
-  const tab = row.closest('.l2-tvt-shop-cat-panel');   // вкладка категории: игра показывает по одной
+  if (pending()) return paymentReconcile();
+  const it = J.it, row = await env.waitX(() => rowOf(it), 8000, 250);
+  if (!allowed()) return;
+  if (!row) return finish(J, false, `в магазине нет строки «${it.n}»`);
+  const tab = row.closest('.l2-tvt-shop-cat-panel');
   if (tab && tab.hidden !== false && !env.shown(row)) { const tb = env.$q(`.l2-tvt-shop-cat-tab[data-cat="${tab.id.replace('tvt-shop-panel-', '')}"]`); if (tb) { env.fire(tb); await env.sleep(400); } }
+  if (!allowed()) return;
   const bal = +(env.$q('#tvt-shop-shil-balance')?.textContent || '').replace(/\D/g, '');
-  if (bal < (it.price || 0)) { await finish(J, false, `на странице ${bal} Shil, нужно ${it.price}`); return; }
+  if (bal < (it.price || 0)) return finish(J, false, `на странице ${bal} Shil, нужно ${it.price}`);
   const btn = row.querySelector('.l2-tvt-shop-row__buy');
-  if (!btn || btn.disabled) { await finish(J, false, 'кнопки «Купити» нет'); return; }
-  const msg = env.$q('#tvt-shop-msg'); if (msg) msg.textContent = '';
+  if (!btn || btn.disabled) return finish(J, false, 'кнопки «Купити» нет');
   await env.pause?.();
-  // 10.0.14: чекбокс/цель могли измениться, пока искали строку или ждали паузу перед платным кликом.
+  if (!allowed()) return;
   if (!purchaseAllowed(J)) return cancelPurchase(J);
-  env.fire(btn);
-  const r = await env.waitX(() => { const t = (env.$q('#tvt-shop-msg')?.textContent || '').trim(); return t && !/Купуємо|Покупаем/i.test(t) ? t : null; }, 12000, 250);
-  const ok = /Придбано|Куплено|Приобретено/i.test(r || '');
-  await finish(J, ok, r || 'игра не ответила за 12 с');
+  if (!env.payments || !env.gameGet) return finish(J, false, 'защита оплаты недоступна');
+  const cat = await json('/game/tvt/shop/catalog');
+  if (!allowed()) return;
+  const live = (cat?.categories || []).flatMap(c => c.key === 'consumable' ? [] : c.items || []).find(x => +x.itemId === +it.id);
+  const price = Number(live?.priceShil), pagePrice = Number((row.querySelector('.l2-tvt-shop-row__price')?.textContent || '').trim());
+  if (!live || !Number.isSafeInteger(price) || price <= 0 || price !== it.price || pagePrice !== price)
+    return finish(J, false, 'цена цели или строка магазина изменилась — обнови цель');
+  const j = await json('/character'), ch = j?.character || j;
+  if (!allowed() || !purchaseAllowed(J)) return;
+  if (!own(ch) || !ch.id || amount(ch, SHIL_ID) < price || amount(ch, it.id) == null) return finish(J, false, 'сумка или монеты героя не подтверждены');
+  const p = await env.payments.prepare({ kind: 'tvt-shop', key: 'tvt-shop:' + it.id, itemId: it.id, name: it.n, jobT: J.t,
+    heroId: String(ch.id), revision: ch.revision, before: amount(ch, it.id), quote: { amount: price, currency: 'Shil' } });
+  if (!p) return;
+  if (!allowed() || !purchaseAllowed(J) || btn.disabled || !env.shown(btn)) { await env.payments.cancel(p); return; }
+  if (!env.payments.sent(p)) { await env.payments.cancel(p); return; }
+  armedPayment = p.id;
+  const clicked = env.fire(btn); // между permit и платным кликом нет await
+  if (clicked === false) { await env.payments.cancel(p, { notSent: true }); return; }
+  await env.waitX(() => env.rt.tsReceipt?.id === p.id, 12000, 250);
+  const confirmed = await paymentReconcile();
+  if (!confirmed) { if (active(T0)) env.setStatus('TvT-магазин: исход покупки неизвестен — проверяю сумку, повтор запрещён'); return; }
+  if (active(T0) && isShop() && !env.rt.tsJob) { location.href = env.fishNow?.() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
 async function finish(J, ok, why) {
+  const T0 = token(); if (!active(T0) || !sameJob(J)) return;
   const log = [{ t: Date.now(), id: J.it.id, n: J.it.n, price: J.it.price, ok, why: String(why).slice(0, 120) }, ...(env.rt.tsLog || [])].slice(0, 20);
   env.rec(ok ? 'B' : 'S', 'TvT-магазин', `${J.it.n}: ${ok ? '✓ куплено' : '✗ ' + why}`);
   await env.setRt({ tsJob: null, tsLog: log, ...(ok ? { tsGoalDone: { id: J.it.id, t: Date.now() } } : {}) });
-  if (isShop()) { location.href = env.fishNow?.() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
+  if (active(T0) && isShop() && !env.rt.tsJob) { location.href = env.fishNow?.() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
-return { SHIL_ID, SHOP_URL, TS_KNOWN, CAT_RU, catalog, itemOf, shopNote, statsText, shil, shilNote, readyNote, plan, line, want, shopStep, chainWant, buy, finish, isShop };
+return { SHIL_ID, SHOP_URL, TS_KNOWN, CAT_RU, catalog, itemOf, shopNote, statsText, shil, shilNote, readyNote, plan, line, want, shopStep, chainWant, buy, finish, isShop, onNet, paymentReconcile };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

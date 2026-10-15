@@ -21,7 +21,13 @@ const CLASS_KEYS = ['skills', 'skillDb', 'petStat', 'petAdvice', 'petLast', 'pet
 // 10.0 (аудит ядра): метка опроса — в sessionStorage, иначе 2 GET на каждой загрузке страницы (как Маммон в 9.2.2)
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
-let pollT = ssNum('l2bot-storyPollT');
+const pollKey = () => 'l2bot-storyPollT@' + (env.rt.char || '');
+let pollChar = env.rt.char, pollT = ssNum(pollKey());
+const token = () => ({ char: env.rt.char, kick: +env.rt.manualKickAt || 0 });
+const same = T => env.rt.char === T.char && (+env.rt.manualKickAt || 0) === T.kick;
+const active = T => same(T) && env.on !== false && env.tabOwner !== false;
+const sameJob = J => !!J && !!env.rt.storyJob && env.rt.storyJob?.key === J.key && env.rt.storyJob?.t === J.t && (J.char == null || J.char === env.rt.char) && (J.kick == null || J.kick === (+env.rt.manualKickAt || 0));
+const withinBudget = price => { const max = Number(env.cfg.storyTpMax ?? 100000); return Number.isFinite(max) && max >= 0 && price <= max; };
 const fmtA = n => Math.round(+n || 0).toLocaleString('ru');
 const low = s => String(s || '').trim().toLowerCase();
 // ответ игры → короткая запись rt.story[kind]
@@ -72,7 +78,7 @@ function qNote(kind, q) {
 }
 // /character: свой Noblesse (скилл 1323 на всех классах) и активный класс
 function charNote(ch) {
-  if (!ch || typeof ch !== 'object') return;
+  if (!ch || typeof ch !== 'object' || ch.name && env.rt.char && low(ch.name) !== low(env.rt.char)) return;
   if ('noblesse' in ch && !!ch.noblesse !== !!env.rt.story?.nobleOwn) {
     env.setRt({ story: { ...(env.rt.story || {}), nobleOwn: !!ch.noblesse } });
     if (ch.noblesse) env.rec('B', 'квест', 'статус Noblesse получен 👑: Noblesse Blessing (1323) свой — за FA больше не покупаю; поставь его на панель боя, бот будет держать его как бафф');
@@ -109,12 +115,14 @@ async function getJson(path) {
 }
 // фоновый опрос (только GET): прогресс обоих квестов раз в 10 мин
 async function storyTick(force) {
+  const T0 = token();
+  if (pollChar !== env.rt.char) { pollChar = env.rt.char; pollT = ssNum(pollKey()); }
   if (!force && Date.now() - pollT < POLL) return;
-  pollT = Date.now(); ssSet('l2bot-storyPollT', pollT);
+  pollT = Date.now(); ssSet(pollKey(), pollT);
   for (const kind of Object.keys(Q)) {
     const S = env.rt.story?.[kind];
     if (!force && S?.completed && Date.now() - (S.t || 0) < 24 * 3600000) continue;   // пройденный — раз в сутки
-    try { const r = await getJson(Q[kind].root); if (r.ok && r.j?.quest) qNote(kind, r.j.quest); } catch (e) {}
+    try { const r = await getJson(Q[kind].root); if (!same(T0)) return; if (r.ok && r.j?.quest) qNote(kind, r.j.quest); } catch (e) {}
   }
 }
 // ---- сдача готовой части ----
@@ -131,10 +139,13 @@ function want() {
   return null;
 }
 async function finish(J, ok, why) {
+  const T0 = token();
+  if (!active(T0) || !sameJob(J)) return;
   const log = [{ kind: J.kind, ok: !!ok, why: String(why || '').slice(0, 140), t: Date.now() }, ...(env.rt.storyLog || [])].slice(0, 20);
   env.rec('B', 'квест', `${Q[J.kind].name}: ${ok ? '✓' : '✗'} ${why}${J.home ? ' · возвращаюсь на точку' : ''}`);
   const back = J.home && !env.fishNow() ? { zoneGo: { id: J.home, t: Date.now(), why: 'квест сдан: обратно на точку' }, zoneGoT: 0 } : {};
   await env.setRt({ storyJob: null, storyLog: log, ...back });
+  if (!active(T0) || env.rt.storyJob) return;
   storyTick(true).catch(() => {});
   if (!back.zoneGo && env.on !== false) { location.href = env.fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(3000); }
 }
@@ -143,18 +154,74 @@ async function tpPrice(tp) {                      // цена телепорта
   const x = r.ok && (r.j?.locations || []).find(l => l?.teleportId === tp);
   return x ? +(x.vipFreeApplied ? 0 : x.adenaCost ?? x.baseAdenaCost ?? NaN) : null;
 }
+let armedPayment = null;
+const paymentPending = () => { const p = env.payments?.pending(); return p?.kind === 'story-teleport' ? p : null; };
+const ownCharacter = ch => ch?.name === env.rt.char && !!ch.id && Number.isSafeInteger(ch.revision);
+function onNet(path, d) {
+  const p = paymentPending(), ch = d.res?.character;
+  if (!p || p.char !== (env.rt.char || '') || d.paymentId !== p.id || armedPayment !== p.id || path !== Q[p.questKind]?.root + '/teleport' || d.method !== 'POST' ||
+      d.req?.targetId !== p.target || !Number.isSafeInteger(d.req?.expectedRevision)) return;
+  if (d.status >= 200 && d.status < 300 && !d.error && !d.res?.error && ownCharacter(ch) && String(ch.id) === p.heroId && ch.revision > d.req.expectedRevision)
+    env.setRt({ storyTpReceipt: { id: p.id, outcome: 'arrived', revision: ch.revision } });
+  // Native UI после первого 409 сама повторяет один запрос с новой revision: это ещё не окончательный отказ.
+  else if (d.status >= 400 && d.status < 500 && ![408,409].includes(d.status) && (!ch || ownCharacter(ch) && String(ch.id) === p.heroId) && env.rt.storyTpReceipt?.id !== p.id)
+    env.setRt({ storyTpReceipt: { id: p.id, outcome: 'rejected', why: String(d.res?.error || 'HTTP ' + d.status).slice(0,100) } });
+}
+let reconciling = false, reconcileAt = 0, reconcileId = '';
+async function paymentReconcile() {
+  const p = paymentPending(); if (!p || reconciling || p.char !== (env.rt.char || '') || env.tabOwner === false) return false;
+  const lease = env.leaseEpoch, current = () => paymentPending()?.id === p.id && p.char === (env.rt.char || '') && env.tabOwner !== false && env.leaseEpoch === lease;
+  reconciling = true;
+  try {
+    let receipt = env.rt.storyTpReceipt?.id === p.id ? env.rt.storyTpReceipt : null;
+    if (!receipt) {
+      if (reconcileId === p.id && Date.now() - reconcileAt < 5000) return false;
+      reconcileId = p.id; reconcileAt = Date.now();
+      const r = await getJson(Q[p.questKind].root), ch = r.j?.character, q = norm(p.questKind, r.j?.quest);
+      if (!current() || !r.ok || !ownCharacter(ch) || String(ch.id) !== p.heroId || ch.revision <= p.revision || !q) return false;
+      const key = `${p.questKind}:${q.part ?? q.stage}`;
+      if (q.completed || q.atNpc && q.npcTp === p.target && key === p.jobKey) receipt = { outcome: 'arrived', revision: ch.revision };
+    }
+    if (!receipt || !current()) return false;
+    const J = env.rt.storyJob;
+    if (J?.t === p.jobT && J.key === p.jobKey && env.payments.matchesContext(p)) {
+      const w = await env.setRt({ storyJob: receipt.outcome === 'arrived' ? { ...J, tpT: Date.now(), tpId: p.target } : null });
+      if (!current() || w?.ok !== true || await env.rtCommit() !== true || !current()) return false;
+    }
+    return env.payments.confirm(p, { kind: receipt.outcome === 'arrived' ? 'npc-arrival' : 'server-rejected', revision: receipt.revision, why: receipt.why });
+  } finally { reconciling = false; }
+}
+async function teleport(J, tp, target, price, allowed) {
+  if (!env.payments) { env.setStatus('Квест: защита оплаты недоступна'); return false; }
+  const r = await getJson('/character'), ch = r.j?.character || r.j;
+  if (!allowed() || env.cfg.storyTurnIn === false || !withinBudget(price) || !r.ok || !ownCharacter(ch)) return false;
+  const p = await env.payments.prepare({ kind: 'story-teleport', key: 'story:' + J.key + ':' + target, questKind: J.kind, target,
+    jobKey: J.key, jobT: J.t, heroId: String(ch.id), revision: ch.revision, quote: { amount: price, currency: 'Adena' } });
+  if (!p) return false;
+  if (!allowed() || env.cfg.storyTurnIn === false || !withinBudget(price) || tp.disabled || !env.payments.sent(p)) { await env.payments.cancel(p); if (allowed() && env.cfg.storyTurnIn === false) await cancel(J); return false; }
+  // durable prepare завершён; одноразовый permit и native click идут без await.
+  armedPayment = p.id;
+  if (env.fire(tp) === false) { await env.payments.cancel(p, { notSent: true }); return false; }
+  await env.waitX(() => env.rt.storyTpReceipt?.id === p.id || !allowed(), 8000, 200);
+  const ok = await paymentReconcile();
+  if (!ok && allowed()) env.setStatus('Квест: исход телепорта неизвестен — проверяю NPC, повторная оплата запрещена');
+  return ok;
+}
 async function cancel(J) {
+  if (!sameJob(J)) return;
   const tried = { ...(env.rt.storyTried || {}) }; delete tried[J.key];
   env.rec('B', 'квест', `${Q[J.kind].name}: поход отменён — автосдача выключена`);
   await env.setRt({ storyJob: null, storyTried: tried });
 }
 async function step(J) {
-  if (env.on === false) return;
+  const T0 = token(), allowed = () => active(T0) && sameJob(J);
+  if (!allowed()) return;
+  if (paymentPending()) { await paymentReconcile(); return; }
   if (env.cfg.storyTurnIn === false) return cancel(J);
   const P = Q[J.kind];
   if (location.pathname !== P.page) { env.setStatus(`Квест ${P.name}: иду сдавать часть`); location.href = P.page; await env.sleep(4000); return; }
   const box = await env.waitX(() => { const a = env.$q(`#${P.act}-quest-actions`); return a && a.children.length ? a : null; }, 10000, 200);
-  if (env.on === false) return;              // 14.10: остановили бота, пока страница загружала кнопки.
+  if (!allowed()) return;              // 14.10: остановили бота, пока страница загружала кнопки.
   if (env.cfg.storyTurnIn === false) return cancel(J);
   const err = () => (env.$q(`#${P.act}-quest-err`)?.textContent || '').trim();
   if (!box) return finish(J, false, err() || 'кнопок квеста нет (страница не загрузилась или часть уже сдана)');
@@ -163,6 +230,7 @@ async function step(J) {
   if (done) {
     env.fire(done);
     await env.waitX(() => !btn(P.done) || err() || null, 8000, 200);
+    if (!allowed()) return;
     const e = err();
     return finish(J, !e && !btn(P.done), e ? `игра отказала: ${e.slice(0, 80)}` : `часть сдана (${J.why})`);
   }
@@ -171,26 +239,16 @@ async function step(J) {
   if (J.tpT) return finish(J, false, 'после телепорта NPC всё ещё не рядом');
   const id = tp.dataset[`${P.act}Target`] || '';
   const price = await tpPrice(id), max = env.cfg.storyTpMax ?? 100000;
-  if (env.on === false) return;              // цена пришла после «Стоп» — платный переход уже не нужен.
+  if (!allowed()) return;              // цена пришла после «Стоп» — платный переход уже не нужен.
   if (env.cfg.storyTurnIn === false) return cancel(J);
   if (price == null || !isFinite(price)) return finish(J, false, `цена телепорта к ${id || 'NPC'} неизвестна — не лечу вслепую`);
-  if (price > max) return finish(J, false, `телепорт к NPC ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
-  // 10.0.14: setRt синхронно меняет память/очередь. Резерв и клик — в одном JS-шаге: Stop во время записи
-  // не оставит tpT без отправленного перехода. Отклонённый fire возвращает исходное задание до первого await.
-  const write = env.setRt({ storyJob: { ...J, tpT: Date.now() } });
-  const clicked = env.on !== false && env.cfg.storyTurnIn !== false && env.fire(tp);
-  const rollback = clicked ? null : env.setRt({ storyJob: J });
-  await write; if (rollback) await rollback;
-  if (!clicked) { if (env.on !== false && env.cfg.storyTurnIn === false) await cancel(J); return; }
-  env.rec('B', 'квест', `${P.name}: телепорт к NPC (${id}) за ${price ? fmtA(price) + ' адены' : 'бесплатно'} — сдать часть`);
-  if (env.on === false) return;
-  await env.waitX(() => location.pathname !== P.page || err() || null, 8000, 200);
-  if (env.on === false) return;
-  if (location.pathname === P.page && err()) return finish({ ...J, home: null }, false, `не улетели: ${err().slice(0, 80)}`);
+  if (!withinBudget(price)) return finish(J, false, `телепорт к NPC ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
+  await teleport(J, tp, id, price, allowed);
 }
 // шаг в главном цикле. true — занят квестом (цикл идёт на следующий круг)
 async function storyStep() {
-  if (env.on === false) return false;
+  if (paymentPending()) { await paymentReconcile(); return true; }
+  if (env.on === false || env.tabOwner === false) return false;
   const J = env.rt.storyJob;
   if (J) {
     if (env.cfg.storyTurnIn === false) { await cancel(J); return true; }
@@ -206,12 +264,12 @@ async function storyStep() {
   // 10.0: без режима (только задачи) бот стоит, где стоял — точка возврата не нужна
   if (!env.fishNow() && !['cat', 'tasks'].includes(env.autonomyMode()) && (!home || /^out:/.test(home))) return false;
   const tried = Object.fromEntries(Object.entries(env.rt.storyTried || {}).filter(([, t]) => Date.now() - t < 86400000));
-  await env.setRt({ storyJob: { ...w, home, t: Date.now() }, storyTried: { ...tried, [w.key]: Date.now() } });
+  await env.setRt({ storyJob: { ...w, home, char: env.rt.char, kick: +env.rt.manualKickAt || 0, t: Date.now() }, storyTried: { ...tried, [w.key]: Date.now() } });
   env.rec('B', 'квест', `${Q[w.kind].name}: иду сдавать — ${w.why}`);
   return true;
 }
 // 10.0 (лог 12.10 12:01: заказ Маммона висел, пока шла цепочка): готовую часть есть смысл сдать — цепочку прерываем после боя
 function chainWant() { const w = want(); if (!w || !env.awayFree(true)) return null; const z = env.rt.zone; return z && !/^out:/.test(z) ? w : null; }
-return { chainWant, Q, CLASS_KEYS, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line };
+return { chainWant, Q, CLASS_KEYS, norm, qNote, charNote, classNote, openNames, rbIds, storyTick, want, finish, tpPrice, step, storyStep, line, onNet, paymentReconcile };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

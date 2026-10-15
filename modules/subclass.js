@@ -19,6 +19,7 @@ const role = () => roleOf(profOf());
 const isSub = () => (+env.rt.classCur?.slot || 0) > 0;
 // слоты классов героя из /character (classSlots: slots[4] {slot, owned, active, profession, race, level}, secondAndThirdUnlocked)
 function charNote(ch) {
+  if (ch?.name && env.rt.char && String(ch.name).toLowerCase() !== String(env.rt.char).toLowerCase()) return false;
   const cs = ch?.classSlots; if (!cs || !Array.isArray(cs.slots)) return false;
   const slots = cs.slots.filter(x => x && (x.owned || x.profession)).map(x => ({ slot: +x.slot || 0, prof: String(x.profession || ''), lvl: +x.level || 0, on: !!x.active }));
   const patch = { subSlots: slots, subUnlock: !!cs.secondAndThirdUnlocked };
@@ -45,8 +46,11 @@ const me = () => String(env.heroNick?.() || '').trim();
 const isHelper = () => !!mainNick() && mainNick().toLowerCase() !== me().toLowerCase();
 // 10.0.14: настройки уже могли сменить основного, а пятиминутный кэш ещё принадлежит прежнему адресату.
 const mainNeed = () => String(env.rt.subNeed?.nick || '').trim().toLowerCase() === mainNick().toLowerCase() ? env.rt.subNeed : null;
-let needT = 0, readT = 0, infoT = 0;
+let needT = 0, readT = 0, infoT = 0, cacheChar = env.rt.char;
+const token = () => JSON.stringify([env.rt.char || '', me(), mainNick(), env.cfg.mmGoalItem || '', env.rt.classCur || null]);
+function resetPoll() { if (cacheChar !== env.rt.char) { cacheChar = env.rt.char; needT = readT = infoT = 0; } }
 async function needWrite(now = Date.now()) {
+  resetPoll();
   if (!env.cfg.mmGoalItem || isHelper() || now - needT < NEED_EVERY) return false;
   needT = now;
   let P = null; try { P = env.mammon?.goalAll?.(); } catch (e) { return false; }
@@ -57,9 +61,12 @@ async function needWrite(now = Date.now()) {
   return true;
 }
 async function needRead(now = Date.now()) {
+  resetPoll();
+  const T0 = token();
   if (!isHelper() || now - readT < NEED_EVERY) return false;
   readT = now;
   let v = null; try { v = await env.sharedGet(NEED_KEY); } catch (e) { v = null; }
+  if (token() !== T0) return false;
   const need = v && now - (+v.t || 0) < NEED_TTL && String(v.nick || '').toLowerCase() === mainNick().toLowerCase() ? v : null;
   if (JSON.stringify(need || null) === JSON.stringify(env.rt.subNeed || null)) return false;
   await env.setRt({ subNeed: need });
@@ -80,7 +87,7 @@ function helpGoal() {
 function handover() {
   if (!isHelper()) return null;
   const need = mainNeed(); if (!need?.items) return null;
-  const items = need.items.map(([id, nm, miss]) => { const h = env.invQty(+id); return h > 0 ? [+id, Math.min(h, +miss || h), String(nm)] : null; }).filter(Boolean);
+  const items = need.items.map(([id, nm, miss]) => { const h = env.invQty(+id), n = Number(miss); return h > 0 && Number.isFinite(n) && n > 0 ? [+id, Math.min(h, n), String(nm)] : null; }).filter(Boolean);
   return { to: need.nick, items };
 }
 function handWant(now = Date.now()) {
@@ -107,8 +114,9 @@ function text() {
   return out.join('\n');
 }
 async function tick() {
-  const now = Date.now();
-  await needWrite(now); await needRead(now);
+  const now = Date.now(), T0 = token();
+  await needWrite(now); if (token() !== T0) return;
+  await needRead(now); if (token() !== T0) return;
   const r = role();
   if (r !== (env.rt.subRole ?? null)) { await env.setRt({ subRole: r }); if (r) env.rec('B', 'саб', r === 'crafter' ? `класс ${profName(profOf())} умеет крафтить: сырьё крафтеру не шлю, план крафта — в «Сабклассах»` : `класс ${profName(profOf())} — спойлер: спойл в приоритете, точка фарма по дропу + спойлу`); }
   if (now - infoT > INFO_EVERY) { infoT = now; const t = text(); if (t !== env.rt.subInfo) await env.setRt({ subInfo: t }); }
