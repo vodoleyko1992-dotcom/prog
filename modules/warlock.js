@@ -272,6 +272,7 @@ function noteSnapshot(ch, shots) {
         stacks: Array.isArray(ch.inventory?.stacks)?ch.inventory.stacks.map(s=>({itemId:s?.itemId,qty:s?.qty})):null },
       battleHotbarSlots: Array.isArray(ch.battleHotbarSlots)?ch.battleHotbarSlots.map(s=>s?{k:s.k,id:s.id}:null):null };
     prepared = snapshot(ch, env.shotContext?.(preparedSource,{preflight:true}) || 'unknown');
+    if (prepared && Number.isFinite(ch.snapshotGeneratedAt)) prepared.validUntil = Math.min(prepared.validUntil, ch.snapshotGeneratedAt + 30000);
   }
 }
 function invalidateSnapshot() { latest = null; latestSeen = true; latestHero = null; prepared = null; preparedSource = null; }

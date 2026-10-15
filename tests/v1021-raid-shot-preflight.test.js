@@ -68,6 +68,7 @@ for(const kind of ['ttl','buff','born','class','slot','hero','staleResponse','mi
 });
 test('Stop и потеря замка после GET не дают планируемый DPS',()=>{for(const key of ['on','tabOwner']){const f=setup();f.note();f.env[key]=false;assert.equal(f.plan().key,null)}});
 test('перечитывание плана не продлевает30сек свежести',()=>{const f=setup();f.note();f.tick(25000);assert.ok(f.plan().key);f.tick(5001);assert.equal(f.plan().prepared,false)});
+test('задержка ответа не прибавляет30сек к возрасту серверного снимка',()=>{const f=setup();f.ch.snapshotGeneratedAt-=29000;f.note();assert.ok(f.plan().key);f.tick(1001);assert.equal(f.plan().prepared,false)});
 for(const data of [
  {url:'/game/battle/hotbar'}, {url:'/character/equip'}, {url:'/game/inventory/discard'}, {url:'/game/drops-shop/buy'},
  {url:'/game/battle/action',req:{action:'mystic_spiritshot_toggle'}}, {url:'/game/battle/action',req:{action:'fighter_soulshot_toggle'}},
