@@ -4,7 +4,7 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.tvt = function create_tvt(env) {
-const tvtNow = () => Date.now() + (env.TVT?.off || 0);
+const tvtNow = () => Date.now() + (env.TVT?.off ?? env.rt.tvt?.off ?? 0);
 
 const tvtMs = v => typeof v === 'number' ? v : (v && Date.parse(v)) || 0;
 const canRun = () => env.on !== false && env.tabOwner !== false && !!env.cfg.tvtOn;
@@ -14,7 +14,27 @@ function tvtState() {
   const nx = T.schedule?.next || {}, now = tvtNow();
   return { phase: T.phase || '', reg: !!(T.isRegistered || T.myTeam), team: T.myTeam, id: T.eventId || nx.slotKey || '',
     start: tvtMs(T.startsAt) || tvtMs(nx.battleStartsAt), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000,
+    regOpen: tvtMs(nx.registrationOpensAt), count: +T.registeredCount || 0, max: +T.maxPlayers || 20,
     eliminated: !!T.isRegistered && /^(ACTIVE|FINISHED)$/i.test(T.phase || '') && T.selfCombat?.alive === false };
+}
+const tvtRegistrationDue = () => { const s = tvtState(); return canRun() && !!s && /REGISTRATION/i.test(s.phase) && !s.reg && (!s.regEnd || s.now < s.regEnd); };
+let readAt = 0, reading = false;
+async function tvtRefresh(force = false) {
+  if (!canRun() || !env.gameGet || reading) return;
+  const s = tvtState(), now = Date.now(), opening = s?.regOpen && s.now >= s.regOpen - 5000 && s.now <= s.regOpen + 10000;
+  const due = !s || !s.reg && (opening || tvtRegistrationDue());
+  if (!force && (!due || now - readAt < (opening ? 1000 : 5000))) return;
+  reading = true; readAt = now;
+  try {
+    const response = await env.gameGet('/game/tvt', 8000), data = response?.ok ? await response.json() : null;
+    if (!canRun() || typeof data?.phase !== 'string') return;
+    const t = Date.now();
+    env.TVT = { ...data, t, off: tvtMs(data.serverNow) ? tvtMs(data.serverNow) - t : 0 };
+    const T = env.TVT;
+    await env.setRt({ tvt: { phase: T.phase, eventId: T.eventId, isRegistered: T.isRegistered, myTeam: T.myTeam,
+      startsAt: T.startsAt, registrationEndsAt: T.registrationEndsAt, schedule: T.schedule, registeredCount: T.registeredCount,
+      maxPlayers: T.maxPlayers, selfCombat: typeof T.selfCombat?.alive === 'boolean' ? { alive: T.selfCombat.alive } : null, t, off: T.off } });
+  } catch (e) {} finally { reading = false; }
 }
 
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
@@ -41,6 +61,7 @@ function tvtSoon() {                                // пора на арену:
 // туры РБ/эпиков, телепорты): они длятся минуты и бот опаздывал на арену или уходил с неё
 function tvtHold() {
   if (!env.cfg.tvtOn) return false;
+  if (tvtRegistrationDue()) return true;
   const S = tvtState(); if (!S || !S.reg || S.eliminated) return false;
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
   if (env.rt.tvtDone && env.rt.tvtDone === (S.id || String(S.start || ''))) return false;
@@ -59,37 +80,53 @@ async function tvtWait() {                          // окно TvT, дел на
 
 async function tvtStep() {                          // true — шаг TvT сделан (главный цикл начинает заново)
   if (!canRun()) return false;
+  await tvtRefresh();
+  if (!canRun()) return false;
   // 10.0.14 (public tvt-arena-combat.js, 14.10): павшего участника игра выводит в чат, а не воскрешает.
   // Статус привязан к событию в TVT/rt.tvt; старый TVTC.self от прошлого боя сюда не подмешиваем.
   const state = tvtState();
+  const registration = tvtRegistrationDue();
   if (state?.eliminated) return env.rt.tvtDone === (state.id || String(state.start || '')) ? false : tvtLeave('выбыл из боя');
   tvtStep.leaveT = tvtStep.leaveT || 0;
   if (env.isBattle()) {
     // 10.0.11 (игрок 13.10: «TvT важнее»): бой TvT начался/вот-вот, а бот в PvE-бою — выходим на карту (следующий круг уведёт на арену).
-    // Раньше tvtStep в бою не работал: тур РБ/эпик/долгий моб держали бота до победы. Босс — по галке «TvT важнее боя с РБ» (tvtOverRb)
-    if (!tvtSoon()) return false;
+    // 15.10: регистрация тоже прерывает PvE; по решению игрока включённый TvT важнее любого босса.
+    if (!registration && !tvtSoon()) return false;
+    if (env.victory?.()) { location.href = '/tvt-arena.html'; return true; }
     const rbFight = /l2dop_(rb|eg)_/i.test(location.search) || env.rt.rbHunt?.step === 'fight' || !!(env.rt.epic?.step && env.rt.epic.step !== 'pick');
-    if (rbFight && env.cfg.tvtOverRb === false) return false;
-    if (Date.now() - tvtStep.leaveT < 30000) return false;   // выход сервер не подтвердил (leaveCheck вернул в бой) — не чаще раза в 30 с
+    if (Date.now() - tvtStep.leaveT < (registration ? 3000 : 30000)) return false;
     tvtStep.leaveT = Date.now();
     const S = tvtState() || {};
-    env.rec('B', 'TvT', `бой TvT ${S.start && S.start > S.now ? 'через ' + Math.round((S.start - S.now) / 1000) + ' с' : 'идёт'} — бросаю ${rbFight ? 'бой с боссом' : 'моба'}, иду на арену`);
+    env.rec('B', 'TvT', `${registration ? `регистрация открыта, мест занято ${S.count}/${S.max}` : `бой TvT ${S.start && S.start > S.now ? 'через ' + Math.round((S.start - S.now) / 1000) + ' с' : 'идёт'}`} — прерываю ${rbFight ? 'бой с боссом' : 'фарм'}, иду на арену`);
+    env.leaveMark?.((location.search || '').match(/[?&]spawnId=([^&]+)/)?.[1], 'TvT: освобождаю PvE-бой');
     await env.toMap(); await env.sleep(500); return true;
   }
   const pr = env.$q('#l2-tvt-registration-prompt'), yes = env.$q('#l2-tvt-registration-prompt-yes');
-  if (pr && !pr.hidden && env.shown(yes)) { env.rec('B', 'TvT', 'окно «Зарегистрироваться на TvT?» — да'); await env.pause(); if (!canRun()) return false; env.fire(yes); await env.sleep(1200); return true; }
+  if (!state && pr && !pr.hidden && env.shown(yes) && !isArena()) { location.href = '/tvt-arena.html'; await env.sleep(1000); return true; }
   const S = tvtState(); if (!S) return false;
-  // запись: регистрация открыта, нас нет — на арену, «Зарегистрироваться» (на одно событие — не чаще раза в 2 мин)
-  const regN = (env.rt.tvtRegN || {})[S.id] || 0;   // 7.1.30: не больше 3 попыток записи на одно событие (иначе рыбалка ↔ арена каждые 2 мин)
-  if (/REGISTRATION/i.test(S.phase) && !S.reg && regN < 3 && Date.now() - ((env.rt.tvtRegT || {})[S.id] || 0) > 120000) {
+  // Запись сразу после открытия; неподтверждённую попытку повторяем с backoff на арене, без циклов фарм↔арена.
+  const regN = (env.rt.tvtRegN || {})[S.id] || 0;
+  if (registration) {
     if (!isArena()) { env.setStatus('TvT: иду записываться'); location.href = '/tvt-arena.html'; await env.sleep(4000); return true; }
+    if (S.count >= S.max) { env.setStatus(`TvT: заняты все ${S.max} мест — проверяю освобождение места`); await env.sleep(1000); return true; }
+    const retry = [3000, 5000, 10000, 30000][Math.min(3, Math.max(0, regN - 1))];
+    if (Date.now() - ((env.rt.tvtRegT || {})[S.id] || 0) < retry) { await env.sleep(200); return true; }
     const b = await env.waitX(() => { const x = env.$q('#tvt-register-btn'); return env.shown(x) ? x : null; }, 6000, 200);
-    if (!canRun()) return false;
+    if (!canRun() || !tvtRegistrationDue() || tvtState()?.id !== S.id) return false;
     await env.setRt({ tvtRegT: { ...(env.rt.tvtRegT || {}), [S.id]: Date.now() }, tvtRegN: { [S.id]: regN + 1 } });
     if (!canRun()) return false;
-    if (b) { await env.pause(); if (!canRun()) return false; env.fire(b); env.rec('B', 'TvT', `записался на TvT (${S.id})`); await env.sleep(1500); }
+    if (b) {
+      await env.pause(); if (!canRun() || !tvtRegistrationDue() || tvtState()?.id !== S.id || b.disabled) return false; env.fire(b);
+      env.rec('B', 'TvT', `регистрация отправлена (${S.count}/${S.max}); жду подтверждения сервера`);
+      await env.sleep(1500); if (!canRun()) return false;
+      if (!tvtState()?.reg) await tvtRefresh(true);
+      if (!canRun()) return false;
+      if (!tvtState()?.reg) { env.setStatus('TvT: регистрация пока не подтверждена — остаюсь на арене'); return true; }
+      env.rec('B', 'TvT', `регистрация подтверждена (${S.id})`);
+    }
     else env.rec('B', 'TvT', `кнопки «Зарегистрироваться» нет — ${(env.$q('#tvt-message')?.textContent || env.$q('#tvt-phase-label')?.textContent || '').trim().slice(0, 80)}`);
     if (!canRun()) return false;
+    if (!b) return true;
     location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
   }
   if (tvtSoon()) {
@@ -134,6 +171,20 @@ function skillInfo(b) {
 function mpNow() { const m = env.meMp?.(); if (m && m.cur != null && !isNaN(+m.cur)) return +m.cur; const C = env.TVTC; return C && C.selfMp != null ? +C.selfMp : null; }
 function mpOk(b, mp) { const s = skillInfo(b); return !s || !(+s.mpCost > 0) || mp == null || mp >= +s.mpCost; }
 function srvReady(b) { const s = skillInfo(b); return !s || !s.readyAt || tvtMs(s.readyAt) <= tvtNow() + 50; }
+function tvtSkillAllowed(b) {
+  const s = skillInfo(b), key = String(env.slotAction?.(b) || '');
+  if (s) return s.usable !== false && (!s.targetType || /enemy|enemies|opponent/i.test(s.targetType));
+  return !env.TVTS?.complete || /^(?:attack|basic_attack|battle_potion)/.test(key);
+}
+let skillsReadAt = 0;
+async function tvtSkillsRefresh() {
+  if (!canRun() || !env.gameGet || env.TVTS?.complete && env.TVTS.event === tvtState()?.id || Date.now() - skillsReadAt < 5000) return;
+  skillsReadAt = Date.now();
+  try {
+    const event = tvtState()?.id, r = await env.gameGet('/game/tvt/skills', 5000), data = r?.ok ? await r.json() : null;
+    if (canRun() && tvtState()?.id === event && Array.isArray(data?.skills)) env.TVTS = { skills: data.skills.filter(x => x && typeof x === 'object'), complete: true, event, t: Date.now() };
+  } catch (e) {}
+}
 const stuck = new Map(), misses = new Map();      // ключ слота → до какого времени не жмём / сколько кликов подряд без ответа
 const slotKey = b => String(env.slotAction?.(b) || env.cleanTitle(b?.title || '') || '').toLowerCase();
 const notStuck = b => (stuck.get(slotKey(b)) || 0) <= Date.now();
@@ -146,7 +197,7 @@ function stuckNote(b, mp) {
 async function tvtFight() {
   if (!canRun()) return false;
   if (!env.rt.tvtIn) { await env.setRt({ tvtIn: tvtState()?.id || 1 }); env.rec('B', 'TvT', 'на арене — жду старт'); }
-  let lastPot = 0, lastTgt = 0, lastBack = 0, lastPet = 0, lastMpNote = 0;
+  let lastPot = 0, lastTgt = 0, lastTgtId = '', lastBack = 0, lastPet = 0, lastMpNote = 0;
   const t0 = Date.now();
   while (canRun() && isArena() && Date.now() - t0 < 12 * 60000) {
     const S = tvtState() || {};
@@ -174,17 +225,21 @@ async function tvtFight() {
     // (как сделал игрок в 03:00:26), затем выбираем следующего. Не чаще раза в 4 с — если кнопка не помогла, жмём врага напрямую
     const back = env.$q('#tvt-back-roster-btn');
     if (curDead && cur && domCur && env.shown(back) && Date.now() - lastBack > 4000) {
-      lastBack = Date.now(); env.rec('B', 'TvT', `${cur.name || 'цель'} повержен — назад к списку врагов`); env.fire(back); await env.sleep(env.rnd(350, 550)); continue;
+      lastBack = Date.now(); env.rec('B', 'TvT', `${cur.name || 'цель'} повержен — назад к списку врагов`); env.fire(back);
+      await env.waitX(() => !env.TVTC?.selectedTarget || env.TVTC.selectedTarget.characterId !== cur.characterId, 1000, 25); await env.sleep(40); continue;
     }
-    if (best && (curDead || better) && Date.now() - lastTgt > 1500) {
-      lastTgt = Date.now(); env.setStatus(`TvT: цель ${best.name}${best.hp != null ? ` (HP ${best.hp})` : best.lvl ? ` (${best.lvl} ур.)` : ''}`); env.fire(best.e); await env.sleep(env.rnd(350, 550)); continue;
+    if (best && (curDead || better) && (best.id !== lastTgtId || Date.now() - lastTgt > 1000)) {
+      lastTgt = Date.now(); lastTgtId = best.id; env.setStatus(`TvT: цель ${best.name}${best.hp != null ? ` (HP ${best.hp})` : best.lvl ? ` (${best.lvl} ур.)` : ''}`); env.fire(best.e);
+      await env.waitX(() => String(env.TVTC?.selectedTarget?.characterId || '') === String(best.id), 1000, 25); await env.sleep(40); continue;
     }
     if (curDead) { env.setStatus(best ? `TvT: выбираю цель — ${best.name}` : 'TvT: живых врагов нет — жду'); await env.sleep(best ? 300 : 800); continue; }   // 9.2: по павшей цели скиллы не жмём
+    await tvtSkillsRefresh();
+    if (!canRun()) return false;
     const me = env.meHp();
     // банка HP: на арене — с 60 %, не чаще раза в 1,1 с
     if (me && me.pct <= 60 && Date.now() - lastPot > 1100) { const pot = env.hpPotPick(me.pct <= 35); if (pot) { lastPot = Date.now(); env.fire(pot); await env.sleep(env.rnd(150, 250)); continue; } }
     const sv = tvtNow(), stunned = (cur?.stunnedUntil || 0) > sv, mp = mpNow();
-    const okB = b => b && env.ready(b) && notStuck(b) && srvReady(b) && mpOk(b, mp);
+    const okB = b => b && tvtSkillAllowed(b) && env.ready(b) && notStuck(b) && srvReady(b) && mpOk(b, mp);
     const pickR = list => env.names(list).map(n => env.slotsBy(n)[0]).find(okB);
     let b = null, why = '';
     if (!stunned && (b = pickR(env.cfg.nStun))) why = 'стан';
@@ -199,12 +254,12 @@ async function tvtFight() {
     }
     if (!b) { await env.sleep(150); continue; }
     env.setStatus(`TvT: ${why} — ${env.cleanTitle(b.title)} → ${cur?.name || 'цель'}${cur?.hp != null ? ` (${cur.hp}/${cur.maxHp})` : ''}`);
-    const actBefore = env.TVTC?.actN || 0;
+    const actBefore = env.TVTC?.actN || 0, sentAt = Date.now();
     env.fire(b);
     // ждём ответ сервера на этот удар (≈0,3–0,6 с), не дольше 1 с; нет ответа — клик игра не отправила (MP, откат, панель)
-    const got = await env.waitX(() => (env.TVTC?.actN || 0) !== actBefore ? true : null, 1000, 40);
+    const got = await env.waitX(() => (env.TVTC?.actN || 0) !== actBefore && env.TVTC?.actT >= sentAt ? true : null, 1000, 40);
     if (!got) stuckNote(b, mp); else misses.set(slotKey(b), 0);
-    await env.sleep(env.rnd(120, 220));
+    await env.sleep(got ? 40 : env.rnd(120, 220)); // подтверждённый ответ уже завершил ход; лишняя фиксированная пауза не нужна
     if (env.TVTC?.actErr && Date.now() - env.TVTC.actErr.t < 1500) await env.sleep(300);   // сервер отказал (откат/MP) — не долбим
     if (!canRun()) return false;
     // 10.0.11: «Атака питомца» — у Warlock кот основной урон, на арене он бьёт только по своей кнопке (#tvt-summon-attack-btn)
@@ -216,6 +271,6 @@ async function tvtFight() {
   // Stop, потеря вкладки, смена страницы и предел одного вызова — не серверный итог события.
   return false;
 }
- return { tvtNow, tvtMs, tvtState, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, skillInfo, mpNow };
+ return { tvtNow, tvtMs, tvtState, tvtRegistrationDue, tvtRefresh, tvtSkillAllowed, tvtSkillsRefresh, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, skillInfo, mpNow };
  };
 })(globalThis);

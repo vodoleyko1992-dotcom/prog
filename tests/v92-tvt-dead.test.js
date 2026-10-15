@@ -17,7 +17,7 @@ const env = {
   TVT: { eventId: 'e1', phase: 'ACTIVE', isRegistered: true, myTeam: 1, startsAt: now - 5000, endsAt: now + 600000, t: now },
   TVTC: { t: now, selectedTarget: { characterId: 'x1', name: 'xdesx', hp: 0, maxHp: 544, alive: false } },   // ответ удара: targetDead
   $q: s => els[s] || null, shown: e => !!e && e.shown !== false, rec: (...a) => logs.push(a.join(' ')), setStatus: () => {}, setRt: async () => {},
-  sleep: async () => {}, rnd: () => 0, meHp: () => ({ pct: 100 }), names: s => String(s || '').split(',').map(x => x.trim()).filter(Boolean),
+  sleep: async () => {}, waitX: async fn => fn(), rnd: () => 0, meHp: () => ({ pct: 100 }), names: s => String(s || '').split(',').map(x => x.trim()).filter(Boolean),
   slotsBy: () => [{ title: 'Blaze', id: 'blaze' }], ready: () => true, forceCosts: () => [], hudForce: () => 0, forceNow: () => 0, forceMax: () => 0,
   cleanTitle: t => t, autonomyMode: () => 'farm', hpPotPick: () => null,
   fire: e => { fired.push(e.id); if (fired.length >= 3) env.on = false; },

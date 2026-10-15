@@ -196,6 +196,7 @@ const dungeonBattle = () => /^sdms_/i.test(new URLSearchParams(location.search).
 
 async function nextFight(ctx) {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
+  if (await env.tvtStep?.()) return;
   if (env.tvtSoon() && !ctx?.rb) { env.rec('B', 'TvT', 'бой TvT скоро — после этого моба на арену'); location.href = '/tvt-arena.html'; await env.sleep(4000); return; }
   await env.sleep(env.rnd(40, 120));                      // после победы — сразу дальше (v5.4: было 150–350 мс)
   if (!env.on || !env.tabOwner) return;
