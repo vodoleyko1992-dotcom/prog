@@ -20,13 +20,15 @@ function quests(state, envExtra = {}) {
   sandbox.globalThis = sandbox;
   vm.runInNewContext(src('modules/quests.js'), sandbox, { filename: 'quests.js' });
   const recs = [], fired = [];
-  const env = { rt: {}, cfg: { campAuto: true, campaign: false, campaignEvery: 25 }, on: true, QLINE: /^$/, TAG: 't',
+  // 15.10: клик больше не доказывает телепорт — моделируем реальный character и принятый ответ.
+  let snapshot={name:"Hero",id:"hero-1",revision:1,currentZoneId:"town",locationType:"city",worldX:1,worldY:2}, Q;
+  const env = { rt: {char:"Hero"}, gameGet:async()=>({ok:true,json:async()=>({character:snapshot})}), cfg: { campAuto: true, campaign: false, campaignEvery: 25 }, on: true, QLINE: /^$/, TAG: 't',
     heroLvl: () => 15, isCampaign: () => true, isMail: () => false, shown: e => !!e && !e.hidden, logLines: () => [], noticeText: () => '',
     $q: sel => sandbox.document.querySelector(sel), setRt: async p => Object.assign(env.rt, p), rec: (...a) => recs.push(a.join(' ')), setStatus: () => {},
-    fire: b => { fired.push(b.dataset.action || b.dataset.questTeleportId); b.onfire && b.onfire(); }, pause: async () => {}, sleep: async () => {}, rnd: () => 100,
+    fire: b => { fired.push(b.dataset.action || b.dataset.questTeleportId); b.onfire && b.onfire(); if(b.dataset.questTeleportId){const rev=snapshot.revision;snapshot={...snapshot,revision:rev+1,currentZoneId:b.dataset.questTeleportId,locationType:'zone',worldX:30,worldY:40};Q.campLocationNote('/game/story-quests/starter-saga/teleport',{method:'POST',status:200,req:{teleportId:b.dataset.questTeleportId,expectedRevision:rev},res:{character:snapshot}})} }, pause: async () => {}, sleep: async () => {}, rnd: () => 100,
     goOutskirts: async () => { env.outs = (env.outs || 0) + 1; },
     waitFor: async (fn) => { for (let i = 0; i < 3; i++) { const r = fn(); if (r) return r; } return null; }, ...envExtra };
-  return { q: sandbox.L2V7Factories.quests(env), env, recs, fired, location };
+  Q=sandbox.L2V7Factories.quests(env); return { q: Q, env, recs, fired, location };
 }
 const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь новичка: Первые испытания', minLevel: 10, effectiveLevel: 15, stage: 'hunt_1', completed: false, scout: { teleportId: 'elven_ruins' } };
 

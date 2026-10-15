@@ -5,6 +5,143 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.quests = function create_quests(env) {
 const location = env.routeLocation || root.location;
+// 15.10 (лог 11:11): после ручного «Город» lastTeleport оставался Cruma, хотя герой уже в Дионе.
+// Страница гильдии сама по себе не меняет координаты. Верим принятому снимку, а не URL/старому клику.
+const CAMP_AT = 'l2bot.campaignAt';
+let liveAt = null, locationCheck = null, pendingCheck = null;
+const locationKey = s => JSON.stringify([s?.char, s?.id, s?.zone, s?.dung, s?.loc, s?.x, s?.y]);
+function campSnapshot(ch) {
+  if (!ch || ch.name !== env.rt.char || !ch.id || !Number.isSafeInteger(ch.revision) ||
+      !['currentZoneId', 'locationType', 'worldX', 'worldY'].every(k => Object.hasOwn(ch, k))) return null; // частичный delta не означает ухода
+  return { char: ch.name, id: ch.id, rev: ch.revision, zone: ch.currentZoneId == null ? null : String(ch.currentZoneId),
+    dung: ch.activeDungeonId || null, loc: String(ch.locationType || ''),
+    x: Number.isFinite(ch.worldX) ? ch.worldX : null, y: Number.isFinite(ch.worldY) ? ch.worldY : null, t: Date.now() };
+}
+function campLocationNote(path, d) {
+  const pending = env.rt.campaignTp, isReply = pending && pending.char === env.rt.char && pending.url === location.pathname &&
+    /^\/game\/story-quests\/(?:dion-campaign|starter-saga)\/(?:teleport|transport)$/.test(path) && d.method === 'POST' &&
+    (d.req?.teleportId || d.req?.transportId) === pending.id && Number.isSafeInteger(d.req?.expectedRevision) && d.req.expectedRevision >= pending.rev;
+  // 409 native UI повторяет самостоятельно: пока второй запрос не ответил, это ещё не доказанный отказ операции.
+  if (isReply && !pending.ack && d.req.expectedRevision === pending.rev && !d.error && d.status !== 409 && d.status >= 200 && d.status < 500 && (d.res?.error || d.res?.ok === false) &&
+      (!d.res?.character || d.res.character.id === pending.charId && d.res.character.name === pending.char)) {
+    const ack = { ...pending, refused: { status: d.status, t: Date.now(), reason: String(d.res.error || 'отказ сервера').slice(0, 120) } };
+    try { root.sessionStorage?.setItem('l2bot.campaignTp', JSON.stringify(ack)); } catch (_) {}
+    if (env.tabOwner !== false) env.setRt({ campaignTp: ack });
+    return;
+  }
+  if (d.error || d.status < 200 || d.status >= 300 || d.res?.error || d.res?.ok === false) return;
+  const s = campSnapshot(d.res?.character); if (!s) return;
+  let old = liveAt || env.rt.campaignAt;
+  try { const saved = JSON.parse(root.sessionStorage?.getItem(CAMP_AT) || 'null'); if (saved?.char === s.char && (!old || saved.rev > old.rev)) old = saved; } catch (_) {}
+  if (old?.char === s.char && (old.id !== s.id || old.rev > s.rev)) { liveAt = old; return; }
+  liveAt = s;
+  const q = d.res?.quest, points = [q?.npc, q?.scout, q?.townNpc].filter(p => p?.teleportId && Number.isFinite(p.worldX) && Number.isFinite(p.worldY)).map(p => ({ tp: p.teleportId, x: p.worldX, y: p.worldY }));
+  if (points.length && env.tabOwner !== false && JSON.stringify(points) !== JSON.stringify(env.rt.campaignPoints)) env.setRt({ campaignPoints: points });
+  try { root.sessionStorage?.setItem(CAMP_AT, JSON.stringify(s)); } catch (_) {}
+  if (env.tabOwner !== false && locationKey(env.rt.campaignAt) !== locationKey(s)) env.setRt({ campaignAt: s });
+  const p = env.rt.campaignTp;
+  if (!p || p.char !== s.char || p.charId !== s.id || p.kick !== (+env.rt.manualKickAt || 0) || p.chapter !== chapterKey() || p.url !== location.pathname ||
+      !/^\/game\/story-quests\/(?:dion-campaign|starter-saga)\/(?:teleport|transport)$/.test(path) || d.method !== 'POST' ||
+      (d.req?.teleportId || d.req?.transportId) !== p.id || !Number.isSafeInteger(d.req?.expectedRevision) ||
+      d.req.expectedRevision < p.rev || s.rev <= d.req.expectedRevision) return;
+  // Native UI может единожды повторить 409 с новой ревизией. Только точный принятый POST подтверждает намерение.
+  const ack = { ...p, ack: s, refused: null };
+  try { root.sessionStorage?.setItem('l2bot.campaignTp', JSON.stringify(ack)); } catch (_) {}
+  if (env.tabOwner !== false) env.setRt({ campaignTp: ack });
+}
+const samePoint = (a, b) => a?.id === b?.id && !b?.dung && a?.x != null && a?.y != null && a.x === b.x && a.y === b.y && (b.loc !== 'city' || a.loc === 'city');
+const chapterKey = () => JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter]);
+function campReached(tp, s) {
+  if (!s || s.char !== env.rt.char) return null;
+  const a = env.rt.campaignAnchor;
+  if (a?.tp === tp && a.at?.id === s.id && a.at.loc !== 'city' && s.loc === 'city') return false;
+  if (s.zone === tp && !s.dung) return true;
+  if (!s.dung && a?.tp === tp && samePoint(a.at, s)) return true;
+  if (!s.dung && env.rt.campaignPoints?.some(p => p.tp === tp && p.x === s.x && p.y === s.y)) return true;
+  if (s.zone || s.dung || /^(?:city|dungeon)$/.test(s.loc)) return false;
+  return null;
+}
+function campGuard() {
+  const char = env.rt.char, kick = +env.rt.manualKickAt || 0, chapter = chapterKey(), enabled = !!env.cfg.campaign, auto = env.cfg.campAuto;
+  return () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && char === env.rt.char &&
+    kick === (+env.rt.manualKickAt || 0) && chapter === chapterKey() && enabled === !!env.cfg.campaign && auto === env.cfg.campAuto && campEnabled();
+}
+async function campReadAt(active, force = false) {
+  const key = JSON.stringify([env.rt.char, +env.rt.manualKickAt || 0]);
+  if (!force && liveAt?.char === env.rt.char && (!locationCheck || locationCheck.key === key) && Date.now() - liveAt.t < 15000) return liveAt;
+  if (!force && locationCheck?.key === key && Date.now() - locationCheck.t < 5000) return locationCheck.at;
+  locationCheck = { key, t: Date.now(), at: null };
+  try {
+    const r = await env.gameGet('/character'), j = r.ok ? await r.json() : null;
+    if (!active()) return null;
+    const s = campSnapshot(j?.character); if (!s) return null;
+    campLocationNote('/character', { status: 200, res: j });
+    if (liveAt?.id !== s.id || liveAt.rev > s.rev) return null;
+    locationCheck.at = liveAt; return liveAt;
+  } catch (_) { return null; }
+}
+async function campLocationStep() {
+  if (location.pathname !== '/map.html' || env.rt.actionOwner || !campEnabled()) return false;
+  const tp = campOpen().find(t => t.tp)?.tp; if (!tp) return false;
+  const active = campGuard(), s = await campReadAt(active); if (!active()) return true;
+  if (!s) { env.setStatus('Кампания: жду подтверждения текущей локации'); return true; }
+  const reached = campReached(tp, s);
+  if (reached === true && !env.rt.campaignTp) return false;
+  // Не сканируем десятки страниц чужой карты, даже если там есть те же мобы.
+  await env.setRt({ campaignDue: true }); if (!active()) return true;
+  env.rec('B', 'кампания', `проверяю точку главы: ${s.zone || s.loc || '?'} → ${tp}`);
+  await goCampaign(); return true;
+}
+async function campTeleport(tp, btn, active) {
+  let p = env.rt.campaignTp;
+  if (p) {
+    try { const cancelled = JSON.parse(root.sessionStorage?.getItem('l2bot.campaignTpCancelled') || 'null');
+      if (cancelled?.nonce === p.nonce && !!p.nonce && cancelled.charId === p.charId && cancelled.id === p.id) { await env.setRt({ campaignTp: null }); p = null; } } catch (_) {}
+  }
+  if (p) {
+    try { const a = JSON.parse(root.sessionStorage?.getItem('l2bot.campaignTp') || 'null');
+      if (a?.nonce === p.nonce && !!p.nonce && a.id === p.id && a.charId === p.charId && a.kick === p.kick) p = a; } catch (_) {}
+    if (p.char !== env.rt.char) { env.setStatus('Кампания: неподтверждённый телепорт другого персонажа; повтор запрещён'); return false; }
+  }
+  const pendingKey = p && JSON.stringify([p.nonce, env.rt.char, +env.rt.manualKickAt || 0, chapterKey(), p.ack?.rev, p.refused?.reason, liveAt?.rev]);
+  if (pendingKey && pendingCheck?.key === pendingKey && Date.now() - pendingCheck.t < 5000) { env.setStatus('Кампания: жду подтверждения телепорта; повторно не отправляю'); return false; }
+  let s = await campReadAt(active, true); if (!active()) return false;
+  const sameRoute = !p || p.id === tp && p.kick === (+env.rt.manualKickAt || 0) && p.chapter === chapterKey();
+  if (sameRoute && p?.ack && (!s || p.ack.rev >= s.rev) && (!liveAt || liveAt.char !== p.char || p.ack.rev >= liveAt.rev)) s = p.ack;
+  const destination = p?.id || tp;
+  const confirmed = s && (!p || s.id === p.charId && s.rev > p.rev) && (campReached(destination, s) === true ||
+    p?.ack && p.ack.id === s.id && !s.dung && (locationKey(p.ack) === locationKey(s) || samePoint(p.ack, s)));
+  if (confirmed) {
+    // После Stop/смены главы только сверяем уже выполненное намерение; старую команду не повторяем.
+    await env.setRt({ lastTeleport: destination, campaignAnchor: { tp: destination, at: s }, campaignTp: null, chainQ: [], chainWhy: '' });
+    try { root.sessionStorage?.removeItem('l2bot.campaignTp'); } catch (_) {}
+    if (!active()) return false;
+    return destination === tp ? true : campTeleport(tp, btn, active);
+  }
+  if (p?.refused) {
+    await env.setRt({ campaignTp: null, campaignTpRetry: { id: p.id, until: Date.now() + 30000, reason: p.refused.reason } });
+    try { root.sessionStorage?.removeItem('l2bot.campaignTp'); } catch (_) {}
+    env.setStatus(`Кампания: телепорт отклонён (${p.refused.reason}); проверю через 30 секунд`); return false;
+  }
+  if (p) { pendingCheck = { key: pendingKey, t: Date.now() }; env.setStatus('Кампания: результат телепорта не подтверждён; повторная отправка запрещена'); return false; }
+  if (env.rt.campaignTpRetry?.id === tp && env.rt.campaignTpRetry.until > Date.now()) { env.setStatus('Кампания: жду повторной проверки после отказа телепорта'); return false; }
+  if (!s || !btn || btn.disabled) { env.setStatus('Кампания: нет подтверждения позиции или доступной кнопки телепорта'); return false; }
+  await env.pause(); if (!active()) return false;
+  p = { nonce: Date.now() + ':' + Math.random().toString(36).slice(2), id: tp, char: s.char, charId: s.id, rev: s.rev, kick: +env.rt.manualKickAt || 0, chapter: chapterKey(), url: location.pathname, t: Date.now() };
+  const written = await env.setRt({ campaignTp: p });
+  const notSent = async () => { // Достоверно знаем: fire ещё не вызывался (либо вернул false).
+    try { root.sessionStorage?.setItem('l2bot.campaignTpCancelled', JSON.stringify(p)); } catch (_) {}
+    if (env.rt.campaignTp?.nonce === p.nonce && env.rt.campaignTp?.charId === p.charId) await env.setRt({ campaignTp: null });
+    return false;
+  };
+  if (written?.ok === false || env.rtCommit && !await env.rtCommit() || !active()) return notSent();
+  if (env.fire(btn) === false) return notSent();
+  await env.waitFor(() => env.rt.campaignTp?.ack || env.rt.campaignTp?.refused || !active(), 8000, 100);
+  if (!active()) return false;
+  // Повторный проход лишь сверяет ACK/GET; отправка уже сохранённого намерения невозможна.
+  return campTeleport(tp, btn, active);
+}
+
 function questLinesInLog() {
   return env.logLines().map(l => l.match(env.QLINE)).filter(Boolean)
     .map(m => ({ label: m[1].replace(/[★·\s]+$/, '').trim(), done: +m[2], total: +m[3], left: m[4] != null ? +m[4] : Math.max(0, +m[3] - +m[2]) }));
@@ -455,23 +592,14 @@ async function campaign() {
   env.rec('B', 'кампания', `${st.title}: ` + open.map(t => `${t.name} ${t.done}/${t.total}${t.loc ? ' @' + t.loc : ''}`).join(' · '));
   // телепорт к локации первой невыполненной цели (если ещё не там)
   const tp = open.find(t => t.tp)?.tp;
-  if (tp && env.rt.lastTeleport !== tp) {
+  if (tp) {
     const all = [...document.querySelectorAll('[data-quest-teleport-id], [data-quest-transport-id]')].filter(b => (b.dataset.questTeleportId || b.dataset.questTransportId) === tp);
     const btn = all.find(b => !/npc/i.test(b.textContent)) || all[0];
-    env.setStatus(`Кампания: телепорт → ${open.find(t => t.tp === tp)?.loc || tp}`);
-    await env.pause();
-    if (!env.on) return;
-    if (chapterMark !== JSON.stringify([env.rt.storySaga?.stage, env.rt.dionCampaign?.chapter]) || staleCampaignPage()) return;
-    const href = location.href;
-    env.fire(btn);
-    // телепорт мгновенный и обычно без сообщения: 150 мс хватает, дальше сразу в Окрестности
-    await env.waitFor(() => location.href !== href || /телепорт|перемещ|переміщ/i.test(env.noticeText()), 150, 30);
-    await env.setRt({ lastTeleport: tp, chainQ: [], chainWhy: '' });   // новая локация — статистику цепочки с нуля
-    env.rec('B', 'телепорт', `${tp}: ${env.noticeText() || 'без сообщения'}`);
-    if (location.href !== href) await env.sleep(env.rnd(150, 250));
+    env.setStatus(`Кампания: проверяю локацию → ${open.find(t => t.tp === tp)?.loc || tp}`);
+    if (!await campTeleport(tp, btn, campGuard())) return;
   }
   return env.goOutskirts();
 }
- return { questLinesInLog, sagaNote, dionNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
+ return { campLocationNote, campLocationStep, campReached, campTeleport, campGuard, questLinesInLog, sagaNote, dionNote, campAuto, campEnabled, CAMP_AUTO_MAX_LVL, actionBtn, pressAction, campActive, campOpen, campMobOpen, campRbOpen, campChampOpen, campChampMin, isQuestName, applyQuestLog, questProgress, questRate, questFights, trackQuest, questsFor, questSummary, isCampaignPage, isQuests, campOn, goCampaign, questsStep, mailStep, campaignState, campaign };
  };
 })(globalThis);
