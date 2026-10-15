@@ -4185,7 +4185,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get antibotState() { return antibo
   get shown() { return shown; }, set shown(value) { shown = value; },
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; } });
-L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.epics = L2V7Factories.epics({ get shown() { return shown; }, get rbTimerListNote() { return (...a) => L2V7Modules.rbtimer.listNote(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faCost() { return faCost; }, get gameAuth() { return gameAuth; }, get invQty() { return invQty; }, get rbInfo() { return (...a) => L2V7Modules.raid.rbInfo(...a); }, get rbPreCheck() { return rbPreCheck; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get EPICS() { return EPICS; }, set EPICS(value) { EPICS = value; },
   get EPIC_URL() { return EPIC_URL; }, set EPIC_URL(value) { EPIC_URL = value; },
@@ -5474,6 +5474,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   }
   try { dock(); } catch (e) {}
   if (isBattle()) setTimeout(() => hotbarRows3().catch(() => {}), 800);   // и при выключенном боте — 3 ряда открыты всегда
+  if (isEpicPage()) setTimeout(() => epicListScan().catch(e => console.warn(TAG, 'эпики: список страницы', e)), 1800);
   if (/magister/i.test(location.pathname)) [2500, 6000].forEach(ms => setTimeout(() => { try { learnSkillDb(); } catch (e) {} }, ms));   // 7.1.31: ранги/описания навыков — и при выключенном боте
   draw(); main();
   if (!on && rt.invScan) invScanDrive();
