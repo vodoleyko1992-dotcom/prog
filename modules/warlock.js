@@ -1,4 +1,4 @@
-/* Автобаф кота: отдельная дополнительная задача, без смены основного режима. */
+/* Автобаф суммона: отдельная дополнительная задача, без смены основного режима. */
 (function (root) {
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
@@ -23,12 +23,13 @@ function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick() || !Number.isInteger(slot) || !Number.isSafeInteger(ch.revision)) return null;
   const prof = String(ch.l2Profession || '');
-  if (!/^human_(?:warlock|arcana_lord)$/.test(prof)) return null;
+  if (!/^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(prof)) return null;
   return { char: ch.name, prof, slot, key: `${slot}:${prof}` };
 }
+// 10.0.23 (лог 15.10 07:18): полный городской набор доступен и Dark Panther (283).
 function summon(ch) {
   const p = ch?.activeSummon;
-  return p && p.kind === 'servitor' && typeof p.key === 'string' && /^(?:kai|kat|mew)_the_cat$/.test(p.key)
+  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^human_(?:dark_avenger|hell_knight)$/.test(ch.l2Profession || '') ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key))
     && p.hp > 0 && number(p.summonSkillId) > 0 && number(p.summonSkillLevel) > 0 && Array.isArray(p.activeBuffs) ? p : null;
 }
 function catalogSet(data) {
@@ -106,11 +107,11 @@ async function reconcile(T, ch, afterWin, confirmedWrite) {
     const saved = await patch({ pending: null, spent: (state().spent || 0) + paid.price, lifetimeSpent: (state().lifetimeSpent || 0) + paid.price, snapshot: snapshot(ch), purchases: (state().purchases || 0) + 1,
       budgetEpoch: state().budgetEpoch || P.at, lastReceipt: { at: P.at, confirmedAt: Date.now(), revision: ch.revision, price: paid.price, kind: paid.kind,
         classKey: P.classKey, petKey: P.petKey, petLevel: P.petLevel, expiresAt: effects.expiresAt },
-      expiresAt: effects.expiresAt, status: 'active', reason: 'Полный баф кота подтверждён', nextCheckAt: Date.now() + 60000 });
+      expiresAt: effects.expiresAt, status: 'active', reason: 'Полный баф суммона подтверждён', nextCheckAt: Date.now() + 60000 });
     const durable = await durableOrRestore(T, before, ['pending','spent','lifetimeSpent','snapshot','purchases','budgetEpoch','lastReceipt','expiresAt','status','reason','nextCheckAt'], saved);
     confirmedWrite?.(durable);
     if (!durable) { await status(T, 'unknown', 'Квитанция не сохранена; резерв покупки остаётся'); return true; }
-    env.rec('B', 'кот', `Полный баф подтверждён: ${paid.price} адены, до ${new Date(effects.expiresAt).toISOString()}`); return true;
+    env.rec('B', 'суммон', `Полный баф подтверждён: ${paid.price} адены, до ${new Date(effects.expiresAt).toISOString()}`); return true;
   }
   await status(T, 'unknown', contradicts ? 'Цена, валюта или баланс противоречат квитанции; повторная оплата запрещена' : effects ? 'Эффекты есть, расход не подтверждён; повторная покупка запрещена' : 'Исход покупки не подтверждён; проверяю бафы без повторной оплаты', { nextCheckAt: Date.now() + 15000 });
   return true;
@@ -123,18 +124,18 @@ async function step({ afterWin = false, forceRead = false } = {}) {
   try {
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
-    if (!identity(ch)) { await status(T, 'class', 'Нужен текущий персонаж Warlock и подтверждённый класс', { nextCheckAt: Date.now() + 15000 }); return false; }
+    if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord или Dark Avenger / Hell Knight', { nextCheckAt: Date.now() + 15000 }); return false; }
     noteSnapshot(ch);
     if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя'); return false; }
     if (await reconcile(T, ch, afterWin)) return true;
     if (!same(T, afterWin)) return false;
-    const p = summon(ch); if (!p) { await status(T, 'pet', 'Нужен живой призванный кот', { nextCheckAt: Date.now() + 10000 }); return false; }
+    const p = summon(ch); if (!p) { await status(T, 'pet', 'Нужен живой призванный суммон', { nextCheckAt: Date.now() + 10000 }); return false; }
     const raw = await read('/character/town/buffer/catalog'); if (!same(T, afterWin)) return false;
     const set = catalogSet(raw); if (!set) { await status(T, 'catalog', 'Цена, валюта или состав полного бафа не подтверждены', { nextCheckAt: Date.now() + 15000 }); return false; }
     const full = coverage(p, set.skills); await observe(T, ch, set, full); if (!same(T, afterWin)) return false;
     if (full) { await status(T, 'active', 'Полный баф уже действует'); return false; }
     const S = state(), last = S.lastReceipt;
-    if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери кота повторно не покупаю'); return false; }
+    if (last?.expiresAt > Date.now()) { await status(T, 'early-loss', 'Оплаченный срок ещё не истёк; после смены или потери суммона повторно не покупаю'); return false; }
     if (last && option('petFullRenew') !== true) { await status(T, 'renew', 'Автообновление выключено'); return false; }
     if (last && ch.revision < last.revision) { await status(T, 'stale', 'Снимок старее последней покупки; жду свежее состояние'); return false; }
     const budget = number(option('petFullBudget')), cap = number(option('petFullMaxPrice'));
@@ -183,7 +184,7 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     noteSnapshot(fresh.character || fresh);
     await reconcile(T, fresh.character || fresh, afterWin); return true;
   } catch (_) {
-    if (mine(T)) await status(T, state().pending ? 'unknown' : 'read', state().pending ? 'Исход покупки неизвестен; повторно не оплачиваю' : 'Не удалось прочитать состояние кота', { nextCheckAt: Date.now() + 15000 });
+    if (mine(T)) await status(T, state().pending ? 'unknown' : 'read', state().pending ? 'Исход покупки неизвестен; повторно не оплачиваю' : 'Не удалось прочитать состояние суммона', { nextCheckAt: Date.now() + 15000 });
     return false;
   } finally { busy = false; }
 }
@@ -325,12 +326,12 @@ function raidContext(id, st = {}, options = {}) {
   const p = prepared, fresh = p && p.char===charName() && p.char===env.heroNick() && p.classKey===`${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`
     && p.validUntil>Date.now() && Date.now()-p.at>=0 && Date.now()-p.at<=30000 && p.born===(+env.rt.petBornT||0);
   const s = planning ? fresh ? p : null : currentSnapshot(), h = s?.hero;
-  const flags = planning ? { prepared: !!s, planned: true, reason: s ? 'Заряды для следующего боя не подтверждены' : 'Нужен свежий полный состав персонажа и кота' } : {};
+  const flags = planning ? { prepared: !!s, planned: true, reason: s ? 'Заряды для следующего боя не подтверждены' : 'Нужен свежий полный состав персонажа и суммона' } : {};
   if (!s || !h?.buffs || !(h.mAtk > 0 || h.pAtk > 0) || s.shots === 'unknown' || !id
     || planning && env.shotContext?.(preparedSource,{preflight:true})!==s.shots) return { managed: true, key: null, ...flags };
   const target = [String(id), ...[['lvl','level'],['hp','maxHp'],['pDef','pdef'],['mDef','mdef'],['pAtk','patk'],['mAtk','matk']].map(keys => keys.map(k => st[k]).find(Number.isFinite) ?? null)];
   // 10.0.21 (лог 15.10 00:49): сила состава общая для РБ, точный замер потерь/урона остаётся привязан к цели.
-  // Перепризыв меняет powerKey даже после свежего /character с теми же цифрами кота.
+  // Перепризыв меняет powerKey даже после свежего /character с теми же цифрами суммона.
   return { managed: true, key: JSON.stringify([s.key,target,s.born]), powerKey: JSON.stringify([s.key,s.born]), validUntil: s.validUntil,
     ...(planning ? { prepared: true, planned: true, reason: 'Заряды на панели и в сумке; бот включит их в начале боя' } : {}) };
 }
@@ -338,7 +339,7 @@ async function noteBattle(ctx) {
   const p = ctx?.pet, c = ctx?.petCohort, T = token();
   if (!mine(T) || !p || !c || c.char !== T.char || c.classKey !== `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`
     || c.validUntil <= Date.now() || (latestSeen && (!latest || latest.key !== c.snapshotKey)) || ctx.petActsKnown === false || ctx.petCohortMixed || p.resummons || p.deaths || ctx.petCohortDone || p.key !== c.petKey) return;
-  // Только наблюдаемый урон. Не смешиваем ранг кота, бафы и заряды; неизвестные заряды помечены явно.
+  // Только наблюдаемый урон. Не смешиваем ранг суммона, бафы и заряды; неизвестные заряды помечены явно.
   ctx.petCohortDone = true;
   const all = { ...(env.rt.petCohorts || {}) }, old = all[c.key] || {}, fields = ['hits','hitDmg','crits','misses','dmg','acts'];
   all[c.key] = { ...c, fights: (old.fights || 0) + 1, ...Object.fromEntries(fields.map(k => [k, (old[k] || 0) + (+p[k] || 0)])), at: Date.now() };

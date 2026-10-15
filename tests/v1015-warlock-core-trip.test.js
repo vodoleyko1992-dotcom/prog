@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-const core=fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');const source=core.slice(core.indexOf('// Поход за платным бафом:'),core.indexOf('// Автобаф кота: отдельная задача'));
+// 10.0.23: граница по объявлению функции, независимо от переименования кота в суммона.
+const core=fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');const source=core.slice(core.indexOf('// Поход за платным бафом:'),core.indexOf('const warlockShotContext ='));
 function make(){let now=100000;class Clock extends Date{static now(){return now}}
  const c={console,Date:Clock,URLSearchParams,Number,Set,Promise,crypto:{randomUUID:()=> 'trip-1'},CSS:{escape:x=>x},on:true,tabOwner:true,cfg:{tvtOn:true,petFullAuto:true,catDungeon:'saints',shopReserve:200000,shopMaxSpend:2000000},rt:{char:'Hero',zone:'home-zone'},mode:'farm',hero:'Hero',tvt:false,ab:false,otherJob:false,commits:0,saves:[],clicks:[],backend:0,status:'',saveOk:true,afterSave:null,afterCommit:null,onGet:null,
   window:{postMessage(){}},sleep:async()=>{},location:{pathname:'/map.html',search:'',href:'',reload(){c.reloads=(c.reloads||0)+1}},CAT_URL:'/catacombs.html',at:null,button:null,

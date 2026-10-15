@@ -779,7 +779,7 @@ async function rbBuffHold(name, active) {
 }
 
 function rbSummonBuffReady() {
-  if (env.cfg.petFullAuto !== true || !/^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || '')) return true;
+  if (env.cfg.petFullAuto !== true || !/^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) return true;
   const s = env.warlock?.summary?.();
   return s?.status === 'active' && s.expiresAt > Date.now() + 60000;
 }
@@ -1058,12 +1058,12 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await rbBuffHold(preparing.name, active)) return;
     if (!active()) return;
-    if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord)$/.test(env.rt.classCur?.prof || '')) {
+    if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
       await env.warlock?.step?.({ forceRead: true });
       if (!active()) return;
       if (!rbSummonBuffReady()) {
         const s = env.warlock?.summary?.();
-        await rbHuntPhase('prepare', `жду полный бафф кота: ${s?.reason || 'нет подтверждения'}; к РБ пока не иду`);
+        await rbHuntPhase('prepare', `жду полный бафф суммона: ${s?.reason || 'нет подтверждения'}; к РБ пока не иду`);
         if (active()) await env.sleep(3000);
         return;
       }

@@ -19,6 +19,7 @@ function fixture({ need = null, cat = true, state = 'active' } = {}) {
       logLines: () => [], newLines: () => [], activeBuffs: () => [] } });
   return { ...m, setNeed: value => { missing = value; }, setCat: value => { status = value; }, buffCalls: () => buffCalls, catCalls: () => catCalls };
 }
+// 10.0.23: общий статус полного баффа теперь относится и к пантере.
 test('отложенный FA-бафф удерживает тур до подтверждения, затем разрешает выбор РБ', async () => {
   const f = fixture({ need: { fa: [1323] }, cat: false });
   await f.R.rbHuntStep(); assert.equal(f.env.rt.rbHunt.phase, 'prepare'); assert.equal(f.env.rt.rbHunt.step, 'pick'); assert.equal(f.fires.length, 0);
@@ -26,7 +27,7 @@ test('отложенный FA-бафф удерживает тур до подт
 });
 test('включённый полный бафф кота не допускает к РБ до подтверждённого срока', async () => {
   const f = fixture({ state: 'budget' });
-  await f.R.rbHuntStep(); assert.equal(f.env.rt.rbHunt.step, 'pick'); assert.match(f.env.rt.rbHunt.next, /полный бафф кота/); assert.equal(f.catCalls(), 1);
+  await f.R.rbHuntStep(); assert.equal(f.env.rt.rbHunt.step, 'pick'); assert.match(f.env.rt.rbHunt.next, /полный бафф суммона/); assert.equal(f.catCalls(), 1);
   f.setCat('active'); await f.R.rbHuntStep(); assert.equal(f.env.rt.rbHunt.step, 'go');
 });
 test('если бафф снят после выбора, платный перелёт отменяется до клика', async () => {
