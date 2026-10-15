@@ -22,7 +22,7 @@ const LAG_MS = 10 * MIN;     // «жив» через ≤10 мин после с
 const defH = () => { const v = +env.cfg?.rbRespH; return v > 0 && v < 200 ? v : 8; };
 const state = () => env.rt?.rbTimer && typeof env.rt.rbTimer === 'object' ? env.rt.rbTimer : { b: {} };
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
-let pollT = ssNum('l2bot-rbtT'), busy = false;
+let pollT = ssNum('l2bot-rbtT'), tourPollT = ssNum('l2bot-rbtTourT'), busy = false;
 
 // ---------- чистые функции (их же берёт меню) ----------
 // новые сведения: rows [{id, n, l, al, e, rh, pg}] → { T, ev }. Своё состояние не трогает
@@ -205,7 +205,9 @@ async function listNote(j, src = 'page') {
     // тур выбирает по rt.rbList — освежаем «жив / убит» у тех же РБ (та же строка, что на странице «Рейдовые боссы»)
     const L = { ...(env.rt.rbList || {}) }, now = Date.now(); let ch = 0;
     raid.forEach((r, i) => { if (r.al == null) return; const p = L[r.id], b = r.b, ad = +b.adenaCost, col = +b.coinOfLuckCost > 0;
-      L[r.id] = { ...(p || {}), name: String(b.name || p?.name || '').slice(0, 60), lvl: r.l || p?.lvl || 0, alive: r.al, status: r.al ? 'Живой' : 'Убит',
+      // После недавнего убийства список игры может отставать: очередь и таймер верят одной смерти.
+      const previous = T0.b?.[r.id], alive = r.al && previous?.al === false && previous.dh && now - previous.dh < LAG_MS ? false : r.al;
+      L[r.id] = { ...(p || {}), name: String(b.name || p?.name || '').slice(0, 60), lvl: r.l || p?.lvl || 0, alive, status: alive ? 'Живой' : 'Убит',
         price: col ? +b.coinOfLuckCost : Number.isFinite(ad) ? ad : p?.price || 0, unit: col ? 'Coin of Luck' : 'аден', priceText: col ? `(${+b.coinOfLuckCost} Coin of Luck)` : Number.isFinite(ad) ? `(Аден ${ad})` : p?.priceText || '',
         deny: b.canAttack === false ? String(b.attackBlockedReasonUk || 'игра не пускает').replace(/^Недоступно:\s*/i, '').slice(0, 60) : '', page, ord: page * 1000 + i, t: now };
       ch++; });
@@ -228,6 +230,45 @@ async function kill(id, n, l) {
 // ---------- опрос списка (только GET, страницы своего окна уровней + эпики) ----------
 async function getJson(path) {
   try { const r = await env.gameGet(path); if (!r?.ok) return null; const j = await r.json(); return Array.isArray(j?.bosses) ? j : null; } catch (e) { return null; }
+}
+// Пустая очередь тура проверяется чаще общего наблюдения: только страницы своего окна.
+function tourPages() {
+  const level = +env.heroLevel?.() || +env.rt?.lvl || 0, cap = +env.RB_WIN || 15;
+  if (!(level > 0) || !Number.isFinite(level)) return [];
+  const lo = level - Math.min(env.cfg.rbMaxBelow > 0 ? env.cfg.rbMaxBelow : cap, cap);
+  const hi = level + Math.min(env.cfg.rbMaxAbove ?? cap, cap);
+  const pageOf = value => Number.isInteger(+value) && +value > 0 ? +value : 0;
+  let pages = Object.values(env.rt.rbList || {}).filter(row => row && +row.lvl >= lo && +row.lvl <= hi).map(row => pageOf(row.page)).filter(Boolean);
+  if (!pages.length) pages = Object.entries(state().pg || {}).filter(([, range]) => Array.isArray(range) && Number.isFinite(+range[0]) && Number.isFinite(+range[1]) && +range[0] <= hi && +range[1] >= lo).map(([page]) => pageOf(page)).filter(Boolean);
+  if (!pages.length) return [];
+  const first = Math.min(...pages), last = Math.max(...pages);
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+}
+async function tourTick({ active } = {}) {
+  if (typeof active !== 'function' || !active() || busy || Date.now() - tourPollT < 30000) return false;
+  const pages = tourPages();
+  if (!pages.length || !active()) return false;
+  tourPollT = Date.now(); busy = true;
+  try { sessionStorage.setItem('l2bot-rbtTourT', String(tourPollT)); } catch (e) {}
+  let updated = false;
+  try {
+    for (const page of pages) {
+      if (!active()) break;
+      let response;
+      try {
+        const r = await env.gameGet(`/game/raid-bosses?page=${page}`);
+        if (!active()) break;
+        if (!r?.ok) continue;
+        response = await r.json();
+      } catch (e) { continue; }
+      if (!active()) break;
+      if (+response?.page !== page || !rowsOf(response).some(row => !row.e && typeof row.al === 'boolean')) continue;
+      await listNote(response, 'тур');
+      updated = true;
+      if (!active()) break;
+    }
+  } finally { busy = false; }
+  return updated;
 }
 async function tick() {
   if (env.cfg.rbTimers === false || busy) return false;
@@ -252,6 +293,6 @@ async function tick() {
   return pages > 0;
 }
 
-return { replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, state };
+return { replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, state };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

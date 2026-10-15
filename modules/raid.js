@@ -955,6 +955,18 @@ async function rbExitAshen(H, active) {
   await huntSet({step:'go',phase:'travel',exitAt:null,exitClickAt:null,exitReadAt:null,next:`выход из Ashen подтверждён; продолжаю к ${H.name}`});
 }
 
+// 15.10, журнал18:59: на точке могут остаться только РБ; без автофарма не обещаем добычу мобов.
+async function rbIdleMap(text,active) {
+  if(!active())return;
+  if(!env.isMap()){location.href='/map.html';await env.sleep(3000);return;}
+  const mob=env.$q('#map-mob-list .l2-map-mob-link:not(.l2-map-mob-link--raid):not(.l2-map-mob-link--epic)');
+  if(!env.cfg.zoneAuto && !mob){
+    env.setStatus('Тур РБ: обычных мобов здесь нет; жду новые РБ, проверяю доступность не чаще раза в 30 с');
+    await env.sleep(1000);return;
+  }
+  env.setStatus(text);return env.map();
+}
+
 const RB_IDLE_MS = 5 * 60000;                     // 8.0 (аудит фарма A5): подходящих РБ нет — 5 мин фармим мобов (было 90 с + перечитка списка)
 async function rbHuntStep() {
   if (!env.on || env.tabOwner === false) return;
@@ -1080,6 +1092,12 @@ async function rbHuntStep() {
   // Два отказа после платных перелётов — отдельная защитная пауза: её не снимает даже воскресший РБ.
   const mark = env.rt.rbIdleMark || {}, idle = env.rt.rbHuntIdle || 0;
   const refusalPause = idle > Date.now() && env.rt.rbRefuse?.n >= 2 && Date.now() - (env.rt.rbRefuse.t || 0) < RB_IDLE_MS;
+  // Пустую очередь обновляем чтением страниц своего окна, не ждём старый TTL15мин/таймер10мин.
+  if(!refusalPause && !plan.ready.length && !rbPreparationCandidates().length && env.rbTimer?.tourTick){
+    const readActive=()=>active()&&env.canAct?.()!==false&&env.tourReadReady?.()!==false;
+    await env.rbTimer.tourTick({active:readActive});if(!readActive())return;
+    plan=rbTourPlan();rbTourPublish(plan);
+  }
   const early = !!idle && ((!!mark.lvl && !!plan.heroLvl && plan.heroLvl !== mark.lvl) || (env.potModel()?.n || 0) > (mark.pots || 0) || (env.rt.shopT || 0) > (mark.t || 0)
     || (env.rt.rbDpsSample?.t || 0) > (mark.sampleT || mark.t || 0) || (env.rt.rbKills || 0) > (mark.kills ?? env.rt.rbKills ?? 0)
     || Number.isFinite(mark.adena) && Number.isFinite(env.rt.adenaSeen?.v) && env.rt.adenaSeen.v > mark.adena);
@@ -1099,9 +1117,7 @@ async function rbHuntStep() {
       env.rec('B', 'тур РБ', `${hit.name} (${hit.lvl}) доступен — заканчиваю простой`);
       await env.setRt({ rbHuntIdle: 0, rbIdleN: 0, rbIdleMark: null, rbRefuse: null }); return;
     }
-    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
-    env.setStatus(`Тур РБ: ${String(H.next || H.last || 'подходящих РБ нет').slice(0, 140)} — повтор через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`);
-    return env.map();
+    return rbIdleMap(`Тур РБ: ${String(H.next || H.last || 'подходящих РБ нет').slice(0, 140)} — повтор через ${Math.ceil((env.rt.rbHuntIdle - Date.now()) / 1000)} с`,active);
   }
   // 8.0 (аудит фарма A5, лог 10.10 21:39–21:46): конец простоя сбрасывал rbListT — список (≈14 страниц) перечитывался каждые ≈105 с,
   // цепочка стояла ≈18–20 с на каждое чтение (21:41:09 → 21:41:29 вместо ≈3 с между боями), а в окне — те же мёртвые / «не по силам». Теперь список живёт свои 15 мин (простой — 5 мин);
@@ -1167,18 +1183,17 @@ async function rbHuntStep() {
   plan = rbTourPlan(); rbTourPublish(plan);
   const p = plan.ready[0] || null;
   if (!p) {
-    const why = `подходящих РБ нет — ${rbListWhy(plan)}`;
+    const why = `подходящих РБ нет по последнему списку — ${rbListWhy(plan)}`;
     const idleN = H.last === why ? Math.min(2, (env.rt.rbIdleN || 0) + 1) : 0, idleMs = RB_IDLE_MS * [1, 2, 4][idleN];
     const retry = plan.blocked.map(x => x.waitMs).filter(x => x > 0), wait = Math.min(idleMs, ...(retry.length ? retry : [idleMs]));
-    const next = `${why}; фармлю мобов, повторная оценка через ${Math.ceil(wait / 60000)} мин`;
+    const next = `${why}; жду новые РБ, фарм на месте при наличии мобов; повторная оценка через ${Math.ceil(wait / 60000)} мин`;
     if (H.last !== why) env.recBot(`Тур РБ: ${next}`);
     await rbHuntPhase('wait', next, { last: why });
     if (!active()) return;
     await env.setRt({ rbHuntIdle: Date.now() + wait, rbIdleN: idleN,
       rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null } });
     if (!active()) return;
-    if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); return; }
-    return env.map();
+    return rbIdleMap(`Тур РБ: ${next}`,active);
   }
   await rbHuntPhase('choose', `выбран ${p.name} (${p.lvl}); проверяю маршрут и цифры игры`);
   if (!active()) return;

@@ -171,6 +171,8 @@ console.log('PASS: zone pick — rated only with fights near the hero level, nev
   let lvl = 53, pots = 100;
   // 10.0.14: проверяем активный тур владельца вкладки; Stop/потеря lease отдельно покрыты raid-lifecycle.
   const renv = { on: true, tabOwner: true, cfg: { rbMaxBelow: 15, rbMaxAbove: 15, rbPotReserve: 0 }, RB_WIN: 15, rt: {}, heroLvl: () => lvl, potModel: () => ({ n: pots }),
+    // 15.10: старый A5 проверяет idle на точке с обычными мобами.
+    $q: s => s.startsWith('#map-mob-list ')?{}:null,
     meHp: () => ({ max: 5000, cur: 5000, pct: 100 }), isMap: () => true, map: async () => 'map', setRt: async p => { Object.assign(renv.rt, p); }, rec: () => {}, recBot: () => {}, setStatus: () => {}, sleep: async () => {} };
   const RB = rsb.L2V7Factories.raid(renv);
   const idleEnd = (mark, extra = {}) => {

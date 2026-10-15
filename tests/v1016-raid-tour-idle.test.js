@@ -1,13 +1,15 @@
 'use strict';
 // 14.10: простой тура заканчивается по доступности, но защитная пауза после отказов не теряется.
 const test = require('node:test'), assert = require('node:assert/strict');
-const { mk } = require('./epic-harness.cjs');
+const { mk,docOf } = require('./epic-harness.cjs');
 const MIN = 60000;
 function fixture(o = {}) {
  const now = Date.now(), m = mk({ hero: 55, cfg: { epicMode: false, rbHuntMode: true, rbMode: true, shopAuto: false, rbMaxBelow: 15, rbMaxAbove: 15, ...o.cfg },
   rt: { rbHunt: { step: 'pick' }, rbListT: now, rbHuntIdle: now + 10 * MIN, rbIdleMark: { lvl: 55, pots: 960, t: now - MIN },
    rbList: { low: { name: 'Младший', lvl: 50, alive: true, price: 100000, unit: 'аден', page: 1, t: now } }, rbStats: { low: { hp: 10000, patk: 10, matk: 10, src: 'api' } }, rbDb: {}, ...o.rt },
   env: { RB_WIN: 15, RB_TRY_MS: 10 * MIN, RB_RETRY_MS: 2 * MIN, tabOwner: true, ...o.env } });
+ // 15.10: прежние сценарии простоя явно имеют обычного моба; пустая точка проверяется отдельно.
+ m.setDoc(docOf('<div id="map-mob-list"><a class="l2-map-mob-link">Моб</a></div>'));
  m.maps = 0; m.env.map = async () => { m.maps++; return 'map'; }; return m;
 }
 for (const kind of ['уровень', 'банки', 'магазин']) test(`ожидание заканчивается сразу после улучшения: ${kind}`, async () => {
