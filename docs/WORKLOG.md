@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 16.10.2026, 09:35 UTC+10 — Codex — PR ожидается
+## 16.10.2026, 09:35 UTC+10 — Codex — [PR #178](https://github.com/vodoleyko1992-dotcom/prog/pull/178)
 
 - Сделано: по явному «Правь и сборка» новая политика обычного тура — все свежие живые разрешённые игрой РБ в окне уровня без veto по силе/DPS/экономике/старым пробам и отказам. Бой не прекращается только по30с/смене состава/регену. Реальные HP/удары/смерть, платежи/выход, лимиты, задачи/TvT и эпики защищены. Chrome10.0.29 включает весь merged PR177 и предыдущую10.0.28. [Changelog](changelog/CHANGELOG-10.0.29.md).
 - Проверки: 332 Node-файла PASS (exit0);66 уникальных Chromium-файлов:64 PASS общим прогоном, auto-task-selection PASS дважды после исправления ожидания async commit/DOM в тесте, Warlock MV3 все12 сценариев PASS отдельным повтором после timeout ожидания входа в город (первый общий runner exit1). Новый raid MV3:8 сценариев PASS в runner и после последней runtime-правки; safe fight>30с/unknownDPS/context/regen и actual lowHP/lethal покрыты Node. Синтаксис runtime/изменённых JS/CJS, envcheck30, secret-pattern/base-profile scan и diff-check PASS. ZIP64 файла/58 строковых ссылок manifest, целостность PASS; zipload Chromium version10.0.29/cfg209/errors0. Gordon fixture до исправления блокировался старым verdict; после — платный маршрут→вход→победа, также unknown combat stats. Негативные actual MV3: dead/level/price/funds/unknown payment+reload/TvT. Независимое production review без блокеров.
