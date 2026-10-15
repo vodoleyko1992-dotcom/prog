@@ -81,7 +81,7 @@ async function showWakeResult() {
 async function activateMode(rtPatch, cfgPatch) {
   await chrome.storage.local.set({ paused: null });   // 8.0: выбран режим — пауза снята (иначе после остановки меню предлагало «Продолжить»)
   // 14.10: отдельные кнопки тура/эпиков/кампании тоже заменяют режим. Разовая разделка/обмен без смены cfg сохраняют возврат из дейлика.
-  const modeChanged = ['enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto', 'taskOnly', 'rbBetween'].some(k => Object.hasOwn(cfgPatch || {}, k));
+  const modeChanged = ['enchantMode', 'fishMode', 'rbHuntMode', 'epicMode', 'catMode', 'campaign', 'zoneAuto', 'taskOnly'].some(k => Object.hasOwn(cfgPatch || {}, k));
   // 15.10: любой явный выбор другого режима снимает заточку; разовые службы без смены режима сохраняют её.
   if (modeChanged) cfgPatch = { enchantMode: false, ...cfgPatch };
   await menuPatch({ ...rtPatch, ...(modeChanged ? { dailyFish: null, dailyRb: null } : {}), manualKickAt: Date.now() }, { cfgPatch, on: true });
@@ -93,7 +93,7 @@ const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champM
 const TXT  = ['petHealPrefer', 'mmCrafter', 'mmCraftScope', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmCraftSend', 'mmCraftNote', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtOverRb', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbBetween: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
               enchantMode: false, enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
               taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, rec: true, questStop: false, deepEvery: 10,
@@ -188,7 +188,6 @@ async function load() {
   showCounts(reccount, snapcount);
 
   // режим РБ
-  paintRbToggle(d);
   $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
   paintModes(d, on, rt);
   paintCls(d, rt);
@@ -760,7 +759,7 @@ async function renderFarm(rt, d) {
   const L = rt.lvl || 0, k = (d.farmRes || '').trim().toLowerCase(), r = db.res[k];
   let txt = keys.length ? `В базе ресурсов: ${keys.length} (обновлено ${new Date(db.t).toLocaleString('ru')})` : 'База пуста — нажмите «Обновить базу ресурсов» (бот откроет форум и раскроет строки по одной).';
   if (k && !r) txt += `\n⚠ «${d.farmRes}» нет в базе`;
-  if (r?.bosses?.length) txt += `\n${r.name}: падает с РБ — ${r.bosses.slice(0, 6).map(([n, l, c]) => `${n} ${l} ур. ${c}%`).join(' · ')}${r.drop?.length ? '' : ' (бот полетит к живому РБ из списка, если включён «👑 РБ между мобами»)'}`;
+  if (r?.bosses?.length) txt += `\n${r.name}: падает с РБ — ${r.bosses.slice(0, 6).map(([n, l, c]) => `${n} ${l} ур. ${c}%`).join(' · ')}${r.drop?.length ? '' : ' (бот полетит к живому РБ из списка, если включён «👑 Тур по РБ»)'}`;
   if (r && L) {
     const above = d.lvlAbove ?? 30, w = farmWinP(d, L), fit = l => farmFitP(d, l, L);   // 7.2.1: тот же диапазон −3…+5, что у бота
     const by = {};
@@ -1052,21 +1051,13 @@ function petLineOf(rt) {
     + `${s.dealt ? ` · ${Math.round(s.dmg / s.dealt * 100)} % урона` : ''} · гибель ${s.deaths || 0}`;
 }
 // ==== /8.0 сводка «Обзора» ====
-// 8.0.3: «РБ между мобами» — как в ядре (content.rbEff): тур по РБ, или выбор игрока rbBetween, пока не рыбалка/эпики/кампания.
-// Хранимый rbMode больше не источник правды — сводки и подсветка не расходятся с тем, что делает бот
-const rbEff = d => d.enchantMode !== true && !!(d.rbHuntMode || (d.rbBetween && !d.fishMode && !d.epicMode && !d.campaign));
-function paintRbToggle(d) {
-  const b = $('rbToggle'); if (!b) return;
-  const susp = !!d.rbBetween && !rbEff(d);
-  b.classList.toggle('on', !!d.rbBetween); b.classList.toggle('susp', susp); b.dataset.on = d.rbBetween ? '1' : '0';
-  b.title = susp ? 'Включено, но сейчас ждёт: вернётся само после ' + (d.enchantMode === true ? 'заточки' : d.fishMode ? 'рыбалки' : d.epicMode ? 'эпиков' : 'кампании')
-    : 'Бить РБ в текущей локации между мобами (по умолчанию выкл)';
-}
+// Обычные рейдовые боссы доступны только в рейдовом туре.
+const rbEff = d => d.enchantMode !== true && !!d.rbHuntMode;
 const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 function renderDash(rt, d, st) {
   if (!$('dash')) return;
   const now = Date.now(), m = currentMode(d), S = sessInfo(rt, now);
-  const mods = [rbEff(d) && m !== 'rb' && 'РБ между мобами', d.tvtOn && 'TvT'].filter(Boolean);
+  const mods = [d.tvtOn && 'TvT'].filter(Boolean);
   $('dashMode').textContent = MODE_NAME[m] + (mods.length ? ' + ' + mods.join(', ') : '');
   const [stTxt, stCls] = !st.on ? (st.paused ? ['⏸ пауза', 'pause'] : ['○ остановлен', 'off']) : st.failing ? ['⚠ сбой · восстановление', 'warn']
     : st.heartbeatValid ? ['● работает', 'on'] : st.booting ? ['… запуск', 'warn'] : ['⚠ нет сигнала', 'warn'];
@@ -1437,7 +1428,7 @@ function renderRb(rt) {
     return `<div class="rb"><span class="m">${m[0]}</span><div><b>${(d.name || s.name || id).replace(/</g, '&lt;')}</b> (${d.lvl || s.lvl || '?'}) — ${m[1]}`
       + `<div class="d">${zn ? '📍 ' + zn.replace(/</g, '&lt;') + (z === rt.zone ? ' (здесь)' : '') + ' · ' : ''}${s.seenT ? 'видел ' + new Date(s.seenT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) + ' · ' : ''}${d.tries ? `попыток ${d.tries}` : ''}${d.kills ? ` · убит ${d.kills}×` : ''}${d.heroLvl ? ` · проверен на ур. ${d.heroLvl}` : ''}${chipNow}`
       + `${d.note ? '<br>' + d.note.replace(/</g, '&lt;') : ''}</div></div></div>`;
-  }).join('') : '<div class="hint">Пусто — включите «👑 Тур по РБ» или «РБ между мобами» и зайдите на карту</div>';
+  }).join('') : '<div class="hint">Пусто — включите «👑 Тур по РБ» и зайдите на карту</div>';
   const F = Object.values(rt.rbForum || {}), V = Object.entries(rt.rbZoneVisit || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const ok = Object.values(db).filter(d => d.verdict === 'ok').length, no = Object.values(db).filter(d => d.verdict === 'no').length;
   const RL = Object.values(rt.rbList || {}), L = rt.lvl || 0;
@@ -1547,7 +1538,7 @@ $('apply').onclick = async () => {
   load();
 };
 // ---------- 7.1.31: «Чем занят бот» — ровно один режим (движок и так исполняет один: эпики → тур РБ → рыбалка → катакомбы → кампания → фарм) ----------
-// Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания, «РБ между мобами», TvT — дополнения
+// Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
 function currentMode(d) {
   return d.enchantMode === true ? 'enchant' : d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
 }
@@ -1571,9 +1562,9 @@ document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classLi
   $('enchantModeToggle').textContent = m === 'enchant' ? '✨ Режим автозаточки выбран' : '✨ Включить режим автозаточки';
   $('enchantModeToggle').classList.toggle('on', m === 'enchant');
   $('enchantModeToggle').setAttribute('aria-pressed', String(m === 'enchant'));
-  $('campToggle').classList.toggle('on', !!d.campaign); $('tvtToggle').classList.toggle('on', !!d.tvtOn); paintRbToggle(d);
+  $('campToggle').classList.toggle('on', !!d.campaign); $('tvtToggle').classList.toggle('on', !!d.tvtOn);
   document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => b.classList.toggle('on', d[b.dataset.task] !== false));
-  const mods = [m !== 'enchant' && (d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`)), rbEff(d) && m !== 'rb' && '👑 РБ между мобами', d.tvtOn && '⚔ TvT'].filter(Boolean);
+  const mods = [m !== 'enchant' && (d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`)), d.tvtOn && '⚔ TvT'].filter(Boolean);
   const ms = $('modeSummary'); if (ms) ms.textContent = `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
@@ -1691,20 +1682,15 @@ async function setMode(m) {
   const now = Date.now(), leaveEpic = cfg.epicMode && m !== 'epic' ? { epic: { step: 'pick', t: now, last: 'режим выключен' } } : {};
   const leaveHunt = cfg.rbHuntMode && m !== 'rb' ? { rbHunt: { step: 'pick', t: now, last: 'тур выключен' }, rbGo: null } : {};
   const leave = { ...leaveEpic, ...leaveHunt };
-  // 8.0.3: «РБ между мобами» вне тура — только по выбору игрока (rbBetween, по умолчанию выкл). Раньше тур включал rbMode, а переход на
-  // фарм/автофарм/катакомбы его не выключал: бот продолжал бегать к РБ, и автофарм не летал по зонам. С 8.0.3 rbMode вычисляется в ядре (rbEff), здесь — только для совместимости хранилища
-  const rbB = !!cfg.rbBetween;
-  // 10.0 (игрок 12.10: «старт без быстрого режима»): режим снят — бот делает только включённые задачи (Маммон, квесты, цель фарма, TvT).
-  // Снятие режима бота не запускает и не останавливает: работал — продолжает задачами, стоял — «▶ Старт» запустит задачи
-  if (m === 'tasks') await menuPatch({ ...leave, zoneAutoKick: null, zoneGo: null, manualKickAt: now }, { cfgPatch: { ...MODES_OFF, zoneAuto: false, taskOnly: true, rbMode: rbB } });
-  else if (m === 'farm') await activateMode({ ...leave, zoneAutoKick: null, zoneGo: null }, { ...MODES_OFF, zoneAuto: false, rbMode: rbB });
+  if (m === 'tasks') await menuPatch({ ...leave, zoneAutoKick: null, zoneGo: null, manualKickAt: now }, { cfgPatch: { ...MODES_OFF, zoneAuto: false, taskOnly: true, rbMode: false } });
+  else if (m === 'farm') await activateMode({ ...leave, zoneAutoKick: null, zoneGo: null }, { ...MODES_OFF, zoneAuto: false, rbMode: false });
   // с автофармом включаем и цепочку «Охотиться дальше»: ≈5,4 с на моба против ≈11,4 с через карту
-  else if (m === 'auto') await activateMode({ ...leave, zoneAutoKick: now, zoneGoT: 0, zoneLvlT: 0 }, { ...MODES_OFF, zoneAuto: true, chain: true, rbMode: rbB });
+  else if (m === 'auto') await activateMode({ ...leave, zoneAutoKick: now, zoneGoT: 0, zoneLvlT: 0 }, { ...MODES_OFF, zoneAuto: true, chain: true, rbMode: false });
   // 10.0.6: запуск тура/эпиков — новая «📦 Серия РБ» (что выпало; сводка в окне бота), модуль rbrun дополнит нулями
   else if (m === 'rb') await activateMode({ ...leaveEpic, ...rbTourRestart(rt), rbRun: { t0: now, mode: 'tour' }, rbHunt: { step: 'pick', t: now, last: 'тур запущен' }, rbGo: null, rbWant: null, rbListT: 0 }, { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   else if (m === 'epic') await activateMode({ ...leaveHunt, rbRun: { t0: now, mode: 'epic' }, epic: { step: 'pick', t: now, last: 'режим запущен' }, epicListT: 0, rbWant: null }, { ...MODES_OFF, epicMode: true, rbMode: false, campaign: false });
   else if (m === 'fish') await activateMode({ ...leave, fishTgt: null }, { ...MODES_OFF, fishMode: true, rbMode: false, campaign: false });
-  else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: rbB });
+  else if (m === 'cat') await activateMode({ ...leave }, { ...MODES_OFF, catMode: true, campaign: false, rbMode: false });
   else if (m === 'enchant') {
     showTab('enchant');
     await activateMode({ ...leave, rbGo: null, rbWant: null, zoneGo: null, zoneAutoKick: null },
@@ -2180,7 +2166,7 @@ async function huntToggle() {
   const v = !cfg.rbHuntMode;
   // включение: с начала — свежий список РБ; рыбалку выключаем (тур её заменяет)
   const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0, ...rbTourRestart(rt) } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
-  const mode = { rbHuntMode: v, ...(v ? { fishMode: false, rbMode: true, epicMode: false, catMode: false, campaign: false } : { rbMode: !!cfg.rbBetween }) };   // 8.0.3: тур выключен — rbMode по выбору игрока
+  const mode = { rbHuntMode: v, ...(v ? { fishMode: false, rbMode: true, epicMode: false, catMode: false, campaign: false } : { rbMode: false }) };   // после тура обычный фарм не ищет РБ
   if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
 }
 async function epicToggle() {
@@ -2223,16 +2209,6 @@ function paintRbOne(rt, on, paused) {
     : on ? `Ищу и бью РБ — после убийства пауза.${o.n ? ` По команде убито ${o.n}.` : ''} Обычный «🧭 Тур по РБ» — без остановок.`
     : 'Бот стоит. «🎯 Ещё один РБ» — продолжить по одному.';
 }
-$('rbToggle').onclick = async () => {
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
-  const v = !cfg.rbBetween;   // 8.0.3: кнопка — выбор игрока (rbBetween); тур по РБ ею не выключается
-  // выключение — сразу: никаких ожиданий РБ, бот возвращается к обычным мобам.
-  // включение (v4.27) — сразу в работу: свежий список РБ игры, тур, и бот запускается, если стоял
-  const patch = { sinceRb: v ? 999 : 0, rbPending: v, rbCur: null, rbTourWhy: '', ...(v ? { rbListT: 0, rbZoneVisit: {} } : { rbGo: null, rbWant: null }) };
-  const mode = { rbBetween: v, rbMode: v || !!cfg.rbHuntMode, ...(v ? { rbTour: cfg.rbTour !== false, fishMode: false, epicMode: false, catMode: false, campaign: false } : {}) };
-  if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });
-};
-
 // перерисовка меню — не чаще 3 раз в секунду и только когда его видно: бот пишет состояние часто,
 // а полная перерисовка панели на каждую запись тормозила вкладку игры
 let loadT = 0, loadTimer = null, loadPending = false;

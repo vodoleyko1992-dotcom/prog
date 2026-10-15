@@ -97,7 +97,7 @@ function testIntegration() {
   assert(!popup.includes("storage.local.set({ rt: { ...rt, _src: 'menu'"));
   assert(popup.includes('if (v) await activateMode(patch, mode); else await menuPatch(patch, { cfgPatch: mode });'));
   assert(popup.includes('epicMode: v') && popup.includes('fishMode: false, rbHuntMode: false')); 
-  assert(popup.includes('rbMode: v') && popup.includes('rbTour: cfg.rbTour !== false')); 
+  assert(popup.includes('rbHuntMode: v') && !popup.includes("$('rbToggle').onclick"));
   assert(bg.includes("chrome.tabs.onRemoved.addListener"));
   console.log('PASS: code integration, menu writes migrated, manifest scripts order');
 }
