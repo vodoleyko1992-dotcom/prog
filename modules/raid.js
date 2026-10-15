@@ -161,12 +161,17 @@ function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
   // Эпики (свой ДПС от вызывающего) — по своим правилам
   const maxMin = env.cfg.rbMaxKillMin ?? 20;
-  if (!epic && !dpsOver && maxMin > 0 && t > maxMin * 60) return { ok: false, kind: 'slow', why: `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`, ...x };
+  const slow = !epic && !dpsOver && maxMin > 0 && t > maxMin * 60;
+  const slowWhy = `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`;
+  // 15.10 (лог 00:42): 997/с по неизмеренному Warlock обещали 92 мин, а Hekaton пал за 2:26.
+  // Даём только штатную однократную пробу; проверку спецудара, HP и банок ниже не пропускаем.
+  const slowProbe = slow && context?.managed && context.key && !ownDps && probeOk(id, st, sp, maxHp, measured, epic, {ok:false,kind:'slow',why:slowWhy,...x});
+  if (slow && !slowProbe) return { ok: false, kind: 'slow', why: slowWhy, ...x };
   if (sp >= maxHp * 0.45 * lim) return no({ ok: false, kind: 'strong', why: `спецудар ${Math.round(sp / maxHp * 100)}% HP героя · ${info}`, ...x });
   if (sp + 2 * p90 >= maxHp * 0.60 * lim) return no({ ok: false, kind: 'strong', why: `опасная комбинация спецудара и двух обычных ударов · ${info}`, ...x });
   if (loss > potRate * 0.8 * slack && loss > 0) return no({ ok: false, kind: 'strong', why: `банки не успевают: максимум ${Math.round(potRate)} HP/с · ${info}`, ...x });
   if (need * 1.15 > pool * slack) return { ok: false, kind: 'pots', why: `${pool ? 'недостаточный резерв банок' : 'нет подтверждённого запаса банок'} · ${info}`, ...x };
-  return { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
+  return slowProbe || { ok: true, confidence: measured ? 'observed' : 'estimated', why: `Предварительная оценка, не гарантия победы · ${info}`, ...x };
 }
 
 // 9.2.5 (игрок 12.10: «скинул список РБ, в которых бот не уверен, а он всё равно не шёл всех проверять»): «не по силам» по ОЦЕНКЕ спецудара
@@ -500,7 +505,7 @@ function rbPreSkipWhy(id) {
   const observed = ps.observed || /^аварийный выход:/.test(env.rt.rbDb?.[id]?.note || '');
   if (!observed && real && ['pots', 'slow', 'strong', 'unknown'].includes(ps.kind) && !rbVerdictBlocks(id)) {
     const check = rbPreCheck(id, st);
-    if (check.ok && !check.probe) return '';
+    if (check.ok && (!check.probe || ps.kind === 'slow')) return '';
   }
   return ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : ps.kind === 'slow' ? 'долгий бой (недавно)' : 'пропуск после осмотра (недавно)';
 }
