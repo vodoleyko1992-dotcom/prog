@@ -62,7 +62,7 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
   assert.match(manifest, /"modules\/tvtshop\.js"/); assert.match(html, /<script src="modules\/tvtshop\.js"><\/script>/);
   assert.match(content, /tsGoalItem: 920033, tsBuy: false,/); assert.match(popup, /tsGoalItem: 920033, tsBuy: false,/);   // игрок 12.10: цель Тату Душі, автопокупка выкл
   assert.match(content, /once\('tsGoal100', \(\) => \{ if \(!\+C\('tsGoalItem'\)\) cf\.tsGoalItem = 920033; \}\);/); assert.match(popup, /rt\.tsReady \? ' ✔ готово к покупке'/);
-  assert.match(content, /if \(await L2V7Modules\.tvtshop\.shopStep\(\)\) \{ await sleep\(200\); continue; \}/);
+  assert.match(content, /if \(!Array\.isArray\(cfg\.autoTasks\) && await L2V7Modules\.tvtshop\.shopStep\(\)\) \{ await sleep\(200\); continue; \}/);
   assert.match(content, /path === '\/game\/tvt\/shop\/catalog' && tabOwner && Array\.isArray\(d\.res\?\.categories\)\) try \{ L2V7Modules\.tvtshop\.shopNote\(d\.res\); \}/);
   assert.match(content, /if \(tabOwner\) try \{ L2V7Modules\.tvtshop\.shilNote\(\); \} catch \(er\) \{\}/);
   assert.match(mobfarm, /env\.tsChainWant\?\.\(\)/);

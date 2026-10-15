@@ -119,7 +119,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   await until(()=>h.g.core('autonomyMode()==="tasks" && !cfg.enchantMode'));state=await h.get(['cfg','rt']);
   assert.equal(state.rt.enchant.status,'paused');assert.equal(state.rt.enchant.pending.id,pending.id);assert.deepEqual(state.rt.enchant.history,oldHistory);assert.deepEqual(state.cfg.enchant,saved);
   await delay(700);assert.equal((await h.get(['rt'])).rt.enchant.pending.id,pending.id);pass('переключение режима сохраняет неизвестную попытку и историю; новых попыток нет');
-  await select('enchantModeToggle');await reload();assert.equal(await start().isDisabled(),true);assert.equal(await ui.locator('[data-command="resume"]').isDisabled(),true);
+  await select('enchantModeToggle');await reload();assert.equal(await start().count(),0);assert.equal(await ui.locator('[data-command="resume"]').isDisabled(),true);
   assert.equal((await h.get(['rt'])).rt.enchant.pending.id,pending.id);pass('возвращение в режим не повторяет неизвестную попытку');
   await h.click('stop');await until(()=>h.g.core('!on && !running'),20000);
   assert.equal(traffic.filter(r=>r.method==='POST').length,0);assert.deepEqual(h.errors,[]);pass('ни одного игрового POST; нет ошибок JavaScript; реальная игровая вкладка оставалась открыта');

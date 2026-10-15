@@ -45,7 +45,7 @@ function world(o = {}) {
     waitFor: async (fn, timeout = 10000, step = 250) => { const t0 = clock.t; while (clock.t - t0 < timeout) { const r = fn(); if (r) return r; clock.t += step; } return null; },
     setRt: async p => { W.setRt.push(p); Object.assign(env.rt, p); return { ok: true }; },
     setStatus: s => { W.status = s; W.statusAt = clock.t; }, rec: (...a) => W.recs.push(a.join(' ')),
-    halt: async m => { W.halted = m; }, idle: async () => {}, autonomyMode: () => 'idle',
+    halt: async m => { W.halted = m; }, idle: async () => {}, autonomyMode: () => W.mode || 'idle',
     isNoBite: () => false, isBite: () => false, isCast: () => false,
   };
   W.env = env; W.F = sb.L2V7Factories.fishing(env);
@@ -123,7 +123,7 @@ function world(o = {}) {
   // ---------- A3 + B1 + B5: заброс под лагом ----------
   // Без ответа сервера через 8 с исход неизвестен: не выдумываем заброс/поклёвку и не повторяем.
   { const W = world({ rt: { rodLvl: 2 } });
-    W.netAt = null; await W.F.fishing();
+    W.netAt = null; W.mode = 'fish'; await W.F.fishing();
     assert.match(W.status, /исход заброса неизвестен/);
     assert.ok(W.statusAt - W.castT >= 8000, `без ответа — не раньше 8 с (было ${W.statusAt - W.castT})`);
     assert.ok(W.sleepBeforeCast >= 20 && W.sleepBeforeCast <= 60, `реакция перед забросом 20–60 мс (${W.sleepBeforeCast})`);
@@ -132,13 +132,13 @@ function world(o = {}) {
   }
   // лог 19:00:04.677: ответ на заброс через 3,9 с — «не клюнула» только после ответа (+300 мс на перерисовку)
   { const W = world({ rt: { rodLvl: 2 } });
-    W.netAt = 3900; await W.F.fishing();
+    W.netAt = 3900; W.mode = 'fish'; await W.F.fishing();
     const dt = W.statusAt - W.castT;
     assert.ok(dt >= 4200 && dt < 4500, `ответ через 3,9 с — решение после него (${dt})`);
   }
   // быстрый ответ — запасной признак срабатывает с 3,5 с, как раньше
   { const W = world({ rt: { rodLvl: 2 } });
-    W.netAt = 400; await W.F.fishing();
+    W.netAt = 400; W.mode = 'fish'; await W.F.fishing();
     const dt = W.statusAt - W.castT;
     assert.ok(dt >= 3500 && dt < 3700, `быстрый ответ — 3,5 с (${dt})`);
   }

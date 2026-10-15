@@ -6,7 +6,7 @@
    - GET /game/epic-bosses → то же + respawnHours (АК/Ядро/Орфен 12, Закен 36, Баюм 60…), в строке игры «· респ. 12 ч»; времени смерти нет;
    - GET /game/spawn/<id>/info — цифры и дроп, времени тоже нет.
    Поэтому время смерти бот узнаёт сам: свой убитый РБ — точно (combat → kill), чужой — между «последний раз видел живым» и «впервые
-   увидел мёртвым» (опрос списка раз в N мин, список «Рейдовые боссы» при туре, ответы игры через hook). Воскрес — то же окно; пара
+   увидел мёртвым» (импорт внешней слежки, список «Рейдовые боссы» при туре, ответы игры через hook). Воскрес — то же окно; пара
    «умер в [a, b] → воскрес в [c, d]» даёт длительность респа в [c − b, d − a]. Свой респ у каждого РБ (ob), общий по всем РБ — медиана,
    иначе cfg.rbRespH (8 ч: замер 12.10 из облака — 11 РБ ур. 35–79, у всех респ 7,98–8,04 ч от смерти, т. е. ровно 8 ч). У эпиков — respawnHours игры.
    Память: rt.rbTimer = { b: { spawnId: { n имя, l ур., e эпик, rh респ игры ч, al жив, ls видел последний раз, ch впервые видел в этом
@@ -22,10 +22,30 @@ const LAG_MS = 10 * MIN;     // «жив» через ≤10 мин после с
 const defH = () => { const v = +env.cfg?.rbRespH; return v > 0 && v < 200 ? v : 8; };
 const state = () => env.rt?.rbTimer && typeof env.rt.rbTimer === 'object' ? env.rt.rbTimer : { b: {} };
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
-let pollT = ssNum('l2bot-rbtT'), tourPollT = ssNum('l2bot-rbtTourT'), busy = false;
+let tourPollT = ssNum('l2bot-rbtTourT'), busy = false;
 // Свой GET обходит hook: его персональные цены/доступность нельзя писать после смены героя или сабкласса.
 const pollContext = () => JSON.stringify([env.rt?.char || '', env.rt?.classCur?.prof ?? null, env.rt?.classCur?.slot ?? null]);
 
+// 15.10: старые снимки слежки могли не содержать тип/респ эпика. ID — из справочника игры.
+const EPIC_H = { l2dop_rb_29001: 12, l2dop_rb_29006: 12, l2dop_rb_29014: 12, l2dop_rb_29022: 36, l2dop_rb_29020: 60, l2dop_rb_29019: 72, l2dop_rb_29028: 240, l2dop_rb_29045: 60 };
+const epoch = v => Number.isFinite(+v) && +v > 0 ? (+v < 1e12 ? +v * 1000 : +v) : 0;
+function normalize(T) {
+  if (!T?.b || typeof T.b !== 'object' || Array.isArray(T.b)) return null;
+  const b = {};
+  for (const [id, row] of Object.entries(T.b)) {
+    if (!row || typeof row !== 'object' || Array.isArray(row) || typeof row.al !== 'boolean') continue;
+    const x = { ...row };
+    if (EPIC_H[id] || x.e === true || x.e === 1 || x.bossType === 'epic') x.e = 1;
+    for (const key of ['ls', 'ch', 'pv', 'dl', 'dh', 'k']) if (key in x) x[key] = epoch(x[key]);
+    if (!(x.ls > 0)) x.ls = x.ch || x.dh || x.k || 0;
+    if (!(x.rh > 0) && +x.respawnHours > 0) x.rh = +x.respawnHours;
+    if (Array.isArray(x.ob)) x.ob = x.ob.filter(o => Array.isArray(o) && o.length === 2 && o.every(Number.isFinite) && o[0] >= 0 && o[1] >= o[0]).slice(-OB_MAX);
+    else delete x.ob;
+    if (x.al) { delete x.dl; delete x.dh; delete x.k; }
+    b[id] = x;
+  }
+  return { ...T, b };
+}
 // ---------- чистые функции (их же берёт меню) ----------
 // новые сведения: rows [{id, n, l, al, e, rh, pg}] → { T, ev }. Своё состояние не трогает
 function observe(T0, rows, now = Date.now()) {
@@ -33,7 +53,7 @@ function observe(T0, rows, now = Date.now()) {
   for (const r of rows || []) {
     if (!r || !r.id || typeof r.al !== 'boolean') continue;
     const p = B[r.id], x = { ...(p || {}), n: String(r.n || p?.n || r.id).slice(0, 40), l: +r.l || p?.l || 0 };
-    if (r.e) x.e = 1;
+    if (r.e || EPIC_H[r.id]) x.e = 1;
     if (+r.rh > 0) x.rh = +r.rh;
     if (+r.pg > 0) x.pg = +r.pg;
     if (!p || typeof p.al !== 'boolean') {
@@ -64,9 +84,9 @@ function killed(T0, id, now = Date.now(), n, l) {
 // {t, st: {spawnId: [имя, ур., isAlive, bossType]}}) → таймеры, как если бы бот сам опрашивал список в эти моменты
 function replay(snaps) {
   let T = { b: {} };
-  for (const s of [...(snaps || [])].filter(x => x && +x.t > 0 && x.st && typeof x.st === 'object').sort((a, b) => a.t - b.t)) {
-    const t = +s.t < 1e12 ? +s.t * 1000 : +s.t;
-    T = observe(T, Object.entries(s.st).map(([id, v]) => Array.isArray(v) ? { id, n: v[0], l: +v[1] || 0, al: typeof v[2] === 'boolean' ? v[2] : null, e: v[3] === 'epic' } : null), t).T;
+  for (const s of [...(snaps || [])].filter(x => x && epoch(x.t) > 0 && x.st && typeof x.st === 'object').sort((a, b) => epoch(a.t) - epoch(b.t))) {
+    const t = epoch(s.t);
+    T = observe(T, Object.entries(s.st).map(([id, v]) => Array.isArray(v) ? { id, n: v[0], l: +v[1] || 0, al: typeof v[2] === 'boolean' ? v[2] : null, e: v[3] === 'epic', rh: +v[4] || 0 } : v && typeof v === 'object' ? { id, n: v.n || v.name, l: v.l || v.level, al: v.al ?? v.isAlive, e: v.e || v.bossType === 'epic', rh: v.rh || v.respawnHours } : null), t).T;
   }
   return T;
 }
@@ -95,9 +115,10 @@ function merge(A, Bt) {
 function parseFile(txt) {
   const s = String(txt || '').trim(); if (!s) return null;
   try { const j = JSON.parse(s);
-    if (j?.b && typeof j.b === 'object') return j;
-    if (j?.rbTimer?.b) return j.rbTimer;
-    if (j?.rt?.rbTimer?.b) return j.rt.rbTimer;
+    if (j?.b) return normalize(j);
+    if (j?.rbTimer?.b) return normalize(j.rbTimer);
+    if (j?.rt?.rbTimer?.b) return normalize(j.rt.rbTimer);
+    if (j?.data?.rt?.rbTimer?.b) return normalize(j.data.rt.rbTimer);
     if (Array.isArray(j)) return replay(j);
     if (j?.st) return replay([j]);
   } catch (e) {}
@@ -124,6 +145,7 @@ function respOf(T, id, def = defH()) {
   if (x.rh > 0) return { lo: x.rh * H, hi: x.rh * H, src: 'game' };
   const own = band(x.ob);
   if (own) return { ...own, src: 'own', n: x.ob.length };
+  if (EPIC_H[id]) return { lo: EPIC_H[id] * H, hi: EPIC_H[id] * H, src: 'reference' };
   const g = !x.e && globalResp(T);
   if (g) return { ...g, src: 'all' };
   return { lo: def * H, hi: def * H, src: 'guess' };
@@ -166,7 +188,7 @@ function upTxt(tm, now = Date.now()) {
   if (a.hi - a.lo < 15 * MIN) return `≈${hm(a.hi, now)} (через ${dur(a.hi - now)})`;
   return tm.soon ? `в любую минуту до ${hm(a.hi, now)}` : `${hm(a.lo, now)}–${hm(a.hi, now)} (через ${dur(a.lo - now)})`;
 }
-const SRC = { game: 'игра', own: 'мой замер', all: 'по всем РБ', guess: 'догадка' };
+const SRC = { reference: 'справочник игры', game: 'игра', own: 'мой замер', all: 'по всем РБ', guess: 'догадка' };
 const respTxt = R => R ? `${durH(R.lo, R.hi)} · ${SRC[R.src] || R.src}${R.n ? ` (${R.n})` : ''}${R.rnd ? ', случайный' : ''}` : '';
 // список для меню: сначала мёртвые по времени воскрешения, потом «уже должен», потом живые
 function table(T, now = Date.now(), opt = {}) {
@@ -235,10 +257,7 @@ async function kill(id, n, l) {
   env.rec('B', 'таймеры', `${tm.n} (${tm.l}) убит мной в ${hm(now, now)} — воскреснет ${upTxt(tm, now)} · респ ${respTxt(tm.R)}`);
 }
 
-// ---------- опрос списка (только GET, страницы своего окна уровней + эпики) ----------
-async function getJson(path, active) {
-  try { const r = await env.gameGet(path); if (!active() || !r?.ok) return null; const j = await r.json(); return active() && Array.isArray(j?.bosses) ? j : null; } catch (e) { return null; }
-}
+// ---------- чтение целей активного тура (только GET, страницы своего окна уровней) ----------
 // Пустая очередь тура проверяется чаще общего наблюдения: только страницы своего окна.
 function tourPages() {
   const level = +env.heroLevel?.() || +env.rt?.lvl || 0, cap = +env.RB_WIN || 15;
@@ -282,33 +301,9 @@ async function tourTick({ active: callerActive } = {}) {
   }
   return updated;
 }
-async function tick() {
-  if (env.cfg.rbTimers === false || busy) return false;
-  const context = pollContext(), active = () => env.cfg.rbTimers !== false && pollContext() === context;
-  const every = Math.max(5, +env.cfg.rbTimerMin || 10) * MIN;
-  if (Date.now() - pollT < every) return false;
-  pollT = Date.now(); busy = true; try { sessionStorage.setItem('l2bot-rbtT', String(pollT)); } catch (e) {}
-  let pages = 0;
-  try {
-    const [lo, hi] = winOf(), pg = state().pg || {};
-    // первая страница, где есть РБ не слабее окна (список игры — по возрастанию уровня); не знаем — с первой
-    let p = +Object.keys(pg).map(Number).sort((a, b) => a - b).find(k => (pg[k]?.[1] || 0) >= lo) || 1;
-    for (let i = 0; i < 16 && p && active(); i++) {
-      const j = await getJson(`/game/raid-bosses?page=${p}`, active); if (!j || !active()) break;
-      await listNote(j, 'опрос'); pages++;
-      if (!active()) break;
-      const lv = j.bosses.map(b => +b.level || 0).filter(Boolean);
-      if (!lv.length || Math.max(...lv) > hi || p >= (+j.totalPages || p)) break;
-      p++; await env.sleep(800 + Math.random() * 700);
-    }
-    const e = active() ? await getJson('/game/epic-bosses', active) : null;
-    if (e && active()) { await listNote(e, 'опрос'); pages++; }
-  } finally {
-    busy = false;
-    if (!active()) { pollT = 0; try { sessionStorage.setItem('l2bot-rbtT', '0'); } catch (e) {} }
-  }
-  return pages > 0;
-}
+// 15.10: отдельная слежка через игровые аккаунты выключена по решению игрока.
+// Совместимость со старым вызывающим кодом; активный тур использует только tourTick.
+async function tick() { return false; }
 
 return { replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, state };
  };

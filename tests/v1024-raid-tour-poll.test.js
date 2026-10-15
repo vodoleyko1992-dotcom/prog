@@ -182,17 +182,13 @@ test('обычный tick и tourTick используют один busy без 
   assert.equal(await f.T.tourTick({ active: f.active }), false);
   assert.equal(f.gets.length, 1);
   resolve(); assert.equal(await run, true);
-  assert.equal(await f.T.tick(), true, 'общий busy освобождён после завершения тура');
+  assert.equal(await f.T.tick(), false, '15.10: фоновый мониторинг отключён и после тура');
 });
 
-test('занятый обычный tick не расходует cooldown тура', async () => {
-  let resolve;
-  const gate = new Promise(r => { resolve = r; });
-  const f = fixture({ cfg: { rbTimers: true }, rt: { rbTimer: { b: {}, pg: { 10: [68, 92] } } },
-    get: async url => { await gate; return { ok: true, json: async () => url.includes('epic') ? { bosses: [] } : page(10) }; } });
-  const run = f.T.tick();
-  assert.equal(await f.T.tourTick({ active: f.active }), false);
+test('15.10: выключенный фоновый tick не мешает чтению целей активного тура', async () => {
+  const f = fixture({ cfg: { rbTimers: true } });
+  assert.equal(await f.T.tick(), false);
+  assert.equal(f.gets.length, 0);
   assert.equal(f.storage.has('l2bot-rbtTourT'), false);
-  resolve(); assert.equal(await run, true);
   assert.equal(await f.T.tourTick({ active: f.active }), true);
 });

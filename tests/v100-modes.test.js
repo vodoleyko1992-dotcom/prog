@@ -11,11 +11,11 @@ assert.equal(chooseMode({ tasks: true, fish: true }), 'fish');
 assert.match(content, /cat: !!cfg\.catMode, campaign: campEnabled\(\), tasks: !!cfg\.taskOnly/);   // 10.0.10: кампания из меню или авто (сюжетный квест новичка)
 // 2. главный цикл: без режима и без цели фарма — стоим (задачи Маммона/квестов/TvT стоят выше в цикле)
 assert.match(content, /else if \(autonomyMode\(\) === 'tasks' && !lootGoal\(\)\) await tasksIdle\(\);\n[^\n]*tasksGoalNote[^\n]*\n(?:[^\n]*ashen-bastion[^\n]*\n)?\s*else if \(isMap\(\)\)/);
-assert.ok(content.indexOf("await tasksIdle();") > content.indexOf('await L2V7Modules.mammon.mmStep()'), 'tasks run before idling');
+assert.ok(content.lastIndexOf("await tasksIdle();") > content.indexOf('await L2V7Modules.mammon.mmStep()'), 'tasks run before idling');
 assert.match(mobfarm, /if \(env\.autonomyMode\(\) === 'tasks' && !tasksGoalHere\(\)\) return env\.toMap\(\);/);
 assert.match(story, /\['cat', 'tasks'\]\.includes\(env\.autonomyMode\(\)\)/);
 // 3. меню: currentMode, снятие режима повторным нажатием, кнопка «Только задачи», кнопки задач
-const cm = popup.match(/function currentMode\(d\) \{\n([^\n]+)\n\}/)[1];
+const cm = popup.match(/function currentMode\(d\) \{\n([\s\S]*?)\n\}/)[1];
 const currentMode = new Function('d', cm);
 assert.equal(currentMode({ taskOnly: true }), 'tasks'); assert.equal(currentMode({ taskOnly: true, fishMode: true }), 'fish'); assert.equal(currentMode({ zoneAuto: true }), 'auto');
 assert.match(popup, /const MODES_OFF = \{[^}]*taskOnly: false \}/);

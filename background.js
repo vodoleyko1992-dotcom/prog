@@ -59,6 +59,17 @@ async function lockCommand(m, sender) {
 }
 // A single process owns read/merge/write of runtime patches. Content pages
 // cannot overwrite unrelated popup/character state using stale snapshots.
+// 15.10: таймеры общих боссов приходят из импорта и вкладки одновременно.
+// Запоздалый целый словарь не должен стирать свежие наблюдения или соседние строки.
+function mergeTimerPatch(current, incoming) {
+  if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming) || !incoming.b || typeof incoming.b !== 'object' || Array.isArray(incoming.b)) return current || { b: {} };
+  const b = { ...(current?.b || {}) };
+  for (const [id, row] of Object.entries(incoming.b)) {
+    if (['__proto__', 'constructor', 'prototype'].includes(id) || !row || typeof row !== 'object' || typeof row.al !== 'boolean') continue;
+    if (!b[id] || (+row.ls || 0) >= (+b[id].ls || 0)) b[id] = row;
+  }
+  return { ...(current || {}), ...incoming, b };
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -81,6 +92,7 @@ async function statePatch(m, sender) {
       return { ok: false, reason: 'ownership_lost' };
     const change = {};
     const writePatch=pvpSeedPatch(patch,state.rt||{});
+    if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
     // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
     if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
@@ -142,6 +154,7 @@ async function menuPatch(m, sender) {
       const edit=pvpTargetChange(state.rt||{},m.pvpTargetEdit);if(!edit.ok)return edit;
       rtPatch.pvpTargets=edit.targets;if(edit.seedHandled)rtPatch.pvpSeedDremia1410=true;
     }
+    if (Object.hasOwn(rtPatch, 'rbTimer')) rtPatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, rtPatch.rbTimer);
     // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
@@ -190,6 +203,8 @@ async function switchCharacter(m, sender) {
     }
     const nextRt = { ...(m.defRt || {}), ...(current['rt@' + nick] || {}),
       char: nick, status: `Персонаж: ${nick}`, campaignDue: !!nextCfg.campaign, _src: m.src };
+    // Таймеры боссов общие для сервера; старый кэш другого героя не отменяет импорт.
+    if (prev.rbTimer || nextRt.rbTimer) nextRt.rbTimer = mergeTimerPatch(prev.rbTimer, nextRt.rbTimer);
     await chrome.storage.local.set({ ['rt@' + old]: prev, ['cfg@' + old]: previousCfg,
       rt: nextRt, cfg: nextCfg });
     return { ok: true, rt: nextRt, cfg: nextCfg, changed: true, old };
@@ -531,7 +546,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
     const T = m.rbTimer;
     if (!game || !T || typeof T !== 'object' || Array.isArray(T) || !T.b || typeof T.b !== 'object') { reply({ ok: false, reason: 'invalid' }); return true; }
-    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, rbTimer: T, _src: 'menu' } }); return { ok: true }; })
+    serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt');
+      if (m.expectedChar != null && String(rt.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — повторите импорт' };
+      const rbTimer = mergeTimerPatch(rt.rbTimer, T);
+      await chrome.storage.local.set({ rt: { ...rt, rbTimer, _src: 'menu' } }); return { ok: true, rbTimer }; })
       .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }

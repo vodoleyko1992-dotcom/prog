@@ -92,7 +92,7 @@ async function clanStep() {
   return true;
 }
 // ---------- дейлики: дотянуть 50 рыб и 1 РБ ----------
-const snap = () => Object.fromEntries(MODE_KEYS.map(k => [k, !!env.cfg[k]]));
+const snap = () => Object.fromEntries(MODE_KEYS.map(k => [k, !!(root.L2EngineCore?.rawTaskConfig(env.cfg) || env.cfg)[k]]));
 const dailyTask = id => { const D = env.rt.daily; return D && Date.now() - (D.t || 0) < FRESH ? D.tasks?.[id] || null : null; };
 const doneDay = kind => env.rt.dailyDone?.[kind] === env.rt.daily?.day;
 // 15.10, лог 10:52: дейлик сам включил рыбалку посреди главы Диона (24/40 и 28/40).
@@ -172,8 +172,10 @@ async function dailyStep() {
     return false;
   }
   if (env.cfg.dailyAuto === false || !env.rt.daily?.day || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
+  // 15.10: строгий список сам выбирает режим; дейлик не меняет порядок и не запускает чужую задачу.
+  if (Array.isArray(env.cfg.autoTasks)) return false;
   const lack = fishLack();
-  if (lack && !doneDay('fish') && !env.cfg.fishMode) {
+  if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('fish')) && lack && !doneDay('fish') && !env.cfg.fishMode) {
     const char = env.rt.char, ready = await fishReady(kick);
     if (!canRun() || (+env.rt.manualKickAt || 0) !== kick || env.rt.char !== char || env.cfg.dailyAuto === false || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
     if (ready) {
@@ -183,7 +185,7 @@ async function dailyStep() {
       return true;
     }
   }
-  if (rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
+  if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('raid')) && rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
     const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true, kick };
     await env.setRt({ dailyRb: J, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
     if (await enterDetour('dailyRb', J, kick) && env.rt.dailyRb && !campaignBusy()) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');

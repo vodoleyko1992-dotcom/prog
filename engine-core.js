@@ -116,6 +116,64 @@
     return 'farm';
   }
 
+  // 15.10: явный список задач ограничивает и старые флаги импортированных профилей.
+  const TASK_KEYS = ['tvt','quests','fish','cat','raid','epic','farm','auto','enchant','mammon','dailies','clan','pvp','petbuff','resources'];
+  const taskRaw = new WeakMap();
+  const rawTaskConfig = c => taskRaw.get(c) || c;
+  const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
+  const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
+  function selectedTask(c, rt = {}, now = Date.now()) {
+    const list = taskList(c); if (list === null) return null;
+    return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
+      if (!list.includes(k)) return false;
+      if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
+      if (k === 'fish') return !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
+      if (k === 'quests') {
+        const live = [rt.storySaga,rt.dionCampaign].some(q => q && !q.completed && q.stage !== 'completed');
+        return !(rt.campNoTasksUntil > now && !live && !(rt.questList || []).length); // Только подтверждённое отсутствие; ошибка главы не разрешает другую задачу.
+      }
+      return true;
+    }) || 'tasks';
+  }
+  function taskConfig(input, runtime = () => ({})) {
+    const raw = rawTaskConfig(input);
+    if (!Array.isArray(raw?.autoTasks)) return raw;
+    const groups = {
+      mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
+      quests: ['storyTurnIn','campAuto','searchQuest'], dailies: ['dailyAuto'], clan: ['clanTasks'],
+      pvp: ['enemyHunt','pvpOnSight'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
+    };
+    const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','sealAuto','autoLearn'];
+    const view = new Proxy(raw, { get(target, key) {
+      const active = selectedTask(target, runtime()), allowed = k => taskAllowed(target, k);
+      const primary = {enchantMode:'enchant',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
+      if (Object.hasOwn(primary,key)) return primary[key] === active;
+      if (key === 'tvtOn') return allowed('tvt');
+      if (key === 'taskOnly') return active === 'tasks';
+      if (key === 'tvtOverRb') return true;
+      if (key === 'tsBuy') return false; // Покупка цели TvT — отдельная трата, не участие в событии.
+      if (key === 'chain' && !['farm','auto','quests','cat'].includes(active)) return false;
+      if (['farmRes','recipeRes','resQuests'].includes(key) && !allowed('resources')) return '';
+      if (key === 'mmGoalItem' && !allowed('mammon')) return 0;
+      if (key === 'mmGoalFarm' && !allowed('resources')) return false;
+      for (const [group, keys] of Object.entries(groups)) if (keys.includes(key) && !allowed(group)) return false;
+      if (key === 'campAuto') return false; // Кампания запускается только выбранной задачей.
+      if (support.includes(key) && ['tasks','fish','enchant'].includes(active)) return false;
+      return Reflect.get(target,key);
+    }});
+    taskRaw.set(view, raw); return view;
+  }
+  function taskJobAllowed(c, key, rt = {}) {
+    if (taskList(c) === null) return true;
+    if (['dailyFish','dailyRb'].includes(key)) return false; // Дейлики не владеют режимом строгого списка.
+    const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
+    if (primary) return selectedTask(c,rt) === primary;
+    const group = {mmJob:'mammon',storyJob:'quests',dailyFish:'fish',dailyRb:'raid',petBufferTrip:'petbuff',rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish',farmScan:'resources',recipeScan:'resources',rbScan:'raid'}[key];
+    if (group) return taskAllowed(c,group);
+    if (key === 'tsJob') return false;
+    return !['tasks','fish','enchant'].includes(selectedTask(c,rt));
+  }
+
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
   // Serial execution and retry preserve update ordering even if storage is down.
   function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
@@ -170,6 +228,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

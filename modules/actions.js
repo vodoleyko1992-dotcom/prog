@@ -3,7 +3,7 @@
  root.L2V7Factories=root.L2V7Factories||Object.create(null);
  root.L2V7Factories.actions=function(env){
  let frame=null, executing=null, busy=false, reconciliation=null;
- const context=()=>JSON.stringify([env.rt.char||'',env.mode(),+env.rt.manualKickAt||0,env.cfg.catDungeon||'',env.cfg.farmRes||'',env.cfg.recipeRes||'']);
+ const context=()=>JSON.stringify([env.rt.char||'',env.mode(),+env.rt.manualKickAt||0,env.cfg.catDungeon||'',env.cfg.farmRes||'',env.cfg.recipeRes||'',env.cfg.autoTasks||null]);
  const live=()=>env.on&&env.tabOwner;
  const stamp=j=>String(j?.id||j?.t||j?.at||'legacy');
  const phase=j=>JSON.stringify([j?.phase||j?.step||'',j?.done?.length||0,j?.fa||[],j?.id||j?.target||'',j?.entry?.revision||0,j?.pending?.id||'',j?.page??j?.p??j?.cursor??'',typeof j==='object'?'':j]);
