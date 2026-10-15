@@ -191,6 +191,9 @@ function rank(r, rules) {
   if (rules.some(x => x.neg && ruleMatch(x, r))) return -1;
   return rules.filter(x => !x.neg).findIndex(x => ruleMatch(x, r));
 }
+// A remembered catIn is only a return hint. It does not prove the current battle
+// is inside a dungeon: Ashen Bastion and other zones have their own spawn IDs.
+const dungeonBattle = () => /^sdms_/i.test(new URLSearchParams(location.search).get('spawnId') || '');
 
 async function nextFight(ctx) {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
@@ -256,7 +259,7 @@ async function nextFight(ctx) {
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
-    if (env.cfg.chain !== false && (env.rt.catIn || /spawnId=sdms_/i.test(location.search))) {
+    if (env.cfg.chain !== false && dungeonBattle()) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
@@ -912,6 +915,6 @@ async function ashenStep() {
   env.setStatus(rows.length ? 'Ashen Bastion: подходящие мобы возрождаются' : 'Ashen Bastion: жду список мобов');
   await env.sleep(2000);
 }
- return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep };
+ return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
  };
 })(globalThis);
