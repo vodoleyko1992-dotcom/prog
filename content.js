@@ -920,9 +920,9 @@ const farmMapOn = () => {
 const deepN = () => farmMapOn() ? FARM_EVERY
   : campChampDue() ? Math.min(+cfg.deepEvery || 5, 5)
   : champHunt() ? (mapOff() ? champEvery() : Math.min(cfg.deepEvery, champEvery())) : mapOff() ? Infinity : cfg.deepEvery;
-const mapDue = rules => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) ||
+const mapDue = (rules, ignoreHot = false) => rbDue() || (campRbOpen().length && (rt.sinceDeep || 0) >= 3) ||
   (farmMapOn() ? (rt.sinceDeep || 0) >= FARM_EVERY : (searchActive(rules) &&
-  (campChampDue() || !mapOff() || champHunt()) && (rt.deepHot || rt.sinceDeep >= deepN())));
+  (campChampDue() || !mapOff() || champHunt()) && ((!ignoreHot && rt.deepHot) || rt.sinceDeep >= deepN())));
 // цепочка сама приносит цели (★/чемпионы) в ≥ 50 % боёв — плановую проверку карты откладываем (до 3× интервала)
 function chainCarries(...args) { return L2V7Modules.mobfarm.chainCarries(...args); }
 
