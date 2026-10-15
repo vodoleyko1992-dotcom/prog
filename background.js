@@ -132,7 +132,7 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
-    if (m.expectedChar != null && (!m.expectedChar || state.rt?.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+    if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (m.pvpTargetEdit) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
       const edit=pvpTargetChange(state.rt||{},m.pvpTargetEdit);if(!edit.ok)return edit;

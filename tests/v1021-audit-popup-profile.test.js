@@ -15,3 +15,11 @@ test('поле прежнего героя в фокусе не записыва
   await assert.rejects(() => b.save({ target: field }), /Персонаж изменился/);
   assert.equal(state.cfg.shopReserve, 10000000);
 });
+test('пустой профиль до загрузки HUD принимает настройку только пока герой ещё пуст', async () => {
+  const state = { rt: { char: '' }, cfg: { fishMode: false } }, b = { URL, Date, console, MAX_PATCH_KEYS: 400,
+    chrome: { storage: { local: { get: async keys => Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map(k => [k, structuredClone(state[k])])), set: async patch => Object.assign(state, structuredClone(patch)) } }, runtime: { getURL: p => 'chrome-extension://fixture/' + p } }, serializeLock: f => f() };
+  vm.createContext(b); vm.runInContext(bg.slice(bg.indexOf('async function menuPatch('), bg.indexOf('async function switchCharacter(')), b);
+  const sender = { url: 'chrome-extension://fixture/popup.html' }, request = { rtPatch: {}, cfgPatch: { fishMode: true }, expectedChar: '' };
+  assert.equal((await b.menuPatch(request, sender)).ok, true); assert.equal(state.cfg.fishMode, true);
+  state.rt.char = 'AuditHero'; assert.equal((await b.menuPatch(request, sender)).ok, false);
+});
