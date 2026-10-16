@@ -15,6 +15,8 @@ for(const [name,change]of Object.entries({
  'нет замера':f=>f.env.rt.weaponsT=0,'две надетых строки':f=>f.env.rt.weapons.push({...f.env.rt.weapons[0],id:999}),
  'новое подтверждённое ID не совпадает':f=>f.env.rt.weaponEq={id:999}
 }))test('не обходит защиту: '+name,()=>{const f=fixture();f.env.rt.weaponNow='';change(f);assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
+test('свежий скан пики важнее старого ID предыдущего оружия',()=>{const f=fixture();f.env.rt.weaponNow='Old Sword';f.env.rt.weaponEq={id:999,t:f.env.rt.weaponsT-1000};assert.equal(f.C.warlordPullPlan(f.ctx,f.mp)?.b.action,'provoke')});
+test('более новое подтверждение другого ID запрещает старую пику',()=>{const f=fixture();f.env.rt.weaponEq={id:999,t:f.env.rt.weaponsT+1000};assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
 test('штатная квитанция equip подтверждает пику без ручного клика по панели',async()=>{
  const f=fixture();f.env.rt.char='alt2';f.env.rt.weaponNow='';f.env.rt.weapons=[];f.env.rt.weaponsT=0;
  const core=fs.readFileSync('content.js','utf8'),begin=core.indexOf('async function weaponEquipNote(req) {');

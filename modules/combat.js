@@ -968,7 +968,8 @@ function warlordPullPlan(ctx, mp) {
   // Надетое берём из проверенного инвентаря; незавершённая смена и противоречивые ID запрещают сбор.
   const equipped = (env.rt.weapons || []).filter(w => w.where === 'надето');
   const weapon = env.rt.weaponsT && !env.rt.weaponMetaPending && equipped.length === 1 && equipped[0];
-  if (!weapon || weapon.unknown || (env.rt.weaponEq?.id && +env.rt.weaponEq.id !== +weapon.id) || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return skip('не подтверждена надетая пика');
+  const proof = env.rt.weaponEq, newerProof = proof?.id && (!proof.t || +proof.t >= +env.rt.weaponsT);
+  if (!weapon || weapon.unknown || (newerProof && +proof.id !== +weapon.id) || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return skip('не подтверждена надетая пика');
   const me = env.meHp(), mob = mobHp(), target = warlordPullTarget();
   if (!me || !(me.cur > 0 && me.max > 0) || !mob?.cur || !mp || !Number.isFinite(mp.cur) || mp.cur < (+env.cfg.skillMpMin || 0)) return null;
   const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
