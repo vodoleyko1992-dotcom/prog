@@ -283,6 +283,12 @@ async function nextFight(ctx) {
     location.href = '/ashen-bastion.html'; await env.sleep(3000); return;
   }
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
+    // 20.7: игрок уже мог начать следующий бой, пока старый nextFight обслуживал победу.
+    if (dungeonBattle() && !env.victory()) return;
+    if (env.cfg.chain !== false && dungeonBattle() && dungeonCancelBlocked() && env.catNext) {
+      if (await env.catNext()) return;
+      if (!env.on || env.tabOwner === false || !env.victory()) return;
+    }
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
     if (env.cfg.chain !== false && dungeonBattle() && !dungeonCancelBlocked()) {
@@ -308,6 +314,7 @@ async function nextFight(ctx) {
         }
       }
     }
+    if (dungeonBattle() && !env.victory()) return;
     return env.catGo();
   }
   if (env.campOn() && env.rt.campaignDue) return env.goCampaign();

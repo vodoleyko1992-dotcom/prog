@@ -117,6 +117,28 @@ function mobList(id) {
   return { net: false, list: dom.map((x, i) => ({ ...x, i })) };
 }
 const mobLink = sid => [...document.querySelectorAll('#dungeon-mob-list a[href*="spawnId="]')].find(a => decodeURIComponent((a.getAttribute('href') || '').match(/spawnId=([^&]+)/)?.[1] || '') === sid) || null;
+// 20.7 (лог17.10 01:02): защита от Cancel не должна открывать карту после каждой победы.
+// Свежий список читаем без перехода; штатная страница выбранного боя сама запускает его.
+async function catNext() {
+  const guard = catGuard(), href = location.href, search = location.search;
+  const sid = new URLSearchParams(search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
+  const active = () => guard() && (!env.autonomyMode || env.autonomyMode() === 'cat') && env.cfg.chain !== false && location.href === href && location.search === search && env.victory?.() === true;
+  if (!id || !/\/battle\.html$/i.test(location.pathname) || !active()) return true;
+  let d;
+  try { const r = await env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)); if (r.ok) d = (await r.json())?.dungeon; } catch (_) {}
+  if (!active()) return true;
+  if (!d || d.id !== id || !Array.isArray(d.mobs)) return false;
+  // Как штатная цепочка: только обычные мобы; чемпионов проверяет отдельный поиск.
+  const list = d.mobs.filter(x => x && typeof x.id === 'string' && x.id !== sid && x.id.startsWith('sdms_' + id + '_') && /^\d+$/.test(x.id.slice(('sdms_' + id + '_').length)) && x.inBattleRange !== false && !/champ|raid|epic|boss/i.test(x.kind || ''))
+    .map(x => ({ id: x.id, name: x.name, lvl: +x.level || 0, rb: false, champ: false })).filter(x => x.name && x.lvl > 0);
+  const pick = catPick(list, env.heroLvl());
+  if (!pick) return false;
+  await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
+  if (!active() || !catPick([pick], env.heroLvl())) return true;
+  env.setStatus(`Катакомбы: следующий бой с ${pick.name} (${pick.lvl})`);
+  location.href = '/battle.html?spawnId=' + encodeURIComponent(pick.id);
+  return true;
+}
 // 9.0: ссылка на моба — свежая, прямо перед кликом. Игра перерисовывает список каждые 5 с (опрос /game/dungeon/view, innerHTML = ''), а клик по
 // старой, уже удалённой из страницы ссылке не делает ничего («клик не открыл бой», 6 с впустую и вход заново). Моб на другой странице
 // списка — листаем «‹ / ›» (#dungeon-mob-page-prev/next) до нужной (≤ 20 нажатий)
@@ -377,6 +399,6 @@ async function sealStep() {
   await sealDone(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);
