@@ -12,12 +12,31 @@
  const percent = p => Number.isFinite(p)?(p*100).toLocaleString('ru-RU',{maximumFractionDigits:1})+'%':'—';
  const locationLabel = q => q.locationLabel || (q.eqSlot?'Надето':'В сумке');
  const describe = q => `${q.name || '#'+q.itemId} +${q.level} · ${q.grade} · ${locationLabel(q)}`;
+ function scanSummary(scan,char) {
+  if(!scan||scan.char&&scan.char!==char)return 'Нажмите «Обновить вещи», чтобы прочитать инвентарь персонажа.';
+  if(!scan.ok)return 'Не удалось прочитать вещи: '+(scan.reason||'повторите обновление.');
+  const rows=scan.items||[],available=rows.filter(q=>!q.ambiguous&&q.level<25).length;
+  const max=rows.filter(q=>q.level>=25).length,ambiguous=rows.filter(q=>q.ambiguous&&q.level<25).length;
+  return (available?'Доступно вещей: '+available+'.':'Нет подходящих вещей для добавления.')+(max?' Уже +25: '+max+'.':'')+(ambiguous?' Неоднозначных экземпляров: '+ambiguous+' — разделите одинаковые вещи в игре и обновите список.':'');
+ }
+ function scrollSummary(scan,char) {
+  if(!scan?.ok||scan.char&&scan.char!==char)return 'Наличие свитков появится после обновления вещей.';
+  const rows=[];
+  for(const [i,grade] of ['D','C','B','A','S'].entries())for(const [k,kind] of ['Обычные','Благословенные'].entries())for(const [j,target] of ['броня','оружие'].entries()) {
+   const qty=+scan.scrolls?.[910510+i*2+k*10+j]||0;if(qty>0)rows.push(kind+' · '+grade+' · '+target+': '+number(qty));
+  }
+  return rows.length?rows.join('; '):'Подходящих свитков в сумке нет. Покупки отключены.';
+ }
+ function startSteps(state,cfg,pending) {
+  const selected=Array.isArray(state.cfg?.autoTasks)?state.cfg.autoTasks.includes('enchant'):state.cfg?.enchantMode===true;
+  return [!selected&&'Выберите «Автозаточка» в разрешённых задачах.',!cfg.queue.length&&'Добавьте конкретную вещь.',cfg.maxAttempts<1&&'Укажите положительный лимит попыток.',cfg.maxScrolls<1&&'Укажите положительный лимит свитков.',!cfg.enabled&&'Разрешите попытки заточки.',!state.on&&'Нажмите общий «Старт».',pending&&'Дождитесь подтверждения предыдущей попытки или сверьте результат.'].filter(Boolean);
+ }
  function mount(node, adapter) {
   let state, cfg, busy=false, message='', renderId=0, archiveConfirm='', selectedCandidate='', openDetails=new Set();
   const qByKey = key => cfg.queue.find(q=>q.key===key);
   async function action(fn) { if(busy)return;busy=true;renderId++;node.querySelectorAll('button,input,select').forEach(el=>el.disabled=true);try{await fn();message='';}catch(e){message=String(e?.message||e);}finally{try{await render(true);}finally{busy=false;}} }
   async function persist() {await adapter.saveConfig(clone(cfg), {char:state.rt?.char||''});}
-  const candidates = () => (state.rt?.enchantScan?.items || state.candidates || []).filter(q=>!q.ambiguous && q.level<25).map((q,i)=>({...q,locationLabel:q.locationLabel||((q.eqSlot?'Надето · '+({l1:'правая рука',l2:'левая рука',l3:'торс',l4:'ноги',lh:'голова',lg:'руки',lf:'ступни'}[q.eqSlot]||q.eqSlot):'Сумка · экземпляр '+(i+1))+(q.history?.length?' · рост '+q.history.map(x=>({magic:'М',physical:'Ф',balanced:'Ф+М'}[x]||'?')).join('→'):''))}));
+  const candidates = () => ((!state.rt?.enchantScan?.char||state.rt.enchantScan.char===state.rt?.char?state.rt?.enchantScan?.items:null) || state.candidates || []).filter(q=>!q.ambiguous && q.level<25).map((q,i)=>({...q,locationLabel:q.locationLabel||((q.eqSlot?'Надето · '+({l1:'правая рука',l2:'левая рука',l3:'торс',l4:'ноги',lh:'голова',lg:'руки',lf:'ступни'}[q.eqSlot]||q.eqSlot):'Сумка · экземпляр '+(i+1))+(q.history?.length?' · рост '+q.history.map(x=>({magic:'М',physical:'Ф',balanced:'Ф+М'}[x]||'?')).join('→'):''))}));
   const issues = () => [!cfg.queue.length&&'Добавьте конкретную вещь.',cfg.maxAttempts<1&&'Укажите положительный лимит попыток.',cfg.maxScrolls<1&&'Укажите положительный лимит свитков.'].filter(Boolean);
   function numericFields(values,attr,inherit=false,fields=FIELDS) {return fields.map(([k,label,min,max])=>`<label>${label}<input type="number" min="${min}" max="${max}" ${attr} data-field="${k}" value="${values[k]??''}" ${inherit?'placeholder="Общее правило"':''}></label>`).join('');}
   async function render(force=false) {
@@ -27,20 +46,24 @@
    state=next;cfg={...DEFAULT,...state.cfg?.enchant,queue:clone(state.cfg?.enchant?.queue||[])};
    const session=state.rt?.enchant||{},analysis=state.analytics||session,T=analysis.totals||{},pending=analysis.pending,inventory=candidates();
    const modeSelected=Array.isArray(state.cfg?.autoTasks)?state.cfg.autoTasks.includes('enchant'):state.cfg?.enchantMode===true,canStart=modeSelected&&cfg.enabled&&!issues().length&&!!state.on&&!pending;
+   const steps=startSteps(state,cfg,pending);
    const status=message || (session.reason==='Уровень в панели устарел'?'Страница заточки устарела. Обновите вкладку игры, затем нажмите «Продолжить серию».':session.reason) || (!modeSelected?'Выберите режим «Автозаточка»':!cfg.enabled?'Попытки выключены':!state.on?'Ожидает старта бота':issues()[0]||({idle:'Готово к новой серии',running:'Серия выполняется',paused:'Серия на паузе',done:'Все цели достигнуты',unknown:'Результат попытки ещё не подтверждён'}[session.status]||'Готово'));
    node.innerHTML=`<div class="ench-section">${node.dataset.embedded?'':'<h2>Заточка оружия и брони</h2>'}
     <p class="ench-note">Только выбранные вещи и имеющиеся свитки. Общий «Стоп» прекращает новые попытки.</p>
     <div class="ench-status ${message?'ench-error':''}" role="status">${esc(status)}${pending?'\nОжидаю подтверждение уже отправленной попытки. Повтор не запущен.':''}</div>
     <h3>Очередь вещей</h3><div class="ench-row"><button data-command="refresh">Обновить вещи</button><select data-candidate aria-label="Добавить конкретную вещь"><option value="">Выберите вещь</option>${inventory.map((q,i)=>`<option value="${i}" ${selectedCandidate===JSON.stringify([q.targetInstanceId,q.fingerprint])?'selected':''}>${esc(describe(q))}</option>`).join('')}</select><button data-add>Добавить</button></div>
+    <p class="ench-note" data-scan-status>${esc(scanSummary(state.rt?.enchantScan,state.rt?.char))}</p>
     <p class="ench-note">Для одинаковых вещей выбирайте нужный экземпляр по месту, текущему уровню и характеристикам.</p>
     <div data-queue>${cfg.queue.length?cfg.queue.map((q,i)=>item(q,i,session)).join(''):'<p class="ench-note">Очередь пустая. Ничего не будет заточено.</p>'}</div>
     <h3>Свитки и лимиты</h3><div class="ench-grid"><label>Какие свитки использовать<select data-cfg="scrollPolicy">${opts(POLICIES,cfg.scrollPolicy)}</select></label>${cfg.scrollPolicy==='mixed'?`<label>Обычные свитки — до уровня<input data-cfg="ordinaryUntil" type="number" min="0" max="25" value="${cfg.ordinaryUntil}"></label>`:''}${numericFields(cfg,'data-global',false,FIELDS.slice(0,2))}</div>
+    <p class="ench-note" data-scroll-stock>${esc(scrollSummary(state.rt?.enchantScan,state.rt?.char))}</p>
     <p class="ench-note">0 попыток или свитков — запрет. Только свитки из сумки: без покупок, адены, Coin of Luck и FA.</p>
     <details data-detail="limits"><summary>Дополнительные ограничения</summary><div class="ench-grid">${numericFields(cfg,'data-global',false,FIELDS.slice(2))}<label>Пауза между попытками, мс<input type="number" data-cfg="delayMs" min="500" max="60000" value="${cfg.delayMs}"></label></div><p class="ench-note">Правила отдельной вещи могут быть строже общих лимитов.</p></details>
     <label class="ench-row ench-enable"><input type="checkbox" data-cfg="enabled" ${cfg.enabled?'checked':''}> Разрешить попытки заточки</label>
+    ${steps.length?`<div class="ench-note" data-start-steps>Для запуска серии:<ul>${steps.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
     <div class="ench-row">${session.status==='running'?'<button class="ench-primary" data-command="pause">Пауза</button>':session.runId&&session.status!=='done'?`<button class="ench-primary" data-command="resume" ${canStart&&session.status==='paused'?'':'disabled'}>Продолжить серию</button>`:`<button class="ench-primary" data-command="start" ${canStart?'':'disabled'}>Начать серию</button>`}${pending?'<button data-command="reconcile">Сверить результат</button>':''}</div>
     ${pending?.state==='unknown'?`<details open><summary>Неопределённый результат</summary><p class="ench-note">${esc((session.items||[]).find(x=>x.key===pending.key)?.name||'Выбранная вещь')}: перед попыткой +${pending.before}. Исход не подтверждён. При завершении серии попытка и один свиток останутся в истории как неопределённые; заточка выключится, очередь будет очищена. Для новой серии понадобится заново выбрать вещи.</p><button data-archive-begin>Завершить серию с неизвестным результатом</button>${archiveConfirm===pending.id?'<p class="ench-note">Сохранить этот неопределённый исход и очистить очередь?</p><button data-command="archiveUnknown">Да, сохранить исход и очистить очередь</button>':''}</details>`:''}
-    ${!modeSelected?'<p class="ench-note">Настройки сохранены. Выберите «Автозаточка» в быстрых режимах или кнопкой над настройками.</p>':!state.on?'<p class="ench-note">Режим выбран, бот остановлен. Нажмите общий «Старт», затем начните или продолжите серию.</p>':''}
+    ${!modeSelected?'<p class="ench-note">Настройки сохранены. Выберите «Автозаточка» в разрешённых задачах или кнопкой над настройками.</p>':!state.on?'<p class="ench-note">Режим выбран, бот остановлен. Нажмите общий «Старт», затем начните или продолжите серию.</p>':''}
     <details data-detail="results"><summary>Результаты и история</summary><h3>Результаты этой серии</h3><div class="ench-metrics">${[[T.attempts,'попыток подтверждено'],[T.successes,'успешных'],[T.failures,'неудачных'],[T.scrolls,'свитков списано'],[T.adena,'адены списано'],[(T.unknown||0)+(pending?.state==='unknown'?1:0),'исход неизвестен']].map(([v,t])=>`<div><b>${number(v)}</b><span>${t}</span></div>`).join('')}</div>
     <p class="ench-note">Неизвестный исход не считается успехом или неудачей. ${number((T.reservedScrolls||0)+(pending?1:0))} свитков зарезервировано для ожидающей или неподтверждённой попытки.</p>
     ${rates(analysis.rates || Object.entries(T.byScroll||{}).map(([id,b])=>({...b,scrollId:+id,n:b.attempts,observed:b.attempts?b.successes/b.attempts:null})))}
@@ -75,5 +98,5 @@
   }
   return {refresh:render,ready:render()};
  }
- root.L2EnchantUI={DEFAULT,mount};
+ root.L2EnchantUI={DEFAULT,mount,scanSummary,scrollSummary,startSteps};
 })(globalThis);
