@@ -31,7 +31,8 @@ test('Stop и TvT interruption не объявляют ещё активную �
  const arena=fixture({target:true,tvt:true});await arena.m.fishFight();assert.equal(arena.env.rt.fishCastActive,true);
 });
 test('loaded idle снимает stale active до обслуживания и не начинает новый заброс за лимитом',async()=>{
- const source=read('modules/fishing.js'),start=source.indexOf('  if (fishState()) return fishFight();',source.indexOf('async function fishing()'));
+ // 20.8: ранняя проверка выполненной цели тоже умеет доводить рыбу; проверяем прежний блок загруженной пустой панели.
+ const source=read('modules/fishing.js'),start=source.indexOf('  // Загруженная пустая панель',source.indexOf('async function fishing()'));
  const section=source.slice(start,source.indexOf('  await fishTimeTopUp();',start));
  const cfg={autoTasks:['fish'],fishMaxCasts:1},rt={fish:{casts:1},fishCastActive:true};let setup=0;
  const fn=vm.runInNewContext('(async()=>{'+section+'})',{env:{rt,setRt:async p=>Object.assign(rt,p)},fishState:()=>null,fishFight:()=>assert.fail('idle'),still:()=>E.selectedTask(cfg,rt)==='fish',fishSetup:async()=>{setup++;return false}});

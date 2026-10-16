@@ -1015,6 +1015,11 @@ async function fishing() {
   if (!fishOwn()) return;
   if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
   if (env.payments?.blocked()) { await paymentReconcile(); return; }
+  // 17.10 (журнал01:39): выполненная цель запрещает новый заброс даже при старом режиме/frame.
+  if (env.rt.fishTgt?.done) {
+    if (fishState()) return fishFight();
+    if (!env.rt.fishCastActive) return fishTgtReached();
+  }
   if (!env.rt.fishCastActive && await fishSetup()) return;
   // страница рыбалки дорисовывается скриптом игры: в первые секунды блоки «купите место» / «изучите навыки» /
   // «недоступно» могут мелькнуть до загрузки данных — раньше бот на этом останавливался (журнал 07.10: стоп через
@@ -1031,9 +1036,12 @@ async function fishing() {
     return fishSoft(blocker() || 'Рыбалка: панель рыбалки не загрузилась');
   }
   if (fishState()) return fishFight();
+  if (env.rt.fishTgt?.done && !env.rt.fishCastActive) return fishTgtReached();
   // Загруженная пустая панель снимает сохранённый флаг; до любых покупок пересчитываем задачу.
   if (env.rt.fishCastActive) {
-    await env.setRt({fishCastActive:false}); if (!still()) return;
+    await env.setRt({fishCastActive:false});
+    if (env.rt.fishTgt?.done) return fishTgtReached();
+    if (!still()) return;
     if (await fishSetup()) return;
   }
   if (!still()) return;
@@ -1055,6 +1063,7 @@ async function fishing() {
     await env.setRt({ fishService: 'cut' });
     return;
   }
+  if (env.rt.fishTgt?.done) return fishTgtReached();
   if (!(await fishPrepare()) || !still()) return;
   const fb = fSlot('fishing');
   if (!fOk(fb)) { await env.sleep(300); return; }
@@ -1063,6 +1072,7 @@ async function fishing() {
   // 8.0 (аудит рыбалки, лог 10.10: ≈0,4 с накладных на заброс): «реакция» перед забросом 20–60 мс (было 50–150 мс)
   await env.sleep(env.rnd(20, 60));
   if (!still()) return;
+  if (env.rt.fishTgt?.done) return fishTgtReached();
   // снимок журнала и счётчика ДО нажатия: быстрый «Рыба не клюнула» может прийти вместе с забросом
   fishWatch();
   const pre = fishLog(), m0 = env.fishMut, castT = Date.now();
@@ -1073,7 +1083,7 @@ async function fishing() {
   const pending={char:castChar,at:castT,bait,before:bait0,pre};
   const saved=await env.setRt({fishCastPending:pending});
   const durable=saved?.ok!==false&&(!env.rtCommit||await env.rtCommit());
-  if(!durable||!fishOwn()||env.rt.char!==castChar||env.leaseEpoch!==castLease||(env.rt.manualKickAt||0)!==castKick){if(env.rt.char===castChar&&env.rt.fishCastPending?.at===castT)await env.setRt({fishCastPending:null});return;}
+  if(!durable||!fishOwn()||env.rt.char!==castChar||env.leaseEpoch!==castLease||(env.rt.manualKickAt||0)!==castKick||env.rt.fishTgt?.done){if(env.rt.char===castChar&&env.rt.fishCastPending?.at===castT)await env.setRt({fishCastPending:null});return;}
   if(env.fire(fb)===false){await env.setRt({fishCastPending:null});return;}
   let castSeen = false, gearMsg = '';
   env.fishCast = { bait, t: castT };
@@ -1352,6 +1362,13 @@ async function fishTgtAdd(kind, k) {
 
 async function fishTgtReached() {
   const T = env.rt.fishTgt;
+  if (!T) return false;
+  // Повторный вход после reload/Start не снимает выполненную цель и не запускает разделку заново.
+  if (T.done) {
+    const msg = '🎯 Рыбалка: цель уже выполнена — новые забросы запрещены';
+    if (Array.isArray(env.cfg.autoTasks)) { env.setStatus(msg + '; следующая выбранная задача'); return true; }
+    return env.halt(msg, true);
+  }
   // «рыба»: если разделка включена — сначала разделать и сдать улов на Proof, стоп после обмена
   if (T.type === 'fish' && env.cfg.fishProcess && (env.rt.fishSinceProc || 0) > 0 && !T.final) {
     env.rec('B', 'рыбалка', `🎯 поймано ${T.got}/${T.n} — разделываю и сдаю улов на Proof, потом стоп`);
