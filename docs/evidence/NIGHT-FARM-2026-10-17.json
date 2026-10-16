@@ -1,0 +1,3811 @@
+{
+  "schema": 1,
+  "timezone": "Asia/Vladivostok",
+  "review_date": "2026-10-17",
+  "actor": "alt2",
+  "profession": "human_warlord",
+  "level": 48,
+  "version": "20.8",
+  "sources": [
+    {
+      "name": "l2bot-log-2026-10-16-22-09.txt",
+      "bytes": 6290190,
+      "sha256": "d161e68aaa843c48b1d03133b6ed0b045711698b21bf1f594c2092eaeb10455b"
+    },
+    {
+      "name": "l2bot-learn-2026-10-16-22-09.html",
+      "bytes": 130331,
+      "sha256": "30f0c00015bcfb461349d555119961432b5e15e3463c758d6a8ebf4c6636a04e"
+    },
+    {
+      "name": "l2wap-pages-2026-10-16-22-09.html",
+      "bytes": 2169174,
+      "sha256": "4ea4659f2c98ccc45efc8f0ab2a17834e66febdcbccd79ba6967b003b75867c3"
+    }
+  ],
+  "coverage": {
+    "reported_header_events": 20000,
+    "omitted_oldest_events": 7725,
+    "retained_events": 12275,
+    "first_retained": "05:50:57.710",
+    "last_retained": "08:09:18.727",
+    "whole_night_totals": false
+  },
+  "metrics": {
+    "battle_result_rows": 572,
+    "normal_battles": 554,
+    "champion_battles": 18,
+    "normal_median_seconds": 3.1,
+    "fa_rows": 39,
+    "fa_units": 40,
+    "reward_exp_zero_messages": 522
+  },
+  "battle_http_actions": [
+    {
+      "action": "attack",
+      "status": 200,
+      "count": 178
+    },
+    {
+      "action": "battle_potion_use",
+      "status": 200,
+      "count": 65
+    },
+    {
+      "action": "howl",
+      "status": 200,
+      "count": 136
+    },
+    {
+      "action": "provoke",
+      "status": 200,
+      "count": 134
+    },
+    {
+      "action": "provoke",
+      "status": 423,
+      "count": 1
+    },
+    {
+      "action": "thrill_fight",
+      "status": 200,
+      "count": 12
+    },
+    {
+      "action": "thunder_storm",
+      "status": 200,
+      "count": 148
+    },
+    {
+      "action": "vicious_stance",
+      "status": 200,
+      "count": 50
+    },
+    {
+      "action": "war_cry",
+      "status": 200,
+      "count": 11
+    },
+    {
+      "action": "whirlwind",
+      "status": 200,
+      "count": 345
+    },
+    {
+      "action": "wild_sweep",
+      "status": 200,
+      "count": 139
+    }
+  ],
+  "timeline": [
+    {
+      "line": 3753,
+      "time": "06:06:34.077",
+      "event": "[B] локации телепорт → Skyshadow Meadow · пробую зону по КПД для 48 ур.: ≈2,6 M EXP/ч (по базе: мобы 54–54 ур. (1 вид.), лучшие — Connabi 54)"
+    },
+    {
+      "line": 3754,
+      "time": "06:06:34.397",
+      "event": "[N] сеть POST /game/teleport → 200 · 299 мс · 24622 б"
+    },
+    {
+      "line": 3774,
+      "time": "06:06:38.391",
+      "event": "[B] локации Skyshadow Meadow: прибытие подтверждено сервером"
+    },
+    {
+      "line": 4944,
+      "time": "06:11:37.798",
+      "event": "[S] сервер Несколько API одновременно возвращают 5xx — приостанавливаю действия до восстановления"
+    },
+    {
+      "line": 4954,
+      "time": "06:11:50.251",
+      "event": "[S] сервер игра недоступна (502) на /map.html — жду и пробую снова"
+    },
+    {
+      "line": 4959,
+      "time": "06:12:04.949",
+      "event": "[S] сервер игра снова доступна (простой 0.2 мин, попыток 1)"
+    },
+    {
+      "line": 11085,
+      "time": "06:36:37.895",
+      "event": "[B] локации телепорт → Окрестности: Town of Aden · пробую зону по КПД для 48 ур.: ≈2,6 M EXP/ч (по базе: мобы 45–55 ур. (8 вид.), лучшие — Vanor Silenos Warrior 48, Vanor Silenos Scout 47)"
+    },
+    {
+      "line": 11086,
+      "time": "06:36:38.615",
+      "event": "[N] сеть POST /game/teleport → 200 · 698 мс · 24605 б"
+    },
+    {
+      "line": 11106,
+      "time": "06:36:42.324",
+      "event": "[B] локации Окрестности: Town of Aden: прибытие подтверждено сервером"
+    },
+    {
+      "line": 12077,
+      "time": "06:40:33.679",
+      "event": "[B] антибот сервер выдал «Проверку активности» (/game/battle/action)"
+    },
+    {
+      "line": 12080,
+      "time": "06:40:34.541",
+      "event": "[B] антибот игра показала «Проверку активности»"
+    },
+    {
+      "line": 12185,
+      "time": "07:24:56.333",
+      "event": "[B] антибот проверка пройдена"
+    },
+    {
+      "line": 12221,
+      "time": "07:25:08.275",
+      "event": "[B] локации телепорт → Coliseum · пробую зону по КПД для 48 ур.: ≈2,5 M EXP/ч (по базе: мобы 48–53 ур. (5 вид.), лучшие — Vanor Silenos Warrior 48, Vanor Silenos Shaman 49)"
+    },
+    {
+      "line": 12222,
+      "time": "07:25:08.802",
+      "event": "[N] сеть POST /game/teleport → 502 · 517 мс · 6377 б"
+    },
+    {
+      "line": 12224,
+      "time": "07:25:12.998",
+      "event": "[S] сервер Несколько API одновременно возвращают 5xx — приостанавливаю действия до восстановления"
+    },
+    {
+      "line": 12228,
+      "time": "07:25:16.670",
+      "event": "[B] локации прибытие не подтверждено; повторная оплата телепорта запрещена"
+    },
+    {
+      "line": 12230,
+      "time": "07:25:16.675",
+      "event": "[S] сессия ■ бот остановлен · источник: content-pause · Телепорт: прибытие не подтверждено. Проверьте положение героя"
+    },
+    {
+      "line": 12234,
+      "time": "07:25:35.167",
+      "event": "[S] сервер API отвечает 2xx по разным адресам — проверяю состояние игры"
+    },
+    {
+      "line": 12273,
+      "time": "07:54:45.158",
+      "event": "[N] сеть GET /game/tvt → 401 · 196 мс · 24 б"
+    },
+    {
+      "line": 12274,
+      "time": "07:54:45.160",
+      "event": "[N] сеть GET /game/mail/unread-count → 401 · 197 мс · 24 б"
+    },
+    {
+      "line": 12275,
+      "time": "07:54:47.064",
+      "event": "[N] сеть GET /game/party/hud → 401 · 255 мс · 24 б"
+    },
+    {
+      "line": 12296,
+      "time": "08:07:45.841",
+      "event": "[N] сеть POST /auth/login → 403 · 296 мс · 129 б"
+    }
+  ],
+  "battle_results": [
+    {
+      "line": 93,
+      "time": "05:51:13.063",
+      "seconds": 10.1,
+      "champion": true
+    },
+    {
+      "line": 104,
+      "time": "05:51:16.030",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 122,
+      "time": "05:51:19.464",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 136,
+      "time": "05:51:22.350",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 154,
+      "time": "05:51:27.325",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 168,
+      "time": "05:51:31.634",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 188,
+      "time": "05:51:36.205",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 205,
+      "time": "05:51:40.215",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 224,
+      "time": "05:51:45.284",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 239,
+      "time": "05:51:49.377",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 254,
+      "time": "05:51:53.026",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 273,
+      "time": "05:51:57.388",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 296,
+      "time": "05:52:03.321",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 310,
+      "time": "05:52:07.498",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 328,
+      "time": "05:52:12.412",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 349,
+      "time": "05:52:18.095",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 362,
+      "time": "05:52:22.461",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 388,
+      "time": "05:52:30.433",
+      "seconds": 7.2,
+      "champion": false
+    },
+    {
+      "line": 408,
+      "time": "05:52:35.083",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 421,
+      "time": "05:52:39.127",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 439,
+      "time": "05:52:44.505",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 452,
+      "time": "05:52:47.369",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 472,
+      "time": "05:52:52.325",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 489,
+      "time": "05:52:55.952",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 503,
+      "time": "05:52:59.423",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 521,
+      "time": "05:53:04.282",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 546,
+      "time": "05:53:10.894",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 564,
+      "time": "05:53:14.365",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 577,
+      "time": "05:53:17.239",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 588,
+      "time": "05:53:19.892",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 683,
+      "time": "05:53:43.405",
+      "seconds": 15.4,
+      "champion": true
+    },
+    {
+      "line": 700,
+      "time": "05:53:48.087",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 720,
+      "time": "05:53:53.782",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 733,
+      "time": "05:53:58.110",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 747,
+      "time": "05:54:02.331",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 773,
+      "time": "05:54:11.539",
+      "seconds": 8.0,
+      "champion": false
+    },
+    {
+      "line": 799,
+      "time": "05:54:18.394",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 820,
+      "time": "05:54:23.380",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 834,
+      "time": "05:54:27.090",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 854,
+      "time": "05:54:30.982",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 866,
+      "time": "05:54:33.463",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 878,
+      "time": "05:54:36.291",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 899,
+      "time": "05:54:40.064",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 912,
+      "time": "05:54:44.295",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 926,
+      "time": "05:54:48.271",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 943,
+      "time": "05:54:52.040",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 971,
+      "time": "05:54:58.970",
+      "seconds": 6.0,
+      "champion": false
+    },
+    {
+      "line": 989,
+      "time": "05:55:03.461",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 1003,
+      "time": "05:55:07.161",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 1016,
+      "time": "05:55:10.123",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 1037,
+      "time": "05:55:14.460",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 1060,
+      "time": "05:55:20.210",
+      "seconds": 5.0,
+      "champion": false
+    },
+    {
+      "line": 1075,
+      "time": "05:55:25.210",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 1089,
+      "time": "05:55:28.698",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 1100,
+      "time": "05:55:31.391",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 1119,
+      "time": "05:55:36.586",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 1145,
+      "time": "05:55:42.461",
+      "seconds": 4.7,
+      "champion": false
+    },
+    {
+      "line": 1161,
+      "time": "05:55:46.270",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 1179,
+      "time": "05:55:50.390",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 1193,
+      "time": "05:55:53.350",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 1306,
+      "time": "05:56:21.485",
+      "seconds": 20.7,
+      "champion": true
+    },
+    {
+      "line": 1331,
+      "time": "05:56:27.325",
+      "seconds": 5.0,
+      "champion": false
+    },
+    {
+      "line": 1350,
+      "time": "05:56:31.880",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 1369,
+      "time": "05:56:36.153",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 1387,
+      "time": "05:56:39.976",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 1406,
+      "time": "05:56:44.058",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 1421,
+      "time": "05:56:47.036",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 1440,
+      "time": "05:56:51.995",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 1454,
+      "time": "05:56:54.818",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 1473,
+      "time": "05:56:58.494",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 1492,
+      "time": "05:57:02.268",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 1515,
+      "time": "05:57:08.714",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 1528,
+      "time": "05:57:11.498",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 1548,
+      "time": "05:57:16.987",
+      "seconds": 4.7,
+      "champion": false
+    },
+    {
+      "line": 1567,
+      "time": "05:57:21.054",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 1588,
+      "time": "05:57:25.990",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 1603,
+      "time": "05:57:30.155",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 1620,
+      "time": "05:57:34.702",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 1635,
+      "time": "05:57:38.506",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 1657,
+      "time": "05:57:45.274",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 1672,
+      "time": "05:57:48.389",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 1693,
+      "time": "05:57:53.337",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 1711,
+      "time": "05:57:58.474",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 1731,
+      "time": "05:58:04.317",
+      "seconds": 4.8,
+      "champion": false
+    },
+    {
+      "line": 1747,
+      "time": "05:58:08.262",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 1767,
+      "time": "05:58:13.074",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 1780,
+      "time": "05:58:16.231",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 1803,
+      "time": "05:58:22.893",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 1820,
+      "time": "05:58:28.380",
+      "seconds": 4.5,
+      "champion": false
+    },
+    {
+      "line": 1842,
+      "time": "05:58:33.656",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 1946,
+      "time": "05:59:00.634",
+      "seconds": 19.8,
+      "champion": true
+    },
+    {
+      "line": 1972,
+      "time": "05:59:10.217",
+      "seconds": 8.2,
+      "champion": false
+    },
+    {
+      "line": 1985,
+      "time": "05:59:14.379",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 2000,
+      "time": "05:59:19.457",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 2020,
+      "time": "05:59:24.680",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 2040,
+      "time": "05:59:30.061",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 2056,
+      "time": "05:59:33.482",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 2077,
+      "time": "05:59:38.194",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 2094,
+      "time": "05:59:42.577",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 2107,
+      "time": "05:59:46.303",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 2126,
+      "time": "05:59:51.399",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 2148,
+      "time": "05:59:57.069",
+      "seconds": 4.4,
+      "champion": false
+    },
+    {
+      "line": 2163,
+      "time": "06:00:01.065",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 2178,
+      "time": "06:00:04.819",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 2190,
+      "time": "06:00:08.481",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 2215,
+      "time": "06:00:16.223",
+      "seconds": 6.7,
+      "champion": false
+    },
+    {
+      "line": 2233,
+      "time": "06:00:20.971",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 2246,
+      "time": "06:00:24.370",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 2264,
+      "time": "06:00:28.293",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 2280,
+      "time": "06:00:30.991",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 2299,
+      "time": "06:00:37.424",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 2316,
+      "time": "06:00:41.506",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 2334,
+      "time": "06:00:46.300",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 2356,
+      "time": "06:00:52.104",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 2370,
+      "time": "06:00:56.198",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 2397,
+      "time": "06:01:04.120",
+      "seconds": 7.0,
+      "champion": false
+    },
+    {
+      "line": 2416,
+      "time": "06:01:08.425",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 2433,
+      "time": "06:01:12.454",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 2447,
+      "time": "06:01:16.299",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 2468,
+      "time": "06:01:21.579",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 2565,
+      "time": "06:01:54.413",
+      "seconds": 18.4,
+      "champion": true
+    },
+    {
+      "line": 2583,
+      "time": "06:01:58.336",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 2597,
+      "time": "06:02:01.337",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 2614,
+      "time": "06:02:05.277",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 2635,
+      "time": "06:02:09.104",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 2657,
+      "time": "06:02:15.412",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 2678,
+      "time": "06:02:20.301",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 2693,
+      "time": "06:02:23.264",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 2706,
+      "time": "06:02:27.066",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 2725,
+      "time": "06:02:32.127",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 2738,
+      "time": "06:02:35.552",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 2754,
+      "time": "06:02:39.861",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 2770,
+      "time": "06:02:43.428",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 2799,
+      "time": "06:02:49.381",
+      "seconds": 5.0,
+      "champion": false
+    },
+    {
+      "line": 2818,
+      "time": "06:02:53.529",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 2831,
+      "time": "06:02:56.958",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 2843,
+      "time": "06:02:59.370",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 2864,
+      "time": "06:03:03.051",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 2883,
+      "time": "06:03:06.750",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 2901,
+      "time": "06:03:10.317",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 2916,
+      "time": "06:03:13.131",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 2928,
+      "time": "06:03:16.013",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 2950,
+      "time": "06:03:21.102",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 2968,
+      "time": "06:03:25.234",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 2988,
+      "time": "06:03:29.242",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 3009,
+      "time": "06:03:33.016",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 3026,
+      "time": "06:03:36.526",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 3041,
+      "time": "06:03:40.164",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 3060,
+      "time": "06:03:45.165",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 3074,
+      "time": "06:03:48.380",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 3134,
+      "time": "06:04:09.403",
+      "seconds": 5.8,
+      "champion": false
+    },
+    {
+      "line": 3152,
+      "time": "06:04:14.342",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 3166,
+      "time": "06:04:17.085",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 3192,
+      "time": "06:04:23.985",
+      "seconds": 5.9,
+      "champion": false
+    },
+    {
+      "line": 3209,
+      "time": "06:04:28.167",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 3224,
+      "time": "06:04:32.332",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 3242,
+      "time": "06:04:36.464",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 3259,
+      "time": "06:04:40.319",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 3277,
+      "time": "06:04:45.021",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 3291,
+      "time": "06:04:48.628",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 3305,
+      "time": "06:04:52.132",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 3322,
+      "time": "06:04:55.540",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 3350,
+      "time": "06:05:01.945",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 3368,
+      "time": "06:05:05.382",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 3380,
+      "time": "06:05:08.422",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 3394,
+      "time": "06:05:10.802",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 3403,
+      "time": "06:05:13.238",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 3424,
+      "time": "06:05:17.127",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 3436,
+      "time": "06:05:19.836",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 3457,
+      "time": "06:05:23.854",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 3468,
+      "time": "06:05:27.054",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 3483,
+      "time": "06:05:30.114",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 3506,
+      "time": "06:05:34.973",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 3520,
+      "time": "06:05:37.883",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 3539,
+      "time": "06:05:42.038",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 3561,
+      "time": "06:05:47.385",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 3579,
+      "time": "06:05:51.515",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 3594,
+      "time": "06:05:54.992",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 3605,
+      "time": "06:05:57.130",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 3623,
+      "time": "06:06:01.501",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 3718,
+      "time": "06:06:23.168",
+      "seconds": 14.6,
+      "champion": true
+    },
+    {
+      "line": 3743,
+      "time": "06:06:29.321",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 3808,
+      "time": "06:06:46.132",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 3828,
+      "time": "06:06:49.979",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 3840,
+      "time": "06:06:52.296",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 3862,
+      "time": "06:06:58.040",
+      "seconds": 5.0,
+      "champion": false
+    },
+    {
+      "line": 3885,
+      "time": "06:07:04.044",
+      "seconds": 5.3,
+      "champion": false
+    },
+    {
+      "line": 3898,
+      "time": "06:07:07.152",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 3909,
+      "time": "06:07:09.878",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 3931,
+      "time": "06:07:14.471",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 3945,
+      "time": "06:07:18.105",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 3964,
+      "time": "06:07:21.472",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 3984,
+      "time": "06:07:24.984",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 3998,
+      "time": "06:07:28.107",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 4010,
+      "time": "06:07:30.377",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 4030,
+      "time": "06:07:33.951",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 4047,
+      "time": "06:07:38.079",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 4062,
+      "time": "06:07:41.343",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 4088,
+      "time": "06:07:45.935",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 4104,
+      "time": "06:07:48.916",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 4123,
+      "time": "06:07:54.068",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 4140,
+      "time": "06:07:58.275",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 4160,
+      "time": "06:08:02.948",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 4172,
+      "time": "06:08:06.210",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 4190,
+      "time": "06:08:10.316",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 4211,
+      "time": "06:08:16.192",
+      "seconds": 4.7,
+      "champion": false
+    },
+    {
+      "line": 4233,
+      "time": "06:08:22.520",
+      "seconds": 5.5,
+      "champion": false
+    },
+    {
+      "line": 4246,
+      "time": "06:08:26.167",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 4265,
+      "time": "06:08:30.219",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 4285,
+      "time": "06:08:35.023",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 4398,
+      "time": "06:09:08.369",
+      "seconds": 23.5,
+      "champion": true
+    },
+    {
+      "line": 4411,
+      "time": "06:09:12.837",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 4429,
+      "time": "06:09:18.288",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 4455,
+      "time": "06:09:28.217",
+      "seconds": 9.0,
+      "champion": false
+    },
+    {
+      "line": 4477,
+      "time": "06:09:33.334",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 4492,
+      "time": "06:09:37.365",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 4511,
+      "time": "06:09:42.445",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 4528,
+      "time": "06:09:46.089",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 4546,
+      "time": "06:09:50.945",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 4563,
+      "time": "06:09:55.164",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 4581,
+      "time": "06:09:59.065",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 4601,
+      "time": "06:10:05.024",
+      "seconds": 4.5,
+      "champion": false
+    },
+    {
+      "line": 4629,
+      "time": "06:10:13.091",
+      "seconds": 7.1,
+      "champion": false
+    },
+    {
+      "line": 4646,
+      "time": "06:10:16.457",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 4661,
+      "time": "06:10:20.350",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 4672,
+      "time": "06:10:22.973",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 4692,
+      "time": "06:10:27.940",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 4714,
+      "time": "06:10:34.460",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 4728,
+      "time": "06:10:38.250",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 4744,
+      "time": "06:10:43.505",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 4759,
+      "time": "06:10:46.372",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 4782,
+      "time": "06:10:53.156",
+      "seconds": 5.7,
+      "champion": false
+    },
+    {
+      "line": 4801,
+      "time": "06:10:58.064",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 4814,
+      "time": "06:11:02.394",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 4833,
+      "time": "06:11:07.008",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 4846,
+      "time": "06:11:10.385",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 4866,
+      "time": "06:11:15.139",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 4884,
+      "time": "06:11:20.240",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 4898,
+      "time": "06:11:24.644",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 4917,
+      "time": "06:11:30.519",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 5007,
+      "time": "06:12:20.225",
+      "seconds": 4.7,
+      "champion": false
+    },
+    {
+      "line": 5023,
+      "time": "06:12:24.479",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 5038,
+      "time": "06:12:28.396",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 5056,
+      "time": "06:12:32.298",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 5070,
+      "time": "06:12:35.301",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 5090,
+      "time": "06:12:39.287",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 5109,
+      "time": "06:12:43.294",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 5130,
+      "time": "06:12:46.580",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 5143,
+      "time": "06:12:48.886",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 5163,
+      "time": "06:12:52.499",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 5177,
+      "time": "06:12:56.445",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 5195,
+      "time": "06:13:01.132",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 5207,
+      "time": "06:13:04.414",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 5224,
+      "time": "06:13:08.543",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 5239,
+      "time": "06:13:12.226",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 5262,
+      "time": "06:13:18.809",
+      "seconds": 5.9,
+      "champion": false
+    },
+    {
+      "line": 5274,
+      "time": "06:13:21.590",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 5291,
+      "time": "06:13:25.472",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 5314,
+      "time": "06:13:30.000",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 5335,
+      "time": "06:13:34.221",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 5350,
+      "time": "06:13:36.941",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 5372,
+      "time": "06:13:42.445",
+      "seconds": 4.9,
+      "champion": false
+    },
+    {
+      "line": 5387,
+      "time": "06:13:46.171",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 5410,
+      "time": "06:13:52.685",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 5423,
+      "time": "06:13:55.228",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 5443,
+      "time": "06:13:59.444",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 5472,
+      "time": "06:14:07.207",
+      "seconds": 6.9,
+      "champion": false
+    },
+    {
+      "line": 5491,
+      "time": "06:14:12.320",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 5505,
+      "time": "06:14:16.248",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 5522,
+      "time": "06:14:20.486",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 5636,
+      "time": "06:14:54.650",
+      "seconds": 22.9,
+      "champion": true
+    },
+    {
+      "line": 5659,
+      "time": "06:15:01.535",
+      "seconds": 5.7,
+      "champion": false
+    },
+    {
+      "line": 5671,
+      "time": "06:15:04.435",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 5690,
+      "time": "06:15:08.398",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 5703,
+      "time": "06:15:11.302",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 5725,
+      "time": "06:15:17.447",
+      "seconds": 5.3,
+      "champion": false
+    },
+    {
+      "line": 5740,
+      "time": "06:15:21.093",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 5754,
+      "time": "06:15:25.225",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 5771,
+      "time": "06:15:31.473",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 5799,
+      "time": "06:15:39.231",
+      "seconds": 6.4,
+      "champion": false
+    },
+    {
+      "line": 5812,
+      "time": "06:15:41.928",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 5835,
+      "time": "06:15:46.756",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 5850,
+      "time": "06:15:50.439",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 5867,
+      "time": "06:15:53.857",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 5882,
+      "time": "06:15:56.965",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 5905,
+      "time": "06:16:02.341",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 5919,
+      "time": "06:16:06.124",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 5938,
+      "time": "06:16:10.456",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 5952,
+      "time": "06:16:13.249",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 5976,
+      "time": "06:16:18.287",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 5990,
+      "time": "06:16:21.452",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 6014,
+      "time": "06:16:26.413",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 6025,
+      "time": "06:16:28.435",
+      "seconds": 1.4,
+      "champion": false
+    },
+    {
+      "line": 6050,
+      "time": "06:16:33.287",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 6068,
+      "time": "06:16:37.311",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 6093,
+      "time": "06:16:43.038",
+      "seconds": 4.9,
+      "champion": false
+    },
+    {
+      "line": 6104,
+      "time": "06:16:45.108",
+      "seconds": 1.4,
+      "champion": false
+    },
+    {
+      "line": 6130,
+      "time": "06:16:50.871",
+      "seconds": 4.8,
+      "champion": false
+    },
+    {
+      "line": 6143,
+      "time": "06:16:54.063",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 6165,
+      "time": "06:16:59.216",
+      "seconds": 4.5,
+      "champion": false
+    },
+    {
+      "line": 6253,
+      "time": "06:17:23.009",
+      "seconds": 13.5,
+      "champion": true
+    },
+    {
+      "line": 6272,
+      "time": "06:17:26.353",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 6287,
+      "time": "06:17:29.261",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 6308,
+      "time": "06:17:34.216",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 6323,
+      "time": "06:17:37.029",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 6345,
+      "time": "06:17:42.044",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 6358,
+      "time": "06:17:45.116",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 6381,
+      "time": "06:17:50.137",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 6394,
+      "time": "06:17:52.263",
+      "seconds": 1.3,
+      "champion": false
+    },
+    {
+      "line": 6412,
+      "time": "06:17:56.156",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 6434,
+      "time": "06:18:01.070",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 6457,
+      "time": "06:18:05.856",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 6470,
+      "time": "06:18:08.450",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 6496,
+      "time": "06:18:13.755",
+      "seconds": 4.4,
+      "champion": false
+    },
+    {
+      "line": 6516,
+      "time": "06:18:17.097",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 6534,
+      "time": "06:18:20.264",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 6550,
+      "time": "06:18:22.862",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 6566,
+      "time": "06:18:26.844",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 6583,
+      "time": "06:18:30.843",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 6596,
+      "time": "06:18:34.081",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 6619,
+      "time": "06:18:40.403",
+      "seconds": 5.5,
+      "champion": false
+    },
+    {
+      "line": 6631,
+      "time": "06:18:43.091",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 6650,
+      "time": "06:18:46.846",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 6663,
+      "time": "06:18:50.430",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 6683,
+      "time": "06:18:55.412",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 6696,
+      "time": "06:18:58.109",
+      "seconds": 1.4,
+      "champion": false
+    },
+    {
+      "line": 6724,
+      "time": "06:19:04.977",
+      "seconds": 6.1,
+      "champion": false
+    },
+    {
+      "line": 6784,
+      "time": "06:19:23.219",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 6802,
+      "time": "06:19:26.415",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 6816,
+      "time": "06:19:28.865",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 6922,
+      "time": "06:19:55.730",
+      "seconds": 20.2,
+      "champion": true
+    },
+    {
+      "line": 6985,
+      "time": "06:20:09.000",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 7002,
+      "time": "06:20:12.476",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 7021,
+      "time": "06:20:15.639",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 7034,
+      "time": "06:20:18.141",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 7059,
+      "time": "06:20:23.214",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 7076,
+      "time": "06:20:27.227",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 7099,
+      "time": "06:20:31.127",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 7113,
+      "time": "06:20:35.378",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 7135,
+      "time": "06:20:41.355",
+      "seconds": 4.8,
+      "champion": false
+    },
+    {
+      "line": 7146,
+      "time": "06:20:44.357",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 7165,
+      "time": "06:20:48.412",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 7185,
+      "time": "06:20:54.231",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 7201,
+      "time": "06:20:58.167",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 7218,
+      "time": "06:21:02.188",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 7236,
+      "time": "06:21:06.506",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 7249,
+      "time": "06:21:09.522",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 7276,
+      "time": "06:21:16.106",
+      "seconds": 5.8,
+      "champion": false
+    },
+    {
+      "line": 7292,
+      "time": "06:21:19.455",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 7307,
+      "time": "06:21:23.326",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 7318,
+      "time": "06:21:26.178",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 7339,
+      "time": "06:21:30.128",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 7356,
+      "time": "06:21:34.299",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 7375,
+      "time": "06:21:37.363",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 7391,
+      "time": "06:21:41.221",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 7406,
+      "time": "06:21:45.161",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 7423,
+      "time": "06:21:49.443",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 7451,
+      "time": "06:21:57.141",
+      "seconds": 6.7,
+      "champion": false
+    },
+    {
+      "line": 7469,
+      "time": "06:22:01.195",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 7485,
+      "time": "06:22:05.423",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 7572,
+      "time": "06:22:30.358",
+      "seconds": 14.4,
+      "champion": true
+    },
+    {
+      "line": 7591,
+      "time": "06:22:34.084",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 7609,
+      "time": "06:22:37.468",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 7632,
+      "time": "06:22:42.070",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 7652,
+      "time": "06:22:46.277",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 7672,
+      "time": "06:22:49.825",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 7696,
+      "time": "06:22:54.934",
+      "seconds": 4.4,
+      "champion": false
+    },
+    {
+      "line": 7709,
+      "time": "06:22:58.110",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 7720,
+      "time": "06:23:00.335",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 7739,
+      "time": "06:23:04.449",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 7757,
+      "time": "06:23:08.419",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 7778,
+      "time": "06:23:13.154",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 7794,
+      "time": "06:23:16.987",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 7813,
+      "time": "06:23:21.082",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 7831,
+      "time": "06:23:25.461",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 7850,
+      "time": "06:23:29.160",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 7869,
+      "time": "06:23:32.180",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 7890,
+      "time": "06:23:35.955",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 7910,
+      "time": "06:23:39.653",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 7929,
+      "time": "06:23:43.131",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 7954,
+      "time": "06:23:49.484",
+      "seconds": 5.4,
+      "champion": false
+    },
+    {
+      "line": 7968,
+      "time": "06:23:52.338",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 7997,
+      "time": "06:24:00.892",
+      "seconds": 7.6,
+      "champion": false
+    },
+    {
+      "line": 8008,
+      "time": "06:24:03.880",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 8028,
+      "time": "06:24:08.385",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 8046,
+      "time": "06:24:12.118",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 8065,
+      "time": "06:24:16.440",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 8077,
+      "time": "06:24:19.261",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 8106,
+      "time": "06:24:26.154",
+      "seconds": 5.9,
+      "champion": false
+    },
+    {
+      "line": 8120,
+      "time": "06:24:29.681",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 8226,
+      "time": "06:25:03.131",
+      "seconds": 21.4,
+      "champion": true
+    },
+    {
+      "line": 8250,
+      "time": "06:25:10.292",
+      "seconds": 6.3,
+      "champion": false
+    },
+    {
+      "line": 8263,
+      "time": "06:25:14.143",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 8283,
+      "time": "06:25:18.255",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 8306,
+      "time": "06:25:22.378",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 8325,
+      "time": "06:25:27.072",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 8339,
+      "time": "06:25:30.937",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 8358,
+      "time": "06:25:35.136",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 8382,
+      "time": "06:25:41.070",
+      "seconds": 5.2,
+      "champion": false
+    },
+    {
+      "line": 8401,
+      "time": "06:25:45.102",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 8414,
+      "time": "06:25:48.379",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 8427,
+      "time": "06:25:50.870",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 8453,
+      "time": "06:25:55.930",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 8479,
+      "time": "06:26:00.641",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 8494,
+      "time": "06:26:04.097",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 8508,
+      "time": "06:26:07.097",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 8523,
+      "time": "06:26:10.097",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 8543,
+      "time": "06:26:13.397",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 8559,
+      "time": "06:26:17.471",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 8581,
+      "time": "06:26:20.979",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 8594,
+      "time": "06:26:24.096",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 8615,
+      "time": "06:26:28.040",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 8630,
+      "time": "06:26:31.291",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 8649,
+      "time": "06:26:35.000",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 8668,
+      "time": "06:26:39.605",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 8695,
+      "time": "06:26:45.998",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 8706,
+      "time": "06:26:48.417",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 8730,
+      "time": "06:26:53.331",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 8745,
+      "time": "06:26:56.249",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 8770,
+      "time": "06:27:02.151",
+      "seconds": 5.2,
+      "champion": false
+    },
+    {
+      "line": 8870,
+      "time": "06:27:27.140",
+      "seconds": 16.6,
+      "champion": true
+    },
+    {
+      "line": 8932,
+      "time": "06:27:40.134",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 8955,
+      "time": "06:27:44.935",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 8967,
+      "time": "06:27:47.359",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 8989,
+      "time": "06:27:52.232",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 9005,
+      "time": "06:27:55.214",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 9029,
+      "time": "06:28:00.221",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 9041,
+      "time": "06:28:03.166",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 9064,
+      "time": "06:28:08.411",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 9077,
+      "time": "06:28:12.462",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 9096,
+      "time": "06:28:17.368",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 9109,
+      "time": "06:28:20.219",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 9129,
+      "time": "06:28:24.022",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 9151,
+      "time": "06:28:28.980",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 9170,
+      "time": "06:28:33.141",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 9185,
+      "time": "06:28:36.172",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 9202,
+      "time": "06:28:40.240",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 9218,
+      "time": "06:28:45.182",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 9240,
+      "time": "06:28:50.316",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 9254,
+      "time": "06:28:53.260",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 9277,
+      "time": "06:28:57.881",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 9289,
+      "time": "06:29:01.090",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 9306,
+      "time": "06:29:05.092",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 9318,
+      "time": "06:29:07.282",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 9340,
+      "time": "06:29:13.050",
+      "seconds": 4.8,
+      "champion": false
+    },
+    {
+      "line": 9355,
+      "time": "06:29:16.543",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 9374,
+      "time": "06:29:21.935",
+      "seconds": 4.6,
+      "champion": false
+    },
+    {
+      "line": 9402,
+      "time": "06:29:29.194",
+      "seconds": 6.4,
+      "champion": false
+    },
+    {
+      "line": 9420,
+      "time": "06:29:33.224",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 9436,
+      "time": "06:29:36.386",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 9540,
+      "time": "06:30:07.122",
+      "seconds": 20.5,
+      "champion": true
+    },
+    {
+      "line": 9602,
+      "time": "06:30:21.195",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 9621,
+      "time": "06:30:24.975",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 9635,
+      "time": "06:30:28.232",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 9651,
+      "time": "06:30:31.523",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 9672,
+      "time": "06:30:34.933",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 9701,
+      "time": "06:30:42.390",
+      "seconds": 6.7,
+      "champion": false
+    },
+    {
+      "line": 9716,
+      "time": "06:30:45.632",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 9732,
+      "time": "06:30:49.367",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 9746,
+      "time": "06:30:51.397",
+      "seconds": 1.4,
+      "champion": false
+    },
+    {
+      "line": 9768,
+      "time": "06:30:57.346",
+      "seconds": 5.0,
+      "champion": false
+    },
+    {
+      "line": 9783,
+      "time": "06:30:59.862",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 9795,
+      "time": "06:31:03.369",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 9815,
+      "time": "06:31:08.169",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 9840,
+      "time": "06:31:14.050",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 9853,
+      "time": "06:31:16.418",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 9872,
+      "time": "06:31:20.182",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 9887,
+      "time": "06:31:23.400",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 9909,
+      "time": "06:31:28.886",
+      "seconds": 4.7,
+      "champion": false
+    },
+    {
+      "line": 9921,
+      "time": "06:31:32.205",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 9933,
+      "time": "06:31:34.950",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 9954,
+      "time": "06:31:39.007",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 9967,
+      "time": "06:31:42.482",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 9990,
+      "time": "06:31:46.898",
+      "seconds": 3.7,
+      "champion": false
+    },
+    {
+      "line": 10002,
+      "time": "06:31:49.906",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 10027,
+      "time": "06:31:56.364",
+      "seconds": 5.8,
+      "champion": false
+    },
+    {
+      "line": 10044,
+      "time": "06:32:00.420",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 10064,
+      "time": "06:32:05.270",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 10080,
+      "time": "06:32:09.484",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 10092,
+      "time": "06:32:11.820",
+      "seconds": 1.6,
+      "champion": false
+    },
+    {
+      "line": 10198,
+      "time": "06:32:39.272",
+      "seconds": 20.8,
+      "champion": true
+    },
+    {
+      "line": 10208,
+      "time": "06:32:41.836",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 10224,
+      "time": "06:32:45.082",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 10235,
+      "time": "06:32:47.480",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 10258,
+      "time": "06:32:53.140",
+      "seconds": 4.9,
+      "champion": false
+    },
+    {
+      "line": 10272,
+      "time": "06:32:56.844",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 10292,
+      "time": "06:33:00.865",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 10306,
+      "time": "06:33:04.081",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 10328,
+      "time": "06:33:10.457",
+      "seconds": 5.6,
+      "champion": false
+    },
+    {
+      "line": 10345,
+      "time": "06:33:15.153",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 10364,
+      "time": "06:33:20.275",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 10379,
+      "time": "06:33:24.055",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 10399,
+      "time": "06:33:28.129",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 10414,
+      "time": "06:33:32.248",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 10434,
+      "time": "06:33:36.969",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 10447,
+      "time": "06:33:41.199",
+      "seconds": 3.3,
+      "champion": false
+    },
+    {
+      "line": 10460,
+      "time": "06:33:45.332",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 10476,
+      "time": "06:33:49.322",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 10501,
+      "time": "06:33:55.354",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 10521,
+      "time": "06:34:00.353",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 10536,
+      "time": "06:34:04.404",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 10552,
+      "time": "06:34:08.407",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 10565,
+      "time": "06:34:11.476",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 10586,
+      "time": "06:34:15.335",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 10604,
+      "time": "06:34:20.524",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 10623,
+      "time": "06:34:25.867",
+      "seconds": 4.4,
+      "champion": false
+    },
+    {
+      "line": 10649,
+      "time": "06:34:33.835",
+      "seconds": 7.1,
+      "champion": false
+    },
+    {
+      "line": 10669,
+      "time": "06:34:38.956",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 10682,
+      "time": "06:34:43.461",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 10699,
+      "time": "06:34:48.250",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 10801,
+      "time": "06:35:21.290",
+      "seconds": 23.1,
+      "champion": true
+    },
+    {
+      "line": 10814,
+      "time": "06:35:24.974",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 10826,
+      "time": "06:35:28.229",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 10842,
+      "time": "06:35:32.016",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 10860,
+      "time": "06:35:37.167",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 10886,
+      "time": "06:35:44.930",
+      "seconds": 7.1,
+      "champion": false
+    },
+    {
+      "line": 10900,
+      "time": "06:35:48.275",
+      "seconds": 2.2,
+      "champion": false
+    },
+    {
+      "line": 10918,
+      "time": "06:35:52.491",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 10937,
+      "time": "06:35:57.216",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 10957,
+      "time": "06:36:01.191",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 10972,
+      "time": "06:36:06.208",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 10985,
+      "time": "06:36:08.955",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 11001,
+      "time": "06:36:13.448",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 11018,
+      "time": "06:36:18.267",
+      "seconds": 4.0,
+      "champion": false
+    },
+    {
+      "line": 11043,
+      "time": "06:36:25.689",
+      "seconds": 6.4,
+      "champion": false
+    },
+    {
+      "line": 11056,
+      "time": "06:36:29.056",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 11073,
+      "time": "06:36:33.078",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 11141,
+      "time": "06:36:51.112",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 11161,
+      "time": "06:36:55.007",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 11172,
+      "time": "06:36:57.315",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 11190,
+      "time": "06:37:01.172",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 11210,
+      "time": "06:37:05.330",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 11232,
+      "time": "06:37:09.093",
+      "seconds": 3.0,
+      "champion": false
+    },
+    {
+      "line": 11244,
+      "time": "06:37:11.245",
+      "seconds": 1.5,
+      "champion": false
+    },
+    {
+      "line": 11266,
+      "time": "06:37:16.265",
+      "seconds": 4.2,
+      "champion": false
+    },
+    {
+      "line": 11285,
+      "time": "06:37:20.257",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 11302,
+      "time": "06:37:24.222",
+      "seconds": 3.2,
+      "champion": false
+    },
+    {
+      "line": 11320,
+      "time": "06:37:27.472",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 11335,
+      "time": "06:37:31.153",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 11351,
+      "time": "06:37:34.237",
+      "seconds": 2.4,
+      "champion": false
+    },
+    {
+      "line": 11445,
+      "time": "06:37:56.167",
+      "seconds": 14.7,
+      "champion": true
+    },
+    {
+      "line": 11467,
+      "time": "06:38:01.375",
+      "seconds": 4.3,
+      "champion": false
+    },
+    {
+      "line": 11485,
+      "time": "06:38:05.179",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 11500,
+      "time": "06:38:08.406",
+      "seconds": 2.3,
+      "champion": false
+    },
+    {
+      "line": 11514,
+      "time": "06:38:11.070",
+      "seconds": 2.0,
+      "champion": false
+    },
+    {
+      "line": 11529,
+      "time": "06:38:14.440",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 11543,
+      "time": "06:38:16.981",
+      "seconds": 1.9,
+      "champion": false
+    },
+    {
+      "line": 11563,
+      "time": "06:38:21.196",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 11587,
+      "time": "06:38:25.955",
+      "seconds": 3.9,
+      "champion": false
+    },
+    {
+      "line": 11597,
+      "time": "06:38:28.284",
+      "seconds": 1.7,
+      "champion": false
+    },
+    {
+      "line": 11622,
+      "time": "06:38:34.096",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 11637,
+      "time": "06:38:36.863",
+      "seconds": 1.8,
+      "champion": false
+    },
+    {
+      "line": 11657,
+      "time": "06:38:40.887",
+      "seconds": 3.1,
+      "champion": false
+    },
+    {
+      "line": 11673,
+      "time": "06:38:44.230",
+      "seconds": 2.7,
+      "champion": false
+    },
+    {
+      "line": 11686,
+      "time": "06:38:47.738",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 11703,
+      "time": "06:38:51.972",
+      "seconds": 3.6,
+      "champion": false
+    },
+    {
+      "line": 11716,
+      "time": "06:38:55.105",
+      "seconds": 2.5,
+      "champion": false
+    },
+    {
+      "line": 11736,
+      "time": "06:39:01.222",
+      "seconds": 5.4,
+      "champion": false
+    },
+    {
+      "line": 11768,
+      "time": "06:39:08.237",
+      "seconds": 6.3,
+      "champion": false
+    },
+    {
+      "line": 11782,
+      "time": "06:39:11.149",
+      "seconds": 2.1,
+      "champion": false
+    },
+    {
+      "line": 11801,
+      "time": "06:39:16.199",
+      "seconds": 4.1,
+      "champion": false
+    },
+    {
+      "line": 11818,
+      "time": "06:39:20.474",
+      "seconds": 3.5,
+      "champion": false
+    },
+    {
+      "line": 11837,
+      "time": "06:39:25.553",
+      "seconds": 3.8,
+      "champion": false
+    },
+    {
+      "line": 11852,
+      "time": "06:39:29.473",
+      "seconds": 2.6,
+      "champion": false
+    },
+    {
+      "line": 11866,
+      "time": "06:39:33.964",
+      "seconds": 2.8,
+      "champion": false
+    },
+    {
+      "line": 11879,
+      "time": "06:39:38.083",
+      "seconds": 2.9,
+      "champion": false
+    },
+    {
+      "line": 11899,
+      "time": "06:39:43.788",
+      "seconds": 4.8,
+      "champion": false
+    },
+    {
+      "line": 11925,
+      "time": "06:39:50.500",
+      "seconds": 6.0,
+      "champion": false
+    },
+    {
+      "line": 11943,
+      "time": "06:39:55.232",
+      "seconds": 3.4,
+      "champion": false
+    },
+    {
+      "line": 11965,
+      "time": "06:40:01.366",
+      "seconds": 5.1,
+      "champion": false
+    },
+    {
+      "line": 12073,
+      "time": "06:40:32.039",
+      "seconds": 20.3,
+      "champion": true
+    },
+    {
+      "line": 12209,
+      "time": "07:25:03.267",
+      "seconds": 6.7,
+      "champion": false
+    }
+  ],
+  "fa_events": [
+    {
+      "line": 94,
+      "amount": 1
+    },
+    {
+      "line": 169,
+      "amount": 1
+    },
+    {
+      "line": 189,
+      "amount": 1
+    },
+    {
+      "line": 225,
+      "amount": 1
+    },
+    {
+      "line": 240,
+      "amount": 1
+    },
+    {
+      "line": 255,
+      "amount": 1
+    },
+    {
+      "line": 473,
+      "amount": 1
+    },
+    {
+      "line": 1004,
+      "amount": 1
+    },
+    {
+      "line": 1017,
+      "amount": 1
+    },
+    {
+      "line": 1441,
+      "amount": 1
+    },
+    {
+      "line": 1568,
+      "amount": 1
+    },
+    {
+      "line": 2265,
+      "amount": 1
+    },
+    {
+      "line": 2832,
+      "amount": 1
+    },
+    {
+      "line": 2844,
+      "amount": 1
+    },
+    {
+      "line": 4456,
+      "amount": 1
+    },
+    {
+      "line": 5939,
+      "amount": 1
+    },
+    {
+      "line": 5977,
+      "amount": 1
+    },
+    {
+      "line": 6497,
+      "amount": 1
+    },
+    {
+      "line": 6535,
+      "amount": 1
+    },
+    {
+      "line": 6567,
+      "amount": 1
+    },
+    {
+      "line": 6803,
+      "amount": 1
+    },
+    {
+      "line": 6817,
+      "amount": 1
+    },
+    {
+      "line": 6924,
+      "amount": 1
+    },
+    {
+      "line": 7022,
+      "amount": 1
+    },
+    {
+      "line": 7114,
+      "amount": 1
+    },
+    {
+      "line": 7202,
+      "amount": 1
+    },
+    {
+      "line": 7340,
+      "amount": 1
+    },
+    {
+      "line": 7610,
+      "amount": 1
+    },
+    {
+      "line": 7779,
+      "amount": 1
+    },
+    {
+      "line": 7795,
+      "amount": 1
+    },
+    {
+      "line": 7870,
+      "amount": 1
+    },
+    {
+      "line": 8284,
+      "amount": 1
+    },
+    {
+      "line": 8650,
+      "amount": 1
+    },
+    {
+      "line": 9171,
+      "amount": 1
+    },
+    {
+      "line": 9403,
+      "amount": 1
+    },
+    {
+      "line": 9622,
+      "amount": 1
+    },
+    {
+      "line": 10522,
+      "amount": 1
+    },
+    {
+      "line": 10650,
+      "amount": 1
+    },
+    {
+      "line": 11191,
+      "amount": 2
+    }
+  ],
+  "limitations": [
+    "HTTP200 не равен доказанному эффекту каждого навыка; прямые эффекты подтверждаются отдельными строками игры.",
+    "Итоги боя и DPS — замеры бота, не независимая серверная оценка всех соседей.",
+    "Сводка шапки включает отброшенные события; статистика этого файла пересчитана только по сохранённым строкам.",
+    "Причина 401/403 не раскрыта: ответ auth/login скрыт. Бан или неверный пароль не установлены.",
+    "Нулевой EXP подтверждён наградами; актуальный переключатель получения опыта в данных не виден."
+  ]
+}
