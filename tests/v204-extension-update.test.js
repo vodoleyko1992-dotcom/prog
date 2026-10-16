@@ -1,0 +1,18 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const popup=fs.readFileSync(__dirname+'/../popup.js','utf8');
+const src=popup.slice(0,popup.indexOf('// All menu runtime updates'));
+function fixture(){
+ const elements={updateWarn:{hidden:true},updateWarnText:{textContent:''},reloadBot:{disabled:false}},calls=[];
+ const box={AbortSignal,document:{getElementById:id=>elements[id]},chrome:{runtime:{getManifest:()=>({version:'20.4'}),getURL:p=>'chrome-extension://bot/'+p,reload:()=>calls.push('reload')}},
+  fetch:async(url,opt)=>{calls.push({url,cache:opt.cache});return{ok:true,json:async()=>({version:'20.4'})}}};
+ vm.createContext(box);vm.runInContext(src,box);return{box,elements,calls};
+}
+test('совпадающие версии не требуют перезапуска',async()=>{const f=fixture();assert.equal(await f.box.checkExtensionUpdate(),null);assert.equal(f.elements.updateWarn.hidden,true);await f.box.reloadBotUpdate();assert.ok(!f.calls.includes('reload'));assert.equal(f.calls[0].cache,'no-store')});
+test('заменённый manifest обнаруживается при старой загруженной версии',async()=>{const f=fixture();f.box.fetch=async()=>({ok:true,json:async()=>({version:'20.5'})});const update=await f.box.checkExtensionUpdate();assert.equal(update.loaded,'20.4');assert.equal(update.packaged,'20.5');assert.equal(f.elements.updateWarn.hidden,false);assert.match(f.elements.updateWarnText.textContent,/v20\.5.*v20\.4/);assert.ok(!f.calls.includes('reload'))});
+test('возврат на более старую сборку тоже требует перечитать расширение',async()=>{const f=fixture();f.box.fetch=async()=>({ok:true,json:async()=>({version:'20.3'})});assert.equal((await f.box.checkExtensionUpdate()).packaged,'20.3')});
+test('перезагрузка выполняется только явной командой без записи настроек и памяти',async()=>{const f=fixture();f.box.fetch=async()=>({ok:true,json:async()=>({version:'20.5'})});await f.box.checkExtensionUpdate();assert.equal(f.calls.length,0);await f.box.reloadBotUpdate();assert.deepEqual(f.calls,['reload']);assert.equal(f.elements.reloadBot.disabled,true)});
+test('если файлы уже совпадают, устаревшее уведомление снимается без перезагрузки',async()=>{const f=fixture();let version='20.5';f.box.fetch=async()=>({ok:true,json:async()=>({version})});await f.box.checkExtensionUpdate();version='20.4';await f.box.reloadBotUpdate();assert.equal(f.elements.updateWarn.hidden,true);assert.equal(f.calls.length,0)});
+for(const mode of ['network','http','json','invalid'])test('ошибка проверки '+mode+' не скрывает известную разницу и не перезапускает бот',async()=>{const f=fixture();f.box.fetch=async()=>({ok:true,json:async()=>({version:'20.5'})});await f.box.checkExtensionUpdate();f.box.fetch=async()=>{if(mode==='network')throw Error('failed');return{ok:mode!=='http',json:async()=>{if(mode==='json')throw Error('invalid');return{version:'<invalid>'}}}};assert.equal((await f.box.checkExtensionUpdate()).packaged,'20.5');assert.equal(f.elements.updateWarn.hidden,false);assert.equal(f.calls.length,0)});
+test('одновременное открытие и focus разделяют один запрос',async()=>{const f=fixture();let release,n=0;f.box.fetch=()=>{n++;return new Promise(r=>release=r)};const a=f.box.checkExtensionUpdate(),b=f.box.checkExtensionUpdate();release({ok:true,json:async()=>({version:'20.5'})});await Promise.all([a,b]);assert.equal(n,1)});
+test('отказ Chrome оставляет кнопку доступной и даёт ручной способ',async()=>{const f=fixture();f.box.fetch=async()=>({ok:true,json:async()=>({version:'20.5'})});f.box.chrome.runtime.reload=()=>{throw Error('no')};await f.box.reloadBotUpdate();assert.equal(f.elements.reloadBot.disabled,false);assert.match(f.elements.updateWarnText.textContent,/chrome:\/\/extensions/)});
