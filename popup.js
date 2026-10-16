@@ -1615,9 +1615,9 @@ $('rbSessStop').onclick = async () => {
   if (Array.isArray(current.autoTasks)) { await editAutoTask('raid', false); toast('РБ-сессия остановлена — только оставшиеся выбранные задачи'); }
   else { await setMode('auto', true); toast('РБ-сессия остановлена — автофарм'); }
 };
-  $('enchantModeToggle').textContent = m === 'enchant' ? '✨ Режим автозаточки выбран' : '✨ Включить режим автозаточки';
-  $('enchantModeToggle').classList.toggle('on', m === 'enchant');
-  $('enchantModeToggle').setAttribute('aria-pressed', String(m === 'enchant'));
+  $('enchantModeToggle').textContent = selected.includes('enchant') ? '✨ Режим автозаточки выбран' : '✨ Включить режим автозаточки';
+  $('enchantModeToggle').classList.toggle('on', selected.includes('enchant'));
+  $('enchantModeToggle').setAttribute('aria-pressed', String(selected.includes('enchant')));
   const mods = [m !== 'enchant' && (d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`)), d.tvtOn && '⚔ TvT'].filter(Boolean);
   const ms = $('modeSummary'); if (ms) ms.textContent = strict ? `${on ? 'Основная задача' : 'Следующая задача'}: ${AUTO_TASK_LABELS[active] || 'ожидание'}${selected.includes('tvt') ? ' · TvT выше всех' : ''}${selected.filter(k => k !== active && k !== 'tvt').length ? ' · Также выбраны: ' + selected.filter(k => k !== active && k !== 'tvt').map(k => AUTO_TASK_LABELS[k]).join(', ') : ''}${on ? '' : ' (бот стоит)'}` : `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }

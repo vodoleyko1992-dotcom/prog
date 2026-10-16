@@ -53,7 +53,7 @@ const unknown=process.argv.includes('--unknown');
  await until(async()=> (await h.get(['rt'])).rt.enchant?.status==='done',30000).catch(async e=>{console.log('STATE',{page:h.g.p.url(),posts,rt:(await h.get(['rt'])).rt.enchant,status:(await h.get(['rt'])).rt.status,errors:h.errors});throw e});
  const state=(await h.get(['rt'])).rt.enchant;assert.equal(posts.length,1);assert.equal(state.totals.attempts,1);assert.equal(state.totals.successes,1);assert.equal(state.totals.scrolls,1);assert.equal(state.totals.adena,0);assert.equal(state.pending,null);assert.equal(state.items[0].level,4);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===4037).qty,99);
  // 15.10: отдельный режим после серии остаётся на заточке и не возобновляет задачи/охоту.
- await delay(1000);assert.equal(new URL(h.g.p.url()).pathname,'/enchant.html');assert.equal((await h.get(['cfg'])).cfg.enchantMode,true);assert.equal(posts.length,1);await h.click('stop');assert.deepEqual(h.errors,[]);
+ await delay(1000);assert.equal(new URL(h.g.p.url()).pathname,'/enchant.html');assert.ok((await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));assert.equal(posts.length,1);await h.click('stop');assert.deepEqual(h.errors,[]);
  console.log('PASS full extension: actual popup queue → real main → current public enchant DOM click → hook response → exact accounting → enchant mode/page waits');
  console.log('PASS 1 confirmed scroll, +3→+4, no Adena/CoL, no duplicate POST, no page errors');
 }finally{await h.ctx.close()}})().catch(e=>{console.error('FAIL',e.stack);process.exitCode=1});

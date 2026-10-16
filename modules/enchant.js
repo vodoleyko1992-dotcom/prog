@@ -106,26 +106,34 @@ async function command(cmd,args={}) {
     if(charKey()!==char||current()!==s)return false;await env.setRt({enchant:null});return true;}
   if(cmd==='acknowledge')return acknowledgeUnknown();
   if(cmd==='archiveUnknown')return archiveUnknown(args);
-  if(!['start','resume'].includes(cmd)||!active())return false;
+  if(!['start','resume'].includes(cmd))return false;
   const c=normalizeConfig(),old=current(),char=charKey();
+  const completed=cmd==='start'&&old?.status==='done'&&!old.pending&&sameChar(old)?old:null;
+  const commandActive=()=>active()||!!(completed&&current()===completed&&sameChar(completed)&&env.on===true&&env.tabOwner!==false&&env.canStartCompleted?.()===true);
+  if(!commandActive())return false;
   if(old?.pending)return reconcile();
   if(c.invalid||!c.enabled||!c.queue.length||c.maxAttempts<1||c.maxScrolls<1){env.setStatus?.('Заточка: выбери вещи и положительные лимиты попыток/свитков');return false;}
   const recovery=env.rt.enchantRecovery;
   if(recovery?.char===char&&c.queue.some(q=>recovery.previousKeys?.includes(q.key))){env.setStatus?.('После неизвестного результата очисти план и заново выбери вещи из свежего инвентаря');return false;}
   if(cmd==='start'&&old&&old.status!=='done')return pause('Сначала продолжи или явно сбрось предыдущую сессию');
-  const scan=await readItems();if(!scan||current()!==old||charKey()!==char||!active()||signature(normalizeConfig())!==signature(c))return false;
+  const scan=await readItems();if(!scan||current()!==old||charKey()!==char||!commandActive()||signature(normalizeConfig())!==signature(c))return false;
   if(recovery?.char===char&&scan.snap.revision<=recovery.attemptRevision){env.setStatus?.('Сервер ещё не сменил ревизию неизвестной попытки; новый запуск с этой ревизией заблокирован');return false;}
   const items=[];
+  let original=[];try{const list=completed&&JSON.parse(completed.cfgSig).queue;if(Array.isArray(list))original=list;}catch(_){}
   for(const q of c.queue){const prev=cmd==='resume'?old?.items.find(x=>x.key===q.key&&x.itemId===q.itemId):null;
-    const row=resolve(scan.snap,q,prev?.targetInstanceId||q.targetInstanceId);
-    if(!row||(!prev&&q.fingerprint!==row.fingerprint)||(prev&&prev.fingerprint!==row.fingerprint)){env.setStatus?.(`Заточка: экземпляр ${q.key} изменился или неоднозначен — выбери заново`);return false;}
+    // Только результат нашей завершённой серии, связанный с исходным выбором, может обновить fingerprint/токен.
+    const bindings=original.filter(x=>x?.key===q.key),binding=bindings.length===1?bindings[0]:null;
+    const witnesses=binding&&binding.itemId===q.itemId&&binding.targetInstanceId===q.targetInstanceId&&binding.fingerprint===q.fingerprint&&Array.isArray(completed?.items)?completed.items.filter(x=>x.key===q.key&&x.itemId===q.itemId&&x.done):[];
+    const witness=witnesses.length===1?witnesses[0]:null,expected=prev||witness||q;
+    const row=resolve(scan.snap,q,expected.targetInstanceId);
+    if(!row||expected.fingerprint!==row.fingerprint){env.setStatus?.(`Заточка: экземпляр ${q.key} изменился или неоднозначен — выбери заново`);return false;}
     if(q.targetLevel>25||row.level>25)return false;
     items.push(prev?{...prev,done:row.level>=q.targetLevel}:newItem(q,row));}
   const s={v:1,char,runId:cmd==='resume'&&old?old.runId:`${now()}-${Math.random().toString(36).slice(2,9)}`,status:'running',reason:'',cfgSig:signature(c),
     startedAt:cmd==='resume'&&old?old.startedAt:now(),items,totals:cmd==='resume'&&old?old.totals:totals(),pending:null,history:cmd==='resume'&&old?old.history:[],nextAt:now(),conflicts:0,
     home:cmd==='resume'&&old?old.home:(typeof location!=='undefined'?location.pathname+location.search:'/char.html')};
   if(cmd==='start'&&old)await archive(old);
-  if(current()!==old||!sameChar(s)||!active())return false;
+  if(current()!==old||!sameChar(s)||!commandActive())return false;
   await save(s);return true;
 }
 function limits(s,item,q,c) {

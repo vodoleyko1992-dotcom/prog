@@ -5134,12 +5134,12 @@ const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 const classSwitched = () => { PET = null; };
 
 // Автозаточка: команды меню и диспетчер используют одну фабрику; 15.10 — только в своём режиме.
-const enchantFree = () => on && tabOwner && cfg.enchantMode === true && !!heroNick() && heroNick() === rt.char && !antibotState()
+const enchantFree = (completedStart = false) => on && tabOwner && (cfg.enchantMode === true || completedStart && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) && !!heroNick() && heroNick() === rt.char && !antibotState()
   && L2V7Modules.mammon.modeFree(false, true) && !rt.petBufferTrip && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
 L2V7Modules.enchant = L2V7Factories.enchant({ get routeLocation(){return actionLocation},
   get on() { return on; }, get tabOwner() { return tabOwner; }, get cfg() { return cfg; }, get rt() { return rt; },
   get setRt() { return setRt; }, get rtCommit() { return rtCommit; }, get gameGet() { return gameGet; },
-  get awayFree() { return enchantFree; }, get canRun() { return enchantFree; }, get antibotState() { return antibotState; },
+  get awayFree() { return enchantFree; }, get canRun() { return enchantFree; }, get canStartCompleted() { return () => enchantFree(true); }, get antibotState() { return antibotState; },
   get fire() { return fire; }, get $q() { return $q; }, get waitX() { return waitX; }, get pause() { return pause; },
   get setStatus() { return setStatus; }, get rec() { return rec; }
 });
@@ -5176,10 +5176,7 @@ async function enchantCommand(m) {
       if (heroNick() !== m.char || rt.char !== m.char) return { ok: false, reason: 'Персонаж изменился' };
     }
     cfg = mergeCfg(state.cfg);
-    // 15.10: явный новый Start возвращает завершённую задачу в очередь, сохранив её архив.
-    if (m.action === 'start' && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) {
-      if (!await L2V7Modules.enchant.command('reset')) return {ok:false,reason:'Не удалось сохранить предыдущую серию'};
-    }
+    // 16.10: завершённая серия остаётся свидетелем точного экземпляра до успешного нового Start.
     // Off refresh читает только текущего героя; никаких действий игры при остановленном боте.
     const result = m.action === 'reconcile' ? await L2V7Modules.enchant.reconcile() : await L2V7Modules.enchant.command(m.action, {pendingId:m.pendingId});
     if (rt.char !== m.char || heroNick() !== m.char) return { ok: false, reason: 'Персонаж изменился во время команды' };

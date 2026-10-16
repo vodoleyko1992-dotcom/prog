@@ -5,3 +5,5 @@
 @media(max-width:420px){#enchantPanel .ench-row:has(select){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#enchantPanel .ench-row select{grid-column:1/-1;grid-row:1;width:100%;box-sizing:border-box}}
 /* 15.10: поля заточки не наследуют от общей панели большие отступы строк. */
 #enchantPanel .ench-grid{gap:10px}#enchantPanel .ench-grid label{margin:0;padding:0;min-height:0;justify-content:flex-start;align-items:stretch;text-align:left;gap:5px}
+
+#enchantPanel [data-start-steps] ul{margin:4px 0;padding-left:18px}#enchantPanel [data-scroll-stock]{overflow-wrap:anywhere}
