@@ -38,9 +38,10 @@ const unknown=false;
  await h.popup.locator('#navToggle').click();await h.popup.locator('nav [data-tab="enchant"]').click();await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
  await ui.locator('[data-candidate]').selectOption('0');await ui.locator('[data-add]').click();await until(()=>ui.locator('[data-key]').count());
  await ui.locator('[data-cfg="scrollPolicy"]').selectOption('blessed');await until(async()=>(await h.get(['cfg'])).cfg.enchant.scrollPolicy==='blessed');
+ await ui.locator('[data-detail=limits]>summary').click();
  for(const key of ['maxAttempts','maxScrolls']){const el=ui.locator('[data-global][data-field="'+key+'"]');await el.fill('2');await el.dispatchEvent('change');await until(async()=>(await h.get(['cfg'])).cfg.enchant[key]===2);}
  await ui.locator('[data-item="weaponMode"]').selectOption('magic');await until(async()=>(await h.get(['cfg'])).cfg.enchant.queue[0].weaponMode==='magic');
- await ui.locator('[data-cfg="enabled"]').check();await until(async()=>(await h.get(['cfg'])).cfg.enchant.enabled);
+ await ui.locator('[data-detail=permission]').evaluate(el=>el.open=true);await ui.locator('[data-cfg="enabled"]').check();await until(async()=>(await h.get(['cfg'])).cfg.enchant.enabled);
  assert.notEqual((await h.get(['on'])).on,true);assert.equal(posts.length,0);
  await h.popup.locator('#start').click();await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'));
  await until(()=>ui.locator('[data-command="start"]').isEnabled());await ui.locator('[data-command="start"]').click();
