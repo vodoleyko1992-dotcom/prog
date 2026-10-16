@@ -144,10 +144,9 @@
   const modeSummary = document.getElementById('modeSummary');
   const updateModeSummary = () => {
     if (typeof paintModes === 'function') return;   // 7.1.31: сводку «режим · дополнения» пишет popup.js (paintModes)
-    const active = [...(quickModes?.querySelectorAll('button.on') || [])]
-      .map(b => (b.textContent || '').split(':')[0].replace(/^[^\wА-Яа-яЁё]+/u,'').trim())
-      .filter(Boolean);
-    if (modeSummary) modeSummary.textContent = active.length ? `Включено: ${active.join(', ')}` : 'Все режимы выключены';
+    const active = [...(quickModes?.querySelectorAll('[data-auto-task]:checked') || [])]
+      .map(el => el.closest('label')?.textContent.trim()).filter(Boolean);
+    if (modeSummary) modeSummary.textContent = active.length ? `Выбрано: ${active.join(', ')}` : 'Задачи не выбраны';
   };
   modeToggle?.addEventListener('click', () => {
     const open = quickModes?.hidden;

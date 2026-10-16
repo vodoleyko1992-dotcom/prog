@@ -42,32 +42,26 @@ with sync_playwright() as p:
         page.locator('#navToggle').click()
         page.locator('#moduleNav button[data-tab="fish"]').click()
         if page.locator('#quickModeGrid').is_hidden(): page.locator('#modeToggle').click()   # 10.0: «◫ Быстрые режимы» сворачивает сетку, по умолчанию она открыта
-        page.locator('#fishToggle').click()
-        page.wait_for_function('window.__mockState.on === true && window.__mockState.cfg.fishMode === true')
-        st = page.evaluate('''() => ({ on:__mockState.on,cfg:{...__mockState.cfg},rt:{...__mockState.rt} })''')
-        assert st['on'] is True
-        assert all(st['cfg'][key] is False for key in
-                   ['epicMode', 'rbMode', 'rbHuntMode', 'catMode', 'campaign']), st
-        assert st['cfg']['rodEnchantTo'] == 10, st
-        assert not st['rt'].get('rodGoalActive', False), st
-        # 7.2: меню «один режим» — выбранный подсвечен (.on); выключить рыбалку = выбрать другой режим, бот остаётся ON
-        page.evaluate('load()')
-        page.wait_for_function('document.querySelector("#fishToggle").classList.contains("on")')
-        page.locator('#farmToggle').click()
-        page.wait_for_function('window.__mockState.cfg.fishMode === false')
-        assert page.evaluate('window.__mockState.on') is True, 'Turning off fishing stopped entire bot'
-        page.evaluate('load()')
-        page.wait_for_function('!document.querySelector("#fishToggle").classList.contains("on")')
-        # Every mode uses the same wake path, even if global on was already false.
-        for button_id, flag in [('fishToggle', 'fishMode'), ('epicToggle', 'epicMode'), ('huntToggle', 'rbHuntMode')]:
-            page.evaluate('''(k) => { __mockState.cfg[k] = false; __mockState.on = false; }''', flag)
+        # Canonical task selection saves without starting; Start owns wake acknowledgement.
+        page.locator('[data-auto-task="fish"]').check()
+        page.wait_for_function('__mockState.cfg.autoTasks.includes("fish")')
+        assert page.evaluate('window.__mockState.on') is False
+        page.locator('#start').click()
+        page.wait_for_function('__wakeChecks.kicks > 0')
+        assert page.evaluate('window.__mockState.on') is True
+        page.locator('[data-auto-task="fish"]').uncheck()
+        page.locator('[data-auto-task="farm"]').check()
+        page.wait_for_function('__mockState.cfg.autoTasks.includes("farm") && !__mockState.cfg.autoTasks.includes("fish")')
+        assert page.evaluate('window.__mockState.on') is True
+        for task in ['fish', 'epic', 'raid']:
+            page.evaluate('__mockState.on = false')
             before = page.evaluate('__wakeChecks.kicks')
-            page.locator('#' + button_id).click()
-            page.wait_for_function('''k => __mockState.on === true && __mockState.cfg[k] === true''', arg=flag)
+            page.locator('[data-auto-task="' + task + '"]').check()
+            page.locator('#start').click()
             page.wait_for_function('''n => __wakeChecks.kicks > n''', arg=before)
+            page.locator('[data-auto-task="' + task + '"]').uncheck()
         assert page.evaluate('__wakeChecks.reloads') == 0
-        assert page.locator('#campToggle').is_visible(), '10.0.10: campaign button is back (starter story quest for alts); off by default'
-        assert page.evaluate('__mockState.cfg.campaign') is not True, 'campaign stays off until the player (or campAuto) turns it on'
+        assert page.locator('[data-auto-task="quests"]').is_visible()
         # A stale extension script must be reloaded, not silently declared active.
         page.evaluate('chrome.tabs.sendMessage = async () => null')
         page.locator('#start').click()

@@ -12,8 +12,9 @@ const base=JSON.parse(fs.readFileSync(path.join(__dirname,'v71-baseline-ids.json
 assert.equal(mf.version,'20.2');
 assert.equal(new Set(ids).size,ids.length,'Duplicate HTML IDs');
 // 14.10: GM больше не продаёт наживку; прежнее поле заменено подсказкой к отдельному сервису рыбалки.
-const retained=base.filter(id=>!['shopBait','rbToggle'].includes(id));
+const retained=base.filter(id=>!['shopBait','rbToggle','campToggle','tasksToggle','farmToggle','autoFarmToggle','huntToggle','epicToggle','fishToggle','catToggle','enchantToggle','tvtToggle'].includes(id));
 for(const id of retained) assert(ids.includes(id),`Legacy control lost: ${id}`);
+for(const key of ['quests','farm','auto','raid','epic','fish','cat','enchant','tvt']) assert(html.includes('data-auto-task="'+key+'"'),'canonical selection retained '+key);
 assert(!ids.includes('shopBait'),'Removed GM bait control must not return');
 assert(html.includes('Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».'));
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);

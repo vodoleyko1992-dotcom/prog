@@ -20,7 +20,24 @@ async function harness(){
   async function core(expression){const worldsNow=[...worlds.values()].reverse().filter(w=>w.origin==='chrome-extension://'+id);for(const w of worldsNow){const r=await cdp.send('Runtime.evaluate',{contextId:w.id,expression:'typeof L2V7Modules',returnByValue:true}).catch(()=>null);if(r?.result?.value!=='object')continue;const result=await cdp.send('Runtime.evaluate',{contextId:w.id,expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result.value}throw Error('no content world');}
   await p.goto('https://l2wap.com/map.html');await until(()=>core('typeof on !== "undefined" && !document.prerendering'),30000);return {p,core};}
  const g=await game(), popup=await ctx.newPage();popup.on('pageerror',e=>errors.push(e.message));await popup.goto('chrome-extension://'+id+'/popup.html');await until(()=>popup.evaluate(()=>!!document.querySelector('#start')?.onclick));
- return {ctx,sw,get,id,game,g,popup,errors,requests,click:async id=>popup.evaluate(id=>document.getElementById(id).click(),id)};
+ // Старые сценарии «выбрать один режим» воспроизводим видимыми галками и отдельным Стартом.
+ async function openTab(tab){const b=popup.locator('nav [data-tab="'+tab+'"]');if(!await b.isVisible())await popup.locator('#navToggle').click();await b.click();}
+ async function click(key){
+  const tasks={tasksToggle:null,farmToggle:'farm',autoFarmToggle:'auto',huntToggle:'raid',epicToggle:'epic',fishToggle:'fish',catToggle:'cat',enchantToggle:'enchant',campToggle:'quests'};
+  if(Object.hasOwn(tasks,key)){
+   if(!await popup.locator('#autoTaskSelection').isVisible())await popup.locator('#modeToggle').click();
+   const desired=tasks[key];
+   for(const task of ['enchant','epic','raid','quests','fish','cat','auto','farm']){
+    const el=popup.locator('[data-auto-task="'+task+'"]');if(task!==desired&&await el.isChecked()){await el.uncheck();await until(async()=>!(await get(['cfg'])).cfg.autoTasks?.includes(task));}
+   }
+   if(!Array.isArray((await get(['cfg'])).cfg.autoTasks)){const el=popup.locator('[data-auto-task="'+(desired||'farm')+'"]');await el.setChecked(!await el.isChecked());await until(async()=>Array.isArray((await get(['cfg'])).cfg.autoTasks));if(!desired){await el.uncheck();await until(async()=>!(await get(['cfg'])).cfg.autoTasks.includes('farm'));}}
+   if(desired){const el=popup.locator('[data-auto-task="'+desired+'"]');if(!await el.isChecked()){await el.check();await until(async()=>(await get(['cfg'])).cfg.autoTasks?.includes(desired));}await popup.locator('#start').click();}
+   return;
+  }
+  const b=popup.locator('#'+key);if(!await b.isVisible()){const section=await b.evaluate(e=>e.closest('section[id^="tab-"]')?.id.slice(4));if(section)await openTab(section);}
+  await b.click();
+ }
+ return {ctx,sw,get,id,game,g,popup,errors,requests,click,openTab};
  } catch (e) { await ctx.close(); throw e; } // При ошибке старта браузер тоже закрывается, тест не висит до внешних 300 с.
 }
 module.exports={harness,until,delay};

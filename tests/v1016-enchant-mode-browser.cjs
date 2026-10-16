@@ -29,13 +29,13 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   });
   const ui=h.popup.locator('#enchantPanel'),start=()=>ui.locator('[data-command="start"]');
   const nav=async tab=>{const button=h.popup.locator('nav [data-tab="'+tab+'"]');if(!await button.isVisible())await h.popup.locator('#navToggle').click();await button.click();};
-  const clickMode=async id=>{const button=h.popup.locator('#'+id);if(!await button.isVisible())await h.popup.locator('#modeToggle').click();await button.click();};
+  const clickMode=async id=>h.click(id);
   const patch=async(cfgPatch={},rtPatch={})=>h.sw.evaluate(async({cfgPatch,rtPatch})=>{
    const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);
    await chrome.storage.local.set({cfg:{...cfg,...cfgPatch},...(Object.keys(rtPatch).length?{rt:{...rt,...rtPatch,_src:'enchant-mode-browser'}}:{})});
   },{cfgPatch,rtPatch});
   const reload=async()=>{await h.popup.reload();await until(()=>ui.locator('[data-command="refresh"]').count());};
-  const select=async id=>{if(id==='enchantModeToggle')await nav('enchant');await clickMode(id);await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'),30000);};
+  const select=async id=>{if(id==='enchantModeToggle')await nav('enchant');await clickMode(id);await h.click('start');await nav('enchant');await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'),30000);};
   const status=async()=>h.g.core('({on,running,owner:tabOwner,mode:autonomyMode(),status:rt.status,enchant:rt.enchant})');
   const noActions=async(label,ms=1300)=>{
    const mark=traffic.length,url=h.g.p.url();await delay(ms);
@@ -52,7 +52,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   assert.equal(await h.popup.locator('nav [data-tab="enchant"]').count(),1);
   assert.equal(await h.popup.locator('section#tab-enchant').count(),1);
   assert.equal(await h.popup.locator('#tab-panel #enchantPanel, #tab-panel #tab-enchant').count(),0);
-  assert.equal(await h.popup.locator('#enchantToggle[data-mode="enchant"]').count(),1);
+  assert.equal(await h.popup.locator('[data-auto-task="enchant"]').count(),1);
   assert.equal(await h.popup.locator('#tab-enchant #enchantModeToggle').count(),1);
   await nav('enchant');assert.equal(await h.popup.locator('section#tab-enchant').evaluate(e=>e.classList.contains('act')),true);
   pass('отдельный раздел и оба входа в режим; заточка отсутствует внутри «Боя»');
@@ -76,10 +76,10 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   assert.equal((await h.get(['on'])).on,false);assert.deepEqual((await h.get(['rt'])).rt.enchantArchive,archive);pass('обновление вещей и настройка очереди при Stop сохраняют выключенное состояние и историю');
 
   await select('enchantToggle');let state=await h.get(['on','cfg','rt']);
-  assert.equal(state.on,true);assert.equal(state.cfg.enchantMode,true);for(const key of modes)assert.equal(state.cfg[key],false,key);
+  assert.equal(state.on,true);assert.ok(state.cfg.autoTasks.includes('enchant'));for(const key of ['epic','raid','fish','cat','auto','farm','quests'])assert.ok(!state.cfg.autoTasks.includes(key),key);
   assert.deepEqual(state.cfg.enchant,saved);assert.equal(state.rt.enchant,null);assert.deepEqual(state.rt.enchantArchive,archive);
   assert.equal(await h.popup.locator('#tab-enchant').evaluate(e=>e.classList.contains('act')),true);
-  await until(()=>h.popup.locator('#enchantToggle').evaluate(e=>e.classList.contains('on')));
+  await until(()=>h.popup.locator('[data-auto-task=enchant]').isChecked());
   assert.match(await h.popup.locator('#modeSummary').innerText(),/заточ/i);
   pass('быстрый режим запускает настоящий цикл enchant, выключает остальные режимы и не начинает серию');
   await noActions('выбранная готовая очередь сама не запускается; автоматические задания не вмешиваются');
@@ -100,7 +100,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   await patch({...quiet,rbBetween:false,enchant:saved});await h.g.core('setRt({enchant:null})');
   await clickMode('tasksToggle');await until(()=>h.g.core('on && running && autonomyMode()==="tasks" && !cfg.enchantMode'));
   await reload();assert.equal(await start().isDisabled(),true);pass('кнопка серии заблокирована в другом режиме при работающем боте');
-  await select('enchantModeToggle');state=await h.get(['cfg','rt']);assert.equal(state.cfg.enchantMode,true);assert.equal(state.rt.enchant,null);assert.deepEqual(state.cfg.enchant,saved);
+  await select('enchantModeToggle');state=await h.get(['cfg','rt']);assert.ok(state.cfg.autoTasks.includes('enchant'));assert.equal(state.rt.enchant,null);assert.deepEqual(state.cfg.enchant,saved);
   pass('кнопка раздела выбирает тот же отдельный режим без запуска серии');
 
   for(const [name,changes] of [['enabled=false',{enabled:false}],['пустая очередь',{queue:[]}],['лимит попыток 0',{maxAttempts:0}],['лимит свитков 0',{maxScrolls:0}]]){
@@ -108,7 +108,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   }
   await patch({enchant:saved});await reload();assert.equal(await start().isEnabled(),true);
   await h.click('stop');await until(()=>h.g.core('!on && !running'),20000);await reload();assert.equal(await start().isDisabled(),true);
-  assert.equal((await h.get(['cfg'])).cfg.enchantMode,true);pass('Stop блокирует серию и сохраняет выбранный режим и очередь');
+  assert.ok((await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));pass('Stop блокирует серию и сохраняет выбранный режим и очередь');
   await h.click('start');await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'));await reload();assert.equal(await start().isEnabled(),true);
   await start().click();await until(async()=>(await h.get(['rt'])).rt.enchant?.status==='done',20000);
   state=await h.get(['rt']);assert.equal(state.rt.enchant.items[0].level,3);assert.equal(state.rt.enchant.totals.attempts,0);assert.equal(state.rt.enchant.pending,null);

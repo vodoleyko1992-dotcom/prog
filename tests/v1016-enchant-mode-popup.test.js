@@ -10,7 +10,7 @@ function fixture() {
     chrome: { storage: { local: { get: async () => ({ cfg, rt, on: b.on }), set: async () => {} } } },
     menuPatch: async (p, extra = {}) => { Object.assign(rt, p); Object.assign(cfg, extra.cfgPatch || {}); if ('on' in extra) b.on = extra.on; } };
   vm.runInNewContext(part('async function activateMode(', 'const NUM ') + part('function currentMode(', 'const MODE_NAME =')
-    + part('const MODES_OFF =', '// 10.0: повторное нажатие') + part('async function huntToggle()', 'async function epicToggle()')
+    + part('const MODES_OFF =', "$('enchantModeToggle').onclick") + part('async function huntToggle()', 'async function epicToggle()')
     + part('async function epicToggle()', "$('epicToggle2').onclick"), b); return b;
 }
 const saved = b => JSON.stringify([b.cfg.enchant, b.rt.enchant, b.rt.enchantArchive]);

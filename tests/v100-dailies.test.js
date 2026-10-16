@@ -98,7 +98,7 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
   }
   assert.match(content, /path === '\/game\/daily-quests' && tabOwner && d\.res\?\.tasks\) try \{ L2V7Modules\.dailies\.dailyNote\(d\.res\); \}/); assert.match(content, /path === '\/game\/clan-tasks' && tabOwner/);
   assert.match(content, /get dailyFishNote\(\) \{ return \(\) => L2V7Modules\.dailies\?\.fishNote\?\.\(\); \}/); assert.match(fishing, /if \(env\.dailyFishNote\) bg\(env\.dailyFishNote\(\)\);/);
-  assert.match(html, /data-task="dailyAuto"/); assert.match(html, /data-task="clanTasks"/); assert.match(html, /<input id="dailyAuto" type="checkbox">/); assert.match(html, /<input id="clanTasks" type="checkbox">/); assert.match(html, /id="dqBox"/);
+  assert.match(html, /data-auto-task="dailies"/); assert.match(html, /data-auto-task="clan"/); assert.match(html, /<input id="dailyAuto" type="checkbox">/); assert.match(html, /<input id="clanTasks" type="checkbox">/); assert.match(html, /id="dqBox"/);
   assert.match(popup, /renderTvtShop\(rt, d\); renderDailies\(rt, d\);/);
   console.log('PASS: 10.0 dailies — daily quests parsed (8 tasks, ✓/new day logged), clan tasks (defs with cooldown, take best → CoL first, siege wall never, RB only when allowed; claim ready; help a clanmate; 409/error → 30 min pause), daily fish detour (modes saved/restored, catches counted, back to map), daily RB detour (one tour, back when killed), background polls, menu wired');
 })().catch(e => { console.error(e); process.exit(1); });

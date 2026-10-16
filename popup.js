@@ -1569,11 +1569,10 @@ $('apply').onclick = async () => {
   $('applyRow').hidden = true; $('slots').textContent = '✅ Роли применены';
   load();
 };
-// ---------- 7.1.31: «Чем занят бот» — ровно один режим (движок и так исполняет один: эпики → тур РБ → рыбалка → катакомбы → кампания → фарм) ----------
+// Выбранные задачи и текущая задача по общей политике движка.
 // Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
 const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', epic: 'Эпики', raid: 'Тур по РБ', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
 const AUTO_MAIN_TASKS = ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
-const AUTO_TASK_GROUP = { mmOrders: 'mammon', mmUpgrade: 'mammon', mmCraftSend: 'mammon', storyTurnIn: 'quests', enemyHunt: 'pvp', dailyAuto: 'dailies', clanTasks: 'clan' };
 function selectedAutoTasks(d) {
   if (Array.isArray(d.autoTasks)) return d.autoTasks.filter(k => Object.hasOwn(AUTO_TASK_LABELS, k));
   const flags = { tvt: d.tvtOn, enchant: d.enchantMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmCraftSend || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
@@ -1597,7 +1596,7 @@ function currentMode(d) {
   if (Array.isArray(d.autoTasks)) { const k = AUTO_MAIN_TASKS.find(k => d.autoTasks.includes(k)); return k === 'raid' ? 'rb' : k === 'quests' ? 'quests' : k || 'tasks'; }
   return d.enchantMode === true ? 'enchant' : d.epicMode ? 'epic' : d.rbHuntMode ? 'rb' : d.fishMode ? 'fish' : d.catMode && !d.campaign ? 'cat' : d.taskOnly ? 'tasks' : d.zoneAuto ? 'auto' : 'farm';
 }
-const MODE_NAME = { quests: '📜 Квесты и кампания', tasks: '⏹ Без режима — только задачи', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
+const MODE_NAME = { quests: '📜 Квесты и кампания', tasks: 'Ожидание выбранных задач', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
 function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампания (авто)»
   const strict = Array.isArray(d.autoTasks), selected = selectedAutoTasks(d), active = strict && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) : null, m = active ? (active === 'raid' ? 'rb' : active) : currentMode(d);
   document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.checked = selected.includes(el.dataset.autoTask); });
@@ -1616,14 +1615,11 @@ $('rbSessStop').onclick = async () => {
   if (Array.isArray(current.autoTasks)) { await editAutoTask('raid', false); toast('РБ-сессия остановлена — только оставшиеся выбранные задачи'); }
   else { await setMode('auto', true); toast('РБ-сессия остановлена — автофарм'); }
 };
-document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.classList.toggle('on', (strict ? selected.includes(b.dataset.mode === 'rb' ? 'raid' : b.dataset.mode) : b.dataset.mode === m)); b.classList.toggle('stopped', b.classList.contains('on') && !on); });
   $('enchantModeToggle').textContent = m === 'enchant' ? '✨ Режим автозаточки выбран' : '✨ Включить режим автозаточки';
   $('enchantModeToggle').classList.toggle('on', m === 'enchant');
   $('enchantModeToggle').setAttribute('aria-pressed', String(m === 'enchant'));
-  $('campToggle').classList.toggle('on', strict ? selected.includes('quests') : !!d.campaign); $('tvtToggle').classList.toggle('on', strict ? selected.includes('tvt') : !!d.tvtOn);
-  document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => b.classList.toggle('on', d[b.dataset.task] !== false && (!strict || selected.includes(AUTO_TASK_GROUP[b.dataset.task]))));
   const mods = [m !== 'enchant' && (d.campaign ? '📜 кампания' : (d.campAuto !== false && rt?.campAutoOn && `📜 кампания (авто: ${rt.campAutoOn})`)), d.tvtOn && '⚔ TvT'].filter(Boolean);
-  const ms = $('modeSummary'); if (ms) ms.textContent = strict ? `${on ? 'Основная задача' : 'Следующая задача'}: ${AUTO_TASK_LABELS[active] || 'ожидание'}${selected.includes('tvt') ? ' · TvT выше всех' : ''}${selected.filter(k => k !== active && k !== 'tvt').length ? ' · Ожидают: ' + selected.filter(k => k !== active && k !== 'tvt').map(k => AUTO_TASK_LABELS[k]).join(', ') : ''}${on ? '' : ' (бот стоит)'}` : `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
+  const ms = $('modeSummary'); if (ms) ms.textContent = strict ? `${on ? 'Основная задача' : 'Следующая задача'}: ${AUTO_TASK_LABELS[active] || 'ожидание'}${selected.includes('tvt') ? ' · TvT выше всех' : ''}${selected.filter(k => k !== active && k !== 'tvt').length ? ' · Также выбраны: ' + selected.filter(k => k !== active && k !== 'tvt').map(k => AUTO_TASK_LABELS[k]).join(', ') : ''}${on ? '' : ' (бот стоит)'}` : `${MODE_NAME[m]}${on ? '' : ' (бот стоит)'}${mods.length ? ' · + ' + mods.join(', ') : ''}`;
 }
 // 7.1.31: меню под класс — у мага скрыты воинские блоки (энергия силы, спойл, тотемы/Frenzy, станы, кастеты…), у воина — «Слуга» и дебаффы мага.
 // Класс — как у движка (combatProfileKind): профиль из «Боя» или профессия героя. «👁 Показать настройки всех классов» — всё сразу
@@ -1769,30 +1765,11 @@ async function setMode(m, enabled) {
   if (m === 'tasks') { const { on = false } = await chrome.storage.local.get('on'); toast(`${MODE_NAME.tasks}${on ? '' : ' · ▶ Старт запустит их'}`); }
   else toast(`Режим: ${MODE_NAME[m]}`);
 }
-// 10.0: повторное нажатие на включённый режим снимает его («без режима — только задачи»)
-document.querySelectorAll('#quickModeGrid [data-mode]').forEach(b => { b.onclick = async () => {
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
-  const m = !Array.isArray(cfg.autoTasks) && b.dataset.mode !== 'tasks' && currentMode({ ...DEF, ...cfg }) === b.dataset.mode ? 'tasks' : b.dataset.mode;
-  return setMode(m).catch(e => toast(String(e?.message || e)));
-}; });
 $('enchantModeToggle').onclick = async () => {
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   return setMode(!Array.isArray(cfg.autoTasks) && cfg.enchantMode === true ? 'tasks' : 'enchant').catch(e => toast(String(e?.message || e)));
 };
-// 10.0 (игрок 12.10: «ребилд быстрых режимов»): задачи вне режимов — тоже быстрыми кнопками (те же галочки, что в разделах)
-document.querySelectorAll('#quickModeGrid [data-task]').forEach(b => { b.onclick = async () => {
-  const k = b.dataset.task, { cfg = {} } = await chrome.storage.local.get('cfg'), group = AUTO_TASK_GROUP[k], v = !(({ ...DEF, ...cfg })[k] && (!Array.isArray(cfg.autoTasks) || cfg.autoTasks.includes(group)));
-  await menuPatch({ manualKickAt: Date.now() }, { cfgPatch: { [k]: v, ...(Array.isArray(cfg.autoTasks) && v ? autoTaskPatch(cfg, group, true) : {}) } });
-  if ($(k) && 'checked' in $(k)) $(k).checked = v;
-  b.classList.toggle('on', v); toast(`${b.textContent.trim()}: ${v ? 'включено' : 'выключено'}`);
-}; });
 document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.onchange = () => editAutoTask(el.dataset.autoTask, el.checked).catch(e => { toast(String(e?.message || e)); load(); }); });
-$('tvtToggle').onclick = async () => {
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
-  if (Array.isArray(cfg.autoTasks)) return editAutoTask('tvt', !cfg.autoTasks.includes('tvt'));
-  await menuPatch({}, { cfgPatch: { tvtOn: !cfg.tvtOn } });
-  toast(cfg.tvtOn ? '⚔ TvT выключен' : '⚔ TvT включён');
-};
 $('goalProof').onclick = () => { goalItemsMode = false; setGoals([]); };
 $('goalItems').onclick = async () => { goalItemsMode = true; const { rt = {} } = await chrome.storage.local.get('rt'); renderGoals(rt); };
 $('goalGrid').onclick = e => {
@@ -1847,12 +1824,6 @@ $('fishBest').onclick = async () => {
 $('fishReset').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ fish: null, fishSess: null, fishDmg: null, fishCdStat: null });
-};
-$('campToggle').onclick = async () => {
-  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
-  if (Array.isArray(cfg.autoTasks)) return editAutoTask('quests', !cfg.autoTasks.includes('quests'));
-  if (!cfg.campaign) await activateMode({ campaignDue: true }, { campaign: true, fishMode: false, epicMode: false, rbHuntMode: false, rbMode: false, catMode: false });
-  else await menuPatch({ campaignDue: false }, { cfgPatch: { campaign: false } });
 };
 // «🛒 Закупить сейчас» — бот бросает текущее дело (моба, РБ, рыбу, ожидание) и сразу идёт в магазин; потом возвращается
 async function shopNowGo() {

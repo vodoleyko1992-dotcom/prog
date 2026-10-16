@@ -78,10 +78,10 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
   await test('быстрый запуск после смены порядка не сохраняет прежнюю галочку выгоды',async()=>{
    await seed({rbValueTour:true,rbOrder:'down'});
    // Обработчик кнопки завершён; общий save() запуска выполняется раньше отложенного loadSoon().
-   await h.popup.evaluate(async()=>{await document.querySelector('#rbOrderUp').onclick();document.querySelector('#huntToggle').click();});
-   await until(async()=>{const s=await h.get(['cfg','on']);return s.on&&s.cfg.rbHuntMode});const s=await h.get(['cfg','rt']);assert.equal(s.cfg.rbOrder,'up');assert.equal(s.cfg.rbValueTour,false);preserved(s);
+   await h.popup.locator('#rbOrderUp').click();await h.click('huntToggle');
+   await until(async()=>{const s=await h.get(['cfg','on']);return s.on&&s.cfg.autoTasks?.includes('raid')});const s=await h.get(['cfg','rt']);assert.equal(s.cfg.rbOrder,'up');assert.equal(s.cfg.rbValueTour,false);preserved(s);
   });
-  for(const button of ['huntToggle','huntToggle2']) {
+  for(const button of ['huntToggle2']) {
    for(const [name,refuse,idle,protect] of [
     ['обычный простой',null,now+600000,false],
     ['один свежий отказ',{n:1,t:now-1000},now+600000,false],
@@ -91,7 +91,6 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
    ]) {
     await test(button+' / '+name+': ручной запуск сохраняет только действующую защитную паузу',async()=>{
      const mark={lvl:75,pots:10,t:now-2000};await seed({}, {rbHuntIdle:idle,rbIdleMark:mark,rbIdleN:4,rbRefuse:refuse,rbTourView:snapshot()});
-     if(button==='huntToggle')await h.popup.evaluate(()=>showTab('overview'));
      await h.popup.locator('#'+button).click();await until(async()=>{const s=await h.get(['cfg','on']);return s.on&&s.cfg.rbHuntMode});
      const s=await h.get(['cfg','rt','on']);assert.equal(s.on,true);assert.equal(s.rt.rbListT,0);assert.equal(s.rt.rbHunt.step,'pick');preserved(s);
      assert.equal(s.rt.rbHuntIdle,protect?idle:0);assert.deepEqual(s.rt.rbIdleMark,protect?mark:null);assert.equal(s.rt.rbIdleN,protect?4:0);
