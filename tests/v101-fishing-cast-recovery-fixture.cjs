@@ -25,7 +25,8 @@ async function fishingRecovery(kind){
   if(r.request().method()==='POST')throw Error('unexpected POST '+p);return json({});
  }catch(e){S.errors.push(e.message);return r.fulfill({status:500,body:'{}'}).catch(()=>{});}});
  await h.ctx.addInitScript(()=>{localStorage.setItem('token','fixture');window.L2={whenReady:f=>f(),applyCharacterSnapshot(){},fetchCatalogHints:async()=>{},lastSnapshot:()=>({revision:100}),authFetch:(u,i)=>fetch(u,i),resyncCharacterAfterConflict:async()=>{await fetch('/character');}};});
- await h.sw.evaluate(async(kind)=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,autoTasks:['fish','tvt'],tvtOn:true,fishMode:true,fishAutoSetup:false,fishTimeAuto:false,fishAutoBuy:false,fishProcess:false,fishShots:true,fishBait:'basic',rodEnchantTo:0,fishMaxCasts:kind==='accepted-lost-limit'?1:0,reactMin:0,reactMax:0},rt:{...rt,char:'AuditHero',rodLvl:10,fishSetupDone:Date.now(),fishCastPending:null}});},kind);
+ // 20.3: проверяем одну восстановленную попытку; обычный следующий заброс не должен зависеть от скорости клика Stop тестом.
+ await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,autoTasks:['fish','tvt'],tvtOn:true,fishMode:true,fishAutoSetup:false,fishTimeAuto:false,fishAutoBuy:false,fishProcess:false,fishShots:true,fishBait:'basic',rodEnchantTo:0,fishMaxCasts:1,reactMin:0,reactMax:0},rt:{...rt,char:'AuditHero',rodLvl:10,fishSetupDone:Date.now(),fishCastPending:null}});});
  if(kind.startsWith('legacy'))await h.sw.evaluate(async kind=>{
   const at=Date.now()-10000,{rt}=await chrome.storage.local.get('rt');
   await chrome.storage.local.set({rt:{...rt,fishCastPending:{char:'AuditHero',at,bait:'basic',before:30,pre:[],refreshed:true}}});
