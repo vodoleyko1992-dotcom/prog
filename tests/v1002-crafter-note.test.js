@@ -30,21 +30,21 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', doc = null, click =
 // пояс D Lv.0 → 1: Steel 3 = 15 Iron Ore + 15 Varnish (как в v925-mammon-crafter)
 const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
 (async () => {
-  // 1. задание в партии: что скрафтить и что вернуть; текст письма по-украински, ник героя, без лишнего
+  // 1. задание в партии: что скрафтить и что вернуть; 17.10.2026: текст письма по-русски, ник героя, без лишнего
   { const { M } = mk({ inv: INV }); const w = M.craftWant();
     assert.equal(JSON.stringify(w.note.craft), JSON.stringify([['Steel', 3]])); assert.equal(JSON.stringify(w.note.ret), JSON.stringify([['Steel', 3]])); assert.equal(w.note.part, false);
     const t = M.noteText(w.note, [['Iron Ore', 15], ['Varnish', 15]], 'Warlock');
     assert.equal(t.length, 1);
-    assert.match(t[0], /^Привіт! Надіслав ресурси на крафт \(.*Lv\.0 → 1\): Iron Ore ×15, Varnish ×15\.\nСкрафти, будь ласка, і поверни поштою на Warlock: Steel ×3\.\nДякую!$/);
+    assert.match(t[0], /^Привет! Отправил ресурсы на крафт \(.*Lv\.0 → 1\): Iron Ore ×15, Varnish ×15\.\nСкрафти, пожалуйста, и верни почтой на Warlock: Steel ×3\.\nСпасибо!$/);
     assert.ok(!/бот|bot|скрипт/i.test(t[0])); }
   // скрафтить ≠ вернуть (промежуточное): две строки; неполный набор — приписка
   { const { M } = mk(); const t = M.noteText({ goal: 'Belt Lv.1 → 2', part: true, craft: [['Steel', 6], ['Mithril Alloy', 3]], ret: [['Mithril Alloy', 3]] }, [['Iron Ore', 30]], 'Warlock')[0];
-    assert.match(t, /Скрафти, будь ласка: Steel ×6, Mithril Alloy ×3\.\nПоверни поштою на Warlock: Mithril Alloy ×3\.\nЧастину сировини ще збираю — дошлю пізніше\.\nДякую!/); }
+    assert.match(t, /Скрафти, пожалуйста: Steel ×6, Mithril Alloy ×3\.\nВерни почтой на Warlock: Mithril Alloy ×3\.\nЧасть сырья ещё собираю — дошлю позже\.\nСпасибо!/); }
   // длинное письмо (игра: до 1000 знаков) — делится, каждый кусок ≤ 990, ничего не потеряно
   { const { M } = mk(); const many = Array.from({ length: 80 }, (_, i) => [`Very Long Material Name Number ${i}`, 1000 + i]);
     const t = M.noteText({ goal: 'X', part: false, craft: many, ret: many.slice(0, 40) }, many, 'Warlock');
     assert.ok(t.length >= 3, 'split into ' + t.length); assert.ok(t.every(x => x.length <= 990));
-    for (const [n] of many) assert.ok(t.join('\n').includes(n)); assert.match(t[t.length - 1], /Дякую!$/); }
+    for (const [n] of many) assert.ok(t.join('\n').includes(n)); assert.match(t[t.length - 1], /Спасибо!$/); }
   // галка выключена — без письма
   assert.equal(mk({ inv: INV, cfg: { mmCraftNote: false } }).M.craftWant().note, null);
   // 2. партия ушла → переход на «Нове повідомлення» → «Кому» и текст → «Надіслати» → «надіслано» → итог «письмо с заданием отправил»
@@ -53,8 +53,8 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     await M.sendStep(env.rt.mmJob); assert.equal(loc.href, '/mail-compose.html'); assert.equal(P.fired.length, 0);
     loc.pathname = '/mail-compose.html';
     await M.sendStep(env.rt.mmJob);
-    assert.equal(P.fired.length, 1); assert.equal(P.sent.to, 'Skye'); assert.match(P.sent.text, /Iron Ore ×15, Varnish ×15[\s\S]*поверни поштою на Warlock: Steel ×3/);
-    assert.ok(P.text.events.includes('input')); assert.match(recs.join('\n'), /письмо крафтеру Skye: Привіт!/);
+    assert.equal(P.fired.length, 1); assert.equal(P.sent.to, 'Skye'); assert.match(P.sent.text, /Iron Ore ×15, Varnish ×15[\s\S]*верни почтой на Warlock: Steel ×3/);
+    assert.ok(P.text.events.includes('input')); assert.match(recs.join('\n'), /письмо крафтеру Skye: Привет!/);
     await M.sendStep(env.rt.mmJob); await M.sendStep(env.rt.mmJob);
     assert.equal(env.rt.mmJob, null); assert.equal(env.rt.mmLog[0].ok, true); assert.match(env.rt.mmLog[0].why, /отправил Skye: Iron Ore 15, Varnish 15 · комиссия 17 адены · письмо с заданием отправил — жду готовое/);
     assert.equal(P.fired.length, 1, 'one letter'); }
@@ -65,7 +65,7 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     assert.equal(env.rt.mmJob, null); assert.equal(env.rt.mmLog[0].ok, true); assert.match(env.rt.mmLog[0].why, /письмо не ушло \(Гравця не знайдено\.\)/); }
   // нажали «Надіслати», ответа не видели (перезагрузка) — второй раз не шлём
   { const P = composePage(); const { env, M } = mk({ inv: INV, pn: '/mail-compose.html', doc: P.doc, click: P.click });
-    env.rt.mmJob = { ...M.craftWant(), step: 'act', t: Date.now(), items: [], done: [['Iron Ore', 15, 8]], notes: ['Привіт!'], noteCur: Date.now() };
+    env.rt.mmJob = { ...M.craftWant(), step: 'act', t: Date.now(), items: [], done: [['Iron Ore', 15, 8]], notes: ['Привет!'], noteCur: Date.now() };
     for (let i = 0; i < 3 && env.rt.mmJob; i++) await M.sendStep(env.rt.mmJob);
     assert.equal(P.fired.length, 0, 'no double letter'); assert.equal(env.rt.mmJob, null); }
   // партия ушла не вся — письмо уходит с досылкой и перечисляет всё отправленное

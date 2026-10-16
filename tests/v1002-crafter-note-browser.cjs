@@ -54,7 +54,7 @@ const ENV = `
   const job = { kind: 'send', to: 'Skye', step: 'act', t: Date.now(), items: [], done: [['Iron Ore', 15, 8], ['Varnish', 15, 9]], note };
   const R = await drive({ mmJob: job });
   assert.equal(sends.length, 1, JSON.stringify(sends)); assert.equal(sends[0].recipientName, 'Skye'); assert.ok(sends[0].clientMessageId);
-  assert.match(sends[0].text, /^Привіт! Надіслав ресурси на крафт \(Belt Lv\.0 → 1\): Iron Ore ×15, Varnish ×15\.\nСкрафти, будь ласка, і поверни поштою на Warlock: Steel ×3\.\nДякую!$/);
+  assert.match(sends[0].text, /^Привет! Отправил ресурсы на крафт \(Belt Lv\.0 → 1\): Iron Ore ×15, Varnish ×15\.\nСкрафти, пожалуйста, и верни почтой на Warlock: Steel ×3\.\nСпасибо!$/);
   assert.equal(R.mmJob, null); assert.match(R.mmLog[0].why, /письмо с заданием отправил/);
   console.log('PASS browser: «Нове повідомлення» (real mail-compose.js) — nick and task typed, «Надіслати» → one POST /game/mail/send to Skye, batch closed');
   // длинное задание — несколько писем по ≤ 1000 знаков, все дошли
