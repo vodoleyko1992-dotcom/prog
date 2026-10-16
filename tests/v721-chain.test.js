@@ -32,5 +32,5 @@ assert.ok(p.dmg / p.dmgN > 1600, `average follows fresh samples (${Math.round(p.
 assert.match(content, /once\('camp721', \(\) => \{ cf\.campaign = false;/);
 assert.ok(!/квест на ресурс — фармим сам/.test(content), 'resource quests do not teleport');
 const html = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
-assert.match(html, /<button id="campToggle" class="mod" title=/);   // 10.0.10: кнопка «📜 Кампания» снова видна (сюжетный квест новичка у альта), по умолчанию выключена — camp721 остаётся
+assert.match(html, /data-auto-task="quests"/);   // 10.0.10: кнопка «📜 Кампания» снова видна (сюжетный квест новичка у альта), по умолчанию выключена — camp721 остаётся
 console.log('PASS: chain — server cooldowns by the game battle id, accepted move counts, lost click without 1 s wait, fresh damage average; campaign removed');

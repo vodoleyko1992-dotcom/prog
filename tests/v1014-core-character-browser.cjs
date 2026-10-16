@@ -5,7 +5,7 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert
  await h.sw.evaluate(async()=>{const {rt,cfg}=await chrome.storage.local.get(['rt','cfg']);await chrome.storage.local.set({on:false,rt:{...rt,char:'',auditKeep:17},'rt@AuditHero':{...rt,char:'AuditHero',auditKeep:99},'cfg@AuditHero':{...cfg,rbHuntMode:true,fishMode:false,taskOnly:false}})});
  await h.g.p.goto('https://l2wap.com/map.html');await until(()=>h.g.core('typeof heroNick==="function"'));await delay(500);
  console.log('PRE',JSON.stringify(await h.get(['rt']).then(s=>({char:s.rt.char,keep:s.rt.auditKeep}))));
- await h.popup.reload();await until(()=>h.popup.evaluate(()=>!!document.querySelector('#fishToggle')?.onclick));await h.click('fishToggle');
+ await h.popup.reload();await until(()=>h.popup.evaluate(()=>!!document.querySelector('[data-auto-task=fish]')?.onchange));await h.click('fishToggle');
  await until(async()=>{const s=await h.get(['rt']);return s.rt.char==='AuditHero'},15000);await delay(1000);
  const s=await h.get(['rt','cfg']);console.log('POST',JSON.stringify({char:s.rt.char,fish:s.cfg.fishMode,raid:s.cfg.rbHuntMode,keep:s.rt.auditKeep}));
  assert.equal(s.cfg.fishMode,true,'выбранная рыбалка не должна заменяться старым cfg@герой после HUD placeholder');assert.equal(s.cfg.rbHuntMode,false);assert.equal(s.rt.auditKeep,17,'initial memory сохраняется без фиктивного переключения');

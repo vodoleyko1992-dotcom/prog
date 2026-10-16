@@ -11,7 +11,7 @@ function box() {
     menuPatch: async (p, o = {}) => { Object.assign(rt, p); Object.assign(cfg, o.cfgPatch || {}); },
     activateMode: async (p, c) => { Object.assign(rt, p); Object.assign(cfg, c); } };
   vm.runInNewContext(part('function skipGroups(', 'function rbLineOf(') + part('function renderHuntQueue(', "$('fishRodGoal10').onclick")
-    + part('const MODES_OFF =', '// 10.0: повторное нажатие') + part('async function huntToggle()', 'async function epicToggle()'), b);
+    + part('const MODES_OFF =', "$('enchantModeToggle').onclick") + part('async function huntToggle()', 'async function epicToggle()'), b);
   b.view = () => ({ at: now, heroLvl: 60, lo: 45, hi: 75, mode: 'up', listT: now, stale: false,
     ready: [{ id: 'high', name: 'Высокий', lvl: 65 }], blocked: [{ id: 'low', name: 'Низкий', lvl: 50, kind: 'limit', why: 'лимит 3 платных телепортов за час' }] });
   b.render = () => { b.renderHuntQueue(rt, cfg); return b.$('huntQueue').textContent; }; return b;

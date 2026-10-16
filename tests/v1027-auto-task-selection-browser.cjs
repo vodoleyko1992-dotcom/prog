@@ -28,7 +28,7 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs'), assert
     await check('raid').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('raid'));
     let s = await h.get(['cfg', 'on']); assert.deepEqual(s.cfg.autoTasks, ['tvt', 'fish', 'raid']); assert.equal(s.on, false);
     await until(async () => /Тур по РБ/.test(await h.popup.locator('#modeSummary').innerText()));
-    await h.popup.locator('#fishToggle').click(); await until(async () => !(await h.get(['cfg'])).cfg.autoTasks.includes('fish'));
+    await h.popup.locator('[data-auto-task=fish]').uncheck(); await until(async () => !(await h.get(['cfg'])).cfg.autoTasks.includes('fish'));
     s = await h.get(['cfg', 'on']); assert.deepEqual(s.cfg.autoTasks, ['tvt', 'raid']); assert.equal(s.on, false);
     await check('raid').uncheck(); await check('tvt').uncheck(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.length === 0);
     assert.equal((await h.get(['on'])).on, false);

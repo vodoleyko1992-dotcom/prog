@@ -9,7 +9,7 @@ function modeBox() {
   const box = { rt, cfg, Date, MODE_NAME: {}, toast() {}, save: async () => {}, chrome: { storage: { local: { get: async () => ({ rt, cfg }) } } },
     menuPatch: async (p, o = {}) => { Object.assign(rt, p); Object.assign(cfg, o.cfgPatch || {}); },
     activateMode: async (p, c) => { Object.assign(rt, p); Object.assign(cfg, c); } };
-  vm.runInNewContext(slice(popup, 'const MODES_OFF =', '// 10.0: повторное нажатие'), box); return box;
+  vm.runInNewContext(slice(popup, 'const MODES_OFF =', "$('enchantModeToggle').onclick"), box); return box;
 }
 for (const mode of ['tasks', 'farm', 'auto', 'rb', 'epic', 'fish', 'cat']) test('ручной режим ' + mode + ' отменяет старые daily detours, сохраняя прогресс', async () => {
   const b = modeBox(); await b.setMode(mode); assert.equal(b.rt.dailyFish, null); assert.equal(b.rt.dailyRb, null); assert.equal(b.rt.dailyDone.fish, 7);
@@ -93,7 +93,6 @@ function directModeBox() {
   return { b, elements, daily };
 }
 for (const [name, start, end, invoke] of [
-  ['кампания', "$('campToggle').onclick =", '// «🛒 Закупить сейчас»', e => e.campToggle.onclick()],
   ['тур РБ', 'async function huntToggle()', 'async function epicToggle()', (_e, b) => b.huntToggle()],
   ['эпики', 'async function epicToggle()', "$('epicToggle2').onclick", (_e, b) => b.epicToggle()],
   ['один РБ', "$('rbOneBtn').onclick =", 'function paintRbOne(', e => e.rbOneBtn.onclick()],
@@ -109,4 +108,10 @@ for (const [name, start, end] of [
   const { b, elements, daily } = directModeBox(); vm.runInNewContext(slice(popup, start, end), b);
   const oldJob = b.rt.dailyFish; await elements[name === 'разделка' ? 'fishQuickCut' : 'sealNow'].onclick();
   assert.equal(b.rt.dailyFish, oldJob); await daily.dailyStep(); assert.equal(b.cfg.zoneAuto, true); assert.equal(b.rt.dailyFish, null);
+});
+
+test('выбор кампании единой галкой очищает старые daily маршруты без запуска', async()=>{
+ const b=modeBox();b.autoTaskPatch=(_d,key,enabled)=>({autoTasks:enabled?[key]:[]});b.load=async()=>{};b.DEF={};
+ vm.runInNewContext(slice(popup,'let autoTaskEditQueue =','function currentMode('),b);
+ await b.editAutoTask('quests',true);assert.equal(b.rt.dailyFish,null);assert.equal(b.rt.dailyRb,null);assert.equal(JSON.stringify(b.cfg.autoTasks),JSON.stringify(['quests']));
 });

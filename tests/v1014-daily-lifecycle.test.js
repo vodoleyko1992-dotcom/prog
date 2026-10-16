@@ -12,7 +12,7 @@ function make(){
  sb.save=async()=>{};sb.chrome={storage:{local:{get:async()=>({cfg:env.cfg,rt:env.rt,on:env.on})}}};
  sb.menuPatch=async(p,o={})=>{Object.assign(env.rt,p);Object.assign(env.cfg,o.cfgPatch||{});if(o.on!==undefined)env.on=o.on;};
  sb.activateMode=async(p,c)=>sb.menuPatch({...p,manualKickAt:Date.now()},{cfgPatch:c,on:true});sb.toast=()=>{};sb.MODE_NAME={};
- const popup=read('popup.js'),a=popup.indexOf('const MODES_OFF ='),b=popup.indexOf('// 10.0: повторное нажатие',a);assert(a>=0&&b>a);vm.runInNewContext(popup.slice(a,b),sb);
+ const popup=read('popup.js'),a=popup.indexOf('const MODES_OFF ='),b=popup.indexOf("$('enchantModeToggle').onclick",a);assert(a>=0&&b>a);vm.runInNewContext(popup.slice(a,b),sb);
  return {loc,env,D:sb.L2V7Factories.dailies(env),mode:sb.setMode,cfgs,posts,series};
 }
 test('auto → dailyFish → manual raid сохраняет ручной выбор и прогресс',async()=>{
