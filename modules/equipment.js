@@ -258,10 +258,11 @@ function shotsForMageWeapon() {
 }
 
 function classWeaponTypes() {
-  const prof = env.normalizeProfession(env.rt.prof);
+  const current = env.rt.classCur?.prof ? String(env.rt.classCur.prof).replace(/^(?:dark_elf|human|elf|orc|dwarf)_/, '') : env.rt.prof;
+  const prof = env.normalizeProfession(current);
   const kind = env.combatProfileKind();
-  if (kind === 'mage_summoner') return { types: [env.MAGE], src: `профессия ${env.rt.prof || 'магический профиль'}` };
-  if (env.CLASS_W[prof] && env.CLASS_W[prof][0] !== env.MAGE) return { types: env.CLASS_W[prof], src: `профессия ${env.rt.prof}` };
+  if (kind === 'mage_summoner') return { types: [env.MAGE], src: `профессия ${current || 'магический профиль'}` };
+  if (env.CLASS_W[prof] && env.CLASS_W[prof][0] !== env.MAGE) return { types: env.CLASS_W[prof], src: `профессия ${current}` };
   const votes = {};
   for (const s of (env.rt.panel || [])) {
     const il = s.kind === 'скилл' && env.ilOf(s);
