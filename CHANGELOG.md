@@ -2,6 +2,7 @@
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
 
+- [L2wap Bot 20.7: оба агро Warlord, приоритет спойла и смена задач](docs/changelog/CHANGELOG-20.7.md)
 - [L2wap Bot 20.6: агро Warlord и автобой сабкласса спойлера](docs/changelog/CHANGELOG-20.6.md)
 - [L2wap Bot 20.5: рыбалка, квитанции баффов РБ и обнаружение обновлений](docs/changelog/CHANGELOG-20.5.md)
 - [L2wap Bot 20.4: навыки Warlord и правильные роли боя](docs/changelog/CHANGELOG-20.4.md)
