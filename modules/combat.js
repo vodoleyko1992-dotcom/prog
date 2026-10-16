@@ -258,6 +258,8 @@ function nonOffenseSkill(b) {
   const il = env.ilOf(b) || {};
   if (il.autoUse === false || env.slotAction?.(b) === 'battle_trance' || /^battle trance(?:\s|$)/i.test(env.cleanTitle(b.title || ''))) return true;
   if (il.c === 'Призыв' || il.t === 'SUMMON' || il.target === 'PET' || il.o === 'PASSIVE' || il.o === 'TOGGLE') return true;
+  // 20.3: прежняя nPower Warlord содержит поддержку. Подтверждённые прямые/совмещённые удары сохраняем.
+  if (['Бафф','Дебафф','Агро','Лечение','Расход HP'].includes(il.c) && !il.l2Damage && !/^(?:PDAM|MDAM|MDAMDOT|DRAIN|DAM)$/.test(il.t || '')) return true;
   const n = env.cleanTitle(b.title || '').toLowerCase();
   return /^(?:summon\b|mass summon\b|servitor\b|warrior servitor\b|final servitor\b|transfer pain\b|arcane agility\b|cubic mastery\b|mage bane\b|warrior bane\b|skill mastery\b|spell force\b|heal\b|battle heal\b|servitor bless)/i.test(n);
 }

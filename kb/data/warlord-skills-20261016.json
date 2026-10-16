@@ -1,0 +1,547 @@
+{
+  "evidenceType": "sanitized observed projection; API replies truncated",
+  "sources": [
+    "l2bot-log-2026-10-16-07-15.txt",
+    "l2bot-learn-2026-10-16-07-15.html"
+  ],
+  "date": "2026-10-16",
+  "displayTimezone": "Asia/Vladivostok",
+  "botVersion": "20.3",
+  "profession": "human_warlord",
+  "level": 48,
+  "observedMechanics": [
+    {
+      "id": 36,
+      "action": "whirlwind",
+      "role": "physical_aoe",
+      "targetsHintMax": 4,
+      "weapon": "polearm",
+      "cooldownHintSec": 17,
+      "observedUses": 1,
+      "measuredDirectDamage": false
+    },
+    {
+      "id": 48,
+      "action": "thunder_storm",
+      "role": "damage_and_control_aoe",
+      "targetsHintMax": 4,
+      "weapon": "polearm",
+      "stunHintChance": 0.5,
+      "observedUses": 1,
+      "measuredDirectDamage": false
+    },
+    {
+      "id": 286,
+      "action": "provoke",
+      "role": "aggro",
+      "manualOnlyInBot": true,
+      "observedUses": 5,
+      "spearResistanceDownPct": 10,
+      "debuffSec": 10,
+      "visibleTargetsAfter": 17,
+      "bossAggroEvidence": "game text only, no live raid/epic test"
+    },
+    {
+      "id": 116,
+      "action": "howl",
+      "role": "area_debuff",
+      "observedUses": 1,
+      "enemyPAtkDownPct": 23,
+      "durationSec": 30,
+      "listedTargets": 21
+    },
+    {
+      "id": 130,
+      "action": "thrill_fight",
+      "role": "self_buff",
+      "observedUses": 2,
+      "attackSpeedPct": 5,
+      "runSpeedPct": -20,
+      "durationSec": 300
+    },
+    {
+      "id": 317,
+      "action": "focus_attack",
+      "role": "toggle",
+      "manualOnlyInBot": true,
+      "observedUses": 2,
+      "accuracyBonusObserved": 2,
+      "critDamagePctObserved": 10,
+      "additionalPolearmHitsAfterEnable": true,
+      "aoeEffectNotEstablished": true
+    },
+    {
+      "id": 290,
+      "learnBattleId": "l2_290",
+      "role": "passive",
+      "hintHpAtMostPct": 30,
+      "hintFlatPAtkAtRank1": 32.9,
+      "lowHpProcObserved": false
+    }
+  ],
+  "manualLearnRequests": {
+    "l2_317": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 39,
+          "at": "17:11:00.887"
+        }
+      ]
+    },
+    "l2_87": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 43,
+          "at": "17:11:04.062"
+        }
+      ]
+    },
+    "l2_312": {
+      "http200Count": 3,
+      "events": [
+        {
+          "line": 47,
+          "at": "17:11:06.304"
+        },
+        {
+          "line": 49,
+          "at": "17:11:07.335"
+        },
+        {
+          "line": 53,
+          "at": "17:11:08.506"
+        }
+      ]
+    },
+    "l2_48": {
+      "http200Count": 9,
+      "events": [
+        {
+          "line": 57,
+          "at": "17:11:09.813"
+        },
+        {
+          "line": 60,
+          "at": "17:11:11.343"
+        },
+        {
+          "line": 63,
+          "at": "17:11:12.384"
+        },
+        {
+          "line": 66,
+          "at": "17:11:13.521"
+        },
+        {
+          "line": 69,
+          "at": "17:11:14.560"
+        },
+        {
+          "line": 73,
+          "at": "17:11:15.575"
+        },
+        {
+          "line": 76,
+          "at": "17:11:16.670"
+        },
+        {
+          "line": 79,
+          "at": "17:11:17.696"
+        },
+        {
+          "line": 83,
+          "at": "17:11:18.656"
+        }
+      ]
+    },
+    "l2_36": {
+      "http200Count": 9,
+      "events": [
+        {
+          "line": 86,
+          "at": "17:11:19.540"
+        },
+        {
+          "line": 89,
+          "at": "17:11:20.624"
+        },
+        {
+          "line": 92,
+          "at": "17:11:21.544"
+        },
+        {
+          "line": 96,
+          "at": "17:11:22.385"
+        },
+        {
+          "line": 100,
+          "at": "17:11:23.678"
+        },
+        {
+          "line": 102,
+          "at": "17:11:24.757"
+        },
+        {
+          "line": 106,
+          "at": "17:11:25.815"
+        },
+        {
+          "line": 109,
+          "at": "17:11:26.913"
+        },
+        {
+          "line": 112,
+          "at": "17:11:27.902"
+        }
+      ]
+    },
+    "l2_290": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 116,
+          "at": "17:11:28.805"
+        },
+        {
+          "line": 120,
+          "at": "17:11:32.658"
+        }
+      ]
+    },
+    "l2_116": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 124,
+          "at": "17:11:37.996"
+        },
+        {
+          "line": 127,
+          "at": "17:11:39.057"
+        }
+      ]
+    },
+    "l2_286": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 130,
+          "at": "17:11:39.906"
+        }
+      ]
+    },
+    "l2_104": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 134,
+          "at": "17:11:42.300"
+        }
+      ]
+    },
+    "l2_130": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 140,
+          "at": "17:11:48.036"
+        }
+      ]
+    }
+  },
+  "battleActions": {
+    "war_cry": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 345,
+          "at": "17:13:42.933"
+        },
+        {
+          "line": 438,
+          "at": "17:14:45.752"
+        }
+      ]
+    },
+    "thrill_fight": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 354,
+          "at": "17:13:45.123"
+        },
+        {
+          "line": 443,
+          "at": "17:14:46.612"
+        }
+      ]
+    },
+    "provoke": {
+      "http200Count": 5,
+      "events": [
+        {
+          "line": 359,
+          "at": "17:13:50.106"
+        },
+        {
+          "line": 376,
+          "at": "17:14:07.088"
+        },
+        {
+          "line": 391,
+          "at": "17:14:17.842"
+        },
+        {
+          "line": 423,
+          "at": "17:14:32.184"
+        },
+        {
+          "line": 449,
+          "at": "17:14:50.132"
+        }
+      ]
+    },
+    "wild_sweep": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 366,
+          "at": "17:13:52.674"
+        },
+        {
+          "line": 414,
+          "at": "17:14:27.229"
+        }
+      ]
+    },
+    "thunder_storm": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 381,
+          "at": "17:14:08.703"
+        }
+      ]
+    },
+    "attack": {
+      "http200Count": 13,
+      "events": [
+        {
+          "line": 397,
+          "at": "17:14:19.345"
+        },
+        {
+          "line": 401,
+          "at": "17:14:21.407"
+        },
+        {
+          "line": 406,
+          "at": "17:14:23.382"
+        },
+        {
+          "line": 462,
+          "at": "17:14:54.712"
+        },
+        {
+          "line": 473,
+          "at": "17:14:58.668"
+        },
+        {
+          "line": 483,
+          "at": "17:15:02.636"
+        },
+        {
+          "line": 489,
+          "at": "17:15:04.754"
+        },
+        {
+          "line": 498,
+          "at": "17:15:07.919"
+        },
+        {
+          "line": 506,
+          "at": "17:15:10.574"
+        },
+        {
+          "line": 512,
+          "at": "17:15:13.394"
+        },
+        {
+          "line": 519,
+          "at": "17:15:15.860"
+        },
+        {
+          "line": 526,
+          "at": "17:15:17.885"
+        },
+        {
+          "line": 531,
+          "at": "17:15:19.982"
+        }
+      ]
+    },
+    "whirlwind": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 428,
+          "at": "17:14:33.624"
+        }
+      ]
+    },
+    "howl": {
+      "http200Count": 1,
+      "events": [
+        {
+          "line": 456,
+          "at": "17:14:51.647"
+        }
+      ]
+    },
+    "focus_attack": {
+      "http200Count": 2,
+      "events": [
+        {
+          "line": 469,
+          "at": "17:14:56.619"
+        },
+        {
+          "line": 540,
+          "at": "17:15:22.441"
+        }
+      ]
+    }
+  },
+  "completeFirstCatalogRows": [
+    {
+      "line": 30,
+      "at": "17:10:45.145",
+      "battleId": "l2_312",
+      "nameUk": "Vicious Stance",
+      "hintRu": "Toggle: +109 сила крита на р. 5. MP ~0.4/с, пока включено. Перемикач в бою и поза боем.",
+      "kind": "toggle",
+      "skillLevel": 5,
+      "maxSkillLevel": 20,
+      "canLearn": true,
+      "mpCost": null
+    },
+    {
+      "line": 40,
+      "at": "17:11:01.148",
+      "battleId": "l2_312",
+      "nameUk": "Vicious Stance",
+      "hintRu": "Toggle: +109 сила крита на р. 5. MP ~0.4/с, пока включено. Перемикач в бою и поза боем.",
+      "kind": "toggle",
+      "skillLevel": 5,
+      "maxSkillLevel": 20,
+      "canLearn": true,
+      "mpCost": null
+    },
+    {
+      "line": 44,
+      "at": "17:11:04.469",
+      "battleId": "l2_312",
+      "nameUk": "Vicious Stance",
+      "hintRu": "Toggle: +109 сила крита на р. 5. MP ~0.4/с, пока включено. Перемикач в бою и поза боем.",
+      "kind": "toggle",
+      "skillLevel": 5,
+      "maxSkillLevel": 20,
+      "canLearn": true,
+      "mpCost": null
+    },
+    {
+      "line": 51,
+      "at": "17:11:07.621",
+      "battleId": "l2_312",
+      "nameUk": "Vicious Stance",
+      "hintRu": "Toggle: +166 сила крита на р. 7. MP ~0.4/с, пока включено. Перемикач в бою и поза боем.",
+      "kind": "toggle",
+      "skillLevel": 7,
+      "maxSkillLevel": 20,
+      "canLearn": true,
+      "mpCost": null
+    },
+    {
+      "line": 61,
+      "at": "17:11:11.574",
+      "battleId": "l2_48",
+      "nameUk": "Thunder Storm",
+      "hintRu": "Burst AoE вокруг: главная + до 3 рядом (до 4); шок ~50%. Только копьё/нобарда. Р. 2 скила.",
+      "kind": "battle",
+      "skillLevel": 2,
+      "maxSkillLevel": 37,
+      "canLearn": true,
+      "mpCost": 56
+    },
+    {
+      "line": 71,
+      "at": "17:11:14.843",
+      "battleId": "l2_48",
+      "nameUk": "Thunder Storm",
+      "hintRu": "Burst AoE вокруг: главная + до 3 рядом (до 4); шок ~50%. Только копьё/нобарда. Р. 5 скила.",
+      "kind": "battle",
+      "skillLevel": 5,
+      "maxSkillLevel": 37,
+      "canLearn": true,
+      "mpCost": 60
+    },
+    {
+      "line": 81,
+      "at": "17:11:17.944",
+      "battleId": "l2_48",
+      "nameUk": "Thunder Storm",
+      "hintRu": "Burst AoE вокруг: главная + до 3 рядом (до 4); шок ~50%. Только копьё/нобарда. Р. 8 скила.",
+      "kind": "battle",
+      "skillLevel": 8,
+      "maxSkillLevel": 37,
+      "canLearn": true,
+      "mpCost": 66
+    },
+    {
+      "line": 121,
+      "at": "17:11:32.910",
+      "battleId": "l2_116",
+      "nameUk": "Howl",
+      "hintRu": "Дебаф −23% P.Atk врагов в радиусе бою (як мобы на карте) на 30 с. Warlord.",
+      "kind": "battle",
+      "skillLevel": 0,
+      "maxSkillLevel": 14,
+      "canLearn": true,
+      "mpCost": 29
+    },
+    {
+      "line": 125,
+      "at": "17:11:38.233",
+      "battleId": "l2_116",
+      "nameUk": "Howl",
+      "hintRu": "Дебаф −23% P.Atk врагов в радиусе бою (як мобы на карте) на 30 с. Warlord.",
+      "kind": "battle",
+      "skillLevel": 1,
+      "maxSkillLevel": 14,
+      "canLearn": true,
+      "mpCost": 29
+    },
+    {
+      "line": 135,
+      "at": "17:11:42.546",
+      "battleId": "l2_130",
+      "nameUk": "Thrill Fight",
+      "hintRu": "−20% Run Speed; +5% Attack Speed на 5 мин (р. 1 скила). Warlord.",
+      "kind": "battle",
+      "skillLevel": 0,
+      "maxSkillLevel": 2,
+      "canLearn": true,
+      "mpCost": 21
+    }
+  ],
+  "limitations": [
+    "30 successful requests are not an independent final rank snapshot.",
+    "Most combat actions are manual, not proof of automatic tactical use.",
+    "Net MP delta is not raw skill cost.",
+    "Unmeasured AoE damage is not zero damage.",
+    "One cast cannot establish DPS or stun probability.",
+    "Focus wording does not prove disabled polearm cleave."
+  ]
+}
