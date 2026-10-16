@@ -848,7 +848,7 @@ async function pageGo(target) {                   // листать список
 const setVal = (el, v) => { el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
 const shownTxt = el => el && !el.hidden ? (el.textContent || '').trim() : '';
 // 10.0.2: письмо крафтеру после партии — что скрафтить и что вернуть (/mail-compose.html: «Кому», «Повідомлення» до 1000 знаков,
-// POST /game/mail/send {text, recipientName}). Язык — украинский, как интерфейс игры у клана
+// POST /game/mail/send {text, recipientName}). 17.10.2026: по просьбе пользователя текст письма — по-русски; названия предметов сохраняем из игры
 function noteOf(P, goal) {
   const nm = itNm;
   return { goal, part: (P.cmiss || 0) > 0, craft: (P.craft || []).filter(c => c.qty > 0).map(c => [c.nm, c.qty]),
@@ -857,10 +857,10 @@ function noteOf(P, goal) {
 function noteText(N, sent, me) {         // → письма по ≤ NOTE_MAX знаков (длинное делится по строкам, строка — по пунктам)
   const ls = l => l.map(([n, q]) => `${n} ×${fmtA(q)}`);
   const same = JSON.stringify(N.craft) === JSON.stringify(N.ret);
-  const parts = [[`Привіт! Надіслав ресурси на крафт${N.goal ? ` (${N.goal})` : ''}:`, ls(sent)]];
-  if (N.craft.length) parts.push([same ? 'Скрафти, будь ласка, і поверни поштою' + (me ? ` на ${me}` : '') + ':' : 'Скрафти, будь ласка:', ls(N.craft)]);
-  if (N.ret.length && !same) parts.push([`Поверни поштою${me ? ` на ${me}` : ''}:`, ls(N.ret)]);
-  const tail = [N.part ? 'Частину сировини ще збираю — дошлю пізніше.' : '', 'Дякую!'].filter(Boolean);
+  const parts = [[`Привет! Отправил ресурсы на крафт${N.goal ? ` (${N.goal})` : ''}:`, ls(sent)]];
+  if (N.craft.length) parts.push([same ? 'Скрафти, пожалуйста, и верни почтой' + (me ? ` на ${me}` : '') + ':' : 'Скрафти, пожалуйста:', ls(N.craft)]);
+  if (N.ret.length && !same) parts.push([`Верни почтой${me ? ` на ${me}` : ''}:`, ls(N.ret)]);
+  const tail = [N.part ? 'Часть сырья ещё собираю — дошлю позже.' : '', 'Спасибо!'].filter(Boolean);
   const out = []; let cur = '';
   const put = t => { if (cur && cur.length + 1 + t.length > NOTE_MAX) { out.push(cur); cur = ''; } cur = cur ? cur + '\n' + t : t; };
   for (const [h, l] of parts) {
