@@ -198,6 +198,13 @@ function rank(r, rules) {
 // is inside a dungeon: Ashen Bastion and other zones have their own spawn IDs.
 const dungeonBattle = () => /^sdms_/i.test(new URLSearchParams(location.search).get('spawnId') || '');
 
+// 20.6: случайное «Охотиться дальше» обходит фильтр catPick и снова даёт снявший баффы вид.
+function dungeonCancelBlocked() {
+  if (env.cfg.noCancelMobs === false) return false;
+  const id = (location.search || '').match(/[?&]spawnId=sdms_([^&]+)_\d+(?:&|$)/)?.[1];
+  return !!id && Object.values(env.rt.buffCancel || {}).some(r => !r.champ && r.dungeon === id && env.cancelRisk?.(r.name, false));
+}
+
 async function nextFight(ctx) {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (await env.tvtStep?.()) return;
@@ -278,7 +285,7 @@ async function nextFight(ctx) {
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
-    if (env.cfg.chain !== false && dungeonBattle()) {
+    if (env.cfg.chain !== false && dungeonBattle() && !dungeonCancelBlocked()) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
@@ -1021,6 +1028,6 @@ async function ashenStep() {
   env.setStatus(rows.length ? 'Ashen Bastion: подходящие мобы возрождаются' : 'Ashen Bastion: жду список мобов');
   await env.sleep(2000);
 }
- return { scanChampPages, farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
+ return { dungeonCancelBlocked, scanChampPages, farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
  };
 })(globalThis);
