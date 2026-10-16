@@ -1,0 +1,46 @@
+{
+  "sourceLog": {
+    "file": "l2bot-log-2026-10-16-15-02.txt",
+    "sha256": "69258088b1069697be2ba94dd94e37f1fa6201bb2687b3c7efc8f24225c1deaf",
+    "lines": 8459
+  },
+  "sourceLearn": {
+    "file": "l2bot-learn-2026-10-16-15-02.html",
+    "sha256": "dc92621ea24911da2f30c142737dbc9dc55e03599a93c6a0b397204a90f3f079",
+    "kind": "Aggregated learning report, not complete current battle DOM"
+  },
+  "clientTimezone": "Asia/Vladivostok",
+  "countDungeonReturnMessages": 72,
+  "excerpts": [
+    {
+      "line": 4199,
+      "text": "00:43:33.131 [B] бот Катакомбы: назад в Catacomb of the Branded | battle?spawnId=sdms_catacomb_of_the_branded_067 HP 7555/7718 MP 91/911 · моб Decayed Ancient Soldier 2532/2532"
+    },
+    {
+      "line": 8414,
+      "text": "01:02:06.075 [B] спойл Decayed Ancient Pikeman: добыча спойла — Suede ×2, Silver Nugget ×2, Iron Ore ×6, Charcoal ×2, Animal Skin ×2, Silver Nugget ×2, Animal Bone ×4 | battle?spawnId=sdms_catacomb_of_the_branded_119 HP 7934/7951 MP 463/947 · моб Decayed Ancient Pikeman 2388/2388"
+    },
+    {
+      "line": 8415,
+      "text": "01:02:06.077 [B] итог боя Decayed Ancient Pikeman: 2388 HP за 6.2 с · ДПС 385 (урон по всем мобам 7008, ДПС 1129) · W | battle?spawnId=sdms_catacomb_of_the_branded_119 HP 7934/7951 MP 463/947 · моб Decayed Ancient Pikeman 2388/2388"
+    },
+    {
+      "line": 8416,
+      "text": "01:02:07.122 [U] клик button#battle-victory-hunt.l2-battle-victory-link.l2-battle-victory-link--muted «Охотиться дальше» в [Победа] | battle?spawnId=sdms_catacomb_of_the_branded_119 HP 7934/7951 MP 463/947 · моб Decayed Ancient Pikeman 2388/2388 | слоты: power:∅ stun:∅ attack:∅ shots:∅ mpPot:∅"
+    },
+    {
+      "line": 8417,
+      "text": "01:02:07.667 [N] сеть POST /game/battle/hunt-continue → 200 · 475 мс · 32030 б | battle?spawnId=sdms_catacomb_of_the_branded_112 HP 7951/7951 MP 469/947 · моб Barrow Priest 2196/2196"
+    },
+    {
+      "line": 8418,
+      "text": "01:02:08.074 [B] бот Катакомбы: назад в Catacomb of the Branded | battle?spawnId=sdms_catacomb_of_the_branded_112 HP 7951/7951 MP 469/947 · моб Barrow Priest 2196/2196 | +лог: Бой начат: Barrow Priest (ур. 42) ⏎ аден +17591 ⏎ SP +1317 ⏎ EXP +29037 ⏎ Спойл Silver Nugget ×6 ⏎ аден +4809 ⏎ SP +366 ⏎ EXP +3498 ⏎ SP +396 ⏎ EXP +3693"
+    },
+    {
+      "line": 8419,
+      "text": "01:02:09.246 [S] ядро v20.7: управление вкладкой получено, запускаю цикл /dungeon.html | dungeon?dungeonId=catacomb_of_the_branded HP 7951/7951 MP 469/947"
+    }
+  ],
+  "finding": "Protection against remembered ordinary Cancel species blocked random hunt in the whole dungeon. After manual hunt-continue HTTP200 started a new battle, the previous nextFight still called catGo. Champion memory is already excluded from this chain blocker.",
+  "limits": "Exact runtime cfg/rt not exported; source reproduction and log sequence support the diagnosis. No live account opened in this fix."
+}
