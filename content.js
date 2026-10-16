@@ -18,7 +18,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -931,9 +931,9 @@ const searchActive = rules => campActive() || campMobOpen().length > 0 || campCh
   || rules.some(x => !x.neg && ((x.quest && questHere()) || x.champ || (!!x.name && L2V7Modules.mobfarm.nameHere(x.name))));
 const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: решение «фармлю здесь» держится 3 мин — между проверками цепочка
 // проверка карты каждые N боёв; пока глава ждёт чемпионов — не реже чем раз в 5 боёв (чемпионы появляются и пропадают)
-// v4.30: ищем чемпионов (правило «Чемп» в приоритете) — не реже раза в 20 боёв: при «раз в 100» бот их почти не заставал
-const CHAMP_EVERY = 20;
-// 10.0.5 (игрок 13.10: «автопоиск чемпионов раз в 20 убитых мобов»): карта ради чемпионов — раз в cfg.champEvery боёв (20), и при «0 = никогда»
+// 17.10.2026: резервный интервал поиска чемпионов — 30 боёв по просьбе игрока.
+const CHAMP_EVERY = 30;
+// Карта ради чемпионов — раз в cfg.champEvery боёв, в том числе при выключенной общей проверке карты.
 const champEvery = () => Math.max(5, +cfg.champEvery || CHAMP_EVERY);
 const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.neg);
 // 7.1.31 (просьба игрока: «поставил 99999, а он всё равно проверяет карту»): 0 — карту по плану НЕ проверять никогда, только цепочка
@@ -5787,6 +5787,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     for (const [k, p] of Object.entries(S)) if (p.dmgN && /^(?:curse|surrender|сurse)/i.test(k)) { S[k] = { ...p, dmg: 0, dmgN: 0 }; sk = true; }
   });
   once('ffDmgMig', () => { if (S['focused force']?.dmgN) { S['focused force'] = { ...S['focused force'], dmg: 0, dmgN: 0 }; sk = true; } });
+  // 17.10.2026: по просьбе игрока карта/чемпионы раз в 30 боёв; свои интервалы сохраняем.
+  once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
   if (sk) rf.skills = S;
