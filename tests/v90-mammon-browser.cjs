@@ -110,7 +110,7 @@ const PAGES = {
     const goU = await page.evaluate(() => window.__mockState?.rt?.mmGoReq?.kind);
     if (goO !== 'order' || goU !== 'up') { console.error('FAIL: Mammon go buttons', goO, goU); process.exit(1); }
     const ok = /Stem ×42/.test(t) && /1 Coin of Luck \+ 1\s500\s000 адены/.test(t) && /Pilgrim's Necropolis/.test(t) && /Catacomb of the Witch/.test(t) && /добываю Mithril Ore/.test(t)
-      && /≈ Lv\.2→3/.test(t) && /Всего наперёд до Lv\.3: 1\s500\s000 адены \+ 3 Coin of Luck/.test(t) && /Varnish\s+90\s+\?\s+90/.test(t) && /Передать крафтеру/.test(t) && /Steel\s+18\s+5 Iron Ore \+ 5 Varnish/.test(t)
+      && /≈ Lv\.2→3/.test(t) && /Всего наперёд до Lv\.3: 1\s500\s000 адены \+ 3 Coin of Luck/.test(t) && /Varnish\s+90\s+\?\s+90/.test(t) && /Нужно изготовить/.test(t) && /Steel\s+18\s+5 Iron Ore \+ 5 Varnish/.test(t)
       && /M\.Def|HP: 200 → 220/.test(t) && opts === 24 && sel === '920018' && !overflow && req && !errs.length;
     if (!ok) { console.error('FAIL 4', JSON.stringify({ w, t: t.slice(0, 900), opts, sel, overflow, req, errs })); process.exit(1); }
     if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT + '-' + w + '.png', fullPage: true });

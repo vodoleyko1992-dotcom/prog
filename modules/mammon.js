@@ -410,13 +410,12 @@ function want() {
   const o = env.rt.mmOrder, now = Date.now(), tried = env.rt.mmTried || {};
   if (env.cfg.mmOrders !== false && o?.st === 'OPEN' && o.qty > 0 && o.have >= o.qty && !tried[o.id] && o.exp - now > 60000)
     return { kind: 'order', id: o.id, why: `заказ ${o.res} ×${o.qty}` };
-  const cw = craftWant(now); if (cw?.cmd && !cw.drop) return cw;
+  // 20.7: отправка сырья стороннему крафтеру удалена; план потребностей остаётся.
   const hw = env.handWant?.(now); if (hw && !hw.drop) return hw;   // 10.0.7: «📤 Передать основному сейчас» (modules/subclass.js)
   // 10.0 (аудит): вложение не забирается (инвентарь полон, кнопки нет) — не ходить на почту раз в 10 мин: повтор, когда почта изменилась, или раз в 2 ч
   const uncSig = (env.rt.mmMail?.unc || []).map(a => a.a).join(','), cf = env.rt.mmClaimFail;
   if (env.rt.mmMail?.unc?.length && env.cfg.mmMailClaim !== false && now - (env.rt.mmClaimT || 0) > UP_RETRY / 3 && !(cf?.sig === uncSig && now - (cf.t || 0) < 2 * 3600000))
     return { kind: 'claim', why: `в почте предметов: ${env.rt.mmMail.unc.length} (${env.rt.mmMail.unc.slice(0, 3).map(a => `${a.n} ×${fmtA(a.q)} от ${a.s}`).join(', ')})` };
-  if (cw && !cw.drop) return cw;
   if (env.rt.mmSmithReq) return { kind: 'smith', why: 'узнать цены у кузнеца (по кнопке)' };
   const p = env.cfg.mmGoalItem ? goalPlan() : null;
   // 9.2.5: всё на следующий уровень собрано (материалы по сумке, Coin of Luck — если сумка его знает) — летим улучшать. После неудачи — не чаще раза в 30 мин
@@ -1069,6 +1068,15 @@ async function claimStep(J) {
 async function mmStep() {
   const J = env.rt.mmJob, active = guard(J);
   if (!active()) { if (J && env.on !== false && env.tabOwner !== false && J.context?.char === (env.rt.char || '')) await env.setRt({ mmJob: null }); return false; }
+  // 20.7: старые команды/партии не возобновляют отправку после обновления.
+  if (env.rt.mmCraftReq) await env.setRt({ mmCraftReq: null, mmCraftSay: { t: Date.now(), why: 'Отправка ресурсов крафтеру удалена' } });
+  if (!active()) return false;
+  if (J?.kind === 'send' && !J.hand) {
+    if (env.payments?.blocked()) { await paymentReconcile(); waitPayment(); return true; }
+    // Сохраняем учёт уже отправленного; неизвестную оплату не объявляем отменённой.
+    if (J.cur && J.cur.state !== 'prepared') { env.setStatus('Прежняя отправка крафтеру требует сверки; повтор запрещён'); return true; }
+    await env.setRt({ mmJob: null }); return false;
+  }
   if (J) {
     if (env.isBattle()) return false;
     if (J.paymentAction === 'teleport' && J.payment) {
@@ -1096,8 +1104,6 @@ async function mmStep() {
   if (env.cfg.mmGoalItem && Date.now() - goalT > 30000) { goalT = Date.now(); await gearDb(); env.itemsDb?.().catch?.(() => {}); goalNote(); }
   if (!active()) return false;
   const g = goReq();
-  const cw = craftWant();
-  if (cw?.drop) { env.rec('B', 'Маммон', `кнопка «отправить крафтеру сейчас»: ${cw.drop}`); await env.setRt({ mmCraftReq: null, mmCraftSay: { t: Date.now(), why: cw.drop } }); return false; }
   const hw = env.handWant?.();
   if (hw?.drop) { env.rec('B', 'саб', `кнопка «передать основному сейчас»: ${hw.drop}`); await env.setRt({ subHandReq: null, subHandSay: { t: Date.now(), why: hw.drop } }); return false; }
   if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : env.rt.mmGoReq.kind === 'visit' ? `прийти к ${NPC_NAME[env.rt.mmGoReq.npc] || 'торговцу'}` : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }

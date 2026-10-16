@@ -1,0 +1,14 @@
+'use strict';
+// 17.10: ни старые настройки, ни ручная команда не возобновляют удалённую отправку.
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const root=path.join(__dirname,'..'),source=fs.readFileSync(path.join(root,'modules/mammon.js'),'utf8');
+function fixture(extra={}){const box={location:{pathname:'/map.html'},document:{},sessionStorage:{getItem(){},setItem(){}}};vm.runInNewContext(source,box);let actions=0;const env={rt:{char:'Hero',mmEq:{belt:[920018,0]},mmOrder:null,...extra},cfg:{mmGoalItem:920018,mmGoalLvl:1,mmCraftSend:true,mmCraftNote:true,mmOrders:false,mmSmithAuto:false,mmUpgrade:false,mmMailClaim:false},on:true,tabOwner:true,autonomyMode:()=> 'hunt',isBattle:()=>false,fishNow:()=>false,invQty:id=>({1458:100,1869:115,1876:100,1865:20}[id]||0),ITEMS:{},FARM:{res:{}},setRt:async p=>Object.assign(env.rt,p),rec(){},setStatus(){},fire(){actions++;throw Error('не должно быть отправки')},gameGet(){actions++;throw Error('не должно быть переходов/GET')},sleep:async()=>{}};return {env,M:box.L2V7Factories.mammon(env),actions:()=>actions};}
+(async()=>{
+ for(const extra of [{},{mmCraftReq:{t:Date.now()}},{mmCraft:{to:'Skye',at:{1869:15},pend:[[1865,15,'Varnish']]}}]){const f=fixture(extra);assert.notEqual(f.M.want()?.kind,'send');assert.notEqual(f.M.chainWant()?.kind,'send');assert.equal(f.actions(),0)}
+ for(const cur of [undefined,{state:'prepared'}]){const f=fixture({mmCraftReq:{t:Date.now()},mmCraft:{at:{1869:15}},mmJob:{kind:'send',cmd:true,t:Date.now(),items:[[1869,15,'Iron Ore']],cur}});assert.equal(await f.M.mmStep(),false);assert.equal(f.env.rt.mmJob,null);assert.equal(f.env.rt.mmCraftReq,null);assert.equal(f.env.rt.mmCraft.at[1869],15);assert.equal(f.actions(),0)}
+ {const f=fixture({mmJob:{kind:'send',cur:{state:'sent'}}});assert.equal(await f.M.mmStep(),true);assert.equal(f.env.rt.mmJob.cur.state,'sent');assert.equal(f.actions(),0)}
+ {const f=fixture({mmJob:{kind:'send',cur:{state:'sent'}}});f.env.payments={blocked:()=>true,pending:()=>null};await f.M.mmStep();assert.ok(f.env.rt.mmJob);assert.equal(f.actions(),0)}
+ {const f=fixture();const p=f.M.goalAll();assert.ok(p.raw.length);assert.ok(p.craft.length);assert.ok(p.lv.length);assert.equal(p.raw.find(x=>x.id===1865).need,15);assert.equal(p.raw.find(x=>x.id===1865).miss,0);}
+ const html=fs.readFileSync(path.join(root,'popup.html'),'utf8');for(const id of ['mmCraftGo','mmCraftSend','mmCraftNote','mmCrafter','mmCraftScope'])assert.ok(!html.includes('id="'+id+'"'));assert.ok(html.includes('id="mmPlanBox"'));assert.ok(html.includes('id="mmMailClaim"'));
+ console.log('PASS: удалены ручная/автоматическая отправка и возобновление; сохранены потребности, почта, учёт и неизвестный исход');
+})().catch(e=>{console.error(e);process.exitCode=1});
