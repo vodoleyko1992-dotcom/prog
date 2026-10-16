@@ -28,9 +28,10 @@ const unknown=process.argv.includes('--unknown');
  await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
  const ui=h.popup.locator('#enchantPanel');await until(()=>ui.locator('[data-command="refresh"]').count());await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
  await ui.locator('[data-candidate]').selectOption('0');await ui.locator('[data-add]').click();await until(()=>ui.locator('[data-key]').count());
+ await ui.locator('[data-detail=limits]>summary').click();
  for(const key of ['maxAttempts','maxScrolls']){const el=ui.locator('[data-global][data-field="'+key+'"]');await el.fill('2');await el.dispatchEvent('change');await until(async()=> (await h.get(['cfg'])).cfg.enchant[key]===2);await delay(100);}
  await ui.locator('[data-item="weaponMode"]').selectOption('magic');await until(async()=> (await h.get(['cfg'])).cfg.enchant.queue[0].weaponMode==='magic');
- await ui.locator('[data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
+ await ui.locator('[data-detail=permission]').evaluate(el=>el.open=true);await ui.locator('[data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
  await h.click('enchantToggle');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
  if(unknown){
   await until(async()=> (await h.get(['rt'])).rt.enchant?.pending?.state==='unknown',30000);
@@ -42,7 +43,7 @@ const unknown=process.argv.includes('--unknown');
   await h.popup.locator('#enchantPanel [data-command="refresh"]').click();await until(async()=> (await h.get(['rt'])).rt.enchantScan?.revision===101);
   await until(()=>h.popup.locator('#enchantPanel [data-candidate] option').count().then(n=>n===2));await h.popup.locator('#enchantPanel [data-candidate]').selectOption('0');await h.popup.locator('#enchantPanel [data-add]').click();
   await until(async()=> (await h.get(['cfg'])).cfg.enchant.queue.length===1);const selected=(await h.get(['cfg'])).cfg.enchant.queue[0];assert.equal(selected.level,4);assert.equal(selected.targetLevel,5);assert.ok(!result.rt.enchantRecovery.previousKeys.includes(selected.key));
-  await h.popup.locator('#enchantPanel [data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
+  await h.popup.locator('#enchantPanel [data-detail=permission]').evaluate(el=>el.open=true);await h.popup.locator('#enchantPanel [data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
   await h.click('start');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
   await until(async()=> (await h.get(['rt'])).rt.enchant?.reason==='Уровень в панели устарел',15000);assert.equal(posts.length,1);
   await h.g.p.reload();await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="resume"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="resume"]').click();

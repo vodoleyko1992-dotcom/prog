@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),{harness,until}=require('./v1014-core-lifecycle-browser.cjs');
 (async()=>{const h=await harness();try{
  await h.sw.evaluate(async()=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({on:false,cfg:{...cfg,autoTasks:[],enchant:{enabled:false,queue:[],maxAttempts:0,maxScrolls:0}},rt:{...rt,enchant:null,enchantScan:null}})});
- await h.popup.reload();await h.openTab('enchant');const panel=h.popup.locator('#enchantPanel');await until(()=>panel.locator('[data-start-steps] li').count().then(n=>n===6));assert.equal(await panel.locator('[data-command=start]').isDisabled(),true);
+ await h.popup.reload();await h.openTab('enchant');const panel=h.popup.locator('#enchantPanel');await until(()=>panel.locator('[data-start-steps] li').count().then(n=>n===5));assert.equal(await panel.locator('[data-command=start]').isDisabled(),true);
  async function scan(value){await h.sw.evaluate(async value=>{const {rt}=await chrome.storage.local.get('rt');await chrome.storage.local.set({rt:{...rt,enchantScan:{...value,char:rt.char,t:Date.now()}}})},value);}
  await scan({ok:true,items:[{level:25},{level:3,ambiguous:true}],scrolls:{910510:2,910527:3}});await until(async()=>/Неоднозначных экземпляров: 1/.test(await panel.locator('[data-scan-status]').innerText()));assert.match(await panel.locator('[data-scan-status]').innerText(),/Уже \+25: 1/);assert.match(await panel.locator('[data-scroll-stock]').innerText(),/Обычные · D · броня: 2; Благословенные · A · оружие: 3/);
  await scan({ok:false,reason:'Тестовая ошибка чтения'});await until(async()=>/Тестовая ошибка/.test(await panel.locator('[data-scan-status]').innerText()));
