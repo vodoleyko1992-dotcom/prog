@@ -392,7 +392,7 @@ async function fishBattle(act) {
 }
 
 async function fishAct(name) {                   // нажать рыболовный скилл и дождаться ответа в журнале
-  if (!fishOwn()) { const L = []; L.rej = false; L.tmo = true; return L; }
+  if (env.canAct?.() === false || !fishOwn()) { const L = []; L.rej = false; L.tmo = true; return L; }
   fishWatch();
   const before = fishLog(), m0 = env.fishMut, c0 = env.fishCdMsg, hp0 = fishState()?.cur, t0 = Date.now();
   const hint = () => env.$q('.l2-fishing-combat-hint')?.textContent.trim() || '', h0 = hint();
@@ -414,7 +414,7 @@ async function fishAct(name) {                   // нажать рыболов�
   // до своих 15 с. Обрыв ЭТОГО клика (ошибка сети из hook.js, запрос ушёл не раньше клика) — сразу к повтору по свежему состоянию
   let aborted = false, busy = false;
   const got = await env.waitFor(() => {
-    if (!fishOwn()) return true;                 // 10.0.14: капча/Stop передают управление главному циклу, без повторов и reload.
+    if (env.canAct?.() === false || !fishOwn()) return true; // 20.6: смена задач отдаёт старый frame главному циклу. 10.0.14: капча/Stop передают управление главному циклу, без повторов и reload.
     const nf = env.NET_FISH;
     if (nf.t > t0 && nf.code === 'in_battle') return (busy = true);   // 10.0.1: герой в бою — ждать 15 с бесполезно
     if (nf.t > t0 && nf.err && nf.act === name && !(nf.ms > 0 && nf.t - nf.ms < t0 - 150)) return (aborted = true);
@@ -424,7 +424,7 @@ async function fishAct(name) {                   // нажать рыболов�
     if (!f || (hp0 != null && f.cur !== hp0)) return true;
     return fishNewLines(before).some(l => RESP_RE.test(l.t) || env.CD_RE.test(l.t) || /catch|lost|fail|hit/.test(l.cls));
   }, 15000, 25);
-  if (!fishOwn()) { const L = []; L.rej = false; L.tmo = true; return L; }
+  if (env.canAct?.() === false || !fishOwn()) { const L = []; L.rej = false; L.tmo = true; return L; }
   if (busy) { await fishBattle(name); const L = []; L.rej = false; L.tmo = true; return L; }
   if (stuck && env.on) {
     let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.fishReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
@@ -856,7 +856,9 @@ async function fishFightLoop() {
   let reactMs = react();
   for (let guard = 0; guard < 300 && fishOwn() && !env.rt.shop?.urgent; guard++) {   // «Закупить сейчас» — бросаем рыбу
     if (await env.tvtStep?.()) return;
-    if (!fishOwn()) return;
+    // 20.6, лог 16.10 23:31: старый frame запрещает клики после смены задачи.
+    // Возвращаем управление main, чтобы он открыл frame с новым выбором.
+    if (env.canAct?.() === false || !fishOwn()) return;
     const f = fishState();
     if (!f) {
       statPut('fishCastActive', false);           // рыба вытащена или сорвалась — цель скрылась
