@@ -3,6 +3,7 @@
 // в окне бота справа от «🐉 Респ эпиков» две кнопки, кликабельны (окно само pointer-events:none); бот стоит → клик открывает страницу
 // телепорта к NPC; бот работает (on) → в памяти появляется rt.mmGoReq {kind:'visit', npc} через фон, блок показывает «⏳ …»
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
+const {until,delay}=require('./v1014-core-lifecycle-browser.cjs');
 const path = require('path'), root = path.join(__dirname, '..');
 const game = `<!doctype html><html><head><title>L2WAP</title><style>body{margin:0;background:#111}#wrap{width:560px;margin:0 auto;background:#222}#map-mob-list{height:600px}</style></head>
 <body><div id="wrap"><div id="map-mob-list"><a class="l2-map-mob-link">Giant Fungus · ур. 40</a></div><div id="l2-nav-bottom"></div></div></body></html>`;
@@ -10,7 +11,9 @@ const game = `<!doctype html><html><head><title>L2WAP</title><style>body{margin:
   const ctx = await chromium.launchPersistentContext('', { headless: true, executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium',
     args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`] });
   const sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 15000 });
-  await sw.evaluate(() => chrome.storage.local.set({ cfg: { dock: false }, rt: { char: 'Warlock', rbTimer: { b: {} } }, 'rt@Warlock': {} }));
+  // onInstalled дописывает профиль и перезагружает игровые вкладки; первая навигация теста ждёт этой инициализации.
+  await until(()=>sw.evaluate(async()=>{const s=await chrome.storage.local.get(['cfg','rt']);return !!s.cfg&&!!s.rt&&s.cfg.rec===true&&s.cfg.autoSnap===true;}));await delay(200);
+  await sw.evaluate(() => chrome.storage.local.set({ on:false, cfg: { dock: false }, rt: { char: 'Warlock', rbTimer: { b: {} } }, 'rt@Warlock': {} }));
   await ctx.route('https://l2wap.com/**', r => /\.html/.test(r.request().url()) ? r.fulfill({ contentType: 'text/html', body: game }) : r.fulfill({ contentType: 'application/json', body: '{}' }));
   const errs = [], p = await ctx.newPage(); p.on('pageerror', e => errs.push(String(e))); await p.setViewportSize({ width: 1600, height: 900 });
   await p.goto('https://l2wap.com/map.html'); await p.waitForTimeout(3500);

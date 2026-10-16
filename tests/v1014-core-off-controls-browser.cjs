@@ -17,9 +17,13 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert
  await until(()=>h.popup.locator('#faList').textContent().then(t=>t.indexOf('Audit FA Two')<t.indexOf('Audit FA One')));
  await h.popup.evaluate(()=>document.querySelector('#faList [data-fa-del="1"]').click());await until(async()=>String((await h.get(['cfg'])).cfg.faBuffs).replace(/\s/g,'')==='900002');console.log('PASS FA add/reorder/remove updates selected list while off without buying');
  const before=h.g.p.url();
- for(const [button,key] of [['faScanBtn','faScan'],['bagCheck','bagCheck'],['farmScan','farmScan'],['zoneScan','zoneScan'],['recipeScan','recipeScan'],['epicScan','epicScanReq'],['mmPoll','mmPollReq'],['mmGuideNow','farmGuideReq'],['campNow','campaignDue']]){
+ for(const [button,key] of [['faScanBtn','faScan'],['bagCheck','bagCheck'],['farmScan','farmScan'],['zoneScan','zoneScan'],['recipeScan','recipeScan'],['epicScan','epicScanReq'],['mmPoll','mmPollReq'],['mmGuideNow','farmGuideReq']]){
   await h.click(button);await until(async()=>!!(await h.get(['rt'])).rt[key]);assert.equal((await h.get(['on'])).on,false);assert.equal(h.g.p.url(),before);console.log('PASS off request queued',button);
  }
+ // Старое управление кампанией скрыто в пользу разрешённых задач; проверяем только совместимость обработчика.
+ assert.equal(await h.popup.locator('#campNow').isVisible(),false);
+ await h.popup.evaluate(()=>document.querySelector('#campNow').click());
+ await until(async()=>!!(await h.get(['rt'])).rt.campaignDue);assert.equal((await h.get(['on'])).on,false);assert.equal(h.g.p.url(),before);console.log('PASS hidden legacy campaign handler queues request without starting loop');
  await h.g.p.reload();await until(()=>h.g.core('typeof on!=="undefined"'));await delay(600);const queued=await h.get(['on','rt']);assert.equal(queued.on,false);assert.equal(queued.rt.faScan,true);assert.equal(queued.rt.recipeScan,true);assert.equal(h.g.p.url(),before);console.log('PASS queued read-only requests survive reload without starting loop');
  const download=async id=>{const pending=h.popup.waitForEvent('download');await h.click(id);const d=await pending;return fs.readFile(await d.path(),'utf8')};
  const report=await download('learnReport');assert.ok(report.includes('AuditHero'));assert.ok(report.includes('Настройки'));console.log('PASS actual learning report download while off');

@@ -41,13 +41,17 @@ with sync_playwright() as p:
   assert 33 <= metrics['buttonHeight'] <= 41, metrics # compact controls requested
   assert len(errors)==0,errors
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-fishing.png')))
-  # 10.0: сетка режимов открыта по умолчанию, «◫ Быстрые режимы» сворачивает и разворачивает её по-настоящему
+  # 20.3: единый список разрешённых задач вместо удалённых дублирующих кнопок; сворачивание по-прежнему работает.
   assert page.locator('#quickModeGrid').is_visible()
   page.locator('#modeToggle').click()
   assert not page.locator('#quickModeGrid').is_visible()
   page.locator('#modeToggle').click()
   assert page.locator('#quickModeGrid').is_visible()
-  assert page.locator('#quickModeGrid button[data-mode]').count()==8   # 10.0.17: + отдельный режим автозаточки
+  assert page.locator('#quickModeGrid button[data-mode]').count()==0
+  tasks=page.locator('#autoTaskSelection input[data-auto-task]')
+  assert tasks.count()==15
+  assert set(tasks.evaluate_all('(els)=>els.map(e=>e.dataset.autoTask)'))=={'tvt','enchant','epic','raid','quests','fish','cat','auto','farm','mammon','dailies','clan','pvp','petbuff','resources'}
+  assert page.locator('#autoTaskSelection').is_visible()
   page.close()
  browser.close()
-print('PASS: Classic in-game layout, 13-module navigation, 375px dock, +10 setting, zero console errors')
+print('PASS: Classic in-game layout, 11 sections, 15 allowed tasks, 375px dock, +10 setting, zero console errors')

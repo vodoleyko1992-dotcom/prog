@@ -37,12 +37,12 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   const reload=async()=>{await h.popup.reload();await until(()=>ui.locator('[data-command="refresh"]').count());};
   const select=async id=>{if(id==='enchantModeToggle')await nav('enchant');await clickMode(id);await h.click('start');await nav('enchant');await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'),30000);};
   const status=async()=>h.g.core('({on,running,owner:tabOwner,mode:autonomyMode(),status:rt.status,enchant:rt.enchant})');
-  const noActions=async(label,ms=1300)=>{
+  const noActions=async(label,ms=1300,mode='enchant')=>{
    const mark=traffic.length,url=h.g.p.url();await delay(ms);
    assert.equal(h.g.p.url(),url,label+': unexpected navigation');
    // 10.0.22: включённый TvT проверяет регистрацию даже в заточке; разрешён только GET статуса, не переход/POST/бой.
    assert.deepEqual(traffic.slice(mark).filter(r=>!(r.method==='GET'&&r.path==='/game/tvt')).filter(r=>r.method!=='GET'||/battle|raid|rb-boss|quest|teleport|tvt|fishing|mammon|magister/.test(r.path)),[],label+': unrelated automation');
-   const current=await status();assert.equal(current.mode,'enchant');assert.match(current.status,/^Заточка:/);pass(label);
+   const current=await status();assert.equal(current.mode,mode);if(mode==='enchant')assert.match(current.status,/^Заточка:/);pass(label);
   };
 
   await patch({...Object.fromEntries(modes.map(k=>[k,true])),enchantMode:false,enchant:config,...Object.fromEntries(automatic.map(k=>[k,true])),rbBetween:true,rec:false,autoSnap:false},
@@ -89,10 +89,14 @@ const pass=name=>{passed++;console.log('PASS '+name);};
    await noActions(name+': основной цикл остаётся на месте');
   }
   const session={v:1,char:'AuditHero',runId:'saved-paused',status:'paused',reason:'Пауза игрока',startedAt:1,items:[{...item,start:3,peak:3,attempts:0,successes:0,failures:0,failStreak:0,scrolls:0,adena:0,unknown:0,reservedScrolls:0,done:true}],totals,history:oldHistory,pending:null,nextAt:0,conflicts:0,home:'/map.html'};
-  await patch({enchant:saved});
+  // Завершённая заточка уступает следующей разрешённой задаче. Здесь выбраны только заточка и TvT:
+  // после done остаётся ожидание, а не ранее разрешённые в профиле Маммон/дейлики.
+  await patch({enchant:saved,autoTasks:['enchant','tvt']});
+  await until(()=>h.g.core('cfg.autoTasks.length===2 && cfg.autoTasks.includes("enchant") && cfg.autoTasks.includes("tvt")'));
   for(const phase of ['paused','done']){
    await h.g.core('setRt({enchant:'+JSON.stringify({...session,status:phase})+'})');
-   await noActions('сохранённая серия '+phase+': нет фарма, рейда или автоматического квеста');
+   await noActions('сохранённая серия '+phase+': нет фарма, рейда или автоматического квеста',1300,phase==='done'?'tasks':'enchant');
+   assert.deepEqual((await h.get(['cfg'])).cfg.autoTasks,['enchant','tvt']);
    assert.deepEqual((await h.get(['rt'])).rt.enchant.history,oldHistory);
   }
 

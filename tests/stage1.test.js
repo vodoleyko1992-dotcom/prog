@@ -90,7 +90,7 @@ function checkSafety() {
   assert(allGameplay.includes("env.rt.epic?.step === 'retreatVerify' && ctx.rb"), 'Retreat verifies in battle');
   assert(allGameplay.includes("E.retreatFailed) return epicGiveUp"), 'Failed leave suppresses attempts');
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
-  assert.equal(manifest.version, '20.2');
+  assert.equal(manifest.version, '20.3');
   console.log('PASS: ownership and retreat protections, extension version');
 }
 
