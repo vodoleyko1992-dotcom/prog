@@ -145,6 +145,9 @@ async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
 }
 async function paymentFire(p,button) {
   if(!p)return false;
+  // 16.10, журнал07:48: native-магазин перерисовывает строки при focus/GET. До sent
+  // удалённая/заблокированная кнопка точно не отправляла запрос — намерение можно отменить.
+  if(!button||button.isConnected===false||button.disabled||env.shown?.(button)===false){if(!p.legacy)await env.payments.cancel(p);return false;}
   if(!p.legacy&&!env.payments.sent(p)){await env.payments.cancel(p);return false;}
   if(env.fire(button)===false){if(!p.legacy)await env.payments.cancel(p,{notSent:true});return false;}
   return true;
@@ -566,11 +569,22 @@ async function fishBuy(offer, packs, what) {
     return false;
   }
   const msg0 = env.$q('#fishing-starter-success')?.textContent || '';
-  const btn = row.querySelector('button.l2-fishing-starter-buy-btn') || [...row.querySelectorAll('button')].find(b => /куп|buy|придб/i.test(b.textContent) && !/max|макс/i.test(b.className + b.textContent))
-    || [...row.querySelectorAll('button')].find(b => !/^[+\-−–]$|^\d+$|max|макс/i.test(b.textContent.trim()));
+  const buyButton = r => r && (r.querySelector('button.l2-fishing-starter-buy-btn') || [...r.querySelectorAll('button')].find(b => /куп|buy|придб/i.test(b.textContent) && !/max|макс/i.test(b.className + b.textContent))
+    || [...r.querySelectorAll('button')].find(b => !/^[+\-−–]$|^\d+$|max|макс/i.test(b.textContent.trim())));
+  const btn = buyButton(row);
   if (!btn) { env.rec('B', 'рыбалка: покупка', `${what}: нет кнопки «Купить» · строка: ${html}`); env.fire(env.$q('#fishing-shop-close')); return false; }
   const payment=await paymentPrepare('starter',offer,n,n*price);
-  if(!await paymentFire(payment,btn))return false;
+  if(!payment)return false;
+  // 16.10, журнал07:48: после input и асинхронной подготовки берём живую строку.
+  // При изменившихся количестве/цене отменяем ещё НЕ отправленное намерение, не гадаем по таймауту.
+  const liveRow=findRow(),liveInput=liveRow?.querySelector('input.l2-fishing-starter-qty-input')||(liveRow===row?inp:null);
+  const livePrice=liveRow?.textContent.match(/(\d{1,3}(?:[\s ]\d{3})+|\d+)\s*(аден|adena|адени)/i);
+  const liveCost=liveRow?.querySelector('[data-preview="cost"]');
+  if(!liveRow||!livePrice||num(livePrice[1])!==price||(liveInput?num(liveInput.value)!==n:n!==1)||(liveCost&&num(liveCost.textContent)!==n*price)){
+    if(!payment.legacy)await env.payments.cancel(payment);
+    env.rec('B','рыбалка: покупка',`${what}: строка магазина изменилась до клика — перечитываю, запрос не отправлен`);return false;
+  }
+  if(!await paymentFire(payment,buyButton(liveRow)))return false;
   let ok = await env.waitFor(() => { const m = env.$q('#fishing-starter-success'); return (env.shown(m) && m.textContent !== msg0) || null; }, 1500, 150);
   if (!ok && payment.legacy) {                    // историческая разметка без единой оплаты: окно подтверждения покупки — подтверждаем, только если в нём наше количество
     const dlg = [...document.querySelectorAll('[role="dialog"], [class*="modal"], [class*="confirm"]')].find(d => env.shown(d) && !d.contains(row) && /подтверд|підтверд|confirm|купить|придбати/i.test(d.textContent));
