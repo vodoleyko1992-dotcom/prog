@@ -341,6 +341,18 @@
  },
  {
   "method": "POST",
+  "path": "/character/market/buy-order/sell",
+  "jsFiles": [
+   "market-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-sell-to-buy-order.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
   "path": "/character/market/cancel",
   "jsFiles": [
    "market-coin-of-luck.js",
@@ -373,6 +385,18 @@
   ],
   "pages": [
    "market-coin-buy-orders.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "POST",
+  "path": "/character/market/coin-of-luck/buy-order/sell",
+  "jsFiles": [
+   "market-coin-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-coin-sell-to-buy-order.html"
   ],
   "usedByBot": false,
   "crawledGET": false
@@ -940,6 +964,30 @@
   ],
   "usedByBot": false,
   "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/ashen-bastion/mobs?offset={+}&limit={+}",
+  "jsFiles": [
+   "ashen-bastion.js"
+  ],
+  "pages": [
+   "ashen-bastion.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET",
+  "path": "/game/battle",
+  "jsFiles": [
+   "battle-api-transport.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:36:32.428Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "POST",
@@ -2024,6 +2072,26 @@
   "crawledGET": true
  },
  {
+  "method": "GET",
+  "path": "/game/forum/news/b7dd2c28-7fc3-4015-9a02-bbb661c7d896",
+  "jsFiles": [],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:41:44.314Z",
+  "source": "pages-20261016.json"
+ },
+ {
+  "method": "GET",
+  "path": "/game/forum/news/b7dd2c28-7fc3-4015-9a02-bbb661c7d896/comments",
+  "jsFiles": [],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:41:44.532Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "DELETE/POST",
   "path": "/game/forum/news/{+}",
   "jsFiles": [
@@ -2054,6 +2122,16 @@
   ],
   "usedByBot": false,
   "crawledGET": true
+ },
+ {
+  "method": "GET",
+  "path": "/game/forum/world/weekly-contests/2026-10-05",
+  "jsFiles": [],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:42:18.742Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "GET?",
@@ -2200,6 +2278,19 @@
   ],
   "usedByBot": true,
   "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/item-transfer/candidates",
+  "jsFiles": [
+   "item-transfer-cache.js",
+   "item-transfer.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:38:16.058Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "GET?",
@@ -2493,6 +2584,18 @@
   "crawledGET": true
  },
  {
+  "method": "GET",
+  "path": "/game/map/sync",
+  "jsFiles": [
+   "map.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:36:12.276Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "GET?",
   "path": "/game/map/sync{+}",
   "jsFiles": [
@@ -2500,6 +2603,20 @@
   ],
   "pages": [
    "map.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/market/buy-orders",
+  "jsFiles": [
+   "market-sell-resources.js",
+   "market-sell-to-buy-order.js"
+  ],
+  "pages": [
+   "market-sell-resources.html",
+   "market-sell-to-buy-order.html"
   ],
   "usedByBot": false,
   "crawledGET": true
@@ -2543,6 +2660,18 @@
   ],
   "usedByBot": false,
   "crawledGET": true
+ },
+ {
+  "method": "GET",
+  "path": "/game/market/resource-catalog",
+  "jsFiles": [
+   "market-buy.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:40:28.046Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "POST",
@@ -2845,6 +2974,18 @@
   "crawledGET": true
  },
  {
+  "method": "POST",
+  "path": "/game/premium/purchase-tier",
+  "jsFiles": [
+   "premium-confirm.js"
+  ],
+  "pages": [
+   "premium-confirm.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
   "method": "GET?",
   "path": "/game/public-stats",
   "jsFiles": [
@@ -2869,6 +3010,18 @@
   "crawledGET": false
  },
  {
+  "method": "GET",
+  "path": "/game/quiz/current",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:39:02.709Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "GET?",
   "path": "/game/quiz/current{+}",
   "jsFiles": [
@@ -2891,6 +3044,18 @@
   ],
   "usedByBot": false,
   "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/quiz/log",
+  "jsFiles": [
+   "quiz.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:39:02.722Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "GET?",
@@ -2933,6 +3098,18 @@
   "crawledGET": true
  },
  {
+  "method": "GET",
+  "path": "/game/ratings",
+  "jsFiles": [
+   "ratings-page.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:39:08.082Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "GET?",
   "path": "/game/ratings?type={+}",
   "jsFiles": [
@@ -2955,6 +3132,18 @@
   ],
   "usedByBot": false,
   "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/recipes/sources",
+  "jsFiles": [
+   "forum-recipe-hunt.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:39:09.950Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "GET?",
@@ -3005,6 +3194,18 @@
   "crawledGET": false
  },
  {
+  "method": "GET",
+  "path": "/game/server-news",
+  "jsFiles": [
+   "news.js"
+  ],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:39:15.262Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "POST",
   "path": "/game/server-news/mark-read",
   "jsFiles": [
@@ -3049,6 +3250,43 @@
   "crawledGET": true
  },
  {
+  "method": "POST",
+  "path": "/game/shop/sell",
+  "jsFiles": [
+   "sell-items-bulk.js",
+   "sell-items.js"
+  ],
+  "pages": [
+   "sell-items.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET?",
+  "path": "/game/shop/sell/prices",
+  "jsFiles": [
+   "gm-shop-sell-nav.js",
+   "sell-items.js"
+  ],
+  "pages": [
+   "gm-shop.html",
+   "sell-items.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET",
+  "path": "/game/siege/l2dop_goddard/state",
+  "jsFiles": [],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:34:36.356Z",
+  "source": "pages-20261016.json"
+ },
+ {
   "method": "GET?",
   "path": "/game/siege/schedule",
   "jsFiles": [
@@ -3080,6 +3318,32 @@
   ],
   "usedByBot": false,
   "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/skill-icon/{+}",
+  "jsFiles": [
+   "battle-active-view-renderer.js",
+   "battle-hotbar.js",
+   "tvt-arena-preview.js"
+  ],
+  "pages": [
+   "battle.html",
+   "skill-panel.html",
+   "tvt-arena.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": false
+ },
+ {
+  "method": "GET",
+  "path": "/game/spawn/dense_28688/info",
+  "jsFiles": [],
+  "pages": [],
+  "usedByBot": false,
+  "crawledGET": true,
+  "verifiedAt": "2026-10-16T11:31:15.367Z",
+  "source": "pages-20261016.json"
  },
  {
   "method": "GET?",
@@ -3149,6 +3413,21 @@
  },
  {
   "method": "GET?",
+  "path": "/game/story-quests/noblesse",
+  "jsFiles": [
+   "map-profession-quest-markers.js",
+   "noblesse-quest.js"
+  ],
+  "pages": [
+   "dungeon.html",
+   "map.html",
+   "noblesse-quest.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
   "path": "/game/story-quests/starter-saga",
   "jsFiles": [
    "city.js",
@@ -3160,6 +3439,18 @@
    "dungeon.html",
    "map.html",
    "starter-story-quest.html"
+  ],
+  "usedByBot": false,
+  "crawledGET": true
+ },
+ {
+  "method": "GET?",
+  "path": "/game/story-quests/subclass",
+  "jsFiles": [
+   "subclass-quest.js"
+  ],
+  "pages": [
+   "subclass-quest.html"
   ],
   "usedByBot": false,
   "crawledGET": true
@@ -3567,137 +3858,5 @@
   ],
   "usedByBot": false,
   "crawledGET": false
- },
- {
-  "method": "GET?",
-  "path": "/game/ashen-bastion/mobs?offset={+}&limit={+}",
-  "jsFiles": [
-   "ashen-bastion.js"
-  ],
-  "pages": [
-   "ashen-bastion.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": true
- },
- {
-  "method": "GET?",
-  "path": "/game/shop/sell/prices",
-  "jsFiles": [
-   "gm-shop-sell-nav.js",
-   "sell-items.js"
-  ],
-  "pages": [
-   "gm-shop.html",
-   "sell-items.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": true
- },
- {
-  "method": "POST",
-  "path": "/game/shop/sell",
-  "jsFiles": [
-   "sell-items-bulk.js",
-   "sell-items.js"
-  ],
-  "pages": [
-   "sell-items.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": false
- },
- {
-  "method": "GET?",
-  "path": "/game/market/buy-orders",
-  "jsFiles": [
-   "market-sell-resources.js",
-   "market-sell-to-buy-order.js"
-  ],
-  "pages": [
-   "market-sell-resources.html",
-   "market-sell-to-buy-order.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": true
- },
- {
-  "method": "POST",
-  "path": "/character/market/buy-order/sell",
-  "jsFiles": [
-   "market-sell-to-buy-order.js"
-  ],
-  "pages": [
-   "market-sell-to-buy-order.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": false
- },
- {
-  "method": "POST",
-  "path": "/character/market/coin-of-luck/buy-order/sell",
-  "jsFiles": [
-   "market-coin-sell-to-buy-order.js"
-  ],
-  "pages": [
-   "market-coin-sell-to-buy-order.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": false
- },
- {
-  "method": "POST",
-  "path": "/game/premium/purchase-tier",
-  "jsFiles": [
-   "premium-confirm.js"
-  ],
-  "pages": [
-   "premium-confirm.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": false
- },
- {
-  "method": "GET?",
-  "path": "/game/skill-icon/{+}",
-  "jsFiles": [
-   "battle-active-view-renderer.js",
-   "battle-hotbar.js",
-   "tvt-arena-preview.js"
-  ],
-  "pages": [
-   "battle.html",
-   "skill-panel.html",
-   "tvt-arena.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": false
- },
- {
-  "method": "GET?",
-  "path": "/game/story-quests/noblesse",
-  "jsFiles": [
-   "map-profession-quest-markers.js",
-   "noblesse-quest.js"
-  ],
-  "pages": [
-   "dungeon.html",
-   "map.html",
-   "noblesse-quest.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": true
- },
- {
-  "method": "GET?",
-  "path": "/game/story-quests/subclass",
-  "jsFiles": [
-   "subclass-quest.js"
-  ],
-  "pages": [
-   "subclass-quest.html"
-  ],
-  "usedByBot": false,
-  "crawledGET": true
  }
 ]

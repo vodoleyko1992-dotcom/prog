@@ -1,6 +1,6 @@
 {
  "starterShop": {
-  "availableAdena": 66358189,
+  "availableAdena": 360618737,
   "offers": [
    {
     "key": "starter_rod",
@@ -29,7 +29,7 @@
   ]
  },
  "economy": {
-  "proofQty": 239,
+  "proofQty": 4482,
   "proofName": "Proof of Catching a Fish",
   "proofIcon": "/icons/fishing/proof_of_catching_a_fish.png",
   "exchanges": [
@@ -40,7 +40,7 @@
     "icon": "/icons/fishing/fish_oil.png",
     "requiredQty": 25,
     "proofReward": 1,
-    "ownedQty": 18,
+    "ownedQty": 1,
     "canExchange": false,
     "maxExchangeCount": 0
    },
@@ -51,7 +51,7 @@
     "icon": "/icons/fishing/fish_oil.png",
     "requiredQty": 2,
     "proofReward": 1,
-    "ownedQty": 0,
+    "ownedQty": 1,
     "canExchange": false,
     "maxExchangeCount": 0
    },
@@ -73,7 +73,7 @@
     "icon": "/icons/fishing/fish_scale.png",
     "requiredQty": 5,
     "proofReward": 1,
-    "ownedQty": 1,
+    "ownedQty": 4,
     "canExchange": false,
     "maxExchangeCount": 0
    },
@@ -117,7 +117,7 @@
     "icon": "/icons/fishing/thin_fish_bone.png",
     "requiredQty": 4,
     "proofReward": 1,
-    "ownedQty": 0,
+    "ownedQty": 1,
     "canExchange": false,
     "maxExchangeCount": 0
    },
@@ -208,7 +208,7 @@
       ],
       "priceProof": 500,
       "priceAdena": 500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "cloak_c",
@@ -233,7 +233,7 @@
       ],
       "priceProof": 1500,
       "priceAdena": 1500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "cloak_b",
@@ -258,7 +258,7 @@
       ],
       "priceProof": 3500,
       "priceAdena": 5000000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "cloak_a",
@@ -343,7 +343,7 @@
       ],
       "priceProof": 500,
       "priceAdena": 500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "tattoo_c",
@@ -372,7 +372,7 @@
       ],
       "priceProof": 1500,
       "priceAdena": 1500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "tattoo_b",
@@ -401,7 +401,7 @@
       ],
       "priceProof": 3500,
       "priceAdena": 5000000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "tattoo_a",
@@ -494,7 +494,7 @@
       ],
       "priceProof": 500,
       "priceAdena": 500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "belt_c",
@@ -523,7 +523,7 @@
       ],
       "priceProof": 1500,
       "priceAdena": 1500000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "belt_b",
@@ -552,7 +552,7 @@
       ],
       "priceProof": 3500,
       "priceAdena": 5000000,
-      "canBuy": false
+      "canBuy": true
      },
      {
       "key": "belt_a",
@@ -634,38 +634,38 @@
   }
  ],
  "bait": {
-  "itemId": 6519,
-  "name": "Наживка",
-  "icon": "/icons/fishing/bait_basic.png",
-  "quantity": 7432
+  "itemId": 910602,
+  "name": "Якісна наживка",
+  "icon": "/icons/fishing/bait_good.png",
+  "quantity": 1059
  },
  "basicBait": {
   "itemId": 6519,
   "name": "Наживка",
   "icon": "/icons/fishing/bait_basic.png",
-  "quantity": 7432,
-  "selected": true
+  "quantity": 471,
+  "selected": false
  },
  "goodBait": {
   "itemId": 910602,
   "name": "Якісна наживка",
   "icon": "/icons/fishing/bait_good.png",
-  "quantity": 342,
-  "selected": false
+  "quantity": 1059,
+  "selected": true
  },
  "fishingSoulshot": {
   "itemId": 910601,
   "name": "Рибальський заряд душі",
   "icon": "/icons/fishing/fishing_soulshot.png",
-  "quantity": 38321,
+  "quantity": 4367,
   "enabled": true
  },
  "fishingTime": {
-  "remainingMs": 44461177,
+  "remainingMs": 94005670,
   "active": false,
   "activeUntilMs": 0,
   "activeGraceMs": 30000,
-  "availableAdena": 66358189,
+  "availableAdena": 360618737,
   "canFish": true,
   "packages": [
    {
@@ -673,28 +673,28 @@
     "hours": 1,
     "durationMs": 3600000,
     "priceAdena": 3000000,
-    "canBuy": true
+    "canBuy": false
    },
    {
     "key": "2h",
     "hours": 2,
     "durationMs": 7200000,
     "priceAdena": 5500000,
-    "canBuy": true
+    "canBuy": false
    },
    {
     "key": "3h",
     "hours": 3,
     "durationMs": 10800000,
     "priceAdena": 7500000,
-    "canBuy": true
+    "canBuy": false
    },
    {
     "key": "6h",
     "hours": 6,
     "durationMs": 21600000,
     "priceAdena": 14000000,
-    "canBuy": true
+    "canBuy": false
    }
   ]
  },
@@ -705,10 +705,10 @@
   "blockedReason": null
  },
  "training": {
-  "availableSp": 23007946,
+  "availableSp": 285602742,
   "learnedCount": 3,
   "totalCount": 3,
-  "blockedReason": null,
+  "blockedReason": "in_battle",
   "skills": [
    {
     "key": "fishing",
@@ -743,9 +743,13 @@
  },
  "skillTotal": 3,
  "cooldowns": {
-  "pumpingUntil": 1791703064711,
-  "reelingUntil": 1791703065539,
+  "pumpingUntil": 1792139005292,
+  "reelingUntil": 1792139004821,
   "pumpingMs": 500,
   "reelingMs": 700
+ },
+ "_snapshot": {
+  "time": "2026-10-16T11:37:51.027Z",
+  "source": "GET /game/fishing/state; платнаярыбалка/забросынами невыполнялись"
  }
 }

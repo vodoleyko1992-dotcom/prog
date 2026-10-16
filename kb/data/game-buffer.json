@@ -476,6 +476,200 @@
     ]
    },
    {
+    "id": "summon",
+    "titleUk": "Повний баф сумона",
+    "applyLabelUk": "Взяти баф сумона",
+    "feeAdena": "10000000",
+    "feeCoinOfLuck": 0,
+    "feeHintUk": "Ціна: 10000000 адена",
+    "durationHintUk": "Тривалість: 5 годин",
+    "skills": [
+     {
+      "skillId": 1068,
+      "nameUk": "Сила",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "P.Atk ↑"
+     },
+     {
+      "skillId": 1388,
+      "nameUk": "Велика сила",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "P.Atk ↑"
+     },
+     {
+      "skillId": 1062,
+      "nameUk": "Дух берсерка",
+      "level": 2,
+      "durationSec": 18000,
+      "descriptionUk": "Атака і швидкості ↑, захист ↓"
+     },
+     {
+      "skillId": 271,
+      "nameUk": "Dance of Warrior",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "P.Atk групи ↑"
+     },
+     {
+      "skillId": 1077,
+      "nameUk": "Фокус",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "Шанс фіз. крита ↑"
+     },
+     {
+      "skillId": 1242,
+      "nameUk": "Шепіт смерті",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "Сила фізичного критичного удару ↑"
+     },
+     {
+      "skillId": 274,
+      "nameUk": "Dance of Fire",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "увеличивает мощность Крит. Атк. членов группы. Следующие песни и танцы потребляют д…"
+     },
+     {
+      "skillId": 269,
+      "nameUk": "Song of Hunter",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Шанс фіз. крита групи ↑"
+     },
+     {
+      "skillId": 4699,
+      "iconSkillId": 1331,
+      "nameUk": "Благословення Королеви",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "Фіз. Crit Rate +30% і урон фіз. крита +25%."
+     },
+     {
+      "skillId": 1059,
+      "nameUk": "Тимчасово увеличивает M",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "M.Atk ↑"
+     },
+     {
+      "skillId": 273,
+      "nameUk": "Dance of Mystic",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "M.Atk групи ↑"
+     },
+     {
+      "skillId": 1303,
+      "nameUk": "Тимчасово увеличивает шанс нанесения Крит",
+      "level": 2,
+      "durationSec": 18000,
+      "descriptionUk": "Шанс маг. крита ↑"
+     },
+     {
+      "skillId": 365,
+      "nameUk": "Dance of Siren",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Магічний крит групи ↑"
+     },
+     {
+      "skillId": 1240,
+      "nameUk": "Настанова",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "Точність ↑"
+     },
+     {
+      "skillId": 272,
+      "nameUk": "Dance of Inspiration",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Точність групи ↑"
+     },
+     {
+      "skillId": 1040,
+      "nameUk": "Щит",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "P.Def ↑"
+     },
+     {
+      "skillId": 1389,
+      "nameUk": "Великий щит",
+      "level": 3,
+      "durationSec": 18000,
+      "descriptionUk": "P.Def ↑"
+     },
+     {
+      "skillId": 1036,
+      "nameUk": "Магічний бар’єр",
+      "level": 2,
+      "durationSec": 18000,
+      "descriptionUk": "M.Def ↑"
+     },
+     {
+      "skillId": 1045,
+      "nameUk": "Благословення тіла",
+      "level": 6,
+      "durationSec": 18000,
+      "descriptionUk": "Max HP ↑"
+     },
+     {
+      "skillId": 264,
+      "nameUk": "Song of Earth",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "P.Def групи ↑"
+     },
+     {
+      "skillId": 267,
+      "nameUk": "Song of Warding",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "M.Def групи ↑"
+     },
+     {
+      "skillId": 304,
+      "nameUk": "Song of Vitality",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Max HP групи ↑"
+     },
+     {
+      "skillId": 1268,
+      "nameUk": "Vampiric Rage",
+      "level": 4,
+      "durationSec": 18000,
+      "descriptionUk": "Вампіризм від звичайних фіз. атак"
+     },
+     {
+      "skillId": 310,
+      "nameUk": "Dance of Vampire",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Члены группы восстанавливают часть HP за счет нанесенного врагу урона. Эффект не ра…"
+     },
+     {
+      "skillId": 1356,
+      "nameUk": "Prophecy of Fire",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "HP, P.Atk, захист, Atk.Spd і крит ↑; Speed ↓"
+     },
+     {
+      "skillId": 1413,
+      "nameUk": "Magnus' Chant",
+      "level": 1,
+      "durationSec": 18000,
+      "descriptionUk": "Max MP, M.Atk, M.Def, Cast.Spd, MP Regen і резисти ↑"
+     }
+    ]
+   },
+   {
     "id": "greater",
     "titleUk": "Greater Buffs",
     "applyLabelUk": "Натисніть на іконку, щоб вибрати потрібний вам баф!",
@@ -542,6 +736,7 @@
  },
  "fastAden": {
   "fastAdenItemId": 920048,
+  "fastAdenBalance": 159,
   "sets": [
    {
     "id": "warrior",
@@ -1198,5 +1393,16 @@
     "quantity": 1
    }
   ]
+ },
+ "_snapshot": {
+  "date": "2026-10-16",
+  "fastAdenBalances": {
+   "beforeOwnMagePayments": 189,
+   "afterOwnMagePayments": 169
+  },
+  "summonAppliedCount": 25,
+  "summonCatalogCount": 26,
+  "catalogOnlySkillId": 1413,
+  "evidence": "../../docs/evidence/WARLOCK-PAGES-2026-10-16.json"
  }
 }

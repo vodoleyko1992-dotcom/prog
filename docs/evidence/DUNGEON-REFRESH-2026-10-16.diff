@@ -1,0 +1,80 @@
+--- game-before/dungeon.js
++++ game-after/dungeon.js
+@@ -8,8 +8,6 @@
+ 
+   var mobDrops = window.L2DungeonMobModalDrops || {};
+   var professionQuestMarkers = window.L2MapProfessionQuestMarkers;
+-  var DUNGEON_POLL_IDLE_MS = 5000;
+-  var DUNGEON_POLL_HIDDEN_MS = 30000;
+   var DUNGEON_MOBS_PER_PAGE = 15;
+   var mobListPage = 0;
+   var dungeonViewReadySent = false;
+@@ -437,10 +435,11 @@
+     var mobPageInd = $('dungeon-mob-page-ind');
+     var heroList = $('dungeon-hero-list');
+     var heroSection = $('dungeon-hero-section');
++    var refreshButton = $('dungeon-refresh');
++    var refreshInFlight = false;
+     var battleStartInFlight = false;
+     var pvpStartInFlight = false;
+     var currentDungeon = null;
+-    var pollTimer = null;
+ 
+     if (!dungeonId) {
+       if (errEl) {
+@@ -701,23 +700,29 @@
+       );
+     }
+ 
+-    function schedulePoll() {
+-      if (pollTimer) clearTimeout(pollTimer);
+-      var delay = document.hidden ? DUNGEON_POLL_HIDDEN_MS : DUNGEON_POLL_IDLE_MS;
+-      pollTimer = setTimeout(async function () {
+-        pollTimer = null;
+-        if (document.hidden) {
+-          schedulePoll();
+-          return;
+-        }
++    // Server-authoritative refresh only when the player explicitly requests it.
++    // Initial entry and battle start are already handled by their own API calls.
++    async function refreshOnDemand() {
++      if (refreshInFlight || battleStartInFlight || pvpStartInFlight) return;
++      refreshInFlight = true;
++      if (refreshButton) refreshButton.disabled = true;
++      try {
+         var d = await fetchDungeonView(dungeonId);
+         if (d && d.forbidden) {
+           await resyncAndLeaveDungeon(L2.playerMessageOr(d, ''));
+           return;
+         }
+         if (d) paintDungeon(d);
+-        schedulePoll();
+-      }, delay);
++        else dungeonNotify(tr('dungeon_load_fail', 'Не вдалося оновити список.'));
++      } catch (eRefresh) {
++        dungeonNotify(tr('dungeon_load_fail', 'Не вдалося оновити список.'));
++      } finally {
++        refreshInFlight = false;
++        if (refreshButton) refreshButton.disabled = false;
++      }
++    }
++    if (refreshButton) {
++      refreshButton.addEventListener('click', refreshOnDemand);
+     }
+ 
+     var first = null;
+@@ -752,14 +757,6 @@
+     if (errEl) errEl.hidden = true;
+     paintDungeon(first);
+     markDungeonPageReady('dungeon-view');
+-    schedulePoll();
+-
+-    window.addEventListener('beforeunload', function () {
+-      if (pollTimer) clearTimeout(pollTimer);
+-    });
+-    document.addEventListener('visibilitychange', function () {
+-      if (!document.hidden) schedulePoll();
+-    });
+   }
+ 
+   if (document.readyState === 'loading') {
