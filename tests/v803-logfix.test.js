@@ -8,7 +8,8 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   // 1. пауза на 9-й странице из 14: старые записи на месте, список «несвежий» (перечитка через 3 мин)
   const raidSrc = read('modules/raid.js');
   assert.match(raidSrc, /if \(!nx\) \{ complete = true; break; \}/);
-  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: rbPartialListT\(\), rbScan: null \}\);/);
+  // 20.2: частичный список сохраняется, но не доказывает полноту для перехода к рыбалке.
+  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: rbPartialListT\(\), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null \}\);/);
   // 2. после платного телепорта тура зона сбрасывается (EXP/ч не уходит в прежнюю зону)
   // 10.0.14: резерв передан атомарному helper; очистка зоны по-прежнему идёт до платного клика.
   // 15.10: резерв также содержит явную фазу и время оплаты; сброс старой зоны обязателен по-прежнему.

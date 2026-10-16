@@ -11,7 +11,7 @@ const required = ['fishing','epics','raid','combat','dungeons','tvt','mobfarm','
 // 14.10: отдельная фабрика общей заточки, обязательна в manifest и lazy bridge   // 10.0.7: + заготовка под сабы   // 10.0.6: + серия РБ (что выпало)   // 10.0.5: + чемпионы ради FA   // 10.0.2: + таймеры боссов   // 9.2: + лист врагов; 10.0: + магазин TvT   // 9.0: + Маммон, + квесты сабкласса/Noblesse
 assert.deepEqual(modules.map(s=>path.basename(s,'.js')),required);
 assert.equal(new Set(featurePaths).size,featurePaths.length,'Duplicate script in manifest');
-assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|(?:[89]|10)\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая; 10.0 — десятая
+assert.match(mf.version, /^(?:7\.(?:0\.[01]|1\.[0-9]+|2(?:\.[0-9]+)?)|(?:[89]|10|20)\.[0-9]+(?:\.[0-9]+)?)$/);   // 8.0: и восьмая версия; 9.0 — девятая; 10.0 — десятая; 20.2 — номер по решению пользователя 16.10
 for (const s of featurePaths) assert(fs.existsSync(path.join(root,s)), `Missing module ${s}`);
 const ctx = vm.createContext({
   addEventListener(){}, removeEventListener(){},

@@ -15,7 +15,7 @@ async function fishingRecovery(kind){
   if(p==='/game/tvt')return json({phase:S.tvt?'REGISTRATION':'IDLE',eventId:'fixture-tvt',isRegistered:S.tvt,startsAt:Date.now()+30000,registrationEndsAt:Date.now()+20000,serverNow:Date.now()});
   if(p==='/game/fishing/state'){S.gets++;if(['stop','tvt','selection'].includes(kind)&&S.casts.length&&!S.held){S.held=true;await gate;}state.serverNowMs=Date.now();return json(state);}
   if(p==='/game/fishing/action'){
-   const b=r.request().postDataJSON();if(b.action==='cast'){S.casts.push(b);if(S.casts.length===1){if(kind.startsWith('accepted-lost'))accept();return r.abort('failed');}if(kind==='race'&&S.accepted===0)accept();if(b.expectedRevision!==state.revision)return json({error:'revision_conflict'},409);accept();}
+   const b=r.request().postDataJSON();if(b.action==='cast'){S.casts.push(b);if(S.casts.length===1&&!kind.startsWith('legacy')){if(kind.startsWith('accepted-lost'))accept();return r.abort('failed');}if(kind==='race'&&S.accepted===0)accept();if(b.expectedRevision!==state.revision)return json({error:'revision_conflict'},409);accept();}
    else if(['pumping','reeling'].includes(b.action)){if(b.expectedRevision!==state.revision)return json({error:'revision_conflict'},409);S.hits++;state.revision++;state.target=null;state.logTail=[{kind:'catch',text:'Вы вытащили White Fish.'}];}
    else throw Error('unexpected fishing action '+b.action);
    return json({fishing:state,revision:state.revision,character:char()});
@@ -26,6 +26,18 @@ async function fishingRecovery(kind){
  }catch(e){S.errors.push(e.message);return r.fulfill({status:500,body:'{}'}).catch(()=>{});}});
  await h.ctx.addInitScript(()=>{localStorage.setItem('token','fixture');window.L2={whenReady:f=>f(),applyCharacterSnapshot(){},fetchCatalogHints:async()=>{},lastSnapshot:()=>({revision:100}),authFetch:(u,i)=>fetch(u,i),resyncCharacterAfterConflict:async()=>{await fetch('/character');}};});
  await h.sw.evaluate(async(kind)=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...cfg,autoTasks:['fish','tvt'],tvtOn:true,fishMode:true,fishAutoSetup:false,fishTimeAuto:false,fishAutoBuy:false,fishProcess:false,fishShots:true,fishBait:'basic',rodEnchantTo:0,fishMaxCasts:kind==='accepted-lost-limit'?1:0,reactMin:0,reactMax:0},rt:{...rt,char:'AuditHero',rodLvl:10,fishSetupDone:Date.now(),fishCastPending:null}});},kind);
+ if(kind.startsWith('legacy'))await h.sw.evaluate(async kind=>{
+  const at=Date.now()-10000,{rt}=await chrome.storage.local.get('rt');
+  await chrome.storage.local.set({rt:{...rt,fishCastPending:{char:'AuditHero',at,bait:'basic',before:30,pre:[],refreshed:true}}});
+  const db=await new Promise((res,rej)=>{const r=indexedDB.open('l2bot',3);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+  await new Promise((res,rej)=>{const tx=db.transaction('log','readwrite'),st=tx.objectStore('log'),sid='legacy-fishing-fixture';
+   if(kind==='legacy-full')st.clear();
+   if(kind==='legacy-full')for(let i=0;i<19998;i++)st.add({t:at-100000-i,src:'N',kind:'сеть',what:'old fixture event',sid,st:{page:'fishing'}});
+   st.add({t:at-40,src:'B',kind:'бот',what:'Рыбалка: заброс',sid,st:{page:'fishing'}});
+   st.add({t:at+8000,src:'N',kind:'сеть',what:'POST /game/fishing/action → ошибка: Failed to fetch · 8000 мс',sid,st:{page:'fishing'},data:{q:{action:'cast',expectedRevision:100}}});
+   if(kind==='legacy-ambiguous')st.add({t:at+8001,src:'N',kind:'сеть',what:'POST /game/fishing/action → ошибка: Failed to fetch · 8000 мс',sid,st:{page:'fishing'},data:{q:{action:'cast',expectedRevision:101}}});
+   tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();
+ },kind);
  await h.g.p.goto('https://l2wap.com/fishing.html');await until(()=>h.g.core('typeof L2V7Modules.fishing==="object"'));await h.g.p.waitForSelector('.l2-fishing-hotbar-slot');await h.popup.reload();
  return {h,S,state,release:()=>release(),start:()=>h.click('start'),close:async()=>{release();await h.ctx.close();}};
 }

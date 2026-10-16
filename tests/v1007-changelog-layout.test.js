@@ -14,7 +14,7 @@ const links = [...idx.matchAll(/\]\((docs\/changelog\/CHANGELOG-[^)]+\.md)\)/g)]
 for (const f of hist) assert.ok(links.includes('docs/changelog/' + f), 'в оглавлении нет ссылки на ' + f);
 for (const l of links) assert.ok(fs.existsSync(path.join(root, l)), 'битая ссылка ' + l);
 assert.equal(links.length, new Set(links).size, 'ссылки без повторов');
-assert.ok(links[0].includes('10.0.6') || /10\.0\.([7-9]|\d{2,})|10\.[1-9]/.test(links[0]), 'новые версии сверху: ' + links[0]);   // 10.0.10: двузначный патч
+assert.equal(links[0], 'docs/changelog/CHANGELOG-' + JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8')).version + '.md', 'текущая версия сверху'); // 20.2: номер задаёт manifest, а не диапазон 10.x.
 // сборки не кладут docs/ в пакет
 const ff = fs.readFileSync(path.join(root, 'tests/tools/firefox-build.cjs'), 'utf8');
 const skip = ff.match(/const skip = (\/.*\/);/)[1];

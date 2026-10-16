@@ -589,17 +589,18 @@ async function rbListScan() {                     // все страницы с�
   env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
     env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
-    await env.setRt({ rbScan: null, rbListT: rbPartialListT() });
+    await env.setRt({ rbScan: null, rbListIncomplete: true, rbListVerifiedAt: 0, rbListT: rbPartialListT() });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   // 8.0.3 (лог 11.10 09:04:36: пауза на 9-й странице из 14 — 135 РБ из 197 записались как полный свежий список на 15 мин): прочитан не до
   // конца (пауза/страница не догрузилась) — дописываем к старому и перечитаем через 3 мин
   if (!complete) {
-    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: rbPartialListT(), rbScan: null });
+    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: rbPartialListT(), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null });
     env.rec('B', 'РБ', `список игры прочитан частично (${pages} стр.) — дописал ${n.length} РБ к прежнему, перечитаю через 3 мин`);
     location.href = '/map.html'; await env.sleep(3000); return;
   }
-  await env.setRt({ rbList: all, rbListT: Date.now(), rbScan: null });
+  const verifiedAt = Date.now();
+  await env.setRt({ rbList: all, rbListT: verifiedAt, rbListVerifiedAt: verifiedAt, rbListIncomplete: false, rbScan: null });
   env.rec('B', 'РБ', `список игры: ${n.length} РБ · живых ${n.filter(x => x.alive).length} · доступно мне ${ok.length}`
     + (ok.length ? ` (${ok.sort((a, b) => Math.abs(a.lvl - L) - Math.abs(b.lvl - L)).slice(0, 6).map(x => `${x.name} ${x.lvl}`).join(', ')}…)` : ''));
 }
@@ -953,6 +954,7 @@ function rbTravelBudget(row) {
 
 async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
+  if (phase !== 'wait' && env.rt.rbFishWait) await env.setRt({rbFishWait:null});
   if (H.phase === phase && H.next === next && !Object.keys(extra).length) return;
   await huntSet({ phase, next, ...extra });
   env.setStatus(`Тур РБ: ${next}`);
@@ -1304,14 +1306,26 @@ async function rbHuntStep() {
   plan = rbTourPlan(); rbTourPublish(plan);
   const p = plan.ready[0] || null;
   if (!p) {
+    // Старый кэш мог получить искусственную свежесть после ошибки; для передачи рыбалке нужен полный список.
+    const fishSelected = Array.isArray(env.cfg.autoTasks) && env.cfg.autoTasks.includes('fish');
+    const verified = env.rt.rbListVerifiedAt > 0 && env.rt.rbListVerifiedAt === env.rt.rbListT && !env.rt.rbListIncomplete;
+    if (fishSelected && !verified) {
+      if ((env.rt.rbListVerifyNextAt || 0) > Date.now()) return rbIdleMap('Тур РБ: полный список не подтверждён — жду повторного чтения',active);
+      await env.setRt({rbListVerifyNextAt:Date.now()+180000,rbFishWait:null,rbListT:0});
+      if (!active()) return;
+      if (!isRbPage()) { location.href='/rb-bosses.html?page=1'; await env.sleep(3000); return; }
+      return rbListScan();
+    }
     const why = `подходящих РБ нет по последнему списку — ${rbListWhy(plan)}`;
     const idleN = H.last === why ? Math.min(2, (env.rt.rbIdleN || 0) + 1) : 0, idleMs = RB_IDLE_MS * [1, 2, 4][idleN];
     const retry = plan.blocked.map(x => x.waitMs).filter(x => x > 0), wait = Math.min(idleMs, ...(retry.length ? retry : [idleMs]));
-    const next = `${why}; жду новые РБ${rbIdleFarmAllowed() ? ', фарм на месте при наличии мобов' : ', фарм мобов сейчас не выбран'}; повторная оценка через ${Math.ceil(wait / 60000)} мин`;
+    const next = `${why}; ${fishSelected && verified ? 'перехожу к выбранной рыбалке' : `жду новые РБ${rbIdleFarmAllowed() ? ', фарм на месте при наличии мобов' : ', фарм мобов сейчас не выбран'}`}; повторная оценка через ${Math.ceil(wait / 60000)} мин`;
     if (H.last !== why) env.recBot(`Тур РБ: ${next}`);
     await rbHuntPhase('wait', next, { last: why });
     if (!active()) return;
-    await env.setRt({ rbHuntIdle: Date.now() + wait, rbIdleN: idleN,
+    const idleAt = Date.now();
+    await env.setRt({ rbHuntIdle: idleAt + wait, rbIdleN: idleN,
+      rbFishWait: fishSelected && verified && !env.rt.rbListIncomplete && Object.keys(env.rt.rbList || {}).length > 0 && !env.payments?.blocked?.() && !env.rt.actionPayments?.pending ? {at:idleAt,until:idleAt+wait,listT:env.rt.rbListT||0} : null,
       rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel()?.n || 0, t: Date.now(), sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null } });
     if (!active()) return;
     return rbIdleMap(`Тур РБ: ${next}`,active);

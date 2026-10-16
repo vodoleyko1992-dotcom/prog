@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "10.1",
-  "description": "L2wap Bot 10.1 — квестовые чемпионы и короткая безопасная проба",
+  "version": "20.2",
+  "description": "L2wap Bot 20.2 — полный поиск чемпионов и восстановление рыбалки",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "10.1"
+  "version_name": "20.2"
 }
