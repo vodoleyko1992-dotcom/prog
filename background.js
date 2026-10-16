@@ -413,6 +413,69 @@ async function fishingCastEvidence(at) {
   return fishingCastRevision(rows, at);
 }
 
+function faBuffPendingSpec(p) {
+  const e = p?.evidence, amount = p?.quote?.amount;
+  if (p?.kind !== 'fa-buff' || typeof p.id !== 'string' || !p.id || p.id.length > 256 ||
+    typeof p.char !== 'string' || !p.char || p.char.length > 128 || !Number.isSafeInteger(p.at) || p.at <= 0 ||
+    p.quote?.currency !== 'FA' || !Number.isSafeInteger(amount) || amount <= 0 ||
+    !Array.isArray(e?.ids) || e.ids.length !== 1 || !Number.isSafeInteger(e.ids[0]) || e.ids[0] <= 0 ||
+    !Number.isSafeInteger(e.balance) || e.balance < amount) return null;
+  return { at:p.at, char:p.char, skill:e.ids[0], spent:amount, balance:e.balance - amount };
+}
+// Старые ответы сети обрезаны до 800 символов. Читаем только завершённое поле имени
+// в известном начале character; квитанцию доказывают отдельные новые строки страницы.
+function faBuffJournalReceipt(events, p) {
+  const spec = faBuffPendingSpec(p);
+  if (!spec || !Array.isArray(events) || events.length > MAX_EV) return null;
+  const { at, char, skill, spent, balance } = spec;
+  const rows = events.filter(e => e && Number.isSafeInteger(e.t) && e.t >= at - 30000 && e.t <= at + 30000);
+  const faPost = e => e.src === 'N' && /^POST \/character\/town\/fast-aden-buffer\/apply(?: \?[^→]*)? →/.test(e.what || '');
+  const posts = rows.filter(faPost);
+  const candidates = posts.map(e => {
+    const m = String(e.what).match(/^POST \/character\/town\/fast-aden-buffer\/apply → 200 · ([0-9]+(?:\.[0-9]+)?) мс · [0-9]+ б$/);
+    const ms = m ? Number(m[1]) : NaN;
+    return { e, start:e.t - ms, ms };
+  }).filter(x => Number.isFinite(x.ms) && x.ms >= 0 && x.start >= at && x.start <= at + 2000 && x.e.t <= at + 25000);
+  if (candidates.length !== 1) return null;
+  const { e } = candidates[0], q = e.data?.q, sid = e.sid;
+  if (typeof sid !== 'string' || !sid || sid.length > 128 || e.st?.page !== 'fast-aden-buffer' ||
+    q?.skillId !== skill || q.expectedCostFastAden !== spent || !['warrior','mage','resist','resists','greater'].includes(q.set) ||
+    !Number.isSafeInteger(q.expectedRevision) || q.expectedRevision < 0) return null;
+  const prefix = typeof e.data?.r === 'string' ? e.data.r.slice(0,800) : '';
+  const identity = prefix.match(/^\{"character":\{"id":("(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"),"name":("(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*")(?=,|\})/);
+  if (!identity) return null;
+  try { if (JSON.parse(identity[2]) !== char) return null; } catch (_) { return null; }
+  const starts = rows.filter(x => x.src === 'B' && x.what === 'Бафф: Fast Aden' && x.t <= at && x.t >= at - 30000);
+  if (starts.length !== 1 || starts[0].sid !== sid || starts[0].st?.page !== 'fast-aden-buffer') return null;
+  const b = starts[0];
+  const receiptRows = rows.filter(x => x.t > e.t && x.t <= e.t + 5000 && Array.isArray(x.added) &&
+    x.added.some(s => typeof s === 'string' && /^Баф наложен\. Списано [0-9]+ FA\.$/.test(s)));
+  if (receiptRows.length !== 1) return null;
+  const receipt = receiptRows[0], paid = receipt.added.filter(s => typeof s === 'string' && /^Баф наложен\. Списано [0-9]+ FA\.$/.test(s)),
+    balances = receipt.added.filter(s => typeof s === 'string' && /^Fast Aden: [0-9]+ FA$/.test(s));
+  if (!['B','S'].includes(receipt.src) || receipt.sid !== sid || receipt.st?.page !== 'fast-aden-buffer' || paid.length !== 1 || balances.length !== 1 ||
+    paid[0] !== `Баф наложен. Списано ${spent} FA.` || balances[0] !== `Fast Aden: ${balance} FA`) return null;
+  const interval = rows.filter(x => x.t >= b.t && x.t <= receipt.t);
+  if (interval.some(x => x.src === 'U' || x.sid !== sid || x.st?.page !== 'fast-aden-buffer' ||
+    (x.src === 'S' && /управление вкладкой|бот (?:запущен|остановлен)|пауза|перезапуска|перезагружа|смена героя|сессия|сессии/i.test(x.what || '')) ||
+    (x !== b && x.src === 'B' && x.what === 'Бафф: Fast Aden') || (faPost(x) && x !== e))) return null;
+  return { kind:'journal-receipt', eventKey:`${sid}:${e.t}`, requestRevision:q.expectedRevision, spent, balance };
+}
+async function faBuffEvidence(p) {
+  if (!faBuffPendingSpec(p)) return null;
+  flush(); await writing;
+  if (buf.length) return null;
+  const db = await idb(), rows = await new Promise(resolve => {
+    let done = false;
+    const finish = value => { if (!done) { done = true; clearTimeout(deadline); resolve(value); } };
+    const deadline = setTimeout(() => finish(null), 1500);
+    const r = db.transaction('log').objectStore('log').getAll(null, MAX_EV + 1);
+    r.onsuccess = () => finish(r.result.length > MAX_EV ? null : r.result);
+    r.onerror = () => finish(null);
+  });
+  return faBuffJournalReceipt(rows, p);
+}
+
 // снимок: ключ = хэш структуры страницы (без текста и чисел) — одно и то же состояние не сохраняется дважды
 function addSnap({ key, state, html }) {
   writing = writing.then(async () => {
@@ -574,6 +637,12 @@ chrome.tabs.onRemoved.addListener(tabId => {
 });
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'faBuffEvidence') {
+    let game = false; try { game = /(^|\.)l2wap\.com$/i.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (_) {}
+    if (!game || !Number.isInteger(_s?.tab?.id) || _s.frameId > 0 || (_s.id && _s.id !== chrome.runtime.id)) { reply(null); return true; }
+    faBuffEvidence(m.p).then(reply).catch(() => reply(null));
+    return true;
+  }
   if (m?.cmd === 'fishingCastEvidence') {
     let game = false; try { game = /(^|\.)l2wap\.com$/i.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (_) {}
     if (!game || !Number.isInteger(_s?.tab?.id) || _s.frameId > 0 || (_s.id && _s.id !== chrome.runtime.id)) { reply(null); return true; }
