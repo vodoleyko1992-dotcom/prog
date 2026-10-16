@@ -146,7 +146,7 @@
     if (!Array.isArray(raw?.autoTasks)) return raw;
     const groups = {
       mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
-      quests: ['storyTurnIn','campAuto','searchQuest'], dailies: ['dailyAuto'], clan: ['clanTasks'],
+      quests: ['storyTurnIn','campAuto'], dailies: ['dailyAuto'], clan: ['clanTasks'], // searchQuest — приоритет местных ★ мобов, а не разрешение вести кампанию.
       pvp: ['enemyHunt','pvpOnSight'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
     };
     const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','sealAuto','autoLearn'];

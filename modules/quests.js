@@ -396,10 +396,17 @@ async function goCampaign() {
 async function questsStep() {
   const active = campGuard(false); if (!active()) return;
   env.setStatus('Кампания: читаю «Мои квесты»');
-  const links = await env.waitFor(() => { const a = [...document.querySelectorAll('a.l2-character-quests-entry__title')].filter(env.shown); return a.length ? a : null; }, 8000, 300);
+  const links = await env.waitFor(() => { const a = [...document.querySelectorAll('a.l2-character-quests-entry__title')].filter(env.shown); return a.length ? a : env.shown(env.$q('#character-quests-list .l2-character-quests-empty')) ? [] : null; }, 8000, 300);
   if (!active()) return;
   const link = links && (links.find(a => /campaign/i.test(a.getAttribute('href') || '') && a.closest('[class*="entry--ready"]')) || links.find(a => /campaign/i.test(a.getAttribute('href') || '')) || links[0]);
   if (!link) {                                   // список пуст — старый путь через почту
+    // 16.10, журналы 05:54/05:58: обе кампании сданы, список явно пуст; старая CTA почты не запускает Дион заново и не блокирует фарм.
+    const closed = [env.rt.storySaga,env.rt.dionCampaign].every(q => q && (q.completed === true || q.stage === 'completed'));
+    if (Array.isArray(env.cfg.autoTasks) && closed && env.shown(env.$q('#character-quests-list .l2-character-quests-empty'))) {
+      await env.setRt({ campaignViaMail: false, questList: [], questListT: Date.now(), campaignDue: false, campNoTasksUntil: Date.now() + 10 * 60000 });
+      env.rec('B', 'кампания', 'сюжетные кампании завершены, «Мои квесты» пусты — следующая выбранная задача; проверка через 10 мин');
+      return; // Новый режим продолжит диспетчер: старый владелец не начинает переход после смены задачи.
+    }
     await env.setRt({ campaignViaMail: true, questList: [], questListT: Date.now() });   // v5.6: отметка «смотрели» — иначе снова сюда
     if (!active()) return;
     location.href = '/mail.html'; await env.sleep(5000); return;
