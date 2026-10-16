@@ -6,7 +6,7 @@
  root.L2V7Factories.enchant = function create_enchant(env) {
 const location = env.routeLocation || root.location;
 const DEFAULTS = Object.freeze({ enabled:false, queue:[], scrollPolicy:'blessed', ordinaryUntil:3, maxAttempts:0, maxScrolls:0, maxAdena:0,
-  maxConsecutiveFails:2, maxDropFromStart:1, maxDropFromPeak:2, delayMs:1500, purchase:false, colBudget:0 });
+  maxConsecutiveFails:2, maxDropFromStart:1, maxDropFromPeak:2, delayMs:1500, batchSize:1, purchase:false, colBudget:0 });
 const SCROLLS = Object.freeze(Object.fromEntries(['D','C','B','A','S'].flatMap((grade,i)=>['ordinary','blessed'].flatMap((kind,k)=>['armor','weapon'].map((target,j)=>
   [910510+i*2+k*10+j,{id:910510+i*2+k*10+j,grade,kind,target,chance:kind==='blessed'?1:0.6}])))));
 const EQ_SLOTS = ['l1','l2','l3','l4','lh','lg','lf','neck','le1','le2','lr1','lr2'];
@@ -19,6 +19,7 @@ const cfgRaw = () => env.cfg?.enchant || {};
 function normalizeConfig(raw=cfgRaw()) {
   const c={...DEFAULTS,...raw,enabled:raw.enabled===true,purchase:false,colBudget:0,queue:[]};
   for(const k of NUM_KEYS)c[k]=Math.min(k==='maxAdena'?1e12:100000,nonneg(raw[k],DEFAULTS[k]));
+  c.batchSize=Math.max(1,Math.min(25,nonneg(raw.batchSize,1)));
   c.delayMs=Math.max(500,Math.min(60000,nonneg(raw.delayMs,1500)));c.scrollPolicy=policy(raw.scrollPolicy||DEFAULTS.scrollPolicy);
   c.invalid=!c.scrollPolicy||raw.purchase===true||(+raw.colBudget||0)!==0;
   const keys=new Set(),targets=new Set();
@@ -34,7 +35,7 @@ function normalizeConfig(raw=cfgRaw()) {
   }
   return c;
 }
-const signature = c => JSON.stringify({...c,enabled:true});
+const signature = c => {const v={...c,enabled:true};if(v.batchSize===1)delete v.batchSize;return JSON.stringify(v);};
 const settings = (q,c=normalizeConfig()) => ({...c,...q.rules});
 const kindAt = (level,r) => r.scrollPolicy==='mixed'?(level<r.ordinaryUntil?'ordinary':'blessed'):r.scrollPolicy;
 const charKey = () => String(env.rt.char??'');
@@ -60,6 +61,7 @@ function bagToken(row,slot) {
   if(slot==='rhand'&&row.level>0){if(row.pb==null||row.mb==null)return null;t+=`:${row.pb}:${row.mb}`;
     if(row.history.some(x=>!['physical','magic','balanced'].includes(x)))return null;
     const track=(row.legacy?`L${row.legacy}`:'')+(row.history.length?'H'+row.history.map(x=>({physical:'p',magic:'m',balanced:'b'})[x]).join(''):'');if(track)t+=':'+track;}
+  if(row.uid)t+=':'+row.uid;
   return t;
 }
 function snapshotItems(snap,hints=catalog) {
@@ -90,7 +92,13 @@ async function readItems() {
 }
 const quantity=(s,id)=>(s?.inventory?.stacks||[]).filter(x=>+x.itemId===+id).reduce((a,x)=>a+nonneg(x.qty),0);
 const adena=s=>{const raw=s?.adena,value=typeof raw==='string'&&/^(?:0|[1-9]\d*)$/.test(raw)?Number(raw):raw;return typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;};
-function resolve(s,q,token=q.targetInstanceId) {const list=snapshotItems(s).filter(x=>x.targetInstanceId===token&&x.itemId===+q.itemId);return list.length===1&&!list[0].ambiguous?list[0]:null;}
+function resolve(s,q,token=q.targetInstanceId) {
+  const rows=snapshotItems(s),list=rows.filter(x=>x.targetInstanceId===token&&x.itemId===+q.itemId);
+  if(list.length)return list.length===1&&!list[0].ambiguous?list[0]:null;
+  // Лог 16.10 13:54: прежний план потерял UID клановой вещи. Только точный fingerprint восстанавливает связь.
+  const legacy=rows.filter(x=>x.uid&&x.targetInstanceId===token+':'+x.uid&&x.itemId===+q.itemId&&x.fingerprint===q.fingerprint);
+  return legacy.length===1&&!legacy[0].ambiguous?legacy[0]:null;
+}
 async function pause(reason,extra={}) {const s=current();if(!s)return false;await save({...s,status:'paused',reason,...extra});env.rec?.('S','заточка',reason);return true;}
 async function archive(s) {
   if(!s||!sameChar(s))return;
@@ -157,13 +165,37 @@ function plan() {
 const input=(el,value)=>{el.value=String(value);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));};
 const Q=sel=>env.$q?env.$q(sel):document.querySelector(sel);
 function urlFor(item,q) {return '/enchant.html?target='+encodeURIComponent(item.targetInstanceId)+(item.category==='weapon'?'&mode='+encodeURIComponent(q.weaponMode||'balanced'):'');}
+function batchCount(P,s,snap) {
+  const c=normalizeConfig(),r=settings(P.q,c),i=P.item,t=s.totals;
+  let n=Math.min(c.batchSize,P.q.targetLevel-i.level,quantity(snap,P.scroll.id),
+    c.maxAttempts-t.attempts-t.unknown,r.maxAttempts-i.attempts-i.unknown,
+    c.maxScrolls-t.scrolls-t.reservedScrolls,r.maxScrolls-i.scrolls-i.reservedScrolls);
+  if(r.scrollPolicy==='mixed'&&P.scroll.kind==='ordinary')n=Math.min(n,r.ordinaryUntil-i.level);
+  if(P.scroll.kind==='ordinary') {
+    if(r.maxConsecutiveFails>0)n=Math.min(n,r.maxConsecutiveFails-i.failStreak);
+    n=Math.min(n,Math.max(1,r.maxDropFromPeak));
+    if(i.start>=r.maxDropFromStart)n=Math.min(n,Math.max(1,i.level-(i.start-r.maxDropFromStart)));
+    if(i.peak>i.level)n=Math.min(n,Math.max(1,i.level-(i.peak-r.maxDropFromPeak)));
+  }
+  return Math.max(1,Math.floor(n));
+}
+// Сводный ответ не раскрывает порядок неудач на +0: проверяем все достижимые уровни.
+function batchLevel(before,success,fail,next) {
+  let states=new Map([['0:0',new Set([before])]]);
+  for(let a=0;a<=success;a++)for(let b=0;b<=fail;b++) {
+    const levels=states.get(a+':'+b);if(!levels)continue;
+    const add=(key,v)=>{if(!states.has(key))states.set(key,new Set());states.get(key).add(v);};
+    for(const level of levels){if(a<success&&level<25)add((a+1)+':'+b,level+1);if(b<fail)add(a+':'+(b+1),Math.max(0,level-1));}
+  }
+  return states.get(success+':'+fail)?.has(next)===true;
+}
 async function prepareDom(P) {
   const panel=await env.waitX(()=>Q('#enchant-target-panel')&&!Q('#enchant-target-panel').hidden&&Q('#enchant-submit'),8000,150);if(!panel)return 'Не загрузилась панель заточки';
   const level=+(Q('.l2-enchant-selected-card__name')?.textContent||'').match(/^\s*\+(\d+)/)?.[1];if(!Number.isInteger(level)||level!==P.item.level)return 'Уровень в панели устарел';
   const radio=Q(`input[name="pay"][value="scroll:${P.scroll.id}"]`);if(!radio||radio.disabled)return 'Подходящих свитков нет в панели';
   if(!radio.checked)env.fire(radio);
   if(P.item.category==='weapon'){const mode=Q(`input[name="wmode"][value="${P.q.weaponMode||'balanced'}"]`);if(!mode)return 'Режим оружия недоступен';if(!mode.checked)env.fire(mode);}
-  const count=Q('#enchant-count');if(!count)return 'Не найдено поле количества';input(count,1);
+  const count=Q('#enchant-count');if(!count)return 'Не найдено поле количества';const max=Number(count.max);if(Number.isFinite(max)&&count.max!==''&&max>=0)P.count=Math.min(P.count,max);if(P.count<1)return 'Нет доступных заточек в панели';input(count,P.count);
   const chance=+(Q('#enchant-scroll-chance')?.textContent||'').match(/(\d+(?:[.,]\d+)?)\s*%/)?.[1];
   if(chance!==P.scroll.chance*100)return 'Шанс в игре изменился — нужна проверка правил';
   P.domSignature=domSignature();
@@ -175,7 +207,7 @@ function domReady(P) {
   const p=new URLSearchParams(location.search),pay=Q('input[name="pay"]:checked'),mode=Q('input[name="wmode"]:checked'),btn=Q('#enchant-submit');
   const level=+(Q('.l2-enchant-selected-card__name')?.textContent||'').match(/^\s*\+(\d+)/)?.[1];
   if(level!==P.item.level||level>=P.q.targetLevel||P.domSignature!==domSignature())return false;
-  return location.pathname==='/enchant.html'&&p.get('target')===P.item.targetInstanceId&&pay?.value===`scroll:${P.scroll.id}`&&+Q('#enchant-count')?.value===1&&
+  return location.pathname==='/enchant.html'&&p.get('target')===P.item.targetInstanceId&&pay?.value===`scroll:${P.scroll.id}`&&+Q('#enchant-count')?.value===P.count&&
     (P.item.category!=='weapon'||mode?.value===(P.q.weaponMode||'balanced'))&&btn&&!btn.disabled;
 }
 async function step() {
@@ -209,6 +241,8 @@ async function step() {
     if(s.readFailures){s={...s,readFailures:0,reason:''};await save(s);if(current()!==s||!allowed(s))return false;}
     if(adena(snap)==null)return pause('Баланс Adena не прочитан — расход свитка не выполнялся');
     const row=resolve(snap,P.item);if(!row||row.fingerprint!==P.item.fingerprint)return pause('Выбранный экземпляр изменился вне этой сессии');
+    if(row.targetInstanceId!==P.item.targetInstanceId){await save({...s,items:s.items.map(x=>x.key===P.item.key?{...x,targetInstanceId:row.targetInstanceId}:x)});return true;}
+    P.count=batchCount(P,s,snap);
     if(quantity(snap,P.scroll.id)<1)return pause('Нет подходящего свитка в сумке');
     if(location.pathname!=='/enchant.html'||new URLSearchParams(location.search).get('target')!==P.item.targetInstanceId){
       if(!allowed(s))return false;location.href=urlFor(P.item,P.q);return true;}
@@ -216,7 +250,7 @@ async function step() {
     await env.pause?.();if(!allowed(s))return false;if(!domReady(P))return pause('Параметры страницы изменились до попытки');
     // Долговечное намерение до клика: после crash повторять его нельзя без результата/сверки.
     const pending={id:`${s.runId}:${s.totals.attempts+s.totals.unknown}:${now()}`,t:now(),state:'prepared',key:P.item.key,itemId:P.item.itemId,targetInstanceId:P.item.targetInstanceId,
-      before:P.item.level,fingerprint:P.item.fingerprint,revision:snap.revision,scrollId:P.scroll.id,scrollBefore:quantity(snap,P.scroll.id),adenaBefore:adena(snap),
+      count:P.count,before:P.item.level,fingerprint:P.item.fingerprint,revision:snap.revision,scrollId:P.scroll.id,scrollBefore:quantity(snap,P.scroll.id),adenaBefore:adena(snap),
       colBefore:quantity(snap,4037),chance:P.scroll.chance,weaponMode:P.item.category==='weapon'?(P.q.weaponMode||'balanced'):null};
     const stored=await save({...s,pending});
     // recover пустой очереди не доказывает запись: inactive setRt меняет лишь локальный rt.
@@ -230,7 +264,7 @@ async function step() {
   } finally {busy=false;}
 }
 function note(req,res,status) {
-  const p=current()?.pending;if(!sameChar(current())||!p||req?.payment!=='scroll'||+req.count!==1||req.targetInstanceId!==p.targetInstanceId||+req.scrollItemId!==p.scrollId||
+  const p=current()?.pending;if(!sameChar(current())||!p||req?.payment!=='scroll'||+req.count!==(p.count||1)||req.targetInstanceId!==p.targetInstanceId||+req.scrollItemId!==p.scrollId||
     (p.weaponMode&&req.weaponEnchantMode!==p.weaponMode))return false;
   const recovery=env.rt.enchantRecovery;
   if(recovery?.char===charKey()&&+req.expectedRevision<=recovery.attemptRevision)return false;
@@ -252,8 +286,8 @@ async function settle(n) {
     if(n.status===401||n.status===403||n.status===423){observed.delete(p.id);await save({...s,pending:null,status:'paused',reason:`Игра отклонила попытку (${n.status}); продолжение только вручную`});return true;}
     if(n.status<200||n.status>=300)return markUnknown('Ошибка сети/сервера: результат попытки не подтверждён');
     const r=n.res,attempted=+r.attemptedCount,success=+r.successCount,fail=+r.failCount,scrolls=+r.scrollConsumedCount,next=+r.currentEnchantLevel,prev=+r.previousEnchantLevel;
-    if(+n.req.expectedRevision!==p.revision||attempted!==1||success+fail!==1||![0,1].includes(success)||![0,1].includes(fail)||scrolls!==1||prev!==p.before||
-      next!==(success?prev+1:Math.max(0,prev-1))||r.coinConsumed===true||p.chance===1&&fail)return markUnknown('Ответ игры не соответствует подтверждённым правилам');
+    if(+n.req.expectedRevision!==p.revision||attempted!==(p.count||1)||success+fail!==attempted||!Number.isInteger(success)||!Number.isInteger(fail)||success<0||fail<0||scrolls!==attempted||prev!==p.before||
+      !Number.isInteger(next)||!batchLevel(prev,success,fail,next)||r.coinConsumed===true||p.chance===1&&fail)return markUnknown('Ответ игры не соответствует подтверждённым правилам');
     // hook.js обрезает массивы ответа; проверяем полный свежий инвентарь своим read-only GET.
     let snap=await snapshot();
     s=current();if(s?.pending?.id!==p.id||!sameChar(s)||env.tabOwner===false)return false;
@@ -264,18 +298,18 @@ async function settle(n) {
     const item=s.items.find(x=>x.key===p.key),row=resolve(snap,item,token);
     let identity=null;try{identity=JSON.parse(p.fingerprint);}catch(_){}
     const spentA=p.adenaBefore!=null&&adena(snap)!=null?p.adenaBefore-adena(snap):null;
-    if(!row||!Array.isArray(identity)||String(identity[6]||'')!==String(row.uid||'')||row.level!==next||snap.revision<=+n.req.expectedRevision||quantity(snap,p.scrollId)!==p.scrollBefore-1||quantity(snap,4037)!==p.colBefore||spentA!==0)
+    if(!row||!Array.isArray(identity)||String(identity[6]||'')!==String(row.uid||'')||row.level!==next||snap.revision<=+n.req.expectedRevision||quantity(snap,p.scrollId)!==p.scrollBefore-attempted||quantity(snap,4037)!==p.colBefore||spentA!==0)
       return markUnknown('Результат и инвентарь расходятся — автоматическое повторение заблокировано');
-    const t=clone(s.totals),latency=Math.max(0,n.t-p.t);t.attempts++;t.successes+=success;t.failures+=fail;t.scrolls++;t.latencyMs+=latency;t.samples++;
-    const bucket=t.byScroll[p.scrollId]||{attempts:0,successes:0,failures:0,listed:p.chance};bucket.attempts++;bucket.successes+=success;bucket.failures+=fail;t.byScroll[p.scrollId]=bucket;
-    const c=normalizeConfig(),q=c.queue.find(x=>x.key===p.key),updated={...item,targetInstanceId:row.targetInstanceId,level:next,peak:Math.max(item.peak,next),fingerprint:row.fingerprint,
-      attempts:item.attempts+1,successes:item.successes+success,failures:item.failures+fail,scrolls:item.scrolls+1,failStreak:fail?item.failStreak+1:0,done:!!q&&next>=q.targetLevel};
-    const event={id:p.id,t:n.t,key:p.key,itemId:p.itemId,scrollId:p.scrollId,before:prev,after:next,success:!!success,listed:p.chance,scrolls:1,adena:0,col:0,latencyMs:latency,status:'confirmed'};
+    const t=clone(s.totals),latency=Math.max(0,n.t-p.t);t.attempts+=attempted;t.successes+=success;t.failures+=fail;t.scrolls+=scrolls;t.latencyMs+=latency;t.samples++;
+    const bucket=t.byScroll[p.scrollId]||{attempts:0,successes:0,failures:0,listed:p.chance};bucket.attempts+=attempted;bucket.successes+=success;bucket.failures+=fail;t.byScroll[p.scrollId]=bucket;
+    const c=normalizeConfig(),q=c.queue.find(x=>x.key===p.key),updated={...item,targetInstanceId:row.targetInstanceId,level:next,peak:Math.max(item.peak,next,Math.min(25,prev+success)),peakEstimated:!!item.peakEstimated||attempted>1&&fail>0&&success>0,fingerprint:row.fingerprint,
+      attempts:item.attempts+attempted,successes:item.successes+success,failures:item.failures+fail,scrolls:item.scrolls+scrolls,failStreak:fail?item.failStreak+fail:0,done:!!q&&next>=q.targetLevel};
+    const event={id:p.id,t:n.t,key:p.key,itemId:p.itemId,scrollId:p.scrollId,before:prev,after:next,success:fail===0,attemptedCount:attempted,successCount:success,failCount:fail,listed:p.chance,scrolls,adena:0,col:0,latencyMs:latency,status:'confirmed'};
     const nextState={...s,items:s.items.map(x=>x.key===p.key?updated:x),totals:t,pending:null,conflicts:0,history:[event,...s.history].slice(0,500),nextAt:now()+c.delayMs};
     const reason=!allowed(s)?'Остановлено или настройки изменены':q&&!updated.done?limits(nextState,updated,q,c):'';
     if(reason){nextState.status='paused';nextState.reason=reason;}
     else if(nextState.items.every(x=>x.done)){nextState.status='done';nextState.reason='Все цели достигнуты';nextState.finishedAt=now();}
-    await save(nextState);observed.delete(p.id);env.rec?.('B','заточка',`${item.name}: +${prev} → +${next} · ${success?'успех':'неудача'} · свиток #${p.scrollId} ×1`);return true;
+    await save(nextState);observed.delete(p.id);env.rec?.('B','заточка',`${item.name}: +${prev} → +${next} · ${success} успехов, ${fail} неудач · свиток #${p.scrollId} ×${scrolls}`);return true;
   }finally{settling=false;}
 }
 async function markUnknown(reason,evidence) {
@@ -300,9 +334,9 @@ async function acknowledgeUnknown() {
   let beforeIdentity=null;try{beforeIdentity=JSON.parse(p.fingerprint);}catch(_){}
   if(!beforeIdentity||!Array.isArray(beforeIdentity)||String(beforeIdentity[6]||'')!==String(row?.uid||''))row=null;
   if(!row)return pause('Нельзя однозначно найти прежний экземпляр. Выбери его заново; расход зарезервирован');
-  const t=clone(s.totals);t.unknown++;t.reservedScrolls++;
-  const updated=s.items.map(x=>x.key===p.key?{...x,level:row.level,peak:Math.max(x.peak,row.level),fingerprint:row.fingerprint,targetInstanceId:row.targetInstanceId,unknown:x.unknown+1,reservedScrolls:x.reservedScrolls+1,done:false}:x);
-  const event={id:p.id,t:now(),key:p.key,itemId:p.itemId,scrollId:p.scrollId,before:p.before,after:row.level,status:'unknown',reservedScrolls:1,scrolls:null,adena:null,col:null};
+  const t=clone(s.totals);t.unknown+=p.count||1;t.reservedScrolls+=p.count||1;
+  const updated=s.items.map(x=>x.key===p.key?{...x,level:row.level,peak:Math.max(x.peak,row.level),fingerprint:row.fingerprint,targetInstanceId:row.targetInstanceId,unknown:x.unknown+(p.count||1),reservedScrolls:x.reservedScrolls+(p.count||1),done:false}:x);
+  const event={id:p.id,t:now(),key:p.key,itemId:p.itemId,scrollId:p.scrollId,before:p.before,after:row.level,status:'unknown',reservedScrolls:p.count||1,scrolls:null,adena:null,col:null};
   await save({...s,items:updated,totals:t,pending:null,status:'paused',reason:'Состояние сверено игроком; неизвестная попытка засчитана в лимиты. Для продолжения нажми «Продолжить»',history:[event,...s.history].slice(0,500)});
   observed.delete(p.id);return true;
 }
@@ -317,10 +351,10 @@ async function archiveUnknown(args) {
   const evidence={t:now(),revision:scan.snap.revision,scrollBefore:p.scrollBefore,scrollNow:quantity(scan.snap,p.scrollId),
     adenaDelta:p.adenaBefore!=null&&adena(scan.snap)!=null?p.adenaBefore-adena(scan.snap):null,colDelta:p.colBefore-quantity(scan.snap,4037),
     candidates:scan.items.filter(x=>x.itemId===p.itemId).map(x=>({targetInstanceId:x.targetInstanceId,fingerprint:x.fingerprint,level:x.level,ambiguous:x.ambiguous}))};
-  const t=clone(s.totals);t.unknown++;t.reservedScrolls++;
+  const t=clone(s.totals);t.unknown+=p.count||1;t.reservedScrolls+=p.count||1;
   const event={id:p.id,t:now(),key:p.key,itemId:p.itemId,scrollId:p.scrollId,before:p.before,after:null,status:'unknown',source:'manual_archive',
-    reservedAttempts:1,reservedScrolls:1,scrolls:null,adena:null,col:null};
-  const items=s.items.map(x=>x.key===p.key?{...x,unknown:x.unknown+1,reservedScrolls:x.reservedScrolls+1}:x);
+    reservedAttempts:p.count||1,reservedScrolls:p.count||1,scrolls:null,adena:null,col:null};
+  const items=s.items.map(x=>x.key===p.key?{...x,unknown:x.unknown+(p.count||1),reservedScrolls:x.reservedScrolls+(p.count||1)}:x);
   const entry={runId:s.runId,char:s.char,startedAt:s.startedAt,finishedAt:now(),status:'closed_unknown',reason:'Серия завершена игроком с неизвестным результатом',
     totals:t,items:clone(items),pending:clone(p),evidence,history:[event,...s.history].slice(0,50)};
   const recovery={char:s.char,t:now(),runId:s.runId,pendingId:p.id,revision:scan.snap.revision,attemptRevision:p.revision,previousKeys:s.items.map(x=>x.key)};
@@ -350,7 +384,7 @@ function analytics() {
     return {key:it.key,from:it.level,target:q?.targetLevel??null,expectedAttempts:attempts,expectedScrolls:attempts,
       estimatedMs:attempts!=null&&T.samples>=3?attempts*(T.latencyMs/T.samples+c.delayMs):null,model:'Опубликованные шансы, провал−1, минимум0; без stop-лимитов и нехватки свитков'};});
   return {status:s.status,reason:s.reason,totals:clone(T),pending:s.pending?clone(s.pending):null,rates,estimates,history:s.history.slice(),items:s.items.slice(),archive:clone(env.rt.enchantArchive||[]),
-    remainingAttempts:Math.max(0,c.maxAttempts-T.attempts-T.unknown-(s.pending?1:0)),remainingScrolls:Math.max(0,c.maxScrolls-T.scrolls-T.reservedScrolls-(s.pending?1:0))};
+    remainingAttempts:Math.max(0,c.maxAttempts-T.attempts-T.unknown-(s.pending?(s.pending.count||1):0)),remainingScrolls:Math.max(0,c.maxScrolls-T.scrolls-T.reservedScrolls-(s.pending?(s.pending.count||1):0))};
 }
 return {DEFAULTS,SCROLLS,normalizeConfig,snapshotItems,readItems,command,step,note,plan,analytics,expectedAttempts,reconcile};
  };

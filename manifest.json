@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "L2wap Bot",
   "version": "20.7",
-  "description": "L2wap Bot 20.7 — оба агро Warlord, приоритет спойла и смена задач",
+  "description": "L2wap Bot 20.7 — агро Warlord, быстрая заточка и исправления авторежима",
   "permissions": [
     "storage",
     "unlimitedStorage",
