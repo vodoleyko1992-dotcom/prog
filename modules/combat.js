@@ -113,6 +113,15 @@ function freshBattleLines(before, after) {
   return after.slice();
 }
 
+// 20.6 (лог17.10 00:04): строки Cancel вытесняются наградами AoE ещё до победы.
+// Собираем их по ходу боя, сохраняя повторы между ходами, а не только последний хвост.
+function cancelCollect(ctx, current = env.logLines()) {
+  const added = freshBattleLines(ctx.cancelLog || ctx.logStart || [], current);
+  ctx.cancelLog = current.slice();
+  const lines = added.filter(l => /\]\s*(?:зняв з вас|сн[яи]л с вас|cancell?ed)\s*\d+\s*(?:баф|buff)/i.test(l));
+  if (lines.length) (ctx.cancelLines ||= []).push(...lines);
+}
+
 const noticeText = () => ['#battle-toast', '#l2-hud-notice'].map(x => env.$q(x)).filter(env.shown).map(e => e.textContent.trim()).join(' | ');
 
 const mobTitle = () => env.$q('#battle-mob-title')?.textContent.trim() || '';
@@ -1301,6 +1310,7 @@ async function battle() {
   const countExtras = async () => {
     const current = env.logLines(), added = freshBattleLines(extraLog, current);
     extraLog = current;
+    cancelCollect(ctx, current);
     const fresh = env.extraKillsInLog(added);
     if (!fresh.length) return;
     const sum = f => fresh.reduce((a, k) => a + k[f], 0);
@@ -2136,7 +2146,7 @@ async function battle() {
   const pick = re => { const m = loot.match(re); return m ? parseInt(m[1].replace(/\D/g, ''), 10) || 0 : 0; };
   env.trackEfficiency(rewards.exp + (ctx.extraCredited?.exp || 0), ctx)?.catch?.(e => console.warn(env.TAG, 'эффективность', e));
   env.trackLoot(rewardLines, ctx.name, ctx.rb ? null : { champ: !!ctx.champ, tier: ctx.tier || '', lvl: ctx.lvl || 0 })?.catch?.(e => console.warn(env.TAG, 'добыча', e));
-  try { env.cancelNote?.(env.newLines(ctx.logStart || [], env.logLines()), ctx.name, { champ: !!ctx.champ, tier: ctx.tier || '' }); } catch (e) { console.warn(env.TAG, 'снятие баффов', e); }   // 10.0.7: «[моб] зняв з вас N бафи»
+  try { env.cancelNote?.(ctx.cancelLines || [], ctx.name, { champ: !!ctx.champ, tier: ctx.tier || '', dungeon: (location.search || '').match(/[?&]spawnId=sdms_([^&]+)_\d+(?:&|$)/)?.[1] || '' }); } catch (e) { console.warn(env.TAG, 'снятие баффов', e); }   // 10.0.7: «[моб] зняв з вас N бафи»
   env.setRt({
     kills: env.rt.kills + 1, sinceDeep: env.rt.sinceDeep + 1, target: null,
     adena: env.rt.adena + rewards.adena, exp: env.rt.exp + rewards.exp, sp: env.rt.sp + rewards.sp
@@ -2233,6 +2243,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

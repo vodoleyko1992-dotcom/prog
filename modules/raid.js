@@ -11,10 +11,20 @@ const rbDue = () => env.cfg.rbMode && !env.cfg.rbHuntMode && ((env.rt.rbPending 
 
 function raidList() {                          // метки РБ на карте: title «Око Белефа · ур. 35 · рейд-босс»
   const ids = env.aroundSig().ids;
-  return [...document.querySelectorAll('.l2-map-mob-pin--raid[data-spawn-id]')].map(b => {
+  const rows = [...document.querySelectorAll('.l2-map-mob-pin--raid[data-spawn-id]')].map(b => {
     const t = b.getAttribute('title') || b.getAttribute('aria-label') || '', m = t.match(env.LV_RE);
     return { id: b.dataset.spawnId, name: m ? m[2].trim() : t, lvl: m ? +m[3] : 0, idx: ids.indexOf(b.dataset.spawnId) };
   });
+  // 17.10, лог 00:07–00:10: РБ есть ссылкой в списке, но пина на карте нет.
+  // Такой прилёт тоже подтверждён; тот же список нужен шагу arrive, а не только бухгалтерии.
+  for (const b of document.querySelectorAll('#map-mob-list a.l2-map-mob-link--raid[href]')) {
+    let id;
+    try { const u = new URL(b.getAttribute('href'), 'https://l2wap.com'); if (u.origin !== 'https://l2wap.com' || u.pathname !== '/battle.html') continue; id = u.searchParams.get('spawnId'); } catch (_) { continue; }
+    if (!id || rows.some(x => x.id === id)) continue;
+    const t = (b.textContent || '').trim(), m = t.match(env.LV_RE);
+    rows.push({ id, name: m ? m[2].trim() : t, lvl: m ? +m[3] : 0, idx: ids.indexOf(id) });
+  }
+  return rows;
 }
 
 function rbVerdictBlocks(id) {
@@ -45,7 +55,18 @@ function rbCandidates() {                      // окно уровня: ниж�
 async function rbPinAttack(r, label, opt = {}) {
   const kick = env.rt.manualKickAt, active = () => env.on && env.tabOwner !== false && env.rt.manualKickAt === kick && (!opt.active || opt.active());
   const pin = env.$q(`.l2-map-mob-pin[data-spawn-id="${CSS.escape(r.id)}"]`);   // v5.5: и метка эпика
-  if (!pin || !active()) return false;
+  if (!active()) return false;
+  // Список уже показывает цель, даже если карта не создала пин/общий индекс.
+  if (!pin) {
+    const a = env.$q(`#map-mob-list a.l2-map-mob-link--raid[href*="spawnId=${CSS.escape(r.id)}"]`);
+    if (!a || !env.shown(a)) return false;
+    let u; try { u = new URL(a.getAttribute('href'), 'https://l2wap.com'); } catch (_) { return false; }
+    if (u.origin !== 'https://l2wap.com' || u.pathname !== '/battle.html' || u.searchParams.get('spawnId') !== r.id) return false;
+    env.setStatus(label);
+    await env.setRt({ target: { name: r.name, champ: true, quest: false, rb: true }, mobClickAt: Date.now(), via: 'map' });
+    if (!active() || !env.fire(a)) return false;
+    return !!await env.waitFor(env.isBattle, 10000);
+  }
   env.setStatus(label);
   env.rec('B', 'РБ', `${r.name} (${r.lvl}): в списке мобов нет — через метку на карте`);
   if (!env.fire(pin)) return false;
@@ -489,6 +510,7 @@ async function rbNote(id, patch) {
     targetMaxHp: rbStatsOf(id)?.hp || null, fightS: patch.fightS || null } : null;
   await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(/^убил героя/.test(patch.note || '') ? { deathAt: at } : {}), ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
     ...(won && env.cfg.rbHuntMode && !isEpicId(id) ? { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, rbRefuse: null } : {}) });
+  if (won && env.payments?.pending()?.kind === 'raid-teleport') await paymentReconcile();
 }
 
 function rbTourPick() {
@@ -815,13 +837,20 @@ async function rbTeleportFire(b, patch) {
   if (rollback) await rollback;
   return accepted;
 }
-async function paymentReconcile() {
+async function paymentReconcile(battleId) {
   const P=env.payments?.pending();if(!P || P.kind!=='raid-teleport')return !P;
   const receipt=env.raidPaymentNet?.();
   if(receipt?.ok && receipt.id===P.evidence?.id && receipt.t>=P.at)return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
-  if(!env.isMap()) {env.setStatus?.('РБ: платный переход не подтверждён; повтор запрещён');return false;}
-  const target=raidList().find(x=>x.id===P.evidence?.id);
-  if(!target){env.setStatus?.('РБ: жду подтверждение прибытия к выбранной цели, повторно не плачу');return false;}
+  const id = P.evidence?.id, win = env.rt.rbDb?.[id]?.victoryEvidence;
+  // Ручной вход и сохранённая победа закрывают старое ожидание даже после перезагрузки.
+  if (id && env.isBattle?.() && battleId === id) return env.payments.confirm(P,{kind:'target-battle',id});
+  if (id && win?.char === P.char && win.at >= P.at && win.at <= Date.now()) return env.payments.confirm(P,{kind:'target-victory',id});
+  const target=env.isMap() && raidList().find(x=>x.id===P.evidence?.id);
+  if(!target){
+    if (Date.now() - P.at > 60000) env.pauseBot?.('РБ: результат телепорта не подтверждён за минуту. Оплата сохранена, повтор запрещён; проверь карту и выбранного босса');
+    else env.setStatus?.('РБ: жду подтверждение прибытия к выбранной цели, повторно не плачу');
+    return false;
+  }
   return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
 }
 
@@ -1378,7 +1407,9 @@ function rbWoundNote(ctx) {
 const rbWounded = id => { if (ordinaryLiveTour(id) && rbPreSkipWhy(id)) return false; const w = env.rt.rbWound?.[id], skip = preSkip(id); return !(skip.probeExit && (!ordinaryLiveTour(id) || skip.safety === true) && Date.now() - skip.t < 30 * 60000) && !!w && Date.now() - (w.t || 0) < 30 * 60000 && w.cur < w.max * 0.99 && !rbVerdictBlocks(id); };   // 10.0.2: 95 → 99 % (лог 12.10 22:16: Рахха 96,7 % — «бой окончен → следующий», урон по 4 РБ вразброс)
 function rbLearn(ctx) {                          // v4.46: k = обычный удар РБ (без Ogre) / P.Atk — для оценки до боя
   try { rbWoundNote(ctx); } catch (e) {}
-  const S = ctx.rb, lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
+  const S = ctx.rb;
+  if (env.payments?.pending()?.kind === 'raid-teleport' && env.payments.pending().evidence?.id === S.id) void paymentReconcile(S.id);
+  const lines = env.logLines(), fresh = S.lp ? env.newLines(S.lp, lines) : [];
   S.lp = lines;
   const incomingContext = rbContext(S.id), incomingKey = incomingContext?.managed ? rbIncomingKey(S.id,incomingContext) : null;
   const changedIncoming = !!S.incomingWindow && S.incomingWindow.context !== incomingKey;
