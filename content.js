@@ -2153,7 +2153,7 @@ const isEpicPage = (...args) => L2V7Modules.epics.isEpicPage(...args);
 const epicOn = (...args) => cfg.enchantMode !== true && L2V7Modules.epics.epicOn(...args);
 // 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
 async function tasksIdle() {
-  const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmCraftSend && cfg.mmGoalItem && 'крафтер', cfg.mmMailClaim && 'почта',
+  const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmMailClaim && 'почта',
     cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
   setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
   if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }

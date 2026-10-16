@@ -21,7 +21,7 @@ assert.equal(currentMode({ taskOnly: true }), 'tasks'); assert.equal(currentMode
 assert.match(popup, /const MODES_OFF = \{[^}]*taskOnly: false \}/);
 assert.match(popup, /if \(m === 'tasks'\) await menuPatch\([^\n]*taskOnly: true/, 'detailed mode removal neither starts nor stops the bot');
 for (const task of ['mammon', 'quests', 'pvp', 'tvt', 'fish', 'farm']) assert.match(html, new RegExp(`data-auto-task="${task}"`));
-for (const id of ['mmOrders', 'mmUpgrade', 'mmCraftSend', 'storyTurnIn', 'enemyHunt']) assert.match(html, new RegExp(`id="${id}"`), `detailed setting ${id} remains`);
+for (const id of ['mmOrders', 'mmUpgrade', 'storyTurnIn', 'enemyHunt']) assert.match(html, new RegExp(`id="${id}"`), `detailed setting ${id} remains`);
 assert.doesNotMatch(html, /id="tasksToggle"|data-mode="tasks"|data-task=/);
 const edit = popup.slice(popup.indexOf('function editAutoTask('), popup.indexOf('function currentMode('));
 assert.match(edit, /cfgPatch: autoTaskPatch/);

@@ -58,7 +58,7 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   // кнопка: неполный набор всё равно уходит; нечего — отказ с причиной
   { const { M } = mk({ inv: { ...INV, 1865: 6 }, rt: { mmCraftReq: { t: Date.now() } } }); const w = M.craftWant(); assert.equal(w.cmd, true); assert.match(w.why, /по кнопке.*неполный/); }
   { const { env, M } = mk({ inv: { 1458: 100, 1869: 100, 1876: 100 }, rt: { mmCraftReq: { t: Date.now() } } });
-    assert.equal(await M.mmStep(), false); assert.equal(env.rt.mmCraftReq, null); assert.match(env.rt.mmCraftSay.why, /в сумке нет сырья на крафт/); }
+    assert.equal(await M.mmStep(), false); assert.equal(env.rt.mmCraftReq, null); assert.match(env.rt.mmCraftSay.why, /Отправка ресурсов крафтеру удалена/); }
   // 3. то, что у крафтера, — своё: план не просит слать и фармить его снова
   { const { M } = mk({ inv: { 1458: 100, 1869: 100, 1876: 100, 1865: 5 }, rt: { mmCraft: { at: { 1869: 15, 1865: 15 }, t0: Date.now() } } });
     const P = M.goalAll(); assert.equal(P.snd.length, 0); assert.equal(P.cmiss, 0); assert.ok(P.raw.every(r => r.miss === 0), 'nothing to farm'); }
@@ -131,12 +131,12 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     same(P.snd.map(x => [x.id, x.q]).sort(), [[1865, 45], [1869, 45]], '3 levels × Steel 3 × 5 — not from Lv.0');
     assert.match(M.craftWant().why, /Lv\.2 → 5 \(недостающие 3 ур\.\)/);
     env.cfg.mmCraftScope = 'next'; same(M.craftPlan().snd.map(x => [x.id, x.q]).sort(), [[1865, 15], [1869, 15]], 'next level only'); }
-  assert.ok(read('popup.html').includes('<option value="all">на все недостающие уровни (от текущего до цели)</option>'));
+  assert.ok(!read('popup.html').includes('id="mmCraftScope"'), '20.7: выбор объёма удалённой отправки убран');
   // 9. меню, настройки, ядро
   const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
-  for (const id of ['mmCrafter', 'mmCraftScope', 'mmCraftSend', 'mmMailClaim', 'mmCraftBox', 'mmCraftGo', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
-  // 14.10: новые поля Warlock могут предшествовать Маммону; проверяем сами оба текстовых поля.
-  assert.match(pj, /const TXT {2}= \[[^\]]*'mmCrafter', 'mmCraftScope',/); assert.match(pj, /'mmCraftSend', ('mmCraftNote', )?'mmMailClaim'/);
+  for (const id of ['mmMailClaim', 'mmCraftBox', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
+  // 20.7: поля передачи удалены; старые ключи профилей остаются совместимыми.
+  assert.doesNotMatch(pj, /const TXT {2}= \[[^\]]*'mmCrafter'/); assert.doesNotMatch(pj, /const BOOL = \[[^\]]*'mmCraftSend'/);
   assert.match(pj, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/); assert.match(c, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/);
   assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.match(c, /async function invRefresh\(\)[\s\S]{0,400}inventory\?\.stacks/);
   assert.match(c, /item-transfer\/claim' && d\.status === 200\) \{ L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\); \}/);

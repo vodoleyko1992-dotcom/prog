@@ -68,7 +68,7 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', doc = null, click =
   // 3. кнопка сразу после отправки: что лежит у крафтера; в журнале отправки — с какого уровня цены по оценке
   { const INV = { 1458: 100, 1869: 100, 1876: 100 };
     const { env, M } = mk({ inv: INV, rt: { mmCraftReq: { t: Date.now() }, mmCraft: { to: 'Skye', at: { 1869: 15, 1865: 15 }, t0: Date.now() } } });
-    assert.equal(await M.mmStep(), false); assert.match(env.rt.mmCraftSay.why, /сырьё уже у крафтера Skye \(.*15.*\) — жду готовое письмом/); }
+    assert.equal(await M.mmStep(), false); assert.match(env.rt.mmCraftSay.why, /Отправка ресурсов крафтеру удалена/); }
   { const { M } = mk({ inv: { 1458: 1000, 1869: 1000, 1876: 1000, 1865: 1000 }, cfg: { mmGoalLvl: 3, mmCraftScope: 'all' } });
     const w = M.craftWant(); assert.equal(w.kind, 'send'); assert.match(w.why, /цены с Lv\.1 → 2 — оценка/); }
   { const { M } = mk({ inv: { 1458: 100, 1869: 115, 1876: 100, 1865: 20 } });
