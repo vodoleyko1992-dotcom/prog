@@ -1,0 +1,686 @@
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Vladivostok",
+  "date": "2026-10-16",
+  "source": {
+    "file": "l2bot-log-2026-10-16-12-21.txt",
+    "bytes": 4399270,
+    "sha256": "460b93727479fab9d3ddced0e572210b8b76d68414115482a21abb9c5f65a592",
+    "physicalLines": 8924,
+    "header": "# L2wap Bot v20.5 — журнал: новое с прошлой выгрузки · 8901 событий · 16.10.2026, 21:47:59 — 16.10.2026, 22:21:02"
+  },
+  "catalogCrosscheckSource": {
+    "file": "kb/data/game-mobs.json",
+    "sha256": "b64d054a8ad7bcd7305864dcf9dab0ce5b03563f443af365a9f169978aa4b890",
+    "meaning": "previous catalog; not a new server response"
+  },
+  "scope": "Manual Provoke then Whirlwind after bot pause; lines8910–8924. Adjacent earlier AoE retained for comparison.",
+  "sequence": {
+    "pauseAt": "22:20:52.942",
+    "provokeClickAt": "22:20:57.988",
+    "provokeReplyAt": "22:20:58.385",
+    "whirlwindClickAt": "22:21:01.351",
+    "whirlwindReplyAt": "22:21:02.179",
+    "rewardAt": "22:21:02.568",
+    "domSpawnId": "dense_25478",
+    "requestBattleSpawnId": "dense_25533",
+    "provokeExpectedRevision": 13392,
+    "whirlwindExpectedRevision": 13393
+  },
+  "beforeProvoke": {
+    "visibleTargets": 1,
+    "mainName": "Garden Guard",
+    "mainHp": 2484,
+    "mainMaxHp": 2484,
+    "heroHp": 6195,
+    "heroMaxHp": 6195,
+    "heroMp": 97,
+    "heroMaxMp": 874
+  },
+  "afterProvoke": {
+    "visibleTargets": 31,
+    "additionalTargets": 30,
+    "targetHpPairs": [
+      [
+        2484,
+        2484
+      ],
+      [
+        2484,
+        2484
+      ],
+      [
+        2724,
+        2724
+      ],
+      [
+        2292,
+        2292
+      ],
+      [
+        2484,
+        2484
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2436,
+        2436
+      ],
+      [
+        2340,
+        2340
+      ],
+      [
+        2484,
+        2484
+      ],
+      [
+        2724,
+        2724
+      ],
+      [
+        2724,
+        2724
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2292,
+        2292
+      ],
+      [
+        2340,
+        2340
+      ],
+      [
+        2292,
+        2292
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2964,
+        2964
+      ],
+      [
+        2436,
+        2436
+      ],
+      [
+        2436,
+        2436
+      ],
+      [
+        2340,
+        2340
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2484,
+        2484
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2724,
+        2724
+      ],
+      [
+        2964,
+        2964
+      ],
+      [
+        2964,
+        2964
+      ],
+      [
+        2340,
+        2340
+      ],
+      [
+        2964,
+        2964
+      ],
+      [
+        2580,
+        2580
+      ],
+      [
+        2964,
+        2964
+      ]
+    ],
+    "sumDisplayedTargetHp": 79740,
+    "heroHp": 6195,
+    "heroMp": 40,
+    "effectText": "−10% опору до списів, 10 с.",
+    "effectSourceLine": 8917
+  },
+  "afterWhirlwind": {
+    "heroHp": 6195,
+    "heroMp": 18,
+    "contextShowsOnlyMainTarget": true,
+    "contextMainHpIsStaleOrUnconfirmed": true,
+    "botMeasurement": "урон не измерен",
+    "reward": {
+      "adena": 123292,
+      "exp": 0,
+      "sp": 19820
+    },
+    "rewardSourceLine": 8923,
+    "visibleDefeatTailNames": [
+      "Freya's Gardener",
+      "Garden Guard Leader",
+      "Freya's Gardener",
+      "Nos Lad"
+    ],
+    "defeatTailSourceLine": 8924
+  },
+  "groupBySpecies": [
+    {
+      "name": "Garden Guard",
+      "count": 5,
+      "catalogLevel": 48,
+      "catalogMaxHp": 2484,
+      "catalogSp": 616,
+      "subtotalSp": 3080
+    },
+    {
+      "name": "Doll Blader",
+      "count": 4,
+      "catalogLevel": 53,
+      "catalogMaxHp": 2724,
+      "catalogSp": 618,
+      "subtotalSp": 2472
+    },
+    {
+      "name": "Farhite Lad",
+      "count": 3,
+      "catalogLevel": 44,
+      "catalogMaxHp": 2292,
+      "catalogSp": 386,
+      "subtotalSp": 1158
+    },
+    {
+      "name": "Garden Guard Leader",
+      "count": 5,
+      "catalogLevel": 50,
+      "catalogMaxHp": 2580,
+      "catalogSp": 932,
+      "subtotalSp": 4660
+    },
+    {
+      "name": "Doll Master",
+      "count": 2,
+      "catalogLevel": 50,
+      "catalogMaxHp": 2580,
+      "catalogSp": 594,
+      "subtotalSp": 1188
+    },
+    {
+      "name": "Eva's Seeker",
+      "count": 3,
+      "catalogLevel": 47,
+      "catalogMaxHp": 2436,
+      "catalogSp": 352,
+      "subtotalSp": 1056
+    },
+    {
+      "name": "Nos Lad",
+      "count": 4,
+      "catalogLevel": 45,
+      "catalogMaxHp": 2340,
+      "catalogSp": 484,
+      "subtotalSp": 1936
+    },
+    {
+      "name": "Freya's Gardener",
+      "count": 5,
+      "catalogLevel": 58,
+      "catalogMaxHp": 2964,
+      "catalogSp": 854,
+      "subtotalSp": 4270
+    }
+  ],
+  "crosscheck": {
+    "catalogSpForAll31": 19820,
+    "rewardSp": 19820,
+    "exactMatch": true,
+    "interpretation": "Strong corroboration that all31 gathered ordinary mobs were defeated by the manual Whirlwind. Not31 independent death receipts or a full damage trace."
+  },
+  "netMpChanges": {
+    "provoke": -57,
+    "whirlwind": -22,
+    "combined": -79,
+    "meaning": "observed MP deltas, not raw skill costs"
+  },
+  "events": [
+    {
+      "line": 8890,
+      "at": "22:20:48.685",
+      "message": "[B] бот Бой: Грозова буря · моб 100% · АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом",
+      "context": "battle?spawnId=dense_25414 HP 6195/6195 MP 120/874 · моб Freya's Gardener 2964/2964",
+      "gameLogTail": "Mithril Ore ×2 ⏎ Animal Skin ×1 ⏎ Stone of Purity ×1 ⏎ Грозова буря вразила ворогів поруч: Garden Guard −6520, Doll Blader −6520, Farhite Lad −6520. ⏎ Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~37%) 6520"
+    },
+    {
+      "line": 8893,
+      "at": "22:20:49.552",
+      "message": "[G] игра Выпало: +13966 аден, +0 EXP, +2474 SP.",
+      "context": "battle?spawnId=dense_25414 HP 6195/6195 MP 120/874 · моб Freya's Gardener 2964/2964"
+    },
+    {
+      "line": 8894,
+      "at": "22:20:49.931",
+      "message": "[B] скилл «Грозова буря»: урон не измерен · MP −67 · КД 14.2 с",
+      "context": "battle?spawnId=dense_25414 HP 6195/6195 MP 120/874 · моб Freya's Gardener 2964/2964",
+      "gameLogTail": "Mithril Ore ×2 ⏎ Animal Skin ×1 ⏎ Stone of Purity ×1 ⏎ Грозова буря вразила ворогів поруч: Garden Guard −6520, Doll Blader −6520, Farhite Lad −6520. ⏎ Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~37%) 6520 ⏎ Победа!"
+    },
+    {
+      "line": 8906,
+      "at": "22:20:51.991",
+      "message": "[B] бот Бой: Вихор · моб 100% · АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом",
+      "context": "battle?spawnId=dense_24766 HP 6195/6195 MP 71/874 · моб Crimson Doll Blader 2724/2724",
+      "gameLogTail": "Suede ×2 ⏎ Mithril Ore ×1 ⏎ Вихор вразив ворогів поруч: Garden Guard −7210, Doll Blader −7210, Farhite Lad −7210. ⏎ Вихор: power 732; до 4 цілей (головна + 3 поруч) 7210"
+    },
+    {
+      "line": 8907,
+      "at": "22:20:52.324",
+      "message": "[B] скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с",
+      "context": "battle?spawnId=dense_24766 HP 6195/6195 MP 71/874 · моб Crimson Doll Blader 2724/2724",
+      "gameLogTail": "Suede ×2 ⏎ Mithril Ore ×1 ⏎ Вихор вразив ворогів поруч: Garden Guard −7210, Doll Blader −7210, Farhite Lad −7210. ⏎ Вихор: power 732; до 4 цілей (головна + 3 поруч) 7210 ⏎ Додаткова ціль повалена: Farhite Lad."
+    },
+    {
+      "line": 8908,
+      "at": "22:20:52.370",
+      "message": "[G] игра Выпало: +13378 аден, +0 EXP, +2162 SP.",
+      "context": "battle?spawnId=dense_24766 HP 6195/6195 MP 71/874 · моб Crimson Doll Blader 2724/2724"
+    },
+    {
+      "line": 8910,
+      "at": "22:20:52.942",
+      "message": "[S] сессия ⏸ пауза (состояние сохранено)",
+      "context": "battle?spawnId=dense_24766 HP 6195/6195 MP 71/874 · моб Crimson Doll Blader 2724/2724"
+    },
+    {
+      "line": 8911,
+      "at": "22:20:56.383",
+      "message": "[U] клик button#battle-victory-hunt.l2-battle-victory-link.l2-battle-victory-link--muted «Охотиться дальше» в [Победа]",
+      "context": "battle?spawnId=dense_24766 HP 6195/6195 MP 71/874 · моб Crimson Doll Blader 2724/2724"
+    },
+    {
+      "line": 8912,
+      "at": "22:20:56.756",
+      "message": "[N] сеть POST /game/battle/hunt-continue → 200 · 332 мс · 28559 б",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 97/874 · моб Garden Guard 2484/2484",
+      "request": {
+        "expectedRevision": 13391,
+        "excludeSpawnId": "dense_24766",
+        "preferredSpawnId": "dense_25513",
+        "targetLevel": 53,
+        "battleSpawnId": "dense_25533"
+      },
+      "httpStatus": 200
+    },
+    {
+      "line": 8913,
+      "at": "22:20:57.988",
+      "message": "[U] клик слот #30 «Провокація масова (Provoke)» КД ?",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 97/874 · моб Garden Guard 2484/2484"
+    },
+    {
+      "line": 8915,
+      "at": "22:20:58.385",
+      "message": "[N] сеть POST /game/battle/action → 200 · 340 мс · 30392 б",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 40/874 · моб Garden Guard 2484/2484 +  2484/2484 +  2724/2724 +  2292/2292 +  2484/2484 +  2580/2580 +  2580/2580 +  2436/2436 +  2340/2340 +  2484/2484 +  2724/2724 +  2724/2724 +  2580/2580 +  2292/2292 +  2340/2340 +  2292/2292 +  2580/2580 +  2964/2964 +  2436/2436 +  2436/2436 +  2340/2340 +  2580/2580 +  2484/2484 +  2580/2580 +  2724/2724 +  2964/2964 +  2964/2964 +  2340/2340 +  2964/2964 +  2580/2580 +  2964/2964",
+      "request": {
+        "action": "provoke",
+        "expectedRevision": 13392,
+        "battleSpawnId": "dense_25533"
+      },
+      "httpStatus": 200
+    },
+    {
+      "line": 8917,
+      "at": "22:20:59.071",
+      "message": "[U] скилл «Провокація масова»: урон не измерен · MP −57",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 40/874 · моб Garden Guard 2484/2484 +  2484/2484 +  2724/2724 +  2292/2292 +  2484/2484 +  2580/2580 +  2580/2580 +  2436/2436 +  2340/2340 +  2484/2484 +  2724/2724 +  2724/2724 +  2580/2580 +  2292/2292 +  2340/2340 +  2292/2292 +  2580/2580 +  2964/2964 +  2436/2436 +  2436/2436 +  2340/2340 +  2580/2580 +  2484/2484 +  2580/2580 +  2724/2724 +  2964/2964 +  2964/2964 +  2340/2340 +  2964/2964 +  2580/2580 +  2964/2964",
+      "gameLogTail": "[Garden Guard] промахнулся по тобі. ⏎ Провокація: агро мобів і РБ у радіусі; епіки не зачіпає. ⏎ Провокація (Provoke): агро Garden Guard, Garden Guard, Doll Blader, Farhite Lad, Garden Guard, Garden Guard Leader, Doll Master, Eva's Seeker, Nos Lad, Garden Guard, Doll Blader, Doll Blader, Doll Master, Farhite Lad, Nos Lad, Farhite Lad, Garden Guard Leader, Freya's Gardener, Eva's Seeker, Eva's Seeker, Nos Lad, Garden Guard Leader, Garden Guard, Garden Guard Leader, Doll Blader, Freya's Gardener, Freya's Gardener, Nos Lad, Freya's Gardener, Garden Guard Leader, Freya's Gardener; −10% опору до списів, 10 с."
+    },
+    {
+      "line": 8918,
+      "at": "22:20:59.493",
+      "message": "[U] итог слот #30 «Провокація масова (Provoke)» КД ?",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 40/874 · моб Garden Guard 2484/2484 +  2484/2484 +  2724/2724 +  2292/2292 +  2484/2484 +  2580/2580 +  2580/2580 +  2436/2436 +  2340/2340 +  2484/2484 +  2724/2724 +  2724/2724 +  2580/2580 +  2292/2292 +  2340/2340 +  2292/2292 +  2580/2580 +  2964/2964 +  2436/2436 +  2436/2436 +  2340/2340 +  2580/2580 +  2484/2484 +  2580/2580 +  2724/2724 +  2964/2964 +  2964/2964 +  2340/2340 +  2964/2964 +  2580/2580 +  2964/2964",
+      "gameLogTail": "[Garden Guard] промахнулся по тобі. ⏎ Провокація: агро мобів і РБ у радіусі; епіки не зачіпає. ⏎ Провокація (Provoke): агро Garden Guard, Garden Guard, Doll Blader, Farhite Lad, Garden Guard, Garden Guard Leader, Doll Master, Eva's Seeker, Nos Lad, Garden Guard, Doll Blader, Doll Blader, Doll Master, Farhite Lad, Nos Lad, Farhite Lad, Garden Guard Leader, Freya's Gardener, Eva's Seeker, Eva's Seeker, Nos Lad, Garden Guard Leader, Garden Guard, Garden Guard Leader, Doll Blader, Freya's Gardener, Freya's Gardener, Nos Lad, Freya's Gardener, Garden Guard Leader, Freya's Gardener; −10% опору до списів, 10 с."
+    },
+    {
+      "line": 8919,
+      "at": "22:21:01.351",
+      "message": "[U] клик слот #19 «Вихор (Whirlwind)»",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 40/874 · моб Garden Guard 2484/2484 +  2484/2484 +  2724/2724 +  2292/2292 +  2484/2484 +  2580/2580 +  2580/2580 +  2436/2436 +  2340/2340 +  2484/2484 +  2724/2724 +  2724/2724 +  2580/2580 +  2292/2292 +  2340/2340 +  2292/2292 +  2580/2580 +  2964/2964 +  2436/2436 +  2436/2436 +  2340/2340 +  2580/2580 +  2484/2484 +  2580/2580 +  2724/2724 +  2964/2964 +  2964/2964 +  2340/2340 +  2964/2964 +  2580/2580 +  2964/2964"
+    },
+    {
+      "line": 8920,
+      "at": "22:21:02.179",
+      "message": "[N] сеть POST /game/battle/action → 200 · 796 мс · 28123 б",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 18/874 · моб Garden Guard 2484/2484",
+      "request": {
+        "action": "whirlwind",
+        "expectedRevision": 13393,
+        "battleSpawnId": "dense_25533"
+      },
+      "httpStatus": 200
+    },
+    {
+      "line": 8921,
+      "at": "22:21:02.422",
+      "message": "[U] скилл «Вихор»: урон не измерен · MP −22 · КД 4.7 с",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 18/874 · моб Garden Guard 2484/2484",
+      "gameLogTail": "Випала мисливська шкура +1 ⏎ Stone of Purity ×1 ⏎ Додаткова ціль повалена: Freya's Gardener. ⏎ Armor Piece C ×1 ⏎ Suede ×3 ⏎ Stem ×1 ⏎ Додаткова ціль повалена: Garden Guard Leader. ⏎ Stone of Purity ×1"
+    },
+    {
+      "line": 8923,
+      "at": "22:21:02.568",
+      "message": "[G] игра Выпало: +123292 аден, +0 EXP, +19820 SP.",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 18/874 · моб Garden Guard 2484/2484"
+    },
+    {
+      "line": 8924,
+      "at": "22:21:02.866",
+      "message": "[U] итог слот #19 «Вихор (Whirlwind)»",
+      "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 18/874 · моб Garden Guard 2484/2484",
+      "gameLogTail": "Випала мисливська шкура +1 ⏎ Stone of Purity ×1 ⏎ Додаткова ціль повалена: Freya's Gardener. ⏎ Armor Piece C ×1 ⏎ Suede ×3 ⏎ Stem ×1 ⏎ Додаткова ціль повалена: Garden Guard Leader. ⏎ Stone of Purity ×1 ⏎ Додаткова ціль повалена: Freya's Gardener. ⏎ Varnish ×1 ⏎ Animal Bone ×1 ⏎ Додаткова ціль повалена: Nos Lad."
+    }
+  ],
+  "limitations": [
+    "One manual demonstration while bot paused; does not prove automatic Provoke use or optimal group size.",
+    "Displayed old primary HP2484 after Whirlwind is not evidence the mob survived; the reward is separate evidence.",
+    "Only the tail of the death list is preserved. No complete delta, target IDs or exact damage for the manual Whirlwind.",
+    "The31-target SP sum corroborates a group wipe; universal uncapped AoE or boss/champion behavior is not established.",
+    "79740 is summed HP before the attack, not independently measured skill damage or sustained DPS.",
+    "Reward ratios versus preceding pulls are per-fight observations, not measured adena/hour.",
+    "Repeated U skill/result tails are not separate casts; only one provoke request exists in the file.",
+    "HP6195 at both endpoints does not rule out intermediate damage followed by healing.",
+    "No live game requests, runtime changes or profile changes were performed.",
+    "Large-pull rewards establish group result, not whether Whirlwind directly hit31 targets or victory processing awarded/finished the rest. No universal target cap derived."
+  ],
+  "supplement": {
+    "source": {
+      "file": "l2bot-log-2026-10-16-12-21 (1).txt",
+      "bytes": 27645,
+      "sha256": "c8d4d3bd5d8e6e0097537887f31d236e61ef38c76b3bd4c15682466a98666a7d",
+      "physicalLines": 56,
+      "header": "# L2wap Bot v20.5 — журнал: новое с прошлой выгрузки · 33 событий · 16.10.2026, 22:21:31 — 16.10.2026, 22:21:53"
+    },
+    "previousBattleVictory": {
+      "line": 24,
+      "at": "22:21:31.075",
+      "evidence": "Victory hunt button is clicked after large pull; hunt-continue uses expectedRevision13394."
+    },
+    "provokeRequests": 0,
+    "manualComparisons": [
+      {
+        "action": "thunder_storm",
+        "requestLine": 27,
+        "damageTextLine": 31,
+        "displayedDamage": 6669,
+        "mainName": "Crimson Doll Blader",
+        "extraNames": [
+          "Garden Guard",
+          "Doll Blader",
+          "Farhite Lad"
+        ],
+        "adena": 15155,
+        "sp": 2162,
+        "catalogSpSum": 2162,
+        "heroMpBefore": 203,
+        "heroMpAfter": 178,
+        "botDamageMeasured": false
+      },
+      {
+        "action": "whirlwind",
+        "requestLine": 35,
+        "damageTextLine": 36,
+        "displayedDamage": 7141,
+        "mainName": "Doll Blader",
+        "extraNames": [
+          "Garden Guard",
+          "Doll Blader",
+          "Farhite Lad"
+        ],
+        "adena": 7472,
+        "sp": 2238,
+        "catalogSpSum": 2238,
+        "heroMpBefore": 191,
+        "heroMpAfter": 142,
+        "botDamageMeasured": false
+      },
+      {
+        "action": "wild_sweep",
+        "requestLine": 44,
+        "damageTextLine": 46,
+        "displayedDamage": 5920,
+        "mainName": "Crimson Doll Blader",
+        "extraNames": [],
+        "adena": 6248,
+        "sp": 542,
+        "catalogSpSum": 542,
+        "heroMpBefore": 155,
+        "heroMpAfter": 118,
+        "botDamageMeasured": true
+      }
+    ],
+    "events": [
+      {
+        "line": 24,
+        "at": "22:21:31.075",
+        "message": "[U] клик button#battle-victory-hunt.l2-battle-victory-link.l2-battle-victory-link--muted «Охотиться дальше» в [Победа]",
+        "context": "battle?spawnId=dense_25478 HP 6195/6195 MP 18/874 · моб Garden Guard 2484/2484"
+      },
+      {
+        "line": 25,
+        "at": "22:21:31.377",
+        "message": "[N] сеть POST /game/battle/hunt-continue → 200 · 264 мс · 28475 б",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 203/874 · моб Crimson Doll Blader 2724/2724",
+        "request": {
+          "expectedRevision": 13394,
+          "excludeSpawnId": "dense_25478",
+          "preferredSpawnId": "dense_25579",
+          "targetLevel": 48,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 26,
+        "at": "22:21:38.439",
+        "message": "[U] клик слот #20 «Грозова буря (Thunder Storm)»",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 203/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 27,
+        "at": "22:21:38.925",
+        "message": "[N] сеть POST /game/battle/action → 200 · 454 мс · 24799 б",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 178/874 · моб Crimson Doll Blader 2724/2724",
+        "request": {
+          "action": "thunder_storm",
+          "expectedRevision": 13395,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 29,
+        "at": "22:21:39.326",
+        "message": "[G] игра Выпало: +15155 аден, +0 EXP, +2162 SP.",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 178/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 30,
+        "at": "22:21:39.504",
+        "message": "[U] скилл «Грозова буря»: урон не измерен · MP −25 · КД 14.2 с",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 178/874 · моб Crimson Doll Blader 2724/2724",
+        "gameLogTail": "Accessory Gemstone C ×1 ⏎ Silver Nugget ×3 ⏎ Animal Skin ×2 ⏎ Додаткова ціль повалена: Farhite Lad. ⏎ Silver Nugget ×1 ⏎ Oriharukon Ore ×2 ⏎ Додаткова ціль повалена: Doll Blader. ⏎ Додаткова ціль повалена: Garden Guard."
+      },
+      {
+        "line": 31,
+        "at": "22:21:39.944",
+        "message": "[U] итог слот #20 «Грозова буря (Thunder Storm)»",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 178/874 · моб Crimson Doll Blader 2724/2724",
+        "gameLogTail": "Accessory Gemstone C ×1 ⏎ Silver Nugget ×3 ⏎ Animal Skin ×2 ⏎ Додаткова ціль повалена: Farhite Lad. ⏎ Silver Nugget ×1 ⏎ Oriharukon Ore ×2 ⏎ Додаткова ціль повалена: Doll Blader. ⏎ Додаткова ціль повалена: Garden Guard. ⏎ Грозова буря вразила ворогів поруч: Garden Guard −6669, Doll Blader −6669, Farhite Lad −6669. ⏎ Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 6669"
+      },
+      {
+        "line": 32,
+        "at": "22:21:41.242",
+        "message": "[U] клик button#battle-victory-hunt.l2-battle-victory-link.l2-battle-victory-link--muted «Охотиться дальше» в [Победа]",
+        "context": "battle?spawnId=dense_24673 HP 6195/6195 MP 178/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 33,
+        "at": "22:21:41.757",
+        "message": "[N] сеть POST /game/battle/hunt-continue → 200 · 484 мс · 28562 б",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 191/874 · моб Doll Blader 2724/2724",
+        "request": {
+          "expectedRevision": 13396,
+          "excludeSpawnId": "dense_24673",
+          "preferredSpawnId": "dense_25513",
+          "targetLevel": 53,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 34,
+        "at": "22:21:43.011",
+        "message": "[U] клик слот #19 «Вихор (Whirlwind)»",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 191/874 · моб Doll Blader 2724/2724"
+      },
+      {
+        "line": 35,
+        "at": "22:21:43.685",
+        "message": "[N] сеть POST /game/battle/action → 200 · 645 мс · 24637 б",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 142/874 · моб Doll Blader 2724/2724",
+        "request": {
+          "action": "whirlwind",
+          "expectedRevision": 13397,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 36,
+        "at": "22:21:44.086",
+        "message": "[U] скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 142/874 · моб Doll Blader 2724/2724",
+        "gameLogTail": "Suede ×1 ⏎ Вихор вразив ворогів поруч: Garden Guard −7141, Doll Blader −7141, Farhite Lad −7141. ⏎ Вихор: power 732; до 4 цілей (головна + 3 поруч) 7141 ⏎ Varnish ×1 ⏎ Победа!"
+      },
+      {
+        "line": 37,
+        "at": "22:21:44.089",
+        "message": "[G] игра Выпало: +7472 аден, +0 EXP, +2238 SP.",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 142/874 · моб Doll Blader 2724/2724"
+      },
+      {
+        "line": 40,
+        "at": "22:21:44.527",
+        "message": "[U] итог слот #19 «Вихор (Whirlwind)»",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 142/874 · моб Doll Blader 2724/2724",
+        "gameLogTail": "Suede ×1 ⏎ Вихор вразив ворогів поруч: Garden Guard −7141, Doll Blader −7141, Farhite Lad −7141. ⏎ Вихор: power 732; до 4 цілей (головна + 3 поруч) 7141"
+      },
+      {
+        "line": 41,
+        "at": "22:21:46.466",
+        "message": "[U] клик button#battle-victory-hunt.l2-battle-victory-link.l2-battle-victory-link--muted «Охотиться дальше» в [Победа]",
+        "context": "battle?spawnId=dense_25664 HP 6195/6195 MP 142/874 · моб Doll Blader 2724/2724"
+      },
+      {
+        "line": 42,
+        "at": "22:21:46.768",
+        "message": "[N] сеть POST /game/battle/hunt-continue → 200 · 260 мс · 28653 б",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 155/874 · моб Crimson Doll Blader 2724/2724",
+        "request": {
+          "expectedRevision": 13398,
+          "excludeSpawnId": "dense_25664",
+          "preferredSpawnId": "dense_25513",
+          "targetLevel": 53,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 43,
+        "at": "22:21:47.827",
+        "message": "[U] клик слот #9 «Дикий розмах (Wild Sweep)»",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 155/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 44,
+        "at": "22:21:48.755",
+        "message": "[N] сеть POST /game/battle/action → 200 · 896 мс · 24354 б",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724",
+        "request": {
+          "action": "wild_sweep",
+          "expectedRevision": 13399,
+          "battleSpawnId": "dense_25533"
+        },
+        "httpStatus": 200
+      },
+      {
+        "line": 46,
+        "at": "22:21:48.968",
+        "message": "[U] скилл «Дикий розмах»: урон 5920 · MP −37 · КД 12 с",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724",
+        "gameLogTail": "Випав кубок +1 ⏎ Дикий розмах: power 326 5920"
+      },
+      {
+        "line": 49,
+        "at": "22:21:49.142",
+        "message": "[G] игра Выпало: +6248 аден, +0 EXP, +542 SP.",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 50,
+        "at": "22:21:49.331",
+        "message": "[U] итог слот #9 «Дикий розмах (Wild Sweep)»",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724",
+        "gameLogTail": "Випав кубок +1 ⏎ Дикий розмах: power 326 5920"
+      },
+      {
+        "line": 51,
+        "at": "22:21:51.751",
+        "message": "[S] сессия ▶ бот запущен",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724"
+      },
+      {
+        "line": 53,
+        "at": "22:21:51.806",
+        "message": "[B] бот Бой: загрузка",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724",
+        "gameLogTail": "Випав кубок +1 ⏎ Дикий розмах: power 326 5920 ⏎ Suede ×1 ⏎ Silver Nugget ×1 ⏎ Varnish ×1 ⏎ Вихор вразив ворогів поруч: Garden Guard −7141, Doll Blader −7141, Farhite Lad −7141. ⏎ Вихор: power 732; до 4 цілей (головна + 3 поруч) 7141 ⏎ Бой начат: Doll Blader (ур. 53) ⏎ Varnish ×1"
+      },
+      {
+        "line": 54,
+        "at": "22:21:51.920",
+        "message": "[B] бот Возврат на карту",
+        "context": "battle?spawnId=dense_24858 HP 6195/6195 MP 118/874 · моб Crimson Doll Blader 2724/2724"
+      }
+    ],
+    "interpretation": "Additional log confirms preceding victory and then3 manual casts in separate battles without new Provoke: AoE rewards match4 mobs; Wild Sweep matches1 mob. Bot resumed only afterwards."
+  }
+}
