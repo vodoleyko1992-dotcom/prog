@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.7 — оба агро Warlord, приоритет спойла и смена задач =====
+// ===== L2wap Bot v20.7 — агро Warlord, быстрая заточка и исправления авторежима =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -10,7 +10,7 @@ const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sen
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
   enchantMode: false,
-  enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0},
+  enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
@@ -18,7 +18,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 20, deepEvery: 10,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
+  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
   lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
@@ -931,9 +931,9 @@ const searchActive = rules => campActive() || campMobOpen().length > 0 || campCh
   || rules.some(x => !x.neg && ((x.quest && questHere()) || x.champ || (!!x.name && L2V7Modules.mobfarm.nameHere(x.name))));
 const rbDue = (...args) => L2V7Modules.raid.rbDue(...args);   // тур: решение «фармлю здесь» держится 3 мин — между проверками цепочка
 // проверка карты каждые N боёв; пока глава ждёт чемпионов — не реже чем раз в 5 боёв (чемпионы появляются и пропадают)
-// v4.30: ищем чемпионов (правило «Чемп» в приоритете) — не реже раза в 20 боёв: при «раз в 100» бот их почти не заставал
-const CHAMP_EVERY = 20;
-// 10.0.5 (игрок 13.10: «автопоиск чемпионов раз в 20 убитых мобов»): карта ради чемпионов — раз в cfg.champEvery боёв (20), и при «0 = никогда»
+// 17.10.2026: резервный интервал поиска чемпионов — 30 боёв по просьбе игрока.
+const CHAMP_EVERY = 30;
+// Карта ради чемпионов — раз в cfg.champEvery боёв, в том числе при выключенной общей проверке карты.
 const champEvery = () => Math.max(5, +cfg.champEvery || CHAMP_EVERY);
 const champHunt = () => champRuleOn() && parseRules().some(x => x.champ && !x.neg);
 // 7.1.31 (просьба игрока: «поставил 99999, а он всё равно проверяет карту»): 0 — карту по плану НЕ проверять никогда, только цепочка
@@ -5787,6 +5787,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     for (const [k, p] of Object.entries(S)) if (p.dmgN && /^(?:curse|surrender|сurse)/i.test(k)) { S[k] = { ...p, dmg: 0, dmgN: 0 }; sk = true; }
   });
   once('ffDmgMig', () => { if (S['focused force']?.dmgN) { S['focused force'] = { ...S['focused force'], dmg: 0, dmgN: 0 }; sk = true; } });
+  // 17.10.2026: по просьбе игрока карта/чемпионы раз в 30 боёв; свои интервалы сохраняем.
+  once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
   if (sk) rf.skills = S;
