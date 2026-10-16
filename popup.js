@@ -1994,6 +1994,7 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
   const head = `# L2wap Bot v${chrome.runtime.getManifest().version} — журнал: ${title} · ${rows.length} событий · ${new Date(rows[0][1].t).toLocaleString('ru')} — ${new Date(rows.at(-1)[1].t).toLocaleString('ru')}\n`
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
+    + `# Цель рыбалки: ${JSON.stringify(rt.fishTgt || null)} · активный заброс: ${rt.fishCastActive === true} · обслуживание: ${rt.fishService || '—'}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
     + `# Скиллы (по наблюдениям): ${Object.entries(rt.skills || {}).filter(([, p]) => p.uses || p.dmgN).map(([k, p]) => ({ ...p, name: p.name || k })).map(p => `${p.name}: исп ${p.uses || 0} (ваших ${p.usesU || 0})`
         + (p.dmgN ? `, урон≈${Math.round(p.dmg / p.dmgN)}` : '') + (p.mpN ? `, MP≈${Math.round(p.mp / p.mpN)}` : '')
