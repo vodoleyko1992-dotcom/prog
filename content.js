@@ -229,8 +229,8 @@ const mobSpoiled = () => /(^|\|)spoil:/i.test($q('#battle-mob-effects-row')?.dat
 const SPOIL_LOOT = /^(?:Спойл|Spoil)\s*:?\s*(.+?)\s*×\s*(\d+)/i;
 const SWEEP_OK = /(sweep|свип|зібр|собра)[^.]{0,40}|спойл[^.]{0,20}(получ|отрим)/i;
 function spoilPick(...args) { return L2V7Modules.loot.spoilPick(...args); }
-// v5.5.8: 🎉 масс-спойл (Spoil Festival — область вокруг цели, MP 73–204): когда в бою 2+ живых моба — сначала он (метит всех
-// рядом за одно нажатие), один моб — обычный Spoil (в 3–6 раз дешевле). Масс-спойл — раз за бой (не прошёл — дальше обычный Spoil по главному)
+// Масс-спойл первым по готовности, даже по одному мобу или до появления соседей в DOM.
+// Одиночный Spoil — запасной вариант, когда массовый недоступен или не хватило MP.
 function massSpoilPick(...args) { return L2V7Modules.loot.massSpoilPick(...args); }
 function festivalParse(...args) { return L2V7Modules.loot.festivalParse(...args); }
 async function massSpoilStep(...args) { return L2V7Modules.loot.massSpoilStep(...args); }
