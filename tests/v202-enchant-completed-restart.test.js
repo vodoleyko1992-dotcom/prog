@@ -17,7 +17,7 @@ async function fixture(bag=false){
 for(const bag of [false,true])test('new series preserves exact completed '+(bag?'bag token':'equipped item')+' and resets counters',async()=>{
  const f=await fixture(bag);assert.equal(await f.m.command('start'),true);const s=f.env.rt.enchant;
  assert.equal(s.status,'running');assert.equal(s.items[0].start,4);assert.equal(s.items[0].level,4);assert.equal(s.items[0].attempts,0);assert.equal(s.totals.attempts,0);
- assert.equal(s.items[0].targetInstanceId,bag?'bag:8688:4:0:24':'eq:l1');assert.equal(f.env.rt.enchantArchive[0].totals.attempts,1);
+ assert.equal(s.items[0].targetInstanceId,bag?'bag:8688:4:0:24:own':'eq:l1');assert.equal(f.env.rt.enchantArchive[0].totals.attempts,1);
 });
 for(const [name,change] of Object.entries({
  wrongCharacter:f=>f.old.char='Other',changedKey:f=>f.q.key='other',changedBinding:f=>f.q.targetInstanceId='eq:l2',manualEnchant:f=>f.row.enchant=5,
