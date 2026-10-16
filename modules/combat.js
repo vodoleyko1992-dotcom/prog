@@ -931,8 +931,53 @@ function healPick(ctx, mp) {                      // готовый лечащи
 
 const healSlot = b => [...env.names(env.cfg.nDrain), ...env.names(env.cfg.nHeal || '')].some(n => slotsBy(n)[0] === b);   // 10.0.5: ход лечит героя
 
+// 20.5 (логи16.10 12:21): Provoke → AoE дал награду за31моба; поддержка
+// не входит в nPower. Собираем один раз за бой, заранее резервируем MP на массовый удар.
+function warlordPullTarget() { return location.search + '|' + mobName() + '|' + (mobHp()?.max || 0); }
+function warlordPullCost(b) {
+  const n = env.cleanTitle(b.title).toLowerCase(), il = env.ilOf(b) || {};
+  const row = env.rt.skillDb?.[n] || env.rt.skillDb?.[String(il.n || '').toLowerCase()];
+  // Чистое MP из rt.skills занижается регеном: для сбора берём каталог, затем верх справочника.
+  if (row && Number.isFinite(row.mp) && row.mp > 0) return row.mp;
+  const values = (Array.isArray(il.mp) ? il.mp : [il.mp]).filter(x => Number.isFinite(x) && x > 0);
+  return values.length ? Math.max(...values) : null;
+}
+function warlordPullReady(b) { return uiReady(b) && localCdLeft(b) <= 0 && env.combatCooldown.skillWait('provoke', (env.cdSpawn || env.battleSpawn)()) <= 0; }
+function warlordPullPlan(ctx, mp) {
+  const prof = String(env.rt.classCur?.prof || env.rt.prof || '').replace(/[_-]/g, ' ');
+  if (env.cfg.warlordAggro === false || !/^(?:human )?(?:warlord|dreadnought)$/i.test(prof) || mageCombat() || ctx.rb || ctx.champ || env.pvpPending?.()) return null;
+  const info = env.battleInfo?.(), age = Date.now() - (+info?.t || 0);
+  if (!info || age < 0 || age > 60000 || String(info.name || '').toLowerCase() !== mobName().toLowerCase() || !(info.max > 0) || +info.max !== mobHp()?.max || !/^(normal|passive|neutral|aggressive)$/.test(info.kind || '') || info.tier) return null;
+  const weapon = env.rt.weaponsT && !env.rt.weaponMetaPending && (env.rt.weapons || []).find(w => w.where === 'надето' && w.name === env.rt.weaponNow);
+  if (!weapon || weapon.unknown || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return null;
+  const me = env.meHp(), mob = mobHp(), target = warlordPullTarget();
+  if (!me || !(me.cur > 0 && me.max > 0) || !mob?.cur || !mp || !Number.isFinite(mp.cur) || mp.cur < (+env.cfg.skillMpMin || 0)) return null;
+  const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
+  const powers = new Set(env.names(env.cfg.nPower).map(n => n.toLowerCase()));
+  const aoes = slots.filter(b => ['whirlwind','thunder_storm'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && ready(b) && free('power:' + b.title))
+    .map(b => ({ b, cost: warlordPullCost(b) })).filter(x => x.cost != null && mp.cur > x.cost).sort((a,b) => a.cost - b.cost);
+  if (!aoes.length) return null;
+  const hit = aoes[0], previous = ctx.warlordPull;
+  if (previous) {
+    if (!previous.follow || previous.target !== target) return null;
+    return { key: 'power:' + hit.b.title, name: env.cleanTitle(hit.b.title), b: hit.b, mpCost: hit.cost, warlordPull: 'hit', target, why: 'массовый удар после агро' };
+  }
+  if (100 * me.cur / me.max < Math.max(75, (+env.cfg.stopHp || 25) + 25) || mob.cur < mob.max * .98 || extraMobs().filter(x => x.cur > 0).length >= 3) return null;
+  const pull = slots.find(b => env.slotAction(b) === 'provoke' && warlordPullReady(b) && free('aggro:' + b.title));
+  const cost = pull && warlordPullCost(pull);
+  if (!pull || cost == null || mp.cur < cost + Math.max(hit.cost, +env.cfg.skillMpMin || 0) + 10) return null;
+  return { key: 'aggro:' + pull.title, name: env.cleanTitle(pull.title), b: pull, mpCost: cost, warlordPull: 'pull', target, why: 'собираю группу под массовый удар; MP на связку есть' };
+}
+function warlordPullResult(ctx, a, result) {
+  if (!a?.warlordPull || result === 'lock') return;
+  // Включая неизвестный/отклонённый ответ: повторное агро в этом бою не спамим.
+  if (a.warlordPull === 'pull') ctx.warlordPull = { target: a.target, follow: true };
+  else if (ctx.warlordPull) ctx.warlordPull.follow = false;
+}
+
 function chooseAction(ctx, mp) {
   if (mageCombat()) return magePlan(ctx, mp);
+  const pull = warlordPullPlan(ctx, mp); if (pull) return pull;
   const free = k => (ctx.block[k] || 0) <= Date.now();
   const mpOk = !mp || mp.cur >= env.cfg.skillMpMin;
   // силовые и станы — списки через запятую, порядок = приоритет (каждое название — отдельный скилл)
@@ -1937,7 +1982,8 @@ async function battle() {
       const logBefore = new Set(env.logLines());
       const logArr = env.logLines();
       const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true,
-        a.raidDrain ? () => magePlan(ctx, env.meMp())?.b === a.b : null);
+        a.warlordPull ? () => { const fresh = warlordPullPlan(ctx, env.meMp()); return fresh?.b === a.b && fresh.target === a.target && fresh.warlordPull === a.warlordPull; } : a.raidDrain ? () => magePlan(ctx, env.meMp())?.b === a.b : null);
+      warlordPullResult(ctx, a, done);
       if (a.damageProbe && done === true) { const k = env.skKey(a.b), counts = ctx.damageProbeActs ||= {}; counts[k] = (counts[k] || 0) + 1; }
       if ((a.probe || a.damageProbe) && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
@@ -2170,6 +2216,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
