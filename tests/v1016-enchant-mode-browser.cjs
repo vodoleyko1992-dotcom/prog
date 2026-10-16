@@ -7,7 +7,7 @@ const row={itemId:8688,enchant:3,enchantPAtkBonus:0,enchantMAtkBonus:18,weaponEn
 const snapshot={name:'AuditHero',revision:100,adena:1000000,inventory:{eq:{l1:row},stacks:[{itemId:910527,qty:10},{itemId:4037,qty:99}]}};
 const hints={itemSlotHints:{8688:'rhand'},itemGradeHints:{8688:'A'},itemNamesRu:{8688:'Посох проверки'}};
 const item={key:'saved-weapon',itemId:8688,name:'Посох проверки',level:3,pb:0,mb:18,history:['magic','magic','magic'],legacy:0,uid:'',qty:1,slot:'rhand',eqSlot:'l1',grade:'A',category:'weapon',targetInstanceId:'eq:l1',fingerprint:JSON.stringify([8688,3,0,18,['magic','magic','magic'],0,'']),targetLevel:3,weaponMode:'magic',rules:{maxAttempts:2}};
-const config={enabled:true,queue:[item],scrollPolicy:'blessed',ordinaryUntil:3,maxAttempts:7,maxScrolls:9,maxAdena:0,maxConsecutiveFails:2,maxDropFromStart:1,maxDropFromPeak:2,delayMs:1500,purchase:false,colBudget:0};
+const config={batchSize:1,enabled:true,queue:[item],scrollPolicy:'blessed',ordinaryUntil:3,maxAttempts:7,maxScrolls:9,maxAdena:0,maxConsecutiveFails:2,maxDropFromStart:1,maxDropFromPeak:2,delayMs:1500,purchase:false,colBudget:0};
 const totals={attempts:0,successes:0,failures:0,scrolls:0,adena:0,col:0,unknown:0,reservedScrolls:0,latencyMs:0,samples:0,conflicts:0,byScroll:{}};
 const oldHistory=[{id:'previous-attempt',t:1,key:item.key,before:2,after:3,status:'confirmed',success:true,scrolls:1}];
 const archive=[{runId:'previous-series',startedAt:1,finishedAt:2,status:'done',totals:{...totals,attempts:1,successes:1,scrolls:1},items:[item],history:oldHistory}];
@@ -72,7 +72,8 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   assert.equal((await h.get(['on'])).on,false);assert.equal((await h.get(['cfg'])).cfg.enchantMode,false);
   assert.ok(traffic.some(r=>r.path==='/character')&&traffic.some(r=>r.path==='/character/catalog-hints'));
   const limit=ui.locator('[data-global][data-field="maxAttempts"]');await limit.fill('8');await limit.dispatchEvent('change');await until(async()=>(await h.get(['cfg'])).cfg.enchant.maxAttempts===8);
-  const saved=clone(config);saved.maxAttempts=8;
+  // #211: основной лимит одновременно задаёт попытки и свитки.
+  const saved=clone(config);saved.maxAttempts=8;saved.maxScrolls=8;
   assert.equal((await h.get(['on'])).on,false);assert.deepEqual((await h.get(['rt'])).rt.enchantArchive,archive);pass('обновление вещей и настройка очереди при Stop сохраняют выключенное состояние и историю');
 
   await select('enchantToggle');let state=await h.get(['on','cfg','rt']);
@@ -107,7 +108,9 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   await select('enchantModeToggle');state=await h.get(['cfg','rt']);assert.ok(state.cfg.autoTasks.includes('enchant'));assert.equal(state.rt.enchant,null);assert.deepEqual(state.cfg.enchant,saved);
   pass('кнопка раздела выбирает тот же отдельный режим без запуска серии');
 
-  for(const [name,changes] of [['enabled=false',{enabled:false}],['пустая очередь',{queue:[]}],['лимит попыток 0',{maxAttempts:0}],['лимит свитков 0',{maxScrolls:0}]]){
+  // #211: кнопка серии сама даёт явное разрешение; до её нажатия флаг и расходы не меняются.
+  await patch({enchant:{...saved,enabled:false}});await reload();assert.equal(await start().isEnabled(),true);assert.equal((await h.get(['cfg'])).cfg.enchant.enabled,false);await noActions('enabled=false: доступна только явная команда начала, серия сама не запускается');
+  for(const [name,changes] of [['пустая очередь',{queue:[]}],['лимит попыток 0',{maxAttempts:0}],['лимит свитков 0',{maxScrolls:0}]]){
    await patch({enchant:{...saved,...changes}});await reload();assert.equal(await start().isDisabled(),true,name);pass('старт серии запрещён: '+name);
   }
   await patch({enchant:saved});await reload();assert.equal(await start().isEnabled(),true);

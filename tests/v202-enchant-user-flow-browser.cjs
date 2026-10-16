@@ -41,10 +41,11 @@ const unknown=false;
  await ui.locator('[data-detail=limits]>summary').click();
  for(const key of ['maxAttempts','maxScrolls']){const el=ui.locator('[data-global][data-field="'+key+'"]');await el.fill('2');await el.dispatchEvent('change');await until(async()=>(await h.get(['cfg'])).cfg.enchant[key]===2);}
  await ui.locator('[data-item="weaponMode"]').selectOption('magic');await until(async()=>(await h.get(['cfg'])).cfg.enchant.queue[0].weaponMode==='magic');
- await ui.locator('[data-detail=permission]').evaluate(el=>el.open=true);await ui.locator('[data-cfg="enabled"]').check();await until(async()=>(await h.get(['cfg'])).cfg.enchant.enabled);
+ // #211: разрешение задаёт явная кнопка серии; общий Старт сам попытки не разрешает.
+ assert.equal((await h.get(['cfg'])).cfg.enchant.enabled,false);
  assert.notEqual((await h.get(['on'])).on,true);assert.equal(posts.length,0);
  await h.popup.locator('#start').click();await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'));
- await until(()=>ui.locator('[data-command="start"]').isEnabled());await ui.locator('[data-command="start"]').click();
+ await until(()=>ui.locator('[data-command="start"]').isEnabled());await ui.locator('[data-command="start"]').click();await until(async()=>(await h.get(['cfg'])).cfg.enchant.enabled);
  await until(async()=>(await h.get(['rt'])).rt.enchant?.status==='done',30000).catch(async e=>{console.error('DIAG',{posts,url:h.g.p.url(),state:await h.get(['cfg','rt']),errors:h.errors});throw e;});
  const state=(await h.get(['rt'])).rt.enchant;assert.equal(posts.length,1);assert.equal(state.totals.attempts,1);assert.equal(state.totals.successes,1);assert.equal(state.totals.scrolls,1);assert.equal(state.items[0].level,4);assert.equal(state.pending,null);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===910527).qty,2);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===4037).qty,99);
  const firstRun=state.runId;
