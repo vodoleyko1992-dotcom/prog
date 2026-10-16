@@ -1,0 +1,1717 @@
+{
+  "schema": 1,
+  "simulatorSha256": "6e03deec7278b749b7e2b6c1307f17b5005123b39a70112817223a799144d978",
+  "mode": "offline-simulation",
+  "date": "2026-10-17",
+  "totalBattles": 400000,
+  "modelFile": "kb/data/rotation-model-20261017.json",
+  "modelSha256": "7b2d74c5a3cf7036e61471d481154450b8da17481a473484acfbffa012d96eeb",
+  "results": [
+    {
+      "class": "spoiler",
+      "seed": 335383,
+      "objective": "additional_spoil_resource_units_per_hour",
+      "baseline": "festival_if_available__group_value",
+      "trainingBattles": 160000,
+      "validationBattles": 40000,
+      "totalBattles": 200000,
+      "episodeBattles": 100,
+      "warmupPerEpisode": 40,
+      "scoredBattles": 120000,
+      "best": "festival_if_available__group_value",
+      "improvementVsBaselinePct": 0,
+      "pairedBootstrap95Pct": {
+        "low": 0,
+        "high": 0
+      },
+      "simultaneousVsBaseline95Pct": {
+        "low": 0,
+        "high": 0
+      },
+      "runnerUp": "festival_if_available__attack_only",
+      "improvementVsRunnerUpPct": 1.4918282757030665,
+      "simultaneousVsRunnerUp95Pct": {
+        "low": 0.8209068589930535,
+        "high": 2.2763341444826057
+      },
+      "scenarioResults": [
+        {
+          "scenario": {
+            "id": "known_solo",
+            "available": 1,
+            "initial": 1,
+            "festival": false,
+            "chance": 0.55,
+            "attackScale": 1,
+            "sweepRatio": 1.8,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 780,
+            "seconds": 4701.899999999998,
+            "kills": 780,
+            "spoilUnits": 2154.19,
+            "dropUnits": 1447.04,
+            "markedMain": 780,
+            "potions": 24,
+            "mpSpent": 31827,
+            "actions": {
+              "spoil": 1403,
+              "attack": 1071,
+              "wild_sweep": 235
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "known_group4",
+            "available": 4,
+            "initial": 4,
+            "festival": false,
+            "chance": 0.55,
+            "attackScale": 1,
+            "sweepRatio": 1.8,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 780,
+            "seconds": 4644.599999999998,
+            "kills": 2309,
+            "spoilUnits": 2116.4500000000003,
+            "dropUnits": 4180.799999999999,
+            "markedMain": 780,
+            "potions": 26,
+            "mpSpent": 31138,
+            "actions": {
+              "spoil": 1376,
+              "wild_sweep": 227,
+              "attack": 1067
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "known_weak_sweep",
+            "available": 4,
+            "initial": 4,
+            "festival": false,
+            "chance": 0.55,
+            "attackScale": 0.8,
+            "sweepRatio": 1,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 780,
+            "seconds": 5481.8999999999905,
+            "kills": 2331,
+            "spoilUnits": 2139.09,
+            "dropUnits": 4248.88,
+            "markedMain": 780,
+            "potions": 24,
+            "mpSpent": 34092,
+            "actions": {
+              "spoil": 1484,
+              "attack": 1477,
+              "wild_sweep": 268
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "known_strong_sweep",
+            "available": 4,
+            "initial": 4,
+            "festival": false,
+            "chance": 0.55,
+            "attackScale": 1.3,
+            "sweepRatio": 3,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 780,
+            "seconds": 4455.600000000001,
+            "kills": 2411,
+            "spoilUnits": 2151.52,
+            "dropUnits": 4376.199999999999,
+            "markedMain": 780,
+            "potions": 26,
+            "mpSpent": 30989,
+            "actions": {
+              "spoil": 1389,
+              "attack": 946,
+              "wild_sweep": 209
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "upgrade_festival_solo",
+            "available": 1,
+            "initial": 1,
+            "festival": true,
+            "chance": 0.55,
+            "attackScale": 1,
+            "sweepRatio": 1.8,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "festival_if_available__group_value",
+          "totals": {
+            "battles": 720,
+            "seconds": 3952.5000000000045,
+            "kills": 720,
+            "spoilUnits": 1936.6399999999999,
+            "dropUnits": 1302.7800000000002,
+            "markedMain": 717,
+            "potions": 55,
+            "mpSpent": 41612,
+            "actions": {
+              "spoil": 711,
+              "wild_sweep": 199,
+              "festival": 325,
+              "attack": 994
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "upgrade_festival_group4",
+            "available": 4,
+            "initial": 4,
+            "festival": true,
+            "chance": 0.55,
+            "attackScale": 1,
+            "sweepRatio": 1.8,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "festival_if_available__group_value",
+          "totals": {
+            "battles": 720,
+            "seconds": 4302.599999999999,
+            "kills": 2749,
+            "spoilUnits": 4586.62,
+            "dropUnits": 4892.6,
+            "markedMain": 718,
+            "potions": 41,
+            "mpSpent": 38834,
+            "actions": {
+              "spoil": 703,
+              "attack": 1416,
+              "festival": 349
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "known_chance45",
+            "available": 4,
+            "initial": 4,
+            "festival": false,
+            "chance": 0.45,
+            "attackScale": 0.8,
+            "sweepRatio": 1.8,
+            "regen": 0,
+            "potionDelay": 1.6
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 720,
+            "seconds": 5333.799999999989,
+            "kills": 2078,
+            "spoilUnits": 1990.59,
+            "dropUnits": 3787.0999999999995,
+            "markedMain": 720,
+            "potions": 73,
+            "mpSpent": 36235,
+            "actions": {
+              "spoil": 1613,
+              "attack": 1227,
+              "wild_sweep": 254
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "upgrade_chance75_no_potions",
+            "available": 4,
+            "initial": 4,
+            "festival": true,
+            "chance": 0.75,
+            "attackScale": 1,
+            "sweepRatio": 1.8,
+            "regen": 4,
+            "potionDelay": 1.6,
+            "noPotions": true
+          },
+          "id": "solo12__cheap_finish",
+          "totals": {
+            "battles": 720,
+            "seconds": 3741.0000000000055,
+            "kills": 2443,
+            "spoilUnits": 1683.49,
+            "dropUnits": 4427.04,
+            "markedMain": 599,
+            "potions": 0,
+            "mpSpent": 17362,
+            "actions": {
+              "spoil": 798,
+              "attack": 1212,
+              "wild_sweep": 100
+            },
+            "capped": 0
+          }
+        }
+      ],
+      "limitations": [
+        "Лучший вариант только в указанной модели и смеси сценариев, не доказанный абсолютный оптимум игры.",
+        "Проверочные серии имеют новые seeds и хронологически более позднюю эмпирическую выборку урона.",
+        "Первые40%боёв каждой серии служат прогревомMP/КД и входят в200000исполненных боёв, но исключены из оценок дохода/скорости.",
+        "Базовая политика — упрощённое соответствие текущим приоритетам, не весь runtime расширения.",
+        "Разброс неизвестных механик не является статистическим доверительным интервалом; bootstrap отражает лишь шум внутри модели."
+      ],
+      "training": [
+        {
+          "policy": {
+            "id": "festival_if_available__group_value",
+            "support": "festival_if_available",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28642.499999999996,
+            "kills": 15002,
+            "spoilUnits": 14610.139999999998,
+            "dropUnits": 27290.6,
+            "markedMain": 4542,
+            "potions": 165,
+            "mpSpent": 183786,
+            "actions": {
+              "spoil": 7169,
+              "attack": 8406,
+              "wild_sweep": 301,
+              "festival": 561
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "festival_if_available__attack_only",
+            "support": "festival_if_available",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28997.399999999983,
+            "kills": 15002,
+            "spoilUnits": 14616.139999999996,
+            "dropUnits": 27290.6,
+            "markedMain": 4544,
+            "potions": 149,
+            "mpSpent": 177229,
+            "actions": {
+              "spoil": 7134,
+              "attack": 8975,
+              "festival": 571
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "festival_if_available__cheap_finish",
+            "support": "festival_if_available",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 27728.000000000022,
+            "kills": 12669,
+            "spoilUnits": 13944.699999999995,
+            "dropUnits": 23068.119999999995,
+            "markedMain": 4498,
+            "potions": 215,
+            "mpSpent": 201151,
+            "actions": {
+              "spoil": 7127,
+              "wild_sweep": 1183,
+              "attack": 6950,
+              "festival": 544
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "festival_if_available__sweep_first",
+            "support": "festival_if_available",
+            "damage": "sweep_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 27716.400000000023,
+            "kills": 12252,
+            "spoilUnits": 13803.589999999995,
+            "dropUnits": 22303,
+            "markedMain": 4466,
+            "potions": 214,
+            "mpSpent": 203506,
+            "actions": {
+              "spoil": 7063,
+              "attack": 6846,
+              "wild_sweep": 1342,
+              "festival": 545
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo12__cheap_finish",
+            "support": "solo12",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28832.499999999993,
+            "kills": 12506,
+            "spoilUnits": 12866.000000000005,
+            "dropUnits": 22758.3,
+            "markedMain": 4708,
+            "potions": 175,
+            "mpSpent": 188819,
+            "actions": {
+              "spoil": 8487,
+              "wild_sweep": 1253,
+              "attack": 6811
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo12__sweep_first",
+            "support": "solo12",
+            "damage": "sweep_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28955.899999999994,
+            "kills": 12133,
+            "spoilUnits": 12781.550000000005,
+            "dropUnits": 22082.200000000004,
+            "markedMain": 4678,
+            "potions": 179,
+            "mpSpent": 191835,
+            "actions": {
+              "spoil": 8457,
+              "attack": 6758,
+              "wild_sweep": 1416
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo12__group_value",
+            "support": "solo12",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 29929.599999999962,
+            "kills": 15002,
+            "spoilUnits": 13113.640000000001,
+            "dropUnits": 27290.6,
+            "markedMain": 4798,
+            "potions": 126,
+            "mpSpent": 170597,
+            "actions": {
+              "spoil": 8621,
+              "attack": 8380,
+              "wild_sweep": 309
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo4__cheap_finish",
+            "support": "solo4",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28198.40000000001,
+            "kills": 12525,
+            "spoilUnits": 12317.32,
+            "dropUnits": 22793.159999999996,
+            "markedMain": 4503,
+            "potions": 164,
+            "mpSpent": 180720,
+            "actions": {
+              "spoil": 8070,
+              "wild_sweep": 1245,
+              "attack": 6823
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo4__sweep_first",
+            "support": "solo4",
+            "damage": "sweep_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 28230.60000000001,
+            "kills": 12141,
+            "spoilUnits": 12220.159999999998,
+            "dropUnits": 22119.260000000002,
+            "markedMain": 4469,
+            "potions": 166,
+            "mpSpent": 183355,
+            "actions": {
+              "spoil": 8035,
+              "attack": 6728,
+              "wild_sweep": 1395
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo12__attack_only",
+            "support": "solo12",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 30349.599999999955,
+            "kills": 15002,
+            "spoilUnits": 13113.640000000001,
+            "dropUnits": 27290.6,
+            "markedMain": 4798,
+            "potions": 111,
+            "mpSpent": 163799,
+            "actions": {
+              "spoil": 8621,
+              "attack": 8975
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo4__group_value",
+            "support": "solo4",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 29292.599999999984,
+            "kills": 15002,
+            "spoilUnits": 12552.419999999995,
+            "dropUnits": 27290.6,
+            "markedMain": 4589,
+            "potions": 116,
+            "mpSpent": 162579,
+            "actions": {
+              "spoil": 8199,
+              "attack": 8382,
+              "wild_sweep": 309
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo4__attack_only",
+            "support": "solo4",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 29709.599999999962,
+            "kills": 15002,
+            "spoilUnits": 12552.419999999995,
+            "dropUnits": 27290.6,
+            "markedMain": 4589,
+            "potions": 101,
+            "mpSpent": 155781,
+            "actions": {
+              "spoil": 8199,
+              "attack": 8975
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo1__cheap_finish",
+            "support": "solo1",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 23288.100000000024,
+            "kills": 12641,
+            "spoilUnits": 7490.749999999998,
+            "dropUnits": 23028.060000000005,
+            "markedMain": 2745,
+            "potions": 31,
+            "mpSpent": 116016,
+            "actions": {
+              "spoil": 4800,
+              "attack": 7005,
+              "wild_sweep": 1128
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo1__sweep_first",
+            "support": "solo1",
+            "damage": "sweep_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 23428.50000000003,
+            "kills": 12356,
+            "spoilUnits": 7490.749999999998,
+            "dropUnits": 22458.44000000001,
+            "markedMain": 2745,
+            "potions": 40,
+            "mpSpent": 118810,
+            "actions": {
+              "spoil": 4800,
+              "attack": 6968,
+              "wild_sweep": 1255
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo1__group_value",
+            "support": "solo1",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 24188.000000000022,
+            "kills": 15002,
+            "spoilUnits": 7490.749999999998,
+            "dropUnits": 27290.6,
+            "markedMain": 2745,
+            "potions": 20,
+            "mpSpent": 96986,
+            "actions": {
+              "spoil": 4800,
+              "attack": 8481,
+              "wild_sweep": 263
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo1__attack_only",
+            "support": "solo1",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 24534.500000000022,
+            "kills": 15002,
+            "spoilUnits": 7490.749999999998,
+            "dropUnits": 27290.6,
+            "markedMain": 2745,
+            "potions": 20,
+            "mpSpent": 91200,
+            "actions": {
+              "spoil": 4800,
+              "attack": 8975
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__attack_only",
+            "support": "none",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17302.500000000033,
+            "kills": 15002,
+            "spoilUnits": 0,
+            "dropUnits": 27290.6,
+            "markedMain": 0,
+            "potions": 0,
+            "mpSpent": 0,
+            "actions": {
+              "attack": 8975
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__sweep_first",
+            "support": "none",
+            "damage": "sweep_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 16548.000000000033,
+            "kills": 13114,
+            "spoilUnits": 0,
+            "dropUnits": 23847.799999999996,
+            "markedMain": 0,
+            "potions": 0,
+            "mpSpent": 20174,
+            "actions": {
+              "wild_sweep": 917,
+              "attack": 7555
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__cheap_finish",
+            "support": "none",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 16393.500000000033,
+            "kills": 13242,
+            "spoilUnits": 0,
+            "dropUnits": 24080.739999999998,
+            "markedMain": 0,
+            "potions": 0,
+            "mpSpent": 18524,
+            "actions": {
+              "attack": 7527,
+              "wild_sweep": 842
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__group_value",
+            "support": "none",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17046.000000000033,
+            "kills": 15002,
+            "spoilUnits": 0,
+            "dropUnits": 27290.6,
+            "markedMain": 0,
+            "potions": 0,
+            "mpSpent": 4356,
+            "actions": {
+              "attack": 8606,
+              "wild_sweep": 198
+            },
+            "capped": 0
+          }
+        }
+      ],
+      "validation": [
+        {
+          "policy": {
+            "id": "festival_if_available__group_value",
+            "support": "festival_if_available",
+            "damage": "group_value"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 37121.99999999996,
+            "kills": 18656,
+            "spoilUnits": 18289.490000000005,
+            "dropUnits": 33818.86,
+            "markedMain": 5701,
+            "potions": 210,
+            "mpSpent": 232632,
+            "actions": {
+              "spoil": 9149,
+              "attack": 11169,
+              "wild_sweep": 433,
+              "festival": 675
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "festival_if_available__attack_only",
+            "support": "festival_if_available",
+            "damage": "attack_only"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 37682.09999999995,
+            "kills": 18656,
+            "spoilUnits": 18292.550000000007,
+            "dropUnits": 33818.86,
+            "markedMain": 5702,
+            "potions": 186,
+            "mpSpent": 223840,
+            "actions": {
+              "spoil": 9130,
+              "attack": 11989,
+              "festival": 690
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "festival_if_available__cheap_finish",
+            "support": "festival_if_available",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 35809.600000000006,
+            "kills": 15460,
+            "spoilUnits": 17339.750000000004,
+            "dropUnits": 28067.19999999999,
+            "markedMain": 5634,
+            "potions": 261,
+            "mpSpent": 256406,
+            "actions": {
+              "spoil": 9100,
+              "attack": 9151,
+              "wild_sweep": 1619,
+              "festival": 656
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "solo12__cheap_finish",
+            "support": "solo12",
+            "damage": "cheap_finish"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 37166.799999999974,
+            "kills": 15220,
+            "spoilUnits": 16097.590000000004,
+            "dropUnits": 27604.3,
+            "markedMain": 5879,
+            "potions": 223,
+            "mpSpent": 242205,
+            "actions": {
+              "spoil": 10741,
+              "attack": 8966,
+              "wild_sweep": 1733
+            },
+            "capped": 0
+          }
+        }
+      ]
+    },
+    {
+      "class": "warlord",
+      "seed": 335383,
+      "objective": "all_killed_mobs_per_hour",
+      "baseline": "provoke_first__max_damage",
+      "trainingBattles": 160000,
+      "validationBattles": 40000,
+      "totalBattles": 200000,
+      "episodeBattles": 100,
+      "warmupPerEpisode": 40,
+      "scoredBattles": 120000,
+      "best": "provoke_first__whirlwind_first",
+      "improvementVsBaselinePct": 0.036943380755904975,
+      "pairedBootstrap95Pct": {
+        "low": -0.2683670377236824,
+        "high": 0.2764315243423576
+      },
+      "simultaneousVsBaseline95Pct": {
+        "low": -0.33874444510049173,
+        "high": 0.3404760994014433
+      },
+      "runnerUp": "provoke_first__max_damage",
+      "improvementVsRunnerUpPct": 0.036943380755904975,
+      "simultaneousVsRunnerUp95Pct": {
+        "low": -0.4235083829659869,
+        "high": 0.3910693426698142
+      },
+      "scenarioResults": [
+        {
+          "scenario": {
+            "id": "dense31",
+            "available": 31,
+            "initial": 1,
+            "settle": true,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "provoke_first__whirlwind_first",
+          "totals": {
+            "battles": 780,
+            "seconds": 3180.600000000027,
+            "kills": 14840,
+            "spoilUnits": 0,
+            "dropUnits": 24890.36,
+            "markedMain": 0,
+            "potions": 101,
+            "mpSpent": 63085,
+            "actions": {
+              "wild_sweep": 171,
+              "attack": 277,
+              "provoke": 340,
+              "whirlwind": 411,
+              "howl": 193,
+              "thunder_storm": 168
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "dense21",
+            "available": 21,
+            "initial": 1,
+            "settle": true,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "provoke_first__whirlwind_first",
+          "totals": {
+            "battles": 780,
+            "seconds": 3168.200000000028,
+            "kills": 11440,
+            "spoilUnits": 0,
+            "dropUnits": 19177.259999999995,
+            "markedMain": 0,
+            "potions": 99,
+            "mpSpent": 62758,
+            "actions": {
+              "howl": 194,
+              "thunder_storm": 167,
+              "provoke": 339,
+              "whirlwind": 410,
+              "wild_sweep": 166,
+              "attack": 277
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "medium8",
+            "available": 8,
+            "initial": 1,
+            "settle": true,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "howl__max_damage",
+          "totals": {
+            "battles": 780,
+            "seconds": 3139.200000000027,
+            "kills": 4483,
+            "spoilUnits": 0,
+            "dropUnits": 7480.0199999999995,
+            "markedMain": 0,
+            "potions": 80,
+            "mpSpent": 53392,
+            "actions": {
+              "wild_sweep": 160,
+              "attack": 278,
+              "howl": 529,
+              "whirlwind": 414,
+              "thunder_storm": 161
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "natural4",
+            "available": 4,
+            "initial": 4,
+            "settle": false,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "provoke_first__max_damage",
+          "totals": {
+            "battles": 780,
+            "seconds": 2665.0000000000164,
+            "kills": 3074,
+            "spoilUnits": 0,
+            "dropUnits": 5136.5599999999995,
+            "markedMain": 0,
+            "potions": 39,
+            "mpSpent": 30680,
+            "actions": {
+              "thunder_storm": 148,
+              "whirlwind": 423,
+              "attack": 689,
+              "wild_sweep": 1
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "solo",
+            "available": 1,
+            "initial": 1,
+            "settle": false,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "provoke_first__whirlwind_first",
+          "totals": {
+            "battles": 720,
+            "seconds": 2197.2000000000094,
+            "kills": 720,
+            "spoilUnits": 0,
+            "dropUnits": 1215.3800000000003,
+            "markedMain": 0,
+            "potions": 46,
+            "mpSpent": 30217,
+            "actions": {
+              "attack": 395,
+              "thunder_storm": 128,
+              "whirlwind": 345,
+              "wild_sweep": 128
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "strict31",
+            "available": 31,
+            "initial": 1,
+            "settle": false,
+            "regen": 4,
+            "potionDelay": 0.6
+          },
+          "id": "howl__max_damage",
+          "totals": {
+            "battles": 720,
+            "seconds": 2899.800000000025,
+            "kills": 2181,
+            "spoilUnits": 0,
+            "dropUnits": 3623.34,
+            "markedMain": 0,
+            "potions": 73,
+            "mpSpent": 49250,
+            "actions": {
+              "wild_sweep": 150,
+              "attack": 259,
+              "howl": 487,
+              "whirlwind": 380,
+              "thunder_storm": 149
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "strict21",
+            "available": 21,
+            "initial": 1,
+            "settle": false,
+            "regen": 8,
+            "potionDelay": 0
+          },
+          "id": "howl__max_damage",
+          "totals": {
+            "battles": 720,
+            "seconds": 2904.0000000000246,
+            "kills": 2175,
+            "spoilUnits": 0,
+            "dropUnits": 3644.5999999999995,
+            "markedMain": 0,
+            "potions": 48,
+            "mpSpent": 49072,
+            "actions": {
+              "attack": 293,
+              "howl": 485,
+              "whirlwind": 394,
+              "thunder_storm": 142,
+              "wild_sweep": 141
+            },
+            "capped": 0
+          }
+        },
+        {
+          "scenario": {
+            "id": "dense31_no_potions",
+            "available": 31,
+            "initial": 1,
+            "settle": true,
+            "regen": 4,
+            "potionDelay": 1.6,
+            "noPotions": true
+          },
+          "id": "provoke_first__whirlwind_first",
+          "totals": {
+            "battles": 720,
+            "seconds": 2835.2000000000235,
+            "kills": 720,
+            "spoilUnits": 0,
+            "dropUnits": 1208.8799999999999,
+            "markedMain": 0,
+            "potions": 0,
+            "mpSpent": 11242,
+            "actions": {
+              "attack": 1150,
+              "wild_sweep": 133,
+              "whirlwind": 129
+            },
+            "capped": 0
+          }
+        }
+      ],
+      "limitations": [
+        "Лучший вариант только в указанной модели и смеси сценариев, не доказанный абсолютный оптимум игры.",
+        "Проверочные серии имеют новые seeds и хронологически более позднюю эмпирическую выборку урона.",
+        "Первые40%боёв каждой серии служат прогревомMP/КД и входят в200000исполненных боёв, но исключены из оценок дохода/скорости.",
+        "Базовая политика — упрощённое соответствие текущим приоритетам, не весь runtime расширения.",
+        "Разброс неизвестных механик не является статистическим доверительным интервалом; bootstrap отражает лишь шум внутри модели."
+      ],
+      "training": [
+        {
+          "policy": {
+            "id": "provoke_first__max_damage",
+            "support": "provoke_first",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18360.800000000138,
+            "kills": 31244,
+            "spoilUnits": 0,
+            "dropUnits": 52253.24000000001,
+            "markedMain": 0,
+            "potions": 440,
+            "mpSpent": 299259,
+            "actions": {
+              "provoke": 1294,
+              "whirlwind": 2312,
+              "wild_sweep": 856,
+              "attack": 2857,
+              "thunder_storm": 850,
+              "howl": 761
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke_first__whirlwind_first",
+            "support": "provoke_first",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18190.800000000138,
+            "kills": 30922,
+            "spoilUnits": 0,
+            "dropUnits": 51707.44000000001,
+            "markedMain": 0,
+            "potions": 450,
+            "mpSpent": 301694,
+            "actions": {
+              "provoke": 1294,
+              "whirlwind": 2285,
+              "wild_sweep": 963,
+              "attack": 2670,
+              "thunder_storm": 847,
+              "howl": 761
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl__max_damage",
+            "support": "howl",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18184.200000000146,
+            "kills": 28134,
+            "spoilUnits": 0,
+            "dropUnits": 47062.63999999999,
+            "markedMain": 0,
+            "potions": 363,
+            "mpSpent": 261992,
+            "actions": {
+              "attack": 2860,
+              "howl": 2021,
+              "whirlwind": 2295,
+              "thunder_storm": 839,
+              "wild_sweep": 829
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl_first__max_damage",
+            "support": "howl_first",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18184.200000000146,
+            "kills": 28134,
+            "spoilUnits": 0,
+            "dropUnits": 47062.63999999999,
+            "markedMain": 0,
+            "potions": 363,
+            "mpSpent": 261992,
+            "actions": {
+              "attack": 2860,
+              "howl": 2021,
+              "whirlwind": 2295,
+              "thunder_storm": 839,
+              "wild_sweep": 829
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl__whirlwind_first",
+            "support": "howl",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18014.200000000143,
+            "kills": 27812,
+            "spoilUnits": 0,
+            "dropUnits": 46516.83999999999,
+            "markedMain": 0,
+            "potions": 373,
+            "mpSpent": 264427,
+            "actions": {
+              "attack": 2673,
+              "howl": 2021,
+              "whirlwind": 2268,
+              "thunder_storm": 836,
+              "wild_sweep": 936
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl_first__whirlwind_first",
+            "support": "howl_first",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18014.200000000143,
+            "kills": 27812,
+            "spoilUnits": 0,
+            "dropUnits": 46516.83999999999,
+            "markedMain": 0,
+            "potions": 373,
+            "mpSpent": 264427,
+            "actions": {
+              "attack": 2673,
+              "howl": 2021,
+              "whirlwind": 2268,
+              "thunder_storm": 836,
+              "wild_sweep": 936
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke_first__storm_first",
+            "support": "provoke_first",
+            "damage": "storm_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18436.80000000015,
+            "kills": 27317,
+            "spoilUnits": 0,
+            "dropUnits": 45749.77999999999,
+            "markedMain": 0,
+            "potions": 398,
+            "mpSpent": 282793,
+            "actions": {
+              "wild_sweep": 1035,
+              "attack": 3211,
+              "provoke": 1069,
+              "whirlwind": 2006,
+              "howl": 745,
+              "thunder_storm": 928
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke_first__attack_finish",
+            "support": "provoke_first",
+            "damage": "attack_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17458.400000000132,
+            "kills": 25785,
+            "spoilUnits": 0,
+            "dropUnits": 43206.54000000001,
+            "markedMain": 0,
+            "potions": 381,
+            "mpSpent": 263231,
+            "actions": {
+              "attack": 2964,
+              "thunder_storm": 788,
+              "provoke": 1092,
+              "whirlwind": 1881,
+              "wild_sweep": 750,
+              "howl": 912
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl__storm_first",
+            "support": "howl",
+            "damage": "storm_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18333.200000000146,
+            "kills": 26215,
+            "spoilUnits": 0,
+            "dropUnits": 43828.45999999999,
+            "markedMain": 0,
+            "potions": 356,
+            "mpSpent": 260407,
+            "actions": {
+              "wild_sweep": 1061,
+              "attack": 3022,
+              "howl": 1877,
+              "whirlwind": 2035,
+              "thunder_storm": 944
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl_first__storm_first",
+            "support": "howl_first",
+            "damage": "storm_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 18333.200000000146,
+            "kills": 26215,
+            "spoilUnits": 0,
+            "dropUnits": 43828.45999999999,
+            "markedMain": 0,
+            "potions": 356,
+            "mpSpent": 260407,
+            "actions": {
+              "wild_sweep": 1061,
+              "attack": 3022,
+              "howl": 1877,
+              "whirlwind": 2035,
+              "thunder_storm": 944
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl__attack_finish",
+            "support": "howl",
+            "damage": "attack_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17566.800000000134,
+            "kills": 24628,
+            "spoilUnits": 0,
+            "dropUnits": 41194.33999999998,
+            "markedMain": 0,
+            "potions": 301,
+            "mpSpent": 238341,
+            "actions": {
+              "attack": 2952,
+              "howl": 2102,
+              "whirlwind": 1910,
+              "thunder_storm": 782,
+              "wild_sweep": 735
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl_first__attack_finish",
+            "support": "howl_first",
+            "damage": "attack_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17566.800000000134,
+            "kills": 24628,
+            "spoilUnits": 0,
+            "dropUnits": 41194.33999999998,
+            "markedMain": 0,
+            "potions": 301,
+            "mpSpent": 238341,
+            "actions": {
+              "attack": 2952,
+              "howl": 2102,
+              "whirlwind": 1910,
+              "thunder_storm": 782,
+              "wild_sweep": 735
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke__storm_first",
+            "support": "provoke",
+            "damage": "storm_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 17513.400000000125,
+            "kills": 22762,
+            "spoilUnits": 0,
+            "dropUnits": 38092.079999999994,
+            "markedMain": 0,
+            "potions": 389,
+            "mpSpent": 272233,
+            "actions": {
+              "thunder_storm": 934,
+              "attack": 3158,
+              "provoke": 1287,
+              "whirlwind": 1997,
+              "wild_sweep": 1039
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke__max_damage",
+            "support": "provoke",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 16725.400000000107,
+            "kills": 19924,
+            "spoilUnits": 0,
+            "dropUnits": 33404.04,
+            "markedMain": 0,
+            "potions": 329,
+            "mpSpent": 246352,
+            "actions": {
+              "attack": 3185,
+              "provoke": 1054,
+              "whirlwind": 2106,
+              "thunder_storm": 796,
+              "wild_sweep": 804
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke__whirlwind_first",
+            "support": "provoke",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 16555.400000000103,
+            "kills": 19602,
+            "spoilUnits": 0,
+            "dropUnits": 32858.24000000001,
+            "markedMain": 0,
+            "potions": 339,
+            "mpSpent": 248787,
+            "actions": {
+              "attack": 2998,
+              "provoke": 1054,
+              "whirlwind": 2079,
+              "thunder_storm": 793,
+              "wild_sweep": 911
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke__attack_finish",
+            "support": "provoke",
+            "damage": "attack_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 15927.000000000093,
+            "kills": 17528,
+            "spoilUnits": 0,
+            "dropUnits": 29292.579999999998,
+            "markedMain": 0,
+            "potions": 303,
+            "mpSpent": 228154,
+            "actions": {
+              "wild_sweep": 760,
+              "attack": 3069,
+              "provoke": 1013,
+              "whirlwind": 1821,
+              "thunder_storm": 792
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__attack_finish",
+            "support": "none",
+            "damage": "attack_finish"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 14578.200000000059,
+            "kills": 6586,
+            "spoilUnits": 0,
+            "dropUnits": 10998.099999999997,
+            "markedMain": 0,
+            "potions": 194,
+            "mpSpent": 161280,
+            "actions": {
+              "whirlwind": 1886,
+              "attack": 3441,
+              "thunder_storm": 670,
+              "wild_sweep": 648
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__max_damage",
+            "support": "none",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 15230.200000000073,
+            "kills": 6593,
+            "spoilUnits": 0,
+            "dropUnits": 11009.46,
+            "markedMain": 0,
+            "potions": 250,
+            "mpSpent": 182393,
+            "actions": {
+              "whirlwind": 2134,
+              "wild_sweep": 758,
+              "attack": 3398,
+              "thunder_storm": 743
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__whirlwind_first",
+            "support": "none",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 15060.200000000068,
+            "kills": 6271,
+            "spoilUnits": 0,
+            "dropUnits": 10463.659999999998,
+            "markedMain": 0,
+            "potions": 260,
+            "mpSpent": 184828,
+            "actions": {
+              "whirlwind": 2107,
+              "wild_sweep": 865,
+              "attack": 3211,
+              "thunder_storm": 740
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "none__storm_first",
+            "support": "none",
+            "damage": "storm_first"
+          },
+          "totals": {
+            "battles": 4800,
+            "seconds": 15341.400000000072,
+            "kills": 6241,
+            "spoilUnits": 0,
+            "dropUnits": 10431.379999999994,
+            "markedMain": 0,
+            "potions": 253,
+            "mpSpent": 184456,
+            "actions": {
+              "thunder_storm": 851,
+              "wild_sweep": 940,
+              "whirlwind": 1891,
+              "attack": 3419
+            },
+            "capped": 0
+          }
+        }
+      ],
+      "validation": [
+        {
+          "policy": {
+            "id": "provoke_first__whirlwind_first",
+            "support": "provoke_first",
+            "damage": "whirlwind_first"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 22694.000000000175,
+            "kills": 39146,
+            "spoilUnits": 0,
+            "dropUnits": 65587.78000000001,
+            "markedMain": 0,
+            "potions": 558,
+            "mpSpent": 375096,
+            "actions": {
+              "wild_sweep": 1204,
+              "attack": 3356,
+              "provoke": 1599,
+              "whirlwind": 2841,
+              "howl": 939,
+              "thunder_storm": 1061
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "provoke_first__max_damage",
+            "support": "provoke_first",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 22939.000000000182,
+            "kills": 39554,
+            "spoilUnits": 0,
+            "dropUnits": 66263.70000000001,
+            "markedMain": 0,
+            "potions": 545,
+            "mpSpent": 372411,
+            "actions": {
+              "wild_sweep": 1060,
+              "attack": 3607,
+              "provoke": 1599,
+              "whirlwind": 2884,
+              "howl": 939,
+              "thunder_storm": 1069
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl__max_damage",
+            "support": "howl",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 22901.80000000019,
+            "kills": 35793,
+            "spoilUnits": 0,
+            "dropUnits": 59903.63999999999,
+            "markedMain": 0,
+            "potions": 447,
+            "mpSpent": 330019,
+            "actions": {
+              "wild_sweep": 1035,
+              "attack": 3627,
+              "howl": 2545,
+              "whirlwind": 2905,
+              "thunder_storm": 1052
+            },
+            "capped": 0
+          }
+        },
+        {
+          "policy": {
+            "id": "howl_first__max_damage",
+            "support": "howl_first",
+            "damage": "max_damage"
+          },
+          "totals": {
+            "battles": 6000,
+            "seconds": 22901.80000000019,
+            "kills": 35793,
+            "spoilUnits": 0,
+            "dropUnits": 59903.63999999999,
+            "markedMain": 0,
+            "potions": 447,
+            "mpSpent": 330019,
+            "actions": {
+              "wild_sweep": 1035,
+              "attack": 3627,
+              "howl": 2545,
+              "whirlwind": 2905,
+              "thunder_storm": 1052
+            },
+            "capped": 0
+          }
+        }
+      ]
+    }
+  ]
+}
