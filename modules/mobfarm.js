@@ -410,6 +410,8 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
   let prev = '', same = 0;
   const t0 = Date.now(); let sec0 = -1;
   return env.waitFor(() => {
+    // 20.6: новый выбор задач прерывает ожидание карты без ложной ошибки загрузки.
+    if (env.canAct?.() === false) return 'changed';
     const sec = (Date.now() - t0) / 1000 | 0;
     if (label && sec >= 2 && sec !== sec0) { sec0 = sec; env.rt = { ...env.rt, status: `${label} · ${sec} с` }; env.draw(); }   // только индикатор, без записи в журнал
     if (env.serverDown()) return 'down';           // страница ошибки сервера — ждать список бессмысленно
@@ -696,7 +698,7 @@ async function map() {
   const tab = env.$q('#map-list-mode-mobs');        // открыта вкладка NPC — переключаем на «Мобы»
   if (tab && !tab.classList.contains('is-active')) { env.fire(tab); await env.sleep(500); }
   const mr = await mapReady(30000, 'Карта: жду список мобов');
-  if (mr === 'down' || env.serverDown()) return;     // ошибка сервера — разберётся главный цикл (ожидание без остановки)
+  if (mr === 'changed' || mr === 'down' || env.serverDown()) return;     // ошибка сервера — разберётся главный цикл (ожидание без остановки)
   if (!mr && env.on && !pageItems().length) {
     const n = (env.rt.mapReload || 0) + 1;
     if (n > 3) {                                 // сервер/интернет лежит: ждём и пробуем снова; стоп — если так 15 мин
@@ -815,7 +817,7 @@ async function map() {
       env.rec('B', 'локации', 'автофарм: при старте читаю список зон «Телепорта»');
       await env.setRt({ zoneScan: true }); location.href = '/teleport.html'; await env.sleep(4000); return;   // kick остаётся — после чтения выбор зоны
     }
-    await mapReady(15000);
+    if (await mapReady(15000) === 'changed') return;
     // 8.0.3 (лог 11.10 11:45:34): после смерти «проверил локации — остаюсь здесь (sea_of_spores)» решалось по зоне до смерти (зону по карте
     // бот определял только после этого блока), и герой 56 остался бить мобов 15–35 ур. в Bee Hive. Сначала — зона по этой карте и уровень
     // героя; не прочитались — решаем на следующем проходе карты (kick остаётся), а сейчас фармим как обычно

@@ -1419,6 +1419,8 @@ async function battle() {
   if (!ctx.rb && env.totemSlots().length >= 2) { ctx.tot = {}; ctx.totT = Date.now(); }   // замер тотемов (кроме РБ)
   while (env.on && env.tabOwner) {
     env.champs?.observe?.(ctx);
+    // 20.6: смена задач запрещает клики старого frame — продолжаем бой со следующего тика main.
+    if (env.canAct?.() === false) return;
     strengthReliable(strength, Date.now(), env.actNet?.() || {});
     if (env.pvpPending?.()) return env.pvpRecoveryStep();
     if (env.antibotState()) return;                  // v5.5.6: проверка активности / блок PvE — в главный цикл (там ждём)
