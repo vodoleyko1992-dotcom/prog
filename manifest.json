@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.4",
-  "description": "L2wap Bot 20.4 — навыки Warlord и правильные роли боя",
+  "version": "20.5",
+  "description": "L2wap Bot 20.5 — рыбалка без зависания покупки наживки",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.4"
+  "version_name": "20.5"
 }
