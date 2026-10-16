@@ -1,0 +1,4638 @@
+{
+  "schemaVersion": 1,
+  "sourceType": "user_uploaded_exports",
+  "timezone": "Asia/Vladivostok",
+  "sources": [
+    {
+      "file": "l2wap-pages-2026-10-16-11-48.html",
+      "bytes": 3037259,
+      "sha256": "cf593444321688fb5d30651ba738ecdf68bae18845082fa144dcc14d1a906fef"
+    },
+    {
+      "file": "l2bot-log-2026-10-16-11-47.txt",
+      "bytes": 6291160,
+      "sha256": "5aa2a1debb9972645d5213ee8797a9d35aa558d9340fd21ee4badaf327cd44c6"
+    },
+    {
+      "file": "l2bot-learn-2026-10-16-11-48.html",
+      "bytes": 119104,
+      "sha256": "76a9446ae5a9466cf40b8d75eec3f437473860c789d3a0090cab5584e345540a"
+    }
+  ],
+  "scope": {
+    "logPhysicalLines": 11164,
+    "exportHeader": "# L2wap Bot v20.5 — журнал: новое с прошлой выгрузки · 20000 событий · 15.10.2026, 22:28:43 — 16.10.2026, 21:47:58",
+    "warlord20_5StartLine": 8695,
+    "warlord20_5StartAt": "21:37:43.208",
+    "warlord20_5EndAt": "21:47:58.611",
+    "date": "2026-10-16",
+    "previousDayEndsAtLine": 8670,
+    "snapshotCount": 64,
+    "learnHeadings": [
+      "🧠 Отчёт автообучения",
+      "Изменения игры (152)",
+      "Селекторы бота (367) — сверху проблемные",
+      "Страницы (26)",
+      "Запросы игры к серверу (110)",
+      "Скриншоты (0)",
+      "Настройки"
+    ]
+  },
+  "requestCounts": {
+    "vicious_stance": 9,
+    "war_cry": 2,
+    "thrill_fight": 2,
+    "wild_sweep": 32,
+    "whirlwind": 52,
+    "thunder_storm": 24,
+    "attack": 95,
+    "battle_potion_use": 6,
+    "fighter_soulshot_toggle": 1
+  },
+  "requestCountMeaning": "HTTP 200 requests, not independently verified successful casts; no action retries are deduplicated.",
+  "skillMeasurementSummary": {
+    "Вихор": {
+      "botSkillRows": 43,
+      "numericDamageRows": 5,
+      "unmeasuredRows": 38,
+      "numericDamageMin": 48,
+      "numericDamageMax": 5613
+    },
+    "Грозова буря": {
+      "botSkillRows": 21,
+      "numericDamageRows": 4,
+      "unmeasuredRows": 17,
+      "numericDamageMin": 144,
+      "numericDamageMax": 4959
+    },
+    "Дикий розмах": {
+      "botSkillRows": 25,
+      "numericDamageRows": 25,
+      "unmeasuredRows": 0,
+      "numericDamageMin": 3946,
+      "numericDamageMax": 13351
+    }
+  },
+  "battleSummaryRows": 129,
+  "visibleRewardMessagesWithZeroExp": 84,
+  "expGainSwitch": {
+    "line": 8745,
+    "at": "21:38:11.783",
+    "method": "POST",
+    "path": "/character/exp-gain-enabled",
+    "request": {
+      "enabled": false,
+      "expectedRevision": 11755
+    },
+    "httpStatus": 200,
+    "manualClickLine": 8741,
+    "snapshotNumber": 61
+  },
+  "characterSnapshot": {
+    "number": 62,
+    "marker": "/character.html · 16.10.2026, 21:38:19 · 1rg2vcq",
+    "level": 48,
+    "profession": "Warlord",
+    "hp": 5260,
+    "maxHp": 6195,
+    "mp": 874,
+    "maxMp": 874,
+    "cp": 2805,
+    "maxCp": 2805,
+    "pAtk": 1107,
+    "mAtk": 1033,
+    "pDef": 1190,
+    "mDef": 473,
+    "sp": 2127276,
+    "appliesTo": "snapshot before Orcish Poleaxe equip; not final combat stats"
+  },
+  "snapshots": [
+    {
+      "number": 1,
+      "marker": "/battle.html · 15.10.2026, 21:41:58 · 3r9gcw"
+    },
+    {
+      "number": 2,
+      "marker": "/battle.html · 15.10.2026, 21:41:59 · 114adxq"
+    },
+    {
+      "number": 3,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 21:42:50 · 1fpbypa"
+    },
+    {
+      "number": 4,
+      "marker": "/battle.html · 15.10.2026, 21:43:08 · 1ybi1fh"
+    },
+    {
+      "number": 5,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 21:44:32 · hn9rj2"
+    },
+    {
+      "number": 6,
+      "marker": "/tvt-arena.html · 15.10.2026, 21:50:07 · lqmimq"
+    },
+    {
+      "number": 7,
+      "marker": "/battle.html · 15.10.2026, 21:50:44 · 1sn2nn7"
+    },
+    {
+      "number": 8,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 21:50:47 · 1r6divu"
+    },
+    {
+      "number": 9,
+      "marker": "/battle.html · 15.10.2026, 21:50:49 · w4fozb"
+    },
+    {
+      "number": 10,
+      "marker": "/battle.html · 15.10.2026, 21:50:50 · al3w9t"
+    },
+    {
+      "number": 11,
+      "marker": "/battle.html · 15.10.2026, 21:51:09 · yroxld"
+    },
+    {
+      "number": 12,
+      "marker": "/battle.html · 15.10.2026, 21:51:11 · 57vdkr"
+    },
+    {
+      "number": 13,
+      "marker": "/battle.html · 15.10.2026, 21:51:39 · 1vukjtj"
+    },
+    {
+      "number": 14,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 21:52:31 · pgj2fe"
+    },
+    {
+      "number": 15,
+      "marker": "/city.html [Город] · 15.10.2026, 21:58:36 · sbyode"
+    },
+    {
+      "number": 16,
+      "marker": "/tvt-arena.html · 15.10.2026, 21:58:39 · cyn1xa"
+    },
+    {
+      "number": 17,
+      "marker": "/battle.html · 15.10.2026, 22:01:03 · 1nynqfb"
+    },
+    {
+      "number": 18,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:03:13 · qqgyss"
+    },
+    {
+      "number": 19,
+      "marker": "/map.html [map-list-mode-mobs, 6, Окрестности] · 15.10.2026, 22:03:23 · 19nx485"
+    },
+    {
+      "number": 20,
+      "marker": "/map.html [map-list-mode-mobs, 9, Окрестности] · 15.10.2026, 22:04:43 · 1x4bpzp"
+    },
+    {
+      "number": 21,
+      "marker": "/battle.html · 15.10.2026, 22:09:35 · x2yhuj"
+    },
+    {
+      "number": 22,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 22:13:17 · a870ul"
+    },
+    {
+      "number": 23,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 22:15:19 · 1xp51vh"
+    },
+    {
+      "number": 24,
+      "marker": "/battle.html · 15.10.2026, 22:15:33 · 1f2cgd5"
+    },
+    {
+      "number": 25,
+      "marker": "/forum-farm-resources.html · 15.10.2026, 22:15:50 · heavy:/forum-farm-resources.html:497796"
+    },
+    {
+      "number": 26,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:17:31 · a8s3sn"
+    },
+    {
+      "number": 27,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:17:33 · 1e5gwd8"
+    },
+    {
+      "number": 28,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:20:35 · xstwlo"
+    },
+    {
+      "number": 29,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:20:37 · 1itj9cw"
+    },
+    {
+      "number": 30,
+      "marker": "/map.html [map-list-mode-mobs, 2, Окрестности] · 15.10.2026, 22:20:43 · 1vp9lea"
+    },
+    {
+      "number": 31,
+      "marker": "/map.html [map-list-mode-mobs, 5, Окрестности] · 15.10.2026, 22:21:05 · zrqtum"
+    },
+    {
+      "number": 32,
+      "marker": "/map.html [map-list-mode-mobs, 18, Окрестности] · 15.10.2026, 22:21:55 · pzz5v2"
+    },
+    {
+      "number": 33,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:30:38 · 1ve17tc"
+    },
+    {
+      "number": 34,
+      "marker": "/battle.html · 15.10.2026, 22:35:30 · 1xfqonl"
+    },
+    {
+      "number": 35,
+      "marker": "/magister.html · 15.10.2026, 22:35:36 · 1847m9k"
+    },
+    {
+      "number": 36,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:43:04 · 1ttp8mr"
+    },
+    {
+      "number": 37,
+      "marker": "⚠ изменилась страница: «dion-campaign»: пропало 15 — .l2-starter-story-location .l2-starter-story-location--with-action .l2-starter-story-note .l2-starter-story · 15.10.2026, 22:43:17 · learn:nzdea4:497796"
+    },
+    {
+      "number": 38,
+      "marker": "/char.html [Все, 1] · 15.10.2026, 22:43:26 · vv57zv"
+    },
+    {
+      "number": 39,
+      "marker": "/char.html [Расходники, Все, Все] · 15.10.2026, 22:44:02 · iidvxo"
+    },
+    {
+      "number": 40,
+      "marker": "/char.html [Броня, Все, Все] · 15.10.2026, 22:44:04 · 1y3xyrb"
+    },
+    {
+      "number": 41,
+      "marker": "/char.html [Аксессуары, Все, Все] · 15.10.2026, 22:44:15 · 6xqjz2"
+    },
+    {
+      "number": 42,
+      "marker": "/char.html [Аксессуары, Все, Все] · 15.10.2026, 22:44:17 · a97dt6"
+    },
+    {
+      "number": 43,
+      "marker": "/char.html [Оружие, Все, Все] · 15.10.2026, 22:45:01 · re66re"
+    },
+    {
+      "number": 44,
+      "marker": "/character-quests.html · 15.10.2026, 22:45:05 · jkayt8"
+    },
+    {
+      "number": 45,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:45:15 · 135oyy3"
+    },
+    {
+      "number": 46,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:45:34 · 1qx1y73"
+    },
+    {
+      "number": 47,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:46:49 · onz6z"
+    },
+    {
+      "number": 48,
+      "marker": "/map.html [map-list-mode-mobs, 2, Окрестности] · 15.10.2026, 22:47:02 · f95mkr"
+    },
+    {
+      "number": 49,
+      "marker": "/map.html [map-list-mode-mobs, Окрестности] · 15.10.2026, 22:50:35 · bj0yuk"
+    },
+    {
+      "number": 50,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 22:51:32 · 51tj4r"
+    },
+    {
+      "number": 51,
+      "marker": "/map.html [map-list-mode-mobs, 1, Окрестности] · 15.10.2026, 22:55:34 · 1me72bu"
+    },
+    {
+      "number": 52,
+      "marker": "/character-quests.html · 15.10.2026, 22:57:04 · gddydk"
+    },
+    {
+      "number": 53,
+      "marker": "/dion-campaign.html · 15.10.2026, 22:57:16 · 11kqngj"
+    },
+    {
+      "number": 54,
+      "marker": "/map.html [map-list-mode-mobs, 5] · 15.10.2026, 23:25:42 · 1hhkklh"
+    },
+    {
+      "number": 55,
+      "marker": "/battle.html · 15.10.2026, 23:25:43 · t4nvwt"
+    },
+    {
+      "number": 56,
+      "marker": "/map.html [map-list-mode-mobs, 5] · 15.10.2026, 23:25:52 · pa1lp1"
+    },
+    {
+      "number": 57,
+      "marker": "/map.html [map-list-mode-mobs, 1] · 16.10.2026, 21:37:38 · 1gfvua4"
+    },
+    {
+      "number": 58,
+      "marker": "/magister.html · 16.10.2026, 21:37:45 · 1rvpz01"
+    },
+    {
+      "number": 59,
+      "marker": "/map.html [map-list-mode-mobs, 1] · 16.10.2026, 21:37:50 · 14l58wg"
+    },
+    {
+      "number": 60,
+      "marker": "/character.html · 16.10.2026, 21:38:07 · 1cx7bt2"
+    },
+    {
+      "number": 61,
+      "marker": "/character-settings.html · 16.10.2026, 21:38:11 · gadjfr"
+    },
+    {
+      "number": 62,
+      "marker": "/character.html · 16.10.2026, 21:38:19 · 1rg2vcq"
+    },
+    {
+      "number": 63,
+      "marker": "⚠ изменилась страница: «map»: пропало 3 — .l2-wap-cell--location-active .l2-wap-grid--has-outskirts .l2-wap-lbl--p4o · 16.10.2026, 21:38:36 · learn:11l9og6:497819"
+    },
+    {
+      "number": 64,
+      "marker": "/teleport.html · 16.10.2026, 21:38:49 · 1tkmeyx"
+    }
+  ],
+  "battleActionRequests": [
+    {
+      "line": 8844,
+      "at": "21:39:08.316",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11758,
+      "requestBattleSpawnId": "dense_6345",
+      "domContext": "battle?spawnId=dense_6345 HP 5601/6195 MP 874/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8852,
+      "at": "21:39:09.650",
+      "action": "war_cry",
+      "httpStatus": 200,
+      "expectedRevision": 11759,
+      "requestBattleSpawnId": "dense_6345",
+      "domContext": "battle?spawnId=dense_6345 HP 5592/6195 MP 864/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8856,
+      "at": "21:39:10.645",
+      "action": "thrill_fight",
+      "httpStatus": 200,
+      "expectedRevision": 11760,
+      "requestBattleSpawnId": "dense_6345",
+      "domContext": "battle?spawnId=dense_6345 HP 5582/6195 MP 843/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8859,
+      "at": "21:39:12.276",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11761,
+      "requestBattleSpawnId": "dense_6345",
+      "domContext": "battle?spawnId=dense_6345 HP 5582/6195 MP 820/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8909,
+      "at": "21:39:28.348",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11763,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6323 HP 5846/6195 MP 825/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8925,
+      "at": "21:39:32.175",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11765,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6408 HP 5890/6195 MP 771/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 8938,
+      "at": "21:39:35.026",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11767,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6330 HP 5890/6195 MP 736/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8952,
+      "at": "21:39:38.877",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11769,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6488 HP 5890/6195 MP 699/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8964,
+      "at": "21:39:41.816",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11771,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6176 HP 5934/6195 MP 663/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 8976,
+      "at": "21:39:44.494",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11773,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=scatter_3121 HP 6079/6195 MP 677/874 · моб Tanor Silenos Scout 479/2292 +  2580/2580 +  664/2292"
+    },
+    {
+      "line": 8980,
+      "at": "21:39:46.491",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11774,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=scatter_3121 HP 6117/6195 MP 691/874 · моб Tanor Silenos Scout 479/2292"
+    },
+    {
+      "line": 8993,
+      "at": "21:39:48.613",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11776,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6418 HP 6117/6195 MP 642/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9004,
+      "at": "21:39:53.042",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11778,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6307 HP 6117/6195 MP 589/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9019,
+      "at": "21:39:56.696",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11780,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6411 HP 6161/6195 MP 553/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9032,
+      "at": "21:40:00.441",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11782,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6260 HP 6195/6195 MP 530/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9045,
+      "at": "21:40:04.215",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11784,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6391 HP 6195/6195 MP 495/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9060,
+      "at": "21:40:07.325",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11786,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 509/874 · моб Tanor Silenos Scout 541/2292 +  255/2100 +  521/2196"
+    },
+    {
+      "line": 9064,
+      "at": "21:40:09.335",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11787,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 474/874 · моб Tanor Silenos Scout 541/2292"
+    },
+    {
+      "line": 9077,
+      "at": "21:40:12.632",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11789,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6207 HP 6195/6195 MP 407/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9090,
+      "at": "21:40:16.755",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11791,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6226 HP 6195/6195 MP 384/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9104,
+      "at": "21:40:21.739",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11793,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6426 HP 6195/6195 MP 362/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9117,
+      "at": "21:40:26.095",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11795,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 375/874 · моб Tanor Silenos Scout 723/2292 +  725/2388 +  402/2100"
+    },
+    {
+      "line": 9123,
+      "at": "21:40:27.846",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11796,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 340/874 · моб Tanor Silenos Scout 723/2292"
+    },
+    {
+      "line": 9135,
+      "at": "21:40:30.364",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11798,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6352 HP 6195/6195 MP 303/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9147,
+      "at": "21:40:33.581",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11800,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6187 HP 6195/6195 MP 236/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9161,
+      "at": "21:40:36.984",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11802,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6270 HP 6195/6195 MP 201/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9210,
+      "at": "21:40:46.806",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11804,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 218/874 · моб Tanor Silenos Warrior 30271/33432"
+    },
+    {
+      "line": 9214,
+      "at": "21:40:47.635",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11805,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 151/874 · моб Tanor Silenos Warrior 26602/33432"
+    },
+    {
+      "line": 9224,
+      "at": "21:40:49.737",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11806,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6176/6195 MP 116/874 · моб Tanor Silenos Warrior 22098/33432"
+    },
+    {
+      "line": 9228,
+      "at": "21:40:50.569",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11807,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 130/874 · моб Tanor Silenos Warrior 17894/33432 +  661/2292 +  507/2100"
+    },
+    {
+      "line": 9233,
+      "at": "21:40:52.056",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11808,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 130/874 · моб Tanor Silenos Warrior 17023/33432"
+    },
+    {
+      "line": 9238,
+      "at": "21:40:53.680",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11809,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 16061/33432 +  508/2100 +  864/2580"
+    },
+    {
+      "line": 9244,
+      "at": "21:40:55.243",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11810,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 109/874 · моб Tanor Silenos Warrior 11065/33432"
+    },
+    {
+      "line": 9248,
+      "at": "21:40:56.377",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11811,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6177/6195 MP 109/874 · моб Tanor Silenos Warrior 10024/33432 +  432/2196 +  492/2100"
+    },
+    {
+      "line": 9253,
+      "at": "21:40:57.975",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11812,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 123/874 · моб Tanor Silenos Warrior 9143/33432"
+    },
+    {
+      "line": 9259,
+      "at": "21:40:59.608",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11813,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 100/874 · моб Tanor Silenos Warrior 3144/33432"
+    },
+    {
+      "line": 9262,
+      "at": "21:41:01.235",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11814,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 65/874 · моб Tanor Silenos Warrior 3144/33432"
+    },
+    {
+      "line": 9274,
+      "at": "21:41:03.148",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 11816,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6400 HP 6170/6195 MP 565/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9277,
+      "at": "21:41:04.395",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11817,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6400 HP 6170/6195 MP 498/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9289,
+      "at": "21:41:07.217",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11819,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6494 HP 6195/6195 MP 498/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9303,
+      "at": "21:41:09.433",
+      "action": "fighter_soulshot_toggle",
+      "httpStatus": 200,
+      "expectedRevision": 11821,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 498/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9306,
+      "at": "21:41:10.625",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11822,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 463/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9320,
+      "at": "21:41:13.018",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11824,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 426/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 9330,
+      "at": "21:41:15.330",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11826,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_53 HP 6195/6195 MP 426/874 · моб Wyrm 1860/1860"
+    },
+    {
+      "line": 9340,
+      "at": "21:41:17.365",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11828,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6398 HP 6195/6195 MP 377/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9350,
+      "at": "21:41:19.701",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11830,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_36 HP 6195/6195 MP 310/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 9363,
+      "at": "21:41:21.504",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11832,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 310/874 · моб Guardian Basilisk 1908/1908 +  1860/1860 +  1812/1812"
+    },
+    {
+      "line": 9367,
+      "at": "21:41:23.143",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11833,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 275/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 9379,
+      "at": "21:41:25.196",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11835,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 275/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 9390,
+      "at": "21:41:26.850",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11837,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 238/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9402,
+      "at": "21:41:28.647",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11839,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_51 HP 6195/6195 MP 238/874 · моб Breka Orc Archer 1716/1716"
+    },
+    {
+      "line": 9411,
+      "at": "21:41:31.356",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11841,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_34 HP 6195/6195 MP 189/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 9422,
+      "at": "21:41:33.651",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11843,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 189/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9433,
+      "at": "21:41:35.560",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11845,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 122/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 9446,
+      "at": "21:41:37.775",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11847,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 122/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9457,
+      "at": "21:41:40.115",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11849,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 122/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9469,
+      "at": "21:41:42.722",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11851,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6458 HP 6195/6195 MP 85/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9479,
+      "at": "21:41:44.833",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11853,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6218 HP 6187/6195 MP 85/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9485,
+      "at": "21:41:46.035",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11854,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 99/874 · моб Tanor Silenos Warrior 179/2388 +  2292/2292"
+    },
+    {
+      "line": 9489,
+      "at": "21:41:47.887",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11855,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 50/874 · моб Tanor Silenos Warrior 179/2388"
+    },
+    {
+      "line": 9502,
+      "at": "21:41:49.700",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 11857,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 550/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9506,
+      "at": "21:41:50.673",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11858,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 550/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9510,
+      "at": "21:41:51.912",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11859,
+      "requestBattleSpawnId": "dense_6320",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 497/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9561,
+      "at": "21:42:02.176",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11861,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 514/874 · моб Tanor Silenos Chieftain 32174/36120"
+    },
+    {
+      "line": 9569,
+      "at": "21:42:03.192",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11862,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 528/874 · моб Tanor Silenos Chieftain 30669/36120"
+    },
+    {
+      "line": 9575,
+      "at": "21:42:04.898",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11863,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 493/874 · моб Tanor Silenos Chieftain 25056/36120"
+    },
+    {
+      "line": 9581,
+      "at": "21:42:06.188",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11864,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 426/874 · моб Tanor Silenos Chieftain 19823/36120"
+    },
+    {
+      "line": 9585,
+      "at": "21:42:07.058",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11865,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 440/874 · моб Tanor Silenos Chieftain 18259/36120"
+    },
+    {
+      "line": 9591,
+      "at": "21:42:08.482",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11866,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 440/874 · моб Tanor Silenos Chieftain 16839/36120 +  35/2292 +  2388/2388"
+    },
+    {
+      "line": 9594,
+      "at": "21:42:10.569",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11867,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6150/6195 MP 405/874 · моб Tanor Silenos Chieftain 10916/36120"
+    },
+    {
+      "line": 9601,
+      "at": "21:42:12.001",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11868,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 419/874 · моб Tanor Silenos Chieftain 9504/36120"
+    },
+    {
+      "line": 9607,
+      "at": "21:42:13.641",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11869,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6175/6195 MP 396/874 · моб Tanor Silenos Chieftain 4884/36120"
+    },
+    {
+      "line": 9609,
+      "at": "21:42:14.705",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11870,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6152/6195 MP 396/874 · моб Tanor Silenos Chieftain 4884/36120 +  2292/2292 +  2196/2196"
+    },
+    {
+      "line": 9615,
+      "at": "21:42:16.341",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11871,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6265 HP 6152/6195 MP 361/874 · моб Tanor Silenos Chieftain 4884/36120"
+    },
+    {
+      "line": 9627,
+      "at": "21:42:18.319",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11873,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6434 HP 6195/6195 MP 361/874 · моб Tanor Silenos Warrior 197/2388 +  112/2436"
+    },
+    {
+      "line": 9631,
+      "at": "21:42:20.117",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11874,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6434 HP 6187/6195 MP 375/874 · моб Tanor Silenos Warrior 197/2388 +  112/2436 +  2196/2196"
+    },
+    {
+      "line": 9634,
+      "at": "21:42:23.155",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11875,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6434 HP 6187/6195 MP 321/874 · моб Tanor Silenos Warrior 197/2388"
+    },
+    {
+      "line": 9645,
+      "at": "21:42:24.896",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11877,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=scatter_2982 HP 6187/6195 MP 272/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9658,
+      "at": "21:42:27.145",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11879,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6430 HP 6187/6195 MP 235/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9669,
+      "at": "21:42:29.111",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11881,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 235/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 9678,
+      "at": "21:42:31.680",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11883,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6255 HP 6195/6195 MP 186/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9692,
+      "at": "21:42:33.569",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11885,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6261 HP 6195/6195 MP 186/874 · моб Nightmare Lord 2436/2436 +  2196/2196 +  2388/2388"
+    },
+    {
+      "line": 9697,
+      "at": "21:42:35.221",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11886,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6261 HP 6195/6195 MP 200/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9708,
+      "at": "21:42:37.301",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11888,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6501 HP 6195/6195 MP 151/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9719,
+      "at": "21:42:39.343",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11890,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6341 HP 6195/6195 MP 84/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9733,
+      "at": "21:42:41.543",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11892,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6342 HP 6187/6195 MP 84/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9738,
+      "at": "21:42:43.554",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11893,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6342 HP 6187/6195 MP 61/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9751,
+      "at": "21:42:45.314",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 11895,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6272 HP 6179/6195 MP 561/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9755,
+      "at": "21:42:46.410",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11896,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6272 HP 6163/6195 MP 575/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9759,
+      "at": "21:42:47.690",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11897,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6272 HP 6163/6195 MP 526/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9773,
+      "at": "21:42:49.788",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11899,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6221 HP 6195/6195 MP 526/874 · моб Tanor Silenos Warrior 59/2388 +  257/2580"
+    },
+    {
+      "line": 9778,
+      "at": "21:42:51.561",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11900,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6221 HP 6195/6195 MP 540/874 · моб Tanor Silenos Warrior 59/2388"
+    },
+    {
+      "line": 9792,
+      "at": "21:42:54.180",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11902,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6171 HP 6195/6195 MP 491/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9804,
+      "at": "21:42:56.418",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11904,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 491/874 · моб Tanor Silenos Chieftain 451/2580 +  15/2436"
+    },
+    {
+      "line": 9808,
+      "at": "21:42:58.318",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11905,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 438/874 · моб Tanor Silenos Chieftain 451/2580"
+    },
+    {
+      "line": 9822,
+      "at": "21:43:01.289",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11907,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 401/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9834,
+      "at": "21:43:03.646",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11909,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6174 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9850,
+      "at": "21:43:06.192",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11911,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9862,
+      "at": "21:43:07.742",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11913,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 352/874 · моб Tanor Silenos Scout 100/2292 +  162/2436 +  166/2436"
+    },
+    {
+      "line": 9866,
+      "at": "21:43:09.979",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11914,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 100/2292"
+    },
+    {
+      "line": 9880,
+      "at": "21:43:11.668",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11916,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 153/2292"
+    },
+    {
+      "line": 9887,
+      "at": "21:43:13.791",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11917,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 264/874 · моб Tanor Silenos Scout 153/2292"
+    },
+    {
+      "line": 9901,
+      "at": "21:43:16.211",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11919,
+      "requestBattleSpawnId": "dense_6265",
+      "domContext": "battle?spawnId=dense_6317 HP 6195/6195 MP 241/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9946,
+      "at": "21:43:27.297",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11921,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6323 HP 6195/6195 MP 259/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9958,
+      "at": "21:43:29.230",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11923,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 259/874 · моб Tanor Silenos Warrior 155/2388 +  2196/2196"
+    },
+    {
+      "line": 9967,
+      "at": "21:43:31.051",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11924,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 236/874 · моб Tanor Silenos Warrior 155/2388"
+    },
+    {
+      "line": 9979,
+      "at": "21:43:33.025",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11926,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6511 HP 6195/6195 MP 236/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9989,
+      "at": "21:43:35.322",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11928,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6300 HP 6195/6195 MP 187/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10002,
+      "at": "21:43:37.422",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11930,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 187/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10007,
+      "at": "21:43:38.986",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11931,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 134/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10022,
+      "at": "21:43:41.879",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11933,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 134/874 · моб Tanor Silenos Grunt 45/2196 +  40/2436 +  153/2388"
+    },
+    {
+      "line": 10027,
+      "at": "21:43:43.914",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11934,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 99/874 · моб Tanor Silenos Grunt 45/2196"
+    },
+    {
+      "line": 10040,
+      "at": "21:43:45.826",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11936,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 62/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10051,
+      "at": "21:43:47.525",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 11938,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6268 HP 6195/6195 MP 562/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10054,
+      "at": "21:43:48.646",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11939,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6268 HP 6195/6195 MP 562/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10065,
+      "at": "21:43:50.288",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11941,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 231/2580"
+    },
+    {
+      "line": 10077,
+      "at": "21:43:53.277",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11943,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 398/2580"
+    },
+    {
+      "line": 10083,
+      "at": "21:43:55.264",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11944,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 460/874 · моб Tanor Silenos Chieftain 398/2580"
+    },
+    {
+      "line": 10096,
+      "at": "21:43:58.164",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11946,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6425 HP 6195/6195 MP 460/874 · моб Tanor Silenos Warrior 215/2388 +  131/2388 +  172/2436"
+    },
+    {
+      "line": 10100,
+      "at": "21:43:59.700",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11947,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6425 HP 6195/6195 MP 425/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10112,
+      "at": "21:44:01.712",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11949,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6325 HP 6195/6195 MP 388/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10123,
+      "at": "21:44:03.607",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11951,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6295 HP 6195/6195 MP 388/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10135,
+      "at": "21:44:05.611",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11953,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 388/874 · моб Tanor Silenos Chieftain 218/2580"
+    },
+    {
+      "line": 10145,
+      "at": "21:44:07.607",
+      "action": "war_cry",
+      "httpStatus": 200,
+      "expectedRevision": 11955,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6275 HP 6185/6195 MP 378/874 · моб Nightmare Lord 145/2436"
+    },
+    {
+      "line": 10149,
+      "at": "21:44:08.490",
+      "action": "thrill_fight",
+      "httpStatus": 200,
+      "expectedRevision": 11956,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6275 HP 6177/6195 MP 357/874 · моб Nightmare Lord 145/2436"
+    },
+    {
+      "line": 10152,
+      "at": "21:44:09.590",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11957,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6275 HP 6177/6195 MP 322/874 · моб Nightmare Lord 145/2436"
+    },
+    {
+      "line": 10163,
+      "at": "21:44:12.374",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11959,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6317 HP 6185/6195 MP 322/874 · моб Tanor Silenos Warrior 109/2388"
+    },
+    {
+      "line": 10175,
+      "at": "21:44:14.396",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11961,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6417 HP 6195/6195 MP 322/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10186,
+      "at": "21:44:16.284",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11963,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=scatter_413 HP 6195/6195 MP 322/874 · моб Tanor Silenos Grunt 4/2196"
+    },
+    {
+      "line": 10196,
+      "at": "21:44:18.599",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11965,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6416 HP 6195/6195 MP 273/874 · моб Tanor Silenos Chieftain 345/2580"
+    },
+    {
+      "line": 10207,
+      "at": "21:44:21.668",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11967,
+      "requestBattleSpawnId": "dense_6323",
+      "domContext": "battle?spawnId=dense_6396 HP 6195/6195 MP 220/874 · моб Tanor Silenos Chieftain 280/2580"
+    },
+    {
+      "line": 10256,
+      "at": "21:44:30.984",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11969,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6162/6195 MP 237/874 · моб Tanor Silenos Scout 26990/32088"
+    },
+    {
+      "line": 10260,
+      "at": "21:44:32.061",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11970,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 237/874 · моб Tanor Silenos Scout 25358/32088"
+    },
+    {
+      "line": 10269,
+      "at": "21:44:33.446",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11971,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6179/6195 MP 202/874 · моб Tanor Silenos Scout 19729/32088"
+    },
+    {
+      "line": 10273,
+      "at": "21:44:34.671",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11972,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 202/874 · моб Tanor Silenos Scout 18022/32088 +  64/2388"
+    },
+    {
+      "line": 10280,
+      "at": "21:44:36.196",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 11973,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 149/874 · моб Tanor Silenos Scout 12851/32088"
+    },
+    {
+      "line": 10284,
+      "at": "21:44:37.604",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11974,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 163/874 · моб Tanor Silenos Scout 11126/32088 +  250/2436"
+    },
+    {
+      "line": 10291,
+      "at": "21:44:39.070",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11975,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 128/874 · моб Tanor Silenos Scout 4896/32088"
+    },
+    {
+      "line": 10294,
+      "at": "21:44:40.107",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11976,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6159/6195 MP 128/874 · моб Tanor Silenos Scout 3271/32088 +  2100/2100"
+    },
+    {
+      "line": 10298,
+      "at": "21:44:41.729",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11977,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 142/874 · моб Tanor Silenos Scout 1476/32088 +  2100/2100 +  548/2580"
+    },
+    {
+      "line": 10303,
+      "at": "21:44:43.338",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11978,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 156/874 · моб Tanor Silenos Scout 1476/32088 +  2100/2100 +  548/2580"
+    },
+    {
+      "line": 10304,
+      "at": "21:44:45.133",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11979,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 1476/32088"
+    },
+    {
+      "line": 10318,
+      "at": "21:44:47.013",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11981,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6394 HP 6195/6195 MP 84/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10329,
+      "at": "21:44:49.028",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11983,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 84/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10335,
+      "at": "21:44:50.042",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11984,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 98/874 · моб Tanor Silenos Scout 160/2292"
+    },
+    {
+      "line": 10340,
+      "at": "21:44:51.748",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11985,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 49/874 · моб Tanor Silenos Scout 160/2292"
+    },
+    {
+      "line": 10354,
+      "at": "21:44:54.630",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 11987,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 549/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10358,
+      "at": "21:44:55.554",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 11988,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_19 HP 6181/6195 MP 563/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10361,
+      "at": "21:44:57.083",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11989,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 563/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10373,
+      "at": "21:44:59.103",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11991,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 563/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 10384,
+      "at": "21:45:01.645",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 11993,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 526/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 10396,
+      "at": "21:45:03.686",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11995,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 526/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10407,
+      "at": "21:45:05.643",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 11997,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_71 HP 6195/6195 MP 477/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10419,
+      "at": "21:45:07.317",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 11999,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 477/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 10429,
+      "at": "21:45:09.125",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12001,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 477/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 10441,
+      "at": "21:45:11.002",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12003,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 410/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 10453,
+      "at": "21:45:13.303",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12005,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 410/874 · моб Guardian Basilisk 1908/1908 +  2004/2004 +  1668/1668"
+    },
+    {
+      "line": 10458,
+      "at": "21:45:14.871",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12006,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 387/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 10470,
+      "at": "21:45:16.602",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12008,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6248 HP 6195/6195 MP 387/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 10480,
+      "at": "21:45:18.759",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12010,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=scatter_2989 HP 6195/6195 MP 387/874 · моб Tanor Silenos Grunt 1/2196 +  2292/2292"
+    },
+    {
+      "line": 10485,
+      "at": "21:45:20.333",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12011,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=scatter_2989 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 1/2196"
+    },
+    {
+      "line": 10498,
+      "at": "21:45:22.233",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12013,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6167 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10510,
+      "at": "21:45:24.603",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12015,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6332 HP 6195/6195 MP 352/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10522,
+      "at": "21:45:27.175",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12017,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_6353 HP 6195/6195 MP 303/874 · моб Tanor Silenos Grunt 10/2196"
+    },
+    {
+      "line": 10534,
+      "at": "21:45:30.088",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12019,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 280/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10547,
+      "at": "21:45:31.653",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12021,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 280/874 · моб Fettered Soul 2004/2004 +  1812/1812 +  1860/1860"
+    },
+    {
+      "line": 10552,
+      "at": "21:45:33.836",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12022,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 245/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 10565,
+      "at": "21:45:36.019",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12024,
+      "requestBattleSpawnId": "dense_6350",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 245/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10614,
+      "at": "21:45:46.127",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12026,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 275/874 · моб Tanor Silenos Scout 27033/32088"
+    },
+    {
+      "line": 10619,
+      "at": "21:45:47.318",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12027,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 275/874 · моб Tanor Silenos Scout 25249/32088 +  1/2292"
+    },
+    {
+      "line": 10627,
+      "at": "21:45:48.851",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12028,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 222/874 · моб Tanor Silenos Scout 19323/32088"
+    },
+    {
+      "line": 10632,
+      "at": "21:45:50.327",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12029,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 222/874 · моб Tanor Silenos Scout 17559/32088 +  160/2292"
+    },
+    {
+      "line": 10640,
+      "at": "21:45:51.618",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12030,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 187/874 · моб Tanor Silenos Scout 5630/32088"
+    },
+    {
+      "line": 10644,
+      "at": "21:45:52.770",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12031,
+      "requestBattleSpawnId": "dense_6359",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 201/874 · моб Tanor Silenos Scout 5630/32088"
+    },
+    {
+      "line": 10664,
+      "at": "21:46:15.457",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12033,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6379 HP 6195/6195 MP 341/874 · моб Nightmare Lord 98/2436"
+    },
+    {
+      "line": 10677,
+      "at": "21:46:17.445",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12035,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6453 HP 6195/6195 MP 304/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10687,
+      "at": "21:46:19.161",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12037,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 304/874 · моб Tanor Silenos Chieftain 201/2580"
+    },
+    {
+      "line": 10694,
+      "at": "21:46:20.818",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12038,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 269/874 · моб Tanor Silenos Chieftain 201/2580"
+    },
+    {
+      "line": 10707,
+      "at": "21:46:23.625",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12040,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=scatter_2982 HP 6195/6195 MP 269/874 · моб Nightmare Lord 68/2436 +  309/2436"
+    },
+    {
+      "line": 10712,
+      "at": "21:46:25.509",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12041,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=scatter_2982 HP 6195/6195 MP 216/874 · моб Nightmare Lord 68/2436"
+    },
+    {
+      "line": 10726,
+      "at": "21:46:27.941",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12043,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6335 HP 6195/6195 MP 216/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10738,
+      "at": "21:46:29.587",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12045,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 216/874 · моб Tanor Silenos Chieftain 353/2580"
+    },
+    {
+      "line": 10750,
+      "at": "21:46:31.482",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12047,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6246 HP 6195/6195 MP 179/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10761,
+      "at": "21:46:33.837",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12049,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 179/874 · моб Tanor Silenos Warrior 34/2388"
+    },
+    {
+      "line": 10767,
+      "at": "21:46:35.195",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12050,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 34/2388"
+    },
+    {
+      "line": 10781,
+      "at": "21:46:37.587",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12052,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 144/874 · моб Nightmare Lord 339/2436 +  85/2388 +  367/2580"
+    },
+    {
+      "line": 10786,
+      "at": "21:46:39.914",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12053,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 158/874 · моб Nightmare Lord 339/2436"
+    },
+    {
+      "line": 10797,
+      "at": "21:46:42.123",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12055,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6249 HP 6195/6195 MP 158/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10809,
+      "at": "21:46:44.442",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12057,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 158/874 · моб Tanor Silenos Chieftain 529/2580"
+    },
+    {
+      "line": 10822,
+      "at": "21:46:46.564",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12059,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6477 HP 6195/6195 MP 121/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10835,
+      "at": "21:46:48.544",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12061,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 40/2292"
+    },
+    {
+      "line": 10841,
+      "at": "21:46:50.391",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12062,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 86/874 · моб Tanor Silenos Scout 40/2292"
+    },
+    {
+      "line": 10856,
+      "at": "21:46:53.124",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 12064,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_19 HP 6188/6195 MP 86/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10860,
+      "at": "21:46:55.125",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12065,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 100/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10874,
+      "at": "21:46:56.952",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12067,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6266 HP 6195/6195 MP 100/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10883,
+      "at": "21:46:58.911",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12069,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6286 HP 6195/6195 MP 51/874 · моб Tanor Silenos Warrior 171/2388"
+    },
+    {
+      "line": 10897,
+      "at": "21:47:01.876",
+      "action": "battle_potion_use",
+      "httpStatus": 200,
+      "expectedRevision": 12071,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6404 HP 6195/6195 MP 551/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10901,
+      "at": "21:47:03.271",
+      "action": "vicious_stance",
+      "httpStatus": 200,
+      "expectedRevision": 12072,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6404 HP 6195/6195 MP 565/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10904,
+      "at": "21:47:04.179",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12073,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6404 HP 6195/6195 MP 528/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10915,
+      "at": "21:47:06.094",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12075,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6210 HP 6195/6195 MP 528/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10925,
+      "at": "21:47:07.887",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12077,
+      "requestBattleSpawnId": "dense_6379",
+      "domContext": "battle?spawnId=dense_6493 HP 6195/6195 MP 528/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10975,
+      "at": "21:47:17.866",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12079,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 544/874 · моб Nightmare Lord 29775/34104"
+    },
+    {
+      "line": 10980,
+      "at": "21:47:18.841",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12080,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 558/874 · моб Nightmare Lord 29775/34104 +  2388/2388 +  2292/2292"
+    },
+    {
+      "line": 10987,
+      "at": "21:47:20.398",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12081,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6178/6195 MP 523/874 · моб Nightmare Lord 23314/34104"
+    },
+    {
+      "line": 10992,
+      "at": "21:47:21.293",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12082,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 523/874 · моб Nightmare Lord 21730/34104 +  203/2436 +  539/2580"
+    },
+    {
+      "line": 10998,
+      "at": "21:47:23.137",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12083,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 470/874 · моб Nightmare Lord 16771/34104"
+    },
+    {
+      "line": 11004,
+      "at": "21:47:24.735",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12084,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 484/874 · моб Nightmare Lord 15105/34104"
+    },
+    {
+      "line": 11012,
+      "at": "21:47:26.682",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12085,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 449/874 · моб Nightmare Lord 9492/34104"
+    },
+    {
+      "line": 11015,
+      "at": "21:47:27.788",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12086,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 449/874 · моб Nightmare Lord 7949/34104 +  407/2580"
+    },
+    {
+      "line": 11019,
+      "at": "21:47:29.370",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12087,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6176/6195 MP 463/874 · моб Nightmare Lord 6356/34104"
+    },
+    {
+      "line": 11026,
+      "at": "21:47:31.096",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12088,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 440/874 · моб Nightmare Lord 2070/34104"
+    },
+    {
+      "line": 11030,
+      "at": "21:47:32.763",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12089,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 405/874 · моб Nightmare Lord 2070/34104"
+    },
+    {
+      "line": 11044,
+      "at": "21:47:34.663",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12091,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6387 HP 6195/6195 MP 405/874 · моб Tanor Silenos Warrior 284/2388 +  151/2436"
+    },
+    {
+      "line": 11049,
+      "at": "21:47:36.949",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12092,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6387 HP 6195/6195 MP 419/874 · моб Tanor Silenos Warrior 284/2388"
+    },
+    {
+      "line": 11062,
+      "at": "21:47:39.367",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12094,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6386 HP 6195/6195 MP 419/874 · моб Nightmare Lord 251/2436"
+    },
+    {
+      "line": 11072,
+      "at": "21:47:41.736",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12096,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6392 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11086,
+      "at": "21:47:43.735",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12098,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6293 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11100,
+      "at": "21:47:46.593",
+      "action": "wild_sweep",
+      "httpStatus": 200,
+      "expectedRevision": 12100,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6216 HP 6195/6195 MP 315/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 11114,
+      "at": "21:47:48.637",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12102,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6500 HP 6195/6195 MP 315/874 · моб Nightmare Lord 2436/2436 +  2100/2100 +  2196/2196"
+    },
+    {
+      "line": 11118,
+      "at": "21:47:50.817",
+      "action": "whirlwind",
+      "httpStatus": 200,
+      "expectedRevision": 12103,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6500 HP 6195/6195 MP 280/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 11133,
+      "at": "21:47:52.757",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12105,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6271 HP 6195/6195 MP 280/874 · моб Tanor Silenos Chieftain 365/2580 +  2196/2196"
+    },
+    {
+      "line": 11138,
+      "at": "21:47:55.270",
+      "action": "attack",
+      "httpStatus": 200,
+      "expectedRevision": 12106,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6271 HP 6195/6195 MP 294/874 · моб Tanor Silenos Chieftain 365/2580"
+    },
+    {
+      "line": 11153,
+      "at": "21:47:57.457",
+      "action": "thunder_storm",
+      "httpStatus": 200,
+      "expectedRevision": 12108,
+      "requestBattleSpawnId": "dense_6422",
+      "domContext": "battle?spawnId=dense_6199 HP 6195/6195 MP 227/874 · моб Tanor Silenos Chieftain 2580/2580"
+    }
+  ],
+  "botSkillMeasurements": [
+    {
+      "line": 8861,
+      "at": "21:39:12.715",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6345 HP 5582/6195 MP 820/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Дикий розмах»: урон 4745 · MP −23"
+    },
+    {
+      "line": 8911,
+      "at": "21:39:28.899",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6323 HP 5846/6195 MP 825/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 8927,
+      "at": "21:39:32.843",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6408 HP 5890/6195 MP 771/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 8942,
+      "at": "21:39:35.716",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6330 HP 5890/6195 MP 736/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 8953,
+      "at": "21:39:39.214",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6488 HP 5890/6195 MP 699/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Дикий розмах»: урон 4804 · MP −37"
+    },
+    {
+      "line": 8966,
+      "at": "21:39:42.991",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6176 HP 5934/6195 MP 663/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 8995,
+      "at": "21:39:49.966",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6418 HP 6117/6195 MP 642/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 9006,
+      "at": "21:39:53.415",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6307 HP 6117/6195 MP 589/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 9022,
+      "at": "21:39:58.397",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6411 HP 6161/6195 MP 553/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 9039,
+      "at": "21:40:01.930",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6260 HP 6195/6195 MP 530/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Дикий розмах»: урон 4778 · MP −37"
+    },
+    {
+      "line": 9047,
+      "at": "21:40:04.724",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6391 HP 6195/6195 MP 495/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 9069,
+      "at": "21:40:10.190",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 474/874 · моб Tanor Silenos Scout 541/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35"
+    },
+    {
+      "line": 9080,
+      "at": "21:40:14.122",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6207 HP 6195/6195 MP 407/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 9096,
+      "at": "21:40:18.209",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6226 HP 6195/6195 MP 384/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Дикий розмах»: урон 4369 · MP −37"
+    },
+    {
+      "line": 9107,
+      "at": "21:40:23.425",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6426 HP 6195/6195 MP 362/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35"
+    },
+    {
+      "line": 9131,
+      "at": "21:40:29.199",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 340/874 · моб Tanor Silenos Scout 723/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35"
+    },
+    {
+      "line": 9145,
+      "at": "21:40:32.525",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6187 HP 6195/6195 MP 303/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Дикий розмах»: урон 4689 · MP −37"
+    },
+    {
+      "line": 9149,
+      "at": "21:40:33.996",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6187 HP 6195/6195 MP 236/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 9170,
+      "at": "21:40:37.766",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6270 HP 6195/6195 MP 201/874 · моб Tanor Silenos 2100/2100",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49"
+    },
+    {
+      "line": 9219,
+      "at": "21:40:48.757",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 151/874 · моб Tanor Silenos Warrior 26602/33432",
+      "measurement": "скилл «Грозова буря»: урон 3669 · MP −67"
+    },
+    {
+      "line": 9268,
+      "at": "21:41:01.741",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 65/874 · моб Tanor Silenos Warrior 3144/33432",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 5 с"
+    },
+    {
+      "line": 9279,
+      "at": "21:41:04.835",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6400 HP 6170/6195 MP 498/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 9317,
+      "at": "21:41:11.986",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 463/874 · моб Breka Orc Shaman 1812/1812",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 5 с"
+    },
+    {
+      "line": 9327,
+      "at": "21:41:14.125",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 426/874 · моб Breka Orc Shaman 1812/1812",
+      "measurement": "скилл «Дикий розмах»: урон 6293 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9349,
+      "at": "21:41:18.913",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_36 HP 6195/6195 MP 377/874 · моб Windsus 2052/2052",
+      "measurement": "скилл «Вихор»: урон 48 · MP −49 · КД 5 с"
+    },
+    {
+      "line": 9361,
+      "at": "21:41:20.917",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 310/874 · моб Guardian Basilisk 1908/1908",
+      "measurement": "скилл «Грозова буря»: урон 144 · MP −67"
+    },
+    {
+      "line": 9378,
+      "at": "21:41:24.755",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 275/874 · моб Breka Orc 1668/1668",
+      "measurement": "скилл «Вихор»: урон 240 · MP −35 · КД 5 с"
+    },
+    {
+      "line": 9399,
+      "at": "21:41:27.790",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 238/874 · моб Breka Orc Warrior 1764/1764",
+      "measurement": "скилл «Дикий розмах»: урон 6910 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9442,
+      "at": "21:41:36.782",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 122/874 · моб Breka Orc 1668/1668",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 9475,
+      "at": "21:41:43.754",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6458 HP 6195/6195 MP 85/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Дикий розмах»: урон 5679 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9498,
+      "at": "21:41:48.793",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 50/874 · моб Tanor Silenos Warrior 179/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 5 с"
+    },
+    {
+      "line": 9519,
+      "at": "21:41:52.862",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 497/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 9565,
+      "at": "21:42:02.776",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 514/874 · моб Tanor Silenos Chieftain 32174/36120",
+      "measurement": "скилл «Дикий розмах»: урон 3946 · MP −23 · КД 12.3 с"
+    },
+    {
+      "line": 9578,
+      "at": "21:42:05.803",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 493/874 · моб Tanor Silenos Chieftain 25056/36120",
+      "measurement": "скилл «Вихор»: урон 5613 · MP −35 · КД 5 с"
+    },
+    {
+      "line": 9625,
+      "at": "21:42:17.813",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6434 HP 6152/6195 MP 361/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Вихор»: урон 2496 · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 9640,
+      "at": "21:42:23.594",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6434 HP 6187/6195 MP 321/874 · моб Tanor Silenos Warrior 197/2388",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −54"
+    },
+    {
+      "line": 9654,
+      "at": "21:42:25.935",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=scatter_2982 HP 6187/6195 MP 272/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9665,
+      "at": "21:42:27.838",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6430 HP 6187/6195 MP 235/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Дикий розмах»: урон 6227 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9690,
+      "at": "21:42:33.011",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6261 HP 6195/6195 MP 186/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9718,
+      "at": "21:42:38.921",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6341 HP 6195/6195 MP 151/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9731,
+      "at": "21:42:41.021",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6342 HP 6195/6195 MP 84/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Грозова буря»: урон 192 · MP −67"
+    },
+    {
+      "line": 9749,
+      "at": "21:42:44.960",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6272 HP 6187/6195 MP 61/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Дикий розмах»: урон 5946 · MP −23 · КД 12.3 с"
+    },
+    {
+      "line": 9770,
+      "at": "21:42:48.782",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6221 HP 6163/6195 MP 526/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9798,
+      "at": "21:42:54.793",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6171 HP 6195/6195 MP 491/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9814,
+      "at": "21:42:59.200",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 438/874 · моб Tanor Silenos Chieftain 451/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 9828,
+      "at": "21:43:01.747",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 401/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Дикий розмах»: урон 5342 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9847,
+      "at": "21:43:04.867",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 9876,
+      "at": "21:43:10.664",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 100/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 9890,
+      "at": "21:43:14.670",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 264/874 · моб Tanor Silenos Scout 153/2292",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 9910,
+      "at": "21:43:17.740",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6317 HP 6195/6195 MP 241/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Дикий розмах»: урон 5534 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 9956,
+      "at": "21:43:28.683",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 259/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Вихор»: урон 192 · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 9975,
+      "at": "21:43:31.757",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 236/874 · моб Tanor Silenos Warrior 155/2388",
+      "measurement": "скилл «Дикий розмах»: урон 6540 · MP −23 · КД 12.3 с"
+    },
+    {
+      "line": 9996,
+      "at": "21:43:35.792",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6300 HP 6195/6195 MP 187/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 10011,
+      "at": "21:43:39.704",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 134/874 · моб Tanor Silenos Warrior 215/2388",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 10036,
+      "at": "21:43:44.715",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 99/874 · моб Tanor Silenos Grunt 45/2196",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 10049,
+      "at": "21:43:47.121",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6268 HP 6195/6195 MP 62/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Дикий розмах»: урон 6237 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10073,
+      "at": "21:43:51.842",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 231/2580",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 10085,
+      "at": "21:43:55.641",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 460/874 · моб Tanor Silenos Chieftain 398/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 10110,
+      "at": "21:44:00.677",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6325 HP 6195/6195 MP 425/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 10122,
+      "at": "21:44:02.795",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6295 HP 6195/6195 MP 388/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Дикий розмах»: урон 6408 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10155,
+      "at": "21:44:10.797",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6275 HP 6177/6195 MP 322/874 · моб Nightmare Lord 145/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.8 с"
+    },
+    {
+      "line": 10199,
+      "at": "21:44:20.006",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6416 HP 6195/6195 MP 273/874 · моб Tanor Silenos Chieftain 345/2580",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.8 с"
+    },
+    {
+      "line": 10211,
+      "at": "21:44:22.666",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6396 HP 6195/6195 MP 220/874 · моб Tanor Silenos Chieftain 280/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 10314,
+      "at": "21:44:45.761",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 1476/32088",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10325,
+      "at": "21:44:47.716",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6394 HP 6195/6195 MP 84/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Дикий розмах»: урон 12837 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10344,
+      "at": "21:44:52.674",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 49/874 · моб Tanor Silenos Scout 160/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с"
+    },
+    {
+      "line": 10387,
+      "at": "21:45:01.849",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 526/874 · моб Breka Orc Warrior 1764/1764",
+      "measurement": "скилл «Дикий розмах»: урон 13351 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10418,
+      "at": "21:45:06.728",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 477/874 · моб Guardian Basilisk 1908/1908",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с"
+    },
+    {
+      "line": 10449,
+      "at": "21:45:11.718",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 410/874 · моб Breka Orc Warrior 1764/1764",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 10468,
+      "at": "21:45:15.804",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6248 HP 6195/6195 MP 387/874 · моб Tanor Silenos 2100/2100",
+      "measurement": "скилл «Дикий розмах»: урон 6306 · MP −23 · КД 12.3 с"
+    },
+    {
+      "line": 10497,
+      "at": "21:45:21.675",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6167 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 2196/2196",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10524,
+      "at": "21:45:27.646",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6353 HP 6195/6195 MP 303/874 · моб Tanor Silenos Grunt 10/2196",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с"
+    },
+    {
+      "line": 10542,
+      "at": "21:45:30.642",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 280/874 · моб Windsus 2052/2052",
+      "measurement": "скилл «Дикий розмах»: урон 5738 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10562,
+      "at": "21:45:34.701",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 245/874 · моб Breka Orc Shaman 1812/1812",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10685,
+      "at": "21:46:18.682",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 304/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Дикий розмах»: урон 6151 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10697,
+      "at": "21:46:21.678",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 269/874 · моб Tanor Silenos Chieftain 201/2580",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10725,
+      "at": "21:46:26.703",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6335 HP 6195/6195 MP 216/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −53"
+    },
+    {
+      "line": 10759,
+      "at": "21:46:32.785",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 179/874 · моб Tanor Silenos Warrior 2388/2388",
+      "measurement": "скилл «Дикий розмах»: урон 5755 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10777,
+      "at": "21:46:36.666",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 34/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10833,
+      "at": "21:46:47.728",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 2292/2292",
+      "measurement": "скилл «Дикий розмах»: урон 5672 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 10843,
+      "at": "21:46:50.654",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 86/874 · моб Tanor Silenos Scout 40/2292",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 10887,
+      "at": "21:46:59.666",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6286 HP 6195/6195 MP 51/874 · моб Tanor Silenos Warrior 171/2388",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −49 · КД 4.7 с"
+    },
+    {
+      "line": 11002,
+      "at": "21:47:23.731",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 470/874 · моб Nightmare Lord 16771/34104",
+      "measurement": "скилл «Грозова буря»: урон 4959 · MP −53"
+    },
+    {
+      "line": 11028,
+      "at": "21:47:31.746",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 440/874 · моб Nightmare Lord 2070/34104",
+      "measurement": "скилл «Дикий розмах»: урон 4286 · MP −23 · КД 12.3 с"
+    },
+    {
+      "line": 11035,
+      "at": "21:47:32.981",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 405/874 · моб Nightmare Lord 2070/34104",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 11083,
+      "at": "21:47:42.679",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6392 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    },
+    {
+      "line": 11103,
+      "at": "21:47:46.866",
+      "name": "Дикий розмах",
+      "domContext": "battle?spawnId=dense_6216 HP 6195/6195 MP 315/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Дикий розмах»: урон 12635 · MP −37 · КД 12.3 с"
+    },
+    {
+      "line": 11123,
+      "at": "21:47:51.115",
+      "name": "Вихор",
+      "domContext": "battle?spawnId=dense_6500 HP 6195/6195 MP 280/874 · моб Nightmare Lord 2436/2436",
+      "measurement": "скилл «Вихор»: урон не измерен · MP −35 · КД 4.7 с"
+    },
+    {
+      "line": 11155,
+      "at": "21:47:57.748",
+      "name": "Грозова буря",
+      "domContext": "battle?spawnId=dense_6199 HP 6195/6195 MP 227/874 · моб Tanor Silenos Chieftain 2580/2580",
+      "measurement": "скилл «Грозова буря»: урон не измерен · MP −67"
+    }
+  ],
+  "gameDamageTextInBotDecisions": [
+    {
+      "line": 8860,
+      "at": "21:39:12.299",
+      "text": "Дикий розмах: power 326 4745",
+      "domContext": "battle?spawnId=dense_6345 HP 5582/6195 MP 820/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8908,
+      "at": "21:39:28.341",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6138, Tanor Silenos Grunt −6138, Nightmare Lord −6138.",
+      "domContext": "battle?spawnId=dense_6323 HP 5846/6195 MP 825/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8908,
+      "at": "21:39:28.341",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6138",
+      "domContext": "battle?spawnId=dense_6323 HP 5846/6195 MP 825/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8924,
+      "at": "21:39:32.163",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −5788, Tanor Silenos Grunt −5788, Nightmare Lord −5788.",
+      "domContext": "battle?spawnId=dense_6408 HP 5890/6195 MP 771/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 8924,
+      "at": "21:39:32.163",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~40%) 5788",
+      "domContext": "battle?spawnId=dense_6408 HP 5890/6195 MP 771/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 8939,
+      "at": "21:39:35.038",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −5880, Tanor Silenos Grunt −5880, Nightmare Lord −5880.",
+      "domContext": "battle?spawnId=dense_6330 HP 5890/6195 MP 736/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8939,
+      "at": "21:39:35.038",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5880",
+      "domContext": "battle?spawnId=dense_6330 HP 5890/6195 MP 736/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8951,
+      "at": "21:39:38.872",
+      "text": "Дикий розмах: power 326 4804",
+      "domContext": "battle?spawnId=dense_6488 HP 5890/6195 MP 699/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8963,
+      "at": "21:39:41.810",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6230, Tanor Silenos Grunt −6230, Nightmare Lord −6230.",
+      "domContext": "battle?spawnId=dense_6176 HP 5934/6195 MP 663/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 8963,
+      "at": "21:39:41.810",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6230",
+      "domContext": "battle?spawnId=dense_6176 HP 5934/6195 MP 663/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 8977,
+      "at": "21:39:44.545",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −1628.",
+      "domContext": "battle?spawnId=scatter_3121 HP 6079/6195 MP 677/874 · моб Tanor Silenos Scout 479/2292 +  2580/2580 +  664/2292"
+    },
+    {
+      "line": 8981,
+      "at": "21:39:46.497",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −6550, Tanor Silenos Scout −1789.",
+      "domContext": "battle?spawnId=scatter_3121 HP 6117/6195 MP 691/874 · моб Tanor Silenos Scout 479/2292"
+    },
+    {
+      "line": 8992,
+      "at": "21:39:48.598",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6633, Tanor Silenos Grunt −6633, Nightmare Lord −6633.",
+      "domContext": "battle?spawnId=dense_6418 HP 6117/6195 MP 642/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 8992,
+      "at": "21:39:48.598",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6633",
+      "domContext": "battle?spawnId=dense_6418 HP 6117/6195 MP 642/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9005,
+      "at": "21:39:53.044",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −4979, Tanor Silenos Grunt −4979, Nightmare Lord −4979.",
+      "domContext": "battle?spawnId=dense_6307 HP 6117/6195 MP 589/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9005,
+      "at": "21:39:53.044",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~41%) 4979",
+      "domContext": "battle?spawnId=dense_6307 HP 6117/6195 MP 589/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9018,
+      "at": "21:39:56.670",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −5811, Tanor Silenos Grunt −5811, Nightmare Lord −5811.",
+      "domContext": "battle?spawnId=dense_6411 HP 6161/6195 MP 553/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9018,
+      "at": "21:39:56.670",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5811",
+      "domContext": "battle?spawnId=dense_6411 HP 6161/6195 MP 553/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9033,
+      "at": "21:40:00.446",
+      "text": "Дикий розмах: power 326 4778",
+      "domContext": "battle?spawnId=dense_6260 HP 6195/6195 MP 530/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9046,
+      "at": "21:40:04.228",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −5748, Tanor Silenos Grunt −5748, Nightmare Lord −5748.",
+      "domContext": "battle?spawnId=dense_6391 HP 6195/6195 MP 495/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9046,
+      "at": "21:40:04.228",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5748",
+      "domContext": "battle?spawnId=dense_6391 HP 6195/6195 MP 495/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9061,
+      "at": "21:40:07.400",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −1845, Tanor Silenos Grunt −1675.",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 509/874 · моб Tanor Silenos Scout 541/2292 +  255/2100 +  521/2196"
+    },
+    {
+      "line": 9063,
+      "at": "21:40:09.328",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos −6286, Tanor Silenos Grunt −6286, Tanor Silenos Chieftain −6286.",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 474/874 · моб Tanor Silenos Scout 541/2292"
+    },
+    {
+      "line": 9063,
+      "at": "21:40:09.328",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6286",
+      "domContext": "battle?spawnId=dense_6414 HP 6195/6195 MP 474/874 · моб Tanor Silenos Scout 541/2292"
+    },
+    {
+      "line": 9076,
+      "at": "21:40:12.613",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −5105, Tanor Silenos Grunt −5105, Nightmare Lord −5105.",
+      "domContext": "battle?spawnId=dense_6207 HP 6195/6195 MP 407/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9076,
+      "at": "21:40:12.613",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~40%) 5105",
+      "domContext": "battle?spawnId=dense_6207 HP 6195/6195 MP 407/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9089,
+      "at": "21:40:16.698",
+      "text": "Дикий розмах: power 326 4369",
+      "domContext": "battle?spawnId=dense_6226 HP 6195/6195 MP 384/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9103,
+      "at": "21:40:21.728",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6418, Tanor Silenos Grunt −6418, Nightmare Lord −6418.",
+      "domContext": "battle?spawnId=dense_6426 HP 6195/6195 MP 362/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9103,
+      "at": "21:40:21.728",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6418",
+      "domContext": "battle?spawnId=dense_6426 HP 6195/6195 MP 362/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9118,
+      "at": "21:40:26.265",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −1663, Tanor Silenos −1698.",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 375/874 · моб Tanor Silenos Scout 723/2292 +  725/2388 +  402/2100"
+    },
+    {
+      "line": 9122,
+      "at": "21:40:27.830",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Warrior −5860, Tanor Silenos −5860, Tanor Silenos Chieftain −5860.",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 340/874 · моб Tanor Silenos Scout 723/2292"
+    },
+    {
+      "line": 9122,
+      "at": "21:40:27.830",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5860",
+      "domContext": "battle?spawnId=dense_6354 HP 6195/6195 MP 340/874 · моб Tanor Silenos Scout 723/2292"
+    },
+    {
+      "line": 9134,
+      "at": "21:40:30.351",
+      "text": "Дикий розмах: power 326 4689",
+      "domContext": "battle?spawnId=dense_6352 HP 6195/6195 MP 303/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9146,
+      "at": "21:40:33.569",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −5844, Tanor Silenos Grunt −5844, Nightmare Lord −5844.",
+      "domContext": "battle?spawnId=dense_6187 HP 6195/6195 MP 236/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9146,
+      "at": "21:40:33.569",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~41%) 5844",
+      "domContext": "battle?spawnId=dense_6187 HP 6195/6195 MP 236/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9160,
+      "at": "21:40:36.978",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6151, Tanor Silenos Grunt −6151, Nightmare Lord −6151.",
+      "domContext": "battle?spawnId=dense_6270 HP 6195/6195 MP 201/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9160,
+      "at": "21:40:36.978",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6151",
+      "domContext": "battle?spawnId=dense_6270 HP 6195/6195 MP 201/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9211,
+      "at": "21:40:46.806",
+      "text": "Дикий розмах: power 326 3161",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 218/874 · моб Tanor Silenos Warrior 30271/33432"
+    },
+    {
+      "line": 9225,
+      "at": "21:40:49.783",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 4504",
+      "domContext": "battle?spawnId=dense_6320 HP 6176/6195 MP 116/874 · моб Tanor Silenos Warrior 22098/33432"
+    },
+    {
+      "line": 9229,
+      "at": "21:40:50.573",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −1631, Tanor Silenos −1593.",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 130/874 · моб Tanor Silenos Warrior 17894/33432 +  661/2292 +  507/2100"
+    },
+    {
+      "line": 9234,
+      "at": "21:40:52.109",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −1523, Tanor Silenos −1673.",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 130/874 · моб Tanor Silenos Warrior 17023/33432"
+    },
+    {
+      "line": 9239,
+      "at": "21:40:53.681",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −1592, Tanor Silenos Chieftain −1716.",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 16061/33432 +  508/2100 +  864/2580"
+    },
+    {
+      "line": 9245,
+      "at": "21:40:55.297",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos −4996, Tanor Silenos Chieftain −4996.",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 109/874 · моб Tanor Silenos Warrior 11065/33432"
+    },
+    {
+      "line": 9245,
+      "at": "21:40:55.297",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 4996",
+      "domContext": "battle?spawnId=dense_6320 HP 6195/6195 MP 109/874 · моб Tanor Silenos Warrior 11065/33432"
+    },
+    {
+      "line": 9249,
+      "at": "21:40:56.383",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −1764, Tanor Silenos −1608.",
+      "domContext": "battle?spawnId=dense_6320 HP 6177/6195 MP 109/874 · моб Tanor Silenos Warrior 10024/33432 +  432/2196 +  492/2100"
+    },
+    {
+      "line": 9254,
+      "at": "21:40:58.035",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −7299, Tanor Silenos −1828.",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 123/874 · моб Tanor Silenos Warrior 9143/33432"
+    },
+    {
+      "line": 9260,
+      "at": "21:40:59.629",
+      "text": "Дикий розмах: power 326 · КРИТ 5999",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 100/874 · моб Tanor Silenos Warrior 3144/33432"
+    },
+    {
+      "line": 9263,
+      "at": "21:41:01.296",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 4626",
+      "domContext": "battle?spawnId=dense_6320 HP 6178/6195 MP 65/874 · моб Tanor Silenos Warrior 3144/33432"
+    },
+    {
+      "line": 9278,
+      "at": "21:41:04.423",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −4966, Tanor Silenos Grunt −4966, Nightmare Lord −4966.",
+      "domContext": "battle?spawnId=dense_6400 HP 6170/6195 MP 498/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9278,
+      "at": "21:41:04.423",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~40%) 4966",
+      "domContext": "battle?spawnId=dense_6400 HP 6170/6195 MP 498/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9290,
+      "at": "21:41:07.219",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −6747, Tanor Silenos Chieftain −6639.",
+      "domContext": "battle?spawnId=dense_6494 HP 6195/6195 MP 498/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9307,
+      "at": "21:41:10.627",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7243, Tanor Silenos Grunt −7243, Nightmare Lord −7243.",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 463/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9307,
+      "at": "21:41:10.627",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7243",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 463/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9319,
+      "at": "21:41:13.007",
+      "text": "Дикий розмах: power 326 6293",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 426/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 9341,
+      "at": "21:41:17.366",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −8081, Tanor Silenos Grunt −8081, Nightmare Lord −8081.",
+      "domContext": "battle?spawnId=dense_6398 HP 6195/6195 MP 377/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9341,
+      "at": "21:41:17.366",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 8081",
+      "domContext": "battle?spawnId=dense_6398 HP 6195/6195 MP 377/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 9351,
+      "at": "21:41:19.722",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −7170, Tanor Silenos Grunt −7170, Nightmare Lord −7170.",
+      "domContext": "battle?spawnId=dense_36 HP 6195/6195 MP 310/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 9351,
+      "at": "21:41:19.722",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~42%) 7170",
+      "domContext": "battle?spawnId=dense_36 HP 6195/6195 MP 310/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 9368,
+      "at": "21:41:23.159",
+      "text": "Вихор вразив ворогів поруч: Wyrm −6999, Breka Orc Shaman −6999, Tanor Silenos Chieftain −6999.",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 275/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 9368,
+      "at": "21:41:23.159",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6999",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 275/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 9380,
+      "at": "21:41:25.198",
+      "text": "Древко розсікло ворогів поруч: Windsus −2514, Road Scavenger −9419.",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 275/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 9391,
+      "at": "21:41:26.866",
+      "text": "Дикий розмах: power 326 6910",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 238/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9403,
+      "at": "21:41:28.710",
+      "text": "Древко розсікло ворогів поруч: Fettered Soul −2564.",
+      "domContext": "battle?spawnId=dense_51 HP 6195/6195 MP 238/874 · моб Breka Orc Archer 1716/1716"
+    },
+    {
+      "line": 9412,
+      "at": "21:41:31.381",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7999, Tanor Silenos Grunt −7999, Nightmare Lord −7999.",
+      "domContext": "battle?spawnId=dense_34 HP 6195/6195 MP 189/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 9412,
+      "at": "21:41:31.381",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7999",
+      "domContext": "battle?spawnId=dense_34 HP 6195/6195 MP 189/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 9421,
+      "at": "21:41:33.641",
+      "text": "Древко розсікло ворогів поруч: Breka Orc −2289, Breka Orc Overlord −2367.",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 189/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9434,
+      "at": "21:41:35.589",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6953, Tanor Silenos Grunt −6953, Nightmare Lord −6953.",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 122/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 9434,
+      "at": "21:41:35.589",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~44%) 6953",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 122/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 9445,
+      "at": "21:41:37.766",
+      "text": "Древко розсікло ворогів поруч: Breka Orc −2391, Guardian Basilisk −2222.",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 122/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 9456,
+      "at": "21:41:40.086",
+      "text": "Древко розсікло ворогів поруч: Breka Orc −2490, Windsus −2241.",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 122/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 9468,
+      "at": "21:41:42.715",
+      "text": "Дикий розмах: power 326 5679",
+      "domContext": "battle?spawnId=dense_6458 HP 6195/6195 MP 85/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9486,
+      "at": "21:41:46.038",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2608.",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 99/874 · моб Tanor Silenos Warrior 179/2388 +  2292/2292"
+    },
+    {
+      "line": 9490,
+      "at": "21:41:47.915",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Scout −6870, Tanor Silenos Chieftain −6870.",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 50/874 · моб Tanor Silenos Warrior 179/2388"
+    },
+    {
+      "line": 9490,
+      "at": "21:41:47.915",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6870",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 50/874 · моб Tanor Silenos Warrior 179/2388"
+    },
+    {
+      "line": 9511,
+      "at": "21:41:51.933",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6039, Tanor Silenos Grunt −6039, Nightmare Lord −6039.",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 497/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9511,
+      "at": "21:41:51.933",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 6039",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 497/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9562,
+      "at": "21:42:02.177",
+      "text": "Дикий розмах: power 326 3946",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 514/874 · моб Tanor Silenos Chieftain 32174/36120"
+    },
+    {
+      "line": 9570,
+      "at": "21:42:03.193",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2282, Tanor Silenos Warrior −2521.",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 528/874 · моб Tanor Silenos Chieftain 30669/36120"
+    },
+    {
+      "line": 9576,
+      "at": "21:42:04.981",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −5613.",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 493/874 · моб Tanor Silenos Chieftain 25056/36120"
+    },
+    {
+      "line": 9576,
+      "at": "21:42:04.981",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5613",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 493/874 · моб Tanor Silenos Chieftain 25056/36120"
+    },
+    {
+      "line": 9582,
+      "at": "21:42:06.204",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 5233",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 426/874 · моб Tanor Silenos Chieftain 19823/36120"
+    },
+    {
+      "line": 9586,
+      "at": "21:42:07.059",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2499, Tanor Silenos Warrior −2543.",
+      "domContext": "battle?spawnId=dense_6265 HP 6174/6195 MP 440/874 · моб Tanor Silenos Chieftain 18259/36120"
+    },
+    {
+      "line": 9595,
+      "at": "21:42:10.861",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Scout −5923, Tanor Silenos Warrior −5923.",
+      "domContext": "battle?spawnId=dense_6265 HP 6150/6195 MP 405/874 · моб Tanor Silenos Chieftain 10916/36120"
+    },
+    {
+      "line": 9595,
+      "at": "21:42:10.861",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5923",
+      "domContext": "battle?spawnId=dense_6265 HP 6150/6195 MP 405/874 · моб Tanor Silenos Chieftain 10916/36120"
+    },
+    {
+      "line": 9595,
+      "at": "21:42:10.861",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2257.",
+      "domContext": "battle?spawnId=dense_6265 HP 6150/6195 MP 405/874 · моб Tanor Silenos Chieftain 10916/36120"
+    },
+    {
+      "line": 9602,
+      "at": "21:42:12.002",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −8879, Tanor Silenos Grunt −2306.",
+      "domContext": "battle?spawnId=dense_6265 HP 6195/6195 MP 419/874 · моб Tanor Silenos Chieftain 9504/36120"
+    },
+    {
+      "line": 9608,
+      "at": "21:42:13.709",
+      "text": "Дикий розмах: power 326 4620",
+      "domContext": "battle?spawnId=dense_6265 HP 6175/6195 MP 396/874 · моб Tanor Silenos Chieftain 4884/36120"
+    },
+    {
+      "line": 9614,
+      "at": "21:42:16.331",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Scout −5560, Tanor Silenos Grunt −5560.",
+      "domContext": "battle?spawnId=dense_6265 HP 6152/6195 MP 361/874 · моб Tanor Silenos Chieftain 4884/36120"
+    },
+    {
+      "line": 9614,
+      "at": "21:42:16.331",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5560",
+      "domContext": "battle?spawnId=dense_6265 HP 6152/6195 MP 361/874 · моб Tanor Silenos Chieftain 4884/36120"
+    },
+    {
+      "line": 9628,
+      "at": "21:42:18.392",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2324, Nightmare Lord −2442.",
+      "domContext": "battle?spawnId=dense_6434 HP 6195/6195 MP 361/874 · моб Tanor Silenos Warrior 197/2388 +  112/2436"
+    },
+    {
+      "line": 9635,
+      "at": "21:42:23.183",
+      "text": "Грозова буря вразила ворогів поруч: Nightmare Lord −6184, Tanor Silenos Grunt −6184.",
+      "domContext": "battle?spawnId=dense_6434 HP 6187/6195 MP 321/874 · моб Tanor Silenos Warrior 197/2388"
+    },
+    {
+      "line": 9635,
+      "at": "21:42:23.183",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~40%) 6184",
+      "domContext": "battle?spawnId=dense_6434 HP 6187/6195 MP 321/874 · моб Tanor Silenos Warrior 197/2388"
+    },
+    {
+      "line": 9646,
+      "at": "21:42:24.912",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7695, Tanor Silenos Grunt −7695, Nightmare Lord −7695.",
+      "domContext": "battle?spawnId=scatter_2982 HP 6187/6195 MP 272/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9646,
+      "at": "21:42:24.912",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7695",
+      "domContext": "battle?spawnId=scatter_2982 HP 6187/6195 MP 272/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9657,
+      "at": "21:42:27.138",
+      "text": "Дикий розмах: power 326 6227",
+      "domContext": "battle?spawnId=dense_6430 HP 6187/6195 MP 235/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9668,
+      "at": "21:42:29.103",
+      "text": "Древко розсікло ворогів поруч: Road Scavenger −2398, Breka Orc −2335.",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 235/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 9679,
+      "at": "21:42:31.707",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6807, Tanor Silenos Grunt −6807, Nightmare Lord −6807.",
+      "domContext": "battle?spawnId=dense_6255 HP 6195/6195 MP 186/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9679,
+      "at": "21:42:31.707",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6807",
+      "domContext": "battle?spawnId=dense_6255 HP 6195/6195 MP 186/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 9696,
+      "at": "21:42:35.209",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −10302.",
+      "domContext": "battle?spawnId=dense_6261 HP 6195/6195 MP 200/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9709,
+      "at": "21:42:37.320",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7867, Tanor Silenos Grunt −7867, Nightmare Lord −7867.",
+      "domContext": "battle?spawnId=dense_6501 HP 6195/6195 MP 151/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9709,
+      "at": "21:42:37.320",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7867",
+      "domContext": "battle?spawnId=dense_6501 HP 6195/6195 MP 151/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9720,
+      "at": "21:42:39.362",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6956, Tanor Silenos Grunt −6956, Nightmare Lord −6956.",
+      "domContext": "battle?spawnId=dense_6341 HP 6195/6195 MP 84/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9720,
+      "at": "21:42:39.362",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 6956",
+      "domContext": "battle?spawnId=dense_6341 HP 6195/6195 MP 84/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9737,
+      "at": "21:42:43.547",
+      "text": "Дикий розмах: power 326 5946",
+      "domContext": "battle?spawnId=dense_6342 HP 6187/6195 MP 61/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9758,
+      "at": "21:42:47.683",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7530, Tanor Silenos Grunt −7530, Nightmare Lord −7530.",
+      "domContext": "battle?spawnId=dense_6272 HP 6163/6195 MP 526/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9758,
+      "at": "21:42:47.683",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7530",
+      "domContext": "battle?spawnId=dense_6272 HP 6163/6195 MP 526/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9774,
+      "at": "21:42:49.849",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2323, Tanor Silenos Scout −2380.",
+      "domContext": "battle?spawnId=dense_6221 HP 6195/6195 MP 526/874 · моб Tanor Silenos Warrior 59/2388 +  257/2580"
+    },
+    {
+      "line": 9779,
+      "at": "21:42:51.579",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2101, Tanor Silenos Chieftain −8965.",
+      "domContext": "battle?spawnId=dense_6221 HP 6195/6195 MP 540/874 · моб Tanor Silenos Warrior 59/2388"
+    },
+    {
+      "line": 9793,
+      "at": "21:42:54.182",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −8038, Tanor Silenos Grunt −8038, Nightmare Lord −8038.",
+      "domContext": "battle?spawnId=dense_6171 HP 6195/6195 MP 491/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9793,
+      "at": "21:42:54.182",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 8038",
+      "domContext": "battle?spawnId=dense_6171 HP 6195/6195 MP 491/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9805,
+      "at": "21:42:56.437",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2421, Tanor Silenos −2349.",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 491/874 · моб Tanor Silenos Chieftain 451/2580 +  15/2436"
+    },
+    {
+      "line": 9809,
+      "at": "21:42:58.321",
+      "text": "Грозова буря вразила ворогів поруч: Nightmare Lord −6689, Tanor Silenos Chieftain −6689.",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 438/874 · моб Tanor Silenos Chieftain 451/2580"
+    },
+    {
+      "line": 9809,
+      "at": "21:42:58.321",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~39%) 6689",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 438/874 · моб Tanor Silenos Chieftain 451/2580"
+    },
+    {
+      "line": 9823,
+      "at": "21:43:01.304",
+      "text": "Дикий розмах: power 326 5342",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 401/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9835,
+      "at": "21:43:03.673",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7029, Tanor Silenos Grunt −7029, Nightmare Lord −7029.",
+      "domContext": "battle?spawnId=dense_6174 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9835,
+      "at": "21:43:03.673",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7029",
+      "domContext": "battle?spawnId=dense_6174 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9849,
+      "at": "21:43:06.187",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −9952, Tanor Silenos −2217.",
+      "domContext": "battle?spawnId=dense_6218 HP 6195/6195 MP 352/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9863,
+      "at": "21:43:07.865",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2274, Nightmare Lord −2270.",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 352/874 · моб Tanor Silenos Scout 100/2292 +  162/2436 +  166/2436"
+    },
+    {
+      "line": 9867,
+      "at": "21:43:10.000",
+      "text": "Вихор вразив ворогів поруч: Nightmare Lord −7203, Nightmare Lord −7203, Tanor Silenos Chieftain −7203.",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 100/2292"
+    },
+    {
+      "line": 9867,
+      "at": "21:43:10.000",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7203",
+      "domContext": "battle?spawnId=dense_6225 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 100/2292"
+    },
+    {
+      "line": 9881,
+      "at": "21:43:11.669",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2233, Tanor Silenos Warrior −9897.",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 317/874 · моб Tanor Silenos Scout 153/2292"
+    },
+    {
+      "line": 9886,
+      "at": "21:43:13.781",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6996.",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 264/874 · моб Tanor Silenos Scout 153/2292"
+    },
+    {
+      "line": 9886,
+      "at": "21:43:13.781",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~41%) 6996",
+      "domContext": "battle?spawnId=dense_6168 HP 6195/6195 MP 264/874 · моб Tanor Silenos Scout 153/2292"
+    },
+    {
+      "line": 9900,
+      "at": "21:43:16.203",
+      "text": "Дикий розмах: power 326 5534",
+      "domContext": "battle?spawnId=dense_6317 HP 6195/6195 MP 241/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9947,
+      "at": "21:43:27.299",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6903, Tanor Silenos Grunt −6903, Nightmare Lord −6903.",
+      "domContext": "battle?spawnId=dense_6323 HP 6195/6195 MP 259/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9959,
+      "at": "21:43:29.273",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −10344.",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 259/874 · моб Tanor Silenos Warrior 155/2388 +  2196/2196"
+    },
+    {
+      "line": 9966,
+      "at": "21:43:31.039",
+      "text": "Дикий розмах: power 326 6540",
+      "domContext": "battle?spawnId=dense_6349 HP 6195/6195 MP 236/874 · моб Tanor Silenos Warrior 155/2388"
+    },
+    {
+      "line": 9980,
+      "at": "21:43:33.038",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2333.",
+      "domContext": "battle?spawnId=dense_6511 HP 6195/6195 MP 236/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 9990,
+      "at": "21:43:35.344",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7398, Tanor Silenos Grunt −7398, Nightmare Lord −7398.",
+      "domContext": "battle?spawnId=dense_6300 HP 6195/6195 MP 187/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 9990,
+      "at": "21:43:35.344",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7398",
+      "domContext": "battle?spawnId=dense_6300 HP 6195/6195 MP 187/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10003,
+      "at": "21:43:37.471",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −10557, Tanor Silenos Scout −2361.",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 187/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10008,
+      "at": "21:43:38.987",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6329.",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 134/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10008,
+      "at": "21:43:38.987",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~40%) 6329",
+      "domContext": "battle?spawnId=dense_6202 HP 6195/6195 MP 134/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10023,
+      "at": "21:43:41.923",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2396, Tanor Silenos Warrior −2235.",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 134/874 · моб Tanor Silenos Grunt 45/2196 +  40/2436 +  153/2388"
+    },
+    {
+      "line": 10026,
+      "at": "21:43:43.909",
+      "text": "Вихор вразив ворогів поруч: Nightmare Lord −7854, Tanor Silenos Warrior −7854, Tanor Silenos Chieftain −7854.",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 99/874 · моб Tanor Silenos Grunt 45/2196"
+    },
+    {
+      "line": 10026,
+      "at": "21:43:43.909",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7854",
+      "domContext": "battle?spawnId=dense_6499 HP 6195/6195 MP 99/874 · моб Tanor Silenos Grunt 45/2196"
+    },
+    {
+      "line": 10039,
+      "at": "21:43:45.817",
+      "text": "Дикий розмах: power 326 6237",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 62/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10055,
+      "at": "21:43:48.694",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2599, Tanor Silenos Chieftain −2349.",
+      "domContext": "battle?spawnId=dense_6268 HP 6195/6195 MP 562/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10066,
+      "at": "21:43:50.316",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7685, Tanor Silenos Grunt −7685, Nightmare Lord −7685.",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 231/2580"
+    },
+    {
+      "line": 10066,
+      "at": "21:43:50.316",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7685",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 231/2580"
+    },
+    {
+      "line": 10078,
+      "at": "21:43:53.321",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2488, Tanor Silenos −9023.",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 513/874 · моб Tanor Silenos Chieftain 398/2580"
+    },
+    {
+      "line": 10084,
+      "at": "21:43:55.275",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6781.",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 460/874 · моб Tanor Silenos Chieftain 398/2580"
+    },
+    {
+      "line": 10084,
+      "at": "21:43:55.275",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~39%) 6781",
+      "domContext": "battle?spawnId=dense_6318 HP 6195/6195 MP 460/874 · моб Tanor Silenos Chieftain 398/2580"
+    },
+    {
+      "line": 10097,
+      "at": "21:43:58.180",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2257, Nightmare Lord −2264.",
+      "domContext": "battle?spawnId=dense_6425 HP 6195/6195 MP 460/874 · моб Tanor Silenos Warrior 215/2388 +  131/2388 +  172/2436"
+    },
+    {
+      "line": 10101,
+      "at": "21:43:59.717",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Warrior −14440, Nightmare Lord −14440, Tanor Silenos Chieftain −14440.",
+      "domContext": "battle?spawnId=dense_6425 HP 6195/6195 MP 425/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10101,
+      "at": "21:43:59.717",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) · КРИТ 14440",
+      "domContext": "battle?spawnId=dense_6425 HP 6195/6195 MP 425/874 · моб Tanor Silenos Warrior 215/2388"
+    },
+    {
+      "line": 10113,
+      "at": "21:44:01.714",
+      "text": "Дикий розмах: power 326 6408",
+      "domContext": "battle?spawnId=dense_6325 HP 6195/6195 MP 388/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10124,
+      "at": "21:44:03.608",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2268, Tanor Silenos Chieftain −2362.",
+      "domContext": "battle?spawnId=dense_6295 HP 6195/6195 MP 388/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10134,
+      "at": "21:44:05.597",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2279, Nightmare Lord −2291.",
+      "domContext": "battle?spawnId=dense_6296 HP 6195/6195 MP 388/874 · моб Tanor Silenos Chieftain 218/2580"
+    },
+    {
+      "line": 10151,
+      "at": "21:44:09.584",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6956, Tanor Silenos Grunt −6956, Nightmare Lord −6956.",
+      "domContext": "battle?spawnId=dense_6275 HP 6177/6195 MP 322/874 · моб Nightmare Lord 145/2436"
+    },
+    {
+      "line": 10151,
+      "at": "21:44:09.584",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6956",
+      "domContext": "battle?spawnId=dense_6275 HP 6177/6195 MP 322/874 · моб Nightmare Lord 145/2436"
+    },
+    {
+      "line": 10164,
+      "at": "21:44:12.407",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2537, Tanor Silenos Scout −9672.",
+      "domContext": "battle?spawnId=dense_6317 HP 6185/6195 MP 322/874 · моб Tanor Silenos Warrior 109/2388"
+    },
+    {
+      "line": 10174,
+      "at": "21:44:14.387",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2192, Tanor Silenos Scout −2467.",
+      "domContext": "battle?spawnId=dense_6417 HP 6195/6195 MP 322/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10185,
+      "at": "21:44:16.272",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2300, Tanor Silenos Chieftain −2235.",
+      "domContext": "battle?spawnId=scatter_413 HP 6195/6195 MP 322/874 · моб Tanor Silenos Grunt 4/2196"
+    },
+    {
+      "line": 10195,
+      "at": "21:44:18.587",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7260, Tanor Silenos Grunt −7260, Nightmare Lord −7260.",
+      "domContext": "battle?spawnId=dense_6416 HP 6195/6195 MP 273/874 · моб Tanor Silenos Chieftain 345/2580"
+    },
+    {
+      "line": 10195,
+      "at": "21:44:18.587",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7260",
+      "domContext": "battle?spawnId=dense_6416 HP 6195/6195 MP 273/874 · моб Tanor Silenos Chieftain 345/2580"
+    },
+    {
+      "line": 10208,
+      "at": "21:44:21.705",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −13279, Tanor Silenos Grunt −13279, Nightmare Lord −13279.",
+      "domContext": "battle?spawnId=dense_6396 HP 6195/6195 MP 220/874 · моб Tanor Silenos Chieftain 280/2580"
+    },
+    {
+      "line": 10208,
+      "at": "21:44:21.705",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) · КРИТ 13279",
+      "domContext": "battle?spawnId=dense_6396 HP 6195/6195 MP 220/874 · моб Tanor Silenos Chieftain 280/2580"
+    },
+    {
+      "line": 10257,
+      "at": "21:44:31.026",
+      "text": "Дикий розмах: power 326 5098",
+      "domContext": "battle?spawnId=dense_6350 HP 6162/6195 MP 237/874 · моб Tanor Silenos Scout 26990/32088"
+    },
+    {
+      "line": 10261,
+      "at": "21:44:32.105",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −9614, Tanor Silenos Warrior −10464.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 237/874 · моб Tanor Silenos Scout 25358/32088"
+    },
+    {
+      "line": 10270,
+      "at": "21:44:33.488",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −5629.",
+      "domContext": "battle?spawnId=dense_6350 HP 6179/6195 MP 202/874 · моб Tanor Silenos Scout 19729/32088"
+    },
+    {
+      "line": 10270,
+      "at": "21:44:33.488",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5629",
+      "domContext": "battle?spawnId=dense_6350 HP 6179/6195 MP 202/874 · моб Tanor Silenos Scout 19729/32088"
+    },
+    {
+      "line": 10274,
+      "at": "21:44:34.675",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2324, Tanor Silenos Grunt −9079.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 202/874 · моб Tanor Silenos Scout 18022/32088 +  64/2388"
+    },
+    {
+      "line": 10281,
+      "at": "21:44:36.236",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Warrior −5171.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 149/874 · моб Tanor Silenos Scout 12851/32088"
+    },
+    {
+      "line": 10281,
+      "at": "21:44:36.236",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~41%) 5171",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 149/874 · моб Tanor Silenos Scout 12851/32088"
+    },
+    {
+      "line": 10285,
+      "at": "21:44:37.621",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2476, Nightmare Lord −2186.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 163/874 · моб Tanor Silenos Scout 11126/32088 +  250/2436"
+    },
+    {
+      "line": 10292,
+      "at": "21:44:39.123",
+      "text": "Вихор вразив ворогів поруч: Nightmare Lord −6230.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 128/874 · моб Tanor Silenos Scout 4896/32088"
+    },
+    {
+      "line": 10292,
+      "at": "21:44:39.123",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6230",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 128/874 · моб Tanor Silenos Scout 4896/32088"
+    },
+    {
+      "line": 10295,
+      "at": "21:44:40.112",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2318.",
+      "domContext": "battle?spawnId=dense_6350 HP 6159/6195 MP 128/874 · моб Tanor Silenos Scout 3271/32088 +  2100/2100"
+    },
+    {
+      "line": 10299,
+      "at": "21:44:41.779",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2032.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 142/874 · моб Tanor Silenos Scout 1476/32088 +  2100/2100 +  548/2580"
+    },
+    {
+      "line": 10305,
+      "at": "21:44:45.139",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos −5798, Tanor Silenos Chieftain −5798.",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 1476/32088"
+    },
+    {
+      "line": 10305,
+      "at": "21:44:45.139",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5798",
+      "domContext": "battle?spawnId=dense_6350 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 1476/32088"
+    },
+    {
+      "line": 10317,
+      "at": "21:44:47.006",
+      "text": "Дикий розмах: power 326 · КРИТ 12837",
+      "domContext": "battle?spawnId=dense_6394 HP 6195/6195 MP 84/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10336,
+      "at": "21:44:50.053",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −9243, Tanor Silenos Grunt −2248.",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 98/874 · моб Tanor Silenos Scout 160/2292"
+    },
+    {
+      "line": 10341,
+      "at": "21:44:51.750",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7956.",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 49/874 · моб Tanor Silenos Scout 160/2292"
+    },
+    {
+      "line": 10341,
+      "at": "21:44:51.750",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7956",
+      "domContext": "battle?spawnId=dense_6518 HP 6195/6195 MP 49/874 · моб Tanor Silenos Scout 160/2292"
+    },
+    {
+      "line": 10383,
+      "at": "21:45:01.635",
+      "text": "Дикий розмах: power 326 · КРИТ 13351",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 526/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 10395,
+      "at": "21:45:03.678",
+      "text": "Древко розсікло ворогів поруч: Breka Orc Archer −2264, Wyrm −2233.",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 526/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10408,
+      "at": "21:45:05.680",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −15348, Tanor Silenos Grunt −15348, Nightmare Lord −15348.",
+      "domContext": "battle?spawnId=dense_71 HP 6195/6195 MP 477/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10408,
+      "at": "21:45:05.680",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) · КРИТ 15348",
+      "domContext": "battle?spawnId=dense_71 HP 6195/6195 MP 477/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10420,
+      "at": "21:45:07.319",
+      "text": "Древко розсікло ворогів поруч: Windsus −2382, Windsus −2318.",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 477/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 10430,
+      "at": "21:45:09.126",
+      "text": "Древко розсікло ворогів поруч: Breka Orc −2449.",
+      "domContext": "battle?spawnId=dense_8 HP 6195/6195 MP 477/874 · моб Breka Orc 1668/1668"
+    },
+    {
+      "line": 10440,
+      "at": "21:45:10.994",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −7137, Tanor Silenos Grunt −7137, Nightmare Lord −7137.",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 410/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 10440,
+      "at": "21:45:10.994",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~43%) 7137",
+      "domContext": "battle?spawnId=dense_90 HP 6195/6195 MP 410/874 · моб Breka Orc Warrior 1764/1764"
+    },
+    {
+      "line": 10457,
+      "at": "21:45:14.863",
+      "text": "Дикий розмах: power 326 6306",
+      "domContext": "battle?spawnId=dense_35 HP 6195/6195 MP 387/874 · моб Guardian Basilisk 1908/1908"
+    },
+    {
+      "line": 10469,
+      "at": "21:45:16.595",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2494, Nightmare Lord −2440.",
+      "domContext": "battle?spawnId=dense_6248 HP 6195/6195 MP 387/874 · моб Tanor Silenos 2100/2100"
+    },
+    {
+      "line": 10481,
+      "at": "21:45:18.798",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2597.",
+      "domContext": "battle?spawnId=scatter_2989 HP 6195/6195 MP 387/874 · моб Tanor Silenos Grunt 1/2196 +  2292/2292"
+    },
+    {
+      "line": 10486,
+      "at": "21:45:20.342",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Scout −8141, Tanor Silenos Chieftain −8141.",
+      "domContext": "battle?spawnId=scatter_2989 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 1/2196"
+    },
+    {
+      "line": 10486,
+      "at": "21:45:20.342",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 8141",
+      "domContext": "battle?spawnId=scatter_2989 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 1/2196"
+    },
+    {
+      "line": 10499,
+      "at": "21:45:22.271",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2317, Tanor Silenos Scout −9449.",
+      "domContext": "battle?spawnId=dense_6167 HP 6195/6195 MP 352/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10511,
+      "at": "21:45:24.641",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2186.",
+      "domContext": "battle?spawnId=dense_6332 HP 6195/6195 MP 352/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10523,
+      "at": "21:45:27.201",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −6877, Tanor Silenos Grunt −6877, Nightmare Lord −6877.",
+      "domContext": "battle?spawnId=dense_6353 HP 6195/6195 MP 303/874 · моб Tanor Silenos Grunt 10/2196"
+    },
+    {
+      "line": 10523,
+      "at": "21:45:27.201",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6877",
+      "domContext": "battle?spawnId=dense_6353 HP 6195/6195 MP 303/874 · моб Tanor Silenos Grunt 10/2196"
+    },
+    {
+      "line": 10533,
+      "at": "21:45:30.076",
+      "text": "Дикий розмах: power 326 5738",
+      "domContext": "battle?spawnId=dense_19 HP 6195/6195 MP 280/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10551,
+      "at": "21:45:33.829",
+      "text": "Вихор вразив ворогів поруч: Breka Orc Shaman −8279, Wyrm −8279, Tanor Silenos Chieftain −8279.",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 245/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 10551,
+      "at": "21:45:33.829",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 8279",
+      "domContext": "battle?spawnId=dense_20 HP 6195/6195 MP 245/874 · моб Fettered Soul 2004/2004"
+    },
+    {
+      "line": 10566,
+      "at": "21:45:36.058",
+      "text": "Древко розсікло ворогів поруч: Breka Orc Archer −2438, Wyrm −2576.",
+      "domContext": "battle?spawnId=dense_52 HP 6195/6195 MP 245/874 · моб Breka Orc Shaman 1812/1812"
+    },
+    {
+      "line": 10615,
+      "at": "21:45:46.128",
+      "text": "Дикий розмах: power 326 5055",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 275/874 · моб Tanor Silenos Scout 27033/32088"
+    },
+    {
+      "line": 10620,
+      "at": "21:45:47.319",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2291, Tanor Silenos Grunt −2368.",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 275/874 · моб Tanor Silenos Scout 25249/32088 +  1/2292"
+    },
+    {
+      "line": 10628,
+      "at": "21:45:48.852",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Scout −5926, Tanor Silenos Chieftain −5926.",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 222/874 · моб Tanor Silenos Scout 19323/32088"
+    },
+    {
+      "line": 10628,
+      "at": "21:45:48.852",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~41%) 5926",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 222/874 · моб Tanor Silenos Scout 19323/32088"
+    },
+    {
+      "line": 10633,
+      "at": "21:45:50.328",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2132, Tanor Silenos −2470.",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 222/874 · моб Tanor Silenos Scout 17559/32088 +  160/2292"
+    },
+    {
+      "line": 10641,
+      "at": "21:45:51.619",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Scout −11929.",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 187/874 · моб Tanor Silenos Scout 5630/32088"
+    },
+    {
+      "line": 10641,
+      "at": "21:45:51.619",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) · КРИТ 11929",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 187/874 · моб Tanor Silenos Scout 5630/32088"
+    },
+    {
+      "line": 10643,
+      "at": "21:45:52.761",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2338.",
+      "domContext": "battle?spawnId=dense_6359 HP 6195/6195 MP 201/874 · моб Tanor Silenos Scout 5630/32088"
+    },
+    {
+      "line": 10665,
+      "at": "21:46:15.470",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −8681, Tanor Silenos Warrior −2456.",
+      "domContext": "battle?spawnId=dense_6379 HP 6195/6195 MP 341/874 · моб Nightmare Lord 98/2436"
+    },
+    {
+      "line": 10678,
+      "at": "21:46:17.455",
+      "text": "Дикий розмах: power 326 6151",
+      "domContext": "battle?spawnId=dense_6453 HP 6195/6195 MP 304/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10688,
+      "at": "21:46:19.270",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2209, Tanor Silenos Grunt −2362.",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 304/874 · моб Tanor Silenos Chieftain 201/2580"
+    },
+    {
+      "line": 10693,
+      "at": "21:46:20.812",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7566.",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 269/874 · моб Tanor Silenos Chieftain 201/2580"
+    },
+    {
+      "line": 10693,
+      "at": "21:46:20.812",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7566",
+      "domContext": "battle?spawnId=dense_6495 HP 6195/6195 MP 269/874 · моб Tanor Silenos Chieftain 201/2580"
+    },
+    {
+      "line": 10708,
+      "at": "21:46:23.669",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2127, Tanor Silenos Grunt −2588.",
+      "domContext": "battle?spawnId=scatter_2982 HP 6195/6195 MP 269/874 · моб Nightmare Lord 68/2436 +  309/2436"
+    },
+    {
+      "line": 10713,
+      "at": "21:46:25.535",
+      "text": "Грозова буря вразила ворогів поруч: Nightmare Lord −7378, Tanor Silenos Chieftain −7378.",
+      "domContext": "battle?spawnId=scatter_2982 HP 6195/6195 MP 216/874 · моб Nightmare Lord 68/2436"
+    },
+    {
+      "line": 10713,
+      "at": "21:46:25.535",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~40%) 7378",
+      "domContext": "battle?spawnId=scatter_2982 HP 6195/6195 MP 216/874 · моб Nightmare Lord 68/2436"
+    },
+    {
+      "line": 10727,
+      "at": "21:46:27.976",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2227, Tanor Silenos Chieftain −2048.",
+      "domContext": "battle?spawnId=dense_6335 HP 6195/6195 MP 216/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10739,
+      "at": "21:46:29.588",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −9842, Tanor Silenos −2523.",
+      "domContext": "battle?spawnId=dense_6336 HP 6195/6195 MP 216/874 · моб Tanor Silenos Chieftain 353/2580"
+    },
+    {
+      "line": 10751,
+      "at": "21:46:31.496",
+      "text": "Дикий розмах: power 326 5755",
+      "domContext": "battle?spawnId=dense_6246 HP 6195/6195 MP 179/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 10762,
+      "at": "21:46:33.848",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2585, Tanor Silenos Grunt −2433.",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 179/874 · моб Tanor Silenos Warrior 34/2388"
+    },
+    {
+      "line": 10768,
+      "at": "21:46:35.195",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7646.",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 34/2388"
+    },
+    {
+      "line": 10768,
+      "at": "21:46:35.195",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7646",
+      "domContext": "battle?spawnId=dense_6209 HP 6195/6195 MP 144/874 · моб Tanor Silenos Warrior 34/2388"
+    },
+    {
+      "line": 10782,
+      "at": "21:46:37.624",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2303, Tanor Silenos Chieftain −2213.",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 144/874 · моб Nightmare Lord 339/2436 +  85/2388 +  367/2580"
+    },
+    {
+      "line": 10785,
+      "at": "21:46:39.908",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2370, Tanor Silenos Chieftain −2077.",
+      "domContext": "battle?spawnId=dense_6408 HP 6195/6195 MP 158/874 · моб Nightmare Lord 339/2436"
+    },
+    {
+      "line": 10798,
+      "at": "21:46:42.125",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2051, Tanor Silenos Scout −10184.",
+      "domContext": "battle?spawnId=dense_6249 HP 6195/6195 MP 158/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10810,
+      "at": "21:46:44.445",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −10473, Tanor Silenos −10851.",
+      "domContext": "battle?spawnId=dense_6269 HP 6195/6195 MP 158/874 · моб Tanor Silenos Chieftain 529/2580"
+    },
+    {
+      "line": 10823,
+      "at": "21:46:46.596",
+      "text": "Дикий розмах: power 326 5672",
+      "domContext": "battle?spawnId=dense_6477 HP 6195/6195 MP 121/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10836,
+      "at": "21:46:48.594",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −9825, Tanor Silenos Grunt −10529.",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 121/874 · моб Tanor Silenos Scout 40/2292"
+    },
+    {
+      "line": 10842,
+      "at": "21:46:50.393",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7768.",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 86/874 · моб Tanor Silenos Scout 40/2292"
+    },
+    {
+      "line": 10842,
+      "at": "21:46:50.393",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7768",
+      "domContext": "battle?spawnId=dense_6294 HP 6195/6195 MP 86/874 · моб Tanor Silenos Scout 40/2292"
+    },
+    {
+      "line": 10873,
+      "at": "21:46:56.946",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2217.",
+      "domContext": "battle?spawnId=dense_6266 HP 6195/6195 MP 100/874 · моб Tanor Silenos Grunt 2196/2196"
+    },
+    {
+      "line": 10884,
+      "at": "21:46:58.913",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Chieftain −7824, Tanor Silenos Grunt −7824, Nightmare Lord −7824.",
+      "domContext": "battle?spawnId=dense_6286 HP 6195/6195 MP 51/874 · моб Tanor Silenos Warrior 171/2388"
+    },
+    {
+      "line": 10884,
+      "at": "21:46:58.913",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 7824",
+      "domContext": "battle?spawnId=dense_6286 HP 6195/6195 MP 51/874 · моб Tanor Silenos Warrior 171/2388"
+    },
+    {
+      "line": 10905,
+      "at": "21:47:04.180",
+      "text": "Дикий розмах: power 326 5656",
+      "domContext": "battle?spawnId=dense_6404 HP 6195/6195 MP 528/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10916,
+      "at": "21:47:06.132",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2558.",
+      "domContext": "battle?spawnId=dense_6210 HP 6195/6195 MP 528/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10926,
+      "at": "21:47:07.889",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2421.",
+      "domContext": "battle?spawnId=dense_6493 HP 6195/6195 MP 528/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10976,
+      "at": "21:47:17.900",
+      "text": "Дикий розмах: power 326 4329",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 544/874 · моб Nightmare Lord 29775/34104"
+    },
+    {
+      "line": 10988,
+      "at": "21:47:20.398",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos Warrior −6461, Tanor Silenos Scout −6461, Tanor Silenos Chieftain −6461.",
+      "domContext": "battle?spawnId=dense_6422 HP 6178/6195 MP 523/874 · моб Nightmare Lord 23314/34104"
+    },
+    {
+      "line": 10993,
+      "at": "21:47:21.298",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2233, Tanor Silenos Chieftain −2041.",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 523/874 · моб Nightmare Lord 21730/34104 +  203/2436 +  539/2580"
+    },
+    {
+      "line": 10999,
+      "at": "21:47:23.183",
+      "text": "Грозова буря вразила ворогів поруч: Nightmare Lord −4959, Tanor Silenos Chieftain −4959.",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 470/874 · моб Nightmare Lord 16771/34104"
+    },
+    {
+      "line": 10999,
+      "at": "21:47:23.183",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); шок не сработал (~40%) 4959",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 470/874 · моб Nightmare Lord 16771/34104"
+    },
+    {
+      "line": 11005,
+      "at": "21:47:24.783",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2238, Tanor Silenos Warrior −10414.",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 484/874 · моб Nightmare Lord 15105/34104"
+    },
+    {
+      "line": 11013,
+      "at": "21:47:26.721",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 5613",
+      "domContext": "battle?spawnId=dense_6422 HP 6195/6195 MP 449/874 · моб Nightmare Lord 9492/34104"
+    },
+    {
+      "line": 11016,
+      "at": "21:47:27.790",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2453, Tanor Silenos Chieftain −2173.",
+      "domContext": "battle?spawnId=dense_6422 HP 6175/6195 MP 449/874 · моб Nightmare Lord 7949/34104 +  407/2580"
+    },
+    {
+      "line": 11020,
+      "at": "21:47:29.413",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Chieftain −2065, Tanor Silenos Grunt −2318.",
+      "domContext": "battle?spawnId=dense_6422 HP 6176/6195 MP 463/874 · моб Nightmare Lord 6356/34104"
+    },
+    {
+      "line": 11027,
+      "at": "21:47:31.135",
+      "text": "Дикий розмах: power 326 4286",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 440/874 · моб Nightmare Lord 2070/34104"
+    },
+    {
+      "line": 11029,
+      "at": "21:47:32.756",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6098",
+      "domContext": "battle?spawnId=dense_6422 HP 6135/6195 MP 405/874 · моб Nightmare Lord 2070/34104"
+    },
+    {
+      "line": 11045,
+      "at": "21:47:34.707",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2437, Nightmare Lord −2285.",
+      "domContext": "battle?spawnId=dense_6387 HP 6195/6195 MP 405/874 · моб Tanor Silenos Warrior 284/2388 +  151/2436"
+    },
+    {
+      "line": 11050,
+      "at": "21:47:36.969",
+      "text": "Древко розсікло ворогів поруч: Nightmare Lord −2266, Nightmare Lord −2185.",
+      "domContext": "battle?spawnId=dense_6387 HP 6195/6195 MP 419/874 · моб Tanor Silenos Warrior 284/2388"
+    },
+    {
+      "line": 11063,
+      "at": "21:47:39.367",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Scout −2502.",
+      "domContext": "battle?spawnId=dense_6386 HP 6195/6195 MP 419/874 · моб Nightmare Lord 251/2436"
+    },
+    {
+      "line": 11073,
+      "at": "21:47:41.744",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6355, Tanor Silenos Grunt −6355, Nightmare Lord −6355.",
+      "domContext": "battle?spawnId=dense_6392 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11073,
+      "at": "21:47:41.744",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 6355",
+      "domContext": "battle?spawnId=dense_6392 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11087,
+      "at": "21:47:43.757",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Warrior −2389.",
+      "domContext": "battle?spawnId=dense_6293 HP 6195/6195 MP 352/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11099,
+      "at": "21:47:46.580",
+      "text": "Дикий розмах: power 326 · КРИТ 12635",
+      "domContext": "battle?spawnId=dense_6216 HP 6195/6195 MP 315/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 11119,
+      "at": "21:47:50.859",
+      "text": "Вихор вразив ворогів поруч: Tanor Silenos −6705, Tanor Silenos Grunt −6705, Tanor Silenos Chieftain −6705.",
+      "domContext": "battle?spawnId=dense_6500 HP 6195/6195 MP 280/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 11119,
+      "at": "21:47:50.859",
+      "text": "Вихор: power 732; до 4 цілей (головна + 3 поруч) 6705",
+      "domContext": "battle?spawnId=dense_6500 HP 6195/6195 MP 280/874 · моб Nightmare Lord 2436/2436"
+    },
+    {
+      "line": 11134,
+      "at": "21:47:52.764",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos −2327.",
+      "domContext": "battle?spawnId=dense_6271 HP 6195/6195 MP 280/874 · моб Tanor Silenos Chieftain 365/2580 +  2196/2196"
+    },
+    {
+      "line": 11139,
+      "at": "21:47:55.278",
+      "text": "Древко розсікло ворогів поруч: Tanor Silenos Grunt −2235, Tanor Silenos Grunt −2532.",
+      "domContext": "battle?spawnId=dense_6271 HP 6195/6195 MP 294/874 · моб Tanor Silenos Chieftain 365/2580"
+    },
+    {
+      "line": 11154,
+      "at": "21:47:57.458",
+      "text": "Грозова буря вразила ворогів поруч: Tanor Silenos Chieftain −6233, Tanor Silenos Grunt −6233, Nightmare Lord −6233.",
+      "domContext": "battle?spawnId=dense_6199 HP 6195/6195 MP 227/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 11154,
+      "at": "21:47:57.458",
+      "text": "Грозова буря: power 557; до 4 цілей (головна + 3 поруч); ціль шокирован (~39%) 6233",
+      "domContext": "battle?spawnId=dense_6199 HP 6195/6195 MP 227/874 · моб Tanor Silenos Chieftain 2580/2580"
+    }
+  ],
+  "otherEvidence": [
+    {
+      "line": 8850,
+      "at": "21:39:09.160",
+      "text": "21:39:09.160 [B] тоггл Жорстка стійка: включён | battle?spawnId=dense_6345 HP 5601/6195 MP 874/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 8853,
+      "at": "21:39:09.650",
+      "text": "21:39:09.650 [B] бот Бафф: Бойовий клич (War Cry) | battle?spawnId=dense_6345 HP 5592/6195 MP 864/874 · моб Tanor Silenos Chieftain 2580/2580 | +лог: [Tanor Silenos Chieftain] ударив тебе −9 HP. ⏎ Бойовий клич: +20% до фіз. атаки на 5 хв."
+    },
+    {
+      "line": 8857,
+      "at": "21:39:10.645",
+      "text": "21:39:10.645 [B] бот Бафф: Азарт бою (Thrill Fight) | battle?spawnId=dense_6345 HP 5582/6195 MP 843/874 · моб Tanor Silenos Chieftain 2580/2580 | +лог: [Tanor Silenos Chieftain] ударив тебе −10 HP. ⏎ Азарт бою: −20% Run Speed; +5% Attack Speed; 5 хв."
+    },
+    {
+      "line": 8865,
+      "at": "21:39:14.249",
+      "text": "21:39:14.249 [B] оружие надето «Orcish Poleaxe» (C, древковое) — заряды теперь под C | battle?spawnId=dense_6345 HP 5582/6195 MP 820/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9482,
+      "at": "21:41:45.438",
+      "text": "21:41:45.438 [B] тоггл Жорстка стійка: выключен — MP 9% < 10%, включу при ≥ 30% | battle?spawnId=dense_6218 HP 6187/6195 MP 85/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9509,
+      "at": "21:41:51.259",
+      "text": "21:41:51.259 [B] тоггл Жорстка стійка: включён | battle?spawnId=dense_6296 HP 6195/6195 MP 550/874 · моб Tanor Silenos Chieftain 2580/2580"
+    },
+    {
+      "line": 9736,
+      "at": "21:42:42.330",
+      "text": "21:42:42.330 [B] тоггл Жорстка стійка: выключен — MP 9% < 10%, включу при ≥ 30% | battle?spawnId=dense_6342 HP 6187/6195 MP 84/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 9757,
+      "at": "21:42:47.132",
+      "text": "21:42:47.132 [B] тоггл Жорстка стійка: включён | battle?spawnId=dense_6272 HP 6163/6195 MP 575/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 10146,
+      "at": "21:44:07.619",
+      "text": "21:44:07.619 [B] бот Бафф: Бойовий клич (War Cry) | battle?spawnId=dense_6275 HP 6185/6195 MP 378/874 · моб Nightmare Lord 145/2436 | +лог: [Nightmare Lord] ударив тебе −10 HP. ⏎ Бойовий клич: +20% до фіз. атаки на 5 хв."
+    },
+    {
+      "line": 10150,
+      "at": "21:44:08.533",
+      "text": "21:44:08.533 [B] бот Бафф: Азарт бою (Thrill Fight) | battle?spawnId=dense_6275 HP 6177/6195 MP 357/874 · моб Nightmare Lord 145/2436 | +лог: [Nightmare Lord] ударив тебе −8 HP. ⏎ Азарт бою: −20% Run Speed; +5% Attack Speed; 5 хв."
+    },
+    {
+      "line": 10331,
+      "at": "21:44:49.500",
+      "text": "21:44:49.500 [B] тоггл Жорстка стійка: выключен — MP 9% < 10%, включу при ≥ 30% | battle?spawnId=dense_6518 HP 6195/6195 MP 84/874 · моб Tanor Silenos Scout 2292/2292"
+    },
+    {
+      "line": 10360,
+      "at": "21:44:56.144",
+      "text": "21:44:56.144 [B] тоггл Жорстка стійка: включён | battle?spawnId=dense_19 HP 6181/6195 MP 563/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10656,
+      "at": "21:46:13.605",
+      "text": "21:46:13.605 [B] бой нет ответа игры 20 с (моб 98/2436) — обновляю страницу | battle?spawnId=dense_6379 HP 6195/6195 MP 201/874 · моб Nightmare Lord 98/2436"
+    },
+    {
+      "line": 10858,
+      "at": "21:46:53.518",
+      "text": "21:46:53.518 [B] тоггл Жорстка стійка: выключен — MP 9% < 10%, включу при ≥ 30% | battle?spawnId=dense_19 HP 6188/6195 MP 86/874 · моб Windsus 2052/2052"
+    },
+    {
+      "line": 10903,
+      "at": "21:47:03.627",
+      "text": "21:47:03.627 [B] тоггл Жорстка стійка: включён | battle?spawnId=dense_6404 HP 6195/6195 MP 565/874 · моб Tanor Silenos Warrior 2388/2388"
+    },
+    {
+      "line": 11036,
+      "at": "21:47:32.986",
+      "text": "21:47:32.986 [B] итог боя Nightmare Lord [чемп]: 34104 HP за 15.7 с · ДПС 2173 (урон по всем мобам 38784, ДПС 2472) · HP части соседей неизвестны · Др→А→В→А→Гб→А→В→А→А→Др→В | battle?spawnId=dense_6422 HP 6135/6195 MP 405/874 · моб Nightmare Lord 2070/34104"
+    }
+  ],
+  "limitations": [
+    "Log contains older Warrior battles from 15 October. Only the explicitly delimited 20.5 segment is counted here.",
+    "HTML snapshots stop before the new battle segment: latest battle snapshot is 15 October 23:25:43. No 16 October battle DOM or complete skill catalog is supplied.",
+    "HTTP 200 and bot skill measurements are separate evidence layers; counts must not be combined as successful casts.",
+    "Damage text is displayed damage, potentially overkill, not known HP removed. Repeated log tails and bot rows are not additional hits.",
+    "MP deltas include regeneration/toggle/potion effects, not raw skill costs.",
+    "Bot cooldown labels and observed click intervals do not establish canonical server skill cooldowns.",
+    "No new measurements for Provoke, Howl, Focus Attack, species buffs, Final Frenzy or raid bosses.",
+    "Single-target and partial all-target DPS remain incomplete where neighbors HP are unknown.",
+    "No raw character identifiers, credentials, cookies, tokens or executable HTML copied into this evidence."
+  ]
+}
