@@ -1,0 +1,304 @@
+{
+  "evidenceType": "observed projections, not full server responses",
+  "sources": [
+    "l2bot-log-2026-10-16-07-09.txt",
+    "l2bot-learn-2026-10-16-07-09.html"
+  ],
+  "date": "2026-10-16",
+  "displayTimezone": "Asia/Vladivostok",
+  "botVersion": "20.2",
+  "questKey": "human-fighter-second",
+  "titleUk": "Випробування бойового пробудження",
+  "resourceRequirement": {
+    "itemId": 1876,
+    "nameUk": "Міфрилова руда",
+    "nameEn": "Mithril Ore",
+    "need": 275
+  },
+  "killRequirements": [
+    {
+      "name": "Karul Bugbear",
+      "level": 40,
+      "need": 80,
+      "locationUk": "Селище мисливців (Hunter's Village)"
+    },
+    {
+      "name": "Taik Orc Warrior",
+      "level": 42,
+      "need": 50,
+      "locationUk": "Ліс Дзеркал (Forest of Mirrors)"
+    }
+  ],
+  "initialRequirementsAlreadyComplete": true,
+  "champions": [
+    {
+      "stage": "champion_1",
+      "step": 4,
+      "name": "Steel Trial Champion",
+      "level": 51,
+      "spawnId": "quest_human_fighter_second_prof_champion_steel",
+      "teleportId": "dragon_valley"
+    },
+    {
+      "stage": "champion_2",
+      "step": 5,
+      "name": "Mirror Trial Champion",
+      "level": 53,
+      "spawnId": "quest_human_fighter_second_prof_champion_mirror",
+      "teleportId": "forest_of_mirrors"
+    },
+    {
+      "stage": "champion_3",
+      "step": 6,
+      "name": "Outlaw Trial Champion",
+      "level": 55,
+      "spawnId": "quest_human_fighter_second_prof_champion_outlaw",
+      "teleportId": "outlaw_forest"
+    },
+    {
+      "stage": "champion_4",
+      "step": 7,
+      "name": "Flame Trial Champion",
+      "level": 57,
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "teleportId": "blazing_swamp"
+    },
+    {
+      "stage": "champion_5",
+      "step": 8,
+      "name": "Massacre Trial Champion",
+      "level": 59,
+      "spawnId": "quest_human_fighter_second_prof_champion_massacre",
+      "teleportId": "fields_of_massacre"
+    }
+  ],
+  "statusTransitions": [
+    {
+      "stage": "champion_1",
+      "at": "16:14:16.613",
+      "sourceLine": 55,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Крок 4/8: у Долині Драконів (Dragon Valley) переможи ★ Steel Trial Champion, ур. 51."
+    },
+    {
+      "stage": "champion_2",
+      "at": "16:21:28.709",
+      "sourceLine": 1845,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Крок 5/8: у Лісі Дзеркал (Forest of Mirrors) переможи ★ Mirror Trial Champion, ур. 53."
+    },
+    {
+      "stage": "champion_3",
+      "at": "16:23:16.039",
+      "sourceLine": 2176,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Крок 6/8: у Лісі розбійників (Outlaw Forest) переможи ★ Outlaw Trial Champion, ур. 55."
+    },
+    {
+      "stage": "champion_4",
+      "at": "16:33:02.874",
+      "sourceLine": 4289,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Крок 7/8: у Полум’яних болотах (Blazing Swamp) переможи ★ Flame Trial Champion, ур. 57."
+    },
+    {
+      "stage": "champion_5",
+      "at": "16:35:11.853",
+      "sourceLine": 4634,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Крок 8/8: на Полях різанини (Fields of Massacre) переможи ★ Massacre Trial Champion, ур. 59."
+    },
+    {
+      "stage": "return",
+      "at": "17:06:51.068",
+      "sourceLine": 11103,
+      "accepted": true,
+      "completed": false,
+      "instructionUk": "Усі випробування пройдено. Повернися до Майстра випробувань Рейнара у Місто Гіран (Town of Giran) та отримай Еліксир Пробудження."
+    },
+    {
+      "stage": "completed",
+      "at": "17:09:09.894",
+      "sourceLine": 11451,
+      "accepted": true,
+      "completed": true,
+      "instructionUk": "Еліксир Пробудження отримано. Віднеси його до Гільдії Магістрів і обери другу професію."
+    }
+  ],
+  "receipts": [
+    {
+      "method": "POST",
+      "path": "/character/profession-quest/human-fighter-second/reynar",
+      "status": 200,
+      "at": "17:08:51.513",
+      "sourceLine": 11411,
+      "expectedRevision": 9294,
+      "professionInCharacterResponse": "human_warrior"
+    },
+    {
+      "method": "POST",
+      "path": "/character/profession/human-warlord",
+      "status": 200,
+      "at": "17:09:11.473",
+      "sourceLine": 11456,
+      "expectedRevision": 9296,
+      "professionInCharacterResponse": "human_warlord"
+    }
+  ],
+  "trialBattleStarts": [
+    {
+      "spawnId": "quest_light_elf_fighter_second_prof_champion_mirror",
+      "at": "16:14:18.355",
+      "sourceLine": 68,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_light_elf_fighter_second_prof_champion_mirror",
+      "at": "16:14:33.073",
+      "sourceLine": 140,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_steel",
+      "at": "16:20:32.672",
+      "sourceLine": 1629,
+      "initiator": "user"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_mirror",
+      "at": "16:21:58.457",
+      "sourceLine": 1943,
+      "initiator": "user"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_soul",
+      "at": "16:24:16.421",
+      "sourceLine": 2419,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_soul",
+      "at": "16:24:34.220",
+      "sourceLine": 2490,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_soul",
+      "at": "16:24:57.232",
+      "sourceLine": 2603,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_light_elf_fighter_second_prof_champion_mirror",
+      "at": "16:26:26.695",
+      "sourceLine": 2998,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_outlaw",
+      "at": "16:31:45.595",
+      "sourceLine": 4042,
+      "initiator": "user"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:33:30.376",
+      "sourceLine": 4348,
+      "initiator": "user"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "16:37:44.903",
+      "sourceLine": 5202,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "16:38:03.356",
+      "sourceLine": 5265,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:45:42.424",
+      "sourceLine": 6890,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:46:05.996",
+      "sourceLine": 6951,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "16:49:23.163",
+      "sourceLine": 7746,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:57:29.634",
+      "sourceLine": 9514,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:57:53.654",
+      "sourceLine": 9611,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_flame",
+      "at": "16:58:08.996",
+      "sourceLine": 9675,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "17:00:59.837",
+      "sourceLine": 10267,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "17:01:17.999",
+      "sourceLine": 10337,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_mystic_second_prof_champion_flame",
+      "at": "17:01:36.116",
+      "sourceLine": 10407,
+      "initiator": "bot"
+    },
+    {
+      "spawnId": "quest_human_fighter_second_prof_champion_massacre",
+      "at": "17:03:28.699",
+      "sourceLine": 10712,
+      "initiator": "user"
+    }
+  ],
+  "trialBattleStartCounts": {
+    "quest_light_elf_fighter_second_prof_champion_mirror": 3,
+    "quest_human_fighter_second_prof_champion_steel": 1,
+    "quest_human_fighter_second_prof_champion_mirror": 1,
+    "quest_human_mystic_second_prof_champion_soul": 3,
+    "quest_human_fighter_second_prof_champion_outlaw": 1,
+    "quest_human_fighter_second_prof_champion_flame": 6,
+    "quest_human_mystic_second_prof_champion_flame": 6,
+    "quest_human_fighter_second_prof_champion_massacre": 1
+  },
+  "limitations": [
+    "First three stage transitions and acceptance are absent from available event rows.",
+    "Status JSON is truncated in export; unavailable fields are unknown, not null.",
+    "22 battle starts are not 22 confirmed victories.",
+    "Class selection and required champion engagements were initiated manually.",
+    "Resource costs and inventory debit cannot be reconstructed from truncated receipts."
+  ]
+}
