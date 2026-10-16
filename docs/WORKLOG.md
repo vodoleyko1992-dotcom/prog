@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 17.10.2026, 01:34 UTC+10 — Codex — PR в подготовке: ускоренная Chrome-сборка20.8
+## 17.10.2026, 01:34 UTC+10 — Codex — [PR #218](https://github.com/vodoleyko1992-dotcom/prog/pull/218): ускоренная Chrome-сборка20.8
 
 - Пользователь прямо запросил ускоренную сборку. Включены все влитые #215/#216/#217 поверх20.7; версия с двумя частями20.8. Исправления runtime/профиль при выпуске не меняются; актуализированы manifest/header/README-CHROME, пять версионных контрактов, CHANGELOG/CLAUDE/HANDOFF.
 - Целевые проверки: actualMV3/main/hook агро шесть сценариев PASS; реальныеdungeons.js/сохранённый nativebattle-start-flow с локальнымиAPI: безопасный бой без карты и прерванное чтение безstart PASS. Синтаксис47runtimeJS/envcheck30/privacy/diff-check PASS. ZIP64файла,1299113байт,84ссылок и побайтная распаковка PASS; Chromium15620.8,cfg210,errors0. Полный366Node-runner PASS; первый запуск до создания CHANGELOG остановился на отсутствующей новой ссылке, файл добавлен до итогового прогона.
