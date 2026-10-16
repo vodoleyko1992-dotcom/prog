@@ -10,7 +10,7 @@ const view = read('tests/fixtures-dungeon-view-90.json');
 const BODY = `<div id="l2-hud-legacy-lvl">66</div><p class="err" id="dungeon-load-err" hidden></p><div id="dungeon-content" hidden><h1 id="dungeon-title">—</h1><p id="dungeon-sub"></p>
 <div id="dungeon-mob-pager" hidden><button type="button" id="dungeon-mob-page-prev">‹</button><span id="dungeon-mob-page-ind"></span><button type="button" id="dungeon-mob-page-next">›</button></div>
 <ul id="dungeon-mob-list"></ul><section id="dungeon-hero-section" hidden><ul id="dungeon-hero-list"></ul></section></div>
-<div id="dungeon-mob-modal" hidden><a id="dungeon-mob-modal-battle" href="#">У бій</a></div>`;
+<button id="dungeon-refresh" type="button">Обновить</button><div id="dungeon-mob-modal" hidden><a id="dungeon-mob-modal-battle" href="#">У бій</a></div>`;
 // заглушка общего кода игры (common.js): токен, снимок персонажа, authFetch = fetch, переход — запоминаем
 const L2STUB = `window.L2 = { tr: (k, f) => f, token: () => 'x', lastSnapshot: () => ({ revision: 7, level: 66 }), authFetch: (u, o) => fetch(u, o),
   playerMessageOr: (j, f) => (j && (j.messageUk || j.error)) || f, navigateToPage: u => { window.__nav = u; return true; }, applyCharacterSnapshot() {}, resyncCharacterWhenRequired: async () => null };
@@ -34,7 +34,9 @@ async function gameJs(f) { try { const r = await fetch('https://l2wap.com/' + f)
     // как content.js: сообщения hook.js → список подземелья; alert на этой странице → сообщение
     let N = null, A = null;
     addEventListener('message', e => { if (e.data?.__l2bot === 'net' && e.data.dm) N = { ...e.data.dm, t: Date.now() }; if (e.data?.__l2bot === 'alert') A = e.data.text; });
-    const t0 = Date.now(); while (!N && Date.now() - t0 < 8000) await new Promise(r => setTimeout(r, 100));   // игра опрашивает view раз в 5 с
+    // 20.6: актуальный dungeon.js больше не опрашивает view каждые5с; запрос через native Refresh.
+    document.getElementById('dungeon-refresh').click();
+    const t0 = Date.now(); while (!N && Date.now() - t0 < 8000) await new Promise(r => setTimeout(r, 100));   // ждём ответ явного обновления
     (0, eval)(src);
     const rt = {}, fired = [], logs = [];
     const sleep = ms => new Promise(r => setTimeout(r, Math.min(ms, 300)));

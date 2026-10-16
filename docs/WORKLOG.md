@@ -1,5 +1,12 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 16.10.2026, 22:45 UTC+10 — Codex — [PR #204](https://github.com/vodoleyko1992-dotcom/prog/pull/204): Chrome20.6
+
+- По команде «Сборка» подготовлен Chrome20.6 поверх #201/#202. Обновлены manifest/content/пять versionassertions/READMEChrome/changelog/контекст; функциональные изменения не добавлялись. ZIP64runtime-файла,1296158байт,83ссылки и побайтная распаковка PASS; разница runtimeот #202только manifest/content/READMEChrome. Настройки и base-profileне меняются.
+- Проверки: полный355Node PASS, синтаксис47runtimeJS и5изменённых тестов/envcheck30/diff-check PASS; ziploadChromium20.6,cfg210,errors0. Первый Nodeпрогон остановился на ещё не созданном CHANGELOG20.6; после записи changelogполный повтор355PASS. Полный browserrunnerнаChrome156сCPUaffinity/rendererlimit:73PASS/5FAIL; полные повторы всех5файлов PASS, нерешённых падений0. Два fixtureрыбалки получили public-кеш; три старых теста актуализированы без ослабления ASSERT/таймаутов: nativeRefreshкатакомб вместоpoll, Маммон снизу эпиков вместо справа, фокус/готовыеoptionsFAпередAdd. Отдельные actualMV3Provoke/update PASS; всего80уникальных браузерных файлов. Два историческихDOMбез снимков пропущены; финальный355Node PASS. Все игровыеAPIсинтетические, аккаунт не открывался.
+- Доставка: https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/85175a2d8c5089ad03d67f9020cb9838309553c3/l2wap-bot-v20.6.zip . HTTP200, скачанныйZIPпобайтно/SHA256совпал; SHA256 `8310e488a36dbe01b0e6a1a0732a0d1626a6fc0e55776e48cd8ab84ebeb04764`. Отдельная download-ветка, GitHubReleaseне публикуется. Архив доставляется прямой ссылкойGitHub.
+- Осталось: контрольный лог автоматического агро и автобоя активного сабкласса после установки. PR #204; документы #203сохранены при интеграции, повтор355Node/envcheck30 PASS, runtime/ZIPне изменились. Живой аккаунт не открывался, Firefox не запрошен.
+
 ## 16.10.2026, 23:01 UTC+10 — Codex — [PR #203](https://github.com/vodoleyko1992-dotcom/prog/pull/203): сабклассы и экипировка Warlock
 
 - Решения пользователя: персонаж свободен; изучить саб, затем петовод → весь комплект → спойлер. Проведено4 успешных switch;12 S/A вещей сняты сервером в сумку, C-комплект автоматически не возвращается. Исходная экипировка/22 баффа восстановлены, итог спойлер40/Oren/внебоя/fullHP/MP, сеанс закрыт.13FA,0адены,0CoL; EXP/SP/навыки/панель/склад без изменений. Старый бой покинут, собственных побед не заявляем.
