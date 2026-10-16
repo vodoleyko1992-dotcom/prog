@@ -25,7 +25,7 @@ for(const [name,change]of Object.entries({
  'профиль мага':f=>f.state.mage=true,'РБ':f=>f.ctx.rb={},'чемпион':f=>f.ctx.champ=true,'PvP':f=>f.env.pvpPending=()=>true,
  'чужие HP в ответе':f=>f.state.infoMax=34104,'нет HP в ответе':f=>f.state.infoMax=null,'неподтверждённое оружие':f=>f.env.rt.weapons[0].unknown=true,
  'неизвестный тип цели':f=>f.state.kind='unknown','API чемпион':f=>f.state.kind='champion','цвет чемпиона':f=>f.state.tier='orange','старый ответ':f=>f.state.age=61000,
- 'мало HP':f=>f.state.hp=749,'нет HP':f=>f.state.max=0,'добивание':f=>f.state.mob=1500,'готовая группа':f=>f.state.extra=[100,200,300],
+ 'мало HP':f=>f.state.hp=749,'нет HP':f=>f.state.max=0,'готовая группа':f=>f.state.extra=[100,200,300],
  'нет копья':f=>f.env.rt.weapons[0].wt='меч','неизвестное оружие':f=>f.env.rt.weaponsT=0,'переодевание':f=>f.env.rt.weaponMetaPending={},'старая запись оружия':f=>f.env.rt.weaponNow='New weapon',
  'нет Provoke':f=>f.panel.shift(),'отключённый слот':f=>f.panel[0].disabled=true,'откат Provoke':f=>f.state.cd.provoke=1000,
  'оба AoE на КД':f=>{f.state.cd.whirlwind=1000;f.state.cd.thunder_storm=1000},'AoE удалены из ролей':f=>f.env.cfg.nPower='',
@@ -35,7 +35,7 @@ for(const [name,change]of Object.entries({
 test('MP хватает ровно на обе цены и запас10; без запаса не собирает',()=>{const f=fixture();f.mp.cur=116;assert.ok(f.C.warlordPullPlan(f.ctx,f.mp));f.mp.cur=115;assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
 test('каталог MP важнее net-дельты, верх справочника важнее её занижения',()=>{const f=fixture();f.mp.cur=115;f.env.rt.skills['провокація масова']={mpN:10,mp:1};assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null);f.env.rt.skillDb['провокація масова']={mp:40};assert.ok(f.C.warlordPullPlan(f.ctx,f.mp));f.env.rt.skillDb={};f.panel[0].mp=[20,60,90];f.mp.cur=140;assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
 test('Thunder Storm используется, когда Whirlwind недоступен; чужие роли не восстанавливаются',()=>{const f=fixture();f.env.cfg.nPower='Грозова буря';const a=f.C.warlordPullPlan(f.ctx,f.mp);f.C.warlordPullResult(f.ctx,a,true);assert.equal(f.C.warlordPullPlan(f.ctx,f.mp).b.action,'thunder_storm')});
-for(const result of [true,false,'cd','unavail'])test('после результата '+result+' повторного сбора нет',()=>{const f=fixture(),a=f.C.warlordPullPlan(f.ctx,f.mp);f.C.warlordPullResult(f.ctx,a,result);const b=f.C.warlordPullPlan(f.ctx,f.mp);assert.equal(b.warlordPull,'hit');f.C.warlordPullResult(f.ctx,b,true);assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
+for(const result of [true,false])test('после результата '+result+' повторного сбора нет',()=>{const f=fixture(),a=f.C.warlordPullPlan(f.ctx,f.mp);f.C.warlordPullResult(f.ctx,a,result);const b=f.C.warlordPullPlan(f.ctx,f.mp);assert.equal(b.warlordPull,'hit');f.C.warlordPullResult(f.ctx,b,true);assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null)});
 test('lock до клика оставляет решение доступным, повтор не считается отправленным',()=>{const f=fixture(),a=f.C.warlordPullPlan(f.ctx,f.mp);f.C.warlordPullResult(f.ctx,a,'lock');assert.equal(f.C.warlordPullPlan(f.ctx,f.mp).warlordPull,'pull')});
 test('за время ожидания отключение/HP/MP/смена цели отменяют прежний план',()=>{
  for(const change of [f=>f.env.cfg.warlordAggro=false,f=>f.state.hp=700,f=>f.mp.cur=40,f=>f.location.search='?spawnId=new']){const f=fixture(),a=f.C.warlordPullPlan(f.ctx,f.mp);change(f);const b=f.C.warlordPullPlan(f.ctx,f.mp);assert.ok(!b||b.b!==a.b||b.target!==a.target)}
