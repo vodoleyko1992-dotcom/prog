@@ -3124,14 +3124,15 @@ setInterval(() => {
 // 7.2.3: ширина запоминается (stickyFree) — окно больше не прыгает между крупным и мелким при смене экрана
 // 10.0.5: запоминается самое узкое измеренное поле — окно не залезает на игру (спойлер 13.10: «левая панель вышла за край»)
 let indStick = (() => { try { return JSON.parse(localStorage.getItem('l2bot-indw') || 'null'); } catch (e) { return null; } })();
-function layoutInd(bounds) {
+function layoutInd(bounds, menuLeft = null) {
   try {
     const vw = document.documentElement.clientWidth || innerWidth;
     const s = L2EngineCore.stickyFree(indStick, (bounds?.left || 0) - 16, vw, !!bounds?.observed?.length);
     if (s !== indStick) { indStick = s; try { localStorage.setItem('l2bot-indw', JSON.stringify(s)); } catch (e) {} }
-    const free = s.free;
+    const free = menuLeft === null ? s.free : Math.min(s.free, Math.max(0, menuLeft - 16), 440);
     ui.classList.toggle('wide', free >= 300);
     ui.style.width = free >= 300 ? `${Math.min(free, 760)}px` : '';
+    ui.classList.toggle('dock-covered', menuLeft !== null && free < 300);
   } catch (e) {}   // индикатор ещё не создан
 }
 // 8.0.7 (игрок: «основная версия — не под андроиды, там ничего не меняем»): раскладка для планшета — только на Android
@@ -3139,11 +3140,17 @@ const ANDROID = /Android/i.test(navigator.userAgent || '');
 let dockOver = false;
 const dockOverOpen = () => { try { return localStorage.getItem('l2bot-dockOpen') === '1'; } catch (e) { return false; } };
 const dockWideOpen = () => { try { return localStorage.getItem('l2bot-dockWide') === '1'; } catch (e) { return false; } };
+// При узком экране x2 занимает окно, индикатор временно скрывается; сворачивание возвращает его размер.
+function dockWideRoom(viewport, normalWidth, wideOn, min, gameLeft) {
+  const reserve = viewport >= 760 && gameLeft >= 316 ? Math.min(440, gameLeft - 16, viewport - 404) : 0;
+  const width = wideOn ? Math.min(normalWidth * 2, Math.max(0, viewport - (reserve ? reserve + 24 : 16))) : normalWidth;
+  return { width, menuLeft: wideOn && !min ? viewport - 8 - width : null };
+}
 function dock() {
   if (window.top !== window) return;
   if (!cfg.dock) try { layoutInd(dockGameBounds(document.documentElement.clientWidth || innerWidth)); } catch (e) {}
   let wrap = document.getElementById('l2bot-dock');
-  if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; try { ui.classList.remove('over', 'hid'); } catch (e) {} return; }
+  if (!cfg.dock) { wrap?.remove(); dockObserver?.disconnect(); dockObserved = []; dockWaiter?.disconnect(); dockWaiter = null; try { ui.classList.remove('over', 'hid', 'dock-covered'); } catch (e) {} return; }
   const viewport = document.documentElement.clientWidth || innerWidth;
   const bounds = dockGameBounds(viewport), available = viewport - bounds.right - 8;
   // 8.0.7 (игрок 11.10, планшет с Firefox для Android: «всё немного криво косо»): рядом с игрой места нет (портрет планшета,
@@ -3179,14 +3186,15 @@ function dock() {
     wrap.append(tg, wide, fr);
     document.documentElement.appendChild(wrap);
   }
-  layoutInd(bounds);
-  try { ui.classList.toggle('over', dockOver); ui.classList.toggle('hid', dockOver && !min); draw(); } catch (e) {}   // индикатор ещё не создан
-  // Если рядом места нет (узкое окно или ещё не загрузилась игра) — компактная панель поверх игры (8.0.7: на Android до 460 px)
+  // 16.10.2026: x2 делит экран с индикатором; обе панели используют одну границу, без наложения.
   const normalWidth = bounds.right > 0 && available >= 300 ? available : Math.min(dockOver ? 460 : 380, Math.max(0, viewport - 16));
   const wideOn = dockWideOpen() && !dockOver;
-  const w = wideOn ? Math.min(normalWidth * 2, Math.max(0, viewport - 16)) : normalWidth;
+  const room = dockWideRoom(viewport, normalWidth, wideOn, min, bounds.left);
+  const w = room.width;
+  layoutInd(bounds, room.menuLeft);
+  try { ui.classList.toggle('over', dockOver); ui.classList.toggle('hid', dockOver && !min); draw(); } catch (e) {}   // индикатор ещё не создан
   wrap.style.cssText = `position:fixed;top:8px;right:${min ? -w : 8}px;bottom:8px;width:${w}px;z-index:2147483646;`
-    + 'box-sizing:border-box;border:1px solid #56452f;border-radius:12px;background:#14100d;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:right .2s';
+    + `box-sizing:border-box;padding-left:${dockOver ? 40 : 30}px;border:1px solid #56452f;border-radius:12px;background:#14100d;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:right .2s`;
   const toggle = wrap.querySelector('#l2bot-dock-toggle'), tw = dockOver ? 36 : 26;
   toggle.style.width = tw + 'px'; toggle.style.height = (dockOver ? 64 : 46) + 'px'; toggle.style.fontSize = (dockOver ? 17 : 13) + 'px';
   toggle.style.left = min ? -tw + 'px' : '0';
@@ -3253,16 +3261,17 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind .e .mm .bt{pointer-events:auto;cursor:pointer;font:inherit;font-size:11px;line-height:1.3;padding:3px 9px;margin:0;border-radius:7px;border:1px solid rgba(212,168,86,.55);background:rgba(212,168,86,.14);color:#f0cf86;white-space:nowrap;text-align:left}
 #l2bot-ind .e .mm .bt:hover{background:rgba(212,168,86,.3)}
 #l2bot-ind .e .mm .ms{font-size:10.5px;color:#a39280;white-space:normal}
+#l2bot-ind.wide .e .mm{flex-direction:row;flex-wrap:wrap;max-width:100%}
 #l2bot-ind.wide .e .mm .bt{font-size:14px;padding:4px 12px}
 #l2bot-ind.wide .e .mm .ms{font-size:12.5px}
-#l2bot-ind.wide .e{margin-top:auto;padding-top:9px;font-size:15px;flex:0 0 auto}
+#l2bot-ind.wide .e{flex-direction:column;margin-top:auto;padding-top:9px;font-size:15px;flex:0 0 auto}
 #l2bot-ind .b{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.08);color:#d8c39a;font-variant-numeric:tabular-nums}
 #l2bot-ind .b .bt{pointer-events:auto;cursor:pointer;font:inherit;font-size:11px;line-height:1.3;padding:3px 9px;margin:1px 6px 1px 0;border-radius:7px;border:1px solid rgba(212,168,86,.55);background:rgba(212,168,86,.14);color:#f0cf86}
 #l2bot-ind .b .bt:hover{background:rgba(212,168,86,.3)}
 #l2bot-ind.wide .b{flex:0 0 auto;font-size:14.5px;padding-top:9px;margin-top:8px}
 #l2bot-ind.wide .b .bt{font-size:14px;padding:4px 12px}
 #l2bot-ind.over{max-width:min(380px,calc(100vw - 60px));opacity:.92}
-#l2bot-ind.hid{display:none!important}`;
+#l2bot-ind.hid,#l2bot-ind.dock-covered{display:none!important}`;
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
