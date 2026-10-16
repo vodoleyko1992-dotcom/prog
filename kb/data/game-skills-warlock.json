@@ -13,7 +13,7 @@
   },
   {
    "battleId": "l2_1083",
-   "level": 12,
+   "level": 17,
    "nameUk": "Surrender to Fire",
    "hintUk": "M.Def цілі −10%.",
    "hintRu": "M.Def цели −10%.",
@@ -24,7 +24,7 @@
   },
   {
    "battleId": "l2_1111",
-   "level": 13,
+   "level": 18,
    "nameUk": "Summon Kat the Cat",
    "hintUk": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
    "hintRu": "Summon Kat the Cat: слуга автоматично атакує разом із власником; P.Atk отримує +15% від поточного M.Atk хазяїна.",
@@ -35,7 +35,7 @@
   },
   {
    "battleId": "l2_1126",
-   "level": 24,
+   "level": 34,
    "nameUk": "Servitor Recharge",
    "hintUk": "Відновлює MP викликаного слуги. Сила відновлення зростає з рівнем уміння.",
    "hintRu": "Восстанавливает MP викликаного слуги. Сила восстановление растёт с уровнем умения.",
@@ -46,7 +46,7 @@
   },
   {
    "battleId": "l2_1127",
-   "level": 35,
+   "level": 45,
    "nameUk": "Servitor Heal",
    "hintUk": "Відновлює HP викликаного слуги. Сила лікування зростає з рівнем уміння.",
    "hintRu": "Восстанавливает HP викликаного слуги. Сила лечение растёт с уровнем умения.",
@@ -79,7 +79,7 @@
   },
   {
    "battleId": "l2_1151",
-   "level": 11,
+   "level": 16,
    "nameUk": "Corpse Life Drain",
    "hintUk": "Лікує HP: Power×4 + рівень×3 + ранг×5. Power 0.",
    "hintRu": "Лечит HP: Power×4 + уровень×3 + ранг×5. Power 0.",
@@ -90,7 +90,7 @@
   },
   {
    "battleId": "l2_1157",
-   "level": 4,
+   "level": 5,
    "nameUk": "Body To Mind",
    "hintUk": "У бою ефекту немає: 0 зміни HP і статів, лише витрата MP і відкат.",
    "hintRu": "В бою эффекта нет: 0 изменения HP и статов, только трата MP и откат.",
@@ -101,7 +101,7 @@
   },
   {
    "battleId": "l2_1160",
-   "level": 10,
+   "level": 15,
    "nameUk": "Slow",
    "hintUk": "Speed цілі ×0,7 на 120 с.",
    "hintRu": "Speed цели ×0,7 на 120 с.",
@@ -123,7 +123,7 @@
   },
   {
    "battleId": "l2_1167",
-   "level": 5,
+   "level": 6,
    "nameUk": "Poisonous Cloud",
    "hintUk": "Отрута 120 шкоди × 6 тиків (кожні 5 с).",
    "hintRu": "Яд 120 урона × 6 тиков (каждые 5 с).",
@@ -134,7 +134,7 @@
   },
   {
    "battleId": "l2_1168",
-   "level": 6,
+   "level": 7,
    "nameUk": "Curse Poison",
    "hintUk": "P.Atk цілі −12%. Окремого контролю чи зняття бафів немає.",
    "hintRu": "P.Atk цели −12%. Окремого контролю чи снятие бафов нет.",
@@ -222,7 +222,7 @@
   },
   {
    "battleId": "l2_1222",
-   "level": 10,
+   "level": 15,
    "nameUk": "Curse Chaos",
    "hintUk": "P.Atk цілі −12%, M.Def −10%. Accuracy не змінює.",
    "hintRu": "P.Atk цели −12%, M.Def −10%. Accuracy не меняет.",
@@ -233,7 +233,7 @@
   },
   {
    "battleId": "l2_1225",
-   "level": 13,
+   "level": 18,
    "nameUk": "Summon Mew the Cat",
    "hintUk": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
    "hintRu": "Summon Mew the Cat: бойовий слуга; P.Atk отримує +20% від поточного M.Atk хазяїна.",
@@ -255,7 +255,7 @@
   },
   {
    "battleId": "l2_1276",
-   "level": 9,
+   "level": 14,
    "nameUk": "Summon Kai the Cat",
    "hintUk": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
    "hintRu": "Summon Kai the Cat: основний DD-слуга Warlock; P.Atk отримує +25% від поточного M.Atk хазяїна.",
@@ -266,7 +266,7 @@
   },
   {
    "battleId": "l2_1299",
-   "level": 1,
+   "level": 2,
    "nameUk": "Servitor Ultimate Defense",
    "hintUk": "Слуга: Ultimate Defense — посилення P.Def/M.Def на 20 хв; нерухомість лише 30 с.",
    "hintRu": "Слуга: Ultimate Defense — посилення P.Def/M.Def на 20 хв; нерухомість лише 30 с.",
@@ -277,7 +277,7 @@
   },
   {
    "battleId": "l2_1331",
-   "level": 5,
+   "level": 10,
    "nameUk": "Summon Feline Queen",
    "hintUk": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
    "hintRu": "Summon Feline Queen: support-слуга; P.Atk отримує +10% від поточного M.Atk хазяїна. У вікні слуги доступний Blessing of Queen для тебе + Party.",
@@ -287,11 +287,66 @@
    "maxSkillLevel": 10
   },
   {
+   "battleId": "l2_1346",
+   "level": 1,
+   "nameUk": "Warrior Servitor",
+   "hintUk": "Баф активного слуги: Max HP +20%, HP regen +20%, P.Def +20%, Accuracy +4, P.Atk +10%, Atk.Speed +20%, опір дебафам +10, Speed −10%.",
+   "hintRu": "Баф активного слуги: Max HP +20%, HP regen +20%, P.Def +20%, Accuracy +4, P.Atk +10%, Atk.Speed +20%, опір дебафам +10, Speed −10%.",
+   "l2SkillId": 1346,
+   "iconUrl": "/skills/Skill1346.jpg",
+   "kind": "battle",
+   "maxSkillLevel": 1
+  },
+  {
+   "battleId": "l2_1349",
+   "level": 1,
+   "nameUk": "Final Servitor",
+   "hintUk": "Баф активного слуги: Max HP +20%, Accuracy +4, P.Atk +10%, P.Def +20%, Atk.Speed +20%, Crit +20%, Crit Damage +20%, M.Def/M.Atk/Cast +20%, опір дебафам +20, Speed −20%.",
+   "hintRu": "Баф активного слуги: Max HP +20%, Accuracy +4, P.Atk +10%, P.Def +20%, Atk.Speed +20%, Crit +20%, Crit Damage +20%, M.Def/M.Atk/Cast +20%, опір дебафам +20, Speed −20%.",
+   "l2SkillId": 1349,
+   "iconUrl": "/skills/skill1349.gif",
+   "kind": "battle",
+   "maxSkillLevel": 1
+  },
+  {
+   "battleId": "l2_1350",
+   "level": 1,
+   "nameUk": "Warrior Bane",
+   "hintUk": "P.Atk цілі −12%. Окремого контролю чи зняття бафів немає.",
+   "hintRu": "P.Atk цели −12%. Окремого контролю чи снятие бафов нет.",
+   "l2SkillId": 1350,
+   "iconUrl": "/skills/skill1350.gif",
+   "kind": "battle",
+   "maxSkillLevel": 1
+  },
+  {
+   "battleId": "l2_1351",
+   "level": 1,
+   "nameUk": "Mage Bane",
+   "hintUk": "P.Atk цілі −12%. Окремого контролю чи зняття бафів немає.",
+   "hintRu": "P.Atk цели −12%. Окремого контролю чи снятие бафов нет.",
+   "l2SkillId": 1351,
+   "iconUrl": "/skills/skill1351.gif",
+   "kind": "battle",
+   "maxSkillLevel": 1
+  },
+  {
+   "battleId": "l2_1406",
+   "level": 1,
+   "nameUk": "Summon Feline King",
+   "hintUk": "Summon Feline King: фінальний DD-слуга Arcana Lord; P.Atk отримує +55% від поточного M.Atk хазяїна.",
+   "hintRu": "Summon Feline King: фінальний DD-слуга Arcana Lord; P.Atk отримує +55% від поточного M.Atk хазяїна.",
+   "l2SkillId": 1406,
+   "iconUrl": "/skills/skill1406.png",
+   "kind": "battle",
+   "maxSkillLevel": 1
+  },
+  {
    "battleId": "l2_146",
-   "level": 35,
+   "level": 45,
    "nameUk": "Anti Magic",
-   "hintUk": "Пасивно: +86 M.Def.",
-   "hintRu": "Пассивно: +86 M.Def.",
+   "hintUk": "Пасивно: +108 M.Def.",
+   "hintRu": "Пассивно: +108 M.Def.",
    "l2SkillId": 146,
    "iconUrl": "/skills/skill0146.gif",
    "kind": "passive",
@@ -332,7 +387,7 @@
   },
   {
    "battleId": "l2_234",
-   "level": 31,
+   "level": 41,
    "nameUk": "Robe Mastery",
    "hintUk": "Пасив: P.Def +1,7.",
    "hintRu": "Пассив: P.Def +1,7.",
@@ -354,10 +409,10 @@
   },
   {
    "battleId": "l2_249",
-   "level": 32,
+   "level": 40,
    "nameUk": "Weapon Mastery",
-   "hintUk": "Пасив: +77.4 M. Atk (flat) на рівні 32 скіла. MP у бою не витрачається.",
-   "hintRu": "Пассив: +77.4 M. Atk (flat) на уровне 32 скила. MP в бою не тратится.",
+   "hintUk": "Пасив: +99.3 M. Atk (flat) на рівні 40 скіла. MP у бою не витрачається.",
+   "hintRu": "Пассив: +99.3 M. Atk (flat) на уровне 40 скила. MP в бою не тратится.",
    "l2SkillId": 249,
    "iconUrl": "/skills/skill0249.gif",
    "kind": "passive",
@@ -365,10 +420,10 @@
   },
   {
    "battleId": "l2_258",
-   "level": 23,
+   "level": 33,
    "nameUk": "Light Armor Mastery",
-   "hintUk": "Пасив: P.Def +34,8. Cast, Atk.Spd і MP regen ×34,8.",
-   "hintRu": "Пассив: P.Def +34,8. Cast, Atk.Spd и MP regen ×34,8.",
+   "hintUk": "Пасив: P.Def +46. Cast, Atk.Spd і MP regen ×46.",
+   "hintRu": "Пассив: P.Def +46. Cast, Atk.Spd и MP regen ×46.",
    "l2SkillId": 258,
    "iconUrl": "/skills/skill0258.gif",
    "kind": "passive",
@@ -376,7 +431,7 @@
   },
   {
    "battleId": "l2_285",
-   "level": 22,
+   "level": 27,
    "nameUk": "Higher Mana Gain",
    "hintUk": "Пасив: +0,6 MP за тик.",
    "hintRu": "Пассив: +0,6 MP за тик.",
@@ -384,6 +439,17 @@
    "iconUrl": "/skills/skill0285.gif",
    "kind": "passive",
    "maxSkillLevel": 27
+  },
+  {
+   "battleId": "l2_338",
+   "level": 1,
+   "nameUk": "Arcane Agility",
+   "hintUk": "Тогл: Cast +20%. Відкат дає +10% касту. −10% MP regen стає +5% M.Def.",
+   "hintRu": "Тогл: Cast +20%. Откат даёт +10% каста. −10% MP regen становится +5% M.Def.",
+   "l2SkillId": 338,
+   "iconUrl": "/skills/skill0338.gif",
+   "kind": "toggle",
+   "maxSkillLevel": 1
   }
  ],
  "castableSelfBuffs": [
@@ -403,10 +469,10 @@
   {
    "battleId": "l2_1167",
    "l2SkillId": 1167,
-   "skillLevel": 5,
+   "skillLevel": 6,
    "nameUk": "Отруйна хмара",
    "iconUrl": "/skills/skill1167.gif",
-   "mpCost": 71,
+   "mpCost": 82,
    "durationSec": 30,
    "cooldownSec": 20,
    "readyRemainingSec": 0,
@@ -416,10 +482,10 @@
   {
    "battleId": "l2_1222",
    "l2SkillId": 1222,
-   "skillLevel": 10,
+   "skillLevel": 15,
    "nameUk": "Прокляття хаосу",
    "iconUrl": "/skills/skill1222.gif",
-   "mpCost": 48,
+   "mpCost": 55,
    "durationSec": 10,
    "cooldownSec": 8,
    "readyRemainingSec": 0,
@@ -429,10 +495,10 @@
   {
    "battleId": "l2_1160",
    "l2SkillId": 1160,
-   "skillLevel": 10,
+   "skillLevel": 15,
    "nameUk": "Сповільнення",
    "iconUrl": "/skills/skill1160.gif",
-   "mpCost": 48,
+   "mpCost": 55,
    "durationSec": 120,
    "cooldownSec": 7,
    "readyRemainingSec": 0,
@@ -440,42 +506,267 @@
    "activeRemainingSec": null
   }
  ],
- "toggleStances": [],
+ "toggleStances": [
+  {
+   "battleId": "l2_338",
+   "skillId": 338,
+   "level": 1,
+   "nameUk": "Таємна спритність",
+   "iconUrl": "/skills/skill0338.gif",
+   "active": true
+  }
+ ],
  "activeSummon": {
   "kind": "servitor",
-  "key": "kai_the_cat",
-  "summonSkillId": 1276,
-  "summonSkillLevel": 7,
-  "nameUk": "Kai the Cat",
-  "iconUrl": "/skills/skill1276.gif",
-  "maxHp": 3110,
-  "maxMp": 728,
-  "pAtk": 2039,
-  "pDef": 672,
-  "mAtk": 269,
-  "mDef": 621,
-  "pAtkSpd": 320,
-  "castSpd": 368,
-  "accuracy": 70,
-  "critRate": 500,
-  "mCritRate": 25,
-  "critDmgMul": 2.4,
+  "key": "feline_king",
+  "summonSkillId": 1406,
+  "summonSkillLevel": 1,
+  "nameUk": "Feline King",
+  "iconUrl": "/skills/skill1406.png",
+  "hp": 7411,
+  "maxHp": 12716,
+  "mp": 744,
+  "maxMp": 744,
+  "pAtk": 30235,
+  "pDef": 2411,
+  "mAtk": 412,
+  "mDef": 2160,
+  "pAtkSpd": 260,
+  "castSpd": 338,
+  "accuracy": 81,
+  "critRate": 850,
+  "mCritRate": 54,
+  "critDmgMul": 5.568750000000001,
   "runSpeed": 100,
   "debuffResistPct": 0,
   "activeBuffs": [
    {
-    "skillId": 4699,
+    "skillId": 1068,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1068",
+    "descriptionUk": "+12% P.Atk слуги",
+    "iconUrl": "/skills/skill1068.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1388,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1388",
+    "descriptionUk": "+10% P.Atk слуги",
+    "iconUrl": "/skills/skill1388.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1062,
+    "level": 2,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1062",
+    "descriptionUk": "+8% P.Atk слуги",
+    "iconUrl": "/skills/skill1062.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 271,
     "level": 1,
-    "expiresAtMs": 1791774534061,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 271",
+    "descriptionUk": "+12% P.Atk слуги",
+    "iconUrl": "/skills/skill0271.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1077,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1077",
+    "descriptionUk": "+30% Crit слуги",
+    "iconUrl": "/skills/skill1077.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1242,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1242",
+    "descriptionUk": "+50% Crit Damage слуги",
+    "iconUrl": "/skills/skill1242.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 274,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 274",
+    "descriptionUk": "+35% Crit Damage слуги",
+    "iconUrl": "/skills/skill0274.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 269,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 269",
+    "descriptionUk": "+100% Crit слуги",
+    "iconUrl": "/skills/skill0269.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 4699,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
     "nameUk": "Blessing of Queen",
-    "descriptionUk": "+20% Crit Damage слуги",
+    "descriptionUk": "+30% Crit слуги; +25% Crit Damage слуги",
     "iconUrl": "/skills/skill1331.gif",
-    "remainingSec": 19
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1059,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1059",
+    "descriptionUk": "+20% M.Atk слуги",
+    "iconUrl": "/skills/skill1059.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 273,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 273",
+    "descriptionUk": "+20% M.Atk слуги",
+    "iconUrl": "/skills/skill0273.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1303,
+    "level": 2,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1303",
+    "descriptionUk": "+15 M.Crit слуги",
+    "iconUrl": "/skills/skill1303.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 365,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 365",
+    "descriptionUk": "+15 M.Crit слуги",
+    "iconUrl": "/skills/skill0365.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1240,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1240",
+    "descriptionUk": "+10% Accuracy слуги",
+    "iconUrl": "/skills/skill1240.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 272,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 272",
+    "descriptionUk": "+4 Accuracy слуги",
+    "iconUrl": "/skills/skill0272.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1040,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1040",
+    "descriptionUk": "+15% P.Def слуги",
+    "iconUrl": "/skills/skill1040.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1389,
+    "level": 3,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1389",
+    "descriptionUk": "+10% P.Def слуги",
+    "iconUrl": "/skills/skill1389.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1036,
+    "level": 2,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1036",
+    "descriptionUk": "+30% M.Def слуги",
+    "iconUrl": "/skills/skill1036.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1045,
+    "level": 6,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1045",
+    "descriptionUk": "+20% Max HP слуги",
+    "iconUrl": "/skills/skill1045.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 264,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 264",
+    "descriptionUk": "+25% P.Def слуги",
+    "iconUrl": "/skills/skill0264.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 267,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 267",
+    "descriptionUk": "+30% M.Def слуги",
+    "iconUrl": "/skills/skill0267.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 304,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 304",
+    "descriptionUk": "+30% Max HP слуги",
+    "iconUrl": "/skills/skill0304.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1268,
+    "level": 4,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1268",
+    "descriptionUk": "+15% hpRegen слуги",
+    "iconUrl": "/skills/skill1268.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 310,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 310",
+    "descriptionUk": "+15% hpRegen слуги",
+    "iconUrl": "/skills/skill0310.gif",
+    "remainingSec": 17952
+   },
+   {
+    "skillId": 1356,
+    "level": 1,
+    "expiresAtMs": 1792167631570,
+    "nameUk": "Скіл 1356",
+    "descriptionUk": "+20% P.Atk слуги; +10% Crit Damage слуги; +10% Max HP слуги",
+    "iconUrl": "/skills/skill1356.gif",
+    "remainingSec": 17952
    }
   ],
-  "abilities": [],
-  "hp": 3110,
-  "mp": 728
+  "abilities": []
  },
  "tvtSkills": {
   "skills": [
@@ -657,5 +948,5 @@
    }
   ]
  },
- "_snapshot": "12.10.2026: Warlock 64 ур., Majestic Robe Set (A), M.Atk 5 465 (было 60 ур./3 252 на 11.10)"
+ "_snapshot": "16.10.2026 21:21UTC+10: Warlock78/ArcanaLord,41навык; Kingпослебаффасуммона/20магическихFA. tvtSkillsсохранены12.10,сегоднянепроверены. Живыеописаниянеравныизмеренномубоевомуэффекту."
 }

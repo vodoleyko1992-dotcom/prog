@@ -1,0 +1,2714 @@
+{
+  "source": "Строкивклиенте,включаядинамическиепрефиксы/иконки. methods — эвристикасоседнегоисходника. Это не подтверждённыеAPIмутации.",
+  "candidates": [
+    {
+      "path": "/auth/",
+      "assets": [
+        "/sw.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/auth/change-password",
+      "assets": [
+        "/character-settings.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/auth/login",
+      "assets": [
+        "/main.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/auth/logout",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/auth/logout-all",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/auth/refresh",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character",
+      "assets": [
+        "/arena.js",
+        "/battle.js",
+        "/common.js",
+        "/craft.js",
+        "/sw.js"
+      ],
+      "methods": [
+        "GET",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/",
+      "assets": [
+        "/sw.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/bonuses",
+      "assets": [
+        "/bonuses-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/catalog-hints",
+      "assets": [
+        "/l2-catalog-cache.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/catalog-version",
+      "assets": [
+        "/l2-catalog-cache.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/companion/dismiss",
+      "assets": [
+        "/l2-hud-companion.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/companion/feline-queen-blessing",
+      "assets": [
+        "/l2-hud-companion.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/companion/seraphim-gift",
+      "assets": [
+        "/l2-hud-companion.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/consumable/use",
+      "assets": [
+        "/char.js",
+        "/craft-mp-hotbar.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/equip",
+      "assets": [
+        "/battle-hotbar.js",
+        "/char.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/equipment/crystallize",
+      "assets": [
+        "/char-crystallize-modal.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/equipment/crystallize/preview",
+      "assets": [
+        "/char-crystallize-modal.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/exp-gain-enabled",
+      "assets": [
+        "/character-settings.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/inventory/discard",
+      "assets": [
+        "/char-inventory-discard.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/magister",
+      "assets": [
+        "/magister.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/market/buy",
+      "assets": [
+        "/market-listing-buy.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/buy-order/cancel",
+      "assets": [
+        "/market-sell-resources.js",
+        "/market.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/buy-order/sell",
+      "assets": [
+        "/market-sell-to-buy-order.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/cancel",
+      "assets": [
+        "/market-coin-of-luck.js",
+        "/market.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/coin-of-luck/buy-order",
+      "assets": [
+        "/market-coin-buy-orders.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/coin-of-luck/buy-order/cancel",
+      "assets": [
+        "/market-coin-buy-orders.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/coin-of-luck/buy-order/sell",
+      "assets": [
+        "/market-coin-sell-to-buy-order.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/list",
+      "assets": [
+        "/market-coin-sell.js",
+        "/market-sell-item.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/market/my-buy-orders",
+      "assets": [
+        "/market.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/market/my-listings",
+      "assets": [
+        "/market.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/accept-first",
+      "assets": [
+        "/magister-profession-common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dark-elf-fighter-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dark-elf-fighter-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dark-elf-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dark-elf-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dwarf-fighter-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/dwarf-fighter-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/human-fighter-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/human-fighter-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/human-mystic-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/human-mystic-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/light-elf-fighter-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/light-elf-fighter-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/light-elf-mystic-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/light-elf-mystic-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/orc-fighter-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/orc-fighter-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/orc-mystic-second",
+      "assets": [
+        "/magister-second-profession-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-quest/orc-mystic-second/status",
+      "assets": [
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession-resource-requirement/",
+      "assets": [
+        "/magister-profession-common.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/profession/",
+      "assets": [
+        "/magister-profession-common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/profile-status",
+      "assets": [
+        "/character.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/rebirth-blessing",
+      "assets": [
+        "/rebirth-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/rebirth-blessing/catalog",
+      "assets": [
+        "/rebirth-buffer.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/rebirth-forge/smelt",
+      "assets": [
+        "/rebirth-forge.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/rebirth-forge/upgrade-shield",
+      "assets": [
+        "/rebirth-shield.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/rename",
+      "assets": [
+        "/character-settings.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/skills/cast",
+      "assets": [
+        "/l2-skill-cast-client.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/skills/learn",
+      "assets": [
+        "/magister.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/skills/toggle",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/subclasses",
+      "assets": [
+        "/subclasses.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/subclasses/",
+      "assets": [
+        "/subclasses.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town",
+      "assets": [
+        "/magisters.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/town/buffer",
+      "assets": [
+        "/town-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town/buffer/catalog",
+      "assets": [
+        "/town-buffer.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/town/buffer/remove",
+      "assets": [
+        "/town-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town/fast-aden-buffer/apply",
+      "assets": [
+        "/fast-aden-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town/fast-aden-buffer/buy-consumable",
+      "assets": [
+        "/fast-aden-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town/fast-aden-buffer/buy-dye",
+      "assets": [
+        "/fast-aden-dye-shop.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/town/fast-aden-buffer/catalog",
+      "assets": [
+        "/fast-aden-buffer.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/character/town/restore-vitals",
+      "assets": [
+        "/town-buffer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/warehouse/deposit",
+      "assets": [
+        "/char.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/warehouse/withdraw",
+      "assets": [
+        "/warehouse.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/character/weapon-augmentation",
+      "assets": [
+        "/augmentation-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/",
+      "assets": [
+        "/l2-item-runtime.js",
+        "/sw.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/achievements",
+      "assets": [
+        "/achievements-page.js",
+        "/char-achievement-rank.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/admin/test-mob/reset",
+      "assets": [
+        "/battle-test-mob-ui.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/admin/test-mob/start",
+      "assets": [
+        "/test-mob.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/ancient-trader/exchange",
+      "assets": [
+        "/ancient-trader.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/ancient-trader/offers",
+      "assets": [
+        "/ancient-trader.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/antibot/activity",
+      "assets": [
+        "/battle-antibot.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/antibot/challenge",
+      "assets": [
+        "/battle-antibot.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/arena",
+      "assets": [
+        "/arena-rating.js",
+        "/arena.js"
+      ],
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/game/arena/leave",
+      "assets": [
+        "/arena-presence.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/arena/return",
+      "assets": [
+        "/battle-defeat-flow.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/arena/start",
+      "assets": [
+        "/arena.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/ashen-bastion/mobs",
+      "assets": [
+        "/ashen-bastion.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle",
+      "assets": [
+        "/battle-api-transport.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle/action",
+      "assets": [
+        "/battle-api-transport.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/battle/hotbar",
+      "assets": [
+        "/battle-hotbar.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/battle/hunt-continue",
+      "assets": [
+        "/battle-api-transport.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/battle/leave",
+      "assets": [
+        "/battle-api-transport.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle/pvp-defeat/ack",
+      "assets": [
+        "/battle.js",
+        "/map.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/battle/pvp/start",
+      "assets": [
+        "/battle-api-transport.js",
+        "/common.js",
+        "/dungeon.js",
+        "/map.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle/return-to-town",
+      "assets": [
+        "/battle-api-transport.js",
+        "/map.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle/start",
+      "assets": [
+        "/battle-api-transport.js",
+        "/dungeon.js",
+        "/l2-party-hud.js",
+        "/map-battle-request.js",
+        "/party.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/battle/sync",
+      "assets": [
+        "/battle-api-transport.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/brave-hunter",
+      "assets": [
+        "/brave-hunter-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/catacombs",
+      "assets": [
+        "/catacombs.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/catacombs/teleport",
+      "assets": [
+        "/catacombs.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/chat/replies/unread-count",
+      "assets": [
+        "/l2-chat-reply-notify.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/chat/social-unread",
+      "assets": [
+        "/l2-social-chat-unread-notify.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/chat/social-unread/mark-read",
+      "assets": [
+        "/l2-social-chat-unread-notify.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clan-tasks",
+      "assets": [
+        "/clan-tasks.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clan-tasks/",
+      "assets": [
+        "/clan-tasks.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/",
+      "assets": [
+        "/clan-view.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/announcement",
+      "assets": [
+        "/clan-my.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/castles",
+      "assets": [
+        "/clan-castles.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/castles/",
+      "assets": [
+        "/clan-castles.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/chat",
+      "assets": [
+        "/clan-my.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/create",
+      "assets": [
+        "/clans-create.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/deputy",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/deputy/candidates",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/deputy/demote",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/disband",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/emblem",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/hall",
+      "assets": [
+        "/clan-hall.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/invite",
+      "assets": [
+        "/player.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/invite/accept",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/invite/decline",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/items/catalog",
+      "assets": [
+        "/clan-items.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/items/upgrade-level",
+      "assets": [
+        "/clan-items-upgrade.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/items/upgrades",
+      "assets": [
+        "/clan-items-upgrade.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/leave",
+      "assets": [
+        "/clan-my.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/level",
+      "assets": [
+        "/clan-level.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/level-up",
+      "assets": [
+        "/clan-level.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/list",
+      "assets": [
+        "/clans.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/members/kick",
+      "assets": [
+        "/clan-kick.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/members/kick-targets",
+      "assets": [
+        "/clan-kick.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/my",
+      "assets": [
+        "/clan-items.js",
+        "/clan-manage.js",
+        "/clan-my.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/tax-policy",
+      "assets": [
+        "/clan-manage.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/treasury",
+      "assets": [
+        "/clan-my.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/treasury-access",
+      "assets": [
+        "/clan-my-treasury-access.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse",
+      "assets": [
+        "/clan-warehouse.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse/access",
+      "assets": [
+        "/clan-warehouse.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse/deposit",
+      "assets": [
+        "/clan-armor-inventory-client.js",
+        "/clan-warehouse-items.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse/items/deposit",
+      "assets": [
+        "/clan-warehouse-items.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse/items/withdraw",
+      "assets": [
+        "/clan-warehouse-items.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/clans/warehouse/withdraw",
+      "assets": [
+        "/clan-warehouse-items.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/client-config",
+      "assets": [
+        "/menu.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/craft/armor",
+      "assets": [
+        "/craft-armor-tab.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/craft/jewelry",
+      "assets": [
+        "/craft-jewelry-tab.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/craft/materials",
+      "assets": [
+        "/craft.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/craft/shields",
+      "assets": [
+        "/craft-shield-tab.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/craft/weapons",
+      "assets": [
+        "/craft.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/daily-quests",
+      "assets": [
+        "/daily-quests-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/dragon-dungeon",
+      "assets": [
+        "/dragon-dungeon.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/dragon-dungeon/",
+      "assets": [
+        "/dragon-dungeon.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/drops-shop",
+      "assets": [
+        "/gm-shop.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/drops-shop/buy",
+      "assets": [
+        "/gm-shop.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/dungeon/enter",
+      "assets": [
+        "/dungeon.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/dungeon/view",
+      "assets": [
+        "/dungeon.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/epic-boss/teleport",
+      "assets": [
+        "/epic-bosses.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/epic-bosses",
+      "assets": [
+        "/epic-bosses.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/farm-guide",
+      "assets": [
+        "/forum-farm-resources.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/farm-guide/resource-teleport",
+      "assets": [
+        "/forum-farm-resources.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/action",
+      "assets": [
+        "/fishing-page-api.js",
+        "/fishing-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/buy-gear",
+      "assets": [
+        "/fishing-shop-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/buy-special",
+      "assets": [
+        "/fishing-shop-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/buy-starter",
+      "assets": [
+        "/fishing-page-api.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/cut",
+      "assets": [
+        "/char-fishing-cut.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/enchant-rod",
+      "assets": [
+        "/char-fishing-rod-enchant.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/exchange-material",
+      "assets": [
+        "/fishing-shop-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/learn-skill",
+      "assets": [
+        "/fishing-page-api.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/open-old-box",
+      "assets": [
+        "/char-fishing-old-box-open.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/fishing/state",
+      "assets": [
+        "/fishing-page.js",
+        "/fishing-shop-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/forum/news",
+      "assets": [
+        "/forum-news.js",
+        "/forum.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/forum/news/",
+      "assets": [
+        "/forum-news.js"
+      ],
+      "methods": [
+        "DELETE",
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/forum/world/weekly-contests",
+      "assets": [
+        "/forum-news.js",
+        "/forum-weekly-contests.js",
+        "/forum.js",
+        "/playerContestHonors.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/forum/world/weekly-contests/",
+      "assets": [
+        "/forum-weekly-contests.js",
+        "/playerContestHonors.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/gm-premium-shop",
+      "assets": [
+        "/gm-premium-shop.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/gm-premium-shop/buy",
+      "assets": [
+        "/gm-premium-shop.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/hunt",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/inventory/enchant",
+      "assets": [
+        "/enchant.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/inventory/expand",
+      "assets": [
+        "/char-inventory-capacity.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/item-icon",
+      "assets": [
+        "/char.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/item-icon/",
+      "assets": [
+        "/battle-hotbar.js",
+        "/battle-log-reward-renderer.js",
+        "/captain-andrei.js",
+        "/char-crystallize-modal.js",
+        "/char-fishing-cut.js",
+        "/char-fishing-reward-result.js",
+        "/char.js",
+        "/charEquipFrame.js",
+        "/craft-mp-hotbar.js",
+        "/item-stats-modal.js",
+        "/l2-catalog-cache.js",
+        "/l2-item-presentation.js",
+        "/l2-item-runtime.js",
+        "/market-buy-item.js",
+        "/market-buy.js",
+        "/market-sell-item.js",
+        "/market-sell-resources.js",
+        "/market-sell-to-buy-order.js",
+        "/market-sell.js",
+        "/market.js",
+        "/rebirth-forge.js",
+        "/sell-items.js",
+        "/warehouse.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/item-transfer/candidates",
+      "assets": [
+        "/item-transfer-cache.js",
+        "/item-transfer.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/item-transfer/send",
+      "assets": [
+        "/item-transfer.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/latest-news-notice",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mail/send",
+      "assets": [
+        "/mail-compose.js",
+        "/mail-thread.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/mail/thread",
+      "assets": [
+        "/mail-thread.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mail/unread-count",
+      "assets": [
+        "/l2-mail-unread-notify.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/blacksmith",
+      "assets": [
+        "/mammon-blacksmith.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/blacksmith/upgrade",
+      "assets": [
+        "/mammon-blacksmith.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/mammon/blacksmith/upgrades",
+      "assets": [
+        "/mammon-blacksmith.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/merchant",
+      "assets": [
+        "/mammon-merchant.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/merchant/buy",
+      "assets": [
+        "/mammon-merchant.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/mammon/merchant/request",
+      "assets": [
+        "/mammon-location-common.js",
+        "/mammon-merchant.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/merchant/request/claim",
+      "assets": [
+        "/mammon-merchant.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/mammon/merchant/shop",
+      "assets": [
+        "/mammon-merchant.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/mammon/teleport",
+      "assets": [
+        "/mammon-location-common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/map/around",
+      "assets": [
+        "/map.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/map/spawns",
+      "assets": [
+        "/map-local-spawn-priority.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/map/sync",
+      "assets": [
+        "/map.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/market/buy-orders",
+      "assets": [
+        "/market-sell-resources.js",
+        "/market-sell-to-buy-order.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/market/coin-of-luck/buy-orders",
+      "assets": [
+        "/market-coin-buy-orders.js",
+        "/market-coin-sell-to-buy-order.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/market/coin-of-luck/listings",
+      "assets": [
+        "/market-buy-item.js",
+        "/market-coin-of-luck.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/market/listings",
+      "assets": [
+        "/market-buy-item.js",
+        "/market.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/market/resource-catalog",
+      "assets": [
+        "/market-buy.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/move",
+      "assets": [
+        "/map.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/news/",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/olympiad",
+      "assets": [
+        "/olympiad-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/olympiad/buy-coupon",
+      "assets": [
+        "/olympiad-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/olympiad/crystal-shop",
+      "assets": [
+        "/crystal-shop-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/olympiad/crystal-shop/exchange",
+      "assets": [
+        "/crystal-shop-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/online",
+      "assets": [
+        "/l2-online-foot.js",
+        "/online.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party",
+      "assets": [
+        "/party.js",
+        "/player.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party/disband",
+      "assets": [
+        "/party.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party/hud",
+      "assets": [
+        "/l2-party-hud.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party/invite-player",
+      "assets": [
+        "/player.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/party/invite/accept",
+      "assets": [
+        "/l2-party-hud.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/party/invite/decline",
+      "assets": [
+        "/l2-party-hud.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/party/kick",
+      "assets": [
+        "/party.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party/leave",
+      "assets": [
+        "/party.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/party/reward-notice/ack",
+      "assets": [
+        "/l2-party-hud.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/party/support/",
+      "assets": [
+        "/player-buffs.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/player-login-claim",
+      "assets": [
+        "/common.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/player/",
+      "assets": [
+        "/mail-compose.js",
+        "/player-buffs.js",
+        "/player.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/player/by-name/",
+      "assets": [
+        "/mail-compose.js",
+        "/player.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/premium",
+      "assets": [
+        "/premium-confirm.js",
+        "/premium.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/premium/purchase-tier",
+      "assets": [
+        "/premium-confirm.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/public-stats",
+      "assets": [
+        "/main.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/quiz/answer",
+      "assets": [
+        "/quiz.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/quiz/current",
+      "assets": [
+        "/quiz.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/quiz/leaderboard",
+      "assets": [
+        "/quiz.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/quiz/log",
+      "assets": [
+        "/quiz.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/raid-boss/teleport",
+      "assets": [
+        "/rb-bosses.js",
+        "/world-boss-list-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/raid-bosses",
+      "assets": [
+        "/rb-bosses.js",
+        "/world-boss-list-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/ratings",
+      "assets": [
+        "/ratings-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/recipes/learn",
+      "assets": [
+        "/char.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/recipes/sources",
+      "assets": [
+        "/forum-recipe-hunt.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/recommend-nick/color",
+      "assets": [
+        "/recommend-nick.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/recommend-nick/recommend/",
+      "assets": [
+        "/recommend-nick.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/recommend-nick/state",
+      "assets": [
+        "/recommend-nick.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/server-news",
+      "assets": [
+        "/news.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/server-news/mark-read",
+      "assets": [
+        "/l2-server-news-unread-notify.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/server-news/unread",
+      "assets": [
+        "/l2-server-news-unread-notify.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/seven-seals",
+      "assets": [
+        "/seven-seals-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/shop/sell",
+      "assets": [
+        "/sell-items-bulk.js",
+        "/sell-items.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/shop/sell/prices",
+      "assets": [
+        "/gm-shop-sell-nav.js",
+        "/sell-items.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/siege/",
+      "assets": [
+        "/city.js",
+        "/common.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/siege/schedule",
+      "assets": [
+        "/forum-city-sieges.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/",
+      "assets": [
+        "/battle-active-view-renderer.js",
+        "/battle-hotbar.js",
+        "/battle-log-renderer.js",
+        "/common.js",
+        "/fast-aden-buffer.js",
+        "/magister.js",
+        "/pers.js",
+        "/playerPublicBuffs.js",
+        "/town-buffer.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/110",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/112",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/127",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/28",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/65",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/70",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/82",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/86",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/skill-icon/92",
+      "assets": [
+        "/tvt-arena-preview.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/spawn/",
+      "assets": [
+        "/ashen-bastion.js",
+        "/dungeon.js",
+        "/map.js",
+        "/world-boss-list-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/dion-campaign",
+      "assets": [
+        "/city.js",
+        "/dion-campaign.js",
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/giran-campaign",
+      "assets": [
+        "/city.js",
+        "/giran-campaign.js",
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/goddard-ocean-flame",
+      "assets": [
+        "/captain-andrei.js",
+        "/map-profession-quest-markers.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/noblesse",
+      "assets": [
+        "/map-profession-quest-markers.js",
+        "/noblesse-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/starter-saga",
+      "assets": [
+        "/city.js",
+        "/map-profession-quest-markers.js",
+        "/starter-story-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/story-quests/subclass",
+      "assets": [
+        "/subclass-quest.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/support/staff",
+      "assets": [
+        "/support-center.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/support/tickets",
+      "assets": [
+        "/support-center.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/support/tickets/",
+      "assets": [
+        "/support-center.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tattoos",
+      "assets": [
+        "/tattooist-page.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tattoos/engrave",
+      "assets": [
+        "/tattooist-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/tattoos/remove",
+      "assets": [
+        "/tattooist-page.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/teleport",
+      "assets": [
+        "/magister-profession-common.js",
+        "/teleport.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/teleport/locations",
+      "assets": [
+        "/magister-profession-common.js",
+        "/teleport.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/time",
+      "assets": [
+        "/l2-game-time.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt",
+      "assets": [
+        "/l2-tvt-registration-prompt.js",
+        "/tvt-arena-lifecycle.js"
+      ],
+      "methods": [
+        "GET",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/action",
+      "assets": [
+        "/tvt-arena-combat.js",
+        "/tvt-arena-hotbar.js",
+        "/tvt-arena-skills.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/ally-target",
+      "assets": [
+        "/tvt-arena-combat.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/combat/sync",
+      "assets": [
+        "/tvt-arena-combat.js"
+      ],
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/game/tvt/presence",
+      "assets": [
+        "/tvt-arena-presence.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/register",
+      "assets": [
+        "/l2-tvt-registration-prompt.js",
+        "/tvt-arena-lifecycle.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/result/latest",
+      "assets": [
+        "/tvt-arena-result.js"
+      ],
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/game/tvt/shop/catalog",
+      "assets": [
+        "/tvt-shop.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/shop/purchase",
+      "assets": [
+        "/tvt-shop.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/tvt/skills",
+      "assets": [
+        "/tvt-arena-skills.js"
+      ],
+      "methods": [
+        "GET"
+      ]
+    },
+    {
+      "path": "/game/tvt/summon/action",
+      "assets": [
+        "/tvt-arena-summon.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/target",
+      "assets": [
+        "/tvt-arena-combat.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/target/clear",
+      "assets": [
+        "/tvt-arena-combat.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/tvt/unregister",
+      "assets": [
+        "/l2-tvt-registration-prompt.js",
+        "/tvt-arena-lifecycle.js"
+      ],
+      "methods": [
+        "POST",
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/vip",
+      "assets": [
+        "/vip.js"
+      ],
+      "methods": [
+        "unknown"
+      ]
+    },
+    {
+      "path": "/game/vip/purchase",
+      "assets": [
+        "/vip.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/world/enter-city",
+      "assets": [
+        "/city.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    },
+    {
+      "path": "/game/world/enter-map",
+      "assets": [
+        "/map.js"
+      ],
+      "methods": [
+        "POST"
+      ]
+    }
+  ]
+}
