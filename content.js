@@ -3806,6 +3806,7 @@ const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))
 function netContextStart(d) {
   if(d.rid==null)return;
   NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
 function netContextTake(d) {
@@ -4405,7 +4406,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
