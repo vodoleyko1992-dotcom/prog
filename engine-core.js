@@ -124,10 +124,16 @@
   const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
+    const fishOpen = rt.fishCastActive === true || !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
+    const wait = rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
+    const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
+    const raidPayment = !!rt.actionPayments?.pending && rt.actionPayments.pending.kind !== 'fishing';
+    const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
-      if (k === 'fish') return !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
+      if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy) && idleRaid && !raidPayment && (fishBusy || wait.until > now && !freshRaid)) return false;
+      if (k === 'fish') return fishOpen || !!idleRaid && fishBusy;
       if (k === 'quests') {
         const live = [rt.storySaga,rt.dionCampaign].some(q => q && !q.completed && q.stage !== 'completed');
         return !(rt.campNoTasksUntil > now && !live && !(rt.questList || []).length); // Только подтверждённое отсутствие; ошибка главы не разрешает другую задачу.
@@ -167,6 +173,8 @@
     if (taskList(c) === null) return true;
     if (['dailyFish','dailyRb'].includes(key)) return false; // Дейлики не владеют режимом строгого списка.
     const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
+    // Ожидающий тур сохраняет место возврата после выбранной рыбалки; боевые маршруты не переносятся.
+    if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && selectedTask(c,rt) === 'fish') return true;
     if (primary) return selectedTask(c,rt) === primary;
     const group = {mmJob:'mammon',storyJob:'quests',dailyFish:'fish',dailyRb:'raid',petBufferTrip:'petbuff',rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish',farmScan:'resources',recipeScan:'resources',rbScan:'raid'}[key];
     if (group) return taskAllowed(c,group);

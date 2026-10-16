@@ -372,6 +372,47 @@ function flush() {
   });
 }
 
+// Старый pending не содержит revision: журнал даёт только узкую привязку к одному запросу.
+// В старых строках нет героя; любой разрыв контекста или неоднозначность запрещает восстановление.
+function fishingCastRevision(events, at) {
+  if (!Number.isSafeInteger(at) || at <= 0 || !Array.isArray(events)) return null;
+  const rows = events.filter(e => e && Number.isSafeInteger(e.t) && e.t >= at - 300 && e.t <= at + 30000);
+  const cast = e => e.src === 'B' && e.what === 'Рыбалка: заброс';
+  const starts = rows.filter(e => cast(e) && at - e.t >= 0 && at - e.t <= 300);
+  if (starts.length !== 1) return null;
+  const b = starts[0], sid = b.sid;
+  if (typeof sid !== 'string' || !sid || b.st?.page !== 'fishing') return null;
+  const next = Math.min(Infinity, ...rows.filter(e => cast(e) && e.t > b.t).map(e => e.t));
+  const requests = rows.filter(e => e.src === 'N' && /^POST \/game\/fishing\/action(?: \?[^→]*)? →/.test(e.what || '') && e.data?.q?.action === 'cast');
+  const candidates = requests.map(e => {
+    const m = String(e.what).match(/ · ([0-9]+(?:\.[0-9]+)?) мс(?: |$)/), ms = m ? Number(m[1]) : NaN;
+    return { e, start: e.t - ms, ms };
+  }).filter(x => Number.isFinite(x.ms) && x.ms >= 0 && x.start >= at && x.start <= at + 2000 && x.start < next);
+  if (candidates.length !== 1) return null;
+  const { e, start } = candidates[0], revision = e.data.q.expectedRevision;
+  if (e.sid !== sid || e.st?.page !== 'fishing' || !Number.isSafeInteger(revision) || revision < 0) return null;
+  // Лишний cast без измеренной длительности тоже оставляет неоднозначность.
+  if (requests.some(x => x !== e && x.t >= b.t && x.t <= e.t)) return null;
+  if (rows.some(x => x !== b && x.t >= b.t && x.t <= start &&
+    (x.src === 'U' || x.src === 'S' || x.src === 'B' || x.st?.page && x.st.page !== 'fishing' || x.sid && x.sid !== sid))) return null;
+  return { revision };
+}
+async function fishingCastEvidence(at) {
+  if (!Number.isSafeInteger(at) || at <= 0) return null;
+  flush(); await writing;
+  if (buf.length) return null; // Не читаем неполный журнал после ошибки записи.
+  const db = await idb(), rows = await new Promise((resolve, reject) => {
+    // Разовая миграция читает не больше штатного объёма + одной строки для проверки переполнения.
+    let done = false;
+    const finish = value => { if (!done) { done = true; clearTimeout(deadline); resolve(value); } };
+    const deadline = setTimeout(() => finish(null), 1500);
+    const r = db.transaction('log').objectStore('log').getAll(null, MAX_EV + 1);
+    r.onsuccess = () => finish(r.result.length > MAX_EV ? null : r.result.filter(e => e && Number.isSafeInteger(e.t) && e.t >= at - 300 && e.t <= at + 30000));
+    r.onerror = () => finish(null);
+  });
+  return fishingCastRevision(rows, at);
+}
+
 // снимок: ключ = хэш структуры страницы (без текста и чисел) — одно и то же состояние не сохраняется дважды
 function addSnap({ key, state, html }) {
   writing = writing.then(async () => {
@@ -533,6 +574,12 @@ chrome.tabs.onRemoved.addListener(tabId => {
 });
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'fishingCastEvidence') {
+    let game = false; try { game = /(^|\.)l2wap\.com$/i.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (_) {}
+    if (!game || !Number.isInteger(_s?.tab?.id) || _s.frameId > 0 || (_s.id && _s.id !== chrome.runtime.id)) { reply(null); return true; }
+    fishingCastEvidence(m.at).then(reply).catch(() => reply(null));
+    return true;
+  }
   if (m?.cmd?.startsWith('lock') && ['lockAcquire', 'lockRenew', 'lockRelease', 'lockCheck'].includes(m.cmd)) {
     lockCommand(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v10.1 — квестовые чемпионы и короткая безопасная проба =====
+// ===== L2wap Bot v20.2 — полный поиск чемпионов и восстановление рыбалки =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -4406,7 +4406,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },

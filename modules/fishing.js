@@ -791,6 +791,7 @@ function fishDmgNote(lines) {
 }
 
 async function fishCaught(name) {
+  statPut('fishCastActive', false);
   const old = env.rt.fishSess, sess = old && Date.now() - (old.last || 0) < 15 * 60000 ? { ...old } : { t0: Date.now() - 6000, n: 0 };   // пауза > 15 мин — новая сессия
   sess.n++; sess.last = Date.now(); sess.shots = (sess.shots || 0) + env.fishShotsSess; env.fishShotsSess = 0;
   if (env.fishCast) { baitNote(env.fishCast.bait, { caught: 1, ms: Date.now() - env.fishCast.t, proof: fishValOf(name) }); env.fishCast = null; }
@@ -829,7 +830,11 @@ async function fishStallCheck(f) {
 }
 
 // 8.0: учёт вываживания уходит в хранилище одной записью в конце (поймана — уже в fishCaught; сорвалась / скрылась / прервали — здесь)
-async function fishFight() { try { return await fishFightLoop(); } finally { statFlush(); } }
+async function fishFight() {
+  // Уже начатую рыбу доводим до исхода, даже если последний заброс исчерпал лимит.
+  if (fishState() && fishOwn()) { statPut('fishCastActive', true); statFlush(); }
+  try { return await fishFightLoop(); } finally { statFlush(); }
+}
 async function fishFightLoop() {
   let fishName = fishState()?.name || '';
   let lastNeed = null, needT = Date.now();       // «реакция» отсчитывается от момента, когда подсказка стала известна
@@ -839,7 +844,8 @@ async function fishFightLoop() {
     if (await env.tvtStep?.()) return;
     if (!fishOwn()) return;
     const f = fishState();
-    if (!f) {                                    // рыба вытащена или сорвалась — цель скрылась
+    if (!f) {
+      statPut('fishCastActive', false);           // рыба вытащена или сорвалась — цель скрылась
       const fresh = guard && env.fishLastPre ? fishNewLines(env.fishLastPre) : [];
       const late = fresh.find(l => /catch/.test(l.cls) || /Вы вытащили|Ви витягли/i.test(l.t));
       if (late) await fishCaught(late.fish || fishName);
@@ -878,6 +884,7 @@ async function fishFightLoop() {
     const caught = lines.find(l => /catch/.test(l.cls) || /Вы вытащили|Ви витягли/i.test(l.t));
     if (caught) { await fishCaught(caught.fish || fishName); return; }
     if (/сорвалась|зірвалась/i.test(txt)) {
+      statPut('fishCastActive', false);
       fishStat({ lost: 1 });
       if (env.fishCast) { baitNote(env.fishCast.bait, { ms: Date.now() - env.fishCast.t }); env.fishCast = null; }
       env.rec('B', 'рыбалка', `сорвалась ${fishName}: «${f2.st}» → нажат ${f2.need} · ${txt.slice(0, 120)}`);
@@ -896,6 +903,7 @@ function castRequestNote(d) {
   if(!p||!fishOwn()||p.char!==env.rt.char||d.path!=='/game/fishing/action'||d.method!=='POST'||d.req?.action!=='cast'||!Number.isSafeInteger(d.req.expectedRevision)||Date.now()-p.at>15000||Number.isSafeInteger(p.requestRevision))return;
   env.setRt({fishCastPending:{...p,requestRevision:d.req.expectedRevision}});env.rtCommit?.();
 }
+let legacyCastCheck = null;
 async function castReconcile() {
   const p=env.rt.fishCastPending;if(!p)return false;
   const selection=()=>JSON.stringify(Array.isArray(env.cfg.autoTasks)?env.cfg.autoTasks:[env.cfg.fishMode,env.cfg.epicMode]);
@@ -906,18 +914,29 @@ async function castReconcile() {
   const f=fishState(),fresh=fishNewLines(p.pre||[]),nf=env.NET_FISH||{};
   if(f||fresh.some(env.isNoBite)){
     fishStat({casts:1,...(f?{bites:1}:{nobite:1})});baitNote(p.bait,{casts:1,...(f?{bites:1}:{})});env.fishCast=f?{bait:p.bait,t:p.at}:null;
-    await env.setRt(statTake({fishCastPending:null}));if(f&&owned()&&selection()===choice)await fishFight();return true;
+    await env.setRt(statTake({fishCastPending:null,fishCastActive:!!f}));if(f&&owned()&&selection()===choice)await fishFight();return true;
   }
   if(!p.retryAt&&nf.act==='cast'&&nf.t>=p.at&&castRejected(nf)){await env.setRt({fishCastPending:null});return true;}
+  // Старые записи не имели revision: восстанавливаем её только по однозначному сохранённому запросу.
+  if(!Number.isSafeInteger(p.requestRevision)&&env.castEvidence&&(!legacyCastCheck||legacyCastCheck.char!==char||legacyCastCheck.at!==p.at||Date.now()-legacyCastCheck.t>=30000)){
+    legacyCastCheck={char,at:p.at,t:Date.now()};
+    const evidence=await env.castEvidence(p.at);if(!valid())return true;
+    if(Number.isSafeInteger(evidence?.revision)&&evidence.revision>=0){
+      const saved=await env.setRt({fishCastPending:{...p,requestRevision:evidence.revision}});
+      if(saved?.ok!==false)await commit();
+      if(valid())env.rec('B','рыбалка','Исходная revision старого заброса восстановлена из сохранённого сетевого журнала');
+      return true;
+    }
+  }
   const [raw,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);if(!valid())return true;
   const state=raw?.fishing||raw,ch=j?.character||j;
   const known=state&&ch?.name===char&&typeof ch.id==='string'&&ch.id&&(!p.charId||p.charId===ch.id)&&Number.isSafeInteger(state.revision)&&ch.revision===state.revision&&Object.hasOwn(state,'target');
   const reload=async()=>{const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,refreshed:true}});if(saved?.ok===false)return;await commit();if(valid())location.reload();};
-  if(known&&state.target&&typeof state.target==='object'){await reload();return true;}
+  if(known&&state.target&&typeof state.target==='object'){await env.setRt({fishCastActive:true});if(valid())await reload();return true;}
   const R=p.requestRevision;
   if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision>R){
     // Старый запрос уже не применится: revision ушла вперёд. Исход не выдумываем; лимит забросов учитываем консервативно.
-    fishStat({casts:1});await env.setRt(statTake({fishCastPending:null}));
+    fishStat({casts:1});await env.setRt(statTake({fishCastPending:null,fishCastActive:false}));
     env.rec('B','рыбалка','Активной рыбы нет, состояние сервера обновилось — старый заброс больше не повторяю');return true;
   }
   if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision===R&&env.gamePost){
@@ -979,7 +998,8 @@ async function fishing() {
   if (!still()) return;
   if (!fishOwn()) return;
   if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
-  if (await fishSetup()) return;
+  if (env.payments?.blocked()) { await paymentReconcile(); return; }
+  if (!env.rt.fishCastActive && await fishSetup()) return;
   // страница рыбалки дорисовывается скриптом игры: в первые секунды блоки «купите место» / «изучите навыки» /
   // «недоступно» могут мелькнуть до загрузки данных — раньше бот на этом останавливался (журнал 07.10: стоп через
   // 0,5–1,7 с после прихода на /fishing.html). Теперь решаем только по устоявшейся картине и без остановки.
@@ -995,6 +1015,12 @@ async function fishing() {
     return fishSoft(blocker() || 'Рыбалка: панель рыбалки не загрузилась');
   }
   if (fishState()) return fishFight();
+  // Загруженная пустая панель снимает сохранённый флаг; до любых покупок пересчитываем задачу.
+  if (env.rt.fishCastActive) {
+    await env.setRt({fishCastActive:false}); if (!still()) return;
+    if (await fishSetup()) return;
+  }
+  if (!still()) return;
   await fishTimeTopUp();
   if (!still()) return;
   if (fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent) === 0) return fishSoft('Рыбалка: оплаченное время закончилось');
@@ -1061,7 +1087,7 @@ async function fishing() {
     return null;
   }, 25000, 40);
   if (!fishOwn() || env.rt.char!==castChar || env.leaseEpoch!==castLease || res === 'interrupted') { statFlush(); return; }
-  if(res && res!=='unknown')await env.setRt({fishCastPending:null});
+  if(res && res!=='unknown')await env.setRt({fishCastPending:null,fishCastActive:res==='bite'});
   if(!fishOwn()||env.rt.char!==castChar||env.leaseEpoch!==castLease)return;
   if (res === 'rejected') {
     env.fishCast = null; statFlush();
