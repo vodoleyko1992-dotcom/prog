@@ -2921,8 +2921,16 @@ function setVal(el, v) {                         // как будто ввёл �
   el.dispatchEvent(new Event('input', { bubbles: true }));
   el.dispatchEvent(new Event('change', { bubbles: true }));
 }
+// 20.8 (ночной журнал17.10,08:08): явный бан аккаунта не является обычным выходом.
+function accountLoginBlocked() {
+  return [...document.querySelectorAll('#login-msg, .l2-auth-home__err, [role="alert"]')].some(el => shown(el)
+    && /(?:ака?унт|аккаунт|уч[её]тная запись|обл[іи]ковий запис|account)\s+(?:заблок|blocked|banned|suspended)/i.test(el.textContent || ''));
+}
+const stopBlockedLogin = () => halt('Аккаунт заблокирован сервером — бот остановлен. Проверьте сообщение игры; повторный вход не выполняется', true);
 async function autoLogin() {
+  if (accountLoginBlocked()) return stopBlockedLogin();
   const { auth } = await chrome.storage.local.get('auth');
+  if (accountLoginBlocked()) return stopBlockedLogin();
   if (!auth?.login || !auth?.pass) {
     await idle(60000, 'Вы вышли из игры — войдите вручную (или задайте логин/пароль: меню → Журнал → 🔐 Автовход)');
     return;
@@ -2942,8 +2950,10 @@ async function autoLogin() {
   await sleep(rnd(300, 600));
   const btn = [...form.querySelectorAll('button, input[type="submit"], a')].filter(shown)
     .find(b => /войти|увійти|вход|вхід|login|sign in/i.test(b.textContent + ' ' + (b.value || '')));
+  if (accountLoginBlocked()) return stopBlockedLogin();
   if (btn) fire(btn); else if (pw.form) pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
-  const ok = await waitFor(() => !loginPage() || $q('#l2-hud-legacy-name'), 15000, 300);
+  const ok = await waitFor(() => accountLoginBlocked() || !loginPage() || $q('#l2-hud-legacy-name'), 15000, 300);
+  if (accountLoginBlocked()) return stopBlockedLogin();
   if (ok && !loginPage()) {
     rec('S', 'вход', 'вход выполнен — продолжаю');
     await setRt({ loginTries: [] });

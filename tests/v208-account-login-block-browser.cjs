@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require(process.env.PLAYWRIGHT_NODE||'playwright'),source=fs.readFileSync(path.join(__dirname,'../content.js'),'utf8');
+const login=source.slice(source.indexOf('function accountLoginBlocked()'),source.indexOf('// ---------- сервер игры недоступен'));
+const halt=source.slice(source.indexOf('async function halt(msg, hard)'),source.indexOf('// 8.0.3 (игрок 11.10:',source.indexOf('async function halt(msg, hard)')));
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM,args:['--no-sandbox']});try{
+ for(const blocked of [true,false]){const p=await browser.newPage(),errors=[],requests=[];p.on('pageerror',e=>errors.push(e.message));await p.route('**/*',r=>{requests.push(r.request().url());return r.abort()});await p.setContent(`<form><input type="password"><p id="login-msg" class="l2-auth-home__err">${blocked?'Акаунт заблоковано. Причина: Бот':'Фарм заблоковано на 1 годину'}</p></form>`);
+ await p.addScriptTag({content:`let on=true;const TAG='test';const rt={};let reads=0,idles=0;const fishNow=()=>false,rec=()=>{},setRt=async v=>Object.assign(rt,v),shown=e=>!!e&&!e.hidden&&e.getClientRects().length>0;const saved={};window.chrome={storage:{local:{get:async()=>{reads++;return {auth:null}},set:async v=>Object.assign(saved,v)}}};const idle=async()=>{idles++};${halt}\n${login}\nwindow.testRun=async()=>{await autoLogin();return {on,reads,idles,saved,status:rt.status}};`});
+ const result=await p.evaluate(()=>testRun());assert.equal(result.on,!blocked);assert.equal(result.reads,blocked?0:1);assert.equal(result.idles,blocked?0:1);if(blocked){assert.equal(result.saved.on,false);assert.match(result.saved.stopMeta.reason,/Аккаунт заблокирован/)}assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);await p.close();}
+ console.log('PASS browser actual login DOM + production halt: account block stops without auth/network, PvE block stays ordinary logout');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
