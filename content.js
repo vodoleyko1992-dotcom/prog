@@ -255,6 +255,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
   for (const bn of list) {
     const b = slotsBy(bn)[0]; if (!b || (ctx.block['tgl:' + bn] || 0) > Date.now()) continue;
     const st = toggleState(bn, b), il = ilOf(b);
+    if (il?.autoUse === false) continue; // 20.3: ручной Focus Attack не переключаем даже из старого списка ролей.
     if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) await setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } });
     let want = null;
     if (st !== true && mpP >= (st === false && rt.toggleOff?.[bn] ? onP : off + 1) && uiReady(b)) want = true;     // включить
@@ -474,7 +475,10 @@ const LS_BY_NAME = Object.create(null);
 // 15.10, живая проверка: Battle Trance расходует HP, это не атака и не автоматический бафф.
 const NATIVE_SKILL_META = { battle_trance: { n: 'Battle Trance', c: 'Расход HP', t: 'HP_SELF_COST', o: 'ACTIVE', target: 'SELF', autoUse: false, L: 'L2WAP: снижает текущее HP до 25% максимума; только вручную' } };
 const NATIVE_SKILL_NAMES = { 'battle trance': 'battle_trance' };
-const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312 };
+const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312,
+  // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
+  focus_attack: 317, detect_animal_weakness: 87, detect_insect_weakness: 75, detect_plant_weakness: 104,
+  howl: 116, thrill_fight: 130, whirlwind: 36, thunder_storm: 48, provoke: 286 };
 IL_BY_NAME['дикий розмах'] = 245;
 function ilOf(x) {                               // x: кнопка слота, запись панели (cdKey) или имя скилла
   let id = null, name = '';
@@ -504,6 +508,14 @@ function ilOf(x) {                               // x: кнопка слота, 
 // 7.2.1 (скрин магистра 10.10): дебаффы L2WAP — не как в Interlude. mDefDown — +урон заклинаний мага (кот бьёт физикой, ему не помогает),
 // pAtkDown — защита (моб бьёт слабее). Curse Poison в справочнике — «Яд», на L2WAP это −12 % P.Atk
 const IL_FIX = { 78: { dur: 300, L: 'L2WAP: War Cry · +20% P.Atk на 5 минут · MP 10 · откат 180 с' },
+  // 20.3: серверные подсказки/лог Warlord важнее стандартного Interlude. Агро и выбор вида цели пока ручные.
+  36: { L: 'L2WAP: Whirlwind · главная цель и до 3 рядом · только пика/алебарда · откат 17 с · урон по замеру' },
+  48: { L: 'L2WAP: Thunder Storm · главная цель и до 3 рядом · шок около 50% по подсказке сервера · только пика/алебарда' },
+  116: { dur: 30, L: 'L2WAP: Howl · P.Atk врагов в радиусе −23% на 30 с · не прямой урон' },
+  130: { dur: 300, L: 'L2WAP: Thrill Fight · Run Speed −20%, Attack Speed +5% на первом ранге · 5 минут' },
+  317: { o: 'TOGGLE', autoUse: false, L: 'L2WAP: Focus Attack · переключатель · +2 точности и +10% силы крита в журнале · пока только вручную' },
+  286: { autoUse: false, L: 'L2WAP: Provoke · агро мобов и РБ в радиусе, без эпиков · сопротивление пике −10% на 10 с · пока только вручную' },
+  75: { autoUse: false }, 87: { autoUse: false }, 104: { autoUse: false },
   1151: { c: 'Лечение', t: 'HEAL', target: 'SELF', reuse: 2000, mp: 0, pow: 0,
   L: 'Лечение · на себя · L2WAP: в бою по живой цели, HP = уровень×3 + ранг×5, MP 0, откат ≈2 с' },
   // 10.0.23 (лог15.10 07:14): оба навыка наносят прямой урон живому РБ.
