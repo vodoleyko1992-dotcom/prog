@@ -86,7 +86,7 @@ function groupPlan(ctx, opts, eco = false) {
       why: probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
         : `АОЕ: ${visible ? 'живых соседей ' + near.length : 'по свежим боям'} · доп. убийств ≈${sideKills.toFixed(1)} · полезный урон ≈${Math.round(useful)}` });
   }
-  return ranked.sort((a, b) => b.sideKills - a.sideKills || b.useful - a.useful || (a.mpCost || 0) - (b.mpCost || 0))[0] || null;
+  return ranked.sort((a, b) => b.sideKills - a.sideKills || b.useful - a.useful || b.dmg - a.dmg || (b.cd || 0) - (a.cd || 0) || (a.mpCost || 0) - (b.mpCost || 0))[0] || null;
 }
 
 // Награды всех целей из свежего журнала — один итог. Lootline служит запасным
@@ -796,12 +796,18 @@ function dpsPlan(ctx, mp) {
     // замер не растёт. Проба — не больше PROBE_USES нажатий: дальше удар живёт по тому, что намерено (или по справочнику)
     const used = o => (env.damageSkills || env.rt.skills)?.[o.name.replace(/\s*\(.*$/, '').toLowerCase()]?.uses || 0;
     const probe = opts.filter(o => o.key !== 'attack' && !o.charge && !o.force && meas(o) < 3 && used(o) < PROBE_USES).sort((a, b) => meas(a) - meas(b))[0];
-    if (probe && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
+    if (probe && probe.dmg >= maxKnown && hp > Math.max(maxKnown, 300) * 1.3) return { ...probe, probe: true, why: `пробую новый удар (замер ${meas(probe)}/3)` };
   }
   // 1) добивание
   // 9.2: по этой цели есть замеры — «добьёт» = добивало в ≥ 85 % ударов (анализатор боя), иначе — как раньше, 85 % среднего
   const killOk = o => { const p = o.key === 'charge' ? null : env.fightKillP?.(o.name.replace(/\s*\(.*$/, ''), hp); return p != null ? p >= 0.85 : o.dmg * 0.85 >= hp; };
-  const kill = opts.filter(killOk).sort((a, b) => env.actCost(a) - env.actCost(b) || b.dmg - a.dmg)[0];
+  // ДПС: готовый сильный удар первым, в том числе при добивании. Личный КД — не время хода.
+  // Экономия и ограничения рейда сохраняют прежний выбор дешёвого добивания.
+  const cheapFinish = env.cfg.fightMode === 'kpd' || !!ctx.rb ||
+    !!mp && mp.cur < mp.max * .35 && !(env.mpPotSlot?.() && env.qty(env.mpPotSlot()) !== 0);
+  const kill = opts.filter(killOk).sort((a, b) => cheapFinish
+    ? env.actCost(a) - env.actCost(b) || b.dmg - a.dmg
+    : b.dmg - a.dmg || (b.cd || 0) - (a.cd || 0))[0];
   if (kill) return { ...kill, why: `добивание (${hp} HP)` };
   if (ctx.rb) {
     const atkD = env.expDmg('атака'), me = env.meHp();
@@ -998,7 +1004,8 @@ function chooseAction(ctx, mp) {
   if (env.cfg.fightMode === 'kpd' && env.expDmg('атака') * 0.85 >= (mobHp()?.cur || Infinity)) return null;   // КПД: ждём откат атаки
   if (ctx.lfHold) return null;                    // РБ без банок: дорогие удары придержаны ради маны — ждём атаку
   if (env.forceCosts().some(c => { const b = slotsBy(c.name)[0]; return b && env.forceNow() >= c.cost && cdLeft(b) <= 0.6; })) return null;
-  const pw = powers.find(ready);
+  const pw = powers.filter(ready).filter(b => !mp || (env.skillMp(env.cleanTitle(b.title)) || 0) <= mp.cur)
+    .sort((a, b) => env.expDmg(env.skKey(b)) - env.expDmg(env.skKey(a)))[0];
   if (pw) return { key: 'power:' + pw.title, name: pw.title, b: pw };
   if (powers.some(b => cdLeft(b) <= 0.6) || stuns.some(b => cdLeft(b) <= 0.6)) return null;   // вот-вот откатится — ждём
   const atk = slotsBy(env.cfg.nAttack).find(ready);
