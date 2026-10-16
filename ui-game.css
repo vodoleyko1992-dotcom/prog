@@ -271,3 +271,20 @@ html.docked .module-tile strong{font-size:12.5px;white-space:normal}
 html.docked .module-tile em.on{font-size:0}
 html.docked .module-tile em.on::before{content:'●';font-size:12px}
 #toast{white-space:normal;width:max-content;max-width:calc(100vw - 24px);text-align:left;overflow-wrap:anywhere;line-height:1.4}
+
+/* 16.10.2026: одинаковые ячейки задач вместо разрозненных строк в x2 и узком меню. */
+#autoTaskSelection{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:5px 8px;min-width:0;margin:0;padding:6px 8px 8px;border:1px solid var(--line);border-radius:8px}
+#autoTaskSelection legend{padding:0 5px;font-size:12px;color:var(--dim)}
+#autoTaskSelection label,html.docked #autoTaskSelection label{display:flex;justify-content:flex-start;min-width:0;min-height:34px;margin:0;padding:5px 6px;gap:7px;line-height:1.3;border:1px solid transparent;border-radius:6px;cursor:pointer}
+#autoTaskSelection label:hover{background:var(--goldbg);border-color:var(--line)}
+#autoTaskSelection label:has(input:checked){background:var(--okbg)}
+#autoTaskSelection .hint{grid-column:1/-1;margin:3px 0 0;overflow-wrap:anywhere}
+/* Широкое встроенное меню использует место для навигации, а не растягивает каждую кнопку. */
+@media(min-width:900px){
+ html.docked .app-shell{display:grid;grid-template-columns:180px minmax(0,1fr);grid-template-rows:1fr;gap:0}
+ html.docked #navToggle{display:none}
+ html.docked .app-shell nav,html.docked .app-shell.nav-collapsed nav{position:static!important;display:flex!important;flex-direction:column;align-items:stretch;width:auto!important;max-height:none;min-height:0;overflow-y:auto!important;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 8px!important;gap:5px}
+ html.docked .app-shell nav button{flex:0 0 auto;flex-direction:row;justify-content:flex-start;min-height:38px;text-align:left}
+ html.docked .workarea{min-width:0;overflow:hidden}
+ html.docked .overview-modules{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
