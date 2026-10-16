@@ -668,7 +668,7 @@ function cancelNote(lines, name, opt = {}) {         // после боя: ск�
   if (!n) return 0;
   // память по виду: чемпион и обычный моб того же вида — разные записи (снимают оранжевые/красные чемпионы, обычный Buffalo — нет)
   const key = cancelKey(name || who, opt.champ), C = { ...(env.rt.buffCancel || {}) }, o = C[key] || {};
-  C[key] = { t: Date.now(), n: (o.n || 0) + n, k: (o.k || 0) + 1, name: name || who, champ: !!opt.champ, tier: opt.tier || '' };
+  C[key] = { t: Date.now(), n: (o.n || 0) + n, k: (o.k || 0) + 1, name: name || who, champ: !!opt.champ, tier: opt.tier || '', dungeon: opt.dungeon || o.dungeon || '' };
   for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 30 * 86400000) delete C[k];
   env.setRt({ buffCancel: C, tbCancelT: Date.now() });
   const paid = faPaidLeft(0), RULE_P = { blue: 3, orange: 5, red: 7 }, rule = opt.champ && RULE_P[opt.tier];   // 10.0.8: правило игры, не свойство вида

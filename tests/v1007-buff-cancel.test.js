@@ -56,7 +56,7 @@ const B = load('modules/buffs.js').L2V7Factories.buffs(env);
   menv.cfg.noCancelMobs = false; assert.deepEqual(pick(), ['b1', 'm1', 'q1', 'r1'], 'checkbox off — as before');
   // 4. проводка: combat зовёт cancelNote после боя, геттеры в content.js, галка в меню
   const cb = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), ct = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
-  assert.match(cb, /env\.cancelNote\?\.\(env\.newLines\(ctx\.logStart \|\| \[\], env\.logLines\(\)\), ctx\.name, \{ champ: !!ctx\.champ, tier: ctx\.tier \|\| '' \}\)/);
+  assert.match(cb, /env\.cancelNote\?\.\(ctx\.cancelLines \|\| \[\], ctx\.name/); // 20.6: накопленные строки вместо вытесненного хвоста победы
   assert.match(ct, /get cancelNote\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.cancelNote\(\.\.\.a\); \}/);
   assert.match(ct, /get cancelRisk\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.cancelRisk\(\.\.\.a\); \}/);
   assert.match(ct, /noCancelMobs: true, cancelMobs: ''/); assert.match(ct, /once\('cancel1007'/);
