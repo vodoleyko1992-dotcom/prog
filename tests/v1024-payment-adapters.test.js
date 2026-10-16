@@ -61,7 +61,7 @@ for(const event of ['character','lease','ownership','payment'])test(`FA: ${event
 function raid(){
  const env={on:true,rt:{char:'hero',rbHunt:{step:'go',id:'boss',price:100},rbWant:null},setStatus(){}};attach(env);let fires=0;
  env.fire=()=>{if(env.payments.blocked()&&!env.payments.consumePermit())return false;fires++;return true};
- const source=read('modules/raid.js'),start=source.indexOf('async function rbTeleportFire('),end=source.indexOf('\nasync function paymentReconcile()',start);
+ const source=read('modules/raid.js'),start=source.indexOf('async function rbTeleportFire('),end=source.indexOf('\nasync function paymentReconcile(',start);
  const box={env,console};vm.runInNewContext(source.slice(start,end)+'\nthis.fireTeleport=rbTeleportFire;',box);
  return {env,fire:()=>box.fireTeleport({}, {rbHunt:{...env.rt.rbHunt,step:'arrive'},rbWant:'boss'}),fires:()=>fires};
 }
@@ -69,7 +69,7 @@ test('рейд: durable намерение и стадия arrive сохране
 test('рейд: ошибка сохранения arrive отменяет неотправленный платёж',async()=>{const f=raid();let n=0;f.env.rtCommit=async()=>++n!==2;assert.equal(await f.fire(),false);assert.equal(f.fires(),0);assert.equal(f.env.rt.rbHunt.step,'go')});
 test('рейд: наличие другого босса не подтверждает оплаченный маршрут',async()=>{
  const f=raid();await f.fire();f.env.isMap=()=>true;let rows=[{id:'other-boss'}];
- const source=read('modules/raid.js'),start=source.indexOf('async function paymentReconcile()'),end=source.indexOf('\nasync function rbGoStep()',start);
+ const source=read('modules/raid.js'),start=source.indexOf('async function paymentReconcile('),end=source.indexOf('\nasync function rbGoStep()',start);
  const box={env:f.env,raidList:()=>rows};vm.runInNewContext(source.slice(start,end)+'\nthis.reconcile=paymentReconcile;',box);
  assert.equal(await box.reconcile(),false);assert.ok(f.env.payments.blocked());rows=[{id:'boss'}];assert.ok(await box.reconcile());assert.equal(f.env.payments.blocked(),false);
 });
