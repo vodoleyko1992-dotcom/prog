@@ -35,10 +35,10 @@ function pagerInfo() {                         // «5 / 27 (398)»
 
 const pageKey = () => (env.$q('#map-mob-page-ind')?.textContent || '') + '|' + pageItems().map(i => i.id).join(',');
 
-async function gotoPage(n) {
+async function gotoPage(n, active = () => true) {
   n = Math.floor(Number(n));
   if (!Number.isFinite(n)) return false;
-  for (let guard = 0; guard < 40 && env.on; guard++) {
+  for (let guard = 0; guard < 40 && env.on && active(); guard++) {
     const pg = pagerInfo();
     if (!pg) return false;
     n = Math.max(1, Math.min(n, pg.total));
@@ -50,8 +50,9 @@ async function gotoPage(n) {
       env.$q(pg.cur < n ? '#map-mob-page-next' : '#map-mob-page-prev');
     if (!btn || btn.disabled) return false;
     const before = pageKey();
-    if (!env.fire(btn)) return false;
+    if (!active() || !env.fire(btn)) return false;
     if (!(await env.waitFor(() => pagerInfo()?.cur !== pg.cur && pageKey() !== before && pageItems().length, 4000, 100))) return false;
+    if (!active()) return false;
     await env.sleep(env.rnd(120, 300));
   }
   return false;
@@ -446,7 +447,7 @@ function farmRate() {
   const sk = medOf(Object.values(V).filter(v => v.n >= 3 && v.sec > 0).map(v => v.sec / v.n));
   return eps > 0 && sk > 0 ? { eps, sk } : null;
 }
-function candidates(rules, sig, types, limitIdx) {
+function candidates(rules, sig, types, limitIdx, evidence = {}) {
   const out = [];
   // 8.0.3 (игрок 11.10: «поиск чемпионов по умолчанию откл.»): пока «Искать чемпионов» выключено (и глава не просит чемпионов),
   // чемпион — обычный моб: без окна до −8 ур. и без особой ценности (бот не тянется к ним сам)
@@ -457,23 +458,23 @@ function candidates(rules, sig, types, limitIdx) {
   const pos = rules.filter(x => !x.neg), faRank = pos.findIndex(x => !(x.quest || x.farm));
   // 10.0.10 (лог 13.10 18:13: красный Hook Spider 16 при герое 8 — окно +5 не сработало): чемпиона без записи в кэше спавнов брали с уровнем 0,
   // а окно уровней при 0 не проверяется. Имя и уровень такого — из строки списка на экране (pageItems), если она видна
-  const onPage = {}; try { for (const it of pageItems()) if (it.id && !onPage[it.id]) onPage[it.id] = it; } catch (e) {}
+  const onPage = { ...evidence }; try { for (const it of pageItems()) if (it.id) onPage[it.id] = it; } catch (e) {}
   sig.ids.forEach((id, idx) => {
     if (idx >= limitIdx || env.isRaidId(id) || types[id] === 'raid' || types[id] === 'epic_guard') return;
-    const c = env.rt.spawns?.[id] || (onPage[id]?.name && onPage[id].lvl ? [onPage[id].name, onPage[id].lvl] : null);
+    const c = (onPage[id]?.name && onPage[id].lvl ? [onPage[id].name, onPage[id].lvl] : null) || env.rt.spawns?.[id];
     const minL = env.campChampMin();
     // Тип сервера не зависит от порога задания главы: иначе теряется запрет цвета.
     // 16.10: после reload/истечения NET карта всё ещё доказывает тип видимой строки.
-    const champ = types[id] === 'champion' || !!onPage[id]?.champ;
+    const champ = onPage[id] ? !!onPage[id].champ : types[id] === 'champion';
     const campEligible = champ && !(minL && c && c[1] && c[1] < minL);
     if (!c && !champ) return;                  // имя неизвестно и не чемпион — оценить нельзя
     const name = c ? c[0] : '', lvl = c ? c[1] : 0;
     const r = { id, idx, name, lvl, champ, boss: !!name && env.isBoss(name),
                 quest: !!name && env.isQuestName(name, sig.quest) };
     if (champ) {
-      r.tier = champTier(id, onPage[id]?.a, ''); r.fa = faChance(true, r.tier, lvl, hl0);
+      r.tier = onPage[id]?.tier || champTier(id, onPage[id]?.a, ''); r.fa = faChance(true, r.tier, lvl, hl0);
       const fresh = Date.now() - (env.NET_SPAWNS?.t || 0) < 10 * 60000;
-      r.hp = onPage[id]?.hp || (fresh ? env.NET_SPAWNS?.hp?.[id] : 0) || 0; r.exp = onPage[id]?.exp || (fresh ? env.NET_SPAWNS?.exp?.[id] : 0) || 0;
+      r.hp = (onPage[id] ? onPage[id].hp : fresh ? env.NET_SPAWNS?.hp?.[id] : 0) || 0; r.exp = (onPage[id] ? onPage[id].exp : fresh ? env.NET_SPAWNS?.exp?.[id] : 0) || 0;
     }
     // моб на 7+ ур. выше: атака почти не попадает (лог 20:20: Bloody Banshee 74 при герое 41 — атака 1–2 урона,
     // бой 26 с вместо 3). Такие — не цели, даже если чемпионы. Цели квеста — до +10
@@ -531,6 +532,30 @@ function candidates(rules, sig, types, limitIdx) {
     if (k >= 0) out.push({ ...r, rank: k, ql: qLike, faHot });
   });
   return mobValRank(out, champOn);
+}
+
+// 16.10, журнал 01:56: знание имени не доказывает свежие тип/цвет/HP на скрытой странице.
+// Наблюдения живут только в этом проходе; отсутствие цели объявляем лишь после всех страниц.
+async function scanChampPages(rules, sig, limitIdx, active = () => env.on) {
+  const evidence = {}, ids = sig.ids.join(','), total = Math.ceil(Math.min(limitIdx, sig.ids.length) / env.PAGE_SIZE);
+  let visited = 0;
+  const valid = () => active() && aroundSig().ids.join(',') === ids;
+  for (let p = 1; p <= total; p++) {
+    if (!valid()) return { sig, evidence, visited, total, complete: false, canceled: true };
+    env.setStatus(`Ищу чемпионов: стр. ${p}/${total}`);
+    if (!(await env.gotoPage(p, valid)) || !valid()) return { sig, evidence, visited, total, complete: false, canceled: true };
+    const expected = sig.ids.slice((p - 1) * env.PAGE_SIZE, Math.min(p * env.PAGE_SIZE, limitIdx));
+    const ready = () => valid() && pagerInfo()?.cur === p && expected.every(id => pageItems().some(it => it.id === id));
+    if (!ready()) await env.waitFor(ready, 1500);
+    if (!ready()) return { sig, evidence, visited, total, complete: false, canceled: true };
+    await env.absorb();
+    if (!ready()) return { sig, evidence, visited, total, complete: false, canceled: true };
+    for (const it of pageItems()) if (sig.ids.includes(it.id)) evidence[it.id] = { id: it.id, name: it.name, lvl: it.lvl, champ: it.champ, boss: it.boss, hp: it.hp, exp: it.exp, tier: champTier(it.id, it.a, '') };
+    visited++;
+    const candidate = candidates(rules, sig, markerTypes(), limitIdx, evidence).find(c => c.champ);
+    if (candidate) return { sig, evidence, visited, total, complete: visited === total, candidate };
+  }
+  return { sig, evidence, visited, total, complete: true };
 }
 
 // 8.0 (аудит фарма B1): среди целей одного приоритета — самая выгодная, а не ближайшая. Раньше в строке «[все]» бот брал первого
@@ -599,9 +624,9 @@ async function attackSpawn(c, label, opt = {}) {
   if (!active()) return false;
   const page = Math.floor(c.idx / env.PAGE_SIZE) + 1;
   const sel = `#map-mob-list a[href*="spawnId=${CSS.escape(c.id)}"]`;
-  if (!(await env.gotoPage(page)) || !active()) return false;
+  if (!(await env.gotoPage(page, active)) || !active()) return false;
   let a = env.$q(sel);
-  for (const d of [1, -1]) { if (a || !active()) break; if (await env.gotoPage(page + d)) a = env.$q(sel); }
+  for (const d of [1, -1]) { if (a || !active()) break; if (await env.gotoPage(page + d, active)) a = env.$q(sel); }
   if (!a || !active()) return false;
   const it = pageItems().find(x => x.id === c.id);
   if (it) Object.assign(c, { name: c.name || it.name, lvl: c.lvl || it.lvl, quest: c.quest || it.quest, champ: c.champ || it.champ });
@@ -837,8 +862,21 @@ async function map() {
     .map(([, i]) => Math.floor(i / env.PAGE_SIZE) + 1))].sort((a, b) => a - b);
   // изучать имена незачем, если уже есть цель лучшего «именного» правила (чемпионов видно по меткам и без имён)
   const pos = rules.filter(x => !x.neg), named = Math.max(0, pos.findIndex(x => !(x.champ && !x.quest && !x.name)));
-  const best0 = candidates(rules, sig, markerTypes(), limitIdx)[0];
-  if (unknownPages.length && !(best0 && best0.rank <= named)) {
+  const initial = candidates(rules, sig, markerTypes(), limitIdx), best0 = initial[0];
+  let pageEvidence = {}, champScanned = false;
+  const champPriority = pos.findIndex(x => x.champ);
+  const searchingChamps = deep && champRuleOn() && champPriority >= 0 && (!best0 || best0.rank >= champPriority);
+  if (searchingChamps && !initial.some(c => c.champ)) {
+    const context = () => JSON.stringify([env.scanContext?.(), env.rt.char, env.rt.manualKickAt, env.rt.zone, location.pathname,
+      env.autonomyMode(), env.cfg.searchChamp, env.cfg.champBlue, env.cfg.champOrange, env.cfg.champRed, env.cfg.champCancel, env.cfg.champLeave,
+      env.campActive(), env.campOpen().filter(t => t.champ)]);
+    const before = context(), active = () => env.on && env.tabOwner !== false && env.canScanMap?.() !== false && context() === before;
+    const scan = await scanChampPages(rules, sig, limitIdx, active);
+    if (scan.canceled || !active()) return;
+    pageEvidence = scan.evidence; champScanned = true;
+    env.rec('B', 'чемпионы', scan.candidate ? `Проверено страниц ${scan.visited}/${scan.total}: найден ${scan.candidate.name} на стр. ${Math.floor(scan.candidate.idx / env.PAGE_SIZE) + 1}` : `Проверены все ${scan.total} страниц: доступных чемпионов сейчас нет`);
+  }
+  if (!champScanned && unknownPages.length && !(best0 && best0.rank <= named)) {
     const cap = env.campMobOpen().length ? 30 : 6;     // ищем цели главы — изучаем локацию целиком за один заход
     for (const [k, p] of unknownPages.slice(0, cap).entries()) {
       env.setStatus(`Изучаю список локации: стр. ${p} (${k + 1}/${Math.min(cap, unknownPages.length)} из ${unknownPages.length})`);
@@ -865,7 +903,7 @@ async function map() {
     if (here && env.rt.wrongLoc) await env.setRt({ wrongLoc: 0 });
   }
 
-  let cands = candidates(rules, sig, markerTypes(), limitIdx);
+  let cands = candidates(rules, sig, markerTypes(), limitIdx, pageEvidence);
   // 7.2.1 (лог 10.10 21:17:34): после города «В Окрестности» ближе всего — мобы 69–78 ур., и бот улетел в Pavel Ruins (≈2,6 M EXP/ч),
   // хотя в этой же локации дальше по списку — мобы 54–63 ур. (замер тут ≈4,45 M EXP/ч на 52 ур.). Ближние страницы без своих —
   // сперва свои по всей локации (имена из кэша спавнов), телепорт — только если их нет нигде
@@ -881,7 +919,7 @@ async function map() {
     if (env.rt.champSeen !== key) {
       const ct = env.campOpen().find(t => t.champ);
       env.rec('B', 'чемпионы', ch.length ? `на локации ${ch.length}: ${ch.slice(0, 3).map(c => `${c.name || '?'} (${c.lvl || '?'})`).join(', ')} — иду к ближайшему (глава: ${ct.done}/${ct.total})`
-        : `чемпионов на локации сейчас нет (глава: ${ct.done}/${ct.total}) — бью цели главы, проверяю карту чаще`);
+        : `доступных чемпионов на локации сейчас нет (глава: ${ct.done}/${ct.total}) — бью цели главы, проверяю карту чаще`);
       await env.setRt({ champSeen: key });
     }
   }
@@ -981,6 +1019,6 @@ async function ashenStep() {
   env.setStatus(rows.length ? 'Ashen Bastion: подходящие мобы возрождаются' : 'Ashen Bastion: жду список мобов');
   await env.sleep(2000);
 }
- return { farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
+ return { scanChampPages, farmRate, FA_P, FA_MOB, FA_BELOW, lowCap, champTier, faChance, pageItems, pagerInfo, pageKey, gotoPage, aroundSig, markerTypes, netSpawns, parseRules, champRuleOn, chainBetter, chainCarries, ruleMatch, questHere, nameHere, rank, nextFight, mapReady, candidates, mobEps, mobValRank, mobValNote, attackSpawn, map, ashenRows, ashenStep, dungeonBattle };
  };
 })(globalThis);
