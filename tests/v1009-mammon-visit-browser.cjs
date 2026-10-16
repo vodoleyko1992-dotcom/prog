@@ -1,6 +1,6 @@
 'use strict';
 // 10.0.9 (игрок 13.10 07:22: «добавь кнопку — открыть Маммона/прийти к Маммону — торговец или кузнец»): настоящий Chromium с расширением —
-// в окне бота справа от «🐉 Респ эпиков» две кнопки, кликабельны (окно само pointer-events:none); бот стоит → клик открывает страницу
+// в окне бота под «🐉 Респ эпиков» (раскладка20.4) две кнопки, кликабельны (окно само pointer-events:none); бот стоит → клик открывает страницу
 // телепорта к NPC; бот работает (on) → в памяти появляется rt.mmGoReq {kind:'visit', npc} через фон, блок показывает «⏳ …»
 const { chromium } = require(process.env.PLAYWRIGHT_NODE || '/opt/node-tools/node_modules/playwright');
 const {until,delay}=require('./v1014-core-lifecycle-browser.cjs');
@@ -20,7 +20,7 @@ const game = `<!doctype html><html><head><title>L2WAP</title><style>body{margin:
   const out = {};
   out.layout = await p.evaluate(() => { const i = document.getElementById('l2bot-ind'); const e = i.querySelector('.e'), mm = i.querySelector('.e .mm'), et = i.querySelector('.e .et');
     const b = [...i.querySelectorAll('[data-mmgo]')].map(x => x.textContent); const r1 = et?.getBoundingClientRect(), r2 = mm?.getBoundingClientRect();
-    return { hasE: !!e, btns: b, right: !!(r1 && r2) && r2.left >= r1.left + r1.width - 1, last: i.lastElementChild === e, ptr: mm ? getComputedStyle(mm.querySelector('.bt')).pointerEvents : null }; });
+    return { hasE: !!e, btns: b, below: !!(r1 && r2) && r1.height > 0 && r2.height > 0 && r2.top >= r1.bottom - 1, last: i.lastElementChild === e, ptr: mm ? getComputedStyle(mm.querySelector('.bt')).pointerEvents : null }; });
   // бот стоит → клик «⚒ Кузнец Маммона» открывает страницу телепорта к кузнецу
   await p.click('#l2bot-ind [data-mmgo=smith]'); await p.waitForTimeout(1500); out.urlOff = p.url();
   // бот работает → клик «🛒 Торговец Маммона» ставит команду в память (через фон), окно показывает «⏳ к торговцу»
@@ -31,8 +31,8 @@ const game = `<!doctype html><html><head><title>L2WAP</title><style>body{margin:
   out.req = await sw.evaluate(async () => { const s = await chrome.storage.local.get('rt'); return s.rt?.mmGoReq || null; });
   out.state = await p.evaluate(() => document.querySelector('#l2bot-ind .e .mm .ms')?.textContent || '');
   await ctx.close();
-  const ok = !errs.length && out.layout.hasE && out.layout.btns.join('|') === '🛒 Торговец Маммона|⚒ Кузнец Маммона' && out.layout.right && out.layout.last && out.layout.ptr === 'auto'
+  const ok = !errs.length && out.layout.hasE && out.layout.btns.join('|') === '🛒 Торговец Маммона|⚒ Кузнец Маммона' && out.layout.below && out.layout.last && out.layout.ptr === 'auto'
     && /\/mammon-blacksmith-loc\.html$/.test(out.urlOff) && out.req && out.req.kind === 'visit' && out.req.npc === 'order' && /⏳ к торговцу/.test(out.state);
-  console.log((ok ? 'PASS' : 'FAIL') + ': Mammon buttons in the bot window to the right of epic respawns — stopped bot opens the teleport page, running bot queues a visit command in memory' + (ok ? '' : ' ' + JSON.stringify({ out, errs })));
+  console.log((ok ? 'PASS' : 'FAIL') + ': Mammon buttons in the bot window below epic respawns — stopped bot opens the teleport page, running bot queues a visit command in memory' + (ok ? '' : ' ' + JSON.stringify({ out, errs })));
   process.exit(ok ? 0 : 1);
 })().catch(e => { console.error('FAIL', e); process.exit(1); });

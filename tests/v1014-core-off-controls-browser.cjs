@@ -10,7 +10,8 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert
  await h.click('check');await until(()=>h.popup.locator('#slots').textContent().then(t=>/страницу боя/.test(t)));
  await h.click('suggest');await until(()=>h.popup.locator('#slots').textContent().then(t=>t.includes('Audit Spell')),30000);assert.equal((await h.get(['cfg'])).cfg.nPower,'','suggest remains reviewable before Apply');
  await h.click('apply');await until(async()=> (await h.get(['cfg'])).cfg.nPower==='Audit Spell');const roles=(await h.get(['cfg'])).cfg;assert.equal(roles.nMpPot,'Audit Mana');assert.equal(roles.nHpPot,'Audit Healing');assert.equal((await h.get(['on'])).on,false);console.log('PASS off panel report → real core suggestion → explicit Apply sets learned skill and potion roles');
- for(const id of ['900001','900002']){await h.popup.evaluate(id=>document.querySelector('#faPick').value=id,id);await h.click('faAdd');await until(async()=>String((await h.get(['cfg'])).cfg.faBuffs).includes(id));}
+ // 20.6: ждём свежие options и держим фокус на select — периодический load не сбрасывает выбор до Add.
+ for(const id of ['900001','900002']){await until(()=>h.popup.locator('#faPick option[value="'+id+'"]').count());await h.popup.locator('#faPick').focus();await h.popup.locator('#faPick').selectOption(id);await h.click('faAdd');await until(async()=>String((await h.get(['cfg'])).cfg.faBuffs).includes(id));}
  // storage уже записан, но перерисовка popup намеренно отложена до 350 мс.
  await until(()=>h.popup.locator('#faList [data-fa-up="1"]').count());
  await h.popup.evaluate(()=>document.querySelector('#faList [data-fa-up="1"]').click());await until(async()=>String((await h.get(['cfg'])).cfg.faBuffs).replace(/\s/g,'')==='900002,900001');
