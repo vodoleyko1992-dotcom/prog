@@ -2,13 +2,15 @@
 const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert=require('node:assert/strict');
 (async()=>{const h=await harness();try{
  for(const task of ['mammon','quests','pvp','dailies','clan']) {
-  const el=h.popup.locator('[data-auto-task="'+task+'"]');await el.check();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks?.includes(task));assert.equal((await h.get(['on'])).on,false);
-  await el.uncheck();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes(task));console.log('PASS task selection saves without starting',task);
+  // 20.5: async render может вернуть старый checked до завершения сохранения.
+  // Native click + ожидание обоих результатов вместо синхронного assert внутри check/uncheck.
+  const el=h.popup.locator('[data-auto-task="'+task+'"]');if(!await el.isChecked())await el.click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks?.includes(task)&&await el.isChecked());assert.equal((await h.get(['on'])).on,false);
+  await el.click();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes(task)&&!await el.isChecked());console.log('PASS task selection saves without starting',task);
  }
  for(const [button,task,expected] of [['farmToggle','farm','farm'],['autoFarmToggle','auto','farm'],['huntToggle','raid','raid'],['epicToggle','epic','epic'],['fishToggle','fish','fish'],['catToggle','cat','cat']]){
   await h.click(button);await until(async()=> (await h.get(['on'])).on&&await h.g.core('autonomyMode()')===expected,15000);
   assert.ok((await h.get(['cfg'])).cfg.autoTasks.includes(task));console.log('PASS task checkbox + Start → actual content',task);
-  await h.popup.locator('[data-auto-task="'+task+'"]').uncheck();await until(()=>h.g.core('autonomyMode()==="tasks"'));assert.equal((await h.get(['on'])).on,true);
+  const el=h.popup.locator('[data-auto-task="'+task+'"]');await until(()=>el.isChecked());await el.click();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes(task)&&!await el.isChecked()&&await h.g.core('autonomyMode()==="tasks"'));assert.equal((await h.get(['on'])).on,true);
   await h.click('stop');await until(()=>h.g.core('!on && !running'),20000);
  }
  for(const button of ['campToggle','huntToggle2','epicToggle2','rbOneBtn']){
