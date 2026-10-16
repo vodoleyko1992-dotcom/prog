@@ -890,26 +890,50 @@ async function fishFightLoop() {
 // у рыбака (по 100 000 SP), купить рыболовное место (10 000 000 Adena, один раз — только если после покупки останется резерв
 // закупок). Удочку, наживку, заряды и время бот уже покупает сам. Выключить: fishAutoSetup: false
 const castRejected=nf=>nf.ok===false&&!(nf.status>=500)&&['revision_conflict','in_battle'].includes(nf.code);
-// Неизвестный заброс сохраняется через reload: таймаут не означает «не клюнула».
+// 16.10, журнал 03:11: abort заброса оставлял вечный pending. Повтор только с исходной revision.
+function castRequestNote(d) {
+  const p=env.rt.fishCastPending;
+  if(!p||!fishOwn()||p.char!==env.rt.char||d.path!=='/game/fishing/action'||d.method!=='POST'||d.req?.action!=='cast'||!Number.isSafeInteger(d.req.expectedRevision)||Date.now()-p.at>15000||Number.isSafeInteger(p.requestRevision))return;
+  env.setRt({fishCastPending:{...p,requestRevision:d.req.expectedRevision}});env.rtCommit?.();
+}
 async function castReconcile() {
   const p=env.rt.fishCastPending;if(!p)return false;
-  const char=env.rt.char,lease=env.leaseEpoch,valid=()=>fishOwn()&&env.rt.char===char&&char===p.char&&env.leaseEpoch===lease&&env.rt.fishCastPending?.at===p.at;
+  const selection=()=>JSON.stringify(Array.isArray(env.cfg.autoTasks)?env.cfg.autoTasks:[env.cfg.fishMode,env.cfg.epicMode]);
+  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,choice=selection();
+  const owned=()=>fishOwn()&&env.canRun?.()!==false&&!env.payments?.blocked?.()&&env.rt.char===char&&char===p.char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick;
+  const valid=()=>owned()&&fishNow()&&env.rt.fishCastPending?.at===p.at;
   if(!valid())return true;
   const f=fishState(),fresh=fishNewLines(p.pre||[]),nf=env.NET_FISH||{};
   if(f||fresh.some(env.isNoBite)){
     fishStat({casts:1,...(f?{bites:1}:{nobite:1})});baitNote(p.bait,{casts:1,...(f?{bites:1}:{})});env.fishCast=f?{bait:p.bait,t:p.at}:null;
-    await env.setRt(statTake({fishCastPending:null}));if(f&&fishOwn()&&env.rt.char===char)await fishFight();return true;
+    await env.setRt(statTake({fishCastPending:null}));if(f&&owned()&&selection()===choice)await fishFight();return true;
   }
-  if(nf.act==='cast'&&nf.t>=p.at&&castRejected(nf)){await env.setRt({fishCastPending:null});return true;}
-  const [state,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);if(!valid())return true;
-  const ch=j?.character||j;if(char&&ch?.name!==char)return true;
-  // DOM-счётчик мог отстать ещё ДО запроса: снижение относительно него не доказывает этот заброс.
-  // Один раз обновляем экран, сохраняя неизвестный запрос; повтор разрешит только новый исход/точный отказ.
-  if(state&&!p.refreshed){
-    await env.setRt({fishCastPending:{...p,refreshed:true}});await commit();
-    if(valid())location.reload();return true;
+  if(!p.retryAt&&nf.act==='cast'&&nf.t>=p.at&&castRejected(nf)){await env.setRt({fishCastPending:null});return true;}
+  const [raw,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);if(!valid())return true;
+  const state=raw?.fishing||raw,ch=j?.character||j;
+  const known=state&&ch?.name===char&&typeof ch.id==='string'&&ch.id&&(!p.charId||p.charId===ch.id)&&Number.isSafeInteger(state.revision)&&ch.revision===state.revision&&Object.hasOwn(state,'target');
+  const reload=async()=>{const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,refreshed:true}});if(saved?.ok===false)return;await commit();if(valid())location.reload();};
+  if(known&&state.target&&typeof state.target==='object'){await reload();return true;}
+  const R=p.requestRevision;
+  if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision>R){
+    // Старый запрос уже не применится: revision ушла вперёд. Исход не выдумываем; лимит забросов учитываем консервативно.
+    fishStat({casts:1});await env.setRt(statTake({fishCastPending:null}));
+    env.rec('B','рыбалка','Активной рыбы нет, состояние сервера обновилось — старый заброс больше не повторяю');return true;
   }
-  env.setStatus('Рыбалка: исход заброса неизвестен — сверяю сервер, повтор пока запрещён');await env.sleep(1000);return true;
+  if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision===R&&env.gamePost){
+    if(p.retryAt&&Date.now()-p.retryAt<15000){await env.sleep(1000);return true;}
+    const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,charId:ch.id,retryAt:Date.now()}});
+    if(saved?.ok===false||env.rtCommit&&!(await env.rtCommit())||!valid())return true;
+    env.rec('B','рыбалка','Восстанавливаю прерванный заброс с той же revision: повторное списание наживки защищено');
+    let response=null;try{response=await env.gamePost('/game/fishing/action',{action:'cast',expectedRevision:R});}catch(_){}
+    if(!valid())return true;
+    // Даже409 здесь не отменяет исходный запрос: он мог выиграть гонку. Снова читаем сервер на следующем тике.
+    if(response?.ok){await reload();return true;}
+    env.setStatus('Рыбалка: сверяю исход защищённого повтора');await env.sleep(1000);return true;
+  }
+  if(state&&!p.refreshed){await reload();return true;}
+  env.setStatus(Number.isSafeInteger(R)?'Рыбалка: исход заброса неизвестен — жду согласованный снимок сервера':'Рыбалка: исход заброса неизвестен (старая запись без revision) — откройте рыбалку и выполните один заброс вручную');
+  await env.sleep(1000);return true;
 }
 async function fishSetup() {
   if(env.payments?.blocked()){await paymentReconcile();return true;}
@@ -1306,6 +1330,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);
