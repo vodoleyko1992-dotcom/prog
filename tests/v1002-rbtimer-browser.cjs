@@ -69,6 +69,7 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     // 10.0.3: Alt+R на странице игры → окно выбора файла → таймеры героя (команда rbtImport в фон)
     {
       const t0 = Math.floor(Date.now() / 1000) - 3600, f = [0, 600].map((dt, i) => JSON.stringify({ t: t0 + dt, st: { l2dop_rb_9: ['Lokness', 70, i === 0, 'raid'] } })).join('\n');
+      await p.bringToFront(); // 20.4: нативный выбор файла по хоткею проверяем в активной вкладке.
       const [fc] = await Promise.all([p.waitForEvent('filechooser', { timeout: 5000 }), p.keyboard.press('Alt+KeyW')]);
       await fc.setFiles({ name: 'rb-poll.jsonl', mimeType: 'application/json', buffer: Buffer.from(f) });
       await p.waitForTimeout(500);
@@ -114,6 +115,7 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
       const t0 = Math.floor(now / 1000) - 9 * 3600, snaps = [0, 600, 1200, 8 * 3600 + 1200, 8 * 3600 + 1800].map((dt, i) => JSON.stringify({ t: t0 + dt, st: { l2dop_rb_9: ['Lokness', 70, !(i >= 2 && i <= 3), 'raid'], l2dop_rb_25051: ['Rahha', 65, false, 'raid'] } })).join('\n');
       // 10.0.3: Alt+R в меню открывает то же окно загрузки, что кнопка «📥 Загрузить таймеры из файла слежки»
       await page.evaluate(() => document.querySelector('nav button[data-tab="overview"]')?.click());
+      await page.bringToFront();
       const [fc] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }), page.keyboard.press('Alt+KeyW')]);
       const foot = await page.$eval('footer', e => e.innerText), rbTab = await page.$eval('#tab-rb', e => e.classList.contains('act'));
       if (!/Alt\+W\s*таймеры/.test(foot) || !rbTab) { console.error('FAIL alt+r menu', JSON.stringify({ foot, rbTab })); process.exit(1); }

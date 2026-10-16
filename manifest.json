@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.3",
-  "description": "L2wap Bot 20.3 — квестовые цели на точке, единые задачи и автозаточка",
+  "version": "20.4",
+  "description": "L2wap Bot 20.4 — навыки Warlord и правильные роли боя",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.3"
+  "version_name": "20.4"
 }
