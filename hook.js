@@ -72,7 +72,8 @@
   const parse = (txt, ct) => { const o = raw(txt, ct); return o == null ? null : redact(o); };
   // v5.6: список мобов локации (/game/map/spawns → nearbySpawns) — целиком, но кратко: [id, тип, имя, ур.]. Метки карты больше
   // не несут тип моба (остались только РБ), а redact режет массивы до 8 — бот не видел чемпионов вовсе
-  const spawns = o => { try { const a = o && Array.isArray(o.nearbySpawns) ? o.nearbySpawns : null;
+  // 16.10: /game/map/sync отдаёт список внутри around; после навигации без него терялись типы чемпионов главы.
+  const spawns = o => { try { const a = o && Array.isArray(o.nearbySpawns) ? o.nearbySpawns : Array.isArray(o?.around?.nearbySpawns) ? o.around.nearbySpawns : null;
     return a ? a.slice(0, 3000).map(x => [String(x.id || ''), String(x.kind || ''), String(x.name || '').slice(0, 60), +x.level || 0, +x.distance || 0,
       // 10.0.5 (обновление игры 13.10: FA с чемпионов): цвет чемпиона championTier — blue/orange/red (шанс 1 FA 10/20/60 %)
       x.kind === 'champion' ? String(x.championTier || '').slice(0, 10) : '',

@@ -15,7 +15,8 @@ function pageItems() {
   return [...document.querySelectorAll('#map-mob-list a.l2-map-mob-link')].map(a => {
     const id = (a.getAttribute('href') || '').match(/spawnId=([^&#]+)/)?.[1] || '';
     const text = a.textContent.trim(), m = text.match(env.LV_RE);
-    return { a, id, text, name: m ? m[2].trim() : text, lvl: m ? +m[3] : 0,
+    const row = a.closest?.('li')?.textContent || text, stat = key => { const v = row.match(new RegExp('\\b' + key + '\\s+([0-9][0-9 \\u00a0\\u202f]*)', 'i')); return v ? Number(v[1].replace(/\s/g, '')) : 0; };
+    return { a, id, text, hp: stat('HP'), exp: stat('EXP'), name: m ? m[2].trim() : text, lvl: m ? +m[3] : 0,
              quest: a.classList.contains('l2-map-mob-link--quest-target') || env.QUEST.test(text),
              champ: env.isChamp(text), boss: env.isBoss(text) || env.isRaidId(id) || a.classList.contains('l2-map-mob-link--raid') || EPIC_GUARD.test(text) || /--epic_guard/.test(a.className) };
   }).filter(x => x.id);
@@ -81,12 +82,13 @@ function markerTypes() {
 const FA_P = { blue: 0.1, orange: 0.2, red: 0.6 }, FA_MOB = 0.01, FA_BELOW = 5;
 const TIER_RU = { blue: 'синий', orange: 'оранжевый', red: 'красный' };
 function champTier(id, a, unknown = 'blue') {      // в бою неизвестный цвет не разрешаем автоматически как синий
-  const t = env.NET_SPAWNS?.tier?.[id];
+  const li = a?.closest?.('li'), m = (li?.className || '').match(/l2-map-mob-item--champion-(\w+)/);
+  if (m) return m[1];
+  const t = Date.now() - (env.NET_SPAWNS?.t || 0) < 10 * 60000 ? env.NET_SPAWNS?.tier?.[id] : '';
   if (t) return t;
   if (/^champ_r_/i.test(id || '')) return 'red';
   if (/^champ_o_/i.test(id || '')) return 'orange';
-  const li = a?.closest?.('li'), m = (li?.className || '').match(/l2-map-mob-item--champion-(\w+)/);
-  return m ? m[1] : unknown;
+  return unknown;
 }
 // шанс 1 FA с этого моба (0 — моб ниже героя больше чем на 5 ур.)
 // 10.0.5 (игрок 13.10 00:32: «поставь фарм мобов −5 лвл максимум, иначе не падают ФА»): ниже героя больше чем на 5 ур. не бьём никогда —
@@ -434,7 +436,7 @@ function champSkip(r, why) {                       // в журнал — раз
   const k = (r.tier || 'blue') + ':' + (r.lvl || 0);
   if (Date.now() - (skipRecT[k] || 0) < 600000) return;
   skipRecT[k] = Date.now();
-  env.rec('B', 'чемпионы', `${r.name || 'чемпион'} (${r.lvl || '?'}, ${TIER_RU[r.tier] || 'синий'}): пропускаю — ${why}`);
+  env.rec('B', 'чемпионы', `${r.name || 'чемпион'} (${r.lvl || '?'}, ${TIER_RU[r.tier] || 'неизвестный цвет'}): пропускаю — ${why}`);
 }
 // темп обычного фарма этой зоны: EXP/с (медиана видов зоны по замерам) и время на моба, с — для цены чемпиона (champs.limitS)
 function farmRate() {
@@ -461,15 +463,17 @@ function candidates(rules, sig, types, limitIdx) {
     const c = env.rt.spawns?.[id] || (onPage[id]?.name && onPage[id].lvl ? [onPage[id].name, onPage[id].lvl] : null);
     const minL = env.campChampMin();
     // Тип сервера не зависит от порога задания главы: иначе теряется запрет цвета.
-    const champ = types[id] === 'champion';
+    // 16.10: после reload/истечения NET карта всё ещё доказывает тип видимой строки.
+    const champ = types[id] === 'champion' || !!onPage[id]?.champ;
     const campEligible = champ && !(minL && c && c[1] && c[1] < minL);
     if (!c && !champ) return;                  // имя неизвестно и не чемпион — оценить нельзя
     const name = c ? c[0] : '', lvl = c ? c[1] : 0;
     const r = { id, idx, name, lvl, champ, boss: !!name && env.isBoss(name),
                 quest: !!name && env.isQuestName(name, sig.quest) };
     if (champ) {
-      r.tier = champTier(id); r.fa = faChance(true, r.tier, lvl, hl0);
-      r.hp = env.NET_SPAWNS?.hp?.[id] || 0; r.exp = env.NET_SPAWNS?.exp?.[id] || 0;
+      r.tier = champTier(id, onPage[id]?.a, ''); r.fa = faChance(true, r.tier, lvl, hl0);
+      const fresh = Date.now() - (env.NET_SPAWNS?.t || 0) < 10 * 60000;
+      r.hp = onPage[id]?.hp || (fresh ? env.NET_SPAWNS?.hp?.[id] : 0) || 0; r.exp = onPage[id]?.exp || (fresh ? env.NET_SPAWNS?.exp?.[id] : 0) || 0;
     }
     // моб на 7+ ур. выше: атака почти не попадает (лог 20:20: Bloody Banshee 74 при герое 41 — атака 1–2 урона,
     // бой 26 с вместо 3). Такие — не цели, даже если чемпионы. Цели квеста — до +10
@@ -478,7 +482,9 @@ function candidates(rules, sig, types, limitIdx) {
     // (глава «Champions · Lv.24» при герое 31 — все чемпионы 24–27 отсекались окном lvlBelow 3)
     // 7.2: моб-источник ресурса/рецепта (правило farm) — как цель квеста: зона выбрана под него (до −10 ур.), окно уровней не отсекает
     const farmT = !!name && rules.some(x => x.farm && x.name === name.toLowerCase());
-    const qLike = r.quest || farmT || (campEligible && env.campActive() && env.campChampOpen());
+    const chapter = campEligible && env.campActive() && env.campChampOpen();
+    if (chapter) r.chapterChamp = true;
+    const qLike = r.quest || farmT || chapter;
     // v4.58: «мягкое окно» — улететь в зону своего уровня не вышло, а тут все выше: 20 мин бьём самых слабых из тех, что есть
     const relax = relaxOk(env.rt.lvlRelax) ? env.rt.lvlRelax.up : 0;
     if (hl && lvl && lvl > hl + Math.max(qLike ? 10 : 0, env.cfg.lvlAbove ?? 15, relax)) return;
@@ -507,9 +513,9 @@ function candidates(rules, sig, types, limitIdx) {
       const off = env.champs?.tierOff?.(r) || env.champs?.held?.(r);
       if (off) { champSkip(r, off); return; }
     }
-    if (champ && env.champs && (!qLike || env.champs.valueMode?.(r))) {
-      const j = env.champs.judge(r);
-      Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
+    if (champ && env.champs && (!qLike || env.champs.valueMode?.(r) || ((r.quest || chapter) && lvl > 0 && hl - lvl >= 20))) {
+      const j = env.champs.judge(r, r.quest || chapter);
+      Object.assign(r, { chOk: j.ok, chProbe: !!j.probe, chQuestQuick: !!j.questQuick, chEta: j.eta || 0, chLim: j.lim || 0, chWhy: j.why || '' });
       if (!j.ok) { champSkip(r, j.why); return; }
     }
     // 10.0.7 (лог 13.10 13:07–13:11, игрок 03:15: «некоторые мобы научились убивать бафф, таких избегаем»): моб снимает баффы
@@ -579,7 +585,11 @@ function champEntryOff(c) {
   if (c.rb || !c.champ) return null;
   const min = env.campChampMin?.() || 0;
   const chapter = env.campActive() && env.campChampOpen() && !(min && c.lvl && c.lvl < min);
-  return env.champs?.tierOff?.(c, true) || (!c.quest && !chapter && (env.champs?.tierOff?.(c) || env.champs?.held?.(c))) || null;
+  if (c.chapterChamp && !chapter) return 'цель по чемпионам этой главы уже не активна';
+  const required = chapter || (c.quest && (env.isQuestName?.(c.name) ?? true));
+  if (c.chQuestQuick && !env.champs?.questQuick?.({ ...c, quest: required }, required)) return 'условия короткой квестовой пробы изменились';
+  const quickQuest = (c.quest || chapter) && c.lvl > 0 && (env.heroLvl?.() || env.rt?.lvl || 0) - c.lvl >= 20;
+  return env.champs?.tierOff?.(c, true) || (quickQuest && env.champs?.held?.(c)) || (!c.quest && !chapter && (env.champs?.tierOff?.(c) || env.champs?.held?.(c))) || null;
 }
 async function attackSpawn(c, label, opt = {}) {
   // 15.10: рейд передаёт свою отмену; смена режима/ручная команда во время листания не открывает прежнюю цель.

@@ -145,9 +145,21 @@ function valueJudge(c) {
   return { ok, eta: Math.ceil(eta), lim, hard: isHard(c), probe: !d.known,
     why: `окупаемость: награда ≈${Math.round(value)} с фарма; бой ≈${Math.ceil(eta)} с + Cancel ≈${cancel} с + переход ≈${Math.ceil(travel)} с + резерв ${Math.ceil(reserve)} с → ${ok ? 'выгодно' : 'невыгодно'}` };
 }
+// Узкая проба низкоуровневой квестовой цели: риск Cancel разрешён ради задания.
+// Разрыв уровней не доказывает один удар; реальный бой ограничен десятью секундами.
+function questQuick(c, required = false) {
+  if (env.cfg?.champLeave === false) return null;
+  if (!(required || c?.quest) || c?.rb || !['blue', 'orange'].includes(c?.tier) || tierOff(c) || held(c) || isHard(c)) return null;
+  if (env.cfg?.champCancel === 'never' && c.tier === 'orange') return null;
+  const lvl = L();
+  if (!(lvl > 0 && c.lvl > 0 && c.lvl <= lvl - 20 && Number.isFinite(c.hp) && c.hp > 0)) return null;
+  return { ok: true, questQuick: true, probe: true, lim: 10,
+    why: 'квестовый чемпион на 20+ уровней ниже: проба до 10 с; риск снятия баффов разрешён ради квеста' };
+}
 // решение до боя: { ok, probe, eta, lim, why }
-function judge(c) {
+function judge(c, required = false) {
   { const off = tierOff(c); if (off) return { ok: false, off: true, lim: 0, why: off }; }
+  const quick = questQuick(c, required); if (quick) return quick;
   if (valueMode(c)) {
     const h = held(c); if (h) return { ok: false, lim: 0, why: h };
     return valueJudge(c);
@@ -172,6 +184,7 @@ function fleeCheck(ctx, me, mob, sec) {
   const done = Math.max(0, (ctx.chHp0 || mob.max) - mob.cur), left = mob.cur / mob.max, lim = ctx.chLim || T_DEF[ctx.tier] || T_DEF.blue;
   const hpMin = isHard(ctx) ? 50 : 30;             // 10.0.8: у усиленных 73+ атака ×4 — уходим раньше
   if (me && me.pct < hpMin && left > 0.35) return { kind: 'danger', why: `моё HP ${Math.round(me.pct)} %${isHard(ctx) ? ' (чемпион 73+, атака ×4)' : ''}, у чемпиона ${Math.round(left * 100)} %` };
+  if (ctx.chQuestQuick && sec >= 10) return { kind: 'slow', why: 'квестовая проба 10 с завершена — чемпион ещё жив' };
   if (sec >= 8 && done < mob.max * 0.03) return { kind: 'weak', why: `не пробиваю: за ${Math.round(sec)} с снято ${Math.round(done / mob.max * 100)} %` };
   const eta = sec + mob.cur / Math.max(done / sec, 1);
   if (sec >= (valueMode(ctx) ? 6 : 10) && eta > lim * (valueMode(ctx) ? 1 : 1.3) && left > 0.25) return { kind: 'slow', why: `бой ≈${Math.round(eta)} с при пределе ${lim} с — невыгодно против обычного фарма` };
@@ -204,10 +217,11 @@ async function learn(ctx, outcome, dealt, sec) {
   holds[actor()]=V;
   if(measurement)cohorts[measurement.key]=M;
   const legacy=rootM.legacy || (!rootM.context && (rootM.dps||rootM.dpsH||rootM.v) ? {dps:rootM.dps,dpsH:rootM.dpsH,v:rootM.v,st:rootM.st} : undefined);
-  await env.setRt({champLearn:{...rootM,...(measurement?M:{}),context:measurement?.key||rootM.context,cohorts,holds,...(legacy?{legacy}:{})}});
+  const saved = await env.setRt({champLearn:{...rootM,...(measurement?M:{}),context:measurement?.key||rootM.context,cohorts,holds,...(legacy?{legacy}:{})}});
+  if (saved?.ok === false) { ctx.chLearnDone = false; return null; }
   return M;
 }
 const tierRu = t => TIER_RU[t] || TIER_RU.blue;
- return { valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
+ return { questQuick, valueMode, valueJudge, FA_P, FA_MOB, T_DEF, TIER_RU, V_HOLD, HARD_LVL, DEF_K, CANCEL_P, CANCEL_MAX, CANCEL_GAP, HIT_S, HIT_ACC, isHard, tKey, tierRu, observe, noteDamage, powNow, grown, dpsOn, cancelCost, cancelBlock, limitS, judge, held, tierOff, TIER_CFG, TIER_DEF, fleeCheck, learn };
  };
 })(globalThis);

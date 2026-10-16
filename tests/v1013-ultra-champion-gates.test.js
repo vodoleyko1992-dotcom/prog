@@ -14,7 +14,7 @@ function fixture() {
       champBlue: true, champOrange: false, champRed: false, champMinLvl: 20,
       champCancel: 'paid', noCancelMobs: true, priority: '[все]', searchChamp: false, champFa: true },
     rt: { lvl: 74, rbDps: 1000, spawns: { champ_o_test: ['Buffalo Slave', 72], ordinary: ['Safe', 74] } },
-    NET_SPAWNS: { tier: { champ_o_test: 'orange' } }, PAGE_SIZE: 15, on: true,
+    NET_SPAWNS: { t: Date.now(), tier: { champ_o_test: 'orange' } }, PAGE_SIZE: 15, on: true,
     heroLvl: () => env.rt.lvl, setRt: async patch => Object.assign(env.rt, patch), rec() {}, setStatus() {},
     campActive: () => false, campChampOpen: () => false, campChampMin: () => 0, campMobOpen: () => [], campOpen: () => [],
     isRaidId: () => false, isBoss: () => false, isQuestName: () => false, isChamp: () => false,
