@@ -26,7 +26,8 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  // Чтение ручного перехода запоминается и на паузе, управление остаётся выключено.
  const before=visits.length;await delay(800);assert.equal(visits.length,before);
  await h.g.p.reload();await h.click('start');await until(()=>h.g.core('on && tabOwner'));
- await h.g.p.evaluate(()=>{fetch('/game/story-quests/dion-campaign').catch(()=>{});});
+ // 20.4: Start может перейти на страницу главы между проверками. Повторяем только безопасное чтение в готовом документе.
+ await until(()=>h.g.p.evaluate(()=>{if(document.readyState!=='complete')return false;fetch('/game/story-quests/dion-campaign').catch(()=>{});return true;}));
  await until(async()=>(await h.get(['rt'])).rt.campaign?.targets?.[0]?.name === 'Tumran Bugbear',20000);await h.click('stop');
  assert.ok(!visits.includes('/starter-story-quest.html'));assert.deepEqual(h.errors,[]);console.log('PASS MV3 next chapter, Stop, reload, no old quest revisit');
  }catch(e){console.error('DIAG',JSON.stringify({visits,chapter,state:await h.get(['on','rt']).then(x=>({on:x.on,campaign:x.rt.campaign,url:x.rt.campaignUrl,dion:x.rt.dionCampaign,status:x.rt.status,errors:x.rt.errors}))}));throw e;}finally{await h.ctx.close()}})().catch(e=>{console.error(e);process.exitCode=1});
