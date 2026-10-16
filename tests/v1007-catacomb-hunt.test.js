@@ -59,6 +59,8 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
         NET_ERR: err ? { t: Date.now() + 1000, err, path: '/game/battle/hunt-continue' } : { t: 0 }, catGo: async () => { env.cat = (env.cat || 0) + 1; return 'cat'; },
         fire: () => { env.fired = true; if (goesTo === 'dungeon') { loc.pathname = '/dungeon.html'; loc.href = 'https://l2wap.com/dungeon.html?dungeonId=necropolis_of_devotion'; } else { loc.href = 'https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_devotion_090'; } return true; } };
       const sb = { env, location: loc, Date, String, console, dungeonBattle: () => /^sdms_/i.test(new URLSearchParams(loc.search).get('spawnId') || '') }; sb.globalThis = sb;
+      // 20.6: узкий стенд nextFight включает реальный фильтр цепочки Cancel.
+      vm.runInNewContext(MOB.slice(MOB.indexOf('function dungeonCancelBlocked()'), MOB.indexOf('async function nextFight(ctx)')), sb);
       vm.runInNewContext(`this.nf = async () => {\n${block}\n return 'fallthrough'; };`, sb);
       const r = await sb.nf(); return { r, logs, env };
     };
