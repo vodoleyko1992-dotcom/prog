@@ -486,6 +486,8 @@
   <div id="clsBox" class="camp">Класс ещё не определён — запусти бота на странице боя</div>
   <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии, ветке и панели</option><option value="mage_summoner">Маг — заклинания (Warlock: с котом)</option><option value="fighter">Воин — удары, энергия, станы</option></select></label>
   <div class="hint">«Авто»: бот узнаёт профессию из ответов игры (и смену саба), по ней выбирает профиль. Незнакомая профессия — по ветке класса (mystic → маг, fighter → воин), а если и она неизвестна — по панели: заклинания «Маг. атака» → маг. Дальше бот сам распознаёт роли скиллов на панели (удары, баффы, лечение, спойл, призыв), каждый новый удар сначала пробует на «толстом» мобе и замеряет, а потом ставит в ротацию по замеру. Так подхватывается любой класс: спойлер, Дестр, Sorcerer, SH.</div>
+  <label data-cls="fighter"><input id="warlordAggro" type="checkbox"> Warlord: агро перед массовой атакой</label>
+  <div class="hint" data-cls="fighter">Provoke → Whirlwind или Thunder Storm, один сбор за бой с обычным мобом. Только с пикой, HP от75% и MP на оба навыка; готовую группу повторно не собирает.</div>
   <h4>📒 Память боя</h4>
   <div id="fightBox" class="box">Боёв с анализом ещё нет</div>
   <div class="row"><button id="fightMemReset">🧹 Забыть память боя этого класса</button></div>
