@@ -52,7 +52,7 @@ const C = load('modules/champs.js', env);
   // 5. проводка: hook (HP/EXP), mobfarm (оценка, темп зоны), combat (отход, учёт, без «не по зубам» по имени вида), карта раз в 20
   assert.match(read('hook.js'), /x\.kind === 'champion' \? \+x\.maxHp \|\| 0 : 0, x\.kind === 'champion' \? \+x\.rewardExp \|\| 0 : 0/);
   const mf = read('modules/mobfarm.js'), cb = read('modules/combat.js'), ct = read('content.js');
-  assert.match(mf, /const j = env\.champs\.judge\(r\);/); assert.match(mf, /if \(!j\.ok\) \{ champSkip\(r, j\.why\); return; \}/);
+  assert.match(mf, /const j = env\.champs\.judge\(r, r\.quest \|\| chapter\);/); assert.match(mf, /if \(!j\.ok\) \{ champSkip\(r, j\.why\); return; \}/);
   assert.match(cb, /const fl = env\.champs\.fleeCheck\(ctx, me, mob, \(Date\.now\(\) - t0\) \/ 1000\);/);
   // 10.0.22: обычный вид оценивается только по достоверной серии ходов; чемпион сохраняет отдельную ветку.
   // 15.10: обучаем одиночную силу по HP чемпиона; дополнительный AoE остаётся отдельной аналитикой.

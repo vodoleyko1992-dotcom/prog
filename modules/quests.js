@@ -472,7 +472,9 @@ function campaignState() {
     if (rbM) return { name: rbM[1].trim(), rb: true, lvl: +(li.textContent.match(/Lv\.?\s*(\d+)/i)?.[1] || 0), done: pr ? +pr[1] : 0, total: pr ? +pr[2] : 1,
                       ok: !!li.querySelector('.l2-starter-story-done') || /✓/.test(li.textContent) || !!(pr && +pr[1] >= +pr[2]),
                       loc: (li.querySelector('small')?.textContent || '').replace(/^Локация:\s*/i, '').trim(), tp: tp?.dataset.questTeleportId || tp?.dataset.questTransportId || '' };
-    return { name, lvl: +(li.textContent.match(/Lv\.?\s*(\d+)/i)?.[1] || 0), done: pr ? +pr[1] : 0, total: pr ? +pr[2] : 0,
+    // Общая цель главы бывает строкой списка; имя конкретного Champion-моба не становится общей целью.
+    const genericChamp = /^(?:чемпионы|чемпіони|champions)(?:\s*[·:]?\s*(?:Lv\.?|ур\.?)\s*\d+\s*\+?)?$/i.test(name);
+    return { name, ...(genericChamp ? { objective: true, champ: true, minLvl: +(name.match(/(?:Lv\.?|ур\.?)\s*(\d+)\s*\+/i)?.[1] || 0) } : {}), lvl: +(li.textContent.match(/Lv\.?\s*(\d+)/i)?.[1] || 0), done: pr ? +pr[1] : 0, total: pr ? +pr[2] : 0,
              ok: !!li.querySelector('.l2-starter-story-done') || (pr && +pr[1] >= +pr[2]),
              loc: (li.querySelector('small')?.textContent || '').replace(/^Локация:\s*/i, '').trim(), tp: tp?.dataset.questTeleportId || tp?.dataset.questTransportId || '' };
   });

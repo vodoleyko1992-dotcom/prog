@@ -1,0 +1,34 @@
+'use strict';
+// 16.10: глава «Чемпионы 0/12»: sync приносит типы внутри around, не в корне.
+const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
+const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+const hook = read('hook.js'), start = hook.indexOf('const spawns = o =>'), end = hook.indexOf('\n\n', start);
+const parse = vm.runInNewContext(hook.slice(start, end) + '\nspawns;');
+const plain = x => JSON.parse(JSON.stringify(x));
+const champion = { id: 'dense_chapter', kind: 'champion', name: 'Leto Lizardman Soldier', level: 37, distance: 12, championTier: 'blue', maxHp: 27384, rewardExp: 30450 };
+const expected = [[champion.id, 'champion', champion.name, 37, 12, 'blue', 27384, 30450]];
+assert.deepEqual(plain(parse({ nearbySpawns: [champion] })), expected, 'старый корневой feed сохранён');
+assert.deepEqual(plain(parse({ around: { nearbySpawns: [champion] } })), expected, 'nested sync сохраняет весь контракт строки');
+assert.deepEqual(plain(parse({ nearbySpawns: [], around: { nearbySpawns: [champion] } })), [], 'явный пустой корневой список имеет приоритет');
+assert.equal(parse({ around: { nearbySpawns: null } }), undefined);
+assert.equal(parse(null), undefined);
+assert.equal(parse({ around: { nearbySpawns: { id: 'wrong' } } }), undefined);
+assert.equal(parse({ around: { nearbySpawns: Array(3001).fill(champion) } }).length, 3000, 'лимит сообщений сохранён');
+const fixture = JSON.parse(read('kb/raw/map-sync.json')).data;
+const rows = plain(parse(fixture));
+assert.ok(rows.some(r => r[0] === 'dense_29717' && r[1] === 'champion' && r[2] === 'Buffalo Slave'), 'actual server fixture распознан');
+const ctx = { console, Date, document: { querySelectorAll: () => [] } };
+vm.runInNewContext(read('modules/mobfarm.js'), ctx);
+const env = { rt: { spawns: {} }, NET_SPAWNS: null, tabIdle: false, isRaidId: () => false, rec: () => {}, $q: () => null };
+env.setRt = async patch => Object.assign(env.rt, patch);
+const mf = ctx.L2V7Factories.mobfarm(env);
+(async () => {
+  await mf.netSpawns(parse({ around: { nearbySpawns: [champion] } }));
+  assert.equal(env.NET_SPAWNS.kind.dense_chapter, 'champion');
+  assert.equal(env.NET_SPAWNS.tier.dense_chapter, 'blue');
+  assert.equal(env.NET_SPAWNS.hp.dense_chapter, 27384);
+  assert.equal(env.NET_SPAWNS.exp.dense_chapter, 30450);
+  assert.equal(mf.markerTypes().dense_chapter, 'champion', 'после reload новый sync восстанавливает тип для candidates');
+  assert.deepEqual(plain(env.rt.spawns.dense_chapter), [champion.name, 37]);
+  console.log('PASS v1029-map-sync-champion-feed: plain/nested/empty/malformed/cap/server fixture/NET_SPAWNS');
+})().catch(e => { console.error(e); process.exitCode = 1; });

@@ -1,0 +1,10 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(__dirname+'/../modules/combat.js','utf8');
+function fixture(learn){let timeout,cleared=false;const box={env:{champs:{learn}},setTimeout(fn,ms){assert.equal(ms,1200);timeout=fn;return 1},clearTimeout(){cleared=true}};vm.runInNewContext(source.slice(source.indexOf('async function champQuickExitCommit('),source.indexOf('async function battle()'))+';this.run=champQuickExitCommit',box);return{run:box.run,expire:()=>timeout(),cleared:()=>cleared};}
+test('short champion hold waits for persistence before leave continuation',async()=>{let resolve;const f=fixture(()=>new Promise(r=>resolve=r));let done=false;const p=f.run({},'slow',5,10).then(x=>{done=true;return x});await Promise.resolve();assert.equal(done,false);resolve({});assert.equal(await p,true);assert.equal(f.cleared(),true)});
+test('rejected or failed persistence does not claim a durable hold',async()=>{for(const learn of [async()=>null,async()=>{throw Error('storage')}]){const f=fixture(learn);assert.equal(await f.run({},'danger',5,10),false)}});
+test('hung persistence has bounded wait so emergency leave can continue',async()=>{const f=fixture(()=>new Promise(()=>{}));const p=f.run({},'danger',5,10);f.expire();assert.equal(await p,false);assert.equal(f.cleared(),true)});
+test('short probe awaits hold and rechecks actor, owner and document before native leave',()=>{const b=source.slice(source.indexOf('if (ctx.chQuestQuick) {'),source.indexOf('env.fire(leave);',source.indexOf('if (ctx.chQuestQuick) {')));assert.match(b,/await champQuickExitCommit/);assert.match(b,/env.tabOwner === false/);assert.match(b,/before !== env.battleExitContext/);assert.match(b,/beforeUrl !== location.pathname/);});
+
+test('short probe checks actor again after leave wait and learn before target cleanup',()=>{assert.match(source,/const ended = await env.waitFor\(\(\) => !env.isBattle\(\), 8000, 150\);\s*if \(ctx.chQuestQuick && \(!env.on \|\| env.tabOwner === false \|\| quickActor !== env.battleExitContext\?\.\(\)\)\) return;/);});

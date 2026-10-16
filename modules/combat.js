@@ -1027,6 +1027,15 @@ async function rbTryExit(ctx, me, mob, v, ep) {
   return null;
 }
 
+// 16.10: навигация уничтожает продолжение; hold короткой пробы пишем до native leave.
+// Сбой storage не должен бесконечно удерживать героя в опасном бою.
+async function champQuickExitCommit(ctx, outcome, dealt, sec) {
+  let timer;
+  try { return !!(await Promise.race([env.champs.learn(ctx, outcome, dealt, sec), new Promise(resolve => { timer = setTimeout(() => resolve(null), 1200); })])); }
+  catch (e) { return false; }
+  finally { clearTimeout(timer); }
+}
+
 async function battle() {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.setStatus('Бой: загрузка');
@@ -1148,12 +1157,14 @@ async function battle() {
   // 10.0.5: чемпион — предел боя (его цена в секундах обычного фарма, mobfarm → champs.judge) и HP на входе — для отхода (champs.fleeCheck)
   if (ctx.champ) { ctx.lvl = ctx.lvl || (same && t.lvl) || 0; ctx.chHp0 = mob0?.cur || mob0?.max || 0; ctx.heroLvl0 = env.heroLvl() || env.rt.lvl || 0;   // 10.0.10: уровень героя на входе — для вердикта (champs.learn)
     ctx.chLim = (same && t.lim) || env.champs?.limitS({ tier: ctx.tier, lvl: ctx.lvl, exp: 0 }) || 40; }
-  if (ctx.champ && !isRb && env.champs?.valueMode?.(ctx)) {
+  const chapterChamp = ctx.champ && env.campActive() && env.campChampOpen() && ctx.lvl >= (env.campChampMin?.() || 0);
+  const quickQuest = (ctx.questKill || chapterChamp) && ctx.lvl > 0 && (env.heroLvl() || env.rt.lvl || 0) - ctx.lvl >= 20;
+  if (ctx.champ && !isRb && (env.champs?.valueMode?.(ctx) || quickQuest)) {
     // Экономический допуск с карты не переносим на следующего одноимённого моба цепочки.
     const fresh = same && ['map', 'dungeon'].includes(cameVia) && Date.now() - (t.valueT || 0) < 60000;
-    const j = env.champs.judge({ ...ctx, hp: mob0?.max || 0, exp: fresh ? t.exp : 0, fa: fresh ? t.fa : undefined });
+    const j = env.champs.judge({ ...ctx, hp: mob0?.max || 0, exp: fresh ? t.exp : 0, fa: fresh ? t.fa : undefined }, ctx.questKill || chapterChamp);
     if (!j.ok) { env.rec('B', 'чемпионы', `${ctx.name}: ${j.why} — на карту`); await env.setRt({ target: null }); return env.toMap(); }
-    ctx.chLim = j.lim;
+    ctx.chLim = j.lim; ctx.chQuestQuick = !!j.questQuick;
   }
   // v5.5.1: «Охотиться дальше» сам подсовывает моба — если этот вид уже «не по зубам» (урон ≈0), не бьём его (лог 08.10 16:31–16:38:
   // после конца «Бонуса новачка» урон упал до 1–3, бот 3 раза подряд заходил к Tracker Skeleton Leader и погиб)
@@ -1473,13 +1484,23 @@ async function battle() {
       const fl = env.champs.fleeCheck(ctx, me, mob, (Date.now() - t0) / 1000);
       const leave = fl && env.$q('#battle-back-map');
       if (fl && env.shown(leave)) {
+        const quickActor = ctx.chQuestQuick ? env.battleExitContext?.() : null;
         ctx.chOut = true;
         const sec = (Date.now() - t0) / 1000, dealt = Math.max(0, (ctx.chHp0 || mob.max) - mob.cur);
         env.rec('B', 'чемпионы', `${ctx.name} (${ctx.lvl || '?'}, ${env.champs.tierRu(ctx.tier)}): ⚠ ${fl.why} — ухожу из боя, снято ${dealt} из ${mob.max} за ${sec.toFixed(0)} с; снова попробую, когда вырастет сила`);
+        if (ctx.chQuestQuick) {
+          const before = env.battleExitContext?.(), beforeUrl = location.pathname + location.search;
+          const saved = await champQuickExitCommit(ctx, fl.kind, dealt, sec);
+          if (!env.on || env.tabOwner === false || !env.isBattle() || before !== env.battleExitContext?.() || beforeUrl !== location.pathname + location.search) return;
+          if (!saved) env.rec('B', 'чемпионы', 'Пауза после короткой пробы не подтверждена в памяти; штатный выход не задерживаю');
+        }
         if (ctx.spawnId) env.leaveMark?.(ctx.spawnId, ctx.name);   // spawnId известен точно — иначе «вернуться в бой» не к кому
         env.fire(leave);
-        if (await env.waitFor(() => !env.isBattle(), 8000, 150)) {
-          await env.champs.learn(ctx, fl.kind, dealt, sec);
+        const ended = await env.waitFor(() => !env.isBattle(), 8000, 150);
+        if (ctx.chQuestQuick && (!env.on || env.tabOwner === false || quickActor !== env.battleExitContext?.())) return;
+        if (ended) {
+          if (!ctx.chQuestQuick || !ctx.chLearnDone) await env.champs.learn(ctx, fl.kind, dealt, sec);
+          if (ctx.chQuestQuick && (!env.on || env.tabOwner === false || quickActor !== env.battleExitContext?.())) return;
           await env.setRt({ target: null, sinceDeep: 999 });
           return;
         }
@@ -2147,6 +2168,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

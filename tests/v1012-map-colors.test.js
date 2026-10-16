@@ -7,7 +7,7 @@ let quest=false,campaign=false;
 const env={cfg:{priority:'[квест]\n[все]',searchChamp:true,searchQuest:true,champFa:true,champBlue:true,champOrange:false,champRed:false,champMinLvl:0,
   lvlBelow:5,lvlAbove:5,lvlMin:1,lvlMax:99,noCancelMobs:false},
   rt:{lvl:74,spawns:{champ_o_goddard_0:['Buffalo Slave',72],dense_ordinary:['Buffalo Slave',72],dense_blue:['Buffalo Slave',72]}},
-  PAGE_SIZE:15,NET_SPAWNS:{tier:{champ_o_goddard_0:'orange',dense_blue:'blue'}},
+  PAGE_SIZE:15,NET_SPAWNS:{t:Date.now(),tier:{champ_o_goddard_0:'orange',dense_blue:'blue'}},
   heroLvl:()=>74,isRaidId:()=>false,isBoss:()=>false,isQuestName:()=>quest,
   campActive:()=>campaign,campChampOpen:()=>campaign,campChampMin:()=>0,campMobOpen:()=>[],campOpen:()=>[],
   farmRules:()=>[{farm:true,name:'buffalo slave'}],recipeRules:()=>[],rec:()=>{},setRt:async()=>{}};
