@@ -11,7 +11,7 @@ async function test(kind){const f=await allPages({ordinaryFirst:kind==='ordinary
  }else if(kind==='empty-reset'){
   await until(()=>f.S.pages.includes(20),25000);for(let p=1;p<=20;p++)assert.ok(f.S.pages.includes(p),'просмотрена страница '+p);await delay(1200);const n=f.S.pages.length;await delay(1000);assert.equal(f.S.pages.length,n,'полный пустой проход завершён');
   await f.h.click('stop');await until(()=>f.h.g.core('!on&&!running'));f.S.champPage=8;f.S.generation++;await f.seed();await f.h.g.p.goto('https://l2wap.com/map.html');await f.start();await until(async()=>(await f.diag()).S.wins===1,25000);await f.h.click('stop');
- }else if(kind==='ordinary-first'){await until(()=>f.S.battleTargets.length>0,25000);await f.h.click('stop');assert.deepEqual(f.S.battleTargets,['known_0_0']);assert.deepEqual(f.S.pages,[1],'обычная квестовая цель выше чемпиона: без скана');
+ }else if(kind==='ordinary-first'){await until(()=>f.S.battleTargets.length>0,25000);/* 20.5: проверяем выбор до Stop: штатный выход из боя сам повторно читает карту. */assert.deepEqual(f.S.battleTargets,['known_0_0']);assert.deepEqual(f.S.pages,[1],'обычная квестовая цель выше чемпиона: без скана');await f.h.click('stop');
  }else{await until(async()=>(await f.diag()).S.wins===1,25000);await f.h.click('stop');for(let p=1;p<=12;p++)assert.ok(f.S.pages.includes(p),'просмотрена страница '+p);}
  if(kind==='red-page')assert.deepEqual(f.S.battleTargets,['dense_leto_fixture'],'красный чемпион страницы2 не выбран');
  const d=await f.diag();assert.deepEqual(d.S.routeErrors,[]);assert.deepEqual(f.h.errors,[]);console.log('PASS all pages '+kind,JSON.stringify({pages:f.S.pages,entries:d.S.entries,attacks:d.S.attacks}));

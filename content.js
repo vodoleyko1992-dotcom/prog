@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.5 — рыбалка без зависания покупки наживки =====
+// ===== L2wap Bot v20.5 — рыбалка, подтверждение баффов РБ и обнаружение обновлений =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3991,7 +3991,7 @@ addEventListener('message', e => {
   // 9.0: Маммон — экипировка (уровни плаща/пояса/тату), список кузнеца и заказ из запросов самой игры (игрок открыл страницу)
   // 10.0 (аудит ядра): игрок сменил персонажа, а память ещё прежнего (switchChar впереди) — заметки Маммона/квестов чужого героя не пишем в его rt
   const meNow = !heroNick() || rt.char === heroNick();
-  if (meNow) { L2V7Modules.quests?.campLocationNote(path, d); L2V7Modules.fishing?.paymentNote?.(path,d); L2V7Modules.mammon?.paymentNote?.(path,d); L2V7Modules.tvtshop?.onNet?.(path,d); L2V7Modules.story?.onNet?.(path,d); }
+  if (meNow) { L2V7Modules.quests?.campLocationNote(path, d); L2V7Modules.fishing?.paymentNote?.(path,d); L2V7Modules.buffs?.paymentNote?.(path,d); L2V7Modules.mammon?.paymentNote?.(path,d); L2V7Modules.tvtshop?.onNet?.(path,d); L2V7Modules.story?.onNet?.(path,d); }
   if (path === '/game/world/enter-city') warlockTownReceive(d,path);
   if (path === '/character' && d.pet && d.pet.name === rt.char && heroNick() === rt.char) L2V7Modules.warlock.noteSnapshot(d.pet);
   if (path === '/game/inventory/enchant' && d.method === 'POST' && heroNick() === rt.char && rt.enchant?.pending)
@@ -4858,7 +4858,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtComm
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },

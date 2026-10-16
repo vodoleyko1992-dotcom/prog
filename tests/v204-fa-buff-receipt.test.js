@@ -1,0 +1,39 @@
+'use strict';
+// 16.10, журнал22:29: оплаченный Dance не должен удерживать весь рейд после исчезновения эффекта.
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),url='/character/town/fast-aden-buffer/apply';
+async function fixture(){
+ const store={},now=Date.now(),box={Date,console,document:{querySelectorAll:()=>[]},sessionStorage:{setItem:(k,v)=>store[k]=v,getItem:k=>store[k]}};
+ for(const m of ['payments','buffs'])vm.runInNewContext(read('modules/'+m+'.js'),box);
+ let gets=0,posts=0;
+ const e={rt:{char:'Hero',manualKickAt:1,tbuff:{t:123,step:'fa',fa:[273,1303]}},on:true,tabOwner:true,leaseEpoch:1,cfg:{},setRt:async p=>{Object.assign(e.rt,p);return{ok:true}},rtCommit:async()=>true,autonomyMode:()=> 'raid',lease:()=>e.leaseEpoch,$q:()=>null,setStatus(){},rec(){},gameGet:async()=>{gets++;return {ok:true,json:async()=>({character:{name:e.rt.char,activeBuffs:[]}})}},gamePost:async()=>{posts++;throw Error('POST при сверке запрещён')}};
+ e.payments=box.L2V7Factories.payments(e);const B=box.L2V7Factories.buffs(e);
+ const P=await e.payments.prepare({kind:'fa-buff',key:'fa:273',quote:{amount:1,currency:'FA'},evidence:{set:'mage',ids:[273],balance:235,jobT:123,before:{273:now+24*3600000},beforeLevels:{273:1},expectedLevels:{273:1}}});
+ const d={method:'POST',status:200,paymentId:P.id,req:{set:'mage',skillId:273,expectedCostFastAden:1,expectedRevision:294666},res:{set:'mage',skillId:273,costFastAden:1,fastAdenBalance:234,character:{name:'Hero',revision:294667,activeBuffs:[]}}};
+ return{e,B,P,d,box,store,gets:()=>gets,posts:()=>posts,reload:()=>{e.payments=box.L2V7Factories.payments(e);return box.L2V7Factories.buffs(e)}};
+}
+test('точная native квитанция закрывает платёж без текущего эффекта и без GET/POST',async()=>{const f=await fixture();f.B.paymentNote(url,f.d);assert.equal(await f.B.paymentReconcile(),true);assert.equal(f.e.payments.pending(),null);assert.deepEqual(f.e.rt.tbuff.fa,[1303]);assert.equal(f.e.rt.actionPayments.history[0].confirmation.kind,'server-receipt');assert.equal(f.e.rt.actionPayments.history[0].confirmation.spent,1);assert.equal(f.gets(),0);assert.equal(f.posts(),0);});
+for(const [name,change] of Object.entries({resultSkill:d=>d.res.skillId=1323,resultSet:d=>d.res.set='greater',resultCost:d=>d.res.costFastAden=5,resultBalance:d=>d.res.fastAdenBalance=235,noResultQuote:d=>delete d.res.costFastAden,noTicket:d=>delete d.paymentId,otherTicket:d=>d.paymentId='other',otherActor:d=>d.res.character.name='Other',sameRevision:d=>d.res.character.revision=d.req.expectedRevision,missingRevision:d=>delete d.res.character.revision,badRequestRevision:d=>d.req.expectedRevision=-1,otherSkill:d=>d.req.skillId=1323,otherCost:d=>d.req.expectedCostFastAden=5,otherSet:d=>d.req.set='greater',serverError:d=>d.res.error='refused',notOK:d=>d.res.ok=false,status500:d=>d.status=500,status409:d=>d.status=409,noStatus:d=>delete d.status,transportError:d=>d.error='abort',notPOST:d=>d.method='GET'}))test('квитанция не принимается: '+name,async()=>{const f=await fixture();change(f.d);f.B.paymentNote(url,f.d);assert.equal(await f.B.paymentReconcile(),false);assert.equal(f.e.payments.pending().id,f.P.id);assert.equal(f.posts(),0)});
+test('не тот endpoint и потерянный владелец не записывают квитанцию',async()=>{const f=await fixture();f.B.paymentNote('/character/town/buffer',f.d);f.e.tabOwner=false;f.B.paymentNote(url,f.d);assert.equal(f.e.rt.faBuffReceipt,undefined);});
+test('после reload квитанция из sessionStorage работает даже при отказе /character',async()=>{const f=await fixture();f.B.paymentNote(url,f.d);delete f.e.rt.faBuffReceipt;f.e.gameGet=async()=>{throw Error('offline')};const B=f.reload();assert.equal(await B.paymentReconcile(),true);assert.equal(f.e.payments.pending(),null);});
+test('позднее подтверждение после выбора новой задачи не воскрешает старую очередь',async()=>{const f=await fixture();f.B.paymentNote(url,f.d);f.e.rt.manualKickAt=2;f.e.rt.tbuff={t:999,step:'fa',fa:[273]};f.e.on=false;assert.equal(await f.B.paymentReconcile(),true);assert.deepEqual(f.e.rt.tbuff,{t:999,step:'fa',fa:[273]});});
+test('ошибка durable flush оставляет оплату заблокированной',async()=>{const f=await fixture();f.B.paymentNote(url,f.d);f.e.rtCommit=async()=>false;assert.equal(await f.B.paymentReconcile(),false);assert.ok(f.e.payments.pending());});
+test('историческая квитанция снимает истёкшую оплату, не посылая новую',async()=>{const f=await fixture();f.P.at-=24*3600000;f.e.faBuffEvidence=async p=>{assert.equal(p.id,f.P.id);return{kind:'journal-receipt',eventKey:'saved:1',requestRevision:294666,spent:1,balance:234}};assert.equal(await f.B.paymentReconcile(),true);assert.equal(f.e.rt.actionPayments.history[0].confirmation.kind,'journal-receipt');assert.equal(f.posts(),0)});
+for(const kind of ['actor','owner','lease','payment'])test('смена '+kind+' во время чтения журнала отменяет старую сверку',async()=>{const f=await fixture();f.e.faBuffEvidence=async()=>{if(kind==='actor')f.e.rt.char='Other';if(kind==='owner')f.e.tabOwner=false;if(kind==='lease')f.e.leaseEpoch++;if(kind==='payment')f.e.rt.actionPayments.pending={...f.P,id:'other'};return{kind:'journal-receipt',eventKey:'saved:1',requestRevision:294666,spent:1,balance:234}};assert.equal(await f.B.paymentReconcile(),false);assert.equal(f.e.rt.actionPayments.history?.length||0,0);});
+test('отсутствующие исторические доказательства не запрашиваются чаще30с',async()=>{const f=await fixture();let calls=0;f.e.faBuffEvidence=async()=>{calls++;return null};await f.B.paymentReconcile();await f.B.paymentReconcile();assert.equal(calls,1);assert.ok(f.e.payments.pending());});
+for(const key of ['skillId','set','expectedCostFastAden','expectedRevision'])test('шлюз claim отклоняет неподходящий '+key,async()=>{const f=await fixture();assert.equal(f.e.payments.sent(f.P),true);assert.equal(f.e.payments.consumePermit(),true);const req={...f.d.req,[key]:key==='set'?'greater':NaN};assert.equal(f.e.payments.claimRequest({method:'POST',path:url,req}),'');assert.equal(f.e.payments.claimRequest({method:'POST',path:url,req:f.d.req}),f.P.id);assert.equal(f.e.payments.claimRequest({method:'POST',path:url,req:f.d.req}),'');});
+async function hooked(xhr=false){
+ const f=await fixture(),out=[],claims=new Map();let finish;
+ const window={alert(){},fetch:()=>new Promise(resolve=>finish=resolve),postMessage:d=>{out.push(d);if(d.__l2bot==='netStart')claims.set(d.rid,f.e.payments.claimRequest(d));else if(d.__l2bot==='net')f.B.paymentNote(d.url,{...d,paymentId:claims.get(d.rid)||''});}};
+ const response=JSON.stringify(f.d.res);
+ class X{open(){}send(){this.status=200;this.responseText=response;this.end()}addEventListener(_,cb){this.end=cb}getResponseHeader(){return'application/json'}}
+ vm.runInNewContext(read('hook.js'),{window,XMLHttpRequest:X,location:{href:'https://l2wap.com/fast-aden-buffer.html',origin:'https://l2wap.com',host:'l2wap.com'},URL,URLSearchParams,performance:{now:()=>1},console});
+ f.e.payments.sent(f.P);f.e.payments.consumePermit();
+ if(xhr){const x=new X();x.open('POST',url);x.send(JSON.stringify(f.d.req));}
+ else {const p=window.fetch(url,{method:'POST',body:JSON.stringify(f.d.req)});finish({status:200,headers:{get:()=> 'application/json'},clone:()=>({text:async()=>response})});await p;}
+ for(let i=0;i<12;i++)await Promise.resolve();
+ assert.equal(out.find(x=>x.__l2bot==='netStart').req.skillId,273);
+ assert.equal(await f.B.paymentReconcile(),true);assert.equal(f.e.payments.pending(),null);
+}
+test('настоящий hook fetch передаёт параметры request-start до native квитанции',()=>hooked());
+test('настоящий hook XHR использует ту же привязку оплаченного клика',()=>hooked(true));

@@ -51,8 +51,9 @@
     const e=p.evidence||{},expected=p.kind==='fishing'&&/^\/game\/fishing\/(?:action|buy-starter|buy-gear)$/.test(e.path||'')?e.path:
       p.kind==='cat-teleport'?'/game/catacombs/teleport':p.kind==='raid-teleport'?'/game/raid-boss/teleport':
       p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='shop'?'/game/drops-shop/buy':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
-      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':null;
+      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':p.kind==='fa-buff'?'/character/town/fast-aden-buffer/apply':null;
     if(!expected||d.path!==expected)return '';
+    if(p.kind==='fa-buff'&&(!e.set||d.req?.set!==e.set||e.ids?.length!==1||d.req?.skillId!==e.ids[0]||d.req?.expectedCostFastAden!==p.quote.amount||!Number.isSafeInteger(d.req?.expectedRevision)))return '';
     if(p.kind==='story-teleport'&&Number.isSafeInteger(d.rid)&&d.req?.targetId===p.target&&Number.isSafeInteger(d.req?.expectedRevision))nativeClaim={id:p.id,context:p.context,rid:d.rid,path:d.path,revision:d.req.expectedRevision,at:Date.now()};
     requestPermit=null;return p.id;
   }

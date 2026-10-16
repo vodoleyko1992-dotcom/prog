@@ -1,4 +1,34 @@
 const $ = id => document.getElementById(id);
+// 16.10, лог 20:38: обновление страницы не перечитывает manifest распакованного расширения в Chrome.
+// Сверяем загруженную версию с файлом; отдельная строка не исчезает от рабочего heartbeat старого ядра.
+let extensionUpdate = null, extensionUpdateCheck = null;
+async function checkExtensionUpdate() {
+  if (extensionUpdateCheck) return extensionUpdateCheck;
+  extensionUpdateCheck = (async () => {
+    const loaded = chrome.runtime.getManifest().version;
+    const response = await fetch(chrome.runtime.getURL('manifest.json'), { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+    if (!response.ok) return extensionUpdate;
+    const packaged = (await response.json()).version;
+    if (typeof packaged !== 'string' || !/^\d+(?:\.\d+){0,3}$/.test(packaged)) return extensionUpdate;
+    extensionUpdate = packaged !== loaded ? { loaded, packaged } : null;
+    const box = $('updateWarn');
+    if (box) box.hidden = !extensionUpdate;
+    if (extensionUpdate && $('updateWarnText')) $('updateWarnText').textContent =
+      `Файлы бота обновлены до v${packaged}, но Chrome ещё использует v${loaded}. Перезагрузите бот, чтобы применить обновление.`;
+    return extensionUpdate;
+  })().catch(() => extensionUpdate).finally(() => { extensionUpdateCheck = null; });
+  return extensionUpdateCheck;
+}
+async function reloadBotUpdate() {
+  if (!await checkExtensionUpdate()) return;
+  // Только явное нажатие: настройки, очереди и квитанции остаются в storage; новый фон обновит вкладки.
+  const button = $('reloadBot'); if (button) button.disabled = true;
+  try { chrome.runtime.reload(); }
+  catch (e) {
+    if (button) button.disabled = false;
+    if ($('updateWarnText')) $('updateWarnText').textContent = 'Не удалось перезагрузить бот. Откройте chrome://extensions и нажмите «Обновить» у L2wap Bot.';
+  }
+}
 // All menu runtime updates are serialized with bot updates, never rewrite stale snapshots.
 async function menuPatch(rtPatch, extra = {}) {
   const response = await Promise.race([chrome.runtime.sendMessage({ cmd: 'menuPatch', rtPatch, ...extra }),
@@ -2278,6 +2308,10 @@ chrome.storage.onChanged.addListener(ch => {
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && loadPending) loadSoon(); });
 load();
+if ($('reloadBot')) $('reloadBot').onclick = reloadBotUpdate;
+void checkExtensionUpdate();
+window.addEventListener('focus', () => { void checkExtensionUpdate(); });
+setInterval(() => { if (!document.hidden && !dockMin) void checkExtensionUpdate(); }, 30000);
 
 // ===================== v5: удобство интерфейса =====================
 // 1) разделы вкладок — сворачиваемые карточки (состояние запоминается); 2) длинные пояснения — под «ⓘ»;

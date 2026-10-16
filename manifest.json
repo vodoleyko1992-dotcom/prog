@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "L2wap Bot",
   "version": "20.5",
-  "description": "L2wap Bot 20.5 — рыбалка без зависания покупки наживки",
+  "description": "L2wap Bot 20.5 — рыбалка, подтверждение баффов РБ и обнаружение обновлений",
   "permissions": [
     "storage",
     "unlimitedStorage",
