@@ -2022,7 +2022,8 @@ const iconStem = src => (src || '').split('/').pop().replace(/\.\w+$/, '').repla
 const normalizeProfession = name => String(name || '').trim().replace(/[_\s-]+/g, ' ').replace(/\s+/g, ' ').toLowerCase();
 function combatProfileKind() {
   if (cfg.combatProfile === 'fighter' || cfg.combatProfile === 'mage_summoner') return cfg.combatProfile;
-  const normalized = normalizeProfession(rt.prof);
+  // 20.5 (лог 16.10 12:23): rt.prof остаётся от осмотра основного класса; API знает активный саб.
+  const normalized = normalizeProfession(rt.classCur?.prof ? String(rt.classCur.prof).replace(/^(?:dark_elf|human|elf|orc|dwarf)_/, '') : rt.prof);
   if ((CLASS_W[normalized] || [])[0] === MAGE) return 'mage_summoner';
   if (CLASS_W[normalized]) return 'fighter';
   if (/\b(?:mage|mystic|wizard|warlock|summoner|arcana lord|sorcer|necromancer|bishop|prophet|cleric|spellhowler|spellsinger|oracle|elder|shaman|overlord|warcryer)\b/.test(normalized)) return 'mage_summoner';
