@@ -437,26 +437,46 @@ async function faClashNote(id, H0, now = Date.now()) {
   return lost;
 }
 
+// 16.10, журнал22:29: срок/уровень эффекта не заменяет квитанцию конкретной покупки.
+function paymentNote(path,d) {
+  const P=env.payments?.pending(),E=P?.evidence||{},q=d?.req,ch=d?.res?.character;
+  if(P?.kind!=='fa-buff'||P.char!==env.rt.char||env.tabOwner===false||path!=='/character/town/fast-aden-buffer/apply'||d.method!=='POST'||d.paymentId!==P.id||d.error||d.status<200||d.status>=300||!Number.isInteger(d.status)||d.res?.error||d.res?.ok===false)return;
+  if(P.quote?.currency!=='FA'||!E.set||q?.set!==E.set||E.ids?.length!==1||q.skillId!==E.ids[0]||q.expectedCostFastAden!==P.quote.amount||!Number.isSafeInteger(q.expectedRevision)||q.expectedRevision<0||ch?.name!==P.char||!Number.isSafeInteger(ch.revision)||ch.revision<=q.expectedRevision)return;
+  if(d.res.skillId!==q.skillId||d.res.set!==q.set||d.res.costFastAden!==P.quote.amount||!Number.isSafeInteger(E.balance)||d.res.fastAdenBalance!==E.balance-P.quote.amount)return;
+  const receipt={paymentId:P.id,char:P.char,skillId:q.skillId,set:q.set,spent:q.expectedCostFastAden,requestRevision:q.expectedRevision,revision:ch.revision};
+  try{root.sessionStorage?.setItem('l2bot.faBuffReceipt',JSON.stringify(receipt));}catch(_){}
+  env.setRt({faBuffReceipt:receipt});
+}
+let journalCheck=null;
 async function paymentReconcile() {
   const P=env.payments?.pending();if(!P || !['fa-buff','town-buff'].includes(P.kind))return !P;
   const lease=env.leaseEpoch, char=env.rt.char;
   const valid=()=>env.tabOwner!==false && env.leaseEpoch===lease && env.rt.char===char && char===P.char && env.payments.pending()?.id===P.id;
   if(!valid())return false;
-  const E=P.evidence || {};let H=hudBuffs(), levels=null;
-  if(env.gameGet)try {const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
+  const E=P.evidence || {},ids=E.ids||[];let H=hudBuffs(),levels=null,proof=null,receipt=env.rt.faBuffReceipt;
+  try{const r=JSON.parse(root.sessionStorage?.getItem('l2bot.faBuffReceipt')||'null');if(r?.paymentId===P.id)receipt=r;}catch(_){}
+  if(P.kind==='fa-buff'&&receipt?.paymentId===P.id&&receipt.char===P.char&&ids.length===1&&receipt.skillId===ids[0]&&receipt.set===E.set&&receipt.spent===P.quote.amount&&Number.isSafeInteger(receipt.requestRevision)&&Number.isSafeInteger(receipt.revision)&&receipt.revision>receipt.requestRevision)proof={kind:'server-receipt',revision:receipt.revision,spent:receipt.spent};
+  if(!proof&&env.gameGet)try {const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
     if(ch?.name===P.char && Array.isArray(ch.activeBuffs)){H=Object.fromEntries(ch.activeBuffs.map(x=>[+x.skillId,Number.isFinite(x.expiresAtMs)?x.expiresAtMs:x.expiresAt]).filter(([,exp])=>Number.isFinite(exp)));levels=Object.fromEntries(ch.activeBuffs.filter(x=>+x.level>0).map(x=>[+x.skillId,+x.level]));}
   }catch(_){}
   if(!valid())return false;
-  const ids=E.ids||[],fresh=H && ids.length && ids.every(id=>Number.isFinite(H[id]) && H[id]>Date.now()+60000)
+  const fresh=H && ids.length && ids.every(id=>Number.isFinite(H[id]) && H[id]>Date.now()+60000)
     && ids.some(id=>!E.before?.[id] || H[id]>E.before[id]+60000 || (Number.isFinite(E.beforeLevels?.[id]) && E.expectedLevels?.[id]>E.beforeLevels[id] && levels?.[id]>=E.expectedLevels[id]));
-  if(!fresh){env.setStatus?.('Бафф: исход оплаты неизвестен; повтор запрещён, сверяю эффекты');return false;}
+  if(!proof&&fresh)proof={kind:'effects-satisfied',ids,expires:Math.min(...ids.map(id=>H[id]))};
+  // Старый успешный платёж восстанавливаем даже после истечения баффа, но только
+  // по однозначному запросу и новому сообщению о списании в том же SID журнала.
+  if(!proof&&P.kind==='fa-buff'&&env.faBuffEvidence&&(!journalCheck||journalCheck.id!==P.id||Date.now()-journalCheck.t>=30000)){
+    journalCheck={id:P.id,t:Date.now()};const r=await env.faBuffEvidence(P);if(!valid())return false;
+    if(r?.kind==='journal-receipt'&&r.spent===P.quote.amount&&r.balance===E.balance-P.quote.amount&&Number.isSafeInteger(r.requestRevision)&&typeof r.eventKey==='string')proof=r;
+  }
+  if(!proof){env.setStatus?.('Бафф: исход оплаты неизвестен; повтор запрещён, сверяю эффекты');return false;}
   const current=env.rt.tbuff, S=current && Number.isFinite(E.jobT) && current.t===E.jobT && (+env.rt.manualKickAt||0)===P.kick ? current : null, patch={};
   if(P.kind==='fa-buff') {
     if(S)patch.tbuff={...S,fa:(S.fa||[]).filter(id=>!ids.includes(id))};
     if(ids.includes(1323))patch.nobBuyT=P.at;
   }else if(S?.step==='town' && S.set===E.set){patch.tbuff=S.fa?.length?{...S,step:'fa'}:S.then?{...S.then,t:Date.now()}:null;patch.tbOk=true;}
   if(Object.keys(patch).length && ((await env.setRt(patch))?.ok!==true || !valid()))return false;
-  return env.payments.confirm(P,{kind:'effects-satisfied',ids,expires:Math.min(...ids.map(id=>H[id]))});
+  return env.payments.confirm(P,proof);
 }
 async function townBuffStep() {
   if(env.payments?.blocked()){await paymentReconcile();return;}
@@ -600,7 +620,7 @@ async function townBuffStep() {
       await env.pause();
       if (!active())return;
       if (!needed(id)) continue;
-      const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,ids:[id],before:H0,beforeLevels:hudLevels(),expectedLevels:{[id]:root.L2FaFull?.UP?.[id]||0},balance:bal}}):null;
+      const P=env.payments?await env.payments.prepare({key:`fa:${id}`,kind:'fa-buff',quote:{amount:cost,currency:'FA'},evidence:{jobT:st.t,set:b.dataset.setId||'',ids:[id],before:H0,beforeLevels:hudLevels(),expectedLevels:{[id]:root.L2FaFull?.UP?.[id]||0},balance:bal}}):null;
       if(env.payments && (!P || !active() || !needed(id) || +(b.dataset.cost||1)!==cost || balNow()!==bal || !env.payments.sent(P))){if(P)await env.payments.cancel(P);return;}
       const clicked=env.fire(b);if(P && clicked===false){await env.payments.cancel(P,{notSent:true});return;}
       const ok = await env.waitX(() => balNow() < bal, 5000, 200);
@@ -675,6 +695,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
