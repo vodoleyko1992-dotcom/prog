@@ -23,6 +23,14 @@ async function paymentReconcile() {
   return env.payments.confirm(P, { kind: A.ok ? 'server-receipt' : 'server-rejected', id: A.id, status: A.status });
 }
 
+let catQuoteWait = null;
+// 20.6 (лог 16.10 23:54): отказ проверки не должен запускать запросы и ложный «телепорт» каждый тик.
+const catQuoteContext = id => JSON.stringify([id, env.rt.char, env.rt.manualKickAt, env.cfg.catDungeon, env.cfg.shopReserve, env.cfg.shopMaxSpend]);
+async function catQuoteReject(id, why) {
+  catQuoteWait = { key: catQuoteContext(id), until: Date.now() + 15000, why };
+  env.setStatus(`Катакомбы: ${why}; повторная проверка через 15 с`);
+  return false;
+}
 async function catTeleport(id, active) {
   // У старых автономных DOM-fixture нет платежного модуля; основной runtime всегда передаёт его.
   if (!env.payments) return null;
@@ -32,12 +40,16 @@ async function catTeleport(id, active) {
     const [c, l] = await Promise.all([cr.json(), lr.json()]);
     if (!active()) return false;
     ch = cr.ok && c?.character; row = lr.ok && l?.dungeons?.find(x => x?.dungeonId === id);
-  } catch (_) { if (active()) env.setStatus('Катакомбы: не удалось проверить цену и персонажа'); return false; }
+  } catch (_) { if (active()) return catQuoteReject(id, 'не удалось получить цену и персонажа'); return false; }
   const price = row?.adenaCost, adena = typeof ch?.adena === 'string' && /^\d+$/.test(ch.adena) ? +ch.adena : ch?.adena;
-  if (!ch || ch.name !== env.rt.char || !ch.id || !Number.isSafeInteger(ch.revision) || ch.inBattle !== false || !Number.isSafeInteger(price) || price < 0
-      || !Number.isSafeInteger(adena) || price > 0 && (adena - price < Math.max(0, env.cfg.shopReserve ?? 200000) || price > (env.cfg.shopMaxSpend ?? 2000000))) {
-    env.setStatus('Катакомбы: цена, запас адены или состояние героя не подтверждены'); return false;
-  }
+  const why = !ch ? 'сервер не подтвердил персонажа' : ch.name !== env.rt.char || !ch.id ? 'персонаж ответа не совпадает с текущим'
+    : !Number.isSafeInteger(ch.revision) ? 'сервер не подтвердил ревизию персонажа'
+    : ch.inBattle !== false ? 'сервер не подтвердил выход из боя'
+    : !Number.isSafeInteger(price) || price < 0 ? 'сервер не подтвердил цену телепорта'
+    : !Number.isSafeInteger(adena) || adena < 0 ? 'сервер не подтвердил запас адены'
+    : price > 0 && adena - price < Math.max(0, env.cfg.shopReserve ?? 200000) ? 'после телепорта не останется заданного запаса адены'
+    : price > 0 && price > (env.cfg.shopMaxSpend ?? 2000000) ? 'цена телепорта превышает лимит расходов' : '';
+  if (why) return catQuoteReject(id, why);
   const button = () => env.$q(`.l2-rb-row__tp[data-dungeon-id="${CSS.escape(id)}"]`);
   const quoted = el => {
     const txt = el?.closest('.l2-rb-row')?.querySelector('.l2-rb-row__price-gold, .l2-rb-row__price')?.textContent || '';
@@ -45,7 +57,8 @@ async function catTeleport(id, active) {
     const m = txt.match(/\d[\d\s\u00a0\u202f]*/);
     return !!el && !el.disabled && env.shown(el) && (price === 0 && /бесплат|безкоштов|\bfree\b/i.test(txt) || /аден|adena/i.test(txt) && m && +m[0].replace(/\s/g, '') === price);
   };
-  if (!quoted(button())) return false;
+  if (!quoted(button())) return catQuoteReject(id, 'кнопка телепорта или её цена не подтверждены');
+  catQuoteWait = null;
   const P = await env.payments.prepare({ key: `cat:${id}`, kind: 'cat-teleport', quote: { amount: price, currency: 'Adena' }, evidence: { id, revision: ch.revision, actorId: ch.id } });
   if (!P) return false;
   const patch = { catTpT: Date.now(), catCur: id, catBackTried: 0 };
@@ -124,6 +137,9 @@ async function catGo(id) {                        // в подземелье: е
   if (!active()) return;
   id ||= catTarget(); if (!id) { env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return; }
   const nm = env.CAT_LIST[id]?.[0] || id;
+  if (isCatPage() && catQuoteWait?.key === catQuoteContext(id) && Date.now() < catQuoteWait.until) {
+    env.setStatus(`Катакомбы: ${catQuoteWait.why}; жду повторной проверки`); await env.sleep(1000); return;
+  }
   // Квитанция пришла, но native redirect мог потеряться. Не оплачиваем снова
   // при следующем тике/перезагрузке той же страницы: сначала смотрим вход на карте.
   const receipt = env.rt.actionPayments?.history?.[0];
@@ -173,13 +189,14 @@ async function catGo(id) {                        // в подземелье: е
     await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: why.slice(0, 60) }, catIn: null });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
-  env.rec('B', 'катакомбы', `телепорт в ${nm}${price ? ' (' + price + ')' : ''}`);
   if (env.payments) {
     await env.pause(); if (!active()) return;
     if (!await catTeleport(id, active)) return;
+    env.rec('B', 'катакомбы', `телепорт в ${nm}${price ? ' (' + price + ')' : ''}`);
     await env.waitX(() => !isCatPage() || env.catPaymentNet?.()?.t >= (env.payments.pending()?.at || Infinity), 8000, 200);
     await paymentReconcile(); return;
   }
+  env.rec('B', 'катакомбы', `телепорт в ${nm}${price ? ' (' + price + ')' : ''}`);
   await env.setRt({ catTpT: Date.now(), catCur: id, catBackTried: 0 });
   if (!active()) return;
   const t0 = Date.now(); await env.pause(); if (!active() || !env.fire(b)) return;
