@@ -34,13 +34,16 @@ const PS = { uses: 61, dmg: 61 * 1028, dmgN: 61, cd: 1.8 }, ATK = { uses: 66, dm
 { const a = plan({ 'атака': ATK, 'power strike': PS, 'drain health': { uses: 26, dmg: 23, dmgN: 1, cd: 8.3 } });
   assert.ok(a && !/пробую/.test(a.why), 'после 8+ нажатий проба не повторяется: ' + a?.why);
   assert.equal(a.name, 'Power Strike'); }
-// 2. новый удар (3 нажатия, 1 замер) на толстом мобе — проба как прежде
+// 20.6: 2. слабый новый удар не вытесняет готовый известный Power Strike.
 { const a = plan({ 'атака': ATK, 'power strike': PS, 'drain health': { uses: 3, dmg: 23, dmgN: 1, cd: 8.3 } });
-  assert.ok(a && /пробую новый удар \(замер 1\/3\)/.test(a.why), 'новый удар пробуем: ' + a?.why); assert.equal(a.name, 'Drain Health'); }
+  assert.ok(a && !/пробую/.test(a.why), 'слабая проба не вытесняет известный удар: ' + a?.why); assert.equal(a.name, 'Power Strike'); }
 // 3. 5+ нажатий без единого замера урона — удара нет в ротации: Power Strike на откате → обычная атака, не Drain Health
 { const a = plan({ 'атака': ATK, 'power strike': PS, 'drain health': { uses: 6, dmg: 0, dmgN: 0, cd: 8.3 } }, Date.now() + 5000);
   assert.ok(a, 'ход есть'); assert.equal(a.key, 'attack', 'без замера урона Drain Health не жмётся: ' + a?.name + ' ' + a?.why); }
-// 4. 4 нажатия без замера — ещё пробуем (не рубим раньше времени)
+// 20.6: 4. отсутствие замера не даёт приоритет над сильным готовым ударом.
 { const a = plan({ 'атака': ATK, 'power strike': PS, 'drain health': { uses: 4, dmg: 0, dmgN: 0, cd: 8.3 } });
-  assert.equal(a?.name, 'Drain Health', 'до 5 нажатий проба идёт: ' + a?.why); }
+  assert.equal(a?.name, 'Power Strike', 'сильный удар раньше слабой пробы: ' + a?.why); }
+// 20.6: перспективный сильный навык по-прежнему допускает ограниченную пробу.
+{ const a = plan({ 'атака': ATK, 'power strike': PS, 'drain health': { uses: 3, dmg: 3000, dmgN: 1, cd: 8.3 } });
+  assert.equal(a?.name, 'Drain Health'); assert.match(a.why, /пробую новый удар/); }
 console.log('v1011-fighter-probe-stop: OK');

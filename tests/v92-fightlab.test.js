@@ -199,7 +199,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   const story = read('modules/story.js'); assert.match(story, /if \(ch\.classBranch && String\(ch\.classBranch\) !== env\.rt\.classBranch\) env\.setRt\(\{ classBranch: /);
   // воин: новый удар (< 3 замеров) пробуется на «толстом» мобе, как у мага
   const combat = read('modules/combat.js');
-  assert.match(combat, /if \(probe && hp > Math\.max\(maxKnown, 300\) \* 1\.3\) return \{ \.\.\.probe, probe: true, why: `пробую новый удар/);
+  // 20.6: проба слабого удара не вытесняет известный сильный.
+  assert.match(combat, /if \(probe && probe\.dmg >= maxKnown && hp > Math\.max\(maxKnown, 300\) \* 1\.3\) return \{ \.\.\.probe, probe: true, why: `пробую новый удар/);
   assert.ok(combat.indexOf('пробую новый удар') < combat.indexOf('// 1) добивание'), 'probe before the kill rule in dpsPlan');
 }
 

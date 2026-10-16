@@ -4,15 +4,24 @@
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.loot = function create_loot(env) {
-function spoilPick(ctx) {                         // какой спойл жать: Spoil Crush (ещё и бьёт) → Spoil → Spoil Festival
-  const all = env.names(env.cfg.nSpoil).map(bn => ({ bn, b: env.slotsBy(bn)[0] })).filter(x => x.b && env.ready(x.b) && (ctx.block['spoil:' + x.bn] || 0) < Date.now());
-  const rank = x => /crush/i.test(x.bn) ? 0 : /festival/i.test(x.bn) ? 2 : 1;
-  return all.sort((a, b) => rank(a) - rank(b))[0] || null;
+// 20.6 (лог 16.10 23:21): массовый спойл проверяем отдельно: префикс «Spoil» также находит Spoil Festival.
+const isMassSpoil = b => /festival|спойл[- ]фестиваль/i.test(env.cleanTitle(b?.title || ''));
+function spoilPick(ctx) {
+  const all = env.names(env.cfg.nSpoil).flatMap(bn => env.slotsBy(bn).map(b => ({ bn, b })))
+    .filter(x => !isMassSpoil(x.b) && env.ready(x.b) && (ctx.block['spoil:' + x.bn] || 0) < Date.now());
+  return all.sort((a, b) => Number(!/crush/i.test(a.bn)) - Number(!/crush/i.test(b.bn)))[0] || null;
 }
 
 function massSpoilPick(ctx) {
-  const list = env.names(env.cfg.nSpoilMass || ''); if (!list.length) return null;
-  for (const bn of list) { const b = env.slotsBy(bn)[0]; if (b && env.ready(b) && (ctx.block['spoil:' + bn] || 0) < Date.now()) return { bn, b }; }
+  // Старые настройки могли содержать только nSpoil=Spoil. Ищем изученный Festival на панели,
+  // даже если автороли ещё не заполнили nSpoilMass; при выключенных обеих ролях спойл не включаем.
+  if (!env.names(env.cfg.nSpoilMass || '').length && !env.names(env.cfg.nSpoil || '').length) return null;
+  const list = [...new Set([...env.names(env.cfg.nSpoilMass || ''),
+    ...env.names(env.cfg.nSpoil || '').filter(n => /festival/i.test(n)), 'spoil festival'])];
+  for (const bn of list) {
+    const b = env.slotsBy(bn).find(b => env.ready(b) && (ctx.block['spoil:' + bn] || 0) < Date.now());
+    if (b) return { bn, b };
+  }
   return null;
 }
 
@@ -25,25 +34,28 @@ function festivalParse(lines) {                   // → [{ name, ok, ch }] из
 }
 
 async function massSpoilStep(ctx, act, mob) {
-  if (ctx.massTried || !env.cfg.nSpoilMass || (ctx.rb && !env.cfg.spoilRb) || !mob?.max || mob.cur <= 0) return false;
+  if (ctx.massTried || (ctx.rb && !env.cfg.spoilRb) || !mob?.max || mob.cur <= 0) return false;
   const near = env.extraMobs().filter(x => x.cur > 0).length;
-  if (near < 1) return false;                        // 2+ живых моба: главный + хотя бы один рядом
+  // Festival выгоднее и по одной цели: гарантированная метка вместо повторов Spoil.
+  // Соседи могут появиться в DOM только после первого хода.
+  if (!near && (ctx.spoiled || env.mobSpoiled())) return false;
   const x = massSpoilPick(ctx); if (!x) return false;
   const mp = env.meMp(), need = env.skillMp(env.cleanTitle(x.b.title)) || 0;
-  if (mp && need && mp.cur < need + 20) return false;  // маны мало — обойдёмся обычным Spoil
-  ctx.massTried = true;
+  if (mp && need && mp.cur < need) return false;  // маны мало — обойдёмся обычным Spoil
   const before = env.logLines();
   const r = await act(x.b, `Масс-спойл: ${env.cleanTitle(x.b.title)} (мобов ${near + 1})`);
   if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
-  if (r === 'cd' || r === 'noforce') { ctx.massTried = false; return true; }
-  await env.waitFor(() => env.mobSpoiled() || env.newLines(before, env.logLines()).some(l => env.SPOIL_OK.test(l) || env.SPOIL_FAIL.test(l)), 1500, 80);
+  if (r === 'cd' || r === 'noforce') return true;
+  if (r !== true) return true; // потерянный клик не подтверждает применение
+  ctx.massTried = true;
+  await env.waitFor(() => env.mobSpoiled() || env.newLines(before, env.logLines()).some(l => env.SPOIL_OK.test(l) || env.SPOIL_FAIL.test(l) || festivalParse([l]).length), 1500, 80);
   const fresh = env.newLines(before, env.logLines());
   // v5.5.9: игра пишет итог по каждому мобу: «Spoil Festival: Enku Orc Shaman: промах (64%); Roughly Hewn Rock Golem: успіх (51%); …»
   const res = festivalParse(fresh), mainR = res.find(x => env.nameLike(x.name, ctx.name));
   const oks = res.length ? res.filter(x => x.ok).length : fresh.filter(l => env.SPOIL_OK.test(l)).length;
   const bads = res.length ? res.filter(x => !x.ok).length : fresh.filter(l => env.SPOIL_FAIL.test(l)).length;
   if (env.mobSpoiled() || mainR?.ok || (!res.length && oks && !bads)) ctx.spoiled = true;
-  const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; await env.setRt({ spoilStat: S });
+  const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; S.massFail = (S.massFail || 0) + bads; await env.setRt({ spoilStat: S });
   env.rec('B', 'спойл', `${ctx.name} +${near} рядом: масс-спойл → ${oks || bads ? `✅${oks} ✗${bads}${res.length ? ' (' + res.map(x => `${x.name} ${x.ok ? '✅' : '✗'}${x.ch ? x.ch + '%' : ''}`).join(', ') + ')' : ''}` : 'нажат'}${ctx.spoiled ? ' · главный помечен' : ' · главного добью обычным Spoil'}${fresh.length && !oks && !bads ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
   return true;
 }
