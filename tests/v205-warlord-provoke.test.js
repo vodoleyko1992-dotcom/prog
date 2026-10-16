@@ -26,7 +26,7 @@ for(const [name,change]of Object.entries({
  'чужие HP в ответе':f=>f.state.infoMax=34104,'нет HP в ответе':f=>f.state.infoMax=null,'неподтверждённое оружие':f=>f.env.rt.weapons[0].unknown=true,
  'неизвестный тип цели':f=>f.state.kind='unknown','API чемпион':f=>f.state.kind='champion','цвет чемпиона':f=>f.state.tier='orange','старый ответ':f=>f.state.age=61000,
  'мало HP':f=>f.state.hp=749,'нет HP':f=>f.state.max=0,'готовая группа':f=>f.state.extra=[100,200,300],
- 'нет копья':f=>f.env.rt.weapons[0].wt='меч','неизвестное оружие':f=>f.env.rt.weaponsT=0,'переодевание':f=>f.env.rt.weaponMetaPending={},'старая запись оружия':f=>f.env.rt.weaponNow='New weapon',
+ 'нет копья':f=>f.env.rt.weapons[0].wt='меч','неизвестное оружие':f=>f.env.rt.weaponsT=0,'переодевание':f=>f.env.rt.weaponMetaPending={},'противоречивое надетое ID':f=>f.env.rt.weaponEq={id:999},
  'нет Provoke':f=>f.panel.shift(),'отключённый слот':f=>f.panel[0].disabled=true,'откат Provoke':f=>f.state.cd.provoke=1000,
  'оба AoE на КД':f=>{f.state.cd.whirlwind=1000;f.state.cd.thunder_storm=1000},'AoE удалены из ролей':f=>f.env.cfg.nPower='',
  'мало MP на связку':f=>f.mp.cur=115,'неизвестная цена агро':f=>f.panel[0].mp=null,'неизвестная цена AoE':f=>{f.panel[1].mp=null;f.panel[2].mp=null},
