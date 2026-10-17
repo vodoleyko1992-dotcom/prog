@@ -98,7 +98,7 @@ const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь нови
   assert.equal(JSON.parse(src('base-profile.json')).cfg.campAuto, true);
   // 6. чемпион «не пробиваю» за 15 с — вид не метим (combat.battle)
   const i = combat.indexOf("const hopeless = el >= 15");
-  const blk = combat.slice(i, i + 2200);
+  const blk = combat.slice(i, i + 3600);   // 20.13 (шаг 5, combat/C2): перед веткой добавлен предел чемпиона
   // (слито с PR #87: чемпион уходит через champs.learn, метка по имени вида не ставится)
   assert.match(blk, /if \(ctx\.champ && !ctx\.rb && env\.champs\) \{/, 'чемпион: свой учёт, без hardMobs');
   assert.ok(blk.indexOf('ctx.champ && !ctx.rb && env.champs') < blk.indexOf('hardMobs: { ...(env.rt.hardMobs'), 'ветка чемпиона раньше записи hardMobs');

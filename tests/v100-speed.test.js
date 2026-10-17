@@ -36,6 +36,6 @@ assert.match(combat, /potOk = !!\(potB && env\.qty\(potB\) !== 0\);/);
 assert.match(combat, /potOk = !!potB && env\.qty\(potB\) !== 0;/);
 assert.match(combat, /if \(ctx\.rb && me\) \{/);
 // 6. «не пробиваю» при HP < 60 % — сначала выход из боя, потом баффер; смерть от РБ — spawnId из адреса
-assert.match(combat, /if \(leave\) \{ env\.fire\(leave\); await env\.waitFor\(\(\) => !env\.isBattle\(\) \|\| null, 4000, 100\); \}\n\s*if \(await env\.restoreVitals/);
+assert.match(combat, /if \(leave\) \{\n\s*env\.fire\(leave\);\n\s*if \(!\(await env\.waitFor\(\(\) => !env\.isBattle\(\) \|\| null, 8000, 150\)\)\)[^\n]*\n\s*\}\n\s*if \(me && me\.pct < 60\) \{\n\s*if \(await env\.restoreVitals/);   // 20.13 (шаг 5, combat/C2): выход — всегда, ожидание 8 с
 assert.match(surv, /rbId = \/\^l2dop_rb_\/i\.test\(urlRb\) \? urlRb : env\.rt\.target\?\.rb \? env\.rt\.rbCur : null/);
 console.log('PASS: 10.0 speed — chain without waiting for the storage write, 50 ms polling, hunt-continue in flight waited up to 15 s, 40 ms between chain fights; lost click 0.7 s, server refusal not waited on screen, debuff result by log line; fightlab sees real hotbar slots, delta tail not double-counted, flushed on page leave; MP saved only without potions; RB HUD null-safe; leave battle before healer; RB death by URL');

@@ -148,7 +148,8 @@ async function step({ afterWin = false, forceRead = false } = {}) {
     const ch = data.character || data;
     if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord или Dark Avenger / Hell Knight', { nextCheckAt: Date.now() + 15000 }); return false; }
     noteSnapshot(ch);
-    if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя'); return false; }
+    // 20.13 (ревизия 17.10, шаг 5, аудит combat/C10): без nextCheckAt бой на сервере давал GET /character на каждом тике главного цикла
+    if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя', { nextCheckAt: Date.now() + 10000 }); return false; }
     if (await reconcile(T, ch, afterWin)) return true;
     if (!same(T, afterWin)) return false;
     const p = summon(ch); if (!p) { await status(T, 'pet', 'Нужен живой призванный суммон', { nextCheckAt: Date.now() + 10000 }); return false; }
