@@ -36,7 +36,7 @@ const CASES = [
     const html = read('popup.html').replace(/<link rel="stylesheet" href="[^"]+">/g, '').replace(/<script src="[^"]+"><\/script>/g, '');
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const s of ['ui-v7.css', 'ui-game.css', 'enchant-ui.css', 'warlock-ui.css']) await page.addStyleTag({ content: read(s) });
-    for (const j of ['modules/fightlab.js', 'modules/enchant.js', 'enchant-ui.js', 'modules/warlock.js', 'warlock-ui.js', 'pvp-ui.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
+    for (const j of ['modules/fightlab.js', 'modules/enchant.js', 'enchant-ui.js', 'modules/warlock.js', 'warlock-ui.js', 'pvp-ui.js', 'defaults.js', 'popup.js', 'ui-v7.js']) await page.addScriptTag({ content: read(j) });
     await page.evaluate(() => document.querySelector('nav button[data-tab="panel"]').click());
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {
