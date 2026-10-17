@@ -103,7 +103,7 @@ test('F6: фон — свой протухший замок тем же epoch в
 });
 function resumeBox(answer){
  const c={leaseEpoch:'one',documentLease:'one',tabOwner:true,on:true,recovered:0,location:{pathname:'/map.html'},document:{hasFocus:()=>true},tabVis:()=>false,
-  ipc:async()=>answer,rtWriter:{recover:async()=>{c.recovered++;}}};
+  calls:[],ipc:async m=>{c.calls.push(m);return m.cmd==='lockAcquire'?answer:{ok:true}},rtWriter:{recover:async()=>{c.recovered++;}}};
  vm.createContext(c);vm.runInContext(slice(content,'async function renewResume(','setInterval(async () => {')+';this.R=renewResume;',c);return c;
 }
 test('F6: content — возврат своего замка сохраняет очередь и досылает её',async()=>{
@@ -112,6 +112,18 @@ test('F6: content — возврат своего замка сохраняет 
 test('F6: content — замок у другой вкладки или не возврат: прежняя очистка',async()=>{
  assert.equal(await resumeBox({ok:false,reason:'other_tab'}).R(),false);
  const c=resumeBox({ok:true,epoch:'new',resumed:false});assert.equal(await c.R(),false);assert.equal(c.leaseEpoch,'one');assert.equal(c.recovered,0);
+ // шаг 5 (core-b, ревью): выданный, но не возвращённый замок отпускается, а его epoch запоминается — иначе следующий tabLock получал ownership_lost навсегда
+ assert.deepEqual(c.calls.map(m=>m.cmd),['lockAcquire','lockRelease']);assert.equal(c.calls[1].epoch,'new');assert.equal(c.documentLease,'new');
+});
+test('F6 (ревью): возврат замка не отбирает его у видимой вкладки и не трогает пересобранный замок',async()=>{
+ const c=resumeBox({ok:true,epoch:'new',resumed:true});await c.R();assert.equal(c.calls[0].focus,false);
+ const d=resumeBox({ok:true,epoch:'one',resumed:true});d.ipc=async m=>{d.calls.push(m);d.leaseEpoch='fresh';return{ok:true,epoch:'fresh'}};
+ assert.equal(await d.R(),'moved');assert.equal(d.leaseEpoch,'fresh');assert.equal(d.recovered,0);assert.equal(d.calls.length,1);
+ const e=resumeBox({ok:true,epoch:'new',resumed:true});e.on=false;assert.equal(await e.R(),false);assert.deepEqual(e.calls.map(m=>m.cmd),['lockAcquire','lockRelease']);
+ // фон: свежий чужой замок при focus:false не отдаётся
+ const f=fixture();f.state.lock={k:'tab2',tab:2,epoch:'two',t:f.box.Date.now(),vis:false};
+ assert.equal((await f.box.lockCommand({cmd:'lockAcquire',epoch:'one',page:'/map.html',vis:true,focus:false},f.tab(1))).ok,false);
+ assert.match(slice(content,"const r = await ipc({ cmd: 'lockRenew'",'else if (tabOwner && !on'),/again === 'moved'\) return;/);
 });
 test('F6: при отказе продления очередь чистится только после неудачного возврата',()=>{
  const tick=slice(content,"const r = await ipc({ cmd: 'lockRenew'",'else if (tabOwner && !on');

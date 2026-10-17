@@ -2645,12 +2645,21 @@ async function tabLock() {
   return tabOwner;
 }
 // 20.13 (шаг 5, core-b/F6): вернуть свой замок тем же epoch; true — замок наш, очередь записей сохранена и досылается
+// шаг 5 (core-b, ревью): focus:false — возврат своего замка не отбирает его у другой вкладки (раньше продление этого не делало);
+// фон выдал замок, но вернуть очередь нельзя (не resumed, Stop, смена состояния) — замок отпускаем и запоминаем его epoch в documentLease:
+// иначе брошенный замок этой вкладки с новым epoch давал вечное ownership_lost следующему tabLock этого документа
 async function renewResume() {
   const old = leaseEpoch; if (!old) return false;
   let a = null;
-  try { a = await ipc({ cmd: 'lockAcquire', epoch: old, page: location.pathname, vis: tabVis(), focus: !!document.hasFocus?.() }, 9000); } catch (e) { return false; }
-  if (!a?.ok || !(a.epoch === old || a.resumed) || leaseEpoch !== old || !tabOwner || !on) return false;
-  leaseEpoch = a.epoch; documentLease = a.epoch;
+  try { a = await ipc({ cmd: 'lockAcquire', epoch: old, page: location.pathname, vis: tabVis(), focus: false }, 9000); } catch (e) { return false; }
+  if (!a?.ok) return false;
+  if (leaseEpoch !== old) { if (a.epoch) documentLease = a.epoch; return 'moved'; }   // за это время замок пересобрал tabLock/lockLost — его не трогаем
+  documentLease = a.epoch;
+  if (!(a.epoch === old || a.resumed) || !tabOwner || !on) {
+    try { await ipc({ cmd: 'lockRelease', epoch: a.epoch }, 9000); } catch (e) {}
+    return false;
+  }
+  leaseEpoch = a.epoch;
   rtWriter.recover().catch(() => {});
   return true;
 }
@@ -2663,6 +2672,7 @@ setInterval(async () => {
         // раньше очередь неотправленных записей (убийства, добыча, счётчики, отметки служб) стиралась, а повторный захват подменял rt
         // снимком из хранилища. Сначала пробуем вернуть свой же замок; другого хозяина не было (resumed) — очередь дописываем.
         const again = await renewResume();
+        if (again === 'moved') return;
         if (again) { lockMine = Date.now(); return; }
         tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return;
       }
