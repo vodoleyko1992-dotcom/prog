@@ -58,9 +58,9 @@ test('F3: content передаёт user для Esc и hard для жёстких
  assert.match(slice(content,'async function halt(','async function pauseBot('),/automationStop\(msg, 'stop', \{ hard: !!hard, user: !!user \}\)/);
 });
 test('F3: automationStop при отказе фона жёсткого стопа повторяет и пишет причину',async()=>{
- const calls=[],recs=[];const c={rt:{char:'Hero',manualKickAt:1},leaseEpoch:'one',automationGeneration:0,on:true,sleep:async()=>{},
+ const calls=[],recs=[];const c={rt:{char:'Hero',manualKickAt:1},leaseEpoch:'one',automationGeneration:0,on:true,sleep:async()=>{},setTimeout:f=>f(),
   ipc:async m=>{calls.push(m);return calls.length<3?undefined:{ok:false,reason:'ownership_lost'}},rec:(...a)=>recs.push(a.join(' ')),setRt:async()=>{}};
- vm.createContext(c);vm.runInContext(slice(content,'async function automationStop(','// hard = настоящая остановка')+';this.S=automationStop;',c);
+ vm.createContext(c);vm.runInContext(slice(content,'const STOP_PEND_KEY','// hard = настоящая остановка')+';this.S=automationStop;',c);
  const r=await c.S('Аккаунт заблокирован','stop',{hard:true});
  assert.equal(calls.length,3);assert.equal(calls[0].hard,true);assert.equal(r.ok,false);assert.equal(c.on,false);assert.match(recs[0],/ownership_lost/);
 });

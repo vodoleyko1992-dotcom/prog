@@ -42,7 +42,8 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200,
   // 20.13 (ревизия 17.10, шаг 5, defaults/D11): скрытые настройки, которые читались только через «?? N» по месту, — с теми же значениями,
   // чтобы они были видны в экспорте настроек и при разборе лога. Поведение не меняется (значения равны прежним запасным).
-  rbHuntMode: false, mageMpPct: 25, mageEcoPct: 30, rbVampHp: 60, rbDeathPenalty: 0, magisterSpReserve: 0, fishRodBuy: true, fishAutoSetup: true, rbOrder: 'up', mageProbe: true,
+  // Остальные такие ключи (mageMpPct, mageEcoPct, rbVampHp…) — выше, в блоке quality/L3.
+  rbHuntMode: false, rbOrder: 'up',
   // 20.13 (ревизия 17.10, шаг 5, defaults/D16): банка MP у воина — от доли MP (как mageMpPct у мага), а не только от 70 MP: «MP не экономим».
   fighterMpPct: 25,
 };
