@@ -123,10 +123,11 @@
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
   const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
   // Дневные квоты профиля: календарные сутки Владивостока, независимо от часов браузера.
-  const dailyKeys = {fish:'dailyFishLimit',auto:'dailyAutoKillLimit',cat:'dailyCatKillLimit'};
+  // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие!»): один дневной лимит мобов на обе охоты, счётчики auto/cat складываются.
+  const dailyKeys = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'};
   const dailyDay = (now = Date.now()) => new Date(now + 10 * 3600000).toISOString().slice(0,10);
   const dailyLimit = (c,k) => { const n = +rawTaskConfig(c)?.[dailyKeys[k]]; return Number.isSafeInteger(n) && n > 0 ? n : 0; };
-  const dailyCount = (rt,k,now = Date.now()) => rt.dailyQuota?.day === dailyDay(now) ? Math.max(0,+rt.dailyQuota[k] || 0) : 0;
+  const dailyCount = (rt,k,now = Date.now()) => rt.dailyQuota?.day !== dailyDay(now) ? 0 : k === 'fish' ? Math.max(0,+rt.dailyQuota.fish || 0) : Math.max(0,+rt.dailyQuota.auto || 0) + Math.max(0,+rt.dailyQuota.cat || 0);
   const dailyBlocked = (c,rt,k,now = Date.now()) => dailyLimit(c,k) > 0 && dailyCount(rt,k,now) >= dailyLimit(c,k);
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
