@@ -280,10 +280,14 @@ const baitPph = o => o?.ms > 60000 ? o.proof / o.ms * 3600000 : 0;   // Proof в
 // «Якісна наживка» (Good Fishing Lure ×10 = 3 Proof, т.е. 0,3 Proof за заброс; бесплатно — из Old Box). В игре описания нет —
 // решаем по замеру: по 60+ забросов на каждой, сравниваем Proof/ч. Хорошая лучше ≥ 3 % — ловим на ней, пока есть (бесплатные из Old Box);
 // покупать её за Proof выгодно, только если прибавка на заброс больше 0,3 Proof (пишем в журнал, сами не покупаем)
-function baitAuto() {
+// 17.10.2026 (пользователь: «есть улучшенная наживка, на автомате не использует её»): замер «хорошая не лучше» навсегда
+// уводил «Авто» на обычную, а бесплатная «Якісна наживка» из Old Box лежала в сумке. Бот её не покупает, поэтому
+// «Авто» = хорошая, пока она есть в сумке, иначе обычная (fishPrepare переключает по наличию, без паузы); замер остаётся
+// только советом в журнале — стоит ли покупать её за Proof.
+function baitAuto() { return 'goodBait'; }
+function baitAutoMeasured() {                       // прежний вердикт замера — для журнала и меню
   const S = env.rt.fishBaitStat || {}, g = S.good || {}, b = S.basic || {};
-  if ((g.casts || 0) < 60) return 'goodBait';        // нет хорошей — fishPrepare сам перейдёт на обычную (и вернётся через 30 мин)
-  if ((b.casts || 0) < 60) return 'basicBait';
+  if ((g.casts || 0) < 60 || (b.casts || 0) < 60) return null;
   return baitPph(g) > baitPph(b) * 1.03 ? 'goodBait' : 'basicBait';
 }
 const baitWant = () => env.cfg.fishBait === 'good' ? 'goodBait' : env.cfg.fishBait === 'auto' ? baitAuto() : 'basicBait';
@@ -693,7 +697,7 @@ async function fishPrepare() {                  // удочка, наживка 
   const want = baitWant();
   if (env.cfg.fishBait === 'auto' && want !== env.rt.baitAutoWant) {   // 7.2.1: смена решения «Авто» — в журнал с причиной
     await env.setRt({ baitAutoWant: want, baitSwapTo: null });
-    env.rec('B', 'рыбалка', `наживка «Авто»: ${want === 'goodBait' ? 'хорошая' : 'обычная'} — ${baitVerdict()}`);
+    env.rec('B', 'рыбалка', `наживка «Авто»: хорошая, пока она есть в сумке, иначе обычная — ${baitVerdict()}`);
   }
   // сразу после загрузки страницы счётчики ещё пусты — ждём, пока панель/строка снаряжения покажет число
   await env.waitFor(() => fishQty(want) != null, 8000, 150);
@@ -747,10 +751,12 @@ async function fishPrepare() {                  // удочка, наживка 
     await buy('bait', 'bait_x10', env.cfg.fishBuyPacks || 100, 'Fishing Lure ×10');
     return env.on && avail('basicBait');
   };
-  // уже перешли на другую наживку — 30 мин ловим на ней, не переключая туда-сюда перед каждым забросом
+  // нужная наживка есть — ловим на ней сразу (17.10: хорошая из Old Box появилась — не ждём 30 мин на обычной).
+  // Нужной нет — уже перешли на другую: 30 мин ловим на ней, не дёргая выбор перед каждым забросом
+  if (await avail(want)) use = want;
   const sw = env.rt.baitSwapTo;
-  if (sw && sw !== want && Date.now() - (env.rt.baitSwapT || 0) < 1800000 && isOn(sw) && (fishQty(sw) || 0) > 0) use = sw;
-  if (!use && await avail(want)) use = want;
+  if (!use && sw && sw !== want && Date.now() - (env.rt.baitSwapT || 0) < 1800000 && isOn(sw) && (fishQty(sw) || 0) > 0) use = sw;
+  if (use === want && sw) bg(env.setRt({ baitSwapTo: null }));
   if (!use && want === 'basicBait' && await buyBasic()) use = 'basicBait';   // нужна обычная — сперва докупить её, хорошую не тратить
   if (!use) {
     const other = want === 'basicBait' ? 'goodBait' : 'basicBait';
@@ -1414,6 +1420,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitAutoMeasured, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);

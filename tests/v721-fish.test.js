@@ -18,14 +18,17 @@ env.rt.fishRates = { fish_oil: [50, 1] };
 assert.ok(F.fishCutValue('Вы разрезали Black Fish ×110. Получено: Fish Oil ×327.').proof < 7);
 env.rt.fishRates = null;
 assert.equal(F.fishCutValue('Вы открыли Old Box ×3'), null);
-// 2. «Авто»: сперва замер хорошей (пока есть), потом обычной, потом — по Proof/ч
+// 2. «Авто» (17.10): хорошая, пока она есть в сумке (fishPrepare переключит на обычную по наличию); замер — только совет в журнале
 assert.equal(F.baitWant(), 'goodBait');
 env.rt.fishBaitStat = { good: { casts: 60, bites: 40, caught: 38, ms: 300000, proof: 12 } };
-assert.equal(F.baitWant(), 'basicBait');
+assert.equal(F.baitWant(), 'goodBait');
+assert.equal(F.baitAutoMeasured(), null, 'замер не завершён — вердикта нет');
 env.rt.fishBaitStat.basic = { casts: 60, bites: 40, caught: 38, ms: 300000, proof: 12.6 };
-assert.equal(F.baitWant(), 'basicBait', 'good not better → basic');
+assert.equal(F.baitWant(), 'goodBait', 'good not better → всё равно хорошая, пока бесплатная есть');
+assert.equal(F.baitAutoMeasured(), 'basicBait', 'замер: обычная не хуже');
 env.rt.fishBaitStat.good.proof = 20;
 assert.equal(F.baitWant(), 'goodBait', 'good clearly better → use it while free ones last');
+assert.equal(F.baitAutoMeasured(), 'goodBait');
 assert.match(F.baitVerdict(), /покупать за Proof \(0,3 за шт\.\) невыгодно/, '+0,12 Proof per cast < 0,3 price');
 env.cfg.fishBait = 'basic'; assert.equal(F.baitWant(), 'basicBait'); env.cfg.fishBait = 'good'; assert.equal(F.baitWant(), 'goodBait');
 // 3. код: после поимки — без ожидания записи; лишняя пауза после «не клюнула» убрана; наживка — та, что выбрана в игре
