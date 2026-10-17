@@ -568,6 +568,9 @@ function epicBuffWhy(now = Date.now(), noBudget = false) {
   const v = epicVerdict(k, now); if (v.v !== 'ok') return `эпик ${VLBL[v.v] || v.v}`;
   const d1h = (env.rt.deaths1h || []).filter(t => now - t < H).length; if (d1h >= 2) return `${d1h} смерти за последний час`;
   if (!E.route) return 'дорога к эпику ещё не выбрана';
+  // 20.12 (ревизия 17.10): после смерти/отхода (noPay) или «только логово» платный телепорт запрещён — без бесплатной дороги
+  // (он на этой карте или логово за адену) шаг go сразу отменит заход, и набор за FA пропал бы зря
+  if ((E.noPay || E.lairOnly) && !epicHereNow(k) && !epicLair(k, now).ok) return 'после смерти/отхода — только бесплатно или через логово, а дороги нет';
   return '';
 }
 function epicBuffCol() { return epicOn() ? !epicBuffWhy() : null; }

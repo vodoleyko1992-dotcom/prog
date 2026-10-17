@@ -6,7 +6,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 const content = read('content.js'), epicsSrc = read('modules/epics.js'), raidSrc = read('modules/raid.js');
 const EPICS = vm.runInNewContext('(' + content.slice(content.indexOf('const EPICS = [') + 'const EPICS = '.length, content.indexOf('const EPIC_URL')).replace(/;\s*$/, '') + ')');
 const LV_RE = vm.runInNewContext(content.match(/const LV_RE = (\/.+\/iu);/)[1]);
-const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
+const base = require('./helpers/warlock52-rt.cjs')(); // 20.12: замеры Warlock 52 — из фикстуры
 const fx = JSON.parse(read('tests/fixtures-epic-bosses-803.json'));
 const clone = o => JSON.parse(JSON.stringify(o));
 const H = 3600000, MIN = 60000;

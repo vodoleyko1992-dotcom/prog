@@ -16,7 +16,7 @@ assert.equal(ownLeft('vampiric touch'), 0, 'VT: floor without timestamp is ignor
 assert.ok(Math.abs(ownLeft('blaze') - (3.3 * 0.85 - 1)) < 0.05, 'fresh floor (5 s old) still respected: ' + ownLeft('blaze'));
 // 2. миграция стирает старые границы; в базовом профиле их нет
 assert.match(content, /once\('cdFloor80', \(\) => \{ for \(const \[k, p\] of Object\.entries\(S\)\) if \(p && \(p\.cdFloor \|\| p\.cdFloorAt\)\) \{ S\[k\] = \{ \.\.\.p, cdFloor: 0, cdFloorAt: 0 \}; sk = true; \} \}\);/);
-const skills = JSON.parse(read('base-profile.json')).chars.Warlock.rt.skills;
+const skills = require('./helpers/warlock52-rt.cjs')().skills; // 20.12: замеры Warlock 52 — из фикстуры
 assert.ok(Object.values(skills).every(s => !s.cdFloor && !s.cdFloorAt), 'base profile has no cdFloor');
 // 3. записи без ожидания на ходе и после победы; остаток очереди уходит при уходе со страницы
 assert.match(combat, /env\.setRt\(\{ cdUse: use, cdUntil: until \}\);   \/\/ 8\.0/);

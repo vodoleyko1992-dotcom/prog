@@ -113,7 +113,7 @@ const content = read('content.js'), combat = read('modules/combat.js');
   assert.match(combat, /env\.srvHangMark\?\.\('нет ответа игры 20 с'\);/, 'the 20 s fight watchdog marks the hang too');
 
   // 5. Noblesse при платных баффах по 1 FA (лог 09:05: 9 баффов + Noblesse 5 FA) — после смерти докупается; без платных — нет
-  { const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
+  { const base = require('./helpers/warlock52-rt.cjs')(); // 20.12: замеры Warlock 52 — из фикстуры
     const now = Date.now(), E3 = now + 125 * 60000, T24 = now + 20 * 3600000;
     const TOWN = [1036, 1040, 1045, 1048, 1059, 1062, 1068, 1077, 1085, 1086, 1240, 1242, 1268], FA9 = [1389, 264, 273, 276, 1303, 365, 268, 304, 4703];
     let hud = [], path_ = '/map.html';
