@@ -6,6 +6,7 @@ const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engi
 function fixture(task='auto'){
  let now=Date.parse('2026-10-17T13:59:00Z');
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
+ globalThis.Date=Clock;   // 20.13: engine-core считает игровой день по общему Date — после 14:00 UTC 17.10 реальные часы уводили тест на другой день
  const source=read('tests/v208-farm-kill-quota.test.js'),c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,Date:Clock,URL,URLSearchParams,structuredClone,console};
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);
  const f=c.fixture(task);f.state.cfg.autoKillLimit=0;f.state.cfg.catKillLimit=0;f.state.cfg.dailyKillLimit=5;f.state.cfg.autoTasks=['cat','auto','dailies'];f.state.cfg.catMode=true;f.refresh();
