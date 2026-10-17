@@ -22,17 +22,8 @@ async function restoreVitals(why) {
   return true;
 }
 
-async function lowHpEscape(me) {
-  const active=contextGuard();if(!active())return false;
-  const now = Date.now(), lows = [...(env.rt.lowHp || []), now].filter(t => now - t < 20 * 60000);
-  await env.setRt({ lowHp: lows, target: null });
-  if(!active())return false;
-  env.rec('B', 'мало HP', `HP ${me.pct | 0}% ≤ ${env.cfg.stopHp}% — выхожу из боя и восстанавливаюсь (${lows.length}/3 за 20 мин)`);
-  if (lows.length >= 3) return env.halt(`Мало HP 3 раза за 20 мин — цели слишком сильные (проверьте уровни/банки)`);
-  if (await restoreVitals(`мало HP (${me.pct | 0}%)`)) return;
-  if(!active())return false;
-  await env.toOutskirts();
-}
+// 20.13 (ревизия 17.10, шаг 7, аудит combat/C12): lowHpEscape (выход из боя при мало HP и остановка бота после 3 раз за 20 мин) удалена —
+// её никто не вызывал с v4.44 (из боя уйти нельзя, мало HP лечит combat.battle), а остановка противоречила цели «работать часами»
 
 async function onDeath() {
   const active=contextGuard();if(!active())return false;
@@ -167,6 +158,6 @@ async function reviveStep() {
   if (a) env.fire(a); else location.href = '/city.html';
   await env.waitFor(() => env.isCity() || !!defeatBtn(), 8000);
 }
- return { restoreVitals, lowHpEscape, onDeath, reviveStep };
+ return { restoreVitals, onDeath, reviveStep };
  };
 })(globalThis);
