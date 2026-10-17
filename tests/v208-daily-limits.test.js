@@ -75,3 +75,20 @@ test('failed fish write holds fishing without fabricating quota or stopping bot'
  const f=fixture();f.state.rt.fish={t0:10,caught:0};f.refresh();await f.c.dailyLimitFishSync();f.state.rt.fish.caught=1;f.c.rt.fish.caught=1;f.fail();
  assert.equal(await f.c.dailyLimitFishSync(),false);assert.equal(f.c.rt.dailyQuota.fish,0);assert.equal(f.state.on,true);
 });
+
+function dailyFixture(){
+ const c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,console,Date};
+ const src=read('tests/v1014-daily-lifecycle.test.js');vm.runInNewContext(src.slice(0,src.indexOf("test('auto")),c);return c.make();
+}
+test('legacy daily quest cannot restart fishing after the fish daily quota',async()=>{
+ const {env,D}=dailyFixture();env.dailyFishBlocked=()=>true;env.gameGet=()=>assert.fail('no preparation after quota');
+ assert.equal(await D.dailyStep(),false);assert.equal(env.rt.dailyFish,undefined);assert.equal(env.cfg.zoneAuto,true);
+});
+test('legacy fish daily quest yields back to remaining farm at quota',async()=>{
+ const {env,D}=dailyFixture();await D.dailyStep();assert.equal(env.cfg.fishMode,true);env.dailyFishBlocked=()=>true;await D.dailyStep();
+ assert.equal(env.rt.dailyFish,null);assert.equal(env.cfg.zoneAuto,true);assert.equal(env.cfg.fishMode,false);
+});
+test('legacy daily quest finishes an already hooked fish before yielding',async()=>{
+ const {env,D}=dailyFixture();await D.dailyStep();env.dailyFishBlocked=()=>true;env.fishState=()=>({hp:1});await D.dailyStep();assert.ok(env.rt.dailyFish);
+ env.fishState=()=>null;await D.dailyStep();assert.equal(env.rt.dailyFish,null);assert.equal(env.cfg.zoneAuto,true);
+});

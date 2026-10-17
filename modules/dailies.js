@@ -143,6 +143,7 @@ async function dailyStep() {
   // Прерванный старый detour не имеет права возвращать настройки поверх более нового ручного выбора.
   for (const [key, D] of [['dailyFish', F], ['dailyRb', R]]) if (D && D.kick != null && D.kick !== kick) { await env.setRt({ [key]: null }); return true; }
   if (F) {
+    if (env.dailyFishBlocked?.() && !env.fishState?.()) { await detourEnd('dailyFish',F,'дневной лимит рыбы достигнут');return true; }
     if (fishTakenOver(F)) { await env.setRt({ dailyFish: null }); return true; }
     if (campaignBusy() && (F.readyUntil || !env.fishState?.())) return yieldCampaign('dailyFish', F, kick);
     if (env.cfg.dailyAuto === false) { await detourEnd('dailyFish', F, 'дейлики выключены'); return true; }
@@ -175,7 +176,7 @@ async function dailyStep() {
   // 15.10: строгий список сам выбирает режим; дейлик не меняет порядок и не запускает чужую задачу.
   if (Array.isArray(env.cfg.autoTasks)) return false;
   const lack = fishLack();
-  if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('fish')) && lack && !doneDay('fish') && !env.cfg.fishMode) {
+  if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('fish')) && lack && !env.dailyFishBlocked?.() && !doneDay('fish') && !env.cfg.fishMode) {
     const char = env.rt.char, ready = await fishReady(kick);
     if (!canRun() || (+env.rt.manualKickAt || 0) !== kick || env.rt.char !== char || env.cfg.dailyAuto === false || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
     if (ready) {
