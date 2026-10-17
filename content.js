@@ -1645,7 +1645,7 @@ async function farmStep() {                       // после боя: пора
   if (rt.zone === p.tp || Date.now() - (rt.zoneGoT || 0) < 180000) return false;
   const why = `${g.name} (${g.why}${isFinite(g.left) ? `, ещё ${g.left}` : ''}): ${p.loc} — ${p.names.slice(0, 3).map(n => `${n} ${p.mobs[n].lvl} ур. ${p.mobs[n].ch ? p.mobs[n].ch + '%' : ''}${p.mobs[n].spCh ? ' спойл ' + p.mobs[n].spCh + '%' : ''}`).join(', ')} · ≈${p.e.toFixed(2)} шт./бой`;
   rec('B', 'фарм', `лечу за ресурсом → ${why}`);
-  await setRt({ zoneGo: { id: p.tp, url: FARM_URL, forum: true, res: g.name, t: Date.now(), why: 'фарм: ' + why }, zoneGoT: 0 });
+  await setRt({ zoneGo: { id: p.tp, url: FARM_URL, forum: true, res: g.name, task: 'resources', t: Date.now(), why: 'фарм: ' + why }, zoneGoT: 0 });
   (L2V7Modules.actions?.canAct?.() !== false && (location.href = FARM_URL)); await sleep(4000);
   return true;
 }
@@ -1730,7 +1730,7 @@ async function recipeStep() {                     // после боя: пора
   if (rt.zone === p.zid || Date.now() - (rt.zoneGoT || 0) < 180000) return false;
   const why = `${g.name}${isFinite(g.left) ? ` (ещё ${g.left})` : ''}: ${p.loc} — ${p.names.slice(0, 3).map(n => `${n} ${p.mobs[n].lvl} ур. ${p.mobs[n].ch}%${p.mobs[n].kind === 'спойл' ? ' спойл' : ''}`).join(', ')}`;
   rec('B', 'рецепт', `лечу за рецептом → ${why}`);
-  await setRt({ zoneGo: { id: p.zid, t: Date.now(), why: 'рецепт: ' + why }, zoneGoT: 0, recipeWhy: '' });
+  await setRt({ zoneGo: { id: p.zid, task: 'resources', t: Date.now(), why: 'рецепт: ' + why }, zoneGoT: 0, recipeWhy: '' });
   (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/teleport.html')); await sleep(4000);
   return true;
 }
