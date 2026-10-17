@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path'), os = require('os'), { execFile
 const root = path.join(__dirname, '..', '..'), out = path.resolve(process.argv[2] || root);
 const mf = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 // Firefox: фоновая страница вместо service worker (service worker в расширениях Firefox нет), без полей только для Chrome
-const ff = { ...mf, background: { scripts: ['background.js'] } };
+const ff = { ...mf, background: { scripts: ['engine-core.js', 'background.js'] } };
 delete ff.minimum_chrome_version; delete ff.version_name;
 ff.browser_specific_settings = {
   gecko: { id: 'l2wap-bot@local', strict_min_version: '128.0', data_collection_permissions: { required: ['none'] } },

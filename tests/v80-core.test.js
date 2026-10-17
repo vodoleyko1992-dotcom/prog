@@ -50,7 +50,7 @@ for (const k of ['lock', 'wdDown', 'stopMeta', 'paused', 'auth']) assert.ok(new 
 assert.match(content, /if \(ch\.lock && on && tabOwner && ch\.lock\.newValue\?\.epoch !== leaseEpoch\) \{/);
 assert.match(bg, /if \(valid && Date\.now\(\) - lock\.t > 20000\) await chrome\.storage\.local\.set\(\{ lock: \{ \.\.\.lock, t: Date\.now\(\) \} \}\);/);
 assert.match(bg, /chrome\.tabs\.update\(tab, \{ autoDiscardable: false \}\)/);
-assert.match(bg, /hbBg: \{ \.\.\.hbMem \}, wdog: \[\], wdDown: null \}/);
+assert.match(bg, /hbBg: \{ \.\.\.nextHb \}, wdog: \[\], wdDown: null \}/);
 // 5. ключи-секреты в перехватчике
 const SECRET = new RegExp(hook.match(/const SECRET = \/(.+)\/i;/)[1], 'i');
 for (const k of ['accessJwt', 'bearerToken', 'ticket', 'apiKey', 'refreshToken', 'password']) assert.ok(SECRET.test(k), k);

@@ -199,39 +199,52 @@
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
   // Serial execution and retry preserve update ordering even if storage is down.
   function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
-    let pending = {}, inflight = {}, flushing = null, retryAt = 0, gen = 0;   // 10.0: gen — поколение очереди (clear() после потери замка)
-    async function drain() {
-      while (Object.keys(pending).length) {
+    // Реворк ядра: каждая выдача замка получает свою очередь. Ответ старого запроса
+    // после clear() не подтверждает новую запись и не задерживает её своим backoff.
+    const fresh = () => ({ pending: {}, inflight: {}, flushing: null, retryAt: 0 });
+    let current = fresh();
+    const cleared = () => ({ ok: false, reason: 'cleared' });
+    async function drain(state) {
+      while (Object.keys(state.pending).length) {
+        if (state !== current) return cleared();
         if (!canWrite()) return { ok: false, reason: 'inactive' };
-        const batch = pending, g0 = gen; pending = {}; inflight = batch;
+        const batch = state.pending; state.pending = {}; state.inflight = batch;
         try {
           const response = await send(batch);
+          if (state !== current) return cleared();
           if (!response?.ok) throw new Error(response?.reason || 'storage_patch_failed');
-          retryAt = 0; inflight = {};
+          state.retryAt = 0; state.inflight = {};
         } catch (e) {
-          // Newer updates take precedence over the failed older batch.
-          // 10.0 (аудит ядра): пакет из «до потери замка» (clear() был, пока он летел) обратно не ставим — иначе после возврата замка
-          // старые kills/exp/zoneStat затёрли бы то, что за это время записала другая вкладка
-          if (g0 === gen) pending = { ...batch, ...pending }; inflight = {};
-          retryAt = clock() + 3000;
+          if (state !== current) return cleared();
+          // Более свежие значения заменяют неудачный старый пакет.
+          state.pending = { ...batch, ...state.pending }; state.inflight = {};
+          state.retryAt = clock() + 3000;
           onError(e);
           return { ok: false, reason: 'write_failed' };
         }
       }
       return { ok: true };
     }
+    function flush(state) {
+      if (!state.flushing) state.flushing = Promise.resolve().then(() => drain(state)).then(result => {
+        state.flushing = null;
+        if (state !== current) return cleared();
+        // enqueue может попасть между последним await в drain и завершением promise.
+        // Тогда его подтверждение тоже ждёт фактической записи, а не пустой старой очереди.
+        return result.ok && Object.keys(state.pending).length ? flush(state) : result;
+      }, error => { state.flushing = null; throw error; });
+      return state.flushing;
+    }
     function enqueue(patch) {
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
-      Object.assign(pending, patch);
-      if (retryAt > clock()) return Promise.resolve({ ok: false, reason: 'backoff' });
-      if (!flushing) {
-        flushing = Promise.resolve().then(drain).finally(() => { flushing = null; });
-      }
-      return flushing;
+      const state = current;
+      Object.assign(state.pending, patch);
+      if (state.retryAt > clock()) return Promise.resolve({ ok: false, reason: 'backoff' });
+      return flush(state);
     }
-    function peek() { return { ...inflight, ...pending }; }
-    function recover() { return flushing || (!Object.keys(pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
-    function clear() { pending = {}; inflight = {}; retryAt = 0; gen++; }
+    function peek() { return { ...current.inflight, ...current.pending }; }
+    function recover() { return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
+    function clear() { current = fresh(); }
     return { enqueue, peek, recover, clear };
   }
 

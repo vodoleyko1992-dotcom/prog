@@ -1,3 +1,5 @@
+// Ядро выбора задач используется и сторожем MV3; в Firefox его подключает background.scripts.
+if (typeof importScripts === 'function') importScripts('engine-core.js');
 let hbMem = null;                                // последний пульс вкладки с ботом (сторож зависаний)
 let hbPersistedAt = 0;                           // last successful storage commit
 let hbPersistPending = Promise.resolve();
@@ -239,6 +241,7 @@ async function menuPatch(m, sender) {
   const valid = p => p && typeof p === 'object' && !Array.isArray(p) &&
     Object.keys(p).length <= MAX_PATCH_KEYS && Object.keys(p).every(k => !['__proto__', 'constructor', 'prototype', '_src'].includes(k));
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
+  if (typeof m.on === 'boolean' || Object.hasOwn(rtPatch, 'manualKickAt')) serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['rt', 'cfg']);
     if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
@@ -293,6 +296,31 @@ async function menuPatch(m, sender) {
     return { ok: true };
   });
 }
+// Реворк ядра: Stop/пауза проходят той же очередью, что замок и решение сторожа.
+// Команды меню доступны даже с ошибочным диапазоном лимитов и неизвестной оплатой.
+async function botControl(m, sender) {
+  if (!['stop', 'pause'].includes(m.action)) return { ok: false, reason: 'invalid_control' };
+  let popup = false, game = false;
+  try {
+    const url = new URL(sender?.url || sender?.tab?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html'));
+    popup = url.origin === expected.origin && url.pathname === expected.pathname;
+    game = url.protocol === 'https:' && /(^|\.)l2wap\.com$/i.test(url.hostname) && Number.isInteger(sender?.tab?.id) && sender.frameId === 0;
+  } catch (_) {}
+  if ((!popup && !game) || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
+  serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
+  return serializeLock(async () => {
+    const state = await chrome.storage.local.get(['on', 'lock', 'rt']);
+    if (!popup) {
+      if (String(m.char || '') !== String(state.rt?.char || '') || m.kick != null && m.kick !== (state.rt?.manualKickAt || 0)) return { ok: false, reason: 'character_changed' };
+      if (!state.on) return { ok: true };
+      if (state.lock?.k !== 'tab' + sender.tab.id || !m.epoch || state.lock.epoch !== m.epoch || Date.now() - state.lock.t >= LOCK_TTL) return { ok: false, reason: 'ownership_lost' };
+    }
+    const now = Date.now(), reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240);
+    await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null,
+      stopMeta: { source: String(m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
+    return { ok: true };
+  });
+}
 async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
   if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
@@ -340,10 +368,16 @@ const paint = on => {
 chrome.storage.local.get('on').then(s => paint(s.on));
 chrome.storage.onChanged.addListener(ch => {
   if (!ch.on) return;
+  serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   paint(ch.on.newValue);
-  if (ch.on.newValue) chrome.storage.local.get('hbBg').then(({ hbBg }) => {   // старт — отсчёт сторожа заново
-    const h = hbMem || hbBg; if (!h) return;
-    hbMem = { ...h, t: Date.now() }; chrome.storage.local.set({ hbBg: { ...hbMem }, wdog: [], wdDown: null }).then(() => { hbPersistedAt = Date.now(); }).catch(() => {});   // ручной старт — счёт перезагрузок с нуля; 8.0: старая метка простоя сервера — не после нового старта (10.0: комментарий съедал .then/.catch)
+  if (ch.on.newValue) serializeLock(async () => {   // старт — отсчёт сторожа заново, в очереди владельца
+    const { on, hbBg, lock } = await chrome.storage.local.get(['on', 'hbBg', 'lock']);
+    if (!on) return; // Пока ждали хранилище, игрок мог уже остановить бота.
+    const h = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
+    if (!h || lock?.k !== 'tab' + h.tab) return;
+    const nextHb = { ...h, t: Date.now() };
+    await chrome.storage.local.set({ hbBg: { ...nextHb }, wdog: [], wdDown: null });
+    hbMem = nextHb; hbPersistedAt = Date.now();
   }).catch(() => {});
 });
 
@@ -427,8 +461,11 @@ chrome.runtime.onInstalled.addListener(async details => {
 // и всё ниже (журнал, замок вкладки, запись памяти) не регистрировалось
 chrome.commands?.onCommand.addListener(async c => {
   if (c !== 'toggle-bot') return;
-  const { on = false } = await chrome.storage.local.get('on');
-  await chrome.storage.local.set({ on: !on, ...(!on ? {} : { stopMeta: { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: Date.now() } }) });
+  serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
+  await serializeLock(async () => {
+    const { on = false } = await chrome.storage.local.get('on');
+    await chrome.storage.local.set({ on: !on, ...(!on ? {} : { stopMeta: { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: Date.now() } }) });
+  });
 });
 
 // ===== журнал и снимки страниц — в IndexedDB (до 100 000 событий и 1000 страниц) =====
@@ -687,67 +724,96 @@ async function srvProbe(origin) {
   catch (e) { return 'down'; } finally { clearTimeout(tm); }
 }
 chrome.runtime.onStartup.addListener(() => { void ensureWatchdogAlarm(); });
+let watchdogRunning = false;
 chrome.alarms?.onAlarm.addListener(async a => {
-  if (a.name !== 'l2watch') return;
-  const before = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']);
-  let { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = before;
-  let hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
-  // Не перезагружать вкладку-ожидателя: сторож следит только за владельцем замка.
-  if (!on || !Number.isInteger(hb?.tab) || lock?.k !== 'tab' + hb.tab) return;
-  let now = Date.now(), quiet = now - hb.t;
-  if (quiet < 150000) { if (wdDown) await chrome.storage.local.set({ wdDown: null }); return; }   // 7.2.5: вкладка ожила сама — простой окончен
-  let tab = null;
-  try { tab = await chrome.tabs.get(hb.tab); } catch (e) {}
-  if (!tab || !/l2wap\.com/.test(tab.url || tab.pendingUrl || '')) return;     // вкладку закрыли или ушли с сайта — не трогаем
-  const ev = { t: now, src: 'S', kind: 'сторож', what: '', st: '' };
-  const origin = new URL(tab.url || tab.pendingUrl).origin;
-  const server = await srvProbe(origin);
-  // 15.10: сетевой probe может занять 8 с. Stop, новый хозяин или свежий heartbeat отменяют прежнее решение.
-  ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown']));
-  hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
-  if (!on || lock?.k !== before.lock?.k || lock?.epoch !== before.lock?.epoch || lock?.k !== 'tab' + tab.id || hb?.tab !== tab.id) return;
-  now = Date.now(); quiet = now - hb.t;
-  if (quiet < 150000) return;
-  const recent = wdog.filter(t => now - t < 20 * 60000);
-  const plan = wdPlan({ quiet, recent, fish: !!cfg.fishMode, srv: server, downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
-  if (plan.down) {                                     // сервер лежит: не попытка, не остановка
-    if (plan.act !== 'reload') return;
-    ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), сервер игры не отвечает — перезагружаю вкладку раз в 2 мин, бота не останавливаю`;
-    if (!wdDown) { buf.push(ev); flush(); }            // в журнал — только начало простоя
-    hbMem = { tab: hb.tab, t: now - 60000, page: hb.page };
-    await chrome.storage.local.set({ wdDown: { since: wdDown?.since || now, last: now }, hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
-    try { await chrome.tabs.reload(hb.tab); } catch (e) {}
-    return;
-  }
-  if (plan.back) {
-    ev.what = `сервер игры снова отвечает (простой ${Math.round((now - (wdDown.since || now)) / 60000)} мин) — перезагружаю вкладку, бот продолжает задачу`;
-    buf.push(ev); flush();
-    hbMem = { tab: hb.tab, t: now, page: hb.page };
-    await chrome.storage.local.set({ wdDown: null, hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
-    try { await chrome.tabs.reload(hb.tab); } catch (e) {}
-    return;
-  }
-  // рыбалка (v4.49): не останавливаем никогда — после 3 перезагрузок за 20 мин просто перезагружаем реже (раз в 5 мин)
-  if (recent.length >= 3 && cfg.fishMode) {
-    if (now - Math.max(...recent) < 5 * 60000) return;
-    ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — рыбалка: перезагружаю вкладку (раз в 5 мин, не останавливаю)`;
-    buf.push(ev); flush();
-    hbMem = { tab: hb.tab, t: now, page: hb.page };
-    await chrome.storage.local.set({ wdog: [...recent, now], hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
-    try { await chrome.tabs.update(hb.tab, { url: new URL(tab.url || tab.pendingUrl).origin + '/fishing.html' }); } catch (e) { try { await chrome.tabs.reload(hb.tab); } catch (e2) {} }
-    return;
-  }
-  if (recent.length >= 3) {
-    ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
-    buf.push(ev); flush();
-    await chrome.storage.local.set({ on: false, wdog: recent, stopMeta: { source: 'watchdog', reason: ev.what, t: Date.now() } });
-    return;
-  }
-  ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
-  buf.push(ev); flush();
-  hbMem = { tab: hb.tab, t: now, page: hb.page };      // дать странице время загрузиться
-  await chrome.storage.local.set({ wdog: [...recent, now], hbBg: { ...hbMem } }); hbPersistedAt = Date.now();
-  try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+  if (a.name !== 'l2watch' || watchdogRunning) return;
+  watchdogRunning = true;
+  const generation = serializeLock.controlSeq || 0;
+  try {
+    const before = await serializeLock(async () => {
+      const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']);
+      const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
+      if (!state.on || !Number.isInteger(hb?.tab) || state.lock?.k !== 'tab' + hb.tab) return null;
+      const quiet = Date.now() - hb.t, wdDown = state.wdDown;
+      if (quiet < 150000) { if (wdDown) await chrome.storage.local.set({ wdDown: null }); return; }
+      return state;
+    });
+    if (!before) return;
+    let { on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {} } = before;
+    let hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
+    let now = Date.now(), quiet = now - hb.t, tab;
+    try { tab = await chrome.tabs.get(hb.tab); } catch (_) { return; }
+    let origin;
+    try {
+      const url = new URL(tab.pendingUrl || tab.url);
+      if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname)) return;
+      origin = url.origin;
+    } catch (_) { return; }
+    const ev = { t: now, src: 'S', kind: 'сторож', what: '', st: '' };
+    // Сеть не держит очередь записей: Stop/heartbeat/новый хозяин обрабатываются сразу.
+    const server = await srvProbe(origin);
+    await serializeLock(async () => {
+      const stillCurrent = async () => {
+        if ((serializeLock.controlSeq || 0) !== generation) return false;
+        let latestTab; try { latestTab = await chrome.tabs.get(tab.id); } catch (_) { return false; }
+        if ((latestTab.pendingUrl || latestTab.url) !== (tab.pendingUrl || tab.url)) return false;
+        const state = await chrome.storage.local.get(['on', 'lock', 'rt', 'hbBg']);
+        const h = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
+        return (serializeLock.controlSeq || 0) === generation && !!state.on && state.lock?.k === lock?.k && state.lock?.epoch === lock?.epoch && h?.tab === hb.tab && h.t === hbMem?.t
+          && state.rt?.char === rt.char && (state.rt?.manualKickAt || 0) === (rt.manualKickAt || 0);
+      };
+      const persist = async (patch, nextHb) => {
+        await chrome.storage.local.set({ ...patch, hbBg: { ...nextHb } });
+        hbMem = nextHb; hbPersistedAt = Date.now();
+      };
+      // 15.10: сетевой probe может занять 8 с. Stop, новый хозяин или свежий heartbeat отменяют прежнее решение.
+      ({ on = false, hbBg, wdog = [], cfg = {}, lock, wdDown = null, rt = {} } = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']));
+      hb = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
+      if ((serializeLock.controlSeq || 0) !== generation || !on || lock?.k !== before.lock?.k || lock?.epoch !== before.lock?.epoch || lock?.k !== 'tab' + tab.id || hb?.tab !== tab.id || rt.char !== before.rt?.char || (rt.manualKickAt || 0) !== (before.rt?.manualKickAt || 0)) return;
+      let currentTab; try { currentTab = await chrome.tabs.get(tab.id); } catch (_) { return; }
+      if ((serializeLock.controlSeq || 0) !== generation || (currentTab.pendingUrl || currentTab.url) !== (tab.pendingUrl || tab.url)) return;
+      now = Date.now(); quiet = now - hb.t;
+      if (quiet < 150000) return;
+      const recent = wdog.filter(t => now - t < 20 * 60000);
+      const fishMode = Array.isArray(cfg.autoTasks) ? globalThis.L2EngineCore?.selectedTask(cfg, rt, now) === 'fish' : !!cfg.fishMode;
+      const plan = wdPlan({ quiet, recent, fish: fishMode, srv: server, downLast: wdDown?.last || 0, wasDown: !!wdDown, now });
+      if (plan.down) {                                     // сервер лежит: не попытка, не остановка
+        if (plan.act !== 'reload') return;
+        ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}), сервер игры не отвечает — перезагружаю вкладку раз в 2 мин, бота не останавливаю`;
+        if (!wdDown) { buf.push(ev); flush(); }            // в журнал — только начало простоя
+        await persist({ wdDown: { since: wdDown?.since || now, last: now } }, { tab: hb.tab, t: now - 60000, page: hb.page });
+        if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+        return;
+      }
+      if (plan.back) {
+        ev.what = `сервер игры снова отвечает (простой ${Math.round((now - (wdDown.since || now)) / 60000)} мин) — перезагружаю вкладку, бот продолжает задачу`;
+        buf.push(ev); flush();
+        await persist({ wdDown: null }, { tab: hb.tab, t: now, page: hb.page });
+        if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+        return;
+      }
+      // рыбалка (v4.49): не останавливаем никогда — после 3 перезагрузок за 20 мин просто перезагружаем реже (раз в 5 мин)
+      if (recent.length >= 3 && fishMode) {
+        if (now - Math.max(...recent) < 5 * 60000) return;
+        ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — рыбалка: перезагружаю вкладку (раз в 5 мин, не останавливаю)`;
+        buf.push(ev); flush();
+        await persist({ wdog: [...recent, now] }, { tab: hb.tab, t: now, page: hb.page });
+        if (await stillCurrent()) try { await chrome.tabs.update(hb.tab, { url: origin + '/fishing.html' }); } catch (e) { if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e2) {} }
+        return;
+      }
+      if (recent.length >= 3) {
+        ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
+        buf.push(ev); flush();
+        await chrome.storage.local.set({ on: false, wdog: recent, stopMeta: { source: 'watchdog', reason: ev.what, t: Date.now() } });
+        return;
+      }
+      ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
+      buf.push(ev); flush();
+      await persist({ wdog: [...recent, now] }, { tab: hb.tab, t: now, page: hb.page }); // дать странице время загрузиться
+      if (await stillCurrent()) try { await chrome.tabs.reload(hb.tab); } catch (e) {}
+    });
+  } catch (e) { console.warn('[L2bot] сторож: восстановление отложено', e); }
+  finally { watchdogRunning = false; }
 });
 
 // Release immediately when the owning tab is closed (no 90-second stale lock).
@@ -813,6 +879,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   }
   if (m?.cmd === 'menuPatch') {
     menuPatch(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
+  if (m?.cmd === 'botControl') {
+    botControl(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
   if (m?.cmd === 'charSwitch') {
