@@ -102,8 +102,12 @@ function limitRangeChange(state,now,options={}) {
   }
   cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt};
 }
+// 20.12 (ревизия 17.10, UI-2): ключа дневного лимита нет в сохранённых настройках — у вкладки действует её заводское значение
+// (DEF_CFG), фон сверяет с ним же. Раньше расхождение незаметно закрывала запись всей формы при Старте; без неё рыбалка и охота
+// ждали «daily_fish_interrupted» / «quota_changed» вечно. Явно сохранённое число по-прежнему сверяется строго.
+const dailyLimitOf = (cfg, key, tabLimit) => cfg?.[key] === undefined ? farmQuotaLimit(tabLimit) : farmQuotaLimit(cfg[key]);
 function dailyFishChange(state,E,now) {
-  const rt=state.rt||{},limit=farmQuotaLimit(state.cfg?.dailyFishLimit);
+  const rt=state.rt||{},limit=dailyLimitOf(state.cfg,'dailyFishLimit',E?.limit);
   if(!state.on || !limit || limit!==E.limit || (rt.manualKickAt||0)!==(E.kick||0)) return {ok:false,reason:'daily_fish_interrupted'};
   const fish=rt.fish||{},t0=+fish.t0||0,caught=Math.max(0,+fish.caught||0),old=rt.dailyFishMark;
   const mark=!old || t0>old.t0 ? {t0,caught} : t0===old.t0 ? {t0,caught:Math.max(caught,old.caught)} : old;
@@ -116,7 +120,7 @@ function farmQuotaChange(state, E, now) {
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
   const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
   // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
-  const dailyLimit=farmQuotaLimit(cfg.dailyKillLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0);
+  const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0);   // 20.12: нет ключа — значение вкладки
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
   const old = rt.farmQuota?.[E.task];
   let row = old, dailyQuota=dailyQuotaToday(rt,now);
@@ -869,6 +873,30 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     if (!game || !R || typeof R !== 'object' || Array.isArray(R) || R.kind !== 'visit' || !['order', 'smith'].includes(R.npc) || !(+R.t > 0)) { reply({ ok: false, reason: 'invalid' }); return true; }
     serializeLock(async () => { const { rt = {} } = await chrome.storage.local.get('rt'); await chrome.storage.local.set({ rt: { ...rt, mmGoReq: { kind: 'visit', npc: R.npc, t: +R.t }, mmGoSay: null, _src: 'menu' } }); return { ok: true }; })
       .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
+  // 20.12 (ревизия 17.10, UI-10): ◀/▶ дока во вкладке без замка (бот работает в другой вкладке или аренда истекла) — statePatch отвечал
+  // ownership_lost, и меню молча не сворачивалось. Свёрнутость — настройка вида, пишется отдельно, только этот ключ, только со страницы игры.
+  if (m?.cmd === 'dockMinSet') {
+    let game = false; try { game = /(^|\.)l2wap\.com$/.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (e) {}
+    if (!game || typeof m.dockMin !== 'boolean') { reply({ ok: false, reason: 'invalid' }); return true; }
+    serializeLock(async () => { const { cfg = {} } = await chrome.storage.local.get('cfg'); await chrome.storage.local.set({ cfg: { ...cfg, dockMin: m.dockMin } }); return { ok: true }; })
+      .then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
+  // 20.12 (ревизия 17.10, UI-4): импорт файла настроек — через ту же очередь фона, что и записи меню и вкладки (раньше напрямую в storage
+  // мимо очереди: работающий бот затирал импорт или импорт — свежие записи бота). Ключи проверяет меню по своему списку (cfgImportClean).
+  if (m?.cmd === 'cfgImport') {
+    let fromPopup = false;
+    try { const src = new URL(_s?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); fromPopup = src.origin === expected.origin && src.pathname === expected.pathname; } catch (e) {}
+    const okObj = p => p && typeof p === 'object' && !Array.isArray(p) && Object.keys(p).length <= MAX_PATCH_KEYS && Object.keys(p).every(k => /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k));
+    const per = m.perChar && typeof m.perChar === 'object' && !Array.isArray(m.perChar) ? m.perChar : {};
+    if (!fromPopup || !okObj(m.cfg) || Object.keys(per).length > 50 || !Object.entries(per).every(([k, v]) => /^cfg@[^\s]{1,100}$/.test(k) && okObj(v))) { reply({ ok: false, reason: 'invalid' }); return true; }
+    serializeLock(async () => {
+      const keys = ['cfg', ...Object.keys(per)], state = await chrome.storage.local.get(keys), change = { cfg: { ...(state.cfg || {}), ...m.cfg } };
+      for (const [k, v] of Object.entries(per)) change[k] = { ...(state[k] && typeof state[k] === 'object' ? state[k] : {}), ...v };
+      await chrome.storage.local.set(change); return { ok: true };
+    }).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
   if (m?.cmd === 'rbRunSet') {

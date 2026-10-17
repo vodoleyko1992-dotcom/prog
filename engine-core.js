@@ -184,9 +184,14 @@
     }});
     taskRaw.set(view, raw); return view;
   }
+  const MANUAL_JOBS = ['shop','invScan','bagCheck','faScan','recipeScan','farmScan','zoneScan'];
   function taskJobAllowed(c, key, rt = {}) {
     if (taskList(c) === null) return true;
     if (['dailyFish','dailyRb'].includes(key)) return false; // Дейлики не владеют режимом строгого списка.
+    // 20.12 (ревизия 17.10, core-a/M2): разовые кнопки меню («🛒 Закупить сейчас», «Пересчитать в сумке», «Обновить список баффов FA»,
+    // «Проверить оружие», чтение баз/телепорта) — явная команда игрока; раньше при выбранной рыбалке/«только задачах» их молча стирали.
+    const job = rt[key];
+    if (MANUAL_JOBS.includes(key) && job && typeof job === 'object' && (job.urgent === true || job.manual === true)) return true;
     const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
     // Ожидающий тур сохраняет место возврата после выбранной рыбалки; боевые маршруты не переносятся.
     if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && selectedTask(c,rt) === 'fish') return true;

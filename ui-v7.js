@@ -151,6 +151,8 @@
   };
   modeToggle?.addEventListener('click', () => {
     const open = quickModes?.hidden;
+    // 20.12 (ревизия 17.10, UI-7): состояние запоминает popup.js (taskListOpen → localStorage) — док не раскрывает список на каждом переходе
+    if (typeof taskListOpen === 'function') return taskListOpen(!!open);
     if (quickModes) quickModes.hidden = !open;
     modeToggle.setAttribute('aria-expanded',String(!!open));
   });

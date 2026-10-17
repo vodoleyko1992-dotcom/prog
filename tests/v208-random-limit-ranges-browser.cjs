@@ -20,7 +20,7 @@ async function scenario(task){
  await h.g.p.goto('https://l2wap.com/battle.html?spawnId=fixture');await until(()=>h.g.core('rt.char==="AuditHero"'));await h.g.p.evaluate(()=>fetch('/game/battle'));await h.g.p.bringToFront();await h.click('start');
  await until(async()=>((await h.get(['rt'])).rt.farmQuota?.[task]?.done),20000);
  const state=await h.get(['rt','cfg','on']);assert.equal(state.on,true);assert.equal(state.rt.farmQuota[task].got,target);assert.ok(state.cfg.limitRanges[key]);assert.ok(!state.cfg.autoTasks.includes(task));assert.ok(state.cfg.autoTasks.includes(task==='cat'?'auto':'dailies'));assert.deepEqual(acts,['attack']);await h.click('stop');
- await h.openTab('limits');await h.click(task+'KillReset');assert.equal((await h.get(['rt'])).rt.farmQuota[task].got,0);
+ await h.openTab('limits');await h.click(task+'KillReset');/* 20.12: клик не ждёт записи фона (в очереди после Stop) — ждём результат, а не читаем сразу */await until(async()=>(await h.get(['rt'])).rt.farmQuota[task].got===0,5000);
  assert.deepEqual(h.errors,[]);console.log('PASS MV3 '+task+': random range 2–4 → stored target / popup reload / full Save+Start preserves range / exact victory / reset');
  }catch(e){console.error('DIAG',task,acts,await h.get(['rt','cfg','on']));throw e}finally{await h.ctx.close()}
 }

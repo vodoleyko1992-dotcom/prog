@@ -45,7 +45,8 @@ const now = Date.now();
   // 5. проводка: окно бота (кнопки справа от «Респ эпиков», кликабельны, блок есть и без эпиков), фон mmGoSet только с l2wap.com, геттер pauseBot, меню
   const c = read('content.js'), bg = read('background.js'), pp = read('popup.js');
   assert.match(c, /L2V7Modules\.mammon = L2V7Factories\.mammon\(\{[^\n]* get \$q\(\) \{ return \$q; \}, get pauseBot\(\) \{ return pauseBot; \}/, 'mammon: геттер pauseBot');
-  assert.match(c, /data-mmgo="order"[^\n]*🛒 Торговец Маммона<\/button><button type="button" class="bt" data-mmgo="smith"[^\n]*⚒ Кузнец Маммона<\/button>/, 'две кнопки рядом');
+  // 20.12 (UI-8): текст кнопки зависит от шага подтверждения — проверяем обе подписи рядом
+  assert.match(c, /data-mmgo="order"[^\n]*'🛒 Торговец Маммона'\}<\/button><button type="button" class="bt" data-mmgo="smith"[^\n]*'⚒ Кузнец Маммона'\}<\/button>/, 'две кнопки рядом');
   assert.match(c, /<div class="e"><div class="et"><b>🐉 Респ эпиков<\/b>[^\n]*<div class="mm">\$\{mmGoBtns\(\)\}<\/div><\/div>/, 'кнопки в блоке «Респ эпиков»');
   assert.match(c, /if \(t === '— 🏛 маммон —'\) return `<div class="e"><div class="mm">\$\{mmGoBtns\(\)\}<\/div><\/div>`/, 'без эпиков — только кнопки');
   assert.match(c, /#l2bot-ind \.e\{display:flex;gap:10px;align-items:flex-start\}/); assert.match(c, /#l2bot-ind \.e \.mm \.bt\{pointer-events:auto;cursor:pointer/, 'кнопки кликабельны в окне pointer-events:none');

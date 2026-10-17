@@ -160,6 +160,13 @@ function ownCfgChange(c) {
   if (i < 0) return false;
   OWN_CFG.splice(i, 1); return true;
 }
+// 20.12 (ревизия 17.10, UI-10): только вид меню (◀/▶ дока) — не повод перезапускать решения бота
+const VIEW_CFG = ['dockMin'];
+function viewOnlyCfgChange(c) {
+  const o = c?.oldValue || {}, n = c?.newValue || {}, js = v => JSON.stringify(v);
+  const changed = [...new Set([...Object.keys(o), ...Object.keys(n)])].filter(k => js(o[k]) !== js(n[k]));
+  return changed.length > 0 && changed.every(k => VIEW_CFG.includes(k));
+}
 async function setCfg(patch) {
   OWN_CFG.push({ patch: { ...patch }, t: Date.now() }); if (OWN_CFG.length > 20) OWN_CFG.shift();
   const response = await ipc({ cmd: 'statePatch', patch: {}, cfgPatch: patch,
@@ -3371,7 +3378,15 @@ function dock() {
     tg.addEventListener('click', async e => {
       e.stopPropagation();
       if (dockOver) { try { localStorage.setItem('l2bot-dockOpen', dockOverOpen() ? '0' : '1'); } catch (er) {} dock(); return; }
-      await setCfg({ dockMin: !cfg.dockMin });
+      // 20.12 (ревизия 17.10, UI-10): вкладка-хозяин пишет своей записью (не поднимает поколение); другая вкладка — командой фона
+      // dockMinSet без замка. Не вышло — подсказка на кнопке, а не молчаливый отказ.
+      const want = !cfg.dockMin;
+      try { if (tabOwner) await setCfg({ dockMin: want }); else throw new Error('not_owner'); }
+      catch (er) {
+        let ok = false; try { ok = !!(await chrome.runtime.sendMessage({ cmd: 'dockMinSet', dockMin: want }))?.ok; } catch (e2) {}
+        if (ok) { cfg = { ...cfg, dockMin: want }; dock(); }
+        else { tg.title = 'Не удалось свернуть меню: фон расширения не ответил. Обновите страницу'; tg.textContent = '⚠'; setTimeout(() => { try { tg.title = ''; dock(); } catch (e3) {} }, 3000); }
+      }
     });
     const wide = document.createElement('button');
     wide.id = 'l2bot-dock-wide';
@@ -3508,7 +3523,7 @@ let rbRunOpen = (() => { try { return localStorage.getItem('l2bot-rbrun') === '1
 if (typeof addEventListener === 'function') addEventListener('click', e => {
   const b = e.target?.closest?.('[data-rbrun]'); if (!b || !ui.contains?.(b)) return; e.preventDefault(); e.stopPropagation();
   if (b.dataset.rbrun === 'toggle') { rbRunOpen = !rbRunOpen; try { localStorage.setItem('l2bot-rbrun', rbRunOpen ? '1' : '0'); } catch (er) {} try { draw(); } catch (er) {} return; }
-  if (b.dataset.rbrun === 'reset') { if (b.dataset.ask !== '1') { b.dataset.ask = '1'; b.textContent = '⚠ Ещё раз — обнулить'; setTimeout(() => { try { draw(); } catch (er) {} }, 4000); return; }
+  if (b.dataset.rbrun === 'reset') { if (indAskFirst('rbrun:reset')) return;   // 20.12 (UI-9): подтверждение в переменной, перерисовка его не стирает
     rbRunReset().catch(() => {}); }
 });
 // обнуление — через фон (команда rbRunSet): пишется и когда вкладка не держит замок (бот стоит/на паузе); не вышло — обычный setRt
@@ -3526,7 +3541,9 @@ async function rbRunReset() {
 const MM_LOC = { order: '/mammon-merchant-loc.html', smith: '/mammon-blacksmith-loc.html' };
 if (typeof addEventListener === 'function') addEventListener('click', e => {
   const b = e.target?.closest?.('[data-mmgo]'); if (!b || !ui.contains?.(b)) return; e.preventDefault(); e.stopPropagation();
-  mmGoClick(b.dataset.mmgo === 'smith' ? 'smith' : 'order').catch(() => {});
+  const npc = b.dataset.mmgo === 'smith' ? 'smith' : 'order';
+  if (indAskFirst('mm:' + npc)) return;   // 20.12 (UI-8): первое нажатие только просит подтвердить
+  mmGoClick(npc).catch(() => {});
 });
 async function mmGoClick(npc) {
   const who = npc === 'smith' ? 'кузнецу' : 'торговцу';
@@ -3540,7 +3557,40 @@ async function mmGoClick(npc) {
 function mmGoBtns() {
   const R = rt.mmGoReq, S = rt.mmGoSay, J = rt.mmJob, now = Date.now();
   const st = J?.visit ? `⏳ иду к ${J.kind === 'smith' ? 'кузнецу' : 'торговцу'}…` : R?.kind === 'visit' && now - (R.t || 0) < 30 * 60000 ? `⏳ к ${R.npc === 'smith' ? 'кузнецу' : 'торговцу'}: после боя/тура` : S && now - (S.t || 0) < 600000 ? `✗ ${S.why}` : '';
-  return `<button type="button" class="bt" data-mmgo="order" title="${on ? 'Телепорт к торговцу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к торговцу Маммона'}">🛒 Торговец Маммона</button><button type="button" class="bt" data-mmgo="smith" title="${on ? 'Телепорт к кузнецу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к кузнецу Маммона'}">⚒ Кузнец Маммона</button>${st ? `<span class="ms">${escH(st)}</span>` : ''}`;
+  // 20.12 (ревизия 17.10, UI-8): кнопка — вторым нажатием (первое показывает «⚠ Ещё раз — …»): окно бота может лежать поверх игры,
+  // и случайный промах мышью был платным телепортом с паузой бота
+  const ask = k => indAsk.key === 'mm:' + k && indAsk.until > now;
+  return `<button type="button" class="bt" data-mmgo="order" title="${on ? 'Телепорт к торговцу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к торговцу Маммона'} — нажать дважды">${ask('order') ? '⚠ Ещё раз — к торговцу' : '🛒 Торговец Маммона'}</button><button type="button" class="bt" data-mmgo="smith" title="${on ? 'Телепорт к кузнецу Маммона (за адену), открыть его страницу и встать на паузу' : 'Бот стоит: открыть страницу телепорта к кузнецу Маммона'} — нажать дважды">${ask('smith') ? '⚠ Ещё раз — к кузнецу' : '⚒ Кузнец Маммона'}</button>${st ? `<span class="ms">${escH(st)}</span>` : ''}`;
+}
+// 20.12 (ревизия 17.10, UI-9/F7): подтверждение «вторым нажатием» хранится здесь, а не в DOM — перерисовка его не сбрасывает
+let indAsk = { key: '', until: 0 };
+function indAskFirst(key) {
+  const now = Date.now();
+  if (indAsk.key === key && indAsk.until > now) { indAsk = { key: '', until: 0 }; return false; }   // второе нажатие — выполнить
+  indAsk = { key, until: now + 4000 }; setTimeout(() => { if (indAsk.key === key && indAsk.until <= Date.now()) { indAsk = { key: '', until: 0 }; } try { draw(); } catch (e) {} }, 4050);
+  try { draw(); } catch (e) {} return true;
+}
+// 20.12 (ревизия 17.10, UI-9/F7): окно перерисовывается несколько раз в секунду. Раньше ui.innerHTML пересоздавал все кнопки — клик,
+// попавший между mousedown и mouseup на перерисовку, терялся. Теперь: разметка не изменилась — DOM не трогаем; изменилась — правим
+// узлы на месте (те же кнопки остаются под курсором, у них меняются только текст и атрибуты).
+let indHtml = null;
+function indPatch(el, html) {
+  if (html === indHtml) return; indHtml = html;
+  if (typeof el.replaceChildren !== 'function' || typeof document?.createElement !== 'function' || !el.firstChild) { el.innerHTML = html; return; }
+  const tpl = document.createElement('div'); tpl.innerHTML = html; indPatchKids(el, tpl);
+}
+function indPatchKids(el, tpl) {
+  const a = [...el.childNodes], b = [...tpl.childNodes];
+  if (a.length !== b.length) { el.replaceChildren(...b); return; }
+  b.forEach((n, i) => {
+    const o = a[i];
+    if (o.isEqualNode(n)) return;
+    if (o.nodeType === 3 && n.nodeType === 3) { o.nodeValue = n.nodeValue; return; }
+    if (o.nodeType !== 1 || n.nodeType !== 1 || o.tagName !== n.tagName) { o.replaceWith(n); return; }
+    for (const at of [...o.attributes]) if (!n.hasAttribute(at.name)) o.removeAttribute(at.name);
+    for (const at of [...n.attributes]) if (o.getAttribute(at.name) !== at.value) o.setAttribute(at.name, at.value);
+    indPatchKids(o, n);
+  });
 }
 function draw() {
   const L = [], now = Date.now();
@@ -3606,7 +3656,7 @@ function draw() {
   ui.style.display = '';
   const lines = mode === 'mini' || ui.classList.contains('over') ? L.slice(0, 3) : L;   // 8.0.7: поверх игры (планшет) — 3 строки
   const dot = on ? '#5cc27a' : pz ? '#e3b04b' : '#7f8c8d';
-  ui.innerHTML = lines.map((t, i) => {
+  indPatch(ui, lines.map((t, i) => {
     if (i === 0) return `<div class="h"><i style="background:${dot};color:${on || pz ? dot : 'transparent'}"></i>${escH(t)}</div>`;
     if (i === 1) return `<div class="s${on ? '' : ' old'}">${escH(t)}</div>`;
     if (t === sess) return `<div class="t">${escH(t)}</div>`;
@@ -3616,10 +3666,10 @@ function draw() {
     if (t === '— 🏛 маммон —') return `<div class="e"><div class="mm">${mmGoBtns()}</div></div>`;
     if (rbRunTxt && t === rbRunTxt) { let S = null; try { S = L2V7Modules.rbrun.summary(now); } catch (e) {}
       const head = `<button type="button" class="bt" data-rbrun="toggle" title="${rbRunOpen ? 'Свернуть сводку' : 'Показать, что выпало с РБ за серию'}">📦 Серия РБ${S ? `: убито ${S.kills}${S.nItems ? ` · вещей ${S.nItems}` : ''}` : ''} ${rbRunOpen ? '▴' : '▾'}</button>`;
-      const body = rbRunOpen ? `${escH(t.replace(/^— 📦 серия РБ —\n/, ''))}\n<button type="button" class="bt" data-rbrun="reset" title="Обнулить сводку и считать заново с этого момента">↺ Новая серия</button>` : '';
+      const body = rbRunOpen ? `${escH(t.replace(/^— 📦 серия РБ —\n/, ''))}\n<button type="button" class="bt" data-rbrun="reset" title="Обнулить сводку и считать заново с этого момента">${indAsk.key === 'rbrun:reset' && indAsk.until > now ? '⚠ Ещё раз — обнулить' : '↺ Новая серия'}</button>` : '';
       return `<div class="b">${head}${body ? '\n' + body : ''}</div>`; }
     return `<div>${escH(t)}</div>`;
-  }).join('');
+  }).join(''));
   ui.style.borderColor = on ? 'rgba(92,194,122,.55)' : pz ? 'rgba(227,176,75,.55)' : 'rgba(212,168,86,.3)';
 }
 
@@ -5780,7 +5830,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
 // любая необработанная ошибка расширения — в журнал (чтобы «полный сбой» был виден в выгрузке, а не только в консоли)
 // v5.6: обработчики ошибок — один набор (выше, у записи журнала); второй дублировал каждую ошибку в журнале
 chrome.storage.onChanged.addListener(ch => {
-  if (ch.on || ch.cfg && !ownCfgChange(ch.cfg) || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
+  if (ch.on || ch.cfg && !ownCfgChange(ch.cfg) && !viewOnlyCfgChange(ch.cfg) || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
   // Обновление справочников из меню должно быть видно без перезагрузки страницы.
   if (ch.farmDb) FARM = ch.farmDb.newValue || null;
   if (ch.recipeDb) RECIPES = ch.recipeDb.newValue || null;
