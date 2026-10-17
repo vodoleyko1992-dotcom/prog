@@ -271,10 +271,28 @@ function tourPages() {
   const first = Math.min(...pages), last = Math.max(...pages);
   return Array.from({ length: last - first + 1 }, (_, i) => first + i);
 }
+// 20.13 (ревизия 17.10, шаг 5, TM-1): опрос раз в 30 с остаётся, но не больше 2 страниц за раз (было все 6–8 — ≈800 GET/ч часами).
+// Первыми — страницы, где у РБ окна живой, неизвестный или наступающий (≤5 мин) / прошедший респ; остальные — по кругу.
+const TOUR_PAGES_MAX = 2;
+let tourTurn = ssNum('l2bot-rbtTourTurn');   // очередь страниц переживает переходы между страницами игры
+function tourPagesDue(pages, now = Date.now()) {
+  const T = state(), due = new Set(), set = new Set(pages);
+  for (const [id, row] of Object.entries(env.rt.rbList || {})) {
+    const page = +row?.page;
+    if (!set.has(page) || due.has(page)) continue;
+    const tm = timerOf(T, id, now);
+    if (!tm || tm.al || tm.late || tm.soon || (tm.at.lo > 0 ? tm.at.lo : tm.at.hi) - now <= 5 * MIN) due.add(page);
+  }
+  const rot = (a, k) => a.length ? [...a.slice(k % a.length), ...a.slice(0, k % a.length)] : [];
+  const first = pages.filter(p => due.has(p)), rest = pages.filter(p => !due.has(p)), n = TOUR_PAGES_MAX, t = tourTurn++;
+  try { sessionStorage.setItem('l2bot-rbtTourTurn', String(tourTurn)); } catch (e) {}
+  if (!first.length || !rest.length) return rot(first.length ? first : rest, t * n).slice(0, n);
+  return [...rot(first, t * (n - 1)).slice(0, n - 1), ...rot(rest, t).slice(0, 1)];   // одна страница за опрос — остальным, чтобы их не забыть
+}
 async function tourTick({ active: callerActive } = {}) {
   const context = pollContext(), active = () => pollContext() === context && !!callerActive?.();
   if (typeof callerActive !== 'function' || !active() || busy || Date.now() - tourPollT < 30000) return false;
-  const pages = tourPages();
+  const pages = tourPagesDue(tourPages());
   if (!pages.length || !active()) return false;
   tourPollT = Date.now(); busy = true;
   try { sessionStorage.setItem('l2bot-rbtTourT', String(tourPollT)); } catch (e) {}
@@ -305,6 +323,6 @@ async function tourTick({ active: callerActive } = {}) {
 // Совместимость со старым вызывающим кодом; активный тур использует только tourTick.
 async function tick() { return false; }
 
-return { replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, state };
+return { tourPages, tourPagesDue, replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, state };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
