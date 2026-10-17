@@ -371,7 +371,21 @@ function flush() {
   dirty = false; flushT = Date.now();
   const out = { ...cache };
   cache.__src = out;
-  try { env.setRt({ fightMem: out, fightLast: lastFight })?.catch?.(() => {}); } catch (e) {}   // 9.2: последний бой — в меню «Память боя"
+  // 20.13 (ревизия 17.10, шаг 5, quality/L2): dirty снимаем оптимистично, но отказ записи (ok:false — ownership_lost,
+  // character_changed — или исключение) возвращает dirty, пока кэш тот же: память боя допишется следующим flush,
+  // а не потеряется до следующего боя. Сбой — одна строка в журнал раз в 10 мин.
+  const src = cache, failed = e => { if (cache === src && cache.__src === out) dirty = true; failNote(e); };
+  try {
+    const r = env.setRt({ fightMem: out, fightLast: lastFight });   // 9.2: последний бой — в меню «Память боя"
+    if (r?.then) r.then(v => { if (v?.ok === false) failed(v.reason || 'запись отклонена'); }, failed);
+    else if (r?.ok === false) failed(r.reason || 'запись отклонена');
+  } catch (e) { failed(e); }
+}
+let failNoteT = -Infinity;
+function failNote(e) {
+  if (Date.now() - failNoteT < 600000) return;
+  failNoteT = Date.now();
+  try { env.rec?.('S', 'ошибки', `анализ боя: память боя не сохранена (${String(e?.message || e).slice(0, 120)}), повторю`); } catch (_) {}
 }
 
 // ---------- подсказки бою ----------
