@@ -113,7 +113,8 @@ const boss = (id, lvl, alive, extra = {}) => ({ spawnId: 'l2dop_rb_' + id, name:
   // 14.10: новая фабрика заточки также стоит перед ядром; таймер обязан загрузиться до content, без требования соседства.
   const scripts = JSON.parse(read('manifest.json')).content_scripts.find(c => c.js.includes('content.js')).js;
   assert.ok(scripts.indexOf('modules/rbtimer.js') >= 0 && scripts.indexOf('modules/rbtimer.js') < scripts.indexOf('content.js'));
-  assert.match(c, /rbTimers: true, rbTimerMin: 10, rbRespH: 8/);
+  // 20.12 (ревизия 17.10, UI-13): rbTimers/rbTimerMin никто не читал — убраны; догадка респа rbRespH осталась
+  assert.match(c, /rbRespH: 8/); assert.doesNotMatch(c, /rbTimers: true|rbTimerMin: 10/);
   assert.match(c, /const ep = epicRespTxt\(wide, now\); L\.push\(ep \|\| '— 🏛 маммон —'\)/, 'индикатор слева снизу: респ эпиков (10.0.9: блок есть всегда — кнопки Маммона)');
   console.log('PASS: 10.0.2 таймеры боссов — окно смерти, свой килл, замер респа (свой / по всем / догадка 8 ч / игра у эпиков), опрос окна уровней, rbList, журнал, тур');
 })().catch(e => { console.error(e); process.exit(1); });

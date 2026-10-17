@@ -209,13 +209,13 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbSpikeRhythm: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
               enchantMode: false, enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
               autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, rec: true, questStop: false, deepEvery: 30,
@@ -288,8 +288,8 @@ async function load() {
     if (!on || heartbeatValid) { if (w) wakeWarnSet(null); paintWakeWarn(false); }
     else if (w) paintWakeWarn(true, w.text);
     else paintWakeWarn(!booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000, WAKE_NOTAB); }
-  if ($('workVer')) $('workVer').textContent = 'v' + ver;   // 8.0: версия из манифеста (было зашито «v7.1.11»)
-  $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span><span class="ver">v${esc(ver)}</span>`
+  // 20.12 (ревизия 17.10, UI-6): версия — только в подвале; строка героя короче, шапка не выше 200 px
+  $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
   // 8.0 (аудит меню): ⏱ — EXP/ч за сессию (с ↺), как в «Обзоре». Раньше — средний темп за всё время (rt.eff):
   // «≈3,5 млн EXP/ч» при 0 боёв
@@ -1523,7 +1523,12 @@ $('mmGoOrder')?.addEventListener('click', async () => { await menuPatch({ mmGoRe
 $('mmCraftForget')?.addEventListener('click', async () => { await menuPatch({ mmCraft: null }); toast('↺ Забыл, что лежит у крафтера'); });
 $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', tvtshop: 'pvp', dailies: 'hunt', analyze: 'panel', roles: 'panel', pet: 'warlock', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', enemies: 'pvp', epic: 'rb', rbtimer: 'rb', loot: 'supply', log: 'svc' };
+// 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
+// «TvT/PvP и сервис»), тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
+// #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', limits: 'overview',
+  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', enchant: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
+  supply: 'fish', mammon: 'fish', loot: 'fish', pvp: 'svc', tvtshop: 'svc', enemies: 'svc', log: 'svc' };
 // 20.12 (ревизия 17.10, UI-7): встроенное меню — iframe, который грузится заново на каждом переходе страницы игры. Свёрнутый/раскрытый
 // список задач и прокрутка разделов запоминаются на этом устройстве (localStorage), иначе после каждого боя шапка снова раскрывала
 // 15 галок, а длинный раздел («Охота») прыгал в начало. Хранилище может быть недоступно — тогда всё работает как раньше.
@@ -1534,7 +1539,16 @@ const dockUiSave = () => { try { localStorage.setItem(DOCK_UI_KEY, JSON.stringif
 function taskListOpen(open, remember = true) {
   const grid = $('quickModeGrid'), tog = $('modeToggle');
   if (grid) grid.hidden = !open; tog?.setAttribute('aria-expanded', String(!!open));
+  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Свернуть' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
   if (remember) { dockUi.tasksOpen = !!open; dockUiSave(); }
+}
+// 20.12 (ревизия 17.10): галки задач переехали из шапки в «Обзор» (в шапке — одна строка-сводка). Нажатие на сводку или «Изменить»
+// открывает «Обзор» с раскрытым списком; повторное нажатие, когда список на виду, сворачивает его. По умолчанию список свёрнут.
+function taskListToggle() {
+  const grid = $('quickModeGrid'), shown = !!grid && !grid.hidden && !!document.getElementById('tab-overview')?.classList.contains('act');
+  if (shown) return taskListOpen(false);
+  showTab('overview'); taskListOpen(true);
+  setTimeout(() => $('taskBoard')?.scrollIntoView({ block: 'start' }), 30);
 }
 if (typeof dockUi.tasksOpen === 'boolean') taskListOpen(dockUi.tasksOpen, false);
 const tabScroll = new Map(Object.entries(dockUi.scroll).filter(([k, v]) => /^tab-[\w-]+$/.test(k) && Number.isFinite(v) && v > 0));
@@ -1553,7 +1567,7 @@ function restoreTabScroll() {
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
-  if (!document.getElementById('tab-' + t)) t = 'overview';
+  if (!document.querySelector('section#tab-' + t)) t = 'overview';
   const previous = document.querySelector('section.act');
   if (previous) tabScroll.set(previous.id, previous.scrollTop);
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('act', b.dataset.tab === t); b.setAttribute('aria-current', b.dataset.tab === t ? 'page' : 'false'); });
@@ -1561,7 +1575,13 @@ function showTab(t) {
   try { localStorage.setItem('tab', t); } catch (e) {}
   document.dispatchEvent(new CustomEvent('l2:tabchange', { detail: { tab: t } }));
   document.getElementById('tab-' + t).scrollTop = tabScroll.get('tab-' + t) || 0;
-  if (sub) setTimeout(() => document.getElementById('tab-' + sub)?.parentElement?.scrollIntoView({ block: 'start' }), 30);
+  const mark = sub && document.getElementById('tab-' + sub);
+  if (mark) { revealEl(mark); setTimeout(() => (mark.closest('.subsec-title') || mark.parentElement)?.scrollIntoView({ block: 'start' }), 30); }
+}
+// 20.12: показать элемент — раскрыть «Дополнительно» и карточку, где он лежит (поиск, переходы, «Подробнее ↗»). До cardify() блоков нет.
+function revealEl(el) {
+  const adv = el?.closest?.('.adv.closed'); if (adv) advSet(adv, true);
+  const card = el?.closest?.('.card.closed'); if (card) cardSet(card, true);
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 try { showTab(localStorage.getItem('tab') || 'overview'); } catch (e) {}
@@ -2652,11 +2672,21 @@ const UIKEY = 'ui5';
 const uiState = (() => { try { return JSON.parse(localStorage.getItem(UIKEY) || '{}'); } catch (e) { return {}; } })();
 const uiSave = () => { try { localStorage.setItem(UIKEY, JSON.stringify(uiState)); } catch (e) {} };
 uiState.closed ||= {};
+uiState.adv ||= {};
 
+// 20.12 (ревизия 17.10): раскрыть/свернуть карточку и блок «Дополнительно» — одно место (клик, поиск, переходы); состояние — ui5
+function cardSet(c, open) {
+  c.classList.toggle('closed', !open); c.querySelector(':scope>.ch')?.setAttribute('aria-expanded', String(!!open));
+  uiState.closed[c.dataset.key] = !open; uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key: c.dataset.key } }));
+}
+function advSet(a, open) {
+  a.classList.toggle('closed', !open); a.querySelector(':scope>.adv-h')?.setAttribute('aria-expanded', String(!!open));
+  uiState.adv[a.dataset.key] = !!open; uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key: 'adv:' + a.dataset.key } }));
+}
 function cardify() {
   document.querySelectorAll('section').forEach(sec => {
     const kids = [...sec.childNodes];
-    let card = null, body = null, idx = 0, subTitle = '', subCls = '';
+    let card = null, body = null, idx = 0, subTitle = '', subCls = '', dest = sec;
     const start = (h) => {
       const c = card = document.createElement('div'); c.className = 'card';
       const head = document.createElement('div'); head.className = 'ch'; head.tabIndex = 0; head.setAttribute('role', 'button');
@@ -2668,23 +2698,34 @@ function cardify() {
       const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▼'; head.appendChild(chev);
       body = document.createElement('div'); body.className = 'cb';
       body.id = 'card-body-' + sec.id + '-' + idx; head.setAttribute('aria-controls', body.id);
-      card.append(head, body); sec.appendChild(card);
+      card.append(head, body); dest.appendChild(card);
       if (uiState.closed[key]) c.classList.add('closed');
       head.setAttribute('aria-expanded', String(!c.classList.contains('closed')));
-      const tog = () => { c.classList.toggle('closed'); head.setAttribute('aria-expanded', String(!c.classList.contains('closed'))); uiState.closed[key] = c.classList.contains('closed'); uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key } })); };   // своя карточка, не последняя
+      const tog = () => cardSet(c, c.classList.contains('closed'));   // своя карточка, не последняя
       head.addEventListener('click', tog);
       head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
     };
     for (const n of kids) {
+      // 20.12 (ревизия 17.10): метка .adv-start — всё после неё в разделе уходит в свёрнутый блок «⚙ Дополнительно» (тонкая настройка);
+      // раскрытие запоминается на устройстве (ui5.adv), поиск и переходы раскрывают блок сами
+      if (n.nodeType === 1 && n.classList?.contains('adv-start')) {
+        const adv = document.createElement('div'); adv.className = 'adv'; adv.dataset.key = sec.id.replace('tab-', '');
+        const head = document.createElement('button'); head.type = 'button'; head.className = 'adv-h'; head.textContent = n.textContent.trim();
+        const advBody = document.createElement('div'); advBody.className = 'adv-b'; advBody.id = 'adv-body-' + sec.id; head.setAttribute('aria-controls', advBody.id);
+        adv.append(head, advBody); sec.appendChild(adv); n.remove();
+        const open = uiState.adv[adv.dataset.key] === true; adv.classList.toggle('closed', !open); head.setAttribute('aria-expanded', String(open));
+        head.addEventListener('click', () => advSet(adv, adv.classList.contains('closed')));
+        dest = advBody; card = null; subTitle = ''; subCls = ''; continue;
+      }
       // 8.0 (аудит меню): .no-card (сводка «Обзора», «📤 Логи») — всегда на виду, вне сворачиваемых карточек;
       // скрытые служебные поля в начале раздела не создают пустую карточку «⚙ Основное» (было вверху «Охоты»)
-      if (n.nodeType === 1 && n.classList?.contains('no-card')) { sec.appendChild(n); card = null; continue; }
-      if (!card && n.nodeType === 1 && n.hidden) { sec.appendChild(n); continue; }
+      if (n.nodeType === 1 && n.classList?.contains('no-card')) { dest.appendChild(n); card = null; continue; }
+      if (!card && n.nodeType === 1 && n.hidden) { dest.appendChild(n); continue; }
       // 7.1.31: подзаголовок бывшего раздела внутри объединённого (Охота: Автофарм, Катакомбы…) — вне карточек
-      if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { sec.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
+      if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { dest.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
       if (n.nodeType === 1 && n.tagName === 'H4') { start(n); continue; }
       if (n.nodeType === 3 && !n.textContent.trim()) { n.remove(); continue; }
-      if (!card && subTitle && n.nodeType === 1 && n.classList?.contains('intro-callout')) { n.classList.add('subsec-lead'); if (subCls) n.dataset.cls = subCls; sec.appendChild(n); continue; }
+      if (!card && subTitle && n.nodeType === 1 && n.classList?.contains('intro-callout')) { n.classList.add('subsec-lead'); if (subCls) n.dataset.cls = subCls; dest.appendChild(n); continue; }
       if (n.nodeType === 8) continue;
       if (!card) start(null);
       body.appendChild(n);
@@ -2719,12 +2760,17 @@ function searchIndex() {
   const out = [];
   document.querySelectorAll('section').forEach(sec => {
     const tab = sec.id.replace('tab-', ''), nb = document.querySelector(`nav button[data-tab="${tab}"]`), tabName = nb ? (nb.querySelector('.ic')?.textContent || '') + ' ' + nb.lastChild.textContent.trim() : tab;
+    // 20.12 (ревизия 17.10): в «где» — ещё и подраздел (бывший раздел: «Автозаточка», «Маммон», «PvP»…), поиск по старому имени находит его
+    const subOf = card => {
+      for (let p = card; p; p = p.previousElementSibling) if (p.classList?.contains('subsec-title')) return p.textContent.replace(/^\S+\s*/, '').trim();
+      return card.closest('.adv') ? 'Дополнительно' : '';
+    };
     sec.querySelectorAll('.card').forEach(card => {
-      const title = card.querySelector('.ch h4')?.textContent.trim() || '';
-      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where: tabName, kind: 'раздел' });
-      card.querySelectorAll('.cb > label, .cb > .row > button, .cb > .row button').forEach(el => {
+      const title = card.querySelector('.ch h4')?.textContent.trim() || '', sub = subOf(card), where = sub ? tabName + ' › ' + sub : tabName;
+      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел' });
+      card.querySelectorAll('.cb > label, .cb > .champ-row > label, .cb > .row > button, .cb > .row button').forEach(el => {
         const t = (el.tagName === 'LABEL' ? [...el.childNodes].filter(n => n.nodeType === 3 || n.tagName === 'SPAN' && !n.querySelector('input')).map(n => n.textContent).join(' ') : el.textContent).replace(/\s+/g, ' ').trim();
-        if (t) out.push({ el, card, tab, text: t, where: tabName + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
+        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
       });
     });
   });
@@ -2732,8 +2778,7 @@ function searchIndex() {
 }
 let IDX = null, resSel = 0;
 function goTo(r) {
-  showTab(r.tab);
-  if (r.card.classList.contains('closed')) { r.card.classList.remove('closed'); r.card.querySelector('.ch')?.setAttribute('aria-expanded', 'true'); uiState.closed[r.card.dataset.key] = false; uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key: r.card.dataset.key } })); }
+  showTab(r.tab); revealEl(r.el);
   r.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
   const inp = r.el.querySelector?.('input:not([hidden]),select'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 350);
@@ -2760,7 +2805,7 @@ $('uiSearch').addEventListener('keydown', e => {
 });
 $('uiResults').addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); goTo($('uiResults')._hits[+d.dataset.i]); } });
 $('uiSearch').addEventListener('blur', () => setTimeout(() => $('uiResults').classList.remove('show'), 150));
-// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…9, 0 — вкладки, Ctrl+K или «/» — поиск
+// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…6 — разделы (20.12: их шесть), Ctrl+K или «/» — поиск
 document.addEventListener('keydown', async e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' || (!typing && e.key === '/')) { e.preventDefault(); $('uiSearch').focus(); $('uiSearch').select(); return; }
@@ -2774,7 +2819,7 @@ document.addEventListener('keydown', async e => {
 
 if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings().catch(() => {}); };
 if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
-if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { taskListOpen(true); $('modeToggle').scrollIntoView({ block: 'nearest' }); document.querySelector('#autoTaskSelection input')?.focus(); };
+if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { const was = !$('quickModeGrid').hidden; taskListToggle(); if (!was) document.querySelector('#autoTaskSelection input')?.focus({ preventScroll: true }); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
 if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
 cardify();
@@ -2811,7 +2856,7 @@ const enchantUI = L2EnchantUI.mount($('enchantPanel'), {
 function panelShown(el) {
   if (!el || document.hidden || dockMin) return false;
   const sec = el.closest('section');
-  return (!sec || sec.classList.contains('act')) && !el.closest('.card.closed');
+  return (!sec || sec.classList.contains('act')) && !el.closest('.card.closed') && !el.closest('.adv.closed');
 }
 function panelRefresher(el, refresh, delay) {
   let t = null, stale = false;

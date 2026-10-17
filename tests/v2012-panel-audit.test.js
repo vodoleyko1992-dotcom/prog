@@ -123,7 +123,9 @@ const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); a
   assert.match(popup, /if \(typeof dockUi\.tasksOpen === 'boolean'\) taskListOpen\(dockUi\.tasksOpen, false\);/);
   assert.match(popup, /const tabScroll = new Map\(Object\.entries\(dockUi\.scroll\)/, 'прокрутка разделов из localStorage');
   assert.match(popup, /load\(\)\.catch\(\(\) => \{\}\)\.finally\(\(\) => \{ restoreTabScroll\(\);/);
-  assert.match(ui7, /if \(typeof taskListOpen === 'function'\) return taskListOpen\(!!open\);/, 'кнопка списка задач запоминает состояние');
+  // 20.12 (новая компоновка): строка задач в шапке открывает «Обзор» со списком; состояние по-прежнему пишет taskListOpen
+  assert.match(ui7, /modeToggle\?\.addEventListener\('click', \(\) => \{ if \(typeof taskListToggle === 'function'\) taskListToggle\(\); \}\);/, 'кнопка списка задач запоминает состояние');
+  assert.match(popup, /function taskListToggle\(\) \{[\s\S]*?showTab\('overview'\); taskListOpen\(true\);/);
   assert.match(html, /id="modeToggle"/); assert.match(html, /id="quickModeGrid"/);
 
   // ---------- UI-8/UI-9: окно бота ----------

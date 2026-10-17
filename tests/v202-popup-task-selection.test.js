@@ -8,8 +8,9 @@ for(const id of ['tasksToggle','farmToggle','autoFarmToggle','huntToggle','epicT
 for(const task of ['raid','fish','tvt','quests','mammon','enchant','petbuff'])assert.match(html,new RegExp('data-auto-task="'+task+'"'));
 // 20.7: поля удалённой отправки крафтеру больше не являются настройками меню.
 for(const id of ['start','stop','pause','mmOrders','mmUpgrade','enchantModeToggle','petFullToggle'])assert.ok(html.includes('id="'+id+'"'),'detailed setting retained '+id);
-assert.ok(html.indexOf('id="petFullToggle"')>html.indexOf('<section id="tab-warlock">'));
-assert.ok(ui.includes("querySelectorAll('[data-auto-task]:checked')"));assert.ok(!ui.includes("querySelectorAll('button.on')"));
+assert.ok(html.indexOf('id="petFullToggle"')>html.indexOf('id="tab-warlock"'));   // 20.12: подраздел «Боя и класса»
+// 20.12: сводку задач в шапке пишет только popup.js (paintModes), запасной вариант ui-v7.js убран
+assert.ok(js.includes("const ms = $('modeSummary'); if (ms) ms.textContent = strict"));assert.ok(!ui.includes("querySelectorAll('button.on')"));
 assert.ok(!html.includes('Быстрые режимы'));assert.ok(html.includes('Рыбалка и фарм не чередуются'));
 console.log('PASS single task panel, retained detailed settings, no dangling legacy handlers, canonical summary');
 // Реальный обработчик первого изменения переводит legacy профиль в allowlist, не запуская бота.

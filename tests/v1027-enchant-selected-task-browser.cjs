@@ -9,14 +9,14 @@ const assert=require('node:assert/strict');
  const enchant={enabled:true,queue:[item],scrollPolicy:'blessed',ordinaryUntil:3,maxAttempts:7,maxScrolls:9,maxAdena:0,maxConsecutiveFails:2,maxDropFromStart:1,maxDropFromPeak:2,delayMs:1500,purchase:false,colBudget:0};
  await h.ctx.route('https://**/*',route=>{const req=route.request(),path=new URL(req.url()).pathname;traffic.push({path,method:req.method()});if(path==='/character')return route.fulfill({json:{character}});if(path==='/character/catalog-hints')return route.fulfill({json:hints});return route.fallback();});
  await h.sw.evaluate(async enchant=>{const s=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({cfg:{...s.cfg,enchantMode:false,autoTasks:['enchant','fish'],enchant,fishAutoSetup:false,fishRodBuy:false,fishProcess:false},rt:{...s.rt,enchant:null,enchantArchive:[],manualKickAt:0,_src:'selected-enchant-browser'}});},enchant);
- await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').count());await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
+ await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').count());await h.popup.evaluate(()=>showTab('enchant')/* 20.12: подраздел «Боя и класса» */);
  const button=()=>h.popup.locator('#enchantPanel [data-command="start"]');assert.equal(await button().isDisabled(),true);
  await h.click('start');await until(()=>h.g.core('on && running && tabOwner && autonomyMode()==="enchant"'));
  await until(()=>button().isEnabled());assert.equal((await h.get(['cfg'])).cfg.enchantMode,false);await delay(500);assert.equal((await h.get(['rt'])).rt.enchant,null);
  console.log('PASS allowlist enchant selection enables explicit series button with raw enchantMode=false; no implicit series');
  let previous='';
  for(let i=0;i<2;i++){
-  if(i){await until(()=>new URL(h.g.p.url()).pathname==='/fishing.html');await delay(300);await h.popup.reload();await until(()=>button().count());await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());await until(()=>button().isEnabled());}
+  if(i){await until(()=>new URL(h.g.p.url()).pathname==='/fishing.html');await delay(300);await h.popup.reload();await until(()=>button().count());await h.popup.evaluate(()=>showTab('enchant')/* 20.12: подраздел «Боя и класса» */);await until(()=>button().isEnabled());}
   await button().click();await until(async()=>{const r=(await h.get(['rt'])).rt.enchant;return r?.status==='done'&&r.runId!==previous;},20000).catch(async e=>{console.log('RESTART DEBUG',await h.g.core('({mode:autonomyMode(),on,running,tabOwner,status:rt.status,session:rt.enchant,ack:rt.enchantCommandAck,archive:rt.enchantArchive,owner:rt.actionOwner})'),await h.popup.locator('#enchantPanel [role="status"]').textContent());throw e;});
   const state=await h.get(['cfg','rt']);assert.equal(state.cfg.enchantMode,false);assert.deepEqual(state.cfg.autoTasks,['enchant','fish']);assert.equal(state.rt.enchant.totals.attempts,0);assert.equal(state.rt.enchant.totals.scrolls,0);
   if(i)assert.ok(state.rt.enchantArchive.some(a=>a.runId===previous),'previous completed series archived');

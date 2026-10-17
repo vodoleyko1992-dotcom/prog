@@ -14,7 +14,8 @@ async function scenario(task){
  if(p==='/battle.html')return route.fulfill({contentType:'text/html',body:`<!doctype html><meta charset="utf-8"><div id="l2-hud-legacy-name">AuditHero</div><div id="l2-hud-legacy-lvl">49</div><div id="character-profession">Bounty Hunter</div><div id="l2-nav-bottom"></div><span id="l2-hud-hp-cur">7000</span><span id="l2-hud-hp-max">7000</span><span id="l2-hud-mp-cur">500</span><span id="l2-hud-mp-max">900</span><div id="battle-mob-title">Garden Guard · ур.49</div><div id="battle-mob-hp-val">1000 / 1000</div><button class="l2-battle-hotbar-slot" title="Атака" id="attack"><span data-slot-cd="attack" hidden></span></button><div id="battle-log"></div><div id="battle-victory-inline" hidden>Победа!</div><script>fetch('/character');fetch('/game/battle');document.getElementById('attack').onclick=async()=>{await fetch('/game/battle/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'attack'})});document.getElementById('battle-mob-hp-val').textContent='0 / 1000';document.getElementById('battle-victory-inline').hidden=false;};</script>`});
  return json({});
  });
- await h.openTab('limits');const key=task+'KillLimit';await h.popup.locator('#'+key+'From').fill('2');await h.popup.locator('#'+key+'To').fill('4');await h.click(key+'RangeSet');
+ const key=task+'KillLimit';await h.reveal('#'+key+'From');   // 20.12 (ревизия 17.10): разовые цели — в «Дополнительно» «Обзора»
+await h.popup.locator('#'+key+'From').fill('2');await h.popup.locator('#'+key+'To').fill('4');await h.click(key+'RangeSet');
  await until(async()=>!!(await h.get(['cfg'])).cfg.limitRanges?.[key]);target=(await h.get(['cfg'])).cfg[key];assert.ok(target>=2&&target<=4);
  await h.popup.reload();await until(()=>h.popup.locator('#'+key+'RangeSet').evaluate(e=>!!e.onclick));await h.openTab('limits');assert.equal((await h.get(['cfg'])).cfg[key],target);assert.equal(await h.popup.locator('#'+key+'From').inputValue(),'2');
  await h.g.p.goto('https://l2wap.com/battle.html?spawnId=fixture');await until(()=>h.g.core('rt.char==="AuditHero"'));await h.g.p.evaluate(()=>fetch('/game/battle'));await h.g.p.bringToFront();await h.click('start');
@@ -28,6 +29,7 @@ async function settings(){
  const h=await harness();try{
  await h.popup.setViewportSize({width:390,height:900});await h.openTab('limits');const keys={dailyFishLimit:[2,4],dailyKillLimit:[10,20],fishMaxCasts:[50,100]};
  for(const [key,[min,max]] of Object.entries(keys)){
+ await h.reveal('#'+key+'From');/* 20.12: максимум забросов — в «Дополнительно» «Обзора» */
  await h.popup.locator('#'+key+'From').fill(String(min));await h.popup.locator('#'+key+'To').fill(String(max));await h.click(key+'RangeSet');await until(async()=>!!(await h.get(['cfg'])).cfg.limitRanges?.[key]);
  const {cfg}=await h.get(['cfg']);assert.ok(cfg[key]>=min&&cfg[key]<=max);assert.equal(await h.popup.locator('#'+key+'RangeSet').evaluate(e=>e.scrollWidth<=e.clientWidth),true,'range button label fits at390px');assert.ok((await h.popup.locator('#'+key+'RangeInfo').textContent()).includes('выбрано'));
  }

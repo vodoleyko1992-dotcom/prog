@@ -19,7 +19,9 @@ const ov = html.slice(html.indexOf('<section id="tab-overview"'), html.indexOf('
 for (const id of ['dash', 'dashMode', 'dashState', 'dashSub', 'dashKpi', 'dashLines', 'logsAll', 'logsNote']) assert.match(ov, new RegExp(`id="${id}"`), id);
 assert.match(html, /<div id="wakeWarn" class="wake-warn" role="alert" hidden><\/div>/);
 assert.ok(!/overview-stat|help-steps|important-note|intro-callout/.test(ov), 'static intro and duplicated tiles removed');
-assert.ok(!/модуль слева|значок «\?»|[Кк]ампани/.test(ov), 'no stale texts on the overview');
+// 20.12 (ревизия 17.10): список задач перенесён в «Обзор» — в нём законно есть «Кампании»; старые тексты ищем вне него.
+const ovText = ov.replace(/<fieldset id="autoTaskSelection">[\s\S]*?<\/fieldset>/, '');
+assert.ok(!/модуль слева|значок «\?»|[Кк]ампани/.test(ovText), 'no stale texts on the overview');
 assert.match(ov, /class="dash no-card"/); assert.match(ov, /class="dash-actions no-card"><button id="logsAll"/);
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]); assert.equal(new Set(ids).size, ids.length, 'duplicate ids');
 
@@ -48,11 +50,13 @@ assert.ok(!/<h4>📜 Квесты<\/h4>/.test(html), 'card with only a help fold
 assert.ok(!/«Фарм РБ»|фарм РБ\./.test(html + js), 'old name «Фарм РБ»');
 assert.ok(!/вкладке «Скиллы»|вкладки «Банки»/.test(html), 'old section names');
 assert.ok(!/Кампани/.test(html.replace(/<button id="campToggle"[^>]*>[^<]*<\/button>/, '').replace(/<!--[\s\S]*?-->/g, '')), 'no campaign in visible texts');
-assert.match(ui, /hunt:\['Охота','Фарм на месте, TvT, локации и автофарм, катакомбы'\]/);
+// 20.12 (ревизия 17.10): таблица заголовков разделов в ui-v7.js убрана — подпись раздела теперь в title кнопки навигации.
+assert.match(html, /<button data-tab="hunt"[^>]*title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса \(Alt\+2\)"/);
 assert.ok(!/кампани/i.test(fnSrc(ui, 'const HELP = {')), 'help texts without campaign');
 assert.ok(!/overviewKills|async function overview\(\)/.test(ui), 'second storage poll of the overview removed');
-assert.match(js, /if \(n\.nodeType === 1 && n\.classList\?\.contains\('no-card'\)\) \{ sec\.appendChild\(n\); card = null; continue; \}/);
-assert.match(js, /if \(!card && n\.nodeType === 1 && n\.hidden\) \{ sec\.appendChild\(n\); continue; \}/, 'hidden fields do not create an empty «⚙ Основное» card');
+// 20.12 (ревизия 17.10): cardify кладёт в текущий контейнер dest (раздел или блок «Дополнительно»).
+assert.match(js, /if \(n\.nodeType === 1 && n\.classList\?\.contains\('no-card'\)\) \{ dest\.appendChild\(n\); card = null; continue; \}/);
+assert.match(js, /if \(!card && n\.nodeType === 1 && n\.hidden\) \{ dest\.appendChild\(n\); continue; \}/, 'hidden fields do not create an empty «⚙ Основное» card');
 { // «Удочка пока неизвестен» → «неизвестна»
   const el = {}; const sb = { $: id => (el[id] ||= { textContent: '' }), Number };
   vm.runInNewContext(fnSrc(js, 'function renderRodGoal('), sb);

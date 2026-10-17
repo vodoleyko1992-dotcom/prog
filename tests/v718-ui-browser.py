@@ -23,12 +23,11 @@ with sync_playwright() as p:
     page.add_script_tag(content=(root / script).read_text())
   page.wait_for_timeout(450)
   if mode=='dock':page.evaluate("document.documentElement.classList.add('docked')")
-  page.locator('#navToggle').click()
+  # 20.12 (ревизия 17.10): кнопки «≡ Разделы» нет — шесть разделов всегда на виду.
   page.wait_for_timeout(80)
   menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==12,menu   # 20.8: добавлен отдельный раздел «Лимиты»
-  assert menu['grid']==(2 if mode=='dock' else 4),menu
-  assert menu['visible']=='grid',menu
+  assert menu['tabs']==6,menu   # 20.12: 12 разделов сведены в 6
+  assert menu['visible']!='none',menu
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-menu.png')))
   page.locator('#moduleNav button[data-tab="fish"]').click()
   page.wait_for_timeout(100)

@@ -21,11 +21,13 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: fs.readFileSync(path.join(root, c), 'utf8') });
     for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
     await page.waitForTimeout(900);
-    await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="hunt"]').click(); await page.waitForTimeout(400);
+    await page.locator('#moduleNav button[data-tab="hunt"]').click();   // 20.12 (ревизия 17.10): навигация всегда на виду
+    await page.waitForTimeout(400);
     await page.evaluate(() => { document.querySelector('#zoneBox').scrollIntoView(); });
     const head = await page.$$eval('#zoneBox table th', t => t.map(x => x.textContent));
     const rec = await page.$eval('#zoneBox .rec', x => x.textContent);
     const kpd = await page.$$eval('#zoneBox table tr', r => r.slice(1).map(x => x.children[3]?.textContent));
+    await page.evaluate(() => revealEl(document.getElementById('routeWrap')));   // 20.12 (ревизия 17.10): маршрут — в «Дополнительно» «Охоты»
     await page.locator('#routeWrap > summary').click(); await page.waitForTimeout(300);
     const route = await page.$$eval('#routeBox table tr', r => r.slice(1).map(x => [...x.children].map(c => c.textContent)));
     const cur = route.find(x => x[0].startsWith('📍'));

@@ -17,7 +17,8 @@ const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
     await P.locator('[data-auto-task="dailies"]').check(); await until(async () => (await h.get(['cfg'])).cfg.autoTasks.includes('dailies'));
     let s = await h.get(['cfg', 'on']);
     assert.equal(s.cfg.nPower, 'Blaze, Aura Burn', 'галка задачи не вернула старое значение формы'); assert.equal(s.cfg.shopReserve, 999);
-    // UI-11: пустое поле — умолчание
+    // UI-11: пустое поле — умолчание (20.12: строка «Задачи бота» перевела меню в «Обзор» — возвращаемся к закупке)
+    await h.openTab('supply');
     await P.locator('#shopReserve').fill(''); await P.locator('#shopReserve').blur(); await until(async () => (await h.get(['cfg'])).cfg.shopReserve === 200000);
     // UI-3: галка TvT в PvP ведёт список задач; tsBuy выключен с пояснением
     await h.openTab('pvp'); await until(() => P.locator('#tvtOn').isChecked());

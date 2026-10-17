@@ -7,7 +7,7 @@ async function test(kind){const f=await fishingRecovery(kind);try{
  }else if(['stop','tvt','selection'].includes(kind)){
   await until(()=>f.S.held,30000);
   if(kind==='stop')await f.h.click('stop');
-  if(kind==='selection'){await f.h.popup.locator('[data-auto-task="fish"]').click();await until(async()=>!(await f.h.get(['cfg'])).cfg.autoTasks.includes('fish'));}
+  if(kind==='selection'){await f.h.tasks();/* 20.12: задачи — в «Обзоре» */await f.h.popup.locator('[data-auto-task="fish"]').click();await until(async()=>!(await f.h.get(['cfg'])).cfg.autoTasks.includes('fish'));}
   if(kind==='tvt'){f.S.tvt=true;await f.h.g.p.evaluate(()=>fetch('/game/tvt'));await until(()=>f.h.g.core('L2V7Modules.tvt.tvtHold()'));}
   f.release();await delay(2000);assert.equal(f.S.casts.length,1);assert.equal(f.S.accepted,0);
  }else{await until(()=>f.S.hits===1,40000);if(kind==='accepted-lost-limit')await until(async()=>{const {rt}=await f.h.get(['rt']);return rt.fish?.caught===1&&!rt.fishCastPending;});await f.h.click('stop');assert.equal(f.S.accepted,1);assert.equal(f.state.basicBait.quantity,29);assert.equal(f.S.casts.length,kind.startsWith('accepted-lost')||kind.startsWith('legacy')?1:2);assert.ok(f.S.casts.every(b=>b.expectedRevision===100),'original and recovery share revision fence');}

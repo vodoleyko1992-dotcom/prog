@@ -63,7 +63,8 @@ with sync_playwright() as p:
     raw=re.sub(r'<script src="[^"]+"></script>','',raw)
     page.set_content(raw,wait_until='domcontentloaded')
     page.add_style_tag(content=(root/'ui-v7.css').read_text())
-    page.add_style_tag(content=(root/'ui-ios.css').read_text())
+    # 20.12 (ревизия 17.10): ui-ios.css удалён (popup.html его не подключал); стили — ui-v7.css + ui-game.css.
+    page.add_style_tag(content=(root/'ui-game.css').read_text())
     # 10.0.17: реальные зависимости и порядок из popup.html.
     for script in re.findall(r'<script src="([^"]+)"></script>', (root / "popup.html").read_text()):
       page.add_script_tag(content=(root / script).read_text())
@@ -90,7 +91,7 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==12,stats   # 20.8: добавлен отдельный раздел «Лимиты»
+    assert stats['tabs']==6,stats   # 20.12 (ревизия 17.10): 12 разделов сведены в 6
     assert stats['sw']<=stats['cw']+1,stats
     assert stats['navGrid']==(3 if label=='dock' else 5),stats
     for section in ('nav','plain','proof'):

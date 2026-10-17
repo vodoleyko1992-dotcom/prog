@@ -18,14 +18,14 @@ for(const key of ['quests','farm','auto','raid','epic','fish','cat','enchant','t
 assert(!ids.includes('shopBait'),'Removed GM bait control must not return');
 assert(html.includes('Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».'));
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,12); // 20.8: отдельный раздел дневных лимитов и разовых целей.
-assert(tabs.includes('enchant') && html.includes('<section id="tab-enchant">'), 'Автозаточка должна иметь собственный раздел');
+assert.equal(tabs.length,6); // 20.12 (ревизия 17.10): 12 разделов сведены в 6, прежние — подразделы с метками #tab-<старый>.
+assert(html.includes('<div class="subsec-title" id="tab-enchant">') && /enchant: 'panel'/.test(fs.readFileSync(path.join(root,'popup.js'),'utf8')), 'Автозаточка — подраздел «Боя и класса», доступна по старой ссылке');
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);
 assert(html.includes('id="tab-epic"')&&html.includes('id="tab-dungeon"'));   // 7.1.31: подразделы «РБ и эпики» / «Охота»
 assert(html.includes('<script src="popup.js"></script>\n<script src="ui-v7.js"></script>'));
 assert(html.includes('<link rel="stylesheet" href="ui-v7.css">'));
 assert((js.match(/:'[^']+'[,\n]/g)||[]).length>55,'Missing per-control documentation');
-assert(css.includes('html.docked')&&css.includes('.overview-modules'));
+assert(css.includes('html.docked'));   // 20.12: плитки «Быстрые переходы» (.overview-modules) убраны — шесть разделов всегда на виду
 console.log(`PASS: v7.1 UI, ${tabs.length} tabs, ${retained.length} old IDs preserved, ${ids.length-retained.length} new IDs, obsolete GM bait replaced by fishing hint`);
 console.log('PASS: distinct epic/dungeon tabs, 8 boss checkboxes, inline explanations, dock styles');

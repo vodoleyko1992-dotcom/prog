@@ -46,7 +46,7 @@ test('миграция dailyKill2010: старые лимиты складыва
  assert.ok(/dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF,/.test(src));assert.ok(!/dailyAutoKillLimit: 0/.test(src));
 });
 test('меню: один общий лимит мобов, остаток в «Лимитах» и в обзоре задач',()=>{
- const html=read('popup.html'),js=read('popup.js'),section=html.split('<section id="tab-limits">')[1].split('</section>')[0];
+ const html=read('popup.html'),js=read('popup.js'),section=html.split('id="tab-limits"')[1].split('</section>')[0];   // 20.12: «Лимиты» — подраздел «Обзора» (метка #tab-limits)
  assert.ok(section.includes('id="dailyKillLimit"'));assert.ok(section.includes('id="mobsDailyProgress"'));assert.ok(section.includes('id="mobsDailyReset"'));
  for(const id of ['dailyAutoKillLimit','dailyCatKillLimit','autoDailyProgress','catDailyProgress'])assert.ok(!html.includes('id="'+id+'"'),id);
  assert.ok(!/dailyAutoKillLimit|dailyCatKillLimit/.test(js));
