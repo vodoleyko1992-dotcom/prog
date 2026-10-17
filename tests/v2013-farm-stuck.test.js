@@ -74,6 +74,10 @@ test('NAV-2: прилетел по уровню, а своих мобов нет
   assert.equal(await M.zoneForLevel(), true, 'первый перелёт по уровню'); assert.equal(env.rt.zoneGo.id, 'B'); assert.equal(env.rt.zoneLvlGo.id, 'B');
   // прилетели в B — у точки снова 60–70
   Object.assign(env.rt, { zone: 'B', zoneGo: null, zoneLvlT: 0 });
+  // (ревью) первый проход по ещё пустой карте не стирает отметку перелёта
+  const items = env.pageItems; env.pageItems = () => [];
+  assert.equal(await M.zoneForLevel(), false); assert.equal(env.rt.zoneLvlGo?.id, 'B', 'пустая страница — не «свои нашлись»');
+  env.pageItems = items;
   assert.equal(await M.zoneForLevel(), true, 'B не годится → дальше, но не обратно без отметки');
   assert.ok(env.rt.zoneBad.B > 0, 'B помечена «плохой»'); assert.equal(env.rt.zoneLvlMiss.n, 1); assert.equal(env.rt.zoneGo.id, 'A');
   // прилетели в A — и там то же: второй неудачный перелёт подряд → остаёмся

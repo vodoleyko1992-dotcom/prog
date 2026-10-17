@@ -239,8 +239,10 @@ async function zoneForLevel() {
   const lo = L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5), hi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: окно из меню; для ВЫБОРА ЗОНЫ — не выше +15 (v5.3.1)
   const lv = env.pageItems().filter(i => !i.champ && i.lvl).map(i => i.lvl);
   if (!lv.length || lv.some(l => l >= lo && l <= hi)) {    // на этой странице есть свои — дело не в уровне
-    // 20.13 (шаг 5, farm/NAV-2): свои нашлись — перелёт удался, счёт неудачных перелётов с нуля
-    if (env.rt.zoneLvlMiss?.n || (env.rt.zoneLvlGo && env.rt.zoneLvlGo.id === env.rt.zone)) await env.setRt({ zoneLvlMiss: null, zoneLvlGo: null });
+    // 20.13 (шаг 5, farm/NAV-2): свои нашлись — перелёт удался, счёт неудачных перелётов с нуля.
+    // Шаг 5 (ревью): пустая страница (карта не дорисована / одни чемпионы) — не доказательство: отметку перелёта не стираем, иначе
+    // первый проход по недорисованной карте после прилёта гасил учёт и пинг-понг A ↔ B возвращался
+    if (lv.length && (env.rt.zoneLvlMiss?.n || (env.rt.zoneLvlGo && env.rt.zoneLvlGo.id === env.rt.zone))) await env.setRt({ zoneLvlMiss: null, zoneLvlGo: null });
     return false;
   }
   if (Date.now() - (env.rt.zoneLvlT || 0) < 5 * 60000) return false;
