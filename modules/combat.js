@@ -144,9 +144,11 @@ function slotsBy(str) {                       // кнопки панели, че
 }
 
 let overlayBusySeen = new WeakMap(), overlayReadySeen = new WeakSet(), overlaySpawn = '';
+let frozenSince = new WeakMap(), frozenLost = new WeakMap(), frozenNoted = new WeakSet();   // застывший рисунок КД навыка (см. cdBusy)
+const FROZEN_GRACE = 1200, FROZEN_MAX_LOST = 2;
 function cdBusy(b) {
   const spawn = (env.cdSpawn || env.battleSpawn)();
-  if (overlaySpawn !== spawn) { overlaySpawn = spawn; overlayBusySeen = new WeakMap(); overlayReadySeen = new WeakSet(); }
+  if (overlaySpawn !== spawn) { overlaySpawn = spawn; overlayBusySeen = new WeakMap(); overlayReadySeen = new WeakSet(); frozenSince = new WeakMap(); frozenLost = new WeakMap(); frozenNoted = new WeakSet(); }
   const cd = env.slotCd(b);
   const t = parseFloat((cd?.querySelector('.l2-battle-hotbar-slot-cd__timer')?.textContent || '').replace(',', '.'));
   let busy = !!cd && !cd.hidden && cd.classList.contains('l2-battle-hotbar-slot-cd--on') && !(t <= 0.1);
@@ -158,6 +160,23 @@ function cdBusy(b) {
     if (!(net && net.start > net.done) && env.combatCooldown.skillKnown?.('attack', spawn, since)
         && env.combatCooldown.skillWait('attack', spawn) <= 0) busy = false;
   }
+  // 17.10.2026 (ночной журнал alt1 05:28–08:10: 20 боёв воина дольше 30 с, навыки не нажимались, бой шёл одной
+  // принудительной атакой раз в 10 с): застывший RAF-рисунок КД держал не только атаку, но и навыки, а 10.0.26 доверял
+  // серверу лишь для атаки. Теперь и для навыка: сервер прислал откат именно ЭТОГО нажатия (delta.skillCooldowns),
+  // он истёк, запросов в полёте нет, потерянного клика нет, а рисунок «занят» ещё ≥ FROZEN_GRACE — жмём по серверу.
+  // Отказ игры «ещё на КД» или потеря клика после такого нажатия считается; после двух за бой рисунку этого слота снова верим.
+  if (busy && /^l2_\d+$/.test(String(env.slotAction(b) || ''))) {
+    const id = env.slotAction(b), k = env.skKey(b), net = env.actNet?.();
+    const serverReady = !(net && net.start > net.done) && !((lostUntil.get(k) || 0) > Date.now())
+      && env.combatCooldown.skillKnown?.(id, spawn, pressAt.get(k) || 0) && env.combatCooldown.skillWait(id, spawn) <= 0;
+    if (serverReady && (frozenLost.get(b) || 0) < FROZEN_MAX_LOST) {
+      if (!frozenSince.has(b)) frozenSince.set(b, Date.now());
+      if (Date.now() - frozenSince.get(b) >= FROZEN_GRACE) {
+        busy = false;
+        if (!frozenNoted.has(b)) { frozenNoted.add(b); env.rec?.('B', 'бой', `рисунок отката «${env.cleanTitle?.(b.title) || b.title}» застыл: сервер считает навык готовым — жму по серверному дедлайну`); }
+      }
+    } else frozenSince.delete(b);
+  } else frozenSince.delete(b);
   if (busy) { overlayBusySeen.set(b, true); overlayReadySeen.delete(b); }
   else if (overlayBusySeen.get(b)) { overlayBusySeen.delete(b); overlayReadySeen.add(b); }
   return busy;
@@ -213,7 +232,10 @@ function cdLeft(b) {
   return Math.max(isNaN(v) ? 0 : v, potionSlot(b) ? 0 : localCdLeft(b), (env.slotAction(b) ? env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) / 1000 : 0)) || 99;
 }
 
-async function rememberCd(b, how) {             // how: 'used' — нажат и ушёл в КД; 'cd' — игра сказала «на перезарядке»
+async function rememberCd(b, how) {             // how: 'used' — нажат и ушёл в КД; 'cd' — игра сказала «на перезарядке»; 'lost' — клик потерян
+  // 17.10: отказ/потеря после нажатия «по серверному дедлайну» при застывшем рисунке — после двух рисунку слота снова верим (cdBusy)
+  if ((how === 'cd' || how === 'lost') && frozenSince.has(b)) frozenLost.set(b, (frozenLost.get(b) || 0) + 1);
+  if (how === 'lost') return;
   const k = env.skKey(b); if (!k) return;
   // Successful potions are gated by the server global cooldown, not Interlude reuse=10000.
   if (potionSlot(b)) {
@@ -1450,6 +1472,7 @@ async function battle() {
     if (lockLost) { if (bindB) lockB = Math.min(LOCK_B[1], lockB + 15); else lockA = Math.min(LOCK_A[1], lockA + 30); lockSave(); }
     else if (sent && gap < 60) { if (bindB) lockB = Math.max(LOCK_B[0], lockB - 1); else lockA = Math.max(LOCK_A[0], lockA - 2); lockSave(); }   // на границе теряется ≈6 % нажатий
     if (lost && !lockLost && env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + 700);   // 7.2.2: не жать его же сразу снова
+    if (lost) void rememberCd(b, 'lost');          // 17.10: нажатие «по серверу» при застывшем рисунке потеряно — считаем (см. cdBusy)
     ctx.lastLost = lost && !lockLost;             // 10.0 (аудит боя): потерянный клик — слот «занят» 0,7 с (lostUntil), а не 3 с паузы вызывающего
     // 10.0 (аудит боя): сервер уже ответил отказом на этот ход — не ждём по экрану до 1 с, откат учтён моделью (combatCooldown)
     const refused = sent && !netOk && env.actNet().done >= env.actNet().start && (!exact || env.actNet().action === exact) && !victory() && !defeat();
@@ -2112,16 +2135,22 @@ async function battle() {
       }
       continue;
     }
-    if (mageCombat() && Date.now() - (ctx.mageWaitNoteAt || 0) >= 4500) {
+    // 17.10.2026 (ночной журнал alt1: 20 долгих боёв воина без объяснения в журнале): причины ожидания пишем и для воина,
+    // когда он 6 с ничего не нажал — иначе следующий разбор снова гадает, почему навыки не шли
+    const fighterIdle = !mageCombat() && Date.now() - lastAct > 6000;
+    if ((mageCombat() || fighterIdle) && Date.now() - (ctx.mageWaitNoteAt || 0) >= 4500) {
       const gcdMs = env.combatCooldown.globalWait();
-      const reasons = mageSpellSlots().map(b => {
+      const waitSlots = mageCombat() ? mageSpellSlots()
+        : [...env.names(env.cfg.nPower), ...env.names(env.cfg.nStun)].map(n => slotsBy(n)[0]).filter(b => b && !nonOffenseSkill(b));
+      const reasons = waitSlots.map(b => {
         const name = env.cleanTitle(b.title), id = env.slotAction(b);
         const serverMs = id ? env.combatCooldown.skillWait(id, (env.cdSpawn || env.battleSpawn)()) : 0;
         const key = 'power:' + b.title;
         const blockMs = Math.max(0, (ctx.block[key] || 0) - Date.now());
         const localMs = localCdLeft(b) * 1000;
-        const reason = !uiReady(b) ? 'интерфейс' : gcdMs > 0 ? 'сервер GCD' : serverMs > 0 ? 'сервер навыка' : blockMs > 0 ? 'после неудачи' : localMs > 0 ? 'резервный таймер' : 'готов';
-        return `${name}: ${reason}${reason === 'готов' ? '' : ` ${Math.ceil(Math.max(gcdMs, serverMs, blockMs, localMs))} мс`}`;
+        const needMp = mp && !affordable(b, mp);
+        const reason = !uiReady(b) ? 'интерфейс' : gcdMs > 0 ? 'сервер GCD' : serverMs > 0 ? 'сервер навыка' : blockMs > 0 ? (blockMs > 1e12 ? 'недоступно до конца боя' : 'после неудачи') : localMs > 0 ? 'резервный таймер' : needMp ? `не хватает MP (${actionMp(b)})` : 'готов';
+        return `${name}: ${reason}${reason === 'готов' || /MP|недоступно/.test(reason) ? '' : ` ${Math.ceil(Math.max(gcdMs, serverMs, Math.min(blockMs, 1e9), localMs))} мс`}`;
       });
       // 7.1.30: и атака — при MP ≈ 0 маг живёт атакой, а в журнале было видно только заклинания («все готовы», но бот стоит)
       const atkB = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака');
@@ -2129,7 +2158,8 @@ async function battle() {
       if (mp) reasons.push(`MP ${mp.cur}`);
       const rs = reasons.join(' · '), rsk = rs.replace(/\d+ мс/g, '').replace(/MP \d+/, '');
       ctx.mageWaitNoteAt = Date.now();
-      if (reasons.length && (rsk !== ctx.mageWaitSig || Date.now() - (ctx.mageWaitLogT || 0) > 60000)) { ctx.mageWaitSig = rsk; ctx.mageWaitLogT = Date.now(); env.rec('B', 'ожидание навыков', rs); }   // 7.1.30: без спама
+      if (reasons.length && (rsk !== ctx.mageWaitSig || Date.now() - (ctx.mageWaitLogT || 0) > 60000)) { ctx.mageWaitSig = rsk; ctx.mageWaitLogT = Date.now(); const waitText = (fighterIdle ? `воин ${Math.round((Date.now() - lastAct) / 1000)} с без действий · ` : '') + rs; env.rec('B', 'ожидание навыков', waitText);
+        env.setRt({ combatWait: { t: Date.now(), text: waitText.slice(0, 200) } }); }   // 7.1.30: без спама; 17.10: причина видна и в «Обзоре» меню
     }
     // 7.1.30 (лог 09.10 07:35): маг на MP 20, банки на панели нет, заклинания «готовы», а атака не жмётся — бот простоял 20 с до
     // перезагрузки (после неё атака и MP 174 появились сразу: страница боя перестала обновляться). Теперь: 6 с без действий у мага —

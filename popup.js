@@ -1743,7 +1743,9 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if ((rt.pveBlockUntil || 0) > now) return { state:'waiting', label:'Ограничение игры', text:'PvE-фарм временно заблокирован', hint:'До ' + new Date(rt.pveBlockUntil).toLocaleTimeString('ru', { timeZone:'Asia/Vladivostok', hour:'2-digit', minute:'2-digit' }) + ' (Владивосток). ' + last, tab:selected.includes('fish') ? 'fish' : 'svc' };
   if (!selected.length) return { state:'waiting', label:'Ожидание', text:'Задачи не выбраны', hint:'Выберите разрешённые задачи кнопкой «Изменить» в обзоре.', tab:'overview' };
   if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в обзоре; дополнительные задачи остаются разрешены.', tab:'overview' };
-  return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.', tab:TASK_TABS[primary] || 'overview' };
+  // 17.10: бой стоит дольше 6 с — причина ожидания навыков из журнала показана рядом с задачей (свежая, не старше 2 мин)
+  const combatWait = rt.combatWait && now - (+rt.combatWait.t || 0) < 120000 && /^\/?battle|бой/i.test(String(rt.status || '')) ? ' · Бой ждёт: ' + String(rt.combatWait.text || '').slice(0, 160) : '';
+  return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
 }
 function taskBoardRows(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
