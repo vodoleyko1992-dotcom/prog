@@ -4,7 +4,7 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs'),assert
  for(const task of ['mammon','quests','pvp','dailies','clan']) {
   // 20.5: async render может вернуть старый checked до завершения сохранения.
   // Native click + ожидание обоих результатов вместо синхронного assert внутри check/uncheck.
-  const el=h.popup.locator('[data-auto-task="'+task+'"]');if(!await el.isChecked())await el.click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks?.includes(task)&&await el.isChecked());assert.equal((await h.get(['on'])).on,false);
+  await h.tasks();const el=h.popup.locator('[data-auto-task="'+task+'"]');if(!await el.isChecked())await el.click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks?.includes(task)&&await el.isChecked());assert.equal((await h.get(['on'])).on,false);
   await el.click();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes(task)&&!await el.isChecked());console.log('PASS task selection saves without starting',task);
  }
  for(const [button,task,expected] of [['farmToggle','farm','farm'],['autoFarmToggle','auto','farm'],['huntToggle','raid','raid'],['epicToggle','epic','epic'],['fishToggle','fish','fish'],['catToggle','cat','cat']]){

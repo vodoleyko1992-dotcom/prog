@@ -25,14 +25,14 @@ const unknown=process.argv.includes('--unknown');
   html=html.replace('</body>',`<div id="l2-hud-legacy-name">AuditHero</div><script>${bootstrap}</script>${names.slice(0,-1).map(f=>'<script src="/'+f+'"></script>').join('')}<script>L2EnchantClient.install(L2);</script><script src="/enchant.js"></script></body>`);
   return r.fulfill({contentType:'text/html; charset=utf-8',body:html});
  });
- await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
+ await h.popup.evaluate(()=>showTab('enchant'));   // 20.12 (ревизия 17.10): автозаточка — подраздел «Боя и класса»
  const ui=h.popup.locator('#enchantPanel');await until(()=>ui.locator('[data-command="refresh"]').count());await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
  await ui.locator('[data-candidate]').selectOption('0');await ui.locator('[data-add]').click();await until(()=>ui.locator('[data-key]').count());
  await ui.locator('[data-detail=limits]>summary').click();
  for(const key of ['maxAttempts','maxScrolls']){const el=ui.locator('[data-global][data-field="'+key+'"]');await el.fill('2');await el.dispatchEvent('change');await until(async()=> (await h.get(['cfg'])).cfg.enchant[key]===2);await delay(100);}
  await ui.locator('[data-item="weaponMode"]').selectOption('magic');await until(async()=> (await h.get(['cfg'])).cfg.enchant.queue[0].weaponMode==='magic');
  await ui.locator('[data-detail=permission]').evaluate(el=>el.open=true);await ui.locator('[data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
- await h.click('enchantToggle');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
+ await h.click('enchantToggle');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await h.openTab('enchant');/* 20.12: после выбора задачи меню остаётся в «Обзоре» */await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
  if(unknown){
   await until(async()=> (await h.get(['rt'])).rt.enchant?.pending?.state==='unknown',30000);
   const before=(await h.get(['rt'])).rt.enchant;await h.click('stop');await until(()=>h.g.core('!on && !tabOwner'),15000);
@@ -44,7 +44,7 @@ const unknown=process.argv.includes('--unknown');
   await until(()=>h.popup.locator('#enchantPanel [data-candidate] option').count().then(n=>n===2));await h.popup.locator('#enchantPanel [data-candidate]').selectOption('0');await h.popup.locator('#enchantPanel [data-add]').click();
   await until(async()=> (await h.get(['cfg'])).cfg.enchant.queue.length===1);const selected=(await h.get(['cfg'])).cfg.enchant.queue[0];assert.equal(selected.level,4);assert.equal(selected.targetLevel,5);assert.ok(!result.rt.enchantRecovery.previousKeys.includes(selected.key));
   await h.popup.locator('#enchantPanel [data-detail=permission]').evaluate(el=>el.open=true);await h.popup.locator('#enchantPanel [data-cfg="enabled"]').check();await until(async()=> (await h.get(['cfg'])).cfg.enchant.enabled);
-  await h.click('start');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
+  await h.click('start');await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await h.openTab('enchant');/* 20.12: после выбора задачи меню остаётся в «Обзоре» */await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="start"]').click();
   await until(async()=> (await h.get(['rt'])).rt.enchant?.reason==='Уровень в панели устарел',15000);assert.equal(posts.length,1);
   await h.g.p.reload();await until(()=>h.g.core('on && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="resume"]').isEnabled());await h.popup.locator('#enchantPanel [data-command="resume"]').click();
   await until(async()=> (await h.get(['rt'])).rt.enchant?.status==='done',30000).catch(async e=>{const s=await h.get(['rt','cfg']);console.log('RECOVERY STATE',{page:h.g.p.url(),posts,session:s.rt.enchant,recovery:s.rt.enchantRecovery,cfg:s.cfg.enchant,status:s.rt.status,errors:h.errors});throw e});const resumed=(await h.get(['rt'])).rt;

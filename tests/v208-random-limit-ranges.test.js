@@ -60,7 +60,7 @@ test('range edits and resolve reject stale character or owner, Stop and write fa
 });
 test('same fixed existing defaults do not gain random limits; UI ranges use explicit Apply',()=>{
  const base=JSON.parse(read('base-profile.json'));assert.deepEqual(Object.keys(base.cfg.limitRanges).sort(),['dailyFishLimit','dailyKillLimit']);const html=read('popup.html');for(const key of ['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'])for(const suffix of ['From','To','RangeSet','RangeClear','RangeInfo'])assert.ok(html.includes('id="'+key+suffix+'"'));
- assert.match(read('popup.js'),/!one && cfg\.limitRanges\?\.\[k\]/);assert.match(html,/id="fishTgtMax"/);
+ /* 20.12 (UI-1): полной записи формы больше нет вовсе — выпавший лимит диапазона не перезаписывается старым числом формы */assert.match(read('popup.js'),/if \(!one\.length\) return false;/);assert.match(html,/id="fishTgtMax"/);
 });
 
 test('ordinary popup Start/Stop and statistics commands remain available with active ranges',async()=>{

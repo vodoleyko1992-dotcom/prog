@@ -10,20 +10,13 @@
   --r:11px;--r2:8px;--sh:0 6px 20px rgba(0,0,0,.40);
 }
 html{background:#120e0b;color-scheme:dark;scrollbar-color:#6d563a #211912}
-body{width:760px;height:620px;min-height:520px;max-height:680px;
- overflow:hidden;background:#18130f;color:var(--txt);font:14px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:0}
+
 ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#6b5338;border-radius:8px}
 ::selection{background:#775630;color:#fff9e6}
-header{padding:10px 16px 11px;max-height:40vh;overflow-y:auto;overflow-x:hidden;
- border-bottom:2px solid #785c36;background:linear-gradient(180deg,#2b2118,#1b1510 93%);box-shadow:0 3px 13px #0008}
-.brandbar{height:28px;margin-bottom:6px}.brandmark{width:29px;height:28px;border-radius:6px;
- background:linear-gradient(155deg,#edca82,#a47a35);color:#2c1b0a;box-shadow:inset 0 1px #fff6,0 1px 4px #0008}
-.brandmark span{color:#6c3919}.brandcopy strong{font-size:14px;color:#f4dfb6;letter-spacing:.025em}
-.brandcopy strong span{color:#f2c87b}.brandcopy small{font-size:10px;color:#b9a58a}
-.edition{color:#e2bd78;font-size:10px;border-color:#685334}
+
 #heroLine{margin:3px 0 8px;min-height:19px}
 #heroLine .hero{font-size:13.5px;color:#fff0ce}
-#heroLine .ver{font-size:11px;color:#dbc399;background:#2e241b;border-color:#6f5838}
+
 #heroLine .state{font-size:11px}
 #heroLine .state.on{color:#a3ecc0;background:#203728;border-color:#478657}
 #heroLine .state.off{color:#d8c8b1;background:#352b24;border-color:#685440}
@@ -36,62 +29,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 #start,#start.running{color:#f0ffe9;background:linear-gradient(#347744,#225431);border-color:#75b87a;box-shadow:none;animation:none}
 #stop{color:#ffe4d8;background:linear-gradient(#6d372b,#4b2620);border-color:#bc6856}
 #shopNowTop,#reset{flex:0 0 43px;font-size:16px;background:linear-gradient(#433525,#30271e);border-color:#90734d}
-#modeToggle{display:flex;align-items:center;gap:10px;min-height:40px;width:100%;padding:7px 11px;margin:9px 0 0;
- background:#302419;border:1px solid #84663d;border-radius:8px;text-align:left;color:#f2e2c8;box-shadow:none}
-#modeToggle:hover,#modeToggle[aria-expanded=true]{background:#403022;border-color:#dbaf67}
-#modeToggle .mode-toggle-title{font-size:13px;font-weight:750;color:#f0d59c;white-space:nowrap}
-#modeSummary{font-size:12px;color:#d8c4a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-#modeToggle .mode-toggle-arrow{font-size:18px;margin-left:auto;transition:transform .12s}
-#modeToggle[aria-expanded=true] .mode-toggle-arrow{transform:rotate(180deg)}
-#quickModeGrid[hidden]{display:none!important}
-#quickModeGrid:not([hidden]){margin-top:7px}
-.modes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-.modes button{min-height:39px;padding:6px 7px;white-space:normal;font-size:12px;text-align:center;
- background:#372a1e;border:1px solid #775b3d;color:#e7d4ba;border-radius:7px}
-.modes button.on,#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on,#rbOneBtn.on{
+
+#rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on,#rbOneBtn.on{
  background:linear-gradient(#896526,#664519);color:#fff5d8;border-color:#dfb46a;box-shadow:inset 0 1px #f4d7a655}
-#status{margin-top:8px;max-height:73px;min-height:0;padding:8px 10px;overflow-y:auto;background:#160f0b;border:1px solid #614c34;border-radius:7px}
+
 #status:empty{display:none}
 #status .st{font-size:12.5px;line-height:1.4;color:#efe1c8}
 #status .health{font-size:11px;color:#f0ba70}
 #status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 #status .chip{font-size:10.5px;color:#dbc6a4;background:#33261c;border-color:#61503b}
 #status .chip b{color:#f9e8c8}
-#questBox{max-height:45px;overflow-y:auto}
-.app-shell{position:relative;display:flex;flex-direction:column;min-height:0;flex:1;background:#1a1410}
-#navToggle{display:flex;flex:0 0 auto;align-items:center;gap:9px;justify-content:flex-start;
- width:calc(100% - 24px);min-height:43px;margin:10px 12px 4px;padding:8px 12px;
- color:#efddba;background:linear-gradient(#35281c,#291e16);border:1px solid #81633c;border-radius:8px;text-align:left;box-shadow:inset 0 1px #ffffff08}
-#navToggle:hover,#navToggle[aria-expanded=true]{background:#493420;border-color:#d7ac61}
-.nav-toggle-icon{display:grid;place-items:center;width:27px;height:27px;flex:0 0 27px;
- background:#554027;border:1px solid #9d7542;border-radius:5px;color:#f4d49b;font-size:17px}
-.nav-toggle-text{flex:1;font-size:14px;font-weight:800;color:#f7e1b9}
-#navCurrentName{font-size:12.5px;color:#dfbe86;font-weight:600}
-.nav-toggle-right{font-size:11.5px;color:#e8c789;white-space:nowrap}
-.nav-toggle-arrow{margin-left:6px;font-size:17px}
-.app-shell nav{position:absolute!important;top:58px!important;left:12px!important;right:12px!important;width:auto!important;
- z-index:19!important;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
- padding:12px!important;background:#241b14;border:1px solid #947148;border-radius:10px;
- box-shadow:0 13px 37px #000d;overflow-y:auto!important;max-height:min(73vh,480px)}
-.app-shell.nav-collapsed nav{display:none!important}
-.app-shell nav .nav-heading,.app-shell nav .nav-group{display:none!important}
-.app-shell nav button{display:flex;align-items:center;justify-content:center;flex-direction:row;gap:8px;
- width:auto;min-height:48px;padding:8px 9px;white-space:normal;text-align:left;
- background:#34271d;border:1px solid #72573a;border-radius:7px;color:#f2ddbd;font-size:13px;font-weight:720}
-.app-shell nav button .ic{font-size:19px;color:#e7bd78;flex:0 0 24px;width:24px;text-align:center}
-.app-shell nav button.act{color:#fff5de;background:#705026;border-color:#e3b469;box-shadow:inset 3px 0 #f5d58f}
-.app-shell nav button.act .ic{color:#fff0bd}
-.app-shell nav button:hover{background:#473423;border-color:#dbac61}
-.workarea{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;background:#1b1510}
-.worktop{padding:10px 16px 6px}
-.worktitle strong{font-size:20px;color:#f1d39a;letter-spacing:0;font-weight:820}
-.worktitle small{font-size:12px;color:#c6b295;margin-top:3px}
-.work-v{font-size:10.5px;color:#d9bb8b;border-color:#766043}
-#uiSearchWrap{padding:5px 16px 10px;background:#1b1510}
+
 #uiSearch{height:39px;padding:8px 10px 8px 32px;font-size:13px;color:#fff1dc;
  background-color:#120d09;border:1px solid #806548;border-radius:7px}
 #uiSearch:focus{border-color:#e3b66b;background:#1b130d}
-#uiResults{background:#33261a;border:1px solid #947246;left:16px;right:16px;top:46px}
+
 #uiResults div{font-size:12.5px;padding:9px 10px}
 #uiResults div:hover,#uiResults div.sel{background:#5a3f24}
 section{display:none;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;padding:2px 16px 22px;
@@ -134,20 +86,7 @@ details.help summary,details:not(.help) summary{color:#f0cb85;font-size:12.5px;f
 .intro-callout{padding:12px 14px;background:#302318;border:1px solid #826541;border-radius:8px;color:#eee2d2}
 .intro-callout b{color:#f2d297;font-size:14px}
 .intro-callout p{font-size:12.5px;color:#d9c5a7}
-.overview-stat{gap:8px;margin:10px 0}
-.overview-stat>div,.module-tile,.help-steps>div{background:#2c2118;border:1px solid #695338;border-radius:8px}
-.overview-stat>div{padding:10px 11px}
-.overview-stat span{color:#c8ac83;font-size:10.5px;letter-spacing:.06em}
-.overview-stat strong{color:#fff0ce;font-size:18px}
-.module-tile{min-height:68px;padding:10px 12px}
-.module-tile:hover{background:#3e2e1e;border-color:#e2b475}
-.module-tile strong{font-size:13px;color:#f5e0ba}
-.module-tile small{font-size:11.5px;color:#cdb79a}
-.module-tile em{font-size:11px;color:#d6b477}
-.tile-icon{background:#4e3923;border:1px solid #8a6a42;color:#f5cb80;border-radius:6px}
-.help-steps>div{padding:11px}
-.help-steps span{color:#d7c4ab;font-size:12px}.help-steps strong{color:#f4dfba;font-size:13px}
-.help-steps b{color:#f2c980}
+
 .important-note{background:#45301c;border:1px solid #b98b46;border-left:3px solid #f4c875;
  color:#f0d7a9;border-radius:7px;font-size:12px}
 .important-note b{color:#fff0c9}
@@ -166,39 +105,22 @@ details.help summary,details:not(.help) summary{color:#f0cb85;font-size:12.5px;f
 #goalGrid button i{background:#aa7b30;color:#fff6de}
 #goalQueue{background:#261c13;border-color:#806341;color:#d8c4a6}
 #rodEnchantTo{font-size:14px;font-weight:760;background:#302212;border:1px solid #e3b86d;color:#fff2cc}
-#fishQuickCut,button.ios-primary-action{background:linear-gradient(#936b2c,#6c4a20)!important;
- color:#fff3d4!important;border:1px solid #dbaf6b!important;font-weight:770!important;min-height:41px!important;box-shadow:none!important}
-#fishQuickCut:hover,button.ios-primary-action:hover{background:linear-gradient(#aa8138,#755426)!important}
+#fishQuickCut,button.ios-primary-action{background:linear-gradient(#936b2c,#6c4a20);
+ color:#fff3d4;border:1px solid #dbaf6b;font-weight:770;min-height:41px;box-shadow:none}
+#fishQuickCut:hover,button.ios-primary-action:hover{background:linear-gradient(#aa8138,#755426)}
 footer{flex:0 0 auto;padding:5px 12px;background:#17110d;color:#bba383;border-top:1px solid #655039;font-size:10.5px}
 #toast{background:#332417;color:#fff1d6;border:1px solid #a67e47;box-shadow:0 5px 20px #0008;font-size:12px}
-html.docked body{width:100%;height:100vh;min-height:0;max-height:none}
+
 html.tabbed body{max-width:960px;margin:0 auto;border-left:1px solid #56452f;border-right:1px solid #56452f}   /* 8.0.7: меню отдельной вкладкой (Firefox для Android) */
-html.tabbed .brandbar{margin-left:0}
-html.docked header{padding:8px 10px 9px;max-height:37vh}
-html.docked .brandbar{height:24px}
-html.docked .edition{display:none}
+
 html.docked #heroLine .hero{font-size:12.5px}
 html.docked #start,html.docked #stop{font-size:13px;min-height:40px}
-html.docked #status{max-height:62px}
-html.docked .app-shell{display:flex;flex-direction:column}
-html.docked #modeSummary{font-size:11px}
-html.docked .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
-html.docked .modes button{min-height:38px;font-size:12px}
-html.docked #navToggle{margin:8px 9px 3px;width:calc(100% - 18px);min-height:43px}
-html.docked .app-shell nav{left:9px!important;right:9px!important;top:52px!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:9px!important;max-height:65vh}
-html.docked .app-shell nav button{min-height:43px;font-size:12px;gap:4px;padding:7px 5px}
-html.docked .app-shell nav button .ic{font-size:17px;flex-basis:19px;width:19px}
-html.docked .worktop{padding:9px 12px 4px}
-html.docked .worktitle strong{font-size:18px}
-html.docked .worktitle small{font-size:11px}
-html.docked #uiSearchWrap{padding:5px 11px 9px}
+
 html.docked section{padding:1px 11px 20px}
 html.docked .card>.cb{padding:8px 9px 12px}
 html.docked label{font-size:12.5px;gap:7px;min-height:44px;padding:7px 5px}
 html.docked label>input:not([type=checkbox]),html.docked label>select{max-width:100%}
-html.docked .overview-stat{grid-template-columns:repeat(2,minmax(0,1fr))}
-html.docked .overview-modules{grid-template-columns:1fr}
-@media(max-width:600px){body{width:100vw}.modes{grid-template-columns:repeat(2,minmax(0,1fr))}.app-shell nav{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-stat{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-modules{grid-template-columns:1fr}}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* 7.1.10 — compact game controls (without changing the classic palette) */
@@ -210,32 +132,27 @@ html.docked .overview-modules{grid-template-columns:1fr}
 /* 8.0: суммы в аденах не обрезаются (2 000 000 выглядело как 200000) */
 input.money{width:128px}
 #shopNowTop,#reset{flex:0 0 34px;min-height:33px;font-size:14px}
-#modeToggle{min-height:33px;padding:5px 10px;margin-top:7px}
-#navToggle{min-height:35px;padding:5px 10px}
-.modes button{min-height:33px;padding:5px;font-size:12px}
-.app-shell nav button{min-height:36px;padding:5px 7px}
-html.docked #start,html.docked #stop,html.docked #pause{min-height:33px;max-width:none;padding:5px 6px;font-size:13px}
-html.docked #modeToggle{min-height:33px}
-html.docked #navToggle{min-height:35px}
-html.docked .modes button{min-height:33px}
-html.docked .app-shell nav button{min-height:36px;padding:5px 7px}
 
-/* v7.1.11: compact, sharply delineated utility controls */
+html.docked #start,html.docked #stop,html.docked #pause{min-height:33px;max-width:none;padding:5px 6px;font-size:13px}
+
+/* v7.1.11: compact, sharply delineated utility controls
+   20.12 (ревизия 17.10, UI-12): без !important — правила стоят последними в своём весе; переключатели в панели заточки
+   больше не перебиваются (#enchantPanel стилизует только поля, не галки) */
 .inline-info,html.docked .inline-info{box-sizing:border-box;display:inline-grid;place-items:center;flex:0 0 18px;
-  min-width:18px!important;width:18px!important;height:20px!important;min-height:20px!important;
-  margin:0 2px 0 auto;padding:0!important;border:0!important;border-bottom:1px dotted #a6895d!important;
-  border-radius:2px!important;background:transparent!important;box-shadow:none!important;
-  color:#d5b475!important;font:700 12px/1 Georgia,serif!important;cursor:help}
-.inline-info:hover,.inline-info[aria-expanded=true]{background:#4d3825!important;color:#fff0c7!important;border-bottom:1px solid #e4ba72!important}
-input[type=checkbox],html.docked input[type=checkbox]{box-sizing:border-box;flex:0 0 34px!important;
-  width:34px!important;min-width:34px!important;height:20px!important;min-height:20px!important;
-  border:1px solid #917c62!important;border-radius:11px!important;padding:0!important;
-  background:#493b2c!important;box-shadow:none!important}
-input[type=checkbox]:checked,html.docked input[type=checkbox]:checked{background:#397349!important;border-color:#81ad78!important}
-input[type=checkbox]::before{top:2px!important;left:2px!important;width:14px!important;height:14px!important;
-  background:#d6c3a5!important;box-shadow:none!important}
-input[type=checkbox]:checked::before{transform:translateX(14px)!important;background:#f6f2e6!important}
-label{column-gap:5px!important}
+  min-width:18px;width:18px;height:20px;min-height:20px;
+  margin:0 2px 0 auto;padding:0;border:0;border-bottom:1px dotted #a6895d;
+  border-radius:2px;background:transparent;box-shadow:none;
+  color:#d5b475;font:700 12px/1 Georgia,serif;cursor:help}
+.inline-info:hover,.inline-info[aria-expanded=true]{background:#4d3825;color:#fff0c7;border-bottom:1px solid #e4ba72}
+input[type=checkbox],html.docked input[type=checkbox]{box-sizing:border-box;flex:0 0 34px;
+  width:34px;min-width:34px;height:20px;min-height:20px;
+  border:1px solid #917c62;border-radius:11px;padding:0;
+  background:#493b2c;box-shadow:none}
+input[type=checkbox]:checked,html.docked input[type=checkbox]:checked{background:#397349;border-color:#81ad78}
+input[type=checkbox]::before{top:2px;left:2px;width:14px;height:14px;
+  background:#d6c3a5;box-shadow:none}
+input[type=checkbox]:checked::before{transform:translateX(14px);background:#f6f2e6}
+label{column-gap:5px}
 
 /* 8.0 (аудит меню): живая сводка «Обзора», кнопка «📤 Логи для разбора», постоянная строка «вкладка не отвечает»,
    тосты с переносом (на 375 px длинный текст обрезался nowrap) */
@@ -262,14 +179,7 @@ label{column-gap:5px!important}
 .dash-lines b{font-weight:700;color:#fff0ce;font-variant-numeric:tabular-nums}
 .dash-lines b.low{color:#ff9b85}
 .dash-lines i{font-style:normal;color:#ae987a;font-size:11.5px}
-.module-tile em.on{color:#a3ecc0}
-html.docked .overview-modules{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-html.docked .module-tile{min-height:44px;padding:7px 8px;gap:7px}
-html.docked .module-tile small,html.docked .module-tile em:not(.on){display:none}
-html.docked .module-tile .tile-icon{width:26px;height:26px;flex-basis:26px;font-size:14px}
-html.docked .module-tile strong{font-size:12.5px;white-space:normal}
-html.docked .module-tile em.on{font-size:0}
-html.docked .module-tile em.on::before{content:'●';font-size:12px}
+
 #toast{white-space:normal;width:max-content;max-width:calc(100vw - 24px);text-align:left;overflow-wrap:anywhere;line-height:1.4}
 
 /* 16.10.2026: одинаковые ячейки задач вместо разрозненных строк в x2 и узком меню. */
@@ -280,26 +190,14 @@ html.docked .module-tile em.on::before{content:'●';font-size:12px}
 #autoTaskSelection label:has(input:checked){background:var(--okbg)}
 #autoTaskSelection .hint{grid-column:1/-1;margin:3px 0 0;overflow-wrap:anywhere}
 /* Широкое встроенное меню использует место для навигации, а не растягивает каждую кнопку. */
-@media(min-width:900px){
- html.docked .app-shell{display:grid;grid-template-columns:180px minmax(0,1fr);grid-template-rows:1fr;gap:0}
- html.docked #navToggle{display:none}
- html.docked .app-shell nav,html.docked .app-shell.nav-collapsed nav{position:static!important;display:flex!important;flex-direction:column;align-items:stretch;width:auto!important;max-height:none;min-height:0;overflow-y:auto!important;border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;padding:10px 8px!important;gap:5px}
- html.docked .app-shell nav button{flex:0 0 auto;flex-direction:row;justify-content:flex-start;min-height:38px;text-align:left}
- html.docked .workarea{min-width:0;overflow:hidden}
- html.docked .overview-modules{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
 
 /* 17.10: рабочая область — последнее действие, явное ожидание, результат сохранения. */
-.activity-panel{flex:0 0 auto;min-width:0;margin:0 16px 8px;padding:9px 11px;border:1px solid #66533c;border-left:3px solid #72966f;border-radius:7px;background:#211b13;color:#f3e5ce;overflow-wrap:anywhere}
-.activity-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
-.activity-state{font-size:11px;font-weight:750;color:#baddaf}
-.activity-panel>strong{display:block;font-size:13px;line-height:1.4;font-weight:650}
-#activityHint{margin-top:3px;font-size:11.5px;line-height:1.4;color:#c9b69a;max-height:3em;overflow-y:auto}
-/* 20.12: неизвестная оплата — что ждёт сверки и ручной выход игрока */
-.payment-pending{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;line-height:1.4;color:#ffc49c}
+
+/* 20.12: неизвестная оплата — что ждёт сверки и ручной выход игрока; строка во всю ширину блока «что делает бот», не обрезается */
+.payment-pending{display:flex;flex:1 1 100%;flex-wrap:wrap;align-items:center;gap:6px;min-width:0;margin-top:2px;font-size:11.5px;line-height:1.4;color:#ffc49c}
 .payment-pending[hidden]{display:none}
-.payment-pending button{flex:0 1 auto;max-width:100%;white-space:normal}
-#activityDetails,.task-board-head button,.task-progress button{flex:0 0 auto;min-height:24px;padding:2px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
+.payment-pending button{flex:0 1 auto;max-width:100%;min-height:24px;padding:2px 8px;font-size:11px;white-space:normal}
+.task-board-head button,.task-progress button{flex:0 0 auto;min-height:24px;padding:2px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
 .activity-panel[data-state=blocked]{border-left-color:#e59067;background:#362219}
 .activity-panel[data-state=blocked] .activity-state{color:#ffc49c}
 .activity-panel[data-state=waiting],.activity-panel[data-state=recovering],.activity-panel[data-state=paused]{border-left-color:#dfbc72}
@@ -327,13 +225,124 @@ html.docked .module-tile em.on::before{content:'●';font-size:12px}
 .task-progress button{margin-left:auto}
 .task-meter{grid-column:1/-1;height:4px;overflow:hidden;border-radius:4px;background:#4a3c2a}
 .task-meter>span{display:block;height:100%;background:#90b278}
-html.docked .activity-panel,html.docked .settings-feedback{margin-right:11px;margin-left:11px}
-html.docked #status{max-height:42px;margin-top:5px;padding:4px 8px}#status .chips{margin-top:0}
-html.docked .activity-panel{padding:7px 9px}
-html.docked .activity-panel>strong{font-size:12.5px}
-@media(max-height:690px){.worktop{padding-top:5px;padding-bottom:4px}.worktitle small{display:none}.activity-panel{padding:6px 9px;margin-bottom:5px}#activityHint{max-height:1.5em}.activity-panel>strong{max-height:2.8em;overflow-y:auto}.settings-feedback{max-height:90px;overflow-y:auto}#uiSearchWrap{padding-top:2px;padding-bottom:6px}}
-@media(max-width:420px){.activity-panel,.settings-feedback{margin-left:11px;margin-right:11px}.task-row{grid-template-columns:minmax(0,1fr) minmax(72px,105px)}.task-board{padding:9px}.task-board-note{font-size:11px}}
+html.docked .settings-feedback{margin-right:11px;margin-left:11px}
+#status .chips{margin-top:0}
+
+@media(max-height:690px){.settings-feedback{max-height:90px;overflow-y:auto}}
+@media(max-width:420px){.settings-feedback{margin-left:11px;margin-right:11px}.task-row{grid-template-columns:minmax(0,1fr) minmax(72px,105px)}.task-board{padding:9px}.task-board-note{font-size:11px}}
 :focus-visible{outline:2px solid #edc985;outline-offset:2px}
 
 /* В коротком окне несколько постоянных предупреждений не вытесняют настройки за нижний край. */
-@media(max-height:740px){.workarea,html.docked .workarea{overflow-y:auto;overflow-x:hidden}section.act,html.docked section.act{flex:1 0 170px;min-height:170px}}
+@media(max-height:740px){section.act,html.docked section.act{flex:1 0 170px;min-height:170px}}
+label.task-owned-row input:disabled{opacity:.45;cursor:not-allowed}.hint.task-owned{margin:-2px 0 6px;font-size:11.5px;color:#d9b77a}
+
+/* ===== 20.12 (ревизия 17.10, раздел 3 аудита: UI-6/UI-7/UI-12): компоновка окна — одно место =====
+   Окно Chrome не бывает выше 600 px: тело 760×596, шапка ≤200 px (герой · состояние, кнопки, строка задач, что делает бот),
+   строка из 6 разделов и поиска, раздел занимает всё остальное, подвал — одна строка. Встроенное меню (html.docked) — на всю высоту;
+   уже 600 px — разделы в одну строку значками с коротким именем, поиск под ними; шире 900 px во встроенном меню (×2) — колонка слева. */
+body{display:flex;flex-direction:column;width:760px;height:596px;max-height:600px;margin:0;overflow:hidden;
+ background:#18130f;color:var(--txt);font:14px/1.48 system-ui,-apple-system,"Segoe UI",sans-serif}
+html.docked body{width:100%;height:100vh;max-height:none}
+header{position:relative;z-index:6;flex:0 0 auto;padding:7px 12px 7px;
+ border-bottom:2px solid #785c36;background:linear-gradient(180deg,#2b2118,#1b1510 93%);box-shadow:0 3px 13px #0008}
+/* верхняя строка: герой · состояние движка и поиск настройки (выпадающий список поверх раздела) */
+.toprow{display:flex;align-items:center;gap:10px;margin:0 0 6px}
+#heroLine{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0;min-height:20px;margin:0}
+#heroLine .hero{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header>.row{margin-top:0;gap:6px}
+#start,#pause,#stop,#shopNowTop,#reset{min-height:32px}
+#modeToggle{display:flex;align-items:center;gap:8px;width:100%;min-height:30px;margin:6px 0 0;padding:4px 10px;text-align:left;
+ background:#302419;border:1px solid #84663d;border-radius:7px;color:#f2e2c8;box-shadow:none}
+#modeToggle:hover,#modeToggle[aria-expanded=true]{background:#403022;border-color:#dbaf67}
+#modeToggle .mode-toggle-title{flex:0 0 auto;font-size:12.5px;font-weight:750;color:#f0d59c;white-space:nowrap}
+#modeSummary{flex:1;min-width:0;font-size:12px;color:#d8c4a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#modeToggle .mode-toggle-edit{flex:0 0 auto;font-size:11px;font-weight:700;color:#f3d294;border:1px solid #84663d;border-radius:5px;padding:1px 7px}
+/* что делает бот: состояние, действие, подсказка и счётчики сессии — один блок (раньше «панель активности» дублировала #status) */
+.activity-panel{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;margin-top:6px;padding:5px 9px;border:1px solid #66533c;border-left:3px solid #72966f;
+ border-radius:7px;background:#211b13;color:#f3e5ce;overflow-wrap:anywhere;max-height:76px;overflow-y:auto}
+.activity-head{display:flex;align-items:baseline;gap:8px;flex:1 1 100%;min-width:0}
+.activity-state{flex:0 0 auto;font-size:11px;font-weight:750;color:#baddaf;white-space:nowrap}
+#activityText{flex:1;min-width:0;font-size:12.5px;line-height:1.35;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#activityDetails{flex:0 0 auto;min-height:22px;padding:1px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
+#activityHint{flex:1 1 180px;min-width:0;font-size:11.5px;line-height:1.35;color:#c9b69a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#activityHint:empty{display:none}
+#status{flex:0 1 auto;min-width:0;margin:0;padding:0;border:0;background:none;max-height:none;overflow:visible}
+#status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:0}
+/* разделы и поиск */
+.app-shell{display:flex;flex-direction:column;flex:1;min-height:0;background:#1a1410}
+.navbar{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:6px 12px;border-bottom:1px solid #4f3f2c;background:#1b1510}
+nav#moduleNav{display:flex;gap:4px;flex:1 1 auto;min-width:0}
+nav#moduleNav button{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;flex:1 1 auto;min-width:0;min-height:32px;padding:4px 8px;
+ white-space:nowrap;font-size:12.5px;font-weight:700;color:#e6d2b2;background:#2c2118;border:1px solid #634c33;border-radius:7px}
+nav#moduleNav button .ic{flex:0 0 auto;font-size:14px;line-height:1;color:#e7bd78}
+nav#moduleNav button .lb{overflow:hidden;text-overflow:ellipsis}
+nav#moduleNav button:hover{background:#473423;border-color:#dbac61;color:#fff5dd}
+nav#moduleNav button.act{color:#fff5de;background:#705026;border-color:#e3b469;box-shadow:inset 0 -2px #f5d58f}
+nav#moduleNav button.act .ic{color:#fff0bd}
+#uiSearchWrap{position:relative;flex:0 1 250px;min-width:150px;padding:0;background:none}
+#uiSearch{width:100%;height:28px;min-height:28px;padding:3px 9px 3px 30px;font-size:12.5px;background:#120d09 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c9b08a' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 9px 50%}
+#uiSearch:focus{background-color:#1b130d}
+#uiResults{position:absolute;left:0;right:0;top:36px;z-index:20;max-height:300px;overflow:auto;display:none;
+ background:#33261a;border:1px solid #947246;border-radius:8px;box-shadow:0 10px 28px #000c}
+#uiResults div{font-size:12.5px;padding:8px 10px}
+#uiResults div:hover,#uiResults div.sel{background:#5a3f24}
+.workarea{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:hidden;background:#1b1510}
+.settings-feedback{margin:6px 12px 0}
+section{padding-top:8px}
+footer{flex:0 0 auto;padding:3px 12px;text-align:right;font-size:10.5px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Подразделы и «Дополнительно»: одинаковые отступы, тонкая настройка свёрнута */
+.subsec-title{margin:16px 0 8px;padding:6px 10px;border-left:3px solid #d8ae61;background:rgba(216,174,97,.09);border-radius:0 8px 8px 0;
+ font-size:13.5px;font-weight:800;color:#f3d9a8}
+section>.subsec-title:first-child{margin-top:4px}
+.adv{margin:16px 0 4px;border:1px dashed #7d6242;border-radius:9px;background:#1e1712}
+.adv-h{display:flex;align-items:center;width:100%;min-height:36px;padding:7px 12px;text-align:left;font-size:13px;font-weight:780;color:#f0d59c;
+ background:none;border:0;border-radius:9px;box-shadow:none}
+.adv-h::after{content:'▾';margin-left:auto;font-size:13px;color:#e0c393;transition:transform .12s}
+.adv.closed>.adv-h::after{transform:rotate(-90deg)}
+.adv-h:hover{background:#2c2118}
+.adv-b{padding:2px 8px 6px}
+.adv.closed>.adv-b{display:none}
+.adv-b>.subsec-title:first-child{margin-top:6px}
+/* Обзор: список задач в двух группах */
+#quickModeGrid{margin-top:9px}
+#autoTaskSelection .task-group-title{grid-column:1/-1;margin:4px 0 0;font-size:11.5px;font-weight:780;letter-spacing:.02em;color:#e2bd78}
+#autoTaskSelection .task-group-title:first-of-type{margin-top:0}
+#questBox:not(:empty){margin:0 0 11px}
+/* Чемпионы одной строкой: цвета + режим Cancel */
+.champ-row{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;margin:2px 0}
+.champ-row>label{flex:0 0 auto;min-height:36px;margin:0;padding:4px 6px}
+.champ-row>label:last-child{flex:1 1 260px;min-width:0}
+.champ-row select{min-width:0;max-width:100%}
+.champ-row-t{font-size:12.5px;color:#d4c3a7}
+label{min-height:36px;padding:5px 8px}
+input:not([type=checkbox]),select{min-height:30px;padding:4px 8px}
+.card>.ch{min-height:38px;padding:8px 12px}
+.card{margin:0 0 9px}
+/* ≥900 px во встроенном меню (×2): разделы — колонкой слева, поиск над ними */
+@media(min-width:900px){
+ html.docked .app-shell{display:grid;grid-template-columns:190px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+ html.docked .navbar{flex-direction:column;align-items:stretch;padding:10px 8px;border-bottom:0;border-right:1px solid #4f3f2c;overflow-y:auto}
+ html.docked nav#moduleNav{flex-direction:column}
+ html.docked nav#moduleNav button{justify-content:flex-start;min-height:38px}
+}
+/* узко (встроенное меню, планшет, 360 px): разделы — значок и короткое имя в одну строку, поиск ниже */
+@media(max-width:600px){
+ body{width:100vw}
+ header{padding:6px 9px}
+ .navbar{padding:5px 8px}
+ nav#moduleNav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ nav#moduleNav button{flex-direction:column;justify-content:center;gap:1px;min-height:40px;padding:3px 1px;font-size:0}
+ nav#moduleNav button .lb{display:none}
+ nav#moduleNav button::after{content:attr(data-short);font-size:10.5px;line-height:1.15;font-weight:700}
+ nav#moduleNav button .ic{font-size:15px}
+ .toprow{gap:6px}
+ #heroLine{flex:0 1 auto}
+ #heroLine .state{font-size:10.5px;padding:1px 6px}
+ #uiSearchWrap{flex:1 1 90px;min-width:80px}
+ #uiResults{left:auto;right:0;width:calc(100vw - 18px)}
+ footer{text-align:center}
+ .champ-row>label:last-child{flex-basis:100%}
+}
+/* короткое окно: несколько постоянных предупреждений — раздел остаётся доступным общей прокруткой */
+@media(max-height:620px){.activity-panel{max-height:62px}.activity-panel:has(.payment-pending:not([hidden])){max-height:none}}
+@media(max-height:740px){.workarea{overflow-y:auto;overflow-x:hidden}section.act{flex:1 0 170px;min-height:170px}}

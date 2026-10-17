@@ -17,7 +17,8 @@ async function scenario(task){
  await h.g.p.goto('https://l2wap.com/battle.html?spawnId=fixture');await until(()=>h.g.core('rt.char==="AuditHero"'));await h.g.p.evaluate(()=>fetch('/game/battle'));await h.g.p.bringToFront();await h.click('start');
  await until(async()=>((await h.get(['rt'])).rt.farmQuota?.[task]?.done),20000);
  const state=await h.get(['rt','cfg','on']);assert.equal(state.on,true);assert.equal(state.rt.farmQuota[task].got,3);assert.ok(!state.cfg.autoTasks.includes(task));assert.ok(state.cfg.autoTasks.includes(task==='cat'?'auto':'dailies'));assert.deepEqual(acts,['attack']);await h.click('stop');
- await h.openTab('limits');await h.popup.locator('#'+task+'KillLimit').fill('12');await h.popup.locator('#'+task+'KillLimit').dispatchEvent('change');await until(async()=>((await h.get(['cfg'])).cfg[task+'KillLimit'])===12);await h.click(task+'KillReset');assert.equal((await h.get(['rt'])).rt.farmQuota[task].got,0);
+ await h.reveal('#'+task+'KillLimit');   // 20.12 (ревизия 17.10): разовые цели — в «Дополнительно» «Обзора»
+ await h.popup.locator('#'+task+'KillLimit').fill('12');await h.popup.locator('#'+task+'KillLimit').dispatchEvent('change');await until(async()=>((await h.get(['cfg'])).cfg[task+'KillLimit'])===12);await h.click(task+'KillReset');assert.equal((await h.get(['rt'])).rt.farmQuota[task].got,0);
  assert.deepEqual(h.errors,[]);console.log('PASS MV3 '+task+': victory +3 → task disabled / bot ON / remaining task; UI limit/reset');
  }catch(e){console.error('DIAG',task,acts,await h.get(['rt','cfg','on']));throw e}finally{await h.ctx.close()}
 }

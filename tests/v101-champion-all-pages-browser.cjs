@@ -5,7 +5,7 @@ async function test(kind){const f=await allPages({ordinaryFirst:kind==='ordinary
  if(['stop','tvt','selection'].includes(kind)){
   await until(()=>f.S.held,20000);
   if(kind==='stop'){await f.h.click('stop');await until(async()=>!(await f.h.get(['on'])).on);}
-  else if(kind==='selection'){await f.h.popup.locator('[data-auto-task="quests"]').click();await until(async()=>!(await f.h.get(['cfg'])).cfg.autoTasks.includes('quests'));}
+  else if(kind==='selection'){await f.h.tasks();/* 20.12: задачи — в «Обзоре» */await f.h.popup.locator('[data-auto-task="quests"]').click();await until(async()=>!(await f.h.get(['cfg'])).cfg.autoTasks.includes('quests'));}
   else{f.S.tvt=true;await f.h.g.p.evaluate(()=>fetch('/game/tvt'));await until(()=>f.h.g.core('L2V7Modules.tvt.tvtHold()'));}
   f.release();await delay(1800);await f.h.click('stop');assert.equal(f.S.pages.filter(p=>p>2).length,0,'отменённое чтение не продолжает скан');assert.equal((await f.diag()).S.entries,0);
  }else if(kind==='empty-reset'){

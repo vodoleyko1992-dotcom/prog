@@ -30,12 +30,14 @@ const unknown=false;
  const ui=h.popup.locator('#enchantPanel');
  const initial=await h.get(['cfg','rt','on']);assert.notEqual(initial.on,true);assert.ok(!initial.cfg.enchant?.queue?.length);assert.ok(!initial.rt.enchant?.runId);
  // Чистая установка: только пользовательские переключатели, никаких cfg/rt/queue injections.
+ await h.tasks();   // 20.12 (ревизия 17.10): задачи — в «Обзоре»
  const enchant=h.popup.locator('[data-auto-task="enchant"]');await enchant.click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks?.includes('enchant'));
  for(const key of (await h.get(['cfg'])).cfg.autoTasks.filter(k=>k!=='enchant')){
   await until(()=>h.popup.locator('[data-auto-task="'+key+'"]').isChecked());await h.popup.locator('[data-auto-task="'+key+'"]').click();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes(key));
  }
  assert.deepEqual((await h.get(['cfg'])).cfg.autoTasks,['enchant']);
- await h.popup.locator('#navToggle').click();await h.popup.locator('nav [data-tab="enchant"]').click();await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
+ await h.openTab('enchant');   // 20.12 (ревизия 17.10): подраздел «Боя и класса»
+ await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===2));
  await ui.locator('[data-candidate]').selectOption('0');await ui.locator('[data-add]').click();await until(()=>ui.locator('[data-key]').count());
  await ui.locator('[data-cfg="scrollPolicy"]').selectOption('blessed');await until(async()=>(await h.get(['cfg'])).cfg.enchant.scrollPolicy==='blessed');
  await ui.locator('[data-detail=limits]>summary').click();
@@ -49,8 +51,9 @@ const unknown=false;
  await until(async()=>(await h.get(['rt'])).rt.enchant?.status==='done',30000).catch(async e=>{console.error('DIAG',{posts,url:h.g.p.url(),state:await h.get(['cfg','rt']),errors:h.errors});throw e;});
  const state=(await h.get(['rt'])).rt.enchant;assert.equal(posts.length,1);assert.equal(state.totals.attempts,1);assert.equal(state.totals.successes,1);assert.equal(state.totals.scrolls,1);assert.equal(state.items[0].level,4);assert.equal(state.pending,null);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===910527).qty,2);assert.equal(snapshot.inventory.stacks.find(x=>x.itemId===4037).qty,99);
  const firstRun=state.runId;
- await h.popup.locator('[data-auto-task="fish"]').click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks.includes('fish'));await until(()=>h.g.core('autonomyMode()==="fish"'));
+ await h.tasks();await h.popup.locator('[data-auto-task="fish"]').click();await until(async()=>(await h.get(['cfg'])).cfg.autoTasks.includes('fish'));await until(()=>h.g.core('autonomyMode()==="fish"'));
  await until(()=>h.popup.locator('#enchantModeToggle').getAttribute('aria-pressed').then(v=>v==='true'));assert.match(await h.popup.locator('#enchantModeToggle').textContent(),/выбран/);
+ await h.openTab('enchant');   // 20.12: после выбора задачи меню в «Обзоре»
  const target=ui.locator('[data-item="targetLevel"]');await target.fill('5');await target.dispatchEvent('change');await until(async()=>(await h.get(['cfg'])).cfg.enchant.queue[0].targetLevel===5);
  await until(()=>ui.locator('[data-command="start"]').isEnabled());await ui.locator('[data-command="start"]').click();
  await until(async()=>{const {rt}=await h.get(['rt']);return rt.enchant?.status==='done'&&rt.enchant.runId!==firstRun;},30000);

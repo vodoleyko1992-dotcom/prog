@@ -209,13 +209,13 @@ async function activateMode(rtPatch, cfgPatch) {
   return showWakeResult();
 }
 
-const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
+const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
 NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
-const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
+const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
+const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbSpikeRhythm: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
               "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
               enchantMode: false, enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
               autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, rec: true, questStop: false, deepEvery: 30,
@@ -288,8 +288,8 @@ async function load() {
     if (!on || heartbeatValid) { if (w) wakeWarnSet(null); paintWakeWarn(false); }
     else if (w) paintWakeWarn(true, w.text);
     else paintWakeWarn(!booting && !failing && Date.now() - (+rt.manualKickAt || 0) > 20000, WAKE_NOTAB); }
-  if ($('workVer')) $('workVer').textContent = 'v' + ver;   // 8.0: версия из манифеста (было зашито «v7.1.11»)
-  $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span><span class="ver">v${esc(ver)}</span>`
+  // 20.12 (ревизия 17.10, UI-6): версия — только в подвале; строка героя короче, шапка не выше 200 px
+  $('heroLine').innerHTML = `<span class="hero">👤 ${esc(rt.char || 'Персонаж')}${rt.lvl ? ` · ${rt.lvl} ур.` : ''}</span>`
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
   // 8.0 (аудит меню): ⏱ — EXP/ч за сессию (с ↺), как в «Обзоре». Раньше — средний темп за всё время (rt.eff):
   // «≈3,5 млн EXP/ч» при 0 боёв
@@ -317,6 +317,7 @@ async function load() {
   // режим РБ
   $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
   paintModes(d, on, rt);
+  paintTaskOwned(d);   // 20.12 (UI-3): переключатели, которыми в режиме задач владеет список задач
   paintCls(d, rt);
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   renderEpics(rt, d);
@@ -570,7 +571,7 @@ function renderGoals(rt) {
 }
 async function setGoals(list) {
   $('fishGoal').value = list.join(', ');
-  await save();
+  await saveKeys(['fishGoal']);
   const { rt = {} } = await chrome.storage.local.get('rt');
   renderGoals(rt);
 }
@@ -671,7 +672,7 @@ const resParse = v => String(v || '').split('\n').map(l => l.match(/^\s*(.+?)\s*
   .map(m => ({ name: m[1].trim(), key: m[1].trim().toLowerCase(), need: +m[2] }));
 async function resSet(list) {
   $('resQuests').value = list.map(r => `${r.name} = ${r.need}`).join('\n');
-  await save(); load();
+  await saveKeys(['resQuests']); load();
 }
 async function renderRes(rt, d) {
   const rq = resParse(d.resQuests), bag = rt.bagAll, h = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -900,7 +901,7 @@ async function renderRecipes(rt, d) {
 }
 $('recipeScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
-  await menuPatch({ recipeScan: true });
+  await menuPatch({ recipeScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   $('recipeBox').textContent = on ? '⏳ Бот откроет «Охоту на рецепты» после текущего боя' : '⏳ База обновится после ▶ Старт (или откройте форум «Охота на рецепты» сами)';
 };
 $('recipeReset').onclick = async () => {
@@ -1111,7 +1112,7 @@ $('faList').addEventListener('click', async e => {
 });
 $('faScanBtn').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
-  await menuPatch({ faScan: true });
+  await menuPatch({ faScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   $('faNote').textContent = on ? '⏳ Бот откроет баффер Fast Aden после текущего боя' : '⏳ Список обновится после ▶ Старт (или откройте баффер Fast Aden сами — бот перепишет его)';
 };
 
@@ -1317,19 +1318,33 @@ $('authClear').onclick = async () => {
   $('authNote').textContent = 'Стёрто. ' + ($('authNote').dataset.base || '');
 };
 
+// 20.12 (UI-2): save() без события (Старт, режимы, «Проверить», «Закупить сейчас») больше не отправляет форму целиком — только ждёт
+// уже начатых записей полей и не даёт продолжить, если изменение так и не сохранилось.
 async function save(e) {
+  if (!e?.target?.id && !Array.isArray(e?.keys)) return settingsFlush();
+  saveRunning++; try { return await saveFields(e); } finally { saveRunning--; }
+}
+async function saveFields(e) {
   if (formChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   const n = {};
   if (/^nWeapon/.test(e?.target?.id || '')) n.weaponManual = !!String(e.target.value || '').trim();   // игрок выбрал оружие сам — проверка инвентаря его не перепишет
   // v5.6: сохраняем только изменённое поле — раньше форма целиком перезаписывала настройки, и то, что бот сам поменял
   // (автороли, оружие) пока поле было в фокусе, откатывалось к старому
-  const id = e?.target?.id;
-  const one = id && (NUM.includes(id) || TXT.includes(id) || BOOL.includes(id)) ? [id] : null;
-  NUM.forEach(k => { if (!one && cfg.limitRanges?.[k]) return; if (!one || one.includes(k)) n[k] = Math.max(0, +$(k).value || 0); });
-  TXT.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).value; });
-  BOOL.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).checked; });
-  if (one && ['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
+  // 20.12 (ревизия 17.10, UI-1/UI-2): только поля, которые игрок изменил. Без id (галки задач, поиск, Старт, «Проверить»)
+  // раньше уходила вся форма (~200 ключей) — устаревший снимок откатывал то, что успел записать бот или второе окно меню.
+  const id = e?.target?.id, keys = Array.isArray(e?.keys) ? e.keys : id ? [id] : [];
+  const one = keys.filter(k => NUM.includes(k) || TXT.includes(k) || BOOL.includes(k));
+  if (!one.length) return false;
+  NUM.forEach(k => { if (one.includes(k)) { const v = numField(k); if (v !== undefined) n[k] = v; } });
+  TXT.forEach(k => { if (one.includes(k)) n[k] = $(k).value; });
+  BOOL.forEach(k => { if (one.includes(k)) n[k] = $(k).checked; });
+  if (!Object.keys(n).length) return false;
+  if (['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
+  // 20.12 (ревизия 17.10, UI-3): в режиме «Задачи бота» TvT/Катакомбы/Автофарм в разделах ведут тот же список задач,
+  // а не только старый флаг, который движок в этом режиме не читает (раньше галка «Участвовать в TvT» молча не действовала).
+  const taskOf = TASK_FLAG_OF[id];
+  if (taskOf && Array.isArray(cfg.autoTasks) && typeof n[id] === 'boolean') Object.assign(n, autoTaskPatch({ ...DEF, ...cfg }, taskOf, n[id]), { [id]: n[id] });
   for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
   if (n.rodEnchantTo != null) n.rodEnchantTo = Math.min(10, n.rodEnchantTo);
   if (n.maxPages < 1) n.maxPages = 1;
@@ -1340,13 +1355,42 @@ async function save(e) {
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
-  if (one && ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit'].includes(id)) magReset.manualKickAt = Date.now();
+  if (['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit'].includes(id) || taskOf && Array.isArray(cfg.autoTasks)) magReset.manualKickAt = Date.now();
   try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
   catch (error) {
     const why = String(error?.message || error);
     if (typeof toast === 'function') toast('Настройки не сохранены: ' + why);
     throw error; // do not continue Start/Buy/Mode with unapplied configuration
   } // отдельные поля, без перезаписи всего cfg
+  return true;
+}
+// 20.12 (ревизия 17.10, UI-3): переключатели в разделах, которые в режиме «Задачи бота» ведут сам список задач
+const TASK_FLAG_OF = { tvtOn: 'tvt', catMode: 'cat', zoneAuto: 'auto' };
+// 20.12 (UI-2): счётчик начатых сохранений — change срабатывает на blur раньше click, а menuPatch ещё не вызван (ждёт чтения cfg)
+var saveRunning = 0;
+// 20.12 (ревизия 17.10, UI-2): программная запись конкретных полей формы (цели рыбалки, квесты на ресурсы, «Фулл бафф»).
+const saveKeys = keys => save({ keys });
+// 20.12 (ревизия 17.10, UI-11/D9): пустое или нечисловое поле не превращается в 0 (у части ключей 0 = «защита выключена»/«без лимита»):
+// сохраняется значение по умолчанию, поле показывает его. Явно введённый 0 сохраняется как 0.
+function numField(k) {
+  const el = $(k), raw = String(el?.value ?? '').trim(), v = +raw;
+  if (raw !== '' && Number.isFinite(v)) return Math.max(0, v);
+  const def = DEF[k];
+  if (typeof def !== 'number') return undefined;   // умолчания нет — прежнее значение не трогаем
+  if (el) el.value = def;
+  if (typeof toast === 'function') toast(`Пустое поле — поставлено значение по умолчанию: ${def}`);
+  return def;
+}
+// 20.12 (ревизия 17.10, UI-2): Старт/режимы/«Проверить» больше не отправляют форму целиком. Они ждут уже начатые записи
+// полей (change срабатывает до click) и не продолжают, если изменение так и не сохранилось.
+async function settingsFlush() {
+  await Promise.resolve();
+  const busy = () => (typeof settingsPending !== 'undefined' && settingsPending) || saveRunning;
+  for (let i = 0; busy() && i < 160; i++) await new Promise(r => setTimeout(r, 100));
+  if (typeof settingsFailed === 'undefined') return true;   // вырезка в тестах без очереди меню
+  if ([...settingsFailed.values()].some(f => f.retryable)) await retrySettings().catch(() => {});
+  if (settingsFailed.size) { const why = [...settingsFailed.values()].at(-1)?.reason || 'есть несохранённые изменения';
+    if (typeof toast === 'function') toast('Настройки не сохранены: ' + why); throw new Error(why); }
 }
 
 // ---------- вкладки ----------
@@ -1479,12 +1523,51 @@ $('mmGoOrder')?.addEventListener('click', async () => { await menuPatch({ mmGoRe
 $('mmCraftForget')?.addEventListener('click', async () => { await menuPatch({ mmCraft: null }); toast('↺ Забыл, что лежит у крафтера'); });
 $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', tvtshop: 'pvp', dailies: 'hunt', analyze: 'panel', roles: 'panel', pet: 'warlock', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', enemies: 'pvp', epic: 'rb', rbtimer: 'rb', loot: 'supply', log: 'svc' };
-const tabScroll = new Map();
+// 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
+// «TvT/PvP и сервис»), тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
+// #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', limits: 'overview',
+  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', enchant: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
+  supply: 'fish', mammon: 'fish', loot: 'fish', pvp: 'svc', tvtshop: 'svc', enemies: 'svc', log: 'svc' };
+// 20.12 (ревизия 17.10, UI-7): встроенное меню — iframe, который грузится заново на каждом переходе страницы игры. Свёрнутый/раскрытый
+// список задач и прокрутка разделов запоминаются на этом устройстве (localStorage), иначе после каждого боя шапка снова раскрывала
+// 15 галок, а длинный раздел («Охота») прыгал в начало. Хранилище может быть недоступно — тогда всё работает как раньше.
+const DOCK_UI_KEY = 'l2bot-dockUi';
+const dockUi = (() => { try { const v = JSON.parse(localStorage.getItem(DOCK_UI_KEY) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } })();
+dockUi.scroll = dockUi.scroll && typeof dockUi.scroll === 'object' ? dockUi.scroll : {};
+const dockUiSave = () => { try { localStorage.setItem(DOCK_UI_KEY, JSON.stringify(dockUi)); } catch (e) {} };
+function taskListOpen(open, remember = true) {
+  const grid = $('quickModeGrid'), tog = $('modeToggle');
+  if (grid) grid.hidden = !open; tog?.setAttribute('aria-expanded', String(!!open));
+  const edit = $('taskBoardEdit'); if (edit) { edit.textContent = open ? 'Свернуть' : 'Изменить'; edit.setAttribute('aria-expanded', String(!!open)); }
+  if (remember) { dockUi.tasksOpen = !!open; dockUiSave(); }
+}
+// 20.12 (ревизия 17.10): галки задач переехали из шапки в «Обзор» (в шапке — одна строка-сводка). Нажатие на сводку или «Изменить»
+// открывает «Обзор» с раскрытым списком; повторное нажатие, когда список на виду, сворачивает его. По умолчанию список свёрнут.
+function taskListToggle() {
+  const grid = $('quickModeGrid'), shown = !!grid && !grid.hidden && !!document.getElementById('tab-overview')?.classList.contains('act');
+  if (shown) return taskListOpen(false);
+  showTab('overview'); taskListOpen(true);
+  setTimeout(() => $('taskBoard')?.scrollIntoView({ block: 'start' }), 30);
+}
+if (typeof dockUi.tasksOpen === 'boolean') taskListOpen(dockUi.tasksOpen, false);
+const tabScroll = new Map(Object.entries(dockUi.scroll).filter(([k, v]) => /^tab-[\w-]+$/.test(k) && Number.isFinite(v) && v > 0));
+let scrollSaveT = null;
+document.querySelectorAll('section[id^="tab-"]').forEach(sec => sec.addEventListener('scroll', () => {
+  if (!sec.classList.contains('act')) return;
+  tabScroll.set(sec.id, sec.scrollTop);
+  if (scrollSaveT) return;
+  scrollSaveT = setTimeout(() => { scrollSaveT = null; dockUi.scroll = Object.fromEntries([...tabScroll].filter(([, v]) => v > 0)); dockUiSave(); }, 300);
+}, { passive: true }));
+// содержимое раздела дорисовывает load() — после первой отрисовки возвращаем сохранённую позицию
+function restoreTabScroll() {
+  const sec = document.querySelector('section.act'), top = sec && tabScroll.get(sec.id);
+  if (sec && top > 0 && sec.scrollTop === 0) sec.scrollTop = top;
+}
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
-  if (!document.getElementById('tab-' + t)) t = 'overview';
+  if (!document.querySelector('section#tab-' + t)) t = 'overview';
   const previous = document.querySelector('section.act');
   if (previous) tabScroll.set(previous.id, previous.scrollTop);
   document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('act', b.dataset.tab === t); b.setAttribute('aria-current', b.dataset.tab === t ? 'page' : 'false'); });
@@ -1492,7 +1575,13 @@ function showTab(t) {
   try { localStorage.setItem('tab', t); } catch (e) {}
   document.dispatchEvent(new CustomEvent('l2:tabchange', { detail: { tab: t } }));
   document.getElementById('tab-' + t).scrollTop = tabScroll.get('tab-' + t) || 0;
-  if (sub) setTimeout(() => document.getElementById('tab-' + sub)?.parentElement?.scrollIntoView({ block: 'start' }), 30);
+  const mark = sub && document.getElementById('tab-' + sub);
+  if (mark) { revealEl(mark); setTimeout(() => (mark.closest('.subsec-title') || mark.parentElement)?.scrollIntoView({ block: 'start' }), 30); }
+}
+// 20.12: показать элемент — раскрыть «Дополнительно» и карточку, где он лежит (поиск, переходы, «Подробнее ↗»). До cardify() блоков нет.
+function revealEl(el) {
+  const adv = el?.closest?.('.adv.closed'); if (adv) advSet(adv, true);
+  const card = el?.closest?.('.card.closed'); if (card) cardSet(card, true);
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 try { showTab(localStorage.getItem('tab') || 'overview'); } catch (e) {}
@@ -1691,7 +1780,9 @@ for(const key of rangeLimitKeys) {
   $(key+'RangeSet').onclick=()=>apply(false);$(key+'RangeClear').onclick=()=>apply(true);
 }
 
-document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', e => { void save(e).catch(() => {}); }); });
+// 20.12 (ревизия 17.10, UI-1): общий обработчик — только у полей настроек (NUM/TXT/BOOL). Галки задач, поиск по ресурсам и прочие
+// служебные поля сохраняют себя сами; раньше их change вызывал save() без id и отправлял всю устаревшую форму.
+document.querySelectorAll('input,textarea,select').forEach(el => { if (el.id && (NUM.includes(el.id) || TXT.includes(el.id) || BOOL.includes(el.id)) && !['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', e => { void save(e).catch(() => {}); }); });
 
 $('check').onclick = async () => {
   await save();
@@ -1731,6 +1822,24 @@ $('apply').onclick = async () => {
 // Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
 const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', epic: 'Эпики', raid: 'Тур по РБ', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
 const AUTO_MAIN_TASKS = ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
+// …и те, что в этом режиме не действуют (движок их подменяет, engine-core taskConfig): показаны выключенными с пояснением
+const TASK_OWNED = { tsBuy: 'В режиме «Задачи бота» автопокупка в TvT-магазине не выполняется — покупайте вручную или верните прежние настройки', campAuto: 'Управляется задачами: сюжетные квесты ведёт задача «Квесты и кампания» в «Задачах бота»' };
+function paintTaskOwned(d) {
+  const strict = Array.isArray(d.autoTasks);
+  for (const [k, task] of Object.entries(TASK_FLAG_OF)) { const el = $(k); if (!el) continue;
+    if (strict && document.activeElement !== el) el.checked = d.autoTasks.includes(task);
+    taskHint(el, strict ? `Управляется задачами: эта галка включает/снимает «${AUTO_TASK_LABELS[task]}» в «Задачах бота»` : ''); }
+  for (const [k, why] of Object.entries(TASK_OWNED)) { const el = $(k); if (!el) continue;
+    el.disabled = strict; taskHint(el, strict ? why : ''); }
+}
+function taskHint(el, text) {
+  const label = el.closest('label'); if (!label) return;
+  // подсказка помнится у поля: ui-v7 вставляет своё «i»-пояснение сразу после label, соседство ненадёжно
+  let h = el._taskHint || null;
+  if (!text) { h?.remove(); el._taskHint = null; label.classList.remove('task-owned-row'); return; }
+  if (!h) { h = el._taskHint = document.createElement('div'); h.className = 'hint task-owned'; label.after(h); }
+  label.classList.add('task-owned-row'); if (h.textContent !== text) h.textContent = text;
+}
 // 17.10: UI показывает подтверждённые причины ожидания и очередь отдельно от последнего действия.
 const TASK_TABS = { tvt:'pvp', enchant:'enchant', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
 // 20.12 (ревизия 17.10, аудит PAY-1): что именно ждёт сверки — вид, сумма, давность; кнопка ручного выхода только для неё.
@@ -1818,10 +1927,16 @@ function autoTaskPatch(d, key, enabled) {
   return { autoTasks: [...tasks], ...(flags[key] ? { [flags[key]]: enabled } : {}), ...(key === 'quests' ? { storyTurnIn: enabled } : {}) };
 }
 let autoTaskEditQueue = Promise.resolve();
+// 20.12 (ревизия 17.10, UI-1): пока правка списка задач в очереди фона, промежуточная перерисовка (load по записи rt) не возвращает
+// галкам старое состояние из cfg — иначе быстрый второй клик «не меняет» галку. Финальный load() после записи рисует правду.
+let autoTaskPending = 0;
 function editAutoTask(key, enabled) {
+  autoTaskPending++;
   const edit = autoTaskEditQueue.catch(() => {}).then(async () => {
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
-  await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
+  try {
+    const { cfg = {} } = await chrome.storage.local.get('cfg');
+    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
+  } finally { autoTaskPending--; }
   await load();
   });
   autoTaskEditQueue = edit; return edit;
@@ -1833,7 +1948,7 @@ function currentMode(d) {
 const MODE_NAME = { quests: '📜 Квесты и кампания', tasks: 'Ожидание выбранных задач', farm: '⚔ Фарм на месте', auto: '🗺 Автофарм', rb: '👑 Тур по РБ', epic: '🐉 Эпики', fish: '🎣 Рыбалка', cat: '🏛 Катакомбы', enchant: '✨ Автозаточка' };
 function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампания (авто)»
   const strict = Array.isArray(d.autoTasks), selected = selectedAutoTasks(d), active = strict && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt) : null, m = active ? (active === 'raid' ? 'rb' : active) : currentMode(d);
-  document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.checked = selected.includes(el.dataset.autoTask); });
+  if (!(typeof autoTaskPending === 'number' && autoTaskPending)) document.querySelectorAll('#autoTaskSelection [data-auto-task]').forEach(el => { el.checked = selected.includes(el.dataset.autoTask); });
   const note = $('autoTaskStatus'); if (note) note.textContent = strict ? (selected.length ? 'Разрешено: ' + selected.map(k => AUTO_TASK_LABELS[k]).join(', ') : 'Ничего не выбрано — бот ждёт') : 'Показаны прежние настройки. Измените список, чтобы разрешить только выбранные задачи.';
   $('rbSessStart').onclick = async () => {
   await save();
@@ -1841,7 +1956,7 @@ function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампан
   await setMode('rb', true);
   toast('🔥 РБ-сессия: бот идёт к бафферу за баффами, потом — тур по РБ');
 };
-$('rbSessAuto').onclick = async () => { $('rbSessBuffs').value = 'auto'; await save(); toast('⚡ Фулл бафф под класс: список подставлен'); };
+$('rbSessAuto').onclick = async () => { $('rbSessBuffs').value = 'auto'; await saveKeys(['rbSessBuffs']); toast('⚡ Фулл бафф под класс: список подставлен'); };
 $('rbSessStop').onclick = async () => {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ rbSess: { ...(rt.rbSess || {}), on: false, end: Date.now(), sum: rt.rbSess?.sum || null } });
@@ -2015,7 +2130,7 @@ $('goalGrid').onclick = e => {
 $('bagCheck').onclick = async () => {
   await save();
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
-  await menuPatch({ bagCheck: true });
+  await menuPatch({ bagCheck: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? '🎒 Бот пересчитает сумку после боя' : '🎒 Пересчёт после ▶ Старт');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 confirmClick('lootReset', async () => {               // обнулить статистику добычи
@@ -2024,7 +2139,7 @@ confirmClick('lootReset', async () => {               // обнулить ста
 });
 $('farmScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
-  await menuPatch({ farmScan: true });
+  await menuPatch({ farmScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? 'База ресурсов: бот откроет форум после боя' : 'База обновится после ▶ Старт (или раскройте строки на странице «Фарм ресурсов» сами — они сохранятся)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('farmReset').onclick = async () => {
@@ -2038,7 +2153,7 @@ confirmClick('petStatReset', async () => {
 });
 $('zoneScan').onclick = async () => {
   const { rt = {}, on = false } = await chrome.storage.local.get(['rt', 'on']);
-  await menuPatch({ zoneScan: true });
+  await menuPatch({ zoneScan: { manual: true, t: Date.now() } });   // 20.12 (M2): ручная команда — список задач её не отменяет
   toast(on ? 'Список зон: бот откроет «Телепорт» после боя' : 'Список зон обновится после ▶ Старт (или откройте «Телепорт» — зоны читаются сами)');   // 8.0: в #status текст стирала ближайшая перерисовка
 };
 $('zoneBox').onclick = async e => {
@@ -2081,7 +2196,7 @@ let controlGeneration = 0;
 $('start').onclick = async () => {
   const generation = ++controlGeneration;
   try {
-    await save(); if (generation !== controlGeneration) return;
+    await save(); if (generation !== controlGeneration) return;   // 20.12 (UI-2): save() без полей только ждёт записей, форму целиком не пишет
     const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
     await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return;
     await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true });
@@ -2337,7 +2452,7 @@ $('learnShots').addEventListener('change', async e => {
   if (!e.target.checked) return;
   let ok = false;
   try { ok = await chrome.permissions.request({ origins: ['<all_urls>'] }); } catch (er) {}
-  if (!ok) { e.target.checked = false; await save(); toast?.('Скриншоты: Chrome не дал разрешения', 'var(--bad)'); }
+  if (!ok) { e.target.checked = false; await saveKeys(['learnShots']); toast?.('Скриншоты: Chrome не дал разрешения', 'var(--bad)'); }
 });
 confirmClick('learnReset', async () => { await chrome.storage.local.remove('learn'); renderLearn(); toast?.('↺ База автообучения сброшена'); });
 const readShots = async () => {
@@ -2413,6 +2528,29 @@ $('rbtFile').onchange = async e => {
     load();
   } catch (er) { toast('Не загрузил таймеры: ' + (er?.message || er)); }
 };
+// 20.12 (ревизия 17.10, UI-4): белый список импорта — ключи умолчаний меню (DEF) и ядра, которых нет в DEF; тип должен совпадать.
+// Однократные флаги миграций, служебные и чужие ключи не импортируются.
+// 20.12 (ревизия 17.10, ревью импорта): ключи, которые читают content.js/модули, но которых нет в DEF меню. Без них импорт
+// молча отбрасывал выбор игрока: «⬇ С самых сильных» (rbOrder) и скрытые настройки, записанные руками в файл настроек.
+// Тест v2012-cfg-import-keys сверяет список со всеми cfg.X в коде — новый ключ без типа здесь уронит тест.
+const CFG_IMPORT_EXTRA = { dockMin: 'boolean', potSlotAuto: 'boolean', weaponClassPick: 'boolean', weaponScanAuto: 'boolean', rbExpValue: 'number', rbPotCost: 'number', rbHuntMode: 'boolean', rbBetween: 'boolean',
+  rbOrder: 'string', champNoCancel: 'boolean', farmHere: 'boolean', fishAutoSetup: 'boolean', fishRodBuy: 'boolean', mageEcoPct: 'number', mageMpPct: 'number',
+  mageProbe: 'boolean', magisterSkip: 'string', magisterSpReserve: 'number', rbDeathPenalty: 'number', rbVampHp: 'number' };
+const CFG_MONEY = ['shopReserve', 'shopMaxSpend', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicAdenaDailyMax', 'mmTpMax', 'storyTpMax', 'petFullBudget', 'petFullMaxPrice', 'petFullReserve', 'enchant'];
+function cfgImportClean(src) {
+  const clean = {}, skipped = [];
+  for (const [k, v] of Object.entries(src || {})) {
+    if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(k)) { skipped.push(k); continue; }
+    const def = Object.hasOwn(DEF, k) ? DEF[k] : undefined, want = def === undefined ? CFG_IMPORT_EXTRA[k] : def === null ? 'null' : Array.isArray(def) ? 'array' : typeof def;
+    let ok = false;
+    if (want === 'number') ok = typeof v === 'number' && Number.isFinite(v) && v >= 0;
+    else if (want === 'boolean' || want === 'string') ok = typeof v === want && (want !== 'string' || v.length <= 20000);
+    else if (want === 'object') ok = v && typeof v === 'object' && !Array.isArray(v) && JSON.stringify(v).length <= 100000;
+    else if (want === 'null') ok = v === null || (k === 'autoTasks' ? Array.isArray(v) && v.length <= 50 && v.every(x => typeof x === 'string' && x.length <= 40) : typeof v === 'number' && Number.isFinite(v) && v >= 0);
+    if (ok) clean[k] = v; else skipped.push(k);
+  }
+  return { clean, skipped };
+}
 $('cfgImport').onclick = () => $('cfgFile').click();
 $('cfgFile').onchange = async e => {
   const f = e.target.files?.[0]; e.target.value = '';
@@ -2421,11 +2559,17 @@ $('cfgFile').onchange = async e => {
     const j = JSON.parse(await f.text());
     const src = j?.l2botCfg ? j.data : j?.l2bot ? j.data : null;          // файл настроек или файл «Памяти бота»
     if (!src?.cfg || typeof src.cfg !== 'object') throw new Error('в файле нет настроек L2wap Bot');
+    // 20.12 (ревизия 17.10, UI-4): только известные настройки с подходящим типом (cfgImportClean), запись — через очередь фона
+    const main = cfgImportClean(src.cfg), perChar = {};
+    for (const [k, v] of Object.entries(src)) if (/^cfg@[^\s]{1,100}$/.test(k) && v && typeof v === 'object' && !Array.isArray(v)) { const c = cfgImportClean(v).clean; if (Object.keys(c).length) perChar[k] = c; }
+    if (!Object.keys(main.clean).length && !Object.keys(perChar).length) throw new Error('в файле нет известных настроек');
     const { cfg = {} } = await chrome.storage.local.get('cfg');
-    const patch = { cfg: { ...cfg, ...src.cfg } };
-    for (const [k, v] of Object.entries(src)) if (/^cfg@/.test(k) && v && typeof v === 'object') patch[k] = v;
-    await chrome.storage.local.set(patch);
-    $('cfgNote').textContent = `✅ Импортировано настроек: ${Object.keys(src.cfg).length} (из v${j.v || '?'}, ${j.t ? new Date(j.t).toLocaleString('ru') : '—'}). Работающий бот подхватит их сразу.`;
+    const money = CFG_MONEY.filter(k => Object.hasOwn(main.clean, k) && JSON.stringify(main.clean[k]) !== JSON.stringify(cfg[k] ?? DEF[k]));
+    const r = await chrome.runtime.sendMessage({ cmd: 'cfgImport', cfg: main.clean, perChar });
+    if (!r?.ok) throw new Error('фон не принял импорт: ' + (r?.reason || 'нет ответа'));
+    $('cfgNote').textContent = `✅ Импортировано настроек: ${Object.keys(main.clean).length} (из v${j.v || '?'}, ${j.t ? new Date(j.t).toLocaleString('ru') : '—'}). Работающий бот подхватит их сразу.`
+      + (main.skipped.length ? ` Пропущено неизвестных или неверных: ${main.skipped.length} (${main.skipped.slice(0, 8).join(', ')}${main.skipped.length > 8 ? '…' : ''}).` : '')
+      + (money.length ? ` ⚠ Изменены траты/лимиты: ${money.join(', ')} — проверьте их в меню.` : '');
     toast?.('⬆ Настройки загружены');
     load();
   } catch (err) { $('cfgNote').textContent = '⚠ Не импортировано: ' + (err.message || err); }
@@ -2535,7 +2679,7 @@ chrome.storage.onChanged.addListener(ch => {
   }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && loadPending) loadSoon(); });
-load();
+load().catch(() => {}).finally(() => { restoreTabScroll(); setTimeout(restoreTabScroll, 400); });   // 20.12 (UI-7)
 if ($('reloadBot')) $('reloadBot').onclick = reloadBotUpdate;
 void checkExtensionUpdate();
 window.addEventListener('focus', () => { void checkExtensionUpdate(); });
@@ -2548,11 +2692,21 @@ const UIKEY = 'ui5';
 const uiState = (() => { try { return JSON.parse(localStorage.getItem(UIKEY) || '{}'); } catch (e) { return {}; } })();
 const uiSave = () => { try { localStorage.setItem(UIKEY, JSON.stringify(uiState)); } catch (e) {} };
 uiState.closed ||= {};
+uiState.adv ||= {};
 
+// 20.12 (ревизия 17.10): раскрыть/свернуть карточку и блок «Дополнительно» — одно место (клик, поиск, переходы); состояние — ui5
+function cardSet(c, open) {
+  c.classList.toggle('closed', !open); c.querySelector(':scope>.ch')?.setAttribute('aria-expanded', String(!!open));
+  uiState.closed[c.dataset.key] = !open; uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key: c.dataset.key } }));
+}
+function advSet(a, open) {
+  a.classList.toggle('closed', !open); a.querySelector(':scope>.adv-h')?.setAttribute('aria-expanded', String(!!open));
+  uiState.adv[a.dataset.key] = !!open; uiSave(); document.dispatchEvent(new CustomEvent('l2:cardtoggle', { detail: { key: 'adv:' + a.dataset.key } }));
+}
 function cardify() {
   document.querySelectorAll('section').forEach(sec => {
     const kids = [...sec.childNodes];
-    let card = null, body = null, idx = 0, subTitle = '', subCls = '';
+    let card = null, body = null, idx = 0, subTitle = '', subCls = '', dest = sec;
     const start = (h) => {
       const c = card = document.createElement('div'); c.className = 'card';
       const head = document.createElement('div'); head.className = 'ch'; head.tabIndex = 0; head.setAttribute('role', 'button');
@@ -2564,23 +2718,34 @@ function cardify() {
       const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▼'; head.appendChild(chev);
       body = document.createElement('div'); body.className = 'cb';
       body.id = 'card-body-' + sec.id + '-' + idx; head.setAttribute('aria-controls', body.id);
-      card.append(head, body); sec.appendChild(card);
+      card.append(head, body); dest.appendChild(card);
       if (uiState.closed[key]) c.classList.add('closed');
       head.setAttribute('aria-expanded', String(!c.classList.contains('closed')));
-      const tog = () => { c.classList.toggle('closed'); head.setAttribute('aria-expanded', String(!c.classList.contains('closed'))); uiState.closed[key] = c.classList.contains('closed'); uiSave(); };   // своя карточка, не последняя
+      const tog = () => cardSet(c, c.classList.contains('closed'));   // своя карточка, не последняя
       head.addEventListener('click', tog);
       head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
     };
     for (const n of kids) {
+      // 20.12 (ревизия 17.10): метка .adv-start — всё после неё в разделе уходит в свёрнутый блок «⚙ Дополнительно» (тонкая настройка);
+      // раскрытие запоминается на устройстве (ui5.adv), поиск и переходы раскрывают блок сами
+      if (n.nodeType === 1 && n.classList?.contains('adv-start')) {
+        const adv = document.createElement('div'); adv.className = 'adv'; adv.dataset.key = sec.id.replace('tab-', '');
+        const head = document.createElement('button'); head.type = 'button'; head.className = 'adv-h'; head.textContent = n.textContent.trim();
+        const advBody = document.createElement('div'); advBody.className = 'adv-b'; advBody.id = 'adv-body-' + sec.id; head.setAttribute('aria-controls', advBody.id);
+        adv.append(head, advBody); sec.appendChild(adv); n.remove();
+        const open = uiState.adv[adv.dataset.key] === true; adv.classList.toggle('closed', !open); head.setAttribute('aria-expanded', String(open));
+        head.addEventListener('click', () => advSet(adv, adv.classList.contains('closed')));
+        dest = advBody; card = null; subTitle = ''; subCls = ''; continue;
+      }
       // 8.0 (аудит меню): .no-card (сводка «Обзора», «📤 Логи») — всегда на виду, вне сворачиваемых карточек;
       // скрытые служебные поля в начале раздела не создают пустую карточку «⚙ Основное» (было вверху «Охоты»)
-      if (n.nodeType === 1 && n.classList?.contains('no-card')) { sec.appendChild(n); card = null; continue; }
-      if (!card && n.nodeType === 1 && n.hidden) { sec.appendChild(n); continue; }
+      if (n.nodeType === 1 && n.classList?.contains('no-card')) { dest.appendChild(n); card = null; continue; }
+      if (!card && n.nodeType === 1 && n.hidden) { dest.appendChild(n); continue; }
       // 7.1.31: подзаголовок бывшего раздела внутри объединённого (Охота: Автофарм, Катакомбы…) — вне карточек
-      if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { sec.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
+      if (n.nodeType === 1 && n.classList?.contains('subsec-title')) { dest.appendChild(n); card = null; subTitle = n.textContent.trim(); subCls = n.dataset.cls || ''; continue; }
       if (n.nodeType === 1 && n.tagName === 'H4') { start(n); continue; }
       if (n.nodeType === 3 && !n.textContent.trim()) { n.remove(); continue; }
-      if (!card && subTitle && n.nodeType === 1 && n.classList?.contains('intro-callout')) { n.classList.add('subsec-lead'); if (subCls) n.dataset.cls = subCls; sec.appendChild(n); continue; }
+      if (!card && subTitle && n.nodeType === 1 && n.classList?.contains('intro-callout')) { n.classList.add('subsec-lead'); if (subCls) n.dataset.cls = subCls; dest.appendChild(n); continue; }
       if (n.nodeType === 8) continue;
       if (!card) start(null);
       body.appendChild(n);
@@ -2615,12 +2780,17 @@ function searchIndex() {
   const out = [];
   document.querySelectorAll('section').forEach(sec => {
     const tab = sec.id.replace('tab-', ''), nb = document.querySelector(`nav button[data-tab="${tab}"]`), tabName = nb ? (nb.querySelector('.ic')?.textContent || '') + ' ' + nb.lastChild.textContent.trim() : tab;
+    // 20.12 (ревизия 17.10): в «где» — ещё и подраздел (бывший раздел: «Автозаточка», «Маммон», «PvP»…), поиск по старому имени находит его
+    const subOf = card => {
+      for (let p = card; p; p = p.previousElementSibling) if (p.classList?.contains('subsec-title')) return p.textContent.replace(/^\S+\s*/, '').trim();
+      return card.closest('.adv') ? 'Дополнительно' : '';
+    };
     sec.querySelectorAll('.card').forEach(card => {
-      const title = card.querySelector('.ch h4')?.textContent.trim() || '';
-      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where: tabName, kind: 'раздел' });
-      card.querySelectorAll('.cb > label, .cb > .row > button, .cb > .row button').forEach(el => {
+      const title = card.querySelector('.ch h4')?.textContent.trim() || '', sub = subOf(card), where = sub ? tabName + ' › ' + sub : tabName;
+      out.push({ el: card.querySelector('.ch'), card, tab, text: title, where, kind: 'раздел' });
+      card.querySelectorAll('.cb > label, .cb > .champ-row > label, .cb > .row > button, .cb > .row button').forEach(el => {
         const t = (el.tagName === 'LABEL' ? [...el.childNodes].filter(n => n.nodeType === 3 || n.tagName === 'SPAN' && !n.querySelector('input')).map(n => n.textContent).join(' ') : el.textContent).replace(/\s+/g, ' ').trim();
-        if (t) out.push({ el, card, tab, text: t, where: tabName + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
+        if (t) out.push({ el, card, tab, text: t, where: where + ' › ' + title, kind: el.tagName === 'LABEL' ? '' : 'кнопка' });
       });
     });
   });
@@ -2628,8 +2798,7 @@ function searchIndex() {
 }
 let IDX = null, resSel = 0;
 function goTo(r) {
-  showTab(r.tab);
-  if (r.card.classList.contains('closed')) { r.card.classList.remove('closed'); r.card.querySelector('.ch')?.setAttribute('aria-expanded', 'true'); uiState.closed[r.card.dataset.key] = false; uiSave(); }
+  showTab(r.tab); revealEl(r.el);
   r.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
   const inp = r.el.querySelector?.('input:not([hidden]),select'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 350);
@@ -2656,7 +2825,7 @@ $('uiSearch').addEventListener('keydown', e => {
 });
 $('uiResults').addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); goTo($('uiResults')._hits[+d.dataset.i]); } });
 $('uiSearch').addEventListener('blur', () => setTimeout(() => $('uiResults').classList.remove('show'), 150));
-// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…9, 0 — вкладки, Ctrl+K или «/» — поиск
+// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…6 — разделы (20.12: их шесть), Ctrl+K или «/» — поиск
 document.addEventListener('keydown', async e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' || (!typing && e.key === '/')) { e.preventDefault(); $('uiSearch').focus(); $('uiSearch').select(); return; }
@@ -2670,7 +2839,7 @@ document.addEventListener('keydown', async e => {
 
 if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings().catch(() => {}); };
 if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
-if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { $('quickModeGrid').hidden = false; $('modeToggle').setAttribute('aria-expanded', 'true'); $('modeToggle').scrollIntoView({ block: 'nearest' }); document.querySelector('#autoTaskSelection input')?.focus(); };
+if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { const was = !$('quickModeGrid').hidden; taskListToggle(); if (!was) document.querySelector('#autoTaskSelection input')?.focus({ preventScroll: true }); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
 // 20.12 (ревизия 17.10): ручной выход только по решению игрока — второе нажатие в течение 6 с, через фон (как Stop/пауза).
 if ($('paymentDismiss')) $('paymentDismiss').onclick = async () => {
@@ -2714,15 +2883,27 @@ const enchantUI = L2EnchantUI.mount($('enchantPanel'), {
   refreshItems: context => enchantMenuCommand('refresh', context),
   command: (action, context) => enchantMenuCommand(action, context)
 });
-let enchantRefreshT = null;
-chrome.storage.onChanged.addListener(ch => {
-  if (!(ch.cfg || ch.rt || ch.on) || enchantRefreshT) return;
-  enchantRefreshT = setTimeout(() => {
-    enchantRefreshT = null;
+// 20.12 (ревизия 17.10, UI-5): панели Заточки/Warlock/PvP перечитывали весь cfg+rt (rt ≈160 КБ) на каждую запись бота, даже в
+// свёрнутом доке, скрытой вкладке, другом разделе или свёрнутой карточке. Теперь — только когда панель видна; иначе помечаем
+// «устарела» и обновляем один раз, когда её покажут (смена раздела, раскрытие карточки или дока, возврат во вкладку).
+function panelShown(el) {
+  if (!el || document.hidden || dockMin) return false;
+  const sec = el.closest('section');
+  return (!sec || sec.classList.contains('act')) && !el.closest('.card.closed') && !el.closest('.adv.closed');
+}
+function panelRefresher(el, refresh, delay) {
+  let t = null, stale = false;
+  const run = () => { if (!panelShown(el)) { stale = true; return; } stale = false;
     // Не заменяем введённое число, пока игрок держит фокус в поле.
-    if (!$('enchantPanel')?.contains(document.activeElement)) enchantUI.refresh().catch(() => {});
-  }, 350);
-});
+    if (!el.contains(document.activeElement)) refresh().catch(() => {}); };
+  const soon = () => { if (t) return; t = setTimeout(() => { t = null; run(); }, delay); };
+  // общий слушатель меню (выше) уже обновил dockMin: раскрытие дока сразу обновляет видимую панель
+  chrome.storage.onChanged.addListener(ch => { if (!(ch.cfg || ch.rt || ch.on)) return; if (!panelShown(el)) { stale = true; return; } soon(); });
+  const wake = () => { if (stale) soon(); };
+  document.addEventListener('l2:tabchange', wake); document.addEventListener('l2:cardtoggle', wake); document.addEventListener('visibilitychange', wake);
+  return { wake };
+}
+panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);
 
 // Новые платные настройки сохраняются отдельно, с привязкой к показанному персонажу.
 async function warlockMenuCommand(action,context={}) {
@@ -2739,10 +2920,7 @@ const warlockUI=L2WarlockUI.mount($('warlockPanel'),$('petFullToggle'),{
   saveConfig:async(patch,context)=>{ const {cfg={}}=await chrome.storage.local.get('cfg'); return menuPatch({manualKickAt:Date.now()},{cfgPatch:{...patch,...(Array.isArray(cfg.autoTasks)&&Object.hasOwn(patch,'petFullAuto')?autoTaskPatch(cfg,'petbuff',patch.petFullAuto):{})},expectedChar:context.char}); },
   command:warlockMenuCommand
 });
-let warlockRefreshT=null;
-chrome.storage.onChanged.addListener(ch=>{if(!(ch.cfg||ch.rt||ch.on)||warlockRefreshT)return;warlockRefreshT=setTimeout(()=>{warlockRefreshT=null;
-  if (!$('warlockPanel')?.contains(document.activeElement)) warlockUI.refresh().catch(()=>{});
-},350)});
+panelRefresher($('warlockPanel'), () => warlockUI.refresh(), 350);   // 20.12 (UI-5): только видимая панель
 
 // Отдельный список PvP: все изменения привязаны к персонажу показанного меню.
 const pvpUI=L2PvpUI.mount($('pvpTargetsPanel'),{
@@ -2750,7 +2928,4 @@ const pvpUI=L2PvpUI.mount($('pvpTargetsPanel'),{
   saveConfig:(patch,context)=>menuPatch({},{cfgPatch:patch,expectedChar:context.char}),
   editTarget:(edit,context)=>menuPatch({},{pvpTargetEdit:edit,expectedChar:context.char})
 });
-let pvpRefreshT=null;
-chrome.storage.onChanged.addListener(ch=>{if(!(ch.cfg||ch.rt||ch.on)||pvpRefreshT)return;pvpRefreshT=setTimeout(()=>{pvpRefreshT=null;
-  if(!$('pvpTargetsPanel')?.contains(document.activeElement))pvpUI.refresh().catch(()=>{});
-},250)});
+panelRefresher($('pvpTargetsPanel'), () => pvpUI.refresh(), 250);   // 20.12 (UI-5): только видимая панель

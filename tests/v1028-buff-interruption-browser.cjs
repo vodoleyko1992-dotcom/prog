@@ -14,15 +14,15 @@ async function test(kind){const f=await journey(kind==='dynamic'?{dynamicFourth:
  await until(()=>f.S.heroBuffs.length===1,60000);
  if(kind==='unknown'){
   await until(async()=>!!(await f.h.get(['rt'])).rt.actionPayments?.pending,15000);
-  await f.h.popup.locator('[data-auto-task=cat]').click();await until(async()=>(await f.h.get(['cfg'])).cfg.autoTasks.includes('cat'));
+  await f.h.tasks();/* 20.12: задачи — в «Обзоре» */await f.h.popup.locator('[data-auto-task=cat]').click();await until(async()=>(await f.h.get(['cfg'])).cfg.autoTasks.includes('cat'));
   await f.h.g.p.reload();await until(()=>f.h.g.core('on&&tabOwner'));await delay(2500);
   assert.equal(f.S.heroBuffs.length,1);assert.equal((await f.h.get(['rt'])).rt.actionPayments.pending.kind,'fa-buff');
  }else{
   await until(()=>f.held());const before=(await f.h.get(['rt'])).rt.actionOwner;
   assert.equal(before.key,'tbuff');
   assert.ok((await f.h.get(['rt'])).rt.tbuff.fa.length>=2,'прервана незавершённая очередь нескольких FA баффов');
-  if(kind==='cat')await f.h.popup.locator('[data-auto-task=cat]').click();
-  else {await f.h.popup.locator('[data-auto-task="tvt"]').check();await f.h.popup.locator('[data-auto-task="raid"]').uncheck();}
+  if(kind==='cat'){await f.h.tasks();await f.h.popup.locator('[data-auto-task=cat]').click();}   // 20.12 (ревизия 17.10): задачи — в «Обзоре»
+  else {await f.h.tasks();/* 20.12: задачи — в «Обзоре» */await f.h.popup.locator('[data-auto-task="tvt"]').check();await f.h.popup.locator('[data-auto-task="raid"]').uncheck();}
   await until(async()=>{const tasks=(await f.h.get(['cfg'])).cfg.autoTasks;return kind==='cat'?tasks.includes('cat'):tasks.length===1&&tasks[0]==='tvt';});
   if(kind==='cat')assert.equal(await f.h.g.core('autonomyMode()'),'raid');
   const resumed=Date.now();f.release();

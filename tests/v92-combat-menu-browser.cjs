@@ -42,14 +42,15 @@ const CASES = [
     const r = await page.evaluate(() => {
       const vis = id => { const el = document.getElementById(id)?.parentElement; return !!el && getComputedStyle(el).display !== 'none'; };
       // 14.10: старый якорь кота теперь в отдельном Warlock, не дублируется в Бою.
-      if (!document.querySelector('#tab-warlock #petAuto') || document.querySelector('#tab-panel #petAuto')) throw Error('pet controls must move exactly once');
+      // 20.12 (ревизия 17.10): кот — подраздел «Боя и класса» (#tab-warlock), поле одно.
+      const pa = document.querySelectorAll('#petAuto'); if (pa.length !== 1 || !(document.getElementById('tab-warlock').compareDocumentPosition(pa[0]) & 4)) throw Error('pet controls must move exactly once');
       return { cls: [...document.documentElement.classList], box: document.getElementById('clsBox').innerText, fight: document.getElementById('fightBox').innerText,
-        note: document.getElementById('clsNote').innerText, nav: document.querySelector('nav button[data-tab="panel"]').innerText.trim(),
+        note: document.getElementById('clsNote').innerText, nav: document.querySelector('nav button[data-tab="panel"] .lb').textContent.trim(),
         sub: Object.fromEntries(['tab-analyze', 'tab-roles', 'tab-mage', 'tab-spoil', 'tab-fighter', 'tab-fight'].map(id => [id, vis(id)])),
         overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth, dps: document.getElementById('dpsBox').innerText.slice(0, 40) };
     });
     const ok = c.cls.every(x => r.cls.includes(x)) && c.notCls.every(x => !r.cls.includes(x)) && c.shown.every(id => r.sub[id]) && c.hidden.every(id => !r.sub[id])
-      && (c.id !== 'warlock' || /дополнительных убийств 2/.test(r.fight)) && r.sub['tab-analyze'] && r.sub['tab-roles'] && r.sub['tab-fight'] && c.box.test(r.box) && (!c.fight || c.fight.test(r.fight)) && /Бой$/.test(r.nav) && !r.overflow && !errs.length;
+      && (c.id !== 'warlock' || /дополнительных убийств 2/.test(r.fight)) && r.sub['tab-analyze'] && r.sub['tab-roles'] && r.sub['tab-fight'] && c.box.test(r.box) && (!c.fight || c.fight.test(r.fight)) && /Бой и класс$/.test(r.nav) && !r.overflow && !errs.length;
     if (!ok) { console.error('FAIL', w, c.id, JSON.stringify({ r, errs }, null, 1)); process.exit(1); }
     await page.close();
   }

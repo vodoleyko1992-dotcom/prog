@@ -23,6 +23,7 @@ assert.equal(ownCfgChange({ oldValue: base, newValue: { ...base, nWeaponMain: 'Y
 OWN_CFG.length = 0; OWN_CFG.push({ patch: { nWeaponMain: 'Z' }, t: Date.now() - 11000 });
 assert.equal(ownCfgChange({ oldValue: base, newValue: { ...base, nWeaponMain: 'Z' } }), false);
 // слушатель хранилища использует проверку, Start/Stop (on) по-прежнему поднимает поколение
-assert.match(src, /if \(ch\.on \|\| ch\.cfg && !ownCfgChange\(ch\.cfg\) \|\|/);
+// 20.12 (UI-10): к своей записи добавлена запись только вида меню (dockMin) — тоже не поднимает поколение
+assert.match(src, /if \(ch\.on \|\| ch\.cfg && !ownCfgChange\(ch\.cfg\) && !viewOnlyCfgChange\(ch\.cfg\) \|\|/);
 assert.match(src, /async function setCfg\(patch\) \{\n  OWN_CFG\.push/);
 console.log('PASS v2010-own-cfg-generation: своя запись cfg не отменяет свой маршрут, чужая/смешанная — отменяет');

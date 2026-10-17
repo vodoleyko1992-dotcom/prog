@@ -44,9 +44,10 @@ function fishing(mock) {
  const css=fs.readFileSync(path.join(root,'ui-game.css'),'utf8');
  const content=fs.readFileSync(path.join(root,'content.js'),'utf8');
  assert(html.includes('id="fishRodGoal10"') && html.includes('id="fishTimeAuto"'));
- assert(html.includes('id="modeToggle"') && html.includes('id="navToggle"'));
- assert(ui.includes("aria-expanded")&&ui.includes('setNavOpen(false)'));
- assert(css.includes('font-size:14px')&&css.includes('#quickModeGrid[hidden]'));
+ // 20.12 (ревизия 17.10): кнопки «≡ Разделы» больше нет — шесть разделов всегда на виду; список задач скрывается атрибутом hidden (общее правило [hidden]).
+ assert(html.includes('id="modeToggle"') && !html.includes('id="navToggle"'));
+ assert(ui.includes("aria-expanded")&&ui.includes('taskListToggle'));
+ assert(css.includes('font-size:14px')&&css.includes('[hidden]{display:none!important}')&&html.includes('<div id="quickModeGrid" hidden>'));
  assert(content.includes('rodGoalActive: false') && content.includes('rodScrollsBuy'));
  console.log('PASS: one-click rod +10, purchasable time, accessible toggles, game-style UI wired');
 })().catch(e=>{console.error(e);process.exitCode=1;});

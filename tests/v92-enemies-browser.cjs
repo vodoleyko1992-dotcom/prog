@@ -88,7 +88,7 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
     for (const s of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(s) });
     // 14.10: полные зависимости actual popup, враги перенесены в PvP.
     for (const j of [...read('popup.html').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1])) await page.addScriptTag({ content: read(j) });
-    await page.evaluate(() => document.querySelector('nav button[data-tab="pvp"]').click());
+    await page.evaluate(() => showTab('enemies'));   // 20.12 (ревизия 17.10): лист врагов — подраздел «TvT/PvP и сервис»
     await page.waitForTimeout(1000);
     const t = await page.$eval('#enemyBox', e => e.innerText), on = await page.$eval('#enemyHunt', e => e.checked), flag = await page.$eval('#enemyFlagOnly', e => e.checked);
     const hits = await page.$eval('#enemyMinHits', e => e.value), vis = await page.$eval('#enemyBox', e => e.getBoundingClientRect().height > 0);

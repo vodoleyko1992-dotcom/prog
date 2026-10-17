@@ -10,13 +10,15 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  assert.equal(await h.popup.locator('#start,#stop,#pause').count(),3);
  assert.match(await h.popup.locator('#modeToggle').innerText(),/Задачи бота/);
  let s=await h.get(['cfg','on']);assert.equal(s.cfg.autoTasks,null);assert.equal(s.on,false);
+ await h.tasks();   // 20.12 (ревизия 17.10): задачи — в «Обзоре», свёрнуты по умолчанию
  await h.popup.locator('[data-auto-task="raid"]').check();
  await until(async()=>Array.isArray((await h.get(['cfg'])).cfg.autoTasks));
  s=await h.get(['cfg','on']);assert.ok(s.cfg.autoTasks.includes('raid')&&s.cfg.autoTasks.includes('fish'));assert.equal(s.on,false);assert.equal(s.cfg.mmCraftSend,true);assert.equal(s.cfg.mmCrafter,'Crafter');assert.equal(s.cfg.shopReserve,456789);assert.equal(s.cfg.fishMaxCasts,12);
  await h.popup.locator('[data-auto-task="fish"]').uncheck();await until(async()=>!(await h.get(['cfg'])).cfg.autoTasks.includes('fish'));
  await h.popup.reload();await until(()=>h.popup.locator('[data-auto-task="raid"]').isChecked());assert.equal(await h.popup.locator('[data-auto-task="fish"]').isChecked(),false);
  await h.popup.locator('#modeToggle').click();assert.equal(await h.popup.locator('#autoTaskSelection').isVisible(),false);await h.popup.locator('#modeToggle').click();assert.equal(await h.popup.locator('#autoTaskSelection').isVisible(),true);
- await h.popup.locator('#navToggle').click();await h.popup.locator('nav [data-tab="warlock"]').click();assert.equal(await h.popup.locator('#petFullToggle').isVisible(),true);
+ await h.openTab('warlock');   // 20.12 (ревизия 17.10): подраздел «Боя и класса»
+ assert.equal(await h.popup.locator('#petFullToggle').isVisible(),true);
  await h.openTab('overview');
  const tasks=h.popup.locator('#autoTaskSelection [data-auto-task]');
  for(let i=0;i<await tasks.count();i++){await tasks.nth(i).scrollIntoViewIfNeeded();assert.equal(await tasks.nth(i).isVisible(),true);await tasks.nth(i).click({trial:true});}

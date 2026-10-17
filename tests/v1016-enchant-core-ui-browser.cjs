@@ -9,7 +9,7 @@ const assert=require('node:assert/strict');
  await h.ctx.route('https://l2wap.com/character',r=>r.fulfill({json:{character}}));
  await h.ctx.route('https://l2wap.com/character/catalog-hints',r=>r.fulfill({json:catalog}));
  const ui=h.popup.locator('#enchantPanel');await until(()=>ui.locator('[data-add]').count());
- await h.popup.evaluate(()=>document.querySelector('nav [data-tab="enchant"]').click());
+ await h.popup.evaluate(()=>showTab('enchant'));   // 20.12 (ревизия 17.10): автозаточка — подраздел «Боя и класса»
  assert.equal(await ui.locator('[data-key]').count(),0);assert.equal(await ui.locator('[data-cfg="enabled"]').isChecked(),false);
  assert.equal((await h.get(['on'])).on,false);assert.notEqual((await h.get(['cfg'])).cfg.enchantMode,true);assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS opening separate enchant section never selects mode or starts bot');
  await ui.locator('[data-command="refresh"]').click();await until(()=>ui.locator('[data-candidate] option').count().then(n=>n===3));
@@ -26,6 +26,7 @@ const assert=require('node:assert/strict');
  const denied=await h.popup.evaluate(async()=>chrome.runtime.sendMessage({cmd:'menuPatch',rtPatch:{},cfgPatch:{enchant:{enabled:true,queue:[{key:'wrong'}]}},expectedChar:'OtherHero'}));assert.equal(denied.ok,false);assert.equal((await h.get(['cfg'])).cfg.enchant.queue.length,2);console.log('PASS background transaction rejects stale-character configuration');
  await h.click('enchantToggle');await until(()=>h.g.core('on && running && tabOwner'));await h.popup.reload();await until(()=>h.popup.locator('#enchantPanel [data-command="start"]').isEnabled());
  assert.ok((await h.get(['cfg'])).cfg.autoTasks.includes('enchant'));assert.equal((await h.get(['rt'])).rt.enchant?.runId,undefined);assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS explicit enchant mode starts its dispatcher and waits for separate series command');
+ await h.openTab('enchant');   // 20.12 (ревизия 17.10): после выбора задачи меню остаётся в «Обзоре»
  await h.popup.locator('#enchantPanel [data-command="start"]').click();await until(async()=>!!(await h.get(['rt'])).rt.enchant?.runId);
  await h.click('stop');await until(async()=>!(await h.get(['on'])).on);await until(async()=> (await h.get(['rt'])).rt.enchant?.status==='paused');assert.equal(h.requests.filter(r=>r.method==='POST').length,0);console.log('PASS explicit series start → real session; global Stop pauses before any fixture mutation');
  const run=(await h.get(['rt'])).rt.enchant.runId;await h.g.p.reload();await until(()=>h.g.core('typeof on!=="undefined"'));assert.equal((await h.get(['rt'])).rt.enchant.runId,run);assert.equal((await h.get(['on'])).on,false);console.log('PASS stopped session survives document reload without restart');

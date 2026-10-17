@@ -22,11 +22,11 @@ const game = `<!doctype html><html><head><title>L2WAP</title><style>body{margin:
     const b = [...i.querySelectorAll('[data-mmgo]')].map(x => x.textContent); const r1 = et?.getBoundingClientRect(), r2 = mm?.getBoundingClientRect();
     return { hasE: !!e, btns: b, below: !!(r1 && r2) && r1.height > 0 && r2.height > 0 && r2.top >= r1.bottom - 1, last: i.lastElementChild === e, ptr: mm ? getComputedStyle(mm.querySelector('.bt')).pointerEvents : null }; });
   // бот стоит → клик «⚒ Кузнец Маммона» открывает страницу телепорта к кузнецу
-  await p.click('#l2bot-ind [data-mmgo=smith]'); await p.waitForTimeout(1500); out.urlOff = p.url();
+  await p.click('#l2bot-ind [data-mmgo=smith]'); await p.waitForTimeout(300); /* 20.12 (UI-8): второе нажатие подтверждает */ await p.click('#l2bot-ind [data-mmgo=smith]'); await p.waitForTimeout(1500); out.urlOff = p.url();
   // бот работает → клик «🛒 Торговец Маммона» ставит команду в память (через фон), окно показывает «⏳ к торговцу»
   await p.goto('https://l2wap.com/map.html'); await p.waitForTimeout(2500);
   await sw.evaluate(() => chrome.storage.local.set({ on: true })); await p.waitForTimeout(1500);
-  await p.click('#l2bot-ind [data-mmgo=order]'); await p.waitForTimeout(1500);
+  await p.click('#l2bot-ind [data-mmgo=order]'); await p.waitForTimeout(300); /* 20.12 (UI-8): второе нажатие подтверждает */ await p.click('#l2bot-ind [data-mmgo=order]'); await p.waitForTimeout(1500);
   out.urlOn = p.url();
   out.req = await sw.evaluate(async () => { const s = await chrome.storage.local.get('rt'); return s.rt?.mmGoReq || null; });
   out.state = await p.evaluate(() => document.querySelector('#l2bot-ind .e .mm .ms')?.textContent || '');
