@@ -212,12 +212,56 @@ function stuckNote(b, mp) {
     if (Date.now() - (stuckNote.t || 0) > 60000) { stuckNote.t = Date.now(); env.rec('B', 'TvT', `клик «${env.cleanTitle(b?.title || '')}» игра не отправляет (MP ${mp ?? '?'}) — 3 с бью другим`); } }
 }
 
+// 20.11 (лог 17.10 15:00–15:02, West Tyrant 57 на TvT): Focused Force 69 раз ответил «+1 енергія (1/4)» — на арене энергия не копится,
+// бот сжёг на заряды ≈345 MP; к 15:01:01 MP 2, обычная атака бьёт по 1 урону, и 57 с бот «бил» luk без урона, хотя на панели
+// 1013 банок MP (#728). Банки арены подписаны «#728 — зілля …» без имени, поэтому nMpPot и HP_POT_RE их не узнавали.
+// Теперь: энергию берём из ответа сервера (skillLine «(n/max)»), заряд, который не растёт два нажатия подряд, до конца события не жмём;
+// банки арены узнаём по ID предмета (и по restoredHp/restoredMp ответа), MP пьём при нехватке на силовые или ≤35 %.
+const POT_MP = new Set([726, 728]), POT_HP = new Set([725, 727, 1060, 1061, 1073, 1539, 1540]);
+const potLearned = new Map();                     // itemId → 'hp' | 'mp' по ответу сервера на глоток
+const charge = { key: '', n: null, max: null, flat: 0, off: false, last: null, prevSkill: null };
+const chargeKey = () => identity() + ':' + (tvtState()?.id || '');
+function chargeState() { const k = chargeKey(); if (charge.key !== k) Object.assign(charge, { key: k, n: null, max: null, flat: 0, off: false, last: null, prevSkill: null }); return charge; }
+const CHARGE_LINE = /(?:енергі|энерги|energy|заряд)[^()]*\((\d+)\s*\/\s*(\d+)\)/i;
+function tvtActNote(req, res) {
+  const c = chargeState();
+  if (!res || res.error) return;
+  if (req?.action === 'potion' && req.itemId != null) {
+    const kind = +res.restoredMp > 0 ? 'mp' : +res.restoredHp > 0 ? 'hp' : null; if (kind) potLearned.set(+req.itemId, kind);
+    return;
+  }
+  const sk = res.skillId ?? req?.skillId ?? null, m = String(res.skillLine || '').match(CHARGE_LINE);
+  if (m) {
+    const n = +m[1], max = +m[2];
+    if (c.prevSkill === sk && c.last != null && n <= c.last && n < max) c.flat++; else c.flat = 0;
+    c.n = n; c.max = max; c.last = n; c.prevSkill = sk;
+    if (c.flat >= 2 && !c.off) { c.off = true; env.rec('B', 'TvT', `заряд не копит энергию (${n}/${max} после каждого нажатия) — до конца боя не жму, MP на удары`); }
+  } else if (sk != null) c.prevSkill = sk;
+}
+const SLOT_SEL = '.l2-battle-hotbar-slot';
+const slotQty = b => { const t = b?.querySelector?.('.l2-battle-hotbar-slot-uqty')?.textContent; return t ? parseInt(t.replace(/\D/g, ''), 10) : null; };
+function potKindOf(b) {
+  const t = String(b?.title || ''), id = +(t.match(/^#(\d+)\s*[—–-]/)?.[1] || 0);
+  if (id && potLearned.has(id)) return potLearned.get(id);
+  if (id && POT_MP.has(id)) return 'mp';
+  if (id && POT_HP.has(id)) return 'hp';
+  if (!/зілля|зелье|potion/i.test(t)) return null;
+  return /ман|mana|\bmp\b/i.test(t) ? 'mp' : /hp|зцілен|исцелен|лікуван|лечен|healing|здоров/i.test(t) ? 'hp' : null;
+}
+function arenaPot(kind) {
+  const all = [...(document.querySelectorAll?.(SLOT_SEL) || [])];
+  const own = kind === 'mp' ? env.names(env.cfg.nMpPot || '').flatMap(n => env.slotsBy(n)) : [];
+  const slow = b => /^#726\b/.test(String(b?.title || '')) ? 1 : 0;   // Mana Drug восстанавливает медленно — только если другой нет
+  return [...new Set([...own, ...all.filter(b => potKindOf(b) === kind)])].filter(b => slotQty(b) !== 0 && env.ready(b)).sort((a, b) => slow(a) - slow(b))[0] || null;
+}
+function mpMax() { const m = env.meMp?.(); return +m?.max || +env.TVTC?.selfMaxMp || 0; }
+
 async function tvtFight() {
   if (!canRun()) return false;
   const T0 = token(), event = tvtState()?.id;
   const fighting = () => active(T0) && tvtState()?.id === event;
   if (!env.rt.tvtIn) { await env.setRt({ tvtIn: tvtState()?.id || 1 }); env.rec('B', 'TvT', 'на арене — жду старт'); }
-  let lastPot = 0, lastTgt = 0, lastTgtId = '', lastBack = 0, lastPet = 0, lastMpNote = 0;
+  let lastPot = 0, lastMpPot = 0, lastTgt = 0, lastTgtId = '', lastBack = 0, lastPet = 0, lastMpNote = 0;
   const t0 = Date.now();
   while (fighting() && isArena() && Date.now() - t0 < 12 * 60000) {
     const S = tvtState() || {};
@@ -257,20 +301,29 @@ async function tvtFight() {
     if (!fighting()) return false;
     const me = env.meHp();
     // банка HP: на арене — с 60 %, не чаще раза в 1,1 с
-    if (me && me.pct <= 60 && Date.now() - lastPot > 1100) { const pot = env.hpPotPick(me.pct <= 35); if (pot) { lastPot = Date.now(); env.fire(pot); await env.sleep(env.rnd(150, 250)); continue; } }
+    if (me && me.pct <= 60 && Date.now() - lastPot > 1100) { const pot = env.hpPotPick(me.pct <= 35) || arenaPot('hp'); if (pot) { lastPot = Date.now(); env.fire(pot); await env.sleep(env.rnd(150, 250)); continue; } }
     const sv = tvtNow(), stunned = (cur?.stunnedUntil || 0) > sv, mp = mpNow();
+    // 20.11: банка MP — не хватает на самый дешёвый силовой/стан или MP ≤ 35 %; не чаще раза в 1,1 с
+    if (mp != null && Date.now() - lastMpPot > 1100) {
+      const costs = env.names(`${env.cfg.nPower || ''}, ${env.cfg.nStun || ''}, ${env.cfg.nUltra || ''}`).map(n => +skillInfo(env.slotsBy(n)[0])?.mpCost).filter(x => x > 0);
+      const mx = mpMax(), low = (costs.length && mp < Math.min(...costs)) || (mx && mp <= mx * 0.35);
+      const pot = low ? arenaPot('mp') : null;
+      if (pot) { lastMpPot = Date.now(); if (Date.now() - lastMpNote > 30000) { lastMpNote = Date.now(); env.rec('B', 'TvT', `MP ${mp}${mx ? '/' + mx : ''} — пью банку MP (${env.cleanTitle(pot.title || '').slice(0, 40)})`); }
+        env.fire(pot); await env.sleep(env.rnd(150, 250)); continue; }
+    }
+    const ch = chargeState(), force = ch.n ?? env.hudForce() ?? env.forceNow(), fMax = ch.max || env.forceMax();
     const okB = b => b && tvtSkillAllowed(b) && env.ready(b) && notStuck(b) && srvReady(b) && mpOk(b, mp);
     const pickR = list => env.names(list).map(n => env.slotsBy(n)[0]).find(okB);
     let b = null, why = '';
     if (!stunned && (b = pickR(env.cfg.nStun))) why = 'стан';
     else if ((b = pickR(env.cfg.nUltra))) why = 'сверхсильный';
-    else if ((b = env.forceCosts().map(c => ({ c, x: env.slotsBy(c.name)[0] })).filter(o => okB(o.x) && (env.hudForce() ?? env.forceNow()) >= o.c.cost).sort((p, q) => q.c.cost - p.c.cost)[0]?.x)) why = 'энергия';
+    else if ((b = env.forceCosts().map(c => ({ c, x: env.slotsBy(c.name)[0] })).filter(o => okB(o.x) && force >= o.c.cost).sort((p, q) => q.c.cost - p.c.cost)[0]?.x)) why = 'энергия';
     else if ((b = pickR(env.cfg.nPower))) why = 'удар';
-    else if ((env.hudForce() ?? env.forceNow()) < Math.max(2, env.forceMax()) && (b = pickR(env.cfg.nCharge))) why = 'заряд';
+    else if (!ch.off && force < Math.max(2, fMax) && (b = pickR(env.cfg.nCharge))) why = 'заряд';
     else if ((b = env.slotsBy(env.cfg.nAttack).find(x => okB(x) && !(tvtMs(env.TVTC?.nextBasicAttackAt) > sv + 50)))) why = 'атака';   // nextBasicAttackAt — откат обычной атаки по серверу
     if (b && why === 'атака' && mp != null && Date.now() - lastMpNote > 30000) {
       const cheap = Math.min(...env.names(env.cfg.nPower).map(n => +skillInfo(env.slotsBy(n)[0])?.mpCost || Infinity));
-      if (cheap !== Infinity && mp < cheap) { lastMpNote = Date.now(); env.rec('B', 'TvT', `MP ${mp} — на силовые не хватает (самый дешёвый ${cheap} MP), бью обычной атакой`); }
+      if (cheap !== Infinity && mp < cheap) { lastMpNote = Date.now(); env.rec('B', 'TvT', `MP ${mp} — на силовые не хватает (самый дешёвый ${cheap} MP), банки MP на панели нет — бью обычной атакой`); }
     }
     if (!b) { await env.sleep(150); continue; }
     env.setStatus(`TvT: ${why} — ${env.cleanTitle(b.title)} → ${cur?.name || 'цель'}${cur?.hp != null ? ` (${cur.hp}/${cur.maxHp})` : ''}`);
@@ -291,6 +344,6 @@ async function tvtFight() {
   // Stop, потеря вкладки, смена страницы и предел одного вызова — не серверный итог события.
   return false;
 }
- return { tvtNow, tvtMs, tvtState, tvtRegistrationDue, tvtRefresh, tvtSkillAllowed, tvtSkillsRefresh, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, skillInfo, mpNow };
+ return { tvtNow, tvtMs, tvtState, tvtRegistrationDue, tvtRefresh, tvtSkillAllowed, tvtSkillsRefresh, isArena, tvtSoon, tvtHold, tvtWait, tvtStep, tvtLeave, tvtEnemies, tvtFight, tvtDeadNote, tvtActNote, skillInfo, mpNow, arenaPot, potKindOf };
  };
 })(globalThis);
