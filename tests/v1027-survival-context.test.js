@@ -31,8 +31,10 @@ test('death: actor changes while raid death accounting settles; no foreign halt 
 test('restore: actor changes at durable write; no old route continuation',async()=>{
  const f=fixture();f.hook=async p=>{if(p==='setRt')f.mutate('actor')};assert.equal(await f.S.restoreVitals('test'),false);assert.equal(f.route.href,'');assert.equal(f.writes.filter(x=>x.char==='HeroB').length,0);
 });
-test('low HP: actor changes during save; no foreign restore or halt',async()=>{
- const f=fixture();f.hook=async p=>{if(p==='setRt')f.mutate('actor')};await f.S.lowHpEscape({pct:5});assert.equal(f.env.rt.tbuff,undefined);assert.equal(f.writes.filter(x=>x.char==='HeroB').length,0);assert.equal(f.halts.length,0);
+// 20.13 (ревизия 17.10, шаг 7, combat/C12): мёртвая lowHpEscape (остановка бота после 3 просадок HP) удалена — её больше нет ни в модуле, ни в ядре
+test('low HP: no stop-after-3-dips escape remains in survival or core',()=>{
+ const f=fixture();assert.equal(f.S.lowHpEscape,undefined);assert.equal(f.halts.length,0);
+ assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'../content.js'),'utf8'),/lowHpEscape/);
 });
 test('normal death still records old profile and schedules recovery',async()=>{
  const f=fixture();await f.S.onDeath();assert.equal(f.env.rt.deathLog.length,1);assert.equal(f.env.rt.revive.revived,false);assert.equal(f.env.rt.revive.url,'/battle.html?spawnId=mob1');

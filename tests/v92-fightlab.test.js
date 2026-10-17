@@ -177,7 +177,7 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   // 15.10: известный нулевой урон после промахов не заменяется общим положительным средним.
   assert.match(combat, /observed\?\.mean \?\? \(env\.expDmg\(k\)/);
   assert.match(combat, /по этой цели добивает в/);
-  assert.match(combat, /spike: spikeFar \? 0 : spike/);
+  assert.match(combat, /rbTurnHeal\(\{ cur: me\.cur, max: me\.max, spike, p90: ordinaryP90/);   // 20.13 (шаг 7, combat/C8): запас под спецудар — всегда, мёртвый spikeFar убран
 }
 
 // 8. универсальность (игрок: «научить брать и адаптировать систему боя незнакомого героя или профессии»)

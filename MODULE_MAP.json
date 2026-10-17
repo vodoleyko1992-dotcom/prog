@@ -976,7 +976,6 @@
   "survival": {
     "exports": [
       "restoreVitals",
-      "lowHpEscape",
       "onDeath",
       "reviveStep"
     ],

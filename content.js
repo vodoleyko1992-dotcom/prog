@@ -516,12 +516,17 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     else if (st === true && mpP < off) want = false;                                                                  // выключить — бережём MP
     if (want == null) continue;
     ctx.block['tgl:' + bn] = Date.now() + 4000;
-    const r = await act(b, `${want ? 'Включаю' : 'Выключаю (MP ' + (mpP | 0) + '%)'}: ${cleanTitle(b.title)}`);
+    // 20.13 (ревизия 17.10, шаг 7, аудит combat/C3): выключение тоггла бесплатно — act не сверяет его с ценой в MP (5-й аргумент):
+    // раньше при MP < 10 % стойку нельзя было выключить ('nomp'), и она дальше ела ману
+    const r = await act(b, `${want ? 'Включаю' : 'Выключаю (MP ' + (mpP | 0) + '%)'}: ${cleanTitle(b.title)}`, false, null, !want);
     if (r === 'nomp') return true;   // 20.12 (ревизия 17.10): MP не хватило — нажатия не было, состояние тоггла не меняем (слот на паузе 4 с)
-    if (r !== 'unavail' && r !== 'noforce') {   // у тоггла КД может не быть — нажатие засчитываем, дальше сверяемся со строкой баффов
+    // 20.13 (шаг 7, combat/C3): состояние тоггла пишем только по сработавшему нажатию (true). 'lock' — клик потерян в окне занятости
+    // игры: повтор сразу, без записи; false/'cd'/'noforce' — пауза слота 4 с без записи (раньше их засчитывали как переключение)
+    if (r === true) {   // у тоггла КД может не быть — act засчитывает нажатие без ухода в КД; дальше сверяемся со строкой баффов
       await setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } });
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
-    } else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
+    } else if (r === 'lock') ctx.block['tgl:' + bn] = 0;
+    else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
     return true;
   }
   return false;
@@ -2068,9 +2073,6 @@ async function mailStep(...args) { return L2V7Modules.quests.mailStep(...args); 
 function campaignState(...args) { return L2V7Modules.quests.campaignState(...args); }
 
 async function campaign(...args) { return L2V7Modules.quests.campaign(...args); }
-
-// мало HP в обычном бою: выйти из боя, восстановиться до 80 % и продолжить. Стоп — если так 3 раза за 20 мин.
-async function lowHpEscape(...args) { return L2V7Modules.survival.lowHpEscape(...args); }
 
 async function onDeath(...args) { return L2V7Modules.survival.onDeath(...args); }
 // ---------- после смерти: город → магическая статуя (иначе «Восстановить» у баффера не работает) ----------
