@@ -14,3 +14,14 @@ test('бой на сервере: повторный GET /character не ран�
  assert.equal(f.gets.filter(p=>p==='/character').length,2,'через 10 с проверка повторяется');
  assert.equal(f.calls.length,0,'в бою ничего не покупается');
 });
+test('после победы проверка не ждёт паузы «бой на сервере», тики цикла — ждут',async()=>{
+ const f=fixture({char:{inBattle:true}});
+ await f.step();
+ assert.equal(f.status(),'battle');
+ f.ch.inBattle=false;f.tick(3000);
+ await f.step();
+ assert.equal(f.gets.filter(p=>p==='/character').length,1,'тик цикла ждёт 10 с');
+ await f.step({afterWin:true});
+ assert.ok(f.gets.filter(p=>p==='/character').length>=2,'после победы — сразу проверка');
+ assert.notEqual(f.status(),'battle');
+});
