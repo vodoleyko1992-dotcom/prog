@@ -5,6 +5,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engine-core.js');
 function fixture(task='auto'){
  let now=Date.parse('2026-10-17T13:59:00Z');
+ Date.now=()=>now;   // 20.13 (шаг 5): engine-core в тесте брал настоящие часы — после 14:00 UTC 17.10 (полночь UTC+10) тест падал; часы теста везде одни
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
  const source=read('tests/v208-farm-kill-quota.test.js'),c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,Date:Clock,URL,URLSearchParams,structuredClone,console};
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);

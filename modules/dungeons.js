@@ -174,7 +174,14 @@ async function catGo(id) {                        // в подземелье: е
   if (env.payments?.blocked()) { await paymentReconcile(); return; }
   const active = catGuard();
   if (!active()) return;
-  id ||= catTarget(); if (!id) { env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return; }
+  id ||= catTarget();
+  if (!id) {
+    // 20.13 (ревизия 17.10, шаг 5, farm/DG-1): все подземелья в часовом бане — это не «не знаю уровень героя»: честный статус и простой
+    const bad = env.rt.catBad || {}, ids = Object.keys(env.CAT_LIST || {}), now = Date.now();
+    const until = env.heroLvl() && ids.length ? Math.min(...ids.map(k => (bad[k] || 0) + 3600000)) : 0;
+    if (until > now) { const hh = new Date(until).toTimeString().slice(0, 5); await env.idle(Math.min(60000, until - now), `Катакомбы: все подземелья на паузе до ${hh} (см. журнал) — жду`); return; }
+    env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return;
+  }
   const nm = env.CAT_LIST[id]?.[0] || id;
   if (isCatPage() && catQuoteWait?.key === catQuoteContext(id) && Date.now() < catQuoteWait.until) {
     env.setStatus(`Катакомбы: ${catQuoteWait.why}; жду повторной проверки`); await env.sleep(1000); return;
@@ -291,6 +298,22 @@ async function catHunt(id) {
   const pick = catPick(list, L);
   if (!pick) {
     const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto', w = catWin(L);
+    // 20.13 (ревизия 17.10, шаг 5, farm/DG-1): мобы по уровню есть, но все отфильтрованы («не по зубам», снятие баффов, цвет/отказ чемпиона) —
+    // раньше подземелье банилось на час как «нет мобов по уровню» и бот платил за телепорт в следующее, там то же самое, по кругу.
+    // Теперь: настоящая причина в журнал (раз в 10 мин), без бана и без перелёта — ждём, пока список/метки обновятся
+    const inLvl = list.filter(x => !x.rb && x.lvl >= w.lo && x.lvl <= w.hi);
+    if (inLvl.length) {
+      const hardOf = x => { const h = env.rt.hardMobs?.[(x.name || '').toLowerCase()]; return !!h && Date.now() - h.t < 7200000; };
+      const why = [[inLvl.filter(hardOf).length, '«не по зубам»'], [inLvl.filter(x => !hardOf(x) && env.cfg.noCancelMobs !== false && env.cancelRisk?.(x.name, x.champ, x.tier)).length, 'снимают баффы'],
+        [inLvl.filter(x => x.champ && !hardOf(x)).length, 'чемпионы вне выбранных цветов/отложены']].filter(([n]) => n > 0).map(([n, t]) => `${n} ${t}`).join(', ') || 'отфильтрованы';
+      env.setStatus(`Катакомбы ${nm}: мобы ${w.lo}–${w.hi} ур. есть (${inLvl.length}), но не цели: ${why} — жду`);
+      let lastT = 0; try { lastT = +sessionStorage.getItem('l2bot.catFiltRec') || 0; } catch (e) {}
+      if (Date.now() - lastT > 600000) { try { sessionStorage.setItem('l2bot.catFiltRec', String(Date.now())); } catch (e) {}
+        env.rec('B', 'катакомбы', `${nm}: мобов ${w.lo}–${w.hi} ур. ${inLvl.length}, но все не цели (${why}) — остаюсь и жду, подземелье не бросаю`); }
+      const t0 = env.dungNet?.()?.t || 0;
+      if (!(await env.waitX(() => (env.dungNet?.()?.t || 0) > t0 ? 1 : 0, 15000, 500))) { if (!active()) return; location.reload(); await env.sleep(4000); }
+      return;
+    }
     env.setStatus(`Катакомбы ${nm}: мобов ${w.lo}–${w.hi} ур. нет (есть ${Math.min(...list.map(x => x.lvl))}–${Math.max(...list.map(x => x.lvl))})${auto ? ' — ищу другое подземелье' : ' — жду'}`);
     if (auto) { if (net) env.rec('B', 'катакомбы', `${nm}: мобов ${w.lo}–${w.hi} ур. нет — другое подземелье на 1 ч`); await env.setRt({ catBad: { ...(env.rt.catBad || {}), [id]: Date.now() }, catBadWhy: { ...(env.rt.catBadWhy || {}), [id]: 'нет мобов по уровню' }, catIn: null }); if (!active()) return; location.href = env.CAT_URL; await env.sleep(4000); return; }
     await env.sleep(10000); if (!active()) return; location.reload(); await env.sleep(4000); return;
