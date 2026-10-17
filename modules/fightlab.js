@@ -108,8 +108,19 @@ function mem() {
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
     cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
     Object.defineProperty(cache, '__src', { value: env.rt.fightMem, enumerable: false, writable: true });
-  }
+  } else rebase();
   return cache;
+}
+// 20.13 (ревизия 17.10, шаг 5, quality, ревью): пока dirty (в т.ч. повтор после отказа записи), rt могли перечитать
+// из хранилища с памятью боя другой вкладки. Не затираем её старым снимком: берём хранилище и поверх — свои записи,
+// которые новее по t (или которых там нет). dirty остаётся — следующий flush допишет объединённую память.
+function rebase() {
+  const ext = env.rt.fightMem;
+  if (!dirty || !cache || cache.__src === ext || !ext || typeof ext !== 'object') return;
+  const merged = { ...ext };
+  for (const [k, v] of Object.entries(cache)) if (!ext[k] || (v?.t || 0) > (ext[k]?.t || 0)) merged[k] = v;
+  cache = merged;
+  Object.defineProperty(cache, '__src', { value: ext, enumerable: false, writable: true });
 }
 function keyOf(o) {
   if (/^l2dop_rb_|^l2dop_eg_/i.test(o.spawn || '') || o.kind === 'raid' || o.kind === 'epic') return 'rb:' + (o.spawn || low(o.name));
@@ -368,13 +379,14 @@ function finish(outcome, now = Date.now()) {
 function flush() {
   syncOwner();
   if (!dirty || !cache) return;
+  rebase();
   dirty = false; flushT = Date.now();
   const out = { ...cache };
   cache.__src = out;
   // 20.13 (ревизия 17.10, шаг 5, quality/L2): dirty снимаем оптимистично, но отказ записи (ok:false — ownership_lost,
   // character_changed — или исключение) возвращает dirty, пока кэш тот же: память боя допишется следующим flush,
   // а не потеряется до следующего боя. Сбой — одна строка в журнал раз в 10 мин.
-  const src = cache, failed = e => { if (cache === src && cache.__src === out) dirty = true; failNote(e); };
+  const src = cache, failed = e => { if (cache === src && cache.__src === out) dirty = true; if (e !== 'inactive') failNote(e); };   // ревью: неактивная вкладка — не ошибка
   try {
     const r = env.setRt({ fightMem: out, fightLast: lastFight });   // 9.2: последний бой — в меню «Память боя"
     if (r?.then) r.then(v => { if (v?.ok === false) failed(v.reason || 'запись отклонена'); }, failed);

@@ -44,3 +44,23 @@ test('content.js: таймер замка сообщает ошибку чере
  assert.equal(recs.length,1);assert.match(recs[0][2],/замок: a/);
  now=700000;box.q('замок',new Error('d'));assert.equal(recs.length,2);assert.match(recs[1][2],/замок: d \(×3 за 10 мин\)/);
 });
+// Ревью шага 5: после отказа dirty держится дольше, и rt могут перечитать из хранилища с памятью другой вкладки.
+// Повторная запись не должна затирать её старым снимком: чужие ключи и более свежие чужие записи сохраняются.
+test('повтор после отказа объединяет память с перечитанным хранилищем, а не затирает его',async()=>{
+ const f=fixture(['fail','ok']);await fight(f);
+ const mine=Object.keys(f.writes.at(-1).fightMem);assert.ok(mine.length);
+ const mk=mine[0],own=f.writes.at(-1).fightMem[mk];
+ // другая вкладка записала свою память: чужой моб и более свежая запись по нашему же ключу
+ f.rt.fightMem={'m:other mob':{nm:'Other Mob',n:3,t:own.t+1},[mk]:{...own,n:999,t:own.t+5}};
+ f.L.flush();await settle();
+ const saved=f.rt.fightMem;
+ assert.ok(saved['m:other mob'],'чужой ключ из хранилища сохранён');
+ assert.equal(saved[mk].n,999,'более свежая чужая запись не затёрта старым снимком');
+});
+test('повтор после отказа: свои более свежие записи побеждают старые из хранилища',async()=>{
+ const f=fixture(['fail','ok']);await fight(f);
+ const mk=Object.keys(f.writes.at(-1).fightMem)[0],own=f.writes.at(-1).fightMem[mk];
+ f.rt.fightMem={'m:other mob':{nm:'Other Mob',n:3,t:1},[mk]:{...own,n:-1,t:1}};
+ f.L.flush();await settle();
+ assert.ok(f.rt.fightMem['m:other mob']);assert.equal(f.rt.fightMem[mk].n,own.n,'своя запись новее — она и пишется');
+});
