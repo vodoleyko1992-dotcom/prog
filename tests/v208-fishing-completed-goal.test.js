@@ -7,6 +7,8 @@ function fixture({active=false,target=false,legacy=false,done=true}={}){
  cfg:{...(legacy?{fishMode:true}:{autoTasks:['fish','auto']}),fishProcess:true},NET_FISH:{},setStatus(){},rec(){},
  setRt:async p=>{Object.assign(env.rt,p);env.duringSave?.(p);return {ok:true}},halt:async()=>{calls.halt++;env.on=false},
  $q:()=>null,shown:()=>false,rnd:()=>0,sleep:async()=>env.duringSleep?.(),waitFor:async()=>{env.duringReady?.();return true}};
+ // 17.10: цель выключает только рыбалку, общий Stop больше не вызывается.
+ env.finishFishGoal=async T=>{env.rt.fishTgt=T.done?T:{...T,done:true,doneT:Date.now()};env.cfg.fishMode=false;if(env.cfg.autoTasks)env.cfg.autoTasks=env.cfg.autoTasks.filter(k=>k!=='fish');return true};
  const box={console,Date,document:{querySelectorAll:()=>[]}};vm.runInNewContext(src,box);const F=box.L2V7Factories.fishing(env);
  const ctx={env,fishOwn:()=>env.on&&env.tabOwner,fishNow:()=>true,castReconcile:async()=>{calls.reconcile++;return !!env.pending},
  fishSetup:async()=>{calls.setup++;return false},fishState:()=>target?{}:null,fishFight:async()=>{calls.fight++;env.rt.fishCastActive=false},
@@ -17,7 +19,7 @@ function fixture({active=false,target=false,legacy=false,done=true}={}){
  const run=vm.runInNewContext('('+section+')',ctx);return {env,F,calls,run};
 }
 for(const legacy of [false,true])test('выполненная цель блокирует обслуживание и новый заброс; legacy='+legacy,async()=>{
- const f=fixture({legacy});await f.run();assert.equal(f.calls.cast,0);assert.equal(f.calls.setup,0);assert.equal(f.calls.time,0);assert.equal(f.calls.halt,legacy?1:0);assert.equal(f.env.rt.fishTgt.doneT,123);assert.equal(f.env.rt.fishService,undefined);
+ const f=fixture({legacy});await f.run();assert.equal(f.calls.cast,0);assert.equal(f.calls.setup,0);assert.equal(f.calls.time,0);assert.equal(f.calls.halt,0);assert.equal(f.env.rt.fishTgt.doneT,123);assert.equal(f.env.rt.fishService,undefined);
 });
 test('сохранённый active без рыбы снимается, выполненная цель не запускает покупки',async()=>{
  const f=fixture({active:true});await f.run();assert.equal(f.env.rt.fishCastActive,false);assert.equal(f.calls.cast,0);assert.equal(f.calls.setup,0);assert.equal(f.calls.time,0);

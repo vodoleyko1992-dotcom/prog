@@ -1288,6 +1288,8 @@ async function fishExchange() {
   const fishN = env.rt.fishSinceProcN || 0;
   await env.setRt({ fishProofFish: (env.rt.fishProofFish || 0) + fishN, fishSinceProcN: 0 });
   if (!valid()) return;
+  // Количество рыб достигнуто: сдача завершена, покупки и заточка больше не задерживают остальные задачи.
+  if (env.rt.fishTgt?.final && !env.rt.fishTgt.done) return fishTgtReached();
   // цель: плащ / тату / пояс за Proof + аден — покупаем по очереди, когда кнопка «Купить» активна
   const bought = new Set(env.rt.fishGearBought || []);
   for (const g of env.names(env.cfg.fishGoal || '')) {
@@ -1333,7 +1335,6 @@ async function fishExchange() {
   await env.setRt({ fishService: null, fishProof: p1, fishGearBought: [...bought], rodGoalWaitingProof: !!env.rt.rodGoalActive && rodTo > (env.rt.rodLvl ?? 0) });
   if (!valid()) return;
   if (await fishSvcDone(`Proof ${p1} (+${Math.max(0, p1 - p0)})`)) return;
-  if (env.rt.fishTgt?.final && !env.rt.fishTgt.done) return fishTgtReached();   // цель «рыба»: улов сдан — стоп
   if (env.rt.fishTgt?.done && !env.on) return;
   env.setStatus(`Рыбалка: Proof ${p1} (+${Math.max(0, p1 - p0)}) — ${fishNow() ? 'возвращаюсь рыбачить' : 'возвращаюсь к охоте'}`);
   await env.sleep(env.rnd(800, 1200));
@@ -1363,23 +1364,23 @@ async function fishTgtAdd(kind, k) {
 async function fishTgtReached() {
   const T = env.rt.fishTgt;
   if (!T) return false;
-  // Повторный вход после reload/Start не снимает выполненную цель и не запускает разделку заново.
+  // Повторный вход также снимает оставленную включённой рыбалку, сохраняя doneT.
   if (T.done) {
-    const msg = '🎯 Рыбалка: цель уже выполнена — новые забросы запрещены';
-    if (Array.isArray(env.cfg.autoTasks)) { env.setStatus(msg + '; следующая выбранная задача'); return true; }
-    return env.halt(msg, true);
+    if (!await env.finishFishGoal(T)) return true;
+    env.setStatus('🎯 Рыбалка: цель выполнена — рыбалка выключена; продолжаю остальные выбранные задачи');
+    return true;
   }
-  // «рыба»: если разделка включена — сначала разделать и сдать улов на Proof, стоп после обмена
+  // «рыба»: если разделка включена — сначала разделать и сдать улов на Proof, выключить рыбалку после обмена
   if (T.type === 'fish' && env.cfg.fishProcess && (env.rt.fishSinceProc || 0) > 0 && !T.final) {
-    env.rec('B', 'рыбалка', `🎯 поймано ${T.got}/${T.n} — разделываю и сдаю улов на Proof, потом стоп`);
+    env.rec('B', 'рыбалка', `🎯 поймано ${T.got}/${T.n} — разделываю и сдаю улов на Proof, затем остальные задачи`);
     await env.setRt({ fishTgt: { ...T, final: true }, fishService: 'cut' });
     return;
   }
   const msg = T.type === 'fish' ? `поймано ${T.got} рыб (цель ${T.n})` : `собрано ${T.got} Proof (цель ${T.n}), всего Proof: ${env.rt.fishProof ?? '?'}`;
-  await env.setRt({ fishTgt: { ...T, done: true, doneT: Date.now() } });
+  if (!await env.finishFishGoal(T)) return true;
   env.rec('B', 'рыбалка', `🎯 цель выполнена: ${msg}`);
-  if (Array.isArray(env.cfg.autoTasks)) { env.setStatus(`🎯 Рыбалка: цель выполнена — ${msg}; следующая выбранная задача`); return true; }
-  return env.halt(`🎯 Рыбалка: цель выполнена — ${msg}`, true);
+  env.setStatus(`🎯 Рыбалка: цель выполнена — ${msg}; рыбалка выключена, продолжаю остальные выбранные задачи`);
+  return true;
 }
 
 async function goFishing() {

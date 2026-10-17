@@ -146,6 +146,18 @@ async function setCfg(patch) {
   cfg = withRb({ ...L2EngineCore.rawTaskConfig(cfg), ...patch });
 }
 
+// Сначала дописать поимку, затем атомарно завершить её цель и снять рыбалку.
+async function finishFishGoal(T) {
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  if (!await rtCommit() || !on || !tabOwner || leaseEpoch !== epoch || rt.char !== char || (rt.manualKickAt || 0) !== kick || !['type','n','t'].every(k => rt.fishTgt?.[k] === T[k])) return false;
+  const response = await ipc({ cmd: 'statePatch', patch: {}, finishFishGoal: { type: T.type, n: T.n, t: T.t, kick },
+    src: TAB_ID, epoch, expectedChar: char });
+  if (!response?.ok || rt.char !== char || leaseEpoch !== epoch || (rt.manualKickAt || 0) !== kick || !['type','n','t'].every(k => rt.fishTgt?.[k] === T[k])) return false;
+  rt = { ...rt, fishTgt: response.fishTgt, fishService: null };
+  cfg = mergeCfg(response.cfg);
+  return true;
+}
+
 // ---------- персонаж (шапка есть на всех страницах) ----------
 const numOf = sel => { const t = $q(sel)?.textContent || ''; const n = parseInt(t.replace(/\D/g, ''), 10); return isNaN(n) ? null : n; };
 function bar(...args) { return L2V7Modules.resources.bar(...args); }
@@ -4475,6 +4487,7 @@ L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Module
   get rnd() { return rnd; }, set rnd(value) { rnd = value; },
   get rodScrollsBuy() { return rodScrollsBuy; }, set rodScrollsBuy(value) { rodScrollsBuy = value; },
   get rt() { return rt; }, set rt(value) { rt = value; },
+  get finishFishGoal() { return finishFishGoal; },
   get setRt() { return setRt; }, set setRt(value) { setRt = value; },
   get setStatus() { return setStatus; }, set setStatus(value) { setStatus = value; },
   get shown() { return shown; }, set shown(value) { shown = value; },

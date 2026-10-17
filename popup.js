@@ -424,7 +424,7 @@ function renderFishTgt(rt, d) {
   }
   $('fishTgtBox').textContent = `${T.done ? '✅ Выполнено' : '🎯'} ${T.type === 'fish' ? 'Поймать' : 'Собрать'} ${fmt(T.n)} ${T.type === 'fish' ? 'рыб' : 'Proof'}: ${fmt(got)}/${fmt(T.n)} (${pct} %)`
     + (T.done ? ` · ${new Date(T.doneT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` : left ? ` · осталось ${fmt(left)}` : '')
-    + (T.final && !T.done ? '\n⏳ Цель достигнута — сдаю улов на Proof, потом стоп' : '') + eta
+    + (T.final && !T.done ? '\n⏳ Цель достигнута — сдаю улов на Proof, затем остальные задачи' : '') + eta
     + `\nпоставлена ${new Date(T.t).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${rt.fishProof != null ? ` · всего Proof: ${fmt(rt.fishProof)}` : ''}`;
 }
 $('fishTgtSet').onclick = async () => {
