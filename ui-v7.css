@@ -278,3 +278,9 @@ html:not(.cls-summoner):not(.show-all).cls-mage [data-cls="summoner"],html.cls-f
 .ftree .fs.drop b{color:#7fc97f}.ftree .fs.spoil b{color:#d4a856}.ftree .fs.boss b{color:#e07a6a}
 /* игрок 10.10: неподходящие по уровню не глушить — видно весь выбор (подходящие просто стоят сверху) */
 .ftree .fpath{margin:6px 6px 0;color:var(--mute,#a39280);font-size:10.5px}
+
+/* 20.8: границы и кнопки диапазона читаются в узкой боковой панели. */
+.limit-range .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content max-content;gap:6px;align-items:center}
+.limit-range .row input{width:100%;min-width:0}
+.limit-range .row button{width:auto;min-width:max-content;white-space:nowrap}
+@media(max-width:360px){.limit-range .row{grid-template-columns:repeat(2,minmax(0,1fr))}}

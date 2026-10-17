@@ -75,6 +75,31 @@ const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 
 const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
 const dailyQuotaDay = now => new Date(now + 10 * 3600000).toISOString().slice(0,10);
 const dailyQuotaToday = (rt,now) => rt.dailyQuota?.day === dailyQuotaDay(now) ? {...rt.dailyQuota} : {day:dailyQuotaDay(now),fish:0,auto:0,cat:0};
+// 20.8: диапазон выбирается один раз; фактическая цель остаётся в прежнем cfg-ключе.
+const RANGE_LIMITS = {dailyFishLimit:'daily',dailyAutoKillLimit:'daily',dailyCatKillLimit:'daily',autoKillLimit:'auto',catKillLimit:'cat',fishMaxCasts:'casts'};
+const quotaRandom = (min,max) => Math.min(max,min+Math.floor(Math.random()*(max-min+1)));
+function limitRangeChange(state,now,options={}) {
+  const cfg={...(state.cfg||{})},rt={...(state.rt||{})},ranges={...(cfg.limitRanges||{})},rolls={...(rt.limitRolls||{})};
+  const edit=options.edit;
+  if(edit) {
+    if(!Object.hasOwn(RANGE_LIMITS,edit.key) || !Number.isSafeInteger(edit.min) || edit.min<0 || !Number.isSafeInteger(edit.max) || edit.max<0 || edit.max>0 && (edit.min<1 || edit.max<edit.min)) return {ok:false,reason:'Диапазон: нужны целые числа от 1, «до» не меньше «от»'};
+    if(edit.max)ranges[edit.key]={min:edit.min,max:edit.max};
+    else {delete ranges[edit.key];delete rolls[edit.key];cfg[edit.key]=edit.min;}
+  }
+  for(const key of options.fixed||[]) {delete ranges[key];delete rolls[key];}
+  for(const [key,b] of Object.entries(ranges)) {
+    if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) return {ok:false,reason:'Неверный диапазон лимита: '+key};
+    const kind=RANGE_LIMITS[key],old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
+    const renew=!old || old.min!==b.min || old.max!==b.max || old.value!==cfg[key] || old.value<b.min || old.value>b.max
+      || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
+      || kind==='casts' && options.resetCasts;
+    if(!renew)continue;
+    const value=quotaRandom(b.min,b.max);cfg[key]=value;
+    rolls[key]={...b,value,day:kind==='daily'?dailyQuotaDay(now):'',t:now,seq:(old?.seq||0)+1};
+    if(['auto','cat'].includes(kind))rt.farmQuota={...(rt.farmQuota||{}),[kind]:{run:(row?.run||0)+1,limit:value,got:0}};
+  }
+  cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt};
+}
 function dailyFishChange(state,E,now) {
   const rt=state.rt||{},limit=farmQuotaLimit(state.cfg?.dailyFishLimit);
   if(!state.on || !limit || limit!==E.limit || (rt.manualKickAt||0)!==(E.kick||0)) return {ok:false,reason:'daily_fish_interrupted'};
@@ -133,6 +158,11 @@ async function statePatch(m, sender) {
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
       return { ok: false, reason: 'ownership_lost' };
+    if(m.resolveLimitRanges) {
+      if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
+      const r=limitRangeChange(state,now);if(!r.ok)return r;
+      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota};
+    }
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
       await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
@@ -222,6 +252,20 @@ async function menuPatch(m, sender) {
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
+    if(m.setFishGoal) {
+      const E=m.setFishGoal;
+      if(!m.expectedChar || !['fish','proof'].includes(E.type) || !Number.isSafeInteger(E.min) || E.min<1 || !Number.isSafeInteger(E.max) || E.max<E.min)return {ok:false,reason:'Цель: нужен положительный диапазон «от … до …»'};
+      change.rt={...state.rt,...change.rt,fishTgt:{type:E.type,n:quotaRandom(E.min,E.max),min:E.min,max:E.max,got:0,t:Date.now()},_src:'menu'};
+    }
+    if(m.on!==false && (m.limitRangeEdit || Object.keys(state.cfg?.limitRanges||{}).length || Object.hasOwn(cfgPatch,'limitRanges'))) {
+      if(m.limitRangeEdit && !m.expectedChar)return {ok:false,reason:'Персонаж изменился — обновите меню'};
+      const fixed=Object.hasOwn(cfgPatch,'limitRanges')?[]:Object.keys(cfgPatch).filter(k=>Object.hasOwn(RANGE_LIMITS,k));
+      const r=limitRangeChange({cfg:change.cfg||state.cfg,rt:change.rt||state.rt},Date.now(),{edit:m.limitRangeEdit,fixed,deferDaily:true,resetFarmQuota:m.resetFarmQuota,resetCasts:Object.hasOwn(rtPatch,'fish')&&rtPatch.fish===null});
+      if(!r.ok)return r;
+      // Последующие обработчики видят фактическую цель, а не устаревшее значение формы.
+      for(const key of Object.keys(RANGE_LIMITS))if(r.cfg[key]!==state.cfg?.[key])cfgPatch[key]=r.cfg[key];
+      change.cfg=r.cfg;change.rt={...r.rt,_src:'menu'};
+    }
     // Новый лимит/явный сброс не наследуют старый бой и его поздний ответ.
     const quotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
     for (const [task, key] of [['auto','autoKillLimit'],['cat','catKillLimit']]) {

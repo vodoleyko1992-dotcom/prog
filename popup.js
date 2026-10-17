@@ -164,7 +164,7 @@ const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGo
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
               fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
-              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
+              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, limitRanges: {}, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
@@ -311,6 +311,7 @@ async function load() {
       + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🔍 Проверка баффов — появится в первом бою' : ''); }
   renderCat(rt, d);
   renderFarmQuotas(rt, d);
+  renderLimitRanges(rt,d);
   renderDailyLimits(rt,d);
   // 8.0 (аудит меню): базы «Фарм ресурсов»/«Рецепты» (мегабайты) — только когда открыт раздел «Охота»
   if (huntOpen()) renderHuntDb(rt, d);
@@ -428,14 +429,16 @@ function renderFishTgt(rt, d) {
   $('fishTgtBox').textContent = `${T.done ? '✅ Выполнено' : '🎯'} ${T.type === 'fish' ? 'Поймать' : 'Собрать'} ${fmt(T.n)} ${T.type === 'fish' ? 'рыб' : 'Proof'}: ${fmt(got)}/${fmt(T.n)} (${pct} %)`
     + (T.done ? ` · ${new Date(T.doneT).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}` : left ? ` · осталось ${fmt(left)}` : '')
     + (T.final && !T.done ? '\n⏳ Цель достигнута — сдаю улов на Proof, затем остальные задачи' : '') + eta
+    + (T.max>T.min ? `\nВыбрано ${T.n} из ${T.min}–${T.max}` : '')
     + `\nпоставлена ${new Date(T.t).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${rt.fishProof != null ? ` · всего Proof: ${fmt(rt.fishProof)}` : ''}`;
 }
 $('fishTgtSet').onclick = async () => {
   const n = Math.floor(+$('fishTgtN').value || 0);
   if (n < 1) return $('fishTgtN').focus();
-  const { rt = {} } = await chrome.storage.local.get('rt');
-  await menuPatch({ fishTgt: { type: $('fishTgtType').value, n, got: 0, t: Date.now() } });
-  $('fishTgtN').value = '';
+  const max=Math.floor(+$('fishTgtMax').value||n);
+  if(!Number.isSafeInteger(n)||!Number.isSafeInteger(max)||max<n){toast('Укажите целый диапазон: «до» не меньше «от»');return;}
+  if(formChar==null){toast('Дождитесь загрузки персонажа');return;}
+  try{await menuPatch({}, {setFishGoal:{type:$('fishTgtType').value,min:n,max},expectedChar:formChar});$('fishTgtN').value='';$('fishTgtMax').value='';}catch(e){toast(e.message);}
 };
 $('fishTgtN').addEventListener('keydown', e => { if (e.key === 'Enter') $('fishTgtSet').click(); });
 $('fishTgtClear').onclick = async () => {
@@ -677,6 +680,7 @@ function renderDailyLimits(rt,d) {
   $('dailyLimitsDay').textContent=`Сегодня: ${day} · UTC+10`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
     const limit=+d[key]||0,got=rt.dailyQuota?.day===day ? +rt.dailyQuota[task]||0 : 0;
+    if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got} · цель выберется при запуске`;continue;}
     $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${got>=limit?' · до 00:00':''}` : 'Без дневного лимита';
   }
 }
@@ -1253,7 +1257,7 @@ async function save(e) {
   // (автороли, оружие) пока поле было в фокусе, откатывалось к старому
   const id = e?.target?.id;
   const one = id && (NUM.includes(id) || TXT.includes(id) || BOOL.includes(id)) ? [id] : null;
-  NUM.forEach(k => { if (!one || one.includes(k)) n[k] = Math.max(0, +$(k).value || 0); });
+  NUM.forEach(k => { if (!one && cfg.limitRanges?.[k]) return; if (!one || one.includes(k)) n[k] = Math.max(0, +$(k).value || 0); });
   TXT.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).value; });
   BOOL.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).checked; });
   if (one && ['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
@@ -1590,7 +1594,32 @@ async function activeTab() {
   return g.find(x => x.active) || g[0] || t;
 }
 
-document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk')) el.addEventListener('change', save); });
+const rangeLimitKeys=['dailyFishLimit','dailyAutoKillLimit','dailyCatKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'];
+const limitRangeDrafts=new Set();let limitRangeChar=null;
+function renderLimitRanges(rt,d) {
+  if(limitRangeChar!==rt.char){limitRangeDrafts.clear();limitRangeChar=rt.char;}
+  for(const key of rangeLimitKeys) {
+    const b=d.limitRanges?.[key],row=rt.limitRolls?.[key];
+    if(!limitRangeDrafts.has(key)){
+      $(key+'From').value=b?.min||'';$(key+'To').value=b?.max||'';
+    }
+    const pending=b && key.startsWith('daily') && row?.day!==new Date(Date.now()+10*3600000).toISOString().slice(0,10);
+    $(key+'RangeInfo').textContent=b ? `${b.min}–${b.max} · ${pending?'новое число выберется при запуске':`выбрано: ${row?.value||d[key]}`}${key.startsWith('daily')?' · новое число каждые сутки':''}` : 'Точное число; для диапазона заполните «от» и «до»';
+    $(key).title=b?'Введите точное число, чтобы отключить диапазон':'';
+  }
+}
+for(const key of rangeLimitKeys) {
+  for(const suffix of ['From','To'])$(key+suffix).addEventListener('input',()=>limitRangeDrafts.add(key));
+  const apply=async fixed=>{
+    if(formChar==null){toast('Дождитесь загрузки персонажа');return;}
+    const min=fixed?+$(key).value:+$(key+'From').value,max=fixed?0:+$(key+'To').value;
+    if(!Number.isSafeInteger(min)||min<0||!Number.isSafeInteger(max)||max<0||!fixed&&(min<1||max<min)){toast('Диапазон: целые числа от 1, «до» не меньше «от»');return;}
+    try{await menuPatch({manualKickAt:Date.now()},{limitRangeEdit:{key,min,max},expectedChar:formChar});limitRangeDrafts.delete(key);await load();toast(fixed?'Точное число сохранено':'Диапазон сохранён');}catch(e){toast(e.message);}
+  };
+  $(key+'RangeSet').onclick=()=>apply(false);$(key+'RangeClear').onclick=()=>apply(true);
+}
+
+document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', save); });
 
 $('check').onclick = async () => {
   await save();
@@ -2409,7 +2438,7 @@ function toast(msg, color) {
 }
 document.addEventListener('change', e => {
   const el = e.target;
-  if (!el.matches?.('section input, section select, section textarea') || ['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile'].includes(el.id)) return;
+  if (el.classList?.contains('limitRangeInput') || !el.matches?.('section input, section select, section textarea') || ['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile'].includes(el.id)) return;
   const name = (el.closest('label')?.firstChild?.textContent || el.placeholder || '').trim().slice(0, 40);
   toast(`✓ Сохранено${name ? ': ' + name : ''}`);
 });
