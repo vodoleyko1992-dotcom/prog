@@ -14,6 +14,9 @@ function fixture(task='auto'){
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);
  const f=c.fixture(task);f.state.cfg.autoKillLimit=0;f.state.cfg.catKillLimit=0;f.state.cfg.dailyKillLimit=5;f.state.cfg.autoTasks=['cat','auto','dailies'];f.state.cfg.catMode=true;f.refresh();
  f.advance=()=>{now+=120000;f.state.lock.t=now;};
+ // 20.13 (ревизия 17.10, шаг 5): engine-core здесь загружен через require и брал настоящий Date.now — после 14:00 UTC
+ // (00:00 UTC+10) день счётчика расходился с часами фикстуры и тест падал. Часы движка = часы фикстуры.
+ Date.now=()=>now;
  return f;
 }
 test('убийства автофарма и катакомб складываются в один дневной лимит; достигнут — ждут обе охоты, остальные задачи идут',async()=>{

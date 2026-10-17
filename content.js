@@ -27,6 +27,11 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true,
+  // 20.13 (ревизия 17.10, шаг 5, quality/L3): скрытые настройки, умолчание которых раньше жило только в месте чтения
+  // (`?? 30`, `!== false`…). Значения те же, поведение не меняется; теперь они видны в cfg, экспорте и проверке
+  // tests/v2013-defaults-sync. Резервные `??` в модулях оставлены для старых тестовых окружений без DEF_CFG.
+  mageEcoPct: 30, mageMpPct: 25, mageProbe: true, rbVampHp: 60, rbDeathPenalty: 0, magisterSkip: 'Curse Weakness, Poisonous Cloud', magisterSpReserve: 0,
+  fishRodBuy: true, fishAutoSetup: true,
   // слоты панели — по названию (атрибут title), через запятую — альтернативные написания
   nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
   nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
@@ -2719,8 +2724,17 @@ setInterval(async () => {
     }
     else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
-  } catch (e) {}
+  } catch (e) { quietErr('замок', e); }
 }, 5000);
+// 20.13 (ревизия 17.10, шаг 5, quality/L2): ошибка в таймере продления/сдачи замка (recover, sendMessage после
+// обновления расширения) раньше пропадала без следа. Теперь — одна строка в журнал на тег раз в 10 мин со счётчиком.
+const quietErrs = Object.create(null);
+function quietErr(tag, e) {
+  const q = quietErrs[tag] ||= { n: 0, t: -Infinity }; q.n++;
+  if (Date.now() - q.t < 600000) return;
+  const n = q.n; q.n = 0; q.t = Date.now();
+  try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
+}
 // замок при уходе со страницы не снимаем: следующая страница этой же вкладки продолжит с тем же ключом; закрытую вкладку отпустит таймаут 90 с
 
 // 10.0.2: замеры по РБ из лога 12.10 22:11–22:46 (Warlock 65 + Kai): ДПС в бою, спецудар, обычный удар p90 / макс.
