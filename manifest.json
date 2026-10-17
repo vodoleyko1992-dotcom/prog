@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.9",
-  "description": "L2wap Bot 20.9 — дневные лимиты и случайные диапазоны",
+  "version": "20.10",
+  "description": "L2wap Bot 20.10 — бой без застывших откатов и наживка «Авто»",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.9"
+  "version_name": "20.10"
 }
