@@ -5,6 +5,8 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.equipment = function create_equipment(env) {
 const location = env.routeLocation || root.location;
+// 20.8 (Тир17.10): пустая строка не является ручным выбором оружия.
+const manualWeaponChoice = () => !!env.cfg.weaponManual && !!String(env.cfg.nWeaponMain || '').trim();
 // 14.10: клановые/новые предметы отсутствуют в историческом items-il.json.
 // Читаем только публичные поля каталога игры; экземпляры и бонусы остаются из inventory.
 const WEAPON_CATALOG_TTL = 30 * 60 * 1000;
@@ -187,7 +189,7 @@ async function autoRoles() {
       // v5.6: список «тратит энергию» игрока не перезаписываем, пока его скиллы есть на панели (раньше подменялся каждый бой)
       : k === 'nForce' ? (() => { const ns = String(cur || '').split(',').map(x => x.split('=')[0].trim()).filter(Boolean); return ns.length > 0 && ns.every(n => env.slotsBy(n).length); })()
       : env.slotsBy(cur).length > 0;
-    if (!found) fix[k] = v;
+    if (!found) { fix[k] = v; if (k === 'nWeaponMain' && env.cfg.weaponManual && !manualWeaponChoice()) fix.weaponManual = false; }
   }
   // For a mage, the currently observed offensive hotbar is authoritative:
   // include every newly learned spell and discard stale fighter roles.
@@ -450,19 +452,19 @@ async function invScanStep() {
       && (R.inClass(eq) ? atk(R.main) > atk(eq) * 1.05 : atk(R.main) >= atk(eq) * 0.85));
     // выбор в меню: если поле пустое или такого оружия нет — подставляем «в класс» (или надетое, если «в класс» слабее)
     const has = n => n && list.some(w => (w.name || '').toLowerCase().startsWith(String(n).toLowerCase().split(',')[0].trim()));
-    if (env.cfg.weaponClassPick !== false && !env.cfg.weaponManual) {
+    if (env.cfg.weaponClassPick !== false && !manualWeaponChoice()) {
       const mainPick = (better ? R.main : eq) || R.main || eq;
       const curMain = list.find(w => has(env.cfg.nWeaponMain) && (w.name || '').toLowerCase().startsWith(String(env.cfg.nWeaponMain).toLowerCase().split(',')[0].trim()));
-      const offClass = curMain && R.main && !R.inClass(curMain) && !env.cfg.weaponManual;   // выбор не «в класс» и игрок его не ставил сам
-      if (mainPick && (!env.cfg.nWeaponMain || !has(env.cfg.nWeaponMain) || offClass)) fix.nWeaponMain = mainPick.name;
+      const offClass = curMain && R.main && !R.inClass(curMain) && !manualWeaponChoice();   // выбор не «в класс» и игрок его не ставил сам
+      if (mainPick && (!String(env.cfg.nWeaponMain || '').trim() || !has(env.cfg.nWeaponMain) || offClass)) { fix.nWeaponMain = mainPick.name; if (env.cfg.weaponManual && !manualWeaponChoice()) fix.weaponManual = false; }
     }
     let wore = '';
     // 10.0.2 (Life Stone): на надетом оружии полезный ЛС (умение или бонус, rt.weaponAug от сервера) — сам не переодеваем:
     // ЛС остаётся на старом оружии, умение пропадёт. Рекомендация в меню остаётся, надеть может игрок
     const aw = env.rt.weaponAug, augHold = !!(aw && aw.o && (aw.k === 'active' || aw.k === 'positive') && (!eq?.id || !aw.w || +eq.id === +aw.w));
     // 7.1.30 (лог 15:38:22→24): игрок нажал «Стоп», а бот через 2 с всё равно переодел оружие — после остановки не надеваем
-    if (env.on && env.cfg.weaponClassEquip !== false && !env.cfg.weaponManual && R.main && R.main.where !== 'надето' && better && !augHold) {
-      if (await wearFromBag(R.main, () => active() && env.on && env.cfg.weaponClassEquip !== false && !env.cfg.weaponManual)) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
+    if (env.on && env.cfg.weaponClassEquip !== false && !manualWeaponChoice() && R.main && R.main.where !== 'надето' && better && !augHold) {
+      if (await wearFromBag(R.main, () => active() && env.on && env.cfg.weaponClassEquip !== false && !manualWeaponChoice())) { wore = R.main.name; R.main.where = 'надето'; if (eq) eq.where = 'сумка'; }
     }
     if (!active()) return false;
     const pending = env.rt.weaponMetaPending;
@@ -470,7 +472,7 @@ async function invScanStep() {
     await env.setRt({ weapons: list, weaponsT: Date.now(), ...(verifiedPending ? {weaponMetaPending:null} : {}), weaponRec: { main: R.main?.name || '', types: R.types, src: R.src, lv: R.lv, wore,
       eqInClass: eq ? R.inClass(eq) : null, keptEq: !!(R.main && R.main.where !== 'надето' && !wore && !better), keptAug: !!(augHold && better && !wore) }, invScan: null });
     if (env.rt.char !== char) return false;
-    if (Object.keys(fix).length && env.cfg.weaponClassPick !== false && !env.cfg.weaponManual && env.cfg.nWeaponMain === initialMain) await env.setCfg(fix);
+    if (Object.keys(fix).length && env.cfg.weaponClassPick !== false && !manualWeaponChoice() && env.cfg.nWeaponMain === initialMain) await env.setCfg(fix);
     env.rec('B', 'оружие', `класс: ${R.src} → ${R.types.join(' / ') || '?'} · найдено ${list.length}: ` + list.map(w => `${w.name} [${w.wt}, ${w.g}${w.ench ? ' +' + w.ench : ''}, P.Atk ${w.pa}${w.where === 'надето' ? ', надето' : ''}${R.inClass(w) ? ', в класс' : ''}]`).join(' · ')
       + (R.main ? ` · рекомендую: ${R.main.name}` : ' · оружия «в класс» нет') + (wore ? ` · надел ${wore}` : '') + (Object.keys(fix).length ? ` · в меню: ${Object.entries(fix).map(([k, v]) => k + '=' + v).join(', ')}` : ''));
     env.setStatus(`Оружие: ${list.length} шт. · в класс: ${R.main?.name || 'нет'}${wore ? ' · надето' : ''}`);
@@ -488,6 +490,8 @@ async function invScanStep() {
 function weaponRescanWhy(bag, lv) {
   if (!env.rt.weaponsT) return '';
   const R = env.rt.weaponRec || {}, why = [];
+  if (env.cfg.weaponManual && !manualWeaponChoice() && env.cfg.weaponClassEquip !== false && R.eqInClass !== true)
+    why.push('пустой ручной выбор — проверяю оружие в класс');
   const g = lv && R.lv ? Object.entries(env.GRADE_LV).find(([, L]) => R.lv < L && lv >= L) : null;
   if (g) why.push(`открыт грейд ${g[0]} (${lv} ур.)`);
   if (bag) {
