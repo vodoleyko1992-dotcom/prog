@@ -89,8 +89,12 @@ function limitRangeChange(state,now,options={}) {
     else {delete ranges[edit.key];delete rolls[edit.key];cfg[edit.key]=edit.min;}
   }
   for(const key of options.fixed||[]) {delete ranges[key];delete rolls[key];}
+  const dropped=[];
   for(const [key,b] of Object.entries(ranges)) {
-    if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) return {ok:false,reason:'Неверный диапазон лимита: '+key};
+    // 20.12 (ревизия 17.10, аудит core-b/F2): старый/неизвестный ключ (импорт настроек ≤20.9: dailyAutoKillLimit и т.п.) или
+    // испорченные границы раньше давали ok:false навсегда — цикл бота и все записи меню стояли. Теперь такой диапазон отбрасываем
+    // (остаётся фиксированное значение лимита), остальные обрабатываем как прежде
+    if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) {delete ranges[key];delete rolls[key];dropped.push(key);continue;}
     const kind=RANGE_LIMITS[key],old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
     const renew=!old || old.min!==b.min || old.max!==b.max || old.value!==cfg[key] || old.value<b.min || old.value>b.max
       || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
@@ -100,7 +104,7 @@ function limitRangeChange(state,now,options={}) {
     rolls[key]={...b,value,day:kind==='daily'?dailyQuotaDay(now):'',t:now,seq:(old?.seq||0)+1};
     if(['auto','cat'].includes(kind))rt.farmQuota={...(rt.farmQuota||{}),[kind]:{run:(row?.run||0)+1,limit:value,got:0}};
   }
-  cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt};
+  cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt,dropped};
 }
 function dailyFishChange(state,E,now) {
   const rt=state.rt||{},limit=farmQuotaLimit(state.cfg?.dailyFishLimit);
@@ -164,7 +168,7 @@ async function statePatch(m, sender) {
     if(m.resolveLimitRanges) {
       if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
       const r=limitRangeChange(state,now);if(!r.ok)return r;
-      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota};
+      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
