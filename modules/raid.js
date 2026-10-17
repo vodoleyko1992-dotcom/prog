@@ -916,7 +916,7 @@ async function rbGoStep() {                       // список РБ → ну�
 
 const huntOn = () => !!env.cfg.rbHuntMode;
 function rbBuffShortage(now = Date.now()) {
-  if (env.cfg.rbFaFull === false || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
+  if (!tourFaOn() || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
   const H = env.hudBuffs?.(), need = env.faFullIds?.() || [];
   return H && need.filter(id => !H[id] || H[id] < now + 10 * 60000).length || 0;
 }
@@ -926,7 +926,7 @@ function rbBuffShortage(now = Date.now()) {
 async function rbBuffHold(name, active) {
   if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
   if (!active()) return true;
-  if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
+  if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
     env.setStatus(`Тур РБ: жду подтверждения баффов перед ${name}`);
     if (active()) await env.sleep(3000);
     return true;
@@ -940,6 +940,12 @@ async function rbBuffHold(name, active) {
   env.setStatus(`Тур РБ: жду баффера перед ${name}${names ? ` · нужны: ${names}` : ''}${wait ? ` · повтор через ${wait} с` : ''}`);
   if (active()) await env.sleep(3000);
   return true;
+}
+
+// 20.12 (ревизия 17.10): требование набора за FA в туре — то же правило, что у покупки (buffs.tourFaWanted): тур по дейлику
+// «Убей 1 РБ» без галки dailyRbFa не ждёт FA, не ставит бота на паузу «Пополни FA» и не крутит huntDone перед перелётом
+function tourFaOn() {
+  return env.tourFaWanted ? !!env.tourFaWanted() : env.cfg.rbFaFull !== false && !(env.rt.dailyRb && env.cfg.dailyRbFa !== true);
 }
 
 function rbSummonBuffReady() {
@@ -990,7 +996,7 @@ function rbTravelBudget(row) {
 // Несвежий кошелёк перечитывается (GET /character, бесплатно); не подтвердился — FA не тратим.
 let rbFaBudgetSaid = '';
 async function rbFaBudgetWhy(row, active) {
-  if (!row || env.cfg.rbFaFull === false) return '';
+  if (!row || !tourFaOn()) return '';
   if (env.isMap?.() && raidList().some(r => r.id === row.id)) return '';
   const fresh = env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000;
   if (!fresh) { await rbRefreshState(row.id, active, true); if (!active()) return ''; }
@@ -1150,7 +1156,7 @@ async function rbHuntStep() {
       return;
     }
     if (!active() || !sameJob()) return;
-    if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
+    if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
       return huntDone(H.id, `${H.name}: баффы изменились перед перелётом — подготовлю снова`, false);
     const reason = rbTeleportCheck(H.id, g);
     if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {

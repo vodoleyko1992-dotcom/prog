@@ -300,6 +300,11 @@ function faDeathNote(H, now = Date.now()) {
   if (sig !== (S?.sig ?? '')) env.setRt({ faSnap: { t: now, sig, ids: paid } });
 }
 const faSig = P => Object.entries(P).map(([id, e]) => `${id}:${Math.round(e / 60000)}`).sort().join(',');
+// 20.12 (ревизия 17.10): одно правило «нужен ли туру РБ фулл бафф за FA» — для покупки (faWanted) и для проверок тура в raid
+// (нехватка FA, ожидание баффов, проверка перед перелётом). Тур по дейлику «Убей 1 РБ» — только по явной галке cfg.dailyRbFa
+function tourFaWanted() {
+  return env.cfg.rbFaFull !== false && !(env.rt.dailyRb && env.cfg.dailyRbFa !== true);
+}
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
   if (env.rt.faSkipUntil && now < env.rt.faSkipUntil) return [];
@@ -316,8 +321,7 @@ function faWanted() {
   const RH = env.rt.rbHunt || {};
   const tourPrep = env.rt.tbuff?.rbTour && now - (env.rt.tbuff.t || 0) < 15 * 60000;
   // 20.12 (ревизия 17.10): тур, запущенный дейликом «Убей 1 РБ», сам набор за FA не покупает — только по явной галке cfg.dailyRbFa
-  const dailyTour = !!env.rt.dailyRb && env.cfg.dailyRbFa !== true;
-  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && !dailyTour && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
+  const tourWant = tourFaWanted() && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
   // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA
@@ -697,6 +701,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

@@ -151,3 +151,32 @@ test('тур РБ: при нехватке адены на телепорт на
   assert.equal(stale.buys(), 0, 'перечитанный кошелёк показал нехватку');
   assert.equal(stale.f.env.rt.adenaSeen.v, 250000);
 });
+
+// ---------- (b2) дейлик «Убей 1 РБ»: проверки тура в raid следуют тому же правилу ----------
+function dailyRaid(extraCfg = {}) {
+  const r = raidFixture(1000000), env = r.f.env, pauses = [], dones = [];
+  env.rt.faBal = { v: 0, t: Date.now() }; env.rt.dailyRb = { day: '2026-10-17', k0: 0, t: Date.now(), prev: {} };
+  Object.assign(env.cfg, { rbFaFull: true, ...extraCfg });
+  env.faFullIds = () => [1413, 1323]; env.hudBuffs = () => ({});
+  env.pauseBot = async why => { pauses.push(why); };
+  const rec = env.rec; env.rec = (...a) => { if (/баффы изменились/.test(a.join(' '))) dones.push(a.join(' ')); return rec?.(...a); };
+  return { ...r, env, pauses, dones };
+}
+test('тур по дейлику без dailyRbFa при FA = 0 не ставит бота на паузу и не крутит «баффы изменились»', async () => {
+  const d = dailyRaid();
+  for (let i = 0; i < 4; i++) await d.f.R.rbHuntStep();
+  assert.deepEqual(d.pauses, [], 'пауза «Пополни FA» не вызвана');
+  assert.deepEqual(d.dones, [], 'перед перелётом нет круга huntDone по баффам');
+  assert.equal(d.env.rt.rbHunt.step, 'go', 'подготовка пройдена, тур идёт к РБ');
+  assert.equal(d.buys(), 1, 'городская подготовка один раз, без круга');
+  // явная галка dailyRbFa — прежнее строгое требование набора: нет FA → пауза
+  const strict = dailyRaid({ dailyRbFa: true });
+  for (let i = 0; i < 4; i++) await strict.f.R.rbHuntStep();
+  assert.ok(strict.pauses.length >= 1); assert.match(strict.pauses[0], /нет FA для выбранного баффа/);
+  assert.equal(strict.env.rt.rbHunt.step, 'pick', 'без FA строгий тур не летит');
+  // общее правило в buffs
+  const b = buffsFixture({}, { dailyRb: { t: Date.now() } }); assert.equal(b.B.tourFaWanted(), false);
+  assert.equal(buffsFixture({ dailyRbFa: true }, { dailyRb: { t: Date.now() } }).B.tourFaWanted(), true);
+  assert.equal(buffsFixture({}, {}).B.tourFaWanted(), true);
+  assert.equal(buffsFixture({ rbFaFull: false }, {}).B.tourFaWanted(), false);
+});
