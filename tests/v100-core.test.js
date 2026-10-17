@@ -32,7 +32,8 @@ const content = read('content.js'), bg = read('background.js');
   assert.match(onChange, /L2V7Modules\.enchant\.command\('pause'\)/);
   // 6. фон: .then/.catch больше не внутри комментария
   assert.doesNotMatch(bg, /\/\/[^\n]*\.then\(\(\) => \{ hbPersistedAt/);
-  assert.match(bg, /wdDown: null \}\)\.then\(\(\) => \{ hbPersistedAt = Date\.now\(\); \}\)\.catch/);
+  // Реворк: успешная запись отдельно от комментария, heartbeat меняется после await.
+  assert.match(bg, /await chrome\.storage\.local\.set\(\{ hbBg: \{ \.\.\.nextHb \}, wdog: \[\], wdDown: null \}\);\s+hbMem = nextHb; hbPersistedAt = Date\.now\(\);/);
   // 7. заметки Маммона/квестов — только когда память своего героя
   assert.match(content, /const meNow = !heroNick\(\) \|\| rt\.char === heroNick\(\);/);
   assert.equal((content.match(/if \(tabOwner && meNow && d\.status >= 200/g) || []).length, 2);
