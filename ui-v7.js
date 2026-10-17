@@ -179,8 +179,7 @@
     if (navCurrentName) navCurrentName.textContent = '· ' + name;
     if (title) title.textContent = name;
     if (subtitle) subtitle.textContent = desc;
-    const sec = document.getElementById('tab-'+tab);
-    if (sec) sec.scrollTop = 0;
+    // Прокрутку хранит showTab: возврат в длинный раздел не сбрасывает позицию.
   };
   document.addEventListener('l2:tabchange', e => updateTab(e.detail.tab));
   updateTab(document.querySelector('nav button.act')?.dataset.tab || 'overview');

@@ -193,6 +193,7 @@
   <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
   <div id="heroLine"></div>
   <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
+  <div id="controlWarn" class="wake-warn" role="alert" hidden></div>
   <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
   <div id="updateWarn" class="wake-warn" role="alert" hidden><span id="updateWarnText"></span> <button id="reloadBot" type="button">Перезагрузить бот</button></div>
   <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="true" title="Показать или скрыть список задач">
@@ -247,18 +248,23 @@
 </nav>
 <div class="workarea">
 <div class="worktop"><div class="worktitle"><strong id="currentSectionTitle">Обзор</strong><small id="currentSectionDesc">Состояние систем и быстрые переходы</small></div><span class="work-v" id="workVer"></span></div>
+<div id="activityPanel" class="activity-panel" aria-label="Текущее состояние"><div class="activity-head"><span id="activityState" class="activity-state">Загрузка</span><button id="activityDetails" type="button">Обзор ↗</button></div><strong id="activityText">Читаю состояние бота…</strong><div id="activityHint"></div></div>
+<div id="settingsFeedback" class="settings-feedback" role="status" aria-live="polite" hidden><span id="settingsFeedbackText"></span><button id="settingsRetry" type="button" hidden>Повторить сохранение</button><button id="settingsDiscard" type="button">Отменить несохранённое</button></div>
 <div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div>
 
 <section id="tab-overview" class="act">
   <!-- 8.0 (аудит меню): «Обзор» — живая сводка вместо статичного текста и плиток-дублей шапки -->
-  <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
-  <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
+  <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><button id="taskBoardEdit" type="button">Изменить</button></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div></div>
   <div id="dash" class="dash no-card" aria-label="Сводка текущей сессии">
     <div class="dash-head"><strong id="dashMode">—</strong><span id="dashState" class="dash-state">—</span></div>
     <div id="dashSub" class="dash-sub"></div>
     <div id="dashKpi" class="dash-kpi"></div>
     <div id="dashLines" class="dash-lines"></div>
   </div>
+
+  <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
+  <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
+
   <h4>Быстрые переходы</h4>
   <div class="overview-modules">
     <button type="button" class="module-tile" data-goto="hunt"><span class="tile-icon">◎</span><span><strong>Охота</strong><small>Фарм на месте, приоритеты, TvT, локации и автофарм</small></span><em id="modeHuntState">Открыть ↗</em></button>
@@ -892,7 +898,7 @@
 
 </div><!-- /.workarea -->
 </div><!-- /.app-shell -->
-<footer>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск</footer>
+<footer><span id="settingsState">Настройки сохраняются автоматически после изменения поля</span><br>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск</footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="zone-db.js"></script>
 <script src="zone-kpd.js"></script>
