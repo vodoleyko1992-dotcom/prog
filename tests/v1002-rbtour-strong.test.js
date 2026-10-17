@@ -92,7 +92,7 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   assert.equal(F.leavePending(T + 5600)?.id, HALLATE, '22:35:26 → 22:35:32 on the map, no leave answer → back to the fight');
   F.leaveOk(HALLATE); assert.equal(F.leavePending(Date.now() + 5600), null, 'answered 2xx → fine');
   F.leaveMark(HALLATE, 'x'); assert.equal(F.leavePending(Date.now() + 61000), null, 'stale mark ignored');
-  assert.match(content, /if \(isMap\(\) && await leaveCheck\(\)\) continue;/);
+  assert.match(content, /if \(isMap\(\) && await leaveCheck\(\)\) return true;/);
   F.leaveMark(HALLATE, 'x'); F.leaveMark(null); assert.equal(F.leavePending(Date.now() + 5600), null, 'stayed in the fight → mark cleared');
   assert.equal((combat0.match(/env\.leaveMark\?\.\(null\);/g) || []).length, 3, 'cleared when the exit did not end the fight');   // 10.0.5: + отход от чемпиона
   assert.match(content, /path === '\/game\/battle\/leave' && d\.method === 'POST' && d\.status >= 200 && d\.status < 300 && !d\.error && !d\.res\?\.error\) leaveOk\(/);

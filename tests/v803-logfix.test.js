@@ -23,7 +23,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   assert.match(buffs, /\(L\[id\] \? e - now > 25 \* 60000 : e - now > 3\.2 \* 3600000\) && !faIds\.includes\(id\) && !sessIds\.includes\(id\)/);
   // 5. в туре оружие читается на шаге выбора (не чаще раза в 30 мин)
   const content = read('content.js');
-  const a = content.indexOf("Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); continue; }");
+  const a = content.indexOf("Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); return true; }");
   assert.ok(a > 0 && a < content.indexOf("if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep();"), 'weapon scan before the tour step');
   // 6. смена режима — в журнал
   const ms = vm.runInNewContext(`${content.match(/const rbEff = [^;]+;/)[0]}\n${content.match(/const modeSig = [^;]+;/s)[0]}\nmodeSig`);

@@ -305,7 +305,7 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     assert.match(content, /d\.method === 'POST' && \/\\\/teleport\(\\\/\|\$\|\\\?\)\/\.test\(path\)/, 'teleport detector matches …/teleport too');
     { const tpRe = vm.runInNewContext(content.match(/d\.method === 'POST' && (\/.+?\/)\.test\(path\)/)[1]);
       assert.ok(['/game/raid-boss/teleport', '/game/epic-boss/teleport', '/game/epic-boss/teleport/29014'].every(p => tpRe.test(p)) && !tpRe.test('/game/teleports'), 'teleport path matcher'); }
-    assert.match(content, /if \(rt\.epicScanReq\) \{ if \(fishNow\(\) \|\| isBattle\(\)\) L2V7Modules\.epics\.epicScanAll\('по кнопке'\)\.catch\(\(\) => \{\}\); else \{ await L2V7Modules\.epics\.epicScanAll\('по кнопке'\); continue; \} \}/, 'scan runs in the background on the battle page too (chain)');
+    assert.match(content, /if \(rt\.epicScanReq\) \{ if \(fishNow\(\) \|\| isBattle\(\)\) L2V7Modules\.epics\.epicScanAll\('по кнопке'\)\.catch\(\(\) => \{\}\); else \{ await L2V7Modules\.epics\.epicScanAll\('по кнопке'\); return true; \} \}/, 'scan runs in the background on the battle page too (chain)');
     assert.match(content, /if \(epicOn\(\)\) L2V7Modules\.epics\.epicPollTick\(\)\.catch\(\(\) => \{\}\);/);
     assert.match(content, /once\('epicCol803', /); assert.match(content, /once\('epicDeaths803', \(\) => \{ if \(\+C\('epicMaxDeaths'\) === 10\) cf\.epicMaxDeaths = 3; \}\);/);
     const def = content.slice(content.indexOf('const DEF_CFG = {'), content.indexOf('\n', content.indexOf('const DEF_CFG = {')));
