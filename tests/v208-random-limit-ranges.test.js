@@ -75,3 +75,9 @@ test('Stop remains available even with a malformed imported range',async()=>{
  const f=fixture();f.state.cfg.limitRanges={autoKillLimit:{min:0,max:1}};
  const r=await f.bg.menuPatch({rtPatch:{},on:false},{url:'chrome-extension://test/popup.html'});assert.equal(r.ok,true);assert.equal(f.state.on,false);
 });
+
+test('ordinary midnight popup write does not drop an active battle or rebaseline fish catches',async()=>{
+ const f=fixture();await f.edit('dailyAutoKillLimit',10,20);await f.edit('dailyFishLimit',10,20);f.state.rt.dailyFishMark={t0:10,caught:5};f.refresh();await f.begin();const baseline=structuredClone(f.state.rt.farmQuota.auto.pending);
+ f.advance();await f.menu({rtPatch:{keep:19}});assert.equal(f.state.rt.limitRolls.dailyAutoKillLimit.day,'2026-10-17');assert.deepEqual(f.state.rt.farmQuota.auto.pending,baseline);assert.equal(f.state.rt.dailyFishMark.caught,5);
+ f.refresh();await f.c.syncLimitRanges();assert.deepEqual(f.state.rt.farmQuota.auto.pending,baseline);f.grow(2);f.refresh();await f.win();assert.equal(f.state.rt.dailyQuota.auto,2);assert.equal(f.state.rt.farmQuota.auto.got,2);assert.equal(f.state.rt.dailyFishMark.caught,5);
+});

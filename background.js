@@ -91,7 +91,7 @@ function limitRangeChange(state,now,options={}) {
     if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) return {ok:false,reason:'Неверный диапазон лимита: '+key};
     const kind=RANGE_LIMITS[key],old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
     const renew=!old || old.min!==b.min || old.max!==b.max || old.value!==cfg[key] || old.value<b.min || old.value>b.max
-      || kind==='daily' && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
+      || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
       || kind==='casts' && options.resetCasts;
     if(!renew)continue;
     const value=quotaRandom(b.min,b.max);cfg[key]=value;
@@ -260,7 +260,7 @@ async function menuPatch(m, sender) {
     if(m.on!==false && (m.limitRangeEdit || Object.keys(state.cfg?.limitRanges||{}).length || Object.hasOwn(cfgPatch,'limitRanges'))) {
       if(m.limitRangeEdit && !m.expectedChar)return {ok:false,reason:'Персонаж изменился — обновите меню'};
       const fixed=Object.hasOwn(cfgPatch,'limitRanges')?[]:Object.keys(cfgPatch).filter(k=>Object.hasOwn(RANGE_LIMITS,k));
-      const r=limitRangeChange({cfg:change.cfg||state.cfg,rt:change.rt||state.rt},Date.now(),{edit:m.limitRangeEdit,fixed,resetFarmQuota:m.resetFarmQuota,resetCasts:Object.hasOwn(rtPatch,'fish')&&rtPatch.fish===null});
+      const r=limitRangeChange({cfg:change.cfg||state.cfg,rt:change.rt||state.rt},Date.now(),{edit:m.limitRangeEdit,fixed,deferDaily:true,resetFarmQuota:m.resetFarmQuota,resetCasts:Object.hasOwn(rtPatch,'fish')&&rtPatch.fish===null});
       if(!r.ok)return r;
       // Последующие обработчики видят фактическую цель, а не устаревшее значение формы.
       for(const key of Object.keys(RANGE_LIMITS))if(r.cfg[key]!==state.cfg?.[key])cfgPatch[key]=r.cfg[key];
