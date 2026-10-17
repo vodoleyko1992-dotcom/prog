@@ -34,11 +34,16 @@ const tvtRegistrationDue = () => { const s = tvtState(); return canRun() && !!s 
 const phaseLive = S => /ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase) && !(S.end && S.now > S.end + 5 * 60000)
   && !(S.start && S.now - S.start > 20 * 60000 && !(S.end && S.now < S.end));
 let readAt = 0, readIdentity = '', reading = null;
+// 20.13 (ревизия 17.10, шаг 7, pvp-misc/TVT-7): при пустом состоянии и нерабочем /game/tvt (нет доступа, 401/403/5xx) GET шёл каждые
+// 5 с на каждом круге и ходе боя (≈720 в час). Подряд неудачи без известного состояния: 3 по 5 с, ещё 3 по 30 с, дальше раз в 5 мин.
+// Известное состояние (окно регистрации, stale, записаны) опрашивается как прежде; удачный ответ сбрасывает счётчик
+let readFail = 0;
+const emptyGap = () => readFail < 3 ? 5000 : readFail < 6 ? 30000 : 300000;
 async function tvtRefresh(force = false) {
   if (!canRun() || !env.gameGet) return;
   const T0 = token();
   if (reading?.identity === T0.identity && reading.kick === T0.kick) return;
-  if (readIdentity !== T0.identity) { readIdentity = T0.identity; readAt = 0; }
+  if (readIdentity !== T0.identity) { readIdentity = T0.identity; readAt = 0; readFail = 0; }
   const s = tvtState(), now = Date.now(), opening = s?.regOpen && s.now >= s.regOpen - 5000 && s.now <= s.regOpen + 10000;
   // 10.0.22: после сна вкладки можно пропустить первые10с открытия; продолжаем читать до конца окна.
   const closes = s && (s.regEnd > s.regOpen ? s.regEnd : s.start > s.regOpen ? s.start : s.regOpen + 10 * 60000);
@@ -51,18 +56,20 @@ async function tvtRefresh(force = false) {
   // registrationOpensAt (раньше due держала сама tvtRegistrationDue, теперь она false при полной записи)
   const regFull = !!s && !s.reg && /REGISTRATION/i.test(s.phase) && (!s.regEnd || s.now < s.regEnd) && s.count >= s.max && !regSkipped(s);
   const due = !s || stale || !s.reg && (opening || pendingWindow || regFull || tvtRegistrationDue());
-  if (!force && (!due || now - readAt < (opening ? 1000 : 5000))) return;
+  if (!force && (!due || now - readAt < (opening ? 1000 : !s ? emptyGap() : 5000))) return;
   reading = T0; readAt = now;
   try {
     const response = await env.gameGet('/game/tvt', 8000), data = response?.ok ? await response.json() : null;
-    if (!active(T0) || typeof data?.phase !== 'string') return;
+    if (!active(T0)) return;
+    if (typeof data?.phase !== 'string') { readFail++; return; }
+    readFail = 0;
     const t = Date.now();
     env.TVT = { ...data, t, off: tvtMs(data.serverNow) ? tvtMs(data.serverNow) - t : 0 };
     const T = env.TVT;
     await env.setRt({ tvt: { phase: T.phase, eventId: T.eventId, isRegistered: T.isRegistered, myTeam: T.myTeam,
       startsAt: T.startsAt, registrationEndsAt: T.registrationEndsAt, schedule: T.schedule, registeredCount: T.registeredCount,
       maxPlayers: T.maxPlayers, selfCombat: typeof T.selfCombat?.alive === 'boolean' ? { alive: T.selfCombat.alive } : null, t, off: T.off } });
-  } catch (e) {} finally { if (reading === T0) reading = null; }
+  } catch (e) { if (active(T0)) readFail++; } finally { if (reading === T0) reading = null; }
 }
 
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
@@ -102,11 +109,14 @@ function tvtHold() {
   return !!(S.start && S.start - S.now < hold && S.now - S.start < 11 * 60000);
 }
 
+// 20.13 (ревизия 17.10, шаг 7, pvp-misc/TVT-8): метка «уже написали про это окно» — в замыкании модуля, а не прямой записью в env.rt мимо setRt
+// (та тоже жила только до перезагрузки вкладки, так что поведение прежнее)
+let holdNote = '';
 async function tvtWait() {                          // окно TvT, дел на арене ещё нет — стоим на месте, задачи отложены
   const S = tvtState() || {}, left = S.start ? Math.max(0, Math.round((S.start - S.now) / 1000)) : 0;
   env.setStatus(`TvT через ${left} с — задачи отложены, жду на месте`);
   const k = S.id || String(S.start || '');
-  if (env.rt.tvtHoldNote !== k) { env.rt.tvtHoldNote = k; env.rec('B', 'TvT', `до боя ${left} с — закупку, магистра, баффы, Маммона, квесты и туры откладываю до конца TvT`); }
+  if (holdNote !== k) { holdNote = k; env.rec('B', 'TvT', `до боя ${left} с — закупку, магистра, баффы, Маммона, квесты и туры откладываю до конца TvT`); }
   await env.sleep(1000);
 }
 

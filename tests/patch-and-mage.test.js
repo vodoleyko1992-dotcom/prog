@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..');
@@ -28,8 +29,8 @@ const patch=n=>Object.fromEntries(Array.from({length:n},(_,i)=>['setting_'+i,i])
   assert.equal((await bg.statePatch({patch:{},cfgPatch:patch(401)},owner)).reason,'invalid_patch');
   assert.equal(JSON.stringify(state),before,'invalid patch must not partially set on or config');
   console.log('PASS: Start, Buy/Mode via menuPatch accept 122 and 400 settings; content statePatch accepts 122 and 400; 401 rejected atomically');
-  const content=fs.readFileSync(path.join(root,'content.js'),'utf8');
-  const popup=fs.readFileSync(path.join(root,'popup.js'),'utf8');
+  const content=(fs.readFileSync(path.join(root,'content.js'),'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
+  const popup=(fs.readFileSync(path.join(root,'popup.js'),'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
   assert.match(content,/combatProfile: 'auto'/);
   assert.match(popup,/'combatProfile'/);
   assert.match(fs.readFileSync(path.join(root,'popup.html'),'utf8'),/id="combatProfile"/);

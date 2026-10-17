@@ -10,13 +10,14 @@ const { vm, read, content, mk } = require('./epic-harness.cjs');
   const v30 = verdict(30); assert.equal(v30.v, 'slow', 'player limit 30 still works: ' + v30.why); assert.ok(v30.tKill > 1800);
   for (const lim of [0, undefined, '']) { const v = verdict(lim); assert.equal(v.v, 'ok', `limit ${JSON.stringify(lim)} → no time cap: ${v.v} ${v.why}`); }
   // умолчания: ядро, меню, подсказка, базовый профиль
-  assert.ok(content.slice(content.indexOf('const DEF_CFG = {')).split('\n')[0].includes('epicMaxFightMin: 0,'));
-  assert.match(read('popup.js'), /epicMaxFightMin: 0,/);
+  const defs = read('defaults.js');   // 20.13 (шаг 7): DEF_CFG живёт в defaults.js
+  assert.ok(defs.slice(defs.indexOf('const DEF_CFG = {')).split('\n')[0].includes('epicMaxFightMin: 0,'));
+  assert.match(read('popup.js'), /L2Defaults/); assert.match(defs, /epicMaxFightMin: 0,/);   // меню берёт умолчания из defaults.js
   assert.match(read('popup.html'), /мин \(0 — без предела\) <input id="epicMaxFightMin" type="number" min="0"/);
   assert.match(read('ui-v7.js'), /epicMaxFightMin:'[^']*0 — без предела/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.epicMaxFightMin, 0);
   // обычные РБ не тронуты: свой предел 20 мин (rbMaxKillMin) на месте
-  assert.match(content, /rbMaxKillMin: 20,/);
+  assert.match(defs, /rbMaxKillMin: 20,/);
   // миграция: 30 → 0, своё число не трогаем
   const line = content.match(/once\('epicTime1005', (\(\) => \{[^\n]*?\})\);/)[1];
   for (const [was, want] of [[30, 0], [45, 45], [10, 10], [undefined, undefined]]) {

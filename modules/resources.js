@@ -110,15 +110,7 @@ function longFightMp(ctx, mp, hp) {
   return { cheap: new Set(cheap.map(x => x.n)), free, capSoon: mp.cur + env.MP_REGEN * 6 >= mp.max, costOf: n => all.find(x => x.n === n)?.mp || env.skillMp(n), Tr };
 }
 
-async function rest(toPct, why) {   // (не используется в режиме РБ: вместо простоя — фарм мобов)
-  while (env.on && env.tabOwner) {
-    const me = meHp();
-    if (!me || me.pct >= toPct) return true;
-    env.setStatus(`${why}: HP ${me.pct | 0}% → ${toPct}%`);
-    await env.sleep(2000);
-  }
-  return false;
-}
+// 20.13 (ревизия 17.10, шаг 7, services/CQ-1): удалён rest() — простой до HP без предела по времени нигде не вызывался
 
 // 7.2.1 (лог 10.10 21:07–21:08): оружие сменилось C → B (Sprite's Staff), бот купил 3000 B-зарядов, а на панели остались C-заряды
 // (то же имя «Благословенний заряд духу», ×3886) — игра их не включает, бот жал слот каждые 5 с впустую; игрок переставил руками.
@@ -221,6 +213,6 @@ async function keepShots() {
   if (await env.waitFor(() => env.shotsOn(b), 2000, 100)) env.setStatus('Соски включены');
   else console.info(env.TAG, 'соски не включились');
 }
- return { bar, meHp, meMp, potWatch, potInventory, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, rest, keepShots, shotGradeOf, shotSlotSwap, shotSlotAdd };
+ return { bar, meHp, meMp, potWatch, potInventory, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, keepShots, shotGradeOf, shotSlotSwap, shotSlotAdd };
  };
 })(globalThis);

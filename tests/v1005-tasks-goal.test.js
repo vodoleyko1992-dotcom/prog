@@ -1,9 +1,10 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.5 (лог 12.10 01:29:58–01:30:25, игрок: «почему в режиме „только задачи“ автофармит мобов?»): без режима мобов бьём только на точке
 // цели фарма ресурса/рецепта; на чужой точке (Окрестности, Vampire Soldier 71) — ждём перелёта; журнал говорит, что фармим цель и как снять
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const content = read('content.js'), mobfarm = read('modules/mobfarm.js'), html = read('popup.html');
+const content = (read('defaults.js') + '\n' + read('content.js')), mobfarm = read('modules/mobfarm.js'), html = read('popup.html');
 // 1. tasksGoalHere: цель есть и зона совпадает
 const src = mobfarm.match(/function tasksGoalHere\(\) \{[^\n]+\}/)[0];
 const here = (lg, zone) => vm.runInNewContext(`(env => { ${src}; return tasksGoalHere(); })`, {})({ lootGoal: () => lg, rt: { zone } });

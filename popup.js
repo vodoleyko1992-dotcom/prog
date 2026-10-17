@@ -215,20 +215,9 @@ NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbSpikeRhythm', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
-const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, rbRespH: 8, rbTimerAll: false, sealAuto: false, sealMin: 1, farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, debuffMinActs: 10, petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200, autoMagister: true, magisterEvery: 1, debuffAuto: true, debuffMode: 'auto', nDebuff: '', epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, fightMode: 'dps', combatProfile: 'auto', tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, rbPotAt: 75, rbPotTo: 80, rbValueTour: false, rbBandAuto: true, rbTurnPrice: true, rbSpikeRhythm: true, rbCharge: true, rbChipRetreat: false, rbProbe: true, rbChipMaxAttempts: 3, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, catMode: false, catDungeon: 'auto', recipeRes: '', recipeNeed: 0, recipeSpoil: false, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false, dock: true, campaign: false, autoRevive: true, campaignEvery: 25, autoRoles: true, weaponClassEquip: true, weaponManual: false, nWeaponMain: '', rbMode: false, rbMaxAbove: 15, rbMaxKillMin: 20, rbRetreatHp: 20, rbRestHp: 95, autoSnap: true,
-              "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
-              enchantMode: false, enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
-              autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, rec: true, questStop: false, deepEvery: 30,
-              priority: '[квест]\n[чемп]\n[все]', champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд',
-              lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, champHpMult: 1.5, reactMin: 150, reactMax: 450,
-              stopHp: 25, skillMpMin: 35, warlordAggro: true, mpPotAt: 70, hpPotAt: 50, stunEvery: 15, buffSec: 118,
-              nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
-              nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
-              nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
-              fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
-              // 20.13 (ревизия 17.10, шаг 5, defaults/D11/D16): те же скрытые настройки, что в DEF_CFG content.js
-              rbHuntMode: false, mageMpPct: 25, mageEcoPct: 30, rbVampHp: 60, rbDeathPenalty: 0, magisterSpReserve: 0, fishRodBuy: true, fishAutoSetup: true, rbOrder: 'up', mageProbe: true, fighterMpPct: 25,
-              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 8434, dailyKillLimit: 8434, limitRanges: { dailyKillLimit: { min: 8434, max: 9119 }, dailyFishLimit: { min: 8434, max: 9119 } }, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания меню — та же таблица, что у движка (defaults.js, подключён в popup.html
+// перед popup.js). Прежняя ручная копия совпадала по значениям; лишние для меню 7 ключей меню не читает.
+const DEF = L2Defaults.CFG;
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
@@ -262,8 +251,20 @@ if (DOCKED) {
 if (!DOCKED && /Android/i.test(navigator.userAgent || '')) chrome.tabs?.getCurrent?.()?.then(t => { if (t) document.documentElement.classList.add('docked', 'tabbed'); }).catch(() => {});
 
 let formChar = null; // герой, чьи значения сейчас реально показаны в общей форме
+// 20.13 (ревизия 17.10, шаг 7, аудит core-a/L1): вкладка игры пишет частый статус в маленький ключ live@Ник ({s, t, char}),
+// а rt.status — не чаще раза в минуту. Свежий живой статус этого героя заменяет rt.status в показе; нет ключа/чужой герой — rt.status.
+const isLiveKey = k => /^live@/.test(k);
+async function liveStatusInto(rt) {
+  if (!rt?.char) return rt;
+  try {
+    const k = 'live@' + rt.char, live = (await chrome.storage.local.get(k))?.[k];
+    if (live && live.char === rt.char && typeof live.s === 'string' && live.s) rt.status = live.s;
+  } catch (e) {}
+  return rt;
+}
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
+  await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
     // Черновик относится к герою, а не к DOM: после переключения профилей чужое значение не остаётся в поле.
@@ -1147,14 +1148,6 @@ function renderEff(rt) {
     + (loot.length ? `\n🎒 За сессию: ${loot.map(([k, v]) => `${k} ×${fmt(v)}`).join(', ')}` : '') + valueLine;
 }
 
-// темп: EXP в час по замерам «цепочка / карта» (взвешено по числу боёв)
-function expHour(rt) {
-  const E = rt.eff || {}, parts = ['chain', 'map'].map(k => E[k]).filter(x => x?.n && x.rate);
-  if (!parts.length) return '';
-  const n = parts.reduce((a, x) => a + x.n, 0), perMin = parts.reduce((a, x) => a + x.rate * x.n, 0) / n;
-  const h = perMin * 60;
-  return ` · ≈${h >= 1e6 ? (h / 1e6).toFixed(1).replace('.', ',') + ' млн' : fmt(Math.round(h / 1000)) + ' тыс.'} EXP/ч`;
-}
 // надёжность: сбои и перезагрузки сторожем за последние 20 мин (строка видна, только если что-то было)
 function healthLine(rt, wdog) {
   const now = Date.now(), e = (rt.errs || []).filter(t => now - t < 600000).length, w = (wdog || []).filter(t => now - t < 1200000).length;
@@ -1310,7 +1303,7 @@ chrome.storage.local.get('auth').then(({ auth }) => {
 $('authSave').onclick = async () => {
   const login = $('authLogin').value.trim(), pass = $('authPass').value;
   const { auth = {} } = await chrome.storage.local.get('auth');
-  await chrome.storage.local.set({ auth: { login, pass: pass || auth.pass || '' } });
+  await chrome.storage.local.set({ auth: { login, pass: pass || auth.pass || '', t: Date.now() } });   // 20.13 (шаг 7, core-a/M7): t — новый пароль снимает паузу автовхода
   $('authPass').value = ''; $('authPass').placeholder = '•••••• (сохранён)';
   $('authNote').textContent = '✅ Сохранено. ' + ($('authNote').dataset.base || '');
 };
@@ -2425,10 +2418,10 @@ $('recDom').onclick = async () => {
   } catch { toast('⚠ Откройте вкладку l2wap.com'); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
+const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
-  const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k)));
+  const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память
   const rt = data.rt || {};
   download(`l2bot-memory-${rt.char || 'hero'}-${stamp()}.json`, JSON.stringify({ l2bot: 1, v: chrome.runtime.getManifest().version, t: Date.now(), data }), 'application/json');
   $('memNote').textContent = `✅ Сохранено: РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}, зон ${Object.keys(rt.zoneStat || {}).length}. Файл — в «Загрузках».`;
@@ -2592,7 +2585,7 @@ $('memFile').onchange = async e => {
   try {
     const j = JSON.parse(await f.text());
     if (!j?.l2bot || !j.data?.cfg) throw new Error('это не файл памяти L2wap Bot');
-    const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k)));
+    const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));
     { const all0 = await chrome.storage.local.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
       for (const [k, v] of Object.entries(all0)) if ((k === 'rt' || /^rt@/.test(k)) && v && typeof v === 'object') byChar[v.char || k.slice(3)] = v;
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
@@ -2607,7 +2600,7 @@ confirmClick('recClear', async () => {                // удалить весь
   const db = await idb();
   const tx = db.transaction(['log', 'snaps', 'shots'], 'readwrite');   // v5.6: и скриншоты
   tx.objectStore('log').clear(); tx.objectStore('snaps').clear(); tx.objectStore('shots').clear();
-  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, exLogKey: null, exSnapT: 0 }); load(); };
+  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
@@ -2672,7 +2665,7 @@ function loadSoon() {
 }
 chrome.storage.onChanged.addListener(ch => {
   if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
-  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog) return loadSoon();
+  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon();   // 20.13 (шаг 7): и живой статус live@Ник
   // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
   if (ch.reccount || ch.snapcount) {
     if (ch.reccount) recN = ch.reccount.newValue || 0;

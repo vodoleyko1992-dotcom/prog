@@ -28,15 +28,16 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
   // 2. остальные ветки: обычная банка, лечение скиллом, банка MP, призыв/перепризыв кота, баффы (аварийный, кота, обычные), дебафф
   const checks = [
     [/const r = await act\(hpPot, [^\n]+\);\n\s+if \(r === 'lock'\) \{ lastHpPot = prevPot; ctx\.rb\?\.potT\?\.pop\(\); \}/, 'potion band'],
-    [/if \(hs\) \{ ctx\.block\['heal:' \+ hs\.title\] = Date\.now\(\) \+ 2500; const r = await act\(hs, [^;]+\); if \(r === 'lock'\) ctx\.block\['heal:' \+ hs\.title\] = 0; continue; \}/, 'heal skill'],
-    [/const prevMp = lastMpPot; lastMpPot = Date\.now\(\); if \(await act\(mpPot, [^\n]+?\) === 'lock'\) lastMpPot = prevMp; continue;/, 'MP potion'],
+    [/if \(hs\) \{ ctx\.block\['heal:' \+ hs\.title\] = Date\.now\(\) \+ 2500; const r = await act\(hs, [^;]+\); if \(r === 'lock'\) ctx\.block\['heal:' \+ hs\.title\] = 0; (?:continue|return AGAIN); \}/, 'heal skill'],
+    [/const prevMp = lastMpPot; lastMpPot = Date\.now\(\); if \(await act\(mpPot, [^\n]+?\) === 'lock'\) lastMpPot = prevMp; (?:continue|return AGAIN);/, 'MP potion'],
     [/else await env\.setRt\(\{ petSummonT: sr === 'lock' \? 0 : Date\.now\(\) - 13000 \}\);/, 'pet summon'],
-    [/if \(pr === 'lock'\) \{ ctx\.block\['petheal'\] = 0; continue; \}/, 'pet heal / resummon'],
+    [/if \(pr === 'lock'\) \{ ctx\.block\['petheal'\] = 0; (?:continue|return AGAIN); \}/, 'pet heal / resummon'],
     [/if \(r === 'lock'\) ctx\.block\['buff:' \+ low\[0\]\] = 0;/, 'emergency buff'],
     [/if \(r === 'lock'\) ctx\.block\['petbuff:' \+ pb\.n\] = 0;/, 'pet buff'],
     [/else if \(r === 'lock'\) ctx\.block\['buff:' \+ bn\] = 0;/, 'buff'],
-    [/if \(dr === 'lock'\) continue;/, 'debuff: no 0.5 s pause on a lost click'],
+    [/if \(dr === 'lock'\) (?:continue|return AGAIN);/, 'debuff: no 0.5 s pause on a lost click'],
   ];
+  // 20.13 (ревизия 17.10, шаг 7): бой разрезан на шаги — «повтор сразу» внутри шага это return AGAIN (новый круг, как прежний continue)
   for (const [re, what] of checks) assert.match(combat, re, what);
   // 10.0.15: вампирик использует общий server-CD-aware backoff вместо прежних1500ms.
   const retry = { ctx: { block: { 'drain:VT': 9999 } }, b: { title: 'VT' }, env: { actNet: () => null, slotAction: () => null, skKey: () => 'vt' }, overlayReadySeen: new WeakSet(), lostUntil: new Map(), Date: { now: () => 5000 } };

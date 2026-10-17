@@ -97,8 +97,9 @@ for (const lost of ['stop', 'lease']) for (const stage of ['mammon', 'story', 't
   box.sleep = async () => {};
   // Настоящий порядок диспетчера: mmStep может ждать gearDb/setRt и вернуться false; затем шёл клановый POST.
   box.L2EngineCore = require('../engine-core.js'); box.cfg = {};
-  const src = read('content.js'), start = src.indexOf("      if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep())"), end = src.indexOf('      if (epicOn())', start);
+  const src = read('content.js'), start = src.indexOf("\n  if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep())"), end = src.indexOf('\n  if (epicOn())', start);
   assert.ok(start >= 0 && end > start);
+  vm.runInContext(src.match(/^const loopStale = .*$/m)[0], box);   // 20.13 (шаг 7): участок стал шагом loopSideJobs(), охрана — общий помощник
   vm.runInContext('this.runDispatch=async()=>{for(let i=0;i<1;i++){\n' + src.slice(start, end) + '\n}};', box);
   await box.runDispatch();
   assert.equal(requests.length, 0, 'остановленный диспетчер вызвал POST');

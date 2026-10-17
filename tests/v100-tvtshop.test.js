@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0 (игрок 12.10: «добавь все, монеток шоу»): магазин TvT — Shil Coins по сумке, каталог из ответа игры, цель «копить на вещь», покупка по галочке
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -58,11 +59,11 @@ const mk = ({ rt = {}, cfg = {}, inv = {}, pn = '/map.html', rows = [], bal = 0,
     const { env, T, fired } = mk({ inv: { 920030: 300 }, pn: '/tvt-shop.html', rows: [row], bal: 100 });
     env.rt.tsJob = { kind: 'buy', it: T.itemOf(920033), t: Date.now() }; await T.shopStep(); assert.deepEqual(fired, []); assert.match(env.rt.tsLog[0].why, /на странице 100 Shil, нужно 260/); }
   // 5. ядро и меню
-  const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), manifest = read('manifest.json'), mobfarm = read('modules/mobfarm.js');
+  const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), manifest = read('manifest.json'), mobfarm = read('modules/mobfarm.js');
   assert.match(manifest, /"modules\/tvtshop\.js"/); assert.match(html, /<script src="modules\/tvtshop\.js"><\/script>/);
   assert.match(content, /tsGoalItem: 920033, tsBuy: false,/); assert.match(popup, /tsGoalItem: 920033, tsBuy: false,/);   // игрок 12.10: цель Тату Душі, автопокупка выкл
   assert.match(content, /once\('tsGoal100', \(\) => \{ if \(!\+C\('tsGoalItem'\)\) cf\.tsGoalItem = 920033; \}\);/); assert.match(popup, /rt\.tsReady \? ' ✔ готово к покупке'/);
-  assert.match(content, /if \(!Array\.isArray\(cfg\.autoTasks\) && await L2V7Modules\.tvtshop\.shopStep\(\)\) \{ await sleep\(200\); continue; \}/);
+  assert.match(content, /if \(!Array\.isArray\(cfg\.autoTasks\) && await L2V7Modules\.tvtshop\.shopStep\(\)\) \{ await sleep\(200\); return true; \}/);
   assert.match(content, /path === '\/game\/tvt\/shop\/catalog' && tabOwner && Array\.isArray\(d\.res\?\.categories\)\) try \{ L2V7Modules\.tvtshop\.shopNote\(d\.res\); \}/);
   assert.match(content, /if \(tabOwner\) try \{ L2V7Modules\.tvtshop\.shilNote\(\); \} catch \(er\) \{\}/);
   assert.match(mobfarm, /env\.tsChainWant\?\.\(\)/);

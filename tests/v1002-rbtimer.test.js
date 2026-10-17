@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.7: после rbrun.js в manifest идёт modules/subclass.js (заготовка под сабы) — регулярка ниже допускает его
 // 10.0.2 «⏱ Таймеры боссов» (modules/rbtimer.js): игра у РБ отдаёт только isAlive (у эпиков ещё respawnHours) — время смерти бот
 // узнаёт сам (свой килл точно, чужой — окном между опросами), учит длительность респа, показывает таймеры и будит «Тур РБ»
@@ -105,11 +106,11 @@ const boss = (id, lvl, alive, extra = {}) => ({ spawnId: 'l2dop_rb_' + id, name:
   const tab = T.table(env.rt.rbTimer, NOW, { lo: 50, hi: 80 });
   deq(tab.slice(0, 2).map(t => t.id), ['l2dop_rb_3', 'l2dop_rb_29001'], 'убитые первыми, по времени воскрешения (РБ 8 ч раньше эпика 12 ч)'); assert.ok(tab.every(t => t.e || (t.l >= 50 && t.l <= 80)));
   // 6. подключение: content, hook, raid, combat, меню
-  const c = read('content.js'), raid = read('modules/raid.js');
+  const c = (read('defaults.js') + '\n' + read('content.js')), raid = read('modules/raid.js');
   assert.doesNotMatch(c, /L2V7Modules\.rbtimer\.tick\(\)/); assert.match(c, /raid\|epic\)-bosses\$\/\.test\(path\) && Array\.isArray\(d\.eb\)/);
   assert.match(read('hook.js'), /\(\?:epic\|raid\)-bosses/); assert.match(read('modules/combat.js'), /env\.rbTimerKill\?\.\(ctx\.rb\.id/);
   assert.match(raid, /env\.rbTimer\?\.revivedSince/); assert.match(raid, /env\.rbTimer\?\.domNote\(all\)/); assert.match(raid, /первым воскреснет/);
-  assert.match(read('popup.html'), /id="rbTimerTable"/); assert.match(read('popup.html'), /modules\/rbtimer\.js/); assert.match(read('popup.js'), /function renderRbTimer/); assert.match(read('popup.js'), /RT\.merge\(rt\.rbTimer/); assert.match(read('popup.html'), /id="rbtFile"/);
+  assert.match(read('popup.html'), /id="rbTimerTable"/); assert.match(read('popup.html'), /modules\/rbtimer\.js/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /function renderRbTimer/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /RT\.merge\(rt\.rbTimer/); assert.match(read('popup.html'), /id="rbtFile"/);
   // 14.10: новая фабрика заточки также стоит перед ядром; таймер обязан загрузиться до content, без требования соседства.
   const scripts = JSON.parse(read('manifest.json')).content_scripts.find(c => c.js.includes('content.js')).js;
   assert.ok(scripts.indexOf('modules/rbtimer.js') >= 0 && scripts.indexOf('modules/rbtimer.js') < scripts.indexOf('content.js'));

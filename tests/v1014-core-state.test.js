@@ -18,8 +18,8 @@ test('рейд: pending inventory выполняется перед следую
   const calls = [], rt = { invScan: { step: 'prof', t: Date.now() }, invTourT: Date.now(), rbHunt: { step: 'pick' } };
   const box = { rt, Date, cfg: { weaponScanAuto: true }, autonomyMode: () => 'raid', isBattle: () => false, fishNow: () => false,
     invScanStart: async () => calls.push('start'), invScanStep: async () => calls.push('scan'), rbHuntStep: async () => calls.push('raid'), sleep: async () => {}, setRt: async p => Object.assign(rt, p) };
-  const code = slice(core, '      // 8.0.3 (разбор логов 11.10): в туре оружие', '      if (cfg.weaponScanAuto !== false && !rt.weaponsT');
-  await vm.runInNewContext('(async()=>{for(let once=0;once<1;once++){' + code + '}})()', box); assert.deepEqual(calls, ['scan']);
+  const code = slice(core, '\n  // 8.0.3 (разбор логов 11.10): в туре оружие', '\n  if (cfg.weaponScanAuto !== false && !rt.weaponsT');
+  await vm.runInNewContext('(async()=>{for(let once=0;once<1;once++){' + code + '\n}})()', box); assert.deepEqual(calls, ['scan']);
 });
 test('TvT: изменение alive сохраняется в том же событии и переживает reload', () => {
   const box = { path: '/game/tvt', d: { res: { eventId: 'event1', phase: 'ACTIVE', isRegistered: true, selfCombat: { alive: true } } }, TVT: null, rt: {}, Date, tvtMs: () => 0, setRt: p => Object.assign(box.rt, p) };

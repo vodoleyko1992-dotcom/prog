@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.2 (игрок 12.10: «приписывать последним письмом при отправке ресурсов — письмо, какие ресурсы нам нужны на крафт и сколько, чтобы игрок
 // знал что делать и что возвращать»): после партии сырья — письмо крафтеру на /mail-compose.html (что отправил, что скрафтить, что вернуть)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -90,7 +91,7 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
       rt: { mmCraft: { to: 'Skye', at: { 1868: 700, 1869: 350, 1876: 70 }, t0: now - 1000, ret: { 5550: 14 } } } });
     await M.mailPoll(); assert.ok(!recs.some(x => /не то/.test(x))); assert.equal(env.rt.mmCraft, null, 'plates write off all the raw'); }
   // меню и настройки
-  const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
+  const html = read('popup.html'), pj = (read('defaults.js') + '\n' + read('popup.js')), c = (read('defaults.js') + '\n' + read('content.js'));
   assert.ok(!html.includes('id="mmCraftNote"')); assert.doesNotMatch(pj, /'mmCraftNote'/); // 20.7: управление отправкой удалено; ниже проверяется совместимость старых профилей.
   assert.match(pj, /mmCraftNote: true/); assert.match(c, /mmCraftNote: true/);
   console.log('PASS: 10.0.2 crafter letter — after a batch the crafter gets a letter (what was sent, what to craft and how many, what to return to whom), split at 1000 chars, no double letter, partial batch carried over, menu toggle');

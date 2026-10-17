@@ -71,7 +71,9 @@ for(const interrupted of ['mammon','story','shop','clan','daily','trip','warlock
  Object.assign(c,{autonomyMode:()=>c.cfg.enchantMode?'enchant':'farm',isBattle:()=>false,sleep:async()=>{},farmGuideTick(){},enchantDispatch:async()=>false,epicOn:()=>{calls.push('fallback');return false},warlockTripStep:step('trip'),
   L2V7Modules:{mammon:{mmTick:async()=>{},mmStep:step('mammon')},subclass:{tick:async()=>{}},story:{storyTick:async()=>{},storyStep:step('story')},
   tvtshop:{shopStep:step('shop')},dailies:{tick:async()=>{},clanStep:step('clan'),dailyStep:step('daily')},warlock:{step:step('warlock')}}});
- const start=core.indexOf("      if (L2EngineCore.taskAllowed(cfg,'mammon')) L2V7Modules.mammon.mmTick().catch"),end=core.indexOf('\n',core.indexOf('      if (epicOn())',start));assert.ok(start>0&&end>start);
- await vm.runInContext('(async()=>{while(on){if(autonomyMode()==="enchant")break;'+core.slice(start,end)+'\nbreak;}})()',c);
+ // 20.13 (ревизия 17.10, шаг 7): участок main стал шагом loopSideJobs() — берём настоящие шаги цикла и зовём этот шаг
+ const start=core.indexOf('async function main() {'),end=core.indexOf('// Магистр: актуальный',start);assert.ok(start>0&&end>start&&core.slice(start,end).includes('async function loopSideJobs()'));
+ vm.runInContext(core.slice(start,end),c);
+ await vm.runInContext('(async()=>{if(autonomyMode()!=="enchant")await loopSideJobs();})()',c);
  assert.equal(calls.at(-1),interrupted,JSON.stringify(calls));
 });

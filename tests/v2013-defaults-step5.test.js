@@ -7,8 +7,10 @@ const objAt = (src, mark) => {
   for (; j < src.length; j++) { if (src[j] === '{') d++; else if (src[j] === '}') { d--; if (!d) break; } }
   return vm.runInNewContext('(' + src.slice(i, j + 1) + ')', { DAILY_FISH_DEF: 1, DAILY_KILL_DEF: 1, DAILY_RANGES_DEF: () => ({}) });
 };
-const content = read('content.js'), popup = read('popup.js');
-const DEF_CFG = objAt(content, 'const DEF_CFG = '), DEF = objAt(popup, 'const DEF = ');
+const content = read('defaults.js') + '\n' + read('content.js'), popup = read('popup.js');
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): DEF_CFG движка и DEF меню — одна таблица defaults.js.
+assert.match(content, /const DEF_CFG = L2Defaults\.CFG;/); assert.match(popup, /const DEF = L2Defaults\.CFG;/);
+const DEF_CFG = objAt(content, 'const DEF_CFG = {'), DEF = require(path.join(root, 'defaults.js')).CFG;
 
 test('D11: скрытые настройки есть в DEF_CFG и DEF меню с прежними запасными значениями', () => {
   const want = { rbHuntMode: false, mageMpPct: 25, mageEcoPct: 30, rbVampHp: 60, rbDeathPenalty: 0, magisterSpReserve: 0, fishRodBuy: true, fishAutoSetup: true, rbOrder: 'up', mageProbe: true, fighterMpPct: 25 };

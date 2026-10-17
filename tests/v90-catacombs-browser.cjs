@@ -49,6 +49,7 @@ async function gameJs(f) { try { const r = await fetch('https://l2wap.com/' + f)
     const M = globalThis.L2V7Factories.dungeons(env);
     await M.catHunt('catacomb_of_the_witch');
     await sleep(300);
+    document.documentElement.dataset.l2botOn = '1';   // 20.13 (шаг 7, core-b/F11): окно глушится, пока бот включён (метку ставит content.js)
     alert('Тест окна'); await sleep(200);
     return { n: N?.mobs?.length, id: N?.id, fired, nav: window.__nav, catLv: rt.catLv, page: document.getElementById('dungeon-mob-page-ind').textContent, alert: A, logs };
   }, read('modules/dungeons.js'));

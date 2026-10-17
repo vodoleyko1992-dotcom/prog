@@ -44,7 +44,7 @@ test('смена режима при очистке устаревшего rbGo 
   isBattle:()=>false,isTeleport:()=>false,huntOn:()=>false,farmRbOn:()=>false,sleep:async()=>{},rbGoStep:async()=>{calls.push('rbGo')},zoneCatalogScan:async()=>{calls.push('zoneScan')}};
  c.autonomyMode=()=>c.cfg.enchantMode?'enchant':'farm';
  c.setRt=async patch=>{calls.push('clear');Object.assign(c.rt,patch);c.cfg.enchantMode=true;return {ok:true}};
- const start=core.indexOf('      if (rt.rbGo && !isBattle()) {'),end=core.indexOf('      if (rt.zoneGo && !isBattle()) {',start);assert.ok(start>0&&end>start);
+ const start=core.indexOf('\n  if (rt.rbGo && !isBattle()) {'),end=core.indexOf('\n  if (rt.zoneGo && !isBattle()) {',start);assert.ok(start>0&&end>start);
  await vm.runInNewContext('(async()=>{while(on){if(autonomyMode()==="enchant")break;'+core.slice(start,end)+'\nbreak;}})()',c);
  assert.equal(c.rt.rbGo,null);assert.equal(c.cfg.enchantMode,true);assert.deepEqual(calls,['clear']);assert.equal(c.location.href,'');
 });

@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.2.5 (игрок 12.10: «полностью разрешаю функцию прокачки ЛВЛ вещей, выбранных в настройках у мамона, не смотря на цену в колах»):
 // всё на следующий уровень вещи-цели собрано → поход к кузнецу → «Покращити до Lv.N» на его странице (одна вещь, один уровень, до цели)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -102,10 +103,10 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
     env.ITEMS = {}; M.goalNote(); env.ITEMS = { 1458: { n: 'Crystal: D-Grade' } }; M.goalNote();
     assert.equal(recs.length, n, 'name flip does not spam the journal');
     inv[1458] = 50; M.goalNote(); assert.equal(recs.length, n + 1, 'a real change is logged'); }
-  const cj = read('content.js');
+  const cj = (read('defaults.js') + '\n' + read('content.js'));
   assert.match(cj, /path === '\/game\/item-transfer\/claim' && d\.status === 200\) \{? ?L2V7Modules\.mammon\.mailNote\(\)/);
   // 7. меню и настройки: галочка, по умолчанию ВКЛ
-  const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
+  const html = read('popup.html'), pj = (read('defaults.js') + '\n' + read('popup.js')), c = (read('defaults.js') + '\n' + read('content.js'));
   assert.ok(html.includes('id="mmUpgrade"')); assert.match(pj, /'mmSmithAuto', 'mmUpgrade'/); assert.match(pj, /mmSmithAuto: true, mmUpgrade: true/); assert.match(c, /mmSmithAuto: true, mmUpgrade: true/);
   const hk = read('hook.js');
   assert.match(hk, /location\.pathname === '\/mammon-blacksmith\.html'[\s\S]{0,200}window\.confirm = function/, 'confirm() only on the smith page');

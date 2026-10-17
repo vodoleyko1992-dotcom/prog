@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.2.5 (игрок 12.10: «ник кланового крафтера Skye — отправлять ему ресурсы для очередного / всех повышений вещи у Маммона, он вернёт
 // улучшенные ресурсы почтой; учитывать ресурсы, полученные по почте, и проверять, что в рюкзаке по факту»)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -133,7 +134,7 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     env.cfg.mmCraftScope = 'next'; same(M.craftPlan().snd.map(x => [x.id, x.q]).sort(), [[1865, 15], [1869, 15]], 'next level only'); }
   assert.ok(!read('popup.html').includes('id="mmCraftScope"'), '20.7: выбор объёма удалённой отправки убран');
   // 9. меню, настройки, ядро
-  const html = read('popup.html'), pj = read('popup.js'), c = read('content.js');
+  const html = read('popup.html'), pj = (read('defaults.js') + '\n' + read('popup.js')), c = (read('defaults.js') + '\n' + read('content.js'));
   for (const id of ['mmMailClaim', 'mmCraftBox', 'mmCraftForget']) assert.ok(html.includes(`id="${id}"`), id);
   // 20.7: поля передачи удалены; старые ключи профилей остаются совместимыми.
   assert.doesNotMatch(pj, /const TXT {2}= \[[^\]]*'mmCrafter'/); assert.doesNotMatch(pj, /const BOOL = \[[^\]]*'mmCraftSend'/);

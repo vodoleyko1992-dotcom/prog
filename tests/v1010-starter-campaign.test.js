@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.10 (лог 13.10 18:17–18:58, alt1 Human Fighter 12→17): сюжетный квест новичка бот ведёт сам (кампания авто),
 // «Взять квест» жмётся со страницы главы, чемпион не метит вид «не по зубам»
 const assert = require('node:assert/strict');
@@ -84,7 +85,7 @@ const saga = { questId: 'starter_story_first_steps', titleRu: 'Путь нови
     assert.equal(location.href, '/starter-story-quest.html');
   }
   // 5. проводка: сеть → sagaNote, геттер heroLvl у quests, campEnabled в ядре и mobfarm, DEF_CFG/меню/базовый профиль
-  const content = src('content.js'), mobfarm = src('modules/mobfarm.js'), combat = src('modules/combat.js'), html = src('popup.html'), popup = src('popup.js');
+  const content = (src('defaults.js') + '\n' + src('content.js')), mobfarm = src('modules/mobfarm.js'), combat = src('modules/combat.js'), html = src('popup.html'), popup = (src('defaults.js') + '\n' + src('popup.js'));
   assert.match(content, /starter-saga[^\n]*L2V7Modules\.quests\.sagaNote\(d\.res\.quest\)/);
   assert.match(content, /L2V7Modules\.quests = L2V7Factories\.quests\(\{[^\n]*get heroLvl\(\)/);
   assert.match(content, /campAuto: true/);

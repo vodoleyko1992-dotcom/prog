@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 7.2.3 (лог 10.10 23:19–23:30): B-зарядов 310 → 139 при минимуме 500, а закупки не было; игрок: «минимум сосок 1000,
 // докупать до 5000», «не срываться посреди РБ — покупать после убийства РБ или купить всё и бить дальше того же РБ»,
 // «окно постоянно скачет, то больше, то меньше»
@@ -18,7 +19,7 @@ assert.equal(JSON.stringify(inv.at(-2)), "[3950,139]");
 assert.equal(invOf({ ok: true }), undefined);
 assert.match(hook, /sp: spawns\(o\), inv: invOf\(o\), len: t\.length/);
 assert.match(hook, /req, res, sp: spawns\(o\), inv: invOf\(o\), len,/);
-const content = read('content.js');
+const content = (read('defaults.js') + '\n' + read('content.js'));
 assert.match(content, /const m = invNote\(d\.inv\); if \(m\) \{ INV_NET = \{ m, char:rt.char, t: Date\.now\(\) \}; try \{ sessionStorage\.setItem\('l2bot-inv'/);
 const invNote = vm.runInNewContext(`(${content.match(/const invNote = (inv => \{.*?return m; \});/)[1]})`);
 assert.deepEqual(invNote(inv)[3950], 139); assert.equal(Object.keys(invNote([])).length, 0); // 15.10: полный пустой snapshot обнуляет остатки
@@ -64,7 +65,7 @@ const R = load('modules/raid.js').L2V7Factories.raid(renv);
   // 4. лимит 1000/5000 везде: меню, ядро, базовый профиль, миграция у старых установок
   assert.match(content, /shopShots: '1000\/5000'/);
   assert.match(content, /once\('shots723', \(\) => \{ cf\.shopShots = '1000\/5000'; \}\);/);
-  assert.match(read('popup.js'), /shopShots: '1000\/5000'/);
+  assert.match((read('defaults.js') + '\n' + read('popup.js')), /shopShots: '1000\/5000'/);
   assert.match(read('popup.html'), /id="shopShots" class="sm" placeholder="1000\/5000"/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.shopShots, '1000/5000');
   assert.doesNotMatch(read('modules/economy.js'), /500\/3000/);

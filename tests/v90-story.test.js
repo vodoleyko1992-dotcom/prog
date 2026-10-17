@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.0 (новости игры 11.10: сабклассы и квест Noblesse; игрок: «делай»): прогресс квестов сабкласса и Noblesse из ответов игры, сдача готовой
 // части у NPC (телепорт за адену в пределах лимита), РБ квеста — первыми в туре, свой Noblesse Blessing не покупается за FA, смена класса
 // уносит замеры старого класса в rt.classStash
@@ -93,12 +94,12 @@ const active = (o = {}) => ({ ...RAW_N, part: 1, active: true, subclassLevel: 52
   // 6. связка с ядром: модуль подключён до content.js, геттеры, ответы игры, шаг цикла, ★ не снимаются, FA-Noblesse, РБ квеста в туре
   { const mf = JSON.parse(read('manifest.json')), js = mf.content_scripts.find(s => s.js.includes('content.js')).js;
     assert.ok(js.indexOf('modules/story.js') >= 0 && js.indexOf('modules/story.js') < js.indexOf('content.js'));
-    const c = read('content.js'), b = read('modules/buffs.js'), rd = read('modules/raid.js');
+    const c = (read('defaults.js') + '\n' + read('content.js')), b = read('modules/buffs.js'), rd = read('modules/raid.js');
     assert.match(c, /L2V7Modules\.story = L2V7Factories\.story\(/);
     assert.match(c, /story-quests\\\/\(noblesse\|subclass\)/); assert.match(c, /story-quests\\\/\[\\w-\]\+\(\?:\\\/\\w\+\)\?\)\$\/\.test\(path\)\) L2V7Modules\.story\.charNote\(ch\)/, 'own hero only (path-limited)');
     assert.match(c, /L2V7Modules\.story\.storyTick\(\)[\s\S]{0,200}L2V7Modules\.story\.storyStep\(\)/);
     assert.match(c, /rt\.story\?\.noblesse, open = \[\.\.\.\(rt\.profQuest\?\.open/);
-    assert.match(c, /storyTurnIn: true, storyTpMax: 100000/); assert.match(read('popup.js'), /storyTurnIn: true, storyTpMax: 100000/);
+    assert.match(c, /storyTurnIn: true, storyTpMax: 100000/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /storyTurnIn: true, storyTpMax: 100000/);
     assert.match(read('base-profile.json'), /"storyTurnIn":true,"storyTpMax":100000/);
     assert.match(b, /if \(env\.rt\.story\?\.nobleOwn\) ids = ids\.filter\(id => id !== 1323\)/);
     assert.match(b, /env\.rt\.story\?\.nobleOwn && env\.slotsBy\('noblesse blessing'\)\[0\]/);

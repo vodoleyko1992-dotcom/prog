@@ -1,9 +1,10 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 20.12 (ревизия 17.10, аудит §3, UI-1..UI-15): меню сведено из 12 разделов в 6, тонкая настройка — в блоке «Дополнительно»
 // каждого раздела; старые ссылки #tab-<старый> открывают нужный подраздел через TAB_GROUP; ни одна настройка не потерялась.
 const assert = require('node:assert/strict'), fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const html = read('popup.html'), js = read('popup.js'), ui = read('ui-v7.js'), content = read('content.js');
+const html = read('popup.html'), js = (read('defaults.js') + '\n' + read('popup.js')), ui = read('ui-v7.js'), content = (read('defaults.js') + '\n' + read('content.js'));
 const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает

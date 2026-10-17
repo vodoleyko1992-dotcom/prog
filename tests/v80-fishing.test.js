@@ -1,10 +1,11 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 8.0 (аудит рыбалки, лог 10.10 18:17–19:45, 560 рыб/ч при потолке ≈770–820): наживка по наличию и заряды всегда (A1),
 // без кругов fishing ↔ char и заточка из строки снаряжения (A2), «не клюнула» только после ответа на заброс (A3), заряды при ≤ 20 (A5),
 // меньше накладных на заброс (B1), быстрый обмен (B3), пакет времени 6 ч (B4), одна запись памяти на исход заброса (B5), откат до 1,05 с (C1)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const code = read('modules/fishing.js'), content = read('content.js'), popup = read('popup.js');
+const code = read('modules/fishing.js'), content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js'));
 
 // ---------- фейковая страница рыбалки с управляемыми часами ----------
 const clock = { t: 1800000000000 };
@@ -212,7 +213,7 @@ function world(o = {}) {
   // 17.10: false/ошибка commit теперь также запрещает переход; прежнее ожидание без проверки было недостаточно.
   assert.ok((code.match(/if \(!await commit\(\) \|\| !valid\(\)\) return; location\.href = /g) || []).length >= 3, 'модуль: переходы только после подтверждённой записи; недоступный магазин сохраняет услугу');
   // ---------- B1: главный цикл после шага рыбалки — 30 мс вместо 200 ----------
-  assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); continue; \}/);
+  assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); return true; \}/);
   assert.match(code, /const lines = rej \? \[\] : \(await env\.sleep\(20\), fishNewLines\(before\)\);/);
   // ---------- B3: обмен без постоянных пауз 0,3–0,5 + 0,6–1,0 с на материал ----------
   const ex = code.slice(code.indexOf('async function fishExchange'), code.indexOf('async function fishSvcDone'));

@@ -1,9 +1,10 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.7 (игрок 13.10 03:16, скрин Warlock 67 против Tomb Guard 75: «бот пытается бить моба больше чем на 5 лвл старше»): верхний предел
 // «до героя +» по умолчанию +5 (было 99, у игрока 20); цепочка «Охотиться дальше» подсунула моба выше предела — не бьём, на карту
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const content = read('content.js'), combat = read('modules/combat.js'), popup = read('popup.js');
+const content = (read('defaults.js') + '\n' + read('content.js')), combat = read('modules/combat.js'), popup = (read('defaults.js') + '\n' + read('popup.js'));
 // 1. умолчания и миграция: +5 в ядре и меню; у кого было шире (20, 99) — один раз сводится к +5
 assert.match(content, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5,/, 'core default −5…+5');
 assert.match(popup, /lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5,/, 'menu default −5…+5');

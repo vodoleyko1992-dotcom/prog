@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.12",
-  "description": "L2wap Bot 20.12 — ревизия: бой без зависаний, оплаты, лимит, траты и панель 6 разделов",
+  "version": "20.13",
+  "description": "L2wap Bot 20.13 — ревизия: застревания задач и чистка кода",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -57,6 +57,7 @@
         "https://*.l2wap.com/*"
       ],
       "js": [
+        "defaults.js",
         "skills-il.js",
         "zone-db.js",
         "zone-kpd.js",
@@ -135,5 +136,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.12"
+  "version_name": "20.13"
 }

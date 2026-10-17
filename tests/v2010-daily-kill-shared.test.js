@@ -49,8 +49,9 @@ test('миграция dailyKill2010: старые лимиты складыва
  assert.equal(r.cf.dailyKillLimit,8434);assert.equal(r.cf.dailyFishLimit,undefined);assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyKillLimit:RANGE}));
  r=run({dailyAutoKillLimit:10,dailyCatKillLimit:0,limitRanges:{dailyAutoKillLimit:{min:10,max:20},dailyCatKillLimit:{min:5,max:5},dailyFishLimit:{min:1,max:2}}},{limitRolls:{dailyAutoKillLimit:{value:10},dailyFishLimit:{value:1}}});
  assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyFishLimit:{min:1,max:2},dailyKillLimit:{min:15,max:25}}));assert.equal(JSON.stringify(r.rf.limitRolls),JSON.stringify({dailyFishLimit:{value:1}}));
- const DEF=src.match(/const DAILY_RANGE = \{ min: (\d+), max: (\d+) \}, DAILY_KILL_DEF = DAILY_RANGE\.min, DAILY_FISH_DEF = DAILY_RANGE\.min;/);assert.deepEqual([+DEF[1],+DEF[2]],[8434,9119]);assert.ok(/limitRanges: DAILY_RANGES_DEF\(\)/.test(src));
- assert.ok(/dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF,/.test(src));assert.ok(!/dailyAutoKillLimit: 0/.test(src));
+ const dsrc=read('defaults.js');   // 20.13 (ревизия 17.10, шаг 7): заводские умолчания и диапазон — в defaults.js
+ const DEF=dsrc.match(/const DAILY_RANGE = \{ min: (\d+), max: (\d+) \}, DAILY_KILL_DEF = DAILY_RANGE\.min, DAILY_FISH_DEF = DAILY_RANGE\.min;/);assert.deepEqual([+DEF[1],+DEF[2]],[8434,9119]);assert.ok(/limitRanges: DAILY_RANGES_DEF\(\)/.test(dsrc));
+ assert.ok(/dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF,/.test(dsrc));assert.ok(!/dailyAutoKillLimit: 0/.test(dsrc+src));
 });
 test('меню: один общий лимит мобов, остаток в «Лимитах» и в обзоре задач',()=>{
  const html=read('popup.html'),js=read('popup.js'),section=html.split('id="tab-limits"')[1].split('</section>')[0];   // 20.12: «Лимиты» — подраздел «Обзора» (метка #tab-limits)
