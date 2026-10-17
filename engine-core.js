@@ -194,6 +194,8 @@
     const group = {mmJob:'mammon',storyJob:'quests',dailyFish:'fish',dailyRb:'raid',petBufferTrip:'petbuff',rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish',farmScan:'resources',recipeScan:'resources',rbScan:'raid'}[key];
     if (group) return taskAllowed(c,group);
     if (key === 'tsJob') return false;
+    // 17.10 (лог 15:10, West): перелёт цели «Фарм ресурсов»/рецепта — работа задачи «ресурсы», а не чужой маршрут; иначе «Только задачи» отменял его каждые 4 с.
+    if (key === 'zoneGo' && (rt.zoneGo?.task === 'resources' || rt.zoneGo?.res)) return taskAllowed(c,'resources');
     return !['tasks','fish','enchant'].includes(selectedTask(c,rt));
   }
 
