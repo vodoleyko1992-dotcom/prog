@@ -1283,16 +1283,23 @@ function setStatus(s) {
   draw();
 }
 // Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
-async function automationStop(msg, action = 'stop') {
+// 20.13 (ревизия 17.10, шаг 5, core-b/F3): opt.user — Esc ×2 игрока (фон принимает с любой вкладки игры, как из меню);
+// opt.hard — жёсткий стоп самого бота: фон не отклоняет его из-за нового kick/протухшего замка, без ответа фона — ещё 2 попытки;
+// окончательный отказ — в журнал (раньше молча: здесь «остановлен», а бот работал/запускался снова)
+async function automationStop(msg, action = 'stop', opt = {}) {
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
   automationGeneration++; on = false;
-  const r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick });
+  const send = () => { const p = ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick,
+    ...(opt.user ? { user:true } : {}), ...(opt.hard ? { hard:true } : {}) }); return opt.hard || opt.user ? p.catch(() => null) : p; };
+  let r = await send();
+  for (let i = 0; (opt.hard || opt.user) && !r && i < 2; i++) { await sleep(1000); r = await send(); }
+  if (!r?.ok && (opt.hard || opt.user)) rec('S', 'СТОП', `фон не принял остановку (${r?.reason || 'нет ответа'}): «${String(msg).slice(0, 80)}» — нажмите ⏹ Стоп в меню`);
   if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
   return r;
 }
 // hard = настоящая остановка (Esc ×2, цель рыбалки выполнена, лимит забросов). В режиме рыбалки любая другая
 // «остановка» превращается в паузу с повтором (fishSoft) — рыбалка идёт, пока её не выключат кнопкой (v4.49)
-async function halt(msg, hard) {
+async function halt(msg, hard, user = false) {
   const stamp = automationSnapshot();
   console.warn(TAG, 'СТОП:', msg);
   if (fishNow() && !hard && on) return fishSoft(msg);
@@ -1301,7 +1308,7 @@ async function halt(msg, hard) {
   if (!hard && on && !(await srvUp())) { if (!automationCurrent(stamp)) return; rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, бота не останавливаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
   if (!hard && !automationCurrent(stamp)) return;
   rec('B', 'СТОП', msg);                         // причина остановки — всегда в журнал (раньше была видна только в статусе)
-  await automationStop(msg);
+  await automationStop(msg, 'stop', { hard: !!hard, user: !!user });   // 20.13 (шаг 5, core-b/F3)
 }
 // 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
 // как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
@@ -2637,11 +2644,28 @@ async function tabLock() {
   if (tabOwner) { lockMine = Date.now(); documentLease = leaseEpoch; }
   return tabOwner;
 }
+// 20.13 (шаг 5, core-b/F6): вернуть свой замок тем же epoch; true — замок наш, очередь записей сохранена и досылается
+async function renewResume() {
+  const old = leaseEpoch; if (!old) return false;
+  let a = null;
+  try { a = await ipc({ cmd: 'lockAcquire', epoch: old, page: location.pathname, vis: tabVis(), focus: !!document.hasFocus?.() }, 9000); } catch (e) { return false; }
+  if (!a?.ok || !(a.epoch === old || a.resumed) || leaseEpoch !== old || !tabOwner || !on) return false;
+  leaseEpoch = a.epoch; documentLease = a.epoch;
+  rtWriter.recover().catch(() => {});
+  return true;
+}
 setInterval(async () => {
   try {
     if (tabOwner && on) {
-      const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);
-      if (!r?.ok) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return; }
+      const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);   // без ответа фона — исключение, повтор через 5 с (как раньше)
+      if (!r?.ok) {
+        // 20.13 (ревизия 17.10, шаг 5, core-b/F6): продление не прошло (фон не ответил за 9 с, вкладку в фоне придержали дольше 90 с) —
+        // раньше очередь неотправленных записей (убийства, добыча, счётчики, отметки служб) стиралась, а повторный захват подменял rt
+        // снимком из хранилища. Сначала пробуем вернуть свой же замок; другого хозяина не было (resumed) — очередь дописываем.
+        const again = await renewResume();
+        if (again) { lockMine = Date.now(); return; }
+        tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return;
+      }
       lockMine = Date.now();
     }
     else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
@@ -3822,7 +3846,7 @@ function draw() {
 
 // стоп с клавиатуры — двойной Esc за 0,6 с: одиночный Esc закрывает окна игры и раньше нечаянно останавливал бота
 let escT = 0;
-addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true); escT = Date.now(); }, true);
+addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true, true); escT = Date.now(); }, true);
 
 // 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов»): Alt+R на странице игры — выбор файла слежки,
 // таймеры сливаются с таймерами героя (как кнопка «📥 Загрузить таймеры из файла слежки» в меню; в меню Alt+R делает то же; 10.0.5, игрок 13.10: клавиша теперь Alt+W)
