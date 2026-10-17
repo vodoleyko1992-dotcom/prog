@@ -20,11 +20,12 @@ assert.match(bg, /if \(plan\.down\) \{[\s\S]{0,900}chrome\.tabs\.reload\(hb\.tab
 assert.match(bg, /if \(quiet < 150000\) \{ if \(wdDown\) await chrome\.storage\.local\.set\(\{ wdDown: null \}\); return; \}/);
 assert.match(bg, /fetch\(origin \+ '\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500 && !\(r\.status === 200 && !\/json\/i\.test/);   // 8.0: 200 + HTML = техработы
 // 2. вкладка: раз в 10 с спрашивает сервер и перезагружается сразу, как он ответил
-assert.match(content, /if \(Date\.now\(\) - probeT >= 10000\) \{ probeT = Date\.now\(\); if \(await srvUp\(\)\) \{ rec\('S', 'сервер', `сервер снова отвечает/);
+assert.match(content, /if \(Date\.now\(\) - probeT >= 10000\) \{ probeT = Date\.now\(\); const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) return; if \(up\) \{ rec\('S', 'сервер', `сервер снова отвечает/);
 assert.match(content, /async function srvUp\(\) \{[\s\S]{0,300}fetch\('\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return srvAnswer\(r\.status, r\.headers\.get\('content-type'\)\); \}/);   // 8.0
 // 3. простой сервера не превращается в остановку: ни «нет прогресса 9 мин ×3», ни «сбой повторился»
-assert.match(content, /=== 'stalled' && !serverDown\(\)\) \{\s+if \(!\(await srvUp\(\)\)\) \{[^\n]*await serverWait\(\); continue; \}/);
-assert.match(content, /if \(d\.action === 'halt' && !d\.programming && !\(await srvUp\(\)\)\) \{[\s\S]{0,300}return serverWait\(\);/);
+// Реворк20.9: сетевой probe сначала проверяет контекст; недоступный сервер по-прежнему ждём.
+assert.match(content, /const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) continue;\s+if \(!up\) \{[^\n]*await serverWait\(\); continue; \}/);
+assert.match(content, /if \(d\.action === 'halt' && !d\.programming && !\(await srvUp\(\)\)\) \{\s+if \(!automationCurrent\(stamp\)\) return;[\s\S]{0,300}return serverWait\(\);/);
 // 4. страница техработ (не 5xx) — тоже простой, но не страница входа
 const sd = content.slice(content.indexOf('function serverDown() {'), content.indexOf('// 7.2.5 (игрок 10.10, скрин 502 Bad gateway'));
 const mk = (title, text, pw) => { const doc = { title, body: { innerText: text }, querySelector: s => s === 'input[type="password"]' && pw ? {} : null };

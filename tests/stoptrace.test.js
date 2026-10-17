@@ -16,6 +16,10 @@ call('/game/time',200,6000);assert.equal(state().since,0,'Two healthy endpoints 
 assert.equal(events.filter(e=>e[1]==='сервер').length,2);
 call('/other/api',502,7000);assert.equal(state().since,0,'Ignore unrelated endpoint');
 assert(content.includes("const stopMeta = ch.stopMeta?.newValue"),'Stop source must be shown in game log');
-for(const [file,code,label] of [[pop,pop,'popup'],[bg,bg,'background'],[content,content,'content']]) assert(file.includes('stopMeta:'),`${label}: stop source not persisted`);
+// Реворк20.9: фон сохраняет stopMeta в общей очереди; content передаёт источник через botControl.
+assert(bg.includes('stopMeta:'),'background persists stop attribution');
+assert.match(content,/cmd:'botControl'/,'content routes control through serialized background');
+assert.match(content,/'content-pause' : 'content-halt'/,'automatic control preserves source');
+assert.ok(pop.includes('botControl')||pop.includes('stopMeta:'),'popup attributes Stop/Pause');
 assert(content.includes('location.reload();   // сохраняем URL боя'),'Recovery must not drop current battle URL');
 console.log('PASS stoptrace: global 5xx detection, endpoint quorum, recovery and atomic stop attribution');

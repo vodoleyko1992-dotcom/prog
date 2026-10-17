@@ -27,7 +27,9 @@ const recoveryToMap = (mode, page = '/char.html', repeats = 3) => vm.runInNewCon
 });
 assert.equal(recoveryToMap('farm'), true); assert.equal(recoveryToMap('enchant'), false);
 assert.equal(recoveryToMap('farm', '/map.html'), false); assert.equal(recoveryToMap('farm', '/char.html', 2), false);
-assert.match(mapRecovery[2], /if \(on && tabOwner\)[^;]*canAct[^;]*location\.href = '\/map\.html'/, 'map fallback still requires active ownership');
+// Реворк20.9: общий flush повторно сверяет владельца/поколение и подтверждённую запись.
+assert.match(mapRecovery[2], /if \(await automationFlush\(stamp\)\) location\.href = '\/map\.html'/, 'map recovery needs durable current-context guard');
+assert.match(content, /function automationCurrent\(stamp\) \{ return on && tabOwner && stamp === automationSnapshot\(\)/);
 
 // 2. простой сервера не превращается в остановку
 assert.match(content, /if \(!hard && on && !\(await srvUp\(\)\)\) \{[^\n]*return serverWait\(\); \}/, 'soft halts wait for the server');
@@ -38,7 +40,7 @@ assert.equal(srvAnswer(200, 'text/html'), false, 'maintenance page with 200 HTML
 assert.equal(srvAnswer(401, 'application/json'), true); assert.equal(srvAnswer(404, 'text/html'), true, 'endpoint moved — server is up, do not wait forever');
 assert.equal(srvAnswer(502, 'text/html'), false);
 assert.match(bg, /return r\.status < 500 && !\(r\.status === 200 && !\/json\/i\.test\(r\.headers\.get\('content-type'\) \|\| ''\)\) \? 'up' : 'down';/);
-assert.match(content, /if \(netOutage\.since && !rt\.downT && \$q\('#l2-hud-legacy-name, #l2-nav-bottom'\)\) \{[\s\S]{0,200}await sleep\(3000\);[\s\S]{0,80}if \(await srvUp\(\)\) \{ netOutage\.since = 0;/, 'short API burst: probe, no reload');
+assert.match(content, /if \(netOutage\.since && !rt\.downT && \$q\('#l2-hud-legacy-name, #l2-nav-bottom'\)\) \{[\s\S]{0,200}await sleep\(3000\);\s+if \(!automationCurrent\(stamp\)\) return;\s+const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) return;\s+if \(up\) \{ netOutage\.since = 0;/, 'short API burst: guarded probe, no reload');
 assert.doesNotMatch(content, /setRt\(\{ status: `Сервер игры недоступен/, 'outage countdown no longer writes rt every second');
 
 // 3. меню: переключатель не переписывает весь rt; служебные ключи не попадают в экспорт/импорт памяти
