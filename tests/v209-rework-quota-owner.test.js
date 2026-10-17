@@ -6,9 +6,10 @@ function setup(){
  let now=Date.parse('2026-10-17T13:59:00Z');class Clock extends Date{static now(){return now}}
  const b={Date:Clock,URL,URLSearchParams,console,structuredClone,vm,read:p=>p==='content.js'&&process.env.QUOTA_SOURCE?fs.readFileSync(process.env.QUOTA_SOURCE,'utf8'):realRead(p)};
  vm.createContext(b);vm.runInContext(src.slice(src.indexOf('function fixture('),src.indexOf("\nfor(const task")),b);
- const f=b.fixture();f.state.cfg={...f.state.cfg,autoTasks:['cat','auto'],autoKillLimit:0,catKillLimit:0,dailyAutoKillLimit:3,dailyCatKillLimit:3};
- f.state.rt.dailyQuota={day:'2026-10-17',cat:3,auto:0,fish:0};f.refresh();
- return {...f,midnight:()=>{now=Date.parse('2026-10-17T14:01:00Z');f.state.lock.t=now;f.refresh()}};
+ const f=b.fixture();// 20.10: дневной лимит мобов общий — до полуночи катакомбы не выбраны (иначе при полном счётчике обе охоты ждут), после полуночи игрок добавляет их.
+ f.state.cfg={...f.state.cfg,autoTasks:['auto'],autoKillLimit:0,catKillLimit:0,dailyKillLimit:3};
+ f.state.rt.dailyQuota={day:'2026-10-17',cat:2,auto:0,fish:0};f.refresh();
+ return {...f,midnight:()=>{now=Date.parse('2026-10-17T14:01:00Z');f.state.lock.t=now;f.state.cfg.autoTasks=['cat','auto'];f.refresh()}};
 }
 for(const reload of ['victory','live','resume'])test('после полуночи '+reload+' сохраняет владельца auto и весь AoE',async()=>{
  const f=setup();assert.equal(f.c.L2EngineCore.selectedTask(f.c.cfg,f.c.rt),'auto');await f.begin();f.grow(2);f.midnight();

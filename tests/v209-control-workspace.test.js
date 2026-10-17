@@ -7,7 +7,7 @@ const json=x=>JSON.parse(JSON.stringify(x));
 const now=Date.parse('2026-10-16T15:00:00Z'),st={on:true,heartbeatValid:true};
 const c={Date,Object,Set,Array,Math,currentMode:()=> 'fish'};vm.createContext(c);vm.runInContext(fs.readFileSync(root+'engine-core.js','utf8'),c);
 vm.runInContext(source.slice(source.indexOf('const AUTO_TASK_LABELS ='),source.indexOf('let autoTaskEditQueue =')),c);
-const cfg={autoTasks:['raid','fish','auto','tvt'],dailyFishLimit:10,dailyAutoKillLimit:100};
+const cfg={autoTasks:['raid','fish','auto','tvt'],dailyFishLimit:10,dailyKillLimit:100};
 function settings(){
  const state={rt:{char:'Hero'},writes:[],fails:false},els=new Map();
  const ctx={Map,Object,JSON,Promise,structuredClone,clearTimeout,setTimeout,formChar:'Hero',load:async()=>{},

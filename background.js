@@ -78,7 +78,7 @@ const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
 const dailyQuotaDay = now => new Date(now + 10 * 3600000).toISOString().slice(0,10);
 const dailyQuotaToday = (rt,now) => rt.dailyQuota?.day === dailyQuotaDay(now) ? {...rt.dailyQuota} : {day:dailyQuotaDay(now),fish:0,auto:0,cat:0};
 // 20.8: диапазон выбирается один раз; фактическая цель остаётся в прежнем cfg-ключе.
-const RANGE_LIMITS = {dailyFishLimit:'daily',dailyAutoKillLimit:'daily',dailyCatKillLimit:'daily',autoKillLimit:'auto',catKillLimit:'cat',fishMaxCasts:'casts'};
+const RANGE_LIMITS = {dailyFishLimit:'daily',dailyKillLimit:'daily',autoKillLimit:'auto',catKillLimit:'cat',fishMaxCasts:'casts'};
 const quotaRandom = (min,max) => Math.min(max,min+Math.floor(Math.random()*(max-min+1)));
 function limitRangeChange(state,now,options={}) {
   const cfg={...(state.cfg||{})},rt={...(state.rt||{})},ranges={...(cfg.limitRanges||{})},rolls={...(rt.limitRolls||{})};
@@ -115,7 +115,8 @@ function farmQuotaChange(state, E, now) {
   const keys = FARM_QUOTA[E?.task], cfg = state.cfg || {}, rt = state.rt || {};
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
   const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
-  const dailyLimit=farmQuotaLimit(cfg[E.task==='auto'?'dailyAutoKillLimit':'dailyCatKillLimit']);
+  // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
+  const dailyLimit=farmQuotaLimit(cfg.dailyKillLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0);
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
   const old = rt.farmQuota?.[E.task];
   let row = old, dailyQuota=dailyQuotaToday(rt,now);
@@ -138,7 +139,7 @@ function farmQuotaChange(state, E, now) {
     if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== E.task);
     else if (!['enchantMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
   }
-  return { ok: true, row, dailyQuota, dailyDone: dailyLimit>0 && dailyQuota[E.task]>=dailyLimit, cfg: next, rt: { ...rt, ...(dailyLimit?{dailyQuota}:{}), farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
+  return { ok: true, row, dailyQuota, dailyDone: dailyLimit>0 && dailyMobs(dailyQuota)>=dailyLimit, cfg: next, rt: { ...rt, ...(dailyLimit?{dailyQuota}:{}), farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
 }
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
@@ -276,13 +277,14 @@ async function menuPatch(m, sender) {
       const rows = change.rt?.farmQuota || state.rt?.farmQuota || {}, old = rows[task];
       change.rt = { ...state.rt, ...change.rt, _src: 'menu', farmQuota: { ...rows, [task]: { run: (old?.run || 0) + 1, limit: quotaLimit(change.cfg?.[key] ?? state.cfg?.[key]), got: 0 } } };
     }
-    for(const [task,key] of [['fish','dailyFishLimit'],['auto','dailyAutoKillLimit'],['cat','dailyCatKillLimit']]) {
+    // 20.10: «mobs» — общий дневной лимит автофарма и катакомб: сброс обнуляет оба счётчика и незавершённые билеты обеих охот.
+    for(const [task,key] of [['fish','dailyFishLimit'],['mobs','dailyKillLimit']]) {
       const reset=m.resetDailyQuota===task,edited=Object.hasOwn(cfgPatch,key)&&quotaLimit(cfgPatch[key])!==quotaLimit(state.cfg?.[key]);
       if(!reset&&!edited)continue;
       const rt={...state.rt,...change.rt,_src:'menu'};
-      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());rt.dailyQuota[task]=0;}
+      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat'])rt.dailyQuota[k]=0;}
       if(task==='fish')rt.dailyFishMark={t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0};
-      else {const row=rt.farmQuota?.[task];if(row)rt.farmQuota={...rt.farmQuota,[task]:{...row,run:(row.run||0)+1,pending:null}};}
+      else for(const k of ['auto','cat']){const row=rt.farmQuota?.[k];if(row)rt.farmQuota={...rt.farmQuota,[k]:{...row,run:(row.run||0)+1,pending:null}};}
       change.rt=rt;
     }
     // 15.10: выбор режима не продолжает старую серию; выход сразу запрещает новые попытки.
