@@ -32,10 +32,10 @@ async function run({ pages = [[0], [5]], start = 0, selected = 'Fishing Rod +5',
     if (el.close) opened = null;
     return true;
   };
-  box.env = { get on() { return box.on; }, fire: box.fire, waitX: box.waitX };
+  box.env = { get on() { return box.on; }, get rt(){return box.rt},get cfg(){return box.cfg},get tabOwner(){return box.tabOwner},fire: box.fire, waitX: box.waitX };
   vm.createContext(box);
-  const fishing = read('modules/fishing.js'), f0 = fishing.indexOf('async function fishBagPage('), f1 = fishing.indexOf('async function fishCut(', f0);
-  vm.runInContext(fishing.slice(f0, f1) + '\nthis.L2V7Modules={fishing:{fishBagPage}};', box);
+  // 17.10: pager использует общий контекст продолжения; загружаем настоящую фабрику со всеми его зависимостями.
+  vm.runInContext(read('modules/fishing.js') + '\nthis.L2V7Modules={fishing:L2V7Factories.fishing(env)};', box);
   const content = read('content.js'), c0 = content.indexOf('async function rodEnchant()'), c1 = content.indexOf('// «🔪 Разделать', c0);
   assert.ok(c0 >= 0 && c1 > c0); vm.runInContext(content.slice(c0, c1) + '\nthis.run=rodEnchant;', box);
   for (let i = 0; i < attempts; i++) await box.run();
