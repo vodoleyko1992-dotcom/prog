@@ -69,7 +69,7 @@ test('отключение автообучения освобождает вл�
  const disable=source.match(/async function magisterDisable\(\) \{[\s\S]*?\n\}/)[0];
  const runner=source.match(/\{key:'magister',run:(async\(\)=>\{[^\n]+?\})\},/)[1];
  const f=fixture({magister:{t:1}});f.env.cfg.autoMagister=false;
- const box={cfg:f.env.cfg,rt:f.env.rt,on:true,tabOwner:true,setRt:f.env.setRt,magisterStep:()=>{throw Error('disabled job ran')}};
+ const box={L2EngineCore:require('../engine-core.js'),cfg:f.env.cfg,rt:f.env.rt,on:true,tabOwner:true,setRt:f.env.setRt,magisterStep:()=>{throw Error('disabled job ran')}};
  vm.runInNewContext(disable+';run='+runner,box);f.env.jobs=()=>[{key:'magister',run:box.run}];await f.A.dispatch();assert.equal(f.env.rt.magister,null);assert.equal(f.env.rt.actionOwner,null);
 });
 
