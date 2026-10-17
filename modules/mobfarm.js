@@ -257,8 +257,8 @@ async function nextFight(ctx) {
   }
   if (!env.on || env.tabOwner === false) return;
   // Автобаф кота — обслуживание между целями, без выхода из выбранной зоны.
+  // 20.13 (ревизия 17.10, шаг 7, farm/MF-4): повтор той же проверки on/tabOwner без await между ними убран
   if (env.autonomyMode() === 'enchant') return env.toMap();
-  if (!env.on || env.tabOwner === false) return;
   if (env.victory()) await env.warlock?.step?.({ afterWin: true });
   if (!env.on || env.tabOwner === false) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
@@ -456,17 +456,28 @@ function idleLoad() {
 }
 function idleSave() { try { sessionStorage.setItem(IDLE_KEY, JSON.stringify({ t0: idleT0, n: idleN, recT: idleRecT, at: Date.now() })); } catch (e) {} }
 function idleClear() { try { sessionStorage.removeItem(IDLE_KEY); } catch (e) {} }
-const skipRecT = {};
+// 20.13 (ревизия 17.10, шаг 7, farm/MF-3): метки «раз в 10 мин» жили в переменной модуля и обнулялись каждым переходом на /map.html —
+// «пропускаю — снимает баффы / оранжевый…» писались на каждом заходе на карту. Теперь одна запись в sessionStorage, старше часа — стираются
+const SKIP_KEY = 'l2bot.skipRecT';
+let skipMem = {};                                   // без sessionStorage (тесты, запрет хранилища) — как прежде, в памяти модуля
+function skipDue(k) {
+  const now = Date.now();
+  let m = skipMem;
+  try { const v = JSON.parse(sessionStorage.getItem(SKIP_KEY) || '{}'); if (v && typeof v === 'object') m = v; } catch (e) {}
+  if (now - (+m[k] || 0) < 600000) return false;
+  for (const x of Object.keys(m)) if (!(now - (+m[x] || 0) < 3600000)) delete m[x];
+  m[k] = now; skipMem = m;
+  try { sessionStorage.setItem(SKIP_KEY, JSON.stringify(m)); } catch (e) {}
+  return true;
+}
 function cancelSkip(r, cr) {                        // в журнал — раз в 10 мин на вид
   const k = 'снятие:' + (r.champ ? 'ч:' : '') + String(r.name || '').toLowerCase();
-  if (Date.now() - (skipRecT[k] || 0) < 600000) return;
-  skipRecT[k] = Date.now();
+  if (!skipDue(k)) return;
   env.rec('B', 'цели', `${r.name || 'моб'} (${r.lvl || '?'}${r.champ ? ', ' + (TIER_RU[r.tier] || 'чемпион') : ''}): пропускаю — снимает баффы${cr.own ? ' (ваш список)' : ` (${cr.n} за ${cr.k} боёв)`}`);
 }
 function champSkip(r, why) {                       // в журнал — раз в 10 мин на цвет и уровень
   const k = (r.tier || 'blue') + ':' + (r.lvl || 0);
-  if (Date.now() - (skipRecT[k] || 0) < 600000) return;
-  skipRecT[k] = Date.now();
+  if (!skipDue(k)) return;
   env.rec('B', 'чемпионы', `${r.name || 'чемпион'} (${r.lvl || '?'}, ${TIER_RU[r.tier] || 'неизвестный цвет'}): пропускаю — ${why}`);
 }
 // темп обычного фарма этой зоны: EXP/с (медиана видов зоны по замерам) и время на моба, с — для цены чемпиона (champs.limitS)

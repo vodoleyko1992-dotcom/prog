@@ -204,6 +204,10 @@ function tbDowngrade(set, H) {                     // какие активны�
   return Object.entries(L).map(([id, give]) => ({ id: +id, have: lv[id], give })).filter(x => H[x.id] && H[x.id] - now > 30 * 60000 && x.have > x.give);
 }
 let tbDownLogT = 0;
+// 20.13 (ревизия 17.10, шаг 7, raid/BF-4): два порога «кончается» были разбросаны числами по модулю. Значения прежние:
+// FA_RENEW_MS — когда бафф за FA покупать заново (townBuffNeed, очередь шага fa); BUFF_LOW_MS — «кончается» для городского набора и строки
+// «нет/кончается» в журнале (та же 10-минутная граница у raid.rbBuffShortage). Порог «перед РБ» по длительности боя — отдельное решение
+const FA_RENEW_MS = 60000, BUFF_LOW_MS = 10 * 60000;
 function townBuffNeed() {                          // что взять: { set, fa: [id…] } или null
   let set = env.cfg.townBuffSet || 'basic';
   // 8.0.3 (эпики): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах лимита Coin of Luck на эпиков, иначе
@@ -214,7 +218,7 @@ function townBuffNeed() {                          // что взять: { set, 
   if (H) try { faDeathNote(H); } catch (e) {}       // 8.0.3: что смерть сделала с баффами за FA — в журнал
   // 8.0.3: городской набор выключен и своего списка FA нет — Noblesse при платных баффах (и РБ-сессия) всё равно докупается
   if (!H || set === 'off' && !(env.cfg.faBuffs || '').trim() && !faWanted().length) return null;
-  const soon = id => !H[id] || H[id] - Date.now() < 10 * 60000;
+  const soon = id => !H[id] || H[id] - Date.now() < BUFF_LOW_MS;
   // v5.3: набор учим по факту — какие баффы появились/обновились после «Применить» (rt.tbSetIds). Раньше проверялись
   // 4 «ключевых» ID, и если слетал любой другой из ~10 баффов набора, бот этого не замечал (скрин 08.10 14:46)
   const ids = [...new Set([...(env.TB_KEYS[set] || env.TB_KEYS.basic), ...(env.rt.tbSetIds?.[set] || [])])];
@@ -235,7 +239,7 @@ function townBuffNeed() {                          // что взять: { set, 
     needSet = false;
     if (Date.now() - tbDownLogT > 1800000) { tbDownLogT = Date.now(); env.rec('B', 'бафф', `городской набор «${set}» не беру — он понизит ваши баффы: ${down.map(x => `${env.FA_KNOWN?.[x.id]?.[0] || env.rt.faCat?.[x.id]?.name || 'skill ' + x.id} Lv.${x.have}→${x.give}`).join(', ')}`); }
   }
-  const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < 60000 || (id === 1323 && nobGone(H)) || faLow(id));
+  const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < FA_RENEW_MS || (id === 1323 && nobGone(H)) || faLow(id));
   return needSet || fa.length ? { set: needSet ? set : null, fa } : null;
 }
 
@@ -437,7 +441,7 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if(!active())return false;
   if ((env.rt.tbPauseUntil || 0) > Date.now()) return false;
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
-  const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < 10 * 60000);
+  const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < BUFF_LOW_MS);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
   await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode), epicFa: !!(urgent && /^перед эпиком/.test(why) && env.cfg.epicFaFull !== false && env.epicFaOk?.()) }, tbT: Date.now(), tbInterrupted:null, tbWaitUntil:0 });
   if(!active())return false;
@@ -635,7 +639,7 @@ async function townBuffStep() {
     const got = [], gone = { ...(env.rt.faGone || {}) };
     let bought = 0, short = 0, nobT = 0;
     // 10.0.14: сохранённая очередь переживает reload и ручную покупку; перед каждым списанием проверяем актуальные HUD и выбор.
-    const needed = id => { const H = hudBuffs(); return H && faWanted().includes(id) && (!H[id] || H[id] - Date.now() < 60000 || id === 1323 && nobGone(H) || faLow(id)); };
+    const needed = id => { const H = hudBuffs(); return H && faWanted().includes(id) && (!H[id] || H[id] - Date.now() < FA_RENEW_MS || id === 1323 && nobGone(H) || faLow(id)); };
     for (const id of st.fa || []) {
       if (!active()) return;
       if (!needed(id)) continue;

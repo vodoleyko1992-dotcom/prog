@@ -659,7 +659,7 @@ function rbPreSkipWhy(id) {
     if (death > 0 && Date.now() - death < pause) return pause > 30 * 60000 ? `${rbDeathsSameLvl(d)} подтверждённые смерти на этом РБ при текущем уровне — пауза ${Math.round(pause / 3600000)} ч` : 'недавняя подтверждённая смерть на этом РБ — пауза 30 мин';
     return ps.safety === true && Date.now() - ps.t < 30 * 60000 ? 'выход по фактической опасности — пауза 30 мин' : '';
   }
-  if (now_() - ps.t >= 30 * 60000) return '';
+  if (Date.now() - ps.t >= 30 * 60000) return '';
   // 14.10: банки, HP и DPS могли измениться. Условный отказ снимает только новая успешная оценка по точным цифрам, без пробы.
   const st = rbStatsOf(id), real = st?.hp > 0 && (st.matk > 0 || st.patk > 0) && !st.est;
   const observed = ps.observed || /^аварийный выход:/.test(env.rt.rbDb?.[id]?.note || '');
@@ -718,8 +718,6 @@ function noteRbSkip(id, reason) {
   }
 }
 
-const now_ = () => Date.now();
-
 function rbValueScore(id, x) {
   const stats = env.rt.rbDb?.[id] || {};
   const heroHp = env.meHp()?.max || 0;
@@ -753,6 +751,8 @@ function rbListBlock(id, x, lo, hi) {
   const decision = rbEntryDecision(id, x);
   return decision.ok ? null : decision;
 }
+// 20.13 (ревизия 17.10, шаг 7, raid/CQ-1): rbEligible ядро не зовёт — оставлена для тестов окна уровней (v80-rb, v803-tpguard);
+// тот же отбор тур делает через rbListBlock. Пустой псевдоним now_ удалён
 function rbEligible() {                           // rbCur — состояние прошлого боя, а не запрет живой цели
   const L = env.heroLvl(), lo = rbLo(L), hi = rbHi(L);
   return Object.entries(env.rt.rbList || {}).filter(([id, x]) => !rbListBlock(id, x, lo, hi));
@@ -891,7 +891,7 @@ async function rbGoStep() {                       // список РБ → ну�
   const kick = +env.rt.manualKickAt || 0,char=env.rt.char,generation=env.actionGeneration?.();
   const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick && env.rt.char === char && env.actionGeneration?.() === generation && env.canAct?.() !== false;
   const sameJob = () => env.rt.rbGo?.id === g.id && env.rt.rbGo?.t === g.t;
-  if (env.cfg.rbValueTour && now_() - (env.rt.rbListT || 0) > 10 * 60000) {
+  if (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000) {
     env.rec('B', 'РБ-тур', `${g.name}: данные списка старше 10 мин — обновляю перед платным телепортом`);
     await env.setRt({ rbGo: null, rbListT: 0 }); return;
   }
@@ -1880,6 +1880,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);
