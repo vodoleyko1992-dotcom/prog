@@ -206,3 +206,25 @@ test('TM-1: опрос пустой очереди — не больше 2 ст�
   assert.equal(gets.filter(p => p === 9).length >= 8, true, 'наступающий респ проверяется каждый раз');
   assert.deepEqual([...new Set(gets)].sort((a, c) => a - c), [5, 6, 7, 8, 9, 10, 11, 12], 'остальные страницы не забыты');
 });
+
+// ---------- ревью шага 5 ----------
+test('ревью BF-1: кнопка погашена на время перерисовки — короткое ожидание, покупка, без пометки на 6 ч', async () => {
+  const button = { disabled: true, dataset: { skillId: '1059', cost: '1' } };
+  const f = buffsFixture({ button, balance: '50', rt: { tbuff: { t: 1, step: 'fa', fa: [1059] } } });
+  f.env.payments = null;
+  f.env.waitX = async fn => { if (/disabled/.test(String(fn))) button.disabled = false; return fn(); };   // оживает только в ожидании самой кнопки
+  f.route.pathname = '/fast-aden-buffer.html';
+  await f.B.townBuffStep();
+  assert.equal(f.clicks.length, 1, 'кнопка ожила — куплено');
+  assert.equal(f.env.rt.faGone?.[1059], undefined, 'не помечено «недоступна»');
+});
+
+test('ревью RB-3/BF-1: истёкшее ожидание баффера не уводит тур к РБ без FA при нулевом балансе — простой, без круга pick↔go', async () => {
+  const f = raidFixture({ need: { fa: [1413] }, rt: { faBal: { v: 0, t: Date.now(), d: 0 }, rbBuffWait: { name: 'Boss', t: Date.now() - 16 * MIN } } });
+  await f.R.rbHuntStep();
+  assert.notEqual(f.env.rt.rbHunt.step, 'go', 'без FA к РБ не летим');
+  assert.ok(f.env.rt.rbHuntIdle > Date.now() + 9 * MIN, 'простой тура');
+  assert.equal(f.env.rt.rbBuffWait, null, 'ожидание баффера сброшено');
+  assert.equal(f.pauses(), 0); assert.equal(f.fires.length, 0);
+  assert.doesNotMatch(f.logs.join('\n'), /иду без них/);
+});

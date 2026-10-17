@@ -639,12 +639,14 @@ async function townBuffStep() {
     for (const id of st.fa || []) {
       if (!active()) return;
       if (!needed(id)) continue;
-      const bal = balNow(), b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
+      const bal = balNow(); let b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
       if (!b) { got.push(`${nm(id)}: нет у баффера — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
       const cost = +(b.dataset.cost || 1);
       if (bal < cost) { got.push(`${nm(id)}: не хватает FA (${bal}/${cost})`); short++; continue; }   // дальше — те, что по карману
       // 20.13 (ревизия 17.10, шаг 5, BF-1): FA хватает, а кнопка недоступна (уровень, ограничение сервера) — как «нет у баффера»:
       // 6 ч не просим (faWanted/townBuffNeed его не хотят), иначе тур ждал баффера по кругу
+      // ревью: кнопка может быть погашена на время ответа на прошлую покупку/перерисовки — сначала коротко ждём, потом метим
+      if (b.disabled) { await env.waitX(() => !env.$q(`.l2-fa-buy[data-skill-id="${id}"]`)?.disabled, 2000, 200); if (!active()) return; b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`) || b; }
       if (b.disabled) { got.push(`${nm(id)}: кнопка недоступна — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
       const H0 = hudBuffs() || {};
       await env.pause();

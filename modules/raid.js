@@ -967,7 +967,7 @@ async function rbFaShortIdle(name, missing) {
   const H = env.rt.rbHunt || {};
   if (H.step && H.step !== 'pick') await huntDone(H.id, `${name}: нет FA на выбранный бафф — к РБ не лечу`, false);
   const at = Date.now();
-  await env.setRt({ rbHuntIdle: at + RB_FA_WAIT_MS, rbIdleN: 0, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel?.()?.n || 0, t: at, sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null, faShort: true, faD: faDropNow() } });
+  await env.setRt({ rbHuntIdle: at + RB_FA_WAIT_MS, rbIdleN: 0, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel?.()?.n || 0, t: at, sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null, faShort: true, faD: faDropNow() }, rbBuffWait: null });   // ревью: простой без FA не засчитывается в 15 мин ожидания баффера
   if (at - rbFaShortSaid >= RB_FA_WAIT_MS) { rbFaShortSaid = at; env.rec('B', 'тур РБ', `нет FA для выбранного баффа (не хватает ${missing} эффектов) — тур ждёт 10 мин или новых FA с мобов; остальные задачи идут`); }
   env.setStatus(`Тур РБ: нет FA для выбранного баффа (${missing}) — жду FA, остальные задачи идут`);
 }
@@ -982,16 +982,13 @@ function rbBuffWaitOver(name, now = Date.now()) {
 // 15.10, лог 14:20:58: townBuffStart(false) означает и «бафф уже есть», и «повтор через 40 с».
 // Перед платным перелётом и атакой отдельно проверяем, что отложенных баффов больше нет.
 async function rbBuffHold(name, active) {
-  if (rbBuffWaitOver(name)) {
-    if (!env.rt.rbBuffWait.said) {
-      const names = (env.townBuffNeed?.()?.fa || []).map(id => env.IL?.[id]?.n || env.rt.faCat?.[id]?.name || `#${id}`).join(', ');
-      await env.setRt({ rbBuffWait: { ...env.rt.rbBuffWait, said: true } });
-      env.rec('B', 'тур РБ', `${name}: баффер ${Math.round(RB_BUFF_WAIT_MS / 60000)} мин не дал нужные баффы${names ? ` (${names})` : ''} — иду без них`);
-    }
-    return false;
+  // 20.13 (ревизия 17.10, шаг 5, ревью): тайм-аут ожидания баффера не обходит проверки шапки и нехватки FA — иначе после 15 мин
+  // строгий тур летел без набора при FA = 0 (решение 10.0.21), а шаг go тут же возвращал pick («баффы изменились») — круг без простоя
+  const over = rbBuffWaitOver(name);
+  if (!over) {
+    if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
+    if (!active()) return true;
   }
-  if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
-  if (!active()) return true;
   if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
     env.setStatus(`Тур РБ: жду подтверждения баффов перед ${name}`);
     if (active()) await env.sleep(3000);
@@ -999,6 +996,14 @@ async function rbBuffHold(name, active) {
   }
   const missing = rbBuffShortage();
   if (missing) { await rbFaShortIdle(name, missing); return true; }
+  if (over) {
+    if (!env.rt.rbBuffWait.said) {
+      const names = (env.townBuffNeed?.()?.fa || []).map(id => env.IL?.[id]?.n || env.rt.faCat?.[id]?.name || `#${id}`).join(', ');
+      await env.setRt({ rbBuffWait: { ...env.rt.rbBuffWait, said: true } });
+      env.rec('B', 'тур РБ', `${name}: баффер ${Math.round(RB_BUFF_WAIT_MS / 60000)} мин не дал нужные баффы${names ? ` (${names})` : ''} — иду без них`);
+    }
+    return false;
+  }
   const need = env.townBuffNeed?.();
   if (!need) { if (env.rt.rbBuffWait) await env.setRt({ rbBuffWait: null }); return false; }
   const W = env.rt.rbBuffWait;
