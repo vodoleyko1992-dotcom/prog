@@ -25,7 +25,7 @@ function mainFixture(options={}){
   meHp:noop,mobHp:noop,serverDown:noop,loginPage:noop,leaveCheck:async()=>false,tvtStep:options.tvt?done('TvT'):async()=>false,
   pveFishingStep:async()=>false,antibotGuard:options.antibot?done('antibot'):async()=>false,shopStep:done('urgent shop'),reviveStep:done('revive'),battle:done('battle'),fishFight:done('catch'),
   magisterDisable:done('magister disable'),magisterStep:done('magister step'),magisterStart:done('magister start'),tvtSoon:noop,
-  sleep:async()=>{c.on=false},softError:async e=>{throw e},rec(){},
+  sleep:async()=>{c.on=false},softError:async e=>{throw e},rec(){},stopPendRetry:async()=>false,   // 20.13 (шаг 5, core-a/M6)
  });
  Object.assign(c.L2V7Modules,{pvp:{recoveryStep:options.recovery?done('recovery'):async()=>false,seedConfirmed:async()=>{},step:async()=>false},
   raid:{rbOneStep:async()=>false},enemies:{tick:async()=>{},step:async()=>false},rbtimer:{tick:async()=>{}},

@@ -1283,12 +1283,43 @@ function setStatus(s) {
   draw();
 }
 // Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
+// 20.13 (ревизия 17.10, шаг 5, аудит core-a/M6): on=false ставился до ответа фона; таймаут IPC бросал исключение из halt(), а в
+// хранилище оставалось on=true — через ≈2,5 мин сторож перезагружал вкладку, и «жёсткая» остановка превращалась в цикл
+// «стоп → перезапуск». Теперь: до 3 попыток botControl; не подтвердилось — отметка в sessionStorage (герой + kick), и после
+// перезагрузки main() сначала повторяет остановку. Новый Start игрока (другой manualKickAt) отметку отменяет.
+const STOP_PEND_KEY = 'l2bot-stopPend';
+const stopPendRead = () => { try { return JSON.parse(sessionStorage.getItem(STOP_PEND_KEY) || 'null'); } catch (_) { return null; } };
+const stopPendWrite = v => { try { v ? sessionStorage.setItem(STOP_PEND_KEY, JSON.stringify(v)) : sessionStorage.removeItem(STOP_PEND_KEY); } catch (_) {} };
 async function automationStop(msg, action = 'stop') {
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, t0 = Date.now();
   automationGeneration++; on = false;
-  const r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick });
+  let r = null;
+  for (let i = 0; i < 3 && !r?.ok; i++) {
+    if (i) await new Promise(res => setTimeout(res, 1000));
+    try { r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick }); }
+    catch (e) { r = { ok: false, reason: String(e?.message || e) }; }
+    if (r && !r.ok && ['character_changed', 'ownership_lost', 'invalid_sender', 'invalid_control'].includes(r.reason)) break;   // повтор не поможет
+  }
+  if (r?.ok) stopPendWrite(null);
+  // 20.13 (шаг 5, core-a, ревью): отметка — только когда фон не ответил (таймаут/сбой); отказы по смыслу (другой герой, чужой замок,
+  // неверный отправитель/команда) повтором после перезагрузки не исправить. t0 — начало остановки: по нему повтор узнаёт более позднюю
+  // остановку/запуск горячей клавишей Alt+Shift+B, которая manualKickAt не меняет
+  else if (!r || !['character_changed', 'ownership_lost', 'invalid_sender', 'invalid_control'].includes(r.reason)) stopPendWrite({ char, kick, action, msg: String(msg).slice(0, 240), t: Date.now(), t0 });
   if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
   return r;
+}
+// Неподтверждённая остановка прошлой страницы: повторить её, пока игрок не нажал новый Start (kick) и герой тот же (≤ 30 мин)
+async function stopPendRetry() {
+  const p = stopPendRead(); if (!p) return false;
+  if (Date.now() - (+p.t || 0) > 1800000 || p.char !== (rt.char || '') || p.kick !== (rt.manualKickAt || 0)) { stopPendWrite(null); return false; }
+  // 20.13 (шаг 5, core-a, ревью): после начала той остановки фон уже записал остановку (stopMeta.t ≥ t0) — она дошла, а нынешний
+  // on=true — новый запуск (горячая клавиша не меняет manualKickAt). Повторно не останавливаем
+  let meta = null; try { ({ stopMeta: meta } = await chrome.storage.local.get('stopMeta')); } catch (_) {}
+  if (+meta?.t >= (+p.t0 || +p.t || 0)) { stopPendWrite(null); return false; }
+  stopPendWrite(null);
+  rec('B', 'СТОП', `повторяю остановку, не подтверждённую фоном до перезагрузки: ${p.msg}`);
+  await automationStop(p.msg, p.action === 'pause' ? 'pause' : 'stop');
+  return true;
 }
 // hard = настоящая остановка (Esc ×2, цель рыбалки выполнена, лимит забросов). В режиме рыбалки любая другая
 // «остановка» превращается в паузу с повтором (fishSoft) — рыбалка идёт, пока её не выключат кнопкой (v4.49)
@@ -1624,20 +1655,23 @@ function farmGuideMerge(db, data) {
   }
   return { n, dr, sp };
 }
+// 20.13 (ревизия 17.10, шаг 5, аудит core-a/M3): при неудаче запрос «по кнопке» (farmGuideReq) тоже снимаем — раньше он оставался,
+// и каждый круг main слал новый GET /game/farm-guide и писал строку в журнал (при стабильном 404/401/423 — без конца)
+const farmGuideRetry = () => setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000, farmGuideReq: null });
 async function farmGuideSync(why = 'раз в сутки') {
   if (farmGuideBusy) return false;
   farmGuideBusy = true;
   try {
     const r = await gameGet(FARM_GUIDE_URL, 20000);
-    if (!r.ok) { rec('B', 'фарм', `источники из игры (${why}): HTTP ${r.status} — пробую позже`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    if (!r.ok) { rec('B', 'фарм', `источники из игры (${why}): HTTP ${r.status} — пробую позже`); await farmGuideRetry(); return false; }
     const j = await r.json(), db = await farmDb(), m = farmGuideMerge(db, j);
-    if (!m.n) { rec('B', 'фарм', `источники из игры (${why}): ответ без ресурсов`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    if (!m.n) { rec('B', 'фарм', `источники из игры (${why}): ответ без ресурсов`); await farmGuideRetry(); return false; }
     db.t = Date.now(); FARM = db;
     await chrome.storage.local.set({ farmDb: db });
     await setRt({ farmGuideT: Date.now(), farmN: Object.keys(db.res).length, farmGuideReq: null });
     rec('B', 'фарм', `источники из игры (${why}): ресурсов ${m.n}, источников дропа ${m.dr}, спойла ${m.sp}${+j?.resourceTeleportAdenaCost ? ` · телепорт к точке ${(+j.resourceTeleportAdenaCost).toLocaleString('ru')} адены` : ''}`);
     return true;
-  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(() => {}); return false; }
   finally { farmGuideBusy = false; }
 }
 function farmGuideTick() {                        // фоном, только GET; нужна цели Маммона, цели «Фарм ресурса» и помощнику основного
@@ -2702,6 +2736,7 @@ async function main() {
           rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
         }
       }
+      if (tabOwner && await stopPendRetry()) continue;   // 20.13 (шаг 5, core-a/M6): остановка прошлой страницы не подтверждена
       // Migrations calculated during page initialization must not write without a lease.
       // Apply to the saved current character before switching to a new one.
       // 8.0.3 (проверка правки): устаревание пакета настроек — ДО записи rt и только по свежим настройкам: раньше проверка видела
@@ -2752,7 +2787,10 @@ async function main() {
       // A heartbeat alone cannot detect a live but endlessly looping dispatcher.
       // Check observable progress; exclude intentional maintenance/long waits.
       // 20.12 (ревизия 17.10, аудит H1/M5): неизвестная оплата — честное ожидание сверки, а не «нет прогресса» (3 перезагрузки и стоп за ≈36 мин)
-      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+      // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
+      // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
+      // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
+      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow());
       // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -3049,6 +3087,10 @@ async function magisterStart(afterWin = false) {
 }
 async function magisterDisable() {
   if (cfg.autoMagister === true || !on || !tabOwner) return;
+  // 20.13 (ревизия 17.10, шаг 5, аудит core-a/H3): автомагистр включён игроком, а запрещён только выбранной задачей (рыбалка/
+  // «только задачи»/заточка в списке задач) — это временно: отметки уровней (magChecked) и magEnabled храним, снимаем лишь начатый
+  // поход. Раньше magEnabled:false здесь, а потом magisterStart стирал magChecked — поход к магистру после каждой смены задачи
+  if (L2EngineCore.rawTaskConfig(cfg).autoMagister === true) { if (rt.magister) await setRt({ magister: null }); return; }
   // Не стираем неопределённый исход уже отправленного POST: повторное включение сначала проверит ранг.
   if (rt.magEnabled || rt.magister) await setRt({ magEnabled: false, magister: null });
 }
