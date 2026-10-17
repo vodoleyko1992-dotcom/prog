@@ -213,7 +213,10 @@ async function tick() {
   } catch (e) {} finally { scanBusy = false; }
 }
 // 20.13 (ревизия 17.10, шаг 5, pvp-misc/ENM-1): враг из листа на локации — дочитываем свой клан и клан врага (его профиль), если списка мало
+let clanReadT = 0;
 async function clanRead(T0) {
+  // 20.13 (шаг 5, pvp-misc, ревью): не чаще раза в 5 с — при сбое /character или профиля шаг цикла не шлёт GET каждый круг
+  if (Date.now() - clanReadT < 5000) return; clanReadT = Date.now();
   const S = await env.pvpSelfRead(); if (!active(T0) || !S?.clanId) return;
   for (const h of HERO.list) {
     if (h.clanKnown === true || !h.id || !find(h.id, h.name)) continue;

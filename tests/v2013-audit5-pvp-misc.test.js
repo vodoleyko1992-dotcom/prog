@@ -160,3 +160,30 @@ test('content.js: у фабрики enemies есть геттеры pvpSelf/pvpS
  const src = read('content.js'), m = src.match(/L2V7Modules\.enemies = L2V7Factories\.enemies\(\{[^\n]*/)[0];
  for (const g of ['pvpSelf', 'pvpSelfRead', 'pvpHeroClan']) assert.ok(m.includes(`get ${g}()`), g);
 });
+
+// ---------- ревью шага 5 ----------
+test('ревью TVT-1: 20/20 мест и registrationOpensAt неизвестен — статус всё равно перечитывается (ловим свободное место)', async () => {
+ const f = tvtFixture({ count: 20 }); f.env.TVT.schedule = {};
+ f.env.gameGet = async url => { f.reads.push(url); return { ok: true, json: async () => ({ ...f.env.TVT, registeredCount: 19 }) }; };
+ assert.equal(f.T.tvtRegistrationDue(), false);
+ await f.T.tvtRefresh(); assert.equal(f.reads.length, 1, 'опрос при полной записи идёт');
+ assert.equal(f.T.tvtRegistrationDue(), true, 'место освободилось — регистрация снова «пора»');
+});
+test('ревью PVP-1: обрыв сети или 5xx в начале PvP — не пауза на 15 мин', async () => {
+ for (const d of [{ method: 'POST', req: { targetCharacterId: DID }, error: 'Failed to fetch' }, { method: 'POST', status: 502, req: { targetCharacterId: DID }, res: null }]) {
+  const f = pvpFixture();
+  assert.equal(await f.pvp.step(), true);
+  f.pvp.onNet('/game/battle/pvp/start', d);
+  f.setNow(f.now() + 6000);
+  assert.equal(await f.pvp.step(), true, 'цель не поставлена на паузу'); assert.equal(clicks(f).length, 2);
+ }
+});
+test('ревью ENM-1: сбой чтения своего клана — GET не каждый шаг цикла, а не чаще раза в 5 с', async () => {
+ const f = pvpFixture({ noTarget: true, wire: true, col: 'pk' });
+ f.env.gameGet = async p => { f.calls.push(['GET', p]); return { ok: false }; };
+ f.en.onNet('/game/map/sync', { pv: { heroes: [{ id: DID, name: 'Dremia', lvl: 77, col: 'pk', atk: true, clanId: 'x', clanKnown: true }] } });
+ for (let i = 0; i < 5; i++) { assert.equal(await f.en.step(), false); f.setNow(f.now() + 500); }
+ assert.equal(f.calls.filter(c => c[0] === 'GET' && c[1] === '/character').length, 1);
+ f.setNow(f.now() + 5000); await f.en.step();
+ assert.equal(f.calls.filter(c => c[0] === 'GET' && c[1] === '/character').length, 2);
+});

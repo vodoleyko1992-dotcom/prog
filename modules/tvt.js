@@ -47,7 +47,10 @@ async function tvtRefresh(force = false) {
   // или вот-вот начнётся, — иначе старая фаза ACTIVE после Stop жила, пока игра сама не опросит /game/tvt
   const hold = Math.max(1, +env.cfg.tvtHoldMin || 3) * 60000;
   const stale = !!s?.reg && s.age > 60000 && (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(s.phase) || (s.start && s.start - s.now < hold && s.now - s.start < 20 * 60000));
-  const due = !s || stale || !s.reg && (opening || pendingWindow || tvtRegistrationDue());
+  // 20.13 (шаг 5, pvp-misc, ревью): 20/20 мест — регистрация не «пора», но освобождение места ловим опросом и без известного
+  // registrationOpensAt (раньше due держала сама tvtRegistrationDue, теперь она false при полной записи)
+  const regFull = !!s && !s.reg && /REGISTRATION/i.test(s.phase) && (!s.regEnd || s.now < s.regEnd) && s.count >= s.max && !regSkipped(s);
+  const due = !s || stale || !s.reg && (opening || pendingWindow || regFull || tvtRegistrationDue());
   if (!force && (!due || now - readAt < (opening ? 1000 : 5000))) return;
   reading = T0; readAt = now;
   try {

@@ -27,6 +27,8 @@ function skipSet(id,ms,why){const all=skipAll(),now=Date.now();for(const k of Ob
 const skipOf=id=>{const K=skipAll()[String(id||'')];return K&&K.until>Date.now()?K:null};
 function startNote(d){
  const id=String(d.req?.targetCharacterId||'');if(!id||!targets()[id])return;
+ // 20.13 (шаг 5, pvp-misc, ревью): обрыв сети / 5xx — не отказ игры: паузу не ставим, счёт «нажатий без боя» продолжается
+ if(d.status==null||d.status>=500)return;
  state.tries[id]=0;
  if(d.status>=200&&d.status<300&&!d.res?.error){skipSet(id,0);return}
  const code=String(d.res?.error||d.status||'');
