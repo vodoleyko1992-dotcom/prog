@@ -8,7 +8,7 @@
  const stamp=j=>String(j?.id||j?.t||j?.at||'legacy');
  const phase=j=>JSON.stringify([j?.phase||j?.step||'',j?.done?.length||0,j?.fa||[],j?.id||j?.target||'',j?.entry?.revision||0,j?.pending?.id||'',j?.page??j?.p??j?.cursor??'',typeof j==='object'?'':j]);
  function enterFrame(){frame={context:context(),lease:env.lease()};}
- function canAct(){return live()&&(!frame||frame.context===context()&&frame.lease===env.lease())&&(!executing||executing.context===context()&&!env.interrupted());}
+ function canAct(){return live()&&!env.challengeHold?.()&&(!frame||frame.context===context()&&frame.lease===env.lease())&&(!executing||executing.context===context()&&!env.interrupted());}
  function owns(key){return executing?.key===key&&canAct();}
  async function save(p){const r=await env.setRt(p);return r?.ok!==false&&await env.rtCommit()&&live();}
  async function clear(O,why){
@@ -23,6 +23,7 @@
  async function dispatch(){
   if(busy)return true;
   if(!live())return false;
+  if(env.challengeHold?.())return true;
   busy=true;
   try{
    const jobs=env.jobs();let O=env.rt.actionOwner;
@@ -71,7 +72,7 @@
   }finally{busy=false;}
  }
  function locationProxy(native,manualAllowed=()=>false){
-  const view={},navigate=()=>canAct()||(!env.on&&manualAllowed());
+  const view={},navigate=()=>!env.challengeHold?.()&&(canAct()||(!env.on&&manualAllowed()));
   for(const key of ['href','pathname','search','hash','origin','host','hostname','port','protocol'])Object.defineProperty(view,key,{get:()=>native[key],set:v=>{if(navigate())native[key]=v;}});
   for(const key of ['assign','replace','reload'])view[key]=(...args)=>{if(navigate())return native[key](...args);};
   view.toString=()=>String(native);return view;

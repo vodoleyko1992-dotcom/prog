@@ -1,6 +1,6 @@
 'use strict';
 // 10.0.2: проверка активности игры (anti_bot_challenge). Пока висит — ни кликов бота, ни своих запросов к игре; состояние переживает
-// перезагрузку (rt.abChal); снимается по passed / not_found / блоку фарма / ▶ игрока. Поведение целиком — tests/v1002-antibot-browser.cjs
+// перезагрузку (rt.abChal); снимается по passed / not_found / блоку фарма; Start не подтверждает прохождение. Поведение целиком — tests/v1002-antibot-browser.cjs
 const assert = require('node:assert/strict'), fs = require('fs'), path = require('path'), vm = require('vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
 const content = read('content.js'), hook = read('hook.js');
@@ -32,7 +32,7 @@ vm.createContext(sb); vm.runInContext(content.slice(a, z), sb);
   assert.match(fireGuard, /if \(!el \|\| \(on && !tabOwner\)\) return false;/);
   assert.match(fireGuard, /if \(abHold\(\) && !el\.closest\?\.\('\.l2-antibot-card--blocked'\)\) return false;/);
   assert.match(content, /try \{ abNet\(path, d\.res\); \}/);
-  assert.match(content, /if \(on && ch\.on\.oldValue === false && rt\.abChal\) setRt\(\{ abChal: null \}\);/);
-  assert.match(content, /ch\.paused\.oldValue && !ch\.paused\.newValue && rt\.abChal\) setRt\(\{ abChal: null \}\)/);
-  console.log('PASS: 10.0.2 antibot — challenge sticky in rt.abChal, own requests and clicks blocked, cleared by passed/not_found/block/▶, hook keeps «passed»');
+  assert.doesNotMatch(content, /if \(on && ch\.on\.oldValue === false && rt\.abChal\) setRt\(\{ abChal: null \}\);/);
+  assert.doesNotMatch(content, /ch\.paused\.oldValue && !ch\.paused\.newValue && rt\.abChal\) setRt\(\{ abChal: null \}\)/);
+  console.log('PASS: 10.0.2 antibot — challenge sticky in rt.abChal, own requests and clicks blocked, cleared by passed/not_found/block, Start preserves challenge, hook keeps «passed»');
 })().catch(e => { console.error(e); process.exit(1); });

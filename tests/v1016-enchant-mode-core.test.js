@@ -23,7 +23,7 @@ function mainFixture(options={}){
   isBattle:()=>!!options.battle,isMap:()=>!options.battle,isFishing:()=>!!options.catch,fishState:()=>!!options.catch,fishNow:noop,
   campEnabled:noop,farmDb:async()=>{},recipeDb:async()=>{},learnSkillDb(){},progressMonitor:{tick:(sig,active)=>{calls.push(['watchdog',active]);return 'progress'}},
   meHp:noop,mobHp:noop,serverDown:noop,loginPage:noop,leaveCheck:async()=>false,tvtStep:options.tvt?done('TvT'):async()=>false,
-  antibotGuard:options.antibot?done('antibot'):async()=>false,shopStep:done('urgent shop'),reviveStep:done('revive'),battle:done('battle'),fishFight:done('catch'),
+  pveFishingStep:async()=>false,antibotGuard:options.antibot?done('antibot'):async()=>false,shopStep:done('urgent shop'),reviveStep:done('revive'),battle:done('battle'),fishFight:done('catch'),
   magisterDisable:done('magister disable'),magisterStep:done('magister step'),magisterStart:done('magister start'),tvtSoon:noop,
   sleep:async()=>{c.on=false},softError:async e=>{throw e},rec(){},
  });

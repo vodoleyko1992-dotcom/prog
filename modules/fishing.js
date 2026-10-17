@@ -5,7 +5,7 @@
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
  root.L2V7Factories.fishing = function create_fishing(env) {
 const location = env.routeLocation || root.location;
-const fishOwn = () => env.on && env.tabOwner !== false && !env.antibotState?.();
+const fishOwn = () => env.on && env.tabOwner !== false && (!env.antibotState?.() || env.antibotState?.() === 'blocked' && env.pveFishingAllowed?.() === true);
 async function fishSoft(msg) {
   if (!fishOwn()) return;
   if (!fishNow()) return Array.isArray(env.cfg.autoTasks) ? false : env.halt(msg);
