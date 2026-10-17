@@ -60,9 +60,9 @@ function fireBox(){
  class Ev{constructor(type){this.type=type}}
  const c={on:true,tabOwner:true,running:true,invBusy:false,rt:{},window:{},location:{pathname:'/'},PointerEvent:Ev,MouseEvent:Ev,
   L2V7Modules:{payments:{blocked:()=>true,consumePermit:()=>false},pvp:{pending:()=>true},actions:{canAct:()=>true}},
-  isBattle:()=>false,$q:()=>null,abHold:()=>false,loginPage:()=>true};
+  isBattle:()=>false,isMap:()=>false,isFishing:()=>false,$q:()=>null,abHold:()=>false,loginPage:()=>true};
  vm.createContext(c);
- vm.runInContext(slice(core,'function fire(el) {','// Single-writer settings update.')+';this.fire=fire;',c);
+ vm.runInContext(slice(core,'const PAY_FREE_MAP =','// Single-writer settings update.')+';this.fire=fire;',c); // 20.12: fire() после слияния с шагом 2 вызывает paymentFreeClick — берём вместе с ним
  return {c,mk};
 }
 test('кнопка «Войти» нажимается при неизвестной оплате и PvP-pending',()=>{

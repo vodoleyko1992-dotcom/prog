@@ -37,9 +37,13 @@ test('Stop во время возврата не меняет страницу, 
  env.setCfg=async p=>{Object.assign(env.cfg,p);env.on=false;};await D.dailyStep();assert.equal(loc.href,'');assert.ok(env.rt.dailyFish,'готовый detour остаётся до подтверждённого возврата');
  env.on=true;env.setCfg=async p=>Object.assign(env.cfg,p);await D.dailyStep();assert.equal(env.rt.dailyFish,null);assert.equal(env.cfg.zoneAuto,true);assert.equal(loc.href,'/map.html');
 });
-test('РБ по дейлику → один зачтённый kill → прежний auto и одна серия',async()=>{
- const {env,D,series}=make();env.rt.daily.tasks={strong_enemy_20:{have:0,need:1,done:false}};env.rt.rbKills=5;
- await D.dailyStep();assert.equal(env.cfg.rbHuntMode,true);assert.deepEqual(series,['daily']);env.rt.rbKills=6;await D.dailyStep();assert.equal(env.cfg.rbHuntMode,false);assert.equal(env.cfg.zoneAuto,true);assert.equal(env.rt.dailyRb,null);
+// 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): дейлик РБ тур не включает и серию не начинает;
+// заход, начатый старой версией, сразу заканчивается с возвратом прежнего auto
+test('РБ по дейлику не включает тур; старый заход → прежний auto без серии',async()=>{
+ const {env,D,series,cfgs}=make();env.rt.daily.tasks={strong_enemy_20:{have:0,need:1,done:false}};env.rt.rbKills=5;
+ assert.equal(await D.dailyStep(),false);assert.equal(env.cfg.rbHuntMode,false);assert.equal(env.rt.dailyRb,undefined);assert.deepEqual(series,[]);assert.deepEqual(cfgs,[]);
+ env.rt.dailyRb={day:'audit-day',k0:5,t:Date.now(),prev:{rbHuntMode:false,fishMode:false,epicMode:false,catMode:false,zoneAuto:true},entering:false,kick:0};Object.assign(env.cfg,{rbHuntMode:true,zoneAuto:false});
+ assert.equal(await D.dailyStep(),true);assert.equal(env.cfg.rbHuntMode,false);assert.equal(env.cfg.zoneAuto,true);assert.equal(env.rt.dailyRb,null);assert.deepEqual(series,[]);
 });
 test('остановленный бот не выполняет POST кланового задания и не возвращает detour',async()=>{
  const {env,D,posts,cfgs}=make();env.rt.clanTasks={t:Date.now(),me:{id:'hero'},defs:[{id:'kill_monsters',n:'Охота',canTake:true,reward:{}}],active:[]};

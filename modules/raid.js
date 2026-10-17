@@ -961,9 +961,9 @@ async function rbBuffHold(name, active) {
 }
 
 // 20.12 (ревизия 17.10): требование набора за FA в туре — то же правило, что у покупки (buffs.tourFaWanted): тур по дейлику
-// «Убей 1 РБ» без галки dailyRbFa не ждёт FA, не ставит бота на паузу «Пополни FA» и не крутит huntDone перед перелётом
+// «Убей 1 РБ» (старый, до 20.12) не ждёт FA, не ставит бота на паузу «Пополни FA» и не крутит huntDone перед перелётом
 function tourFaOn() {
-  return env.tourFaWanted ? !!env.tourFaWanted() : env.cfg.rbFaFull !== false && !(env.rt.dailyRb && env.cfg.dailyRbFa !== true);
+  return env.tourFaWanted ? !!env.tourFaWanted() : env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
 
 function rbSummonBuffReady() {

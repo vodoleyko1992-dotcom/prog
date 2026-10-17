@@ -301,9 +301,9 @@ function faDeathNote(H, now = Date.now()) {
 }
 const faSig = P => Object.entries(P).map(([id, e]) => `${id}:${Math.round(e / 60000)}`).sort().join(',');
 // 20.12 (ревизия 17.10): одно правило «нужен ли туру РБ фулл бафф за FA» — для покупки (faWanted) и для проверок тура в raid
-// (нехватка FA, ожидание баффов, проверка перед перелётом). Тур по дейлику «Убей 1 РБ» — только по явной галке cfg.dailyRbFa
+// (нехватка FA, ожидание баффов, проверка перед перелётом). Тур по дейлику «Убей 1 РБ» — без FA (решение игрока 17.10 10:55: «бафф за FA только при туре на РБ»)
 function tourFaWanted() {
-  return env.cfg.rbFaFull !== false && !(env.rt.dailyRb && env.cfg.dailyRbFa !== true);
+  return env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
@@ -320,7 +320,7 @@ function faWanted() {
   // но только перед вылетом к выбранному РБ (townBuffStart «перед РБ …», шаг тура go/fight, rbGo), а не пока тур фармит мобов
   const RH = env.rt.rbHunt || {};
   const tourPrep = env.rt.tbuff?.rbTour && now - (env.rt.tbuff.t || 0) < 15 * 60000;
-  // 20.12 (ревизия 17.10): тур, запущенный дейликом «Убей 1 РБ», сам набор за FA не покупает — только по явной галке cfg.dailyRbFa
+  // 20.12 (ревизия 17.10): тур, запущенный дейликом «Убей 1 РБ», сам набор за FA не покупает (решение игрока 17.10)
   const tourWant = tourFaWanted() && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA

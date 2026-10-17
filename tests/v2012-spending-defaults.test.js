@@ -1,6 +1,6 @@
 'use strict';
 // 20.12 (ревизия 17.10, шаг 4 «траты по умолчанию»): базовый профиль не включает режимы и не переносит замеры Warlock 52,
-// дейлик «Убей 1 РБ» без явной галки не покупает набор за FA, новый герой не наследует платные режимы, конец РБ-сессии
+// дейлик «Убей 1 РБ» не покупает набор за FA (20.12, решение игрока 17.10 10:56: галки dailyRbFa больше нет), новый герой не наследует платные режимы, конец РБ-сессии
 // при списке задач снимает тур, эпик после смерти без бесплатной дороги не берёт FA, тур не берёт FA без бюджета телепорта.
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -54,16 +54,19 @@ function buffsFixture(cfg, rt) {
   env.faCost = id => sb.L2FaFull.COST[id] || 1;
   return { env, B: sb.L2V7Factories.buffs(env) };
 }
-test('тур по дейлику РБ не покупает фулл бафф за FA без явной галки dailyRbFa', () => {
+// 20.12 (решение игрока 17.10 10:56: «бафф за FA только при туре на РБ»): галка dailyRbFa убрана — старый тур по дейлику
+// (rt.dailyRb) набор за FA не покупает никогда, даже если в сохранённых настройках осталось dailyRbFa: true
+test('тур по дейлику РБ не покупает фулл бафф за FA; галки dailyRbFa нет', () => {
   const daily = { day: '2026-10-17', k0: 0, t: Date.now(), prev: {}, entering: false };
   const off = buffsFixture({}, { dailyRb: daily });
   assert.deepEqual([...off.B.faWanted()], [], 'дейлик: набор не нужен');
-  const on = buffsFixture({ dailyRbFa: true }, { dailyRb: daily });
-  assert.ok(on.B.faWanted().length >= 5, 'явная галка — набор как в «Туре РБ»');
+  const old = buffsFixture({ dailyRbFa: true }, { dailyRb: daily });
+  assert.deepEqual([...old.B.faWanted()], [], 'оставшийся в настройках dailyRbFa: true больше ничего не разрешает');
   const tour = buffsFixture({}, {});
   assert.ok(tour.B.faWanted().length >= 5, 'обычный тур без дейлика — как прежде');
   const content = read('content.js'), popup = read('popup.js'), html = read('popup.html');
-  assert.match(content, /dailyRbFa: false,/); assert.match(popup, /dailyRbFa: false,/); assert.match(popup, /'dailyRbFa'/); assert.match(html, /id="dailyRbFa" type="checkbox"/);
+  for (const [n, t] of [['content.js', content], ['popup.js', popup], ['popup.html', html], ['modules/buffs.js', read('modules/buffs.js')], ['modules/raid.js', read('modules/raid.js')], ['modules/dailies.js', read('modules/dailies.js')]])
+    assert.equal(/dailyRbFa/.test(t), false, 'dailyRbFa убран из ' + n);
 });
 
 // ---------- (c) новый герой ----------
@@ -162,21 +165,21 @@ function dailyRaid(extraCfg = {}) {
   const rec = env.rec; env.rec = (...a) => { if (/баффы изменились/.test(a.join(' '))) dones.push(a.join(' ')); return rec?.(...a); };
   return { ...r, env, pauses, dones };
 }
-test('тур по дейлику без dailyRbFa при FA = 0 не ставит бота на паузу и не крутит «баффы изменились»', async () => {
+test('старый тур по дейлику (rt.dailyRb) при FA = 0 не ставит бота на паузу и не крутит «баффы изменились»', async () => {
   const d = dailyRaid();
   for (let i = 0; i < 4; i++) await d.f.R.rbHuntStep();
   assert.deepEqual(d.pauses, [], 'пауза «Пополни FA» не вызвана');
   assert.deepEqual(d.dones, [], 'перед перелётом нет круга huntDone по баффам');
   assert.equal(d.env.rt.rbHunt.step, 'go', 'подготовка пройдена, тур идёт к РБ');
   assert.equal(d.buys(), 1, 'городская подготовка один раз, без круга');
-  // явная галка dailyRbFa — прежнее строгое требование набора: нет FA → пауза
-  const strict = dailyRaid({ dailyRbFa: true });
+  // 20.12 (решение игрока 17.10 10:56): строгое требование набора — только у «Тура РБ», выбранного игроком (без rt.dailyRb): нет FA → пауза
+  const strict = dailyRaid(); strict.env.rt.dailyRb = null;
   for (let i = 0; i < 4; i++) await strict.f.R.rbHuntStep();
   assert.ok(strict.pauses.length >= 1); assert.match(strict.pauses[0], /нет FA для выбранного баффа/);
   assert.equal(strict.env.rt.rbHunt.step, 'pick', 'без FA строгий тур не летит');
   // общее правило в buffs
   const b = buffsFixture({}, { dailyRb: { t: Date.now() } }); assert.equal(b.B.tourFaWanted(), false);
-  assert.equal(buffsFixture({ dailyRbFa: true }, { dailyRb: { t: Date.now() } }).B.tourFaWanted(), true);
+  assert.equal(buffsFixture({ dailyRbFa: true }, { dailyRb: { t: Date.now() } }).B.tourFaWanted(), false, 'старый ключ dailyRbFa не разрешает FA');
   assert.equal(buffsFixture({}, {}).B.tourFaWanted(), true);
   assert.equal(buffsFixture({ rbFaFull: false }, {}).B.tourFaWanted(), false);
 });
