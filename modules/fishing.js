@@ -812,6 +812,7 @@ async function fishCaught(name) {
   // 8.0: весь учёт рыбы (заброс, поклёвка, наживка, улов, сессия, урон, откат, лаг) — одной записью, без ожидания
   fishStat({ caught: 1 }, name);
   bg(env.setRt(statTake({ fishSinceProc: (env.rt.fishSinceProc || 0) + 1, fishSinceProcN: (env.rt.fishSinceProcN || 0) + 1, fishSess: sess })));
+  if (+env.cfg.dailyFishLimit>0 && env.dailyLimitFishSync) await env.dailyLimitFishSync();
   const tg = env.rt.fishTgt; if (tg && !tg.done && tg.type === 'fish') await fishTgtAdd('fish', 1);   // цель «N рыб» — может остановить бота, это ждём
   if (env.dailyFishNote) bg(env.dailyFishNote());   // 10.0: дейлик «50 рыб» — счётчик улова
   env.rec('B', 'рыбалка', `поймана ${name} · ${fishRateTxt()}`);
@@ -1011,6 +1012,7 @@ async function fishing() {
   const kick=+env.rt.manualKickAt||0,char=env.rt.char;
   const still=()=>fishOwn() && fishNow() && kick===(+env.rt.manualKickAt||0) && char===env.rt.char;
   if(await castReconcile())return;
+  if (+env.cfg.dailyFishLimit>0 && env.dailyLimitFishSync && !await env.dailyLimitFishSync()) return;
   if (!still()) return;
   if (!fishOwn()) return;
   if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
