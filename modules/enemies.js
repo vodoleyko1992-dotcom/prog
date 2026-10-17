@@ -107,7 +107,7 @@ function domHeroes() {
 }
 // ---------- можно ли нападать ----------
 // пусто — можно; иначе причина (для журнала и меню)
-function verdict(e, h, me) {
+function verdict(e, h, me, o = {}) {
   if (!e) return 'не в листе';
   const explicit = env.rt.pvpTargets?.[e.id];
   if (env.cfg.pvpOnSight !== false && explicit?.enabled && explicit.id === e.id && low(explicit.name) === low(e.name))
@@ -119,6 +119,17 @@ function verdict(e, h, me) {
   if ((e.skipT || 0) > Date.now()) return e.skipWhy || 'пауза';
   h = h || {};
   if (h.party) return 'в одной группе с нами';
+  // 20.13 (ревизия 17.10, шаг 5, pvp-misc/ENM-1): соклановец, случайно убивший героя, попадал в лист и потом атаковался (у явных целей
+  // pvp.js проверка клана была, здесь — нет). Свой клан — из pvp.selfClan; клан игрока — из списка игроков или его профиля.
+  // Пока свой клан не прочитан, на карте не нападаем; ответ на нападение (incoming) отменяет только подтверждённый общий клан.
+  if (env.pvpSelf) {
+    const S = env.pvpSelf();
+    if (S?.clanId && h.clanKnown === true && String(h.clanId || '') === String(S.clanId)) return 'в одном клане с нами';
+    if (!o.incoming) {
+      if (!S) return 'проверяю свой клан';
+      if (S.clanId && h.clanKnown !== true) return 'проверяю клан игрока';
+    }
+  }
   if (h.atk === false) return h.why || 'игра не даёт напасть (нет кнопки атаки)';
   if (h.ok === false) return h.why || 'игра не даёт напасть';
   if (env.cfg.enemyFlagOnly !== false && h.col !== undefined && !['pk', 'aggressor'].includes(h.col)) return 'ник не красный и не фиолетовый — за нападение дадут карму';
@@ -197,8 +208,21 @@ async function tick() {
     if (!active(T0)) return;
     if (a) noteHeroes(a.map(h => ({ id: String(h.characterId || ''), name: String(h.name || ''), lvl: +h.level || 0, col: String(h.pvpNickColor || ''),
       atk: 'battleOnNameClick' in h || 'showPkButton' in h ? h.battleOnNameClick === true || h.showPkButton === true : null,
-      ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: String(h.pvpBlockedReasonUk || ''), party: !!h.isPartyMember })), String(j.nearestLabelUk || ''));
+      ok: typeof h.pvpAllowed === 'boolean' ? h.pvpAllowed : null, why: String(h.pvpBlockedReasonUk || ''), party: !!h.isPartyMember,
+      clanId: h.clanId == null ? '' : String(h.clanId), clanKnown: Object.hasOwn(h, 'clanId') })), String(j.nearestLabelUk || ''));
   } catch (e) {} finally { scanBusy = false; }
+}
+// 20.13 (ревизия 17.10, шаг 5, pvp-misc/ENM-1): враг из листа на локации — дочитываем свой клан и клан врага (его профиль), если списка мало
+let clanReadT = 0;
+async function clanRead(T0) {
+  // 20.13 (шаг 5, pvp-misc, ревью): не чаще раза в 5 с — при сбое /character или профиля шаг цикла не шлёт GET каждый круг
+  if (Date.now() - clanReadT < 5000) return; clanReadT = Date.now();
+  const S = await env.pvpSelfRead(); if (!active(T0) || !S?.clanId) return;
+  for (const h of HERO.list) {
+    if (h.clanKnown === true || !h.id || !find(h.id, h.name)) continue;
+    const c = await env.pvpHeroClan?.(h.id, h.name); if (!active(T0)) return;
+    if (c && Object.hasOwn(c, 'clanId')) { h.clanId = c.clanId; h.clanKnown = true; }
+  }
 }
 // ---------- шаг главного цикла: true — бот занят врагом ----------
 async function step() {
@@ -216,7 +240,7 @@ async function step() {
   if (Date.now() - INC.t < 20000 && INC.list.length && !busy()) {
     for (const x of INC.list) {
       const e = find(x.id, x.name), h = HERO.list.find(y => (x.id && y.id === x.id) || low(y.name) === low(x.name));
-      if (!e || verdict(e, h || {})) continue;
+      if (!e || verdict(e, h || {}, null, { incoming: true })) continue;
       const btn = env.$q('#l2-pvp-incoming-attack');
       if (!env.shown(btn) || btn.disabled) break;
       // 14.10, public common.js applyPvpIncoming: единственная кнопка HUD привязана к первому нападающему.
@@ -229,11 +253,13 @@ async function step() {
       env.rec('B', 'враги', `${e.name} напал на нас — отвечаю (враг из листа, убивал нас ${e.kills} раз)`);
       await env.setRt({ enemyHunt: { id: e.id || x.id, name: e.name, t: Date.now(), via: 'incoming' } });
       if (!active(T0)) return false;
-      if (!sameTarget() || !env.shown(btn) || btn.disabled || verdict(e, h || {}) || busy()) { await env.setRt({ enemyHunt: null }); continue; }
+      if (!sameTarget() || !env.shown(btn) || btn.disabled || verdict(e, h || {}, null, { incoming: true }) || busy()) { await env.setRt({ enemyHunt: null }); continue; }
       env.fire(btn); INC.t = 0; await env.sleep(4000); return true;
     }
   }
   if (env.isMap() && Date.now() - HERO.t > 20000) { const dh = domHeroes(); if (dh.length) noteHeroes(dh, HERO.zone); }
+  if (env.pvpSelfRead && !busy() && Date.now() - HERO.t <= 90000 && HERO.list.some(h => find(h.id, h.name))) await clanRead(T0);
+  if (!active(T0)) return false;
   const p = pick(); if (!p || busy()) return false;
   if (env.isBattle()) {                                    // идёт бой с мобом — добиваем, на врага после победы
     if (!env.victory?.()) return false;

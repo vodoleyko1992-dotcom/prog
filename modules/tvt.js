@@ -19,10 +19,20 @@ function tvtState() {
   const nx = T.schedule?.next || {}, now = tvtNow();
   return { phase: T.phase || '', reg: !!(T.isRegistered || T.myTeam), team: T.myTeam, id: T.eventId || nx.slotKey || '',
     start: tvtMs(T.startsAt) || tvtMs(nx.battleStartsAt), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000,
-    regOpen: tvtMs(nx.registrationOpensAt), count: +T.registeredCount || 0, max: +T.maxPlayers || 20,
+    regOpen: tvtMs(nx.registrationOpensAt), count: +T.registeredCount || 0, max: +T.maxPlayers || 20, age: Date.now() - (+T.t || 0),
     eliminated: !!T.isRegistered && /^(ACTIVE|FINISHED)$/i.test(T.phase || '') && T.selfCombat?.alive === false };
 }
-const tvtRegistrationDue = () => { const s = tvtState(); return canRun() && !!s && /REGISTRATION/i.test(s.phase) && !s.reg && (!s.regEnd || s.now < s.regEnd); };
+// 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-1): регистрацию, которую нельзя выполнить, не держим приоритетом всё окно —
+// раньше при 20/20 мест или без кнопки «Зарегистрироваться» tvtStep каждый круг возвращал true и PvE стояло до 10 мин (у неподходящего
+// героя — каждое событие). Нет мест — регистрация не «пора», пока фоновый опрос не увидит свободное место (тогда снова на арену);
+// кнопки нет дважды подряд — пропуск до конца окна этого события (rt.tvtRegSkip, причина в журнале).
+const regSkipped = s => { const K = env.rt.tvtRegSkip; return !!K && K.id === s.id && s.now < (+K.until || 0); };
+const tvtRegistrationDue = () => { const s = tvtState(); return canRun() && !!s && /REGISTRATION/i.test(s.phase) && !s.reg && (!s.regEnd || s.now < s.regEnd) && s.count < s.max && !regSkipped(s); };
+// 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-6): фаза боя из старых данных (Stop посреди TvT, свой опрос не шёл, пока записаны) держала
+// приоритет без предела по времени — бот уходил на арену и ждал врагов часами. Фаза «идёт» верна только до конца боя:
+// известный endsAt (+5 мин запаса на итог сервера) или 20 мин от старта (бой ≈10 мин). Обычный путь — свежий опрос (stale в tvtRefresh).
+const phaseLive = S => /ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase) && !(S.end && S.now > S.end + 5 * 60000)
+  && !(S.start && S.now - S.start > 20 * 60000 && !(S.end && S.now < S.end));
 let readAt = 0, readIdentity = '', reading = null;
 async function tvtRefresh(force = false) {
   if (!canRun() || !env.gameGet) return;
@@ -33,7 +43,14 @@ async function tvtRefresh(force = false) {
   // 10.0.22: после сна вкладки можно пропустить первые10с открытия; продолжаем читать до конца окна.
   const closes = s && (s.regEnd > s.regOpen ? s.regEnd : s.start > s.regOpen ? s.start : s.regOpen + 10 * 60000);
   const pendingWindow = s?.regOpen && s.now >= s.regOpen && s.now < closes;
-  const due = !s || !s.reg && (opening || pendingWindow || tvtRegistrationDue());
+  // 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-6): записанный герой тоже перечитывает статус, когда данные старше минуты, а бой идёт
+  // или вот-вот начнётся, — иначе старая фаза ACTIVE после Stop жила, пока игра сама не опросит /game/tvt
+  const hold = Math.max(1, +env.cfg.tvtHoldMin || 3) * 60000;
+  const stale = !!s?.reg && s.age > 60000 && (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(s.phase) || (s.start && s.start - s.now < hold && s.now - s.start < 20 * 60000));
+  // 20.13 (шаг 5, pvp-misc, ревью): 20/20 мест — регистрация не «пора», но освобождение места ловим опросом и без известного
+  // registrationOpensAt (раньше due держала сама tvtRegistrationDue, теперь она false при полной записи)
+  const regFull = !!s && !s.reg && /REGISTRATION/i.test(s.phase) && (!s.regEnd || s.now < s.regEnd) && s.count >= s.max && !regSkipped(s);
+  const due = !s || stale || !s.reg && (opening || pendingWindow || regFull || tvtRegistrationDue());
   if (!force && (!due || now - readAt < (opening ? 1000 : 5000))) return;
   reading = T0; readAt = now;
   try {
@@ -49,6 +66,9 @@ async function tvtRefresh(force = false) {
 }
 
 const isArena = () => /\/tvt-arena\.html/i.test(location.pathname);
+const LEAVE_KEY = 'l2bot.tvtLeaveT';
+const leaveRead = () => { try { return +root.sessionStorage?.getItem(LEAVE_KEY) || 0; } catch (e) { return 0; } };
+const leaveSave = t => { try { root.sessionStorage?.setItem(LEAVE_KEY, String(t)); } catch (e) {} };
 
 // 9.2 (лог 11.10 03:00): убитый враг остаётся в списке команды как живой, пока открыта панель боя — игра перерисовывает
 // список только после «← Вернуться на TvT» (POST /game/tvt/target/clear). Бот 20 с жал на xdesx: POST /game/tvt/target → 400
@@ -65,7 +85,7 @@ function tvtSoon() {                                // пора на арену:
   // «пора на арену» — бот 40 раз бегал рыбалка ↔ арена. Закончился/отменён — не на арену, какое бы ни было время
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
   if (env.rt.tvtDone && env.rt.tvtDone === (S.id || String(S.start || ''))) return false;   // 10.0: пустой id события — по времени старта          // этот бой уже отыгран (итог записан)
-  return /ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase) || (S.start && S.start - S.now < 60000 && S.now - S.start < 11 * 60000);
+  return phaseLive(S) || (S.start && S.start - S.now < 60000 && S.now - S.start < 11 * 60000);
 }
 
 // 10.0.11 (игрок 13.10 22:00: «во время TvT команды других задач подавляют TvT, а TvT важнее»): окно TvT — записаны, бой идёт
@@ -77,7 +97,7 @@ function tvtHold() {
   const S = tvtState(); if (!S || !S.reg || S.eliminated) return false;
   if (/FINISH|RESULT|ENDED|IDLE|CANCEL/i.test(S.phase)) return false;
   if (env.rt.tvtDone && env.rt.tvtDone === (S.id || String(S.start || ''))) return false;
-  if (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(S.phase)) return true;
+  if (phaseLive(S)) return true;
   const hold = Math.max(1, +env.cfg.tvtHoldMin || 3) * 60000;
   return !!(S.start && S.start - S.now < hold && S.now - S.start < 11 * 60000);
 }
@@ -108,8 +128,13 @@ async function tvtStep() {                          // true — шаг TvT сд�
     if (!registration && !tvtSoon()) return false;
     if (env.victory?.()) { location.href = '/tvt-arena.html'; return true; }
     const rbFight = /l2dop_(rb|eg)_/i.test(location.search) || env.rt.rbHunt?.step === 'fight' || !!(env.rt.epic?.step && env.rt.epic.step !== 'pick');
-    if (Date.now() - tvtStep.leaveT < (registration ? 3000 : 30000)) return false;
-    tvtStep.leaveT = Date.now();
+    // 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-3): метка прошлого выхода переживает перезагрузку (sessionStorage). Раньше она жила
+    // только в странице: выход не подтверждён → leaveCheck вернул в бой → новая страница сразу снова уходила (пинг-понг каждые 3 с,
+    // по РБ почти без ударов). Вернулись в бой после своего же выхода — следующая попытка не раньше чем через 30 с.
+    const prevLeave = leaveRead(), returned = prevLeave > tvtStep.leaveT && Date.now() - prevLeave < 120000;
+    const gap = returned ? 30000 : registration ? 3000 : 30000;
+    if (Date.now() - Math.max(tvtStep.leaveT, returned ? prevLeave : 0) < gap) return false;
+    tvtStep.leaveT = Date.now(); leaveSave(tvtStep.leaveT);
     const S = tvtState() || {};
     env.rec('B', 'TvT', `${registration ? `регистрация открыта, мест занято ${S.count}/${S.max}` : `бой TvT ${S.start && S.start > S.now ? 'через ' + Math.round((S.start - S.now) / 1000) + ' с' : 'идёт'}`} — прерываю ${rbFight ? 'бой с боссом' : 'фарм'}, иду на арену`);
     env.leaveMark?.((location.search || '').match(/[?&]spawnId=([^&]+)/)?.[1], 'TvT: освобождаю PvE-бой');
@@ -122,7 +147,6 @@ async function tvtStep() {                          // true — шаг TvT сд�
   const regN = (env.rt.tvtRegN || {})[S.id] || 0;
   if (registration) {
     if (!isArena()) { env.setStatus('TvT: иду записываться'); location.href = '/tvt-arena.html'; await env.sleep(4000); return true; }
-    if (S.count >= S.max) { env.setStatus(`TvT: заняты все ${S.max} мест — проверяю освобождение места`); await env.sleep(1000); return true; }
     const retry = [3000, 5000, 10000, 30000][Math.min(3, Math.max(0, regN - 1))];
     if (Date.now() - ((env.rt.tvtRegT || {})[S.id] || 0) < retry) { await env.sleep(200); return true; }
     const b = await env.waitX(() => { const x = env.$q('#tvt-register-btn'); return env.shown(x) ? x : null; }, 6000, 200);
@@ -130,6 +154,8 @@ async function tvtStep() {                          // true — шаг TvT сд�
     await env.setRt({ tvtRegT: { ...(env.rt.tvtRegT || {}), [S.id]: Date.now() }, tvtRegN: { [S.id]: regN + 1 } });
     if (!active(T0)) return false;
     if (b) {
+      if (env.rt.tvtRegNoBtn) await env.setRt({ tvtRegNoBtn: null });
+      if (!active(T0)) return false;
       await env.pause(); if (!active(T0) || !tvtRegistrationDue() || tvtState()?.id !== S.id || b.disabled) return false; env.fire(b);
       env.rec('B', 'TvT', `регистрация отправлена (${S.count}/${S.max}); жду подтверждения сервера`);
       await env.sleep(1500); if (!active(T0)) return false;
@@ -138,7 +164,21 @@ async function tvtStep() {                          // true — шаг TvT сд�
       if (!tvtState()?.reg) { env.setStatus('TvT: регистрация пока не подтверждена — остаюсь на арене'); return true; }
       env.rec('B', 'TvT', `регистрация подтверждена (${S.id})`);
     }
-    else env.rec('B', 'TvT', `кнопки «Зарегистрироваться» нет — ${(env.$q('#tvt-message')?.textContent || env.$q('#tvt-phase-label')?.textContent || '').trim().slice(0, 80)}`);
+    else {
+      // 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-1): кнопки нет второй раз подряд — герой не подходит под условия события;
+      // до конца окна регистрации этого события PvE не держим (раньше повтор раз в 30 с все 10 мин, каждое событие)
+      const why = (env.$q('#tvt-message')?.textContent || env.$q('#tvt-phase-label')?.textContent || '').trim().slice(0, 80);
+      const nb = env.rt.tvtRegNoBtn?.id === S.id ? (+env.rt.tvtRegNoBtn.n || 0) + 1 : 1;
+      if (nb >= 2) {
+        const until = S.regEnd || S.start || (S.now + 10 * 60000);
+        await env.setRt({ tvtRegNoBtn: null, tvtRegSkip: { id: S.id, until, why: why || 'нет кнопки «Зарегистрироваться»' } });
+        if (!active(T0)) return false;
+        env.rec('B', 'TvT', `кнопки «Зарегистрироваться» нет и при повторе${why ? ` (${why})` : ''} — это событие пропускаю до конца регистрации, возвращаюсь к делу`);
+        location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
+      }
+      await env.setRt({ tvtRegNoBtn: { id: S.id, n: nb } });
+      env.rec('B', 'TvT', `кнопки «Зарегистрироваться» нет — ${why}`);
+    }
     if (!active(T0)) return false;
     if (!b) return true;
     location.href = env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'; await env.sleep(3000); return true;
