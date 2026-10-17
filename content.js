@@ -2046,7 +2046,6 @@ async function onDeath(...args) { return L2V7Modules.survival.onDeath(...args); 
 // ---------- после смерти: город → магическая статуя (иначе «Восстановить» у баффера не работает) ----------
 const DEAD_RE = /знепритомн|без сознани|сначала натисни|спочатку натисни|сначала нажми/i;
 const isCity = (...args) => L2V7Modules.navigation.isCity(...args);
-const clickText = e => [e.textContent, e.title, e.getAttribute('aria-label'), e.getAttribute('href'), ...[...e.querySelectorAll('img')].map(i => (i.alt || '') + ' ' + (i.getAttribute('src') || ''))].join(' ');
 async function reviveStep(...args) { return L2V7Modules.survival.reviveStep(...args); }
 
 
@@ -2768,6 +2767,10 @@ async function leaveCheck() {
   return true;
 }
 async function main() {
+  // 20.13 (ревизия 17.10, шаг 7, quality/M4): одна охранная проверка главного цикла вместо 21 одинаковой копии
+  // условия «бот выключен / вкладка не хозяин / режим заточки» — после каждого await шаг не продолжается после Stop,
+  // потери замка или смены режима на заточку. Условие то же, просто в одном месте.
+  const mainParked = () => !on || !tabOwner || autonomyMode() === 'enchant';
   if (running) return;
   if (!on) { try { await switchChar(); } catch (e) { console.warn(TAG, 'персонаж', e); } return; }
   running = true;
@@ -2897,25 +2900,25 @@ async function main() {
         await sleep(200); continue;
       }
       if (L2EngineCore.taskAllowed(cfg,'pvp')) await L2V7Modules.pvp.seedConfirmed();
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (L2EngineCore.taskAllowed(cfg,'pvp') && await L2V7Modules.pvp.step()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (!isBattle() && await L2V7Modules.raid.rbOneStep()) { await sleep(200); continue; }   // 10.0.2 (лог 01:00): «один РБ» убит — пауза раньше сторожа баффов и магазина
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // 9.2 (игрок 11.10: «Лист врагов»): убийцы героя — в лист; враг на локации — нападаем кнопкой игры (с проверкой сил), следим за возвращением
       if (L2EngineCore.taskAllowed(cfg,'pvp')) L2V7Modules.enemies.tick().catch(() => {});
       // 15.10: фоновая слежка РБ отключена; таймеры импортируются, цели читает активный тур.
       if (L2EngineCore.taskAllowed(cfg,'pvp') && await L2V7Modules.enemies.step()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // 10.0.11 (игрок 13.10 22:00: «команды других задач подавляют TvT»): окно TvT (записаны, до старта < tvtHoldMin мин или бой идёт) —
       // закупку, магистра, баффы, Маммона, квесты, дейлики, туры и телепорты не начинаем; бой с мобом и заброс рыбалки доводим,
       // «🛒 Закупить сейчас» (urgent) — как и раньше. На арену уводит tvtStep выше (за минуту до старта)
       if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { taskPolicyNote('tvt'); await L2V7Modules.tvt.tvtWait(); continue; }
       if (await pveFishingStep()) continue;          // только рыбалка после завершённой проверки, без PvE
       if (await antibotGuard()) continue;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // Неизвестный старый заброс сверяем чтением и при выбранной другой задаче; новый заброс запрещён.
       if (rt.fishCastPending && !fishNow() && !isBattle() && !tvtSoon() && !rt.revive && !L2V7Modules.pvp?.pending() && Date.now() - castObservedAt >= 15000) {
         castObservedAt = Date.now(); await L2V7Modules.fishing.castReconcile({observeOnly:true});
@@ -2929,16 +2932,16 @@ async function main() {
       // «🛒 Закупить сейчас» (urgent) — сразу, даже со страницы боя: бросаем моба/РБ/рыбалку
       if (rt.shop && (!isBattle() || rt.shop.urgent) && Date.now() - (rt.shop.t || 0) < 300000) { await shopStep(); await sleep(300); continue; }
       if (rt.shop && !isBattle()) await setRt({ shop: null });
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // 14.10: проверка доступных рангов сразу при включении и после каждого +1 уровня.
       await magisterDisable();
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (rt.magister && !isBattle()) { await magisterStep(); continue; }
       if (await magisterStart()) continue;
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (rt.tbuff && !isBattle() && Date.now() - (rt.tbuff.t || 0) < 120000) { await townBuffStep(); continue; }
       if (rt.tbuff && !isBattle()) await setRt({ tbuff: null });
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (rt.bagCheck && !isBattle()) {              // «Пересчитать в сумке» (квесты на ресурсы)
         if (!isChar()) { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(4000); continue; }
         setStatus('Квесты на ресурсы: считаю сумку'); await bagCounts(); await setRt({ bagCheck: null });
@@ -2968,7 +2971,7 @@ async function main() {
         if (Date.now() - (rt.rbGo.t || 0) < 90000) { await rbGoStep(); continue; }
         await setRt({ rbGo: null });
       }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/teleport.html')); await sleep(4000); } continue; }
       if (rt.zoneGo && !isBattle()) {
         if (rt.zoneGo.id === 'ashen_bastion' && rt.zoneGo.returnPath === '/ashen-bastion.html') { await zoneGoStep(); continue; }
@@ -2977,10 +2980,10 @@ async function main() {
         if (Date.now() - (rt.zoneGo.t || 0) < 120000 && (onSrc || !rt.zoneGoT || Date.now() - rt.zoneGoT > 120000)) { await zoneGoStep(); continue; }
         await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
       }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // v5.5: сторож баффов — в любом режиме вне боя (раньше проверка была только после победы и на карте)
       if (!isBattle() && !fishNow() && !tvtSoon() && !/tvt/i.test(location.pathname) && Date.now() - (rt.tbWatchT || 0) > 15000) { rt.tbWatchT = Date.now(); setRt({ tbWatchT: rt.tbWatchT }); if (await townBuffStart('сторож: баффы слетели')) continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // «🔪 Разделать всю рыбу → Proof» из меню — сразу, в любом режиме (бой с мобом и вываживание рыбы — доводим до конца)
       if (rt.fishSvc && !isBattle() && !(isFishing() && fishState())) {
         if (Date.now() - (rt.fishSvc.t || 0) > 15 * 60000) { await setRt({ fishSvc: null, fishService: null }); continue; }
@@ -3002,24 +3005,24 @@ async function main() {
       farmGuideTick();                             // 10.0.7: источники дропа/спойла из игры (раз в сутки / по кнопке)
       L2V7Modules.subclass.tick().catch(() => {});  // 10.0.7: заготовка под сабы — роль класса, помощь основному
       if (L2EngineCore.taskAllowed(cfg,'mammon') && await L2V7Modules.mammon.mmStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
+      if (mainParked()) continue;              // 10.0.13: false после await не даёт старому циклу начать следующее действие.
       // 9.0: квесты сабкласса/Noblesse — прогресс фоном (только GET), готовую часть бот сдаёт сам (вне боя и туров, с возвратом на точку)
       if (L2EngineCore.taskAllowed(cfg,'quests')) L2V7Modules.story.storyTick().catch(() => {});
       if (L2EngineCore.taskAllowed(cfg,'quests') && await L2V7Modules.story.storyStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // 10.0 (игрок 12.10 «добавь все, монеток шоу»): магазин TvT — покупка вещи-цели за Shil по галочке (вне боя и туров)
       if (!Array.isArray(cfg.autoTasks) && await L2V7Modules.tvtshop.shopStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       // 10.0 (игрок 12.10): дейлики и клановые задания — опрос фоном (GET), сдать/взять/помочь (POST), рыба и РБ по дейликам (вне боя и туров)
       L2V7Modules.dailies.tick().catch(() => {});
       if (await L2V7Modules.dailies.clanStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (await L2V7Modules.dailies.dailyStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (rt.petBufferTrip && await warlockTripStep()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (on && tabOwner && !isBattle() && await L2V7Modules.warlock.step()) { await sleep(200); continue; }
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (epicOn()) L2V7Modules.epics.epicPollTick().catch(() => {});   // 8.0.3: список эпиков — фоном по окнам появления (только GET, без переходов)
       if (autonomyMode() === 'epic' && !isBattle()) { await epicStep(); await sleep(200); continue; }   // 🐉 v5.5: фарм эпиков — свой цикл (заход → смерть → хил → снова)
       // 8.0.3 (разбор логов 11.10): в туре оружие не читалось (строка ниже ждёт !huntOn) — после сброса памяти заряды бы не докупались.
@@ -3027,7 +3030,7 @@ async function main() {
       // 14.10: начатый тур чтения сумки должен закончить prof → inv → back до следующего шага рейда.
       if (rt.invScan && Date.now() - (rt.invScan.t || 0) < 120000) { await invScanStep(); await sleep(300); continue; }
       if (rt.invScan) await setRt({ invScan: null });
-      if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      if (mainParked()) continue;
       if (autonomyMode() === 'raid' && !isBattle() && cfg.weaponScanAuto !== false && !rt.weaponsT && !fishNow() && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')
           && Date.now() - (rt.invTourT || 0) > 30 * 60000) { await setRt({ invTourT: Date.now() }); await invScanStart(); continue; }
       if (autonomyMode() === 'raid' && !isBattle()) { await rbHuntStep(); await sleep(200); continue; }   // 🧭 тур по РБ — свой пошаговый цикл (после полёта в зону: v4.44)
@@ -3731,7 +3734,6 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind.hid,#l2bot-ind.dock-covered{display:none!important}`;
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 // 8.0 (аудит меню): пауза — отдельный ключ хранилища (кнопка «⏸ Пауза» в меню): индикатор пишет «⏸ пауза», а не «остановлен»
 let indPaused = null;
 chrome.storage.local.get('paused').then(s => { indPaused = s.paused || null; try { draw(); } catch (e) {} }).catch(() => {});

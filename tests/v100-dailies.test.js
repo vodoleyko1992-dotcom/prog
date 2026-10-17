@@ -100,7 +100,7 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
       dailyStep: async () => { calls.push('daily'); return false; }
     } };
     vm.createContext(box);
-    vm.runInContext('this.run=async()=>{for(let i=0;i<1;i++){\n' + content.slice(dispatchStart, dispatchEnd) + '\n}};', box);
+    vm.runInContext('this.run=async()=>{' + require('./helpers/main-parked.cjs')(content) + 'for(let i=0;i<1;i++){\n' + content.slice(dispatchStart, dispatchEnd) + '\n}};', box);
     await box.run();
     assert.deepEqual(calls, changed === 'none' ? ['tick', 'clan', 'daily'] : ['tick', 'clan'], 'daily dispatch after clan await: ' + changed);
   }

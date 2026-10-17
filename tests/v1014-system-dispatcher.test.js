@@ -33,7 +33,7 @@ function make(mode='auto'){
  // 14.10: новая задача заточки выключена/без серии; исполняем её настоящий dispatcher guard.
  const enchantStart=src.indexOf('// Автозаточка: команды меню'),enchantEnd=src.indexOf('chrome.runtime.onMessage.addListener',enchantStart);
  vm.runInNewContext(src.slice(enchantStart,enchantEnd),sb);
- vm.runInNewContext('async function dispatchOnce(){for(let once=0;once<1;once++){'+dispatch+'}}',sb);
+ vm.runInNewContext('async function dispatchOnce(){'+require('./helpers/main-parked.cjs')(src)+'for(let once=0;once<1;once++){'+dispatch+'}}',sb);
  return {sb,cfg,rt,loc,calls,T,D,S,step:sb.dispatchOnce,active:()=>{sb.TVT={eventId:'tvt-e1',phase:'ACTIVE',isRegistered:true,myTeam:1,startsAt:now-10000,t:now};},hold:()=>{sb.TVT={eventId:'tvt-e1',phase:'REGISTRATION',isRegistered:true,myTeam:1,startsAt:now+120000,t:now};}};
 }
 for(const mode of ['farm','auto','fish','raid','epic','cat','tasks'])test('main: active TvT прерывает '+mode+' раньше shop/upgrade/story/daily',async()=>{

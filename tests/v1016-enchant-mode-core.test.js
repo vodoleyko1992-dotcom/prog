@@ -72,6 +72,6 @@ for(const interrupted of ['mammon','story','shop','clan','daily','trip','warlock
   L2V7Modules:{mammon:{mmTick:async()=>{},mmStep:step('mammon')},subclass:{tick:async()=>{}},story:{storyTick:async()=>{},storyStep:step('story')},
   tvtshop:{shopStep:step('shop')},dailies:{tick:async()=>{},clanStep:step('clan'),dailyStep:step('daily')},warlock:{step:step('warlock')}}});
  const start=core.indexOf("      if (L2EngineCore.taskAllowed(cfg,'mammon')) L2V7Modules.mammon.mmTick().catch"),end=core.indexOf('\n',core.indexOf('      if (epicOn())',start));assert.ok(start>0&&end>start);
- await vm.runInContext('(async()=>{while(on){if(autonomyMode()==="enchant")break;'+core.slice(start,end)+'\nbreak;}})()',c);
+ await vm.runInContext('(async()=>{'+require('./helpers/main-parked.cjs')(core)+'while(on){if(autonomyMode()==="enchant")break;'+core.slice(start,end)+'\nbreak;}})()',c);
  assert.equal(calls.at(-1),interrupted,JSON.stringify(calls));
 });
