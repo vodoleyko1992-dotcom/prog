@@ -25,7 +25,7 @@ assert.match(content, /if \(Date\.now\(\) - probeT >= 10000\) \{ probeT = Date\.
 assert.match(content, /async function srvUp\(\) \{[\s\S]{0,300}fetch\('\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return srvAnswer\(r\.status, r\.headers\.get\('content-type'\)\); \}/);   // 8.0
 // 3. простой сервера не превращается в остановку: ни «нет прогресса 9 мин ×3», ни «сбой повторился»
 // Реворк20.9: сетевой probe сначала проверяет контекст; недоступный сервер по-прежнему ждём.
-assert.match(content, /const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) continue;\s+if \(!up\) \{[^\n]*await serverWait\(\); continue; \}/);
+assert.match(content, /const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) return true;\s+if \(!up\) \{[^\n]*await serverWait\(\); return true; \}/);
 assert.match(content, /if \(d\.action === 'halt' && !d\.programming && !\(await srvUp\(\)\)\) \{\s+if \(!automationCurrent\(stamp\)\) return;[\s\S]{0,300}return serverWait\(\);/);
 // 4. страница техработ (не 5xx) — тоже простой, но не страница входа
 const sd = content.slice(content.indexOf('function serverDown() {'), content.indexOf('// 7.2.5 (игрок 10.10, скрин 502 Bad gateway'));

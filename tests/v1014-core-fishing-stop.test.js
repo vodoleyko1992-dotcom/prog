@@ -7,8 +7,8 @@ for (const manual of [false, true]) for (const service of ['cut', 'exchange', 'r
   const loc = { href: '' }, b = { on: true, tabOwner: true, rt: { fishService: service, fishSvc: manual ? { t: Date.now() } : null }, Date, location: loc, L2V7Modules:{},
     isBattle: () => false, isFishing: () => false, fishState: () => null, isChar: () => false, isFishShop: () => false, fishNow: () => true,
     setStatus() {}, setRt: async p => Object.assign(b.rt, p), sleep: async () => {}, rtCommit: async () => { if (interrupt === 'stop') b.on = false; if (interrupt === 'lease') b.tabOwner = false; } };
-  const code = manual ? part('      if (rt.fishSvc && !isBattle()', '      // 9.0: камни печати') : part("      if (fishNow() && rt.fishService === 'cut')", '      // 8.0 (аудит рыбалки, лог 10.10:');
-  await vm.runInNewContext('(async()=>{for(let i=0;i<1;i++){' + code + '}})()', b);
+  const code = manual ? part('\n  if (rt.fishSvc && !isBattle()', '\n  // 9.0: камни печати') : part("\n  if (fishNow() && rt.fishService === 'cut')", '\n  // 8.0 (аудит рыбалки, лог 10.10:');
+  await vm.runInNewContext('(async()=>{for(let i=0;i<1;i++){' + code + '\n}})()', b);
   assert.equal(loc.href, interrupt === 'none' ? service === 'exchange' ? '/fishing-shop.html' : '/char.html' : '');
 });
 for (const at of ['close', 'commit']) for (const interrupt of ['stop', 'lease', 'none']) test(`заточка: нет свитка → обмен, ${interrupt} во время ${at}`, async () => {

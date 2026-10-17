@@ -29,7 +29,7 @@ test('устаревший frame не нажимает даже первый п�
  const f=fixture();f.env.cfg.autoTasks=['auto'];await f.F.fishAct('reeling');assert.deepEqual(f.counts(),{clicks:0,waits:0});
 });
 test('main доводит активную рыбу без нового заброса при следующей задаче',async()=>{
- const source=read('content.js'),start=source.indexOf('      if (!fishNow() && isFishing()'),end=source.indexOf('      // «🛒 Закупить сейчас»',start);assert.ok(start>=0&&end>start);
+ const source=read('content.js'),start=source.indexOf('\n  if (!fishNow() && isFishing()'),end=source.indexOf('\n  // «🛒 Закупить сейчас»',start);assert.ok(start>=0&&end>start);
  for(const active of [true,false])for(const urgent of [true,false]){
   let fight=0,next=0;const b={rt:{shop:{urgent}},fishNow:()=>false,isFishing:()=>true,fishState:()=>active,fishFight:async()=>{fight++},sleep:async()=>{}};
   await vm.runInNewContext('(async()=>{for(let i=0;i<1;i++){'+source.slice(start,end)+'next()}})()',{...b,next:()=>next++});

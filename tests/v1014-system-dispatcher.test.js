@@ -3,8 +3,13 @@
 // Побочные действия остальных подсистем записываются; внешний мир/игровые запросы заменены.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8'),src=read('content.js');
-const a=src.indexOf('      if (cfg.tvtOn && await tvtStep())'),b=src.indexOf('      await sleep(isBattle() ? 40 : 200);',a);
-assert(a>0&&b>a);const dispatch=src.slice(a,b)+'      await sleep(isBattle() ? 40 : 200);';
+// 20.13 (ревизия 17.10, шаг 7): главный цикл разрезан на шаги — берём настоящие шаги и настоящий порядок из mainTick(),
+// начиная с loopUrgent (сервер/вход/воскрешение/выход из боя РБ заглушены, дальше — TvT, как раньше начинался этот участок)
+const a=src.indexOf('async function main() {'),b=src.indexOf('// Магистр: актуальный',a);
+assert(a>0&&b>a);const steps=src.slice(a,b);
+const tick=steps.match(/async function mainTick\(\) \{\s*return ([^;]+);/)[1].replace(/\s+/g,' ');
+assert(tick.startsWith('await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || await loopUrgent()'));
+const dispatch=steps+'\nasync function dispatchOnce(){ return '+tick.replace('await loopLease() || await loopMigrations() || await loopGate() || await loopWatchdog() || ','')+'; }';
 function make(mode='auto'){
  const calls=[],now=Date.now(),loc={pathname:'/map.html',search:'',href:''};
  const cfg={tvtOn:true,weaponScanAuto:false,autoMagister:false,storyTurnIn:false,dailyAuto:false,clanTasks:false,zoneAuto:mode==='auto',fishMode:mode==='fish',rbHuntMode:mode==='raid',epicMode:mode==='epic',catMode:mode==='cat',taskOnly:mode==='tasks'};
@@ -33,7 +38,8 @@ function make(mode='auto'){
  // 14.10: новая задача заточки выключена/без серии; исполняем её настоящий dispatcher guard.
  const enchantStart=src.indexOf('// Автозаточка: команды меню'),enchantEnd=src.indexOf('chrome.runtime.onMessage.addListener',enchantStart);
  vm.runInNewContext(src.slice(enchantStart,enchantEnd),sb);
- vm.runInNewContext('async function dispatchOnce(){for(let once=0;once<1;once++){'+dispatch+'}}',sb);
+ Object.assign(sb,{serverDown:()=>false,loginPage:()=>false,leaveCheck:async()=>false});
+ vm.runInNewContext(dispatch,sb);
  return {sb,cfg,rt,loc,calls,T,D,S,step:sb.dispatchOnce,active:()=>{sb.TVT={eventId:'tvt-e1',phase:'ACTIVE',isRegistered:true,myTeam:1,startsAt:now-10000,t:now};},hold:()=>{sb.TVT={eventId:'tvt-e1',phase:'REGISTRATION',isRegistered:true,myTeam:1,startsAt:now+120000,t:now};}};
 }
 for(const mode of ['farm','auto','fish','raid','epic','cat','tasks'])test('main: active TvT прерывает '+mode+' раньше shop/upgrade/story/daily',async()=>{

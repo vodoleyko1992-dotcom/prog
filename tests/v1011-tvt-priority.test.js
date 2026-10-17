@@ -81,7 +81,7 @@ const baseEnv = () => ({ cfg: { tvtOn: true, tvtHoldMin: 3 }, rt: {}, on: true, 
     // 7) content.js: TvT раньше паузы «один РБ», окно TvT в главном цикле, скиллы арены и ответы ударов из сети, настройки
     const src = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
     assert.ok(src.indexOf('await tvtStep()') < src.indexOf('raid.rbOneStep()'), 'tvtStep раньше rbOneStep');
-    assert.match(src, /L2V7Modules\.tvt\.tvtHold\(\)\) \{ taskPolicyNote\('tvt'\); await L2V7Modules\.tvt\.tvtWait\(\); continue; \}/);
+    assert.match(src, /L2V7Modules\.tvt\.tvtHold\(\)\) \{ taskPolicyNote\('tvt'\); await L2V7Modules\.tvt\.tvtWait\(\); return true; \}/);
     assert.match(src, /path === '\/game\/tvt\/skills'/); assert.match(src, /TVTC\.actN = \(TVTC\.actN \|\| 0\) \+ 1/);
     assert.match(src, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/);
     const pj = fs.readFileSync(path.join(root, 'popup.js'), 'utf8'), ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');

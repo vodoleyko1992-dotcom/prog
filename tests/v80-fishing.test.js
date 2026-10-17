@@ -212,7 +212,7 @@ function world(o = {}) {
   // 17.10: false/ошибка commit теперь также запрещает переход; прежнее ожидание без проверки было недостаточно.
   assert.ok((code.match(/if \(!await commit\(\) \|\| !valid\(\)\) return; location\.href = /g) || []).length >= 3, 'модуль: переходы только после подтверждённой записи; недоступный магазин сохраняет услугу');
   // ---------- B1: главный цикл после шага рыбалки — 30 мс вместо 200 ----------
-  assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); continue; \}/);
+  assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); return true; \}/);
   assert.match(code, /const lines = rej \? \[\] : \(await env\.sleep\(20\), fishNewLines\(before\)\);/);
   // ---------- B3: обмен без постоянных пауз 0,3–0,5 + 0,6–1,0 с на материал ----------
   const ex = code.slice(code.indexOf('async function fishExchange'), code.indexOf('async function fishSvcDone'));

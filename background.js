@@ -416,6 +416,9 @@ async function switchCharacter(m, sender) {
     if (prev.rbTimer || nextRt.rbTimer) nextRt.rbTimer = mergeTimerPatch(prev.rbTimer, nextRt.rbTimer);
     await chrome.storage.local.set({ ['rt@' + old]: prev, ['cfg@' + old]: previousCfg,
       rt: nextRt, cfg: nextCfg });
+    // 20.13 (ревизия 17.10, шаг 7, core-a/L1): живой статус героя (live@Ник) с прошлой сессии старее «Персонаж: …» — убираем,
+    // меню покажет rt.status, пока вкладка не напишет свежий
+    try { await chrome.storage.local.remove('live@' + nick); } catch (e) {}
     return { ok: true, rt: nextRt, cfg: nextCfg, changed: true, old };
   });
 }
@@ -530,7 +533,7 @@ chrome.commands?.onCommand.addListener(async c => {
   });
 });
 
-// ===== журнал и снимки страниц — в IndexedDB (до 100 000 событий и 1000 страниц) =====
+// ===== журнал и снимки страниц — в IndexedDB (до 20 000 событий; снимков до 1000 и до 50 МБ разметки) =====
 // IndexedDB: запись добавляется по одной, журнал не перезаписывается целиком и не нагружает вкладку игры.
 const DB = 'l2bot', MAX_EV = 20000, MAX_SNAPS = 1000;
 let dbp = null;
@@ -699,23 +702,43 @@ async function faBuffEvidence(p) {
 }
 
 // снимок: ключ = хэш структуры страницы (без текста и чисел) — одно и то же состояние не сохраняется дважды
+// 20.13 (ревизия 17.10, шаг 7, аудит core-b/F13): предел был только по числу (1000 × 100–400 КБ = до 400 МБ в профиле Chrome).
+// Теперь и по объёму разметки: больше 50 МБ — удаляем самые старые. Сумма хранится в storage «snapbytes» (один раз считается по
+// уже лежащим снимкам), «Очистить журнал» в меню сбрасывает её в 0
+const MAX_SNAP_BYTES = 50 * 1024 * 1024;
+let snapBytes = null;
+chrome.storage.onChanged.addListener(ch => { if (ch.snapbytes) snapBytes = Number.isFinite(ch.snapbytes.newValue) ? ch.snapbytes.newValue : null; });
+async function snapBytesNow(db) {
+  if (snapBytes != null) return snapBytes;
+  const { snapbytes } = await chrome.storage.local.get('snapbytes');
+  if (Number.isFinite(snapbytes)) return (snapBytes = snapbytes);
+  return (snapBytes = await new Promise(res => {
+    let sum = 0; const r = db.transaction('snaps').objectStore('snaps').openCursor();
+    r.onsuccess = e => { const c = e.target.result; if (!c) return res(sum); sum += String(c.value?.html || '').length; c.continue(); };
+    r.onerror = () => res(0);
+  }));
+}
 function addSnap({ key, state, html }) {
   writing = writing.then(async () => {
     const db = await idb();
+    let total = await snapBytesNow(db);
+    const size = String(html || '').length, over = n => n > MAX_SNAPS || total > MAX_SNAP_BYTES;
     const tx = db.transaction('snaps', 'readwrite'), st = tx.objectStore('snaps');
     let added = 0, n = 0;
     st.count().onsuccess = e => {
       n = e.target.result;
       st.getKey(key).onsuccess = g => {
         if (g.target.result != null) return;
-        // v5.6: при заполнении — удаляем самый старый снимок (раньше новые просто не сохранялись, а бот слал их снова и снова)
-        if (n >= MAX_SNAPS) { const c = st.index('t').openCursor(); c.onsuccess = ev => { const cur = ev.target.result; if (cur) { cur.delete(); n--; } }; }
-        st.put({ key, state: state || '', t: Date.now(), html }); added = 1;
+        st.put({ key, state: state || '', t: Date.now(), html }); added = 1; n++; total += size;
+        // v5.6: при заполнении — удаляем самые старые (раньше новые просто не сохранялись, а бот слал их снова и снова); 20.13: и по объёму
+        if (over(n)) { const c = st.index('t').openCursor(); c.onsuccess = ev => { const cur = ev.target.result; if (!cur || !over(n)) return;
+          if (cur.value?.key !== key) { total -= String(cur.value?.html || '').length; cur.delete(); n--; } cur.continue(); }; }
       };
     };
     await txDone(tx);
-    if (added) await chrome.storage.local.set({ snapcount: Math.min(n + 1, MAX_SNAPS) });
-  }).catch(e => console.warn('[L2bot] снимок:', e));
+    snapBytes = Math.max(0, total);
+    if (added) await chrome.storage.local.set({ snapcount: Math.min(n, MAX_SNAPS), snapbytes: snapBytes });
+  }).catch(e => { snapBytes = null; console.warn('[L2bot] снимок:', e); });
 }
 
 // скриншот экрана для автообучения — только с разрешения игрока (необязательное право «<all_urls>») и только если вкладка игры
