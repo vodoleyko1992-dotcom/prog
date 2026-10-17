@@ -1222,7 +1222,7 @@ async function save(e) {
   if (formChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
   const { cfg = {} } = await chrome.storage.local.get('cfg');
   const n = {};
-  if (/^nWeapon/.test(e?.target?.id || '')) n.weaponManual = true;   // игрок выбрал оружие сам — проверка инвентаря его не перепишет
+  if (/^nWeapon/.test(e?.target?.id || '')) n.weaponManual = !!String(e.target.value || '').trim();   // игрок выбрал оружие сам — проверка инвентаря его не перепишет
   // v5.6: сохраняем только изменённое поле — раньше форма целиком перезаписывала настройки, и то, что бот сам поменял
   // (автороли, оружие) пока поле было в фокусе, откатывалось к старому
   const id = e?.target?.id;
