@@ -206,7 +206,8 @@ function killSnapNote(x) {
 function killSnapStale() { KILL_SNAP.stale = true; }
 const killSnapFresh = char => KILL_SNAP.name === char && !KILL_SNAP.stale && Date.now() - KILL_SNAP.t < 60000;
 async function farmQuotaSnapshot(char, need = null) {
-  const ok = () => KILL_SNAP.name === char && (need ? need(KILL_SNAP) : killSnapFresh(char)), snap = () => ({ name: char, mobsKilled: KILL_SNAP.k, revision: KILL_SNAP.rev, cached: true });
+  // 20.12 (ревизия 17.10, ревью): итог боя (need) — только снимок после конца боя; снимок из середины AoE-боя устарел (stale)
+  const ok = () => KILL_SNAP.name === char && (need ? !KILL_SNAP.stale && need(KILL_SNAP) : killSnapFresh(char)), snap = () => ({ name: char, mobsKilled: KILL_SNAP.k, revision: KILL_SNAP.rev, cached: true });
   if (ok()) return snap();
   // GET /character самой игры ещё в пути — дождаться её ответа, а не слать свой
   if (typeof gameBusy === 'function') for (const t0 = Date.now(); gameBusy().busy && Date.now() - t0 < 1500;) { await sleep(50); if (ok()) return snap(); }
