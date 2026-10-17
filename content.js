@@ -4272,6 +4272,7 @@ addEventListener('message', e => {
     const ent = sk != null && TVTS?.skills?.find(x => x.skillId === sk);
     if (ent) { if (r?.skillReadyAt) ent.readyAt = r.skillReadyAt; else if (d.res?.error === 'tvt_skill_cooldown' && !(tvtMs(ent.readyAt) > tvtNow())) ent.readyAt = tvtNow() + 1200; } }
   // 9.2 (лог 11.10 03:00): павший враг — по ответу удара (targetDead) или отказу выбрать цель (tvt_target_dead), см. tvt.tvtDeadNote
+  if (path === '/game/tvt/action') try { L2V7Modules.tvt.tvtActNote(d.req, d.res && !d.res.error ? d.res : null); } catch (er) {}   // 20.11: энергия заряда и тип банки по ответу арены
   if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
   if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}
   if (path === '/game/daily-quests' && tabOwner && d.res?.tasks) try { L2V7Modules.dailies.dailyNote(d.res); } catch (er) {}   // 10.0: страница «Ежедневные задания»
