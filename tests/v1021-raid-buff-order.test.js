@@ -46,7 +46,8 @@ test('нулевой баланс FA с отсутствующим баффом 
   const f = fixture({ cat: false }); let pauses = 0;
   f.env.rt.faBal = { v: 0, t: Date.now() }; f.env.hudBuffs = () => ({});
   f.env.pauseBot = async () => { pauses++; };
-  await f.R.rbHuntStep(); assert.equal(pauses, 1); assert.equal(f.env.rt.rbHunt.step, 'pick');
+  // 20.13 (ревизия 17.10, шаг 5, RB-3): тур не летит, но бота целиком не останавливает — простой тура с повтором
+  await f.R.rbHuntStep(); assert.equal(pauses, 0); assert.ok(f.env.rt.rbHuntIdle > Date.now()); assert.equal(f.env.rt.rbHunt.step, 'pick'); assert.equal(f.fires.length, 0);
 });
 test('без читаемой шапки баффов рейд не принимает отсутствие доказательств за готовность', async () => {
   const f = fixture({ cat: false }); f.env.hudBuffs = () => null;

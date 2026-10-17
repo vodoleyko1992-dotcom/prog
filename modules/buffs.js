@@ -302,6 +302,15 @@ function faDeathNote(H, now = Date.now()) {
 const faSig = P => Object.entries(P).map(([id, e]) => `${id}:${Math.round(e / 60000)}`).sort().join(',');
 // 20.12 (ревизия 17.10): одно правило «нужен ли туру РБ фулл бафф за FA» — для покупки (faWanted) и для проверок тура в raid
 // (нехватка FA, ожидание баффов, проверка перед перелётом). Тур по дейлику «Убей 1 РБ» — без FA (решение игрока 17.10 10:55: «бафф за FA только при туре на РБ»)
+// 20.13 (ревизия 17.10, шаг 5, RB-3): баланс FA известен только по странице баффера. После записи с мобов могли упасть FA
+// (rt.faDrop, loot.faNote) — тогда прежний «0» уже не доказывает нехватку: баланс неизвестен (null), его уточнит поход к бафферу.
+function faDropSum(D = env.rt.faDrop) { return Object.values(D?.f || {}).reduce((a, x) => a + (+x || 0), 0); }
+function faBalOf(now = Date.now()) {
+  const B = env.rt.faBal;
+  if (!B || !(now - B.t < 6 * 3600000)) return null;
+  if (Number.isFinite(B.d) && faDropSum() > B.d) return null;
+  return B.v;
+}
 function tourFaWanted() {
   return env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
@@ -314,7 +323,10 @@ function faWanted() {
   const sessWant = S?.bought ? sess.filter(id => id === 1323 && env.cfg.rbSessNob !== false) : sess;
   // 9.2.5: эпик — тот же фулл бафф за FA (вместо платного городского набора за 15 Coin of Luck), когда заход на эпика уже разрешён
   // (epics.epicFaOk: по силам, жив по свежему ответу, < 2 смертей за час, дорога выбрана). Берётся только то, чего нет или что кончается
-  const epicWant = env.cfg.epicFaFull !== false && env.epicFaOk?.() ? faFullIds() : [];
+  // 20.13 (ревизия 17.10, шаг 5, EP-2): решение «перед эпиком покупаем набор» фиксируется в rt.tbuff.epicFa при старте похода —
+  // шаг FA у баффера не пересчитывает свежесть ответа сервера (3 мин) и не обрывает набор на середине после задержки/перезагрузки
+  const epicPrep = env.rt.tbuff?.epicFa && now - (env.rt.tbuff.t || 0) < 15 * 60000 && !!env.rt.epic?.k && env.rt.epic.step !== 'pick';
+  const epicWant = env.cfg.epicFaFull !== false && (epicPrep || env.epicFaOk?.()) ? faFullIds() : [];
   // 10.0.1 (лог 12.10 18:10–18:12, игрок: «не срабатывает автобафф под РБ перед рейдом»): фулл бафф брался только по кнопке
   // «🔥 Начать РБ-сессию» — обычный «Тур РБ» летел к трём РБ без единого баффа за FA. Теперь и тур берёт тот же набор (cfg.rbFaFull),
   // но только перед вылетом к выбранному РБ (townBuffStart «перед РБ …», шаг тура go/fight, rbGo), а не пока тур фармит мобов
@@ -338,7 +350,7 @@ function faWanted() {
   if (root.L2FaFull) ids = root.L2FaFull.dropClash(ids, env.rt.faClash);
   // 9.0 (квест Noblesse): статус Noblesse — скилл 1323 свой (на всех классах), за FA его не покупаем
   if (env.rt.story?.nobleOwn) ids = ids.filter(id => id !== 1323);
-  const bal = env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
+  const bal = faBalOf(now);
   if (bal != null && ids.length && bal < Math.min(...ids.map(env.faCost))) return [];   // FA точно не хватит ни на один — не ходим
   return ids;
 }
@@ -355,7 +367,7 @@ function faCatalogNote() {                        // страница /fast-aden
   }
   const patch = {};
   if (n) patch.faCat = cat;
-  if (!isNaN(bal)) { patch.faBal = { v: bal, t: Date.now() }; if (env.rt.faSkipUntil && env.rt.faBal && bal > env.rt.faBal.v) patch.faSkipUntil = 0; }   // FA пополнили — снова можно
+  if (!isNaN(bal)) { patch.faBal = { v: bal, t: Date.now(), d: faDropSum() }; if (env.rt.faSkipUntil && env.rt.faBal && bal > env.rt.faBal.v) patch.faSkipUntil = 0; }   // FA пополнили — снова можно
   if (Object.keys(patch).length) env.setRt(patch);
   return n;
 }
@@ -366,20 +378,30 @@ async function freshBuffPlan(){
   try{const r=await env.gameGet('/character'),d=r.ok?await r.json():null,ch=d?.character||d;
     if(!active() || ch?.name!==char || !Array.isArray(ch.activeBuffs))return null;
     const H={},levels={};
-    for(const b of ch.activeBuffs){const id=+b.skillId,exp=b.expiresAtMs??b.expiresAt;if(!(id>0)||!Number.isFinite(exp))return null;H[id]=exp;if(+b.level>0)levels[id]=+b.level;}
+    // 20.13 (ревизия 17.10, шаг 5, BF-2): эффект без срока (тоггл/постоянный; поля срока нет или null) — бессрочный, как в шапке
+    // (hudBuffs: Infinity), а не повод забраковать весь снимок. Явно испорченный срок по-прежнему делает снимок непригодным.
+    for(const b of ch.activeBuffs){const id=+b.skillId,raw=b.expiresAtMs??b.expiresAt,exp=raw==null?Infinity:raw;if(!(id>0)||!(Number.isFinite(exp)||exp===Infinity))return null;H[id]=exp;if(+b.level>0)levels[id]=+b.level;}
     return {H,levels};
   }catch(_){return null;}
 }
 function planWith(snapshot){try{planningSnapshot=snapshot;return townBuffNeed();}finally{planningSnapshot=null;}}
 
+const TB_INTERRUPT_MS = 3 * 60000;
 let rbAskT = 0;                                     // 10.0.1: когда тур РБ последний раз спрашивал «баффы перед РБ …» (faWanted → tourWant)
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
   const active=contextGuard();if(!active())return false;
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   // Отмена маршрута не равна неудачной покупке. Перед новым планом читаем сервер:
   // HUD после ответа/перезагрузки может ещё не показывать уже оплаченные эффекты.
-  const interrupted=env.rt.tbInterrupted;
+  let interrupted=env.rt.tbInterrupted;
   let snapshot=null;
+  // 20.13 (ревизия 17.10, шаг 5, BF-2): режим «после отмены» ограничен 3 мин. Сервер так и не дал пригодного снимка или шапка
+  // не догнала эффекты — снимаем отметку и решаем по обычным правилам (повторную покупку по-прежнему стережёт payments)
+  if(interrupted && !(Date.now()-(+interrupted.t||0)<TB_INTERRUPT_MS) && !env.payments?.blocked()){
+    await env.setRt({tbInterrupted:null});if(!active())return false;
+    env.rec?.('B','бафф','после отмены маршрута сверка эффектов не завершилась за 3 мин — решаю по обычным правилам');
+    interrupted=null;
+  }
   if(interrupted){
     if(env.payments?.blocked())return true;
     snapshot=await freshBuffPlan();
@@ -417,7 +439,7 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < 10 * 60000);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
-  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode) }, tbT: Date.now(), tbInterrupted:null, tbWaitUntil:0 });
+  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode), epicFa: !!(urgent && /^перед эпиком/.test(why) && env.cfg.epicFaFull !== false && env.epicFaOk?.()) }, tbT: Date.now(), tbInterrupted:null, tbWaitUntil:0 });
   if(!active())return false;
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
   location.href = n.set ? '/town-buffer.html' : '/fast-aden-buffer.html'; await env.sleep(4000);
@@ -619,9 +641,11 @@ async function townBuffStep() {
       if (!needed(id)) continue;
       const bal = balNow(), b = env.$q(`.l2-fa-buy[data-skill-id="${id}"]`);
       if (!b) { got.push(`${nm(id)}: нет у баффера — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
-      if (b.disabled) { got.push(`${nm(id)}: кнопка недоступна`); continue; }
       const cost = +(b.dataset.cost || 1);
       if (bal < cost) { got.push(`${nm(id)}: не хватает FA (${bal}/${cost})`); short++; continue; }   // дальше — те, что по карману
+      // 20.13 (ревизия 17.10, шаг 5, BF-1): FA хватает, а кнопка недоступна (уровень, ограничение сервера) — как «нет у баффера»:
+      // 6 ч не просим (faWanted/townBuffNeed его не хотят), иначе тур ждал баффера по кругу
+      if (b.disabled) { got.push(`${nm(id)}: кнопка недоступна — пропускаю 6 ч`); gone[id] = Date.now(); continue; }
       const H0 = hudBuffs() || {};
       await env.pause();
       if (!active())return;
@@ -643,7 +667,7 @@ async function townBuffStep() {
     }
     if(!active())return;
     const left = balNow();
-    const patch = { faGone: gone, faBal: { v: left, t: Date.now() }, ...(nobT ? { nobBuyT: nobT } : {}) };
+    const patch = { faGone: gone, faBal: { v: left, t: Date.now(), d: faDropSum() }, ...(nobT ? { nobBuyT: nobT } : {}) };
     if (short && !bought) { patch.faSkipUntil = Date.now() + 60 * 60000; got.push('FA не хватает — к бафферу FA не хожу 60 мин (или пока баланс не вырастет)'); }
     await env.setRt(patch);
     if(!active())return;
@@ -701,6 +725,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

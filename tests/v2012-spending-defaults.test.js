@@ -172,10 +172,12 @@ test('старый тур по дейлику (rt.dailyRb) при FA = 0 не с
   assert.deepEqual(d.dones, [], 'перед перелётом нет круга huntDone по баффам');
   assert.equal(d.env.rt.rbHunt.step, 'go', 'подготовка пройдена, тур идёт к РБ');
   assert.equal(d.buys(), 1, 'городская подготовка один раз, без круга');
-  // 20.12 (решение игрока 17.10 10:56): строгое требование набора — только у «Тура РБ», выбранного игроком (без rt.dailyRb): нет FA → пауза
+  // 20.12 (решение игрока 17.10 10:56): строгое требование набора — только у «Тура РБ», выбранного игроком (без rt.dailyRb): нет FA → тур не летит
+  // 20.13 (ревизия 17.10, шаг 5, RB-3): вместо паузы всего бота — простой тура с повтором, остальные задачи идут
   const strict = dailyRaid(); strict.env.rt.dailyRb = null;
   for (let i = 0; i < 4; i++) await strict.f.R.rbHuntStep();
-  assert.ok(strict.pauses.length >= 1); assert.match(strict.pauses[0], /нет FA для выбранного баффа/);
+  assert.deepEqual(strict.pauses, [], 'бот целиком не на паузе');
+  assert.ok(strict.env.rt.rbHuntIdle > Date.now(), 'тур в простое'); assert.equal(strict.env.rt.rbIdleMark.faShort, true);
   assert.equal(strict.env.rt.rbHunt.step, 'pick', 'без FA строгий тур не летит');
   // общее правило в buffs
   const b = buffsFixture({}, { dailyRb: { t: Date.now() } }); assert.equal(b.B.tourFaWanted(), false);
