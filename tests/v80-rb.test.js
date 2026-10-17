@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const load = (f, extra = {}) => { const sb = { console, Date, Math, JSON, CSS: { escape: s => s }, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(read(f), sb); return sb; };
-const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
+const base = require('./helpers/warlock52-rt.cjs')(); // 20.12: замеры Warlock 52 — из фикстуры
 // 10.0.14: шаги тура исполняются только включённым владельцем вкладки; fixture проверяет именно разрешённый preflight.
 const mk = (rt, extra = {}) => { const env = { on: true, tabOwner: true, cfg: { rbProbe: false, rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 54, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,
   meHp: () => ({ max: 4710, cur: 4710, pct: 100 }), potModel: () => ({ pool: 600000, rate: 2000, n: 960 }), hudBuffs: () => ({}), fmtK: n => String(Math.round(n)), fmtT: s => String(Math.round(s)),

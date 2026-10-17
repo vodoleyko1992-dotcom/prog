@@ -315,7 +315,9 @@ function faWanted() {
   // но только перед вылетом к выбранному РБ (townBuffStart «перед РБ …», шаг тура go/fight, rbGo), а не пока тур фармит мобов
   const RH = env.rt.rbHunt || {};
   const tourPrep = env.rt.tbuff?.rbTour && now - (env.rt.tbuff.t || 0) < 15 * 60000;
-  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
+  // 20.12 (ревизия 17.10): тур, запущенный дейликом «Убей 1 РБ», сам набор за FA не покупает — только по явной галке cfg.dailyRbFa
+  const dailyTour = !!env.rt.dailyRb && env.cfg.dailyRbFa !== true;
+  const tourWant = env.cfg.rbFaFull !== false && env.cfg.rbHuntMode && !S?.on && !dailyTour && (now - rbAskT < 60000 || tourPrep || RH.step === 'go' || RH.step === 'fight' || !!env.rt.rbGo) ? faFullIds() : [];
   // 8.0 (аудит РБ B3: 23:18 баффы FA висели, а Noblesse ушёл на прошлой смерти — следующая смерть сняла все 8 баффов): на РБ
   // с платными баффами (FA Greater, 5 FA) Noblesse Blessing докупается и без РБ-сессии — он 1 FA, а бережёт баффы на сотни FA
   // 8.0.3: и в бою с эпиком (начатый эпик: rt.epic.k, шаг не «выбор») — смерть на эпике не должна снимать платные баффы FA

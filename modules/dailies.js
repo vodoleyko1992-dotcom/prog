@@ -189,7 +189,7 @@ async function dailyStep() {
   if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('raid')) && rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
     const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true, kick };
     await env.setRt({ dailyRb: J, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
-    if (await enterDetour('dailyRb', J, kick) && env.rt.dailyRb && !campaignBusy()) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
+    if (await enterDetour('dailyRb', J, kick) && env.rt.dailyRb && !campaignBusy()) env.rec('B', 'дейлики', `РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»)${env.cfg.dailyRbFa === true ? '' : ', без фулл баффа за FA'}, потом назад`);
     return true;
   }
   return false;

@@ -184,6 +184,20 @@
     }});
     taskRaw.set(view, raw); return view;
   }
+  // 20.12 (ревизия 17.10): режимы и платные разрешения — в одном месте. Базовый профиль не включает режимы
+  // (чистая установка = «стоять, где оставили»), новый герой (ещё нет cfg@Ник) не наследует платные режимы предыдущего.
+  const MODE_KEYS = ['enchantMode','epicMode','rbHuntMode','rbMode','rbBetween','fishMode','catMode','zoneAuto','campaign','autoTasks','taskOnly'];
+  const BASE_CFG_SKIP = [...MODE_KEYS, 'weaponManual', 'nWeaponMain'];  // ручной выбор оружия из профиля устаревает вместе со снаряжением
+  const BASE_RT_SKIP = ['weapons','weaponRec','weaponEq','weaponNow','weaponsT','panel','panelSig','skills','rbK','rbDps','rbStats','hardMobs','zoneBad','lvl'];
+  const NEW_HERO_PAID = {epicMode:false, epicCoinDailyMax:0, epicAdenaDailyMax:0, rbHuntMode:false, rbMode:false, rbFaFull:false, epicFaFull:false, fishTimeAuto:false, mmUpgrade:false};
+  const baseProfileCfg = c => Object.fromEntries(Object.entries(c || {}).filter(([k]) => !BASE_CFG_SKIP.includes(k)));
+  const baseProfileRt = r => Object.fromEntries(Object.entries(r || {}).filter(([k]) => !BASE_RT_SKIP.includes(k)));
+  function newHeroCfg(prev) {
+    const next = { ...(prev || {}), ...NEW_HERO_PAID };
+    // Явный список задач тоже выбирает режим: тур РБ и эпики новый герой включает сам.
+    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== 'raid' && k !== 'epic');
+    return next;
+  }
   function taskJobAllowed(c, key, rt = {}) {
     if (taskList(c) === null) return true;
     if (['dailyFish','dailyRb'].includes(key)) return false; // Дейлики не владеют режимом строгого списка.
@@ -266,6 +280,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

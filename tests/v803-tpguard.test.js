@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const load = (extra = {}) => { const sb = { console, Date, Math, JSON, CSS: { escape: s => s }, document: { querySelectorAll: () => [], querySelector: () => null }, location: { pathname: '/rb-bosses.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(read('modules/raid.js'), sb); return sb; };
-const base = JSON.parse(read('base-profile.json')).chars.Warlock.rt;
+const base = require('./helpers/warlock52-rt.cjs')(); // 20.12: замеры Warlock 52 — из фикстуры
 (async () => {
   const recs = [];
   const mk = (rt, extra = {}) => { const env = { cfg: { rbProbe: false, rbMaxBelow: 15, rbMaxAbove: 15, rbRetreatHp: 20, rbRestHp: 95 }, rt, heroLvl: () => 55, RB_WIN: 15, RB_TRY_MS: 0, RB_RETRY_MS: 0,

@@ -343,7 +343,8 @@ async function switchCharacter(m, sender) {
     }
     let nextCfg = current['cfg@' + nick];
     if (!nextCfg) {
-      nextCfg = { ...previousCfg };
+      // 20.12 (ревизия 17.10): эпики/Coin of Luck, тур РБ, бафф за FA, время рыбалки, улучшение у Маммона — новый герой включает сам (список в engine-core).
+      nextCfg = globalThis.L2EngineCore?.newHeroCfg ? globalThis.L2EngineCore.newHeroCfg(previousCfg) : { ...previousCfg };
       for (const k of (Array.isArray(m.roles) ? m.roles : []))
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
@@ -398,19 +399,23 @@ async function applyBaseProfile(why) {
     const cur = await chrome.storage.local.get(['cfg', 'rt', 'learn', ...nicks.flatMap(n => ['rt@' + n, 'cfg@' + n])]);
     const set = {}, done = [];
     const empty = o => !o || typeof o !== 'object' || !Object.keys(o).length;
-    if (empty(cur.cfg)) { set.cfg = { ...base.cfg }; done.push('настройки'); }
+    // 20.12 (ревизия 17.10): режимы («Тур РБ» и др.) и ручное оружие из профиля не переносим — чистая установка стоит, где оставили.
+    const EC = globalThis.L2EngineCore, baseCfg = EC?.baseProfileCfg ? EC.baseProfileCfg(base.cfg) : { ...base.cfg };
+    if (empty(cur.cfg)) { set.cfg = { ...baseCfg }; done.push('настройки'); }
     const curChar = String(cur.rt?.char || '').trim();
     for (const n of nicks) {
       let R = base.chars[n]?.rt; if (empty(R)) continue;
       // 7.2 (лог 10.10 20:08): снаряжение и панель из базового профиля устаревают (там было «надето: Посох життя D» — куплены D-заряды
       // при посохе C). Не переносим: бот сам прочитает инвентарь и панель до закупки
-      R = Object.fromEntries(Object.entries(R).filter(([k]) => !['weapons', 'weaponRec', 'weaponEq', 'weaponNow', 'weaponsT', 'panel', 'panelSig'].includes(k)));
-      if (empty(cur.rt) || (curChar === n && !cur.rt.skills)) {          // нет текущей памяти (или она пустая у этого же героя)
+      // 20.12 (ревизия 17.10): и замеры боя Warlock 52 ур. (skills, rbK, rbDps, rbStats, hardMobs, zoneBad, lvl) — чужой состав, бот замерит сам.
+      R = EC?.baseProfileRt ? EC.baseProfileRt(R) : Object.fromEntries(Object.entries(R).filter(([k]) => !['weapons', 'weaponRec', 'weaponEq', 'weaponNow', 'weaponsT', 'panel', 'panelSig'].includes(k)));
+      // 20.12: без skills в профиле признак «память пустая» — нет ни замеров, ни кэша спавнов (иначе профиль ложился бы поверх при каждом запуске).
+      if (empty(cur.rt) || (curChar === n && !cur.rt.skills && !cur.rt.spawns)) {          // нет текущей памяти (или она пустая у этого же героя)
         set.rt = { ...(cur.rt || {}), ...R, char: n }; done.push('память ' + n);
       } else if (curChar !== n && empty(cur['rt@' + n])) {               // герой сейчас другой — его память ждёт в rt@Ник
         set['rt@' + n] = { ...R, char: n }; done.push('память ' + n + ' (для смены героя)');
       }
-      if (curChar !== n && empty(cur['cfg@' + n])) set['cfg@' + n] = { ...base.cfg };
+      if (curChar !== n && empty(cur['cfg@' + n])) set['cfg@' + n] = { ...baseCfg };
     }
     if (empty(cur.learn) && base.learn) { set.learn = base.learn; done.push('автообучение'); }
     if (base.farmDb) { const { farmDb } = await chrome.storage.local.get('farmDb'); if (empty(farmDb)) { set.farmDb = base.farmDb; done.push('база ресурсов'); } }

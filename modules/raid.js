@@ -986,6 +986,17 @@ function rbTravelBudget(row) {
   return '';
 }
 
+// 20.12 (ревизия 17.10): бюджет телепорта до покупки набора за FA. РБ на этой карте — без телепорта, бюджет не нужен.
+// Несвежий кошелёк перечитывается (GET /character, бесплатно); не подтвердился — FA не тратим.
+let rbFaBudgetSaid = '';
+async function rbFaBudgetWhy(row, active) {
+  if (!row || env.cfg.rbFaFull === false) return '';
+  if (env.isMap?.() && raidList().some(r => r.id === row.id)) return '';
+  const fresh = env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000;
+  if (!fresh) { await rbRefreshState(row.id, active, true); if (!active()) return ''; }
+  return rbTravelBudget(env.rt.rbList?.[row.id] || row);
+}
+
 async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
   if (phase !== 'wait' && env.rt.rbFishWait) await env.setRt({rbFishWait:null});
@@ -1033,9 +1044,13 @@ async function rbSessEnd(why) {
   const kills = (env.rt.rbKills || 0) - (S.k0 || 0), exp = (env.rt.exp || 0) - (S.e0 || 0), ad = (env.rt.adena || 0) - (S.a0 || 0), deaths = (env.rt.deaths || []).length - (S.d0 || 0);
   const sum = { kills, exp, adena: ad, deaths, min, why, faLeft: env.rt.faBal?.v ?? null };
   await env.setRt({ rbSess: { ...S, on: false, end: Date.now(), sum }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ-сессия окончена' }, rbGo: null });
-  await env.setCfg({ rbHuntMode: false, rbMode: false, epicMode: false, fishMode: false, catMode: false, zoneAuto: true, chain: true });   // 15.10: РБ-сессия окончена — рейд выключен, дальше обычный автофарм.
-  env.rec('B', 'РБ-сессия', `окончена: ${why} · ${min} мин · РБ убито ${kills} · EXP +${exp.toLocaleString('ru')} · аден ${ad >= 0 ? '+' : ''}${ad.toLocaleString('ru')}${deaths ? ` · смертей ${deaths}` : ''}${sum.faLeft != null ? ` · FA осталось ${sum.faLeft}` : ''} → режим «Автофарм», жду игрока`);
-  env.setStatus('РБ-сессия окончена — автофарм');
+  // 20.12 (ревизия 17.10): при явном списке задач режим берётся из autoTasks — плоские флаги тур не снимали, и тур снова покупал набор за FA.
+  // Как кнопка «Остановить РБ-сессию» в меню: убрать «Тур РБ» из списка, остальные выбранные задачи остаются.
+  const list = Array.isArray(env.cfg.autoTasks) ? env.cfg.autoTasks : null;
+  if (list) await env.setCfg({ autoTasks: list.filter(k => k !== 'raid') });
+  else await env.setCfg({ rbHuntMode: false, rbMode: false, epicMode: false, fishMode: false, catMode: false, zoneAuto: true, chain: true });   // 15.10: РБ-сессия окончена — рейд выключен, дальше обычный автофарм.
+  env.rec('B', 'РБ-сессия', `окончена: ${why} · ${min} мин · РБ убито ${kills} · EXP +${exp.toLocaleString('ru')} · аден ${ad >= 0 ? '+' : ''}${ad.toLocaleString('ru')}${deaths ? ` · смертей ${deaths}` : ''}${sum.faLeft != null ? ` · FA осталось ${sum.faLeft}` : ''} → ${list ? '«Тур РБ» снят из выбранных задач, дальше остальные выбранные задачи' : 'режим «Автофарм», жду игрока'}`);
+  env.setStatus(list ? 'РБ-сессия окончена — тур РБ снят, остальные задачи' : 'РБ-сессия окончена — автофарм');
   return true;
 }
 
@@ -1298,7 +1313,13 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await rbShopFirst(preparing.name)) return;
     if (!active()) return;
-    if (await rbBuffHold(preparing.name, active)) return;
+    // 20.12 (ревизия 17.10): набор за FA — только когда на телепорт к этой цели хватает адены по свежему кошельку.
+    // Иначе кандидат «нет денег» покупал 22–30 FA каждые 3 ч, а перелёт потом отсекался бюджетом.
+    const faBudget = await rbFaBudgetWhy(preparing, active);
+    if (!active()) return;
+    if (faBudget) {
+      if (rbFaBudgetSaid !== preparing.id + faBudget) { rbFaBudgetSaid = preparing.id + faBudget; env.rec('B', 'тур РБ', `${preparing.name}: бафф за FA не беру — ${faBudget}`); }
+    } else if (await rbBuffHold(preparing.name, active)) return;
     if (!active()) return;
     if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
       await env.warlock?.step?.({ forceRead: true });

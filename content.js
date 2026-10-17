@@ -34,7 +34,8 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1',
   // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
   debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
-  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
+  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200,
+  dailyRbFa: false,   // 20.12 (ревизия 17.10): тур РБ по дейлику без фулл баффа за FA — только по явной галке
 };
 const DEF_RT = { pvpTargets: {}, pvpRecovery: null, pvpResolved: [], status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
