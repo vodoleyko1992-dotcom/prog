@@ -36,6 +36,13 @@ test('ECO-1: временный сбой (окно не открылось) па
  f.env.rt.shop={step:'buy',t:Date.now(),need:[{key:'hp',label:'Банки HP',buy:700,grade:'NG'}],done:[{key:'hp',ok:false,label:'Банки HP',why:'окно покупки не открылось'}]};
  await f.M.shopStep();assert.equal(f.env.rt.shopFail.n,2);
 });
+test('ECO-1 (ревью): «нет в магазине (видел: пусто)» — список не отрисовался, паузу не растит',async()=>{
+ const f=economy({shopFail:{n:1,t:Date.now(),adena:1}});
+ f.env.rt.shop={step:'buy',t:Date.now(),need:[{key:'hp',label:'Банки HP',buy:700,grade:'NG'}],done:[{key:'hp',ok:false,label:'Банки HP',why:'нет в магазине (видел: пусто)'}]};
+ await f.M.shopStep();assert.equal(f.env.rt.shopFail.n,1);assert.equal(f.M.shopGap(),10*MIN);
+ f.env.rt.shop={step:'buy',t:Date.now(),need:[{key:'hp',label:'Банки HP',buy:700,grade:'NG'}],done:[{key:'hp',ok:false,label:'Банки HP',why:'нет в магазине (видел: Зілля, Заряд)'}]};
+ await f.M.shopStep();assert.equal(f.env.rt.shopFail.n,2,'товар правда не найден в отрисованном списке — пауза растёт');
+});
 test('ECO-1: все вызовы закупки уважают паузу, смена оружия её сбрасывает, геттеры есть',()=>{
  const mob=src('modules/mobfarm.js'),raid=src('modules/raid.js'),content=src('content.js');
  assert.match(mob,/> \(env\.shopGap\?\.\(\) \?\? 600000\)\) \{ const low0/);

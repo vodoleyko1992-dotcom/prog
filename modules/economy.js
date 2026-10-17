@@ -303,7 +303,10 @@ function shopGap() {
 }
 function shopFailNext(done) {
   if (done.some(d => d.ok)) return null;
-  if (!done.length || !done.every(d => SHOP_CANT.test(String(d.why || '')))) return env.rt.shopFail || null;
+  // шаг 5 (services, ревью): «нет в магазине (видел: пусто)» — список товаров не отрисовался (страница/вкладка не догрузилась),
+  // это временный сбой, а не «товара нет»: паузу не растим.
+  const cant = d => { const w = String(d.why || ''); return SHOP_CANT.test(w) && !/видел: пусто/.test(w); };
+  if (!done.length || !done.every(cant)) return env.rt.shopFail || null;
   const n = Math.min(SHOP_GAPS.length, (Math.floor(+env.rt.shopFail?.n || 0)) + 1), ad = shopAdena();
   return { n, t: Date.now(), adena: ad > 0 ? ad : (env.rt.adenaSeen?.v ?? null), keys: done.map(d => d.key) };
 }
