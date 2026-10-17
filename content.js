@@ -5727,10 +5727,17 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
     (async () => {
-      const generation = automationGeneration;
-      const state = await chrome.storage.local.get(['on', 'cfg']);
+      // 17.10.2026: запись on/cfg самим Стартом (save → menuPatch) меняет поколение почти одновременно с kick.
+      // Прочитанное до неё состояние устарело — перечитываем хранилище, а не отказываем запуску; отказ только если
+      // поколение не успокоилось за три чтения (идёт настоящая серия Stop/Start или смена героя).
+      let generation = automationGeneration, state = null;
+      for (let attempt = 0; attempt < 3 && !state; attempt++) {
+        generation = automationGeneration;
+        const read = await chrome.storage.local.get(['on', 'cfg']);
+        if (generation === automationGeneration) state = read;
+      }
       const v = chrome.runtime.getManifest().version;
-      if (generation !== automationGeneration) return reply({ok:false,v,running,owner:false,reason:'start_superseded'});
+      if (!state) return reply({ok:false,v,running,owner:false,reason:'start_superseded'});
       on = !!state.on; cfg = mergeCfg(state.cfg);
       if (!on) return reply({ ok: false, v, running: false, owner: false, reason: 'stopped' });
       void main();
