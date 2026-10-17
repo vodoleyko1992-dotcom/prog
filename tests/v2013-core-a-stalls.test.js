@@ -37,11 +37,20 @@ for(const [name,get] of [['HTTP 404',async()=>({ok:false,status:404})],['отв�
  });
 
 test('M5: неизвестный исход заброса (fishCastPending) исключён из «активной задачи» сторожа прогресса',()=>{
- const m=core.match(/const activeJob = ([^;]+);/);assert.ok(m);assert.match(m[1],/\(!rt\.fishCastPending\)/);assert.match(m[1],/payments\?\.pending/);
+ const m=core.match(/const activeJob = ([^;]+);/);assert.ok(m);assert.match(m[1],/payments\?\.pending/);
+ // ревью: глушим сторожа только пока сама рыбалка ждёт сверки, не при бое/других задачах со старой записью
+ const EX='!(rt.fishCastPending && fishNow() && !isBattle())';assert.ok(m[1].includes(EX),'исключение ограничено условием');const ex=[0,'fishNow() && !isBattle()'];
+ const ctx={rt:{fishCastPending:{at:1}}};
+ const f=new Function('rt','fishNow','isBattle','return !(rt.fishCastPending && '+ex[1]+')');
+ assert.equal(f(ctx.rt,()=>true,()=>false),false,'рыбалка ждёт сверки — не активная задача');
+ assert.equal(f(ctx.rt,()=>false,()=>true),true,'старая запись, идёт бой другой задачи — сторож работает');
+ assert.equal(f(ctx.rt,()=>true,()=>true),true,'бой с рыбой — сторож работает');
+ assert.equal(f({},()=>true,()=>false),true);
 });
 
-function stopBox(ipc,rt={char:'Warlock',manualKickAt:5}){
+function stopBox(ipc,rt={char:'Warlock',manualKickAt:5},store={}){
  const ss=new Map(),recs=[],calls=[],c={recs,calls,ss,rt:{...rt},leaseEpoch:7,on:true,automationGeneration:0,Date,JSON,String,Promise,
+  chrome:{storage:{local:{get:async k=>({[k]:store[k]})}}},
   setTimeout:(f)=>f(),sessionStorage:{getItem:k=>ss.has(k)?ss.get(k):null,setItem:(k,v)=>ss.set(k,String(v)),removeItem:k=>ss.delete(k)},
   ipc:async m=>{calls.push(m);return ipc(m,calls.length)},rec:(...a)=>recs.push(a.join(' ')),setRt:async()=>({ok:true})};
  vm.createContext(c);vm.runInContext(slice('const STOP_PEND_KEY','// hard = настоящая остановка')+';this.S=automationStop;this.R=stopPendRetry;this.P=stopPendRead;',c);return c;
@@ -65,4 +74,20 @@ test('M6: подтверждённая остановка — одна попы�
 });
 test('M6: main() повторяет неподтверждённую остановку сразу после получения замка',()=>{
  const m=slice('async function main() {','// Migrations calculated during page initialization');assert.match(m,/stopPendRetry\(\)/);
+});
+test('M6 (ревью): после неподтверждённой остановки фон записал остановку, затем запуск горячей клавишей (kick тот же) — не останавливаем',async()=>{
+ const t0=Date.now()-60000;
+ const c=stopBox(async()=>({ok:true}),{char:'Warlock',manualKickAt:5},{stopMeta:{source:'hotkey',t:t0+30000}});
+ c.ss.set('l2bot-stopPend',JSON.stringify({char:'Warlock',kick:5,action:'stop',msg:'x',t:t0+2000,t0}));
+ assert.equal(await c.R(),false);assert.equal(c.calls.length,0);assert.equal(c.P(),null);assert.equal(c.on,true);
+ // старая stopMeta (до начала остановки) — остановка не дошла: повторяем
+ const c2=stopBox(async()=>({ok:true}),{char:'Warlock',manualKickAt:5},{stopMeta:{t:t0-5000}});
+ c2.ss.set('l2bot-stopPend',JSON.stringify({char:'Warlock',kick:5,action:'stop',msg:'x',t:t0+2000,t0}));
+ assert.equal(await c2.R(),true);assert.equal(c2.calls.length,1);
+});
+test('M6 (ревью): отказ invalid_control/invalid_sender — без отметки повтора (после перезагрузки не исправится)',async()=>{
+ for(const reason of ['invalid_control','invalid_sender']){
+  const c=stopBox(async()=>({ok:false,reason}));await c.S('стоп');assert.equal(c.calls.length,1);assert.equal(c.P(),null,reason);
+ }
+ const c=stopBox(async()=>{throw new Error('timeout')});await c.S('стоп');assert.ok(Number.isFinite(c.P().t0),'t0 сохранён');
 });

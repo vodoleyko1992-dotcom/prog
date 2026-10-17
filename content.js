@@ -1291,7 +1291,7 @@ const STOP_PEND_KEY = 'l2bot-stopPend';
 const stopPendRead = () => { try { return JSON.parse(sessionStorage.getItem(STOP_PEND_KEY) || 'null'); } catch (_) { return null; } };
 const stopPendWrite = v => { try { v ? sessionStorage.setItem(STOP_PEND_KEY, JSON.stringify(v)) : sessionStorage.removeItem(STOP_PEND_KEY); } catch (_) {} };
 async function automationStop(msg, action = 'stop') {
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, t0 = Date.now();
   automationGeneration++; on = false;
   let r = null;
   for (let i = 0; i < 3 && !r?.ok; i++) {
@@ -1301,7 +1301,10 @@ async function automationStop(msg, action = 'stop') {
     if (r && !r.ok && ['character_changed', 'ownership_lost', 'invalid_sender', 'invalid_control'].includes(r.reason)) break;   // повтор не поможет
   }
   if (r?.ok) stopPendWrite(null);
-  else if (!r || !['character_changed', 'ownership_lost'].includes(r.reason)) stopPendWrite({ char, kick, action, msg: String(msg).slice(0, 240), t: Date.now() });
+  // 20.13 (шаг 5, core-a, ревью): отметка — только когда фон не ответил (таймаут/сбой); отказы по смыслу (другой герой, чужой замок,
+  // неверный отправитель/команда) повтором после перезагрузки не исправить. t0 — начало остановки: по нему повтор узнаёт более позднюю
+  // остановку/запуск горячей клавишей Alt+Shift+B, которая manualKickAt не меняет
+  else if (!r || !['character_changed', 'ownership_lost', 'invalid_sender', 'invalid_control'].includes(r.reason)) stopPendWrite({ char, kick, action, msg: String(msg).slice(0, 240), t: Date.now(), t0 });
   if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
   return r;
 }
@@ -1309,6 +1312,10 @@ async function automationStop(msg, action = 'stop') {
 async function stopPendRetry() {
   const p = stopPendRead(); if (!p) return false;
   if (Date.now() - (+p.t || 0) > 1800000 || p.char !== (rt.char || '') || p.kick !== (rt.manualKickAt || 0)) { stopPendWrite(null); return false; }
+  // 20.13 (шаг 5, core-a, ревью): после начала той остановки фон уже записал остановку (stopMeta.t ≥ t0) — она дошла, а нынешний
+  // on=true — новый запуск (горячая клавиша не меняет manualKickAt). Повторно не останавливаем
+  let meta = null; try { ({ stopMeta: meta } = await chrome.storage.local.get('stopMeta')); } catch (_) {}
+  if (+meta?.t >= (+p.t0 || +p.t || 0)) { stopPendWrite(null); return false; }
   stopPendWrite(null);
   rec('B', 'СТОП', `повторяю остановку, не подтверждённую фоном до перезагрузки: ${p.msg}`);
   await automationStop(p.msg, p.action === 'pause' ? 'pause' : 'stop');
@@ -2781,8 +2788,9 @@ async function main() {
       // Check observable progress; exclude intentional maintenance/long waits.
       // 20.12 (ревизия 17.10, аудит H1/M5): неизвестная оплата — честное ожидание сверки, а не «нет прогресса» (3 перезагрузки и стоп за ≈36 мин)
       // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
-      // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин
-      const activeJob = !L2V7Modules.payments?.pending?.() && (!rt.fishCastPending) && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+      // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
+      // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
+      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow());
       // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
