@@ -89,7 +89,8 @@ const source=(name)=>fs.readFileSync(path.join(root,name),'utf8');
   assert.equal(mageB.sleep+mageB.scan+mageB.force.length,0,'Vampiric Touch MP never triggers force logic');
   const fighterA=await executeAction({name:'Force Blaster',b:{title:'Force Blaster'},cost:2,key:'force:Force Blaster'});
   assert.equal(fighterA.sleep,1);assert.equal(fighterA.scan,1);assert.deepEqual(fighterA.force,[3]);
-  assert.match(combat,/mpCost <= Math\.max/);assert.match(combat,/a\.mpCost-b\.mpCost/);
+  // 20.9: все пути используют общий affordable; сортировка дешёвого добивания сохранена.
+  assert.match(combat,/filter\(o => affordable\(o\.b, mp\)\)/);assert.match(combat,/a\.mpCost-b\.mpCost/);
   console.log('PASS: post-action Wind Strike/Vampiric Touch never change force energy; charged fighter attack still does');
 
   // Server clock & battle switching. Newer zero/shortened deadlines supersede older ones.

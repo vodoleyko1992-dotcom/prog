@@ -394,17 +394,33 @@ async function scanInventoryWeapons() {
 }
 
 async function wearFromBag(w, valid = () => env.on && env.tabOwner !== false) {
-  if (!valid()) return false;
+  const actor = () => JSON.stringify([env.rt.char,env.rt.prof,env.rt.classCur?.slot,env.rt.classCur?.prof,env.actionGeneration?.()]), initialActor = actor();
+  const current = () => valid() && env.on && env.tabOwner !== false && actor() === initialActor;
+  if (!current()) return false;
   for (let i = 0; i < 30 && await bagPageTurn(false); i++) {}
   for (let page = 0; page < 30; page++) {
     const row = [...document.querySelectorAll('.l2-char-bag-row[data-item-json]')].find(r => { const j = env.itemJson(r); return +j.itemId === w.id && (!w.inst || j.targetInstanceId === w.inst); });
     const btn = row?.querySelector('.l2-char-bag-equip--wear');
-    if (btn && !btn.disabled && env.shown(btn) && valid()) {
+    if (btn && !btn.disabled && env.shown(btn) && current()) {
       const before = env.$q('img[data-l2-slot="weapon"]')?.getAttribute('src') || '';
-      await env.pause(); if (!valid() || btn.disabled || !env.shown(btn)) return false;
+      const notice = env.noticeText();
+      await env.pause(); if (!current() || btn.disabled || !env.shown(btn)) return false;
       if (env.fire(btn) === false) return false;
-      const ok = await env.waitX(() => (env.$q('img[data-l2-slot="weapon"]')?.getAttribute('src') || '') !== before || env.EQUIP_OK.test(env.noticeText()), 4000, 150);
-      env.rec('B', 'оружие', `надето из сумки «${w.name}» (${w.wt}, ${w.g})${ok ? '' : ' — без подтверждения игры'}`);
+      let ok = !!await env.waitX(() => !current() || ((env.$q('img[data-l2-slot="weapon"]')?.getAttribute('src') || '') !== before || env.noticeText() !== notice && env.EQUIP_OK.test(env.noticeText())), 4000, 150);
+      if (!current()) return false;
+      // 17.10.2026: одинаковые иконка/текст не различают две копии. Старый toast
+      // не доказательство; сверяем read-only l1 и доступную идентичность экземпляра.
+      if (!ok && env.gameGet) try {
+        const r = await env.gameGet('/character');
+        if (!current()) return false;
+        const j = r?.ok ? await r.json() : null, slot = (j?.character || j)?.inventory?.eq?.l1;
+        if (!current()) return false;
+        const id = +(slot && typeof slot === 'object' ? slot.itemId : slot) || 0;
+        const instance = slot?.targetInstanceId, chosen = env.itemJson(row);
+        ok = id === +w.id && (w.ench == null || typeof slot === 'object' && +slot.enchant === +w.ench)
+          && (!w.inst || instance === w.inst || chosen.clanWeaponUid && slot?.clanWeaponUid === chosen.clanWeaponUid);
+      } catch (_) {} // неизвестный исход не превращаем в успешную смену
+      env.rec('B', 'оружие', `${ok ? 'надето из сумки' : 'смена не подтверждена:'} «${w.name}» (${w.wt}, ${w.g})`);
       return !!ok;
     }
     if (!await bagPageTurn(true)) break;
