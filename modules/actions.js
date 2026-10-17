@@ -25,6 +25,21 @@
   if(why)patch.actionLast={key:O.key,reason:why,at:Date.now()};
   if(await save(patch))env.rec('B','действия',why?`${O.key}: ${why}; старый маршрут отменён`:`${O.key}: маршрут завершён`);
  }
+ // 20.13 (ревизия 17.10, шаг 5, аудит ACT-1): цикл одного служебного маршрута (магазин открывает не ту вкладку, сумка и т. п.)
+ // раньше выключал бота целиком (halt hard) — вместе с рыбалкой, фармом и TvT. Теперь снимается только этот маршрут,
+ // у магазина — пауза закупки (shopT/shopFail, 10 → 30 → 60 → 180 мин). Полная остановка — как прежде, если тот же маршрут
+ // зациклился 3 раза за час, и всегда для выхода тура РБ (rbHunt — это состояние тура, а не одноразовый маршрут).
+ const LOOP_WINDOW=3600000,LOOP_MAX=3;
+ async function loopTrip(O,job,why){
+  if(job.key==='rbHunt'){await env.halt(why,true);return;}
+  const now=Date.now(),loops={...(env.rt.actionLoops||{})},list=(Array.isArray(loops[job.key])?loops[job.key]:[]).filter(t=>now-t<LOOP_WINDOW);
+  list.push(now);loops[job.key]=list.slice(-LOOP_MAX);
+  if(list.length>=LOOP_MAX){await env.halt(`${why}; ${list.length}-й раз за час`,true);return;}
+  const patch={actionOwner:null,[job.key]:null,actionLoops:loops,actionLast:{key:job.key,reason:'цикл маршрута',at:now}};
+  if(job.key==='tbuff'&&env.rt.tbuff)patch.tbInterrupted={t:now,jobT:env.rt.tbuff.t};
+  if(job.key==='shop'){const n=Math.min(4,Math.floor(+env.rt.shopFail?.n||0)+1);patch.shopT=now;patch.shopFail={n,t:now,adena:env.rt.shopFail?.adena??null,keys:['цикл']};}
+  if(await save(patch))env.rec('B','действия',`${why}; маршрут ${job.key} снят (${list.length}/${LOOP_MAX} за час), остальные задачи продолжаются`);
+ }
  async function dispatch(){
   if(busy)return true;
   if(!live())return false;
@@ -69,9 +84,9 @@
     const node=JSON.stringify([page,p]),seen={...(O.seen||{})};
     if(changed||page!==O.page)seen[node]=(seen[node]||0)+1;
     const next={...O,phase:p,progressAt:changed?now:O.progressAt,page,visits:changed?1:(O.visits||1)+(page!==O.page?1:0),seen:Object.fromEntries(Object.entries(seen).slice(-64))};
-    if(seen[node]>5){await env.halt(`Маршрут ${job.key}: повторяется цикл страниц и этапов; остановлено после 5 возвратов`,true);return true;}
+    if(seen[node]>5){await loopTrip(O,job,`Маршрут ${job.key}: повторяется цикл страниц и этапов (5 возвратов)`);return true;}
     // Время ожидания TvT/сервера не ограничиваем. Ловим именно переходы без изменения этапа.
-    if(next.visits>10){await env.halt(`Маршрут ${job.key}: более 10 переходов без продвижения этапа ${value.phase||value.step||''}`,true);return true;}
+    if(next.visits>10){await loopTrip(O,job,`Маршрут ${job.key}: более 10 переходов без продвижения этапа ${value.phase||value.step||''}`);return true;}
     if(JSON.stringify(next)!==JSON.stringify(O)){if(!await save({actionOwner:next}))return true;O=next;}
    }
    if(!canAct()||env.interrupted())return true;

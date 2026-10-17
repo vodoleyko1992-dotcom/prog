@@ -224,7 +224,7 @@ async function nextFight(ctx) {
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   // 20.12 (ревизия 17.10, аудит PAY-1): при неизвестной оплате после победы не уходим в магазин/телепорт — цепочка продолжается.
   const payHold = !!env.paymentHold?.();
-  if (!payHold && env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
+  if (!payHold && env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > (env.shopGap?.() ?? 600000)) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
   const healing = (env.rt.rbHunt?.phase === 'prepare' || env.rt.rbHunt?.last === 'лечусь на мобах') && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
@@ -238,9 +238,10 @@ async function nextFight(ctx) {
   if (!ctx?.rb && await env.townBuffStart('баффы кончились')) return;            // городской бафф слетел (смерть/24 ч)
   if (env.autonomyMode() === 'enchant') return env.toMap();
   const since = Date.now() - (env.rt.shopT || 0);
-  const low = since > 600000 ? env.shopNeedByPanel() : '';
+  const shopGap = env.shopGap?.() ?? 600000;   // 20.13 (ревизия 17.10, шаг 5, ECO-1): пауза растёт, если купить было нечего
+  const low = since > shopGap ? env.shopNeedByPanel() : '';
   const plan = env.cfg.shopAuto ? env.shopPlan() : [];
-  let oreDue = env.cfg.shopAuto && plan.some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > 3600000;
+  let oreDue = env.cfg.shopAuto && plan.some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > Math.max(3600000, shopGap);
   // 8.0 (аудит фарма B4): сумка из ответов сервера свежая (< 5 мин, env.invQty) и всё из плана закупки не ниже минимума —
   // плановый поход в инвентарь (≈10–15 с раз в час) ничего не купит, пропускаем. Не пропускаем, если идут «Квесты на ресурсы»
   // (прогресс берётся из пересчёта сумки) или полный пересчёт сумки старше 5 ч (по нему оценивается запас банок перед РБ)

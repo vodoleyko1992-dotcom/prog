@@ -1814,7 +1814,7 @@ async function rbAbort(ctx, mob, why) {
 // расходники и бить дальше того же РБ»): в бою закупки нет никогда. Проверка — только между боями: перед следующим РБ
 // и при отходе от РБ; раз уж идём в магазин — докупаем всё до максимума (force), недобитый РБ после магазина — первым (rbWounded)
 async function rbShopFirst(label, retreat) {
-  if (!env.cfg.shopAuto || env.rt.shop || Date.now() - (env.rt.shopT || 0) < 600000) return false;
+  if (!env.cfg.shopAuto || env.rt.shop || Date.now() - (env.rt.shopT || 0) < (env.shopGap?.() ?? 600000)) return false;   // 20.13 (шаг 5, ECO-1)
   const [mn] = env.pair(env.cfg.shopHp, '300/1000'), n = env.hpPotStock();
   const low = (env.shopNeedByPanel?.() || '').split(', ').filter(Boolean);
   if (mn && n != null && n < mn && !low.some(x => /^банки HP/.test(x))) low.unshift(`банки HP ${n} < ${mn}`);

@@ -2,7 +2,10 @@
 // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено»):
 // один дневной лимит мобов dailyKillLimit на автофарм и катакомбы, миграция dailyKill2010, остаток в меню.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engine-core.js');
+const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine0=require('../engine-core.js');
+// 20.13 (ревизия 17.10, шаг 5): проверки движка — на часах фикстуры (13:59Z), а не на настоящих: после 14:00Z (00:00 UTC+10)
+// настоящие сутки уже другие, и тест падал в зависимости от времени запуска.
+const T0=Date.parse('2026-10-17T13:59:00Z'),engine={dailyCount:(r,k,n)=>engine0.dailyCount(r,k,n??T0),dailyBlocked:(c,r,k,n)=>engine0.dailyBlocked(c,r,k,n??T0),selectedTask:(c,r,n)=>engine0.selectedTask(c,r,n??T0)};
 function fixture(task='auto'){
  let now=Date.parse('2026-10-17T13:59:00Z');
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
@@ -14,7 +17,7 @@ function fixture(task='auto'){
 }
 test('убийства автофарма и катакомб складываются в один дневной лимит; достигнут — ждут обе охоты, остальные задачи идут',async()=>{
  const f=fixture('cat');let t=await f.begin();f.grow(3);assert.equal(await f.win(t),false);   // 3/5 — лимит не достигнут
- assert.equal(f.state.rt.dailyQuota.cat,3);assert.equal(engine.dailyCount(f.state.rt,'auto',Date.now()),3);
+ assert.equal(f.state.rt.dailyQuota.cat,3);assert.equal(engine.dailyCount(f.state.rt,'auto'),3);
  assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto'),false);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat'),false);
  f.state.rt.dailyQuota.auto=2;f.refresh();   // ещё 2 моба на автофарме → 5/5
  assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat'),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto'),true);

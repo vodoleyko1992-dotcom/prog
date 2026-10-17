@@ -32,8 +32,10 @@ test('неудачная durable запись владельца не разре
  // 17.10: ожидание записи теперь видно игроку; запуск shop по-прежнему запрещён.
  const f=fixture({shop:{step:'buy'}});f.commit(false);await f.A.dispatch();assert.deepEqual(f.calls,['Служебный маршрут: жду сохранения состояния']);
 });
+// 20.13 (ревизия 17.10, шаг 5, ACT-1): цикл снимает только этот маршрут (бот работает дальше); остановка — на 3-м цикле за час.
 test('петля переходов без нового этапа ограничена и переживает reload',async()=>{
- let f=fixture({shop:{step:'buy'}});for(let i=0;i<12&&f.env.on;i++){f.page(i%2?'/map.html':'/shop.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}assert.ok(f.calls.includes('halt'));
+ let f=fixture({shop:{step:'buy'}});for(let i=0;i<12&&f.env.rt.shop;i++){f.page(i%2?'/map.html':'/shop.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}
+ assert.equal(f.calls.includes('halt'),false);assert.equal(f.env.on,true);assert.equal(f.env.rt.shop,null);assert.equal(f.env.rt.actionOwner,null);assert.equal(f.env.rt.actionLoops.shop.length,1);
 });
 test('смена этапа сбрасывает счётчик переходов',async()=>{
  const f=fixture({shop:{step:'count'}});for(let i=0;i<15;i++){f.page('/page'+i);f.env.rt.shop.step='stage'+i;await f.A.dispatch();}assert.equal(f.env.on,true);
@@ -82,5 +84,9 @@ test('Stop блокирует автоматический переход, но 
 });
 
 test('цикл A→B→A с изменением фазы также ограничен и переживает reload',async()=>{
- let f=fixture({petBufferTrip:{id:'cycle',phase:'city'}});for(let i=0;i<14&&f.env.on;i++){f.env.rt.petBufferTrip.phase=i%2?'pay':'city';f.page(i%2?'/town-buffer.html':'/city.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}assert.ok(f.calls.includes('halt'));
+ let f=fixture({petBufferTrip:{id:'cycle',phase:'city'}});
+ for(let round=0;round<3&&f.env.on;round++){if(!f.env.rt.petBufferTrip)f.env.rt.petBufferTrip={id:'cycle'+round,phase:'city'};
+  for(let i=0;i<14&&f.env.on&&f.env.rt.petBufferTrip;i++){f.env.rt.petBufferTrip.phase=i%2?'pay':'city';f.page(i%2?'/town-buffer.html':'/city.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}
+  if(round<2){assert.equal(f.env.on,true,'цикл '+(round+1)+' снимает маршрут, бот работает');assert.equal(f.env.rt.petBufferTrip,null);}}
+ assert.ok(f.calls.includes('halt'),'третий цикл того же маршрута за час — остановка');
 });
