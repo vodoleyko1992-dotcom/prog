@@ -68,6 +68,11 @@ const bgSleep = ms => new Promise(r => {
 // Нет пульса > 2,5 мин при включённом боте (вкладка зависла, выгружена браузером, ошибка сервера) — фон перезагрузит вкладку.
 let hbT = 0;
 var leaseEpoch = null;
+let automationGeneration = 0;
+// 20.9: старое ожидание/восстановление не управляет новой сессией после Stop, смены героя или задач.
+function automationSnapshot() { return JSON.stringify([automationGeneration,rt.char||'',leaseEpoch,+rt.manualKickAt||0,modeSig(cfg),location.pathname,location.search]); }
+function automationCurrent(stamp) { return on && tabOwner && stamp === automationSnapshot() && L2V7Modules.actions?.canAct?.() !== false; }
+async function automationFlush(stamp) { return automationCurrent(stamp) && await rtCommit() && automationCurrent(stamp); }
 function heartbeat() {
   if (!tabOwner || !on) return; // ожидающие вкладки не должны перепривязывать сторожа
   const now = Date.now();
@@ -173,12 +178,20 @@ async function farmQuotaSnapshot(char) {
   if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
   return c;
 }
+// 17.10.2026: после смены суток/reload владелец уже начатого боя важнее нового приоритета задач.
+function farmQuotaPending(spawn) {
+  const raw = L2EngineCore.rawTaskConfig(cfg), enabled = task => L2EngineCore.taskList(cfg) !== null
+    ? L2EngineCore.taskAllowed(cfg, task) : task === 'cat' ? raw.catMode : raw.zoneAuto;
+  return ['auto','cat'].map(task => ({ task, row: rt.farmQuota?.[task] })).filter(({task,row}) => enabled(task)
+    && row?.pending && !row.done && row.pending.spawn === spawn && row.limit === farmQuotaLimit(task) && (farmQuotaLimit(task) || farmDailyLimit(task)));
+}
 async function beginFarmQuota(spawn) {
   if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
-  const task = farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
+  const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
+  const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
   if (!limit && !dailyLimit) return null;
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
-  const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && farmQuotaTask() === task && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
+  const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
   try {
     const c = await farmQuotaSnapshot(char); if (!valid()) return false;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
@@ -189,8 +202,10 @@ async function beginFarmQuota(spawn) {
 }
 async function finishFarmQuota(ticket, lost = false) {
   if (!ticket) {
-    const task = farmQuotaTask(), row = rt.farmQuota?.[task], spawn = new URLSearchParams(location.search).get('spawnId') || '';
-    if (!row?.pending || row.done || row.pending.spawn !== spawn || row.limit !== farmQuotaLimit(task) || !(farmQuotaLimit(task)||farmDailyLimit(task))) return false;
+    const spawn = new URLSearchParams(location.search).get('spawnId') || '', previous = farmQuotaPending(spawn);
+    if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return true; }
+    if (!previous.length) return false;
+    const {task,row} = previous[0];
     if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost) : false; }
     ticket = { task, limit: row.limit, dailyLimit:farmDailyLimit(task), char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
   }
@@ -1136,26 +1151,32 @@ function setStatus(s) {
   else rt = { ...rt, status: s };
   draw();
 }
+// Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
+async function automationStop(msg, action = 'stop') {
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  automationGeneration++; on = false;
+  const r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick });
+  if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
+  return r;
+}
 // hard = настоящая остановка (Esc ×2, цель рыбалки выполнена, лимит забросов). В режиме рыбалки любая другая
 // «остановка» превращается в паузу с повтором (fishSoft) — рыбалка идёт, пока её не выключат кнопкой (v4.49)
 async function halt(msg, hard) {
+  const stamp = automationSnapshot();
   console.warn(TAG, 'СТОП:', msg);
   if (fishNow() && !hard && on) return fishSoft(msg);
   // 8.0 (аудит ядра): «список мобов не грузится 15 мин», «клик по мобу 3 раза» и т. п. при частичном простое сервера — не остановка:
   // сервер не отвечает — ждём его. Настоящие остановки (hard: Esc ×2, цель выполнена, ошибка кода) — как раньше
-  if (!hard && on && !(await srvUp())) { rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, бота не останавливаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
+  if (!hard && on && !(await srvUp())) { if (!automationCurrent(stamp)) return; rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, бота не останавливаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
+  if (!hard && !automationCurrent(stamp)) return;
   rec('B', 'СТОП', msg);                         // причина остановки — всегда в журнал (раньше была видна только в статусе)
-  on = false;
-  await chrome.storage.local.set({ on: false, stopMeta: { source: 'content-halt', reason: String(msg).slice(0, 240), t: Date.now() } });
-  await setRt({ status: msg });
+  await automationStop(msg);
 }
 // 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
 // как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
 async function pauseBot(msg) {
   rec('B', 'пауза', msg);
-  on = false;
-  await chrome.storage.local.set({ on: false, paused: { t: Date.now(), why: String(msg).slice(0, 160) }, stopMeta: { source: 'content-pause', reason: String(msg).slice(0, 240), t: Date.now() } });
-  await setRt({ status: msg });
+  await automationStop(msg, 'pause');
 }
 
 // ---------- переходы ----------
@@ -2511,7 +2532,7 @@ async function main() {
   if (!on) { try { await switchChar(); } catch (e) { console.warn(TAG, 'персонаж', e); } return; }
   running = true;
   try {
-  let servicesStarted = false;
+  let servicesStarted = false, castObservedAt = 0;
   while (on) {
     try {
       if (!tabOwner || Date.now() - (window.__lockT || 0) > 30000) {
@@ -2574,11 +2595,14 @@ async function main() {
         rt.rbHunt?.step || '', rt.shop?.step || '', rt.tbuff?.step || '',
         meHp()?.cur ?? '', mobHp()?.cur ?? ''].join('|');
       if (progressMonitor.tick(sig, activeJob && !abWait) === 'stalled' && !serverDown()) {
-        if (!(await srvUp())) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); continue; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
+        const stamp = automationSnapshot();
+        const up = await srvUp(); if (!automationCurrent(stamp)) continue;
+        if (!up) { netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); await serverWait(); continue; }   // 7.2.5: это простой сервера, а не зависание бота — без остановки
         const history = (rt.stallRecoveries || []).filter(t => Date.now() - t < 30 * 60000);
         rec('S', 'восстановление', `нет прогресса 9 мин: ${location.pathname}, режим ${autonomyMode()}, попытка ${history.length + 1}/3`);
         if (history.length >= 3) { await halt('Автономный режим не продвигается после 3 восстановлений за 30 мин', true); break; }
         await setRt({ stallRecoveries: [...history, Date.now()] });
+        if (!await automationFlush(stamp)) continue;
         location.reload(); await sleep(5000); continue;
       }
       if (serverDown()) { await serverWait(); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
@@ -2635,6 +2659,11 @@ async function main() {
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); continue; }
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
+      // Неизвестный старый заброс сверяем чтением и при выбранной другой задаче; новый заброс запрещён.
+      if (rt.fishCastPending && !fishNow() && !isBattle() && !tvtSoon() && !rt.revive && !L2V7Modules.pvp?.pending() && Date.now() - castObservedAt >= 15000) {
+        castObservedAt = Date.now(); await L2V7Modules.fishing.castReconcile({observeOnly:true});
+        if (!on || !tabOwner || L2V7Modules.actions?.canAct?.() === false) continue;
+      }
       // 10.0.24: сохранённый маршрут завершаем прежде запуска другого сервиса.
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); continue; }
       // 20.6, лог 16.10 23:31: после смены задачи доводим текущую рыбу в новом frame,
@@ -3051,8 +3080,10 @@ function accountLoginBlocked() {
 }
 const stopBlockedLogin = () => halt('Аккаунт заблокирован сервером — бот остановлен. Проверьте сообщение игры; повторный вход не выполняется', true);
 async function autoLogin() {
+  const stamp = automationSnapshot(); if (!automationCurrent(stamp)) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
   const { auth } = await chrome.storage.local.get('auth');
+  if (!automationCurrent(stamp)) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
   if (!auth?.login || !auth?.pass) {
     await idle(60000, 'Вы вышли из игры — войдите вручную (или задайте логин/пароль: меню → Журнал → 🔐 Автовход)');
@@ -3061,6 +3092,7 @@ async function autoLogin() {
   const now = Date.now(), tries = (rt.loginTries || []).filter(t => now - t < 600000);
   if (tries.length >= 3) { await idle(120000, 'Автовход: 3 попытки за 10 мин не удались — жду (проверьте логин/пароль)'); return; }
   await setRt({ loginTries: [...tries, now] });
+  if (!automationCurrent(stamp)) return;
   const pw = [...document.querySelectorAll('input[type="password"]')].find(shown);
   const form = pw.closest('form') || document;
   const user = [...form.querySelectorAll('input:not([type]), input[type="text"], input[type="email"]')].filter(shown)
@@ -3069,18 +3101,22 @@ async function autoLogin() {
   rec('S', 'вход', `форма входа на ${location.pathname} — автовход (попытка ${tries.length + 1}/3)`);   // без логина и пароля
   if (user) { user.focus(); setVal(user, auth.login); }
   await sleep(rnd(300, 600));
+  if (!automationCurrent(stamp) || pw.isConnected === false) return;
   pw.focus(); setVal(pw, auth.pass);
   await sleep(rnd(300, 600));
   const btn = [...form.querySelectorAll('button, input[type="submit"], a')].filter(shown)
     .find(b => /войти|увійти|вход|вхід|login|sign in/i.test(b.textContent + ' ' + (b.value || '')));
+  if (!automationCurrent(stamp) || pw.isConnected === false) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
   if (btn) fire(btn); else if (pw.form) pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
   const ok = await waitFor(() => accountLoginBlocked() || !loginPage() || $q('#l2-hud-legacy-name'), 15000, 300);
+  if (!automationCurrent(stamp)) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
   if (ok && !loginPage()) {
     rec('S', 'вход', 'вход выполнен — продолжаю');
     await setRt({ loginTries: [] });
     await sleep(2000);
+    if (!automationCurrent(stamp)) return;
     if (!$q('#l2-hud-legacy-name')) { (L2V7Modules.actions?.canAct?.() !== false && (location.href = fishNow() ? '/fishing.html' : '/map.html')); await sleep(6000); }
   } else {
     const err = [...document.querySelectorAll('[class*="error"], [class*="err"], [role="alert"]')].filter(shown).map(e => e.textContent.trim()).filter(Boolean).join(' ').slice(0, 120);
@@ -3128,25 +3164,29 @@ async function srvUp() {
 }
 const srvAnswer = (status, ct) => status < 500 && !(status === 200 && !/json/i.test(ct || ''));
 async function serverWait() {
+  const stamp = automationSnapshot(); if (!automationCurrent(stamp)) return;
   // по просьбе игрока: рестарт сервера — перезагружаем страницу каждые 10 с (раньше 30 с → … → 5 мин), пока игра не ответит
   // 8.0 (аудит ядра): короткая серия ошибок API при живой игре на экране — через 3 с спрашиваем сервер; отвечает — работаем
   // дальше без перезагрузки страницы (раньше три 5xx за 30 с всегда вели к перезагрузке)
   if (netOutage.since && !rt.downT && $q('#l2-hud-legacy-name, #l2-nav-bottom')) {
     setStatus('Сбой ответов сервера — проверяю, отвечает ли игра'); await sleep(3000);
-    if (await srvUp()) { netOutage.since = 0; netOutage.failures = []; rec('S', 'сервер', 'короткий сбой ответов сервера — игра отвечает, продолжаю без перезагрузки'); return; }
+    if (!automationCurrent(stamp)) return;
+    const up = await srvUp(); if (!automationCurrent(stamp)) return;
+    if (up) { netOutage.since = 0; netOutage.failures = []; rec('S', 'сервер', 'короткий сбой ответов сервера — игра отвечает, продолжаю без перезагрузки'); return; }
   }
   const now = Date.now(), n = (rt.downN || 0) + 1, wait = Math.min(120000, 10000 * Math.pow(2, Math.min(4, n - 1)));
   const code = netOutage.since ? 'API 5xx' : (((document.title || '') + ' ' + (document.body?.innerText || '').slice(0, 300)).match(/\b5\d\d\b/)?.[0] || '5xx');
   if (!rt.downT) rec('S', 'сервер', `игра недоступна (${code}) на ${location.pathname} — жду и пробую снова`);
   await setRt({ downT: rt.downT || now, downN: n });
+  if (!automationCurrent(stamp)) return;
   const t0 = Date.now();                          // свой отсчёт, без записи в журнал на каждой попытке
   let probeT = t0;                                // 7.2.5: раз в 10 с спрашиваем сервер — ответил, значит перезагружаем сразу, не ждём до 2 мин
-  while (on && Date.now() - t0 < wait) {
+  while (automationCurrent(stamp) && Date.now() - t0 < wait) {
     setStatus(`Сервер игры недоступен (${code}) — попытка ${n}, проверяю каждые 10 с, перезагрузка не позже чем через ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с`);   // 8.0: не чаще раза в 2,5 с в хранилище
-    if (Date.now() - probeT >= 10000) { probeT = Date.now(); if (await srvUp()) { rec('S', 'сервер', `сервер снова отвечает — перезагружаю страницу и продолжаю (${autonomyMode()})`); break; } }
+    if (Date.now() - probeT >= 10000) { probeT = Date.now(); const up = await srvUp(); if (!automationCurrent(stamp)) return; if (up) { rec('S', 'сервер', `сервер снова отвечает — перезагружаю страницу и продолжаю (${autonomyMode()})`); break; } }
     await sleep(1000);
   }
-  if (!on) return;
+  if (!await automationFlush(stamp)) return;
   location.reload();   // сохраняем URL боя/локации и состояние пользователя
   await sleep(8000);
 }
@@ -3159,6 +3199,7 @@ async function serverBack() {
 // сбой в цикле — не повод останавливать бота: записать, переждать, при повторах — обновить страницу.
 // Остановка — только если ошибки сыплются постоянно (8 за 10 мин).
 async function softError(e) {
+  const stamp = automationSnapshot(); if (!automationCurrent(stamp)) return;
   const route = [location.pathname, rt.epic?.step || '', rt.rbGo ? 'raid' : '', rt.fishService || ''].join(':');
   if (!recovery.count(route) && rt.engineFailures?.[route]?.length) recovery.restore(route, rt.engineFailures[route]);
   // 8.0: повторы ошибки кода переживают перезагрузку страницы (sessionStorage вкладки) — иначе вечный круг «повтор → перезагрузка»
@@ -3172,24 +3213,28 @@ async function softError(e) {
   const now = Date.now(), errs = [...(rt.errs || []), now].filter(t => now - t < 30 * 60000);
   await setRt({ errs, engineFailures: keep,
     health: { route, action: d.action, failures10m: d.recent, updatedAt: now } });
+  if (!automationCurrent(stamp)) return;
   rec('S', 'ошибка', `${d.error} @ ${route}: ${d.action} (${d.recent} за 10 мин)`);
-  if (d.action === 'halt' && !d.programming && !(await srvUp())) {   // 7.2.5: сбои из-за лежащего сервера — ждём сервер, бота не останавливаем
+  if (d.action === 'halt' && !d.programming && !(await srvUp())) {
+    if (!automationCurrent(stamp)) return;   // 7.2.5: сбои из-за лежащего сервера — ждём сервер, бота не останавливаем
     rec('S', 'сервер', 'сбои повторяются, а сервер игры не отвечает — это простой сервера, жду его, бота не останавливаю');
     netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now();
     return serverWait();
   }
   // 8.0: «Cannot read properties of null/undefined» бывает и от недогруженной страницы при сбое сервера — сначала проверка сервера
   if (d.action === 'halt' && d.programming && /cannot (?:read|set) properties of (?:null|undefined)/i.test(d.error) && !(await srvUp())) {
+    if (!automationCurrent(stamp)) return;
     rec('S', 'сервер', 'ошибка страницы повторяется, а сервер игры не отвечает — жду сервер, бота не останавливаю');
     netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now();
     return serverWait();
   }
+  if (!automationCurrent(stamp)) return;
   // 8.0: 3-й повтор той же ошибки страницы — не ещё одна перезагрузка, а уход на карту (другая страница, другое состояние)
   if (d.action === 'reload' && d.programming && d.fatalRepeats === 3 && autonomyMode() !== 'enchant' && !/\/map\.html/.test(location.pathname)) {
     setStatus('Восстановление: ошибка страницы повторилась — перехожу на карту');
     rec('S', 'восстановление', `${d.error.slice(0, 80)} — 3-й раз подряд, перехожу на карту (4-й — остановка с сообщением)`);
     await sleep(2000);
-    if (on && tabOwner) (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/map.html'));
+    if (await automationFlush(stamp)) location.href = '/map.html';
     return;
   }
   if (d.action === 'halt') {
@@ -3200,7 +3245,7 @@ async function softError(e) {
   if (d.action === 'reload') {
     setStatus(`Восстановление: перезагрузка после ${d.recent} ошибок`);
     await sleep(2000);
-    if (on && tabOwner) location.reload();
+    if (await automationFlush(stamp)) location.reload();
     return;
   }
   const wait = d.delayMs;
@@ -3211,7 +3256,7 @@ async function softError(e) {
   // («Illegal invocation», лог 09.10 18:33) 15 «пауз 3 мин» проходили за 50 мс
   const label = d.action === 'cooldown' ? 'Пауза после повторных сбоев' : 'Восстановление', t0 = Date.now(), lastKick = +rt.manualKickAt || 0;
   setStatus(label);
-  while (on && !rt.shop?.urgent && (+rt.manualKickAt || 0) <= lastKick && Date.now() - t0 < wait) { setStatus(`${label} · ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с`); await sleep(Math.max(1, Math.min(1000, wait - (Date.now() - t0)))); }
+  while (automationCurrent(stamp) && !rt.shop?.urgent && (+rt.manualKickAt || 0) <= lastKick && Date.now() - t0 < wait) { setStatus(`${label} · ${Math.ceil((wait - (Date.now() - t0)) / 1000)} с`); await sleep(Math.max(1, Math.min(1000, wait - (Date.now() - t0)))); }
 }
 // ---------- меню бота справа от игры (то же меню, что по кнопке расширения) ----------
 // Панель занимает всё место справа от игрового блока; границу берём из самой страницы.
@@ -4540,6 +4585,7 @@ async function actionScanStep(key){
 
 // 10.0.24: реестр продолжений. Read-only опросы не приобретают маршрут.
 L2V7Modules.actions = L2V7Factories.actions({
+ get actionGeneration(){return ()=>automationGeneration},
  get rt(){return rt},get cfg(){return cfg},get on(){return on},get tabOwner(){return tabOwner},
  get mode(){return autonomyMode},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
  get id(){return ()=>crypto.randomUUID()},get setRt(){return setRt},get rtCommit(){return rtCommit},get rec(){return rec},get setStatus(){return setStatus},get halt(){return halt},get isBattle(){return isBattle},
@@ -4565,7 +4611,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -4645,7 +4691,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return ()=>RAID_PAY_NET}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return ()=>RAID_PAY_NET}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get gameGet() { return gameGet; },
   get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
@@ -5040,7 +5086,7 @@ L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get toggleState() { return toggleState; }, set toggleState(value) { toggleState = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.equipment = L2V7Factories.equipment({ get damageSkills() { return damageSkills(); }, get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.equipment = L2V7Factories.equipment({ get actionGeneration(){return ()=>automationGeneration}, get damageSkills() { return damageSkills(); }, get scanLocation(){return (st,char)=>L2V7Modules.actions.locationProxy(location,()=>invBusy&&!running&&st.manual&&rt.char===char&&(!rt.invScan||rt.invScan.t===st.t))}, get routeLocation(){return actionLocation}, get gameGet() { return gameGet; }, get tabOwner() { return tabOwner; }, get noEffect() { return noEffect; }, get on(){return on},  get combatProfileKind() { return combatProfileKind; }, get normalizeProfession() { return normalizeProfession; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get CLASS_W() { return CLASS_W; }, set CLASS_W(value) { CLASS_W = value; },
   get EQUIP_OK() { return EQUIP_OK; }, set EQUIP_OK(value) { EQUIP_OK = value; },
   get FREE_HIT() { return FREE_HIT; }, set FREE_HIT(value) { FREE_HIT = value; },
@@ -5681,15 +5727,17 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
     (async () => {
+      const generation = automationGeneration;
       const state = await chrome.storage.local.get(['on', 'cfg']);
-      on = !!state.on; cfg = mergeCfg(state.cfg);
       const v = chrome.runtime.getManifest().version;
+      if (generation !== automationGeneration) return reply({ok:false,v,running,owner:false,reason:'start_superseded'});
+      on = !!state.on; cfg = mergeCfg(state.cfg);
       if (!on) return reply({ ok: false, v, running: false, owner: false, reason: 'stopped' });
       void main();
       const deadline = Date.now() + 3500;
-      while (on && !(running && tabOwner && leaseEpoch) && Date.now() < deadline)
+      while (on && generation === automationGeneration && !(running && tabOwner && leaseEpoch) && Date.now() < deadline)
         await new Promise(resolve => setTimeout(resolve, 120));
-      if (!on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
+      if (generation !== automationGeneration || !on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
       if (!running) return reply({ ok: false, v, running: false, owner: tabOwner, reason: 'loop_not_running' });
       if (!tabOwner || !leaseEpoch) return reply({ ok: false, v, running: true, owner: false, reason: 'another_tab_or_lock_unavailable' });
       heartbeat();
@@ -5707,6 +5755,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
 // любая необработанная ошибка расширения — в журнал (чтобы «полный сбой» был виден в выгрузке, а не только в консоли)
 // v5.6: обработчики ошибок — один набор (выше, у записи журнала); второй дублировал каждую ошибку в журнале
 chrome.storage.onChanged.addListener(ch => {
+  if (ch.on || ch.cfg || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
   // Обновление справочников из меню должно быть видно без перезагрузки страницы.
   if (ch.farmDb) FARM = ch.farmDb.newValue || null;
   if (ch.recipeDb) RECIPES = ch.recipeDb.newValue || null;

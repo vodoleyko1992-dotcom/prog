@@ -50,7 +50,9 @@ const mk = rt => {
     assert.ok(i1 > 0 && i1 < i2 && i1 < i3 && i1 < i4, 'core: «one RB killed» pause comes before the buff watchdog, shop and town buff'); }
   // ядро: пауза = как кнопка «⏸ Пауза» (on:false + paused), геттер модуля есть
   const content = read('content.js');
-  assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  on = false;\n  await chrome\.storage\.local\.set\(\{ on: false, paused: \{ t: Date\.now\(\), why:/);
+  // Реворк20.9: автоматическая пауза использует ту же сериализованную команду фона, что меню.
+  assert.match(content, /async function pauseBot\(msg\) \{\n  rec\('B', 'пауза', msg\);\n  await automationStop\(msg, 'pause'\);/);
+  assert.match(read('background.js'), /paused: m\.action === 'pause' \? \{ t: now, why: reason\.slice\(0, 160\) \} : null/);
   // 10.0.15: новые lazy getters не меняют контракт pauseBot и не обязаны идти после него.
   assert.match(content.match(/L2V7Modules\.raid = L2V7Factories\.raid\(\{([\s\S]*?)\}\);/)?.[1] || '', /get pauseBot\(\) \{ return pauseBot; \}/);
   assert.match(content, /am === 'raid' && rt\.rbOne\?\.on && '🎯 по одному РБ'/, 'indicator shows the mode');

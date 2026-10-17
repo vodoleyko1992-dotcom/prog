@@ -137,9 +137,10 @@ const loadErr  = () => env.shown(env.$q('#battle-load-err'));
 function slotsBy(str) {                       // кнопки панели, чей title начинается с одного из названий
   const alts = env.names(str);
   if (!alts.length) return [];
+  const exact = b => alts.includes(env.cleanTitle(b.title || '').toLowerCase());
   return [...document.querySelectorAll(env.SLOT)]
-    .filter(b => { const t = (b.title || '').toLowerCase(); return alts.some(a => t.startsWith(a)) && !env.isEquip(b); })
-    .sort((a, b) => env.shown(b) - env.shown(a));      // видимый ряд — первым
+    .filter(b => { const t = (b.title || '').toLowerCase(); return alts.some(a => t.startsWith(a) && (t.length === a.length || /[\s(:.—–-]/.test(t[a.length]))) && !env.isEquip(b); })
+    .sort((a, b) => exact(b) - exact(a) || env.shown(b) - env.shown(a)); // Heal раньше Heal Servitor, даже на другом ряду
 }
 
 let overlayBusySeen = new WeakMap(), overlayReadySeen = new WeakSet(), overlaySpawn = '';
@@ -265,12 +266,36 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
 function nonOffenseSkill(b) {
   if (!b) return true;
   const il = env.ilOf(b) || {};
-  if (il.autoUse === false || env.slotAction?.(b) === 'battle_trance' || /^battle trance(?:\s|$)/i.test(env.cleanTitle(b.title || ''))) return true;
-  if (il.c === 'Призыв' || il.t === 'SUMMON' || il.target === 'PET' || il.o === 'PASSIVE' || il.o === 'TOGGLE') return true;
+  if (il.autoUse === false || env.noEffect?.(b) || env.slotAction?.(b) === 'battle_trance' || /^battle trance(?:\s|$)/i.test(env.cleanTitle(b.title || ''))) return true;
+  if (il.c === 'Призыв' || il.t === 'SUMMON' || (il.target === 'PET' || il.target === 'CORPSE_MOB') || ['PASSIVE','TOGGLE','CHANCE'].includes(il.o)) return true;
   // 20.3: прежняя nPower Warlord содержит поддержку. Подтверждённые прямые/совмещённые удары сохраняем.
   if (['Бафф','Дебафф','Агро','Лечение','Расход HP'].includes(il.c) && !il.l2Damage && !/^(?:PDAM|MDAM|MDAMDOT|DRAIN|DAM)$/.test(il.t || '')) return true;
   const n = env.cleanTitle(b.title || '').toLowerCase();
   return /^(?:summon\b|mass summon\b|servitor\b|warrior servitor\b|final servitor\b|transfer pain\b|arcane agility\b|cubic mastery\b|mage bane\b|warrior bane\b|skill mastery\b|spell force\b|heal\b|battle heal\b|servitor bless)/i.test(n);
+}
+
+// 17.10.2026, реворк боя: реген может свести замер расхода к нулю. Стоимость
+// текущего ранга сервера важнее дельты MP; все пути выбора используют одну проверку.
+function actionMp(b) {
+  if (!b || env.slotKind?.(b) === 'атака' || env.slotKind?.(b) === 'предмет' || env.slotAction?.(b) === 'attack') return 0;
+  const n = env.cleanTitle(b.title || '').toLowerCase(), il = env.ilOf?.(b) || {};
+  const learned = env.rt.skillDb?.[n] || env.rt.skillDb?.[String(il.n || '').toLowerCase()];
+  if (learned && (learned.mpKnown || learned.mp > 0) && Number.isFinite(learned.mp) && learned.mp >= 0) return learned.mp;
+  if (il.mp === 0) return 0; // IL_FIX: бесплатный Corpse Life Drain; общий skillMp иначе подставит30
+  const measured = env.skillMp?.(env.cleanTitle(b.title || ''));
+  if (Number.isFinite(measured) && measured > 0) return measured;
+  const v = Array.isArray(il.mp) ? il.mp[Math.min(il.mp.length - 1, 10)] : il.mp;
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+function affordable(b, mp, reserve = 1) {
+  const cost = actionMp(b);
+  return !mp || Number.isFinite(mp.cur) && mp.cur >= cost + (cost > 0 ? reserve : 0);
+}
+function heroHealSkill(b, drain = false) {
+  if (!b) return false;
+  const il = env.ilOf(b) || {};
+  if (il.autoUse === false || env.noEffect?.(b) || (il.target === 'PET' || il.target === 'CORPSE_MOB') || ['PASSIVE','TOGGLE','CHANCE'].includes(il.o)) return false;
+  return drain ? il.t === 'DRAIN' || !il.c && !il.t : /^(?:HEAL|HEAL_PERCENT|HOT|HEAL_STATIC|DRAIN)$/.test(il.t || '') || !il.c && !il.t;
 }
 
 const petNote = { name: '', t: 0 }, emptyPanel = { since: 0, last: 0, logT: 0 };
@@ -613,8 +638,7 @@ function magePlan(ctx, mp) {
   const potB = env.mpPotSlot?.(), potOk = !!(potB && env.qty(potB) !== 0);
   const eco = !!mp && !potOk && mp.max > 0 && mp.cur / mp.max * 100 < (env.cfg.mageEcoPct ?? 30);
   if (mp && mp.cur < (env.cfg.skillMpMin ?? 35)) {
-    const cheap = Math.min(Infinity, ...mageSpellSlots().filter(ready).map(b => {
-      const il = env.ilOf(b) || {}; return env.skillMp(env.cleanTitle(b.title)) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 30; }));
+    const cheap = Math.min(Infinity, ...mageSpellSlots().filter(ready).map(actionMp));
     if (!(cheap <= mp.cur - 1)) {
       if (freeFinish()) return freeFinish();
       if (potOk) return null;                     // 7.1.30: ни на что не хватает, банка есть — её выпьет блок банок
@@ -626,7 +650,7 @@ function magePlan(ctx, mp) {
   const opts = mageSpellSlots().filter(b => ready(b) && (ctx.block['power:' + b.title] || 0) <= Date.now())
     .map(b => {
       const n = env.cleanTitle(b.title), il = env.ilOf(b) || {}, k = env.skKey(b);
-      const mpCost = env.skillMp(n) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
+      const mpCost = actionMp(b);
       // 9.2: урон по ЭТОЙ цели (анализатор боя: прошлые бои с ней + этот бой) важнее общего среднего по всем мобам
       const observed = env.fightDmgOn?.(n);
       const dmg = observed?.mean ?? (env.expDmg(k) || env.expDmg(n) || 0);
@@ -634,7 +658,7 @@ function magePlan(ctx, mp) {
       return { key:'power:' + b.title, name:n, b, dmg:observed ? dmg : dmg || base, mpCost,
         cd: env.rt.skills?.[k]?.cdNet || env.rt.skills?.[k]?.cd || (il.reuse || 5000)/1000,
         order:priority.indexOf(n.toLowerCase()) };
-    }).filter(o => !mp || o.mpCost <= Math.max(0, mp.cur - 1));
+    }).filter(o => affordable(o.b, mp));
   if (!opts.length) return freeFinish();
   // До одиночного добивания сравниваем дополнительную добычу: текущие HP соседей
   // либо свежую подтверждённую отдачу АОЕ в этой же зоне.
@@ -663,7 +687,7 @@ function magePlan(ctx, mp) {
     const wk = mob.max + '/' + mobTitle();
     if (ctx.waitKillMob !== wk) { ctx.waitKillMob = wk; ctx.waitKillT = 0; }   // новый моб (цепочка) — заново
     const expired = !!ctx.waitKillT && Date.now() - ctx.waitKillT > 1500;
-    const soon = expired ? null : mageSpellSlots().filter(b => !ready(b) && cdLeft(b) > 0 && cdLeft(b) <= env.turnSec() * 0.5 && (!mp || (env.skillMp(env.cleanTitle(b.title)) || 0) <= mp.cur - 1))
+    const soon = expired ? null : mageSpellSlots().filter(b => !ready(b) && cdLeft(b) > 0 && cdLeft(b) <= env.turnSec() * 0.5 && affordable(b, mp))
       .map(b => ({ n: env.cleanTitle(b.title), p: env.fightKillP(env.cleanTitle(b.title), hpK) })).filter(x => x.p != null && x.p >= 0.85)[0];
     const nowKill = opts.some(o => { const p = env.fightKillP(o.name, hpK); return p != null ? p >= 0.5 : o.dmg >= hpK * 1.08; });
     if (soon && !nowKill && !ctx.rb) { ctx.waitKillT ||= Date.now(); ctx.waitWhy = `жду ${soon.n}: откатится через полхода и добьёт (${Math.round(soon.p * 100)} %)`; return null; }
@@ -743,7 +767,7 @@ function dpsPlan(ctx, mp) {
     }
     for (const c of env.forceCosts()) {
       const b = slotsBy(c.name)[0], k = c.name.toLowerCase();
-      if (!b || !ready(b) || !free('force:' + c.name) || fN < c.cost) continue;
+      if (!b || nonOffenseSkill(b) || !ready(b) || !free('force:' + c.name) || fN < c.cost) continue;
       opts.push({ key: 'force:' + c.name, name: `${c.name} (−${c.cost} эн.)`, b, dmg: env.expDmg(c.name), force: c.cost, cost: c.cost,
                   cd: env.rt.skills?.[k]?.cd || env.rt.skillDb?.[k]?.cd || 10 });
     }
@@ -760,9 +784,9 @@ function dpsPlan(ctx, mp) {
   }
   // Готовый откат ещё не означает доступный каст: проверяем стоимость каждого кандидата.
   for (let i = opts.length - 1; i >= 0; i--) {
-    const o = opts[i], il = env.ilOf(o.b) || {};
-    o.mpCost = o.key === 'attack' ? 0 : env.skillMp?.(o.name.replace(/\s*\(.*$/, '')) || (Array.isArray(il.mp) ? il.mp[0] : il.mp) || 0;
-    if (mp && o.mpCost > Math.max(0, mp.cur - 1)) opts.splice(i, 1);
+    const o = opts[i];
+    o.mpCost = o.key === 'attack' ? 0 : actionMp(o.b);
+    if (!affordable(o.b, mp)) opts.splice(i, 1);
   }
   // РБ без банок MP: дорогие удары — только из излишка маны (см. longFightMp)
   const lf = env.longFightMp(ctx, mp, hp);
@@ -775,7 +799,7 @@ function dpsPlan(ctx, mp) {
     }
   }
   ctx.lfHold = !!lfCut;
-  const chargeB = env.names(env.cfg.nCharge).map(n => slotsBy(n)[0]).find(b => b && ready(b) && free('charge'));
+  const chargeB = env.names(env.cfg.nCharge).map(n => slotsBy(n)[0]).find(b => b && !nonOffenseSkill(b) && ready(b) && free('charge') && affordable(b, mp));
   // v4.46 (симуляция 350 000 боёв): на РБ ход Focused Force проигрывает обычной атаке с вампиризмом — энергию не копим,
   // уже накопленную тратим (HA/FB). Побед при нехватке банок 26 % → 53 %, бой на 16 % быстрее, банок на 58 % меньше
   const rbDamageNames = ['Burning Fist', 'Soul Breaker', 'Iron Punch'];
@@ -877,7 +901,7 @@ function ultPick(ctx, mp) {
     const il = env.ilOf(b), hpCost = /HP −/.test(il?.L || '') || /of doom/i.test(n);
     // касты в l2wap мгновенные (между скиллами — общая задержка хода + свой откат), поэтому Vortex — такой же сверхсильный удар
     if (hpCost && (me?.pct ?? 100) < 40) continue;
-    if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0) + 5) continue;
+    if (!affordable(b, mp, 5)) continue;
     const dmg = env.expDmg(env.skKey(b)) || 0, atk = env.expDmg('атака') || 0;
     // урон удара ещё не замерен — тогда только по «толстым» по проценту: моб почти целый (≥ 60 %)
     const ok = mode === 'always' || boss || (mode === 'big' && (dmg ? mob.cur >= Math.max(dmg * 0.7, atk * 4) && (!mob.max || mob.cur / mob.max >= 0.3) : (!mob.max || mob.cur / mob.max >= 0.6) && mob.cur >= atk * 4));
@@ -931,8 +955,8 @@ function drainPreferred(ctx, me, b, pot) {
 function drainPick(ctx, mp) {                     // готовый скилл с поглощением HP из роли «Вампиризм» (порядок = приоритет)
   for (const n of env.names(env.cfg.nDrain)) {
     const b = slotsBy(n)[0];
-    if (!b || !ready(b) || (ctx.block['drain:' + b.title] || 0) > Date.now()) continue;
-    if (mp && mp.cur < (env.skillMp(env.cleanTitle(b.title)) || 0) + 5) continue;
+    if (!heroHealSkill(b, true) || !ready(b) || (ctx.block['drain:' + b.title] || 0) > Date.now()) continue;
+    if (!affordable(b, mp, 5)) continue;
     if (env.ilOf(b)?.L && /труп моба/.test(env.ilOf(b).L)) continue;      // Life Scavenge / Corpse Life Drain — только по трупу
     return b;
   }
@@ -940,11 +964,38 @@ function drainPick(ctx, mp) {                     // готовый скилл �
 }
 
 function healPick(ctx, mp) {                      // готовый лечащий скилл на себя из роли «Лечение» (порядок = приоритет)
-  return env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => b && env.ilOf(b)?.target !== 'PET' && !env.noEffect?.(b) && ready(b) &&
-    (ctx.block['heal:' + b.title] || 0) <= Date.now() && (!mp || mp.cur >= env.skillMp(env.cleanTitle(b.title)) + 10)) || null;
+  return env.names(env.cfg.nHeal || '').map(n => slotsBy(n)[0]).find(b => heroHealSkill(b) && ready(b) &&
+    (ctx.block['heal:' + b.title] || 0) <= Date.now() && affordable(b, mp, 10)) || null;
 }
 
-const healSlot = b => [...env.names(env.cfg.nDrain), ...env.names(env.cfg.nHeal || '')].some(n => slotsBy(n)[0] === b);   // 10.0.5: ход лечит героя
+const healSlot = b => !!b && heroHealSkill(b) && (env.ilOf(b)?.t === 'DRAIN' || [...env.names(env.cfg.nDrain), ...env.names(env.cfg.nHeal || '')].some(n => slotsBy(n)[0] === b));   // 10.0.5: ход лечит героя
+
+// Отказ оружия принадлежит подтверждённой экипировке и активному классу,
+// а не имени последнего ручного клика. После реальной смены пробуем навык заново.
+function combatWeapon() {
+  const equipped = (env.rt.weapons || []).filter(w => w.where === 'надето');
+  const w = env.rt.weaponsT && !env.rt.weaponMetaPending && equipped.length === 1 && equipped[0];
+  const p = env.rt.weaponEq, freshProof = p?.id && (!p.t || +p.t >= +env.rt.weaponsT);
+  return w && !w.unknown && !(freshProof && +p.id !== +w.id) ? w : null;
+}
+function weaponContext() {
+  const w = combatWeapon();
+  return w?.id ? JSON.stringify([env.rt.char || '',env.rt.classCur?.slot ?? '',env.rt.classCur?.prof || env.rt.prof || '',+w.id,w.inst || '',w.ench ?? '']) : '';
+}
+function weaponBlocks() {
+  const context = weaponContext(), block = {};
+  if (context) for (const [k,v] of Object.entries(env.rt.unavailW || {}))
+    if (v.context === context && Date.now() - v.t >= 0 && Date.now() - v.t < 1800000) block[k] = Infinity;
+  return block;
+}
+function refreshWeaponBlocks(ctx) {
+  const context = weaponContext();
+  if (ctx.weaponContext != null && ctx.weaponContext !== context) {
+    for (const key of ctx.weaponBlocked || []) delete ctx.block[key];
+    const fresh = weaponBlocks(); Object.assign(ctx.block, fresh); ctx.weaponBlocked = Object.keys(fresh);
+  }
+  ctx.weaponContext = context;
+}
 
 // 20.5 (логи16.10 12:21): Provoke → AoE дал награду за31моба; поддержка
 // не входит в nPower. Собираем один раз за бой, заранее резервируем MP на массовый удар.
@@ -966,10 +1017,8 @@ function warlordPullPlan(ctx, mp) {
   if (!info || age < 0 || age > 60000 || String(info.name || '').toLowerCase() !== mobName().toLowerCase() || !(info.max > 0) || +info.max !== mobHp()?.max || !/^(normal|passive|neutral|aggressive)$/.test(info.kind || '') || info.tier) return skip('нет свежего подтверждения обычной цели');
   // 17.10.2026, журнал00:52–00:57: weaponNow — имя последнего клика, equip/скан его не подтверждают.
   // Надетое берём из проверенного инвентаря; незавершённая смена и противоречивые ID запрещают сбор.
-  const equipped = (env.rt.weapons || []).filter(w => w.where === 'надето');
-  const weapon = env.rt.weaponsT && !env.rt.weaponMetaPending && equipped.length === 1 && equipped[0];
-  const proof = env.rt.weaponEq, newerProof = proof?.id && (!proof.t || +proof.t >= +env.rt.weaponsT);
-  if (!weapon || weapon.unknown || (newerProof && +proof.id !== +weapon.id) || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return skip('не подтверждена надетая пика');
+  const weapon = combatWeapon();
+  if (!weapon || !/^(?:древковое|polearm)$/i.test(weapon.wt || '')) return skip('не подтверждена надетая пика');
   const me = env.meHp(), mob = mobHp(), target = warlordPullTarget();
   if (!me || !(me.cur > 0 && me.max > 0) || !mob?.cur || !mp || !Number.isFinite(mp.cur) || mp.cur < (+env.cfg.skillMpMin || 0)) return null;
   const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
@@ -1002,6 +1051,7 @@ function warlordPullResult(ctx, a, result) {
 }
 
 function chooseAction(ctx, mp) {
+  refreshWeaponBlocks(ctx);
   if (mageCombat()) return magePlan(ctx, mp);
   const pull = warlordPullPlan(ctx, mp); if (pull) return pull;
   if (ctx.warlordPullSkip && !ctx.warlordPullNoted) { ctx.warlordPullNoted = true; env.rec?.('B', 'агро', ctx.warlordPullSkip); }
@@ -1012,7 +1062,7 @@ function chooseAction(ctx, mp) {
   const powers = mpOk ? env.names(env.cfg.nPower).filter(n => !env.names(env.cfg.nUltra).includes(n)).map(n => slotsBy(n)[0]).filter(Boolean).filter(b => { const il = env.ilOf(b); return !nonOffenseSkill(b) && free('power:' + b.title); }) : [];
   const longFight = (mobHp()?.cur || 0) > env.expDmg('атака') * 2 + Math.max(0, ...powers.filter(ready).map(b => env.expDmg(env.skKey(b))));
   const stuns  = mpOk && ctx.champ && !ctx.rb && longFight && Date.now() - ctx.lastStun >= env.cfg.stunEvery * 1000
-               ? list(env.cfg.nStun).filter(b => free('stun:' + b.title)) : [];
+               ? list(env.cfg.nStun).filter(b => !nonOffenseSkill(b) && free('stun:' + b.title) && affordable(b, mp)) : [];
   const st = stuns.find(ready);
   const ult = ultPick(ctx, mp);                   // v5.3: 💥 сверхсильный скилл (Punch of Doom, Crush of Doom, Vortex…)
   if (ult) return ult;
@@ -1025,7 +1075,7 @@ function chooseAction(ctx, mp) {
   if (env.cfg.fightMode === 'kpd' && env.expDmg('атака') * 0.85 >= (mobHp()?.cur || Infinity)) return null;   // КПД: ждём откат атаки
   if (ctx.lfHold) return null;                    // РБ без банок: дорогие удары придержаны ради маны — ждём атаку
   if (env.forceCosts().some(c => { const b = slotsBy(c.name)[0]; return b && env.forceNow() >= c.cost && cdLeft(b) <= 0.6; })) return null;
-  const pw = powers.filter(ready).filter(b => !mp || (env.skillMp(env.cleanTitle(b.title)) || 0) <= mp.cur)
+  const pw = powers.filter(ready).filter(b => affordable(b, mp))
     .sort((a, b) => env.expDmg(env.skKey(b)) - env.expDmg(env.skKey(a)))[0];
   if (pw) return { key: 'power:' + pw.title, name: pw.title, b: pw };
   if (powers.some(b => cdLeft(b) <= 0.6) || stuns.some(b => cdLeft(b) <= 0.6)) return null;   // вот-вот откатится — ждём
@@ -1208,10 +1258,8 @@ async function battle() {
   const same = !!t && nm === t.name.toLowerCase();
   const color = battleColor(nm, spawnId, mob0?.max, cameVia, t, same);
   const hpChamp = !!known && !!mob0 && mob0.max >= known * env.cfg.champHpMult;
-  const blockW = {};
-  for (const [k, v] of Object.entries(env.rt.unavailW || {}))
-    if (v.w === (env.rt.weaponNow || '?') && Date.now() - v.t < 1800000) blockW[k] = Infinity;
-  const ctx = { lastStun: 0, block: blockW, killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
+  const blockW = weaponBlocks();
+  const ctx = { lastStun: 0, block: blockW, weaponContext: weaponContext(), weaponBlocked: Object.keys(blockW), killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
                 name: mobName(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
   if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // замер слуги, включая пантеру воина
@@ -1366,6 +1414,7 @@ async function battle() {
     const free = await gameFree();
     if (!free || !env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
     if (stillNeeded && !stillNeeded()) return 'lock';
+    if (env.meMp && !affordable(b, env.meMp(), 0)) return 'lock'; // MP мог измениться за ожидание ответа игры
     // 10.0.5 (лог 13.10 10:51:56): удар выбран при HP 55 %, а пока ждали ответ хода после лага, HP стал 19 % — бот всё равно нажал Blaze.
     // Удар (hpGuard) не жмём, если за время ожидания HP упал до опасного: 'lock' — цикл сразу решает заново (банка, вампирик, лечение)
     if (hpGuard && !healSlot(b)) { const m2 = env.meHp(), p0 = ctx.mePct0;
@@ -2049,7 +2098,8 @@ async function battle() {
       }
       if (done === 'unavail') {                   // с этим оружием скилл не работает — до конца боя не трогаем
         ctx.block[a.key] = Infinity;
-        await env.setRt({ unavailW: { ...(env.rt.unavailW || {}), [a.key]: { w: env.rt.weaponNow || '?', t: Date.now() } } });
+        (ctx.weaponBlocked ||= []).push(a.key);
+        await env.setRt({ unavailW: { ...(env.rt.unavailW || {}), [a.key]: { context: weaponContext(), t: Date.now() } } });
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
         env.rec('B', 'недоступно', `«${a.b.title}»: ${noticeText() || 'скилл недоступен'}`);
         console.info(env.TAG, `${a.b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
@@ -2249,6 +2299,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

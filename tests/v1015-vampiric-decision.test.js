@@ -18,7 +18,8 @@ function setup(o={}){
  env.antibotState=()=>{if(++loops>(o.maxLoops??160))throw Error('fixture exceeded bounded actual battle loops');return false};
  env.slotKind=b=>b===pot?'предмет':b===f.atk?'атака':'скилл';env.slotAction=b=>b===vt?'l2_1147':b===pot?'battle_potion_use':b===f.atk?'attack':'l2_1220';
  env.HP_POT_RE=/зцілення/i;env.potKey=b=>b?.title.toLowerCase();env.potName=b=>b.title;env.potBag=()=>1;env.qty=b=>b===pot?1:b?null:0;
- env.ilOf=b=>b===vt||b===blaze?{c:'Маг. атака',t:'MDAM',mp:20}:null;
+ // 20.9: допуск лечения проверяет тип; настоящий Vampiric Touch — DRAIN, Blaze — MDAM.
+ env.ilOf=b=>b===vt?{c:'Маг. атака',t:'DRAIN',mp:20}:b===blaze?{c:'Маг. атака',t:'MDAM',mp:20}:null;
  env.expDmg=k=>/vampiric/i.test(k)?1400:4000;env.skillMp=()=>20;env.skKey=b=>typeof b==='string'?b.toLowerCase():b.title.toLowerCase();
  env.combatCooldown=createBattleCooldown(()=>now);env.memLeft=b=>Math.max(0,(env.rt.cdUntil?.[env.skKey(b)]||0)-now)/1000;
  env.fightHealOn=()=>o.heal==null?null:{n:5,p20:o.heal,mean:o.heal};

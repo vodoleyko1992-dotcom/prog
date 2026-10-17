@@ -208,7 +208,8 @@ function world(o = {}) {
   // 10.0.24: между commit и навигацией добавлена общая проверка владельца действия.
   assert.ok((content.match(/await rtCommit\(\); [^\n]*location\.href = /g) || []).length >= 7, 'служебные переходы рыбалки — после записи');
   assert.match(content, /L2V7Modules\.fishing = L2V7Factories\.fishing\(\{[^\n]*get rtCommit\(\)\{return rtCommit\}/, 'геттер rtCommit у модуля рыбалки');
-  assert.ok((code.match(/await commit\(\); (?:if \([^;]+; )?location\.href = /g) || []).length >= 3, 'модуль: переходы после записи; недоступный магазин сохраняет услугу без перехода');
+  // 17.10: false/ошибка commit теперь также запрещает переход; прежнее ожидание без проверки было недостаточно.
+  assert.ok((code.match(/if \(!await commit\(\) \|\| !valid\(\)\) return; location\.href = /g) || []).length >= 3, 'модуль: переходы только после подтверждённой записи; недоступный магазин сохраняет услугу');
   // ---------- B1: главный цикл после шага рыбалки — 30 мс вместо 200 ----------
   assert.match(content, /else if \(fishNow\(\) && isFishing\(\)\) \{ await fishing\(\); await sleep\(30\); continue; \}/);
   assert.match(code, /const lines = rej \? \[\] : \(await env\.sleep\(20\), fishNewLines\(before\)\);/);

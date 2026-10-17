@@ -14,7 +14,7 @@ const waitReply = async ({ enabled=true, ownership='yes' } = {}) => {
   const context = {
     chrome: { runtime: { onMessage: {addListener:fn=>{handler=fn}},getManifest:()=>({version:'7.1.15'})},
       storage:{local:{get: async()=>({on:enabled,cfg:{}})}} },
-    mergeCfg:x=>x,on:false,running:false,tabOwner:false,leaseEpoch:null,
+    mergeCfg:x=>x,automationGeneration:0,on:false,running:false,tabOwner:false,leaseEpoch:null,
     main(){mainCalls++;context.running=true;if (ownership==='yes') {context.tabOwner=true;context.leaseEpoch='lease';}},
     heartbeat(){},setTimeout,Date,Promise,
   };

@@ -30,10 +30,72 @@ async function reloadBotUpdate() {
   }
 }
 // All menu runtime updates are serialized with bot updates, never rewrite stale snapshots.
+// 17.10: подтверждение сохранения относится к ответу фона, а не к событию change.
+let settingsSerial = 0, settingsPending = 0;
+const settingsFailed = new Map(), settingsApplied = new Map();
+function paintSettingsFeedback() {
+  const box = $('settingsFeedback'), text = $('settingsFeedbackText'), badge = $('settingsState'), retry = $('settingsRetry');
+  if (!box || !badge) return;
+  const failure = [...settingsFailed.values()].at(-1);
+  box.hidden = !failure; box.dataset.state = failure ? 'error' : settingsPending ? 'saving' : 'saved';
+  if (failure) text.textContent = 'Настройки не сохранены: ' + failure.reason;
+  if (retry) { retry.hidden = ![...settingsFailed.values()].some(f => f.retryable); retry.disabled = !!settingsPending; }
+  if ($('settingsDiscard')) $('settingsDiscard').disabled = !!settingsPending;
+  badge.dataset.state = failure ? 'error' : settingsPending ? 'saving' : 'saved';
+  badge.textContent = failure ? 'Есть несохранённые изменения' : settingsPending ? 'Сохраняю настройки…' : settingsSerial ? '✓ Изменения сохранены' : 'Настройки сохраняются автоматически после изменения поля';
+}
 async function menuPatch(rtPatch, extra = {}) {
-  const response = await Promise.race([chrome.runtime.sendMessage({ cmd: 'menuPatch', rtPatch, ...extra }),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Фоновый процесс не отвечает (15 с)')), 15000))]);
-  if (!response?.ok) throw new Error('Не удалось сохранить изменение: ' + (response?.reason || 'фон недоступен'));
+  const editKind = ['limitRangeEdit','setFishGoal','pvpTargetEdit'].find(k => extra[k]);
+  const editKey = editKind === 'limitRangeEdit' ? extra.limitRangeEdit.key : editKind === 'pvpTargetEdit' ? extra.pvpTargetEdit.id : editKind;
+  const tracked = !!extra.cfgPatch || !!editKind, serial = tracked ? ++settingsSerial : settingsSerial;
+  // Форма привязана к прочитанному герою; новая запись не может незаметно попасть другому.
+  const request = tracked ? { ...extra, expectedChar: extra.expectedChar ?? formChar } : extra;
+  const char = request.expectedChar;
+  if (tracked) { settingsPending++; paintSettingsFeedback(); }
+  let timer;
+  try {
+    const response = await Promise.race([chrome.runtime.sendMessage({ cmd: 'menuPatch', rtPatch, ...request }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Фоновый процесс не отвечает (15 с)')), 15000); })]);
+    if (!response?.ok) throw new Error('Не удалось сохранить изменение: ' + (response?.reason || 'фон недоступен'));
+    if (tracked) {
+      for (const field of Object.keys(request.cfgPatch || {})) settingsApplied.set(JSON.stringify([char, field]), serial);
+      // Успех другого поля не скрывает более раннюю ошибку. Повторное изменение того же поля заменяет старое.
+      for (const [key, failure] of settingsFailed) {
+        if (failure.char !== char) continue;
+        if (failure.editKind) { if (failure.editKind === editKind && failure.editKey === editKey && failure.serial <= serial) settingsFailed.delete(key); continue; }
+        for (const field of Object.keys(request.cfgPatch || {})) if (failure.serial <= serial) delete failure.cfgPatch[field];
+        if (!Object.keys(failure.cfgPatch).length) settingsFailed.delete(key);
+      }
+    }
+  } catch (error) {
+    if (tracked) {
+      const patch = Object.fromEntries(Object.entries(request.cfgPatch || {}).filter(([field]) => (settingsApplied.get(JSON.stringify([char, field])) || 0) <= serial));
+      for (const [key, failure] of settingsFailed) {
+        if (failure.char !== char || failure.serial > serial) continue;
+        if (failure.editKind) { if (failure.editKind === editKind && failure.editKey === editKey) settingsFailed.delete(key); continue; }
+        for (const field of Object.keys(patch)) delete failure.cfgPatch[field];
+        if (!Object.keys(failure.cfgPatch).length) settingsFailed.delete(key);
+      }
+      if (Object.keys(patch).length || editKind) settingsFailed.set(serial, { serial, char, editKind, editKey, cfgPatch: structuredClone(patch), reason: String(error?.message || error),
+      retryable: !editKind && !Object.keys(rtPatch || {}).some(k => !['manualKickAt','magEnabled'].includes(k)) && !Object.hasOwn(extra, 'on'),
+      rtPatch: Object.fromEntries(Object.entries(rtPatch || {}).filter(([k]) => ['manualKickAt','magEnabled'].includes(k))) });
+    }
+    throw error;
+  } finally { clearTimeout(timer); if (tracked) { settingsPending--; paintSettingsFeedback(); } }
+}
+async function retrySettings() {
+  if (settingsPending) return;
+  const { rt = {} } = await chrome.storage.local.get('rt');
+  for (const [key, failure] of [...settingsFailed]) {
+    if (!failure.retryable) continue;
+    if (failure.char !== (rt.char || '')) {
+      failure.reason = 'Персонаж изменился. Вернитесь к ' + (failure.char || 'исходному профилю') + ' и измените поле снова.';
+      failure.retryable = false; continue;
+    }
+    try { await menuPatch(failure.rtPatch, { cfgPatch: failure.cfgPatch, expectedChar: failure.char }); settingsFailed.delete(key); }
+    catch (_) { settingsFailed.delete(key); break; }
+  }
+  paintSettingsFeedback(); await load();
 }
 
 // 8.0 (аудит меню): неудачный запуск — постоянная строка под кнопками, а не тост на 1,4 с и не текст в #status,
@@ -202,10 +264,13 @@ async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
   const d = { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
-    fillWeapons(rt, d);                            // списки оружия выставляют выбор сами
-    TXT.forEach(k => { if (!/^nWeapon/.test(k)) $(k).value = d[k] ?? ''; });
-    NUM.forEach(k => $(k).value = d[k]);
-    BOOL.forEach(k => $(k).checked = !!d[k]);
+    // Черновик относится к герою, а не к DOM: после переключения профилей чужое значение не остаётся в поле.
+    const unsaved = Object.assign({}, ...[...settingsFailed.values()].filter(f => f.char === (rt.char || '')).sort((a,b) => a.serial - b.serial).map(f => f.cfgPatch));
+    const visible = { ...d, ...unsaved };
+    fillWeapons(rt, visible);                       // списки оружия выставляют выбор сами
+    TXT.forEach(k => { if (!/^nWeapon/.test(k)) $(k).value = visible[k] ?? ''; });
+    NUM.forEach(k => $(k).value = visible[k]);
+    BOOL.forEach(k => $(k).checked = !!visible[k]);
     formChar = rt.char || '';
   }
   recN = reccount; snapN = snapcount; dockMin = DOCKED && !!d.dockMin;
@@ -228,7 +293,7 @@ async function load() {
     + `<span class="state ${heartbeatValid ? 'on' : 'off'}">${runningLabel}</span>`;
   // 8.0 (аудит меню): ⏱ — EXP/ч за сессию (с ↺), как в «Обзоре». Раньше — средний темп за всё время (rt.eff):
   // «≈3,5 млн EXP/ч» при 0 боёв
-  $('status').innerHTML = `<div class="st">${esc(rt.status || '—')}</div><div class="chips">`
+  $('status').innerHTML = `<div class="chips">`
     + chip('⚔', rt.kills || 0, 'Боёв за сессию') + chip('✨', '+' + fmt(rt.exp), 'Опыт за сессию') + chip('📘', '+' + fmt(rt.sp), 'SP за сессию')
     + chip('💰', '+' + fmt(rt.adena), 'Адена за сессию') + (rt.rbKills ? chip('👑', rt.rbKills, 'РБ убито') : '')
     + (S.exp != null && rt.exp > 0 ? chip('⏱', fmtBig(S.exp) + ' EXP/ч', 'EXP в час за сессию (с нажатия ↺)') : '')
@@ -301,6 +366,8 @@ async function load() {
   renderPet(rt);
   paintRbOne(rt, on, paused);
   renderDash(rt, d, { on, paused, heartbeatValid, booting, failing });
+  renderWorkspace(rt, d, { on, paused, heartbeatValid, booting, failing });
+  paintSettingsFeedback();
   renderEff(rt);
   renderFa(rt, d); renderPots(rt, d); renderRbSess(rt, d);
   renderZones(rt, d);
@@ -1147,9 +1214,9 @@ const rbEff = d => d.enchantMode !== true && !!d.rbHuntMode;
 const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 function renderDash(rt, d, st) {
   if (!$('dash')) return;
-  const now = Date.now(), m = currentMode(d), S = sessInfo(rt, now);
-  const mods = [d.tvtOn && 'TvT'].filter(Boolean);
-  $('dashMode').textContent = MODE_NAME[m] + (mods.length ? ' + ' + mods.join(', ') : '');
+  const now = Date.now(), active = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null, m = active === 'raid' ? 'rb' : active || currentMode(d), S = sessInfo(rt, now);
+  const mods = [selectedAutoTasks(d).includes('tvt') && 'TvT'].filter(Boolean);
+  $('dashMode').textContent = (MODE_NAME[m] || MODE_NAME.tasks) + (mods.length ? ' + ' + mods.join(', ') : '');
   const [stTxt, stCls] = !st.on ? (st.paused ? ['⏸ пауза', 'pause'] : ['○ остановлен', 'off']) : st.failing ? ['⚠ сбой · восстановление', 'warn']
     : st.heartbeatValid ? ['● работает', 'on'] : st.booting ? ['… запуск', 'warn'] : ['⚠ нет сигнала', 'warn'];
   $('dashState').textContent = stTxt; $('dashState').dataset.st = stCls;
@@ -1275,7 +1342,6 @@ async function save(e) {
   try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
   catch (error) {
     const why = String(error?.message || error);
-    $('status').textContent = 'Не удалось сохранить настройки: ' + why;
     if (typeof toast === 'function') toast('Настройки не сохранены: ' + why);
     throw error; // do not continue Start/Buy/Mode with unapplied configuration
   } // отдельные поля, без перезаписи всего cfg
@@ -1412,14 +1478,18 @@ $('mmCraftForget')?.addEventListener('click', async () => { await menuPatch({ mm
 $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
 const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', tvtshop: 'pvp', dailies: 'hunt', analyze: 'panel', roles: 'panel', pet: 'warlock', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel', enemies: 'pvp', epic: 'rb', rbtimer: 'rb', loot: 'supply', log: 'svc' };
+const tabScroll = new Map();
 function showTab(t) {
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
   if (!document.getElementById('tab-' + t)) t = 'overview';
-  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('act', b.dataset.tab === t));
+  const previous = document.querySelector('section.act');
+  if (previous) tabScroll.set(previous.id, previous.scrollTop);
+  document.querySelectorAll('nav button').forEach(b => { b.classList.toggle('act', b.dataset.tab === t); b.setAttribute('aria-current', b.dataset.tab === t ? 'page' : 'false'); });
   document.querySelectorAll('section').forEach(sec => sec.classList.toggle('act', sec.id === 'tab-' + t));
   try { localStorage.setItem('tab', t); } catch (e) {}
   document.dispatchEvent(new CustomEvent('l2:tabchange', { detail: { tab: t } }));
+  document.getElementById('tab-' + t).scrollTop = tabScroll.get('tab-' + t) || 0;
   if (sub) setTimeout(() => document.getElementById('tab-' + sub)?.parentElement?.scrollIntoView({ block: 'start' }), 30);
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -1619,7 +1689,7 @@ for(const key of rangeLimitKeys) {
   $(key+'RangeSet').onclick=()=>apply(false);$(key+'RangeClear').onclick=()=>apply(true);
 }
 
-document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', save); });
+document.querySelectorAll('input,textarea,select').forEach(el => { if (!['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile', 'addName', 'authLogin', 'authPass'].includes(el.id)   /* 7.1.30: эти поля сохраняют себя сами — иначе ввод логина перезаписывал все настройки */ && !el.classList.contains('epicChk') && !el.classList.contains('limitRangeInput')) el.addEventListener('change', e => { void save(e).catch(() => {}); }); });
 
 $('check').onclick = async () => {
   await save();
@@ -1659,6 +1729,65 @@ $('apply').onclick = async () => {
 // Текущий режим — так же, как его выбирает движок (L2EngineCore.chooseMode). Кампания и TvT — дополнения
 const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', epic: 'Эпики', raid: 'Тур по РБ', quests: 'Квесты и кампания', fish: 'Рыбалка', cat: 'Катакомбы', auto: 'Автофарм', farm: 'Фарм на месте', mammon: 'Маммон', dailies: 'Дейлики', clan: 'Клан', pvp: 'Враги', petbuff: 'Автобаф суммона', resources: 'Ресурсы и рецепты' };
 const AUTO_MAIN_TASKS = ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
+// 17.10: UI показывает подтверждённые причины ожидания и очередь отдельно от последнего действия.
+const TASK_TABS = { tvt:'pvp', enchant:'enchant', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
+function workspaceState(rt, d, st, now = Date.now()) {
+  const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
+  const last = String(rt.status || 'Состояние от игры ещё не получено');
+  const pending = rt.actionPayments?.pending || rt.petFull?.pending || rt.enchant?.pending;
+  if (rt.abChal) return { state:'blocked', label:'Нужно ваше действие', text:'Игра ожидает проверку активности', hint:'Пройдите проверку во вкладке игры. Бот ждёт результата сервера.', tab:'svc' };
+  if (!st.on) return { state:st.paused ? 'paused' : 'stopped', label:st.paused ? 'Пауза' : 'Бот остановлен', text:st.paused ? 'Задачи приостановлены' : 'Задачи начнутся после «Старт»',
+    hint:(pending ? 'Остался неподтверждённый результат операции. ' : '') + 'Последнее: ' + last, tab:'overview' };
+  if (pending) return { state:'blocked', label:'Проверка результата', text:'Есть операция без подтверждённого результата', hint:'Бот сверяет результат. Повторная трата запрещена до подтверждения. ' + last, tab:rt.enchant?.pending ? 'enchant' : rt.petFull?.pending ? 'warlock' : 'svc' };
+  if (st.failing || !st.heartbeatValid) return { state:'recovering', label:st.failing ? 'Восстановление' : st.booting ? 'Запуск' : 'Нет сигнала', text:st.failing ? 'Движок восстанавливает работу' : st.booting ? 'Жду подтверждения от движка' : 'Вкладка игры не подтвердила работу', hint:st.failing ? 'Последнее сообщение: ' + last : st.booting ? 'Выбранные задачи сохранены. Запуск подтверждается ответом вкладки.' : 'Откройте вкладку игры и проверьте сообщение под кнопками управления.', tab:'svc' };
+  if ((rt.pveBlockUntil || 0) > now) return { state:'waiting', label:'Ограничение игры', text:'PvE-фарм временно заблокирован', hint:'До ' + new Date(rt.pveBlockUntil).toLocaleTimeString('ru', { timeZone:'Asia/Vladivostok', hour:'2-digit', minute:'2-digit' }) + ' (Владивосток). ' + last, tab:selected.includes('fish') ? 'fish' : 'svc' };
+  if (!selected.length) return { state:'waiting', label:'Ожидание', text:'Задачи не выбраны', hint:'Выберите разрешённые задачи кнопкой «Изменить» в обзоре.', tab:'overview' };
+  if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в обзоре; дополнительные задачи остаются разрешены.', tab:'overview' };
+  return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.', tab:TASK_TABS[primary] || 'overview' };
+}
+function taskBoardRows(rt, d, st, now = Date.now()) {
+  const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
+  const day = new Date(now + 10 * 3600000).toISOString().slice(0, 10);
+  return selected.map(key => {
+    let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
+    let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
+    const dailyKey = {fish:'dailyFishLimit',auto:'dailyAutoKillLimit',cat:'dailyCatKillLimit'}[key];
+    const dailyLimit = +d[dailyKey] || 0, dailyGot = rt.dailyQuota?.day === day ? +rt.dailyQuota[key] || 0 : 0;
+    const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
+    if (dailyPending) progress.push('Дневная цель выберется при запуске');
+    else if (dailyLimit > 0) {
+      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
+      if (dailyGot >= dailyLimit) { label = 'До 00:00 Владивостока'; state = 'waiting'; }
+    }
+    if (['auto','cat'].includes(key)) {
+      const limit = +d[key === 'auto' ? 'autoKillLimit' : 'catKillLimit'] || 0, row = rt.farmQuota?.[key];
+      if (limit > 0) { const got = row?.limit === limit ? +row.got || 0 : 0; progress.push(`Серия: ${got} / ${limit}`); if (percent == null) percent = Math.min(100, Math.round(got / limit * 100)); if (row?.limit === limit && row.done) { label = 'Цель выполнена'; state = 'done'; } }
+    }
+    if (key === 'fish') {
+      if (d.fishMaxCasts > 0) { progress.push(`Забросы: ${+rt.fish?.casts || 0} / ${d.fishMaxCasts}`); if ((+rt.fish?.casts || 0) >= d.fishMaxCasts) { label = 'Лимит забросов'; state = 'done'; } }
+      if (rt.fishTgt?.done) { label = 'Цель рыбалки выполнена'; state = 'done'; }
+    }
+    if (key === 'enchant') {
+      const phase = {done:'Завершено',completed:'Завершено',paused:'Серия на паузе',unknown:'Проверка результата',running:st.on && st.heartbeatValid ? 'Серия запущена' : 'Серия ожидает работы'}[rt.enchant?.status];
+      if (phase) { label = phase; state = ['done','completed'].includes(rt.enchant?.status) ? 'done' : rt.enchant?.status === 'unknown' ? 'waiting' : state; }
+    }
+    if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = 'Ждёт доступного РБ'; state = 'waiting'; }
+    return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
+  });
+}
+function renderWorkspace(rt, d, st) {
+  const activity = workspaceState(rt, d, st);
+  if ($('activityPanel')) {
+    $('activityPanel').dataset.state = activity.state; $('activityState').textContent = activity.label;
+    $('activityText').textContent = activity.text; $('activityHint').textContent = activity.hint;
+    $('activityDetails').dataset.goto = activity.tab; $('activityDetails').textContent = activity.tab === 'overview' ? 'Обзор ↗' : 'Подробнее ↗';
+  }
+  if (!$('taskBoardRows')) return;
+  const rows = taskBoardRows(rt, d, st);
+  $('taskBoardNote').textContent = rows.length ? 'Выбрано: ' + rows.length + '. Приоритет определяет следующую задачу, фактическое действие показано выше.' : 'Ничего не выбрано. Разрешите нужные задачи; изменение списка не запускает бота.';
+  const markup = rows.map(r => `<div class="task-row" data-state="${r.state}"><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
+  const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
+}
 function selectedAutoTasks(d) {
   if (Array.isArray(d.autoTasks)) return d.autoTasks.filter(k => Object.hasOwn(AUTO_TASK_LABELS, k));
   const flags = { tvt: d.tvtOn, enchant: d.enchantMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
@@ -1928,18 +2057,41 @@ $('campNow').onclick = async () => {
   $('campBox').textContent = (on ? '⏳ Проверю кампанию после текущего боя' : '⏳ Проверю кампанию после ▶ Старт')
     + (cfg.campaign ? '' : ' (Кампания выключена — только прочитаю главу и вернусь к охоте)');
 };
+// Стоп/Пауза отменяют ещё ожидающий сохранения запуск: поздний ACK не включает бота снова.
+let controlGeneration = 0;
 $('start').onclick = async () => {
-  await save();
-  const { rt = {} } = await chrome.storage.local.get('rt');
-  await chrome.storage.local.set({ paused: null });
-  await menuPatch({ ...((await chrome.storage.local.get('cfg')).cfg?.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true });
-  await showWakeResult();
+  const generation = ++controlGeneration;
+  try {
+    await save(); if (generation !== controlGeneration) return;
+    const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
+    await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return;
+    await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true });
+    if (generation === controlGeneration) await showWakeResult();
+  } catch (error) { toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 };
-$('stop').onclick = () => chrome.storage.local.set({ on: false, paused: null, stopMeta: { source: 'popup-stop', reason: 'Нажата кнопка Стоп', t: Date.now() } });
+async function botControl(action) {
+  let timer;
+  try {
+    const response = await Promise.race([chrome.runtime.sendMessage({ cmd:'botControl', action, source:'popup-' + action, reason:action === 'pause' ? 'Пауза' : 'Нажата кнопка Стоп' }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Фон не ответил за 15 с')), 15000); })]);
+    if (!response?.ok) throw new Error(response?.reason || 'фон недоступен');
+    if ($('controlWarn')) $('controlWarn').hidden = true;
+  } catch (error) {
+    const message = 'Не удалось ' + (action === 'pause' ? 'поставить на паузу' : 'остановить бота') + ': ' + String(error?.message || error) + '. Повторите команду.';
+    if ($('controlWarn')) { $('controlWarn').textContent = message; $('controlWarn').hidden = false; }
+    throw new Error(message);
+  } finally { clearTimeout(timer); }
+}
+$('stop').onclick = async () => { controlGeneration++; try { await botControl('stop'); toast('■ Бот остановлен', 'var(--bad)'); } catch (e) { toast('⚠ ' + e.message, 'var(--bad)'); } };
 $('pause').onclick = async () => {
+  const generation = ++controlGeneration;
   const { on = false, paused = null } = await chrome.storage.local.get(['on', 'paused']);
-  if (on) { await chrome.storage.local.set({ on: false, paused: { t: Date.now() }, stopMeta: { source: 'popup-pause', reason: 'Пауза', t: Date.now() } }); toast('⏸ Пауза — состояние сохранено'); }
-  else if (paused) { await chrome.storage.local.set({ paused: null }); await menuPatch({ manualKickAt: Date.now() }, { on: true }); toast('▶ Продолжаю с того же места'); }
+  if (generation !== controlGeneration) return;
+  if (on) { try { await botControl('pause'); toast('⏸ Пауза — состояние сохранено'); } catch (e) { toast('⚠ ' + e.message, 'var(--bad)'); } }
+  else if (paused) {
+    try { await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return; await menuPatch({ manualKickAt: Date.now() }, { on: true }); if (generation === controlGeneration) toast('▶ Продолжаю с того же места'); }
+    catch (error) { toast('⚠ Продолжить не удалось: ' + String(error?.message || error), 'var(--bad)'); }
+  }
 };
 // 8.0: ↺ стирает статистику, раны РБ и добычу — только вторым нажатием (рядом 🛒 и Стоп, легко промахнуться)
 confirmClick('reset', async () => {
@@ -2392,9 +2544,11 @@ function cardify() {
       const cls = h?.dataset.cls || subCls; if (cls) c.dataset.cls = cls;
       const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▼'; head.appendChild(chev);
       body = document.createElement('div'); body.className = 'cb';
+      body.id = 'card-body-' + sec.id + '-' + idx; head.setAttribute('aria-controls', body.id);
       card.append(head, body); sec.appendChild(card);
       if (uiState.closed[key]) c.classList.add('closed');
-      const tog = () => { c.classList.toggle('closed'); uiState.closed[key] = c.classList.contains('closed'); uiSave(); };   // своя карточка, не последняя
+      head.setAttribute('aria-expanded', String(!c.classList.contains('closed')));
+      const tog = () => { c.classList.toggle('closed'); head.setAttribute('aria-expanded', String(!c.classList.contains('closed'))); uiState.closed[key] = c.classList.contains('closed'); uiSave(); };   // своя карточка, не последняя
       head.addEventListener('click', tog);
       head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
     };
@@ -2436,12 +2590,7 @@ function toast(msg, color) {
   t.textContent = msg; t.style.borderLeftColor = color || (warn ? 'var(--warn)' : 'var(--ok)'); t.classList.add('show');
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), toastMs(msg, color));
 }
-document.addEventListener('change', e => {
-  const el = e.target;
-  if (el.classList?.contains('limitRangeInput') || !el.matches?.('section input, section select, section textarea') || ['recN', 'resPick', 'resNeed', 'fishTgtType', 'fishTgtN', 'memFile', 'uiSearch', 'faPick', 'cfgFile', 'rbtFile'].includes(el.id)) return;
-  const name = (el.closest('label')?.firstChild?.textContent || el.placeholder || '').trim().slice(0, 40);
-  toast(`✓ Сохранено${name ? ': ' + name : ''}`);
-});
+// Успех сохранения показывает ответ menuPatch; change ещё не означает запись.
 // поиск настройки по всем вкладкам
 function searchIndex() {
   const out = [];
@@ -2461,7 +2610,7 @@ function searchIndex() {
 let IDX = null, resSel = 0;
 function goTo(r) {
   showTab(r.tab);
-  if (r.card.classList.contains('closed')) { r.card.classList.remove('closed'); uiState.closed[r.card.dataset.key] = false; uiSave(); }
+  if (r.card.classList.contains('closed')) { r.card.classList.remove('closed'); r.card.querySelector('.ch')?.setAttribute('aria-expanded', 'true'); uiState.closed[r.card.dataset.key] = false; uiSave(); }
   r.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   r.el.classList.remove('flash'); void r.el.offsetWidth; r.el.classList.add('flash');
   const inp = r.el.querySelector?.('input:not([hidden]),select'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 350);
@@ -2498,9 +2647,13 @@ document.addEventListener('keydown', async e => {
   const n = e.code === 'Digit0' ? 10 : +(e.code.match(/^Digit([1-9])$/) || [])[1];
   if (n) { e.preventDefault(); const b = document.querySelectorAll('nav button')[n - 1]; if (b) showTab(b.dataset.tab); }
 });
-// кнопки старт/стоп/сброс — короткое подтверждение
-$('stop').addEventListener('click', () => toast('■ Бот остановлен', 'var(--bad)'));
+// Подтверждение Стоп/Пауза показывается после успешного ответа фона.
 
+if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings().catch(() => {}); };
+if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
+if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { $('quickModeGrid').hidden = false; $('modeToggle').setAttribute('aria-expanded', 'true'); $('modeToggle').scrollIntoView({ block: 'nearest' }); document.querySelector('#autoTaskSelection input')?.focus(); };
+if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
+if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
 cardify();
 foldHints();
 
