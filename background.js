@@ -136,6 +136,15 @@ function farmQuotaChange(state, E, now) {
     const delta=E.counter-row.pending.counter,got=row.got+delta;
     if(dailyLimit)dailyQuota[E.task]=(dailyQuota[E.task]||0)+delta;
     row = { ...row, got, pending: null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
+  } else if (E.op === 'approx') {
+    // 20.12 (ревизия 17.10): счётчик сервера недоступен/не подтвердил итог — бой засчитан по журналу боя (n убитых), с пометкой approx.
+    // close — закрыть pending именно этого боя (иначе отказ: бой уже закрыт или заменён другим).
+    if (!Number.isSafeInteger(E.n) || E.n < 0 || E.n > 200 || typeof E.spawn !== 'string' || !E.spawn) return { ok: false, reason: 'quota_snapshot' };
+    if (E.close && (!row || row.done || row.pending?.spawn !== E.spawn)) return { ok: false, reason: 'quota_battle_changed' };
+    if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
+    const got = row.got + E.n;
+    if (dailyLimit) dailyQuota[E.task] = (dailyQuota[E.task] || 0) + E.n;
+    row = { ...row, got, approx: (row.approx || 0) + E.n, pending: E.close || row.pending?.spawn === E.spawn ? null : row.pending || null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
   } else return { ok: false, reason: 'quota_operation' };
   const next = { ...cfg };
   if (row.done) {
@@ -172,7 +181,8 @@ async function statePatch(m, sender) {
     }
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
-      await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
+      // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
+      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;

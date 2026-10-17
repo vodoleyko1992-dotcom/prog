@@ -209,11 +209,42 @@ function farmQuotaTask() {
 const farmQuotaKey = task => task === 'auto' ? 'autoKillLimit' : 'catKillLimit';
 const farmQuotaLimit = task => { const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
 const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
-async function farmQuotaSnapshot(char) {
-  const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
-  if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
-  return c;
+// 20.12 (ревизия 17.10, аудит H1/F1/F9/Q-2/Q-3/M4): дневной лимит включён у всех, а на каждого моба бот делал свой GET /character
+// до и после боя; при сбое счётчика герой стоял в открытом бою без ударов, на экране победы GET шёл каждый круг. Теперь счётчик —
+// из ответов самой игры (hook kc: её GET /character после хода), свой GET только без свежего снимка (после неудачи — не чаще раза
+// в 10 с); отметка начала боя не держит бой: без счётчика убитые считаются по журналу боя с пометкой «неточно»; подтверждение
+// итога — не больше 5 попыток / 30 с, затем бой засчитывается по журналу и бот идёт дальше.
+const KILL_SNAP = { name: '', k: -1, rev: -1, t: 0, stale: false }, QUOTA_WAIT = {};
+let KILL_FAIL_T = 0, quotaApproxNoteT = 0;
+function killSnapNote(x) {
+  if (!x || typeof x.name !== 'string' || !Number.isSafeInteger(x.k) || x.k < 0 || !Number.isSafeInteger(x.rev)) return;
+  if (x.name === KILL_SNAP.name && x.rev < KILL_SNAP.rev) return;   // поздний ответ старее уже виденного
+  Object.assign(KILL_SNAP, { name: x.name, k: x.k, rev: x.rev, t: Date.now(), stale: false });
 }
+// Конец любого боя (и РБ/PvP вне квоты): до нового снимка игры старый счётчик не годится как точка начала следующего боя.
+function killSnapStale() { KILL_SNAP.stale = true; }
+const killSnapFresh = char => KILL_SNAP.name === char && !KILL_SNAP.stale && Date.now() - KILL_SNAP.t < 60000;
+async function farmQuotaSnapshot(char, need = null) {
+  // 20.12 (ревизия 17.10, ревью): итог боя (need) — только снимок после конца боя; снимок из середины AoE-боя устарел (stale)
+  const ok = () => KILL_SNAP.name === char && (need ? !KILL_SNAP.stale && need(KILL_SNAP) : killSnapFresh(char)), snap = () => ({ name: char, mobsKilled: KILL_SNAP.k, revision: KILL_SNAP.rev, cached: true });
+  if (ok()) return snap();
+  // GET /character самой игры ещё в пути — дождаться её ответа, а не слать свой
+  if (typeof gameBusy === 'function') for (const t0 = Date.now(); gameBusy().busy && Date.now() - t0 < 1500;) { await sleep(50); if (ok()) return snap(); }
+  if (!need && Date.now() - KILL_FAIL_T < 10000) throw new Error('Счётчик убийств сервера пока не получен');
+  try {
+    const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
+    if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
+    killSnapNote({ name: c.name, k: c.mobsKilled, rev: c.revision });
+    return c;
+  } catch (e) { KILL_FAIL_T = Date.now(); throw e; }
+}
+// Повтор подтверждения одного боя: не чаще раза в 2 с, не больше 5 попыток / 30 с.
+function quotaWait(key) {
+  const now = Date.now(), W = QUOTA_WAIT[key] ||= { n: 0, t0: now, t: 0 };
+  for (const k of Object.keys(QUOTA_WAIT)) if (k !== key && now - QUOTA_WAIT[k].t0 > 600000) delete QUOTA_WAIT[k];
+  return W;
+}
+const quotaWaitOver = W => W.n >= 5 || Date.now() - W.t0 >= 30000;
 // 17.10.2026: после смены суток/reload владелец уже начатого боя важнее нового приоритета задач.
 function farmQuotaPending(spawn) {
   const raw = L2EngineCore.rawTaskConfig(cfg), enabled = task => L2EngineCore.taskList(cfg) !== null
@@ -228,35 +259,76 @@ async function beginFarmQuota(spawn) {
   if (!limit && !dailyLimit) return null;
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
   const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
+  // 20.12: без счётчика бой не бросаем — билет «неточно», убитые засчитаются по журналу боя.
+  const approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true });
+  // Reload начатого боя: фон всё равно оставит сохранённую точку начала — свежий снимок не нужен.
+  const prev = previous[0]?.row.pending;
+  let c;
+  try { c = prev ? { mobsKilled: prev.counter, revision: prev.revision } : await farmQuotaSnapshot(char); }
+  catch (e) { if (!valid()) return null; setStatus('Лимит мобов: счётчик сервера недоступен — считаю по журналу боя'); return approx(); }
+  if (!valid()) return null;
   try {
-    const c = await farmQuotaSnapshot(char); if (!valid()) return false;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
-    if (!r?.ok || !valid()) return false;
+    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: начало боя не записано — продолжаю бой'); return null; }
     rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row } };
     return { task, limit, dailyLimit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
-  } catch (e) { if (valid()) setStatus('Лимит мобов: жду счётчик сервера'); return false; }
+  } catch (e) { if (!valid()) return null; setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
 }
-async function finishFarmQuota(ticket, lost = false) {
+// Общий итог подтверждённого и приблизительного учёта: true — бой в этой задаче больше не продолжаем (лимит).
+function farmQuotaApply(T, r) {
+  rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
+  if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
+  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
+  if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
+  return false;
+}
+// 20.12: засчитать бой по журналу (n убитых) — счётчик сервера недоступен или не подтвердил итог. close — закрыть висящий pending боя.
+async function farmQuotaApprox(T, n, close = false) {
+  if (T.done) return false;
+  T.done = true;
+  const name = T.task === 'cat' ? 'Катакомбы' : 'Автофарм';
+  try {
+    if (!await rtCommit()) return false;
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    if (!r?.ok) return false;
+    if (Date.now() - quotaApproxNoteT > 600000) { quotaApproxNoteT = Date.now(); rec('B', 'лимит мобов', `${name}: счётчик убийств сервера ${close ? 'не подтвердил итог боя' : 'недоступен'} — засчитал по журналу боя: ${n} (неточно), продолжаю`); }
+    return farmQuotaApply(T, r);
+  } catch (e) { return false; }
+}
+async function finishFarmQuota(ticket, lost = false, seen = null) {
+  const logN = Number.isSafeInteger(seen) && seen >= 0 ? seen : lost ? 0 : 1;
   if (!ticket) {
     const spawn = new URLSearchParams(location.search).get('spawnId') || '', previous = farmQuotaPending(spawn);
-    if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return true; }
+    if (previous.length > 1) {
+      // 20.12: неясный владелец не держит экран победы вечно
+      const W = quotaWait('multi:' + spawn); W.n++; if (quotaWaitOver(W)) { delete QUOTA_WAIT['multi:' + spawn]; return false; }
+      setStatus('Лимит мобов: сверяю владельца начатого боя'); return true;
+    }
     if (!previous.length) return false;
     const {task,row} = previous[0];
-    if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost) : false; }
+    if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost, seen) : false; }
     ticket = { task, limit: row.limit, dailyLimit:farmDailyLimit(task), char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
   }
-  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit||0) && rt.farmQuota?.[T.task]?.run === T.run;
+  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit||0) && (T.approx || rt.farmQuota?.[T.task]?.run === T.run);
   if (!valid()) return true;
+  if (T.approx) return farmQuotaApprox(T, logN);
+  const key = `${T.task}:${T.run}:${T.spawn}:${T.beforeRevision}`, W = quotaWait(key);
+  if (W.n && Date.now() - W.t < 2000) return true;
+  const miss = async text => {
+    if (!valid()) return true;
+    W.n++; W.t = Date.now();
+    if (!quotaWaitOver(W)) { setStatus(text); return true; }
+    delete QUOTA_WAIT[key];
+    return farmQuotaApprox(T, logN, true);
+  };
   try {
-    const c = await farmQuotaSnapshot(T.char); if (!valid() || !await rtCommit()) return true;
+    const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || (lost ? s.k >= p.counter : s.k > p.counter));
+    const c = await farmQuotaSnapshot(T.char, need); if (!valid() || !await rtCommit()) return true;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
-    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: сверяю итог боя'); return true; }
-    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
-    if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
-    if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
-    if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
-    return false;
-  } catch (e) { if (valid()) setStatus('Лимит мобов: жду подтверждение счётчика'); return true; }
+    if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
+    delete QUOTA_WAIT[key];
+    return farmQuotaApply(T, r);
+  } catch (e) { return miss('Лимит мобов: жду подтверждение счётчика'); }
 }
 
 async function dailyLimitFishSync() {
@@ -4225,6 +4297,8 @@ addEventListener('message', e => {
   d.paymentId=netContext.paymentId||'';
   d.retryOf=netContext.retryOf||0;
   if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
+  // 20.12 (ревизия 17.10): счётчик убийств для лимита мобов — из ответов самой игры; конец боя без нового снимка — снимок устарел
+  if (d.kc && d.status >= 200 && d.status < 300) killSnapNote(d.kc); else if (d.bt?.end) killSnapStale();
   // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
   try { L2V7Modules.pvp?.onNet(path, d); } catch (e) { console.warn(TAG, 'PvP', e); }
      // 8.0.3: запрос игры закончился — она снова принимает клики
@@ -4840,7 +4914,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automa
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get campChampMin() { return campChampMin; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },

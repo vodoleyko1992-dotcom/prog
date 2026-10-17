@@ -1416,7 +1416,13 @@ async function battle() {
       ctx.killed.push(k.name);
     }
   };
-  if (!ctx.rb && env.beginFarmQuota) { ctx.farmQuota = await env.beginFarmQuota(ctx.spawnId || spawnId); if (ctx.farmQuota === false) return; }
+  // 20.12 (ревизия 17.10, аудит H1/F1): отметка лимита мобов больше не держит героя в уже открытом бою. Есть свежий счётчик из ответа
+  // игры — запись идёт параллельно с ударами; нет — ждём только свой снимок (без него билет «неточно»). Неудача — бой продолжается.
+  if (!ctx.rb && env.beginFarmQuota) {
+    ctx.farmQuotaP = Promise.resolve().then(() => env.beginFarmQuota(ctx.spawnId || spawnId)).then(t => t || null, () => null);
+    if (!env.farmQuotaCached?.()) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; }
+  }
+  ctx.quotaTicket = async () => { if (ctx.farmQuotaP) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; } return ctx.farmQuota || null; };
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
   const reloadSlot = () => { let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
@@ -2223,7 +2229,7 @@ async function battle() {
   const result = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : null, 3000, 40);
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
-  if (result === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(ctx.farmQuota, true); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
+  if (result === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(await ctx.quotaTicket(), true, ctx.killed.length); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (result !== 'win') {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
@@ -2318,7 +2324,7 @@ async function battle() {
   // квест: прогресс с экрана победы («26 / 35 · осталось 9»), частота дропа, прогноз боёв
   const qDone = await env.trackQuest(ctx.name, ctx.questKill);
   if (qDone && env.cfg.questStop) return env.halt(`Квест выполнен: ${qDone}`);
-  if (ctx.farmQuota && await env.finishFarmQuota?.(ctx.farmQuota)) return;
+  { const qT = await ctx.quotaTicket(); if (qT && await env.finishFarmQuota?.(qT, false, 1 + ctx.killed.length)) return; }
   await env.nextFight(ctx);
 }
 
