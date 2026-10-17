@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.2.5 (игрок 12.10: «на основе данных игры разработай фулл баф на РБ и Эпиков за ФА»): готовый набор FA под класс (fa-full.js),
 // «auto» в списке РБ-сессии, тот же набор перед разрешённым заходом на эпика (вместо 15 Coin of Luck), городской Lv.2 под FA Lv.3 —
 // докупается, пара баффов, что снимают друг друга, замечается при покупке (rt.faClash) и больше не берётся
@@ -81,7 +82,7 @@ epicOk = false;
   m.env.rt.faBal = { v: 101, t: Date.now() }; m.env.cfg.epicFaFull = false; assert.equal(m.E.epicBuffCol(), true, 'option off → as before');
   m.env.cfg.epicMode = false; assert.equal(m.E.epicFaOk(), false, 'epic mode off');
   // ---------- 4. проводка: геттеры, манифест, меню, миграция ----------
-  const content = read('content.js'), mf = JSON.parse(read('manifest.json'));
+  const content = (read('defaults.js') + '\n' + read('content.js')), mf = JSON.parse(read('manifest.json'));
   assert.ok(mf.content_scripts.find(x => x.js.includes('content.js')).js.indexOf('fa-full.js') < mf.content_scripts.find(x => x.js.includes('content.js')).js.indexOf('modules/buffs.js'));
   assert.match(read('popup.html'), /<script src="fa-full\.js"><\/script>/);
   assert.match(read('popup.html'), /id="epicFaFull" type="checkbox"/); assert.match(read('popup.html'), /id="rbSessAuto"/);

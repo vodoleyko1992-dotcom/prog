@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.24: дополнительные геттеры владельца перед прежними зависимостями допустимы.
 // 8.0.3 (эпики, разбор 11.10 — логи 4ee00a04/d089c7e2, снимок 75dac78f): Coin of Luck — «0» = не тратить; единые ворота перед любой
 // тратой CoL (свежий список, жив, игра пускает, цифры босса, вердикт); 1 платный заход на появление; резерв не снимается на таймауте;
@@ -308,10 +309,10 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     assert.match(content, /if \(rt\.epicScanReq\) \{ if \(fishNow\(\) \|\| isBattle\(\)\) L2V7Modules\.epics\.epicScanAll\('по кнопке'\)\.catch\(\(\) => \{\}\); else \{ await L2V7Modules\.epics\.epicScanAll\('по кнопке'\); return true; \} \}/, 'scan runs in the background on the battle page too (chain)');
     assert.match(content, /if \(epicOn\(\)\) L2V7Modules\.epics\.epicPollTick\(\)\.catch\(\(\) => \{\}\);/);
     assert.match(content, /once\('epicCol803', /); assert.match(content, /once\('epicDeaths803', \(\) => \{ if \(\+C\('epicMaxDeaths'\) === 10\) cf\.epicMaxDeaths = 3; \}\);/);
-    const def = content.slice(content.indexOf('const DEF_CFG = {'), content.indexOf('\n', content.indexOf('const DEF_CFG = {')));
+    const dsrc = read('defaults.js'), def = dsrc.slice(dsrc.indexOf('const DEF_CFG = {'), dsrc.indexOf('\n', dsrc.indexOf('const DEF_CFG = {')));   // 20.13 (шаг 7): умолчания в defaults.js
     for (const kv of ['epicCoinPerBoss: 1', 'epicCoinKeep: 0', 'epicMaxFightMin: 0', 'epicMaxRetreats: 8', 'epicMaxDeaths: 5', 'epicCoinDailyMax: 0']) assert.ok(def.includes(kv), kv);
     assert.match(content, /\{ k: 'frintezza', lvl: 90,/);
-    const html = read('popup.html'), popup = read('popup.js'), ui = read('ui-v7.js');
+    const html = read('popup.html'), popup = (read('defaults.js') + '\n' + read('popup.js')), ui = read('ui-v7.js');
     assert.match(html, /Coin of Luck на эпиков за 24 ч \(0 — НЕ тратить\)/); assert.match(ui, /epicCoinDailyMax:'Coin of Luck — ценная валюта \(донат, немного падает из Old Box и за TvT\)\. Ноль — бот не тратит их никогда/);
     assert.ok(!/0 — без лимита\) <input id="epicCoinDailyMax"/.test(html) && !/Ноль — лимита нет\.',\n\s+epicAdena/.test(ui.replace(/epicAdenaDailyMax:'[^']*'/, '')), 'no stale «0 = no limit» for CoL');
     assert.match(html, /<button id="epicScan"[^>]*>🔄 Проверить эпиков \(бесплатно\)<\/button>/); assert.match(html, /<div id="epicTable" class="zbox">/); assert.match(html, /id="epicSum"/);
@@ -328,7 +329,7 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
   }
   // ---------- T10: таблица эпиков в меню ----------
   {
-    const js = read('popup.js'), a = js.indexOf('function renderEpics(');
+    const js = (read('defaults.js') + '\n' + read('popup.js')), a = js.indexOf('function renderEpics(');
     let i = js.indexOf('{', a), depth = 0; for (; i < js.length; i++) { if (js[i] === '{') depth++; else if (js[i] === '}' && --depth === 0) break; }
     const el = {}; const sb = { $: id => (el[id] ||= { textContent: '', innerHTML: '' }), Date, Math, String, Object };
     vm.runInNewContext(js.slice(a, i + 1), sb);

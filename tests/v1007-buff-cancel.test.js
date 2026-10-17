@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.7 (лог 13.10 13:03–13:12, игрок: «куда пропадал бафф в последних минутах боя?»): чемпионы снимают баффы («[Frost Tarantula] зняв з вас
 // 3 бафи.»); бот писал «после баффера баффы так и не появились (1/3)» и ждал к бафферу 10 мин, а платные баффы за FA (8–9 FA) уходили за минуту
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -55,12 +56,12 @@ const B = load('modules/buffs.js').L2V7Factories.buffs(env);
   assert.ok(mrecs.some(r => /Tomb Guard \(68\): пропускаю — снимает баффы \(ваш список\)/.test(r)));
   menv.cfg.noCancelMobs = false; assert.deepEqual(pick(), ['b1', 'm1', 'q1', 'r1'], 'checkbox off — as before');
   // 4. проводка: combat зовёт cancelNote после боя, геттеры в content.js, галка в меню
-  const cb = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), ct = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
+  const cb = fs.readFileSync(path.join(root, 'modules/combat.js'), 'utf8'), ct = (fs.readFileSync(path.join(root, 'content.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
   assert.match(cb, /env\.cancelNote\?\.\(ctx\.cancelLines \|\| \[\], ctx\.name/); // 20.6: накопленные строки вместо вытесненного хвоста победы
   assert.match(ct, /get cancelNote\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.cancelNote\(\.\.\.a\); \}/);
   assert.match(ct, /get cancelRisk\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.cancelRisk\(\.\.\.a\); \}/);
   assert.match(ct, /noCancelMobs: true, cancelMobs: ''/); assert.match(ct, /once\('cancel1007'/);
-  const ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8'), pj = fs.readFileSync(path.join(root, 'popup.js'), 'utf8');
+  const ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8'), pj = (fs.readFileSync(path.join(root, 'popup.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
   assert.match(ph, /id="noCancelMobs"/); assert.match(ph, /id="cancelMobs"/); assert.match(ph, /id="cancelList"/);
   assert.match(pj, /'noCancelMobs'/); assert.match(pj, /'cancelMobs'/); assert.match(pj, /renderCancelList\(rt\);/);
   console.log('PASS: 10.0.7 buff cancel — «зняв з вас N бафи» logged and remembered per mob, town buffer right after the fight (no fake «buffer failed», no 10-min wait), mobs that cancel buffs (learned or listed) are never targets, ★ quest mobs excepted');

@@ -1,8 +1,9 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0 часть 6 (игрок: «ребаланс настроек с целью повышения КПД»): заводские значения и разовая миграция только заводских значений
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const content = read('content.js'), popup = read('popup.js'), eco = read('modules/economy.js'), base = JSON.parse(read('base-profile.json'));
+const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), eco = read('modules/economy.js'), base = JSON.parse(read('base-profile.json'));
 const defOf = (src, k) => (src.match(new RegExp(`\\b${k}: ([^,]+),`)) || [])[1];
 for (const src of [content, popup]) {
   assert.equal(defOf(src, 'shopMp'), "'200/1000'"); assert.equal(defOf(src, 'rbMaxBelow'), '9'); assert.equal(defOf(src, 'rbTour'), 'false');

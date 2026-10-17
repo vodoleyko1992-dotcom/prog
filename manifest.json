@@ -57,6 +57,7 @@
         "https://*.l2wap.com/*"
       ],
       "js": [
+        "defaults.js",
         "skills-il.js",
         "zone-db.js",
         "zone-kpd.js",

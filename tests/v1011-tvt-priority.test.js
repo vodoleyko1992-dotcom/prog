@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.11 (лог 13.10 22:00, alt1 Knight 20 на TvT; игрок: «учим бота быстро убивать на TvT» + «команды других задач подавляют TvT»):
 // 1) окно TvT (tvtHold) — за tvtHoldMin мин до старта задачи не начинаем; 2) из PvE-боя — на карту и на арену;
 // 3) на арене скилл дороже текущего MP не жмём (30 с Power Strike 19 MP за 3 урона, потом 22 с клики без MP и без запросов);
@@ -79,12 +80,12 @@ const baseEnv = () => ({ cfg: { tvtOn: true, tvtHoldMin: 3 }, rt: {}, on: true, 
     await T.tvtFight();
     assert.equal(fired[0], 'nick-ambi-spoil', 'первая цель — самый младший (27), а не Existence (80): ' + fired.join(','));
     // 7) content.js: TvT раньше паузы «один РБ», окно TvT в главном цикле, скиллы арены и ответы ударов из сети, настройки
-    const src = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
+    const src = (fs.readFileSync(path.join(root, 'content.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
     assert.ok(src.indexOf('await tvtStep()') < src.indexOf('raid.rbOneStep()'), 'tvtStep раньше rbOneStep');
     assert.match(src, /L2V7Modules\.tvt\.tvtHold\(\)\) \{ taskPolicyNote\('tvt'\); await L2V7Modules\.tvt\.tvtWait\(\); return true; \}/);
     assert.match(src, /path === '\/game\/tvt\/skills'/); assert.match(src, /TVTC\.actN = \(TVTC\.actN \|\| 0\) \+ 1/);
     assert.match(src, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/);
-    const pj = fs.readFileSync(path.join(root, 'popup.js'), 'utf8'), ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
+    const pj = (fs.readFileSync(path.join(root, 'popup.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8')), ph = fs.readFileSync(path.join(root, 'popup.html'), 'utf8');
     assert.match(pj, /tvtHoldMin: 3, tvtOverRb: true, tvtPet: true/); assert.match(pj, /const NUM  = \[[^\]]*'tvtHoldMin'/); assert.match(pj, /const BOOL = \[[^\]]*'tvtPet'/);
     for (const id of ['tvtHoldMin', 'tvtPet']) assert.ok(ph.includes(`id="${id}"`), 'popup.html: ' + id);
     const bp = JSON.parse(fs.readFileSync(path.join(root, 'base-profile.json'), 'utf8')).cfg;

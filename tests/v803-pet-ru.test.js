@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 8.0.3 (логи 11.10 10:37–10:44): выучена Summon Feline Queen (слот #4, раньше Kai #24) — незнакомого кота бот брал первым на панели;
 // отказ дебаффа «Ціль опирається ефекту» засчитывался как успех; русское «атакует» в строке удара кота (на будущее)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -19,7 +20,7 @@ assert.equal(C.petPick(panel, '').title, 'Summon Mew the Cat', 'measured advice 
 env.rt.petAdvice = null; env.rt.skillDb = { 'summon feline queen': { desc: 'support-слуга; P.Atk отримує +30% від поточного M.Atk хазяїна' } };
 assert.equal(C.petMul('feline_queen'), 30, 'multiplier read from the magister description when present');
 assert.equal(C.petPick(panel, '').title, 'Summon Feline Queen');
-const combat = read('modules/combat.js'), content = read('content.js'), html = read('popup.html');
+const combat = read('modules/combat.js'), content = (read('defaults.js') + '\n' + read('content.js')), html = read('popup.html');
 assert.doesNotMatch(combat, /\|\| sums\[0\];/, 'no «first summon on the panel» fallback');
 assert.match(content, /if \(s\?\.key && rt\.petLast !== s\.key && tabOwner\) setRt\(\{ petLast: s\.key \}\)/, 'last live cat remembered from activeSummon');
 assert.doesNotMatch(html, /<option value="Summon Feline Queen">/, '9.2: Feline Queen — бафф кота, не вариант призыва');

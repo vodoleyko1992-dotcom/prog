@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.2.5 (игрок 12.10: «я скинул список РБ, в которых бот не уверен, а он всё равно не шёл всех проверять»; лог 12.10 10:51–12:02):
 // 1) у Кастора, Фальстона, Тимініеля, Гекатона в памяти лежали неточные цифры базового профиля 8.0.3 (from 'base803', M.Atk Кастора 9339
 //    при настоящих 4339) и шли впереди встроенных цифр игры — «спецудар 131 % HP» вместо 61 %;
@@ -64,7 +65,7 @@ const mkK = (o = {}) => mk({ hero: 61, meHp: () => me, ...o, rt: { rbStats: { ..
   m.env.rt.rbDb[KASTOR].probe.t = Date.now() - 4 * H; assert.equal(m.R.probeFight(KASTOR), false);
 
   // ---------- 4. проводка ----------
-  const content = read('content.js'), combat = read('modules/combat.js'), popup = read('popup.js'), html = read('popup.html');
+  const content = (read('defaults.js') + '\n' + read('content.js')), combat = read('modules/combat.js'), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html');
   assert.match(content, /get probeFight\(\) \{ return \(\.\.\.a\) => L2V7Modules\.raid\.probeFight\(\.\.\.a\); \}/);
   assert.match(content, /epicFaFull: true, rbFaFull: true, rbProbe: true,/);
   assert.match(content, /once\('rbStats925', \(\) => \{/);

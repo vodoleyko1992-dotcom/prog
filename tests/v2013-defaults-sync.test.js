@@ -6,11 +6,11 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=f=>fs.readFileSync(__dirname+'/../'+f,'utf8');
 function table(src,decl){const i=src.indexOf(decl);assert.ok(i>=0,decl);let j=src.indexOf('{',i),d=0,k=j;
  for(;k<src.length;k++){if(src[k]==='{')d++;else if(src[k]==='}'&&!--d)break;}return src.slice(j,k+1);}
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): обе таблицы теперь одна — defaults.js (L2Defaults.CFG). content.js и popup.js
+// только ссылаются на неё; литеральных копий умолчаний в них больше нет.
 const content=read('content.js'),popup=read('popup.js');
-// Константы диапазона дневных лимитов — как в content.js (popup пишет числа напрямую).
-const consts=content.slice(content.indexOf('const DAILY_RANGE ='),content.indexOf('const DEF_CFG ='));
-const C=vm.runInNewContext(consts+';('+table(content,'const DEF_CFG = ')+')');
-const P=vm.runInNewContext('('+table(popup,'const DEF = ')+')');
+assert.match(content,/const DEF_CFG = L2Defaults\.CFG;/);assert.match(popup,/const DEF = L2Defaults\.CFG;/);
+const C=require(__dirname+'/../defaults.js').CFG,P=C;
 test('каждое умолчание меню совпадает с умолчанием движка',()=>{
  const missing=[],diff=[];
  for(const k of Object.keys(P)){if(!Object.hasOwn(C,k))missing.push(k);else if(JSON.stringify(C[k])!==JSON.stringify(P[k]))diff.push(`${k}: движок ${JSON.stringify(C[k])}, меню ${JSON.stringify(P[k])}`);}

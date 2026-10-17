@@ -1,10 +1,11 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.7 (игрок 13.10: «автофарм расходников на апгрейд выбранного снаряжения… выбор оптимальных локаций, учитывать дроп и спойл;
 // заготовка под саб крафтера и спойлера»): точка фарма по всем недостающим материалам цели Маммона, галки дроп/спойл, источники из
 // игры (/game/farm-guide → дроп + спойл), заготовка modules/subclass.js (роль класса, свой крафт, помощник основного, передача)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const content = read('content.js'), pj = read('popup.js'), ph = read('popup.html'), bp = JSON.parse(read('base-profile.json')), mf = read('manifest.json');
+const content = (read('defaults.js') + '\n' + read('content.js')), pj = (read('defaults.js') + '\n' + read('popup.js')), ph = read('popup.html'), bp = JSON.parse(read('base-profile.json')), mf = read('manifest.json');
 const load = (file, extra = {}) => { const sb = { console, Date, Math, JSON, Object, Number, String, Array, Set, Map, RegExp, location: { pathname: '/map.html', href: '' }, ...extra }; sb.globalThis = sb; vm.runInNewContext(read(file), sb); return sb; };
 // farmWin/farmFit/farmZones — вырезка из content.js (как в v721-farmwin)
 const cut = (re, tag) => { const m = content.match(re); assert.ok(m, 'вырезка ' + tag); return m[0]; };

@@ -1,8 +1,9 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 8.0.3 (игрок 11.10: «купил почему-то сразу 9999 крючков»; выбор: «покупать по 100 пакетов — кончилась, бот докупит»)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const content = read('content.js'), popup = read('popup.js'), fishing = read('modules/fishing.js'), html = read('popup.html');
+const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), fishing = read('modules/fishing.js'), html = read('popup.html');
 const def = content.slice(0, content.indexOf('const DEF_RT'));
 assert.match(def, /fishBuyPacks: 100,/, 'core default 100 packs');
 assert.doesNotMatch(def, /fishBuyPacks: 1000/);

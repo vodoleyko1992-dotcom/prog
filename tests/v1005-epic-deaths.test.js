@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.5 (игрок 13.10 00:57: «3 смерти за заход на эпики расширяем до 5»): смертей на эпика за появление — 5 (было 3);
 // разовая миграция epicDeaths1005 меняет только прежние заводские 3, своё число игрока не трогает
 const assert = require('node:assert/strict');
@@ -20,8 +21,8 @@ const { vm, read, content, base, clone, mk } = require('./epic-harness.cjs');
   { const m = mk({ cfg: { epicMaxDeaths: 3 }, rt: { epicDb: okDb(), rbStats: okStats(), epic: fight(2) } });
     await m.E.epicStep(); assert.equal(m.env.rt.epic.step, 'pick', 'player limit 3 respected'); }
   // умолчания: ядро, меню, подсказка, базовый профиль
-  assert.ok(content.slice(content.indexOf('const DEF_CFG = {')).split('\n')[0].includes('epicMaxDeaths: 5'));
-  assert.match(read('popup.js'), /epicMaxDeaths: 5, epicCheck: false/);
+  assert.ok(read('defaults.js').slice(read('defaults.js').indexOf('const DEF_CFG = {')).split('\n')[0].includes('epicMaxDeaths: 5'));
+  assert.match((read('defaults.js') + '\n' + read('popup.js')), /epicMaxDeaths: 5, epicCheck: false/);
   assert.match(read('popup.html'), /Смертей на одного эпика за его появление \(5\)/);
   assert.match(read('ui-v7.js'), /epicMaxDeaths:'[^']*по умолчанию 5/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.epicMaxDeaths, 5);

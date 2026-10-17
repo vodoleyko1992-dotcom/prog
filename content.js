@@ -7,46 +7,10 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
-// 20.10 (игрок 17.10 04:40: «диапазон от 8434 до 9119»): заводской дневной диапазон для мобов (автофарм+катакомбы вместе) и для рыбы — число выбирается заново каждые сутки,
-// чтобы счётчики не выделялись в статистике игры; меняются в «Лимитах». Точное значение до первого выбора — нижняя граница.
-const DAILY_RANGE = { min: 8434, max: 9119 }, DAILY_KILL_DEF = DAILY_RANGE.min, DAILY_FISH_DEF = DAILY_RANGE.min;
-const DAILY_RANGES_DEF = () => ({ dailyKillLimit: { ...DAILY_RANGE }, dailyFishLimit: { ...DAILY_RANGE } });
-const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
-  "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
-  enchantMode: false,
-  enchant: {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"batchSize":1,"purchase":false,"colBudget":0},
-  priority: '[квест]\n[чемп]\n[все]',
-  rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
-  fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
-  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF, limitRanges: DAILY_RANGES_DEF(), zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
-  campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
-  autoRoles: true, nWeaponMain: '',
-  rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbSpikeRhythm: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
-  autoTasks: null, taskOnly: false, tsGoalItem: 920033, tsBuy: false, dailyAuto: true, clanTasks: true, chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,   // 8.0.3: чемпионы по умолчанию ВЫКЛ (игрок 11.10), включаются в «Охоте»
-  lvlMin: 1, lvlMax: 99, lvlAbove: 5, lvlBelow: 5, maxPages: 3, sealAuto: false, sealMin: 1,
-  champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
-  reactMin: 150, reactMax: 450, buffSec: 118,
-  stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true,
-  // 20.13 (ревизия 17.10, шаг 5, quality/L3): скрытые настройки, умолчание которых раньше жило только в месте чтения
-  // (`?? 30`, `!== false`…). Значения те же, поведение не меняется; теперь они видны в cfg, экспорте и проверке
-  // tests/v2013-defaults-sync. Резервные `??` в модулях оставлены для старых тестовых окружений без DEF_CFG.
-  mageEcoPct: 30, mageMpPct: 25, mageProbe: true, rbVampHp: 60, rbDeathPenalty: 0, magisterSkip: 'Curse Weakness, Poisonous Cloud', magisterSpReserve: 0,
-  fishRodBuy: true, fishAutoSetup: true,
-  // слоты панели — по названию (атрибут title), через запятую — альтернативные написания
-  nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
-  nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
-  // энергия силы: кто копит и кто тратит («Имя=цена»)
-  nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1',
-  // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
-  debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
-  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200,
-  // 20.13 (ревизия 17.10, шаг 5, defaults/D11): скрытые настройки, которые читались только через «?? N» по месту, — с теми же значениями,
-  // чтобы они были видны в экспорте настроек и при разборе лога. Поведение не меняется (значения равны прежним запасным).
-  // Остальные такие ключи (mageMpPct, mageEcoPct, rbVampHp…) — выше, в блоке quality/L3.
-  rbHuntMode: false, rbOrder: 'up',
-  // 20.13 (ревизия 17.10, шаг 5, defaults/D16): банка MP у воина — от доли MP (как mageMpPct у мага), а не только от 70 MP: «MP не экономим».
-  fighterMpPct: 25,
-};
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания настроек и дневные диапазоны — в defaults.js (общий файл
+// с меню, подключён в manifest перед content.js). Здесь только прежние имена, код ниже не меняется.
+const { DAILY_RANGE, DAILY_KILL_DEF, DAILY_FISH_DEF, DAILY_RANGES_DEF } = L2Defaults;
+const DEF_CFG = L2Defaults.CFG;
 const DEF_RT = { pvpTargets: {}, pvpRecovery: null, pvpResolved: [], status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
                  spawns: {}, questTargets: [], quests: {},

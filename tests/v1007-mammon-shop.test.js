@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.7 (игрок 13.10 02:38, скрин раздела «Сырьё»: «Кристал: ранг D · нет в фарме» 900/0/900; «кристаллы покупаются в магазине»):
 // сырьё цели Маммона, которое продаёт gm-shop (кристаллы, самоцветы, Soul/Spirit Ore), — «магазин», а не «нет в фарме»; бот докупает
 // его в обычной закупке расходников (вкладка грейда, подраздел «Ресурси»), фармить его не пытается; источник в базе фарма ищется
@@ -59,7 +60,7 @@ const INV = { 57: 9e6, 4037: 3, 1458: 0, 1869: 1984, 1876: 1607, 1865: 2961 };
   env.mmShopWant = () => { throw new Error('boom'); }; assert.ok(E.shopPlan().some(x => x.key === 'shots'), 'a failing Mammon plan does not break the shop plan');
 }
 // 4. проводка: ядро отдаёт economy геттер mmShopWant, умолчание mmShopBuy = ВКЛ, меню — галка и подпись «магазин» вместо «нет в фарме»
-{ const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), eco = read('modules/economy.js');
+{ const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), eco = read('modules/economy.js');
   assert.match(content, /get mmShopWant\(\) \{ return \(\) => L2V7Modules\.mammon\?\.mmShopWant\?\.\(\) \|\| \[\]; \}/);
   assert.match(content, /mmGoalFarm: true, mmShopBuy: true,/);
   assert.match(popup, /mmGoalFarm: true, mmShopBuy: true,/); assert.match(popup, /'mmGoalFarm', 'mmShopBuy',/);

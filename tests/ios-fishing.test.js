@@ -8,7 +8,9 @@ for(const n of ['content.js','popup.js','popup.html','background.js','ui-v7.js',
   files[n]=fs.readFileSync(path.join(base,n),'utf8');
 const manifest=JSON.parse(fs.readFileSync(path.join(base,'manifest.json')));
 assert.equal(manifest.version,'20.12');
-for(const n of ['content.js','popup.js']){
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): умолчания движка и меню — одна таблица defaults.js
+files['defaults.js']=fs.readFileSync(path.join(base,'defaults.js'),'utf8');
+for(const n of ['defaults.js']){
   assert.match(files[n],/fishMode: false, rodEnchantTo: 10,/);
   assert.match(files[n],/fishGoal: ''/);
   assert.doesNotMatch(files[n],/fishGoal: 'tattoo_d, cloak_d, belt_d'/);

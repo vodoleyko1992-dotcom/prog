@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.1 (лог 12.10 18:10–18:12, игрок: «не срабатывает автобафф под РБ перед рейдом на РБ»): фулл бафф за FA брался только в
 // «РБ-сессии» (кнопка «🔥 Начать РБ-сессию»). Обычный «Тур РБ» полетел к Giant Marpanak, The 3rd Underwater Guardian и Roaring Lord
 // Kastor без единого баффа за FA. Теперь тур берёт тот же набор (cfg.rbFaFull, по умолчанию вкл) — только перед вылетом к РБ
@@ -46,8 +47,8 @@ hud = { 1068: now + 20 * 3600000 };   // городской набор на ме
   benv.rt.rbSess = { on: true, bought: true, until: now + 2 * 3600000 };
   assert.deepEqual([...B.faWanted()], [1323], 'running RB session keeps its own rules'); benv.rt.rbSess = null;
   // проводка: умолчание, меню
-  assert.match(read('content.js'), /epicFaFull: true, rbFaFull: true,/);
+  assert.match((read('defaults.js') + '\n' + read('content.js')), /epicFaFull: true, rbFaFull: true,/);
   assert.match(read('popup.html'), /id="rbFaFull" type="checkbox"/);
-  assert.match(read('popup.js'), /'rbSessNob', 'rbFaFull',/); assert.match(read('popup.js'), /epicFaFull: true, rbFaFull: true/);
+  assert.match((read('defaults.js') + '\n' + read('popup.js')), /'rbSessNob', 'rbFaFull',/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /epicFaFull: true, rbFaFull: true/);
   console.log('PASS: 10.0.1 RB tour takes the FA full buff before flying to a RB (not while farming), only missing buffs, switch rbFaFull');
 })().catch(e => { console.error(e); process.exit(1); });

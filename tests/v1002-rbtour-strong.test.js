@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.2 (игрок 12.10: «плохо фармит РБ, особенно сильных»; лог 12.10 22:11–22:46, тур РБ, Warlock 65): 30 выходов из боя за 35 мин, убиты 2 РБ из 6,
 // две смерти. 1) спецудар 29–36 % HP («смертельно» по скачку ≥ 30 %) → выход после каждого; 2) бой-проба шла 3 ч и после замера спецудара;
 // 3) Галлате 73 и Голконда 79 — бой по ≈25–43 мин (урон по РБ выше героя вдвое меньше общего ДПС); 4) недобитый на 96,7 % — «следующий»;
@@ -82,7 +83,7 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   assert.equal(m3.R.rbWounded(RAHHA), true, '96.7 % is wounded now (was: < 95 %)');
 
   // ---------- 5. выход из боя без ответа сервера — назад в бой ----------
-  const content = read('content.js'), combat0 = read('modules/combat.js');
+  const content = (read('defaults.js') + '\n' + read('content.js')), combat0 = read('modules/combat.js');
   const fnSrc = content.slice(content.indexOf('function leaveMark('), content.indexOf('async function leaveCheck()'));
   const store = {}, sessionStorage = { getItem: k => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } };
   const F = new Function('sessionStorage', fnSrc + '; return { leaveMark, leaveOk, leavePending };')(sessionStorage);
@@ -100,7 +101,7 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   const combat = read('modules/combat.js');
   assert.equal((combat.match(/env\.leaveMark\?\.\(ctx\.rb\.id, ctx\.name\);\n\s*env\.fire\(leave\);/g) || []).length, 2, 'mark before both RB exits');
   // настройка
-  assert.match(content, /rbMaxKillMin: 20,/); assert.match(read('popup.js'), /'rbMaxKillMin'/); assert.match(read('popup.html'), /id="rbMaxKillMin"/);
+  assert.match(content, /rbMaxKillMin: 20,/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /'rbMaxKillMin'/); assert.match(read('popup.html'), /id="rbMaxKillMin"/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.rbMaxKillMin, 20);
   // ---------- 7. игрок 12.10: «как потом вернуться к этим боссам… надо учиться всегда» ----------
   const m7 = mk({ hero: 65, meHp: () => ({ max: 8313, cur: 8313, pct: 100 }), rt: { rbDps: 4300, rbList: { [GOLK]: { lvl: 79, alive: true } } } });
@@ -119,7 +120,7 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   assert.equal(m7.env.rt.rbDb[GOLK].dps, Math.round(2400 * 0.6 + 2000 * 0.4)); assert.equal(m7.env.rt.rbDb[GOLK].dpsLvl, 65); assert.equal(m7.env.rt.rbDb[GOLK].dpsBase, 4300);
   assert.ok(Math.abs(m7.env.rt.rbGapK - (1 - 2000 / 4300) / 14) < 0.001, 'gap factor learned from the fight: ' + m7.env.rt.rbGapK);
   // замеры лога 12.10 — в памяти сразу (once rbFit1002) и в базовом профиле
-  const c7 = read('content.js'), mig = c7.slice(c7.indexOf("once('rbFit1002'"), c7.indexOf("once('rbStats925'"));
+  const c7 = (read('defaults.js') + '\n' + read('content.js')), mig = c7.slice(c7.indexOf("once('rbFit1002'"), c7.indexOf("once('rbStats925'"));
   const FIT = new Function(c7.slice(c7.indexOf('const RB_FIT_1002 = '), c7.indexOf('};', c7.indexOf('const RB_FIT_1002 = ')) + 2) + '; return RB_FIT_1002;')();
   const rt7 = { rbDps: 4000, rbDb: { [RAHHA]: { dps: 5000, sp: 3000, kills: 2 } } }, rf7 = {};
   new Function('rt', 'rf', 'once', 'RB_FIT_1002', mig)(rt7, rf7, (f, fn) => fn(), FIT);
