@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.9 — дневные лимиты и случайные диапазоны =====
+// ===== L2wap Bot v20.10 — бой без застывших откатов и наживка «Авто» =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -148,7 +148,20 @@ function fire(el) {
 }
 
 // Single-writer settings update. Avoid whole-cfg races with the popup.
+// 20.10 (смоуки v208-tyrant-weapon/v1015-clan-caster после реворка #231): своя запись настроек
+// (подстановка оружия в меню, снятие weaponManual) поднимала поколение управления и отменяла
+// собственный возврат с /char.html — бот оставался на странице сумки. Своя запись, которая меняет
+// ровно свои ключи, поколение не поднимает; любая другая смена cfg (меню, другая вкладка) — поднимает.
+const OWN_CFG = [];
+function ownCfgChange(c) {
+  const o = c?.oldValue || {}, n = c?.newValue || {}, js = v => JSON.stringify(v);
+  const changed = [...new Set([...Object.keys(o), ...Object.keys(n)])].filter(k => js(o[k]) !== js(n[k]));
+  const i = OWN_CFG.findIndex(w => Date.now() - w.t < 10000 && changed.every(k => Object.hasOwn(w.patch, k) && js(n[k]) === js(w.patch[k])));
+  if (i < 0) return false;
+  OWN_CFG.splice(i, 1); return true;
+}
 async function setCfg(patch) {
+  OWN_CFG.push({ patch: { ...patch }, t: Date.now() }); if (OWN_CFG.length > 20) OWN_CFG.shift();
   const response = await ipc({ cmd: 'statePatch', patch: {}, cfgPatch: patch,
     src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' });
   if (!response?.ok) throw new Error('settings_patch_failed: ' + (response?.reason || 'unknown'));
@@ -5766,7 +5779,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
 // любая необработанная ошибка расширения — в журнал (чтобы «полный сбой» был виден в выгрузке, а не только в консоли)
 // v5.6: обработчики ошибок — один набор (выше, у записи журнала); второй дублировал каждую ошибку в журнале
 chrome.storage.onChanged.addListener(ch => {
-  if (ch.on || ch.cfg || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
+  if (ch.on || ch.cfg && !ownCfgChange(ch.cfg) || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
   // Обновление справочников из меню должно быть видно без перезагрузки страницы.
   if (ch.farmDb) FARM = ch.farmDb.newValue || null;
   if (ch.recipeDb) RECIPES = ch.recipeDb.newValue || null;
