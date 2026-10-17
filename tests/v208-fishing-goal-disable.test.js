@@ -35,3 +35,8 @@ test('после финального обмена цель завершаетс
  names:()=>assert.fail('не начинать покупки после финальной сдачи'),rodScrollsBuy:()=>assert.fail('не покупать свитки')});
  await f.F.fishExchange();assert.equal(f.state.rt.fishTgt.done,true);assert.equal(f.state.rt.fishService,null);assert.equal(f.state.cfg.fishMode,false);assert.equal(f.state.rt.fishProofFish,10);
 });
+
+test('поздний ответ IPC не возвращает старую цель поверх новой из меню',async()=>{
+ const f=fixture(),ipc=f.c.ipc;f.c.ipc=async m=>{const r=await ipc(m);f.c.rt={...f.c.rt,fishTgt:{type:'fish',n:50,got:0,t:456},manualKickAt:77};f.c.cfg={fishMode:true,autoTasks:['fish','raid']};return r};
+ await f.F.fishTgtReached();assert.equal(f.c.rt.fishTgt.t,456);assert.equal(f.c.cfg.fishMode,true);assert.deepEqual(f.c.cfg.autoTasks,['fish','raid']);
+});

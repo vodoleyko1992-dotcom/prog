@@ -152,7 +152,7 @@ async function finishFishGoal(T) {
   if (!await rtCommit() || !on || !tabOwner || leaseEpoch !== epoch || rt.char !== char || (rt.manualKickAt || 0) !== kick || !['type','n','t'].every(k => rt.fishTgt?.[k] === T[k])) return false;
   const response = await ipc({ cmd: 'statePatch', patch: {}, finishFishGoal: { type: T.type, n: T.n, t: T.t, kick },
     src: TAB_ID, epoch, expectedChar: char });
-  if (!response?.ok || rt.char !== char) return false;
+  if (!response?.ok || rt.char !== char || leaseEpoch !== epoch || (rt.manualKickAt || 0) !== kick || !['type','n','t'].every(k => rt.fishTgt?.[k] === T[k])) return false;
   rt = { ...rt, fishTgt: response.fishTgt, fishService: null };
   cfg = mergeCfg(response.cfg);
   return true;
