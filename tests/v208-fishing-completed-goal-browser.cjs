@@ -14,10 +14,12 @@ const {chromium}=require(process.env.PLAYWRIGHT_NODE||'playwright'),assert=requi
     $q:s=>document.querySelector(s),shown:e=>!!e&&!e.hidden,fire:b=>{clicks.push(b?.dataset.slot);b?.click()},
     setRt:async p=>{Object.assign(env.rt,p);return{ok:true}},setStatus:s=>statuses.push(s),halt:async s=>{halts.push(s);env.on=false},
     rec(){},waitFor:async fn=>fn(),sleep:async()=>{},cdBusy:()=>false};
+ // 17.10: цель выключает только рыбалку, общий Stop больше не вызывается.
+   env.finishFishGoal=async T=>{env.rt.fishTgt=T.done?T:{...T,done:true,doneT:Date.now()};env.cfg.fishMode=false;if(env.cfg.autoTasks)env.cfg.autoTasks=env.cfg.autoTasks.filter(k=>k!=='fish');return true};
    const F=L2V7Factories.fishing(env);await F.fishing();await F.fishing();
    return{clicks,halts,statuses,rt:env.rt};
   },kind);
-  assert.equal(r.clicks.length,0);assert.equal(r.halts.length,kind==='legacy'?1:0);assert.equal(r.rt.fishCastActive,false);assert.equal(r.rt.fishTgt.doneT,123);assert.deepEqual(errors,[]);
+  assert.equal(r.clicks.length,0);assert.equal(r.halts.length,0);assert.equal(r.rt.fishCastActive,false);assert.equal(r.rt.fishTgt.doneT,123);assert.deepEqual(errors,[]);
   console.log('PASS browser completed goal '+kind);await page.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
