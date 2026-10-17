@@ -14,7 +14,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
-  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
+  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, limitRanges: {}, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
@@ -223,6 +223,25 @@ async function dailyLimitFishSync() {
   if(before<limit && r.dailyQuota.fish>=limit)rec('B','дневной лимит',`Рыбалка: ${r.dailyQuota.fish}/${limit} — до следующего дня, продолжаю остальные`);
   return true;
   } catch(e) {if(valid())setStatus('Лимит рыбалки: жду запись улова');return false;}
+}
+
+// 20.8: новое число только на новые сутки/серию, а не на каждую проверку цикла.
+async function syncLimitRanges() {
+  const raw=L2EngineCore.rawTaskConfig(cfg),ranges=raw.limitRanges||{},day=L2EngineCore.dailyDay();
+  const needed=Object.entries(ranges).some(([key,b])=>{
+    if(!b || !Number.isSafeInteger(b.min) || !Number.isSafeInteger(b.max) || b.min<1 || b.max<b.min)return true;
+    const old=rt.limitRolls?.[key],task={autoKillLimit:'auto',catKillLimit:'cat'}[key],enabled=task && (Array.isArray(raw.autoTasks)?raw.autoTasks.includes(task):raw[task==='auto'?'zoneAuto':'catMode']);
+    return !old || old.min!==b.min || old.max!==b.max || old.value!==raw[key] || key.startsWith('daily') && old.day!==day || enabled && rt.farmQuota?.[task]?.done;
+  });
+  if(!needed)return true;
+  const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0,signature=JSON.stringify(ranges);
+  const valid=()=>on&&tabOwner&&rt.char===char&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&JSON.stringify(L2EngineCore.rawTaskConfig(cfg).limitRanges||{})===signature;
+  try {
+    if(!await rtCommit()||!valid())return false;
+    const r=await ipc({cmd:'statePatch',patch:{},resolveLimitRanges:true,rangeKick:kick,epoch,expectedChar:char,src:TAB_ID});
+    if(!r?.ok||!valid()){if(valid())setStatus('Лимиты: '+(r?.reason||'жду подтверждение записи'));return false;}
+    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};return true;
+  } catch(e){if(valid())setStatus('Лимиты: жду сохранение выбранного диапазона');return false;}
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -2529,6 +2548,7 @@ async function main() {
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
       }
       if (heroNick() && rt.char !== heroNick()) { await switchChar(); if (!tabOwner) continue; }
+      if(Object.keys(cfg.limitRanges||{}).length && !await syncLimitRanges()){await sleep(500);continue;}
       L2V7Modules.actions?.enterFrame();
       // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
       if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); continue; }
