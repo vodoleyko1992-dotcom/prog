@@ -53,7 +53,9 @@ def contrast(a,b):
 
 with sync_playwright() as p:
   browser=p.chromium.launch(headless=True,executable_path=__import__('os').environ.get('CHROMIUM','/usr/bin/chromium'),args=['--no-sandbox','--disable-dev-shm-usage'])
-  for width,height,label in [(738,720,'wide'),(375,720,'dock')]:
+  # 20.12 (ревизия 17.10): широкий случай — настоящая ширина меню Chrome (body 760 px), а не 738: на 738 px body{width:760px}
+  # честно даёт прокрутку, которой в настоящем popup нет.
+  for width,height,label in [(760,720,'wide'),(375,720,'dock')]:
     page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
     page.evaluate(mock)
     errors=[]
@@ -63,7 +65,8 @@ with sync_playwright() as p:
     raw=re.sub(r'<script src="[^"]+"></script>','',raw)
     page.set_content(raw,wait_until='domcontentloaded')
     page.add_style_tag(content=(root/'ui-v7.css').read_text())
-    page.add_style_tag(content=(root/'ui-ios.css').read_text())
+    # 20.12 (ревизия 17.10): ui-ios.css удалён (popup.html его не подключал); стили — ui-v7.css + ui-game.css.
+    page.add_style_tag(content=(root/'ui-game.css').read_text())
     # 10.0.17: реальные зависимости и порядок из popup.html.
     for script in re.findall(r'<script src="([^"]+)"></script>', (root / "popup.html").read_text()):
       page.add_script_tag(content=(root / script).read_text())
@@ -80,7 +83,8 @@ with sync_playwright() as p:
       return {sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth,
         nav:c(nav),plain:c(document.querySelector('section.act label')),
         proof:c(proof),proofActive:proof.classList.contains('on'),
-        rod:rod.value, navGrid:getComputedStyle(document.querySelector('nav')).gridTemplateColumns.split(' ').length,
+        rod:rod.value, navRows:new Set([...document.querySelectorAll('nav button[data-tab]')].map(b=>Math.round(b.getBoundingClientRect().top))).size,
+        navOverflow:document.querySelector('nav').scrollWidth-document.querySelector('nav').clientWidth,
         tabs:document.querySelectorAll('nav button[data-tab]').length,
         btnText:getComputedStyle(nav).fontSize};
     }""")
@@ -90,22 +94,28 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==12,stats   # 20.8: добавлен отдельный раздел «Лимиты»
+    assert stats['tabs']==6,stats   # 20.12 (ревизия 17.10): 12 разделов сведены в 6
     assert stats['sw']<=stats['cw']+1,stats
-    assert stats['navGrid']==(3 if label=='dock' else 5),stats
+    # 20.12 (ревизия 17.10): навигация — шесть кнопок в один ряд (flex/grid), без собственной горизонтальной прокрутки.
+    assert stats['navRows']==1 and stats['navOverflow']<=1,stats
     for section in ('nav','plain','proof'):
       ct=contrast(stats[section]['fg'],stats[section]['bg'])
       print(label, section, 'contrast=',round(ct,2))
       assert ct>=4.5,(label,section,ct)
-    print('PASS',label,'tabs',stats['tabs'],'grid',stats['navGrid'],'no horizontal overflow',path.name)
+    print('PASS',label,'tabs',stats['tabs'],'rows',stats['navRows'],'no horizontal overflow',path.name)
     # The gear selection must write its exact setting, and Proof mode must clear it.
     # 10.0: нижняя панель разделов фиксирована и накрывает низ прокрутки — кнопку сначала выводим в середину экрана
     # (с ростом меню «ближний край» прокрутки Playwright попадал под панель «Сервис», клик ждал 30 с)
     # 10.0: сетка «◫ Быстрые режимы» в шапке занимает ≈430 px из 594 — настройки раздела видны только при свёрнутой сетке;
     # кнопка сворачивания теперь работает (hidden не перебивается display:grid), проверяем её и сворачиваем перед кликами
+    # 20.12 (ревизия 17.10): список задач перенесён в «Обзор» и по умолчанию свёрнут — настройкам рыбалки он не мешает.
+    # Строка задач открывает «Обзор» со списком, повторное нажатие сворачивает; затем возвращаемся в «Рыбалку».
+    assert page.evaluate("getComputedStyle(document.getElementById('quickModeGrid')).display")=='none'
+    page.locator('#modeToggle').click(); page.wait_for_timeout(120)
     assert page.evaluate("getComputedStyle(document.getElementById('quickModeGrid')).display")!='none'
     page.locator('#modeToggle').click(); page.wait_for_timeout(120)
     assert page.evaluate("getComputedStyle(document.getElementById('quickModeGrid')).display")=='none'
+    page.locator('nav button[data-tab="fish"]').click(); page.wait_for_timeout(120)
     def click_mid(sel):
       page.locator(sel).evaluate("e=>e.scrollIntoView({block:'center'})"); page.wait_for_timeout(60); page.locator(sel).click()
     click_mid('#goalItems')

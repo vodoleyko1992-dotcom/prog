@@ -100,7 +100,8 @@ const MAP = '<html><body><span id="l2-hud-legacy-lvl">65</span></body></html>';
     await page.evaluate(() => document.querySelector('nav button[data-tab="rb"]').click());
     await page.waitForTimeout(1000);
     const t = await page.$eval('#rbTimerTable', e => e.innerText), sum = await page.$eval('#rbTimerSum', e => e.innerText);
-    const on = await page.$eval('#rbTimers', e => e.checked), resp = await page.$eval('#rbRespH', e => e.value), every = await page.$eval('#rbTimerMin', e => e.value);
+    // 20.12 (ревизия 17.10): скрытые поля rbTimers/rbTimerMin убраны — их никто не читал; таймеры работают всегда.
+    const on = !(await page.$('#rbTimers')) && !(await page.$('#rbTimerMin')), resp = await page.$eval('#rbRespH', e => e.value), every = '10';
     const vis = await page.$eval('#rbTimerTable', e => e.getBoundingClientRect().height > 0);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     const rows = t.split('\n').filter(Boolean), at = re => rows.findIndex(r => re.test(r));

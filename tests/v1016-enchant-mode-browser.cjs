@@ -28,7 +28,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
    return route.fallback();
   });
   const ui=h.popup.locator('#enchantPanel'),start=()=>ui.locator('[data-command="start"]');
-  const nav=async tab=>{const button=h.popup.locator('nav [data-tab="'+tab+'"]');if(!await button.isVisible())await h.popup.locator('#navToggle').click();await button.click();};
+  const nav=async tab=>h.openTab(tab);   // 20.12 (ревизия 17.10): шесть разделов на виду, старые имена — через showTab/TAB_GROUP
   const clickMode=async id=>h.click(id);
   const patch=async(cfgPatch={},rtPatch={})=>h.sw.evaluate(async({cfgPatch,rtPatch})=>{
    const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);
@@ -49,19 +49,19 @@ const pass=name=>{passed++;console.log('PASS '+name);};
    {enchant:null,enchantArchive:archive,enchantScan:null,rbGo:null,zoneGo:null,magister:null,petBufferTrip:null,manualKickAt:0});
   await h.popup.setViewportSize({width:760,height:1200});
   await h.popup.goto('chrome-extension://'+h.id+'/popup.html?dock=1');await until(()=>ui.locator('[data-command="refresh"]').count());
-  assert.equal(await h.popup.locator('nav [data-tab="enchant"]').count(),1);
-  assert.equal(await h.popup.locator('section#tab-enchant').count(),1);
-  assert.equal(await h.popup.locator('#tab-panel #enchantPanel, #tab-panel #tab-enchant').count(),0);
+  // 20.12: автозаточка — свой подраздел «Боя и класса» с меткой #tab-enchant (старая ссылка enchant ведёт туда).
+  assert.equal(await h.popup.locator('#tab-panel > #tab-enchant.subsec-title, #tab-panel #tab-enchant').count(),1);
+  assert.equal(await h.popup.locator('#enchantPanel').count(),1);
   assert.equal(await h.popup.locator('[data-auto-task="enchant"]').count(),1);
-  assert.equal(await h.popup.locator('#tab-enchant #enchantModeToggle').count(),1);
-  await nav('enchant');assert.equal(await h.popup.locator('section#tab-enchant').evaluate(e=>e.classList.contains('act')),true);
-  pass('отдельный раздел и оба входа в режим; заточка отсутствует внутри «Боя»');
+  assert.equal(await h.popup.locator('#tab-panel #enchantModeToggle').count(),1);
+  await nav('enchant');assert.equal(await h.popup.locator('#tab-panel').evaluate(e=>e.classList.contains('act')),true);assert.equal(await h.popup.locator('#tab-enchant').isVisible(),true);
+  pass('отдельный подраздел и оба входа в режим');
 
   for(const width of [760,375]){
    await h.popup.setViewportSize({width,height:1200});await nav('panel');
    await h.popup.locator('#uiSearch').fill('заточка');await until(()=>h.popup.locator('#uiResults [data-i]').count());
    const result=h.popup.locator('#uiResults [data-i]').filter({hasText:'Заточка'}).first();await result.click();
-   assert.equal(await h.popup.locator('#tab-enchant').evaluate(e=>e.classList.contains('act')),true);
+   assert.equal(await h.popup.locator('#tab-panel').evaluate(e=>e.classList.contains('act')),true);
    const bounds=await h.popup.evaluate(()=>({viewport:innerWidth,doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,panel:document.querySelector('#enchantPanel').getBoundingClientRect().right}));
    assert.ok(bounds.doc<=bounds.viewport+1&&bounds.body<=bounds.viewport+1&&bounds.panel<=bounds.viewport+1,'horizontal overflow at '+width+': '+JSON.stringify(bounds));
    pass('поиск открывает самостоятельную заточку; без горизонтального переполнения '+width+' px');
@@ -79,7 +79,7 @@ const pass=name=>{passed++;console.log('PASS '+name);};
   await select('enchantToggle');let state=await h.get(['on','cfg','rt']);
   assert.equal(state.on,true);assert.ok(state.cfg.autoTasks.includes('enchant'));for(const key of ['epic','raid','fish','cat','auto','farm','quests'])assert.ok(!state.cfg.autoTasks.includes(key),key);
   assert.deepEqual(state.cfg.enchant,saved);assert.equal(state.rt.enchant,null);assert.deepEqual(state.rt.enchantArchive,archive);
-  assert.equal(await h.popup.locator('#tab-enchant').evaluate(e=>e.classList.contains('act')),true);
+  assert.equal(await h.popup.locator('#tab-panel').evaluate(e=>e.classList.contains('act')),true);
   await until(()=>h.popup.locator('[data-auto-task=enchant]').isChecked());
   assert.match(await h.popup.locator('#modeSummary').innerText(),/заточ/i);
   pass('быстрый режим запускает настоящий цикл enchant, выключает остальные режимы и не начинает серию');

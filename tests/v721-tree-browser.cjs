@@ -23,7 +23,8 @@ mock = mock.replace("rt:{char:'West',lvl:56,fishProof:850,fish:{casts:10,caught:
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: fs.readFileSync(path.join(root, c), 'utf8') });
     for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
     await page.waitForTimeout(900);
-    await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="hunt"]').click(); await page.waitForTimeout(400);
+    await page.locator('#moduleNav button[data-tab="hunt"]').click();   // 20.12 (ревизия 17.10): навигация всегда на виду
+    await page.waitForTimeout(400);
     await page.evaluate(() => { document.querySelector('#farmTree').scrollIntoView(); });
     const groups = await page.$$eval('#farmTree > details.fgrp > summary', s => s.map(x => x.textContent.trim()));
     await page.locator('#farmTree > details.fgrp >> nth=0 >> summary').click(); await page.waitForTimeout(900);   // 8.0.5: «Ресурсы» — первыми

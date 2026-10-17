@@ -13,33 +13,31 @@
   }
   *{box-sizing:border-box}
   html{scrollbar-color:var(--line2) transparent;scrollbar-width:thin;-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none}
-  body{font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;width:360px;margin:0;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased}
+
   ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
-  html.docked body{width:auto}
+
   html.docked section{min-height:0}
-  html.docked header{padding-left:36px}
+
   html.docked .zbox{overflow-x:auto}
   html.docked #lootBox td:last-child{white-space:normal;overflow-wrap:anywhere}
 
   /* ---- шапка ---- */
-  header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#1d1712,#16120e);padding:10px 10px 8px;border-bottom:1px solid var(--line);max-height:48vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+
   #heroLine{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:20px}
   #heroLine .hero{font-weight:700;color:var(--gold2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #heroLine .ver{font-size:10.5px;color:var(--mute);border:1px solid var(--line);border-radius:20px;padding:0 7px}
+
   #heroLine .state{margin-left:auto;font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px;white-space:nowrap}
   #heroLine .state.on{background:var(--okbg);color:var(--ok);border:1px solid rgba(92,194,122,.45)}
   #heroLine .state.off{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid var(--line)}
   #heroLine .state.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px;animation:blink 1.4s ease-in-out infinite}
   @keyframes blink{50%{opacity:.25}}
-  .modes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
-  .modes button{text-align:left;padding:7px 9px;font-size:12px;border-radius:var(--r2)}
-  #status{margin-top:8px;max-height:120px;overflow:auto;background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:7px 9px}
+
   #status .st{font-weight:600;font-size:12.5px;color:var(--txt);white-space:pre-line}
   #status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
   #status .chip{font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
   #status .chip b{color:var(--txt);font-weight:600}
   #status .health{font-size:11px;color:var(--warn);margin-top:5px;white-space:pre-line}
-  #questBox{font-size:11px;color:var(--dim);margin-top:8px;max-height:210px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+
   #questBox:empty{display:none}
   #questBox .qt{color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.02em}
   #questBox .qchips{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
@@ -80,14 +78,9 @@
   #campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#rbOrderUp.on,#rbOrderDown.on{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#20180f;font-weight:700;border-color:var(--gold2);box-shadow:0 0 0 1px rgba(240,207,134,.25),0 2px 8px rgba(212,168,86,.25)}
 
   /* ---- вкладки ---- */
-  nav{display:flex;gap:2px;padding:6px 6px 0;background:var(--bg);position:sticky;top:0;z-index:4}
-  nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;border-radius:var(--r2) var(--r2) 0 0;border:1px solid transparent;border-bottom:none;padding:5px 1px 5px;font-size:10.5px;color:var(--mute);background:transparent;line-height:1.15}
-  nav button .ic{font-size:15px;line-height:1.1}
-  nav button:hover{color:var(--txt);background:rgba(255,255,255,.03);border-color:transparent}
-  nav button.act{background:var(--panel);color:var(--gold2);border-color:var(--line);box-shadow:inset 0 2px 0 var(--gold)}
-  #uiSearchWrap{position:relative;padding:8px 10px 0;background:var(--panel)}
+
   #uiSearch{width:100%;padding:6px 10px 6px 28px;border-radius:20px;background:var(--inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a39280' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 9px 50%}
-  #uiResults{position:absolute;left:10px;right:10px;top:40px;z-index:6;background:var(--card2);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--sh);max-height:260px;overflow:auto;display:none}
+
   #uiResults.show{display:block}
   #uiResults div{padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--line);font-size:12px}
   #uiResults div:last-child{border-bottom:none}
@@ -190,94 +183,114 @@
 <link rel="stylesheet" href="pvp-ui.css">
 </head><body>
 <header>
-  <div class="brandbar"><div class="brandmark" aria-hidden="true">L<span>2</span></div><div class="brandcopy"><strong>L2WAP <span>CONTROL</span></strong><small>Модульная система управления</small></div><span class="edition">CONTROL CENTER / v7</span></div>
-  <div id="heroLine"></div>
+  <div class="toprow"><div id="heroLine"></div><div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div></div>
   <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
   <div id="controlWarn" class="wake-warn" role="alert" hidden></div>
   <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
   <div id="updateWarn" class="wake-warn" role="alert" hidden><span id="updateWarnText"></span> <button id="reloadBot" type="button">Перезагрузить бот</button></div>
-  <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="true" title="Показать или скрыть список задач">
-    <span class="mode-toggle-title">◫ Задачи бота</span><span id="modeSummary">Выбрать задачи</span><span class="mode-toggle-arrow" aria-hidden="true">⌄</span>
+  <button id="modeToggle" type="button" aria-controls="quickModeGrid" aria-expanded="false" title="Список задач — в разделе «Обзор»: показать или скрыть">
+    <span class="mode-toggle-title">◫ Задачи бота:</span><span id="modeSummary">Выбрать задачи</span><span class="mode-toggle-edit" aria-hidden="true">Изменить</span>
   </button>
-  <div id="quickModeGrid" class="modes">
-    <fieldset id="autoTaskSelection" style="grid-column:1/-1"><legend>Разрешённые задачи авторежима</legend>
-      <label><input type="checkbox" data-auto-task="tvt">TvT</label>
-      <label><input type="checkbox" data-auto-task="enchant">Автозаточка</label>
-      <label><input type="checkbox" data-auto-task="epic">Эпики</label>
-      <label><input type="checkbox" data-auto-task="raid">Тур по РБ</label>
-      <label><input type="checkbox" data-auto-task="quests">Квесты и кампания</label>
-      <label><input type="checkbox" data-auto-task="fish">Рыбалка</label>
-      <label><input type="checkbox" data-auto-task="cat">Катакомбы</label>
-      <label><input type="checkbox" data-auto-task="auto">Автофарм</label>
-      <label><input type="checkbox" data-auto-task="farm" title="Стоять там, где оставили: ★ цели квестов и мобы этой локации (чемпионы — если включено «Искать чемпионов» в «Охоте»)">Фарм на месте</label>
-      <label><input type="checkbox" data-auto-task="mammon">Маммон</label>
-      <label><input type="checkbox" data-auto-task="dailies">Дейлики</label>
-      <label><input type="checkbox" data-auto-task="clan">Клан</label>
-      <label><input type="checkbox" data-auto-task="pvp">Враги</label>
-      <label><input type="checkbox" data-auto-task="petbuff">Автобаф суммона</label>
-      <label><input type="checkbox" data-auto-task="resources" title="Выбранная цель ресурсов: на её точке бьёт мобов-источники. Настройка цели — в разделе фарма.">Ресурсы и рецепты</label>
-      <div id="autoTaskStatus" class="hint" aria-live="polite"></div>
-      <p class="hint">Можно выбрать одну или несколько задач. Изменения сохраняются без запуска. TvT имеет высший приоритет; затем заточка → эпики → РБ → квесты → рыбалка → катакомбы → автофарм → фарм. Если доступных РБ нет, выбранная рыбалка работает до следующей проверки тура. Текущая рыба доводится до конца. Рыбалка и фарм не чередуются; остальные задачи ждут завершения или снятия предыдущей. Пустой список — ожидание. Детальные настройки и лимиты расходов сохраняются.</p>
-    </fieldset>
-  </div>
-  <div id="status"></div>
-  <div id="questBox"></div>
+  <div id="activityPanel" class="activity-panel" aria-label="Текущее состояние"><div class="activity-head"><span id="activityState" class="activity-state">Загрузка</span><strong id="activityText">Читаю состояние бота…</strong><button id="activityDetails" type="button">Обзор ↗</button></div><div id="activityHint"></div><div id="paymentPendingBox" class="payment-pending" hidden><span id="paymentPendingText"></span><button id="paymentDismiss" type="button" title="Только если вы уверены, что оплата не прошла (адена/монеты не списаны): бот снимет ожидание и сможет заплатить снова">Считать оплату не прошедшей</button></div><div id="status"></div></div>
 </header>
-<div class="app-shell nav-collapsed">
-<button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
-  <span class="nav-toggle-icon" aria-hidden="true">▦</span>
-  <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 12 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
-</button>
+<div class="app-shell">
+<div class="navbar">
 <nav id="moduleNav" aria-label="Разделы управления">
-  <div class="nav-heading">НАВИГАЦИЯ</div>
-  <button data-tab="overview" class="act" title="Состояние и обзор подсистем"><span class="ic">◈</span>Обзор</button>
-  <div class="nav-group">РЕЖИМЫ</div>
-  <button data-tab="hunt" title="Фарм на месте, автофарм, катакомбы, TvT, ресурсы"><span class="ic">◎</span>Охота</button>
-  <button data-tab="rb" title="Рейд-боссы, тур по РБ, эпик-боссы"><span class="ic">♛</span>РБ и эпики</button>
-  <button data-tab="limits" title="Дневные лимиты и разовые цели"><span class="ic">⏱</span>Лимиты</button>
-  <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
-  <button data-tab="enchant" title="Режим заточки оружия и брони, очередь, лимиты и результаты"><span class="ic">✨</span>Автозаточка</button>
-  <div class="nav-group">ОБЩЕЕ</div>
-  <button data-tab="panel" title="Анализ боя, общие правила, подразделы классов (Warlock и кот, маг, спойлер, воин), герой"><span class="ic">⚔</span>Бой</button>
-  <button data-tab="pvp" title="Явные цели, обычный лист врагов, TvT и магазин"><span class="ic">⚔</span>PvP</button>
-  <button data-tab="warlock" title="Призыв, лечение, бафы, полный набор и статистика кота или пантеры"><span class="ic">🐱</span>Warlock и суммоны</button>
-  <button data-tab="supply" title="Банки, закупка, добыча, эффективность"><span class="ic">🧪</span>Снабжение</button>
-  <button data-tab="mammon" title="Заказы торговца Маммона, кузнец, накопление на улучшение"><span class="ic">🏺</span>Маммон</button>
-  <button data-tab="svc" title="Журнал, диагностика, автовход, память"><span class="ic">⚙</span>Сервис</button>
+  <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, дневные лимиты, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
+  <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
+  <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
+  <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, автозаточка, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
+  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, закупка расходников, Маммон, добыча (Alt+5)"><span class="ic">◉</span><span class="lb">Рыбалка и снабжение</span></button>
+  <button data-tab="svc" data-short="Сервис" title="TvT и магазин TvT, PvP и лист врагов, автовход, настройки, диагностика (Alt+6)"><span class="ic">⚙</span><span class="lb">TvT/PvP и сервис</span></button>
 </nav>
+</div>
 <div class="workarea">
-<div class="worktop"><div class="worktitle"><strong id="currentSectionTitle">Обзор</strong><small id="currentSectionDesc">Состояние систем и быстрые переходы</small></div><span class="work-v" id="workVer"></span></div>
-<div id="activityPanel" class="activity-panel" aria-label="Текущее состояние"><div class="activity-head"><span id="activityState" class="activity-state">Загрузка</span><button id="activityDetails" type="button">Обзор ↗</button></div><strong id="activityText">Читаю состояние бота…</strong><div id="activityHint"></div><div id="paymentPendingBox" class="payment-pending" hidden><span id="paymentPendingText"></span><button id="paymentDismiss" type="button" title="Только если вы уверены, что оплата не прошла (адена/монеты не списаны): бот снимет ожидание и сможет заплатить снова">Считать оплату не прошедшей</button></div></div>
 <div id="settingsFeedback" class="settings-feedback" role="status" aria-live="polite" hidden><span id="settingsFeedbackText"></span><button id="settingsRetry" type="button" hidden>Повторить сохранение</button><button id="settingsDiscard" type="button">Отменить несохранённое</button></div>
-<div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div>
 
 <section id="tab-overview" class="act">
   <!-- 8.0 (аудит меню): «Обзор» — живая сводка вместо статичного текста и плиток-дублей шапки -->
-  <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><button id="taskBoardEdit" type="button">Изменить</button></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div></div>
+  <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><button id="taskBoardEdit" type="button">Изменить</button></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div>
+    <div id="quickModeGrid" hidden>
+    <fieldset id="autoTaskSelection"><legend>Разрешённые задачи</legend>
+      <div class="task-group-title">Основная работа — одна за раз, по приоритету</div>
+        <label><input type="checkbox" data-auto-task="enchant">Автозаточка</label>
+        <label><input type="checkbox" data-auto-task="epic">Эпики</label>
+        <label><input type="checkbox" data-auto-task="raid">Тур по РБ</label>
+        <label><input type="checkbox" data-auto-task="quests">Квесты и кампания</label>
+        <label><input type="checkbox" data-auto-task="fish">Рыбалка</label>
+        <label><input type="checkbox" data-auto-task="cat">Катакомбы</label>
+        <label><input type="checkbox" data-auto-task="auto">Автофарм</label>
+        <label><input type="checkbox" data-auto-task="farm" title="Стоять там, где оставили: ★ цели квестов и мобы этой локации (чемпионы — если включено «Искать чемпионов» в «Охоте»)">Фарм на месте</label>
+      <div class="task-group-title">Фоновые и по расписанию</div>
+        <label><input type="checkbox" data-auto-task="tvt">TvT</label>
+        <label><input type="checkbox" data-auto-task="mammon">Маммон</label>
+        <label><input type="checkbox" data-auto-task="dailies">Дейлики</label>
+        <label><input type="checkbox" data-auto-task="clan">Клан</label>
+        <label><input type="checkbox" data-auto-task="pvp">Враги</label>
+        <label><input type="checkbox" data-auto-task="petbuff">Автобаф суммона</label>
+        <label><input type="checkbox" data-auto-task="resources" title="Выбранная цель ресурсов: на её точке бьёт мобов-источники. Настройка цели — в разделе фарма.">Ресурсы и рецепты</label>
+        <div id="autoTaskStatus" class="hint" aria-live="polite"></div>
+        <p class="hint">Можно выбрать одну или несколько задач. Изменения сохраняются без запуска. TvT имеет высший приоритет; затем заточка → эпики → РБ → квесты → рыбалка → катакомбы → автофарм → фарм. Если доступных РБ нет, выбранная рыбалка работает до следующей проверки тура. Текущая рыба доводится до конца. Рыбалка и фарм не чередуются; остальные задачи ждут завершения или снятия предыдущей. Пустой список — ожидание. Детальные настройки и лимиты расходов сохраняются.</p>
+    </fieldset>
+    </div>
+  </div>
   <div id="dash" class="dash no-card" aria-label="Сводка текущей сессии">
     <div class="dash-head"><strong id="dashMode">—</strong><span id="dashState" class="dash-state">—</span></div>
     <div id="dashSub" class="dash-sub"></div>
     <div id="dashKpi" class="dash-kpi"></div>
     <div id="dashLines" class="dash-lines"></div>
   </div>
-
   <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
   <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
-
-  <h4>Быстрые переходы</h4>
-  <div class="overview-modules">
-    <button type="button" class="module-tile" data-goto="hunt"><span class="tile-icon">◎</span><span><strong>Охота</strong><small>Фарм на месте, приоритеты, TvT, локации и автофарм</small></span><em id="modeHuntState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="rb"><span class="tile-icon">♛</span><span><strong>Рейд-боссы</strong><small>Тур по РБ, бой по одному, РБ-сессия</small></span><em id="modeRbState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="epic"><span class="tile-icon">✦</span><span><strong>Эпические боссы</strong><small>Выбор, оценка, попытки и лимиты</small></span><em id="modeEpicState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="dungeon"><span class="tile-icon">▥</span><span><strong>Катакомбы</strong><small>Выбор подземелья</small></span><em id="modeCatState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="fish"><span class="tile-icon">◉</span><span><strong>Рыбалка</strong><small>Заброс, улов, разделка, Proof</small></span><em id="modeFishState">Открыть ↗</em></button>
-    <button type="button" class="module-tile" data-goto="panel"><span class="tile-icon">⚔</span><span><strong>Бой</strong><small>Анализ боя, общие правила, Warlock и кот, маг, спойлер, воин</small></span><em>Открыть ↗</em></button>
+  <div id="questBox" class="no-card"></div>
+  <div class="subsec-title" id="tab-limits">⏱ Лимиты</div>
+  <h4>⏱ Дневные лимиты</h4>
+  <div class="hint">0 — без ограничения. Достигнут лимит — задача ждёт следующего дня, бот продолжает остальные. Выбор задач сохраняется. Сброс суток в 00:00 по Владивостоку (UTC+10), затем выбранная задача доступна снова. Счёт начинается после включения лимита; прошлую добычу бот не восстанавливает.</div>
+  <div class="hint">Можно задать точное число или диапазон «от … до …». По диапазону бот выбирает целое число один раз на день или разовую серию и показывает его ниже. Пауза и перезагрузка число не меняют. Ввод точного числа отключает диапазон; «Точно» оставляет выбранное число фиксированным.</div>
+  <div id="dailyLimitsDay" class="hint"></div>
+  <label>🐟 Рыбы в день <input id="dailyFishLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="dailyFishLimit">
+    <div class="row"><input id="dailyFishLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyFishLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyFishLimitRangeSet" type="button">Диапазон</button><button id="dailyFishLimitRangeClear" type="button">Точно</button></div>
+    <div id="dailyFishLimitRangeInfo" class="hint"></div>
   </div>
-  <div class="hint">В «◫ Задачах бота» сверху выберите всё, что разрешаете выполнять. Изменение списка сохраняет настройки и не запускает бота. TvT прерывает выбранную задачу на время события. ↺ начинает новую сессию статистики.</div>
+  <div class="row"><span id="fishDailyProgress" class="hint"></span><button id="fishDailyReset" type="button">Сбросить за сегодня</button></div>
+  <label title="Один общий счётчик на автофарм и катакомбы: убитые в обеих охотах складываются, по достижении обе ждут 00:00">⚔ Мобов в день: автофарм + катакомбы вместе <input id="dailyKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="dailyKillLimit">
+    <div class="row"><input id="dailyKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyKillLimitRangeSet" type="button">Диапазон</button><button id="dailyKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="dailyKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="mobsDailyProgress" class="hint"></span><button id="mobsDailyReset" type="button">Сбросить за сегодня</button></div>
+  <div class="hint">Рыба считается по успешным поимкам. Мобы автофарма и катакомб идут в один общий счётчик по серверному числу убийств, включая массовые атаки; заводская настройка — диапазон 8434–9119 на мобов и столько же на рыбу (новое число каждые сутки), 0 снимает ограничение. Текущий бой завершается целиком, поэтому итог может превысить лимит. Пауза и перезагрузка не сбрасывают прогресс. Сброс статистики рыбалки тоже его сохраняет.</div>
+  <div class="adv-start" data-adv="overview">⚙ Дополнительно: разовые цели</div>
+  <h4>Разовая цель автофарма</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="autoKillLimit">
+    <div class="row"><input id="autoKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="autoKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="autoKillLimitRangeSet" type="button">Диапазон</button><button id="autoKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="autoKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
+  <h4>Разовая цель катакомб</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="catKillLimit">
+    <div class="row"><input id="catKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="catKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="catKillLimitRangeSet" type="button">Диапазон</button><button id="catKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="catKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
+  <div class="hint">Эти цели считаются с момента настройки. После выполнения снимается только соответствующая задача. Новый лимит или сброс начинают новую серию; автоматически на следующий день она не включается.</div>
+  <h4>🎯 Цель рыбалки</h4>
+  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select></div>
+  <div class="row"><input id="fishTgtN" type="number" min="1" placeholder="От / точно" style="width:80px;flex:1;min-width:0"><input id="fishTgtMax" class="limitRangeInput" type="number" min="0" step="1" placeholder="До (необяз.)" aria-label="До: цель рыбалки" style="width:80px;flex:1;min-width:0"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
+  <div class="hint">Для случайной цели укажите «от» и «до». Пустое «до» — точное число. Новая цель выбирается только по кнопке «Поставить»; рыба и Proof поддерживают диапазон.</div>
+  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
+  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
+  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
+  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
+  <div class="limit-range" data-limit-key="fishMaxCasts">
+    <div class="row"><input id="fishMaxCastsFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="fishMaxCastsTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="fishMaxCastsRangeSet" type="button">Диапазон</button><button id="fishMaxCastsRangeClear" type="button">Точно</button></div>
+    <div id="fishMaxCastsRangeInfo" class="hint"></div>
+  </div>
 </section>
 
-<!-- 🎯 ЦЕЛИ -->
 <section id="tab-hunt">
   <div hidden><div id="campBox" class="camp"></div><input id="campaignEvery" type="number" min="5"><button id="campNow"></button></div>
   <h4>Режим охоты</h4>
@@ -285,26 +298,112 @@
   <label>★ Искать квестовых по локации <input id="searchQuest" type="checkbox"></label>
   <label title="10.0.10: у героя до 40 ур. с непройденным сюжетным квестом «Путь новичка» бот сам ведёт кампанию: берёт квест, летит к точке, бьёт ★-цели, жмёт «Поговорить»/«Завершить». Снять — квесты ведёте сами (как на Warlock)">★ Сюжетные квесты новичка — вести самому (герой до 40 ур.) <input id="campAuto" type="checkbox"></label>
   <div class="hint">Квесты ведёте вы (сами летите и сдаёте). Бот там, где стоит, первыми бьёт мобов квеста: ★ на карте и цели квеста профессии.</div>
+  <label>⏹ Стоп, когда квест выполнен <input id="questStop" type="checkbox"></label>
+  <h4>⚔ Чемпионы</h4>
   <label>⚔ Искать чемпионов по локации <input id="searchChamp" type="checkbox"></label>
-  <label>Искать чемпионов раз в N боёв <input id="champEvery" type="number" min="5" style="width:60px"></label>
-  <label>🚪 Уходить от чемпиона, если не пробиваю или бой невыгоден <input id="champLeave" type="checkbox"></label>
-  <div class="hint">Чемпионов бот видит только на карте — пока галочка стоит, проверяет карту раз в N боёв (20; и при «0» ниже). До боя прикидывает, успеет ли убить чемпиона за его цену: опыт и FA с него против того же времени обычного фарма (красный ≈2 мин боя, оранжевый ≈1 мин, синий ≈40 с). Своего замера урона нет — идёт на пробу. В бою уходит, если не пробивает (за 8 с меньше 3 %), если бой выходит заметно дольше цены или если HP < 30 %; такого чемпиона (цвет и уровень) не трогает, пока не вырастет уровень или урон. При «0» ниже карту по плану ради ★ целей не проверяет. Исключение: на точке «Фарма ресурса» / «Охоты на рецепт» плановая проверка карты идёт раз в 50 побед независимо от этих двух интервалов; поиск ★ целей её не ускоряет, удачная цепочка не откладывает. Завершение задачи, лечение и ограничения безопасности могут прервать цепочку раньше.</div>
-  <label>💎 FA с чемпионов: красных и оранжевых — первыми <input id="champFa" type="checkbox"></label>
-  <div class="hint"><b>Каких чемпионов бить</b> (10.0.10): красные снимают баффы чаще всех (Cancel 7 % за удар) — по умолчанию не бью их. Выключенный цвет бот обходит и на карте, и в цепочке «Охотиться дальше». Цветовой запрет действует также для квестов и кампании.</div>
+  <div class="champ-row"><span class="champ-row-t">Бить:</span>
   <label>Синих <input id="champBlue" type="checkbox"></label>
   <label>Оранжевых <input id="champOrange" type="checkbox"></label>
   <label>Красных <input id="champRed" type="checkbox"></label>
+  <label title="Обновление игры 13.10: каждый удачный удар чемпиона снимает ваши баффы — синий 3 % (раз в 30 с), оранжевый 5 %, красный 7 %, до 3 баффов за раз, без задержки. С 73 ур. у оранжевых/красных ещё HP ×3 и атака/защита ×4. Платные — набор за FA (РБ-сессия, тур РБ): в режиме окупаемости коротких синих (до 30 с) бот пробует по времени боя и выживаемости, оранжевых оценивает с ценой Cancel; режим платных баффов защищает их строже; бесплатный городской набор берёт заново сам">Чемпионы снимают баффы (Cancel) <select id="champCancel"><option value="efficiency">Окупаемость: быстрых синих пробовать, оранжевых — по прибыли</option><option value="paid">Обход ВКЛ: бить, если чемпион стоит потери платных баффов за FA</option><option value="never">Обход ВКЛ (жёстко): оранжевых и красных не бить</option><option value="always">Обход ВЫКЛ: бить всегда, баффы не считать</option></select></label>
+  </div>
+  <div class="hint"><b>Каких чемпионов бить</b> (10.0.10): красные снимают баффы чаще всех (Cancel 7 % за удар) — по умолчанию не бью их. Выключенный цвет бот обходит и на карте, и в цепочке «Охотиться дальше». Цветовой запрет действует также для квестов и кампании.</div>
+  <div class="hint">Окупаемость оранжевых: время боя + риск потери FA-баффов + переход сравниваются с наградой в условных секундах обычного фарма. Резерв 20 %, без своего замера ДПС — 40 %. Это оценка, не точный учёт расходников. Нет данных — пропуск. Красные разрешаются только отдельной галочкой.</div>
+  <label>💎 FA с чемпионов: красных и оранжевых — первыми <input id="champFa" type="checkbox"></label>
+  <label>🚪 Уходить от чемпиона, если не пробиваю или бой невыгоден <input id="champLeave" type="checkbox"></label>
+  <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
+  <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
+  <h4>🗺 Локации для кача</h4>
+  <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="1" max="5" style="width:52px"></label>
+  <div class="hint">Не больше 5: с мобов ниже героя больше чем на 5 ур. Fast Aden не падает, таких бот не бьёт (кроме ★ квеста и цели фарма).</div>
+  <label>… до героя + (99 — без ограничения) <input id="lvlAbove" type="number" min="0" max="99" style="width:52px"></label>
+  <div class="hint">По умолчанию +5: мобов выше героя больше чем на N ур. бот не выбирает, а подсунутого цепочкой «Охотиться дальше» — не бьёт и идёт на карту (кроме ★ квеста, источника ресурса и РБ).</div>
+  <div id="lvlWin" class="hint"></div>
+  <div id="zoneBox" class="zbox"><div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.</div></div>
+  <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
+  <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
+  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
+  <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
+
+  <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
+  <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
+  <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
+  <label>Мобы-источники: от −N до +M ур. от героя <span><input id="farmLvlBelow" type="number" min="0" max="40"> <input id="farmLvlAbove" type="number" min="0" max="40"></span></label>
+  <div class="hint">Бот старается фармить там, где источники в этом диапазоне (по умолчанию −3…+5; в списке ниже они отмечены 🎯 и стоят сверху). Таких нет — берёт ближайшие по уровню. Работает и для рецептов.</div>
+  <div id="farmBox" class="hint" style="white-space:pre-line"></div>
+  <input id="farmSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе ресурсов (как на форуме)" autocomplete="off">
+  <div id="farmTree" class="ftree" data-kind="farm"></div>
+  <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
+  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми.</div>
+
+  <div class="subsec-title"><span id="tab-dungeon" class="tab-anchor"></span>🏛 Катакомбы</div>
+  <h4>🏛 Фарм катакомб и некрополей</h4>
+  <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
+  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
+  <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
+  <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
+  <div id="catBox" class="hint" style="white-space:pre-line"></div>
+  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов». Список мобов бот берёт целиком из ответа игры (все страницы списка), первыми бьёт ★-цели квеста и чемпионов. После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). Для боссов используйте «👑 Тур по РБ». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
+
+  <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включение производится только переключателем «Фармить в подземелье».</div>
+  <div class="subsec-title"><span id="tab-dailies" class="tab-anchor"></span>📅 Дейлики и клановые задания</div>
+  <label title="Ежедневные задания игра засчитывает сама. Бот дотягивает то, чего фарм не даёт: «50 рыб» (1 Coin of Luck + 300 000 аден + 50 000 EXP) — идёт на рыбалку и возвращается; «Убей 1 РБ» и «Участие в РБ» — один тур по РБ и назад (раз в день, с 40 ур.)">📅 Дотягивать дейлики: 50 рыб и 1 РБ в день <input id="dailyAuto" type="checkbox"></label>
+  <label title="Клановые задания (/clan-tasks): бот сам берёт доступное (500 монстров — 1 Coin of Luck; SP; адена; РБ, если РБ разрешены), помогает соклановцу, сдаёт готовое. Штурм стены не берёт. Свои запросы с токеном страницы, без переходов">🏰 Клановые задания: взять, помочь, сдать <input id="clanTasks" type="checkbox"></label>
+  <div id="dqBox" class="hint"></div>
+  <div class="hint">«10 сообщений в чате» бот не делает — писать в чат за игрока не будем. Прогресс дейликов и клановых заданий бот читает раз в 10 минут и при открытии их страниц.</div>
+
+  <div class="adv-start" data-adv="hunt">⚙ Дополнительно</div>
+  <h4>⚔ Чемпионы — тонкая настройка</h4>
+  <label>Искать чемпионов раз в N боёв <input id="champEvery" type="number" min="5" style="width:60px"></label>
+  <div class="hint">Чемпионов бот видит только на карте — пока галочка стоит, проверяет карту раз в N боёв (20; и при «0» ниже). До боя прикидывает, успеет ли убить чемпиона за его цену: опыт и FA с него против того же времени обычного фарма (красный ≈2 мин боя, оранжевый ≈1 мин, синий ≈40 с). Своего замера урона нет — идёт на пробу. В бою уходит, если не пробивает (за 8 с меньше 3 %), если бой выходит заметно дольше цены или если HP < 30 %; такого чемпиона (цвет и уровень) не трогает, пока не вырастет уровень или урон. При «0» ниже карту по плану ради ★ целей не проверяет. Исключение: на точке «Фарма ресурса» / «Охоты на рецепт» плановая проверка карты идёт раз в 50 побед независимо от этих двух интервалов; поиск ★ целей её не ускоряет, удачная цепочка не откладывает. Завершение задачи, лечение и ограничения безопасности могут прервать цепочку раньше.</div>
   <label title="На низких уровнях чемпионы (HP ×14…×42) почти не пробиваются — бот уходит и тратит время. 0 = бить с любого уровня">Чемпионов не бить, пока герой ниже N ур. <input id="champMinLvl" type="number" min="0" max="99" style="width:60px"></label>
   <label>🛡 Избегать мобов, которые снимают баффы (бот запоминает их по факту снятия) <input id="noCancelMobs" type="checkbox"></label>
   <input id="cancelMobs" class="wide" placeholder="Свой список мобов, снимающих баффы: имена через запятую (к выученным)">
-  <label title="Обновление игры 13.10: каждый удачный удар чемпиона снимает ваши баффы — синий 3 % (раз в 30 с), оранжевый 5 %, красный 7 %, до 3 баффов за раз, без задержки. С 73 ур. у оранжевых/красных ещё HP ×3 и атака/защита ×4. Платные — набор за FA (РБ-сессия, тур РБ): в режиме окупаемости коротких синих (до 30 с) бот пробует по времени боя и выживаемости, оранжевых оценивает с ценой Cancel; режим платных баффов защищает их строже; бесплатный городской набор берёт заново сам">Чемпионы снимают баффы (Cancel) <select id="champCancel"><option value="efficiency">Окупаемость: быстрых синих пробовать, оранжевых — по прибыли</option><option value="paid">Обход ВКЛ: бить, если чемпион стоит потери платных баффов за FA</option><option value="never">Обход ВКЛ (жёстко): оранжевых и красных не бить</option><option value="always">Обход ВЫКЛ: бить всегда, баффы не считать</option></select></label>
-  <div class="hint">Окупаемость оранжевых: время боя + риск потери FA-баффов + переход сравниваются с наградой в условных секундах обычного фарма. Резерв 20 %, без своего замера ДПС — 40 %. Это оценка, не точный учёт расходников. Нет данных — пропуск. Красные разрешаются только отдельной галочкой.</div>
   <div id="cancelList" class="hint"></div>
   <div class="hint">С чемпиона падает 1 Fast Aden: красный 60 %, оранжевый 20 %, синий 10 % (обычный моб — 1 %), и только если он не ниже героя больше чем на 5 ур. Пока галочка стоит, красный и оранжевый чемпион в этом окне на текущей локации идёт сразу после ★ квеста и цели фарма, даже без «Искать чемпионов». Видны они при проверке карты; бот никуда за ними не летит.</div>
   <div id="faDropBox" class="hint">FA с мобов: пока не считал</div>
+  <h4>🗺 Карта и признаки целей</h4>
   <label>Проверять карту каждые N боёв (0 = никогда, только цепочка) <input id="deepEvery" type="number" min="0"></label>
-  <label>⏹ Стоп, когда квест выполнен <input id="questStop" type="checkbox"></label>
+    <label>Выбор рядом, страниц <input id="maxPages" type="number" min="1"></label>
+    <label>Чемпион в цепочке: HP ≥ × обычного <input id="champHpMult" type="number" step="0.1"></label>
+    <input id="champMark" class="wide" placeholder="Признак чемпиона в имени">
+    <input id="bossMark" class="wide" placeholder="Признак босса (не трогать вне режима РБ)">
+  <h4>Приоритет целей (сверху — главнее)</h4>
+  <div id="prioList"></div>
+  <div class="hint">Бот бьёт моба, подходящего под самое верхнее правило; среди равных — ближайшего. Кнопки ниже добавляют правило в конец списка (если его ещё нет).</div>
+  <div class="row add"><button id="addQuest" title="Квестовые мобы: ★ на карте и цели квеста профессии — бьются первыми там, где стоит бот">+ ★ Квест</button><button id="addChamp" title="Любые чемпионы на локации. Работает при галочке «Искать чемпионов»">+ ⚔ Чемп</button><button id="addAll" title="Все обычные мобы в диапазоне уровней «от / до» (поле ниже)">+ Все по ур.</button></div>
+  <div class="row add"><input id="addName" list="mobNames" placeholder="Имя моба" style="flex:1"><datalist id="mobNames"></datalist><button id="addMob" style="flex:0 0 70px">+ Моб</button></div>
+  <div class="hint">★ Квест — мобы со ★ и цели квеста профессии · ⚔ Чемп — любые чемпионы · Все по ур. — любые мобы в диапазоне «от / до» · «+ Моб» — конкретный моб по имени<br>▲▼ — порядок · 🚫 — исключить (не бить) · ⚔ у моба — только его чемпион · ✕ — удалить</div>
+  <textarea id="priority" hidden></textarea>
+  <label>Уровень для «Все по ур.»: от / до <span><input id="lvlMin" type="number"> <input id="lvlMax" type="number"></span></label>
 
+  <h4>🗺 Автофарм — тонкая настройка</h4>
+  <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
+  <label>Зона для кача: мобы не выше героя на <input id="zoneAbove" type="number" min="0" max="15" style="width:52px"></label>
+  <div class="hint">Как выбирается зона (9.0, КПД): у бота есть встроенная база игры — 90 точек телепорта, их мобы, уровни и опыт за каждого. Для своего уровня он заранее считает, сколько EXP в час даст каждая зона (мобов в окне от героя −N до +M, опыт за моба ÷ время на моба; у мобов L2WAP HP и защита зависят только от уровня, а опыт за моба различается в 2–3 раза). Летит в лучшую по этому прогнозу, там меряет настоящий EXP/ч и дальше верит замерам: прогноз подстраивается под них (своё время на моба, как герой справляется с мобами выше себя, какие мобы «не по зубам», смерти). Пробует другую зону только если её прогноз не хуже 90 % лучшей известной; перелетает, если зона лучше текущей на 10 %+. Верх окна для зоны — «не выше героя на N» (по умолчанию 10; у слабых героев уже: до 11 ур. +3, к 20 ур. +5) — сам расширяется, если герой уверенно бьёт мобов выше. Не работает в туре по РБ, эпиках, рыбалке и катакомбах. Телепорт платный (только адена) — резерв адены из «Закупки».</div>
+  <details id="routeWrap"><summary>📈 Маршрут кача 1→80 по базе игры</summary><div id="routeBox" class="zbox"></div></details>
+  <h4>📜 Охота на рецепты (форум)</h4>
+  <label>Рецепт <input id="recipeRes" class="nm" list="recipeResList" placeholder="напр. Recipe: Bonebreaker"><datalist id="recipeResList"></datalist></label>
+  <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
+  <label data-cls="spoil">⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
+  <div id="recipeBox" class="hint" style="white-space:pre-line"></div>
+  <input id="recipeSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе рецептов" autocomplete="off">
+  <div id="recipeTree" class="ftree" data-kind="recipe"></div>
+  <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
+  <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
+  <h4>💱 Камни печати → Ancient Adena</h4>
+  <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
+  <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
+  <div id="sealBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="sealNow">💱 Обменять все камни сейчас</button></div>
+  <div class="hint">Камни печати (зелёный → 5 AA, синий → 3, красный → 10) падают с мобов в катакомбах и некрополях. Бот меняет их у Ancient Trader (Город → Ancient Trader) все сразу: по кнопке — при первой возможности (бой и вываживание рыбы доводит до конца), с галочкой — сам, не чаще раза в 20 минут, когда камней набралось не меньше порога. Адена и Coin of Luck не тратятся. Ancient Adena нужна у торговца Маммона.</div>
+  <h4>📦 Квесты на ресурсы</h4>
+  <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
+  <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
+  <textarea id="resQuests" hidden></textarea>
+  <div id="resBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="bagCheck">🎒 Пересчитать в сумке</button></div>
+  <div class="hint">Список — предметы из сумки, из добычи, из базы «Фарм ресурсов» и из главы. Число в строке цели можно поправить, ✕ — убрать. Прогресс = в сумке на последней проверке + выпало после. Здесь бот только считает собранное — к источнику летите сами (или поставьте ресурс в «Фарм ресурса»: туда бот летит сам).</div>
   <h4>👑 Сабкласс и Noblesse</h4>
   <div id="storyBox" class="camp">Прогресс бот узнает у игры сам</div>
   <label title="Часть квеста выполнена (убийства и сбор) → бот летит к NPC (Virgil, Caradine, Magister Ladd), жмёт «Завершить часть» и возвращается на точку. Не в бою, не в туре РБ/эпиков, не перед TvT. Взять квест и выбрать сабкласс — только вы">Сдавать готовые части сам <input id="storyTurnIn" type="checkbox"></label>
@@ -320,103 +419,25 @@
   <div class="row"><button id="subHandNow" title="Передать основному сейчас всё его недостающее сырьё, что есть в сумке (одна партия, через «Передача предмета»; не в бою и не в туре)">📤 Передать основному сейчас</button></div>
   <div class="hint">Заготовка: роль класса и слоты бот узнаёт из ответа игры, сабкласс не берёт и не переключает (только ты, у Maestro Reorin / Magister Ladd). Квест на сабкласс — 75 ур. основного и 4 РБ; первый саб по плану Warsmith (свой крафт), второй — Bounty Hunter (спойл Mithril Ore / Stone of Purity / Oriharukon / Adamantite в 6–9 раз чаще дропа).</div>
 
-  <h4>📦 Квесты на ресурсы</h4>
-  <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
-  <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
-  <textarea id="resQuests" hidden></textarea>
-  <div id="resBox" class="hint" style="white-space:pre-line"></div>
-  <div class="row"><button id="bagCheck">🎒 Пересчитать в сумке</button></div>
-  <div class="hint">Список — предметы из сумки, из добычи, из базы «Фарм ресурсов» и из главы. Число в строке цели можно поправить, ✕ — убрать. Прогресс = в сумке на последней проверке + выпало после. Здесь бот только считает собранное — к источнику летите сами (или поставьте ресурс в «Фарм ресурса»: туда бот летит сам).</div>
-  <h4>Приоритет целей (сверху — главнее)</h4>
-  <div id="prioList"></div>
-  <div class="hint">Бот бьёт моба, подходящего под самое верхнее правило; среди равных — ближайшего. Кнопки ниже добавляют правило в конец списка (если его ещё нет).</div>
-  <div class="row add"><button id="addQuest" title="Квестовые мобы: ★ на карте и цели квеста профессии — бьются первыми там, где стоит бот">+ ★ Квест</button><button id="addChamp" title="Любые чемпионы на локации. Работает при галочке «Искать чемпионов»">+ ⚔ Чемп</button><button id="addAll" title="Все обычные мобы в диапазоне уровней «от / до» (поле ниже)">+ Все по ур.</button></div>
-  <div class="row add"><input id="addName" list="mobNames" placeholder="Имя моба" style="flex:1"><datalist id="mobNames"></datalist><button id="addMob" style="flex:0 0 70px">+ Моб</button></div>
-  <div class="hint">★ Квест — мобы со ★ и цели квеста профессии · ⚔ Чемп — любые чемпионы · Все по ур. — любые мобы в диапазоне «от / до» · «+ Моб» — конкретный моб по имени<br>▲▼ — порядок · 🚫 — исключить (не бить) · ⚔ у моба — только его чемпион · ✕ — удалить</div>
-  <textarea id="priority" hidden></textarea>
-  <label>Уровень для «Все по ур.»: от / до <span><input id="lvlMin" type="number"> <input id="lvlMax" type="number"></span></label>
 
-  <details><summary>Дополнительно</summary>
-    <label>Выбор рядом, страниц <input id="maxPages" type="number" min="1"></label>
-    <label>Чемпион в цепочке: HP ≥ × обычного <input id="champHpMult" type="number" step="0.1"></label>
-    <input id="champMark" class="wide" placeholder="Признак чемпиона в имени">
-    <input id="bossMark" class="wide" placeholder="Признак босса (не трогать вне режима РБ)">
-  </details>
 
-  <div class="hint"><button type="button" data-goto="pvp">⚔ TvT и магазин — в разделе PvP</button></div>
-  <div class="subsec-title"><span id="tab-dailies" class="tab-anchor"></span>📅 Дейлики и клановые задания</div>
-  <label title="Ежедневные задания игра засчитывает сама. Бот дотягивает то, чего фарм не даёт: «50 рыб» (1 Coin of Luck + 300 000 аден + 50 000 EXP) — идёт на рыбалку и возвращается; «Убей 1 РБ» и «Участие в РБ» — один тур по РБ и назад (раз в день, с 40 ур.)">📅 Дотягивать дейлики: 50 рыб и 1 РБ в день <input id="dailyAuto" type="checkbox"></label>
-  <label title="Клановые задания (/clan-tasks): бот сам берёт доступное (500 монстров — 1 Coin of Luck; SP; адена; РБ, если РБ разрешены), помогает соклановцу, сдаёт готовое. Штурм стены не берёт. Свои запросы с токеном страницы, без переходов">🏰 Клановые задания: взять, помочь, сдать <input id="clanTasks" type="checkbox"></label>
-  <div id="dqBox" class="hint"></div>
-  <div class="hint">«10 сообщений в чате» бот не делает — писать в чат за игрока не будем. Прогресс дейликов и клановых заданий бот читает раз в 10 минут и при открытии их страниц.</div>
-
-  <div class="subsec-title"><span id="tab-autofarm" class="tab-anchor"></span><span id="tab-loc" class="tab-anchor"></span>🗺 Локации и автофарм</div>
-  <div class="intro-callout"><b>Автофарм — бот сам выбирает локацию для кача.</b><p>Выключен (по умолчанию) — бот стоит там, где вы его оставили: бьёт ★ цели квестов, а нет их — мобов этой локации, даже ниже окна уровня, и никуда не улетает. Включён — при старте сразу проверяет локации и летит в лучшую по КПД (прогноз EXP/ч по базе игры, уточняется своими замерами), с ростом уровня сам переходит в следующую — от 1-го уровня до 80-го.</p></div>
-  <h4>🗺 Локации для кача</h4>
-  <label>🎯 Желаемый уровень мобов: от героя − <input id="lvlBelow" type="number" min="1" max="5" style="width:52px"></label>
-  <div class="hint">Не больше 5: с мобов ниже героя больше чем на 5 ур. Fast Aden не падает, таких бот не бьёт (кроме ★ квеста и цели фарма).</div>
-  <label>… до героя + (99 — без ограничения) <input id="lvlAbove" type="number" min="0" max="99" style="width:52px"></label>
-  <div class="hint">По умолчанию +5: мобов выше героя больше чем на N ур. бот не выбирает, а подсунутого цепочкой «Охотиться дальше» — не бьёт и идёт на карту (кроме ★ квеста, источника ресурса и РБ).</div>
-  <div id="lvlWin" class="hint"></div>
-  <div id="zoneBox" class="zbox"><div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.</div></div>
-  <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
-  <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
-  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
-  <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
-  <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
-  <label>Зона для кача: мобы не выше героя на <input id="zoneAbove" type="number" min="0" max="15" style="width:52px"></label>
-  <div class="hint">Как выбирается зона (9.0, КПД): у бота есть встроенная база игры — 90 точек телепорта, их мобы, уровни и опыт за каждого. Для своего уровня он заранее считает, сколько EXP в час даст каждая зона (мобов в окне от героя −N до +M, опыт за моба ÷ время на моба; у мобов L2WAP HP и защита зависят только от уровня, а опыт за моба различается в 2–3 раза). Летит в лучшую по этому прогнозу, там меряет настоящий EXP/ч и дальше верит замерам: прогноз подстраивается под них (своё время на моба, как герой справляется с мобами выше себя, какие мобы «не по зубам», смерти). Пробует другую зону только если её прогноз не хуже 90 % лучшей известной; перелетает, если зона лучше текущей на 10 %+. Верх окна для зоны — «не выше героя на N» (по умолчанию 10; у слабых героев уже: до 11 ур. +3, к 20 ур. +5) — сам расширяется, если герой уверенно бьёт мобов выше. Не работает в туре по РБ, эпиках, рыбалке и катакомбах. Телепорт платный (только адена) — резерв адены из «Закупки».</div>
-  <details id="routeWrap"><summary>📈 Маршрут кача 1→80 по базе игры</summary><div id="routeBox" class="zbox"></div></details>
-
-  <h4>🌾 Фарм ресурса на крафт (форум: дроп и спойл)</h4>
-  <label>Ресурс <input id="farmRes" class="nm" list="farmResList" placeholder="напр. Stone of Purity"><datalist id="farmResList"></datalist></label>
-  <label>Сколько собрать (0 — без лимита) <input id="farmNeed" type="number" min="0"></label>
-  <label>Мобы-источники: от −N до +M ур. от героя <span><input id="farmLvlBelow" type="number" min="0" max="40"> <input id="farmLvlAbove" type="number" min="0" max="40"></span></label>
-  <div class="hint">Бот старается фармить там, где источники в этом диапазоне (по умолчанию −3…+5; в списке ниже они отмечены 🎯 и стоят сверху). Таких нет — берёт ближайшие по уровню. Работает и для рецептов.</div>
-  <div id="farmBox" class="hint" style="white-space:pre-line"></div>
-  <input id="farmSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе ресурсов (как на форуме)" autocomplete="off">
-  <div id="farmTree" class="ftree" data-kind="farm"></div>
-  <div class="row"><button id="farmScan">📋 Обновить базу ресурсов</button><button id="farmReset">↺ Счётчик</button></div>
-  <div class="hint">Бот выбирает зону, где мобы вашего уровня чаще всего дают ресурс (шанс × количество; у спойлера — дроп + спойл), летит кнопкой «Телепорт» со страницы «Фарм ресурсов» (VIP — бесплатно) и бьёт этих мобов первыми.</div>
-  <h4>📜 Охота на рецепты (форум)</h4>
-  <label>Рецепт <input id="recipeRes" class="nm" list="recipeResList" placeholder="напр. Recipe: Bonebreaker"><datalist id="recipeResList"></datalist></label>
-  <label>Сколько выбить (0 — без лимита) <input id="recipeNeed" type="number" min="0"></label>
-  <label data-cls="spoil">⛏ У меня есть спойл (гном) — считать и спойл <input id="recipeSpoil" type="checkbox"></label>
-  <div id="recipeBox" class="hint" style="white-space:pre-line"></div>
-  <input id="recipeSearch" class="ft-search" type="search" placeholder="🔍 Поиск в базе рецептов" autocomplete="off">
-  <div id="recipeTree" class="ftree" data-kind="recipe"></div>
-  <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
-  <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
-
-  <div class="subsec-title"><span id="tab-dungeon" class="tab-anchor"></span>🏛 Катакомбы</div>
-  <h4>🏛 Фарм катакомб и некрополей</h4>
-  <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
-  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
-  <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
-  <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
-  <div id="catBox" class="hint" style="white-space:pre-line"></div>
-  <div class="hint">Бот летит через «Меню → Катакомбы — Некрополи» (телепорт за 1 адену), жмёт «Войти в подземелье» и бьёт мобов внутри: уровень — в окне «Желаемый уровень мобов». Список мобов бот берёт целиком из ответа игры (все страницы списка), первыми бьёт ★-цели квеста и чемпионов. После боя возвращается в подземелье, после смерти — заходит заново. После боя — «Охотиться дальше» внутри подземелья (цепочкой, без возврата к списку). «Авто» выбирает подземелье по уровню героя и запоминает, каких мобов там увидел; если подходящих нет — пробует другое (то не трогает час). Выбрано конкретное подземелье — бот бьёт его мобов любого уровня (ближе к своему — первыми). Для боссов используйте «👑 Тур по РБ». Пока галочка стоит, обычная охота на карте не идёт (тур по РБ, эпики и рыбалка — главнее).</div>
-
-  <div class="important-note">Режим использует общие сервисы боя, навигации и снабжения. Включение производится только переключателем «Фармить в подземелье».</div>
-  <h4>💱 Камни печати → Ancient Adena</h4>
-  <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
-  <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
-  <div id="sealBox" class="hint" style="white-space:pre-line"></div>
-  <div class="row"><button id="sealNow">💱 Обменять все камни сейчас</button></div>
-  <div class="hint">Камни печати (зелёный → 5 AA, синий → 3, красный → 10) падают с мобов в катакомбах и некрополях. Бот меняет их у Ancient Trader (Город → Ancient Trader) все сразу: по кнопке — при первой возможности (бой и вываживание рыбы доводит до конца), с галочкой — сам, не чаще раза в 20 минут, когда камней набралось не меньше порога. Адена и Coin of Luck не тратятся. Ancient Adena нужна у торговца Маммона.</div>
 </section>
 
-
-
-<!-- 👑 РБ -->
 <section id="tab-rb">
-  <div class="rb-summary">
+  <div class="rb-summary no-card">
     <strong>Рейд-боссы · Центр управления</strong>
     <p>Тур по РБ самостоятельно выбирает живых боссов из общего списка. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
     <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
     <div class="rb-one"><button id="rbOneBtn" type="button" title="Найти и убить одного РБ, потом пауза до твоей команды">🎯 Убить один РБ и ждать команды</button><div id="rbOneInfo" class="hint"></div></div>
     <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
   </div>
+  <h4>🧭 Тур по РБ</h4>
+  <div class="row"><button id="huntToggle2">🧭 Тур по РБ: ВЫКЛ</button></div>
+  <div class="hint">Тур читает список и выбирает всех живых обычных РБ в настроенном диапазоне уровней, доступных по правилам игры. Порядок — по уровню; кнопкой можно развернуть его. Прогноз силы, времени и выгоды не запрещает вход. Сохраняются ручные запреты, проверка цены и средств, лимит попыток, подготовка, защита по фактической опасности и приоритет TvT. Если целей нет — ждёт свежих данных. Правила эпиков отдельные.</div>
+  <div class="row"><button id="rbOrderUp" title="Сначала самые слабые по уровню — начало списка «Рейдовые боссы»">⬆ С самых слабых (начало списка)</button><button id="rbOrderDown" title="Сначала самые сильные по уровню — конец списка">⬇ С самых сильных (конец списка)</button></div>
+  <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
+  <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
+  <div id="rbTourBox" class="hint" style="white-space:pre-line"></div>
   <h4>🔥 Фулл бафф за FA: РБ-сессия и эпики (3 ч)</h4>
   <div class="hint">Одна кнопка: бот берёт у баффера Fast Aden баффы из списка (на 3 ч) и бьёт РБ, пока они действуют. Погиб — слетает только Noblesse Blessing (если он в списке), бот сразу берёт его снова. Баффы слетели совсем — сессия окончена. За 2 мин до конца баффа — итог в журнал и режим «Автофарм».</div>
   <div id="rbSessBox" class="camp" style="white-space:pre-line">—</div>
@@ -439,23 +460,10 @@
   <label>⚡ Быстрая реакция на РБ (100–220 мс) <input id="rbFast" type="checkbox"></label>
   <div class="hint" data-cls="fighter">Модель 100 000 боёв (воин): бафф Bear −20 % времени, банки MP ещё −34 % (≈1,5 банки на РБ), быстрая реакция −7 %; Soul Breaker и Burning Fist в силовых −16 %. Станы на РБ бесполезны (HP и так держится вампириком). Без банок бот бережёт ману: по откату — удары с лучшим уроном на 1 MP (Force Blaster, Soul Breaker), дорогие — только из излишка.</div>
   <div class="hint">Бот меряет урон по РБ и потерю HP. Без банок не успеваем — считает, сколько банок нужно на всё убийство (с запасом 25 %) и хватит ли их за вычетом резерва и с учётом скорости питья. Этот расчёт остаётся справочным для обычного тура и не исключает цель.</div>
-  <h4>🧭 Тур по РБ</h4>
-  <div class="row"><button id="huntToggle2">🧭 Тур по РБ: ВЫКЛ</button></div>
-  <div class="hint">Тур читает список и выбирает всех живых обычных РБ в настроенном диапазоне уровней, доступных по правилам игры. Порядок — по уровню; кнопкой можно развернуть его. Прогноз силы, времени и выгоды не запрещает вход. Сохраняются ручные запреты, проверка цены и средств, лимит попыток, подготовка, защита по фактической опасности и приоритет TvT. Если целей нет — ждёт свежих данных. Правила эпиков отдельные.</div>
-  <div class="row"><button id="rbOrderUp" title="Сначала самые слабые по уровню — начало списка «Рейдовые боссы»">⬆ С самых слабых (начало списка)</button><button id="rbOrderDown" title="Сначала самые сильные по уровню — конец списка">⬇ С самых сильных (конец списка)</button></div>
-  <div id="huntBox" class="camp" style="margin-top:6px">Тур не запускался</div>
-  <div id="huntQueue" class="hint" style="white-space:pre-line"></div>
-  <label>Прежняя оценка выгоды (обычный тур её не ограничивает) <input id="rbValueTour" type="checkbox"></label>
-  <div class="hint">Обычный тур сохраняет порядок по уровню и не пропускает РБ из-за расчётной убыточности. Реальные награды и длительность боя продолжают записываться для справки.</div>
-  <div id="rbTourBox" class="hint" style="white-space:pre-line"></div>
-  <h4>База РБ (все локации)</h4>
-  <div id="rbList"><div class="hint">Пусто — включите «👑 Тур по РБ» и зайдите на карту</div></div>
-  <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
 
   <div class="subsec-title"><span id="tab-rbtimer" class="tab-anchor"></span>⏱ Таймеры боссов</div>
   <div class="hint">Игра показывает у РБ только «Живой / Убит» (у эпиков ещё «респ. N ч»), времени смерти и воскрешения не отдаёт. Бот запоминает сам: своего убитого — точно, чужого — между «видел живым» и «увидел убитым». Длительность респа обычного РБ бот учит по своим наблюдениям (босс убит → воскрес), пока замеров нет — берёт число ниже. «Тур РБ» к убитым не летает, а простой заканчивает, как только подходящий РБ воскрес.</div>
   <div class="hint">Фоновая слежка через игровые аккаунты отключена. Загрузите файл таймеров; активный тур читает свои цели как обычно.</div>
-  <input id="rbTimers" type="checkbox" hidden disabled><input id="rbTimerMin" type="number" hidden disabled>
   <label title="Пока бот сам не замерил респ, он берёт это число (со слов игрока — около 8 ч)">Респ обычного РБ, пока не замерен, ч <input id="rbRespH" type="number" min="1" max="72" step="0.5"></label>
   <label>Показать всех РБ, а не только своего окна уровней <input id="rbTimerAll" type="checkbox"></label>
   <div class="row"><button id="rbtImport" title="Alt+W. Файл слежки из облака (по строке на опрос) или таймеры другого персонажа — сольются с таймерами этого">📥 Загрузить таймеры из файла слежки</button><input id="rbtFile" type="file" accept=".json,.jsonl,.txt,application/json" hidden></div>
@@ -468,70 +476,122 @@
   <div class="hint">Бот берёт выбранных эпиков по порядку, но только живых, к которым игра пускает и которые <b>по силам</b>: перед любой дорогой он спрашивает у игры цифры босса (HP, P.Atk, M.Atk, защиты) и считает спецудар, время боя и нужные банки — проверка сил до оплаты всегда. Дорога: эпик на этой же карте — без телепорта; потом логово за адену; за Coin of Luck — только если ничего другого нет и вы разрешили лимитом. Погиб — следующий заход только если подтверждено, что HP эпика между заходами сохраняется, иначе ждёт следующего появления. Мешают миньоны зоны — бьёт их. Опыт за смерти теряется.</div>
   <label>Королева Муравьёв (АК) <input type="checkbox" class="epicChk" data-epic="ak"></label><label>Ядро <input type="checkbox" class="epicChk" data-epic="core"></label><label>Орфен <input type="checkbox" class="epicChk" data-epic="orfen"></label><label>Баюм <input type="checkbox" class="epicChk" data-epic="baium"></label><label>Валакас <input type="checkbox" class="epicChk" data-epic="valakas"></label><label>Антарас <input type="checkbox" class="epicChk" data-epic="antharas"></label><label>Фринтеза <input type="checkbox" class="epicChk" data-epic="frintezza"></label><label>Закен <input type="checkbox" class="epicChk" data-epic="zaken"></label>
   <input id="epicList" hidden>
-  <label>Смертей на одного эпика за его появление (5) <input id="epicMaxDeaths" type="number" min="1"></label>
-  <label>Строго и на месте: не лезть и при «мало банок» (перед оплатой проверка всегда) <input id="epicCheck" type="checkbox"></label>
-  <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
-  <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
-  <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
   <label>💎 Coin of Luck на эпиков за 24 ч (0 — НЕ тратить) <input id="epicCoinDailyMax" type="number" min="0" step="1"></label>
   <label>Платных заходов на одно появление эпика (1) <input id="epicCoinPerBoss" type="number" min="0" step="1"></label>
   <label>Не опускать баланс Coin of Luck ниже (0 — не проверять) <input id="epicCoinKeep" type="number" min="0" step="1"></label>
   <label>Лимит аден на телепорты к эпикам за 24 ч (0 — без лимита) <input id="epicAdenaDailyMax" type="number" min="0" step="1"></label>
-  <label>Не браться, если бой дольше, мин (0 — без предела) <input id="epicMaxFightMin" type="number" min="0" step="1"></label>
-  <label>Отходов на одно появление эпика (8) <input id="epicMaxRetreats" type="number" min="1" step="1"></label>
   <div class="hint">Coin of Luck — ценная валюта (донат, немного падает из Old Box и за TvT). «0» — бот не тратит их никогда (так по умолчанию). Число — не больше стольких за 24 часа и не больше «платных заходов» на одно появление эпика; при неизвестной цене, после смерти или выхода из боя — никогда. Платный «Повний баф» (15 CoL) во время эпика — тоже в пределах этого лимита, иначе бесплатный «Звичайний баф». Считаются попытки: если сервер не подтвердил телепорт, резерв остаётся (учёт может быть завышен — это безопасная сторона).</div>
-  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится и возвращается (только бесплатно или через логово). Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас 85, Фринтеза 90. Игра пускает к боссам не ниже «уровень героя − 9»; выше героя больше чем на 10 бот не берёт. Общий стоп — 2 × «смертей на эпика» за час (не больше 20).</div>
   <div class="row"><button id="epicScan" title="Только чтение: список эпиков и цифры каждого босса с сервера, ≈полминуты">🔄 Проверить эпиков (бесплатно)</button></div>
   <div id="epicSum" class="hint" style="white-space:pre-line"></div>
   <div id="epicTable" class="zbox"><div class="hint">Пока пусто — нажмите «🔄 Проверить эпиков» (бот должен быть запущен)</div></div>
   <div id="epicBox" class="camp" style="white-space:pre-line">Режим не запускался</div>
 
+  <div class="adv-start" data-adv="rb">⚙ Дополнительно</div>
+  <h4>🧪 Банки и полоса HP на РБ</h4>
+  <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
+  <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
+  <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
+  <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
+  <label>РБ: «цена хода» — лечиться, только когда без этого опасно <input id="rbTurnPrice" type="checkbox"></label>
+  <div class="hint">У знакомого РБ банка или лечение — только если после ещё одного ударного хода HP может упасть ниже «спецудар + 2 удара». Иначе бот бьёт: банка стоит целого хода без урона. Работает вместе с автоматической полосой.</div>
+  <label data-cls="fighter">Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
+  <div class="hint" data-cls="fighter">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
+  <div class="hint">РБ: при автоматической полосе начинаем лечение не ниже 80 % HP, при известном сильном спецударе — ещё раньше. Банки не имеют отдельного 10-секундного отката: учитывается серверный общий КД. Предварительный прогноз РБ ориентировочный, не гарантия победы.</div>
+  <h4>🧪 Пробы и отходы вне обычного тура</h4>
+  <label>🧪 Пробный заход вне обычного тура <input id="rbProbe" type="checkbox"></label>
+  <div class="hint">В обычном туре не требуется разрешать пробу: отсутствие истории или оценки DPS не запрещает бой. Истечение времени пробы само по себе не вызывает отход. Эпики и другие маршруты сохраняют отдельные правила.</div>
+  <label>Отступать по прогнозу вне обычного тура <input id="rbChipRetreat" type="checkbox"></label>
+  <label>Макс. попыток захода на одного РБ за час <input id="rbChipMaxAttempts" type="number" min="1" max="10"></label>
+  <div class="hint">В обычном туре аварийный выход по фактической опасности действует независимо от этой галочки. Выход должен подтвердить сервер; после опасного выхода или смерти цель временно пропускается.</div>
+  <label>Прежняя оценка выгоды (обычный тур её не ограничивает) <input id="rbValueTour" type="checkbox"></label>
+  <div class="hint">Обычный тур сохраняет порядок по уровню и не пропускает РБ из-за расчётной убыточности. Реальные награды и длительность боя продолжают записываться для справки.</div>
+  <h4>⚒ Frenzy и ритм спецудара</h4>
+  <label data-cls="fighter">⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
+  <div class="hint" data-cls="fighter">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
+  <label title="Бой с РБ: ход, на который придётся спецудар, бот узнаёт по памяти боя (ритм ударов) и заранее держит запас HP. Выключено — запас HP только по полосе банок">РБ: учитывать ритм спецудара (память боя) <input id="rbSpikeRhythm" type="checkbox"></label>
+  <h4>🐉 Эпики — тонкая настройка</h4>
+  <label>Смертей на одного эпика за его появление (5) <input id="epicMaxDeaths" type="number" min="1"></label>
+  <label>Строго и на месте: не лезть и при «мало банок» (перед оплатой проверка всегда) <input id="epicCheck" type="checkbox"></label>
+  <label>Измором: выходить из боя при HP ≤ % (0 — до конца) <input id="epicRetreatHp" type="number" min="0" max="90"></label>
+  <label>Желательный перевес над эпиком, ур. (0–10; мягкий приоритет) <input id="epicLvlUp" type="number" min="0" max="10"></label>
+  <label>Минимум банок HP сверх резерва перед телепортом (0 — не проверять) <input id="epicMinHpPots" type="number" min="0" step="1"></label>
+  <label>Не браться, если бой дольше, мин (0 — без предела) <input id="epicMaxFightMin" type="number" min="0" step="1"></label>
+  <label>Отходов на одно появление эпика (8) <input id="epicMaxRetreats" type="number" min="1" step="1"></label>
+  <div class="hint">«Измором»: бьёт эпика до порога HP, выходит из боя, лечится и возвращается (только бесплатно или через логово). Уровни: АК 40, Ядро и Орфен 50, Закен 60, Баюм 75, Антарас 79, Валакас 85, Фринтеза 90. Игра пускает к боссам не ниже «уровень героя − 9»; выше героя больше чем на 10 бот не берёт. Общий стоп — 2 × «смертей на эпика» за час (не больше 20).</div>
+  <h4>База РБ (все локации)</h4>
+  <div id="rbList"><div class="hint">Пусто — включите «👑 Тур по РБ» и зайдите на карту</div></div>
+  <div class="row"><button id="rbReset">↺ Перепроверить всех</button></div>
 </section>
 
-
-<!-- ⚔ БОЙ -->
 <section id="tab-panel">
-  <div class="subsec-title"><span id="tab-analyze" class="tab-anchor"></span>🧠 Анализ боя</div>
-  <div class="intro-callout"><b>Бот сам разбирает каждый бой.</b><p>Каждый ход берётся из ответа сервера: кто сколько снял, кто ударил тебя, спецудары, банки. На каждую цель (РБ, чемпион, вид моба) копится своя память: урон каждого скилла именно по ней, ДПС, удары, ритм спецудара. Следующий бой с той же целью начинается с этих цифр. У каждого класса и саба память своя.</p></div>
-  <h4>🧬 Класс и профиль боя</h4>
-  <div id="clsBox" class="camp">Класс ещё не определён — запусти бота на странице боя</div>
-  <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии, ветке и панели</option><option value="mage_summoner">Маг — заклинания (Warlock: с котом)</option><option value="fighter">Воин — удары, энергия, станы</option></select></label>
-  <div class="hint">«Авто»: бот узнаёт профессию из ответов игры (и смену саба), по ней выбирает профиль. Незнакомая профессия — по ветке класса (mystic → маг, fighter → воин), а если и она неизвестна — по панели: заклинания «Маг. атака» → маг. Дальше бот сам распознаёт роли скиллов на панели (удары, баффы, лечение, спойл, призыв), каждый новый удар сначала пробует на «толстом» мобе и замеряет, а потом ставит в ротацию по замеру. Так подхватывается любой класс: спойлер, Дестр, Sorcerer, SH.</div>
-  <label data-cls="fighter"><input id="warlordAggro" type="checkbox"> Warlord: Provoke / Howl перед массовой атакой</label>
-  <div class="hint" data-cls="fighter">Provoke, а если недоступен — Howl → Whirlwind или Thunder Storm. Один сбор за бой с обычным мобом, даже если он уже ранен. Только с пикой, HP от75% и MP на связку; готовую группу повторно не собирает.</div>
-  <h4>📒 Память боя</h4>
-  <div id="fightBox" class="box">Боёв с анализом ещё нет</div>
-  <div class="row"><button id="fightMemReset">🧹 Забыть память боя этого класса</button></div>
-  <h4>📊 Расчёт ДПС и стратегия</h4>
-  <div id="dpsBox" class="box"></div>
-
-  <div class="subsec-title"><span id="tab-roles" class="tab-anchor"></span>⚔ Общие правила боя</div>
-  <div class="row"><button id="check">🔍 Проверить</button><button id="suggest">🤖 Распознать</button></div>
-  <div class="row" id="applyRow" hidden><button id="apply">✅ Применить предложенное</button></div>
-  <div class="row"><button id="showAllCls" type="button" title="Показать и настройки других классов">👁 Показать настройки всех классов</button></div>
-  <div id="clsNote" class="hint"></div>
-  <div id="slots" class="box"></div>
-  <label>🤖 Автоназначение ролей <input id="autoRoles" type="checkbox"></label>
-  <h4>⚔ Удары и лечение (название из подсказки)</h4>
-  <label>Силовые, по приоритету <input id="nPower" class="nm"></label>
-  <label>Лечение (скиллы) <input id="nHeal" class="nm" placeholder="Heal, Battle Roar…"></label>
-  <label>MP на скилл, мин. (ед.) <input id="skillMpMin" type="number"></label>
-  <label>Бафф каждые, с (если бафф не виден у шапки) <input id="buffSec" type="number"></label>
-  <h4>✨ Баффы</h4>
-  <label>Баффы <input id="nBuffs" class="nm"></label>
-  <div id="buffAudit" class="hint" style="white-space:pre-line"></div>
-  <h4>🔁 Постоянные баффы (тогглы)</h4>
-  <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
-  <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
-  <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
-  <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
+  <h4>🧪 Когда пить банки</h4>
+  <label>Аварийные банки при HP ≤ % (подряд, без паузы) <input id="stopHp" type="number"></label>
+  <label>Банка HP при HP ≤ % <input id="hpPotAt" type="number"></label>
+  <label>Банка MP при MP &lt; (ед.) <input id="mpPotAt" type="number"></label>
   <h4>📚 Магистр</h4>
   <label>Сам учить доступные навыки сейчас и после каждого +1 уровня <input id="autoMagister" type="checkbox"></label>
   <div class="hint">Включено по умолчанию. После победы учит доступные ранги с учётом резерва SP и возвращается на прежнюю точку.</div>
+  <div class="subsec-title"><span id="tab-fight" class="tab-anchor"></span>🛡 Герой: безопасность, баффер, оружие</div>
+  <h4>Безопасность</h4>
+  <label>💀 После смерти — в город и продолжать <input id="autoRevive" type="checkbox"></label>
+  <div class="hint">Не больше 3 смертей за 30 мин, иначе бот остановится.</div>
 
-  <div class="hint"><button type="button" data-goto="pvp">☠ Лист врагов — в разделе PvP</button></div>
-  <div class="hint"><button type="button" data-goto="warlock">🐱 Настройки Warlock и кота</button></div>
+  <h4>✨ Городской баффер</h4>
+  <label>Набор <select id="townBuffSet"><option value="basic">Звичайний баф — бесплатно</option><option value="warrior">Повний баф воїна — 15 Coin of Luck</option><option value="mage">Повний баф мага — 15 Coin of Luck</option><option value="off">Не брать</option></select></label>
+  <div class="hint" style="margin:8px 0 2px;color:var(--txt)">💎 Баффы за Fast Aden (3 ч) — берутся по порядку списка</div>
+  <div class="row add" style="margin-top:2px"><select id="faPick" style="flex:1" aria-label="Бафф за Fast Aden"></select><button id="faAdd" title="Добавить бафф в список" style="flex:0 0 38px">+</button></div>
+  <div id="faList" style="display:flex;flex-direction:column;gap:4px;margin:6px 0"></div>
+  <input id="faBuffs" hidden>
+  <div id="faNote" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="faScanBtn" title="Бот откроет баффер Fast Aden, перепишет список баффов, цены и ваш баланс FA">📋 Обновить список и баланс FA</button></div>
+  <div class="hint">Бафф 24 ч слетает при смерти — бот видит это по шапке и сам идёт к бафферу (не чаще раза в 10 мин). Платный набор — только если выбран здесь. Баффы Fast Aden: выберите в списке и нажмите «+»; ▲▼ — порядок (при нехватке FA берутся по порядку, что по карману), ✕ — убрать. Если FA не хватает ни на один — бот к бафферу FA не ходит 60 мин или пока баланс не вырастет; бафф, которого нет у баффера, пропускается 6 ч.</div>
+  <h4>Оружие</h4>
+  <div id="weapBox" class="camp">Инвентарь ещё не проверялся</div>
+  <label>🗡 Основное <select id="nWeaponMain" class="nm"></select></label>
+  <div class="row"><button id="weapScan">🔍 Проверить инвентарь</button><button id="weapClass">⭐ Поставить «в класс»</button></div>
+  <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
+  <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
 
+  <div class="subsec-title" id="tab-enchant">✨ Автозаточка оружия и брони</div>
+  <h4>✨ Режим и серия заточки</h4>
+  <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
+  <div class="hint">Выберите вещи и лимиты, разрешите попытки и добавьте автозаточку в список задач. После запуска бота нажмите «Начать серию». Когда серия завершится, бот перейдёт к следующей выбранной задаче. Очередь и результаты сохраняются.</div>
+  <div id="enchantPanel" data-embedded="1"></div>
+
+  <div class="subsec-title" id="tab-warlock">🐱 Суммоны: кот Warlock, пантера</div>
+  <h4>🐱 Автобаф суммона и полный набор</h4>
+  <div class="row"><button id="petFullToggle" type="button" aria-pressed="false">🐱 Автобаф суммона</button></div>
+<div id="warlockPanel"></div>
+  <span id="tab-pet" class="tab-anchor"></span>
+  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот атакует вместе с героем. Бот призывает выбранного кота, следит за его HP и поддерживает боевые бафы. Сила кота зависит от ранга призыва, характеристик и действующих эффектов; сравнение ниже использует только принятые игровые действия. Заклинания героя — в разделе «Бой» → «Маг».</p></div>
+  <h4>🐱 Кот</h4>
+  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
+  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: King → Kai → Mew → Kat)</option><option value="Summon Feline King">Feline King (+55 % от M.Atk)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option></select></label>
+  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
+  <label>Разрешить перепризыв при низком HP кота <input id="petResummon" type="checkbox"></label>
+  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
+  <label>Приоритет помощи коту <select id="petHealPrefer"><option value="heal">Сначала лечить</option><option value="resummon">Сначала перепризвать</option></select></label>
+  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
+  <div class="hint">Перепризыв не гарантирует полное HP: бот проверяет состояние после принятого действия. Платные бафы могут сохраниться — повторная покупка проверяет фактические эффекты, а не сам факт перепризыва.</div>
+  <h4>🎯 Добивание</h4>
+  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
+  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но промах кота может потратить ход впустую. Включай, только если банок нет.</div>
+  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
+  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а промах кота может потратить ход впустую. Не на РБ.</div>
+  <h4>✨ Баффы кота</h4>
+  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
+  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
+  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
+  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Blessing of Queen относится к бафам слуги; действующий эффект оплаченного набора бот не перезаписывает. Бот проверяет срок и фактическое действие бафа. Перепризыв сам по себе не доказывает, что эффект исчез. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
+  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
+  <h4>📊 Накопленная статистика котов</h4>
+  <div id="petBox" class="box"></div>
+  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
+
+  <div class="subsec-title" id="tab-classes">🧬 Мой класс</div>
+  <h4>👁 Подразделы класса</h4>
+  <div class="row"><button id="showAllCls" type="button" title="Показать и настройки других классов">👁 Показать настройки всех классов</button></div>
+  <div id="clsNote" class="hint"></div>
   <div class="subsec-title" data-cls="mage"><span id="tab-mage" class="tab-anchor"></span>🔮 Маг — заклинания (Warlock, Sorcerer, SH…)</div>
   <div class="intro-callout"><b>Маг.</b><p>Ротация — по замеру урона каждого заклинания по этой цели: добивание самым дешёвым, которое добьёт наверняка, иначе самое сильное готовое. MP не экономим (банки MP). Новое заклинание сначала замеряется на «толстом» мобе.</p></div>
   <h4 data-cls="mage">🧿 Дебаффы (маг)</h4>
@@ -564,6 +624,8 @@
   <label data-cls="fighter">Стан на чемпе/РБ не чаще, с <input id="stunEvery" type="number"></label>
   <label data-cls="fighter">Логика боя с мобами <select id="fightMode"><option value="dps">⚡ ДПС — быстрее всего</option><option value="kpd">💧 КПД — экономнее (меньше MP и банок)</option></select></label>
   <div class="hint" data-cls="fighter">Симуляция 1 008 000 боёв Тирана с мобами (цепочкой): <b>ДПС</b> — 1719 мобов/ч, 50 MP на моба, 76 банок MP на 1000 мобов (текущая логика: добивание самым дешёвым скиллом, энергия под Force Blaster). <b>КПД</b> — 1516 мобов/ч (−12 %), 32 MP на моба (−36 %), 36 банок MP на 1000 (−53 %): моба, которого добьёт одна атака, бьёт атакой, энергию не копит. На РБ и в TvT логика своя — режим не влияет.</div>
+  <label data-cls="fighter"><input id="warlordAggro" type="checkbox"> Warlord: Provoke / Howl перед массовой атакой</label>
+  <div class="hint" data-cls="fighter">Provoke, а если недоступен — Howl → Whirlwind или Thunder Storm. Один сбор за бой с обычным мобом, даже если он уже ранен. Только с пикой, HP от75% и MP на связку; готовую группу повторно не собирает.</div>
   <h4 data-cls="fighter">⚡ Энергия силы</h4>
   <label>Копит энергию <input id="nCharge" class="nm"></label>
   <label>Тратят («Имя=цена») <input id="nForce" class="nm"></label>
@@ -575,123 +637,40 @@
   <h4 data-cls="fighter">🔥 Важные баффы</h4>
   <label>Важные баффы <input id="nKeyBuffs" class="nm" placeholder="Frenzy, Guts, Zealot, War Cry…"></label>
   <label>Без условия по HP — только с РБ и чемпионами <input id="keyBuffBoss" type="checkbox"></label>
-  <label>⚒ Дестроер: разрешить сливаться под Frenzy (РБ) <input id="rbFrenzyDive" type="checkbox"></label>
-  <div class="hint">На РБ, пока Frenzy готов, бот не лечится банками (кроме аварийных) — HP само падает до 30 %, там Frenzy (+Guts, Zealot по правилам), дальше снова держит HP на уровне из раздела «Снабжение». Симуляция: бой с РБ на ~20 % быстрее, банок на ~30 % меньше, побед почти столько же (96 % против 97 %).</div>
   <div class="hint">Аварийные (действуют только при HP ≤ 30 %: Frenzy, Guts, Zealot, Angelic Icon) бот жмёт, как только HP упало до 30 % — раньше банки HP, чтобы банка не «перескочила» порог. Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → остальные → Zealot. Zealot режет получаемое лечение вдвое — в бою с РБ (где живём на банках) только на добивании, когда у РБ ≤ 15 %. Остальные важные (War Cry, Battle Roar и т.п.) — в начале боя с РБ/чемпионом (или в каждом бою, если галочку снять).</div>
 
-  <div class="subsec-title"><span id="tab-fight" class="tab-anchor"></span>🛡 Герой: безопасность, баффер, оружие</div>
-  <h4>Безопасность</h4>
-  <label>💀 После смерти — в город и продолжать <input id="autoRevive" type="checkbox"></label>
-  <div class="hint">Не больше 3 смертей за 30 мин, иначе бот остановится.</div>
 
-  <h4>✨ Городской баффер</h4>
-  <label>Набор <select id="townBuffSet"><option value="basic">Звичайний баф — бесплатно</option><option value="warrior">Повний баф воїна — 15 Coin of Luck</option><option value="mage">Повний баф мага — 15 Coin of Luck</option><option value="off">Не брать</option></select></label>
-  <div class="hint" style="margin:8px 0 2px;color:var(--txt)">💎 Баффы за Fast Aden (3 ч) — берутся по порядку списка</div>
-  <div class="row add" style="margin-top:2px"><select id="faPick" style="flex:1" aria-label="Бафф за Fast Aden"></select><button id="faAdd" title="Добавить бафф в список" style="flex:0 0 38px">+</button></div>
-  <div id="faList" style="display:flex;flex-direction:column;gap:4px;margin:6px 0"></div>
-  <input id="faBuffs" hidden>
-  <div id="faNote" class="hint" style="white-space:pre-line"></div>
-  <div class="row"><button id="faScanBtn" title="Бот откроет баффер Fast Aden, перепишет список баффов, цены и ваш баланс FA">📋 Обновить список и баланс FA</button></div>
-  <div class="hint">Бафф 24 ч слетает при смерти — бот видит это по шапке и сам идёт к бафферу (не чаще раза в 10 мин). Платный набор — только если выбран здесь. Баффы Fast Aden: выберите в списке и нажмите «+»; ▲▼ — порядок (при нехватке FA берутся по порядку, что по карману), ✕ — убрать. Если FA не хватает ни на один — бот к бафферу FA не ходит 60 мин или пока баланс не вырастет; бафф, которого нет у баффера, пропускается 6 ч.</div>
-  <h4>Темп</h4>
-  <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
-  <h4>Оружие</h4>
-  <div id="weapBox" class="camp">Инвентарь ещё не проверялся</div>
-  <label>🗡 Основное <select id="nWeaponMain" class="nm"></select></label>
-  <div class="row"><button id="weapScan">🔍 Проверить инвентарь</button><button id="weapClass">⭐ Поставить «в класс»</button></div>
-  <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
-  <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
-</section>
+  <div class="adv-start" data-adv="panel">⚙ Дополнительно</div>
+  <div class="subsec-title"><span id="tab-analyze" class="tab-anchor"></span>🧠 Анализ боя</div>
+  <div class="intro-callout"><b>Бот сам разбирает каждый бой.</b><p>Каждый ход берётся из ответа сервера: кто сколько снял, кто ударил тебя, спецудары, банки. На каждую цель (РБ, чемпион, вид моба) копится своя память: урон каждого скилла именно по ней, ДПС, удары, ритм спецудара. Следующий бой с той же целью начинается с этих цифр. У каждого класса и саба память своя.</p></div>
+  <h4>🧬 Класс и профиль боя</h4>
+  <div id="clsBox" class="camp">Класс ещё не определён — запусти бота на странице боя</div>
+  <label>Профиль персонажа <select id="combatProfile"><option value="auto">Авто — по профессии, ветке и панели</option><option value="mage_summoner">Маг — заклинания (Warlock: с котом)</option><option value="fighter">Воин — удары, энергия, станы</option></select></label>
+  <div class="hint">«Авто»: бот узнаёт профессию из ответов игры (и смену саба), по ней выбирает профиль. Незнакомая профессия — по ветке класса (mystic → маг, fighter → воин), а если и она неизвестна — по панели: заклинания «Маг. атака» → маг. Дальше бот сам распознаёт роли скиллов на панели (удары, баффы, лечение, спойл, призыв), каждый новый удар сначала пробует на «толстом» мобе и замеряет, а потом ставит в ротацию по замеру. Так подхватывается любой класс: спойлер, Дестр, Sorcerer, SH.</div>
+  <h4>📒 Память боя</h4>
+  <div id="fightBox" class="box">Боёв с анализом ещё нет</div>
+  <div class="row"><button id="fightMemReset">🧹 Забыть память боя этого класса</button></div>
+  <h4>📊 Расчёт ДПС и стратегия</h4>
+  <div id="dpsBox" class="box"></div>
 
-<section id="tab-enchant">
-  <h3>✨ Автозаточка оружия и брони</h3>
-  <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
-  <div class="hint">Выберите вещи и лимиты, разрешите попытки и добавьте автозаточку в список задач. После запуска бота нажмите «Начать серию». Когда серия завершится, бот перейдёт к следующей выбранной задаче. Очередь и результаты сохраняются.</div>
-  <div id="enchantPanel" data-embedded="1"></div>
-</section>
-
-<section id="tab-pvp">
-  <div id="pvpTargetsPanel"></div>
-  <div class="subsec-title"><span id="tab-enemies" class="tab-anchor"></span>☠ Лист врагов</div>
-  <div class="intro-callout"><b>Кто убил тебя — тот враг.</b><p>Игрок, убивший героя, сам попадает в лист (из ответа игры: ник, сколько раз убил, какими ударами). Пока герой охотится, бот поглядывает, кто на локации (раз в 30 с). Враг из листа появился — бот добивает текущего моба и нападает на него кнопкой игры «Атакувати». Убил — следит дальше: вернётся — нападёт снова. Напал враг из листа — бот отвечает.</p></div>
-  <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
-  <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
-  <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
-  <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
-  <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
-  <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
-  <label>Проиграли подряд — не трогать до нового уровня после, раз <input id="enemyMaxLoss" type="number" min="1" max="10"></label>
-  <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
-  <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
-
-  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
-  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
-  <div class="hint">При включённом TvT регистрация всегда первая: мест всего 20. Фарм и РБ прерываются для записи; до подтверждения регистрации другие дела не начинаются.</div>
-  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
-  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
-  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
-  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
-  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
-  <div id="tsBox" class="hint"></div>
-  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
-  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
-  <div id="tsGoalBox" class="hint"></div>
-  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
-  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
-</section>
-
-<section id="tab-warlock">
-  <div class="row"><button id="petFullToggle" type="button" aria-pressed="false">🐱 Автобаф суммона</button></div>
-<div id="warlockPanel"></div>
-  <div class="subsec-title"><span id="tab-pet" class="tab-anchor"></span>🐱 Warlock — маг с котом</div>
-  <div class="intro-callout"><b>Кот Warlock.</b><p>Кот атакует вместе с героем. Бот призывает выбранного кота, следит за его HP и поддерживает боевые бафы. Сила кота зависит от ранга призыва, характеристик и действующих эффектов; сравнение ниже использует только принятые игровые действия. Заклинания героя — в разделе «Бой» → «Маг».</p></div>
-  <h4>🐱 Кот</h4>
-  <label>Управлять котом (призыв, лечение, баффы) <input id="petAuto" type="checkbox"></label>
-  <label>Какого кота призывать <select id="petSummon"><option value="">Авто — того, что был (иначе лучшего: King → Kai → Mew → Kat)</option><option value="Summon Feline King">Feline King (+55 % от M.Atk)</option><option value="Summon Kai the Cat">Kai the Cat (+25 % от M.Atk)</option><option value="Summon Mew the Cat">Mew the Cat (+20 % от M.Atk)</option><option value="Summon Kat the Cat">Kat the Cat (+15 % от M.Atk)</option></select></label>
-  <div class="hint">Выбранный кот появится, когда нынешний погибнет или бот будет его перепризывать — нынешнего бот специально не отзывает.</div>
-  <label>Разрешить перепризыв при низком HP кота <input id="petResummon" type="checkbox"></label>
-  <label>Перепризыв при HP кота ≤, % <input id="petResummonAt" type="number" min="5" max="90"></label>
-  <label>Приоритет помощи коту <select id="petHealPrefer"><option value="heal">Сначала лечить</option><option value="resummon">Сначала перепризвать</option></select></label>
-  <label>Servitor Heal при HP кота ≤, % <input id="petHealAt" type="number" min="5" max="95"></label>
-  <div class="hint">Перепризыв не гарантирует полное HP: бот проверяет состояние после принятого действия. Платные бафы могут сохраниться — повторная покупка проверяет фактические эффекты, а не сам факт перепризыва.</div>
-  <h4>🎯 Добивание</h4>
-  <label>Учитывать удар кота при добивании (экономия MP) <input id="petFinish" type="checkbox"></label>
-  <div class="hint">По умолчанию выключено: банки MP дешёвые, важнее скорость убийства. Добивание котом экономит ману, но промах кота может потратить ход впустую. Включай, только если банок нет.</div>
-  <label>… только когда MP ниже, % <input id="petFinishMp" type="number" min="10" max="100"></label>
-  <div class="hint">Если моба добьёт удар кота, бот жмёт бесплатную «Атаку» (кот бьёт вместе с ней) и не тратит заклинание. Если моба добьют удар кота и дешёвое заклинание, бот берёт Energy Bolt вместо Blaze. Работает после 5+ замеренных ударов кота, если кот бьёт почти на каждое твоё действие и промахивается не чаще 25 %. Только когда MP ниже порога: при полной мане экономить нечего, а промах кота может потратить ход впустую. Не на РБ.</div>
-  <h4>✨ Баффы кота</h4>
-  <label>Ставить баффы коту <input id="petBuffAuto" type="checkbox"></label>
-  <label>Баффы кота <input id="nPetBuffs" class="nm" placeholder="Servitor Haste, Servitor Magic Shield…"></label>
-  <label>Бафф держится, с (если в справочнике нет) <input id="petBuffSec" type="number" min="30"></label>
-  <div class="hint">Бафф ставится в бою, когда кот жив, моб не при смерти и маны хватает с запасом. Blessing of Queen относится к бафам слуги; действующий эффект оплаченного набора бот не перезаписывает. Бот проверяет срок и фактическое действие бафа. Перепризыв сам по себе не доказывает, что эффект исчез. Скиллы, у которых в описании магистра «В бою эффекта нет» (сейчас Servitor Wind Walk, Body To Mind), бот не жмёт никогда.</div>
-  <div id="noEffBox" class="hint" style="white-space:pre-line"></div>
-  <h4>📊 Накопленная статистика котов</h4>
-  <div id="petBox" class="box"></div>
-  <div class="row"><button id="petStatReset">🧹 Сбросить статистику котов</button></div>
-
-
-</section>
-
-<!-- 🧪 БАНКИ И РАСХОДНИКИ -->
-<section id="tab-supply">
-  <h4>🧪 Когда пить банки</h4>
-  <label>Аварийные банки при HP ≤ % (подряд, без паузы) <input id="stopHp" type="number"></label>
-  <label>Банка HP при HP ≤ % <input id="hpPotAt" type="number"></label>
-  <label>Банка MP при MP &lt; (ед.) <input id="mpPotAt" type="number"></label>
-  <label>РБ: начинать пить при HP ≤ % <input id="rbPotAt" type="number" min="10" max="99"></label>
-  <label>Автоматическая безопасная полоса HP на РБ <input id="rbBandAuto" type="checkbox"></label>
-  <div class="hint">По известному спецудару и двум обычным ударам начинает пить не ниже 80% HP, при высокой опасности — раньше. Если выключить, действует ручной порог выше.</div>
-  <label>РБ: «цена хода» — лечиться, только когда без этого опасно <input id="rbTurnPrice" type="checkbox"></label>
-  <div class="hint">У знакомого РБ банка или лечение — только если после ещё одного ударного хода HP может упасть ниже «спецудар + 2 удара». Иначе бот бьёт: банка стоит целого хода без урона. Работает вместе с автоматической полосой.</div>
-  <label data-cls="fighter">Заряды на РБ, пока мощные навыки на откате <input id="rbCharge" type="checkbox"></label>
-  <div class="hint" data-cls="fighter">Focused Force применяется только когда Burning Fist, Soul Breaker и Iron Punch недоступны не менее 1,5 с. Готовые мощные навыки всегда имеют приоритет.</div>
-  <label>РБ: пить, пока HP не станет ≥ % <input id="rbPotTo" type="number" min="10" max="100"></label>
-  <label>🧪 Пробный заход вне обычного тура <input id="rbProbe" type="checkbox"></label>
-  <div class="hint">В обычном туре не требуется разрешать пробу: отсутствие истории или оценки DPS не запрещает бой. Истечение времени пробы само по себе не вызывает отход. Эпики и другие маршруты сохраняют отдельные правила.</div>
-  <label>Отступать по прогнозу вне обычного тура <input id="rbChipRetreat" type="checkbox"></label>
-  <label>Макс. попыток захода на одного РБ за час <input id="rbChipMaxAttempts" type="number" min="1" max="10"></label>
-  <div class="hint">В обычном туре аварийный выход по фактической опасности действует независимо от этой галочки. Выход должен подтвердить сервер; после опасного выхода или смерти цель временно пропускается.</div>
-  <div class="hint">РБ: при автоматической полосе начинаем лечение не ниже 80 % HP, при известном сильном спецударе — ещё раньше. Банки не имеют отдельного 10-секундного отката: учитывается серверный общий КД. Предварительный прогноз РБ ориентировочный, не гарантия победы.</div>
+  <div class="subsec-title"><span id="tab-roles" class="tab-anchor"></span>⚔ Общие правила боя</div>
+  <div class="row"><button id="check">🔍 Проверить</button><button id="suggest">🤖 Распознать</button></div>
+  <div class="row" id="applyRow" hidden><button id="apply">✅ Применить предложенное</button></div>
+  <div id="slots" class="box"></div>
+  <label>🤖 Автоназначение ролей <input id="autoRoles" type="checkbox"></label>
+  <h4>⚔ Удары и лечение (название из подсказки)</h4>
+  <label>Силовые, по приоритету <input id="nPower" class="nm"></label>
+  <label>Лечение (скиллы) <input id="nHeal" class="nm" placeholder="Heal, Battle Roar…"></label>
+  <label>MP на скилл, мин. (ед.) <input id="skillMpMin" type="number"></label>
+  <label>Бафф каждые, с (если бафф не виден у шапки) <input id="buffSec" type="number"></label>
+  <h4>✨ Баффы</h4>
+  <label>Баффы <input id="nBuffs" class="nm"></label>
+  <div id="buffAudit" class="hint" style="white-space:pre-line"></div>
+  <h4>🔁 Постоянные баффы (тогглы)</h4>
+  <label>Постоянные <input id="nToggles" class="nm" placeholder="Vicious Stance, Soul Cry, Fist Fury, Arcane Power…"></label>
+  <label>Выключать, когда MP ниже, % <input id="toggleMpOff" type="number" min="0" max="90"></label>
+  <label>Включать снова при MP от, % <input id="toggleMpOn" type="number" min="0" max="100"></label>
+  <div class="hint">Включаются один раз и висят, понемногу тратя MP. Бот держит их включёнными; когда MP падает ниже порога — выключает (MP нужнее на удары и банки) и включает снова, когда MP восстановится. Включён ли тоггл — по строке баффов у шапки, иначе по памяти бота (после смерти память сбрасывается).</div>
   <h4>🎒 Слоты расходников (название из подсказки)</h4>
   <label>Соски <input id="nShots" class="nm"></label>
   <label>Банка MP <input id="nMpPot" class="nm"></label>
@@ -699,114 +678,10 @@
 <div class="hint">Какие слоты панели боя — банки и заряды. «🤖 Распознать» в разделе «Бой» заполняет их сам.</div>
   <h4>🧪 Зелья (бот изучает сам)</h4>
   <div id="potBox" class="zbox"><div class="hint">Пока пусто — бот запишет банки с панели в начале боя, а сколько лечит каждая — после первого глотка.</div></div>
-  <h4>🛒 Закупка расходников (Магазин вещей)</h4>
-  <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
-  <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
-  <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
-  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="200/1000"></label>
-  <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
-  <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
-  <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
-  <div class="hint">Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».</div>
-  <label>Не тратить ниже, аден <input id="shopReserve" class="sm money" type="number" min="0"></label>
-  <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
-  <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
-  <div id="shopBox" class="hint" style="white-space:pre-line"></div>
-
-  <h4>📈 Эффективность и добыча</h4>
-  <div id="effBox" class="box"></div>
-
-  <div class="subsec-title"><span id="tab-loot" class="tab-anchor"></span>🎒 Добыча</div>
-  <h4>🎒 Статистика добычи</h4>
-  <div class="hint">Что выпало, сколько, в час и с какого моба выгоднее всего (шт. за бой — по всем боям с этим мобом, включая пустые).</div>
-  <div id="lootBox" class="zbox"></div>
-  <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
-  <h4>⭐ Особая добыча и ценность</h4>
-  <div id="lootExtra" class="box"></div>
+  <h4>Темп</h4>
+  <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
 </section>
 
-<!-- 🏺 Маммон (9.0) -->
-<section id="tab-mammon">
-  <h4>Где сейчас Маммон</h4>
-  <div id="mmNpcBox" class="camp">Ещё не проверял — бот спросит у игры сам</div>
-  <h4>📦 Заказ торговца</h4>
-  <div id="mmOrderBox" class="camp">Заказа ещё не видел</div>
-  <label title="Ресурс уже есть в сумке → телепорт к торговцу, «Здати», обратно на точку охоты. Не в бою, не в туре РБ/эпиков, не перед TvT">Исполнять заказы сам <input id="mmOrders" type="checkbox"></label>
-  <label title="Телепорт к Маммону стоит 500 000 адены (с VIP бесплатно). Дороже — бот не летит">Макс. цена телепорта, адены <input id="mmTpMax" type="number" min="0" step="50000"></label>
-  <div class="row"><button id="mmPoll">🔄 Проверить заказ</button><button id="mmGoOrder" title="Лететь к торговцу сейчас и сдать заказ (если ресурса в сумке хватает). Телепорт — до лимита цены">📦 Сдать заказ сейчас</button></div>
-  <div id="mmLogBox" class="hint" style="white-space:pre-line"></div>
-  <div class="hint">Заказ — ресурс × N, награда 1 Coin of Luck + 1,5 млн адены, достаётся первому, кто сдаст. Бот спрашивает заказ раз в 90 с (только чтение) и летит, только если ресурса в сумке хватает. Не хватает — ничего не тратит.</div>
-  <h4>⚒ Копить на улучшение у кузнеца</h4>
-  <label>Вещь <select id="mmGoalItem"><option value="0">— цели нет —</option></select></label>
-  <label>До уровня <select id="mmGoalLvl"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3">Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select></label>
-  <label title="Недостающий материал, у которого есть источник в базе «Фарм ресурсов», бот добывает сам: по одному, по порядку (как цель «Фарм ресурса»)">Добывать недостающее самому <input id="mmGoalFarm" type="checkbox"></label>
-  <label title="10.0.7: точка телепорта выбирается по ВСЕМ недостающим материалам цели сразу: для каждого ресурса — шт./бой по дропу и спойлу у мобов точки, редкое сырьё (Mithril Ore 7 % дроп / 42 % спойл) весит больше частого (Iron Ore 16 %). Без галки — как раньше: по одному ресурсу, по порядку">Точку фарма выбирать по всем материалам сразу <input id="mmFarmBest" type="checkbox"></label>
-  <label title="Считать дроп с мобов (16 / 11 / 7 / 4 % в зависимости от ресурса, ×1–3 шт.)">Учитывать дроп <input id="mmFarmDrop" type="checkbox"></label>
-  <label title="Считать спойл: Авто — если класс умеет спойлить (гном-спойлер или роль «Спойл» на панели); Да — всегда; Нет — никогда. Спойл в этой игре даёт обычное сырьё только с мобов 3–35 ур. (55 %), Mithril Ore / Stone of Purity с 36–75 ур. (42 %), Oriharukon с 51+ и Adamantite с 61+ (36 %)">Учитывать спойл <select id="mmFarmSpoil"><option value="auto">Авто (если умею спойлить)</option><option value="on">Да</option><option value="off">Нет</option></select></label>
-  <label title="Источники дропа и спойла бот читает прямо из игры (GET /game/farm-guide, то же, что форум «Фарм ресурсов») раз в сутки — с форума он видел только дроп, спойл-строки никогда. Только чтение, ничего не нажимает">Источники дропа и спойла брать из игры (раз в сутки) <input id="mmFarmGuide" type="checkbox"></label>
-  <label title="Сырьё, которое продаёт обычный магазин (Кристал: ранг D/C/B/A/S, Самоцвіт, Soul/Spirit Ore), бот докупает за адену в обычной закупке расходников — ровно недостачу по плану, в пределах резерва и лимита трат за раз (раздел «Закупка»)">Докупать сырьё из магазина (кристаллы и т. п.) <input id="mmShopBuy" type="checkbox"></label>
-  <label title="Цены следующего уровня кузнец показывает только рядом с собой: бот слетает к нему (телепорт по лимиту выше), прочитает и вернётся. Не чаще раза в 6 ч">Узнавать цены у кузнеца сам <input id="mmSmithAuto" type="checkbox"></label>
-  <label title="Разрешено игроком 12.10. Когда для следующего уровня вещи-цели всё собрано (материалы, адена, Coin of Luck), бот летит к кузнецу и жмёт «Покращити» — по одному уровню, только эту вещь и только до уровня цели. Coin of Luck тратится только здесь">Улучшать вещь-цель у кузнеца сам (тратит Coin of Luck) <input id="mmUpgrade" type="checkbox"></label>
-  <div id="mmGoalBox" class="camp">Цели нет</div>
-  <div id="mmPlanBox" class="hint mm-plan"></div>
-  <div class="row"><button id="mmGuideNow" title="Прочитать источники дропа и спойла из игры сейчас (только чтение, ≈2 МБ)">🔄 Источники из игры</button><button id="mmSmith">⚒ Узнать цены у кузнеца</button><button id="mmGoUp" title="Лететь к кузнецу сейчас и улучшить вещь-цель на один уровень (тратит Coin of Luck). Если чего-то не хватает — кузнец покажет, бот ничего не нажмёт">⬆ Улучшить сейчас</button></div>
-  <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
-  <h4>📮 Почта</h4>
-  <label title="Раз в 10 мин бот смотрит почту (только чтение); пришли предметы — заходит в «Пошта → Предмети» и жмёт «Забрати». Вернувшееся от крафтера списывается с «у крафтера»">Забирать предметы из почты сам <input id="mmMailClaim" type="checkbox"></label>
-  <div id="mmCraftBox" class="hint" style="white-space:pre-line"></div>
-  <div class="row"><button id="mmCraftForget" title="Крафтер ответил иначе или вернул вручную — бот забудет, что у крафтера что-то лежит">↺ Забыть, что у крафтера</button></div>
-  <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
-</section>
-
-<!-- Дневные ограничения и прежние разовые цели -->
-<section id="tab-limits">
-  <h4>⏱ Дневные лимиты</h4>
-  <div class="hint">0 — без ограничения. Достигнут лимит — задача ждёт следующего дня, бот продолжает остальные. Выбор задач сохраняется. Сброс суток в 00:00 по Владивостоку (UTC+10), затем выбранная задача доступна снова. Счёт начинается после включения лимита; прошлую добычу бот не восстанавливает.</div>
-  <div class="hint">Можно задать точное число или диапазон «от … до …». По диапазону бот выбирает целое число один раз на день или разовую серию и показывает его ниже. Пауза и перезагрузка число не меняют. Ввод точного числа отключает диапазон; «Точно» оставляет выбранное число фиксированным.</div>
-  <div id="dailyLimitsDay" class="hint"></div>
-  <label>🐟 Рыбы в день <input id="dailyFishLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="dailyFishLimit">
-    <div class="row"><input id="dailyFishLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyFishLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyFishLimitRangeSet" type="button">Диапазон</button><button id="dailyFishLimitRangeClear" type="button">Точно</button></div>
-    <div id="dailyFishLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="fishDailyProgress" class="hint"></span><button id="fishDailyReset" type="button">Сбросить за сегодня</button></div>
-  <label title="Один общий счётчик на автофарм и катакомбы: убитые в обеих охотах складываются, по достижении обе ждут 00:00">⚔ Мобов в день: автофарм + катакомбы вместе <input id="dailyKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="dailyKillLimit">
-    <div class="row"><input id="dailyKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyKillLimitRangeSet" type="button">Диапазон</button><button id="dailyKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="dailyKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="mobsDailyProgress" class="hint"></span><button id="mobsDailyReset" type="button">Сбросить за сегодня</button></div>
-  <div class="hint">Рыба считается по успешным поимкам. Мобы автофарма и катакомб идут в один общий счётчик по серверному числу убийств, включая массовые атаки; заводская настройка — диапазон 8434–9119 на мобов и столько же на рыбу (новое число каждые сутки), 0 снимает ограничение. Текущий бой завершается целиком, поэтому итог может превысить лимит. Пауза и перезагрузка не сбрасывают прогресс. Сброс статистики рыбалки тоже его сохраняет.</div>
-  <h4>Разовая цель автофарма</h4>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="autoKillLimit">
-    <div class="row"><input id="autoKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="autoKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="autoKillLimitRangeSet" type="button">Диапазон</button><button id="autoKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="autoKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
-  <h4>Разовая цель катакомб</h4>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="catKillLimit">
-    <div class="row"><input id="catKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="catKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="catKillLimitRangeSet" type="button">Диапазон</button><button id="catKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="catKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
-  <div class="hint">Эти цели считаются с момента настройки. После выполнения снимается только соответствующая задача. Новый лимит или сброс начинают новую серию; автоматически на следующий день она не включается.</div>
-  <h4>🎯 Цель рыбалки</h4>
-  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select></div>
-  <div class="row"><input id="fishTgtN" type="number" min="1" placeholder="От / точно" style="width:80px;flex:1;min-width:0"><input id="fishTgtMax" class="limitRangeInput" type="number" min="0" step="1" placeholder="До (необяз.)" aria-label="До: цель рыбалки" style="width:80px;flex:1;min-width:0"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
-  <div class="hint">Для случайной цели укажите «от» и «до». Пустое «до» — точное число. Новая цель выбирается только по кнопке «Поставить»; рыба и Proof поддерживают диапазон.</div>
-  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
-  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
-  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
-  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
-  <div class="limit-range" data-limit-key="fishMaxCasts">
-    <div class="row"><input id="fishMaxCastsFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="fishMaxCastsTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="fishMaxCastsRangeSet" type="button">Диапазон</button><button id="fishMaxCastsRangeClear" type="button">Точно</button></div>
-    <div id="fishMaxCastsRangeInfo" class="hint"></div>
-  </div>
-</section>
-
-<!-- 🎣 РЫБАЛКА -->
 <section id="tab-fish">
   <h4>Как бот рыбачит</h4>
   <div class="hint">Выберите «Рыбалка» в списке задач сверху и нажмите «Старт»: бот идёт к рыбаку (Город → Рыбак), выбирает наживку, включает рыболовные заряды, забрасывает удочку и вываживает рыбу — перед каждым нажатием читает подсказку «Рыба замерла → Pumping» / «Рыба сопротивляется → Reeling». Бой и охота в этом режиме не ведутся.</div>
@@ -848,12 +723,97 @@
   <div id="goalQueue" class="hint" style="white-space:pre-line"></div>
   <input id="fishGoal" hidden>
   <div class="hint">Инвентарь → «Рибалка» → рыба: MAX → «Разрезать», Old Box: MAX → «Открыть». Затем «Рыболовный магазин» → «Обмен материалов»: всё, чего хватает на Proof (Fish Oil 25→1, Fish Scale 5→1, Fish Gem 4→1…). Расходники за аден — «Магазин» на странице рыбалки; за Proof — «Рыболовный магазин» → «Товары».</div>
+  <div class="subsec-title" id="tab-supply">🛒 Закупка расходников</div>
+  <h4>🛒 Закупка расходников (Магазин вещей)</h4>
+  <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
+  <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
+  <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
+  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="200/1000"></label>
+  <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
+  <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
+  <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
+  <div class="hint">Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».</div>
+  <label>Не тратить ниже, аден <input id="shopReserve" class="sm money" type="number" min="0"></label>
+  <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
+  <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
+  <div id="shopBox" class="hint" style="white-space:pre-line"></div>
+  <div class="subsec-title" id="tab-mammon">🏺 Маммон</div>
+  <h4>Где сейчас Маммон</h4>
+  <div id="mmNpcBox" class="camp">Ещё не проверял — бот спросит у игры сам</div>
+  <h4>📦 Заказ торговца</h4>
+  <div id="mmOrderBox" class="camp">Заказа ещё не видел</div>
+  <label title="Ресурс уже есть в сумке → телепорт к торговцу, «Здати», обратно на точку охоты. Не в бою, не в туре РБ/эпиков, не перед TvT">Исполнять заказы сам <input id="mmOrders" type="checkbox"></label>
+  <label title="Телепорт к Маммону стоит 500 000 адены (с VIP бесплатно). Дороже — бот не летит">Макс. цена телепорта, адены <input id="mmTpMax" type="number" min="0" step="50000"></label>
+  <div class="row"><button id="mmPoll">🔄 Проверить заказ</button><button id="mmGoOrder" title="Лететь к торговцу сейчас и сдать заказ (если ресурса в сумке хватает). Телепорт — до лимита цены">📦 Сдать заказ сейчас</button></div>
+  <div id="mmLogBox" class="hint" style="white-space:pre-line"></div>
+  <div class="hint">Заказ — ресурс × N, награда 1 Coin of Luck + 1,5 млн адены, достаётся первому, кто сдаст. Бот спрашивает заказ раз в 90 с (только чтение) и летит, только если ресурса в сумке хватает. Не хватает — ничего не тратит.</div>
+  <h4>⚒ Копить на улучшение у кузнеца</h4>
+  <label>Вещь <select id="mmGoalItem"><option value="0">— цели нет —</option></select></label>
+  <label>До уровня <select id="mmGoalLvl"><option value="1">Lv.1</option><option value="2">Lv.2</option><option value="3">Lv.3</option><option value="4">Lv.4</option><option value="5">Lv.5</option></select></label>
+  <label title="Недостающий материал, у которого есть источник в базе «Фарм ресурсов», бот добывает сам: по одному, по порядку (как цель «Фарм ресурса»)">Добывать недостающее самому <input id="mmGoalFarm" type="checkbox"></label>
+  <label title="10.0.7: точка телепорта выбирается по ВСЕМ недостающим материалам цели сразу: для каждого ресурса — шт./бой по дропу и спойлу у мобов точки, редкое сырьё (Mithril Ore 7 % дроп / 42 % спойл) весит больше частого (Iron Ore 16 %). Без галки — как раньше: по одному ресурсу, по порядку">Точку фарма выбирать по всем материалам сразу <input id="mmFarmBest" type="checkbox"></label>
+  <label title="Считать дроп с мобов (16 / 11 / 7 / 4 % в зависимости от ресурса, ×1–3 шт.)">Учитывать дроп <input id="mmFarmDrop" type="checkbox"></label>
+  <label title="Считать спойл: Авто — если класс умеет спойлить (гном-спойлер или роль «Спойл» на панели); Да — всегда; Нет — никогда. Спойл в этой игре даёт обычное сырьё только с мобов 3–35 ур. (55 %), Mithril Ore / Stone of Purity с 36–75 ур. (42 %), Oriharukon с 51+ и Adamantite с 61+ (36 %)">Учитывать спойл <select id="mmFarmSpoil"><option value="auto">Авто (если умею спойлить)</option><option value="on">Да</option><option value="off">Нет</option></select></label>
+  <label title="Источники дропа и спойла бот читает прямо из игры (GET /game/farm-guide, то же, что форум «Фарм ресурсов») раз в сутки — с форума он видел только дроп, спойл-строки никогда. Только чтение, ничего не нажимает">Источники дропа и спойла брать из игры (раз в сутки) <input id="mmFarmGuide" type="checkbox"></label>
+  <label title="Сырьё, которое продаёт обычный магазин (Кристал: ранг D/C/B/A/S, Самоцвіт, Soul/Spirit Ore), бот докупает за адену в обычной закупке расходников — ровно недостачу по плану, в пределах резерва и лимита трат за раз (раздел «Закупка»)">Докупать сырьё из магазина (кристаллы и т. п.) <input id="mmShopBuy" type="checkbox"></label>
+  <label title="Цены следующего уровня кузнец показывает только рядом с собой: бот слетает к нему (телепорт по лимиту выше), прочитает и вернётся. Не чаще раза в 6 ч">Узнавать цены у кузнеца сам <input id="mmSmithAuto" type="checkbox"></label>
+  <label title="Разрешено игроком 12.10. Когда для следующего уровня вещи-цели всё собрано (материалы, адена, Coin of Luck), бот летит к кузнецу и жмёт «Покращити» — по одному уровню, только эту вещь и только до уровня цели. Coin of Luck тратится только здесь">Улучшать вещь-цель у кузнеца сам (тратит Coin of Luck) <input id="mmUpgrade" type="checkbox"></label>
+  <div id="mmGoalBox" class="camp">Цели нет</div>
+  <div id="mmPlanBox" class="hint mm-plan"></div>
+  <div class="row"><button id="mmGuideNow" title="Прочитать источники дропа и спойла из игры сейчас (только чтение, ≈2 МБ)">🔄 Источники из игры</button><button id="mmSmith">⚒ Узнать цены у кузнеца</button><button id="mmGoUp" title="Лететь к кузнецу сейчас и улучшить вещь-цель на один уровень (тратит Coin of Luck). Если чего-то не хватает — кузнец покажет, бот ничего не нажмёт">⬆ Улучшить сейчас</button></div>
+  <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
+  <div class="adv-start" data-adv="fish">⚙ Дополнительно</div>
+  <h4>📮 Почта</h4>
+  <label title="Раз в 10 мин бот смотрит почту (только чтение); пришли предметы — заходит в «Пошта → Предмети» и жмёт «Забрати». Вернувшееся от крафтера списывается с «у крафтера»">Забирать предметы из почты сам <input id="mmMailClaim" type="checkbox"></label>
+  <div id="mmCraftBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="mmCraftForget" title="Крафтер ответил иначе или вернул вручную — бот забудет, что у крафтера что-то лежит">↺ Забыть, что у крафтера</button></div>
+  <h4>📈 Эффективность и добыча</h4>
+  <div id="effBox" class="box"></div>
+  <div class="subsec-title"><span id="tab-loot" class="tab-anchor"></span>🎒 Добыча</div>
+  <h4>🎒 Статистика добычи</h4>
+  <div class="hint">Что выпало, сколько, в час и с какого моба выгоднее всего (шт. за бой — по всем боям с этим мобом, включая пустые).</div>
+  <div id="lootBox" class="zbox"></div>
+  <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
+  <h4>⭐ Особая добыча и ценность</h4>
+  <div id="lootExtra" class="box"></div>
+  <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
 </section>
 
-
-
-<!-- ⚙ СЕРВИС -->
 <section id="tab-svc">
+  <div class="subsec-title" id="tab-pvp">⚔ TvT и PvP</div>
+  <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
+  <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
+  <div class="hint">При включённом TvT регистрация всегда первая: мест всего 20. Фарм и РБ прерываются для записи; до подтверждения регистрации другие дела не начинаются.</div>
+  <label title="За сколько минут до старта TvT бот перестаёт начинать другие дела (закупка, магистр, баффы, Маммон, квесты, дейлики, туры, телепорты) и стоит на месте; бой с мобом доводит. За минуту до старта идёт на арену">TvT важнее всего: задачи откладывать за, мин <input id="tvtHoldMin" type="number" min="1" max="10"></label>
+  <label title="На арене жать «Атака питомца» (кот/слуга бьёт только по этой кнопке)">На TvT бить и питомцем <input id="tvtPet" type="checkbox"></label>
+  <div class="hint">Бот сам записывается (окно «Зарегистрироваться на TvT? — Да» или кнопка на арене), фармит до старта, за минуту до боя идёт на «TvT Arena» и бьётся: цель — живой враг, которого быстрее всего добить (меньше HP + CP), удары — из «Силовых» по откату, банки HP с 60 %. После боя пишет итог и награду в журнал и возвращается к фарму. Слоты (игровое время): 08:00, 15:00, 20:00. Бьёт всегда — иначе награду за победу не дадут («afk»).</div>
+  <div class="hint" data-cls="fighter">Воин на TvT: перед силовыми — стан (если цель не в стане), сверхсильные и удары за энергию; энергию копит скилл из «Копит энергию».</div>
+  <div class="subsec-title"><span id="tab-tvtshop" class="tab-anchor"></span>🛒 Магазин TvT (Shil Coins)</div>
+  <div id="tsBox" class="hint"></div>
+  <label>Копить на <select id="tsGoalItem" class="wide"></select></label>
+  <label title="Когда Shil Coins хватает и уровень героя достаточный — бот сам идёт в «TvT Магазин» и жмёт «Купити» (вне боя и туров). Одна вещь — одна покупка">🛒 Покупать сам, когда хватит <input id="tsBuy" type="checkbox"></label>
+  <div id="tsGoalBox" class="hint"></div>
+  <div class="hint">Когда монет на цель хватит, здесь и в «Обзоре» появится отметка «✔ Готово» (и запись в журнале). Сам бот покупает только с галочкой выше.</div>
+  <div class="hint">Shil Coins дают за победу в TvT (2 за бой). Все вещи магазина — S-grade с 70 уровня. Монеты бот считает по сумке из ответов игры (сумка читается при старте и раз в час).</div>
+  <div class="subsec-title">🎯 PvP</div>
+  <h4>🎯 Атаковать при встрече</h4>
+  <div id="pvpTargetsPanel"></div>
+  <div class="subsec-title"><span id="tab-enemies" class="tab-anchor"></span>☠ Лист врагов</div>
+  <div class="intro-callout"><b>Кто убил тебя — тот враг.</b><p>Игрок, убивший героя, сам попадает в лист (из ответа игры: ник, сколько раз убил, какими ударами). Пока герой охотится, бот поглядывает, кто на локации (раз в 30 с). Враг из листа появился — бот добивает текущего моба и нападает на него кнопкой игры «Атакувати». Убил — следит дальше: вернётся — нападёт снова. Напал враг из листа — бот отвечает.</p></div>
+  <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
+  <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
+  <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
+  <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
+  <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
+  <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
+  <label>Проиграли подряд — не трогать до нового уровня после, раз <input id="enemyMaxLoss" type="number" min="1" max="10"></label>
+  <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
+  <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
+
+  <div class="subsec-title">⚙ Сервис</div>
+  <h4>📌 Меню и индикатор</h4>
+  <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
+  <label>🖥 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
   <h4>🔐 Автовход (если выбило из игры)</h4>
   <label>Логин (ник) <input id="authLogin" class="nm" autocomplete="off" spellcheck="false"></label>
   <label>Пароль <input id="authPass" class="nm" type="password" autocomplete="new-password"></label>
@@ -865,10 +825,9 @@
   <h4>💾 Память бота (перед обновлением)</h4>
   <div class="row"><button id="memSave" class="main">💾 Сохранить память</button><button id="memLoad">📂 Загрузить память</button><input id="memFile" type="file" accept=".json,application/json" hidden></div>
   <div id="memNote" class="hint">База РБ («не по силам», убитые), выученные скиллы и КД, тотемы, зоны, добыча, рыбалка и все настройки — в один файл. Chrome стирает память, если расширение удалить или загрузить заново из другой папки. Обновляйтесь так: распакуйте новую версию поверх старой папки → «Обновить» на chrome://extensions. Если ставите заново — сначала «Сохранить память», после установки «Загрузить память». Логин и пароль в файл не попадают.</div>
+  <div class="adv-start" data-adv="svc">⚙ Дополнительно</div>
 
   <div class="subsec-title"><span id="tab-log" class="tab-anchor"></span>≋ Диагностика</div>
-  <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
-  <label>🖥 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
   <label>Записывать клики и действия бота <input id="rec" type="checkbox"></label>
   <label>📸 Снимки новых состояний страниц <input id="autoSnap" type="checkbox"></label>
   <div id="recCount" class="hint"></div>
@@ -892,7 +851,7 @@
 
 </div><!-- /.workarea -->
 </div><!-- /.app-shell -->
-<footer><span id="settingsState">Настройки сохраняются автоматически после изменения поля</span><br>L2wap Control Center <span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск</footer>
+<footer><span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+1…6</span> разделы · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск · <span id="settingsState">Настройки сохраняются автоматически после изменения поля</span></footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="zone-db.js"></script>
 <script src="zone-kpd.js"></script>

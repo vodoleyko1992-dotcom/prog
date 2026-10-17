@@ -39,9 +39,9 @@ with sync_playwright() as p:
           page.add_script_tag(content=(root / script).read_text())
         page.wait_for_timeout(450)
         # Exposed mode must work from a real user click, not only rod +10.
-        page.locator('#navToggle').click()
+        # 20.12 (ревизия 17.10): навигация всегда на виду, кнопки «≡ Разделы» нет.
         page.locator('#moduleNav button[data-tab="fish"]').click()
-        if page.locator('#quickModeGrid').is_hidden(): page.locator('#modeToggle').click()   # 10.0: «◫ Быстрые режимы» сворачивает сетку, по умолчанию она открыта
+        if page.locator('#quickModeGrid').is_hidden(): page.locator('#modeToggle').click()   # 20.12: строка «Задачи бота» открывает список задач в «Обзоре» (по умолчанию свёрнут)
         # Canonical task selection saves without starting; Start owns wake acknowledgement.
         page.locator('[data-auto-task="fish"]').check()
         page.wait_for_function('__mockState.cfg.autoTasks.includes("fish")')

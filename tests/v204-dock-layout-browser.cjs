@@ -25,7 +25,7 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  assert.equal(await frame.locator('#tab-svc').isVisible(),true);
  await p.locator('#l2bot-dock-wide').click();await until(()=>p.locator('#l2bot-dock-wide').getAttribute('aria-pressed').then(v=>v==='false'));
  assert.equal(await core("ui.classList.contains('dock-covered')"),false);
- assert.equal(await frame.locator('#navToggle').isVisible(),true);
+ assert.equal(await frame.locator('nav [data-tab="svc"]').isVisible(),true);   // 20.12 (ревизия 17.10): узкая док-панель — шесть значков разделов вместо «≡ Разделы»
  await p.locator('#l2bot-dock-wide').click();await until(()=>frame.locator('nav [data-tab="svc"]').isVisible());
  await frame.locator('header').evaluate(el=>el.scrollTop=0);
  await p.screenshot({path:__dirname+'/../work/dock-x2.png'});

@@ -21,7 +21,8 @@ mock = mock.replace("cfg:{", "cfg:{tsGoalItem:920033,");
     for (const j of [...fs.readFileSync(path.join(root,'popup.html'),'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1])) await page.addScriptTag({ content: fs.readFileSync(path.join(root, j), 'utf8') });
     await page.waitForTimeout(900);
     const dash = await page.$eval('#dashLines', e => e.textContent);
-    await page.locator('#navToggle').click(); await page.locator('#moduleNav button[data-tab="pvp"]').click(); await page.waitForTimeout(400);
+    await page.evaluate(() => showTab('pvp'));   // 20.12 (ревизия 17.10): «≡ Разделы» нет, старое имя pvp → «TvT/PvP и сервис»
+    await page.waitForTimeout(400);
     await page.evaluate(() => document.querySelector('#tsBox').scrollIntoView());
     const box = await page.$eval('#tsBox', e => e.textContent), goal = await page.$eval('#tsGoalBox', e => e.textContent);
     const opts = await page.$$eval('#tsGoalItem option', o => o.map(x => x.textContent)), sel = await page.$eval('#tsGoalItem', e => e.value);

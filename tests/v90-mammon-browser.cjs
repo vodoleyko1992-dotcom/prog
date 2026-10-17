@@ -97,9 +97,9 @@ const PAGES = {
     await page.setContent(html, { waitUntil: 'domcontentloaded' });
     for (const c of ['ui-v7.css', 'ui-game.css']) await page.addStyleTag({ content: read(c) });
     for (const j of [...require('fs').readFileSync(require('path').join(root, 'popup.html'), 'utf8').matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1])) await page.addScriptTag({ content: read(j) });
-    await page.evaluate(() => document.querySelector('nav button[data-tab="mammon"]').click());
+    await page.evaluate(() => showTab('mammon'));   // 20.12 (ревизия 17.10): Маммон — подраздел «Рыбалки и снабжения»
     await page.waitForTimeout(1200);
-    const t = await page.$eval('#tab-mammon', e => e.innerText), opts = await page.$$eval('#mmGoalItem option', o => o.length), sel = await page.$eval('#mmGoalItem', e => e.value);
+    const t = await page.$eval('#tab-fish', e => e.innerText), opts = await page.$$eval('#mmGoalItem option', o => o.length), sel = await page.$eval('#mmGoalItem', e => e.value);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     await page.evaluate(() => document.querySelector('#mmPoll').click()); await page.waitForTimeout(200);
     const req = await page.evaluate(() => window.__mockState?.rt?.mmPollReq);

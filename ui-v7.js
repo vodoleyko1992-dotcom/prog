@@ -73,7 +73,6 @@
     toggleMpOn:'Вновь активировать постоянные умения при восстановлении MP выше порога.',
     nSpoil:'Название умения точечного Spoil для пометки противника.',
     nSpoilMass:'Название массового Spoil для нескольких противников.',
-    nSweep:'Название умения сбора добычи после удачного Spoil.',
     spoilRb:'Разрешить попытки Spoil в боях с рейд-боссами.',
     drainHp:'При HP ниже этого процента отдавать приоритет лечащим уронным умениям.',
     nDrain:'Названия умений с поглощением здоровья от урона.',
@@ -90,7 +89,7 @@
     shopSoul:'Формат мин/до для Soul Ore.',
     shopReserve:'Минимальная сумма аден, которую бот должен оставить после закупки.',
     shopMaxSpend:'Максимальная сумма аден, разрешённая на одну закупку.',
-    fishBait:'Тип наживки. Хорошая наживка может требовать покупки за Proof.',
+    fishBait:'Авто — хорошая наживка, пока она есть в сумке (из Old Box; бот её не покупает), иначе обычная за адену.',
     fishShots:'Применять рыболовные заряды во время ловли.',
     fishAutoBuy:'Автоматически докупать рыболовные расходники за адены.',
     fishBuyPacks:'Количество пакетов обычной наживки на одну закупку (по умолчанию 100 = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч; кончилась — бот докупит).',
@@ -111,84 +110,14 @@
     gameMsgLog:'Сохранять всплывающие сообщения игры и уведомления.',
     learnShots:'Сохранять скриншоты при обнаружении изменений страниц при наличии разрешения браузера.'
   };
-  const titles = {
-    pvp: ['PvP', 'Цели при встрече, обычные враги и командные бои'],
-    warlock: ['Warlock и суммоны', 'Призыв, лечение, бафы и статистика кота или пантеры'],
-    overview:['Обзор','Сводка сессии: темп, РБ, рыбалка, запасы, кот'],
-    hunt:['Охота','Фарм на месте, TvT, локации и автофарм, катакомбы'],
-    autofarm:['Автофарм','Автоподбор локации для кача'],
-    loc:['Локации','Ресурсы и рецепты'],
-    rb:['РБ и эпики','Обычные РБ, тур по РБ, эпик-боссы'],
-    epic:['Эпические боссы','Отдельная стратегия, ресурсы и ограничения'],
-    dungeon:['Катакомбы','Автоматический фарм внутри подземелий'],
-    fish:['Рыбалка','Оснастка, улов, обработка и Proof'],
-    limits:['Лимиты','Дневные квоты, счётчики и разовые цели'],
-    enchant:['Автозаточка','Отдельный режим: очередь вещей, лимиты и результаты серии'],
-    panel:['Бой','Анализ боя, общие правила, классы: Warlock и кот, маг, спойлер, воин; герой'],
-    analyze:['Анализ боя','Класс и профиль, память на цель, ДПС'],
-    roles:['Общие правила боя','Роли скиллов, удары, лечение, баффы, тогглы'],
-    pet:['Warlock','Кот Warlock: призыв, лечение, баффы, статистика'],
-    mage:['Маг','Дебаффы и вампиризм'],
-    spoil:['Спойлер','Спойл и масс-спойл'],
-    fighter:['Воин','Атака, станы, энергия силы, сверхсильные, важные баффы'],
-    fight:['Тактика и герой','Безопасность, оборудование и городские сервисы'],
-    supply:['Снабжение','Банки, закупка, добыча, эффективность'],
-    loot:['Добыча','Учет и эффективность предметов'],
-    log:['Диагностика','Журналы, API, снимки и автообучение'],
-    mammon:['Маммон','Заказы торговца, кузнец, накопление на улучшение'],
-    svc:['Сервис','Автовход, память, настройки, журнал и диагностика']
-  };
-  // Large, discoverable tile menu: all 8 sections appear at once, no sideways scrolling.
-  // Collapse after selection, preserving room for module settings in a 375px dock.
+  // 20.12 (ревизия 17.10): шапка — одна строка-сводка задач; сами галки — в «Обзоре» (popup.js taskListToggle).
+  // Разделов шесть, навигация всегда на виду: выпадающий список «Разделы», строка заголовка раздела и её подписи убраны.
   const modeToggle = document.getElementById('modeToggle');
-  const quickModes = document.getElementById('quickModeGrid');
-  const modeSummary = document.getElementById('modeSummary');
-  const updateModeSummary = () => {
-    if (typeof paintModes === 'function') return;   // 7.1.31: сводку «режим · дополнения» пишет popup.js (paintModes)
-    const active = [...(quickModes?.querySelectorAll('[data-auto-task]:checked') || [])]
-      .map(el => el.closest('label')?.textContent.trim()).filter(Boolean);
-    if (modeSummary) modeSummary.textContent = active.length ? `Выбрано: ${active.join(', ')}` : 'Задачи не выбраны';
-  };
-  modeToggle?.addEventListener('click', () => {
-    const open = quickModes?.hidden;
-    if (quickModes) quickModes.hidden = !open;
-    modeToggle.setAttribute('aria-expanded',String(!!open));
-  });
-  if (quickModes) new MutationObserver(updateModeSummary).observe(quickModes,{subtree:true,attributes:true,attributeFilter:['class'],childList:true,characterData:true});
-  updateModeSummary();
-  const shell = document.querySelector('.app-shell');
-  const navToggle = document.getElementById('navToggle');
-  const navCurrentName = document.getElementById('navCurrentName');
-  const setNavOpen = open => {
-    shell?.classList.toggle('nav-collapsed', !open);
-    navToggle?.setAttribute('aria-expanded', String(open));
-  };
-  navToggle?.addEventListener('click', () => setNavOpen(shell?.classList.contains('nav-collapsed')));
-  document.querySelectorAll('#moduleNav button[data-tab]').forEach(b =>
-    b.addEventListener('click', () => setNavOpen(false)));
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !shell?.classList.contains('nav-collapsed')) {
-      setNavOpen(false); navToggle?.focus();
-    }
-  });
-  // Existing onClick/showTab handlers are owned by popup.js; listen without overriding.
-  const title = document.getElementById('currentSectionTitle');
-  const subtitle = document.getElementById('currentSectionDesc');
-  const updateTab = tab => {
-    const [name,desc] = titles[tab] || titles.overview;
-    if (navCurrentName) navCurrentName.textContent = '· ' + name;
-    if (title) title.textContent = name;
-    if (subtitle) subtitle.textContent = desc;
-    // Прокрутку хранит showTab: возврат в длинный раздел не сбрасывает позицию.
-  };
-  document.addEventListener('l2:tabchange', e => updateTab(e.detail.tab));
-  updateTab(document.querySelector('nav button.act')?.dataset.tab || 'overview');
+  modeToggle?.addEventListener('click', () => { if (typeof taskListToggle === 'function') taskListToggle(); });
   document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => {
-    const tab = b.dataset.goto;
     // 7.1.31: бывшие разделы (epic, dungeon…) — подразделы новых; showTab сам найдёт раздел и прокрутит к подразделу
-    if (typeof showTab === 'function') { showTab(tab); document.documentElement.querySelector('.app-shell')?.classList.add('nav-collapsed'); return; }
-    const nav = document.querySelector('nav button[data-tab="'+tab+'"]');
-    if (nav) nav.click();
+    if (typeof showTab === 'function') return showTab(b.dataset.goto);
+    document.querySelector('nav button[data-tab="'+b.dataset.goto+'"]')?.click();
   }));
   for(const [id,description] of Object.entries(HELP)) {
     const el=document.getElementById(id);

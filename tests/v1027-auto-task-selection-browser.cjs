@@ -7,6 +7,7 @@ const { harness, until } = require('./v1014-core-lifecycle-browser.cjs'), assert
     await h.sw.evaluate(async () => { const { cfg, rt } = await chrome.storage.local.get(['cfg', 'rt']); await chrome.storage.local.set({ on: false, cfg: { ...cfg, autoTasks: ['tvt'], fishMode: true, campaign: true }, rt: { ...rt, _src: 'selection-ui-test', enchant: { status: 'done', totals: { byScroll: {} }, items: [], history: [] } } }); });
     await h.popup.goto('chrome-extension://' + h.id + '/popup.html?dock=1');
     await until(() => h.popup.locator('#autoTaskSelection [data-auto-task="tvt"]').isChecked());
+    await h.tasks();   // 20.12 (ревизия 17.10): список задач — в «Обзоре», свёрнут по умолчанию
     assert.equal(await h.popup.locator('#autoTaskSelection input:checked').count(), 1);
     // load() может завершить старый снимок между кликом и async menuPatch: Playwright check()
     // проверяет мгновенное состояние. Команда уже сохранена; ждём commit и окончательную отрисовку.

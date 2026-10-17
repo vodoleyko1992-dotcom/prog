@@ -58,7 +58,7 @@ const mk = rt => {
   assert.match(content, /am === 'raid' && rt\.rbOne\?\.on && '🎯 по одному РБ'/, 'indicator shows the mode');
   // меню: кнопка в «Центре управления» РБ; повторное нажатие во время работы не сбивает; выбор режима руками — обычный тур
   const html = read('popup.html'), popup = read('popup.js');
-  const box = html.slice(html.indexOf('<div class="rb-summary">'), html.indexOf('<div class="rb-primary">'));
+  const box = html.slice(html.indexOf('<div class="rb-summary')/* 20.12: класс no-card — сводка вне карточки */, html.indexOf('<div class="rb-primary">'));
   assert.match(box, /<button id="rbOneBtn" type="button"[^>]*>🎯 Убить один РБ и ждать команды<\/button><div id="rbOneInfo" class="hint"><\/div>/);
   assert.match(popup, /if \(on && cfg\.rbHuntMode && rt\.rbOne\?\.on\) return toast\(/);
   assert.match(popup, /const one = \{ \.\.\.\(rt\.rbOne \|\| \{\}\), on: true, k0: rt\.rbKills \|\| 0, t: now \};/);
