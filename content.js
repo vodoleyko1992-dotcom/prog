@@ -2044,8 +2044,6 @@ function campaignState(...args) { return L2V7Modules.quests.campaignState(...arg
 
 async function campaign(...args) { return L2V7Modules.quests.campaign(...args); }
 
-// мало HP в обычном бою: выйти из боя, восстановиться до 80 % и продолжить. Стоп — если так 3 раза за 20 мин.
-
 async function onDeath(...args) { return L2V7Modules.survival.onDeath(...args); }
 // ---------- после смерти: город → магическая статуя (иначе «Восстановить» у баффера не работает) ----------
 const DEAD_RE = /знепритомн|без сознани|сначала натисни|спочатку натисни|сначала нажми/i;
