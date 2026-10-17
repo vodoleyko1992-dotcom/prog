@@ -1470,7 +1470,6 @@ const RB_TRY_MS = 10 * 60000, RB_RETRY_MS = 2 * 60000;
 // (P.Atk и HP растут ≈ как уровень в 3-й степени — сверено по замерам 45/47/49/55).
 function rbStatsGuess(...args) { return L2V7Modules.raid.rbStatsGuess(...args); }
 function rbTeleportCheck(...args) { return L2V7Modules.raid.rbTeleportCheck(...args); }
-const now_ = (...args) => L2V7Modules.raid.now_(...args);
 function rbListPick(...args) { return L2V7Modules.raid.rbListPick(...args); }
 // почему никого: разбивка по причинам (для статуса и журнала)
 function rbListWhy(...args) { return L2V7Modules.raid.rbListWhy(...args); }
@@ -1923,7 +1922,6 @@ function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args
 async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; if (L2V7Modules.payments?.blocked?.()) return false; return L2V7Modules.buffs.townBuffStart(...args); }
 async function townBuffStep(...args) { return L2V7Modules.buffs.townBuffStep(...args); }
 
-async function rest(...args) { return L2V7Modules.resources.rest(...args); }
 // 8.0.3 (лог 11.10 10:13:25 «РБ HP 704k ≈6:60», 09:59:54 «до опасного HP ≈-1:-1»): секунды округлялись отдельно от минут (419,6 с →
 // «6:60»), отрицательное не обрезалось. Теперь сначала округляем всё время, меньше нуля — «0:00» (уже)
 const fmtT = sec => { if (!isFinite(sec)) return '∞'; const s = Math.max(0, Math.round(sec)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };

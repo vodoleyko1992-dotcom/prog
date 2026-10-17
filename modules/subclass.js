@@ -43,7 +43,9 @@ const spoilFirst = () => role() === 'spoiler' && env.cfg.subSpoilFirst !== false
 // другой персонаж с cfg.subMainNick = ник основного читает её и добывает это сырьё (content.farmGoal → helpGoal), а по кнопке передаёт
 const mainNick = () => String(env.cfg.subMainNick || '').trim();
 const me = () => String(env.heroNick?.() || '').trim();
-const isHelper = () => !!mainNick() && mainNick().toLowerCase() !== me().toLowerCase();
+// 20.13 (ревизия 17.10, шаг 7, pvp-misc/SUB-1): пока ник героя не прочитан (сразу после загрузки), герой не «помощник» —
+// раньше сам основной на минуту читал свою недостачу как чужую (строка «помощник: …» в журнале, цель фарма «помощь …»)
+const isHelper = () => !!me() && !!mainNick() && mainNick().toLowerCase() !== me().toLowerCase();
 // 10.0.14: настройки уже могли сменить основного, а пятиминутный кэш ещё принадлежит прежнему адресату.
 const mainNeed = () => String(env.rt.subNeed?.nick || '').trim().toLowerCase() === mainNick().toLowerCase() ? env.rt.subNeed : null;
 let needT = 0, readT = 0, infoT = 0, cacheChar = env.rt.char;
@@ -51,7 +53,7 @@ const token = () => JSON.stringify([env.rt.char || '', me(), mainNick(), env.cfg
 function resetPoll() { if (cacheChar !== env.rt.char) { cacheChar = env.rt.char; needT = readT = infoT = 0; } }
 async function needWrite(now = Date.now()) {
   resetPoll();
-  if (!env.cfg.mmGoalItem || isHelper() || now - needT < NEED_EVERY) return false;
+  if (!env.cfg.mmGoalItem || !me() || isHelper() || now - needT < NEED_EVERY) return false;   // 20.13 (шаг 7, SUB-1): без ника — не пишем
   needT = now;
   let P = null; try { P = env.mammon?.goalAll?.(); } catch (e) { return false; }
   if (!P) return false;
@@ -93,6 +95,7 @@ function handover() {
 function handWant(now = Date.now()) {
   const R = env.rt.subHandReq; if (!R?.t) return null;
   if (now - R.t > 30 * 60000) return { drop: 'команда устарела (30 мин)' };
+  if (!me()) return null;                         // 20.13 (шаг 7, SUB-1): ник ещё не прочитан — команду не снимаем, ждём
   const h = handover();
   if (!h) return { drop: isHelper() ? 'недостача выбранного основного ещё не прочитана' : 'ник основного не задан или это и есть основной' };
   if (env.invQty(0) == null) return null;         // сумка не прочитана — подождём (mmTick читает её)

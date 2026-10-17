@@ -126,14 +126,20 @@ async function paymentReconcile() {
   if(!valid())return false;
   return env.payments.confirm(p,proof);
 }
+// 20.13 (ревизия 17.10, шаг 7, services/ECO-2): резерв адены рыбака — одна функция вместо трёх копий (оплата, время, магазин).
+// Значение прежнее: полный cfg.shopReserve. В economy.shopReserve для бедного героя резерв — не больше половины адены; свести их —
+// решение о тратах, не чистка (как и лимит shopMaxSpend: здесь без настройки — без предела, в economy — 2 млн)
+const fishReserve = () => Math.max(0, +env.cfg.shopReserve || 0);
 async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
+  // 20.13 (шаг 7, services/CQ-1): в расширении env.payments есть всегда; ветка legacy жива только для старых тестов без payments
+  // (v80-fishing, v716-feature, v1014-fishing-controls, v1027-daily-campaign-priority) — удалять вместе с переводом этих тестов
   if(!env.payments)return {legacy:true};
   if(env.payments.blocked()){await paymentReconcile();return null;}
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode(),valid=()=>fishOwn()&&env.rt.char===char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&env.autonomyMode()===mode&&wanted();
   const [j,s]=await Promise.all([paymentRead('/character'),paymentRead('/game/fishing/state')]);if(!valid())return null;
   const ch=j?.character||j;if(ch?.name!==char||!ch.id||!Number.isSafeInteger(ch.revision)||!Number.isSafeInteger(s?.revision))return null;
   // 20.12: отдельные ревизии и адена до клика — для сверки «состояние не изменилось» (L2PayOutcome.unchanged).
-  const e={action,key,charId:ch.id,revision:Math.max(ch.revision,s.revision),chRev:ch.revision,stRev:s.revision,adena:amountNumber(ch.adena)},reserve=Math.max(0,+env.cfg.shopReserve||0);
+  const e={action,key,charId:ch.id,revision:Math.max(ch.revision,s.revision),chRev:ch.revision,stRev:s.revision,adena:amountNumber(ch.adena)},reserve=fishReserve();
   let actual,available,canBuy=false;
   if(action==='time'){
     const row=s.fishingTime?.packages?.find(x=>x.key===key);actual=amountNumber(row?.priceAdena);available=amountNumber(s.fishingTime?.availableAdena);canBuy=row?.canBuy===true;
@@ -193,7 +199,7 @@ async function fishTimeTopUp() {
   const moneyText = env.$q('#fishing-time-adena')?.textContent;
   if (!moneyText || !/\d/.test(moneyText)) return false;
   const adena = +(moneyText.replace(/[^\d]/g, '') || 0);
-  const reserve = Math.max(0, +env.cfg.shopReserve || 0);
+  const reserve = fishReserve();
   if (adena - reserve < prices[pack]) {
     // 8.0: на выбранный пакет аден не хватает — берём самый большой из меньших, который по карману (иначе время кончится и рыбалка встанет)
     const alt = ORDER.slice(0, ORDER.indexOf(pack)).reverse().find(k => prices[k] > 0 && adena - reserve >= prices[k] && !env.$q(`[data-fishing-time-package="${k}"]`)?.disabled);
@@ -554,7 +560,7 @@ async function fishBuy(offer, packs, what) {
     env.rec('B', 'рыбалка: покупка', `${what}: не прочитана цена в адене или баланс — не покупаю`);
     env.fire(env.$q('#fishing-shop-close')); return false;
   }
-  const reserve = Math.max(0, +env.cfg.shopReserve || 0), cap = env.cfg.shopMaxSpend == null ? Infinity : Math.max(0, +env.cfg.shopMaxSpend || 0);
+  const reserve = fishReserve(), cap = env.cfg.shopMaxSpend == null ? Infinity : Math.max(0, +env.cfg.shopMaxSpend || 0);
   const money = Math.max(0, Math.min(adena * 0.8, adena - reserve, cap));
   let n = Math.max(1, Math.round(packs));
   n = Math.min(n, Math.floor(money / price));
