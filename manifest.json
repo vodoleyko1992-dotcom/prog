@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.8",
-  "description": "L2wap Bot 20.8 — катакомбы без лишней карты и исправление агро",
+  "version": "20.9",
+  "description": "L2wap Bot 20.9 — дневные лимиты и случайные диапазоны",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -135,5 +135,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.8"
+  "version_name": "20.9"
 }
