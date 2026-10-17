@@ -7,6 +7,10 @@ const recovery = L2EngineCore.createRecoveryController();
 const transitionMonitor = L2EngineCore.createTransitionMonitor();
 const progressMonitor = L2EngineCore.createProgressMonitor();
 const ipc = (payload, ms = 15000) => L2EngineCore.withTimeout(chrome.runtime.sendMessage(payload), ms);
+// 20.10 (игрок 17.10 04:40: «диапазон от 8434 до 9119»): заводской дневной диапазон для мобов (автофарм+катакомбы вместе) и для рыбы — число выбирается заново каждые сутки,
+// чтобы счётчики не выделялись в статистике игры; меняются в «Лимитах». Точное значение до первого выбора — нижняя граница.
+const DAILY_RANGE = { min: 8434, max: 9119 }, DAILY_KILL_DEF = DAILY_RANGE.min, DAILY_FISH_DEF = DAILY_RANGE.min;
+const DAILY_RANGES_DEF = () => ({ dailyKillLimit: { ...DAILY_RANGE }, dailyFishLimit: { ...DAILY_RANGE } });
 const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true, mmUpgrade: true, mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, mmCraftNote: true, mmMailClaim: true, storyTurnIn: true, storyTpMax: 100000, mmFarmBest: true, mmFarmDrop: true, mmFarmSpoil: 'auto', mmFarmGuide: true, subCraftSelf: true, subSpoilFirst: true, subMainNick: '', subHelpMain: true, epicMode: false, epicList: 'ak,core,orfen,baium,valakas,antharas,frintezza,zaken', epicMaxDeaths: 5, epicCheck: false, epicRetreatHp: 35, epicLvlUp: 0, epicCoinDailyMax: 0, epicCoinPerBoss: 1, epicCoinKeep: 0, epicMaxFightMin: 0, epicMaxRetreats: 8, epicAdenaDailyMax: 0, epicMinHpPots: 0, recipeRes: '', recipeNeed: 0, recipeSpoil: false, catMode: false, catDungeon: 'auto', nKeyBuffs: '', keyBuffBoss: true, nToggles: '', toggleMpOff: 10, toggleMpOn: 30, nSpoil: '', nSpoilMass: '', nSweep: '', spoilRb: false, tvtOn: true, tvtHoldMin: 3, tvtOverRb: true, tvtPet: true, pvpOnSight: true, enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30, fightMode: 'dps', combatProfile: 'auto', rbPotAt: 75, rbPotTo: 80, rbFrenzyDive: false, nUltra: '', ultMode: 'big', nDrain: '', drainHp: 85, indMode: 'full', autoLearn: true, netLog: true, gameMsgLog: true, learnShots: false,
   "petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal",
   enchantMode: false,
@@ -14,7 +18,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
-  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, limitRanges: {}, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
+  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF, limitRanges: DAILY_RANGES_DEF(), zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
@@ -217,7 +221,7 @@ async function finishFarmQuota(ticket, lost = false) {
     if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: сверяю итог боя'); return true; }
     rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
     if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
-    if(r.dailyDone){rec('B','дневной лимит',`${T.task==='cat'?'Катакомбы':'Автофарм'}: ${r.dailyQuota[T.task]}/${T.dailyLimit} — до следующего дня, продолжаю остальные`);return true;}
+    if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
     if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
     return false;
   } catch (e) { if (valid()) setStatus('Лимит мобов: жду подтверждение счётчика'); return true; }
@@ -5979,6 +5983,22 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('ffDmgMig', () => { if (S['focused force']?.dmgN) { S['focused force'] = { ...S['focused force'], dmg: 0, dmgN: 0 }; sk = true; } });
   // 17.10.2026: по просьбе игрока карта/чемпионы раз в 30 боёв; свои интервалы сохраняем.
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
+  // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено, иначе нас замечают в статистике»):
+  // два дневных лимита мобов → один dailyKillLimit (старые складываются; если оба были 0 — заводские DAILY_KILL_DEF), рыба без лимита → DAILY_FISH_DEF.
+  // Диапазоны «От/До» старых ключей переезжают на новый (границы складываются), выбранные числа дня — заново.
+  once('dailyKill2010', () => {
+    const q = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0, a = q(C('dailyAutoKillLimit')), c = q(C('dailyCatKillLimit'));
+    const R = { ...(C('limitRanges') || {}) }, ra = R.dailyAutoKillLimit, rc = R.dailyCatKillLimit;
+    if (ra || rc) R.dailyKillLimit = { min: (ra?.min || 0) + (rc?.min || 0), max: (ra?.max || 0) + (rc?.max || 0) };
+    delete R.dailyAutoKillLimit; delete R.dailyCatKillLimit;
+    // Старых лимитов не было → заводской диапазон игрока на оба счётчика; свои прежние числа/диапазоны сохраняются.
+    if (!(a + c) && !R.dailyKillLimit) R.dailyKillLimit = { ...DAILY_RANGE };
+    if (!q(C('dailyFishLimit')) && !R.dailyFishLimit) R.dailyFishLimit = { ...DAILY_RANGE };
+    cf.limitRanges = R;
+    cf.dailyKillLimit = a + c || DAILY_KILL_DEF; if (!q(C('dailyFishLimit'))) cf.dailyFishLimit = DAILY_FISH_DEF;
+    cf.dailyAutoKillLimit = 0; cf.dailyCatKillLimit = 0;
+    const rolls = { ...(rt.limitRolls || {}) }; delete rolls.dailyAutoKillLimit; delete rolls.dailyCatKillLimit; rf.limitRolls = rolls;
+  });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
   if (sk) rf.skills = S;

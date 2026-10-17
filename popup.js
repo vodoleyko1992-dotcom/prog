@@ -211,7 +211,7 @@ async function activateMode(rtPatch, cfgPatch) {
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
-NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyAutoKillLimit', 'dailyCatKillLimit');
+NUM.push('autoKillLimit', 'catKillLimit', 'dailyFishLimit', 'dailyKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
@@ -226,7 +226,7 @@ const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGo
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
               fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
-              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, limitRanges: {}, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
+              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 8434, dailyKillLimit: 8434, limitRanges: { dailyKillLimit: { min: 8434, max: 9119 }, dailyFishLimit: { min: 8434, max: 9119 } }, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
@@ -741,14 +741,16 @@ $('sealNow').onclick = async () => {
   await activateMode({ sealEx: { t: Date.now(), stopAfter: !on }, sealT: 0 }, {});
   $('sealNow').textContent = 'Обмен поставлен в очередь';
 };
-const dailyLimitKeys={fish:'dailyFishLimit',auto:'dailyAutoKillLimit',cat:'dailyCatKillLimit'};
+// 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
+const dailyLimitKeys={fish:'dailyFishLimit',mobs:'dailyKillLimit'};
+const dailyGotOf=(rt,task,day)=>rt.dailyQuota?.day!==day ? 0 : task==='fish' ? +rt.dailyQuota.fish||0 : (+rt.dailyQuota.auto||0)+(+rt.dailyQuota.cat||0);
 function renderDailyLimits(rt,d) {
   const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10);
   $('dailyLimitsDay').textContent=`Сегодня: ${day} · UTC+10`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
-    const limit=+d[key]||0,got=rt.dailyQuota?.day===day ? +rt.dailyQuota[task]||0 : 0;
-    if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got} · цель выберется при запуске`;continue;}
-    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${got>=limit?' · до 00:00':''}` : 'Без дневного лимита';
+    const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&rt.dailyQuota?.day===day ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0})` : '';
+    if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got}${parts} · цель выберется при запуске`;continue;}
+    $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · до 00:00':` · осталось ${limit-got}`}` : 'Без дневного лимита';
   }
 }
 for(const task of Object.keys(dailyLimitKeys)) $(task+'DailyReset').onclick=async()=>{
@@ -1328,7 +1330,7 @@ async function save(e) {
   TXT.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).value; });
   BOOL.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).checked; });
   if (one && ['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
-  for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyAutoKillLimit','dailyCatKillLimit']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
+  for (const k of ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
   if (n.rodEnchantTo != null) n.rodEnchantTo = Math.min(10, n.rodEnchantTo);
   if (n.maxPages < 1) n.maxPages = 1;
   if (n.champHpMult < 1.1) n.champHpMult = 1.1;
@@ -1338,7 +1340,7 @@ async function save(e) {
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
-  if (one && ['autoKillLimit','catKillLimit','dailyFishLimit','dailyAutoKillLimit','dailyCatKillLimit'].includes(id)) magReset.manualKickAt = Date.now();
+  if (one && ['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit'].includes(id)) magReset.manualKickAt = Date.now();
   try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
   catch (error) {
     const why = String(error?.message || error);
@@ -1664,7 +1666,7 @@ async function activeTab() {
   return g.find(x => x.active) || g[0] || t;
 }
 
-const rangeLimitKeys=['dailyFishLimit','dailyAutoKillLimit','dailyCatKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'];
+const rangeLimitKeys=['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'];
 const limitRangeDrafts=new Set();let limitRangeChar=null;
 function renderLimitRanges(rt,d) {
   if(limitRangeChar!==rt.char){limitRangeDrafts.clear();limitRangeChar=rt.char;}
@@ -1753,12 +1755,12 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
   return selected.map(key => {
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
-    const dailyKey = {fish:'dailyFishLimit',auto:'dailyAutoKillLimit',cat:'dailyCatKillLimit'}[key];
-    const dailyLimit = +d[dailyKey] || 0, dailyGot = rt.dailyQuota?.day === day ? +rt.dailyQuota[key] || 0 : 0;
+    const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
+    const dailyLimit = +d[dailyKey] || 0, q = rt.dailyQuota?.day === day ? rt.dailyQuota : {}, dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0);
     const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
     if (dailyPending) progress.push('Дневная цель выберется при запуске');
     else if (dailyLimit > 0) {
-      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
+      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы)' : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
       if (dailyGot >= dailyLimit) { label = 'До 00:00 Владивостока'; state = 'waiting'; }
     }
     if (['auto','cat'].includes(key)) {

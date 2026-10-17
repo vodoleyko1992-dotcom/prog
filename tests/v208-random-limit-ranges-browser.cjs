@@ -26,7 +26,7 @@ async function scenario(task){
 }
 async function settings(){
  const h=await harness();try{
- await h.popup.setViewportSize({width:390,height:900});await h.openTab('limits');const keys={dailyFishLimit:[2,4],dailyAutoKillLimit:[10,20],dailyCatKillLimit:[5,10],fishMaxCasts:[50,100]};
+ await h.popup.setViewportSize({width:390,height:900});await h.openTab('limits');const keys={dailyFishLimit:[2,4],dailyKillLimit:[10,20],fishMaxCasts:[50,100]};
  for(const [key,[min,max]] of Object.entries(keys)){
  await h.popup.locator('#'+key+'From').fill(String(min));await h.popup.locator('#'+key+'To').fill(String(max));await h.click(key+'RangeSet');await until(async()=>!!(await h.get(['cfg'])).cfg.limitRanges?.[key]);
  const {cfg}=await h.get(['cfg']);assert.ok(cfg[key]>=min&&cfg[key]<=max);assert.equal(await h.popup.locator('#'+key+'RangeSet').evaluate(e=>e.scrollWidth<=e.clientWidth),true,'range button label fits at390px');assert.ok((await h.popup.locator('#'+key+'RangeInfo').textContent()).includes('выбрано'));
@@ -37,8 +37,8 @@ async function settings(){
  await h.openTab('limits');await h.popup.locator('#fishTgtN').fill('4');await h.popup.locator('#fishTgtMax').fill('6');await h.click('fishTgtSet');await until(async()=>!!(await h.get(['rt'])).rt.fishTgt);
  const goal=(await h.get(['rt'])).rt.fishTgt;assert.ok(goal.n>=4&&goal.n<=6);assert.equal(goal.min,4);assert.equal(goal.max,6);
  await h.popup.locator('#fishTgtType').selectOption('proof');await h.popup.locator('#fishTgtN').fill('20');await h.popup.locator('#fishTgtMax').fill('30');await h.click('fishTgtSet');await until(async()=>(await h.get(['rt'])).rt.fishTgt?.type==='proof');assert.ok((await h.get(['rt'])).rt.fishTgt.n>=20);
- await h.popup.locator('#dailyAutoKillLimit').fill('40');await h.popup.locator('#dailyAutoKillLimit').dispatchEvent('change');await until(async()=>!(await h.get(['cfg'])).cfg.limitRanges?.dailyAutoKillLimit);assert.equal((await h.get(['cfg'])).cfg.dailyAutoKillLimit,40);
- await h.click('dailyCatKillLimitRangeClear');assert.equal((await h.get(['cfg'])).cfg.limitRanges.dailyCatKillLimit,undefined);
+ await h.popup.locator('#dailyKillLimit').fill('40');await h.popup.locator('#dailyKillLimit').dispatchEvent('change');await until(async()=>!(await h.get(['cfg'])).cfg.limitRanges?.dailyKillLimit);assert.equal((await h.get(['cfg'])).cfg.dailyKillLimit,40);
+ await h.click('dailyFishLimitRangeClear');assert.equal((await h.get(['cfg'])).cfg.limitRanges.dailyFishLimit,undefined);
  assert.deepEqual(h.errors,[]);console.log('PASS MV3 daily/cast range settings, Start preserves chosen limits, real fish hook, fish/Proof random goals and return to fixed');
  }finally{await h.ctx.close()}
 }
