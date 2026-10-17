@@ -2615,10 +2615,14 @@ async function main() {
       // 20.12 (ревизия 17.10, аудит core-a/C1): сервер/вход/антибот — раньше лимитов, PvP-восстановления и заточки. Раньше
       // pvp.recoveryStep на странице входа каждый круг уводил на /map.html и возвращал true — до autoLogin/serverWait цикл не доходил,
       // а при капче antibotGuard не звал игрока
-      if (serverDown()) { await serverWait(); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
+      // 20.12 (ревизия 17.10, ревью шага 1): кадр действий обновляем ДО ранних веток — serverWait/autoLogin начинаются с
+      // automationCurrent() (canAct сверяет кадр с поколением); при устаревшем кадре они возвращались без await, а цикл крутился
+      // на микрозадачах (Stop/события хранилища не доходили). Плюс после ранних веток всегда настоящая пауза
+      L2V7Modules.actions?.enterFrame();
+      if (serverDown()) { await serverWait(); await sleep(200); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
       if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
-      if (loginPage()) { await autoLogin(); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
-      if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
+      if (loginPage()) { await autoLogin(); await sleep(200); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
+      if (antibotState() === 'check' && await antibotGuard()) { await sleep(200); continue; }   // v5.5.6: проверка активности — ждём человека
       // 20.12 (аудит core-a/C1, farm/Q-4): отказ синхронизации диапазонов лимитов больше не держит весь цикл: пишем причину в журнал
       // один раз и продолжаем с прежними фиксированными значениями лимитов (повтор синхронизации — раз в 30 с)
       if(Object.keys(cfg.limitRanges||{}).length && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);continue;}
@@ -2657,8 +2661,8 @@ async function main() {
         if (!await automationFlush(stamp)) continue;
         location.reload(); await sleep(5000); continue;
       }
-      if (serverDown()) { await serverWait(); continue; }      // 20.12: повтор после долгих шагов выше (страница могла смениться)
-      if (loginPage()) { await autoLogin(); continue; }
+      if (serverDown()) { await serverWait(); await sleep(200); continue; }      // 20.12: повтор после долгих шагов выше (страница могла смениться)
+      if (loginPage()) { await autoLogin(); await sleep(200); continue; }
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
       if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя

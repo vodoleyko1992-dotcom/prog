@@ -106,3 +106,28 @@ test('главный цикл обновляет loopT на каждом кру�
  const m=slice(core,'async function main() {','// Магистр: актуальный');
  assert.match(m,/while \(on\) \{\s*loopT = Date\.now\(\);/);
 });
+
+// --- ревью шага 1: устаревший кадр действий + сервер лежит/страница входа — цикл не крутится на микрозадачах
+function staleLoop(kind,refresh){
+ const c=loop({[kind]:true}),calls=c.calls;let gen=2,frame=1,checks=0;
+ c.L2V7Modules.actions={enterFrame:()=>{calls.push('enterFrame');if(refresh)frame=gen},canAct:()=>frame===gen};
+ // как настоящие serverWait/autoLogin: при устаревшем кадре выходят сразу, без await
+ const early=name=>async()=>{if(!c.L2V7Modules.actions.canAct())return;calls.push(name);c.on=false};
+ c.serverWait=early('serverWait');c.autoLogin=early('autoLogin');
+ const chk=()=>{if(++checks>50){calls.push('spin');c.on=false}return true};
+ if(kind==='down')c.serverDown=chk;else c.loginPage=chk;
+ c.sleep=async()=>{calls.push('sleep');c.on=false};
+ return c;
+}
+for(const [kind,want] of [['down','serverWait'],['login','autoLogin']]){
+ test(`${want}: устаревший кадр (поколение++) обновляется до ранней ветки`,async()=>{
+  const c=staleLoop(kind,true);await vm.runInContext('main()',c);
+  assert.ok(!c.calls.includes('spin'),'цикл крутился без паузы: '+JSON.stringify(c.calls));
+  assert.ok(c.calls.indexOf('enterFrame')>=0&&c.calls.indexOf('enterFrame')<c.calls.indexOf(want),JSON.stringify(c.calls));
+ });
+ test(`${want}: даже если кадр не освежился, после ранней ветки настоящая пауза`,async()=>{
+  const c=staleLoop(kind,false);await vm.runInContext('main()',c);
+  assert.ok(!c.calls.includes('spin'),'цикл крутился без паузы: '+JSON.stringify(c.calls));
+  assert.ok(c.calls.includes('sleep'),JSON.stringify(c.calls));
+ });
+}
