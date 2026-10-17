@@ -39,6 +39,10 @@
     if(env.isBattle()&&!env.victory?.()){await env.runCombat();return true;}
     const key=String(pending.id||pending.kind)+':'+env.page(),now=Date.now();
     if(!reconciliation||reconciliation.key!==key||now-reconciliation.at>=15000){reconciliation={key,at:now};await env.reconcile(pending);}
+    // 20.12 (ревизия 17.10, аудит PAY-1/H1): неизвестная оплата блокирует только платные шаги. Владелец маршрута и его
+    // этап не трогаем, а бесплатную работу на месте (бой, цепочка, фарм точки, рыбалка из сумки) делает ядро.
+    const still=env.paymentPending();
+    if(still&&live()&&!env.challengeHold?.()&&env.freeWork)await env.freeWork(still);
     return true;
    }
    reconciliation=null;

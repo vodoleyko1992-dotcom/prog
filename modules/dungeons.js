@@ -12,15 +12,32 @@ const isDungeon = () => /\/dungeon\.html/i.test(location.pathname);
 const dungeonHere = () => new URLSearchParams(location.search).get('dungeonId') || '';
 // 15.10, ревизия: таймаут native-телепорта не доказывает отказ. Только точный
 // ответ отправленного запроса снимает запрет повторной оплаты после reload.
+// 20.12 (ревизия 17.10, аудит H2): отказ — по общему правилу payments (в т. ч. 423/429 и 2xx с error);
+// без квитанции — сверка по GET /character: герой в подземелье — прибыл; через ≥2 мин дважды «не в подземелье,
+// без смерти» — телепорт не применился (запрос с expectedRevision: старый уже не спишет адену поверх нового).
 async function paymentReconcile() {
   const P = env.payments?.pending(); if (!P || P.kind !== 'cat-teleport') return !P;
-  const A = env.catPaymentNet?.();
-  if (!A || A.t < P.at || A.id !== P.evidence.id || A.paymentId !== P.id || A.expectedAdenaCost !== P.quote.amount) {
-    env.setStatus('Катакомбы: результат телепорта неизвестен; повторно не плачу'); return false;
+  const A = env.catPaymentNet?.(), E = P.evidence || {};
+  const bound = A && A.t >= P.at && A.id === E.id && A.paymentId === P.id && A.expectedAdenaCost === P.quote.amount;
+  if (bound && !((A.ok && A.characterName !== P.char) || (A.characterId && E.actorId && A.characterId !== E.actorId))) {
+    const out = A.outcome || (A.ok ? 'applied' : env.payments.REJECT?.includes(A.status) ? 'rejected' : 'unknown');
+    if (out === 'applied') return env.payments.confirm(P, { kind: 'server-receipt', id: A.id, status: A.status });
+    if (out === 'rejected') return env.payments.confirm(P, { kind: 'server-rejected', id: A.id, status: A.status, spent: 0 });
   }
-  if ((A.ok && A.characterName !== P.char) || (A.characterId && P.evidence.actorId && A.characterId !== P.evidence.actorId)) return false;
-  if (!A.ok && ![400, 401, 403, 404, 409, 412, 422].includes(A.status)) return false;
-  return env.payments.confirm(P, { kind: A.ok ? 'server-receipt' : 'server-rejected', id: A.id, status: A.status });
+  const char = env.rt.char, lease = env.leaseEpoch, valid = () => env.tabOwner !== false && env.leaseEpoch === lease && env.rt.char === char && char === P.char && env.payments.pending()?.id === P.id;
+  if (env.gameGet && env.payments.probeDue?.(P)) {
+    let ch = null;
+    try { const r = await env.gameGet('/character'), j = r.ok ? await r.json() : null; ch = j?.character || j; } catch (_) {}
+    if (!valid()) return false;
+    if (ch?.name === P.char && (!E.actorId || ch.id === E.actorId) && Number.isSafeInteger(ch.revision)) {
+      const here = ch.activeDungeonId != null && String(ch.activeDungeonId) === String(E.id);
+      if (here && ch.revision > E.revision) { env.payments.probeNote(P, false); return env.payments.confirm(P, { kind: 'target-arrival', id: E.id, revision: ch.revision }); }
+      const died = (env.rt.deathLog || []).some(t => t >= P.at);
+      if (env.payments.probeNote(P, !here && !died && Number.isSafeInteger(E.revision) && ch.revision >= E.revision))
+        return env.payments.confirm(P, { kind: 'state-not-applied', id: E.id, revision: ch.revision, spent: 0 });
+    }
+  }
+  env.setStatus('Катакомбы: результат телепорта неизвестен; повторно не плачу, сверяю состояние героя'); return false;
 }
 
 let catQuoteWait = null;

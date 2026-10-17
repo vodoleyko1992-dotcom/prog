@@ -53,9 +53,10 @@ test('recording victory immediately settles matching payment, preserves new rout
  await f.R.rbNote(boss,{kills:1});assert.equal(f.env.payments.pending(),null);assert.equal(f.env.rt.rbWant,other);assert.equal(f.env.rt.rbHunt.id,other);
  await f.R.paymentReconcile();assert.equal(f.env.rt.actionPayments.history.length,1);
 });
-for(const page of ['/map.html','/rb-bosses.html'])test('unknown teleport after one minute pauses with reserve retained on '+page,async()=>{
+// 20.12 (ревизия 17.10, аудит RB-1): неизвестный исход больше не ставит весь бот на паузу — честное ожидание сверки, повтор запрещён.
+for(const page of ['/map.html','/rb-bosses.html'])test('unknown teleport after one minute waits (no bot pause) with reserve retained on '+page,async()=>{
  const f=fixture(),p=await f.prepare();p.at-=61000;f.loc.pathname=page;f.reload();
- assert.equal(await f.R.paymentReconcile(),false);assert.equal(f.pauses.length,1);assert.match(f.pauses[0],/повтор запрещён/);assert.ok(f.env.payments.pending());assert.equal(await f.env.payments.prepare({key:'raid:new',kind:'raid-teleport',quote:{amount:1,currency:'Adena'}}),null);
+ assert.equal(await f.R.paymentReconcile(),false);assert.equal(f.pauses.length,0);assert.ok(f.env.payments.pending());assert.equal(await f.env.payments.prepare({key:'raid:new',kind:'raid-teleport',quote:{amount:1,currency:'Adena'}}),null);
 });
 test('late matching list arrival still recovers a timed out payment without another teleport',async()=>{
  const f=fixture(),p=await f.prepare();p.at-=61000;f.nodes.links=[f.link()];assert.equal(await f.R.paymentReconcile(),true);assert.equal(f.pauses.length,0);

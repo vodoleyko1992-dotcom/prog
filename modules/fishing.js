@@ -81,9 +81,10 @@ function paymentNote(path,d) {
   const e=p.evidence||{}, ch=d.res?.character;
   if(path!==e.path||!Number.isSafeInteger(d.req?.expectedRevision)||!Object.entries(e.request||{}).every(([k,v])=>d.req[k]===v))return;
   // Отказ привязан к request-start ticket: старый 409 не может отменить новую покупку.
-  const refused=d.paymentId===p.id&&[400,401,403,404,409,412,422,423,429].includes(d.status);
+  // 20.12 (ревизия 17.10, аудит PAY-3): отказ — по общему правилу (в т. ч. 200 с error / ok:false), только для своего запроса.
+  const refused=d.paymentId===p.id&&env.payments.classify?.(d)==='rejected';
   if(!refused&&(d.status<200||d.status>=300||d.res?.error||d.res?.ok===false||!ch||ch.name!==p.char||ch.id!==e.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=e.revision||d.req.expectedRevision!==e.revision))return;
-  const receipt={paymentId:p.id,char:p.char,charId:e.charId,revision:ch?.revision,t:Date.now(),...(refused?{refused:d.status}:{})};
+  const receipt={paymentId:p.id,char:p.char,charId:e.charId,revision:ch?.revision,t:Date.now(),...(refused?{refused:d.status||'error'}:{})};
   try {root.sessionStorage?.setItem('l2bot.fishingPayment',JSON.stringify(receipt));}catch(_){}
   if(env.tabOwner!==false)env.setRt({fishPaymentReceipt:receipt});
 }
@@ -102,6 +103,12 @@ async function paymentReconcile() {
     paymentCheck={id:p.id,t:Date.now()};
     const [j,s]=await Promise.all([paymentRead('/character'),paymentRead('/game/fishing/state')]);if(!valid())return false;
     const ch=j?.character||j;
+    // 20.12 (ревизия 17.10, аудит PAY-3): ни герой, ни рыбалка не изменились (те же ревизии, адены не меньше) — дважды
+    // за ≥2 мин после оплаты: покупка не применилась. Рыбалку в это время бот не ведёт, ревизии сам не двигает.
+    if(ch?.name===p.char&&ch.id===e.charId&&Number.isSafeInteger(e.chRev)&&Number.isSafeInteger(s?.revision)&&env.payments.probeNote?.(p,s.revision===e.stRev&&env.payments.unchanged?.({revision:e.chRev,adena:e.adena},ch))){
+      if(!valid())return false;
+      await env.payments.confirm(p,{kind:'state-not-applied',revision:ch.revision,spent:0});env.setStatus?.('Рыбалка: покупка не применилась (состояние не изменилось); перечитываю состояние');return false;
+    }
     if(ch?.name===p.char&&ch.id===e.charId&&Number.isSafeInteger(ch.revision)&&ch.revision>e.revision&&Number.isSafeInteger(s?.revision)&&s.revision>e.revision){
       const elapsed=Math.max(0,Date.now()-p.at);
       const satisfied=e.action==='time'?Number.isFinite(s.fishingTime?.remainingMs)&&s.fishingTime.remainingMs>=Math.max(e.before+60000,e.before+e.gain-elapsed-30000):
@@ -125,7 +132,8 @@ async function paymentPrepare(action,key,amount,price,wanted=()=>true) {
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode(),valid=()=>fishOwn()&&env.rt.char===char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&env.autonomyMode()===mode&&wanted();
   const [j,s]=await Promise.all([paymentRead('/character'),paymentRead('/game/fishing/state')]);if(!valid())return null;
   const ch=j?.character||j;if(ch?.name!==char||!ch.id||!Number.isSafeInteger(ch.revision)||!Number.isSafeInteger(s?.revision))return null;
-  const e={action,key,charId:ch.id,revision:Math.max(ch.revision,s.revision)},reserve=Math.max(0,+env.cfg.shopReserve||0);
+  // 20.12: отдельные ревизии и адена до клика — для сверки «состояние не изменилось» (L2PayOutcome.unchanged).
+  const e={action,key,charId:ch.id,revision:Math.max(ch.revision,s.revision),chRev:ch.revision,stRev:s.revision,adena:amountNumber(ch.adena)},reserve=Math.max(0,+env.cfg.shopReserve||0);
   let actual,available,canBuy=false;
   if(action==='time'){
     const row=s.fishingTime?.packages?.find(x=>x.key===key);actual=amountNumber(row?.priceAdena);available=amountNumber(s.fishingTime?.availableAdena);canBuy=row?.canBuy===true;
@@ -708,6 +716,7 @@ async function fishPrepare() {                  // удочка, наживка 
   const F = () => env.rt.fishBuyFail || {};
   const buyOk = k => { const f = F()[k]; if (!f) return true; const t = typeof f === 'number' ? f : f.t, n = f.n || 1; return Date.now() - t > [30, 60, 120, 300][Math.min(n - 1, 3)] * 1000; };
   const buy = async (k, offer, packs, what) => {
+    if (env.payments?.blocked?.()) return false;   // 20.12: покупка ждёт сверки прежней оплаты — это не «магазин не ответил»
     const cap = (env.rt.fishPackCap || {})[offer];
     const useCap = cap && Date.now() - cap.t < 30 * 60000;          // «много пакетов не проходит» — помним 30 мин
     let ok = await fishBuy(offer, useCap ? cap.n : packs, what);
@@ -1036,13 +1045,16 @@ async function fishing() {
   if (!still()) return;
   if (!fishOwn()) return;
   if (env.NET_FISH.code === 'in_battle' && Date.now() - env.NET_FISH.t < 60000 && await fishBattle(env.NET_FISH.act || 'cast')) return;   // 10.0.1
-  if (env.payments?.blocked()) { await paymentReconcile(); return; }
+  // 20.12 (ревизия 17.10, аудит PAY-1): неизвестная оплата другого вида не останавливает рыбалку тем, что есть в сумке —
+  // запрещены только покупки (места, времени, наживки, удочки). Своя оплата рыбалки — ждём сверки, ловить не начинаем.
+  let payHold = false;
+  if (env.payments?.blocked()) { await paymentReconcile(); const p = env.payments.pending(); if (env.payments.blocked() && (!p || p.kind === 'fishing' || !env.paymentFree?.(p))) return; payHold = env.payments.blocked(); }
   // 17.10 (журнал01:39): выполненная цель запрещает новый заброс даже при старом режиме/frame.
   if (env.rt.fishTgt?.done) {
     if (fishState()) return fishFight();
     if (!env.rt.fishCastActive) return fishTgtReached();
   }
-  if (!env.rt.fishCastActive && await fishSetup()) return;
+  if (!env.rt.fishCastActive && !payHold && await fishSetup()) return;
   // страница рыбалки дорисовывается скриптом игры: в первые секунды блоки «купите место» / «изучите навыки» /
   // «недоступно» могут мелькнуть до загрузки данных — раньше бот на этом останавливался (журнал 07.10: стоп через
   // 0,5–1,7 с после прихода на /fishing.html). Теперь решаем только по устоявшейся картине и без остановки.
@@ -1064,7 +1076,7 @@ async function fishing() {
     await env.setRt({fishCastActive:false});
     if (env.rt.fishTgt?.done) return fishTgtReached();
     if (!still()) return;
-    if (await fishSetup()) return;
+    if (!payHold && await fishSetup()) return;
   }
   if (!still()) return;
   await fishTimeTopUp();
