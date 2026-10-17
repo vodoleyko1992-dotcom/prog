@@ -2032,7 +2032,10 @@ async function battle() {
     const hitMp = Math.min(...env.names(env.cfg.nPower).filter(n => slotsBy(n).length).map(n => env.skillMp(n)), Infinity);
     // 7.1.16-fix: у мага мана — весь урон. Порог 70 MP из 928 (лог 09.10: MP падал до 51–71, бой шёл рывками) — держим ≥ 25 % MP
     const mageMp = mageCombat() && mp?.max ? Math.round(mp.max * (env.cfg.mageMpPct ?? 25) / 100) : 0;
-    const mpNeed = Math.max(env.cfg.mpPotAt, rbMpAt, mageMp, isFinite(hitMp) ? Math.round(hitMp * 1.5) : 0);
+    // 20.13 (ревизия 17.10, шаг 5, defaults/D16): у воина (и любого профиля, кроме мага с котом) порог был max(70 MP, 1,5 удара) — Warlord с MP ≈1500 пил банку лишь у дна,
+    // и связка Provoke + массовый удар пропускалась «MP мало». Теперь и воин держит ≥ fighterMpPct (25 %) MP; 0 — прежнее правило.
+    const fighterMp = !mageCombat() && mp?.max ? Math.round(mp.max * Math.max(0, +(env.cfg.fighterMpPct ?? 25) || 0) / 100) : 0;
+    const mpNeed = Math.max(env.cfg.mpPotAt, rbMpAt, mageMp, fighterMp, isFinite(hitMp) ? Math.round(hitMp * 1.5) : 0);
     const mpPulse = (() => { const p = env.rt.pots?.[env.cleanTitle(mpPot?.title || '').toLowerCase()]; return p && p.pulses > 1 ? Math.max(3000, p.pulses * (p.every || 1) * 1000) : 3000; })();   // 7.1.30: банка «пульсами» — не пить поверх ещё идущей
     if (mpPot && env.qty(mpPot) !== 0 && mp && mp.cur < mpNeed && Date.now() - lastMpPot > mpPulse && ready(mpPot)) {
       const prevMp = lastMpPot; lastMpPot = Date.now(); if (await act(mpPot, `Банка MP (MP ${mp.cur} < ${mpNeed})`) === 'lock') lastMpPot = prevMp; continue;   // 8.0.3: 'lock' — повтор сразу
