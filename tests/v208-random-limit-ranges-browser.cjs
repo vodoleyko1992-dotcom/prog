@@ -26,10 +26,10 @@ async function scenario(task){
 }
 async function settings(){
  const h=await harness();try{
- await h.openTab('limits');const keys={dailyFishLimit:[2,4],dailyAutoKillLimit:[10,20],dailyCatKillLimit:[5,10],fishMaxCasts:[50,100]};
+ await h.popup.setViewportSize({width:390,height:900});await h.openTab('limits');const keys={dailyFishLimit:[2,4],dailyAutoKillLimit:[10,20],dailyCatKillLimit:[5,10],fishMaxCasts:[50,100]};
  for(const [key,[min,max]] of Object.entries(keys)){
  await h.popup.locator('#'+key+'From').fill(String(min));await h.popup.locator('#'+key+'To').fill(String(max));await h.click(key+'RangeSet');await until(async()=>!!(await h.get(['cfg'])).cfg.limitRanges?.[key]);
- const {cfg}=await h.get(['cfg']);assert.ok(cfg[key]>=min&&cfg[key]<=max);assert.ok((await h.popup.locator('#'+key+'RangeInfo').textContent()).includes('выбрано'));
+ const {cfg}=await h.get(['cfg']);assert.ok(cfg[key]>=min&&cfg[key]<=max);assert.equal(await h.popup.locator('#'+key+'RangeSet').evaluate(e=>e.scrollWidth<=e.clientWidth),true,'range button label fits at390px');assert.ok((await h.popup.locator('#'+key+'RangeInfo').textContent()).includes('выбрано'));
  }
  const {cfg:before}=await h.get(['cfg']);await h.click('start');await until(()=>h.g.core('on && tabOwner'));
  const {cfg:after}=await h.get(['cfg']);for(const key of Object.keys(keys)){assert.equal(after[key],before[key]);assert.deepEqual(after.limitRanges[key],before.limitRanges[key]);}
@@ -42,4 +42,4 @@ async function settings(){
  assert.deepEqual(h.errors,[]);console.log('PASS MV3 daily/cast range settings, Start preserves chosen limits, real fish hook, fish/Proof random goals and return to fixed');
  }finally{await h.ctx.close()}
 }
-(async()=>{for(const task of ['cat','auto'])await scenario(task);await settings()})().catch(e=>{console.error(e.stack);process.exitCode=1});
+(async()=>{if(!process.env.L2_RANGE_SETTINGS_ONLY)for(const task of ['cat','auto'])await scenario(task);await settings()})().catch(e=>{console.error(e.stack);process.exitCode=1});
