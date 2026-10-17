@@ -1304,7 +1304,8 @@ const RECENT = [];                               // v4.47: последние д
 const liveKey = (char = rt.char) => 'live@' + char;
 let rtStatusW = 0;
 function liveStatus(s) {
-  if (!rt.char || tabIdle || document.prerendering) return false;
+  // ревью шага 7: то же условие, что у rtWriter (canWrite) — вкладка без замка при включённом боте не перезаписывает живой статус хозяина
+  if (!rt.char || tabIdle || document.prerendering || (on && !(tabOwner && leaseEpoch))) return false;
   try { chrome.storage.local.set({ [liveKey()]: { s: String(s ?? '').slice(0, 600), t: Date.now(), char: rt.char } }).catch(e => quietErr('статус', e)); return true; }
   catch (e) { quietErr('статус', e); return false; }
 }
@@ -4415,9 +4416,15 @@ addEventListener('message', e => {
   rec('B', 'игра', `окно игры (${GAME_ALERT.path}): ${GAME_ALERT.text.slice(0, 160)}`);
 });
 // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F11): hook.js глушит alert() катакомб/Маммона только при метке data-l2bot-on на <html>.
-// Метку держим по флагу on (раз в 0,5 с и сразу при загрузке); бот остановлен — игрок видит окно игры как обычно
+// Метку держим по флагу on (раз в 0,5 с и сразу после чтения on из хранилища); бот остановлен — игрок видит окно игры как обычно.
+// Ревью шага 7: content.js стартует на document_idle — пока он не прочитал on, alert() при загрузке катакомб открывал окно и
+// останавливал включённого бота до нажатия «ОК». Поэтому метка дублируется в sessionStorage вкладки (l2bot.on): hook.js при
+// загрузке следующей страницы видит прошлое состояние. До чтения on (onMarkReady) метку не трогаем — on ещё false по умолчанию
+let onMarkReady = false;
 function onMark() {
+  if (!onMarkReady) return;
   try { const h = document.documentElement; if (!h?.dataset) return; if (on) { if (h.dataset.l2botOn !== '1') h.dataset.l2botOn = '1'; } else if ('l2botOn' in h.dataset) delete h.dataset.l2botOn; } catch (e) {}
+  try { if (on) { if (sessionStorage.getItem('l2bot.on') !== '1') sessionStorage.setItem('l2bot.on', '1'); } else sessionStorage.removeItem('l2bot.on'); } catch (e) {}
 }
 setInterval(onMark, 500);
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
@@ -6240,6 +6247,7 @@ chrome.storage.onChanged.addListener(ch => {
 const whenActive = fn => document.prerendering ? document.addEventListener('prerenderingchange', fn, { once: true }) : fn();
 whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; on = !!s.on;
+  onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
   // v5.6: одноразовые миграции — в ОДНУ запись настроек и одну запись состояния. Раньше каждая делала своё
   // «прочитать cfg → записать cfg» параллельно с остальными: на чистой установке часть терялась (lvlAbove 99 → 15),
   // а прямые записи rt из хранилища перетирали свежее состояние. Порядок — по версиям: побеждает самое новое значение

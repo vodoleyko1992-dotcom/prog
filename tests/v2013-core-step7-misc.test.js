@@ -49,20 +49,28 @@ test('F10: в теле разовых миграций нет прямых setRt
 });
 
 // --- F11: alert() глушится только при включённом боте
-function alertBox(onAttr){
+function alertBox(onAttr,sess={}){
  const shown=[],posted=[];
  const win={alert:m=>shown.push(m),postMessage:m=>posted.push(m)};
- const box={window:win,location:{pathname:'/catacombs.html',origin:'https://l2wap.invalid'},console:{warn(){}},String,document:{documentElement:{dataset:onAttr?{l2botOn:'1'}:{}}}};
+ const box={window:win,location:{pathname:'/catacombs.html',origin:'https://l2wap.invalid'},console:{warn(){}},String,document:{documentElement:{dataset:onAttr?{l2botOn:'1'}:{}}},
+  sessionStorage:{getItem:k=>k in sess?sess[k]:null}};
  vm.createContext(box);vm.runInContext(slice(hook,"  if (/^\\/(?:catacombs|dungeon","  // 9.2.5: если кузнец"),box);
  win.alert('Недостатньо адени');return {shown,posted};
 }
 test('F11: бот включён — окно игры уходит в журнал; выключен — игрок видит окно',()=>{
  const a=alertBox(true);assert.equal(a.shown.length,0);assert.equal(a.posted[0].__l2bot,'alert');
  const b=alertBox(false);assert.deepEqual(b.shown,['Недостатньо адени']);assert.equal(b.posted.length,0);
- // content держит метку по флагу on
- const c={on:true,document:{documentElement:{dataset:{}}},setInterval(){}};vm.createContext(c);
- vm.runInContext(slice(core,'function onMark()','setInterval(onMark, 500);'),c);
- c.onMark();assert.equal(c.document.documentElement.dataset.l2botOn,'1');c.on=false;c.onMark();assert.equal('l2botOn' in c.document.documentElement.dataset,false);
+ // ревью шага 7: страница ещё грузится (content.js не запущен, метки на <html> нет), но бот был включён на прошлой странице — окно глушим
+ const e=alertBox(false,{'l2bot.on':'1'});assert.equal(e.shown.length,0);assert.equal(e.posted[0].__l2bot,'alert');
+ // content держит метку по флагу on — на <html> и в sessionStorage; до чтения on из хранилища метку не трогает
+ const ss={};const c={on:false,document:{documentElement:{dataset:{}}},setInterval(){},
+  sessionStorage:{getItem:k=>k in ss?ss[k]:null,setItem:(k,v)=>{ss[k]=String(v)},removeItem:k=>{delete ss[k]}}};vm.createContext(c);
+ vm.runInContext(slice(core,'let onMarkReady = false;','setInterval(onMark, 500);').replace('let onMarkReady','var onMarkReady'),c);
+ ss['l2bot.on']='1';c.onMark();assert.equal(ss['l2bot.on'],'1','on ещё не прочитан — прошлую метку не снимаем');
+ c.onMarkReady=true;c.on=true;
+ c.onMark();assert.equal(c.document.documentElement.dataset.l2botOn,'1');assert.equal(ss['l2bot.on'],'1');
+ c.on=false;c.onMark();assert.equal('l2botOn' in c.document.documentElement.dataset,false);assert.equal('l2bot.on' in ss,false);
+ assert.match(core,/on = !!s\.on;\n  onMarkReady = true; onMark\(\);/);
  assert.match(core,/setInterval\(onMark, 500\);/);
 });
 

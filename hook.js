@@ -142,7 +142,10 @@
     // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F11): окно глушим, только пока бот включён (метка data-l2bot-on на <html> ставит
     // content.js). Бот остановлен — игрок сам меняет камни/летит в катакомбы и должен видеть ошибку игры обычным окном
     window.alert = function (msg) {
-      if (document.documentElement?.dataset?.l2botOn !== '1') return oalert.apply(this, arguments);
+      // ревью шага 7: до запуска content.js (document_idle) метки на <html> ещё нет — смотрим копию в sessionStorage вкладки
+      let botOn = document.documentElement?.dataset?.l2botOn === '1';
+      if (!botOn) try { botOn = sessionStorage.getItem('l2bot.on') === '1'; } catch (e) {}
+      if (!botOn) return oalert.apply(this, arguments);
       try { console.warn('[l2bot] окно игры:', msg); window.postMessage({ __l2bot: 'alert', text: String(msg ?? '').slice(0, 300), path: location.pathname }, location.origin); } catch (e) { return oalert.apply(this, arguments); }
     };
   }

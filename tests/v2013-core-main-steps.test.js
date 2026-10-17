@@ -53,7 +53,7 @@ test('M1: смена героя состоялась — круг продолж
 // --- core-a/L1: частый статус — в маленьком ключе live@Ник, rt.status — не чаще раза в минуту
 function statusBox(opt={}){
  let now=1e12;const sets=[],writes=[];
- const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,document:{prerendering:false},Date:{now:()=>now},String,
+ const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,on:opt.on??true,tabOwner:opt.owner??true,leaseEpoch:opt.owner===false?null:'e1',document:{prerendering:false},Date:{now:()=>now},String,
   chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},
   setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})}};
  vm.createContext(c);vm.runInContext(slice(core,'const RECENT = [];','// Команда остановки сериализуется')+';this.S=setStatus;this.save=statusSave;',c);
@@ -69,6 +69,10 @@ test('L1: статус каждые 2,5 с идёт в live@Ник, весь rt 
 });
 test('L1: вкладка, ждущая чужой замок, не пишет live (старый путь — setRt, он сам откажет)',()=>{
  const b=statusBox({idle:true});b.c.S('⏸ Бот уже работает в другой вкладке');assert.equal(b.sets.length,0);assert.equal(b.writes.length,1);
+});
+test('L1 (ревью): бот включён, замка у вкладки нет (ещё не tabIdle) — live не пишем, как rtWriter',()=>{
+ const b=statusBox({owner:false});b.c.S('Загрузка');assert.equal(b.sets.length,0);assert.equal(b.writes.length,1);
+ const off=statusBox({on:false,owner:false});off.c.S('Бот выключен');assert.equal(off.sets.length,1,'бот выключен — писать можно (как rtWriter: !on)');
 });
 test('L1: остановка пишет и rt.status, и live@Ник',async()=>{
  const b=statusBox();await b.c.save('Остановлено');assert.equal(b.writes.at(-1).status,'Остановлено');assert.equal(b.sets.at(-1)['live@Hero'].s,'Остановлено');
