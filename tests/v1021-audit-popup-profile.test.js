@@ -9,7 +9,7 @@ test('поле прежнего героя в фокусе не записыва
   vm.createContext(b);
   vm.runInContext(bg.slice(bg.indexOf('async function menuPatch('), bg.indexOf('async function switchCharacter(')), b);
   const realMenu = b.menuPatch; b.menuPatch = async (rtPatch, extra) => { const r = await realMenu({ rtPatch, ...extra }, { url: 'chrome-extension://fixture/popup.html' }); if (!r.ok) throw Error(r.reason); };
-  vm.runInContext(popup.slice(popup.indexOf('async function load()'), popup.indexOf('  recN = reccount;')) + '\n}', b);
+  vm.runInContext(popup.slice(popup.indexOf('const isLiveKey'), popup.indexOf('  recN = reccount;')) + '\n}', b);   // 20.13 (шаг 7): load() читает живой статус live@Ник
   vm.runInContext(popup.slice(popup.indexOf('async function save(e)'), popup.indexOf('// ---------- вкладки ----------')), b);
   await b.load(); assert.equal(field.value, '500000');
   await assert.rejects(() => b.save({ target: field }), /Персонаж изменился/);

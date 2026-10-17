@@ -52,7 +52,7 @@ function stopBox(ipc,rt={char:'Warlock',manualKickAt:5},store={}){
  const ss=new Map(),recs=[],calls=[],c={recs,calls,ss,rt:{...rt},leaseEpoch:7,on:true,automationGeneration:0,Date,JSON,String,Promise,
   chrome:{storage:{local:{get:async k=>({[k]:store[k]})}}},
   setTimeout:(f)=>f(),sessionStorage:{getItem:k=>ss.has(k)?ss.get(k):null,setItem:(k,v)=>ss.set(k,String(v)),removeItem:k=>ss.delete(k)},
-  ipc:async m=>{calls.push(m);return ipc(m,calls.length)},rec:(...a)=>recs.push(a.join(' ')),setRt:async()=>({ok:true})};
+  ipc:async m=>{calls.push(m);return ipc(m,calls.length)},rec:(...a)=>recs.push(a.join(' ')),setRt:async()=>({ok:true}),statusSave:async()=>({ok:true})};   // 20.13 (шаг 7): статус остановки — statusSave (rt + live@Ник)
  vm.createContext(c);vm.runInContext(slice('const STOP_PEND_KEY','// hard = настоящая остановка')+';this.S=automationStop;this.R=stopPendRetry;this.P=stopPendRead;',c);return c;
 }
 test('M6: таймаут фона — без исключения, 3 попытки, остановка отмечена для повтора после перезагрузки',async()=>{

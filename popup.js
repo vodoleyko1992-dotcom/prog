@@ -262,8 +262,20 @@ if (DOCKED) {
 if (!DOCKED && /Android/i.test(navigator.userAgent || '')) chrome.tabs?.getCurrent?.()?.then(t => { if (t) document.documentElement.classList.add('docked', 'tabbed'); }).catch(() => {});
 
 let formChar = null; // герой, чьи значения сейчас реально показаны в общей форме
+// 20.13 (ревизия 17.10, шаг 7, аудит core-a/L1): вкладка игры пишет частый статус в маленький ключ live@Ник ({s, t, char}),
+// а rt.status — не чаще раза в минуту. Свежий живой статус этого героя заменяет rt.status в показе; нет ключа/чужой герой — rt.status.
+const isLiveKey = k => /^live@/.test(k);
+async function liveStatusInto(rt) {
+  if (!rt?.char) return rt;
+  try {
+    const k = 'live@' + rt.char, live = (await chrome.storage.local.get(k))?.[k];
+    if (live && live.char === rt.char && typeof live.s === 'string' && live.s) rt.status = live.s;
+  } catch (e) {}
+  return rt;
+}
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
+  await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
   const d = { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
     // Черновик относится к герою, а не к DOM: после переключения профилей чужое значение не остаётся в поле.
@@ -2428,7 +2440,7 @@ $('recDom').onclick = async () => {
 const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
-  const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k)));
+  const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память
   const rt = data.rt || {};
   download(`l2bot-memory-${rt.char || 'hero'}-${stamp()}.json`, JSON.stringify({ l2bot: 1, v: chrome.runtime.getManifest().version, t: Date.now(), data }), 'application/json');
   $('memNote').textContent = `✅ Сохранено: РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}, зон ${Object.keys(rt.zoneStat || {}).length}. Файл — в «Загрузках».`;
@@ -2592,7 +2604,7 @@ $('memFile').onchange = async e => {
   try {
     const j = JSON.parse(await f.text());
     if (!j?.l2bot || !j.data?.cfg) throw new Error('это не файл памяти L2wap Bot');
-    const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k)));
+    const data = Object.fromEntries(Object.entries(j.data).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));
     { const all0 = await chrome.storage.local.get(null), byChar = {};      // 8.0.3: журнал трат CoL — по герою, из текущей памяти
       for (const [k, v] of Object.entries(all0)) if ((k === 'rt' || /^rt@/.test(k)) && v && typeof v === 'object') byChar[v.char || k.slice(3)] = v;
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
@@ -2672,7 +2684,7 @@ function loadSoon() {
 }
 chrome.storage.onChanged.addListener(ch => {
   if (ch.cfg) { const was = dockMin; dockMin = DOCKED && !!ch.cfg.newValue?.dockMin; if (was && !dockMin) loadPending = true; }
-  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog) return loadSoon();
+  if (ch.cfg || ch.rt || ch.on || ch.paused || ch.wdog || Object.keys(ch).some(isLiveKey)) return loadSoon();   // 20.13 (шаг 7): и живой статус live@Ник
   // 8.0: новые записи журнала/снимки — только счётчики (раньше — полная перерисовка меню на каждую запись журнала)
   if (ch.reccount || ch.snapcount) {
     if (ch.reccount) recN = ch.reccount.newValue || 0;

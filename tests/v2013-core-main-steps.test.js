@@ -49,3 +49,56 @@ test('M1: смена героя состоялась — круг продолж
  await vm.runInContext('main()',c);
  assert.ok(calls.includes('switch')&&calls.includes('recovery'),JSON.stringify(calls));
 });
+
+// --- core-a/L1: частый статус — в маленьком ключе live@Ник, rt.status — не чаще раза в минуту
+function statusBox(opt={}){
+ let now=1e12;const sets=[],writes=[];
+ const c={rt:{char:'Hero',status:''},tabIdle:!!opt.idle,document:{prerendering:false},Date:{now:()=>now},String,
+  chrome:{storage:{local:{set:async v=>{sets.push(v)}}}},quietErr(){},recBot(){},draw(){},
+  setRt:p=>{writes.push(p);c.rt={...c.rt,...p};return Promise.resolve({ok:true})}};
+ vm.createContext(c);vm.runInContext(slice(core,'const RECENT = [];','// Команда остановки сериализуется')+';this.S=setStatus;this.save=statusSave;',c);
+ return {c,sets,writes,tick:ms=>{now+=ms}};
+}
+test('L1: статус каждые 2,5 с идёт в live@Ник, весь rt — раз в минуту',()=>{
+ const b=statusBox();
+ b.c.S('Бой: моб 1');assert.equal(b.writes.length,1,'первая запись rt');assert.deepEqual(Object.keys(b.sets[0]),['live@Hero']);
+ for(let i=2;i<=20;i++){b.tick(3000);b.c.S('Бой: моб '+i);}   // ≈57 с
+ assert.equal(b.writes.length,1,'rt не переписывается на каждый статус');assert.equal(b.sets.length,20);
+ assert.equal(b.sets.at(-1)['live@Hero'].s,'Бой: моб 20');assert.equal(b.c.rt.status,'Бой: моб 20','память вкладки — свежая');
+ b.tick(5000);b.c.S('Бой: моб 21');assert.equal(b.writes.length,2,'раз в минуту rt.status освежается');
+});
+test('L1: вкладка, ждущая чужой замок, не пишет live (старый путь — setRt, он сам откажет)',()=>{
+ const b=statusBox({idle:true});b.c.S('⏸ Бот уже работает в другой вкладке');assert.equal(b.sets.length,0);assert.equal(b.writes.length,1);
+});
+test('L1: остановка пишет и rt.status, и live@Ник',async()=>{
+ const b=statusBox();await b.c.save('Остановлено');assert.equal(b.writes.at(-1).status,'Остановлено');assert.equal(b.sets.at(-1)['live@Hero'].s,'Остановлено');
+ assert.match(core,/leaseEpoch === epoch\) await statusSave\(msg\);/);
+});
+test('L1: меню берёт live@Ник своего героя, иначе rt.status; память/экспорт без live-ключей',async()=>{
+ const popup=read('popup.js'),store={'live@Hero':{s:'Бой: свежий',t:1,char:'Hero'},'live@Old':{s:'чужой',t:1,char:'Old'}};
+ const c={chrome:{storage:{local:{get:async k=>({[k]:store[k]})}}}};vm.createContext(c);
+ vm.runInContext(slice(popup,'const isLiveKey','async function load()')+';this.F=liveStatusInto;this.K=isLiveKey;',c);
+ assert.equal((await c.F({char:'Hero',status:'старый'})).status,'Бой: свежий');
+ assert.equal((await c.F({char:'Nobody',status:'старый'})).status,'старый');
+ store['live@Hero']={s:'x',char:'Other'};assert.equal((await c.F({char:'Hero',status:'старый'})).status,'старый','чужой герой в ключе — не верим');
+ assert.ok(c.K('live@Hero')&&!c.K('rt@Hero'));
+ assert.match(popup,/await liveStatusInto\(rt\);/);assert.match(popup,/Object\.keys\(ch\)\.some\(isLiveKey\)\) return loadSoon\(\);/);
+ assert.equal((popup.match(/!MEM_SKIP\.has\(k\) && !isLiveKey\(k\)/g)||[]).length,2,'сохранение и загрузка памяти без live@');
+ assert.match(read('background.js'),/await chrome\.storage\.local\.remove\('live@' \+ nick\)/,'смена героя стирает старый живой статус');
+});
+
+// --- пустые catch вокруг записи памяти и замка → журнал раз в 10 мин
+test('потеря записи памяти/замка пишется в журнал (quietErr), а не глушится',()=>{
+ const i=core.indexOf('const quietErrs'),w=core.indexOf('const rtWriter = L2EngineCore.createPatchQueue(');assert.ok(i>0&&i<w,'quietErr объявлен до rtWriter');
+ const writer=slice(core,'const rtWriter = L2EngineCore.createPatchQueue(',"addEventListener('pagehide'");
+ assert.match(writer,/quietErr\('запись памяти', e\);/);assert.doesNotMatch(writer,/\.catch\(\(\) => \{\}\)/);
+ assert.doesNotMatch(core,/rtWriter\.recover\(\)\.catch\(\(\) ?=> ?\{\}\)/);
+ assert.doesNotMatch(core,/lockRelease[^\n]*\.catch\(\(\) ?=> ?\{\}\)/);
+ assert.doesNotMatch(core,/lockRelease', epoch: a\.epoch \}, 9000\); \} catch \(e\) \{\}/);
+ assert.doesNotMatch(core,/try \{ await rtWriter\.recover\(\); \} catch \(e\) \{\}/);
+ // функционально: одна строка журнала на 10 мин со счётчиком
+ let now=1e12;const recs=[];const c={Date:{now:()=>now},String,rec:(...a)=>recs.push(a.join(' '))};vm.createContext(c);
+ vm.runInContext(slice(core,'const quietErrs','// 20.13 (ревизия 17.10, шаг 7, аудит «Код»): пустые catch')+';this.q=quietErr;',c);
+ c.q('запись памяти',Error('ownership_lost'));c.q('запись памяти',Error('ownership_lost'));now+=601000;c.q('запись памяти',Error('write_failed'));
+ assert.equal(recs.length,2);assert.match(recs[0],/запись памяти: ownership_lost/);assert.match(recs[1],/×2 за 10 мин/);
+});

@@ -1100,7 +1100,7 @@ function expPctGain() {
   if (!(p >= 0) || !l) return null;
   const prev = rt.expMark;
   rt.expMark = { p, l };
-  if (!tabIdle) setRt({ expMark: rt.expMark }).catch(() => {});
+  if (!tabIdle) setRt({ expMark: rt.expMark }).catch(e => quietErr('запись памяти', e));
   if (!prev) return null;
   const d = l === prev.l ? p - prev.p : l === prev.l + 1 ? 100 - prev.p + p : null;
   return d != null && d >= 0 && d < 60 ? d : null;
@@ -1227,6 +1227,17 @@ const TAB_ID = Math.random().toString(36).slice(2);
 // v6: Storage updates are serialized PATCHES in the background, under the
 // same epoch-checked lease as character switching. Other keys are preserved.
 // A failed write remains queued and is retried after backoff.
+// 20.13 (ревизия 17.10, шаг 5, quality/L2): ошибка в таймере продления/сдачи замка (recover, sendMessage после
+// обновления расширения) раньше пропадала без следа. Теперь — одна строка в журнал на тег раз в 10 мин со счётчиком.
+const quietErrs = Object.create(null);
+function quietErr(tag, e) {
+  const q = quietErrs[tag] ||= { n: 0, t: -Infinity }; q.n++;
+  if (Date.now() - q.t < 600000) return;
+  const n = q.n; q.n = 0; q.t = Date.now();
+  try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
+}
+// 20.13 (ревизия 17.10, шаг 7, аудит «Код»): пустые catch вокруг записи памяти (setRt/rtWriter) и замка вкладки глушили
+// потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
 let rtBigWarnT = 0, rtSizeT = 0, rtRetryT = null;
 const rtWriter = L2EngineCore.createPatchQueue(
@@ -1234,9 +1245,10 @@ const rtWriter = L2EngineCore.createPatchQueue(
   () => !tabIdle && !document.prerendering && (!on || (tabOwner && !!leaseEpoch)),
   e => {
     console.warn(TAG, 'запись состояния отложена', e);
+    quietErr('запись памяти', e);
     if (!rtRetryT) rtRetryT = setTimeout(() => {
       rtRetryT = null;
-      if (!tabIdle && !document.prerendering) rtWriter.recover().catch(() => {});
+      if (!tabIdle && !document.prerendering) rtWriter.recover().catch(e => quietErr('запись памяти', e));
     }, 3100);
   }
 );
@@ -1285,11 +1297,28 @@ function setRt(p) {
 const RECENT = [];                               // v4.47: последние действия — для индикатора
 // v5.6: статус с бегущим счётчиком («ждёт 37 с», «HP 512/900») — в журнал только когда меняется смысл (цифры не в счёт),
 // в хранилище — не чаще раза в 2,5 с (раньше каждую секунду: весь rt в storage + запись в журнал + чтение всей страницы)
+// 20.13 (ревизия 17.10, шаг 7, аудит core-a/L1): каждая такая запись была полной перезаписью rt (≈160–300 КБ) в фоне ради одной
+// строки для меню. Теперь частый статус — в маленьком ключе хранилища live@Ник ({s, t, char}); меню читает его (откат на rt.status).
+// rt.status по-прежнему пишется, но не чаще раза в минуту (журнал, экспорт памяти, старые читатели). Ключ пишет только вкладка,
+// которой можно писать память (не ждущая чужой замок, не предзагрузка); фон стирает live@Ник при смене героя.
+const liveKey = (char = rt.char) => 'live@' + char;
+let rtStatusW = 0;
+function liveStatus(s) {
+  if (!rt.char || tabIdle || document.prerendering) return false;
+  try { chrome.storage.local.set({ [liveKey()]: { s: String(s ?? '').slice(0, 600), t: Date.now(), char: rt.char } }).catch(e => quietErr('статус', e)); return true; }
+  catch (e) { quietErr('статус', e); return false; }
+}
+// разовая запись статуса и в rt, и в live@Ник (остановка, чтение базы) — меню не покажет более старый живой статус
+function statusSave(s) { liveStatus(s); rtStatusW = Date.now(); return setRt({ status: s }); }
 let statusShape = '', statusW = 0;
 function setStatus(s) {
   const shape = String(s).replace(/[\d.,]+/g, '#');
   if (s !== rt.status && shape !== statusShape) { statusShape = shape; recBot(s); RECENT.unshift({ t: Date.now(), s }); RECENT.length = Math.min(RECENT.length, 31); }
-  if (s !== rt.status && Date.now() - statusW > 2500) { statusW = Date.now(); setRt({ status: s }); }
+  if (s !== rt.status && Date.now() - statusW > 2500) {
+    statusW = Date.now();
+    if (!liveStatus(s) || Date.now() - rtStatusW > 60000) { rtStatusW = Date.now(); setRt({ status: s }); }
+    else rt = { ...rt, status: s };
+  }
   else rt = { ...rt, status: s };
   draw();
 }
@@ -1323,7 +1352,7 @@ async function automationStop(msg, action = 'stop', opt = {}) {
     if (!r || !STOP_NOFIX.includes(r.reason)) stopPendWrite({ char, kick, action, msg: String(msg).slice(0, 240), t: Date.now(), t0 });
     if (opt.hard || opt.user) rec('S', 'СТОП', `фон не принял остановку (${r?.reason || 'нет ответа'}): «${String(msg).slice(0, 80)}» — нажмите ⏹ Стоп в меню`);
   }
-  if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
+  if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await statusSave(msg);
   return r;
 }
 // Неподтверждённая остановка прошлой страницы: повторить её, пока игрок не нажал новый Start (kick) и герой тот же (≤ 30 мин)
@@ -1615,7 +1644,7 @@ async function farmScan() {
     done.add(key); n++;
     if (btn && btn.getAttribute('aria-expanded') === 'true') { fire(btn); await sleep(120); }
     if (!active()) return;
-    setRt({ status: `Фарм: читаю базу — ${n} строк${r ? ` · ${r.name}` : ''}` }); draw();
+    statusSave(`Фарм: читаю базу — ${n} строк${r ? ` · ${r.name}` : ''}`); draw();
     await sleep(rnd(120, 240));
     if (out.length >= 20) { await flush(); await sleep(600); }   // сохраняем и даём странице «вздохнуть»
   };
@@ -2701,11 +2730,11 @@ async function renewResume() {
   if (leaseEpoch !== old) { if (a.epoch) documentLease = a.epoch; return 'moved'; }   // за это время замок пересобрал tabLock/lockLost — его не трогаем
   documentLease = a.epoch;
   if (!(a.epoch === old || a.resumed) || !tabOwner || !on) {
-    try { await ipc({ cmd: 'lockRelease', epoch: a.epoch }, 9000); } catch (e) {}
+    try { await ipc({ cmd: 'lockRelease', epoch: a.epoch }, 9000); } catch (e) { quietErr('замок', e); }
     return false;
   }
   leaseEpoch = a.epoch;
-  rtWriter.recover().catch(() => {});
+  rtWriter.recover().catch(e => quietErr('запись памяти', e));
   return true;
 }
 setInterval(async () => {
@@ -2723,19 +2752,10 @@ setInterval(async () => {
       }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
   } catch (e) { quietErr('замок', e); }
 }, 5000);
-// 20.13 (ревизия 17.10, шаг 5, quality/L2): ошибка в таймере продления/сдачи замка (recover, sendMessage после
-// обновления расширения) раньше пропадала без следа. Теперь — одна строка в журнал на тег раз в 10 мин со счётчиком.
-const quietErrs = Object.create(null);
-function quietErr(tag, e) {
-  const q = quietErrs[tag] ||= { n: 0, t: -Infinity }; q.n++;
-  if (Date.now() - q.t < 600000) return;
-  const n = q.n; q.n = 0; q.t = Date.now();
-  try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
-}
 // замок при уходе со страницы не снимаем: следующая страница этой же вкладки продолжит с тем же ключом; закрытую вкладку отпустит таймаут 90 с
 
 // 10.0.2: замеры по РБ из лога 12.10 22:11–22:46 (Warlock 65 + Kai): ДПС в бою, спецудар, обычный удар p90 / макс.
@@ -4651,7 +4671,7 @@ addEventListener('message', e => {
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
     const src = d.res.battle && typeof d.res.battle === 'object' && 'activeSummon' in d.res.battle ? d.res.battle : d.res;
     if ('activeSummon' in src) { const s = src.activeSummon; PET = { t: Date.now(), has: !!s, key: s?.key || PET?.key || '', name: s?.nameUk || PET?.name || '', hp: +s?.hp || 0, maxHp: +s?.maxHp || 0 };
-      if (s?.key && rt.petLast !== s.key && tabOwner) setRt({ petLast: s.key }).catch(() => {}); }   // 8.0.3: последний живой кот — переживает перезагрузку (combat.petPick)
+      if (s?.key && rt.petLast !== s.key && tabOwner) setRt({ petLast: s.key }).catch(e => quietErr('запись памяти', e)); }   // 8.0.3: последний живой кот — переживает перезагрузку (combat.petPick)
   } catch (er) {}
   // v5.5.1: темп обычной атаки — от сервера. С луком (лог 08.10 19:32) интервал атаки длиннее, кнопка «готова» раньше, игра
   // отвечала «ещё на перезарядке», а бот из-за ошибки памяти КД ждал 5–6 с между выстрелами. Сервер в ответе на удар пишет,
@@ -5769,8 +5789,8 @@ async function enchantCommand(m) {
   } catch (e) { return { ok: false, reason: String(e?.message || e).slice(0, 180) }; }
   finally {
     if (manualEpoch && !on && leaseEpoch === manualEpoch) {
-      await rtWriter.recover().catch(() => {});
-      await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(() => {});
+      await rtWriter.recover().catch(e => quietErr('запись памяти', e));
+      await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(e => quietErr('замок', e));
       if (!on && leaseEpoch === manualEpoch) { tabOwner = false; tabIdle = false; leaseEpoch = null; }
     }
     enchantCommandBusy = false;
@@ -6087,7 +6107,7 @@ async function warlockCommand(m) {
   }catch(e){return {ok:false,reason:String(e?.message||e).slice(0,180)};}
   finally {
     if (manualEpoch&&!on&&leaseEpoch===manualEpoch) {
-      await rtWriter.recover().catch(()=>{});await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(()=>{});
+      await rtWriter.recover().catch(e=>quietErr('запись памяти',e));await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(e=>quietErr('замок',e));
       if (!on&&leaseEpoch===manualEpoch) {tabOwner=false;tabIdle=false;leaseEpoch=null;}
     }
     warlockCommandBusy=false;

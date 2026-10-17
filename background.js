@@ -416,6 +416,9 @@ async function switchCharacter(m, sender) {
     if (prev.rbTimer || nextRt.rbTimer) nextRt.rbTimer = mergeTimerPatch(prev.rbTimer, nextRt.rbTimer);
     await chrome.storage.local.set({ ['rt@' + old]: prev, ['cfg@' + old]: previousCfg,
       rt: nextRt, cfg: nextCfg });
+    // 20.13 (ревизия 17.10, шаг 7, core-a/L1): живой статус героя (live@Ник) с прошлой сессии старее «Персонаж: …» — убираем,
+    // меню покажет rt.status, пока вкладка не напишет свежий
+    try { await chrome.storage.local.remove('live@' + nick); } catch (e) {}
     return { ok: true, rt: nextRt, cfg: nextCfg, changed: true, old };
   });
 }
