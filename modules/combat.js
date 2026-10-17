@@ -1127,14 +1127,14 @@ async function battle() {
     await env.setRt({ battleReload: 0 }); return env.toMap();
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
-  if (st === 'dead') return env.onDeath();
+  if (st === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(null, true); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
     const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
     if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
     return env.toMap();
   }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
-  if (st === 'win') return env.nextFight();                     // открыт уже экран победы
+  if (st === 'win') { if (await env.finishFarmQuota?.()) return; return env.nextFight(); }                     // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
   if (env.rt.bounce || env.rt.mobClickAt) env.setRt({ bounce: 0, mobClickAt: 0 });   // 8.0: без ожидания записи   // бой открылся — счётчик петли сброшен
 
@@ -1327,6 +1327,7 @@ async function battle() {
       ctx.killed.push(k.name);
     }
   };
+  if (!ctx.rb && env.beginFarmQuota) { ctx.farmQuota = await env.beginFarmQuota(ctx.spawnId || spawnId); if (ctx.farmQuota === false) return; }
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
   const reloadSlot = () => { let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
@@ -2107,7 +2108,7 @@ async function battle() {
   const result = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : null, 3000, 40);
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
-  if (result === 'dead') return env.onDeath();
+  if (result === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(ctx.farmQuota, true); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (result !== 'win') {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
@@ -2202,6 +2203,7 @@ async function battle() {
   // квест: прогресс с экрана победы («26 / 35 · осталось 9»), частота дропа, прогноз боёв
   const qDone = await env.trackQuest(ctx.name, ctx.questKill);
   if (qDone && env.cfg.questStop) return env.halt(`Квест выполнен: ${qDone}`);
+  if (ctx.farmQuota && await env.finishFarmQuota?.(ctx.farmQuota)) return;
   await env.nextFight(ctx);
 }
 

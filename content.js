@@ -14,7 +14,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
-  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
+  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
@@ -156,6 +156,53 @@ async function finishFishGoal(T) {
   rt = { ...rt, fishTgt: response.fishTgt, fishService: null };
   cfg = mergeCfg(response.cfg);
   return true;
+}
+
+// 20.8: считаем мобов по серверному mobsKilled, а не бои; массовые убийства не теряются в коротком логе.
+function farmQuotaTask() {
+  const raw = L2EngineCore.rawTaskConfig(cfg), chosen = L2EngineCore.selectedTask(cfg, rt);
+  if (chosen === 'auto' || chosen === 'cat') return chosen;
+  if (chosen) return '';
+  return autonomyMode() === 'cat' ? 'cat' : autonomyMode() === 'farm' && raw.zoneAuto ? 'auto' : '';
+}
+const farmQuotaKey = task => task === 'auto' ? 'autoKillLimit' : 'catKillLimit';
+const farmQuotaLimit = task => { const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
+async function farmQuotaSnapshot(char) {
+  const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
+  if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
+  return c;
+}
+async function beginFarmQuota(spawn) {
+  if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
+  const task = farmQuotaTask(), limit = task && farmQuotaLimit(task);
+  if (!limit) return null;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && farmQuotaTask() === task && farmQuotaLimit(task) === limit;
+  try {
+    const c = await farmQuotaSnapshot(char); if (!valid()) return false;
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
+    if (!r?.ok || !valid()) return false;
+    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row } };
+    return { task, limit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
+  } catch (e) { if (valid()) setStatus('Лимит мобов: жду счётчик сервера'); return false; }
+}
+async function finishFarmQuota(ticket, lost = false) {
+  if (!ticket) {
+    const task = farmQuotaTask(), row = rt.farmQuota?.[task], spawn = new URLSearchParams(location.search).get('spawnId') || '';
+    if (!row?.pending || row.done || row.pending.spawn !== spawn || row.limit !== farmQuotaLimit(task) || !farmQuotaLimit(task)) return false;
+    if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost) : false; }
+    ticket = { task, limit: row.limit, char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
+  }
+  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && rt.farmQuota?.[T.task]?.run === T.run;
+  if (!valid()) return true;
+  try {
+    const c = await farmQuotaSnapshot(T.char); if (!valid() || !await rtCommit()) return true;
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: сверяю итог боя'); return true; }
+    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
+    if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
+    return false;
+  } catch (e) { if (valid()) setStatus('Лимит мобов: жду подтверждение счётчика'); return true; }
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -4584,7 +4631,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get idleFarmAllowed(){return ()=>!Array.
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get campChampMin() { return campChampMin; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
