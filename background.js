@@ -327,6 +327,31 @@ async function botControl(m, sender) {
     return { ok: true };
   });
 }
+// 20.12 (ревизия 17.10, аудит PAY-1): ручной выход игрока из неизвестной оплаты — только по кнопке меню
+// «Считать оплату не прошедшей» и только для той оплаты, которую игрок видел (id и персонаж). Ожидание переносится
+// в историю как «не прошла (решение игрока)», задача снова может заплатить. Сам бот такую оплату не снимает никогда.
+function paymentDismissChange(rt, m, now) {
+  const ap = rt?.actionPayments || {}, p = ap.pending;
+  if (!p) return { ok: false, reason: 'Неподтверждённой оплаты уже нет' };
+  if (!m?.expectedChar || String(rt.char || '') !== m.expectedChar || (p.char && p.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+  if (!m.pendingId || p.id !== m.pendingId) return { ok: false, reason: 'Оплата уже изменилась — обновите меню' };
+  const row = { ...p, phase: 'dismissed', confirmedAt: now, confirmation: { kind: 'player-dismissed', spent: 0 } };
+  const note = { id: p.id, kind: String(p.kind || ''), amount: p.quote?.amount ?? null, currency: String(p.quote?.currency || ''), t: now };
+  return { ok: true, note, rt: { ...rt, actionPayments: { ...ap, pending: null, history: [row, ...(ap.history || [])].slice(0, 40) }, paymentDismissed: note, _src: 'menu' } };
+}
+async function paymentDismiss(m, sender) {
+  let popup = false;
+  try { const url = new URL(sender?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); popup = url.origin === expected.origin && url.pathname === expected.pathname; } catch (_) {}
+  if (!popup || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
+  return serializeLock(async () => {
+    const state = await chrome.storage.local.get(['rt']), now = Date.now(), r = paymentDismissChange(state.rt || {}, m, now);
+    if (!r.ok) return r;
+    await chrome.storage.local.set({ rt: r.rt });
+    buf.push({ t: now, src: 'U', kind: 'оплата', what: `игрок нажал «Считать оплату не прошедшей»: ${r.note.kind} ${r.note.amount ?? '?'} ${r.note.currency} — ожидание снято по решению игрока, повтор снова разрешён`, sid: 'bg' });
+    if (!timer) timer = setTimeout(flush, 1500);
+    return { ok: true };
+  });
+}
 async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
   if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
@@ -885,6 +910,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   }
   if (m?.cmd === 'menuPatch') {
     menuPatch(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
+  if (m?.cmd === 'paymentDismiss') {
+    paymentDismiss(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
   if (m?.cmd === 'botControl') {

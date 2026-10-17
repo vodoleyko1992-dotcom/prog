@@ -815,7 +815,10 @@ async function rbTeleportFire(b, patch) {
   if(env.payments){
     const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price;
     if(!id || !Number.isFinite(price) || price<0)return false;
-    const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id}});
+    // 20.12 (ревизия 17.10, аудит RB-1): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
+    let before0=null;
+    if(typeof env.gameGet==='function')try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null,ch=j?.character||j;if(ch?.name===env.rt.char&&Number.isSafeInteger(ch.revision))before0={revision:ch.revision,adena:typeof ch.adena==='string'&&/^\d+$/.test(ch.adena)?+ch.adena:Number.isSafeInteger(ch.adena)?ch.adena:null,charId:ch.id};}catch(_){}
+    const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id,...(before0||{})}});
     if(!P){env.setStatus('РБ: платный переход ждёт подтверждения предыдущей оплаты');return false;}
     const before=Object.fromEntries(Object.keys(patch).map(k=>[k,env.rt[k]??null]));
     // Откат относится только к нашему снимку: новая ручная цель не должна исчезнуть после await.
@@ -839,19 +842,34 @@ async function rbTeleportFire(b, patch) {
 }
 async function paymentReconcile(battleId) {
   const P=env.payments?.pending();if(!P || P.kind!=='raid-teleport')return !P;
-  const receipt=env.raidPaymentNet?.();
-  if(receipt?.ok && receipt.id===P.evidence?.id && receipt.t>=P.at)return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
-  const id = P.evidence?.id, win = env.rt.rbDb?.[id]?.victoryEvidence;
+  const receipt=env.raidPaymentNet?.(), E=P.evidence||{};
+  if(receipt?.ok && receipt.id===E.id && receipt.t>=P.at && (!receipt.paymentId || receipt.paymentId===P.id) && receipt.outcome!=='rejected')return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
+  // 20.12 (ревизия 17.10, аудит RB-1): явный отказ своего запроса (РБ убит другими, не хватает адены, 4xx / 200 с error) —
+  // адена не списана: снимаем ожидание, этот перелёт 30 мин не повторяем, остальные задачи идут. Без паузы всего бота.
+  if(receipt?.paymentId===P.id && receipt.id===E.id && receipt.t>=P.at && receipt.outcome==='rejected')return raidPayRefused(P,`сервер отклонил телепорт (HTTP ${receipt.status})`,{kind:'server-rejected',id:E.id,status:receipt.status,spent:0});
+  const id = E.id, win = env.rt.rbDb?.[id]?.victoryEvidence;
   // Ручной вход и сохранённая победа закрывают старое ожидание даже после перезагрузки.
   if (id && env.isBattle?.() && battleId === id) return env.payments.confirm(P,{kind:'target-battle',id});
   if (id && win?.char === P.char && win.at >= P.at && win.at <= Date.now()) return env.payments.confirm(P,{kind:'target-victory',id});
-  const target=env.isMap() && raidList().find(x=>x.id===P.evidence?.id);
-  if(!target){
-    if (Date.now() - P.at > 60000) env.pauseBot?.('РБ: результат телепорта не подтверждён за минуту. Оплата сохранена, повтор запрещён; проверь карту и выбранного босса');
-    else env.setStatus?.('РБ: жду подтверждение прибытия к выбранной цели, повторно не плачу');
-    return false;
+  const target=env.isMap() && raidList().find(x=>x.id===E.id);
+  if(target)return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+  // 20.12: ревизия героя та же и адены не меньше — дважды за ≥2 мин: телепорт не применился.
+  if(Number.isSafeInteger(E.revision) && typeof env.gameGet==='function' && env.payments.probeDue?.(P)){
+    const char=env.rt.char;let ch=null;
+    try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null;ch=j?.character||j;}catch(_){}
+    if(env.payments.pending()?.id!==P.id||env.rt.char!==char)return false;
+    if(ch?.name===P.char&&(!E.charId||ch.id===E.charId)&&env.payments.probeNote(P,env.payments.unchanged?.(E,ch)===true))
+      return raidPayRefused(P,'состояние героя не изменилось — телепорт не применился',{kind:'state-not-applied',id:E.id,revision:ch.revision,spent:0});
   }
-  return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+  env.setStatus?.('РБ: исход телепорта не подтверждён — повторно не плачу, сверяю состояние героя; бесплатные задачи идут');
+  return false;
+}
+async function raidPayRefused(P,why,proof){
+  if(!await env.payments.confirm(P,proof))return false;
+  const id=P.evidence?.id;
+  if(id)await env.setRt({rbSkip:{...(env.rt.rbSkip||{}),[id]:Date.now()},...(env.rt.rbGo?.id===id?{rbGo:null}:{})});
+  env.rec?.('B','РБ-тур',`${P.evidence?.name||id}: ${why}; адена не списана, этот перелёт 30 мин не повторяю`);
+  return true;
 }
 
 async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)

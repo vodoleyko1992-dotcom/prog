@@ -2,6 +2,31 @@
 (function (root) {
  'use strict';
  root.L2V7Factories = root.L2V7Factories || Object.create(null);
+ // 20.12 (ревизия 17.10, аудит PAY-1..3/H2/M1): одно правило исхода платного запроса для всех модулей.
+ // Явный отказ сервера (4xx из списка или 2xx с error / ok:false: «не хватает», не та цена, нет подтверждения) —
+ // оплата точно не применилась, повтор разрешён. 5xx, обрыв связи, нет ответа — исход неизвестен, повтор запрещён.
+ const REJECT = [400, 401, 403, 404, 409, 412, 422, 423, 429];
+ const PROBE_AFTER = 120000, PROBE_WAIT = 15000, PROBE_GAP = 30000, PROBE_SLOW = 300000, PROBE_N = 20;
+ function classify(d) {
+  if (!d || typeof d !== 'object') return 'unknown';
+  const s = +d.status;
+  if (!Number.isInteger(s) || s <= 0) return 'unknown';
+  if (REJECT.includes(s)) return 'rejected';
+  if (s >= 200 && s < 300) {
+   const r = d.res;
+   if (r && typeof r === 'object' && (r.error || r.ok === false)) return 'rejected';
+   return d.error ? 'unknown' : 'applied';
+  }
+  return 'unknown';
+ }
+ const money = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? +v : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
+ // Состояние героя после оплаты не изменилось: та же ревизия и адены не меньше, чем до клика.
+ function unchanged(before, ch) {
+  if (!before || !ch || !Number.isSafeInteger(before.revision) || ch.revision !== before.revision) return false;
+  if (before.adena == null) return true;
+  const a = money(ch.adena); return a != null && a >= before.adena;
+ }
+ root.L2PayOutcome = { REJECT, classify, unchanged };
  root.L2V7Factories.payments = function create_payments(env) {
   let serial = 0, writing = false, permit = null, requestPermit = null, nativeClaim = null;
   const unsettled = new Map();
@@ -51,7 +76,7 @@
     const e=p.evidence||{},expected=p.kind==='fishing'&&/^\/game\/fishing\/(?:action|buy-starter|buy-gear)$/.test(e.path||'')?e.path:
       p.kind==='cat-teleport'?'/game/catacombs/teleport':p.kind==='raid-teleport'?'/game/raid-boss/teleport':
       p.kind==='tvt-shop'?'/game/tvt/shop/purchase':p.kind==='shop'?'/game/drops-shop/buy':p.kind==='story-teleport'&&/^(?:noblesse|subclass)$/.test(p.questKind)?`/game/story-quests/${p.questKind}/teleport`:
-      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':p.kind==='fa-buff'?'/character/town/fast-aden-buffer/apply':null;
+      p.kind==='mammon'&&e.action==='transfer'?'/game/item-transfer/send':p.kind==='mammon'&&e.action==='upgrade'?'/game/mammon/blacksmith/upgrade':p.kind==='mammon'&&e.action==='teleport'?'/game/mammon/teleport':p.kind==='fa-buff'?'/character/town/fast-aden-buffer/apply':null;
     if(!expected||d.path!==expected)return '';
     if(p.kind==='fa-buff'&&(!e.set||d.req?.set!==e.set||e.ids?.length!==1||d.req?.skillId!==e.ids[0]||d.req?.expectedCostFastAden!==p.quote.amount||!Number.isSafeInteger(d.req?.expectedRevision)))return '';
     if(p.kind==='story-teleport'&&Number.isSafeInteger(d.rid)&&d.req?.targetId===p.target&&Number.isSafeInteger(d.req?.expectedRevision))nativeClaim={id:p.id,context:p.context,rid:d.rid,path:d.path,revision:d.req.expectedRevision,at:Date.now()};
@@ -84,10 +109,25 @@
       durable=true;
       if (!mine()) return false;
       local.delete(p.id); if(permit===p.id)permit=null;
-      env.rec?.('B','оплата',`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
+      // 20.12: отказ/«не применилась» — оплата не прошла, а не «получена квитанция».
+      env.rec?.('B','оплата',evidence.spent===0?`${p.kind}: оплата не прошла (${evidence.kind==='state-not-applied'?'состояние героя не изменилось':'сервер отклонил'+(evidence.status?' '+evidence.status:'')}); ${p.quote.amount} ${p.quote.currency} не списаны, задача может повторить`
+        :`${p.kind}: ${/satisfied|arrival/.test(evidence.kind)?'результат подтверждён, повтор не требуется':'получена квитанция'}; резерв ${p.quote.amount} ${p.quote.currency}`);
       return true;
     } finally { if(durable&&unsettled.get(p.char)?.id===p.id)unsettled.delete(p.char); writing = false; }
   }
-  return {prepare,sent,cancel,confirm,pending,consumePermit,claimRequest,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>writing||!!pending()};
+  // 20.12 (ревизия 17.10): сверка по состоянию героя — не чаще раза в 30 с, после 20 попыток раз в 5 мин.
+  // «Не применилась» — только через ≥2 мин после оплаты и только если две сверки подряд (≥30 с) видят неизменное состояние.
+  const probes = new Map();
+  // Первые 15 с после оплаты ждём саму квитанцию ответа, лишних GET не делаем.
+  function probeDue(p) { const r=p&&probes.get(p.id); return !!p && Date.now()-(+p.at||0) >= PROBE_WAIT && (!r || Date.now()-r.t >= (r.n>=PROBE_N?PROBE_SLOW:PROBE_GAP)); }
+  function probeNote(p, absent) {
+    if (!p) return false;
+    const now=Date.now(), r=probes.get(p.id)||{n:0,t:0,since:0}, ok=absent===true&&now-p.at>=PROBE_AFTER;
+    r.n++; r.t=now; r.since=ok?(r.since||now):0; probes.set(p.id,r);
+    if (probes.size>20) probes.delete(probes.keys().next().value);
+    return ok && now-r.since>=PROBE_GAP;
+  }
+  return {prepare,sent,cancel,confirm,pending,consumePermit,claimRequest,matchesContext:p=>same(p)&&context()===p.context,blocked:()=>writing||!!pending(),
+   REJECT,classify,unchanged,probeDue,probeNote};
  };
 })(globalThis);

@@ -222,7 +222,9 @@ async function nextFight(ctx) {
   if (env.cfg.shopAuto) await env.syncShotWeapon?.();
   if (!env.on || !env.tabOwner) return;
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
-  if (env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
+  // 20.12 (ревизия 17.10, аудит PAY-1): при неизвестной оплате после победы не уходим в магазин/телепорт — цепочка продолжается.
+  const payHold = !!env.paymentHold?.();
+  if (!payHold && env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
   const healing = (env.rt.rbHunt?.phase === 'prepare' || env.rt.rbHunt?.last === 'лечусь на мобах') && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
@@ -230,9 +232,9 @@ async function nextFight(ctx) {
   if (env.autonomyMode() === 'tasks' && !tasksGoalHere()) return env.toMap();   // 10.0: без режима — бой (начатый игроком или по задаче) довели, дальше не охотимся   // 🐉 эпики: после миньона/моба — снова к эпику   // тур по РБ: дальше решает rbHuntStep (следующий РБ); пока РБ нет — цепочкой
   // расходники на исходе (по панели) или пора проверить руду (раз в час) — сначала в магазин
   // (не чаще раза в 10 мин — если адены не хватило, не бегаем в магазин после каждого боя)
-  if (env.rt.shop) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Закупить сейчас» нажали во время боя
-  if (env.rt.bagCheck) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Пересчитать в сумке» из меню
-  if (env.rt.zoneGo) { location.href = '/teleport.html'; await env.sleep(4000); return; }   // «Лететь» в меню локаций
+  if (env.rt.shop && !payHold) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Закупить сейчас» нажали во время боя
+  if (env.rt.bagCheck && !payHold) { location.href = '/char.html'; await env.sleep(4000); return; }   // «Пересчитать в сумке» из меню
+  if (env.rt.zoneGo && !payHold) { location.href = '/teleport.html'; await env.sleep(4000); return; }   // «Лететь» в меню локаций
   if (!ctx?.rb && await env.townBuffStart('баффы кончились')) return;            // городской бафф слетел (смерть/24 ч)
   if (env.autonomyMode() === 'enchant') return env.toMap();
   const since = Date.now() - (env.rt.shopT || 0);
@@ -244,7 +246,7 @@ async function nextFight(ctx) {
   // (прогресс берётся из пересчёта сумки) или полный пересчёт сумки старше 5 ч (по нему оценивается запас банок перед РБ)
   if (oreDue && !env.resQuests().length && Date.now() - (env.rt.bagAll?.t || 0) < 5 * 3600000
       && plan.every(x => x.ids?.length && x.ids.every(id => env.invQty?.(id) != null) && x.ids.reduce((a, id) => a + env.invQty(id), 0) >= x.mm[0])) oreDue = false;
-  if (low || (oreDue && !ctx?.rb)) { await env.shopStart(low || 'плановая проверка запасов'); location.href = '/char.html'; await env.sleep(4000); return; }
+  if (!payHold && (low || (oreDue && !ctx?.rb))) { await env.shopStart(low || 'плановая проверка запасов'); location.href = '/char.html'; await env.sleep(4000); return; }
   // Новый уровень проверяем после подтверждённой победы, до обеих цепочек. Обычный catloop без задачи не меняем.
   if (!env.on || env.tabOwner === false) return;
   if (env.magisterAfterWin && env.victory()) {
