@@ -23,13 +23,18 @@ test('D11: скрытые настройки есть в DEF_CFG и DEF меню
 });
 
 test('D16: воин пьёт банку MP ниже 25 % MP, а не только у 70 MP; маг с котом — по mageMpPct', () => {
-  const src = read('modules/combat.js'), line = src.match(/ {4}const fighterMp = [^\n]+\n/)[0];
-  const need = (cfg, mage, mp) => vm.runInNewContext(line + `const mageMp = mageCombat() && mp?.max ? Math.round(mp.max * (env.cfg.mageMpPct ?? 25) / 100) : 0;
-    Math.max(env.cfg.mpPotAt, mageMp, fighterMp)`, { env: { cfg: { mpPotAt: 70, ...cfg } }, mageCombat: () => mage, mp });
+  const src = read('modules/combat.js'), line = src.match(/ {4}const mpReserveHit = [^\n]+\n {4}const fighterMp = [^\n]+\n/)[0];
+  const need = (cfg, mage, mp, rb = null, qty = 50) => vm.runInNewContext(line + `const mageMp = mageCombat() && mp?.max ? Math.round(mp.max * (env.cfg.mageMpPct ?? 25) / 100) : 0;
+    Math.max(env.cfg.mpPotAt, mageMp, fighterMp)`, { env: { cfg: { mpPotAt: 70, rbPotReserve: 10, ...cfg }, qty: () => qty }, mageCombat: () => mage, mp, ctx: { rb }, mpPot: {} });
   assert.equal(need({ fighterMpPct: 25 }, false, { cur: 300, max: 1500 }), 375);   // Warlord MP 1500: банка при MP < 375
   assert.equal(need({}, false, { cur: 300, max: 1500 }), 375);                     // без сохранённого ключа — то же умолчание
   assert.equal(need({ fighterMpPct: 0 }, false, { cur: 300, max: 1500 }), 70);     // 0 — прежнее правило 70 MP
   assert.equal(need({ fighterMpPct: 25 }, true, { cur: 300, max: 1000 }), 250);    // маг с котом: mageMpPct, доля воина не добавляется
   assert.equal(need({ fighterMpPct: 25 }, false, null), 70);
+  // шаг 5 (ревью): на РБ доля воина не трогает резерв банок MP (rbPotReserve), при allIn — трогает; вне РБ резерв не мешает
+  assert.equal(need({}, false, { cur: 300, max: 1500 }, {}, 10), 70);
+  assert.equal(need({}, false, { cur: 300, max: 1500 }, {}, 11), 375);
+  assert.equal(need({}, false, { cur: 300, max: 1500 }, { allIn: true }, 10), 375);
+  assert.equal(need({}, false, { cur: 300, max: 1500 }, null, 5), 375);
   assert.match(src, /const mpNeed = Math\.max\(env\.cfg\.mpPotAt, rbMpAt, mageMp, fighterMp,/);
 });
