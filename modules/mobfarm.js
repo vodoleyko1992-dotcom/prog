@@ -463,7 +463,8 @@ let skipMem = {};                                   // без sessionStorage (т
 function skipDue(k) {
   const now = Date.now();
   let m = skipMem;
-  try { const v = JSON.parse(sessionStorage.getItem(SKIP_KEY) || '{}'); if (v && typeof v === 'object') m = v; } catch (e) {}
+  // ревью шага 7: память модуля сливается с записью хранилища — если setItem не проходит (квота), метка не теряется и журнал не спамит
+  try { const v = JSON.parse(sessionStorage.getItem(SKIP_KEY) || '{}'); if (v && typeof v === 'object') m = { ...skipMem, ...v }; } catch (e) {}
   if (now - (+m[k] || 0) < 600000) return false;
   for (const x of Object.keys(m)) if (!(now - (+m[x] || 0) < 3600000)) delete m[x];
   m[k] = now; skipMem = m;

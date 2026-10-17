@@ -81,3 +81,11 @@ test('CQ-1: мёртвые rest() и now_ удалены, резерв рыба�
   assert.equal((fish.match(/Math\.max\(0, ?\+env\.cfg\.shopReserve \|\| ?0\)/g) || []).length, 1, 'одна копия формулы резерва');
   assert.equal((fish.match(/fishReserve\(\)/g) || []).length, 3);
 });
+
+test('MF-3 (ревью): метка не теряется, если sessionStorage читается, но не пишется', () => {
+  const src = read('modules/mobfarm.js'), a = src.indexOf("const SKIP_KEY"), b = src.indexOf('function cancelSkip');
+  const box = { Date, JSON, Object, sessionStorage: { getItem: () => '{}', setItem: () => { throw new Error('quota'); } } };
+  vm.runInNewContext(src.slice(a, b) + ';this.skipDue = skipDue;', box);
+  assert.equal(box.skipDue('x'), true, 'первая запись');
+  assert.equal(box.skipDue('x'), false, 'повтор в 10 мин подавлен и без записи в хранилище');
+});
