@@ -52,6 +52,9 @@
         ...Object.fromEntries(['summonSkillId','summonSkillLevel','hp','maxHp','pAtk','mAtk','accuracy','critRate','critDmgMul'].map(k => [k,n(p[k])])),
         activeBuffs: Array.isArray(p.activeBuffs) ? p.activeBuffs.slice(0,60).filter(b => b && Number.isFinite(b.skillId)).map(b => ({ skillId: b.skillId, level: n(b.level), expiresAtMs: n(b.expiresAtMs) })) : null } : p===null?null:undefined };
   } catch (_) { return undefined; } };
+  // 20.12 (ревизия 17.10): серверный счётчик убийств из ответов самой игры (её GET /character после каждого хода) —
+  // дневной лимит мобов больше не делает свой GET перед и после каждого боя. Только имя, mobsKilled и revision.
+  const killsOf = o => { try { const c = o?.character; return c && typeof c.name === 'string' && Number.isSafeInteger(c.mobsKilled) && c.mobsKilled >= 0 && Number.isSafeInteger(c.revision) ? { name: c.name.slice(0, 120), k: c.mobsKilled, rev: c.revision } : undefined; } catch (e) { return undefined; } };
   const augOf = o => { try { const eq = o?.character?.inventory?.eq || o?.inventory?.eq; if (!eq || typeof eq !== 'object' || !Object.keys(eq).length) return undefined; const l = eq.l1, a = l && typeof l === 'object' ? l.augmentation : null;
     return { w: l == null ? 0 : typeof l === 'number' ? l : +l.itemId || 0, e: l && typeof l === 'object' ? +l.enchant || 0 : 0, o: a && typeof a.outcomeId === 'string' ? a.outcomeId.slice(0, 40) : null, g: a && a.grade ? String(a.grade).slice(0, 2) : null }; } catch (e) { return undefined; } };
   // 8.0.3 (лог 11.10 11:41–11:44): /game/epic-bosses — ровно 8 эпиков, а redact режет массивы до 8: девятый эпик молча выключил бы разбор
@@ -180,7 +183,7 @@
         storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid,retryOf });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid,retryOf }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -196,7 +199,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);

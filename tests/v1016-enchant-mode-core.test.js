@@ -63,7 +63,7 @@ for(const cat of [false,true]) {
 }
 test('выход из режима в core сохраняет pending и не продолжает серию при возврате',async()=>{const c=coreFixture();c.rt.enchant={runId:'run',status:'running',pending:{id:'receipt'},history:[{id:'past'}]};c.cfg.enchantMode=false;await vm.runInContext('enchantDispatch()',c);assert.equal(c.rt.enchant.status,'paused');assert.equal(c.rt.enchant.pending.id,'receipt');assert.equal(c.rt.enchant.history[0].id,'past');c.cfg.enchantMode=true;await vm.runInContext('enchantDispatch()',c);assert.equal(c.rt.enchant.status,'paused')});
 test('конфликт ревизии после выхода из режима не перезагружает чужую страницу',async()=>{const f=fixture();await f.start();f.mode='timeout';await f.tick();f.env.cfg.enchantMode=false;await f.M.note(f.posts[0],{},409);assert.equal(f.events.includes('reload'),false);await f.tick();assert.equal(f.env.rt.enchant.status,'paused');assert.equal(f.posts.length,1)});
-test('новый профиль не включает заточку автоматически',()=>{const profile=JSON.parse(read('base-profile.json'));assert.equal(profile.cfg.enchantMode,false)});
+test('новый профиль не включает заточку автоматически',()=>{const profile=JSON.parse(read('base-profile.json'));assert.notEqual(profile.cfg.enchantMode,true)}); // 20.12: ключи режимов убраны из профиля — отсутствие = ВЫКЛ
 // Настоящий участок main: выбор заточки приходит во время чужого await, до следующей задачи.
 for(const interrupted of ['mammon','story','shop','clan','daily','trip','warlock'])test('смена режима во время '+interrupted+' не запускает следующую задачу',async()=>{
  const calls=[],c=vm.createContext({L2EngineCore:require('../engine-core.js'),on:true,tabOwner:true,cfg:{enchantMode:false},rt:{petBufferTrip:{}},calls});

@@ -16,7 +16,8 @@ const DAILY_RU = { hunt_start_500: 'Убей 500 монстров', strong_enemy
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };
 let dailyT = ssNum('l2bot-dqT'), clanT = ssNum('l2bot-ctT'), postT = 0, busy = null;
-const rbAllowed = () => !!(env.cfg.rbHuntMode || env.cfg.dailyAuto !== false);
+// 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): клановое «Вызов рейдового босса» — только когда игрок сам включил тур
+const rbAllowed = () => !!env.cfg.rbHuntMode;
 const canRun = () => env.on !== false && env.tabOwner !== false;
 // ---------- заметки из ответов игры (страница или свой GET) ----------
 function dailyNote(res) {
@@ -167,10 +168,8 @@ async function dailyStep() {
   if (R) {
     if (campaignBusy()) return yieldCampaign('dailyRb', R, kick);
     if (env.cfg.dailyAuto === false) { await detourEnd('dailyRb', R, 'дейлики выключены'); return true; }
-    if (R.entering) return enterDetour('dailyRb', R, kick);
-    const killed = (env.rt.rbKills || 0) > (R.k0 || 0), late = Date.now() - (R.t || 0) > RB_MAX;
-    if (killed || late || !rbWanted()) { await detourEnd('dailyRb', R, killed ? 'РБ по дейлику убит' : late ? 'РБ по дейлику: 90 мин вышли' : 'дейлик по РБ уже засчитан'); return true; }
-    return false;
+    // 20.12 (решение игрока 17.10 10:56): тур РБ дейлик больше сам не включает — начатый старой версией заход заканчивается, режимы возвращаются
+    await detourEnd('dailyRb', R, 'тур РБ по дейлику больше не включается сам'); return true;
   }
   if (env.cfg.dailyAuto === false || !env.rt.daily?.day || campaignBusy() || env.isBattle() || !env.awayFree?.() || env.fishNow()) return false;
   // 15.10: строгий список сам выбирает режим; дейлик не меняет порядок и не запускает чужую задачу.
@@ -186,12 +185,8 @@ async function dailyStep() {
       return true;
     }
   }
-  if ((!Array.isArray(env.cfg.autoTasks) || env.cfg.autoTasks.includes('raid')) && rbWanted() && !doneDay('rb') && !env.cfg.rbHuntMode && !env.cfg.epicMode && (+env.heroLevel?.() || 0) >= 40) {
-    const J = { day: env.rt.daily.day, k0: env.rt.rbKills || 0, t: Date.now(), prev: snap(), entering: true, kick };
-    await env.setRt({ dailyRb: J, dailyDone: { ...(env.rt.dailyDone || {}), rb: env.rt.daily.day }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ по дейлику' } });
-    if (await enterDetour('dailyRb', J, kick) && env.rt.dailyRb && !campaignBusy()) env.rec('B', 'дейлики', 'РБ за день не убит — один тур по РБ (дейлики «Убей 1 РБ» и «Участие в РБ», клановый «Вызов рейдового босса»), потом назад');
-    return true;
-  }
+  // 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): «Убей 1 РБ» дейлик сам тур не включает —
+  // засчитывается, когда игрок сам выбрал «Тур РБ» (тот берёт свой бафф за FA по rbFaFull)
   return false;
 }
 // 10.0.14: запись задания и переключение режима разделены await. Stop/новый ручной режим не дают старому шагу

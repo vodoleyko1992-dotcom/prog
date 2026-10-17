@@ -89,8 +89,12 @@ function limitRangeChange(state,now,options={}) {
     else {delete ranges[edit.key];delete rolls[edit.key];cfg[edit.key]=edit.min;}
   }
   for(const key of options.fixed||[]) {delete ranges[key];delete rolls[key];}
+  const dropped=[];
   for(const [key,b] of Object.entries(ranges)) {
-    if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) return {ok:false,reason:'Неверный диапазон лимита: '+key};
+    // 20.12 (ревизия 17.10, аудит core-b/F2): старый/неизвестный ключ (импорт настроек ≤20.9: dailyAutoKillLimit и т.п.) или
+    // испорченные границы раньше давали ok:false навсегда — цикл бота и все записи меню стояли. Теперь такой диапазон отбрасываем
+    // (остаётся фиксированное значение лимита), остальные обрабатываем как прежде
+    if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) {delete ranges[key];delete rolls[key];dropped.push(key);continue;}
     const kind=RANGE_LIMITS[key],old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
     const renew=!old || old.min!==b.min || old.max!==b.max || old.value!==cfg[key] || old.value<b.min || old.value>b.max
       || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
@@ -100,7 +104,7 @@ function limitRangeChange(state,now,options={}) {
     rolls[key]={...b,value,day:kind==='daily'?dailyQuotaDay(now):'',t:now,seq:(old?.seq||0)+1};
     if(['auto','cat'].includes(kind))rt.farmQuota={...(rt.farmQuota||{}),[kind]:{run:(row?.run||0)+1,limit:value,got:0}};
   }
-  cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt};
+  cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt,dropped};
 }
 function dailyFishChange(state,E,now) {
   const rt=state.rt||{},limit=farmQuotaLimit(state.cfg?.dailyFishLimit);
@@ -132,6 +136,15 @@ function farmQuotaChange(state, E, now) {
     const delta=E.counter-row.pending.counter,got=row.got+delta;
     if(dailyLimit)dailyQuota[E.task]=(dailyQuota[E.task]||0)+delta;
     row = { ...row, got, pending: null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
+  } else if (E.op === 'approx') {
+    // 20.12 (ревизия 17.10): счётчик сервера недоступен/не подтвердил итог — бой засчитан по журналу боя (n убитых), с пометкой approx.
+    // close — закрыть pending именно этого боя (иначе отказ: бой уже закрыт или заменён другим).
+    if (!Number.isSafeInteger(E.n) || E.n < 0 || E.n > 200 || typeof E.spawn !== 'string' || !E.spawn) return { ok: false, reason: 'quota_snapshot' };
+    if (E.close && (!row || row.done || row.pending?.spawn !== E.spawn)) return { ok: false, reason: 'quota_battle_changed' };
+    if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
+    const got = row.got + E.n;
+    if (dailyLimit) dailyQuota[E.task] = (dailyQuota[E.task] || 0) + E.n;
+    row = { ...row, got, approx: (row.approx || 0) + E.n, pending: E.close || row.pending?.spawn === E.spawn ? null : row.pending || null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
   } else return { ok: false, reason: 'quota_operation' };
   const next = { ...cfg };
   if (row.done) {
@@ -164,11 +177,12 @@ async function statePatch(m, sender) {
     if(m.resolveLimitRanges) {
       if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
       const r=limitRangeChange(state,now);if(!r.ok)return r;
-      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota};
+      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
-      await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
+      // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
+      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;
@@ -323,6 +337,31 @@ async function botControl(m, sender) {
     return { ok: true };
   });
 }
+// 20.12 (ревизия 17.10, аудит PAY-1): ручной выход игрока из неизвестной оплаты — только по кнопке меню
+// «Считать оплату не прошедшей» и только для той оплаты, которую игрок видел (id и персонаж). Ожидание переносится
+// в историю как «не прошла (решение игрока)», задача снова может заплатить. Сам бот такую оплату не снимает никогда.
+function paymentDismissChange(rt, m, now) {
+  const ap = rt?.actionPayments || {}, p = ap.pending;
+  if (!p) return { ok: false, reason: 'Неподтверждённой оплаты уже нет' };
+  if (!m?.expectedChar || String(rt.char || '') !== m.expectedChar || (p.char && p.char !== m.expectedChar)) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+  if (!m.pendingId || p.id !== m.pendingId) return { ok: false, reason: 'Оплата уже изменилась — обновите меню' };
+  const row = { ...p, phase: 'dismissed', confirmedAt: now, confirmation: { kind: 'player-dismissed', spent: 0 } };
+  const note = { id: p.id, kind: String(p.kind || ''), amount: p.quote?.amount ?? null, currency: String(p.quote?.currency || ''), t: now };
+  return { ok: true, note, rt: { ...rt, actionPayments: { ...ap, pending: null, history: [row, ...(ap.history || [])].slice(0, 40) }, paymentDismissed: note, _src: 'menu' } };
+}
+async function paymentDismiss(m, sender) {
+  let popup = false;
+  try { const url = new URL(sender?.url || ''), expected = new URL(chrome.runtime.getURL('popup.html')); popup = url.origin === expected.origin && url.pathname === expected.pathname; } catch (_) {}
+  if (!popup || sender?.id && sender.id !== chrome.runtime.id) return { ok: false, reason: 'invalid_sender' };
+  return serializeLock(async () => {
+    const state = await chrome.storage.local.get(['rt']), now = Date.now(), r = paymentDismissChange(state.rt || {}, m, now);
+    if (!r.ok) return r;
+    await chrome.storage.local.set({ rt: r.rt });
+    buf.push({ t: now, src: 'U', kind: 'оплата', what: `игрок нажал «Считать оплату не прошедшей»: ${r.note.kind} ${r.note.amount ?? '?'} ${r.note.currency} — ожидание снято по решению игрока, повтор снова разрешён`, sid: 'bg' });
+    if (!timer) timer = setTimeout(flush, 1500);
+    return { ok: true };
+  });
+}
 async function switchCharacter(m, sender) {
   const tab = sender?.tab?.id, nick = String(m.nick || '').trim();
   if (!Number.isInteger(tab) || !nick || nick.length > 100 || /^[\s.\-–—…]*$/.test(nick)) return { ok: false, reason: 'invalid_character' };   // 14.10: заглушка HUD не создаёт профиль.
@@ -343,7 +382,8 @@ async function switchCharacter(m, sender) {
     }
     let nextCfg = current['cfg@' + nick];
     if (!nextCfg) {
-      nextCfg = { ...previousCfg };
+      // 20.12 (ревизия 17.10): эпики/Coin of Luck, тур РБ, бафф за FA, время рыбалки, улучшение у Маммона — новый герой включает сам (список в engine-core).
+      nextCfg = globalThis.L2EngineCore?.newHeroCfg ? globalThis.L2EngineCore.newHeroCfg(previousCfg) : { ...previousCfg };
       for (const k of (Array.isArray(m.roles) ? m.roles : []))
         if (typeof k === 'string' && /^n[A-Z]/.test(k)) nextCfg[k] = '';
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
@@ -398,19 +438,23 @@ async function applyBaseProfile(why) {
     const cur = await chrome.storage.local.get(['cfg', 'rt', 'learn', ...nicks.flatMap(n => ['rt@' + n, 'cfg@' + n])]);
     const set = {}, done = [];
     const empty = o => !o || typeof o !== 'object' || !Object.keys(o).length;
-    if (empty(cur.cfg)) { set.cfg = { ...base.cfg }; done.push('настройки'); }
+    // 20.12 (ревизия 17.10): режимы («Тур РБ» и др.) и ручное оружие из профиля не переносим — чистая установка стоит, где оставили.
+    const EC = globalThis.L2EngineCore, baseCfg = EC?.baseProfileCfg ? EC.baseProfileCfg(base.cfg) : { ...base.cfg };
+    if (empty(cur.cfg)) { set.cfg = { ...baseCfg }; done.push('настройки'); }
     const curChar = String(cur.rt?.char || '').trim();
     for (const n of nicks) {
       let R = base.chars[n]?.rt; if (empty(R)) continue;
       // 7.2 (лог 10.10 20:08): снаряжение и панель из базового профиля устаревают (там было «надето: Посох життя D» — куплены D-заряды
       // при посохе C). Не переносим: бот сам прочитает инвентарь и панель до закупки
-      R = Object.fromEntries(Object.entries(R).filter(([k]) => !['weapons', 'weaponRec', 'weaponEq', 'weaponNow', 'weaponsT', 'panel', 'panelSig'].includes(k)));
-      if (empty(cur.rt) || (curChar === n && !cur.rt.skills)) {          // нет текущей памяти (или она пустая у этого же героя)
+      // 20.12 (ревизия 17.10): и замеры боя Warlock 52 ур. (skills, rbK, rbDps, rbStats, hardMobs, zoneBad, lvl) — чужой состав, бот замерит сам.
+      R = EC?.baseProfileRt ? EC.baseProfileRt(R) : Object.fromEntries(Object.entries(R).filter(([k]) => !['weapons', 'weaponRec', 'weaponEq', 'weaponNow', 'weaponsT', 'panel', 'panelSig'].includes(k)));
+      // 20.12: без skills в профиле признак «память пустая» — нет ни замеров, ни кэша спавнов (иначе профиль ложился бы поверх при каждом запуске).
+      if (empty(cur.rt) || (curChar === n && !cur.rt.skills && !cur.rt.spawns)) {          // нет текущей памяти (или она пустая у этого же героя)
         set.rt = { ...(cur.rt || {}), ...R, char: n }; done.push('память ' + n);
       } else if (curChar !== n && empty(cur['rt@' + n])) {               // герой сейчас другой — его память ждёт в rt@Ник
         set['rt@' + n] = { ...R, char: n }; done.push('память ' + n + ' (для смены героя)');
       }
-      if (curChar !== n && empty(cur['cfg@' + n])) set['cfg@' + n] = { ...base.cfg };
+      if (curChar !== n && empty(cur['cfg@' + n])) set['cfg@' + n] = { ...baseCfg };
     }
     if (empty(cur.learn) && base.learn) { set.learn = base.learn; done.push('автообучение'); }
     if (base.farmDb) { const { farmDb } = await chrome.storage.local.get('farmDb'); if (empty(farmDb)) { set.farmDb = base.farmDb; done.push('база ресурсов'); } }
@@ -881,6 +925,10 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   }
   if (m?.cmd === 'menuPatch') {
     menuPatch(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
+    return true;
+  }
+  if (m?.cmd === 'paymentDismiss') {
+    paymentDismiss(m, _s).then(reply).catch(e => reply({ ok: false, reason: String(e) }));
     return true;
   }
   if (m?.cmd === 'botControl') {

@@ -26,6 +26,7 @@ function guard(J) {
 }
 // Локальная копия задания продолжает исходное действие, не захватывает новую аренду после await.
 function copyJob(J, patch) { const next = { ...J, ...patch }; jobGuards.set(next, guard(J)); return next; }
+const money = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? +v : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
 const waitPayment = () => { env.setStatus('Маммон: исход оплаты неизвестен — жду подтверждения игры, повтор запрещён'); };
 const NEAR = 12000 * 0.9;                       // радиус NPC с карты (mapRadii.npcInteractionRadius 12000), с запасом
 const POLL = 90000, NPC_POLL = 30 * 60000, JOB_MAX = 4 * 60000, SMITH_EVERY = 6 * 3600000;
@@ -486,7 +487,11 @@ async function teleport(J) {                      // страница телеп
   const price = /безкошт|бесплат|free/i.test(cost) ? 0 : +(cost.replace(/\D/g, '') || 0);
   const max = env.cfg.mmTpMax ?? 500000;
   if (price > max) return finish(J, false, `телепорт ${fmtA(price)} адены дороже лимита ${fmtA(max)}`);
-  const ticket = env.payments ? await env.payments.prepare({ key: `mammon:tp:${J.kind}:${J.t}`, kind: 'mammon', quote: { amount: price, currency: 'adena' }, evidence: { action: 'teleport', npc: J.kind, home: J.home } }) : null;
+  // 20.12 (ревизия 17.10, аудит PAY-2): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
+  let before0 = null;
+  if (env.payments) try { const r = await getJson('/character'), ch = r.ok && (r.j?.character || r.j); if (ch?.name === env.rt.char && Number.isSafeInteger(ch.revision)) before0 = { revision: ch.revision, adena: money(ch.adena), charId: ch.id }; } catch (_) {}
+  if (!active()) return;
+  const ticket = env.payments ? await env.payments.prepare({ key: `mammon:tp:${J.kind}:${J.t}`, kind: 'mammon', quote: { amount: price, currency: 'adena' }, evidence: { action: 'teleport', npc: J.kind, home: J.home, ...(before0 || {}) } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!active()) { if (ticket) await env.payments.cancel(ticket); return; }
   const next = { ...J, step: 'act', tpT: Date.now(), ...(ticket ? { payment: ticket, paymentAction: 'teleport' } : {}) };
@@ -509,13 +514,37 @@ async function teleport(J) {                      // страница телеп
 // Здесь только GET и память: не возрождаем mmJob, не возвращаем прежний home, не нажимаем кнопку.
 function paymentNote(path,d) {
   const p=env.payments?.pending(),e=p?.evidence,ch=d.res?.character;
+  // 20.12 (ревизия 17.10, аудит PAY-2): ответ на улучшение и телепорт Маммона тоже квитанция: отказ (409, 412, 200 с error) —
+  // Coin of Luck/адена не списаны; применилась — подтверждаем. Только свой запрос (paymentId) и свой герой.
+  if(p?.kind==='mammon'&&p.char===env.rt.char&&d.method==='POST'&&d.paymentId===p.id&&(e?.action==='upgrade'&&/^\/game\/mammon\/blacksmith\/upgrade$/.test(path)&&(!d.req?.targetInstanceId||d.req.targetInstanceId===e.target)||e?.action==='teleport'&&path==='/game/mammon/teleport')){
+    const out=env.payments.classify?.(d);if(out!=='rejected'&&out!=='applied')return;
+    const receipt={paymentId:p.id,char:p.char,action:e.action,t:Date.now(),...(out==='rejected'?{refused:d.status||'error'}:{applied:true,level:Number.isFinite(+d.res?.upgraded?.newLevel)?+d.res.upgraded.newLevel:null})};
+    try{root.sessionStorage?.setItem('l2bot.mammonPayment',JSON.stringify(receipt));}catch(_){}
+    if(env.tabOwner!==false)env.setRt({mmPaymentReceipt:receipt});
+    return;
+  }
   if(p?.kind!=='mammon'||e?.action!=='transfer'||p.char!==env.rt.char||path!=='/game/item-transfer/send'||d.method!=='POST'||!Number.isInteger(d.status)||d.error)return;
   if(!Number.isSafeInteger(d.req?.expectedRevision)||d.req.itemKey!==e.itemKey||d.req.recipientName!==e.to||(d.req.qty??1)!==e.qty)return;
-  const refused=d.paymentId===p.id&&[400,401,403,404,409,412,422,423,429].includes(d.status);
+  const refused=d.paymentId===p.id&&env.payments.classify?.(d)==='rejected';   // 20.12: общее правило отказа (и 200 с error)
   if(!refused&&(d.status<200||d.status>=300||d.res?.error||d.res?.ok===false||ch?.name!==p.char||ch.id!==e.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=e.revision||d.req.expectedRevision!==e.revision))return;
   const receipt={paymentId:p.id,char:p.char,charId:e.charId,revision:ch?.revision,...(refused?{refused:d.status}:{})};
   try{root.sessionStorage?.setItem('l2bot.mammonPayment',JSON.stringify(receipt));}catch(_){}
   if(env.tabOwner!==false)env.setRt({mmPaymentReceipt:receipt});
+}
+function mmReceipt(p) {
+  let r = env.rt.mmPaymentReceipt;
+  try { const x = JSON.parse(root.sessionStorage?.getItem('l2bot.mammonPayment') || 'null'); if (x?.paymentId === p.id) r = x; } catch (_) {}
+  return r?.paymentId === p.id && r.char === p.char && r.action === p.evidence?.action ? r : null;
+}
+// 20.12 (ревизия 17.10, аудит PAY-2): оплата точно не прошла — снимаем ожидание. Улучшение: следующая попытка по счётчику
+// tries (после двух — неудача), телепорт: поход закрыт без возврата (не улетали), повтор — по обычному расписанию.
+async function mmNotApplied(p, proof, why, active) {
+  const J = env.rt.mmJob, mine = J?.payment?.id === p.id, epoch = env.leaseEpoch, own = () => env.tabOwner !== false && epoch === env.leaseEpoch && (env.rt.char || '') === p.char;
+  if (mine && p.evidence?.action === 'upgrade') { const saved = await env.setRt({ mmJob: { ...J, payment: null, paymentAction: null } }); if (saved?.ok === false || !active()) return false; }
+  if (!await env.payments.confirm(p, proof)) return false;
+  env.setStatus(`Маммон: ${why}`);
+  if (mine && p.evidence?.action === 'teleport' && own()) await finish({ ...J, home: null, payment: null, paymentAction: null }, false, why);
+  return true;
 }
 async function paymentReconcile() {
   const p = env.payments?.pending();
@@ -542,16 +571,34 @@ async function paymentReconcile() {
       }
     }
   } else if (e.action === 'upgrade' && e.target && Number.isFinite(e.level)) {
-    const r = await getJson('/game/mammon/blacksmith/upgrades'); if (!active()) return false;
-    const item = r.ok && (r.j?.items || []).find(i => +i.itemId === +e.itemId && i.targetInstanceId === e.target);
-    if (item && +item.level > e.level) { smithNote(r.j.items); proof = { kind: 'server-receipt', itemId: +e.itemId, target: e.target, level: +item.level }; }
-  } else if (e.action === 'teleport' && (e.npc === 'smith' || e.npc === 'order')) {
-    if (e.npc === 'smith') { const r = await getJson('/game/mammon/blacksmith/upgrades'); if (!active()) return false; if (r.ok) proof = { kind: 'server-receipt', npc: e.npc, nearby: true }; }
+    const rc = mmReceipt(p);
+    if (rc?.refused) return mmNotApplied(p, { kind: 'server-rejected', status: rc.refused, spent: 0 }, `улучшение отклонено сервером (${rc.refused})`, active);
+    if (rc?.applied) proof = { kind: 'server-receipt', itemId: +e.itemId, target: e.target, level: rc.level };
     else {
-      const r = await getJson('/character'); if (!active()) return false;
-      const n = await getJson(STATE.order[0]); if (!active()) return false;
-      const me = r.ok && (r.j?.character || r.j), npc = n.ok && n.j?.mammonMerchant?.current;
+      const probe = !!env.payments.probeDue?.(p);
+      let r = null; try { r = await getJson('/game/mammon/blacksmith/upgrades'); } catch (_) {} if (!active()) return false;
+      const item = r?.ok && (r.j?.items || []).find(i => +i.itemId === +e.itemId && i.targetInstanceId === e.target);
+      if (item && +item.level > e.level) { smithNote(r.j.items); proof = { kind: 'server-receipt', itemId: +e.itemId, target: e.target, level: +item.level }; }
+      // 20.12: уровень тот же, Coin of Luck и адены не меньше — дважды за ≥2 мин: улучшение не применилось (запрос с expectedLevel).
+      else if (probe && env.payments.probeNote?.(p, !!item && +item.level === e.level && e.colOwned != null && money(item.cost?.coinOfLuckOwned) >= e.colOwned && (e.adenaOwned == null || money(item.cost?.adenaOwned) >= e.adenaOwned)))
+        return mmNotApplied(p, { kind: 'state-not-applied', level: e.level, spent: 0 }, 'уровень, Coin of Luck и адена не изменились — улучшение не прошло', active);
+    }
+  } else if (e.action === 'teleport' && (e.npc === 'smith' || e.npc === 'order')) {
+    const rc = mmReceipt(p);
+    if (rc?.refused) return mmNotApplied(p, { kind: 'server-rejected', status: rc.refused, spent: 0 }, `телепорт отклонён сервером (${rc.refused})`, active);
+    if (rc?.applied) proof = { kind: 'server-receipt', npc: e.npc };
+    else if (e.npc === 'smith') { let r = null; try { r = await getJson('/game/mammon/blacksmith/upgrades'); } catch (_) {} if (!active()) return false; if (r?.ok) proof = { kind: 'server-receipt', npc: e.npc, nearby: true }; }
+    else {
+      let r = null, n = null; try { r = await getJson('/character'); n = await getJson(STATE.order[0]); } catch (_) {} if (!active()) return false;
+      const me = r?.ok && (r.j?.character || r.j), npc = n?.ok && n.j?.mammonMerchant?.current;
       if (me && npc && Number.isFinite(+me.worldX) && Number.isFinite(+me.worldY) && Number.isFinite(+npc.worldX) && Number.isFinite(+npc.worldY) && Math.hypot(+me.worldX - +npc.worldX, +me.worldY - +npc.worldY) <= NEAR) proof = { kind: 'server-receipt', npc: e.npc, nearby: true };
+    }
+    // 20.12: не рядом, ревизия героя та же и адены не меньше — дважды за ≥2 мин: телепорт не применился.
+    if (!proof && Number.isSafeInteger(e.revision) && env.payments.probeDue?.(p)) {
+      let r = null; try { r = await getJson('/character'); } catch (_) {} if (!active()) return false;
+      const ch = r?.ok && (r.j?.character || r.j);
+      if (ch?.name === p.char && (!e.charId || ch.id === e.charId) && env.payments.probeNote?.(p, env.payments.unchanged?.(e, ch) === true))
+        return mmNotApplied(p, { kind: 'state-not-applied', revision: ch.revision, spent: 0 }, 'состояние героя не изменилось — телепорт не прошёл', active);
     }
   }
   if (!proof || !active()) { waitPayment(); return false; }
@@ -651,7 +698,7 @@ async function upgrade(J, items) {
   const allowed = () => active() && +env.cfg.mmGoalItem === id && (env.cfg.mmUpgrade !== false || J.cmd) && L < Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
   if (!allowed()) return finish(copyJob(J, { cancelled: true }), false, 'улучшение отменено: настройка или цель изменена');
   if (env.payments && (!it.targetInstanceId || !Number.isFinite(+it.cost?.adena) || !Number.isFinite(+it.cost?.coinOfLuck) || a < 0 || col < 0)) return finish(J, false, 'неизвестны экземпляр или точная цена улучшения');
-  const ticket = env.payments ? await env.payments.prepare({ key: `mammon:up:${it.targetInstanceId}:${L}:${J.t}`, kind: 'mammon', quote: { amount: col, currency: 'coin_of_luck' }, evidence: { action: 'upgrade', itemId: id, target: it.targetInstanceId, level: L, adena: a, materials: it.cost?.materials || [] } }) : null;
+  const ticket = env.payments ? await env.payments.prepare({ key: `mammon:up:${it.targetInstanceId}:${L}:${J.t}`, kind: 'mammon', quote: { amount: col, currency: 'coin_of_luck' }, evidence: { action: 'upgrade', itemId: id, target: it.targetInstanceId, level: L, adena: a, materials: it.cost?.materials || [], colOwned: money(it.cost?.coinOfLuckOwned), adenaOwned: money(it.cost?.adenaOwned) } }) : null;
   if (env.payments && !ticket) { waitPayment(); return; }
   if (!allowed()) { if (ticket) await env.payments.cancel(ticket); return; }
   const beforePayment = J;
@@ -1079,6 +1126,12 @@ async function mmStep() {
   }
   if (J) {
     if (env.isBattle()) return false;
+    // 20.12 (ревизия 17.10): оплата задания уже не ждёт сверки (её закрыл игрок кнопкой «Считать оплату не прошедшей»
+    // или сверка) — задание не ждёт её вечно: телепорт считаем несостоявшимся, улучшение решит счётчик попыток.
+    if (J.payment && !env.payments?.blocked() && env.payments?.pending()?.id !== J.payment.id) {
+      if (J.paymentAction === 'teleport') { await finish({ ...J, home: null, payment: null, paymentAction: null }, false, 'исход телепорта закрыт без прибытия'); return true; }
+      await env.setRt({ mmJob: { ...J, payment: null, paymentAction: null } }); return true;
+    }
     if (J.paymentAction === 'teleport' && J.payment) {
       const near = await isNear(J.kind); if (!active()) return true;
       if (!near) { waitPayment(); return true; }

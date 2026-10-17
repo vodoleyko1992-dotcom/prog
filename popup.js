@@ -1733,6 +1733,16 @@ const AUTO_TASK_LABELS = { tvt: 'TvT', enchant: 'Автозаточка', epic: 
 const AUTO_MAIN_TASKS = ['enchant', 'epic', 'raid', 'quests', 'fish', 'cat', 'auto', 'farm'];
 // 17.10: UI показывает подтверждённые причины ожидания и очередь отдельно от последнего действия.
 const TASK_TABS = { tvt:'pvp', enchant:'enchant', epic:'epic', raid:'rb', quests:'hunt', fish:'fish', cat:'dungeon', auto:'autofarm', farm:'hunt', mammon:'mammon', dailies:'dailies', clan:'hunt', pvp:'pvp', petbuff:'warlock', resources:'loc' };
+// 20.12 (ревизия 17.10, аудит PAY-1): что именно ждёт сверки — вид, сумма, давность; кнопка ручного выхода только для неё.
+const PAY_KIND_LABELS = { shop:'закупка в магазине', fishing:'покупка на рыбалке', 'cat-teleport':'телепорт в катакомбы', 'raid-teleport':'телепорт к РБ', mammon:'Маммон', 'fa-buff':'бафф за FA', 'town-buff':'городской бафф', 'tvt-shop':'магазин TvT', 'story-teleport':'телепорт квеста' };
+function paymentPendingView(rt, now = Date.now()) {
+  const p = rt?.actionPayments?.pending;
+  if (!p || !p.id) return null;
+  const what = PAY_KIND_LABELS[p.kind] || String(p.kind || 'оплата'), act = p.evidence?.action, sub = p.kind === 'mammon' ? act === 'upgrade' ? ': улучшение' : act === 'teleport' ? ': телепорт' : act === 'transfer' ? ': передача' : '' : '';
+  const sum = Number.isFinite(+p.quote?.amount) ? `${(+p.quote.amount).toLocaleString('ru')} ${p.quote.currency || ''}`.trim() : '';
+  const min = Math.max(0, Math.floor((now - (+p.at || now)) / 60000));
+  return { id: p.id, char: p.char || rt.char || '', text: `Ждёт сверки: ${what}${sub}${p.evidence?.name ? ' «' + p.evidence.name + '»' : ''}${sum ? ' · ' + sum : ''} · ${min ? min + ' мин назад' : 'только что'}. Бот не повторит её, пока не подтвердит результат; бесплатные задачи идут.` };
+}
 function workspaceState(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
   const last = String(rt.status || 'Состояние от игры ещё не получено');
@@ -1740,7 +1750,7 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if (rt.abChal) return { state:'blocked', label:'Нужно ваше действие', text:'Игра ожидает проверку активности', hint:'Пройдите проверку во вкладке игры. Бот ждёт результата сервера.', tab:'svc' };
   if (!st.on) return { state:st.paused ? 'paused' : 'stopped', label:st.paused ? 'Пауза' : 'Бот остановлен', text:st.paused ? 'Задачи приостановлены' : 'Задачи начнутся после «Старт»',
     hint:(pending ? 'Остался неподтверждённый результат операции. ' : '') + 'Последнее: ' + last, tab:'overview' };
-  if (pending) return { state:'blocked', label:'Проверка результата', text:'Есть операция без подтверждённого результата', hint:'Бот сверяет результат. Повторная трата запрещена до подтверждения. ' + last, tab:rt.enchant?.pending ? 'enchant' : rt.petFull?.pending ? 'warlock' : 'svc' };
+  if (pending) return { state:'blocked', label:'Проверка результата', text:'Есть операция без подтверждённого результата', hint:'Бот сверяет результат (ответ сервера, затем состояние героя). Повторная трата запрещена до подтверждения. ' + last, tab:rt.enchant?.pending ? 'enchant' : rt.petFull?.pending ? 'warlock' : 'svc' };
   if (st.failing || !st.heartbeatValid) return { state:'recovering', label:st.failing ? 'Восстановление' : st.booting ? 'Запуск' : 'Нет сигнала', text:st.failing ? 'Движок восстанавливает работу' : st.booting ? 'Жду подтверждения от движка' : 'Вкладка игры не подтвердила работу', hint:st.failing ? 'Последнее сообщение: ' + last : st.booting ? 'Выбранные задачи сохранены. Запуск подтверждается ответом вкладки.' : 'Откройте вкладку игры и проверьте сообщение под кнопками управления.', tab:'svc' };
   if ((rt.pveBlockUntil || 0) > now) return { state:'waiting', label:'Ограничение игры', text:'PvE-фарм временно заблокирован', hint:'До ' + new Date(rt.pveBlockUntil).toLocaleTimeString('ru', { timeZone:'Asia/Vladivostok', hour:'2-digit', minute:'2-digit' }) + ' (Владивосток). ' + last, tab:selected.includes('fish') ? 'fish' : 'svc' };
   if (!selected.length) return { state:'waiting', label:'Ожидание', text:'Задачи не выбраны', hint:'Выберите разрешённые задачи кнопкой «Изменить» в обзоре.', tab:'overview' };
@@ -1785,6 +1795,11 @@ function renderWorkspace(rt, d, st) {
     $('activityPanel').dataset.state = activity.state; $('activityState').textContent = activity.label;
     $('activityText').textContent = activity.text; $('activityHint').textContent = activity.hint;
     $('activityDetails').dataset.goto = activity.tab; $('activityDetails').textContent = activity.tab === 'overview' ? 'Обзор ↗' : 'Подробнее ↗';
+  }
+  if ($('paymentPendingBox')) {
+    const view = paymentPendingView(rt);
+    $('paymentPendingBox').hidden = !view;
+    if (view) { $('paymentPendingText').textContent = view.text; if ($('paymentDismiss').dataset.pendingId !== view.id) { $('paymentDismiss').dataset.pendingId = view.id; $('paymentDismiss').dataset.armed = ''; $('paymentDismiss').textContent = 'Считать оплату не прошедшей'; } $('paymentDismiss').dataset.char = view.char; }
   }
   if (!$('taskBoardRows')) return;
   const rows = taskBoardRows(rt, d, st);
@@ -2657,6 +2672,19 @@ if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings(
 if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
 if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { $('quickModeGrid').hidden = false; $('modeToggle').setAttribute('aria-expanded', 'true'); $('modeToggle').scrollIntoView({ block: 'nearest' }); document.querySelector('#autoTaskSelection input')?.focus(); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
+// 20.12 (ревизия 17.10): ручной выход только по решению игрока — второе нажатие в течение 6 с, через фон (как Stop/пауза).
+if ($('paymentDismiss')) $('paymentDismiss').onclick = async () => {
+  const b = $('paymentDismiss'), id = b.dataset.pendingId, char = b.dataset.char;
+  if (!id) return;
+  if (b.dataset.armed !== id) { b.dataset.armed = id; b.textContent = 'Точно? Если оплата всё же прошла, бот заплатит снова — нажмите ещё раз'; setTimeout(() => { if (b.dataset.armed === id) { b.dataset.armed = ''; b.textContent = 'Считать оплату не прошедшей'; } }, 6000); return; }
+  b.dataset.armed = ''; b.disabled = true;
+  try {
+    const r = await chrome.runtime.sendMessage({ cmd: 'paymentDismiss', pendingId: id, expectedChar: char });
+    if (!r?.ok) throw new Error(r?.reason || 'Команда не выполнена');
+    toast('Оплата отмечена как не прошедшая — ожидание снято');
+  } catch (e) { toast('⚠ ' + e.message, 'var(--bad)'); }
+  finally { b.disabled = false; b.textContent = 'Считать оплату не прошедшей'; }
+};
 if ($('taskBoardRows')) $('taskBoardRows').onclick = e => { const target = e.target.closest('[data-task-tab]'); if (target) showTab(target.dataset.taskTab); };
 cardify();
 foldHints();

@@ -67,16 +67,23 @@ test('main: auto → dailyFish → TvT → FINISHED → dailyFish → auto со�
  c.loc.pathname='/fishing.html';await c.D.fishNote();await c.step();assert.equal(c.rt.dailyFish,null);assert.equal(c.cfg.zoneAuto,true);assert.equal(c.cfg.fishMode,false);assert.equal(c.loc.href,'/map.html');
  c.loc.pathname='/map.html';await c.step();assert.deepEqual(c.calls,['map']);
 });
-test('main: клановый РБ take → dailyRb → raid → убийство → исходный auto → claim',async()=>{
- const c=make();c.cfg.dailyAuto=true;c.cfg.clanTasks=true;c.rt.daily={day:'d1',t:Date.now(),tasks:{fishing_catch_50:{have:50,need:50,done:true}}};
- const raw={clan:{name:'TestClan',diamonds:0},me:{characterId:'self',activeTaskId:null},taskDefinitions:[{id:'kill_raid_boss',nameRu:'Вызов рейдового босса',target:1,canTake:true}],activeClanTasks:[]};
- const posts=[];c.sb.gamePost=async p=>{posts.push(p);if(p.endsWith('/take')){raw.me.activeTaskId='task-1';raw.taskDefinitions[0].canTake=false;raw.activeClanTasks=[{id:'task-1',taskType:'kill_raid_boss',target:1,progress:0,owner:{id:'self'}}];}else{raw.me.activeTaskId=null;raw.activeClanTasks=[];raw.clan.diamonds=7;}return {ok:true,json:async()=>raw}};
+// 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): без включённого игроком «Тура РБ»
+// клановый «Вызов рейдового босса» не берётся и тур не включается; при включённом туре задание берётся, rt.dailyRb не создаётся,
+// тур идёт как выбрал игрок, после убийства — сдача
+test('main: клановый РБ без тура не берётся и не включает тур; с туром — take → raid → claim без dailyRb',async()=>{
+ const mkRaw=()=>({clan:{name:'TestClan',diamonds:0},me:{characterId:'self',activeTaskId:null},taskDefinitions:[{id:'kill_raid_boss',nameRu:'Вызов рейдового босса',target:1,canTake:true}],activeClanTasks:[]});
+ const wire=(c,raw,posts)=>{c.sb.gamePost=async p=>{posts.push(p);if(p.endsWith('/take')){raw.me.activeTaskId='task-1';raw.taskDefinitions[0].canTake=false;raw.activeClanTasks=[{id:'task-1',taskType:'kill_raid_boss',target:1,progress:0,owner:{id:'self'}}];}else{raw.me.activeTaskId=null;raw.activeClanTasks=[];raw.clan.diamonds=7;}return {ok:true,json:async()=>raw}};};
+ { const c=make();c.cfg.dailyAuto=true;c.cfg.clanTasks=true;c.rt.daily={day:'d1',t:Date.now(),tasks:{fishing_catch_50:{have:50,need:50,done:true}}};
+   const raw=mkRaw(),posts=[];wire(c,raw,posts);c.D.clanNote(raw);
+   await c.step();assert.deepEqual(posts,[]);assert.equal(c.rt.dailyRb,undefined);assert.equal(c.cfg.rbHuntMode,false);assert.equal(c.cfg.zoneAuto,true);assert.deepEqual(c.calls,['map']); }
+ const c=make('raid');c.cfg.dailyAuto=true;c.cfg.clanTasks=true;c.rt.daily={day:'d1',t:Date.now(),tasks:{fishing_catch_50:{have:50,need:50,done:true}}};
+ const raw=mkRaw(),posts=[];wire(c,raw,posts);
  c.D.clanNote(raw);await c.step();assert.deepEqual(posts,['/game/clan-tasks/kill_raid_boss/take']);assert.equal(c.rt.dailyRb,undefined);
- await c.step();assert.equal(c.cfg.rbHuntMode,true);assert.ok(c.rt.dailyRb);assert.deepEqual(c.calls,['dailySeries']);c.calls.length=0;
- await c.step();assert.deepEqual(c.calls,['raid']);c.calls.length=0;c.rt.rbKills=1;await c.step();assert.equal(c.rt.dailyRb,null);assert.equal(c.cfg.rbHuntMode,false);assert.equal(c.cfg.zoneAuto,true);
- raw.activeClanTasks[0].progress=1;raw.activeClanTasks[0].canClaim=true;c.D.clanNote(raw);
+ await c.step();assert.equal(c.cfg.rbHuntMode,true);assert.equal(c.rt.dailyRb,undefined);assert.deepEqual(c.calls,['raid']);c.calls.length=0;
+ c.rt.rbKills=1;raw.activeClanTasks[0].progress=1;raw.activeClanTasks[0].canClaim=true;c.D.clanNote(raw);
  // Перезагрузка страницы обнуляет только локальный POST_GAP; задания и прогресс остаются в rt.
  c.sb.L2V7Modules.dailies=c.sb.L2V7Factories.dailies(c.sb);await c.step();assert.equal(posts.at(-1),'/game/clan-tasks/task-1/claim');assert.equal(c.rt.clanTasks.clan.diamonds,7);assert.equal(c.rt.clanTasks.me.active,null);
+ assert.equal(c.cfg.rbHuntMode,true,'тур остаётся, как выбрал игрок');assert.equal(c.rt.dailyRb,undefined);
 });
 test('main: отказ клана409 не зацикливает POST и не блокирует следующий автофарм',async()=>{
  const c=make();c.cfg.clanTasks=true;const posts=[];c.sb.gamePost=async p=>{posts.push(p);return {ok:false,status:409,json:async()=>({error:'revision_conflict'})}};

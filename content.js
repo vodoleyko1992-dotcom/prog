@@ -34,7 +34,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1',
   // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
   debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
-  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200
+  petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200,
 };
 const DEF_RT = { pvpTargets: {}, pvpRecovery: null, pvpResolved: [], status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
@@ -85,8 +85,14 @@ function heartbeat() {
   try { chrome.runtime.sendMessage({ cmd: 'hb', epoch: leaseEpoch, page: location.pathname }, () => void chrome.runtime.lastError); } catch (e) {}
 }
 // в фоновой вкладке любые паузы (даже 35 мс) — через фоновый скрипт: браузер растягивает их до 1 с и больше
-setInterval(() => { if (on && tabOwner && running) heartbeat(); }, 5000);
-const sleep = ms => { if (on) heartbeat(); return document.visibilityState === 'hidden' ? bgSleep(ms) : new Promise(r => setTimeout(r, ms)); };
+// 20.12 (ревизия 17.10, аудит core-a/H2): пульс из setInterval шёл, пока running=true, даже если main() навсегда завис в await —
+// сторож фона видел «жив» и вкладку не перезагружал. Теперь пульс таймера — только пока цикл жив: loopT обновляют каждый круг
+// main() и каждый sleep(); метка старше LOOP_HB_MS — пульса нет, через 2,5 мин тишины фон перезагрузит вкладку (wdPlan)
+let loopT = Date.now();
+const LOOP_HB_MS = 120000;
+const loopAlive = (now = Date.now()) => now - loopT < LOOP_HB_MS;
+setInterval(() => { if (on && tabOwner && running && loopAlive()) heartbeat(); }, 5000);
+const sleep = ms => { loopT = Date.now(); if (on) heartbeat(); return document.visibilityState === 'hidden' ? bgSleep(ms) : new Promise(r => setTimeout(r, ms)); };
 const rnd = (a, b) => a + Math.random() * (b - a);
 // долгое ожидание кусками по 10 с: пульс для сторожа не прерывается, в статусе — обратный отсчёт
 async function idle(ms, label) {
@@ -122,13 +128,26 @@ function byText(re, sel = 'a,button,div,span') {
     ![...e.children].some(c => re.test(c.textContent.trim())));
 }
 
+// 20.12 (ревизия 17.10, аудит core-a/C2): кнопка/отправка формы входа — не игровое действие и не оплата. Неизвестная оплата или
+// PvP-pending раньше блокировали и её: после выкида из игры бот не мог войти, а сверить оплату без входа нельзя (401) — взаимная блокировка
+// 20.12 (ревизия 17.10, аудит PAY-1/H1): при неизвестной оплате запрещены только платные клики. Бесплатная работа на месте —
+// моб из списка карты и листание списка, панель рыбалки (заброс, подсечка, наживка из сумки) — остаётся.
+const PAY_FREE_MAP = '#map-mob-list a.l2-map-mob-link,#map-mob-page-ind .l2-compact-pages__btn,#map-mob-page-next,#map-mob-page-prev,#map-list-mode-mobs';
+const PAY_FREE_FISH = /^(?:fishing|pumping|reeling|soulshot|basicBait|goodBait)$/;
+function paymentFreeClick(el) {
+  if (!el?.matches) return false;
+  if (isMap() && el.matches(PAY_FREE_MAP)) return true;
+  const slot = isFishing() && el.closest?.('.l2-fishing-hotbar-slot');
+  return !!slot && PAY_FREE_FISH.test(slot.dataset?.slot || '');
+}
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
   if (on && L2V7Modules.actions?.canAct?.() === false) return false;
-  if (L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
+  const login = !!el.closest?.('form')?.querySelector?.('input[type="password"]') && /войти|увійти|вход|вхід|login|sign in/i.test((el.textContent || '') + ' ' + (el.value || '')) && loginPage();
+  if (!login && L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
       && !isBattle() && !/\/tvt-arena\.html$/i.test(location.pathname)
-      && !el.matches?.('#tvt-register-btn,#map-defeat-tocity,#battle-defeat-tocity')) return false;
-  if (L2V7Modules.pvp?.pending() && !['#map-defeat-tocity','#battle-defeat-tocity'].some(s => $q(s) === el)) return false;
+      && !el.matches?.('#tvt-register-btn,#map-defeat-tocity,#battle-defeat-tocity') && !paymentFreeClick(el)) return false;
+  if (!login && L2V7Modules.pvp?.pending() && !['#map-defeat-tocity','#battle-defeat-tocity'].some(s => $q(s) === el)) return false;
   // 10.0.13: Stop отменяет и клики продолжения после await; при выключенном боте оставляем ручной просмотр инвентаря и раскрытие панели.
   if (!on && !(invBusy && !running && rt.invScan?.manual) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
   // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
@@ -190,11 +209,42 @@ function farmQuotaTask() {
 const farmQuotaKey = task => task === 'auto' ? 'autoKillLimit' : 'catKillLimit';
 const farmQuotaLimit = task => { const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
 const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
-async function farmQuotaSnapshot(char) {
-  const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
-  if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
-  return c;
+// 20.12 (ревизия 17.10, аудит H1/F1/F9/Q-2/Q-3/M4): дневной лимит включён у всех, а на каждого моба бот делал свой GET /character
+// до и после боя; при сбое счётчика герой стоял в открытом бою без ударов, на экране победы GET шёл каждый круг. Теперь счётчик —
+// из ответов самой игры (hook kc: её GET /character после хода), свой GET только без свежего снимка (после неудачи — не чаще раза
+// в 10 с); отметка начала боя не держит бой: без счётчика убитые считаются по журналу боя с пометкой «неточно»; подтверждение
+// итога — не больше 5 попыток / 30 с, затем бой засчитывается по журналу и бот идёт дальше.
+const KILL_SNAP = { name: '', k: -1, rev: -1, t: 0, stale: false }, QUOTA_WAIT = {};
+let KILL_FAIL_T = 0, quotaApproxNoteT = 0;
+function killSnapNote(x) {
+  if (!x || typeof x.name !== 'string' || !Number.isSafeInteger(x.k) || x.k < 0 || !Number.isSafeInteger(x.rev)) return;
+  if (x.name === KILL_SNAP.name && x.rev < KILL_SNAP.rev) return;   // поздний ответ старее уже виденного
+  Object.assign(KILL_SNAP, { name: x.name, k: x.k, rev: x.rev, t: Date.now(), stale: false });
 }
+// Конец любого боя (и РБ/PvP вне квоты): до нового снимка игры старый счётчик не годится как точка начала следующего боя.
+function killSnapStale() { KILL_SNAP.stale = true; }
+const killSnapFresh = char => KILL_SNAP.name === char && !KILL_SNAP.stale && Date.now() - KILL_SNAP.t < 60000;
+async function farmQuotaSnapshot(char, need = null) {
+  // 20.12 (ревизия 17.10, ревью): итог боя (need) — только снимок после конца боя; снимок из середины AoE-боя устарел (stale)
+  const ok = () => KILL_SNAP.name === char && (need ? !KILL_SNAP.stale && need(KILL_SNAP) : killSnapFresh(char)), snap = () => ({ name: char, mobsKilled: KILL_SNAP.k, revision: KILL_SNAP.rev, cached: true });
+  if (ok()) return snap();
+  // GET /character самой игры ещё в пути — дождаться её ответа, а не слать свой
+  if (typeof gameBusy === 'function') for (const t0 = Date.now(); gameBusy().busy && Date.now() - t0 < 1500;) { await sleep(50); if (ok()) return snap(); }
+  if (!need && Date.now() - KILL_FAIL_T < 10000) throw new Error('Счётчик убийств сервера пока не получен');
+  try {
+    const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
+    if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
+    killSnapNote({ name: c.name, k: c.mobsKilled, rev: c.revision });
+    return c;
+  } catch (e) { KILL_FAIL_T = Date.now(); throw e; }
+}
+// Повтор подтверждения одного боя: не чаще раза в 2 с, не больше 5 попыток / 30 с.
+function quotaWait(key) {
+  const now = Date.now(), W = QUOTA_WAIT[key] ||= { n: 0, t0: now, t: 0 };
+  for (const k of Object.keys(QUOTA_WAIT)) if (k !== key && now - QUOTA_WAIT[k].t0 > 600000) delete QUOTA_WAIT[k];
+  return W;
+}
+const quotaWaitOver = W => W.n >= 5 || Date.now() - W.t0 >= 30000;
 // 17.10.2026: после смены суток/reload владелец уже начатого боя важнее нового приоритета задач.
 function farmQuotaPending(spawn) {
   const raw = L2EngineCore.rawTaskConfig(cfg), enabled = task => L2EngineCore.taskList(cfg) !== null
@@ -209,35 +259,76 @@ async function beginFarmQuota(spawn) {
   if (!limit && !dailyLimit) return null;
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
   const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
+  // 20.12: без счётчика бой не бросаем — билет «неточно», убитые засчитаются по журналу боя.
+  const approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true });
+  // Reload начатого боя: фон всё равно оставит сохранённую точку начала — свежий снимок не нужен.
+  const prev = previous[0]?.row.pending;
+  let c;
+  try { c = prev ? { mobsKilled: prev.counter, revision: prev.revision } : await farmQuotaSnapshot(char); }
+  catch (e) { if (!valid()) return null; setStatus('Лимит мобов: счётчик сервера недоступен — считаю по журналу боя'); return approx(); }
+  if (!valid()) return null;
   try {
-    const c = await farmQuotaSnapshot(char); if (!valid()) return false;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
-    if (!r?.ok || !valid()) return false;
+    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: начало боя не записано — продолжаю бой'); return null; }
     rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row } };
     return { task, limit, dailyLimit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
-  } catch (e) { if (valid()) setStatus('Лимит мобов: жду счётчик сервера'); return false; }
+  } catch (e) { if (!valid()) return null; setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
 }
-async function finishFarmQuota(ticket, lost = false) {
+// Общий итог подтверждённого и приблизительного учёта: true — бой в этой задаче больше не продолжаем (лимит).
+function farmQuotaApply(T, r) {
+  rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
+  if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
+  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
+  if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
+  return false;
+}
+// 20.12: засчитать бой по журналу (n убитых) — счётчик сервера недоступен или не подтвердил итог. close — закрыть висящий pending боя.
+async function farmQuotaApprox(T, n, close = false) {
+  if (T.done) return false;
+  T.done = true;
+  const name = T.task === 'cat' ? 'Катакомбы' : 'Автофарм';
+  try {
+    if (!await rtCommit()) return false;
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    if (!r?.ok) return false;
+    if (Date.now() - quotaApproxNoteT > 600000) { quotaApproxNoteT = Date.now(); rec('B', 'лимит мобов', `${name}: счётчик убийств сервера ${close ? 'не подтвердил итог боя' : 'недоступен'} — засчитал по журналу боя: ${n} (неточно), продолжаю`); }
+    return farmQuotaApply(T, r);
+  } catch (e) { return false; }
+}
+async function finishFarmQuota(ticket, lost = false, seen = null) {
+  const logN = Number.isSafeInteger(seen) && seen >= 0 ? seen : lost ? 0 : 1;
   if (!ticket) {
     const spawn = new URLSearchParams(location.search).get('spawnId') || '', previous = farmQuotaPending(spawn);
-    if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return true; }
+    if (previous.length > 1) {
+      // 20.12: неясный владелец не держит экран победы вечно
+      const W = quotaWait('multi:' + spawn); W.n++; if (quotaWaitOver(W)) { delete QUOTA_WAIT['multi:' + spawn]; return false; }
+      setStatus('Лимит мобов: сверяю владельца начатого боя'); return true;
+    }
     if (!previous.length) return false;
     const {task,row} = previous[0];
-    if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost) : false; }
+    if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost, seen) : false; }
     ticket = { task, limit: row.limit, dailyLimit:farmDailyLimit(task), char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
   }
-  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit||0) && rt.farmQuota?.[T.task]?.run === T.run;
+  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit||0) && (T.approx || rt.farmQuota?.[T.task]?.run === T.run);
   if (!valid()) return true;
+  if (T.approx) return farmQuotaApprox(T, logN);
+  const key = `${T.task}:${T.run}:${T.spawn}:${T.beforeRevision}`, W = quotaWait(key);
+  if (W.n && Date.now() - W.t < 2000) return true;
+  const miss = async text => {
+    if (!valid()) return true;
+    W.n++; W.t = Date.now();
+    if (!quotaWaitOver(W)) { setStatus(text); return true; }
+    delete QUOTA_WAIT[key];
+    return farmQuotaApprox(T, logN, true);
+  };
   try {
-    const c = await farmQuotaSnapshot(T.char); if (!valid() || !await rtCommit()) return true;
+    const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || (lost ? s.k >= p.counter : s.k > p.counter));
+    const c = await farmQuotaSnapshot(T.char, need); if (!valid() || !await rtCommit()) return true;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
-    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: сверяю итог боя'); return true; }
-    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
-    if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
-    if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
-    if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
-    return false;
-  } catch (e) { if (valid()) setStatus('Лимит мобов: жду подтверждение счётчика'); return true; }
+    if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
+    delete QUOTA_WAIT[key];
+    return farmQuotaApply(T, r);
+  } catch (e) { return miss('Лимит мобов: жду подтверждение счётчика'); }
 }
 
 async function dailyLimitFishSync() {
@@ -272,8 +363,23 @@ async function syncLimitRanges() {
     if(!await rtCommit()||!valid())return false;
     const r=await ipc({cmd:'statePatch',patch:{},resolveLimitRanges:true,rangeKick:kick,epoch,expectedChar:char,src:TAB_ID});
     if(!r?.ok||!valid()){if(valid())setStatus('Лимиты: '+(r?.reason||'жду подтверждение записи'));return false;}
-    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};return true;
+    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};
+    if(r.dropped?.length)rec('S','лимиты',`отброшены устаревшие/неверные диапазоны: ${r.dropped.join(', ')} — остаются фиксированные значения`);   // 20.12
+    return true;
   } catch(e){if(valid())setStatus('Лимиты: жду сохранение выбранного диапазона');return false;}
+}
+// 20.12 (ревизия 17.10, аудит farm/Q-4, core-a/C1): отказ синхронизации диапазонов держал весь цикл (sleep 500; continue) навсегда —
+// ни TvT, ни PvP-восстановления, ни рыбалки. Теперь первые 30 с ждём как раньше (обычно это запись в очереди), потом один раз пишем
+// причину в журнал и продолжаем цикл с прежними значениями лимитов; повторная попытка — раз в 30 с
+const limitSync = { since: 0, said: false, nextT: 0 };
+function limitSyncDue(now = Date.now()) { return !limitSync.since || now - limitSync.since < 30000 || now >= limitSync.nextT; }
+function limitSyncBlock(ok, now = Date.now()) {
+  if (ok) { limitSync.since = 0; limitSync.said = false; limitSync.nextT = 0; return false; }
+  limitSync.since ||= now;
+  if (now - limitSync.since < 30000) return true;
+  limitSync.nextT = now + 30000;
+  if (!limitSync.said) { limitSync.said = true; rec('S', 'лимиты', `диапазоны лимитов не синхронизируются ${Math.round((now - limitSync.since) / 1000)} с — продолжаю с прежними значениями лимитов, повторю позже`); }
+  return false;
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -393,6 +499,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     if (want == null) continue;
     ctx.block['tgl:' + bn] = Date.now() + 4000;
     const r = await act(b, `${want ? 'Включаю' : 'Выключаю (MP ' + (mpP | 0) + '%)'}: ${cleanTitle(b.title)}`);
+    if (r === 'nomp') return true;   // 20.12 (ревизия 17.10): MP не хватило — нажатия не было, состояние тоггла не меняем (слот на паузе 4 с)
     if (r !== 'unavail' && r !== 'noforce') {   // у тоггла КД может не быть — нажатие засчитываем, дальше сверяемся со строкой баффов
       await setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } });
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
@@ -1754,7 +1861,8 @@ const FA_KNOWN = { 1363: ['Chant of Victory', 5], 1356: ['Prophecy of Fire', 5],
 const faCost = id => rt.faCat?.[id]?.cost || FA_KNOWN[id]?.[1] || 1;
 function faWanted(...args) { return L2V7Modules.buffs.faWanted(...args); }
 function faCatalogNote(...args) { return L2V7Modules.buffs.faCatalogNote(...args); }
-async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; return L2V7Modules.buffs.townBuffStart(...args); }
+// 20.12 (ревизия 17.10): платный поход к бафферу при неизвестной оплате не начинаем — бесплатный фарм идёт дальше.
+async function townBuffStart(...args) { if (Array.isArray(cfg.autoTasks) && ['tasks','fish','enchant'].includes(L2EngineCore.selectedTask(cfg,rt))) return false; if (L2V7Modules.payments?.blocked?.()) return false; return L2V7Modules.buffs.townBuffStart(...args); }
 async function townBuffStep(...args) { return L2V7Modules.buffs.townBuffStep(...args); }
 
 async function rest(...args) { return L2V7Modules.resources.rest(...args); }
@@ -2447,6 +2555,26 @@ async function antibotGuard() {                     // true — бот на па
   await sleep(Math.min(Math.max(left, 5000), 30000)); return true;
 }
 
+// 20.12 (ревизия 17.10, аудит PAY-1/H1): пока исход оплаты неизвестен, запрещены только платные шаги (покупки, платные
+// телепорты, баффы, улучшения, обучение) — их блокируют payments/fire/gamePost. Бесплатная работа идёт: бой и цепочка
+// «Охотиться дальше», фарм на текущей точке (без перелётов), рыбалка тем, что есть в сумке. Закупка, рыбалка и рейдовый
+// телепорт первые 3 мин стоят: сверка «состояние героя не изменилось» требует, чтобы фарм не менял адену и ревизию.
+const PAY_HOLD_KINDS = ['shop', 'fishing', 'raid-teleport'];
+function paymentFreeAllowed(P) {
+  if (!P || !on || !tabOwner || P.kind === 'enchant' || autonomyMode() === 'enchant') return false;
+  if (rt.revive || L2V7Modules.pvp?.pending() || antibotState() || abHold()) return false;
+  return !(PAY_HOLD_KINDS.includes(P.kind) && Date.now() - (+P.at || 0) < 180000);
+}
+async function paymentFreeStep(P) {
+  if (!paymentFreeAllowed(P)) return false;
+  if (isBattle()) { await battle(); return true; }
+  if (isFishing() && fishState()) { await fishFight(); return true; }
+  if (fishNow() && isFishing() && P.kind !== 'fishing') { setStatus('Оплата не подтверждена — рыбачу тем, что есть в сумке, покупки ждут сверки'); await fishing(); return true; }
+  if (isMap() && autonomyMode() === 'farm' && !cfg.zoneAuto && !cfg.rbMode && !cfg.rbHuntMode && !farmRbOn() && !campOn() && !lootGoal() && !rt.zoneGo && !rt.rbGo) {
+    setStatus('Оплата не подтверждена — фармлю на месте, платные шаги ждут сверки'); await map(); return true;
+  }
+  return false;
+}
 // Только выбранная рыбалка; PvE/служебные маршруты и неизвестные оплаты не возобновляются.
 async function pveFishingStep() {
   const active = () => on && tabOwner && pveFishingAllowed() && !tvtSoon() && !rt.revive && !L2V7Modules.pvp?.pending();
@@ -2551,6 +2679,7 @@ async function main() {
   try {
   let servicesStarted = false, castObservedAt = 0;
   while (on) {
+    loopT = Date.now();                            // 20.12: метка живости цикла для пульса сторожа
     try {
       if (!tabOwner || Date.now() - (window.__lockT || 0) > 30000) {
         const wasOwner = tabOwner;
@@ -2586,7 +2715,20 @@ async function main() {
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
       }
       if (heroNick() && rt.char !== heroNick()) { await switchChar(); if (!tabOwner) continue; }
-      if(Object.keys(cfg.limitRanges||{}).length && !await syncLimitRanges()){await sleep(500);continue;}
+      // 20.12 (ревизия 17.10, аудит core-a/C1): сервер/вход/антибот — раньше лимитов, PvP-восстановления и заточки. Раньше
+      // pvp.recoveryStep на странице входа каждый круг уводил на /map.html и возвращал true — до autoLogin/serverWait цикл не доходил,
+      // а при капче antibotGuard не звал игрока
+      // 20.12 (ревизия 17.10, ревью шага 1): кадр действий обновляем ДО ранних веток — serverWait/autoLogin начинаются с
+      // automationCurrent() (canAct сверяет кадр с поколением); при устаревшем кадре они возвращались без await, а цикл крутился
+      // на микрозадачах (Stop/события хранилища не доходили). Плюс после ранних веток всегда настоящая пауза
+      L2V7Modules.actions?.enterFrame();
+      if (serverDown()) { await serverWait(); await sleep(200); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
+      if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
+      if (loginPage()) { await autoLogin(); await sleep(200); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
+      if (antibotState() === 'check' && await antibotGuard()) { await sleep(200); continue; }   // v5.5.6: проверка активности — ждём человека
+      // 20.12 (аудит core-a/C1, farm/Q-4): отказ синхронизации диапазонов лимитов больше не держит весь цикл: пишем причину в журнал
+      // один раз и продолжаем с прежними фиксированными значениями лимитов (повтор синхронизации — раз в 30 с)
+      if(Object.keys(cfg.limitRanges||{}).length && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);continue;}
       L2V7Modules.actions?.enterFrame();
       // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
       if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); continue; }
@@ -2602,7 +2744,8 @@ async function main() {
       }
       // A heartbeat alone cannot detect a live but endlessly looping dispatcher.
       // Check observable progress; exclude intentional maintenance/long waits.
-      const activeJob = (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+      // 20.12 (ревизия 17.10, аудит H1/M5): неизвестная оплата — честное ожидание сверки, а не «нет прогресса» (3 перезагрузки и стоп за ≈36 мин)
+      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow());
       // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -2622,10 +2765,8 @@ async function main() {
         if (!await automationFlush(stamp)) continue;
         location.reload(); await sleep(5000); continue;
       }
-      if (serverDown()) { await serverWait(); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
-      if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
-      if (loginPage()) { await autoLogin(); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
-      if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
+      if (serverDown()) { await serverWait(); await sleep(200); continue; }      // 20.12: повтор после долгих шагов выше (страница могла смениться)
+      if (loginPage()) { await autoLogin(); await sleep(200); continue; }
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
       if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
@@ -2870,6 +3011,7 @@ function magChar(ch) {
   return { prof, slot, lvl: +ch.level, key: `${slot}:${prof}`, revision: ch.revision };
 }
 async function magisterStart(afterWin = false) {
+  if (L2V7Modules.payments?.blocked?.()) return false;   // 20.12 (ревизия 17.10): обучение платное — ждёт сверки оплаты
   if (!magActive() || fishNow() || rt.shop || rt.rbGo || rt.zoneGo
       || (rt.epic?.step && rt.epic.step !== 'pick') || (isBattle() && !afterWin)
       || (afterWin && !victory()) || (cfg.tvtOn && L2V7Modules.tvt.tvtHold())) return false;
@@ -3125,7 +3267,12 @@ async function autoLogin() {
     .find(b => /войти|увійти|вход|вхід|login|sign in/i.test(b.textContent + ' ' + (b.value || '')));
   if (!automationCurrent(stamp) || pw.isConnected === false) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
-  if (btn) fire(btn); else if (pw.form) pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
+  // 20.12 (ревизия 17.10, аудит core-a/C2): клик не прошёл (fire отказал) — отправляем форму напрямую и пишем причину в журнал
+  const fired = btn ? fire(btn) !== false : false;
+  if (!fired && pw.form && !abHold()) {   // проверку активности (капчу) не обходим
+    if (btn) rec('S', 'вход', `кнопка входа не нажата (${L2V7Modules.payments?.blocked?.() ? 'висит неподтверждённая оплата' : L2V7Modules.pvp?.pending?.() ? 'ждёт PvP-восстановление' : 'клик отклонён'}) — отправляю форму входа напрямую`);
+    pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
+  }
   const ok = await waitFor(() => accountLoginBlocked() || !loginPage() || $q('#l2-hud-legacy-name'), 15000, 300);
   if (!automationCurrent(stamp)) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
@@ -4041,7 +4188,8 @@ function catPaymentReceipt(){try{return JSON.parse(sessionStorage.getItem('l2bot
 function catPaymentNote(path,d,c){
   if(path!=='/game/catacombs/teleport'||d.method!=='POST'||!c?.paymentId)return;
   const req=d.req||{},ch=d.res?.character||{},a={t:Date.now(),id:req.dungeonId,expectedRevision:req.expectedRevision,expectedAdenaCost:req.expectedAdenaCost,
-    characterId:ch.id,characterName:d.hero?.name||ch.name||'',ok:d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false,status:d.status,paymentId:c.paymentId};
+    characterId:ch.id,characterName:d.hero?.name||ch.name||'',ok:d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false,status:d.status,paymentId:c.paymentId,
+    outcome:L2V7Modules.payments?.classify?.(d)||''};   // 20.12 (ревизия 17.10): исход по общему правилу оплат
   try{sessionStorage.setItem('l2bot.catTpReceipt',JSON.stringify(a));}catch(_){}
 }
 
@@ -4115,6 +4263,7 @@ async function syncShotWeapon() {
 }
 let RAID_PAY_NET = null;
 let SHOP_BUY = null;   // 7.1.30: последняя покупка в магазине вещей (shopKey из запроса)
+function raidPayReceipt(){const p=L2V7Modules.payments?.pending();if(!p||RAID_PAY_NET?.paymentId===p.id)return RAID_PAY_NET;try{const r=JSON.parse(sessionStorage.getItem('l2bot.raidPayReceipt')||'null');if(r?.paymentId===p.id)return r;}catch(_){}return RAID_PAY_NET;}
 function shopBuyReceipt(){const p=L2V7Modules.payments?.pending();if(SHOP_BUY?.paymentId===p?.id)return SHOP_BUY;try{const r=JSON.parse(sessionStorage.getItem('l2bot.shopReceipt')||'null');if(p&&r?.paymentId===p.id)return r;}catch(_){}return SHOP_BUY;}
 function profQuestNote(st) {
   if (!st.accepted) { if (rt.profQuest?.open?.length) { const qs = { ...(rt.questSeen || {}) }; for (const n of rt.profQuest.open) delete qs[n]; setRt({ profQuest: { ...rt.profQuest, open: [], t: Date.now() }, questSeen: qs }); } return; }   // 7.1.30: квест сброшен
@@ -4148,6 +4297,8 @@ addEventListener('message', e => {
   d.paymentId=netContext.paymentId||'';
   d.retryOf=netContext.retryOf||0;
   if(d.pet&&netContext.at)d.pet.requestStartedAt=netContext.at;
+  // 20.12 (ревизия 17.10): счётчик убийств для лимита мобов — из ответов самой игры; конец боя без нового снимка — снимок устарел
+  if (d.kc && d.status >= 200 && d.status < 300) killSnapNote(d.kc); else if (d.bt?.end) killSnapStale();
   // Сначала причина смерти; fightlab ниже не должен учить чужой PvP как урон РБ.
   try { L2V7Modules.pvp?.onNet(path, d); } catch (e) { console.warn(TAG, 'PvP', e); }
      // 8.0.3: запрос игры закончился — она снова принимает клики
@@ -4322,8 +4473,11 @@ addEventListener('message', e => {
   // 7.1.30 (лог 10.10 15:43): игрок сам надел Demon's Staff (C), а бот помнил «надето: Лялька вуду NG» и купил 3000 NG-зарядов.
   // Надевание оружия видно по запросу к серверу — сразу обновляем «надетое» по базе предметов (грейд, тип, P/M.Atk)
   if (path === '/character/equip' && d.method === 'POST' && d.req && !d.error && /^2/.test(String(d.status)) && !d.res?.error) try { weaponEquipNote(d.req); } catch (er) {}
-  if (path === '/game/raid-boss/teleport' && d.method === 'POST') RAID_PAY_NET = { t: Date.now(), id: String(d.req?.spawnId || ''), ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
-  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
+  // 20.12 (ревизия 17.10, аудит RB-1/PAY-3): квитанция хранит статус, привязку к оплате и исход (отказ / применилась / неизвестно);
+  // рейдовая — ещё и в sessionStorage: удачный телепорт уводит со страницы, а переменная вкладки теряется.
+  if (path === '/game/raid-boss/teleport' && d.method === 'POST') { RAID_PAY_NET = { t: Date.now(), id: String(d.req?.spawnId || ''), status: d.status, paymentId: d.paymentId || '', outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error && d.res?.ok !== false };
+    if (d.paymentId) try { sessionStorage.setItem('l2bot.raidPayReceipt', JSON.stringify(RAID_PAY_NET)); } catch (_) {} }
+  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
   if(path==='/game/drops-shop/buy'&&d.method==='POST'&&d.paymentId)try{sessionStorage.setItem('l2bot.shopReceipt',JSON.stringify(SHOP_BUY));}catch(_){}
   // v5.3: для сторожа рыбалки. 8.0.3 (лог 11.10): + обрыв запроса (err — fishAct сразу жмёт снова, а не ждёт 15 с), отметка сервера
   // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
@@ -4610,7 +4764,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get challengeHold(){return abHold},
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
  get paymentPending(){return ()=>L2V7Modules.payments?.pending?.()||(rt.petFull?.pending?{...rt.petFull.pending,kind:'summon-buff'}:rt.enchant?.pending?{...rt.enchant.pending,kind:'enchant'}:null)},
- get runCombat(){return battle},get victory(){return victory},
+ get runCombat(){return battle},get victory(){return victory},get freeWork(){return paymentFreeStep},
  get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':P.kind==='cat-teleport'?'dungeons':P.kind==='fishing'?'fishing':P.kind==='tvt-shop'?'tvtshop':P.kind==='story-teleport'?'story':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
  get jobs(){return ()=>[
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
@@ -4629,7 +4783,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -4709,9 +4863,9 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return ()=>RAID_PAY_NET}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get gameGet() { return gameGet; },
-  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
@@ -4760,7 +4914,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automa
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get campChampMin() { return campChampMin; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get battleInfo() { return () => BATTLE_NET; },
@@ -4879,7 +5033,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get waitX() { return waitX; }, set waitX(value) { waitX = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -4936,7 +5090,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -5316,6 +5470,7 @@ L2V7Modules.dailies = L2V7Factories.dailies({ get dailyFishBlocked(){return ()=>
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 // Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
 L2V7Modules.pvp = L2V7Factories.pvp({ get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation},
+  get loginPage() { return () => loginPage(); }, get gameLoaded() { return () => !!$q('#l2-hud-legacy-name, #l2-nav-bottom'); },   // 20.12: PvP-восстановление не действует на странице входа/незагруженной
   get rt() { return rt; },
   get cfg() { return cfg; },
   get on() { return on; },

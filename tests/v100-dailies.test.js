@@ -28,7 +28,9 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
     const km = env.rt.clanTasks.defs.find(d => d.id === 'kill_monsters'); assert.equal(km.canTake, false); assert.equal(km.why, 'cooldown'); assert.ok(km.cdAt > 0); assert.equal(km.reward.coinOfLuck, 1); assert.equal(km.diamonds, 4);
     D.clanNote({ error: 'clan_required' }); assert.equal(env.rt.clanTasks.noClan, true); }
   // 3. план: берём лучшее доступное (kill_raid_boss и штурм стены — canTake, но стена никогда; РБ — только если РБ разрешены)
-  { const { env, D, posted } = mk(); D.clanNote(clanView()); let p = D.clanPlan(); assert.equal(p.kind, 'take'); assert.equal(p.def.id, 'kill_raid_boss', 'РБ разрешён через dailyAuto');
+  // 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): клановый «Вызов рейдового босса» — только при включённом игроком «Туре РБ»
+  { const { env, D, posted } = mk({ cfg: { rbHuntMode: true } }); D.clanNote(clanView()); let p = D.clanPlan(); assert.equal(p.kind, 'take'); assert.equal(p.def.id, 'kill_raid_boss', 'РБ разрешён включённым туром');
+    const e1 = mk({ cfg: { dailyAuto: true, rbHuntMode: false } }); e1.D.clanNote(clanView()); assert.equal(e1.D.clanPlan(), null, 'dailyAuto без тура РБ больше не разрешает РБ');
     const e2 = mk({ cfg: { dailyAuto: false, rbBetween: false, rbHuntMode: false } }); e2.D.clanNote(clanView()); assert.equal(e2.D.clanPlan(), null, 'без РБ — только стена, её не берём');
     const v = clanView(); v.taskDefinitions.find(d => d.id === 'kill_monsters').canTake = true; v.taskDefinitions.find(d => d.id === 'kill_monsters').blockedReason = null; D.clanNote(v);
     p = D.clanPlan(); assert.equal(p.def.id, 'kill_monsters', 'Coin of Luck важнее РБ'); assert.match(p.why, /\+1 CoL/);
@@ -44,7 +46,7 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
     v2.activeClanTasks = [{ id: 't9', taskType: 'earn_sp_from_monsters', progress: 10, target: 100000, owner: { id: 'u2', name: 'Teddy' }, canHelp: true, canClaim: false }];
     e2.D.clanNote(v2); const h = e2.D.clanPlan(); assert.equal(h.kind, 'help'); assert.match(h.why, /помочь Teddy/); await e2.D.clanStep(); assert.deepEqual(e2.posted, ['/game/clan-tasks/t9/help']); }
   // 5. ошибка игры → запись и пауза 30 мин; 409 → перечитать
-  { const { env, D, recs } = mk({ posts: { '/game/clan-tasks/kill_raid_boss/take': { ok: false, status: 409, body: { messageRu: 'Состояние изменилось' } } } }); D.clanNote(clanView());
+  { const { env, D, recs } = mk({ cfg: { rbHuntMode: true }, posts: { '/game/clan-tasks/kill_raid_boss/take': { ok: false, status: 409, body: { messageRu: 'Состояние изменилось' } } } }); D.clanNote(clanView());
     assert.equal(await D.clanStep(), true); assert.ok(recs.some(r => /✗ взять «Вызов рейдового босса»: Состояние изменилось — повтор через 30 мин/.test(r))); assert.ok(env.rt.clanTaskFail.t);
     const e2 = mk({ rt: { clanTaskFail: { t: Date.now() } } }); e2.D.clanNote(clanView()); assert.equal(await e2.D.clanStep(), false); }
   // 6. дейлик «50 рыб»: не хватает → рыбалка с сохранением режимов; улов считается; добрали → режимы назад, на карту
@@ -55,11 +57,17 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
     await D.fishNote(); loc.pathname = '/fishing.html'; assert.equal(await D.dailyStep(), true); assert.equal(env.rt.dailyFish, null); assert.equal(env.cfg.fishMode, false); assert.equal(env.cfg.zoneAuto, true); assert.equal(loc.href, '/map.html');
     assert.ok(env.recs.some(r => /рыба на дейлик поймана \(3\/3\)/.test(r)));
     assert.equal(await D.dailyStep(), false, 'раз в день'); }
-  // 7. дейлик «1 РБ»: не убит → тур РБ; убит (rbKills вырос) → назад; уже рыбачим по режиму — не трогаем; ниже 40 — нет
+  // 7. 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): дейлик «1 РБ» сам тур РБ не включает,
+  // rt.dailyRb не создаётся; заход, начатый старой версией, заканчивается сразу с возвратом прежних режимов
   { const dq = JSON.parse(JSON.stringify(dailyRaw)); Object.assign(dq.tasks.strong_enemy_20, { have: 0, done: false }); Object.assign(dq.tasks.raid_boss_participate, { have: 0, done: false });
-    const { env, D } = mk({ rt: { rbKills: 5 }, cfg: { zoneAuto: true, rbHuntMode: false } }); D.dailyNote(dq); assert.equal(D.rbWanted(), true);
-    assert.equal(await D.dailyStep(), true); assert.equal(env.cfg.rbHuntMode, true); assert.equal(env.rt.dailyRb.k0, 5); assert.equal(env.rt.rbHunt.step, 'pick');
-    assert.equal(await D.dailyStep(), false); env.rt.rbKills = 6; assert.equal(await D.dailyStep(), true); assert.equal(env.rt.dailyRb, null); assert.equal(env.cfg.rbHuntMode, false); assert.equal(env.cfg.zoneAuto, true);
+    const { env, D, cfgs } = mk({ rt: { rbKills: 5 }, cfg: { zoneAuto: true, rbHuntMode: false } }); D.dailyNote(dq); assert.equal(D.rbWanted(), true);
+    assert.equal(await D.dailyStep(), false, 'дейлик РБ не запускает тур'); assert.equal(env.cfg.rbHuntMode, false); assert.equal(env.rt.dailyRb, undefined); assert.equal(cfgs.length, 0);
+    assert.equal(env.rt.dailyDone?.rb, undefined, 'дейлик РБ не помечается выполненным ботом');
+    const old = mk({ rt: { rbKills: 5, dailyRb: { day: '20261012', k0: 5, t: Date.now(), prev: { rbHuntMode: false, fishMode: false, epicMode: false, catMode: false, zoneAuto: true }, entering: false, kick: 0 } }, cfg: { zoneAuto: false, rbHuntMode: true } });
+    old.D.dailyNote(dq); assert.equal(await old.D.dailyStep(), true, 'старый заход заканчивается');
+    assert.equal(old.env.rt.dailyRb, null); assert.equal(old.env.cfg.rbHuntMode, false); assert.equal(old.env.cfg.zoneAuto, true); assert.equal(old.env.rt.rbHunt.step, 'pick');
+    assert.ok(old.recs.some(r => /тур РБ по дейлику больше не включается сам — возвращаюсь к прежнему режиму/.test(r)));
+    assert.equal(await old.D.dailyStep(), false, 'повторно тур не включается'); assert.equal(old.env.cfg.rbHuntMode, false);
     const e2 = mk({ cfg: { fishMode: true }, rt: { lvl: 64 } }); e2.env.fishNow = () => true; e2.D.dailyNote(dq); assert.equal(await e2.D.dailyStep(), false, 'режим рыбалки — не прерываем');
     const e3 = mk({ rt: { lvl: 35 } }); e3.D.dailyNote(dq); assert.equal(await e3.D.dailyStep(), false, 'ниже 40 — РБ нет'); }
   // 8. опрос фоном: раз в 10 мин, 403 на клане → noClan; выключено — не опрашиваем
@@ -100,5 +108,5 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
   assert.match(content, /get dailyFishNote\(\) \{ return \(\) => L2V7Modules\.dailies\?\.fishNote\?\.\(\); \}/); assert.match(fishing, /if \(env\.dailyFishNote\) bg\(env\.dailyFishNote\(\)\);/);
   assert.match(html, /data-auto-task="dailies"/); assert.match(html, /data-auto-task="clan"/); assert.match(html, /<input id="dailyAuto" type="checkbox">/); assert.match(html, /<input id="clanTasks" type="checkbox">/); assert.match(html, /id="dqBox"/);
   assert.match(popup, /renderTvtShop\(rt, d\); renderDailies\(rt, d\);/);
-  console.log('PASS: 10.0 dailies — daily quests parsed (8 tasks, ✓/new day logged), clan tasks (defs with cooldown, take best → CoL first, siege wall never, RB only when allowed; claim ready; help a clanmate; 409/error → 30 min pause), daily fish detour (modes saved/restored, catches counted, back to map), daily RB detour (one tour, back when killed), background polls, menu wired');
+  console.log('PASS: 10.0 dailies — daily quests parsed (8 tasks, ✓/new day logged), clan tasks (defs with cooldown, take best → CoL first, siege wall never, RB only with RB tour on; claim ready; help a clanmate; 409/error → 30 min pause), daily fish detour (modes saved/restored, catches counted, back to map), daily RB never starts the RB tour (old detour ended, modes restored), background polls, menu wired');
 })().catch(e => { console.error(e); process.exit(1); });

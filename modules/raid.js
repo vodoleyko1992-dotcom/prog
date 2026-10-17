@@ -815,7 +815,10 @@ async function rbTeleportFire(b, patch) {
   if(env.payments){
     const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price;
     if(!id || !Number.isFinite(price) || price<0)return false;
-    const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id}});
+    // 20.12 (ревизия 17.10, аудит RB-1): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
+    let before0=null;
+    if(typeof env.gameGet==='function')try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null,ch=j?.character||j;if(ch?.name===env.rt.char&&Number.isSafeInteger(ch.revision))before0={revision:ch.revision,adena:typeof ch.adena==='string'&&/^\d+$/.test(ch.adena)?+ch.adena:Number.isSafeInteger(ch.adena)?ch.adena:null,charId:ch.id};}catch(_){}
+    const P=await env.payments.prepare({key:`raid:${id}`,kind:'raid-teleport',quote:{amount:price,currency:'Adena'},evidence:{id,name:target.name||id,...(before0||{})}});
     if(!P){env.setStatus('РБ: платный переход ждёт подтверждения предыдущей оплаты');return false;}
     const before=Object.fromEntries(Object.keys(patch).map(k=>[k,env.rt[k]??null]));
     // Откат относится только к нашему снимку: новая ручная цель не должна исчезнуть после await.
@@ -839,19 +842,34 @@ async function rbTeleportFire(b, patch) {
 }
 async function paymentReconcile(battleId) {
   const P=env.payments?.pending();if(!P || P.kind!=='raid-teleport')return !P;
-  const receipt=env.raidPaymentNet?.();
-  if(receipt?.ok && receipt.id===P.evidence?.id && receipt.t>=P.at)return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
-  const id = P.evidence?.id, win = env.rt.rbDb?.[id]?.victoryEvidence;
+  const receipt=env.raidPaymentNet?.(), E=P.evidence||{};
+  if(receipt?.ok && receipt.id===E.id && receipt.t>=P.at && (!receipt.paymentId || receipt.paymentId===P.id) && receipt.outcome!=='rejected')return env.payments.confirm(P,{kind:'server-receipt',id:receipt.id});
+  // 20.12 (ревизия 17.10, аудит RB-1): явный отказ своего запроса (РБ убит другими, не хватает адены, 4xx / 200 с error) —
+  // адена не списана: снимаем ожидание, этот перелёт 30 мин не повторяем, остальные задачи идут. Без паузы всего бота.
+  if(receipt?.paymentId===P.id && receipt.id===E.id && receipt.t>=P.at && receipt.outcome==='rejected')return raidPayRefused(P,`сервер отклонил телепорт (HTTP ${receipt.status})`,{kind:'server-rejected',id:E.id,status:receipt.status,spent:0});
+  const id = E.id, win = env.rt.rbDb?.[id]?.victoryEvidence;
   // Ручной вход и сохранённая победа закрывают старое ожидание даже после перезагрузки.
   if (id && env.isBattle?.() && battleId === id) return env.payments.confirm(P,{kind:'target-battle',id});
   if (id && win?.char === P.char && win.at >= P.at && win.at <= Date.now()) return env.payments.confirm(P,{kind:'target-victory',id});
-  const target=env.isMap() && raidList().find(x=>x.id===P.evidence?.id);
-  if(!target){
-    if (Date.now() - P.at > 60000) env.pauseBot?.('РБ: результат телепорта не подтверждён за минуту. Оплата сохранена, повтор запрещён; проверь карту и выбранного босса');
-    else env.setStatus?.('РБ: жду подтверждение прибытия к выбранной цели, повторно не плачу');
-    return false;
+  const target=env.isMap() && raidList().find(x=>x.id===E.id);
+  if(target)return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+  // 20.12: ревизия героя та же и адены не меньше — дважды за ≥2 мин: телепорт не применился.
+  if(Number.isSafeInteger(E.revision) && typeof env.gameGet==='function' && env.payments.probeDue?.(P)){
+    const char=env.rt.char;let ch=null;
+    try{const r=await env.gameGet('/character'),j=r.ok?await r.json():null;ch=j?.character||j;}catch(_){}
+    if(env.payments.pending()?.id!==P.id||env.rt.char!==char)return false;
+    if(ch?.name===P.char&&(!E.charId||ch.id===E.charId)&&env.payments.probeNote(P,env.payments.unchanged?.(E,ch)===true))
+      return raidPayRefused(P,'состояние героя не изменилось — телепорт не применился',{kind:'state-not-applied',id:E.id,revision:ch.revision,spent:0});
   }
-  return env.payments.confirm(P,{kind:'target-arrival',id:target.id});
+  env.setStatus?.('РБ: исход телепорта не подтверждён — повторно не плачу, сверяю состояние героя; бесплатные задачи идут');
+  return false;
+}
+async function raidPayRefused(P,why,proof){
+  if(!await env.payments.confirm(P,proof))return false;
+  const id=P.evidence?.id;
+  if(id)await env.setRt({rbSkip:{...(env.rt.rbSkip||{}),[id]:Date.now()},...(env.rt.rbGo?.id===id?{rbGo:null}:{})});
+  env.rec?.('B','РБ-тур',`${P.evidence?.name||id}: ${why}; адена не списана, этот перелёт 30 мин не повторяю`);
+  return true;
 }
 
 async function rbGoStep() {                       // список РБ → нужная страница → «Телепорт» → карта (там его найдёт фарм РБ)
@@ -916,7 +934,7 @@ async function rbGoStep() {                       // список РБ → ну�
 
 const huntOn = () => !!env.cfg.rbHuntMode;
 function rbBuffShortage(now = Date.now()) {
-  if (env.cfg.rbFaFull === false || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
+  if (!tourFaOn() || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
   const H = env.hudBuffs?.(), need = env.faFullIds?.() || [];
   return H && need.filter(id => !H[id] || H[id] < now + 10 * 60000).length || 0;
 }
@@ -926,7 +944,7 @@ function rbBuffShortage(now = Date.now()) {
 async function rbBuffHold(name, active) {
   if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
   if (!active()) return true;
-  if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
+  if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
     env.setStatus(`Тур РБ: жду подтверждения баффов перед ${name}`);
     if (active()) await env.sleep(3000);
     return true;
@@ -940,6 +958,12 @@ async function rbBuffHold(name, active) {
   env.setStatus(`Тур РБ: жду баффера перед ${name}${names ? ` · нужны: ${names}` : ''}${wait ? ` · повтор через ${wait} с` : ''}`);
   if (active()) await env.sleep(3000);
   return true;
+}
+
+// 20.12 (ревизия 17.10): требование набора за FA в туре — то же правило, что у покупки (buffs.tourFaWanted): тур по дейлику
+// «Убей 1 РБ» (старый, до 20.12) не ждёт FA, не ставит бота на паузу «Пополни FA» и не крутит huntDone перед перелётом
+function tourFaOn() {
+  return env.tourFaWanted ? !!env.tourFaWanted() : env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
 
 function rbSummonBuffReady() {
@@ -984,6 +1008,17 @@ function rbTravelBudget(row) {
   if (!(cap > 0) || row.price > cap) return `цена ${row.price} выше лимита снабжения ${cap}`;
   if (balance.v - row.price < reserve) return `на телепорт ${row.price} не хватает адены сверх резерва ${reserve}`;
   return '';
+}
+
+// 20.12 (ревизия 17.10): бюджет телепорта до покупки набора за FA. РБ на этой карте — без телепорта, бюджет не нужен.
+// Несвежий кошелёк перечитывается (GET /character, бесплатно); не подтвердился — FA не тратим.
+let rbFaBudgetSaid = '';
+async function rbFaBudgetWhy(row, active) {
+  if (!row || !tourFaOn()) return '';
+  if (env.isMap?.() && raidList().some(r => r.id === row.id)) return '';
+  const fresh = env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000;
+  if (!fresh) { await rbRefreshState(row.id, active, true); if (!active()) return ''; }
+  return rbTravelBudget(env.rt.rbList?.[row.id] || row);
 }
 
 async function rbHuntPhase(phase, next, extra = {}) {
@@ -1033,9 +1068,13 @@ async function rbSessEnd(why) {
   const kills = (env.rt.rbKills || 0) - (S.k0 || 0), exp = (env.rt.exp || 0) - (S.e0 || 0), ad = (env.rt.adena || 0) - (S.a0 || 0), deaths = (env.rt.deaths || []).length - (S.d0 || 0);
   const sum = { kills, exp, adena: ad, deaths, min, why, faLeft: env.rt.faBal?.v ?? null };
   await env.setRt({ rbSess: { ...S, on: false, end: Date.now(), sum }, rbHunt: { step: 'pick', t: Date.now(), last: 'РБ-сессия окончена' }, rbGo: null });
-  await env.setCfg({ rbHuntMode: false, rbMode: false, epicMode: false, fishMode: false, catMode: false, zoneAuto: true, chain: true });   // 15.10: РБ-сессия окончена — рейд выключен, дальше обычный автофарм.
-  env.rec('B', 'РБ-сессия', `окончена: ${why} · ${min} мин · РБ убито ${kills} · EXP +${exp.toLocaleString('ru')} · аден ${ad >= 0 ? '+' : ''}${ad.toLocaleString('ru')}${deaths ? ` · смертей ${deaths}` : ''}${sum.faLeft != null ? ` · FA осталось ${sum.faLeft}` : ''} → режим «Автофарм», жду игрока`);
-  env.setStatus('РБ-сессия окончена — автофарм');
+  // 20.12 (ревизия 17.10): при явном списке задач режим берётся из autoTasks — плоские флаги тур не снимали, и тур снова покупал набор за FA.
+  // Как кнопка «Остановить РБ-сессию» в меню: убрать «Тур РБ» из списка, остальные выбранные задачи остаются.
+  const list = Array.isArray(env.cfg.autoTasks) ? env.cfg.autoTasks : null;
+  if (list) await env.setCfg({ autoTasks: list.filter(k => k !== 'raid') });
+  else await env.setCfg({ rbHuntMode: false, rbMode: false, epicMode: false, fishMode: false, catMode: false, zoneAuto: true, chain: true });   // 15.10: РБ-сессия окончена — рейд выключен, дальше обычный автофарм.
+  env.rec('B', 'РБ-сессия', `окончена: ${why} · ${min} мин · РБ убито ${kills} · EXP +${exp.toLocaleString('ru')} · аден ${ad >= 0 ? '+' : ''}${ad.toLocaleString('ru')}${deaths ? ` · смертей ${deaths}` : ''}${sum.faLeft != null ? ` · FA осталось ${sum.faLeft}` : ''} → ${list ? '«Тур РБ» снят из выбранных задач, дальше остальные выбранные задачи' : 'режим «Автофарм», жду игрока'}`);
+  env.setStatus(list ? 'РБ-сессия окончена — тур РБ снят, остальные задачи' : 'РБ-сессия окончена — автофарм');
   return true;
 }
 
@@ -1135,7 +1174,7 @@ async function rbHuntStep() {
       return;
     }
     if (!active() || !sameJob()) return;
-    if (env.cfg.rbFaFull !== false && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
+    if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
       return huntDone(H.id, `${H.name}: баффы изменились перед перелётом — подготовлю снова`, false);
     const reason = rbTeleportCheck(H.id, g);
     if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {
@@ -1298,7 +1337,13 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await rbShopFirst(preparing.name)) return;
     if (!active()) return;
-    if (await rbBuffHold(preparing.name, active)) return;
+    // 20.12 (ревизия 17.10): набор за FA — только когда на телепорт к этой цели хватает адены по свежему кошельку.
+    // Иначе кандидат «нет денег» покупал 22–30 FA каждые 3 ч, а перелёт потом отсекался бюджетом.
+    const faBudget = await rbFaBudgetWhy(preparing, active);
+    if (!active()) return;
+    if (faBudget) {
+      if (rbFaBudgetSaid !== preparing.id + faBudget) { rbFaBudgetSaid = preparing.id + faBudget; env.rec('B', 'тур РБ', `${preparing.name}: бафф за FA не беру — ${faBudget}`); }
+    } else if (await rbBuffHold(preparing.name, active)) return;
     if (!active()) return;
     if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
       await env.warlock?.step?.({ forceRead: true });

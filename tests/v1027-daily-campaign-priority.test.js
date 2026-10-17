@@ -110,9 +110,10 @@ for(const why of ['Stop','вкладка','кампания','ручная ры�
  };
  await D.dailyStep();assert.equal(writes.length,0);assert.ok(!env.rt.dailyFish);assert.ok(!env.rt.dailyFishCheck);
 });
-test('неподготовленная рыбалка не блокирует допустимый РБ-дейлик',async()=>{
+// 20.12 (решение игрока 17.10 10:56: «тур по РБ не должен быть авто включённым»): после неподготовленной рыбалки РБ-дейлик тур тоже не включает
+test('неподготовленная рыбалка не включает рыбалку, РБ-дейлик тур РБ не включает',async()=>{
  const {env,D}=make();env.rt.daily.tasks.strong_enemy_20={have:0,need:1,done:false};env.gameGet=async()=>({ok:true,json:async()=>({unlocked:false})});
- await D.dailyStep();assert.equal(env.cfg.fishMode,false);assert.equal(env.cfg.rbHuntMode,true);assert.ok(env.rt.dailyRb);
+ await D.dailyStep();assert.equal(env.cfg.fishMode,false);assert.equal(env.cfg.rbHuntMode,false);assert.ok(!env.rt.dailyRb);
 });
 for(const campaign of [false,true])for(const hooked of [false,true])test('закончено уже оплаченное время: возврат вместо автопокупки, рыба='+hooked+', кампания='+campaign,async()=>{
  const {env,D,loc}=make();env.cfg.fishTimeAuto=true;env.cfg.campaign=campaign;const F=saved(env);F.readyUntil=Date.now()-1;loc.pathname='/fishing.html';

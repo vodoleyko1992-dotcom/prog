@@ -295,6 +295,10 @@ html.docked .module-tile em.on::before{content:'●';font-size:12px}
 .activity-state{font-size:11px;font-weight:750;color:#baddaf}
 .activity-panel>strong{display:block;font-size:13px;line-height:1.4;font-weight:650}
 #activityHint{margin-top:3px;font-size:11.5px;line-height:1.4;color:#c9b69a;max-height:3em;overflow-y:auto}
+/* 20.12: неизвестная оплата — что ждёт сверки и ручной выход игрока */
+.payment-pending{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;line-height:1.4;color:#ffc49c}
+.payment-pending[hidden]{display:none}
+.payment-pending button{flex:0 1 auto;max-width:100%;white-space:normal}
 #activityDetails,.task-board-head button,.task-progress button{flex:0 0 auto;min-height:24px;padding:2px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
 .activity-panel[data-state=blocked]{border-left-color:#e59067;background:#362219}
 .activity-panel[data-state=blocked] .activity-state{color:#ffc49c}

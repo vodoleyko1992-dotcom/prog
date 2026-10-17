@@ -141,6 +141,12 @@ async function recoveryStep(){
  if(!(await persist(P,T))||!active(T)||!same(P,T))return true;
  if(env.cfg.autoRevive===false){env.setStatus('PvP: персонаж погиб — автовоскрешение выключено');return true}
  const btn=()=>[env.$q('#map-defeat-tocity'),env.$q('#battle-defeat-tocity')].find(b=>env.shown(b)&&!b.disabled);
+ // 20.12 (ревизия 17.10, аудит core-a/C1): на странице входа и на незагруженной странице игры ничего не делаем — раньше каждый круг
+ // уводил на /map.html, и main() не доходил до автовхода/ожидания сервера. Вход ведёт main(); незагруженная страница — ждём до 15 с,
+ // потом прежний переход на карту (восстановление страницы)
+ if(!btn()&&env.loginPage?.()){state.loadT=0;env.setStatus('PvP: персонаж погиб — жду входа в игру');return true}
+ if(!btn()&&env.gameLoaded&&!env.gameLoaded()){state.loadT||=Date.now();if(Date.now()-state.loadT<15000){env.setStatus('PvP: жду загрузки страницы игры');await env.sleep(500);return true}}
+ else state.loadT=0;
  if(!btn()&&!env.isMap()&&!env.isBattle()){
   if(!active(T)||!same(P,T))return true;
   if(await env.rtCommit()!==true||!active(T)||!same(P,T))return true;
