@@ -860,8 +860,8 @@ async function rbGoStep() {                       // список РБ → ну�
   if (!g || !env.on || env.tabOwner === false) return;
   // 15.10: сохранённое задание прежнего режима не обходит бюджет/фазы основного рейда после обновления.
   if (huntOn()) { await env.setRt({ rbGo: null }); return; }
-  const kick = +env.rt.manualKickAt || 0;
-  const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick;
+  const kick = +env.rt.manualKickAt || 0,char=env.rt.char,generation=env.actionGeneration?.();
+  const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick && env.rt.char === char && env.actionGeneration?.() === generation && env.canAct?.() !== false;
   const sameJob = () => env.rt.rbGo?.id === g.id && env.rt.rbGo?.t === g.t;
   if (env.cfg.rbValueTour && now_() - (env.rt.rbListT || 0) > 10 * 60000) {
     env.rec('B', 'РБ-тур', `${g.name}: данные списка старше 10 мин — обновляю перед платным телепортом`);
@@ -871,7 +871,12 @@ async function rbGoStep() {                       // список РБ → ну�
     await env.setRt({ rbGo: null, rbWant: null });
     return;
   }
-  if (!isRbPage() && await env.townBuffStart(`перед РБ ${g.name}`, true)) { await env.setRt({ rbGo: { ...g, t: Date.now() } }); return; }   // v5.3
+  // 17.10, реворк: баффер может ждать ответ. Новая цель/команда за это время не заменяется прежним РБ.
+  if (!isRbPage()) {
+    const started=await env.townBuffStart(`перед РБ ${g.name}`, true);
+    if (!active() || !sameJob()) return;
+    if (started) { await env.setRt({ rbGo: { ...g, t: Date.now() } }); return; }
+  }
   // страховка (v4.30): к этому РБ уже нажимали «Телепорт» меньше 2 мин назад — не платим второй раз, идём на карту искать его
   // (лог 08.10 00:53: «телепорт к Баріон · 100 000 аден» ×5 за 8 с — бот возвращался в список после каждого перелёта)
   if (Date.now() - (env.rt.rbGoTried?.[g.id] || 0) < 120000) {

@@ -29,7 +29,8 @@ test('unknown после смены режима/reload разрешает то�
  const f=fixture({shop:{step:'buy'},actionPayments:{pending:{kind:'shop'}}});f.mode('farm');f.A.enterFrame();await f.A.dispatch();assert.deepEqual(f.calls,['reconcile']);assert.ok(f.env.rt.actionPayments.pending);
 });
 test('неудачная durable запись владельца не разрешает действие',async()=>{
- const f=fixture({shop:{step:'buy'}});f.commit(false);await f.A.dispatch();assert.deepEqual(f.calls,[]);
+ // 17.10: ожидание записи теперь видно игроку; запуск shop по-прежнему запрещён.
+ const f=fixture({shop:{step:'buy'}});f.commit(false);await f.A.dispatch();assert.deepEqual(f.calls,['Служебный маршрут: жду сохранения состояния']);
 });
 test('петля переходов без нового этапа ограничена и переживает reload',async()=>{
  let f=fixture({shop:{step:'buy'}});for(let i=0;i<12&&f.env.on;i++){f.page(i%2?'/map.html':'/shop.html');await f.A.dispatch();if(i===5)f=fixture(JSON.parse(JSON.stringify(f.env.rt)));}assert.ok(f.calls.includes('halt'));

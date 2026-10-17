@@ -6,18 +6,23 @@
  root.L2V7Factories.fishing = function create_fishing(env) {
 const location = env.routeLocation || root.location;
 const fishOwn = () => env.on && env.tabOwner !== false && (!env.antibotState?.() || env.antibotState?.() === 'blocked' && env.pveFishingAllowed?.() === true);
+// 17.10, реворк: старое ожидание не продолжает сервис после новой команды, даже если Stop → Start вернули прежний режим.
+function fishContinuation() {
+  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode?.(),generation=env.actionGeneration?.();
+  return ()=>fishOwn()&&env.canAct?.()!==false&&env.rt.char===char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&env.autonomyMode?.()===mode&&env.actionGeneration?.()===generation;
+}
 async function fishSoft(msg) {
-  if (!fishOwn()) return;
+  const valid=fishContinuation();
+  if (!valid()) return;
   if (!fishNow()) return Array.isArray(env.cfg.autoTasks) ? false : env.halt(msg);
   const n = Date.now() - (env.rt.fishSoftT || 0) < 15 * 60000 ? (env.rt.fishSoftN || 0) + 1 : 1;
   const STEPS = [5, 10, 20, 30, 40, 60, 120, 180, 240, 300];   // с: 5 → 10 → 20 → 30 → 40 с → 1 → 2 → 3 → 4 → 5 мин (дальше 5 мин)
   const wait = STEPS[Math.min(n - 1, STEPS.length - 1)] * 1000;
   await env.setRt({ fishSoftN: n, fishSoftT: Date.now() });
+  if (!valid()) return;
   env.rec('B', 'рыбалка: пауза', `${msg} — повтор через ${wait / 1000} с (попытка ${n})`);
   await env.idle(wait, `⏸ ${msg} — повтор`);
-  if (!fishOwn()) return;
-  await commit();
-  if (!fishOwn()) return;
+  if (!valid() || !await commit() || !valid()) return;
   location.href = '/fishing.html';
   await env.sleep(6000);
 }
@@ -232,7 +237,10 @@ function fishStat(patch, fishName) {
 const bg = p => { try { p?.catch?.(e => console.warn(env.TAG, 'рыбалка: запись', e)); } catch (e) {} return p; };
 // 8.0 (аудит рыбалки, лог 10.10 18:48:52–57 и 19:21:25–30): перед переходом на другую страницу — дождаться, что запись дошла до
 // хранилища (иначе новая страница читает старое fishService и уводит обратно: fishing ↔ char по кругу)
-async function commit() { statFlush(); try { if (env.rtCommit) await env.rtCommit(); } catch (e) {} }
+async function commit() {
+  try { const r=await statFlush();if(r?.ok===false||env.rtCommit&&await env.rtCommit()!==true){env.setStatus?.('Рыбалка: жду сохранения состояния перед переходом');return false;}return true; }
+  catch (_) { env.setStatus?.('Рыбалка: жду сохранения состояния перед переходом');return false; }
+}
 
 // ---------- 7.2.1: экономика рыбалки ----------
 // Proof с рыбы по видам: из итогов разделки («Вы разрезали Black Fish ×110. Получено: Fish Oil ×327, …») и курсов обмена магазина рыбака
@@ -835,13 +843,16 @@ function fishRateTxt() {
 let fishProgT = Date.now(), fishProgSig = '';
 function fishProgress(f) { const sig = f ? `${f.name}|${f.cur}|${f.need}` : '-'; if (sig !== fishProgSig) { fishProgSig = sig; fishProgT = Date.now(); } }
 async function fishStallCheck(f) {
+  const valid=fishContinuation();
+  if (!valid()) return false;
   fishProgress(f);
   if (!f || Date.now() - fishProgT < 8000) return false;
   let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.fishReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
   if (rl.length >= 3) { if (Date.now() - fishProgT > 60000) { fishProgT = Date.now(); env.rec('B', 'рыбалка', 'экран рыбалки снова завис — 3 перезагрузки за 10 мин, жду'); } return false; }
+  if (!await commit() || !valid()) return true;
   try { sessionStorage.setItem('l2bot.fishReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
   env.rec('B', 'рыбалка', `экран завис: ${f.name} ${f.cur}/${f.max}, кнопка «${f.need || '—'}» недоступна 8 с — перезагружаю страницу`);
-  fishProgT = Date.now(); statFlush(); location.reload(); await env.sleep(6000); return true;
+  fishProgT = Date.now(); location.reload(); await env.sleep(6000); return true;
 }
 
 // 8.0: учёт вываживания уходит в хранилище одной записью в конце (поймана — уже в fishCaught; сорвалась / скрылась / прервали — здесь)
@@ -921,17 +932,18 @@ function castRequestNote(d) {
   env.setRt({fishCastPending:{...p,requestRevision:d.req.expectedRevision}});env.rtCommit?.();
 }
 let legacyCastCheck = null;
-async function castReconcile() {
+async function castReconcile(options={}) {
   const p=env.rt.fishCastPending;if(!p)return false;
+  const observeOnly=options.observeOnly===true,continuation=fishContinuation();
   const selection=()=>JSON.stringify(Array.isArray(env.cfg.autoTasks)?env.cfg.autoTasks:[env.cfg.fishMode,env.cfg.epicMode]);
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,choice=selection();
-  const owned=()=>fishOwn()&&env.canRun?.()!==false&&!env.payments?.blocked?.()&&env.rt.char===char&&char===p.char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick;
-  const valid=()=>owned()&&fishNow()&&env.rt.fishCastPending?.at===p.at;
+  const owned=()=>continuation()&&env.canRun?.()!==false&&!env.payments?.blocked?.()&&env.rt.char===char&&char===p.char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&selection()===choice;
+  const valid=()=>owned()&&(observeOnly||fishNow())&&env.rt.fishCastPending?.at===p.at;
   if(!valid())return true;
   const f=fishState(),fresh=fishNewLines(p.pre||[]),nf=env.NET_FISH||{};
   if(f||fresh.some(env.isNoBite)){
     fishStat({casts:1,...(f?{bites:1}:{nobite:1})});baitNote(p.bait,{casts:1,...(f?{bites:1}:{})});env.fishCast=f?{bait:p.bait,t:p.at}:null;
-    await env.setRt(statTake({fishCastPending:null,fishCastActive:!!f}));if(f&&owned()&&selection()===choice)await fishFight();return true;
+    await env.setRt(statTake({fishCastPending:null,fishCastActive:!!f}));if(f&&!observeOnly&&owned())await fishFight();return true;
   }
   if(!p.retryAt&&nf.act==='cast'&&nf.t>=p.at&&castRejected(nf)){await env.setRt({fishCastPending:null});return true;}
   // Старые записи не имели revision: восстанавливаем её только по однозначному сохранённому запросу.
@@ -948,14 +960,16 @@ async function castReconcile() {
   const [raw,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);if(!valid())return true;
   const state=raw?.fishing||raw,ch=j?.character||j;
   const known=state&&ch?.name===char&&typeof ch.id==='string'&&ch.id&&(!p.charId||p.charId===ch.id)&&Number.isSafeInteger(state.revision)&&ch.revision===state.revision&&Object.hasOwn(state,'target');
-  const reload=async()=>{const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,refreshed:true}});if(saved?.ok===false)return;await commit();if(valid())location.reload();};
-  if(known&&state.target&&typeof state.target==='object'){await env.setRt({fishCastActive:true});if(valid())await reload();return true;}
+  const reload=async()=>{const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,refreshed:true}});if(saved?.ok===false||!await commit())return;if(valid())location.reload();};
+  if(known&&state.target&&typeof state.target==='object'){if(observeOnly)return true;await env.setRt({fishCastActive:true});if(valid())await reload();return true;}
   const R=p.requestRevision;
   if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision>R){
     // Старый запрос уже не применится: revision ушла вперёд. Исход не выдумываем; лимит забросов учитываем консервативно.
     fishStat({casts:1});await env.setRt(statTake({fishCastPending:null,fishCastActive:false}));
     env.rec('B','рыбалка','Активной рыбы нет, состояние сервера обновилось — старый заброс больше не повторяю');return true;
   }
+  // Лимит мог переключить задачу на фарм: сверяем старый исход независимо, без нового заброса и захвата маршрута.
+  if(observeOnly)return true;
   if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision===R&&env.gamePost){
     if(p.retryAt&&Date.now()-p.retryAt<15000){await env.sleep(1000);return true;}
     const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,charId:ch.id,retryAt:Date.now()}});
@@ -1151,68 +1165,75 @@ async function fishing() {
 }
 
 // 10.0.13 (аудит 14.10): у рыболовной вкладки свой pager по 15 строк; первая страница может быть занята материалами.
-async function fishBagPage(next) {
+async function fishBagPage(next, valid=fishContinuation()) {
   const buttons = [...document.querySelectorAll('#char-bag-pager .l2-char-bag-pager__btn')], b = buttons[next ? 1 : 0];
-  if (!env.on || !b || b.disabled) return false;
+  if (!valid() || !b || b.disabled) return false;
   const sig = () => [...document.querySelectorAll('.l2-char-bag-row[data-fishing-inventory-row]')].map(r => r.dataset.itemJson).join('|'), before = sig();
   env.fire(b);
-  return !!await env.waitX(() => sig() !== before, 3000, 100);
+  return !!await env.waitX(() => !valid() || sig() !== before, 3000, 100) && valid();
 }
 async function fishCut() {
+  const continuation=fishContinuation(),service=env.rt.fishService,request=JSON.stringify(env.rt.fishSvc||null);
+  const valid=()=>continuation()&&env.rt.fishService===service&&JSON.stringify(env.rt.fishSvc||null)===request;
+  if (!valid()) return;
   env.setStatus('Рыбалка: разделка улова в инвентаре');
   const tab = await env.waitFor(() => env.$q('button[data-fishing-inventory-tab]'), 10000, 200);
-  if (!env.on) return;
+  if (!valid()) return;
   if (!tab) { env.rec('B', 'рыбалка: разделка', 'нет вкладки «Рибалка» в инвентаре — разделка остаётся в очереди'); await env.sleep(3000); return; }
   if (tab.getAttribute('aria-selected') !== 'true') { env.fire(tab); await env.sleep(env.rnd(900, 1300)); }
-  for (let i = 0; i < 40 && env.on && await fishBagPage(false); i++) {}
+  if (!valid()) return;
+  for (let i = 0; i < 40 && valid() && await fishBagPage(false,valid); i++) {}
   const done = new Set(), got = [];
-  for (let guard = 0; guard < 120 && env.on; guard++) {
+  for (let guard = 0; guard < 120 && valid(); guard++) {
     const row = [...document.querySelectorAll('.l2-char-bag-row[data-fishing-inventory-row]')]
       .find(r => { const j = env.itemJson(r); return j.itemId && !done.has(j.itemId); });
-    if (!row) { if (await fishBagPage(true)) continue; break; }
+    if (!row) { if (await fishBagPage(true,valid)) continue; break; }
     const j = env.itemJson(row); done.add(j.itemId);
     const name = (row.querySelector('.l2-char-bag-name')?.textContent || '').replace(/\s*×\s*\d+.*$/, '').trim();
     if (env.MATERIAL_RE.test(name)) continue;          // материалы и снаряжение не трогаем
     env.fire(row.querySelector('.l2-char-bag-icon--stats') || row);
     const kind = await env.waitFor(() => env.shown(env.$q('#char-bag-modal-cut-row')) ? 'cut' : env.shown(env.$q('#char-bag-modal-oldbox-row')) ? 'box' : (env.shown(env.$q('#char-bag-modal-overlay')) ? 'none' : null), 3000, 100);
-    if (!fishOwn()) return;
+    if (!valid()) return;
     if (!kind) { env.rec('B', 'рыбалка: разделка', `${name}: окно предмета не загрузилось — повторю`); await env.sleep(3000); return; }
     if (kind === 'cut' || (kind === 'box' && env.cfg.fishOpenBoxes)) {
       const [maxSel, actSel] = kind === 'cut' ? ['#char-bag-modal-cut-max', '#char-bag-modal-cut'] : ['#char-oldbox-open-max', '#char-bag-modal-open-oldbox'];
       await env.waitFor(() => env.$q(maxSel) && !env.$q(maxSel).disabled, 2000, 100);
+      if (!valid()) return;
       env.fire(env.$q(maxSel)); await env.sleep(env.rnd(300, 500));
+      if (!valid()) return;
       const before = env.$q('#char-bag-modal-overlay')?.textContent || '';
       if (env.$q(actSel) && !env.$q(actSel).disabled) {
         env.fire(env.$q(actSel));
         const ok = await env.waitFor(() => { const t = env.$q('#char-bag-modal-overlay')?.textContent || ''; return t !== before && /разрезали|розрізали|открыли|відкрили/i.test(t); }, 5000, 150);
-        if (!fishOwn()) return;
+        if (!valid()) return;
         if (!ok) { env.rec('B', 'рыбалка: разделка', `${name}: операция не подтверждена — улов остаётся в очереди`); env.fire(env.$q('#char-bag-modal-close')); await env.sleep(3000); return; }
         const res = (env.$q('#char-bag-modal-overlay')?.textContent || '').replace(/\s+/g, ' ').match(/(Вы|Ви)\s+(разрезали|розрізали|открыли|відкрили)[^]*?(?=Информация|Закрыть|$)/i)?.[0] || '';
         got.push(`${name}: ${res.slice(0, 140)}`);
         env.rec('B', 'рыбалка: разделка', `${name} ×${j.qty || '?'} → ${res.slice(0, 160)}`);
         try { await fishValNote(res); } catch (e) {}   // 7.2.1: Proof с рыбы по видам — для замера наживки
+        if (!valid()) return;
         if (kind === 'box') {                     // 10.0.14: Old Box выдаёт Proof напрямую, до обмена материалов.
           const direct = [...document.querySelectorAll('#char-oldbox-open-result .l2-char-fishing-reward-line__text')]
             .reduce((sum, el) => sum + +(el.textContent.match(/^\s*Proof of Catching a Fish\s*×\s*(\d+)/i)?.[1] || 0), 0);
           if (direct > 0) {
             await env.setRt({ fishProofGain: (env.rt.fishProofGain || 0) + direct,
               ...(Number.isFinite(env.rt.fishProof) ? { fishProof: env.rt.fishProof + direct } : {}) });
+            if (!valid()) return;
             await fishTgtAdd('proof', direct);
-            if (!fishOwn()) return;
+            if (!valid()) return;
           }
         }
       } else { env.fire(env.$q('#char-bag-modal-close')); await env.sleep(3000); return; }
     }
     env.fire(env.$q('#char-bag-modal-close')); await env.sleep(env.rnd(500, 800));
   }
-  if (!fishOwn()) return;
+  if (!valid()) return;
   await env.setRt({ fishService: 'exchange', fishSinceProc: 0 });
   env.setStatus(`Рыбалка: разделано ${got.length} видов — иду менять на Proof`);
 }
 
 async function fishExchange() {
-  const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode();
-  const valid=()=>fishOwn()&&env.rt.char===char&&env.leaseEpoch===lease&&(env.rt.manualKickAt||0)===kick&&env.autonomyMode()===mode;
+  const valid=fishContinuation();
   if (!valid()) return;
   if(env.payments?.blocked()){await paymentReconcile();return;}
   env.setStatus('Рыбалка: обмен продуктов разделки на Proof');
@@ -1230,7 +1251,7 @@ async function fishExchange() {
   if (!(await env.waitFor(loaded, 10000, 200))) {
     if (!valid()) return;
     const n = (env.rt.fishShopRetry || 0) + 1;
-    if (n <= 2) { await env.setRt({ fishShopRetry: n }); await commit(); if (!valid()) return; env.rec('B', 'рыбалка: обмен', `магазин не загрузился — обновляю страницу (${n}/2)`); location.reload(); await env.sleep(5000); return; }
+    if (n <= 2) { await env.setRt({ fishShopRetry: n }); if (!await commit() || !valid()) return; env.rec('B', 'рыбалка: обмен', `магазин не загрузился — обновляю страницу (${n}/2)`); location.reload(); await env.sleep(5000); return; }
     env.rec('B', 'рыбалка: обмен', 'магазин не загрузился 3 раза — услуга сохранена, повтор через 30 с');
     await env.setRt({ fishShopRetry: 0 });
     if (!valid()) return;
@@ -1326,13 +1347,13 @@ async function fishExchange() {
     env.rec('B', 'удочка', 'уровень заточки неизвестен — проверяю удочку в инвентаре до покупки свитков');
     await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] });
     if (!valid()) return;
-    await commit(); if (!valid()) return; location.href = '/char.html'; await env.sleep(4000); return;
+    if (!await commit() || !valid()) return; location.href = '/char.html'; await env.sleep(4000); return;
   }
   if (env.on && rodTo > (env.rt.rodLvl ?? 0)) {
     const r = await env.rodScrollsBuy(rodTo, proof);
     if (!valid()) return;
     p1 = proof();
-    if (r.have > 0 || r.bought > 0) { await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] }); await commit(); if (!valid()) return; location.href = '/char.html'; await env.sleep(4000); return; }
+    if (r.have > 0 || r.bought > 0) { await env.setRt({ fishService: 'rod', fishProof: p1, fishGearBought: [...bought] }); if (!await commit() || !valid()) return; location.href = '/char.html'; await env.sleep(4000); return; }
   }
   await env.setRt({ fishService: null, fishProof: p1, fishGearBought: [...bought], rodGoalWaitingProof: !!env.rt.rodGoalActive && rodTo > (env.rt.rodLvl ?? 0) });
   if (!valid()) return;
@@ -1341,15 +1362,16 @@ async function fishExchange() {
   env.setStatus(`Рыбалка: Proof ${p1} (+${Math.max(0, p1 - p0)}) — ${fishNow() ? 'возвращаюсь рыбачить' : 'возвращаюсь к охоте'}`);
   await env.sleep(env.rnd(800, 1200));
   if (!valid()) return;
-  if (env.on) { await commit(); if (!valid()) return; location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); }
+  if (env.on) { if (!await commit() || !valid()) return; location.href = fishNow() ? '/fishing.html' : '/map.html'; await env.sleep(4000); }
 }
 
 async function fishSvcDone(why) {
-  if (!fishOwn()) return true;
+  const valid=fishContinuation();
+  if (!valid()) return true;
   const S = env.rt.fishSvc;
   if (!S) return false;
   await env.setRt({ fishSvc: null });
-  if (!fishOwn()) return true;
+  if (!valid() || env.rt.fishSvc) return true;
   env.rec('B', 'рыбалка', `«Разделать всю рыбу» из меню — готово${why ? ': ' + why : ''}`);
   if (S.stopAfter) { env.setStatus(`Разделка готова${why ? ' · ' + why : ''} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); return true; }
   return false;

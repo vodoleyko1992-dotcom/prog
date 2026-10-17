@@ -5727,15 +5727,17 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
     (async () => {
+      const generation = automationGeneration;
       const state = await chrome.storage.local.get(['on', 'cfg']);
-      on = !!state.on; cfg = mergeCfg(state.cfg);
       const v = chrome.runtime.getManifest().version;
+      if (generation !== automationGeneration) return reply({ok:false,v,running,owner:false,reason:'start_superseded'});
+      on = !!state.on; cfg = mergeCfg(state.cfg);
       if (!on) return reply({ ok: false, v, running: false, owner: false, reason: 'stopped' });
       void main();
       const deadline = Date.now() + 3500;
-      while (on && !(running && tabOwner && leaseEpoch) && Date.now() < deadline)
+      while (on && generation === automationGeneration && !(running && tabOwner && leaseEpoch) && Date.now() < deadline)
         await new Promise(resolve => setTimeout(resolve, 120));
-      if (!on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
+      if (generation !== automationGeneration || !on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
       if (!running) return reply({ ok: false, v, running: false, owner: tabOwner, reason: 'loop_not_running' });
       if (!tabOwner || !leaseEpoch) return reply({ ok: false, v, running: true, owner: false, reason: 'another_tab_or_lock_unavailable' });
       heartbeat();
