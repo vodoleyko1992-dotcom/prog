@@ -11,7 +11,8 @@ const clock = { t: 1800000000000 };
 class FDate extends Date { static now() { return clock.t; } }
 function world(o = {}) {
   const W = { gearRod: 'Вудка +2', gearLoaded: true, castT: 0, netAt: null, sleeps: [], setRt: [], fired: [], halted: null, recs: [], lastSleep: null };
-  const slot = (kind, on, n) => ({ kind, on, n, disabled: false, get className() { return 'l2-fishing-hotbar-slot' + (this.on ? ' l2-fishing-hotbar-slot--toggle-on' : ''); } });
+  // 17.10: как в игре (fishing-page.js slotMap) — слот наживки с нулём отключён, выбрать его нельзя
+  const slot = (kind, on, n) => ({ kind, on, n, get disabled() { return /Bait$/.test(kind) && this.n === 0; }, get className() { return 'l2-fishing-hotbar-slot' + (this.on ? ' l2-fishing-hotbar-slot--toggle-on' : ''); } });
   W.slots = {
     basicBait: slot('basicBait', o.basicOn ?? true, o.basic ?? 500),
     goodBait: slot('goodBait', o.goodOn ?? false, o.good ?? 0),
