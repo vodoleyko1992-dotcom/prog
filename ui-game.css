@@ -288,3 +288,48 @@ html.docked .module-tile em.on::before{content:'●';font-size:12px}
  html.docked .workarea{min-width:0;overflow:hidden}
  html.docked .overview-modules{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* 17.10: рабочая область — последнее действие, явное ожидание, результат сохранения. */
+.activity-panel{flex:0 0 auto;min-width:0;margin:0 16px 8px;padding:9px 11px;border:1px solid #66533c;border-left:3px solid #72966f;border-radius:7px;background:#211b13;color:#f3e5ce;overflow-wrap:anywhere}
+.activity-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
+.activity-state{font-size:11px;font-weight:750;color:#baddaf}
+.activity-panel>strong{display:block;font-size:13px;line-height:1.4;font-weight:650}
+#activityHint{margin-top:3px;font-size:11.5px;line-height:1.4;color:#c9b69a;max-height:3em;overflow-y:auto}
+#activityDetails,.task-board-head button,.task-progress button{flex:0 0 auto;min-height:24px;padding:2px 7px;font-size:11px;border-radius:5px;white-space:nowrap}
+.activity-panel[data-state=blocked]{border-left-color:#e59067;background:#362219}
+.activity-panel[data-state=blocked] .activity-state{color:#ffc49c}
+.activity-panel[data-state=waiting],.activity-panel[data-state=recovering],.activity-panel[data-state=paused]{border-left-color:#dfbc72}
+.activity-panel[data-state=waiting] .activity-state,.activity-panel[data-state=recovering] .activity-state,.activity-panel[data-state=paused] .activity-state{color:#f3d89c}
+.activity-panel[data-state=stopped]{border-left-color:#8a7964}
+.activity-panel[data-state=stopped] .activity-state{color:#c5b29a}
+.settings-feedback{flex:0 0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0 16px 8px;padding:8px 10px;border:1px solid #ae7658;border-left:3px solid #efaa76;border-radius:7px;background:#412a1d;color:#ffd6b8;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+#settingsFeedbackText{flex:1 1 170px;min-width:0}
+#settingsRetry,#settingsDiscard{min-height:30px;font-size:12px;flex:0 0 auto;padding:5px 8px}
+#settingsState{font-size:10.5px;color:#b4cba4}
+#settingsState[data-state=error]{color:#ffbf98}#settingsState[data-state=saving]{color:#f3d89c}
+.task-board{margin:0 0 11px;padding:10px 12px;border:1px solid #766044;border-radius:9px;background:#2b2118}
+.task-board-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.task-board-head strong{font-size:14px;color:#f4d39a}
+.task-board-note{font-size:11.5px;line-height:1.45;color:#c6b69d;margin:5px 0 9px}
+#taskBoardRows{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:7px}
+.task-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:4px 7px;min-width:0;padding:8px;border:1px solid #5f4e38;border-radius:7px;background:#211a13}
+.task-name{min-width:0;min-height:25px;padding:2px 0;border:0;background:none;box-shadow:none;font-size:12.5px;text-align:left;font-weight:700;color:#f3ddba;white-space:normal;overflow-wrap:anywhere}
+.task-name span{font-weight:400;color:#bca685}
+.task-name:hover{background:none;text-decoration:underline}
+.task-state{font-size:10.5px;line-height:1.4;max-width:112px;color:#b9aa94;text-align:right;align-self:center}
+.task-row[data-state=next]{border-color:#7d9563}.task-row[data-state=next] .task-state{color:#c6e1ab}
+.task-row[data-state=waiting] .task-state{color:#f0d296}.task-row[data-state=done] .task-state{color:#bad6ab}
+.task-progress{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:11.5px;color:#d4c1a6;overflow-wrap:anywhere}
+.task-progress button{margin-left:auto}
+.task-meter{grid-column:1/-1;height:4px;overflow:hidden;border-radius:4px;background:#4a3c2a}
+.task-meter>span{display:block;height:100%;background:#90b278}
+html.docked .activity-panel,html.docked .settings-feedback{margin-right:11px;margin-left:11px}
+html.docked #status{max-height:42px;margin-top:5px;padding:4px 8px}#status .chips{margin-top:0}
+html.docked .activity-panel{padding:7px 9px}
+html.docked .activity-panel>strong{font-size:12.5px}
+@media(max-height:690px){.worktop{padding-top:5px;padding-bottom:4px}.worktitle small{display:none}.activity-panel{padding:6px 9px;margin-bottom:5px}#activityHint{max-height:1.5em}.activity-panel>strong{max-height:2.8em;overflow-y:auto}.settings-feedback{max-height:90px;overflow-y:auto}#uiSearchWrap{padding-top:2px;padding-bottom:6px}}
+@media(max-width:420px){.activity-panel,.settings-feedback{margin-left:11px;margin-right:11px}.task-row{grid-template-columns:minmax(0,1fr) minmax(72px,105px)}.task-board{padding:9px}.task-board-note{font-size:11px}}
+:focus-visible{outline:2px solid #edc985;outline-offset:2px}
+
+/* В коротком окне несколько постоянных предупреждений не вытесняют настройки за нижний край. */
+@media(max-height:740px){.workarea,html.docked .workarea{overflow-y:auto;overflow-x:hidden}section.act,html.docked section.act{flex:1 0 170px;min-height:170px}}
