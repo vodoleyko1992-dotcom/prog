@@ -16,7 +16,7 @@ function make(mode='auto'){
   isBattle:()=>loc.pathname==='/battle.html',isMap:()=>loc.pathname==='/map.html',isFishing:()=>loc.pathname==='/fishing.html',isChar:()=>false,isFishShop:()=>false,isTeleport:()=>false,isCampaign:()=>false,isMail:()=>false,isQuests:()=>false,
   fishState:()=>false,fishNow:()=>cfg.fishMode,epicOn:()=>cfg.epicMode,huntOn:()=>cfg.rbHuntMode,campOn:()=>false,campEnabled:()=>false,heroLevel:()=>75,
   // Сумка текущего документа уже подтверждена; отдельные startup-сценарии ниже закрывают ожидание.
-  inventoryReady:async()=>true,antibotGuard:noop,sealDue:()=>null,farmGuideTick(){},townBuffStart:noop,gameGet:async()=>({ok:false,json:async()=>({})}),
+  inventoryReady:async()=>true,pveFishingStep:async()=>false,antibotGuard:noop,sealDue:()=>null,farmGuideTick(){},townBuffStart:noop,gameGet:async()=>({ok:false,json:async()=>({})}),
   shopStep:record('shop'),magisterStep:record('magister'),townBuffStep:record('buff'),rbGoStep:record('rbGo'),zoneGoStep:record('zoneGo'),invScanStart:record('invStart'),invScanStep:record('invStep'),rbHuntStep:record('raid'),epicStep:record('epic'),
   fishing:record('fish'),battle:record('battle'),goFishing:record('goFish'),catGo:record('cat'),campaign:record('campaign'),goCampaign:record('goCampaign'),mailStep:record('mail'),questsStep:record('quest'),tasksIdle:record('tasks'),map:record('map'),goOutskirts:record('outskirts'),lootGoal:()=>null,
   invQty:()=>null,INV_NET:{m:{}},rbRun:{start:record('dailySeries')},waitX:async f=>f(),pause:async()=>{},fire(){},toMap:async()=>{calls.push('leaveBattle');loc.pathname='/map.html';loc.href='/map.html'},

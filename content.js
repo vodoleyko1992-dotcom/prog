@@ -2295,7 +2295,7 @@ function antibotState() {
 // ЛЮБОЙ клик по странице мимо кнопок символов уходит на сервер (POST /game/antibot/activity) как «подозрительная попытка», 10 — блок.
 // Окно проверки живёт только в памяти страницы: после перезагрузки или перехода его нет, а проверка на сервере висит. Поэтому:
 // выдачу проверки запоминаем по ответу сервера (rt.abChal — переживает перезагрузку), снимаем только по «passed» / «not_found» / блоку
-// фарма или когда игрок сам жмёт ▶ (включает бота / снимает паузу). Пока проверка висит — ни одного клика бота (fire) и ни одного
+// фарма без предположения, что Start/снятие паузы означает успешное прохождение. Пока проверка висит — ни одного клика бота (fire) и ни одного
 // своего запроса к игре (fetch ниже)
 function abNet(path, res) {
   const code = String(res?.code || res?.error || '');
@@ -2307,7 +2307,9 @@ function abNet(path, res) {
   if (!rt.abChal) return;
   if (path === '/game/antibot/challenge' && res?.passed === true || code === 'antibot_challenge_not_found' || code === 'pve_farm_blocked') setRt({ abChal: null });
 }
-const abHold = () => !!rt.abChal || !!abLayer()?.querySelector('.l2-antibot-card__options');
+const abHold = () => !!rt.abChal || !!abLayer()?.querySelector('.l2-antibot-card__options') || (typeof antibotState === 'function' && antibotState() === 'check');
+// 20.8: завершённая проверка с блоком только PvE не запрещает выбранную рыбалку.
+const pveFishingAllowed = () => antibotState() === 'blocked' && !abHold() && autonomyMode() === 'fish';
 // свои запросы бота к игре (content.gameGet/gamePost/srvUp, epics, raid, mammon…) идут через fetch этого мира — один затвор на всех
 const fetch0 = typeof window.fetch === 'function' ? window.fetch.bind(window) : null;
 if (fetch0) window.fetch = async function (u, o) {
@@ -2350,7 +2352,7 @@ async function antibotGuard() {                     // true — бот на па
     const waited = Math.round((Date.now() - (rt.abT || Date.now())) / 1000);
     // 10.0.2: окна на странице нет (перезагрузка/другая страница), а сервер проверку не снимал — игра покажет её снова на первом ходе боя
     setStatus(abLayer() ? `⚠ КАПЧА: решите проверку в окне игры — бот ждёт вас (${waited} с) и ничего не нажимает`
-      : `⚠ КАПЧА ждёт (${waited} с): откройте бой и сделайте ход сами — игра покажет символы; решили — бот продолжит сам (или нажмите ▶)`);
+      : `⚠ КАПЧА ждёт (${waited} с): откройте бой и сделайте ход сами — игра покажет символы; решили — бот продолжит сам`);
     await sleep(1000); return true;
   }
   const until = rt.pveBlockUntil || 0, left = Math.max(0, until - Date.now());
@@ -2366,6 +2368,27 @@ async function antibotGuard() {                     // true — бот на па
   }
   setStatus(`⛔ PvE-фарм заблокирован игрой${left ? ` — ещё ${Math.ceil(left / 60000)} мин` : ''} · жду`);
   await sleep(Math.min(Math.max(left, 5000), 30000)); return true;
+}
+
+// Только выбранная рыбалка; PvE/служебные маршруты и неизвестные оплаты не возобновляются.
+async function pveFishingStep() {
+  const active = () => on && tabOwner && pveFishingAllowed() && !tvtSoon() && !rt.revive && !L2V7Modules.pvp?.pending();
+  if (!active()) return false;
+  const pending = L2V7Modules.payments?.pending?.() || (rt.enchant?.pending && { kind: 'enchant' });
+  if (pending) {
+    if (pending.kind === 'fishing') await L2V7Modules.fishing.paymentReconcile();
+    setStatus('PvE заблокирован; неизвестная оплата требует сверки, повтор запрещён'); await sleep(1000); return true;
+  }
+  if (!active()) return true;
+  if (isBattle()) { await toOutskirts(); await sleep(300); return true; }
+  const svc = rt.fishService, target = svc === 'cut' || svc === 'rod' ? '/char.html' : svc === 'exchange' ? '/fishing-shop.html' : null;
+  if (target) {
+    if ((svc === 'cut' || svc === 'rod') && isChar()) { if (svc === 'cut') await fishCut(); else await rodEnchant(); }
+    else if (svc === 'exchange' && isFishShop()) await fishExchange();
+    else { await rtCommit(); if (active() && rt.fishService === svc && L2V7Modules.actions?.canAct?.() !== false) location.href = target; }
+  } else if (isFishing()) await fishing();
+  else if (active()) await goFishing();
+  await sleep(200); return true;
 }
 
 // ---------- v5.5.1: бот — только в одной вкладке ----------
@@ -2567,6 +2590,7 @@ async function main() {
       // закупку, магистра, баффы, Маммона, квесты, дейлики, туры и телепорты не начинаем; бой с мобом и заброс рыбалки доводим,
       // «🛒 Закупить сейчас» (urgent) — как и раньше. На арену уводит tvtStep выше (за минуту до старта)
       if (cfg.tvtOn && !isBattle() && !rt.shop?.urgent && !(fishNow() && isFishing() && fishState()) && L2V7Modules.tvt.tvtHold()) { taskPolicyNote('tvt'); await L2V7Modules.tvt.tvtWait(); continue; }
+      if (await pveFishingStep()) continue;          // только рыбалка после завершённой проверки, без PvE
       if (await antibotGuard()) continue;           // v5.5.6: блок PvE-фарма — ждём (PvP/TvT выше — можно)   // ⚔ v5.4: TvT — запись, бой, итог   // после смерти: поражение → «Вернуться в город» → статуя → бафф → восстановление
       if (!on || !tabOwner || autonomyMode() === 'enchant') continue;
       if (!isBattle() && !(isFishing() && fishState()) && !await inventoryReady()) { await sleep(200); continue; }
@@ -4479,6 +4503,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get rt(){return rt},get cfg(){return cfg},get on(){return on},get tabOwner(){return tabOwner},
  get mode(){return autonomyMode},get lease(){return ()=>leaseEpoch},get page(){return ()=>location.pathname+location.search},
  get id(){return ()=>crypto.randomUUID()},get setRt(){return setRt},get rtCommit(){return rtCommit},get rec(){return rec},get setStatus(){return setStatus},get halt(){return halt},get isBattle(){return isBattle},
+ get challengeHold(){return abHold},
  get interrupted(){return ()=>!!rt.revive||!!L2V7Modules.pvp?.pending()||!!antibotState()||(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())},
  get paymentPending(){return ()=>L2V7Modules.payments?.pending?.()||(rt.petFull?.pending?{...rt.petFull.pending,kind:'summon-buff'}:rt.enchant?.pending?{...rt.enchant.pending,kind:'enchant'}:null)},
  get runCombat(){return battle},get victory(){return victory},
@@ -4500,7 +4525,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -5664,12 +5689,10 @@ chrome.storage.onChanged.addListener(ch => {
     if (timers) rt = { ...rt, rbTimer: timers };
   }
   if (ch.cfg || ch.rt) enchantModePause().catch(() => {});
-  if (ch.paused && ch.paused.oldValue && !ch.paused.newValue && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок снял паузу — проверку решил
   if (ch.on) {
     on = !!ch.on.newValue;
     if (!on && rt.enchant?.status === 'running' && rt.char === heroNick()) L2V7Modules.enchant.command('pause').catch(() => {});
     if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
-    if (on && ch.on.oldValue === false && rt.abChal) setRt({ abChal: null });   // 10.0.2: игрок сам включил бота — значит, проверку решил
     const stopMeta = ch.stopMeta?.newValue;
     const reason = !on && stopMeta && Date.now() - (+stopMeta.t || 0) < 30000
       ? ` · источник: ${String(stopMeta.source || 'не указан').slice(0, 50)} · ${String(stopMeta.reason || '').slice(0, 180)}`
