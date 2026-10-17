@@ -48,6 +48,8 @@ noteBox.taskPolicyNote('tvt');assert.equal(notes.length,1);clock+=5000;noteBox.t
  // Устаревшее ожидание панели рыбалки не останавливает уже выбранную заточку.
  const fishingBox=vm.createContext({location:{pathname:'/fishing.html'},sessionStorage:{getItem:()=>null,setItem(){}},document:{querySelectorAll:()=>[]}});vm.runInContext(read('modules/fishing.js'),fishingBox);
  let mode='fish',halts=0;const fishEnv={on:true,tabOwner:true,cfg:{autoTasks:['enchant','fish'],fishAutoSetup:false},rt:{char:'hero'},NET_FISH:{},autonomyMode:()=>mode,$q:()=>null,shown:()=>false,waitFor:async()=>{mode='enchant';return null},halt:async()=>halts++,setStatus(){},setRt:async p=>Object.assign(fishEnv.rt,p),rec(){}};
+ // 17.10: атомарное завершение цели проверяется отдельным тестом хранения.
+ fishEnv.finishFishGoal=async T=>{fishEnv.rt.fishTgt={...T,done:true};return true};
  const F=fishingBox.L2V7Factories.fishing(fishEnv);await F.fishing();assert.equal(halts,0);
  fishEnv.rt.fishTgt={type:'fish',n:1,got:1};await F.fishTgtReached();assert.equal(fishEnv.rt.fishTgt.done,true);assert.equal(halts,0,'completed selected fish target does not stop the next task');
  console.log('PASS: 256 selection combinations, TvT-only, fallbacks, raw preservation, stale awaits and pending payment');

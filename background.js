@@ -90,6 +90,18 @@ async function statePatch(m, sender) {
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
       return { ok: false, reason: 'ownership_lost' };
+    // 17.10: завершение цели и снятие только рыбалки — одной записью, по свежему списку задач.
+    if (m.finishFishGoal) {
+      const T = state.rt?.fishTgt, E = m.finishFishGoal;
+      if (!state.on || (state.rt?.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'fish_goal_interrupted' };
+      if (!T || !['type','n','t'].every(k => T[k] === E[k])) return { ok: false, reason: 'fish_goal_changed' };
+      if (!T.done && !(T.n > 0 && T.got >= T.n)) return { ok: false, reason: 'fish_goal_incomplete' };
+      const fishTgt = T.done ? T : { ...T, done: true, doneT: now };
+      const cfg = { ...(state.cfg || {}), fishMode: false };
+      if (Array.isArray(cfg.autoTasks)) cfg.autoTasks = cfg.autoTasks.filter(k => k !== 'fish');
+      await chrome.storage.local.set({ rt: { ...state.rt, fishTgt, fishService: null, _src: String(m.src || '').slice(0, 60) }, cfg });
+      return { ok: true, fishTgt, cfg };
+    }
     const change = {};
     const writePatch=pvpSeedPatch(patch,state.rt||{});
     if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
