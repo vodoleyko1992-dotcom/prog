@@ -141,14 +141,17 @@ async function paymentReconcile() {
 async function step({ afterWin = false, forceRead = false } = {}) {
   if (busy || !active() || !priority(afterWin)) return false;
   const T = token(); if (!mine(T)) return false;
-  if (!forceRead && state().nextCheckAt > Date.now()) return false;
+  // 20.13 (ревизия 17.10, шаг 5, combat/C10, ревью): пауза 10 с после «бой на сервере» — против опроса на каждом тике цикла; проверка после
+  // победы (одна на бой) её не ждёт, иначе в цепочке «Охотиться дальше» (≈5 с/моб) автобаф пропускал каждую вторую победу
+  if (!forceRead && state().nextCheckAt > Date.now() && !(afterWin && state().status === 'battle')) return false;
   busy = true;
   try {
     const data = await read('/character'); if (!same(T, afterWin)) return false;
     const ch = data.character || data;
     if (!identity(ch)) { await status(T, 'class', 'Нужен подтверждённый активный класс Warlock / Arcana Lord или Dark Avenger / Hell Knight', { nextCheckAt: Date.now() + 15000 }); return false; }
     noteSnapshot(ch);
-    if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя'); return false; }
+    // 20.13 (ревизия 17.10, шаг 5, аудит combat/C10): без nextCheckAt бой на сервере давал GET /character на каждом тике главного цикла
+    if (ch.inBattle !== false) { await status(T, 'battle', 'Дождусь завершения боя', { nextCheckAt: Date.now() + 10000 }); return false; }
     if (await reconcile(T, ch, afterWin)) return true;
     if (!same(T, afterWin)) return false;
     const p = summon(ch); if (!p) { await status(T, 'pet', 'Нужен живой призванный суммон', { nextCheckAt: Date.now() + 10000 }); return false; }

@@ -288,6 +288,29 @@ async function shopBuyOne(it, qtyWant, spentSoFar = 0, share = 1) {          // 
   return { ok: false, why: `нет в магазине (видел: ${seen.slice(0, 6).join(', ') || 'пусто'})` };
 }
 
+// 20.13 (ревизия 17.10, шаг 5, аудит ECO-1): закупка, в которой ничего нельзя купить (не хватает адены, товара нет в магазине,
+// цена в Coin of Luck, лимит трат), раньше повторялась каждые 10 мин бесконечно: карта → сумка → магазин → карта (≈30–60 с).
+// Теперь пауза растёт 10 → 30 → 60 → 180 мин (rt.shopFail.n). Сброс: удачная покупка, «всё есть», смена оружия (content: shopFail:null)
+// или заметный рост адены после неудачи (adenaSeen ≥ ×1,2 + 50 тыс.). Временные сбои (окно не открылось, отказ сервера) паузу не растят.
+const SHOP_GAPS = [600000, 1800000, 3600000, 10800000];
+const SHOP_CANT = /адены|нет в магазине|нет в списке|Coin of Luck|лимит трат/;
+function shopGap() {
+  const f = env.rt.shopFail, n = Math.min(SHOP_GAPS.length, Math.max(0, Math.floor(+f?.n || 0)));
+  if (!n) return SHOP_GAPS[0];
+  const a = env.rt.adenaSeen;
+  if (Number.isFinite(f.adena) && a && Number.isFinite(a.v) && a.t > (+f.t || 0) && Date.now() - a.t < 3600000 && a.v >= f.adena * 1.2 + 50000) return SHOP_GAPS[0];
+  return SHOP_GAPS[n - 1];
+}
+function shopFailNext(done) {
+  if (done.some(d => d.ok)) return null;
+  // шаг 5 (services, ревью): «нет в магазине (видел: пусто)» — список товаров не отрисовался (страница/вкладка не догрузилась),
+  // это временный сбой, а не «товара нет»: паузу не растим.
+  const cant = d => { const w = String(d.why || ''); return SHOP_CANT.test(w) && !/видел: пусто/.test(w); };
+  if (!done.length || !done.every(cant)) return env.rt.shopFail || null;
+  const n = Math.min(SHOP_GAPS.length, (Math.floor(+env.rt.shopFail?.n || 0)) + 1), ad = shopAdena();
+  return { n, t: Date.now(), adena: ad > 0 ? ad : (env.rt.adenaSeen?.v ?? null), keys: done.map(d => d.key) };
+}
+
 async function shopStep() {
   if(env.payments?.blocked()){await paymentReconcile();return;}
   const st = env.rt.shop;
@@ -302,7 +325,7 @@ async function shopStep() {
     const sh = plan0.find(x => x.key === 'shots'), sg = shotGrade(), w = equippedWeapon();
     const shNote = sh ? ` · заряды: ${sh.label} (id ${sh.ids.join(',')}) в сумке ${have0(sh)} из мин. ${sh.mm[0]} — грейд ${sg.g}: ${sg.src}; оружие ${w ? (w.name || w.en) + ' ' + (w.g || '?') : 'не прочитано'}` : '';
     env.rec('B', 'закупка', (need.length ? `нужно: ${need.map(x => `${x.label} ${x.have} → +${x.buy}`).join(' · ')}` : 'всё есть — закупка не нужна') + shNote);
-    if (!need.length) { await env.setRt({ shop: null, shopT: Date.now(), shopLast: { t: Date.now(), text: 'всё есть, покупать не нужно' } }); location.href = st.back || '/map.html'; await env.sleep(4000); return; }
+    if (!need.length) { await env.setRt({ shop: null, shopT: Date.now(), shopFail: null, shopLast: { t: Date.now(), text: 'всё есть, покупать не нужно' } }); location.href = st.back || '/map.html'; await env.sleep(4000); return; }
     await env.setRt({ shop: { ...st, step: 'buy', need } });
     location.href = `/gm-shop.html?cat=consumable&grade=${need[0].grade}`; await env.sleep(4000); return;
   }
@@ -333,7 +356,9 @@ async function shopStep() {
       await env.sleep(env.rnd(500, 900));
     }
     const text = done.map(d => d.ok ? `${d.label} +${d.qty}` : `${d.label}: ✗ ${d.why}`).join(' · ') + (spent ? ` · потрачено ${spent.toLocaleString('ru')} аден` : '');
-    await env.setRt({ shop: null, shopT: Date.now(), shopLast: { t: Date.now(), text } });
+    const fail = shopFailNext(done);
+    if (fail && fail !== env.rt.shopFail) env.rec('B', 'закупка', `купить нечего (адена/товар) — следующая попытка не раньше чем через ${Math.round(SHOP_GAPS[fail.n - 1] / 60000)} мин`);
+    await env.setRt({ shop: null, shopT: Date.now(), shopFail: fail, shopLast: { t: Date.now(), text } });
     env.setStatus('Закупка завершена — возвращаюсь');
     location.href = st.back || (env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html'); await env.sleep(4000);
   }
@@ -350,6 +375,6 @@ async function shopStart(why, force) {
   await env.setRt({ shop: { step: 'count', back: env.autonomyMode() === 'fish' ? '/fishing.html' : '/map.html', t: Date.now(), force: !!force } });
   env.rec('B', 'закупка', `иду за расходниками: ${why}`);
 }
- return { paymentReconcile, SHOP_ORDER, shopShare, packQty, shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
+ return { shopGap, SHOP_GAPS, paymentReconcile, SHOP_ORDER, shopShare, packQty, shopPlan, shotGrade, shotsMage, weaponIsMage, shopNeedByPanel, bagCounts, shopAdena, shopReserve, shopBuyOne, shopStep, hpPotStock, shopStart };
  };
 })(globalThis);

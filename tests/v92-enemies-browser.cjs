@@ -35,7 +35,7 @@ const MAP = `<html><body><div id="l2-hud-legacy-name"><span class="l2-player-ide
       const u = new URL(r.request().url());
       if (u.pathname.startsWith('/__ext/')) return r.fulfill({ status: 200, contentType: 'application/json', body: read(u.pathname.slice(7)) });
       if (r.request().method() === 'POST') posts.push([u.pathname, r.request().postData()]);
-      const body = u.pathname === '/character' ? { character: { id: 'me', name: 'Warlock', revision: 5, hp: 1874, maxHp: 6220, pvpDefeat: DEFEAT, currentZoneNameUk: 'Монастир Тиші' }, pvpIncoming: [] }
+      const body = u.pathname === '/character' ? { character: { id: 'me', name: 'Warlock', clanId: null, revision: 5, hp: 1874, maxHp: 6220, pvpDefeat: DEFEAT, currentZoneNameUk: 'Монастир Тиші' }, pvpIncoming: [] }
         : u.pathname === '/game/map/sync' ? { changed: true, around: { nearestLabelUk: 'Монастир Тиші', nearbyHeroes: [
           { characterId: 'c1', name: 'Peaceful', level: 60, pvpNickColor: null, battleOnNameClick: false, showPkButton: false },
           { characterId: DID, name: 'Dremia', level: 61, pvpNickColor: 'pk', nickColor: '#e85840', battleOnNameClick: true, showPkButton: true }] }, pvpIncoming: [], pvpDefeat: null }

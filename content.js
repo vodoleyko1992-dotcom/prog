@@ -27,6 +27,11 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   champMark: 'чемпион, чемпіон', bossMark: 'босс, boss, рейд', champHpMult: 1.5, stunEvery: 15,
   reactMin: 150, reactMax: 450, buffSec: 118,
   stopHp: 25, hpPotAt: 50, mpPotAt: 70, skillMpMin: 35, warlordAggro: true,
+  // 20.13 (ревизия 17.10, шаг 5, quality/L3): скрытые настройки, умолчание которых раньше жило только в месте чтения
+  // (`?? 30`, `!== false`…). Значения те же, поведение не меняется; теперь они видны в cfg, экспорте и проверке
+  // tests/v2013-defaults-sync. Резервные `??` в модулях оставлены для старых тестовых окружений без DEF_CFG.
+  mageEcoPct: 30, mageMpPct: 25, mageProbe: true, rbVampHp: 60, rbDeathPenalty: 0, magisterSkip: 'Curse Weakness, Poisonous Cloud', magisterSpReserve: 0,
+  fishRodBuy: true, fishAutoSetup: true,
   // слоты панели — по названию (атрибут title), через запятую — альтернативные написания
   nAttack: 'Атака', nPower: 'Iron Punch', nStun: 'Stunning Fist', nBuffs: 'Totem Spirit Bear',
   nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
@@ -35,6 +40,12 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   // 7.1.31: 🐱 слуга (Warlock): какого кота призывать (пусто — того, что был, иначе первого на панели), пороги, добивание котом, баффы кота
   debuffMinActs: 10,   // 7.1.31: дебафф в «авто» — только если бою ещё ≥ 10 действий (окупаемость хода)
   petAuto: true, petSummon: '', petResummon: true, petResummonAt: 25, petHealAt: 50, petFinish: false, petFinishMp: 80, petBuffAuto: true, nPetBuffs: '', petBuffSec: 1200,
+  // 20.13 (ревизия 17.10, шаг 5, defaults/D11): скрытые настройки, которые читались только через «?? N» по месту, — с теми же значениями,
+  // чтобы они были видны в экспорте настроек и при разборе лога. Поведение не меняется (значения равны прежним запасным).
+  // Остальные такие ключи (mageMpPct, mageEcoPct, rbVampHp…) — выше, в блоке quality/L3.
+  rbHuntMode: false, rbOrder: 'up',
+  // 20.13 (ревизия 17.10, шаг 5, defaults/D16): банка MP у воина — от доли MP (как mageMpPct у мага), а не только от 70 MP: «MP не экономим».
+  fighterMpPct: 25,
 };
 const DEF_RT = { pvpTargets: {}, pvpRecovery: null, pvpResolved: [], status: '', kills: 0, exp: 0, sp: 0, adena: 0, buffAt: {}, buffSeen: {}, hpMin: {},
                  sinceDeep: 999, deepHot: false, target: null, mobClickAt: 0, bounce: 0,
@@ -1283,16 +1294,54 @@ function setStatus(s) {
   draw();
 }
 // Команда остановки сериализуется фоном вместе с heartbeat/сторожем; локально прекращаем действия сразу.
-async function automationStop(msg, action = 'stop') {
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+// 20.13 (ревизия 17.10, шаг 5, аудит core-a/M6): on=false ставился до ответа фона; таймаут IPC бросал исключение из halt(), а в
+// хранилище оставалось on=true — через ≈2,5 мин сторож перезагружал вкладку, и «жёсткая» остановка превращалась в цикл
+// «стоп → перезапуск». Теперь: до 3 попыток botControl; не подтвердилось — отметка в sessionStorage (герой + kick), и после
+// перезагрузки main() сначала повторяет остановку. Новый Start игрока (другой manualKickAt) отметку отменяет.
+// 20.13 (ревизия 17.10, шаг 5, core-b/F3): opt.user — Esc ×2 игрока (фон принимает с любой вкладки игры, как из меню);
+// opt.hard — жёсткий стоп самого бота: фон не отклоняет его из-за нового kick/протухшего замка; окончательный отказ — в журнал
+// (раньше молча: здесь «остановлен», а бот работал/запускался снова)
+const STOP_PEND_KEY = 'l2bot-stopPend';
+const STOP_NOFIX = ['character_changed', 'ownership_lost', 'invalid_sender', 'invalid_control'];   // повтор не поможет
+const stopPendRead = () => { try { return JSON.parse(sessionStorage.getItem(STOP_PEND_KEY) || 'null'); } catch (_) { return null; } };
+const stopPendWrite = v => { try { v ? sessionStorage.setItem(STOP_PEND_KEY, JSON.stringify(v)) : sessionStorage.removeItem(STOP_PEND_KEY); } catch (_) {} };
+async function automationStop(msg, action = 'stop', opt = {}) {
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, t0 = Date.now();
   automationGeneration++; on = false;
-  const r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick });
+  let r = null;
+  for (let i = 0; i < 3 && !r?.ok; i++) {
+    if (i) await new Promise(res => setTimeout(res, 1000));
+    try { r = await ipc({ cmd:'botControl', action, source:action === 'pause' ? 'content-pause' : 'content-halt', reason:String(msg).slice(0,240), char, epoch, kick,
+      ...(opt.user ? { user:true } : {}), ...(opt.hard ? { hard:true } : {}) }); }
+    catch (e) { r = { ok: false, reason: String(e?.message || e) }; }
+    if (r && !r.ok && STOP_NOFIX.includes(r.reason)) break;
+  }
+  if (r?.ok) stopPendWrite(null);
+  else {
+    // 20.13 (шаг 5, core-a, ревью): отметка — только когда фон не ответил (таймаут/сбой); отказы по смыслу повтором после перезагрузки
+    // не исправить. t0 — начало остановки: по нему повтор узнаёт более позднюю остановку/запуск горячей клавишей Alt+Shift+B
+    if (!r || !STOP_NOFIX.includes(r.reason)) stopPendWrite({ char, kick, action, msg: String(msg).slice(0, 240), t: Date.now(), t0 });
+    if (opt.hard || opt.user) rec('S', 'СТОП', `фон не принял остановку (${r?.reason || 'нет ответа'}): «${String(msg).slice(0, 80)}» — нажмите ⏹ Стоп в меню`);
+  }
   if (r?.ok && !on && rt.char === char && leaseEpoch === epoch) await setRt({ status:msg });
   return r;
 }
+// Неподтверждённая остановка прошлой страницы: повторить её, пока игрок не нажал новый Start (kick) и герой тот же (≤ 30 мин)
+async function stopPendRetry() {
+  const p = stopPendRead(); if (!p) return false;
+  if (Date.now() - (+p.t || 0) > 1800000 || p.char !== (rt.char || '') || p.kick !== (rt.manualKickAt || 0)) { stopPendWrite(null); return false; }
+  // 20.13 (шаг 5, core-a, ревью): после начала той остановки фон уже записал остановку (stopMeta.t ≥ t0) — она дошла, а нынешний
+  // on=true — новый запуск (горячая клавиша не меняет manualKickAt). Повторно не останавливаем
+  let meta = null; try { ({ stopMeta: meta } = await chrome.storage.local.get('stopMeta')); } catch (_) {}
+  if (+meta?.t >= (+p.t0 || +p.t || 0)) { stopPendWrite(null); return false; }
+  stopPendWrite(null);
+  rec('B', 'СТОП', `повторяю остановку, не подтверждённую фоном до перезагрузки: ${p.msg}`);
+  await automationStop(p.msg, p.action === 'pause' ? 'pause' : 'stop');
+  return true;
+}
 // hard = настоящая остановка (Esc ×2, цель рыбалки выполнена, лимит забросов). В режиме рыбалки любая другая
 // «остановка» превращается в паузу с повтором (fishSoft) — рыбалка идёт, пока её не выключат кнопкой (v4.49)
-async function halt(msg, hard) {
+async function halt(msg, hard, user = false) {
   const stamp = automationSnapshot();
   console.warn(TAG, 'СТОП:', msg);
   if (fishNow() && !hard && on) return fishSoft(msg);
@@ -1301,7 +1350,7 @@ async function halt(msg, hard) {
   if (!hard && on && !(await srvUp())) { if (!automationCurrent(stamp)) return; rec('S', 'сервер', `«${String(msg).slice(0, 80)}» — но сервер игры не отвечает: жду сервер, бота не останавливаю`); netOutage.since = netOutage.since || Date.now(); netOutage.last = Date.now(); return serverWait(); }
   if (!hard && !automationCurrent(stamp)) return;
   rec('B', 'СТОП', msg);                         // причина остановки — всегда в журнал (раньше была видна только в статусе)
-  await automationStop(msg);
+  await automationStop(msg, 'stop', { hard: !!hard, user: !!user });   // 20.13 (шаг 5, core-b/F3)
 }
 // 8.0.3 (игрок 11.10: «кнопку — убить одного РБ и ждать команды… когда не могу 24/7 смотреть за ботом»): пауза от самого бота —
 // как кнопка «⏸ Пауза»: состояние сохранено, «▶ Продолжить» или «🎯 Ещё один РБ» в меню запускают снова
@@ -1624,20 +1673,23 @@ function farmGuideMerge(db, data) {
   }
   return { n, dr, sp };
 }
+// 20.13 (ревизия 17.10, шаг 5, аудит core-a/M3): при неудаче запрос «по кнопке» (farmGuideReq) тоже снимаем — раньше он оставался,
+// и каждый круг main слал новый GET /game/farm-guide и писал строку в журнал (при стабильном 404/401/423 — без конца)
+const farmGuideRetry = () => setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000, farmGuideReq: null });
 async function farmGuideSync(why = 'раз в сутки') {
   if (farmGuideBusy) return false;
   farmGuideBusy = true;
   try {
     const r = await gameGet(FARM_GUIDE_URL, 20000);
-    if (!r.ok) { rec('B', 'фарм', `источники из игры (${why}): HTTP ${r.status} — пробую позже`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    if (!r.ok) { rec('B', 'фарм', `источники из игры (${why}): HTTP ${r.status} — пробую позже`); await farmGuideRetry(); return false; }
     const j = await r.json(), db = await farmDb(), m = farmGuideMerge(db, j);
-    if (!m.n) { rec('B', 'фарм', `источники из игры (${why}): ответ без ресурсов`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+    if (!m.n) { rec('B', 'фарм', `источники из игры (${why}): ответ без ресурсов`); await farmGuideRetry(); return false; }
     db.t = Date.now(); FARM = db;
     await chrome.storage.local.set({ farmDb: db });
     await setRt({ farmGuideT: Date.now(), farmN: Object.keys(db.res).length, farmGuideReq: null });
     rec('B', 'фарм', `источники из игры (${why}): ресурсов ${m.n}, источников дропа ${m.dr}, спойла ${m.sp}${+j?.resourceTeleportAdenaCost ? ` · телепорт к точке ${(+j.resourceTeleportAdenaCost).toLocaleString('ru')} адены` : ''}`);
     return true;
-  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await setRt({ farmGuideT: Date.now() - FARM_GUIDE_EVERY + 3600000 }); return false; }
+  } catch (e) { rec('B', 'фарм', `источники из игры (${why}): ${String(e?.message || e).slice(0, 80)}`); await farmGuideRetry().catch(() => {}); return false; }
   finally { farmGuideBusy = false; }
 }
 function farmGuideTick() {                        // фоном, только GET; нужна цели Маммона, цели «Фарм ресурса» и помощнику основного
@@ -2637,17 +2689,53 @@ async function tabLock() {
   if (tabOwner) { lockMine = Date.now(); documentLease = leaseEpoch; }
   return tabOwner;
 }
+// 20.13 (шаг 5, core-b/F6): вернуть свой замок тем же epoch; true — замок наш, очередь записей сохранена и досылается
+// шаг 5 (core-b, ревью): focus:false — возврат своего замка не отбирает его у другой вкладки (раньше продление этого не делало);
+// фон выдал замок, но вернуть очередь нельзя (не resumed, Stop, смена состояния) — замок отпускаем и запоминаем его epoch в documentLease:
+// иначе брошенный замок этой вкладки с новым epoch давал вечное ownership_lost следующему tabLock этого документа
+async function renewResume() {
+  const old = leaseEpoch; if (!old) return false;
+  let a = null;
+  try { a = await ipc({ cmd: 'lockAcquire', epoch: old, page: location.pathname, vis: tabVis(), focus: false }, 9000); } catch (e) { return false; }
+  if (!a?.ok) return false;
+  if (leaseEpoch !== old) { if (a.epoch) documentLease = a.epoch; return 'moved'; }   // за это время замок пересобрал tabLock/lockLost — его не трогаем
+  documentLease = a.epoch;
+  if (!(a.epoch === old || a.resumed) || !tabOwner || !on) {
+    try { await ipc({ cmd: 'lockRelease', epoch: a.epoch }, 9000); } catch (e) {}
+    return false;
+  }
+  leaseEpoch = a.epoch;
+  rtWriter.recover().catch(() => {});
+  return true;
+}
 setInterval(async () => {
   try {
     if (tabOwner && on) {
-      const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);
-      if (!r?.ok) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return; }
+      const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);   // без ответа фона — исключение, повтор через 5 с (как раньше)
+      if (!r?.ok) {
+        // 20.13 (ревизия 17.10, шаг 5, core-b/F6): продление не прошло (фон не ответил за 9 с, вкладку в фоне придержали дольше 90 с) —
+        // раньше очередь неотправленных записей (убийства, добыча, счётчики, отметки служб) стиралась, а повторный захват подменял rt
+        // снимком из хранилища. Сначала пробуем вернуть свой же замок; другого хозяина не было (resumed) — очередь дописываем.
+        const again = await renewResume();
+        if (again === 'moved') return;
+        if (again) { lockMine = Date.now(); return; }
+        tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; return;
+      }
       lockMine = Date.now();
     }
     else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) {} tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
-  } catch (e) {}
+  } catch (e) { quietErr('замок', e); }
 }, 5000);
+// 20.13 (ревизия 17.10, шаг 5, quality/L2): ошибка в таймере продления/сдачи замка (recover, sendMessage после
+// обновления расширения) раньше пропадала без следа. Теперь — одна строка в журнал на тег раз в 10 мин со счётчиком.
+const quietErrs = Object.create(null);
+function quietErr(tag, e) {
+  const q = quietErrs[tag] ||= { n: 0, t: -Infinity }; q.n++;
+  if (Date.now() - q.t < 600000) return;
+  const n = q.n; q.n = 0; q.t = Date.now();
+  try { rec('S', 'ошибки', `${tag}: ${String(e?.message || e || 'ошибка').slice(0, 160)}${n > 1 ? ` (×${n} за 10 мин)` : ''}`); } catch (_) {}
+}
 // замок при уходе со страницы не снимаем: следующая страница этой же вкладки продолжит с тем же ключом; закрытую вкладку отпустит таймаут 90 с
 
 // 10.0.2: замеры по РБ из лога 12.10 22:11–22:46 (Warlock 65 + Kai): ДПС в бою, спецудар, обычный удар p90 / макс.
@@ -2702,6 +2790,7 @@ async function main() {
           rt = { ...DEF_RT, ...(fresh.rt || {}) }; cfg = mergeCfg(fresh.cfg);
         }
       }
+      if (tabOwner && await stopPendRetry()) continue;   // 20.13 (шаг 5, core-a/M6): остановка прошлой страницы не подтверждена
       // Migrations calculated during page initialization must not write without a lease.
       // Apply to the saved current character before switching to a new one.
       // 8.0.3 (проверка правки): устаревание пакета настроек — ДО записи rt и только по свежим настройкам: раньше проверка видела
@@ -2752,7 +2841,10 @@ async function main() {
       // A heartbeat alone cannot detect a live but endlessly looping dispatcher.
       // Check observable progress; exclude intentional maintenance/long waits.
       // 20.12 (ревизия 17.10, аудит H1/M5): неизвестная оплата — честное ожидание сверки, а не «нет прогресса» (3 перезагрузки и стоп за ≈36 мин)
-      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+      // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
+      // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
+      // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
+      const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
         !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
         !!rt.invScan || fishNow());
       // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -3049,6 +3141,10 @@ async function magisterStart(afterWin = false) {
 }
 async function magisterDisable() {
   if (cfg.autoMagister === true || !on || !tabOwner) return;
+  // 20.13 (ревизия 17.10, шаг 5, аудит core-a/H3): автомагистр включён игроком, а запрещён только выбранной задачей (рыбалка/
+  // «только задачи»/заточка в списке задач) — это временно: отметки уровней (magChecked) и magEnabled храним, снимаем лишь начатый
+  // поход. Раньше magEnabled:false здесь, а потом magisterStart стирал magChecked — поход к магистру после каждой смены задачи
+  if (L2EngineCore.rawTaskConfig(cfg).autoMagister === true) { if (rt.magister) await setRt({ magister: null }); return; }
   // Не стираем неопределённый исход уже отправленного POST: повторное включение сначала проверит ранг.
   if (rt.magEnabled || rt.magister) await setRt({ magEnabled: false, magister: null });
 }
@@ -3822,7 +3918,7 @@ function draw() {
 
 // стоп с клавиатуры — двойной Esc за 0,6 с: одиночный Esc закрывает окна игры и раньше нечаянно останавливал бота
 let escT = 0;
-addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true); escT = Date.now(); }, true);
+addEventListener('keydown', e => { if (e.key !== 'Escape' || !on || !e.isTrusted) return; if (Date.now() - escT < 600) halt('Остановлено (Esc ×2)', true, true); escT = Date.now(); }, true);
 
 // 10.0.3 (игрок 12.10 14:26: «Alt+R вызывает окно загрузки таймингов»): Alt+R на странице игры — выбор файла слежки,
 // таймеры сливаются с таймерами героя (как кнопка «📥 Загрузить таймеры из файла слежки» в меню; в меню Alt+R делает то же; 10.0.5, игрок 13.10: клавиша теперь Alt+W)
@@ -4288,7 +4384,7 @@ async function weaponEquipNote(req) {
   const index = W.findIndex(x=>x.id===id && (!x.inst || !w.inst || x.inst===w.inst));
   if (index>=0) W[index] = {...W[index],...w}; else W.push(w);
   await setRt({weapons:W,weaponsT:Date.now(),weaponEq:{id,g:w.g,t:Date.now()},weaponMetaPending:null,
-    ...(oldEquipped?.id !== id ? {shopT:0} : {}),
+    ...(oldEquipped?.id !== id ? {shopT:0,shopFail:null} : {}),   // 20.13 (шаг 5, ECO-1): новое оружие — новые заряды, пауза закупки сбрасывается
     ...(rt.shopShotBad?.want && rt.shopShotBad.want !== w.g ? {shopShotBad:null} : {})});
   rec('B','оружие',`надето «${it.n}» (${w.g}, ${w.wt}) — заряды теперь под ${w.g}`);
 }
@@ -4913,9 +5009,9 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get gameGet() { return gameGet; },
-  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
+  get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faBalOf() { return (...a) => L2V7Modules.buffs.faBalOf(...a); }, get faCost() { return faCost; }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },
   get RB_RETRY_MS() { return RB_RETRY_MS; }, set RB_RETRY_MS(value) { RB_RETRY_MS = value; },
@@ -5140,7 +5236,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -5545,7 +5641,7 @@ L2V7Modules.pvp = L2V7Factories.pvp({ get tvtHold(){return ()=>!!L2V7Modules.tvt
   get antibotState() { return antibotState; },
   get abHold() { return abHold; }
 });
-L2V7Modules.enemies = L2V7Factories.enemies({ get on(){return on},get tabOwner(){return tabOwner},get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
+L2V7Modules.enemies = L2V7Factories.enemies({ get pvpSelf(){return ()=>L2V7Modules.pvp?.selfClan?.()||null}, get pvpSelfRead(){return ()=>L2V7Modules.pvp?.selfRead?.()}, get pvpHeroClan(){return (id,name)=>L2V7Modules.pvp?.heroClan?.(id,name)}, get on(){return on},get tabOwner(){return tabOwner},get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get autonomyMode() { return autonomyMode; }, get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); },
   get fishNow() { return fishNow; }, get gameGet() { return gameGet; }, get heroLevel() { return heroLevel; }, get isBattle() { return isBattle; }, get isMap() { return isMap; },
   get meHp() { return meHp; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; }, get setStatus() { return setStatus; }, get shown() { return shown; },
   get sleep() { return sleep; }, get toMap() { return toMap; }, get tvtSoon() { return tvtSoon; }, get victory() { return victory; }, get waitX() { return waitX; } });

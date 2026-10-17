@@ -13,8 +13,8 @@ test('actual danger stores current wound and safety skip before navigation, surv
 test('missing or rejected durable ACK does not authorize the leave click',async()=>{for(const response of [{ok:false},undefined]){const f=fixture();f.env.setRt=async()=>response;assert.equal(await f.C.probeExitCommit({name:'Boss',rb:{id:'boss'}},{cur:100,max:1000},'abort'),false)}});
 test('buff wait names missing effects and cooldown; repeated prepare phase preserves that status',async()=>{
  const source=read('modules/raid.js'),statuses=[],now=Date.now();
- const env={rt:{tbWaitUntil:now+40000,faCat:{123:{name:'Shield'}}},IL:{456:{n:'Wind Walk'}},cfg:{},townBuffStart:async()=>false,hudBuffs:()=>true,townBuffNeed:()=>({fa:[123,456]}),setStatus:t=>statuses.push(t),sleep:async()=>{}};
- const box={env,Date:class extends Date{static now(){return now}},rbBuffShortage:()=>0,huntSet:async p=>{env.rt.rbHunt={...env.rt.rbHunt,...p}}};
+ const env={rt:{tbWaitUntil:now+40000,faCat:{123:{name:'Shield'}}},IL:{456:{n:'Wind Walk'}},cfg:{},setRt:async p=>{Object.assign(env.rt,p);return {ok:true}},townBuffStart:async()=>false,hudBuffs:()=>true,townBuffNeed:()=>({fa:[123,456]}),setStatus:t=>statuses.push(t),sleep:async()=>{}};
+ const box={env,Date:class extends Date{static now(){return now}},rbBuffShortage:()=>0,rbBuffWaitOver:()=>false,huntSet:async p=>{env.rt.rbHunt={...env.rt.rbHunt,...p}}};
  vm.runInNewContext(source.slice(source.indexOf('async function rbBuffHold('),source.indexOf('function rbSummonBuffReady('))+source.slice(source.indexOf('async function rbHuntPhase('),source.indexOf('async function huntDone(')),box);
  await box.rbHuntPhase('prepare','подготовка');await box.rbBuffHold('Boss',()=>true);const wait=statuses.at(-1);
  assert.match(wait,/Shield, Wind Walk/);assert.match(wait,/40 с/);

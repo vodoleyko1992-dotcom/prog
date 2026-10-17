@@ -68,8 +68,12 @@ test('границы окна включены, страницы дедупли�
     below: row(67, 9), lower: row(68, '10'), same: row('68', 10), next: row(72, 11),
     middle: row(80, 13), upper: row(92, 14), above: row(93, 15), invalid: row(75, 0), fraction: row(75, 11.5), absent: null
   } } });
+  // 20.13 (ревизия 17.10, шаг 5, TM-1): окно страниц прежнее, но за один опрос — не больше 2 страниц, остальные по кругу
+  assert.deepEqual(Array.from(f.T.tourPages()), [10, 11, 12, 13, 14]);
   assert.equal(await f.T.tourTick({ active: f.active }), true);
-  assert.deepEqual(f.gets, [10, 11, 12, 13, 14].map(p => '/game/raid-bosses?page=' + p));
+  assert.equal(f.gets.length, 2);
+  for (let i = 0; i < 6; i++) { f.advance(30000); await f.T.tourTick({ active: f.active }); }
+  assert.deepEqual([...new Set(f.gets)].sort(), [10, 11, 12, 13, 14].map(p => '/game/raid-bosses?page=' + p).sort(), 'за несколько опросов пройдены все страницы окна');
 });
 
 test('настройки окна тура уже стандартного ±15 ограничивают страницы', async () => {
@@ -82,8 +86,9 @@ test('настройки окна тура уже стандартного ±15 
 
 test('без страниц в rbList используется пересечение диапазонов rbTimer.pg', async () => {
   const f = fixture({ rt: { rbList: {}, rbTimer: { b: {}, pg: { 8: [50, 67], 9: [67, 68], 11: [72, 92], 12: [93, 99], bad: [68, 92] } } } });
+  assert.deepEqual(Array.from(f.T.tourPages()), [9, 10, 11]);
   assert.equal(await f.T.tourTick({ active: f.active }), true);
-  assert.deepEqual(f.gets, [9, 10, 11].map(p => '/game/raid-bosses?page=' + p));
+  assert.equal(f.gets.length, 2);
 });
 
 test('неизвестные страницы и уровень не запускают полный скан и не расходуют cooldown', async () => {

@@ -1808,13 +1808,17 @@ async function battle() {
       // ударам, которые сервер принял (≥ 5 за это время) и без зависания сервера (ответ > 5 с) в окне замера; иначе это не «не по зубам», а лаг
       const N = env.actNet?.() || {}, okHits = (N.okN || 0) - (ctx.okN0 || 0), lagged = (N.slowT || 0) >= ctx.hp0T;
       const hopeless = el >= 15 && okHits >= 5 && !lagged && !ctx.questKill && !((env.rt.pveBlockUntil || 0) > Date.now() - 120000) && !env.antibotState() && (ttk > 180 || (ttk > 90 && losing));   // v5.5.8: в блоке фарма урон 0 — это не «не пробиваю»
-      if (hopeless || Date.now() - t0 > 180000) {
+      // 20.13 (ревизия 17.10, шаг 5, аудит combat/C2): у чемпиона свой предел боя (ctx.chLim, до ≈390 с) и свой отход (champs.fleeCheck выше).
+      // Общий предел «бой дольше 3 мин» обрывал почти убитого чемпиона на 181-й секунде внутри его же лимита — теперь для чемпиона под
+      // присмотром fleeCheck предел не короче chLim × 1,3 (тот же запас, что в fleeCheck); у обычного моба и при champLeave=false — прежние 180 с
+      const capMs = ctx.champ && !ctx.rb && env.champs && env.cfg.champLeave !== false ? Math.max(180, (ctx.chLim || 0) * 1.3) * 1000 : 180000;
+      if (hopeless || Date.now() - t0 > capMs) {
         if (!strengthReliable(strength, Date.now(), env.actNet?.() || {})) {
           env.rec('B', 'бой', `${mobName()}: бой затянулся без непрерывных принятых ходов — возвращаюсь на карту, силу моба не оцениваю`);
           await env.setRt({ target: null });
           return env.toMap();
         }
-        const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : 'бой дольше 3 мин';
+        const why = hopeless ? `урон ≈${dps.toFixed(1)}/с, моба убить ≈${isFinite(ttk) ? Math.round(ttk) + ' с' : 'никогда'}` : capMs > 180000 ? `бой дольше ${Math.round(capMs / 1000)} с` : 'бой дольше 3 мин';
         // 10.0.10 (лог 13.10 18:31:07, Elven Ruins): красный Tracker Skeleton 17 (29 880 HP, предел чемпиона 188 с) через 15 с получил общее «не пробиваю
         // (убить ≈134 с)» с меткой «этот вид 2 ч не бью» по ИМЕНИ — и обычные Tracker Skeleton 996 HP (цель ★ квеста рядом) бот дважды отказался бить.
         // У чемпиона свой предел (champs.fleeCheck/learn по цвету) — метка по имени вида не ставится, вердикт «долго» идёт в память чемпионов
@@ -1829,10 +1833,15 @@ async function battle() {
         env.rec('B', 'цели', `${mobName()}: не пробиваю — ${why} → ухожу, этот вид 2 ч не бью`);
         await lowDmgNote();
         }
+        // 10.0 (аудит боя): уход со страницы бой не завершает — моб бьёт дальше, баффер отвечает «Во время бою відновлення недоступне». Сначала выходим из боя.
+        // 20.13 (ревизия 17.10, шаг 5, аудит combat/C2): штатный выход «Назад на карту» — всегда, а не только при HP < 60 %: без него серверный бой
+        // продолжался, следующий клик по карте возвращал в тот же бой, и отсчёт «3 мин» начинался заново. Ждём конца боя, как ветка fleeCheck
+        const leave = env.$q('#battle-back-map');
+        if (leave) {
+          env.fire(leave);
+          if (!(await env.waitFor(() => !env.isBattle() || null, 8000, 150))) env.rec('B', 'бой', `${mobName()}: выход из боя не подтверждён — ухожу на карту`);
+        }
         if (me && me.pct < 60) {
-          // 10.0 (аудит боя): уход со страницы бой не завершает — моб бьёт дальше, баффер отвечает «Во время бою відновлення недоступне». Сначала выходим из боя
-          const leave = env.$q('#battle-back-map');
-          if (leave) { env.fire(leave); await env.waitFor(() => !env.isBattle() || null, 4000, 100); }
           if (await env.restoreVitals(`после неподъёмного моба HP ${me.pct | 0}%`)) return;
         }
         return env.toMap();
@@ -2032,7 +2041,12 @@ async function battle() {
     const hitMp = Math.min(...env.names(env.cfg.nPower).filter(n => slotsBy(n).length).map(n => env.skillMp(n)), Infinity);
     // 7.1.16-fix: у мага мана — весь урон. Порог 70 MP из 928 (лог 09.10: MP падал до 51–71, бой шёл рывками) — держим ≥ 25 % MP
     const mageMp = mageCombat() && mp?.max ? Math.round(mp.max * (env.cfg.mageMpPct ?? 25) / 100) : 0;
-    const mpNeed = Math.max(env.cfg.mpPotAt, rbMpAt, mageMp, isFinite(hitMp) ? Math.round(hitMp * 1.5) : 0);
+    // 20.13 (ревизия 17.10, шаг 5, defaults/D16): у воина (и любого профиля, кроме мага с котом) порог был max(70 MP, 1,5 удара) — Warlord с MP ≈1500 пил банку лишь у дна,
+    // и связка Provoke + массовый удар пропускалась «MP мало». Теперь и воин держит ≥ fighterMpPct (25 %) MP; 0 — прежнее правило.
+    // шаг 5 (defaults, ревью): на РБ доля воина не лезет в резерв банок MP (rbPotReserve) — как прежний порог rbMpAt; при allIn резерв не держим.
+    const mpReserveHit = !!ctx.rb && !ctx.rb.allIn && env.qty(mpPot) != null && env.qty(mpPot) <= (env.cfg.rbPotReserve || 0);
+    const fighterMp = !mageCombat() && !mpReserveHit && mp?.max ? Math.round(mp.max * Math.max(0, +(env.cfg.fighterMpPct ?? 25) || 0) / 100) : 0;
+    const mpNeed = Math.max(env.cfg.mpPotAt, rbMpAt, mageMp, fighterMp, isFinite(hitMp) ? Math.round(hitMp * 1.5) : 0);
     const mpPulse = (() => { const p = env.rt.pots?.[env.cleanTitle(mpPot?.title || '').toLowerCase()]; return p && p.pulses > 1 ? Math.max(3000, p.pulses * (p.every || 1) * 1000) : 3000; })();   // 7.1.30: банка «пульсами» — не пить поверх ещё идущей
     if (mpPot && env.qty(mpPot) !== 0 && mp && mp.cur < mpNeed && Date.now() - lastMpPot > mpPulse && ready(mpPot)) {
       const prevMp = lastMpPot; lastMpPot = Date.now(); if (await act(mpPot, `Банка MP (MP ${mp.cur} < ${mpNeed})`) === 'lock') lastMpPot = prevMp; continue;   // 8.0.3: 'lock' — повтор сразу

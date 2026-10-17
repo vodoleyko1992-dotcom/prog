@@ -3,7 +3,7 @@
 (function(root){'use strict';root.L2V7Factories ||= Object.create(null);
 root.L2V7Factories.pvp=function(env){
 const DID='6f573aad-08ee-4713-9d76-33f5fd4afc93', low=s=>String(s||'').trim().toLowerCase();
-const state={heroes:[],heroesT:0,self:null,selfIdentity:null,profiles:{},waitT:0,closing:null,seedRetryChar:''};
+const state={heroes:[],heroesT:0,self:null,selfIdentity:null,profiles:{},waitT:0,closing:null,seedRetryChar:'',skip:{},tries:{}};
 const receiptKey=()=> 'l2bot.pvpReturn@'+env.rt.char;
 const receiptRead=()=>{try{return JSON.parse(sessionStorage.getItem(receiptKey())||'null')}catch(_){return null}};
 const receiptSave=P=>{try{sessionStorage.setItem(receiptKey(),JSON.stringify(P))}catch(_){}};
@@ -16,6 +16,27 @@ const active=T=>!!env.on&&!!env.tabOwner&&(!T||T.char===env.rt.char&&T.kick===(e
 const targets=()=>env.rt.pvpTargets||{};
 const exact=(t,h)=>!!t?.enabled&&!!t.id&&String(t.id)===String(h?.id||'')&&low(t.name)===low(h?.name);
 const pending=()=>!!recovery();
+// 20.13 (ревизия 17.10, шаг 5, pvp-misc/PVP-1): отказ сервера в начале PvP (цель в безопасной зоне, на другой локации, мертва/офлайн)
+// раньше не останавливал нажатия: клик ника каждые 5 с, пока цель на локации, и PvE всё это время стояло. Отказ — пауза этой цели
+// (10/5/15 мин по коду, как в листе врагов); три нажатия подряд без начала боя — 2 мин. Защита от двойного клика (5 с) прежняя. Это ответ игры, а не оценка силы: правило явной цели не меняется.
+const skipKey=()=>'l2bot.pvpSkip@'+env.rt.char;
+function skipAll(){let S=null;try{S=JSON.parse(root.sessionStorage?.getItem(skipKey())||'null')}catch(_){}const M=state.skip?.[env.rt.char]||{};return{...M,...(S&&typeof S==='object'?S:{})}}
+function skipSet(id,ms,why){const all=skipAll(),now=Date.now();for(const k of Object.keys(all))if(!(all[k]?.until>now))delete all[k];
+ if(ms>0)all[id]={until:now+ms,why};else delete all[id];
+ (state.skip||={})[env.rt.char]=all;try{root.sessionStorage?.setItem(skipKey(),JSON.stringify(all))}catch(_){}}
+const skipOf=id=>{const K=skipAll()[String(id||'')];return K&&K.until>Date.now()?K:null};
+function startNote(d){
+ const id=String(d.req?.targetCharacterId||'');if(!id||!targets()[id])return;
+ // 20.13 (шаг 5, pvp-misc, ревью): обрыв сети / 5xx — не отказ игры: паузу не ставим, счёт «нажатий без боя» продолжается
+ if(d.status==null||d.status>=500)return;
+ state.tries[id]=0;
+ if(d.status>=200&&d.status<300&&!d.res?.error){skipSet(id,0);return}
+ const code=String(d.res?.error||d.status||'');
+ const city=/pvp_target_safe|pvp_attacker_safe|pvp_location_mismatch/.test(code),gone=/pvp_target_dead|offline/.test(code);
+ const why=city?'в городе / безопасной зоне':gone?'не в игре или уже мёртв':`игра отказала (${code})`;
+ skipSet(id,(city?10:gone?5:15)*60000,'отказ сервера: '+why);
+ env.rec('B','PvP',`Атаковать при встрече: ${targets()[id].name||id} — ${why}, пауза ${city?10:gone?5:15} мин`);
+}
 function world(pd){return pd&&pd.name&&!pd.arena&&(!pd.scope||pd.scope==='world')&&!/tvt|arena/i.test(location.pathname)}
 function capture(pd,owner){
  if(!world(pd))return;
@@ -54,6 +75,7 @@ function onNet(path,d){
  if(d.pv?.defeat&&(d.status==null||d.status>=200&&d.status<300))capture(d.pv.defeat,owner);
  const c=d.res?.character||(path==='/character'?d.res:null);selfNote(c);
  if(d.pv?.heroes)heroesNote(d.pv.heroes);
+ if(path==='/game/battle/pvp/start'&&d.method==='POST')startNote(d);
  if(/pvp_defeat_pending/.test(String(d.res?.error||'')+' '+String(d.res?.message||''))&&!pending())
   env.setRt({pvpRecovery:{ev:'',name:'',id:'',t:Date.now(),char:env.rt.char,back:'/map.html'}});
  if(path==='/game/battle/return-to-town'&&d.method==='POST'&&d.status>=200&&d.status<300&&c&&!d.res?.error&&pending()){
@@ -80,6 +102,7 @@ function verdict(t,h){
  if(!exact(t,h))return 'цель выключена или изменился ID/ник';
  if(env.cfg.pvpOnSight===false)return 'атака при встрече выключена';
  if(pending())return 'сначала вернуться в город после PvP-смерти';
+ const K=skipOf(h?.id);if(K)return K.why||'пауза после отказа';
  const S=state.self;
  if(!S||S.char!==env.rt.char||Date.now()-S.t>30000||h.clanKnown!==true)return 'проверяю свою группу и клан';
  if(h.id===S.id)return 'это наш персонаж';
@@ -93,19 +116,29 @@ function pick(){
  return state.heroes.map(h=>({h,t:targets()[h.id]})).find(x=>!verdict(x.t,x.h))||null;
 }
 function occupied(){const r=env.rt;return env.cfg.enchantMode===true||pending()||!!(r.shop||r.rbGo||r.zoneGo||r.revive||r.tbuff||r.magister||r.invScan||r.fishSvc||r.mmJob||r.tsJob||r.storyJob||r.petBufferTrip||r.petFull?.pending||r.enchant?.pending||r.enchant?.status==='running')||env.fishNow?.()||env.tvtHold?.()||env.tvtSoon?.()}
-async function refresh(){
- const T=token();if(!active(T)||pending())return false;
- if(!state.self||state.self.char!==T.char||Date.now()-state.self.t>30000){
-  if(!state.selfIdentity||state.selfIdentity.char!==T.char||Date.now()-state.selfIdentity.t>30000){
+async function selfRefresh(T,maxAge=30000){
+ if(!state.self||state.self.char!==T.char||Date.now()-state.self.t>maxAge){
+  if(!state.selfIdentity||state.selfIdentity.char!==T.char||Date.now()-state.selfIdentity.t>maxAge){
    const r=await env.gameGet('/character');if(!active(T)||pending()||!r?.ok)return false;
    const j=await r.json();if(!active(T)||pending())return false;selfNote(j.character||j);
   }
   const I=state.selfIdentity;
-  if(I?.char===T.char&&(!state.self||state.self.id!==I.id||Date.now()-state.self.t>30000)){
+  if(I?.char===T.char&&(!state.self||state.self.id!==I.id||Date.now()-state.self.t>maxAge)){
    const c=await profileClan(I.id,I.name,T);if(!active(T)||pending())return false;
    if(c)state.self={...I,clanId:c.clanId,t:c.t};
   }
  }
+ return true;
+}
+// 20.13 (ревизия 17.10, шаг 5, pvp-misc/ENM-1): свой клан и клан игрока — и для обычного листа врагов (enemies.js), чтобы он не нападал
+// на соклановца. Клан меняется редко: своя запись живёт 10 мин, опрос — только когда враг из листа на локации.
+const SELF_MAX=10*60000;
+const selfClan=()=>{const S=state.self;return S&&S.char===env.rt.char&&Date.now()-S.t<SELF_MAX?S:null};
+async function selfRead(){const T=token();if(!active(T)||pending()||!env.gameGet)return null;try{await selfRefresh(T,SELF_MAX)}catch(_){return null}return active(T)?selfClan():null}
+async function heroClan(id,name){const T=token();if(!active(T)||pending()||!env.gameGet||!id)return null;return profileClan(String(id),String(name||''),T)}
+async function refresh(){
+ const T=token();if(!active(T)||pending())return false;
+ if(!(await selfRefresh(T)))return false;
  if(Date.now()-state.heroesT>=5000){
   const r=await env.gameGet('/game/map/around');if(!active(T)||pending()||!r?.ok)return false;
   const j=await r.json();if(!active(T)||pending())return false;
@@ -186,8 +219,10 @@ async function step(){
  const writing=env.setRt(patch); // setRt ядра меняет память синхронно; reserve и fire в одном JS task
  if(!valid()){const undo=env.setRt(old);await writing;await undo;return false}
  const fired=env.fire(b);const undo=fired===false?env.setRt(old):null;await writing;if(undo)await undo;
+ // 20.13 (шаг 5, PVP-1): три нажатия подряд без начала боя (ни ответа, ни отказа сервера) — пауза этой цели 2 мин
+ if(fired!==false){const n=(state.tries[id]||0)+1;state.tries[id]=n;if(n>=3){state.tries[id]=0;skipSet(id,2*60000,'три нажатия «напасть» без начала боя')}}
  if(fired!==false)env.rec('B','PvP',`Атаковать при встрече: ${p.t.name} — явно заданная цель, обычная оценка силы не ограничивает атаку`);
  return fired!==false;
 }
-return{onNet,capture,pending,recoveryStep,step,seedConfirmed,targets,exact,verdict,pick,refresh,rawHeroes,_state:state};
+return{selfClan,selfRead,heroClan,onNet,capture,pending,recoveryStep,step,seedConfirmed,targets,exact,verdict,pick,refresh,rawHeroes,_state:state};
 };})(globalThis);

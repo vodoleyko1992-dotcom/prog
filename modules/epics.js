@@ -756,7 +756,10 @@ async function epicStep() {
     if (await env.rbShopFirst(e.nm)) return;
     if (!active()) return;
     // 8.0.3 (ревью): платный набор разрешён только по свежему (≤3 мин) ответу сервера «жив» — спросим заранее (GET, бесплатно)
-    if (['warrior', 'mage'].includes(env.cfg.townBuffSet) && Math.floor(+env.cfg.epicCoinDailyMax || 0) >= TB_COL && !(now - ((env.rt.epicDb || {})[E.k]?.apiT || 0) < 2 * MIN)
+    // 20.13 (ревизия 17.10, шаг 5, EP-2): и фулл бафф за FA (epicFaFull) требует свежего «жив» — без опроса набор брался случайно
+    const paidSet = ['warrior', 'mage'].includes(env.cfg.townBuffSet) && Math.floor(+env.cfg.epicCoinDailyMax || 0) >= TB_COL;
+    const faSet = env.cfg.epicFaFull !== false && (env.faFullIds?.() || []).length > 0;
+    if ((paidSet || faSet) && !(now - ((env.rt.epicDb || {})[E.k]?.apiT || 0) < 2 * MIN)
       && !epicApiDown() && now - (env.rt.epicApiFail?.t || 0) > MIN) await epicApiScan('перед платным баффом');
     if (!active()) return;
     if (await env.townBuffStart(`перед эпиком ${e.nm}`, true)) return;

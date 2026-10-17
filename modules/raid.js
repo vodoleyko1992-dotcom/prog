@@ -508,7 +508,7 @@ async function rbNote(id, patch) {
   const victoryEvidence = won ? { at, char: env.rt.char, classKey: `${env.rt.classCur?.slot}:${env.rt.classCur?.prof}`,
     endingContext: rbContext(id)?.key || null, stableContext: patch.fightContext || null,
     targetMaxHp: rbStatsOf(id)?.hp || null, fightS: patch.fightS || null } : null;
-  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(/^убил героя/.test(patch.note || '') ? { deathAt: at } : {}), ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
+  await env.setRt({ rbDb: { ...(env.rt.rbDb || {}), [id]: { ...prev, ...patch, ...(/^убил героя/.test(patch.note || '') ? { deathAt: at, deathLog: [...(prev.deathLog || []).filter(x => at - x.t < 24 * 3600000), { t: at, lvl: env.heroLvl() || 0 }].slice(-5) } : {}), ...(won ? { lastWin: at, victoryEvidence } : {}), t: at, heroLvl: env.heroLvl(), zone: rbZoneNow() || prev.zone || null } },
     ...(won && env.cfg.rbHuntMode && !isEpicId(id) ? { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, rbRefuse: null } : {}) });
   if (won && env.payments?.pending()?.kind === 'raid-teleport') await paymentReconcile();
 }
@@ -642,11 +642,21 @@ function rbStatsGuess(id, lvl) {
 
 const rbSkipNotices = new Map();
 const preSkip = id => { const v = env.rt.rbPreSkip?.[id]; return typeof v === 'number' ? { t: v, kind: '' } : v && v.t ? v : { t: 0, kind: '' }; };   // 8.0: старый формат — число
+// 20.13 (ревизия 17.10, шаг 5, RB-5): фактические смерти (не прогноз) на одном РБ при том же уровне героя за сутки — пауза растёт:
+// 1 → 30 мин, 2 → 2 ч, 3+ → 6 ч. Новый уровень героя начинает счёт заново.
+function rbDeathsSameLvl(d, now = Date.now()) {
+  const L = env.heroLvl() || 0;
+  return (d?.deathLog || []).filter(x => now - x.t < 24 * 3600000 && (!L || !x.lvl || x.lvl === L)).length;
+}
+function rbDeathPauseMs(d, now = Date.now()) {
+  const n = rbDeathsSameLvl(d, now);
+  return n >= 3 ? 6 * 3600000 : n >= 2 ? 2 * 3600000 : 30 * 60000;
+}
 function rbPreSkipWhy(id) {
   const ps = preSkip(id);
   if (ordinaryLiveTour(id)) {
-    const d = env.rt.rbDb?.[id] || {}, death = d.deathAt || 0;
-    if (death > 0 && Date.now() - death < 30 * 60000) return 'недавняя подтверждённая смерть на этом РБ — пауза 30 мин';
+    const d = env.rt.rbDb?.[id] || {}, death = d.deathAt || 0, pause = rbDeathPauseMs(d);
+    if (death > 0 && Date.now() - death < pause) return pause > 30 * 60000 ? `${rbDeathsSameLvl(d)} подтверждённые смерти на этом РБ при текущем уровне — пауза ${Math.round(pause / 3600000)} ч` : 'недавняя подтверждённая смерть на этом РБ — пауза 30 мин';
     return ps.safety === true && Date.now() - ps.t < 30 * 60000 ? 'выход по фактической опасности — пауза 30 мин' : '';
   }
   if (now_() - ps.t >= 30 * 60000) return '';
@@ -933,26 +943,71 @@ async function rbGoStep() {                       // список РБ → ну�
 }
 
 const huntOn = () => !!env.cfg.rbHuntMode;
+// 20.13 (ревизия 17.10, шаг 5, RB-3): нехватка — когда известного баланса не хватает даже на самый дешёвый недостающий бафф
+// (то же условие, при котором buffs.faWanted отказывается идти к бафферу); FA, выпавшие с мобов после записи баланса, делают его
+// неизвестным (buffs.faBalOf). Баффы, которых нет у баффера/недоступны (rt.faGone, 6 ч), не ждём.
 function rbBuffShortage(now = Date.now()) {
-  if (!tourFaOn() || env.rt.faBal?.v !== 0 || now - env.rt.faBal.t >= 6 * 3600000) return 0;
-  const H = env.hudBuffs?.(), need = env.faFullIds?.() || [];
-  return H && need.filter(id => !H[id] || H[id] < now + 10 * 60000).length || 0;
+  if (!tourFaOn()) return 0;
+  const bal = typeof env.faBalOf === 'function' ? env.faBalOf(now) : env.rt.faBal && now - env.rt.faBal.t < 6 * 3600000 ? env.rt.faBal.v : null;
+  if (!Number.isFinite(bal)) return 0;
+  const H = env.hudBuffs?.(), gone = env.rt.faGone || {};
+  const need = (env.faFullIds?.() || []).filter(id => !(gone[id] && now - gone[id] < 6 * 3600000));
+  if (!H) return 0;
+  const miss = need.filter(id => !H[id] || H[id] < now + 10 * 60000);
+  if (!miss.length) return 0;
+  const cost = id => +(env.faCost?.(id)) || 1;
+  return bal < Math.min(...miss.map(cost)) ? miss.length : 0;
+}
+const faDropNow = () => Object.values(env.rt.faDrop?.f || {}).reduce((a, x) => a + (+x || 0), 0);
+// 20.13 (ревизия 17.10, шаг 5, RB-3): нет FA на выбранный набор — тур не летит (решение 10.0.21), но и бота целиком не ставит на паузу:
+// простой тура 10 мин (фарм/рыбалка/прочие задачи идут), раньше — если с мобов упали FA. Одна строка журнала раз в 10 мин.
+const RB_FA_WAIT_MS = 10 * 60000;
+let rbFaShortSaid = 0;
+async function rbFaShortIdle(name, missing) {
+  const H = env.rt.rbHunt || {};
+  if (H.step && H.step !== 'pick') await huntDone(H.id, `${name}: нет FA на выбранный бафф — к РБ не лечу`, false);
+  const at = Date.now();
+  await env.setRt({ rbHuntIdle: at + RB_FA_WAIT_MS, rbIdleN: 0, rbIdleMark: { lvl: env.heroLvl() || 0, pots: env.potModel?.()?.n || 0, t: at, sampleT: env.rt.rbDpsSample?.t || 0, kills: env.rt.rbKills || 0, adena: env.rt.adenaSeen?.v ?? null, faShort: true, faD: faDropNow() }, rbBuffWait: null });   // ревью: простой без FA не засчитывается в 15 мин ожидания баффера
+  if (at - rbFaShortSaid >= RB_FA_WAIT_MS) { rbFaShortSaid = at; env.rec('B', 'тур РБ', `нет FA для выбранного баффа (не хватает ${missing} эффектов) — тур ждёт 10 мин или новых FA с мобов; остальные задачи идут`); }
+  env.setStatus(`Тур РБ: нет FA для выбранного баффа (${missing}) — жду FA, остальные задачи идут`);
+}
+// 20.13 (ревизия 17.10, шаг 5, BF-1): баффер не даёт нужное (кнопка/набор игры изменились) — тур не стоит вечно.
+// Ждём одну цель не дольше 15 мин, затем идём без недостающих баффов (строка в журнал); через час — снова пробуем купить.
+const RB_BUFF_WAIT_MS = 15 * 60000;
+function rbBuffWaitOver(name, now = Date.now()) {
+  const W = env.rt.rbBuffWait;
+  return !!W && W.name === name && now - W.t >= RB_BUFF_WAIT_MS && now - W.t < 60 * 60000;
 }
 
 // 15.10, лог 14:20:58: townBuffStart(false) означает и «бафф уже есть», и «повтор через 40 с».
 // Перед платным перелётом и атакой отдельно проверяем, что отложенных баффов больше нет.
 async function rbBuffHold(name, active) {
-  if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
-  if (!active()) return true;
+  // 20.13 (ревизия 17.10, шаг 5, ревью): тайм-аут ожидания баффера не обходит проверки шапки и нехватки FA — иначе после 15 мин
+  // строгий тур летел без набора при FA = 0 (решение 10.0.21), а шаг go тут же возвращал pick («баффы изменились») — круг без простоя
+  const over = rbBuffWaitOver(name);
+  if (!over) {
+    if (await env.townBuffStart(`перед РБ ${name}`, true)) return true;
+    if (!active()) return true;
+  }
   if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs()) {
     env.setStatus(`Тур РБ: жду подтверждения баффов перед ${name}`);
     if (active()) await env.sleep(3000);
     return true;
   }
   const missing = rbBuffShortage();
-  if (missing) { await env.pauseBot(`Тур РБ: нет FA для выбранного баффа (не хватает ${missing} эффектов). Пополни FA и продолжи`); return true; }
+  if (missing) { await rbFaShortIdle(name, missing); return true; }
+  if (over) {
+    if (!env.rt.rbBuffWait.said) {
+      const names = (env.townBuffNeed?.()?.fa || []).map(id => env.IL?.[id]?.n || env.rt.faCat?.[id]?.name || `#${id}`).join(', ');
+      await env.setRt({ rbBuffWait: { ...env.rt.rbBuffWait, said: true } });
+      env.rec('B', 'тур РБ', `${name}: баффер ${Math.round(RB_BUFF_WAIT_MS / 60000)} мин не дал нужные баффы${names ? ` (${names})` : ''} — иду без них`);
+    }
+    return false;
+  }
   const need = env.townBuffNeed?.();
-  if (!need) return false;
+  if (!need) { if (env.rt.rbBuffWait) await env.setRt({ rbBuffWait: null }); return false; }
+  const W = env.rt.rbBuffWait;
+  if (!W || W.name !== name || Date.now() - W.t >= 60 * 60000) await env.setRt({ rbBuffWait: { name, t: Date.now() } });
   const names = (need.fa || []).map(id => env.IL?.[id]?.n || env.rt.faCat?.[id]?.name || `#${id}`).join(', ');
   const wait = Math.max(0, Math.ceil((Math.max(env.rt.tbWaitUntil || 0, env.rt.tbPauseUntil || 0) - Date.now()) / 1000));
   env.setStatus(`Тур РБ: жду баффера перед ${name}${names ? ` · нужны: ${names}` : ''}${wait ? ` · повтор через ${wait} с` : ''}`);
@@ -1174,7 +1229,7 @@ async function rbHuntStep() {
       return;
     }
     if (!active() || !sameJob()) return;
-    if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || env.townBuffNeed?.() || !rbSummonBuffReady())
+    if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || (env.townBuffNeed?.() && !rbBuffWaitOver(H.name)) || !rbSummonBuffReady())
       return huntDone(H.id, `${H.name}: баффы изменились перед перелётом — подготовлю снова`, false);
     const reason = rbTeleportCheck(H.id, g);
     if (reason || (env.cfg.rbValueTour && Date.now() - (env.rt.rbListT || 0) > 10 * 60000)) {
@@ -1296,7 +1351,8 @@ async function rbHuntStep() {
   }
   const early = !!idle && ((!!mark.lvl && !!plan.heroLvl && plan.heroLvl !== mark.lvl) || (env.potModel()?.n || 0) > (mark.pots || 0) || (env.rt.shopT || 0) > (mark.t || 0)
     || (env.rt.rbDpsSample?.t || 0) > (mark.sampleT || mark.t || 0) || (env.rt.rbKills || 0) > (mark.kills ?? env.rt.rbKills ?? 0)
-    || Number.isFinite(mark.adena) && Number.isFinite(env.rt.adenaSeen?.v) && env.rt.adenaSeen.v > mark.adena);
+    || Number.isFinite(mark.adena) && Number.isFinite(env.rt.adenaSeen?.v) && env.rt.adenaSeen.v > mark.adena
+    || !!mark.faShort && (faDropNow() > (mark.faD || 0) || (env.rt.faBal?.t || 0) > (mark.t || 0)));
   if (early && !refusalPause) {
     await env.setRt({ rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0, ...((!!mark.lvl && plan.heroLvl !== mark.lvl) ? { rbListT: 0 } : {}) });
     return;
@@ -1312,7 +1368,8 @@ async function rbHuntStep() {
     const revived = new Set(env.rbTimer?.revivedSince?.(mark.t || 0) || []);
     // Таймер обновляет отдельную строку, не дату полного чтения; после пробуждения устаревший список всё равно перечитается.
     const available = [...plan.ready, ...plan.blocked.filter(x => x.kind === 'stale').map(x => ({ id: x.id, ...env.rt.rbList[x.id] }))];
-    const hit = !refusalPause && available.find(x => !plan.stale || (x.t || 0) > (mark.t || 0) || revived.has(x.id));
+    const faWait = !!mark.faShort && faDropNow() <= (mark.faD || 0) && !((env.rt.faBal?.t || 0) > (mark.t || 0));   // 20.13 RB-3: ждём FA, а не живого РБ
+    const hit = !refusalPause && !faWait && available.find(x => !plan.stale || (x.t || 0) > (mark.t || 0) || revived.has(x.id));
     if (hit) {
       env.rec('B', 'тур РБ', `${hit.name} (${hit.lvl}) доступен — заканчиваю простой`);
       await env.setRt({ rbHuntIdle: 0, rbIdleN: 0, rbIdleMark: null, rbRefuse: null }); return;
@@ -1814,7 +1871,7 @@ async function rbAbort(ctx, mob, why) {
 // расходники и бить дальше того же РБ»): в бою закупки нет никогда. Проверка — только между боями: перед следующим РБ
 // и при отходе от РБ; раз уж идём в магазин — докупаем всё до максимума (force), недобитый РБ после магазина — первым (rbWounded)
 async function rbShopFirst(label, retreat) {
-  if (!env.cfg.shopAuto || env.rt.shop || Date.now() - (env.rt.shopT || 0) < 600000) return false;
+  if (!env.cfg.shopAuto || env.rt.shop || Date.now() - (env.rt.shopT || 0) < (env.shopGap?.() ?? 600000)) return false;   // 20.13 (шаг 5, ECO-1)
   const [mn] = env.pair(env.cfg.shopHp, '300/1000'), n = env.hpPotStock();
   const low = (env.shopNeedByPanel?.() || '').split(', ').filter(Boolean);
   if (mn && n != null && n < mn && !low.some(x => /^банки HP/.test(x))) low.unshift(`банки HP ${n} < ${mn}`);
@@ -1823,6 +1880,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, now_, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

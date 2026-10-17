@@ -104,7 +104,7 @@ async function netSpawns(list) {
   for (const [id, k, name, lvl, , tr, mh, ex] of list) {
     if (!id) continue;
     if (k) kind[id] = k;
-    if (k === 'champion') { tier[id] = tr || (/^champ_r_/i.test(id) ? 'red' : /^champ_o_/i.test(id) ? 'orange' : champTier(id)); if (mh > 0) hp[id] = mh; if (ex > 0) exp[id] = ex; }
+    if (k === 'champion') { const t = tr || (/^champ_r_/i.test(id) ? 'red' : /^champ_o_/i.test(id) ? 'orange' : champTier(id, null, '')); if (t) tier[id] = t; if (mh > 0) hp[id] = mh; if (ex > 0) exp[id] = ex; }   // 20.13 (шаг 5, farm/MF-2): неизвестный цвет не подставляем «синим» — решение за tierOff
     if (name && !env.isRaidId(id) && (!sp[id] || sp[id][0] !== name || sp[id][1] !== lvl)) { sp[id] = [name, lvl]; added++; }
   }
   env.NET_SPAWNS = { t: Date.now(), kind, tier, hp, exp };
@@ -224,7 +224,7 @@ async function nextFight(ctx) {
   // v5.2.2: в «Туре РБ» проверка расходников раньше не доходила (выход на карту стоял выше) — банки не докупались
   // 20.12 (ревизия 17.10, аудит PAY-1): при неизвестной оплате после победы не уходим в магазин/телепорт — цепочка продолжается.
   const payHold = !!env.paymentHold?.();
-  if (!payHold && env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > 600000) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
+  if (!payHold && env.huntOn() && env.cfg.shopAuto && !env.rt.shop && Date.now() - (env.rt.shopT || 0) > (env.shopGap?.() ?? 600000)) { const low0 = env.shopNeedByPanel(); if (low0) { await env.shopStart(`${low0} — докупаю всё, пока не в бою`, true); location.href = '/char.html'; await env.sleep(4000); return; } }
   // 10.0 (аудит фарма): тур «лечится на мобах» (HP < порога перед РБ) — цепочкой (≈5 с на моба), а не через карту после каждого боя (≈11 с)
   const healing = (env.rt.rbHunt?.phase === 'prepare' || env.rt.rbHunt?.last === 'лечусь на мобах') && (env.meHp?.()?.pct ?? 100) < (env.cfg.rbRestHp ?? 95);
   if (env.huntOn() && !((env.rt.rbHuntIdle || 0) > Date.now()) && !healing) return env.toMap();
@@ -238,9 +238,10 @@ async function nextFight(ctx) {
   if (!ctx?.rb && await env.townBuffStart('баффы кончились')) return;            // городской бафф слетел (смерть/24 ч)
   if (env.autonomyMode() === 'enchant') return env.toMap();
   const since = Date.now() - (env.rt.shopT || 0);
-  const low = since > 600000 ? env.shopNeedByPanel() : '';
+  const shopGap = env.shopGap?.() ?? 600000;   // 20.13 (ревизия 17.10, шаг 5, ECO-1): пауза растёт, если купить было нечего
+  const low = since > shopGap ? env.shopNeedByPanel() : '';
   const plan = env.cfg.shopAuto ? env.shopPlan() : [];
-  let oreDue = env.cfg.shopAuto && plan.some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > 3600000;
+  let oreDue = env.cfg.shopAuto && plan.some(x => ['spirit', 'soul', 'bait'].includes(x.key)) && since > Math.max(3600000, shopGap);
   // 8.0 (аудит фарма B4): сумка из ответов сервера свежая (< 5 мин, env.invQty) и всё из плана закупки не ниже минимума —
   // плановый поход в инвентарь (≈10–15 с раз в час) ничего не купит, пропускаем. Не пропускаем, если идут «Квесты на ресурсы»
   // (прогресс берётся из пересчёта сумки) или полный пересчёт сумки старше 5 ч (по нему оценивается запас банок перед РБ)
@@ -444,6 +445,17 @@ async function mapReady(timeout = 30000, label = '') {   // список моб�
 // локации, где его открыли, и открытое без автофарма при автофарме не действует (тот сам летит в зону своего уровня)
 const relaxOk = r => !!r && Date.now() - (r.t || 0) < 20 * 60000 && (r.zone || null) === (env.rt.zone || null) && (!env.cfg.zoneAuto || !!r.auto);
 let farRecT = 0, lowRecT = 0, idleT0 = 0, idleRecT = 0, idleN = 0;   // 10.0.10: простой «Целей нет» — с какого момента, когда писали в журнал, проходов карты подряд
+// 20.13 (ревизия 17.10, шаг 5, farm/MF-1): простой «Целей нет» кончается переходом на /map.html — контент-скрипт создаётся заново, и счётчики
+// выше обнулялись: пауза 15 → 60 → 180 с не росла, причина простоя в журнал не попадала (≈200 перезагрузок/ч молча). Теперь счётчики
+// переживают перезагрузку вкладки в sessionStorage; запись старше 10 мин (бот стоял/работал другим) не продолжается
+const IDLE_KEY = 'l2bot.mapIdle';
+function idleLoad() {
+  if (idleT0) return;
+  try { const s = JSON.parse(sessionStorage.getItem(IDLE_KEY) || 'null');
+    if (s && Date.now() - (+s.at || 0) < 600000) { idleT0 = +s.t0 || 0; idleN = +s.n || 0; idleRecT = +s.recT || 0; } } catch (e) {}
+}
+function idleSave() { try { sessionStorage.setItem(IDLE_KEY, JSON.stringify({ t0: idleT0, n: idleN, recT: idleRecT, at: Date.now() })); } catch (e) {} }
+function idleClear() { try { sessionStorage.removeItem(IDLE_KEY); } catch (e) {} }
 const skipRecT = {};
 function cancelSkip(r, cr) {                        // в журнал — раз в 10 мин на вид
   const k = 'снятие:' + (r.champ ? 'ч:' : '') + String(r.name || '').toLowerCase();
@@ -981,6 +993,7 @@ async function map() {
     // 10.0.10 (лог 13.10 19:44–20:56, alt1 19 ур.): 72 мин подряд «Целей нет, обновлю карту через 15 с» — все мобы рядом были «не по зубам»
     // (урон атаки ≈1 после конца «Бонуса новичка») или ниже героя −5, подбор локации выключен, бот молчал (242 перезагрузки карты).
     // Теперь пауза растёт (15 с → 60 с → 3 мин), а через 3 мин простоя и дальше раз в 10 мин — в журнал причина и что сделать
+    idleLoad();                                    // 20.13 (шаг 5, farm/MF-1): счётчики с прошлой загрузки карты
     idleN++;
     const wait = idleN <= 3 ? 15 : idleN <= 8 ? 60 : 180;
     if (!idleT0) idleT0 = Date.now();
@@ -995,6 +1008,7 @@ async function map() {
         + (atk && atk <= 5 ? ` · обычная атака ≈${atk.toFixed(0)} урона за удар — герой почти не пробивает (кончился «Бонус новичка» / слабое или снятое оружие): нужны оружие по уровню и заряды, пока — мобы слабее или другая зона` : '')
         + ` · проверяю карту раз в ${wait} с`);
     }
+    idleSave();
     env.setStatus(`Целей нет, обновлю карту через ${wait} с`);
     for (let i = 0; i < wait && env.on && !env.rt.shop?.urgent; i++) await env.sleep(1000);
     if (env.on) { location.href = '/map.html'; await env.sleep(5000); }
@@ -1002,6 +1016,7 @@ async function map() {
   }
 
   idleT0 = 0; idleN = 0;                         // 10.0.10: цели есть — простой кончился
+  idleRecT = 0; idleClear();                     // 20.13 (шаг 5, farm/MF-1): и сохранённый между перезагрузками счётчик
   // цель могла погибнуть/сдвинуться — пробуем до 5 лучших
   for (const c of cands.slice(0, 5)) {
     if (await attackSpawn(c, c => `Цель: ${c.name || 'чемпион'} (${c.lvl || '?'})${env.tags(c)} · приоритет ${c.rank + 1} · стр. ${pagerInfo()?.cur}`)) return;

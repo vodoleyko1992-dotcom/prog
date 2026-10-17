@@ -17,7 +17,8 @@ assert.equal(wdPlan({ quiet: 200000, recent: [now - 6 * 60000, now - 7 * 60000, 
 // проводка в обработчике будильника
 assert.match(bg, /const server = await srvProbe\(origin\);[\s\S]*const plan = wdPlan\(\{ quiet, recent, fish: fishMode, srv: server, downLast: wdDown\?\.last \|\| 0, wasDown: !!wdDown, now \}\);/);
 assert.match(bg, /if \(plan\.down\) \{[\s\S]{0,900}chrome\.tabs\.reload\(hb\.tab\)[\s\S]{0,60}return;\s+\}\s+if \(plan\.back\)/);
-assert.match(bg, /if \(quiet < 150000\) \{ if \(wdDown\) await chrome\.storage\.local\.set\(\{ wdDown: null \}\); return; \}/);
+// 20.13 (шаг 5, core-b/F4): здоровый пульс снимает wdDown и (после ≥3 мин работы) счётчик перезагрузок
+assert.match(bg, /if \(quiet < 150000\) \{[\s\S]{0,400}\.\.\.\(wdDown \? \{ wdDown: null \} : \{\}\)[\s\S]{0,200}await chrome\.storage\.local\.set\(patch\);\s+return;\s+\}/);
 assert.match(bg, /fetch\(origin \+ '\/game\/time', \{ cache: 'no-store', credentials: 'include', signal: c\.signal \}\); return r\.status < 500 && !\(r\.status === 200 && !\/json\/i\.test/);   // 8.0: 200 + HTML = техработы
 // 2. вкладка: раз в 10 с спрашивает сервер и перезагружается сразу, как он ответил
 assert.match(content, /if \(Date\.now\(\) - probeT >= 10000\) \{ probeT = Date\.now\(\); const up = await srvUp\(\); if \(!automationCurrent\(stamp\)\) return; if \(up\) \{ rec\('S', 'сервер', `сервер снова отвечает/);

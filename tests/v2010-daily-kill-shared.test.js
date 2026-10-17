@@ -3,28 +3,35 @@
 // один дневной лимит мобов dailyKillLimit на автофарм и катакомбы, миграция dailyKill2010, остаток в меню.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engine-core.js');
+// 20.13 (шаг 5): проверки идут на часах фикстуры — после 14:00 UTC 17.10 реальное Date.now() уже следующие сутки UTC+10 (тест падал по времени).
+const T0=Date.parse('2026-10-17T13:59:30Z');
 function fixture(task='auto'){
  let now=Date.parse('2026-10-17T13:59:00Z');
+ Date.now=()=>now;   // 20.13 (шаг 5): engine-core в тесте брал настоящие часы — после 14:00 UTC 17.10 (полночь UTC+10) тест падал; часы теста везде одни
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
+ globalThis.Date=Clock;   // 20.13: engine-core считает игровой день по общему Date — после 14:00 UTC 17.10 реальные часы уводили тест на другой день
  const source=read('tests/v208-farm-kill-quota.test.js'),c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,Date:Clock,URL,URLSearchParams,structuredClone,console};
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);
  const f=c.fixture(task);f.state.cfg.autoKillLimit=0;f.state.cfg.catKillLimit=0;f.state.cfg.dailyKillLimit=5;f.state.cfg.autoTasks=['cat','auto','dailies'];f.state.cfg.catMode=true;f.refresh();
  f.advance=()=>{now+=120000;f.state.lock.t=now;};
+ // 20.13 (ревизия 17.10, шаг 5): engine-core здесь загружен через require и брал настоящий Date.now — после 14:00 UTC
+ // (00:00 UTC+10) день счётчика расходился с часами фикстуры и тест падал. Часы движка = часы фикстуры.
+ Date.now=()=>now;
  return f;
 }
 test('убийства автофарма и катакомб складываются в один дневной лимит; достигнут — ждут обе охоты, остальные задачи идут',async()=>{
  const f=fixture('cat');let t=await f.begin();f.grow(3);assert.equal(await f.win(t),false);   // 3/5 — лимит не достигнут
- assert.equal(f.state.rt.dailyQuota.cat,3);assert.equal(engine.dailyCount(f.state.rt,'auto',Date.now()),3);
- assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto'),false);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat'),false);
+ assert.equal(f.state.rt.dailyQuota.cat,3);assert.equal(engine.dailyCount(f.state.rt,'auto',T0),3);
+ assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto',T0),false);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat',T0),false);
  f.state.rt.dailyQuota.auto=2;f.refresh();   // ещё 2 моба на автофарме → 5/5
- assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat'),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto'),true);
- assert.equal(engine.selectedTask(f.state.cfg,f.state.rt),'tasks');assert.equal(f.state.on,true);assert.deepEqual(f.state.cfg.autoTasks,['cat','auto','dailies']);
+ assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat',T0),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto',T0),true);
+ assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,T0),'tasks');assert.equal(f.state.on,true);assert.deepEqual(f.state.cfg.autoTasks,['cat','auto','dailies']);
  f.advance();assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T14:01:00Z')),'cat');
 });
 test('итог боя ставит dailyDone по сумме: катакомбы 4 + автофарм 1 = 5/5, обе охоты остаются выбранными',async()=>{
  const f=fixture('cat');f.state.rt.dailyQuota={day:'2026-10-17',auto:4,cat:0,fish:0};f.refresh();
  const t=await f.begin();f.grow(1);assert.equal(await f.win(t),true);
- assert.equal(f.state.rt.dailyQuota.cat,1);assert.equal(f.state.rt.dailyQuota.auto,4);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto'),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat'),true);
+ assert.equal(f.state.rt.dailyQuota.cat,1);assert.equal(f.state.rt.dailyQuota.auto,4);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto',T0),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat',T0),true);
  assert.deepEqual(f.state.cfg.autoTasks,['cat','auto','dailies']);assert.equal(f.state.cfg.catMode,true);assert.equal(f.state.on,true);
 });
 test('сброс «за сегодня» обнуляет оба счётчика мобов и не трогает рыбу',async()=>{

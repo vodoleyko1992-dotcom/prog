@@ -56,7 +56,10 @@ async function lockCommand(m, sender) {
     if (changed) await noteAlive(tab, m.page || '');
     // 8.0 (аудит ядра): режим экономии памяти Chrome может выгрузить фоновую вкладку — вкладку бота не выгружать
     if (changed) try { await chrome.tabs.update(tab, { autoDiscardable: false }); } catch (e) {}
-    return { ok: true, key, epoch, changed };
+    // 20.13 (шаг 5, core-b/F6): тот же документ вернул свой же (только протухший) замок — между продлениями хозяина не было,
+    // вкладка может дописать свою очередь записей, а не выбрасывать её
+    const resumed = !!(mine && m.epoch && lock?.epoch === m.epoch);
+    return { ok: true, key, epoch, changed, resumed };
   });
 }
 // A single process owns read/merge/write of runtime patches. Content pages
@@ -330,14 +333,23 @@ async function botControl(m, sender) {
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
     const state = await chrome.storage.local.get(['on', 'lock', 'rt']);
-    if (!popup) {
-      if (String(m.char || '') !== String(state.rt?.char || '') || m.kick != null && m.kick !== (state.rt?.manualKickAt || 0)) return { ok: false, reason: 'character_changed' };
+    // 20.13 (ревизия 17.10, шаг 5, core-b/F3): (а) Esc ×2 — настоящая клавиша игрока (content проверил isTrusted) на любой вкладке игры:
+    // это та же ручная остановка, что из меню; раньше вкладка без замка получала ownership_lost и бот продолжал работать в другой вкладке.
+    // (б) «жёсткий» стоп самого бота (ошибка программы повторилась, 3 восстановления, аккаунт заблокирован) больше не отклоняется из-за нового
+    // manualKickAt или протухшего замка — иначе после kick/F5 бот снова запускался. Отказ остаётся только если замок у другой живой вкладки.
+    const user = !popup && m.user === true && m.action === 'stop';
+    if (!popup && !user) {
+      if (String(m.char || '') !== String(state.rt?.char || '')) return { ok: false, reason: 'character_changed' };
+      if (!m.hard && m.kick != null && m.kick !== (state.rt?.manualKickAt || 0)) return { ok: false, reason: 'character_changed' };
       if (!state.on) return { ok: true };
-      if (state.lock?.k !== 'tab' + sender.tab.id || !m.epoch || state.lock.epoch !== m.epoch || Date.now() - state.lock.t >= LOCK_TTL) return { ok: false, reason: 'ownership_lost' };
+      if (m.hard) {
+        if (state.lock && state.lock.k !== 'tab' + sender.tab.id && Date.now() - state.lock.t < LOCK_TTL) return { ok: false, reason: 'ownership_lost' };
+      } else if (state.lock?.k !== 'tab' + sender.tab.id || !m.epoch || state.lock.epoch !== m.epoch || Date.now() - state.lock.t >= LOCK_TTL) return { ok: false, reason: 'ownership_lost' };
     }
+    if (user && !state.on) return { ok: true };
     const now = Date.now(), reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240);
     await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null,
-      stopMeta: { source: String(m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
+      stopMeta: { source: String(user ? 'content-user' : m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
     return { ok: true };
   });
 }
@@ -785,7 +797,12 @@ chrome.alarms?.onAlarm.addListener(async a => {
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
       if (!state.on || !Number.isInteger(hb?.tab) || state.lock?.k !== 'tab' + hb.tab) return null;
       const quiet = Date.now() - hb.t, wdDown = state.wdDown;
-      if (quiet < 150000) { if (wdDown) await chrome.storage.local.set({ wdDown: null }); return; }
+      if (quiet < 150000) {
+        // 20.13 (шаг 5, core-b/F4): после перезагрузки бот снова пульсирует ≥3 мин — перезагрузка помогла, счётчик «3 за 20 мин» сбрасываем
+        const healed = wdHealed(state.wdog, hb.t), patch = { ...(wdDown ? { wdDown: null } : {}), ...(healed ? { wdog: [] } : {}) };
+        if (Object.keys(patch).length) await chrome.storage.local.set(patch);
+        return;
+      }
       return state;
     });
     if (!before) return;
@@ -866,6 +883,14 @@ chrome.alarms?.onAlarm.addListener(async a => {
   finally { watchdogRunning = false; }
 });
 
+// 20.13 (ревизия 17.10, шаг 5, core-b/F4): Chrome Energy/Memory Saver или игра подвешивали скрытую вкладку раз в несколько минут —
+// каждая перезагрузка возвращала работу, но третья за 20 мин выключала бота на всю ночь. Перезагрузка, после которой пульс шёл ещё
+// ≥ 3 мин, считается удачной и из счётчика уходит; стоп остаётся для перезагрузок подряд, которые не помогли.
+const WD_HEAL_MS = 180000;
+function wdHealed(wdog, hbT) {
+  if (!Array.isArray(wdog) || !wdog.length || !Number.isFinite(hbT)) return false;
+  return hbT - Math.max(...wdog) >= WD_HEAL_MS;
+}
 // Release immediately when the owning tab is closed (no 90-second stale lock).
 chrome.tabs.onRemoved.addListener(tabId => {
   serializeLock(async () => {
