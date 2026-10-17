@@ -2515,7 +2515,12 @@ $('rbtFile').onchange = async e => {
 };
 // 20.12 (ревизия 17.10, UI-4): белый список импорта — ключи умолчаний меню (DEF) и ядра, которых нет в DEF; тип должен совпадать.
 // Однократные флаги миграций, служебные и чужие ключи не импортируются.
-const CFG_IMPORT_EXTRA = { dockMin: 'boolean', potSlotAuto: 'boolean', weaponClassPick: 'boolean', weaponScanAuto: 'boolean', rbExpValue: 'number', rbPotCost: 'number', rbHuntMode: 'boolean', rbBetween: 'boolean' };
+// 20.12 (ревизия 17.10, ревью импорта): ключи, которые читают content.js/модули, но которых нет в DEF меню. Без них импорт
+// молча отбрасывал выбор игрока: «⬇ С самых сильных» (rbOrder) и скрытые настройки, записанные руками в файл настроек.
+// Тест v2012-cfg-import-keys сверяет список со всеми cfg.X в коде — новый ключ без типа здесь уронит тест.
+const CFG_IMPORT_EXTRA = { dockMin: 'boolean', potSlotAuto: 'boolean', weaponClassPick: 'boolean', weaponScanAuto: 'boolean', rbExpValue: 'number', rbPotCost: 'number', rbHuntMode: 'boolean', rbBetween: 'boolean',
+  rbOrder: 'string', champNoCancel: 'boolean', farmHere: 'boolean', fishAutoSetup: 'boolean', fishRodBuy: 'boolean', mageEcoPct: 'number', mageMpPct: 'number',
+  mageProbe: 'boolean', magisterSkip: 'string', magisterSpReserve: 'number', rbDeathPenalty: 'number', rbVampHp: 'number' };
 const CFG_MONEY = ['shopReserve', 'shopMaxSpend', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicAdenaDailyMax', 'mmTpMax', 'storyTpMax', 'petFullBudget', 'petFullMaxPrice', 'petFullReserve', 'enchant'];
 function cfgImportClean(src) {
   const clean = {}, skipped = [];
