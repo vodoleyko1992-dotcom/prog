@@ -97,3 +97,15 @@ test('C7: словарь навыков берётся один раз на фу
  assert.match(combat,/const skillView = \(\) => env\.damageSkills \|\| env\.rt\.skills;/);
  assert.doesNotMatch(combat,/const spikeFar|spikeFar \?/);
 });
+
+// ---------- разрез battle на шаги: порядок проверок круга прежний ----------
+test('battle: шаги круга вызываются в прежнем порядке, сторожа и банки — между ними на своих местах',()=>{
+ const b=combat.slice(combat.indexOf('async function battle() {'),combat.indexOf('  // ---------- шаги круга боя'));
+ const order=['epicRetreatWait(','const me = env.meHp()','{ const g = env.actNet?.().gone;','{ const an = env.actNet?.(), hangMs','mainTargetDead(','emergencyBuffStep(','champFleeStep(',
+  'if (ctx.rb && me && mob && !ctx.rb.retreated)','if (me && me.pct <= Math.max(env.cfg.stopHp, 25))','ctx.emWait = 0;','exitCheckStep(','stallStep(','await env.keepShots();','petStep(','healStep(',
+  'let potAt = env.cfg.hpPotAt;','const hpPot = me && me.pct <= potAt','mpPotStep(','petBuffStep(','buffStep(','debuffStep(','strikeStep(','idleStep(','await env.sleep(100);','return battleWin('];
+ let at=-1;for(const m of order){const i=b.indexOf(m,at+1);assert.ok(i>at,'порядок: '+m);at=i;}
+ for(const n of ['epicRetreatWait','mainTargetDead','emergencyBuffStep','champFleeStep','exitCheckStep','stallStep','petStep','healStep','mpPotStep','petBuffStep','buffStep','debuffStep','strikeStep','idleStep'])
+  assert.match(combat,new RegExp('\\n  async function '+n+'\\('),n);
+ assert.match(combat,/\nasync function battleOpen\(\) \{/);assert.match(combat,/\nasync function battleWin\(ctx, t0, spawnId, strength, countExtras\) \{/);
+});
