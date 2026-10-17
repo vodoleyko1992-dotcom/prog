@@ -1322,7 +1322,7 @@ chrome.storage.local.get('auth').then(({ auth }) => {
 $('authSave').onclick = async () => {
   const login = $('authLogin').value.trim(), pass = $('authPass').value;
   const { auth = {} } = await chrome.storage.local.get('auth');
-  await chrome.storage.local.set({ auth: { login, pass: pass || auth.pass || '' } });
+  await chrome.storage.local.set({ auth: { login, pass: pass || auth.pass || '', t: Date.now() } });   // 20.13 (шаг 7, core-a/M7): t — новый пароль снимает паузу автовхода
   $('authPass').value = ''; $('authPass').placeholder = '•••••• (сохранён)';
   $('authNote').textContent = '✅ Сохранено. ' + ($('authNote').dataset.base || '');
 };
@@ -2437,7 +2437,7 @@ $('recDom').onclick = async () => {
   } catch { toast('⚠ Откройте вкладку l2wap.com'); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
+const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
   const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память
@@ -2619,7 +2619,7 @@ confirmClick('recClear', async () => {                // удалить весь
   const db = await idb();
   const tx = db.transaction(['log', 'snaps', 'shots'], 'readwrite');   // v5.6: и скриншоты
   tx.objectStore('log').clear(); tx.objectStore('snaps').clear(); tx.objectStore('shots').clear();
-  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, exLogKey: null, exSnapT: 0 }); load(); };
+  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);

@@ -3429,10 +3429,20 @@ async function autoLogin() {
     return;
   }
   const now = Date.now(), tries = (rt.loginTries || []).filter(t => now - t < 600000);
+  // 20.13 (ревизия 17.10, шаг 7, аудит core-a/M7): при неверном пароле серии «3 попытки за 10 мин, 2 мин пауза» шли без конца
+  // (≈18 попыток в час — сервер мог принять за подбор). Игра 3 раза подряд ответила «неверный логин/пароль» — автовход стоит
+  // 6 ч или до нового пароля в меню (auth.t); бот ждёт, игрока зовём уведомлением
+  const off = rt.loginOff;
+  if (off && now - (+off.t || 0) < LOGIN_OFF_MS && (+off.authT || 0) === (+auth.t || 0)) {
+    await idle(120000, 'Автовход приостановлен: игра 3 раза подряд ответила «неверный логин или пароль» — войдите вручную или сохраните новый пароль (меню → Журнал → 🔐 Автовход)'); return;
+  }
   if (tries.length >= 3) { await idle(120000, 'Автовход: 3 попытки за 10 мин не удались — жду (проверьте логин/пароль)'); return; }
+  const shownPw = () => [...document.querySelectorAll('input[type="password"]')].find(shown);
+  if (!shownPw()) return;                          // 20.13 (M7): форма успела перерисоваться — попытку не тратим, круг повторит
   await setRt({ loginTries: [...tries, now] });
   if (!automationCurrent(stamp)) return;
-  const pw = [...document.querySelectorAll('input[type="password"]')].find(shown);
+  const pw = shownPw();
+  if (!pw) return;                                 // 20.13 (M7): раньше pw.closest на исчезнувшем поле — TypeError → «ошибка программы»
   const form = pw.closest('form') || document;
   const user = [...form.querySelectorAll('input:not([type]), input[type="text"], input[type="email"]')].filter(shown)
     .find(i => i.compareDocumentPosition(pw) & Node.DOCUMENT_POSITION_FOLLOWING) || [...document.querySelectorAll('input[type="text"], input:not([type])')].find(shown);
@@ -3458,16 +3468,28 @@ async function autoLogin() {
   if (accountLoginBlocked()) return stopBlockedLogin();
   if (ok && !loginPage()) {
     rec('S', 'вход', 'вход выполнен — продолжаю');
-    await setRt({ loginTries: [] });
+    await setRt({ loginTries: [], loginBad: 0, loginOff: null });   // 20.13 (M7): вход удался — счёт неверных паролей с нуля
     await sleep(2000);
     if (!automationCurrent(stamp)) return;
     if (!$q('#l2-hud-legacy-name')) { (L2V7Modules.actions?.canAct?.() !== false && (location.href = fishNow() ? '/fishing.html' : '/map.html')); await sleep(6000); }
   } else {
     const err = [...document.querySelectorAll('[class*="error"], [class*="err"], [role="alert"]')].filter(shown).map(e => e.textContent.trim()).filter(Boolean).join(' ').slice(0, 120);
     rec('S', 'вход', `не удалось войти${err ? ': ' + err : ''}`);
+    // 20.13 (M7): «неверный логин/пароль» подряд — считаем; на третьем автовход встаёт (см. выше), прочие ошибки счёт не трогают
+    if (LOGIN_BAD_RE.test(err)) {
+      const bad = (+rt.loginBad || 0) + 1;
+      if (bad >= 3) {
+        await setRt({ loginBad: 0, loginOff: { t: Date.now(), authT: +auth.t || 0 } });
+        rec('S', 'вход', 'неверный логин/пароль 3 раза подряд — автовход приостановлен на 6 ч (или до нового пароля в меню)');
+        sendAlert('login', 'L2wap Bot: автовход приостановлен', 'Игра 3 раза подряд ответила «неверный логин или пароль». Войдите вручную или сохраните новый пароль в меню бота.', true);
+      } else await setRt({ loginBad: bad });
+    }
     await sleep(5000);
   }
 }
+// 20.13 (ревизия 17.10, шаг 7, core-a/M7): ответ игры «неверный логин/пароль» (RU/UA/EN) и пауза автовхода после 3 таких подряд
+const LOGIN_BAD_RE = /невер|невір|неправил|помилков|ошибочн|wrong|invalid|incorrect/i;
+const LOGIN_OFF_MS = 6 * 3600000;
 
 // ---------- сервер игры недоступен (страница ошибки Cloudflare: «502: Bad gateway», 503, 504, 52x) ----------
 // Бот не останавливается: каждые 10 с пробует открыть игру снова (журнал — только начало и конец простоя).
@@ -4036,6 +4058,12 @@ const PRIVATE = /chat|mail|forum|support/i;
 // их можно записывать и разбирать в базу. Темы, новости и личные разделы форума по-прежнему приватны
 const FORUM_REF = /\/forum-(recipe-hunt|farm-resources|world-events|drop|spoil|craft|recipes?|resources?|guide|db|wiki|raid|rb|boss|epic|bosses)[\w-]*\.html/i;
 const isPrivate = () => (PRIVATE.test(location.pathname) && !FORUM_REF.test(location.pathname)) || loginPage();
+// 20.13 (ревизия 17.10, шаг 7, core-b/F12): приватные запросы для сетевого журнала — сегмент пути chat/mail/message(s)/support
+// (как PRIVATE для страниц, без форума: справочники форума бот разбирает) и полученные передачи (ники отправителей).
+// /game/item-transfer/claim — не приватен: по нему видно, что бот забрал возврат крафтера
+const PRIVATE_NET = /^(?:chat|mail|messages?|support)(?:[-_.]|$)/i;
+const privateNet = path => { const p = String(path || '').split('?')[0]; if (/^\/game\/item-transfer\/claim$/i.test(p)) return false;
+  return /^\/game\/item-transfer\/received/i.test(p) || p.split('/').some(seg => PRIVATE_NET.test(seg)); };
 const fmtS = x => x ? `${x.cur}/${x.max}` : '';
 function snapLite() {
   const mob = isBattle() ? mobHp() : null;
@@ -4386,6 +4414,12 @@ addEventListener('message', e => {
   GAME_ALERT = { t: Date.now(), text: String(e.data.text || '').slice(0, 300), path: String(e.data.path || '') };
   rec('B', 'игра', `окно игры (${GAME_ALERT.path}): ${GAME_ALERT.text.slice(0, 160)}`);
 });
+// 20.13 (ревизия 17.10, шаг 7, аудит core-b/F11): hook.js глушит alert() катакомб/Маммона только при метке data-l2bot-on на <html>.
+// Метку держим по флагу on (раз в 0,5 с и сразу при загрузке); бот остановлен — игрок видит окно игры как обычно
+function onMark() {
+  try { const h = document.documentElement; if (!h?.dataset) return; if (on) { if (h.dataset.l2botOn !== '1') h.dataset.l2botOn = '1'; } else if ('l2botOn' in h.dataset) delete h.dataset.l2botOn; } catch (e) {}
+}
+setInterval(onMark, 500);
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
 // его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
 const GAME_REQ = new Map(); let GAME_END = 0;
@@ -4727,8 +4761,11 @@ addEventListener('message', e => {
   netSeen.set(key, { h, t: now });
   if (netSeen.size > 500) netSeen.delete(netSeen.keys().next().value);
   const st = d.error ? `ошибка: ${d.error}` : d.status;
-  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
-    { data: { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
+  // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F12): почта, чат, личные сообщения, поддержка и полученные передачи — тексты и ники
+  // других игроков; в журнал только метод, путь, статус, время и размер (как клики на приватных страницах)
+  const priv = privateNet(path);
+  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret && !priv ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
+    { data: priv ? { q: '(приватно)' } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
 });
 // сообщения игры: тосты, ошибки, результаты действий — всё, что всплывает на экране
 const GAME_MSG_SEL = '[role="alert"], [aria-live], [class*="toast"], [class*="notice"], [class*="notify"], [class*="-msg"], [class*="result"], [class*="error"], [class*="success"]';
@@ -6214,6 +6251,9 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   }
   const C = k => (k in cf ? cf[k] : L2EngineCore.rawTaskConfig(cfg)[k]);
   // 7.1.30: флаг и в cfg — иначе при смене персонажа (rt новый) все разовые правки настроек применялись заново
+  // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F10): тело once() пишет только в rf/cf. Прямой setRt/setCfg внутри уходил в очередь,
+  // которую main() очищал при захвате замка (бот включён при загрузке страницы), а флаг миграции сохранялся — данные терялись навсегда.
+  // rf/cf ниже идут в deferredMigrations и пишутся после замка. Тест v2013-core-main-steps следит, что setRt/setCfg в once() нет.
   const once = (flag, fn) => { if (!rt[flag] && !rf[flag] && !cfg[flag] && !cf[flag]) { rf[flag] = 1; cf[flag] = 1; fn(); } };
   // v3.5: Focused Force / Hurricane Assault попали в «силовые» (автороли v3.3) — убираем, у них свои роли
   if (names(cfg.nPower || '').some(n => isChargeName(n) || isForceName(n)))
@@ -6352,7 +6392,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // 10.0.7 (лог 13.10 13:03–13:12): эти чемпионы снимали баффы (50 строк «зняв з вас N бафи») — в память снятий сразу, чтобы не учиться заново
   // 15.10: решение игрока — оранжевые только при окупаемости; красные остаются запрещены.
   once('orangeValue1017', () => Object.assign(cf, { champOrange: true, champRed: false, champCancel: 'efficiency' }));
-  once('cancel1007', () => { const C = { ...(rt.buffCancel || {}) }, t = Date.now(); for (const [n, k, tier] of [['Lost Yeti', 23, 'red'], ['Frost Tarantula', 17, 'red'], ['Ghost of Rebellion Soldier', 4, 'orange'], ['Vanor Silenos Shaman', 6, 'red'], ['Buffalo', 4, 'orange'], ['Canyon Antelope', 4, 'red']]) if (!C['ч:' + n.toLowerCase()]) C['ч:' + n.toLowerCase()] = { t, n: k * 3, k, name: n, champ: true, tier }; setRt({ buffCancel: C }); });
+  once('cancel1007', () => { const C = { ...(rt.buffCancel || {}) }, t = Date.now(); for (const [n, k, tier] of [['Lost Yeti', 23, 'red'], ['Frost Tarantula', 17, 'red'], ['Ghost of Rebellion Soldier', 4, 'orange'], ['Vanor Silenos Shaman', 6, 'red'], ['Buffalo', 4, 'orange'], ['Canyon Antelope', 4, 'red']]) if (!C['ч:' + n.toLowerCase()]) C['ч:' + n.toLowerCase()] = { t, n: k * 3, k, name: n, champ: true, tier }; rf.buffCancel = C; });   // 20.13 (шаг 7, core-b/F10): через rf — не теряется при включённом боте
   // 10.0.7 (игрок 13.10 03:16, скрин Warlock 67 против Tomb Guard 75: «бот пытается бить моба больше чем на 5 лвл старше»): верхний предел
   // «до героя +» был 99 (v5.3.1 снял), у игрока 20 — Tomb Guard +8 проходил. Теперь по умолчанию +5 (как и −5); шире — руками в «Охоте»
   once('lvlTop1007', () => { if (!(+C('lvlAbove') <= 5)) cf.lvlAbove = 5; });
@@ -6367,7 +6407,7 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   once('aliasFix7121', () => {    // 7.1.30: выкинуть выученные алиасы, совпавшие с именем чужого заклинания
     const A = { ...(rt.logAlias || {}) }; let n = 0;
     for (const [k, v] of Object.entries(A)) if (Object.entries(NAME_ALIAS).some(([k2, v2]) => k2 !== k && apos(v2) === apos(v))) { delete A[k]; n++; }
-    if (n) setRt({ logAlias: A });
+    if (n) rf.logAlias = A;                        // 20.13 (шаг 7, core-b/F10): прямой setRt терялся, если бот был включён при загрузке
   });
   once('debuffDmg7120', () => {   // 7.1.30: дебаффы получали чужой урон (Surrender to Fire «1822») — обнуляем
     for (const [k, p] of Object.entries(S)) if (p.dmgN && /^(?:curse|surrender|сurse)/i.test(k)) { S[k] = { ...p, dmg: 0, dmgN: 0 }; sk = true; }

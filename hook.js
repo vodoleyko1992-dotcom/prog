@@ -139,7 +139,12 @@
   // «ОК». Там вместо окна — сообщение боту (журнал) и в консоль; на других страницах alert не трогаем
   if (/^\/(?:catacombs|dungeon|ancient-trader|mammon-[\w-]+)\.html$/.test(location.pathname)) {
     const oalert = window.alert;
-    window.alert = function (msg) { try { console.warn('[l2bot] окно игры:', msg); window.postMessage({ __l2bot: 'alert', text: String(msg ?? '').slice(0, 300), path: location.pathname }, location.origin); } catch (e) { return oalert.apply(this, arguments); } };
+    // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F11): окно глушим, только пока бот включён (метка data-l2bot-on на <html> ставит
+    // content.js). Бот остановлен — игрок сам меняет камни/летит в катакомбы и должен видеть ошибку игры обычным окном
+    window.alert = function (msg) {
+      if (document.documentElement?.dataset?.l2botOn !== '1') return oalert.apply(this, arguments);
+      try { console.warn('[l2bot] окно игры:', msg); window.postMessage({ __l2bot: 'alert', text: String(msg ?? '').slice(0, 300), path: location.pathname }, location.origin); } catch (e) { return oalert.apply(this, arguments); }
+    };
   }
   // 9.2.5: если кузнец Маммона спросит «точно улучшить?» окном confirm() — «да» только сразу после нажатия бота (метка data-l2bot-confirm
   // на <html> ставит mammon.upgrade, живёт 5 с); любой другой confirm — обычное окно игроку
