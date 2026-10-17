@@ -18,7 +18,7 @@ for(const key of ['quests','farm','auto','raid','epic','fish','cat','enchant','t
 assert(!ids.includes('shopBait'),'Removed GM bait control must not return');
 assert(html.includes('Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».'));
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,11); // 15.10: автозаточка вынесена из «Боя» в отдельный раздел и режим.
+assert.equal(tabs.length,12); // 20.8: отдельный раздел дневных лимитов и разовых целей.
 assert(tabs.includes('enchant') && html.includes('<section id="tab-enchant">'), 'Автозаточка должна иметь собственный раздел');
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);

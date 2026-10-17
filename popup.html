@@ -226,7 +226,7 @@
 <button id="navToggle" type="button" aria-controls="moduleNav" aria-expanded="false" title="Открыть все разделы управления">
   <span class="nav-toggle-icon" aria-hidden="true">▦</span>
   <span class="nav-toggle-text">Разделы <span id="navCurrentName">· Обзор</span></span>
-  <span class="nav-toggle-right">Все 10 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
+  <span class="nav-toggle-right">Все 12 <span class="nav-toggle-arrow" aria-hidden="true">⌄</span></span>
 </button>
 <nav id="moduleNav" aria-label="Разделы управления">
   <div class="nav-heading">НАВИГАЦИЯ</div>
@@ -234,6 +234,7 @@
   <div class="nav-group">РЕЖИМЫ</div>
   <button data-tab="hunt" title="Фарм на месте, автофарм, катакомбы, TvT, ресурсы"><span class="ic">◎</span>Охота</button>
   <button data-tab="rb" title="Рейд-боссы, тур по РБ, эпик-боссы"><span class="ic">♛</span>РБ и эпики</button>
+  <button data-tab="limits" title="Дневные лимиты и разовые цели"><span class="ic">⏱</span>Лимиты</button>
   <button data-tab="fish" title="Рыбалка, Proof и снаряжение"><span class="ic">◉</span>Рыбалка</button>
   <button data-tab="enchant" title="Режим заточки оружия и брони, очередь, лимиты и результаты"><span class="ic">✨</span>Автозаточка</button>
   <div class="nav-group">ОБЩЕЕ</div>
@@ -354,8 +355,7 @@
   <div id="zoneBox" class="zbox"><div class="hint">Пока нет данных — бот считает опыт в каждой зоне, где охотится.</div></div>
   <div class="row"><button id="zoneScan">📋 Обновить список зон</button></div>
   <label>🗺 Автофарм: сам подбирать локацию <input id="zoneAuto" type="checkbox"></label>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
-  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
+  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
   <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
   <label>Пробных боёв на зону <input id="zoneTrial" type="number" min="10"></label>
   <label>Зона для кача: мобы не выше героя на <input id="zoneAbove" type="number" min="0" max="15" style="width:52px"></label>
@@ -385,8 +385,7 @@
   <div class="subsec-title"><span id="tab-dungeon" class="tab-anchor"></span>🏛 Катакомбы</div>
   <h4>🏛 Фарм катакомб и некрополей</h4>
   <label>🏛 Фармить в подземелье <input id="catMode" type="checkbox"></label>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
-  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
+  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цели фарма</button></div>
   <div class="hint">Считаются все убитые мобы, включая массовые атаки. Бой завершается целиком: итог может быть больше лимита. Затем выключается только эта задача, бот продолжает остальные. Пауза и перезагрузка сохраняют счётчик; новый лимит или сброс начинают его заново.</div>
   <label>Подземелье <select id="catDungeon"><option value="auto">Авто — по уровню героя</option><option value="necropolis_of_sacrifice">Necropolis of Sacrifice</option><option value="pilgrims_necropolis">The Pilgrim's Necropolis</option><option value="patriots_necropolis">The Patriot's Necropolis</option><option value="necropolis_of_worship">Necropolis of Worship</option><option value="necropolis_of_devotion">Necropolis of Devotion</option><option value="necropolis_of_martyrdom">Necropolis of Martyrdom</option><option value="saints_necropolis">The Saint's Necropolis</option><option value="disciples_necropolis">The Disciple's Necropolis</option><option value="catacomb_of_the_heretic">Catacomb of the Heretic</option><option value="catacomb_of_the_branded">Catacomb of the Branded</option><option value="catacomb_of_the_apostate">Catacomb of the Apostate</option><option value="catacomb_of_the_witch">Catacomb of the Witch</option><option value="catacomb_of_dark_omens">Catacomb of Dark Omens</option><option value="catacomb_of_the_forbidden_path">Catacomb of the Forbidden Path</option></select></label>
   <div id="catBox" class="hint" style="white-space:pre-line"></div>
@@ -753,17 +752,40 @@
   <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
 </section>
 
+<!-- Дневные ограничения и прежние разовые цели -->
+<section id="tab-limits">
+  <h4>⏱ Дневные лимиты</h4>
+  <div class="hint">0 — без ограничения. Достигнут лимит — задача ждёт следующего дня, бот продолжает остальные. Выбор задач сохраняется. Сброс суток в 00:00 по Владивостоку (UTC+10), затем выбранная задача доступна снова. Счёт начинается после включения лимита; прошлую добычу бот не восстанавливает.</div>
+  <div id="dailyLimitsDay" class="hint"></div>
+  <label>🐟 Рыбы в день <input id="dailyFishLimit" type="number" min="0" step="1"></label>
+  <div class="row"><span id="fishDailyProgress" class="hint"></span><button id="fishDailyReset" type="button">Сбросить за сегодня</button></div>
+  <label>⚔ Мобов на автофарме в день <input id="dailyAutoKillLimit" type="number" min="0" step="1"></label>
+  <div class="row"><span id="autoDailyProgress" class="hint"></span><button id="autoDailyReset" type="button">Сбросить за сегодня</button></div>
+  <label>🏛 Мобов в катакомбах в день <input id="dailyCatKillLimit" type="number" min="0" step="1"></label>
+  <div class="row"><span id="catDailyProgress" class="hint"></span><button id="catDailyReset" type="button">Сбросить за сегодня</button></div>
+  <div class="hint">Рыба считается по успешным поимкам. Для мобов учитывается серверный счётчик, включая массовые атаки. Текущий бой завершается целиком, поэтому итог может превысить лимит. Пауза и перезагрузка не сбрасывают прогресс. Сброс статистики рыбалки тоже его сохраняет.</div>
+  <h4>Разовая цель автофарма</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
+  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
+  <h4>Разовая цель катакомб</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
+  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
+  <div class="hint">Эти цели считаются с момента настройки. После выполнения снимается только соответствующая задача. Новый лимит или сброс начинают новую серию; автоматически на следующий день она не включается.</div>
+  <h4>🎯 Цель рыбалки</h4>
+  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select><input id="fishTgtN" type="number" min="1" placeholder="Сколько" style="width:80px;flex:0 0 80px"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
+  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
+  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
+  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
+  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
+</section>
+
 <!-- 🎣 РЫБАЛКА -->
 <section id="tab-fish">
   <h4>Как бот рыбачит</h4>
   <div class="hint">Выберите «Рыбалка» в списке задач сверху и нажмите «Старт»: бот идёт к рыбаку (Город → Рыбак), выбирает наживку, включает рыболовные заряды, забрасывает удочку и вываживает рыбу — перед каждым нажатием читает подсказку «Рыба замерла → Pumping» / «Рыба сопротивляется → Reeling». Бой и охота в этом режиме не ведутся.</div>
   <div id="fishBox" class="camp">Ещё не рыбачил</div>
   <div class="row"><button id="fishReset">↺ Обнулить статистику рыбалки</button></div>
-  <h4>🎯 Цель рыбалки</h4>
-  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select><input id="fishTgtN" type="number" min="1" placeholder="Сколько" style="width:80px;flex:0 0 80px"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
-  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
-  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
-  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
+  <div class="row"><button type="button" data-goto="limits">⏱ Лимиты и цель рыбалки</button></div>
   <h4>Снаряжение</h4>
   <div class="row"><button id="fishBest" title="Наживка «Авто» · заряды вкл · докупка вкл · 1000 пакетов наживки, заряды под наживку (≈750 пакетов) · без лимита забросов · разделка каждые 100 · Old Box открывать">⚙ Рекомендуемые настройки рыбалки</button></div>
   <label>Наживка <select id="fishBait"><option value="auto">Авто — по замеру Proof/ч (хорошая — только бесплатная, из Old Box)</option><option value="basic">Обычная (Fishing Lure)</option><option value="good">Хорошая (Good Fishing Lure)</option></select></label>
@@ -772,7 +794,6 @@
   <label title="100 пакетов = 1000 шт. ≈ 100 000 аден ≈ 1,5 ч рыбалки; кончилась — бот докупит">Наживки за раз, пакетов по 10 (1 000 аден) <input id="fishBuyPacks" type="number" min="1"></label>
   <label title="Бот считает расход наживки и зарядов на рыбу и покупает зарядов столько, чтобы они кончились вместе с наживкой (≈750 пакетов на 1000 пакетов наживки)">Заряды под наживку (авто-соотношение) <input id="fishShotAuto" type="checkbox"></label>
   <label>Зарядов за раз, пакетов по 50 (5 000 аден), если авто выкл. <input id="fishShotPacks" type="number" min="1"></label>
-  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
   <label title="Сервер в ответе на каждый приём отдаёт свои откаты (Pumping 0,5 с, Reeling 0,7 с); бот жмёт повтор того же приёма по ним с запасом 60 мс вместо своих 1,05 с. Отказы «на перезарядке» растят запас, при 400 мс — час по своей модели">Откат Pumping/Reeling брать у сервера (быстрее повтор приёма) <input id="fishSrvCd" type="checkbox"></label>
   <div class="hint">Хорошая наживка покупается только в «Рыболовном магазине» за Proof of Catching a Fish — бот её не докупает.</div>
   <h4>Оплаченное время рыбалки</h4>

@@ -122,15 +122,21 @@
   const rawTaskConfig = c => taskRaw.get(c) || c;
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
   const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
+  // Дневные квоты профиля: календарные сутки Владивостока, независимо от часов браузера.
+  const dailyKeys = {fish:'dailyFishLimit',auto:'dailyAutoKillLimit',cat:'dailyCatKillLimit'};
+  const dailyDay = (now = Date.now()) => new Date(now + 10 * 3600000).toISOString().slice(0,10);
+  const dailyLimit = (c,k) => { const n = +rawTaskConfig(c)?.[dailyKeys[k]]; return Number.isSafeInteger(n) && n > 0 ? n : 0; };
+  const dailyCount = (rt,k,now = Date.now()) => rt.dailyQuota?.day === dailyDay(now) ? Math.max(0,+rt.dailyQuota[k] || 0) : 0;
+  const dailyBlocked = (c,rt,k,now = Date.now()) => dailyLimit(c,k) > 0 && dailyCount(rt,k,now) >= dailyLimit(c,k);
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
-    const fishOpen = rt.fishCastActive === true || !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
+    const fishOpen = rt.fishCastActive === true || !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
     const wait = rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
     const raidPayment = !!rt.actionPayments?.pending && rt.actionPayments.pending.kind !== 'fishing';
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
-      if (!list.includes(k)) return false;
+      if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
       if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy) && idleRaid && !raidPayment && (fishBusy || wait.until > now && !freshRaid)) return false;
       if (k === 'fish') return fishOpen || !!idleRaid && fishBusy;
@@ -143,7 +149,15 @@
   }
   function taskConfig(input, runtime = () => ({})) {
     const raw = rawTaskConfig(input);
-    if (!Array.isArray(raw?.autoTasks)) return raw;
+    if (!Array.isArray(raw?.autoTasks)) {
+      if (!Object.keys(dailyKeys).some(k => dailyLimit(raw,k))) return raw;
+      const view = new Proxy(raw,{get(target,key){
+        const rt=runtime(), tasks={fishMode:'fish',catMode:'cat',zoneAuto:'auto'};
+        if (Object.hasOwn(tasks,key) && dailyBlocked(target,rt,tasks[key]) && !(key==='fishMode' && rt.fishCastActive)) return false;
+        if (key==='taskOnly' && Object.entries(tasks).some(([flag,k])=>target[flag] && dailyBlocked(target,rt,k)) && !['enchantMode','epicMode','rbHuntMode','campaign'].some(k=>target[k]) && !Object.entries(tasks).some(([flag,k])=>target[flag] && !dailyBlocked(target,rt,k))) return true;
+        return Reflect.get(target,key);
+      }}); taskRaw.set(view,raw); return view;
+    }
     const groups = {
       mammon: ['mmOrders','mmUpgrade','mmShopBuy','mmSmithAuto','mmCraftSend','mmCraftNote','mmMailClaim','mmGoalFarm'],
       quests: ['storyTurnIn','campAuto'], dailies: ['dailyAuto'], clan: ['clanTasks'], // searchQuest — приоритет местных ★ мобов, а не разрешение вести кампанию.
@@ -236,6 +250,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

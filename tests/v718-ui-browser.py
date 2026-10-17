@@ -26,7 +26,7 @@ with sync_playwright() as p:
   page.locator('#navToggle').click()
   page.wait_for_timeout(80)
   menu=page.evaluate('''() => ({tabs:document.querySelectorAll('#moduleNav button[data-tab]').length,grid:getComputedStyle(document.querySelector('#moduleNav')).gridTemplateColumns.split(' ').length,visible:getComputedStyle(document.querySelector('#moduleNav')).display,navText:getComputedStyle(document.querySelector('#moduleNav button')).fontSize})''')
-  assert menu['tabs']==11,menu   # 10.0.17: PvP, подклассы и отдельная автозаточка
+  assert menu['tabs']==12,menu   # 20.8: добавлен отдельный раздел «Лимиты»
   assert menu['grid']==(2 if mode=='dock' else 4),menu
   assert menu['visible']=='grid',menu
   page.screenshot(path=str(Path(__import__('os').environ.get('L2_SHOTS', '/tmp'))/('l2bot-v7111-game-'+mode+'-menu.png')))

@@ -14,7 +14,7 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   priority: '[квест]\n[чемп]\n[все]',
   rec: true, autoSnap: true, questStop: false, dock: true, dockMin: false,
   fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', farmLvlBelow: 5, farmLvlAbove: 5, rbSessBuffs: 'auto', rbSessNob: true, epicFaFull: true, rbFaFull: true, rbProbe: true, fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true,
-  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
+  autoMagister: true, magisterEvery: 1, potSlotAuto: true, debuffAuto: true, debuffMode: 'auto', nDebuff: '', fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '', weaponClassPick: true, weaponClassEquip: true, weaponManual: false, weaponScanAuto: true, shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, dailyFishLimit: 0, dailyAutoKillLimit: 0, dailyCatKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0,
   campaign: false, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20, autoRevive: true, campaignEvery: 25,   // 10.0.10: campAuto — сюжетный квест новичка бот ведёт сам (герой < 40)
   autoRoles: true, nWeaponMain: '',
   rbValueTour: false, rbExpValue: 0.20, rbPotCost: 500, rbMode: false, rbBandAuto: true, rbTurnPrice: true, rbCharge: true, rbChipRetreat: false, rbChipMaxAttempts: 3, rbRetreatHp: 20, rbRestHp: 95, rbMaxAbove: 15, rbMaxKillMin: 20, rbTimers: true, rbTimerMin: 10, rbRespH: 8, rbTimerAll: false, rbUsePots: true, rbPotReserve: 10,
@@ -167,6 +167,7 @@ function farmQuotaTask() {
 }
 const farmQuotaKey = task => task === 'auto' ? 'autoKillLimit' : 'catKillLimit';
 const farmQuotaLimit = task => { const v = +L2EngineCore.rawTaskConfig(cfg)[farmQuotaKey(task)]; return Number.isSafeInteger(v) && v > 0 ? v : 0; };
+const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
 async function farmQuotaSnapshot(char) {
   const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
   if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
@@ -174,35 +175,54 @@ async function farmQuotaSnapshot(char) {
 }
 async function beginFarmQuota(spawn) {
   if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
-  const task = farmQuotaTask(), limit = task && farmQuotaLimit(task);
-  if (!limit) return null;
+  const task = farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
+  if (!limit && !dailyLimit) return null;
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
-  const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && farmQuotaTask() === task && farmQuotaLimit(task) === limit;
+  const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && farmQuotaTask() === task && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
   try {
     const c = await farmQuotaSnapshot(char); if (!valid()) return false;
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
     if (!r?.ok || !valid()) return false;
     rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row } };
-    return { task, limit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
+    return { task, limit, dailyLimit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
   } catch (e) { if (valid()) setStatus('Лимит мобов: жду счётчик сервера'); return false; }
 }
 async function finishFarmQuota(ticket, lost = false) {
   if (!ticket) {
     const task = farmQuotaTask(), row = rt.farmQuota?.[task], spawn = new URLSearchParams(location.search).get('spawnId') || '';
-    if (!row?.pending || row.done || row.pending.spawn !== spawn || row.limit !== farmQuotaLimit(task) || !farmQuotaLimit(task)) return false;
+    if (!row?.pending || row.done || row.pending.spawn !== spawn || row.limit !== farmQuotaLimit(task) || !(farmQuotaLimit(task)||farmDailyLimit(task))) return false;
     if (row.pending.kick !== (rt.manualKickAt || 0)) { const renewed = await beginFarmQuota(spawn); return renewed === false ? true : renewed ? finishFarmQuota(renewed, lost) : false; }
-    ticket = { task, limit: row.limit, char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
+    ticket = { task, limit: row.limit, dailyLimit:farmDailyLimit(task), char: rt.char, epoch: leaseEpoch, kick: row.pending.kick, run: row.run, spawn, beforeRevision: row.pending.revision };
   }
-  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && rt.farmQuota?.[T.task]?.run === T.run;
+  const T = ticket, valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit||0) && rt.farmQuota?.[T.task]?.run === T.run;
   if (!valid()) return true;
   try {
     const c = await farmQuotaSnapshot(T.char); if (!valid() || !await rtCommit()) return true;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
     if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: сверяю итог боя'); return true; }
     rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
+    if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
+    if(r.dailyDone){rec('B','дневной лимит',`${T.task==='cat'?'Катакомбы':'Автофарм'}: ${r.dailyQuota[T.task]}/${T.dailyLimit} — до следующего дня, продолжаю остальные`);return true;}
     if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
     return false;
   } catch (e) { if (valid()) setStatus('Лимит мобов: жду подтверждение счётчика'); return true; }
+}
+
+async function dailyLimitFishSync() {
+  const limit=L2EngineCore.dailyLimit(cfg,'fish');if(!limit)return true;
+  const mark=rt.dailyFishMark,fish=rt.fish||{},t0=+fish.t0||0;
+  if(mark && rt.dailyQuota?.day===L2EngineCore.dailyDay() && (t0<mark.t0 || t0===mark.t0 && (+fish.caught||0)<=mark.caught))return true;
+  const before=L2EngineCore.dailyCount(rt,'fish');
+  const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0;
+  const valid=()=>on&&tabOwner&&rt.char===char&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&L2EngineCore.dailyLimit(cfg,'fish')===limit;
+  try {
+  if(!await rtCommit()||!valid())return false;
+  const r=await ipc({cmd:'statePatch',patch:{},dailyFish:{limit,kick},expectedChar:char,epoch,src:TAB_ID});
+  if(!r?.ok||!valid())return false;
+  rt={...rt,dailyQuota:r.dailyQuota,dailyFishMark:r.dailyFishMark};
+  if(before<limit && r.dailyQuota.fish>=limit)rec('B','дневной лимит',`Рыбалка: ${r.dailyQuota.fish}/${limit} — до следующего дня, продолжаю остальные`);
+  return true;
+  } catch(e) {if(valid())setStatus('Лимит рыбалки: жду запись улова');return false;}
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -4500,7 +4520,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },

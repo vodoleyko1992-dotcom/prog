@@ -73,13 +73,25 @@ function mergeTimerPatch(current, incoming) {
 // 20.8: лимиты фарма — свой прогресс, атомарное завершение только одной задачи.
 const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 'catMode'] };
 const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
+const dailyQuotaDay = now => new Date(now + 10 * 3600000).toISOString().slice(0,10);
+const dailyQuotaToday = (rt,now) => rt.dailyQuota?.day === dailyQuotaDay(now) ? {...rt.dailyQuota} : {day:dailyQuotaDay(now),fish:0,auto:0,cat:0};
+function dailyFishChange(state,E,now) {
+  const rt=state.rt||{},limit=farmQuotaLimit(state.cfg?.dailyFishLimit);
+  if(!state.on || !limit || limit!==E.limit || (rt.manualKickAt||0)!==(E.kick||0)) return {ok:false,reason:'daily_fish_interrupted'};
+  const fish=rt.fish||{},t0=+fish.t0||0,caught=Math.max(0,+fish.caught||0),old=rt.dailyFishMark;
+  const mark=!old || t0>old.t0 ? {t0,caught} : t0===old.t0 ? {t0,caught:Math.max(caught,old.caught)} : old;
+  const delta=!old ? 0 : t0>old.t0 ? caught : t0===old.t0 ? Math.max(0,caught-old.caught) : 0;
+  const dailyQuota=dailyQuotaToday(rt,now);dailyQuota.fish=(dailyQuota.fish||0)+delta;
+  return {ok:true,dailyQuota,dailyFishMark:mark,rt:{...rt,dailyQuota,dailyFishMark:mark,_src:'daily-quota'}};
+}
 function farmQuotaChange(state, E, now) {
   const keys = FARM_QUOTA[E?.task], cfg = state.cfg || {}, rt = state.rt || {};
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
   const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
-  if (!enabled || !limit || limit !== E.limit) return { ok: false, reason: 'quota_changed' };
+  const dailyLimit=farmQuotaLimit(cfg[E.task==='auto'?'dailyAutoKillLimit':'dailyCatKillLimit']);
+  if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
   const old = rt.farmQuota?.[E.task];
-  let row = old;
+  let row = old, dailyQuota=dailyQuotaToday(rt,now);
   if (E.op === 'begin') {
     if (!Number.isSafeInteger(E.counter) || E.counter < 0 || !Number.isSafeInteger(E.revision) || typeof E.spawn !== 'string' || !E.spawn || E.spawn.length > 160) return { ok: false, reason: 'quota_snapshot' };
     if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
@@ -89,8 +101,9 @@ function farmQuotaChange(state, E, now) {
   } else if (E.op === 'win') {
     if (!row || row.run !== E.run || row.done || row.pending?.spawn !== E.spawn || row.pending?.revision !== E.beforeRevision || row.pending.kick !== (E.kick || 0)) return { ok: false, reason: 'quota_battle_changed' };
     if (!Number.isSafeInteger(E.counter) || (E.lost ? E.counter < row.pending.counter : E.counter <= row.pending.counter) || !Number.isSafeInteger(E.revision) || E.revision <= row.pending.revision) return { ok: false, reason: 'quota_unconfirmed' };
-    const got = row.got + E.counter - row.pending.counter;
-    row = { ...row, got, pending: null, done: got >= limit, ...(got >= limit ? { doneT: now } : {}) };
+    const delta=E.counter-row.pending.counter,got=row.got+delta;
+    if(dailyLimit)dailyQuota[E.task]=(dailyQuota[E.task]||0)+delta;
+    row = { ...row, got, pending: null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
   } else return { ok: false, reason: 'quota_operation' };
   const next = { ...cfg };
   if (row.done) {
@@ -98,7 +111,7 @@ function farmQuotaChange(state, E, now) {
     if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== E.task);
     else if (!['enchantMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
   }
-  return { ok: true, row, cfg: next, rt: { ...rt, farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
+  return { ok: true, row, dailyQuota, dailyDone: dailyLimit>0 && dailyQuota[E.task]>=dailyLimit, cfg: next, rt: { ...rt, ...(dailyLimit?{dailyQuota}:{}), farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
 }
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
@@ -122,7 +135,11 @@ async function statePatch(m, sender) {
       return { ok: false, reason: 'ownership_lost' };
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
-      await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg };
+      await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
+    }
+    if(m.dailyFish) {
+      const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;
+      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.dailyQuota,dailyFishMark:r.dailyFishMark};
     }
     // 17.10: завершение цели и снятие только рыбалки — одной записью, по свежему списку задач.
     if (m.finishFishGoal) {
@@ -211,6 +228,15 @@ async function menuPatch(m, sender) {
       if (m.resetFarmQuota !== task && (!Object.hasOwn(cfgPatch, key) || quotaLimit(cfgPatch[key]) === quotaLimit(state.cfg?.[key]))) continue;
       const rows = change.rt?.farmQuota || state.rt?.farmQuota || {}, old = rows[task];
       change.rt = { ...state.rt, ...change.rt, _src: 'menu', farmQuota: { ...rows, [task]: { run: (old?.run || 0) + 1, limit: quotaLimit(change.cfg?.[key] ?? state.cfg?.[key]), got: 0 } } };
+    }
+    for(const [task,key] of [['fish','dailyFishLimit'],['auto','dailyAutoKillLimit'],['cat','dailyCatKillLimit']]) {
+      const reset=m.resetDailyQuota===task,edited=Object.hasOwn(cfgPatch,key)&&quotaLimit(cfgPatch[key])!==quotaLimit(state.cfg?.[key]);
+      if(!reset&&!edited)continue;
+      const rt={...state.rt,...change.rt,_src:'menu'};
+      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());rt.dailyQuota[task]=0;}
+      if(task==='fish')rt.dailyFishMark={t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0};
+      else {const row=rt.farmQuota?.[task];if(row)rt.farmQuota={...rt.farmQuota,[task]:{...row,run:(row.run||0)+1,pending:null}};}
+      change.rt=rt;
     }
     // 15.10: выбор режима не продолжает старую серию; выход сразу запрещает новые попытки.
     // Берём подтверждённый снимок внутри очереди, чтобы поздний ответ не терял pending/историю.

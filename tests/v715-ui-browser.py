@@ -90,7 +90,7 @@ with sync_playwright() as p:
     assert not errors,(label,errors)
     assert stats['rod']=='10', stats
     assert stats['proofActive'],stats
-    assert stats['tabs']==11,stats   # 10.0.17: PvP, подклассы и отдельная автозаточка
+    assert stats['tabs']==12,stats   # 20.8: добавлен отдельный раздел «Лимиты»
     assert stats['sw']<=stats['cw']+1,stats
     assert stats['navGrid']==(3 if label=='dock' else 5),stats
     for section in ('nav','plain','proof'):
