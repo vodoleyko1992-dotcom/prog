@@ -85,8 +85,14 @@ function heartbeat() {
   try { chrome.runtime.sendMessage({ cmd: 'hb', epoch: leaseEpoch, page: location.pathname }, () => void chrome.runtime.lastError); } catch (e) {}
 }
 // в фоновой вкладке любые паузы (даже 35 мс) — через фоновый скрипт: браузер растягивает их до 1 с и больше
-setInterval(() => { if (on && tabOwner && running) heartbeat(); }, 5000);
-const sleep = ms => { if (on) heartbeat(); return document.visibilityState === 'hidden' ? bgSleep(ms) : new Promise(r => setTimeout(r, ms)); };
+// 20.12 (ревизия 17.10, аудит core-a/H2): пульс из setInterval шёл, пока running=true, даже если main() навсегда завис в await —
+// сторож фона видел «жив» и вкладку не перезагружал. Теперь пульс таймера — только пока цикл жив: loopT обновляют каждый круг
+// main() и каждый sleep(); метка старше LOOP_HB_MS — пульса нет, через 2,5 мин тишины фон перезагрузит вкладку (wdPlan)
+let loopT = Date.now();
+const LOOP_HB_MS = 120000;
+const loopAlive = (now = Date.now()) => now - loopT < LOOP_HB_MS;
+setInterval(() => { if (on && tabOwner && running && loopAlive()) heartbeat(); }, 5000);
+const sleep = ms => { loopT = Date.now(); if (on) heartbeat(); return document.visibilityState === 'hidden' ? bgSleep(ms) : new Promise(r => setTimeout(r, ms)); };
 const rnd = (a, b) => a + Math.random() * (b - a);
 // долгое ожидание кусками по 10 с: пульс для сторожа не прерывается, в статусе — обратный отсчёт
 async function idle(ms, label) {
@@ -122,13 +128,16 @@ function byText(re, sel = 'a,button,div,span') {
     ![...e.children].some(c => re.test(c.textContent.trim())));
 }
 
+// 20.12 (ревизия 17.10, аудит core-a/C2): кнопка/отправка формы входа — не игровое действие и не оплата. Неизвестная оплата или
+// PvP-pending раньше блокировали и её: после выкида из игры бот не мог войти, а сверить оплату без входа нельзя (401) — взаимная блокировка
 function fire(el) {
   if (!el || (on && !tabOwner)) return false;
   if (on && L2V7Modules.actions?.canAct?.() === false) return false;
-  if (L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
+  const login = !!el.closest?.('form')?.querySelector?.('input[type="password"]') && /войти|увійти|вход|вхід|login|sign in/i.test((el.textContent || '') + ' ' + (el.value || '')) && loginPage();
+  if (!login && L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
       && !isBattle() && !/\/tvt-arena\.html$/i.test(location.pathname)
       && !el.matches?.('#tvt-register-btn,#map-defeat-tocity,#battle-defeat-tocity')) return false;
-  if (L2V7Modules.pvp?.pending() && !['#map-defeat-tocity','#battle-defeat-tocity'].some(s => $q(s) === el)) return false;
+  if (!login && L2V7Modules.pvp?.pending() && !['#map-defeat-tocity','#battle-defeat-tocity'].some(s => $q(s) === el)) return false;
   // 10.0.13: Stop отменяет и клики продолжения после await; при выключенном боте оставляем ручной просмотр инвентаря и раскрытие панели.
   if (!on && !(invBusy && !running && rt.invScan?.manual) && !el.matches?.('.l2-battle-hotbar__row-nav--down')) return false;
   // 10.0.2: пока висит проверка активности, клик по странице = «подозрительная попытка» у игры (10 → блок фарма) — не кликаем ничего,
@@ -272,8 +281,23 @@ async function syncLimitRanges() {
     if(!await rtCommit()||!valid())return false;
     const r=await ipc({cmd:'statePatch',patch:{},resolveLimitRanges:true,rangeKick:kick,epoch,expectedChar:char,src:TAB_ID});
     if(!r?.ok||!valid()){if(valid())setStatus('Лимиты: '+(r?.reason||'жду подтверждение записи'));return false;}
-    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};return true;
+    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};
+    if(r.dropped?.length)rec('S','лимиты',`отброшены устаревшие/неверные диапазоны: ${r.dropped.join(', ')} — остаются фиксированные значения`);   // 20.12
+    return true;
   } catch(e){if(valid())setStatus('Лимиты: жду сохранение выбранного диапазона');return false;}
+}
+// 20.12 (ревизия 17.10, аудит farm/Q-4, core-a/C1): отказ синхронизации диапазонов держал весь цикл (sleep 500; continue) навсегда —
+// ни TvT, ни PvP-восстановления, ни рыбалки. Теперь первые 30 с ждём как раньше (обычно это запись в очереди), потом один раз пишем
+// причину в журнал и продолжаем цикл с прежними значениями лимитов; повторная попытка — раз в 30 с
+const limitSync = { since: 0, said: false, nextT: 0 };
+function limitSyncDue(now = Date.now()) { return !limitSync.since || now - limitSync.since < 30000 || now >= limitSync.nextT; }
+function limitSyncBlock(ok, now = Date.now()) {
+  if (ok) { limitSync.since = 0; limitSync.said = false; limitSync.nextT = 0; return false; }
+  limitSync.since ||= now;
+  if (now - limitSync.since < 30000) return true;
+  limitSync.nextT = now + 30000;
+  if (!limitSync.said) { limitSync.said = true; rec('S', 'лимиты', `диапазоны лимитов не синхронизируются ${Math.round((now - limitSync.since) / 1000)} с — продолжаю с прежними значениями лимитов, повторю позже`); }
+  return false;
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -393,6 +417,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     if (want == null) continue;
     ctx.block['tgl:' + bn] = Date.now() + 4000;
     const r = await act(b, `${want ? 'Включаю' : 'Выключаю (MP ' + (mpP | 0) + '%)'}: ${cleanTitle(b.title)}`);
+    if (r === 'nomp') return true;   // 20.12 (ревизия 17.10): MP не хватило — нажатия не было, состояние тоггла не меняем (слот на паузе 4 с)
     if (r !== 'unavail' && r !== 'noforce') {   // у тоггла КД может не быть — нажатие засчитываем, дальше сверяемся со строкой баффов
       await setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } });
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
@@ -2551,6 +2576,7 @@ async function main() {
   try {
   let servicesStarted = false, castObservedAt = 0;
   while (on) {
+    loopT = Date.now();                            // 20.12: метка живости цикла для пульса сторожа
     try {
       if (!tabOwner || Date.now() - (window.__lockT || 0) > 30000) {
         const wasOwner = tabOwner;
@@ -2586,7 +2612,16 @@ async function main() {
         try { await setCfg(patch); } catch (e) { deferredMigrations.cfg = { ...patch, ...deferredMigrations.cfg }; throw e; }
       }
       if (heroNick() && rt.char !== heroNick()) { await switchChar(); if (!tabOwner) continue; }
-      if(Object.keys(cfg.limitRanges||{}).length && !await syncLimitRanges()){await sleep(500);continue;}
+      // 20.12 (ревизия 17.10, аудит core-a/C1): сервер/вход/антибот — раньше лимитов, PvP-восстановления и заточки. Раньше
+      // pvp.recoveryStep на странице входа каждый круг уводил на /map.html и возвращал true — до autoLogin/serverWait цикл не доходил,
+      // а при капче antibotGuard не звал игрока
+      if (serverDown()) { await serverWait(); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
+      if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
+      if (loginPage()) { await autoLogin(); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
+      if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
+      // 20.12 (аудит core-a/C1, farm/Q-4): отказ синхронизации диапазонов лимитов больше не держит весь цикл: пишем причину в журнал
+      // один раз и продолжаем с прежними фиксированными значениями лимитов (повтор синхронизации — раз в 30 с)
+      if(Object.keys(cfg.limitRanges||{}).length && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);continue;}
       L2V7Modules.actions?.enterFrame();
       // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
       if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); continue; }
@@ -2622,10 +2657,8 @@ async function main() {
         if (!await automationFlush(stamp)) continue;
         location.reload(); await sleep(5000); continue;
       }
-      if (serverDown()) { await serverWait(); continue; }      // 502/503/таймаут Cloudflare — ждём, бота не останавливаем
-      if (rt.downT) await serverBack();              // v5.6: сразу после восстановления сервера (раньше — после многих веток, время простоя завышалось)
-      if (loginPage()) { await autoLogin(); continue; }       // выбило из игры — входим снова (логин/пароль из меню)
-      if (antibotState() === 'check' && await antibotGuard()) continue;   // v5.5.6: проверка активности — ждём человека
+      if (serverDown()) { await serverWait(); continue; }      // 20.12: повтор после долгих шагов выше (страница могла смениться)
+      if (loginPage()) { await autoLogin(); continue; }
       if (rt.revive) { await reviveStep(); await sleep(300); continue; }
       if (isMap() && await leaveCheck()) continue;   // 10.0.2: выход из боя с РБ сервер не подтвердил — бой ещё идёт, назад в бой
       if (cfg.tvtOn && await tvtStep()) { taskPolicyNote('tvt'); await sleep(200); continue; }   // 10.0.11 (игрок 13.10: «TvT важнее»): раньше паузы «один РБ» и всех задач; работает и из PvE-боя
@@ -3125,7 +3158,12 @@ async function autoLogin() {
     .find(b => /войти|увійти|вход|вхід|login|sign in/i.test(b.textContent + ' ' + (b.value || '')));
   if (!automationCurrent(stamp) || pw.isConnected === false) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
-  if (btn) fire(btn); else if (pw.form) pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
+  // 20.12 (ревизия 17.10, аудит core-a/C2): клик не прошёл (fire отказал) — отправляем форму напрямую и пишем причину в журнал
+  const fired = btn ? fire(btn) !== false : false;
+  if (!fired && pw.form && !abHold()) {   // проверку активности (капчу) не обходим
+    if (btn) rec('S', 'вход', `кнопка входа не нажата (${L2V7Modules.payments?.blocked?.() ? 'висит неподтверждённая оплата' : L2V7Modules.pvp?.pending?.() ? 'ждёт PvP-восстановление' : 'клик отклонён'}) — отправляю форму входа напрямую`);
+    pw.form.requestSubmit ? pw.form.requestSubmit() : pw.form.submit();
+  }
   const ok = await waitFor(() => accountLoginBlocked() || !loginPage() || $q('#l2-hud-legacy-name'), 15000, 300);
   if (!automationCurrent(stamp)) return;
   if (accountLoginBlocked()) return stopBlockedLogin();
@@ -5316,6 +5354,7 @@ L2V7Modules.dailies = L2V7Factories.dailies({ get dailyFishBlocked(){return ()=>
   get awayFree() { return awayFree; }, get isBattle() { return isBattle; }, get fishNow() { return fishNow; }, get heroLevel() { return heroLevel; }, get sleep() { return sleep; }, get setStatus() { return setStatus; } });
 // Мировой PvP: отдельные явные цели и обязательный возврат после смерти.
 L2V7Modules.pvp = L2V7Factories.pvp({ get tvtHold(){return ()=>!!L2V7Modules.tvt?.tvtHold?.()}, get routeLocation(){return actionLocation},
+  get loginPage() { return () => loginPage(); }, get gameLoaded() { return () => !!$q('#l2-hud-legacy-name, #l2-nav-bottom'); },   // 20.12: PvP-восстановление не действует на странице входа/незагруженной
   get rt() { return rt; },
   get cfg() { return cfg; },
   get on() { return on; },
