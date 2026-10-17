@@ -1148,14 +1148,6 @@ function renderEff(rt) {
     + (loot.length ? `\n🎒 За сессию: ${loot.map(([k, v]) => `${k} ×${fmt(v)}`).join(', ')}` : '') + valueLine;
 }
 
-// темп: EXP в час по замерам «цепочка / карта» (взвешено по числу боёв)
-function expHour(rt) {
-  const E = rt.eff || {}, parts = ['chain', 'map'].map(k => E[k]).filter(x => x?.n && x.rate);
-  if (!parts.length) return '';
-  const n = parts.reduce((a, x) => a + x.n, 0), perMin = parts.reduce((a, x) => a + x.rate * x.n, 0) / n;
-  const h = perMin * 60;
-  return ` · ≈${h >= 1e6 ? (h / 1e6).toFixed(1).replace('.', ',') + ' млн' : fmt(Math.round(h / 1000)) + ' тыс.'} EXP/ч`;
-}
 // надёжность: сбои и перезагрузки сторожем за последние 20 мин (строка видна, только если что-то было)
 function healthLine(rt, wdog) {
   const now = Date.now(), e = (rt.errs || []).filter(t => now - t < 600000).length, w = (wdog || []).filter(t => now - t < 1200000).length;

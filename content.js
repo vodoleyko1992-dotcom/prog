@@ -2040,7 +2040,6 @@ async function onDeath(...args) { return L2V7Modules.survival.onDeath(...args); 
 // ---------- после смерти: город → магическая статуя (иначе «Восстановить» у баффера не работает) ----------
 const DEAD_RE = /знепритомн|без сознани|сначала натисни|спочатку натисни|сначала нажми/i;
 const isCity = (...args) => L2V7Modules.navigation.isCity(...args);
-const clickText = e => [e.textContent, e.title, e.getAttribute('aria-label'), e.getAttribute('href'), ...[...e.querySelectorAll('img')].map(i => (i.alt || '') + ' ' + (i.getAttribute('src') || ''))].join(' ');
 async function reviveStep(...args) { return L2V7Modules.survival.reviveStep(...args); }
 
 
@@ -3795,7 +3794,6 @@ uiCss.textContent = `#l2bot-ind{-moz-text-size-adjust:none;-webkit-text-size-adj
 #l2bot-ind.hid,#l2bot-ind.dock-covered{display:none!important}`;
 document.documentElement.append(uiCss, ui);
 const escH = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
-const clockAt = sec => new Date(Date.now() + sec * 1000).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 // 8.0 (аудит меню): пауза — отдельный ключ хранилища (кнопка «⏸ Пауза» в меню): индикатор пишет «⏸ пауза», а не «остановлен»
 let indPaused = null;
 chrome.storage.local.get('paused').then(s => { indPaused = s.paused || null; try { draw(); } catch (e) {} }).catch(() => {});
