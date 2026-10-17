@@ -71,7 +71,12 @@
   if (ok.length) above = Math.max(above, Math.min(ABOVE_MAX, Math.max(...ok)));
   const deaths = [...new Set([...(o?.rt?.deathLog || []), ...(o?.rt?.deaths || [])])].filter(t => now - t < 3600000).length;
   if (deaths >= 2) above = Math.max(1, above - 3);
-  return { s: s || 5, sMeasured: !!s, g, above, below: o?.cfg?.lvlBelow ?? 3, n: pts.length, deaths };
+  // 20.13 (ревизия 17.10, шаг 5, farm/KPD-1): окно модели — не шире фильтра целей mobfarm: сверху не выше «выше героя» из меню (lvlAbove),
+  // снизу не ниже героя −5 (правило игрока 13.10: FA с мобов ниже −5 не падает; как mobfarm.lowCap). Раньше зона оценивалась по мобам
+  // +10…+15 и −3…−N, которых бот там не бьёт, — автофарм летел за прогнозом, который не сбывался
+  const capA = +o?.cfg?.lvlAbove; if (o?.cfg?.lvlAbove != null && Number.isFinite(capA) && capA >= 0) above = Math.min(above, capA);
+  const below = Math.min(+o?.cfg?.lvlBelow > 0 ? +o.cfg.lvlBelow : 5, 5);
+  return { s: s || 5, sMeasured: !!s, g, above, below, n: pts.length, deaths };
  }
  const gOf = (cal, d) => cal?.g?.[d] ?? gPrior(d);
  // сабклассы (11.10): замер другого класса героя (метка c ≠ rt.prof) — не наш: другой уровень, скиллы и кот

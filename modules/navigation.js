@@ -238,8 +238,26 @@ async function zoneForLevel() {
   const L = env.heroLvl(); if (!L) return false;
   const lo = L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5), hi = L + Math.min(env.cfg.lvlAbove ?? 15, 15);   // v4.59: окно из меню; для ВЫБОРА ЗОНЫ — не выше +15 (v5.3.1)
   const lv = env.pageItems().filter(i => !i.champ && i.lvl).map(i => i.lvl);
-  if (!lv.length || lv.some(l => l >= lo && l <= hi)) return false;    // на этой странице есть свои — дело не в уровне
+  if (!lv.length || lv.some(l => l >= lo && l <= hi)) {    // на этой странице есть свои — дело не в уровне
+    // 20.13 (шаг 5, farm/NAV-2): свои нашлись — перелёт удался, счёт неудачных перелётов с нуля.
+    // Шаг 5 (ревью): пустая страница (карта не дорисована / одни чемпионы) — не доказательство: отметку перелёта не стираем, иначе
+    // первый проход по недорисованной карте после прилёта гасил учёт и пинг-понг A ↔ B возвращался
+    if (lv.length && (env.rt.zoneLvlMiss?.n || (env.rt.zoneLvlGo && env.rt.zoneLvlGo.id === env.rt.zone))) await env.setRt({ zoneLvlMiss: null, zoneLvlGo: null });
+    return false;
+  }
   if (Date.now() - (env.rt.zoneLvlT || 0) < 5 * 60000) return false;
+  // 20.13 (ревизия 17.10, шаг 5, farm/NAV-2): пинг-понг A ↔ B — прилетели по уровню, а у точки снова не те мобы; зона прилёта не исключалась,
+  // и через 5 мин бот платил за перелёт обратно. Теперь такая зона — «плохая» на 6 ч (zoneBad), а после двух неудачных перелётов подряд
+  // остаёмся на 6 ч и бьём, что есть (дальше — обычное «мягкое окно» mobfarm)
+  const H6 = 6 * 3600000, miss = env.rt.zoneLvlMiss && Date.now() - (env.rt.zoneLvlMiss.t || 0) < H6 ? env.rt.zoneLvlMiss : null;
+  if (miss?.n >= 2) return false;
+  const lg = env.rt.zoneLvlGo;
+  if (lg?.id && lg.id === env.rt.zone && Date.now() - (lg.t || 0) < H6) {
+    const n = (miss?.n || 0) + 1;
+    await env.setRt({ zoneLvlGo: null, zoneLvlMiss: { n, t: Date.now() }, zoneBad: { ...(env.rt.zoneBad || {}), [lg.id]: Date.now() } });
+    if (n >= 2) { env.rec('B', 'локации', `${zoneName(lg.id)}: прилетел по уровню, а мобов ${lo}–${hi} ур. у точки нет — ${n}-й перелёт подряд без своих мобов, остаюсь на 6 ч и бью, что есть`); return false; }
+    env.rec('B', 'локации', `${zoneName(lg.id)}: прилетел по уровню, а мобов ${lo}–${hi} ур. у точки нет — зону 6 ч не выбираю`);
+  }
   await env.setRt({ zoneLvlT: Date.now() });
   if ((!env.rt.zoneCatT || zoneCatThin()) && ((env.rt.zoneCatFail || 0) < 3 || Date.now() - (env.rt.zoneCatFailT || 0) > 3600000)) { env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} — читаю «Телепорт», чтобы найти зону своего уровня`); await env.setRt({ zoneScan: true, zoneLvlT: 0 }); location.href = '/teleport.html'; await env.sleep(4000); return true; }   // после чтения — сразу выбор зоны
   const bad = env.rt.zoneBad || {};
@@ -267,7 +285,7 @@ async function zoneForLevel() {
   const why = pickG ? `лучшая по КПД для ${L} ур.: ≈${kExp(E[id].exp)} EXP/ч (${E[id].why})`
     : rate?.exp ? `${zoneRated(rate, trial) ? 'лучшая по опыту для своего уровня' : 'лучшая по старым замерам'}: ≈${Math.round(rate.exp).toLocaleString('ru')} EXP/ч (${rate.n} боёв)` : `зона своего уровня (${c.lo}–${c.hi})`;
   env.rec('B', 'локации', `мобы тут ${Math.min(...lv)}–${Math.max(...lv)} ур., а герой ${L} → лечу в «${c.name || id}» (${c.lo}–${c.hi}) · ${why}`);
-  await env.setRt({ zoneGo: { id, t: Date.now(), why }, zoneGoT: 0 });
+  await env.setRt({ zoneGo: { id, t: Date.now(), why }, zoneGoT: 0, zoneLvlGo: { id, t: Date.now() } });   // 20.13 (farm/NAV-2): куда летели по уровню
   location.href = '/teleport.html'; await env.sleep(4000);
   return true;
 }
@@ -517,6 +535,9 @@ async function zoneGoStep() {                     // полёт: Телепор�
   // 15.10: цена и валюта нужны из текущей строки перед кликом; отсутствие числа не означает бесплатный телепорт.
   const tr = btn.closest('.l2-teleport-miru-surroundings-row, .l2-teleport-miru-city-row'), tc = curOf(tr), cost = teleportCost(tr);
   const before=cost.why?null:await forumCharacter();if(!active())return;
+  // 20.13 (ревизия 17.10, шаг 5, farm/NAV-1): «возврат» в зону, где герой уже стоит (story.finish после неудачи у NPC, раз в 30 мин),
+  // оплачивался заново. Сервер подтверждает, что герой уже в этой зоне, — завершаем перелёт без клика и без оплаты
+  if(before&&before.name===char&&nativeTargetReached(g.id,before)){await forumFinish(g,active);return;}
   const budget = !cost.why && await teleportBudget(cost.price, active, before);
   if (!active()) return;
   if (cost.why || budget) {
