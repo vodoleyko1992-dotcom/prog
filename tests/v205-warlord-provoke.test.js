@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 20.5: Provoke — отдельное решение, не поддержка в списке прямого урона.
 const assert=require('node:assert/strict'),test=require('node:test'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(){
@@ -44,7 +45,7 @@ test('смена цели внутри собранного боя не запу
 test('новый бой получает новое решение; готовая группа после reload не собирается повторно',()=>{const f=fixture();assert.ok(f.C.warlordPullPlan({block:{}},f.mp));f.state.extra=[100,100,100];assert.equal(f.C.warlordPullPlan({block:{}},f.mp),null)});
 
 test('переключатель агро зарегистрирован для чтения/сохранения и ВКЛ только по умолчанию',()=>{
- const pop=fs.readFileSync('popup.js','utf8'),core=fs.readFileSync('content.js','utf8'),profile=JSON.parse(fs.readFileSync('base-profile.json','utf8'));
+ const pop=(fs.readFileSync('popup.js','utf8') + '\n' + fs.readFileSync('defaults.js', 'utf8')),core=(fs.readFileSync('content.js','utf8') + '\n' + fs.readFileSync('defaults.js', 'utf8')),profile=JSON.parse(fs.readFileSync('base-profile.json','utf8'));
  assert.match(pop,/const BOOL = \[[^;]*'warlordAggro'/);assert.match(pop,/warlordAggro: true/);assert.match(core,/warlordAggro: true/);assert.equal(profile.cfg.warlordAggro,true);
  const f=fixture();f.env.cfg.warlordAggro=false;assert.equal(f.C.warlordPullPlan(f.ctx,f.mp),null);
 });

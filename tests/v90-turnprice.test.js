@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.0 «цена хода» (разбор боя, лог 11.10 00:47–01:40, бот 7.2.3): на РБ 255 банок из 1 283 ходов, 96 из 234 банок HP — при HP ≥ 80 %,
 // Corpse Life Drain (+225 HP, 0 урона) при живой банке (+600). Банка — целый ход без урона: у знакомого РБ пьём, только когда
 // после ещё одного ударного хода HP может уйти ниже «спецудар + 2 удара»; без долива до верхней границы полосы.
@@ -47,9 +48,9 @@ assert.match(combat, /if \(me && me\.pct <= env\.cfg\.hpPotAt && !drainFirst && 
 
 // 4. настройка есть в меню, по умолчанию ВКЛ везде
 const rd = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-assert.match(rd('content.js'), /rbBandAuto: true, rbTurnPrice: true,/);
-assert.match(rd('popup.js'), /'rbBandAuto', 'rbTurnPrice'/);
-assert.match(rd('popup.js'), /rbBandAuto: true, rbTurnPrice: true/);
+assert.match((rd('defaults.js') + '\n' + rd('content.js')), /rbBandAuto: true, rbTurnPrice: true,/);
+assert.match((rd('defaults.js') + '\n' + rd('popup.js')), /'rbBandAuto', 'rbTurnPrice'/);
+assert.match((rd('defaults.js') + '\n' + rd('popup.js')), /rbBandAuto: true, rbTurnPrice: true/);
 assert.match(rd('popup.html'), /<input id="rbTurnPrice" type="checkbox">/);
 assert.equal(JSON.parse(rd('base-profile.json')).cfg?.rbTurnPrice ?? JSON.stringify(JSON.parse(rd('base-profile.json'))).includes('"rbTurnPrice":true'), true);
 console.log('v90-turnprice: PASS');

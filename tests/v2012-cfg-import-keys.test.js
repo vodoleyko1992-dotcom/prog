@@ -8,7 +8,9 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
 const popup = read('popup.js');
 const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); assert.ok(i >= 0 && j > i, a); return src.slice(i, j); };
 
-const DEF = vm.runInNewContext('(' + part(popup, 'const DEF = ', '\nconst fmt =').slice(12).replace(/;\s*$/, '') + ')');
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): DEF меню — общая таблица defaults.js (L2Defaults.CFG), та же, что у движка.
+assert.match(popup, /const DEF = L2Defaults\.CFG;/);
+const DEF = require(path.join(root, 'defaults.js')).CFG;
 const b = { Object, JSON, Number, Array, DEF }; vm.createContext(b);
 vm.runInContext(part(popup, 'const CFG_IMPORT_EXTRA', "$('cfgImport').onclick") + ';this.clean=cfgImportClean;this.EXTRA=CFG_IMPORT_EXTRA;', b);
 const sample = k => {

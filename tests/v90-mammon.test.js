@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.0 (игрок 11.10: «давай сделаем функцию исполнения заказов и раздел Маммон — копить на определённую задачу и последовательно
 // идти её делать»): заказ торговца из сумки (телепорт → «Здати» → обратно), цель «копить на улучшение у кузнеца», свои GET с токеном
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -8,7 +9,7 @@ const load = (extra = {}) => { const sb = { console, Date, Math, JSON, Object, N
 const eqJ = (a, b, m) => assert.equal(JSON.stringify(a), JSON.stringify(b), m);
 const GEAR = JSON.parse(read('mammon-gear.json'));
 // 10.0.14: имя в FARM ещё не означает доступный источник. План учитывает уровень героя и реальные drop/spoil через farmZones.
-const farmCode = read('content.js'), farmCut = re => { const m = farmCode.match(re); assert.ok(m, 'farmZones fixture contract'); return m[0]; };
+const farmCode = (read('defaults.js') + '\n' + read('content.js')), farmCut = re => { const m = farmCode.match(re); assert.ok(m, 'farmZones fixture contract'); return m[0]; };
 // 10.0.22: необязательный фильтр доступности источников; прежние расчёты без фильтра сохраняются.
 const zonesSrc = farmCut(/const farmWin = L =>[^\n]+\n/) + farmCut(/function farmFit\(l, L\) \{[\s\S]*?\n\}\n/) + farmCut(/function farmZones\(drop, L, above, sp = \[\], spK = 0\.8, accept = \(\) => true\) \{[\s\S]*?\n\}\n/);
 const farmRes = {
@@ -133,7 +134,7 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
     assert.equal((code.match(/l2-mammon-upgrade-card__btn/g) || []).length, 1, 'upgrade button only in upgrade()'); assert.ok(up.includes('l2-mammon-upgrade-card__btn'));
     assert.ok(!/blacksmith\/upgrade['"`]/.test(code), 'no own upgrade POST'); assert.match(up, /env\.cfg\.mmUpgrade === false/); }
   // 11. ядро: свои GET с токеном страницы (без него 401), РБ/эпики тоже; цель Маммона в farmGoal; шаг в цикле; манифест; меню
-  const c = read('content.js');
+  const c = (read('defaults.js') + '\n' + read('content.js'));
   assert.match(c, /const gameAuth = \(\) => \{ try \{ const t = localStorage\.getItem\('token'\); return t \? \{ Authorization: 'Bearer ' \+ t \}/);
   for (const f of ['modules/raid.js', 'modules/epics.js']) assert.match(read(f), /headers: env\.gameAuth\?\.\(\) \|\| \{\}/, f);
   assert.match(c, /cfg\.mmGoalItem\) \{ const m = L2V7Modules\.mammon\.mmFarmGoal\(\); if \(m\) return m; \}/);
@@ -142,9 +143,9 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   const mf = JSON.parse(read('manifest.json'));
   assert.ok(mf.content_scripts.some(s => s.js.indexOf('modules/mammon.js') >= 0 && s.js.indexOf('modules/mammon.js') < s.js.indexOf('content.js')));
   assert.ok(mf.web_accessible_resources[0].resources.includes('mammon-gear.json'));
-  const html = read('popup.html'), pj = read('popup.js');
+  const html = read('popup.html'), pj = (read('defaults.js') + '\n' + read('popup.js'));
   for (const id of ['tab-mammon', 'mmOrders', 'mmTpMax', 'mmGoalItem', 'mmGoalLvl', 'mmGoalFarm', 'mmSmithAuto', 'mmOrderBox', 'mmGoalBox']) assert.ok(html.includes(`id="${id}"`), id);
-  assert.match(pj, /const DEF = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true,/);
+  assert.match(pj, /const DEF = L2Defaults\.CFG;/);   // 20.13 (шаг 7): меню берёт умолчания движка из defaults.js
   assert.match(c, /const DEF_CFG = \{ mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGoalFarm: true, mmShopBuy: true, mmSmithAuto: true,/);
   const bp = JSON.parse(read('base-profile.json')).cfg; assert.equal(bp.mmOrders, true); assert.equal(bp.mmTpMax, 500000);
   console.log('PASS: 9.0 Mammon — order from bag (teleport ≤ limit, «Здати», winner check, back to the spot), never in battle/tours/TvT; goal «save up for an upgrade» (missing materials in order, farm source, craft hint, ready → upgrade at the smith (9.2.5) or the player), smith prices; own GETs with the page token (RB/epics 401 fixed)');

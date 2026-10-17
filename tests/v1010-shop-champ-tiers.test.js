@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.10 (игрок 13.10 11:33): «адены мало, но хотя бы 1000 или 5000 сосок купить может, или зелья — не 1000, а 100» (лог 19:41: alt1
 // 204 960 аден — первыми банки MP по 2 200, на заряды 23 шт.); «включены нападения на красных, которые кидают кансел… уходит и
 // возвращается к нему же… добавь опции, каких чемпионов бить, особенно на лоу лвлах».
@@ -49,9 +50,9 @@ const load = (file, env) => { const c = { console, Date, Math, JSON, Object, Num
   assert.match(cmb, /const off = env\.champs\?\.tierOff\?\.\(ctx\) \|\| env\.champs\?\.held\?\.\(ctx\);/, 'бой цепочкой: выключенный цвет / вердикт → на карту');
 
   // 3. настройки и меню
-  const ct = read('content.js'), pj = read('popup.js'), ph = read('popup.html'), bp = JSON.parse(read('base-profile.json'));
+  const ct = (read('defaults.js') + '\n' + read('content.js')), pj = (read('defaults.js') + '\n' + read('popup.js')), ph = read('popup.html'), bp = JSON.parse(read('base-profile.json'));
   assert.match(ct, /champBlue: true, champOrange: true, champRed: false, champMinLvl: 20,/);
-  assert.match(pj, /champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 \};/);
+  assert.match(pj, /const DEF = L2Defaults\.CFG;/);   // 20.13 (шаг 7): меню — те же умолчания, что движок (defaults.js)
   assert.match(pj, /'champBlue', 'champOrange', 'champRed',/); assert.match(pj, /'champMinLvl',/);
   for (const id of ['champBlue', 'champOrange', 'champRed', 'champMinLvl']) assert.match(ph, new RegExp(`id="${id}"`));
   assert.equal(bp.cfg.champRed, false); assert.equal(bp.cfg.champMinLvl, 20);

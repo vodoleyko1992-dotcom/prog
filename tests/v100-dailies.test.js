@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0 (игрок 12.10: «клановые задания — делать на авто и получать бонусы; есть квесты общие ежедневные, типо дейлики»)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -77,7 +78,7 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
   // 9. текст меню
   { const { D } = mk(); D.dailyNote(dailyRaw); D.clanNote(clanView()); const t = D.text(); assert.match(t, /✓ 50 рыб/); assert.match(t, /○ 10 сообщений в чате 0\/10/); assert.match(t, /BlackLotus: алмазов 18 · задания нет/); assert.match(t, /✓ Вызов рейдового босса \(\+7💎, 140\s000 EXP\)/); assert.match(t, /⏳ \d\d:\d\d Большая охота \(\+4💎, 1 CoL\)/); }
   // 10. ядро и меню
-  const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), manifest = read('manifest.json'), fishing = read('modules/fishing.js');
+  const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), manifest = read('manifest.json'), fishing = read('modules/fishing.js');
   assert.match(manifest, /"modules\/dailies\.js"/); assert.match(html, /<script src="modules\/dailies\.js"><\/script>/);
   assert.match(content, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks',/);
   assert.match(content, /async function gamePost\(path, body, ms = 8000\)/);

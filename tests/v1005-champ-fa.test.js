@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.5 (обновление игры 13.10 «Обновление чемпионов»): FA с чемпионов — синий 10 %, оранжевый 20 %, красный 60 %, обычный моб 1 %,
 // только с мобов не ниже героя −5. Цвет — championTier в /game/map/spawns (живой ответ 13.10). Красные/оранжевые в окне — первыми, FA в журнал
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
@@ -73,7 +74,7 @@ assert.match(hook, /x\.kind === 'champion' \? String\(x\.championTier \|\| ''\)/
   assert.equal(fd.f.mob, 1);
   assert.equal(lt.faNote(['Fast Aden ×1'], 'Rahha', null), null, 'RB not counted');
   // 5. настройки и меню
-  const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), base = JSON.parse(read('base-profile.json'));
+  const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), base = JSON.parse(read('base-profile.json'));
   assert.match(content, /searchChamp: true, champFa: true/);   // 10.0.5: поиск чемпионов ВКЛ (игрок 13.10)
   assert.match(popup, /'searchChamp', 'champFa'/);
   assert.match(html, /id="champFa"/); assert.match(html, /id="faDropBox"/);

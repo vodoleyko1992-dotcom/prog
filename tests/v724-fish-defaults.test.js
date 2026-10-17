@@ -1,11 +1,12 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 7.2.4 (скрин игрока 10.10): настройки рыбалки — базовые: наживка «Авто», заряды вкл., докупать вкл., 1000 пакетов наживки,
 // заряды под наживку (авто, до 1000 пакетов), 750 пакетов зарядов, если авто выкл., без лимита забросов
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 // 8.0.3 (игрок 11.10: «покупать по 100 пакетов»): наживка — 100 пакетов за закупку (миграция fishBait803, см. v803-fishbait)
 const want = { fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotAuto: true, fishShotPacks: 750, fishMaxCasts: 0 };
-const content = read('content.js'), popup = read('popup.js'), fishing = read('modules/fishing.js');
+const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), fishing = read('modules/fishing.js');
 const lit = v => typeof v === 'string' ? `'${v}'` : String(v);
 for (const [k, v] of Object.entries(want)) {
   assert.ok(content.includes(`${k}: ${lit(v)}`), `content DEF_CFG ${k}`);

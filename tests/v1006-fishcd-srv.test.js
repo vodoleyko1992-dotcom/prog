@@ -1,10 +1,11 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.6 (разбор 13.10 по логам 12.10 12:20–18:12): откат одного и того же приёма рыбалки — по откатам сервера из ответа
 // (fishing.cooldowns: pumpingUntil/reelingUntil при pumpingMs 500 / reelingMs 700), а не по своей модели 1,05 с. Отказ «action_cooldown»
 // при откате по серверу растит запас (+50 мс), модель не раздувает; запас 400 и отказы идут — час по модели; cfg.fishSrvCd=false — как было
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
-const code = read('modules/fishing.js'), content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), base = read('base-profile.json');
+const code = read('modules/fishing.js'), content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), base = read('base-profile.json');
 
 const clock = { t: 1800000000000 };
 class FDate extends Date { static now() { return clock.t; } }

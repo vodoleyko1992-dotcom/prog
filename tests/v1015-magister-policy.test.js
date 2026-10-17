@@ -1,7 +1,8 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 const fs=require('fs'),path=require('path'),vm=require('vm'),test=require('node:test'),assert=require('node:assert/strict');
 const root=process.env.L2_MAGISTER_POLICY_ROOT||path.join(__dirname,'..');
-const content=fs.readFileSync(path.join(root,'content.js'),'utf8'),popup=fs.readFileSync(path.join(root,'popup.js'),'utf8');
+const content=(fs.readFileSync(path.join(root,'content.js'),'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8')),popup=(fs.readFileSync(path.join(root,'popup.js'),'utf8') + '\n' + fs.readFileSync(path.join(root, 'defaults.js'), 'utf8'));
 const onceCode=content.match(/const once =[^\n]+/)[0];
 const migrations=['mag7125','magEveryLevel20261014'].map(n=>content.split('\n').find(s=>s.includes("once('"+n+"'"))).join('\n');
 function migrate(cfg={},rt={}){const ctx={cfg,rt,cf:{},rf:{}};vm.runInNewContext(onceCode+'\n'+migrations,ctx);return {cfg:{...cfg,...ctx.cf},rt:{...rt,...ctx.rf}}}

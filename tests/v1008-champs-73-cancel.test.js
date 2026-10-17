@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 10.0.8 (анонс игры 13.10 «Обновление чемпионов и оружия»): с 73 ур. оранжевые/красные чемпионы — HP ×3, атака/защита ×4 (живой
 // /game/spawn/<id>/info 13.10: красный Hot Springs Yeti 75 — 476 тыс. HP, M.Def 6 014; красный Canyon Antelope 68 — 145 тыс., 1 366);
 // «Cancel» (второй анонс 13.10 06:10 заменил 10/30/60 %): удачный удар снимает до 3 баффов — синий 3 % раз в 30 с, оранжевый 5 %, красный 7 %
@@ -61,7 +62,7 @@ const C = load('modules/champs.js', env);
   assert.equal(B.cancelRisk('Hot Springs Yeti', true, 'blue'), null);
   assert.ok(B.cancelRisk('Hot Springs Yeti', true), 'without a tier (old callers) the memory still answers');
   // 6. проводка: mobfarm передаёт цвет, champs получает faPaidLeft, меню — выбор режима, значение по умолчанию
-  const mf = read('modules/mobfarm.js'), ct = read('content.js'), pj = read('popup.js'), ph = read('popup.html');
+  const mf = read('modules/mobfarm.js'), ct = (read('defaults.js') + '\n' + read('content.js')), pj = (read('defaults.js') + '\n' + read('popup.js')), ph = read('popup.html');
   assert.match(mf, /env\.cancelRisk\?\.\(name, champ, r\.tier\)/);
   assert.match(ct, /get faPaidLeft\(\) \{ return \(\.\.\.a\) => L2V7Modules\.buffs\.faPaidLeft\(\.\.\.a\); \} \}\);/);
   // 15.10: новый режим по решению игрока; старые режимы проверены выше.

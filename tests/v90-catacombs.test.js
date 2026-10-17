@@ -1,4 +1,5 @@
 'use strict';
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 9.0 (просьба игрока 11.10: «доведи до ума фарм катакомб» + «кнопка автообмена камней на AA»; живой ответ игры 11.10 — Catacomb of the
 // Witch: 190 мобов 60–72 ур., по 15 на странице): весь список из ответа игры, листание страниц, свежая ссылка перед кликом, РБ внутри не цель,
 // чемпионы и ★ первыми, возврат в подземелье по activeDungeonId, отказ телепорта (alert) → 3 раза → пропуск; обмен камней у Ancient Trader
@@ -148,7 +149,7 @@ const page = (mobs, p, star = '') => docOf(`<div id="dungeon-content"><ul id="du
 
   // ---------- W: проводка — hook.js, ядро, меню ----------
   {
-    const hook = read('hook.js'), content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), base = JSON.parse(read('base-profile.json'));
+    const hook = read('hook.js'), content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), base = JSON.parse(read('base-profile.json'));
     assert.equal((hook.match(/dm: dungMobs\(u, o\)/g) || []).length, 2, 'fetch and XHR pass the dungeon list');
     assert.match(hook, /\/game\\\/dungeon\\\/\(\?:view\|enter\)\$/);
     assert.match(hook, /catacombs\|dungeon\|ancient-trader/, 'alert is replaced only on these pages');

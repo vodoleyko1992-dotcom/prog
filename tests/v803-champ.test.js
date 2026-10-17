@@ -1,9 +1,10 @@
+// 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 15.10: режим окупаемости по новому решению игрока.
 'use strict';
 // 8.0.3 (игрок 11.10: «пусть поиск чемпионов по умолчанию будет откл., с возможностью вкл»)
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-const content = read('content.js'), popup = read('popup.js'), html = read('popup.html'), mobfarm = read('modules/mobfarm.js');
+const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), mobfarm = read('modules/mobfarm.js');
 // 10.0.5 (игрок 13.10 00:38: «добавь автопоиск чемпионов раз в 20 убитых мобов»): поиск чемпионов снова ВКЛ по умолчанию (once champAuto1005)
 assert.match(content, /chain: true, searchQuest: true, searchChamp: true, champFa: true, champLeave: true, noCancelMobs: true, cancelMobs: '', champCancel: 'efficiency', champEvery: 30, deepEvery: 30,/, 'core default: on (17.10: interval 30)');
 assert.match(popup, /chain: true, searchQuest: true, searchChamp: true,/, 'menu default: on (10.0.5)');
