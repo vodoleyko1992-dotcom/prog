@@ -70,6 +70,36 @@ function mergeTimerPatch(current, incoming) {
   }
   return { ...(current || {}), ...incoming, b };
 }
+// 20.8: лимиты фарма — свой прогресс, атомарное завершение только одной задачи.
+const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 'catMode'] };
+const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
+function farmQuotaChange(state, E, now) {
+  const keys = FARM_QUOTA[E?.task], cfg = state.cfg || {}, rt = state.rt || {};
+  if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
+  const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
+  if (!enabled || !limit || limit !== E.limit) return { ok: false, reason: 'quota_changed' };
+  const old = rt.farmQuota?.[E.task];
+  let row = old;
+  if (E.op === 'begin') {
+    if (!Number.isSafeInteger(E.counter) || E.counter < 0 || !Number.isSafeInteger(E.revision) || typeof E.spawn !== 'string' || !E.spawn || E.spawn.length > 160) return { ok: false, reason: 'quota_snapshot' };
+    if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
+    // Reload активного боя сохраняет исходную точку, включая уже убитых соседей.
+    if (!row.pending || row.pending.spawn !== E.spawn) row = { ...row, pending: { spawn: E.spawn, counter: E.counter, revision: E.revision, kick: E.kick || 0 } };
+    else row = { ...row, pending: { ...row.pending, kick: E.kick || 0 } };
+  } else if (E.op === 'win') {
+    if (!row || row.run !== E.run || row.done || row.pending?.spawn !== E.spawn || row.pending?.revision !== E.beforeRevision || row.pending.kick !== (E.kick || 0)) return { ok: false, reason: 'quota_battle_changed' };
+    if (!Number.isSafeInteger(E.counter) || (E.lost ? E.counter < row.pending.counter : E.counter <= row.pending.counter) || !Number.isSafeInteger(E.revision) || E.revision <= row.pending.revision) return { ok: false, reason: 'quota_unconfirmed' };
+    const got = row.got + E.counter - row.pending.counter;
+    row = { ...row, got, pending: null, done: got >= limit, ...(got >= limit ? { doneT: now } : {}) };
+  } else return { ok: false, reason: 'quota_operation' };
+  const next = { ...cfg };
+  if (row.done) {
+    next[keys[1]] = false;
+    if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== E.task);
+    else if (!['enchantMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
+  }
+  return { ok: true, row, cfg: next, rt: { ...rt, farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -90,6 +120,10 @@ async function statePatch(m, sender) {
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
       return { ok: false, reason: 'ownership_lost' };
+    if (m.farmQuota) {
+      const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
+      await chrome.storage.local.set({ rt: r.rt, cfg: r.cfg }); return { ok: true, row: r.row, cfg: r.cfg };
+    }
     // 17.10: завершение цели и снятие только рыбалки — одной записью, по свежему списку задач.
     if (m.finishFishGoal) {
       const T = state.rt?.fishTgt, E = m.finishFishGoal;
@@ -171,6 +205,13 @@ async function menuPatch(m, sender) {
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
+    // Новый лимит/явный сброс не наследуют старый бой и его поздний ответ.
+    const quotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
+    for (const [task, key] of [['auto','autoKillLimit'],['cat','catKillLimit']]) {
+      if (m.resetFarmQuota !== task && (!Object.hasOwn(cfgPatch, key) || quotaLimit(cfgPatch[key]) === quotaLimit(state.cfg?.[key]))) continue;
+      const rows = change.rt?.farmQuota || state.rt?.farmQuota || {}, old = rows[task];
+      change.rt = { ...state.rt, ...change.rt, _src: 'menu', farmQuota: { ...rows, [task]: { run: (old?.run || 0) + 1, limit: quotaLimit(change.cfg?.[key] ?? state.cfg?.[key]), got: 0 } } };
+    }
     // 15.10: выбор режима не продолжает старую серию; выход сразу запрещает новые попытки.
     // Берём подтверждённый снимок внутри очереди, чтобы поздний ответ не терял pending/историю.
     if (Object.hasOwn(cfgPatch, 'enchantMode') && state.rt?.enchant?.status === 'running') {

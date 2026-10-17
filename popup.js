@@ -149,6 +149,7 @@ async function activateMode(rtPatch, cfgPatch) {
 
 const NUM  = ['enemyLvlAbove', 'tsGoalItem', 'tvtHoldMin', 'champEvery', 'champMinLvl', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'rbTimerMin', 'rbRespH', 'sealMin', 'mmTpMax', 'storyTpMax', 'mmGoalItem', 'mmGoalLvl', 'farmLvlBelow', 'farmLvlAbove', 'debuffMinActs', 'petFinishMp', 'petResummonAt', 'petHealAt', 'petBuffSec', 'epicMinHpPots', 'epicCoinDailyMax', 'epicCoinPerBoss', 'epicCoinKeep', 'epicMaxFightMin', 'epicMaxRetreats', 'epicAdenaDailyMax', 'epicRetreatHp', 'epicLvlUp', 'epicMaxDeaths', 'rbPotTo', 'rbPotAt', 'rbChipMaxAttempts', 'drainHp', 'toggleMpOff', 'toggleMpOn', 'campaignEvery', 'rbMaxAbove', 'rbMaxKillMin', 'rbMaxBelow', 'rbRetreatHp', 'rbRestHp', 'deepEvery', 'lvlMin', 'lvlMax', 'lvlAbove', 'lvlBelow', 'maxPages', 'champHpMult', 'reactMin', 'reactMax',
               'stopHp', 'skillMpMin', 'mpPotAt', 'hpPotAt', 'stunEvery', 'buffSec', 'rbPotReserve', 'rodEnchantTo', 'fishTimeMin', 'fishBuyPacks', 'fishShotPacks', 'fishMaxCasts', 'fishProcessEvery', 'shopReserve', 'shopMaxSpend', 'zoneTrial', 'zoneAbove', 'farmNeed', 'recipeNeed'];
+NUM.push('autoKillLimit', 'catKillLimit');
 const TXT  = ['petHealPrefer', 'rbSessBuffs', 'petSummon', 'nPetBuffs', 'priority', 'champMark', 'cancelMobs', 'bossMark',
               'combatProfile', 'nAttack', 'nPower', 'nStun', 'nBuffs', 'nShots', 'nMpPot', 'nHpPot', 'nHeal', 'nWeaponMain', 'nCharge', 'nForce', 'nDebuff', 'debuffMode', 'fishBait', 'fishGoal', 'fishTimePack', 'shopHp', 'shopMp', 'shopShots', 'shopSpirit', 'shopSoul', 'farmRes', 'townBuffSet', 'faBuffs', 'resQuests', 'indMode', 'recipeRes', 'catDungeon', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nSweep', 'nUltra', 'nDrain', 'ultMode', 'fightMode', 'epicList', 'champCancel', 'mmFarmSpoil', 'subMainNick'];
 const BOOL = ['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks', 'campAuto', 'warlordAggro', 'champBlue', 'champOrange', 'champRed', 'mmOrders', 'mmMailClaim', 'storyTurnIn', 'mmGoalFarm', 'mmShopBuy', 'mmSmithAuto', 'mmUpgrade', 'rbSessNob', 'rbFaFull', 'petAuto', 'petResummon', 'petFinish', 'petBuffAuto', 'autoMagister', 'debuffAuto', 'rbValueTour', 'rbBandAuto', 'rbTurnPrice', 'rbCharge', 'rbChipRetreat', 'rbProbe', 'epicCheck', 'epicFaFull', 'dock', 'tvtOn', 'tvtPet', 'rbFrenzyDive', 'catMode', 'keyBuffBoss', 'spoilRb', 'autoRevive', 'chain', 'searchQuest', 'searchChamp', 'champFa', 'champLeave', 'noCancelMobs', 'rec', 'autoSnap', 'questStop', 'autoRoles', 'rbUsePots', 'weaponClassEquip', 'fishShots', 'fishAutoBuy', 'fishProcess', 'fishOpenBoxes', 'shopAuto', 'zoneAuto', 'rbMpPots', 'rbFast', 'fishShotAuto', 'fishSrvCd', 'fishTimeAuto', 'autoLearn', 'netLog', 'gameMsgLog', 'learnShots', 'recipeSpoil', 'enemyHunt', 'enemyFlagOnly', 'rbTimers', 'rbTimerAll', 'mmFarmBest', 'mmFarmDrop', 'mmFarmGuide', 'subCraftSelf', 'subSpoilFirst', 'subHelpMain'];
@@ -163,7 +164,7 @@ const DEF = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, mmGo
               nShots: 'Заряд душі, Заряд души, Soulshot', nMpPot: 'Зілля мани, Зелье маны, Mana Potion', nHpPot: '', nHeal: '',
               nCharge: 'Focused Force', nForce: 'Hurricane Assault=2, Force Blaster=1', rbUsePots: true, rbPotReserve: 10,
               fishMode: false, rodEnchantTo: 10, fishTimeAuto: false, fishTimePack: '6h', fishTimeMin: 5, fishBait: 'auto', fishShots: true, fishAutoBuy: true, fishBuyPacks: 100, fishShotPacks: 750, fishShotAuto: true, fishMaxCasts: 0, fishSrvCd: true, fishProcess: true, fishProcessEvery: 100, fishOpenBoxes: true, fishGoal: '',
-              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
+              shopAuto: true, shopReserve: 200000, shopMaxSpend: 2000000, shopHp: '300/1000', shopMp: '200/1000', shopShots: '1000/5000', shopSpirit: '0/1000', shopSoul: '0/1000', shopBait: '0/0', zoneAuto: false, autoKillLimit: 0, catKillLimit: 0, zoneTrial: 20, zoneAbove: 10, rbMaxBelow: 9, townBuffSet: 'basic', faBuffs: '', resQuests: '', rbMpPots: true, rbFast: true, rbTour: false, farmRes: '', farmNeed: 0, campAuto: true, champBlue: true, champOrange: true, champRed: false, champMinLvl: 20 };
 const fmt = n => (n || 0).toLocaleString('ru');
 // подтверждение опасных кнопок вторым нажатием (4 с). confirm() во встроенном меню не работает:
 // меню — iframe расширения на странице игры, и Chrome молча блокирует там диалоги (confirm сразу возвращает «Отмена»)
@@ -309,6 +310,7 @@ async function load() {
     $('buffAudit').textContent = A?.list?.length ? `🔍 Проверка баффов (${new Date(A.t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}):\n`
       + A.list.map(x => `${ic[x.st] || '•'} ${x.bn} — ${x.why}`).join('\n') : (d.nBuffs ? '🔍 Проверка баффов — появится в первом бою' : ''); }
   renderCat(rt, d);
+  renderFarmQuotas(rt, d);
   // 8.0 (аудит меню): базы «Фарм ресурсов»/«Рецепты» (мегабайты) — только когда открыт раздел «Охота»
   if (huntOpen()) renderHuntDb(rt, d);
   $('shopBox').textContent = rt.shop ? `⏳ Сейчас закупаюсь (${rt.shop.step === 'count' ? 'считаю сумку' : 'покупаю'})…`
@@ -667,6 +669,16 @@ $('sealNow').onclick = async () => {
   const { on = false } = await chrome.storage.local.get('on');
   await activateMode({ sealEx: { t: Date.now(), stopAfter: !on }, sealT: 0 }, {});
   $('sealNow').textContent = 'Обмен поставлен в очередь';
+};
+function renderFarmQuotas(rt, d) {
+  for (const task of ['auto','cat']) {
+    const row = rt.farmQuota?.[task], limit = +d[task === 'auto' ? 'autoKillLimit' : 'catKillLimit'] || 0;
+    $(task + 'KillProgress').textContent = limit > 0 ? `Убито: ${row?.limit === limit ? row.got || 0 : 0} / ${limit}${row?.done && row.limit === limit ? ' · выполнено' : ''}` : 'Без лимита';
+  }
+}
+for (const task of ['auto','cat']) $(task + 'KillReset').onclick = async () => {
+  if (formChar == null) { toast('Дождитесь загрузки персонажа'); return; }
+  try { await menuPatch({ manualKickAt: Date.now() }, { resetFarmQuota: task, expectedChar: formChar }); await load(); } catch (e) { toast(e.message); }
 };
 function renderCat(rt, d) {
   renderSeal(rt, d);
@@ -1231,6 +1243,7 @@ async function save(e) {
   TXT.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).value; });
   BOOL.forEach(k => { if (!one || one.includes(k)) n[k] = $(k).checked; });
   if (one && ['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
+  for (const k of ['autoKillLimit','catKillLimit']) if (n[k] != null) n[k] = Math.floor(Math.min(Number.MAX_SAFE_INTEGER, n[k]));
   if (n.rodEnchantTo != null) n.rodEnchantTo = Math.min(10, n.rodEnchantTo);
   if (n.maxPages < 1) n.maxPages = 1;
   if (n.champHpMult < 1.1) n.champHpMult = 1.1;
@@ -1240,6 +1253,7 @@ async function save(e) {
   if (n.reactMax != null && n.reactMax < (n.reactMin ?? cfg.reactMin ?? 80)) n.reactMax = n.reactMin ?? cfg.reactMin ?? 80;
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
+  if (one && ['autoKillLimit','catKillLimit'].includes(id)) magReset.manualKickAt = Date.now();
   try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
   catch (error) {
     const why = String(error?.message || error);
