@@ -6384,6 +6384,8 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   });
   once('ffDmgMig', () => { if (S['focused force']?.dmgN) { S['focused force'] = { ...S['focused force'], dmg: 0, dmgN: 0 }; sk = true; } });
   // 17.10.2026: по просьбе игрока карта/чемпионы раз в 30 боёв; свои интервалы сохраняем.
+  // 18.10.2026 (игрок: «расширить время боя со сложными РБ до 30 минут»): заводской предел долгого боя 20 → 30 мин; своё число не трогаем.
+  once('rbKill30_20261018', () => { if (+C('rbMaxKillMin') === 20) cf.rbMaxKillMin = 30; });
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено, иначе нас замечают в статистике»):
   // два дневных лимита мобов → один dailyKillLimit (старые складываются; если оба были 0 — заводские DAILY_KILL_DEF), рыба без лимита → DAILY_FISH_DEF.

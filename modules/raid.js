@@ -264,9 +264,9 @@ function rbPreflightForecast(id, st, slack = 1, dpsOver, hpOver) {
   const x = { sp: Math.round(sp), spPct: Math.round(sp / maxHp * 100), p90: Math.round(p90), t: Math.round(t), need: Math.round(need), pool, source: evidence.source, planned: evidence.planned, incomingSource: incoming.source };
   if (!epic && context?.managed && !evidence.prepared) return { ok: false, kind: 'context', action: 'prepare', why: 'нужна свежая сверка состава и зарядов; запасной DPS не определяет силу РБ', ...x };
   // 10.0.2 (игрок 12.10: «плохо фармит РБ, особенно сильных»; лог 22:16–22:46: Галлате 73 и Голконда 79 — по ≈25–43 мин боя каждый, ни один
-  // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
+  // не убит, две смерти): бой дольше предела (cfg.rbMaxKillMin, 20 мин → 30 мин с 18.10 по просьбе игрока; 0 — без предела) — не сейчас (пропуск 30 мин, не «не по силам»).
   // Эпики (свой ДПС от вызывающего) — по своим правилам
-  const maxMin = env.cfg.rbMaxKillMin ?? 20;
+  const maxMin = env.cfg.rbMaxKillMin ?? 30;
   const slow = !epic && !dpsOver && maxMin > 0 && t > maxMin * 60;
   const slowWhy = `долгий бой ≈${env.fmtT(t)} (урон ≈${Math.round(dps)}/с${ownDps ? ', свой замер' : transferred ? ', по другому РБ с запасом' : context?.managed ? ', текущий состав ещё не измерен' : ''}, предел ${maxMin} мин) · ${info}`;
   // 15.10 (лог 00:42): 997/с по неизмеренному Warlock обещали 92 мин, а Hekaton пал за 2:26.
@@ -813,7 +813,7 @@ function rbListWhy(plan = rbTourPlan()) {
   for (const x of plan.blocked) c[x.kind] = (c[x.kind] || 0) + 1;
   const win = plan.ready.length + plan.blocked.filter(x => x.kind !== 'below' && x.kind !== 'above').length;
   const pm = env.potModel();
-  const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`, c.slow && `бой дольше ${env.cfg.rbMaxKillMin ?? 20} мин ${c.slow}`,
+  const parts = [c.dead && `мертвы ${c.dead}`, c.deny && `игра не пускает ${c.deny}`, c.no && `не по силам ${c.no}`, c.slow && `бой дольше ${env.cfg.rbMaxKillMin ?? 30} мин ${c.slow}`,
     c.pots && `мало банок HP ${c.pots} (сверх резерва ${env.cfg.rbPotReserve || 0}: ${pm ? pm.n + ' шт.' : 'нет'})`, c.retry && `только что пробовал ${c.retry}`,
     c.limit && `лимит 3 телепортов/час ${c.limit}`, c.currency && `запрещённая валюта ${c.currency}`, c.funds && `не хватает бюджета телепорта ${c.funds}`, c.unknown && `нужна разведка цифр игры ${c.unknown}`, c.context && `нужна подготовка состава ${c.context}`, c.unmeasured && `нет замера DPS ${c.unmeasured}`, c.value && `невыгодны ${c.value}`, c.stale && `список устарел ${c.stale}`].filter(Boolean);
   const nx = c.dead ? env.rbTimer?.nextUp?.(lo, hi) : null;   // 10.0.2: таймеры боссов — кто воскреснет первым
@@ -1748,7 +1748,7 @@ function rbAssess(ctx, me, mob) {
     env.rec('B', 'РБ', `${ctx.name}: проба подтверждена, полный DPS ≈${Math.round(dps)}/с; продолжаю бой`);
   }
   if (probingDps && !win && elapsed >= 30) {
-    const tooLong = (env.cfg.rbMaxKillMin ?? 20) > 0 && tKill > (env.cfg.rbMaxKillMin ?? 20) * 60;
+    const tooLong = (env.cfg.rbMaxKillMin ?? 30) > 0 && tKill > (env.cfg.rbMaxKillMin ?? 30) * 60;
     if (tooLong || !enoughCombatData || spikeRisk || !potReliable || !enoughReserve || !candidateWin || context?.managed && !context.key)
       return { abort: true, why: `проба 30 с завершена: ${tooLong ? 'измеренный бой дольше предела' : 'урон и лечение ещё не подтверждают безопасное продолжение'}; полный DPS ≈${Math.round(dps)}/с` };
     rbNote(S.id, { probe: { ...measurement, done: now } }).catch(() => {});
