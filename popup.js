@@ -327,7 +327,7 @@ async function load() {
   { const on = String(d.epicList ?? DEF.epicList).split(','); document.querySelectorAll('.epicChk').forEach(c => c.checked = on.includes(c.dataset.epic)); }
   renderEpics(rt, d);
   renderRbTimer(rt, d);
-  renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d);
+  renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d); renderLifeStone(rt);
   renderStory(rt); renderSub(rt, d);
   $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
   renderHunt(rt, d);
@@ -1282,6 +1282,15 @@ function augLine(rt) {
   return `\n💎 Life Stone: ${A.text(a)}${m?.p != null ? ` · шанс такого ${m.p} %` : ''}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
     + (A.keep(a) ? ' · бот не меняет это оружие сам' : '');
 }
+// 20.17: отдельный раздел ЛС использует те же наблюдения, что и карточка оружия.
+function renderLifeStone(rt) {
+  const box = $('lsCurrent'); if (!box) return;
+  const a = rt.weaponAug;
+  if (!a) { box.textContent = 'Данные ЛС ещё не получены — осмотрите оружие в игре'; return; }
+  if (!a.w) { box.textContent = 'По последнему осмотру оружие не надето'; return; }
+  const weapon = (rt.weapons || []).find(w => +w.id === +a.w && w.where === 'надето');
+  box.textContent = `По последнему осмотру: ${weapon?.name || 'оружие #' + a.w}${a.e ? ' +' + a.e : ''}` + augLine(rt);
+}
 async function weapScan() {
   const { rt = {} } = await chrome.storage.local.get('rt');
   await menuPatch({ invScan: { step: 'prof', back: '', t: Date.now(), manual: true } });   // 14.10: только явная команда продолжает чтение при выключенном боте.
@@ -1521,11 +1530,11 @@ $('mmCraftForget')?.addEventListener('click', async () => { await menuPatch({ mm
 $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
 // 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
-// «TvT/PvP и сервис»), тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
+// «TvT/PvP и сервис»); 20.17: Маммон, заточка, ЛС и сервис выделены отдельно (10 разделов). Тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
 // #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
 const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', limits: 'overview',
-  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', enchant: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
-  supply: 'fish', mammon: 'fish', loot: 'fish', pvp: 'svc', tvtshop: 'svc', enemies: 'svc', log: 'svc' };
+  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
+  supply: 'fish', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 // 20.12 (ревизия 17.10, UI-7): встроенное меню — iframe, который грузится заново на каждом переходе страницы игры. Свёрнутый/раскрытый
 // список задач и прокрутка разделов запоминаются на этом устройстве (localStorage), иначе после каждого боя шапка снова раскрывала
 // 15 галок, а длинный раздел («Охота») прыгал в начало. Хранилище может быть недоступно — тогда всё работает как раньше.
@@ -2857,7 +2866,7 @@ $('uiSearch').addEventListener('keydown', e => {
 });
 $('uiResults').addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); goTo($('uiResults')._hits[+d.dataset.i]); } });
 $('uiSearch').addEventListener('blur', () => setTimeout(() => $('uiResults').classList.remove('show'), 150));
-// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…6 — разделы (20.12: их шесть), Ctrl+K или «/» — поиск
+// горячие клавиши: Alt+S — старт/стоп, Alt+W — таймеры боссов из файла, Alt+1…9, 0 — разделы (20.17: Маммон, заточка, ЛС и сервис отдельно), Ctrl+K или «/» — поиск
 document.addEventListener('keydown', async e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' || (!typing && e.key === '/')) { e.preventDefault(); $('uiSearch').focus(); $('uiSearch').select(); return; }

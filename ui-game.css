@@ -334,14 +334,14 @@ input:not([type=checkbox]),select{min-height:30px;padding:4px 8px}
  .app-shell{display:grid;grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
  .navbar{flex-direction:column;align-items:stretch;padding:10px 8px;border-bottom:0;border-right:1px solid #4f3f2c;overflow-y:auto}
  nav#moduleNav{flex-direction:column;flex:0 0 auto}
- nav#moduleNav button{justify-content:flex-start;flex:0 0 auto;min-height:38px}
+ nav#moduleNav button{justify-content:flex-start;flex:0 0 auto;min-height:32px}
 }
 /* узко (встроенное меню, планшет, 360 px): разделы — значок и короткое имя в одну строку, поиск ниже */
 @media(max-width:600px){
  body{width:100vw}
  header{padding:6px 9px}
  .navbar{padding:5px 8px}
- nav#moduleNav{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ nav#moduleNav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
  nav#moduleNav button{flex-direction:column;justify-content:center;gap:1px;min-height:40px;padding:3px 1px;font-size:0}
  nav#moduleNav button .lb{display:none}
  nav#moduleNav button::after{content:attr(data-short);font-size:10.5px;line-height:1.15;font-weight:700}

@@ -199,9 +199,13 @@
   <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, дневные лимиты, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
   <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
-  <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, автозаточка, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
-  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, закупка расходников, Маммон, добыча (Alt+5)"><span class="ic">◉</span><span class="lb">Рыбалка и снабжение</span></button>
-  <button data-tab="svc" data-short="Сервис" title="TvT и магазин TvT, PvP и лист врагов, автовход, настройки, диагностика (Alt+6)"><span class="ic">⚙</span><span class="lb">TvT/PvP и сервис</span></button>
+  <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
+  <button data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+5)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
+  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, закупка расходников, добыча (Alt+6)"><span class="ic">◉</span><span class="lb">Рыбалка и снабжение</span></button>
+  <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+7)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
+  <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+8)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
+  <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+9)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
+  <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика (Alt+0)"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -394,12 +398,7 @@
   <div id="recipeTree" class="ftree" data-kind="recipe"></div>
   <div class="row"><button id="recipeScan">📋 Обновить базу рецептов</button><button id="recipeReset">↺ Счётчик</button></div>
   <div class="hint">Бот читает форум «Охота на рецепты» (база обновляется и сама, когда вы туда заходите), выбирает локацию, где мобы вашего уровня чаще всего роняют нужный рецепт, летит туда «Телепортом» и бьёт этих мобов первыми. Выпавшие рецепты считаются по добыче. Локацию с форума бот ищет по имени в списке зон «Телепорта» — если её там нет, нажмите «Обновить список зон» в «Локациях для кача».</div>
-  <h4>💱 Камни печати → Ancient Adena</h4>
-  <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
-  <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
-  <div id="sealBox" class="hint" style="white-space:pre-line"></div>
-  <div class="row"><button id="sealNow">💱 Обменять все камни сейчас</button></div>
-  <div class="hint">Камни печати (зелёный → 5 AA, синий → 3, красный → 10) падают с мобов в катакомбах и некрополях. Бот меняет их у Ancient Trader (Город → Ancient Trader) все сразу: по кнопке — при первой возможности (бой и вываживание рыбы доводит до конца), с галочкой — сам, не чаще раза в 20 минут, когда камней набралось не меньше порога. Адена и Coin of Luck не тратятся. Ancient Adena нужна у торговца Маммона.</div>
+  <div class="row"><button type="button" data-goto="seals">💱 Обмен камней печати → ЛС</button></div>
   <h4>📦 Квесты на ресурсы</h4>
   <div class="row add"><input id="resPick" list="resPickList" placeholder="Выберите предмет из списка" style="flex:1" autocomplete="off"><datalist id="resPickList"></datalist><input id="resNeed" type="number" min="1" placeholder="Сколько" style="width:72px;flex:0 0 72px"><button id="resAdd" title="Добавить цель" style="flex:0 0 34px">+</button></div>
   <div id="resList" style="display:flex;flex-direction:column;gap:4px;margin:4px 0"></div>
@@ -555,12 +554,6 @@
   <label>Надевать оружие «в класс» сам <input id="weaponClassEquip" type="checkbox"></label>
   <div class="hint">Список — из инвентаря (Персонаж → профессия, Инвентарь → оружие). ⭐ — подходит классу, ✓ — надето. «В класс» не надевается, если теряется больше 15 % атаки. Новое оружие в сумке и новый грейд (52 — B, 61 — A, 76 — S) бот замечает сам и перечитывает инвентарь.</div>
 
-  <div class="subsec-title" id="tab-enchant">✨ Автозаточка оружия и брони</div>
-  <h4>✨ Режим и серия заточки</h4>
-  <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
-  <div class="hint">Выберите вещи и лимиты, разрешите попытки и добавьте автозаточку в список задач. После запуска бота нажмите «Начать серию». Когда серия завершится, бот перейдёт к следующей выбранной задаче. Очередь и результаты сохраняются.</div>
-  <div id="enchantPanel" data-embedded="1"></div>
-
   <div class="subsec-title" id="tab-warlock">🐱 Суммоны: кот Warlock, пантера</div>
   <h4>🐱 Автобаф суммона и полный набор</h4>
   <div class="row"><button id="petFullToggle" type="button" aria-pressed="false">🐱 Автобаф суммона</button></div>
@@ -687,6 +680,14 @@
   <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
 </section>
 
+<section id="tab-enchant">
+  <h4>✨ Режим и серия заточки</h4>
+  <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
+  <div class="hint">Выберите вещи и лимиты, разрешите попытки и добавьте автозаточку в список задач. После запуска бота нажмите «Начать серию». Когда серия завершится, бот перейдёт к следующей выбранной задаче. Очередь и результаты сохраняются.</div>
+  <div id="enchantPanel" data-embedded="1"></div>
+
+ </section>
+
 <section id="tab-fish">
   <h4>Как бот рыбачит</h4>
   <div class="hint">Выберите «Рыбалка» в списке задач сверху и нажмите «Старт»: бот идёт к рыбаку (Город → Рыбак), выбирает наживку, включает рыболовные заряды, забрасывает удочку и вываживает рыбу — перед каждым нажатием читает подсказку «Рыба замерла → Pumping» / «Рыба сопротивляется → Reeling». Бой и охота в этом режиме не ведутся.</div>
@@ -742,7 +743,17 @@
   <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
   <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
   <div id="shopBox" class="hint" style="white-space:pre-line"></div>
-  <div class="subsec-title" id="tab-mammon">🏺 Маммон</div>
+  <div class="adv-start" data-adv="fish">⚙ Дополнительно</div>
+  <div class="subsec-title"><span id="tab-loot" class="tab-anchor"></span>🎒 Добыча</div>
+  <h4>🎒 Статистика добычи</h4>
+  <div class="hint">Что выпало, сколько, в час и с какого моба выгоднее всего (шт. за бой — по всем боям с этим мобом, включая пустые).</div>
+  <div id="lootBox" class="zbox"></div>
+  <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
+  <h4>⭐ Особая добыча и ценность</h4>
+  <div id="lootExtra" class="box"></div>
+</section>
+
+<section id="tab-mammon">
   <h4>Где сейчас Маммон</h4>
   <div id="mmNpcBox" class="camp">Ещё не проверял — бот спросит у игры сам</div>
   <h4>📦 Заказ торговца</h4>
@@ -767,25 +778,31 @@
   <div id="mmPlanBox" class="hint mm-plan"></div>
   <div class="row"><button id="mmGuideNow" title="Прочитать источники дропа и спойла из игры сейчас (только чтение, ≈2 МБ)">🔄 Источники из игры</button><button id="mmSmith">⚒ Узнать цены у кузнеца</button><button id="mmGoUp" title="Лететь к кузнецу сейчас и улучшить вещь-цель на один уровень (тратит Coin of Luck). Если чего-то не хватает — кузнец покажет, бот ничего не нажмёт">⬆ Улучшить сейчас</button></div>
   <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>
-  <div class="adv-start" data-adv="fish">⚙ Дополнительно</div>
+  <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
+  <div class="row"><button type="button" data-goto="lifestone">💎 ЛС и обмен камней на AA</button></div>
+  <div class="adv-start" data-adv="mammon">⚙ Дополнительно</div>
   <h4>📮 Почта</h4>
   <label title="Раз в 10 мин бот смотрит почту (только чтение); пришли предметы — заходит в «Пошта → Предмети» и жмёт «Забрати». Вернувшееся от крафтера списывается с «у крафтера»">Забирать предметы из почты сам <input id="mmMailClaim" type="checkbox"></label>
   <div id="mmCraftBox" class="hint" style="white-space:pre-line"></div>
   <div class="row"><button id="mmCraftForget" title="Крафтер ответил иначе или вернул вручную — бот забудет, что у крафтера что-то лежит">↺ Забыть, что у крафтера</button></div>
   <h4>📈 Эффективность и добыча</h4>
   <div id="effBox" class="box"></div>
-  <div class="subsec-title"><span id="tab-loot" class="tab-anchor"></span>🎒 Добыча</div>
-  <h4>🎒 Статистика добычи</h4>
-  <div class="hint">Что выпало, сколько, в час и с какого моба выгоднее всего (шт. за бой — по всем боям с этим мобом, включая пустые).</div>
-  <div id="lootBox" class="zbox"></div>
-  <div class="row"><button id="lootReset">↺ Обнулить статистику добычи</button></div>
-  <h4>⭐ Особая добыча и ценность</h4>
-  <div id="lootExtra" class="box"></div>
-  <div class="important-note">Улучшение стоит Coin of Luck. С галочкой «Улучшать вещь-цель у кузнеца сам» бот, собрав всё на следующий уровень, сам жмёт «Покращити» — только для вещи-цели и только до выбранного уровня. Без галочки «Покращити» жмёшь ты.</div>
 </section>
 
-<section id="tab-svc">
-  <div class="subsec-title" id="tab-pvp">⚔ TvT и PvP</div>
+<section id="tab-lifestone">
+  <h4>💎 Life Stone на оружии</h4>
+  <div id="lsCurrent" class="camp" style="white-space:pre-line">Данные ЛС ещё не получены — осмотрите оружие в игре</div>
+  <div class="hint">ЛС — аугментация оружия. Здесь показаны последний известный эффект и наличие активного умения на панели боя. Вставка и замена выполняются в игре: «Персонаж → Аугментація зброї».</div>
+  <div class="row"><button type="button" data-goto="fight">🗡 Оружие и проверка инвентаря</button><button type="button" data-goto="mammon">🏺 Торговец Маммона</button></div>
+  <div class="subsec-title" id="tab-seals">💱 Камни печати → Ancient Adena</div>
+  <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
+  <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
+  <div id="sealBox" class="hint" style="white-space:pre-line"></div>
+  <div class="row"><button id="sealNow">💱 Обменять все камни сейчас</button></div>
+  <div class="hint">Камни печати (зелёный → 5 AA, синий → 3, красный → 10) падают с мобов в катакомбах и некрополях. Бот меняет их у Ancient Trader (Город → Ancient Trader) все сразу: по кнопке — при первой возможности (бой и вываживание рыбы доводит до конца), с галочкой — сам, не чаще раза в 20 минут, когда камней набралось не меньше порога. Адена и Coin of Luck не тратятся. Ancient Adena нужна у торговца Маммона.</div>
+</section>
+
+<section id="tab-pvp">
   <h4>⚔ TvT (командный PvP, 3 раза в день)</h4>
   <label>Участвовать в TvT <input id="tvtOn" type="checkbox"></label>
   <div class="hint">При включённом TvT регистрация всегда первая: мест всего 20. Фарм и РБ прерываются для записи; до подтверждения регистрации другие дела не начинаются.</div>
@@ -808,6 +825,7 @@
   <label>Нападать на врагов из листа <input id="enemyHunt" type="checkbox"></label>
   <label>Только с красным / фиолетовым ником <input id="enemyFlagOnly" type="checkbox"></label>
   <div class="hint">Красный ник — PK (убил мирного), фиолетовый — сам напал недавно. На таких нападать безопасно. Если на обычного игрока, могут дать карму. Выключай на свой риск.</div>
+  <div class="adv-start" data-adv="pvp">⚙ Дополнительно</div>
   <label>Не нападать, если враг выше на, ур. <input id="enemyLvlAbove" type="number" min="0" max="20"></label>
   <label>Не нападать, если убивает нас быстрее, чем за ударов <input id="enemyMinHits" type="number" min="0" max="10"></label>
   <div class="hint">По его ударам из лога твоей смерти: удар 3 000 при 6 000 HP — это 2 удара, нападать нет смысла. 0 — не проверять. Ещё бот не нападает при HP ниже 80 %, в группе, в городе, во время похода, тура РБ, эпиков, рыбалки и перед TvT.</div>
@@ -815,7 +833,9 @@
   <label>Проверять локацию каждые, с <input id="enemyScanS" type="number" min="15" max="600"></label>
   <div id="enemyBox" class="box">Лист пуст — сюда попадут игроки, которые убьют героя</div>
 
-  <div class="subsec-title">⚙ Сервис</div>
+</section>
+
+<section id="tab-svc">
   <h4>📌 Меню и индикатор</h4>
   <label>📌 Меню справа от игры (на странице) <input id="dock" type="checkbox"></label>
   <label>🖥 Индикатор на странице игры <select id="indMode"><option value="full">Подробный</option><option value="mini">Компактный</option><option value="off">Скрыть</option></select></label>
@@ -856,7 +876,7 @@
 
 </div><!-- /.workarea -->
 </div><!-- /.app-shell -->
-<footer><span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+1…6</span> разделы · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск · <span id="settingsState">Настройки сохраняются автоматически после изменения поля</span></footer>
+<footer><span id="footVer"></span> · <span class="kbd">Alt+S</span> старт/стоп · <span class="kbd">Alt+1…9, 0</span> разделы · <span class="kbd">Alt+W</span> таймеры · <span class="kbd">Ctrl+K</span> поиск · <span id="settingsState">Настройки сохраняются автоматически после изменения поля</span></footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="defaults.js"></script>
 <script src="zone-db.js"></script>
