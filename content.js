@@ -70,10 +70,14 @@ setInterval(() => { if (on && tabOwner && running && loopAlive()) heartbeat(); }
 const sleep = ms => { loopT = Date.now(); if (on) heartbeat(); return document.visibilityState === 'hidden' ? bgSleep(ms) : new Promise(r => setTimeout(r, ms)); };
 const rnd = (a, b) => a + Math.random() * (b - a);
 // долгое ожидание кусками по 10 с: пульс для сторожа не прерывается, в статусе — обратный отсчёт
+// 20.17 (лог 18.10 21:46–21:55): пауза рыбалки 300 с не давала записаться на TvT — окно открылось в 21:50, а цикл стоял в idle.
+// Теперь в паузе бот сам читает /game/tvt (с прежними пределами частоты) и прерывает ожидание, когда пора записываться или на арену
+const idleTvtBreak = () => { if (!cfg.tvtOn || loginPage()) return false; const T = L2V7Modules.tvt; void T?.tvtRefresh?.(); return !!(T?.tvtRegistrationDue?.() || T?.tvtSoon?.()); };
 async function idle(ms, label) {
   const t0 = Date.now();
   setStatus(label);                              // в журнал — один раз, дальше только отсчёт в статусе
-  while (on && tabOwner && !rt.shop?.urgent && Date.now() - t0 < ms) { setStatus(`${label} · ${Math.ceil((ms - (Date.now() - t0)) / 1000)} с`); await sleep(Math.min(1000, ms - (Date.now() - t0))); }
+  while (on && tabOwner && !rt.shop?.urgent && Date.now() - t0 < ms) {
+    if (idleTvtBreak()) { rec('B', 'TvT', `прерываю ожидание «${String(label).slice(0, 60)}» — пора на TvT`); return; } setStatus(`${label} · ${Math.ceil((ms - (Date.now() - t0)) / 1000)} с`); await sleep(Math.min(1000, ms - (Date.now() - t0))); }
 }
 // «реакция» между ходами. На РБ — быстрее (модель 100 000 боёв: 300 → 150 мс среднее = −7 % времени боя; 600 мс = +17 %)
 const pause = () => { const rb = isBattle() && rt.target?.rb && cfg.rbFast !== false; return sleep(rb ? rnd(Math.min(cfg.reactMin, 100), Math.min(cfg.reactMax, 220)) : rnd(cfg.reactMin, cfg.reactMax)); };
@@ -4637,10 +4641,11 @@ addEventListener('message', e => {
     if (mine) sessionStorage.setItem('l2bot.epicTp', JSON.stringify({ path, status: d.status, ok: a.ok, msg, t: Date.now() }));
     rec('B', 'эпики', `телепорт к эпику: ${d.method} ${path} → ${d.status || d.error} · запрос ${JSON.stringify(d.req ?? null).slice(0, 200)}${msg ? ' · ' + msg : ''}${!mine ? ' · запрос не к этому эпику — не учитываю' : a.ok === null ? ' · ответ неясен — резерв оставляю' : ''}`);
   } catch (er) {}
+  // 20.17 (лог 18.10): в ключе записи rt.tvt и слот расписания — иначе IDLE с новым слотом не сохранялся, после перезагрузки жил старый
   if (path === '/game/tvt' && d.res && !d.res.error) { TVT = { ...d.res, t: Date.now(), off: tvtMs(d.res.serverNow) ? tvtMs(d.res.serverNow) - Date.now() : 0 };
     // 14.10: выбывшего участника игра уводит в чат; после reload нельзя вновь вести его на арену того же события.
     const alive = TVT.selfCombat?.alive, selfCombat = typeof alive === 'boolean' ? { alive } : null;
-    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, registrationEndsAt: TVT.registrationEndsAt, registeredCount: TVT.registeredCount, maxPlayers: TVT.maxPlayers, off: TVT.off, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
+    const k = `${TVT.eventId}|${TVT.phase}|${TVT.isRegistered}|${alive ?? ''}|${TVT.schedule?.next?.slotKey || ''}`; if (rt.tvt?.k !== k) setRt({ tvt: { k, eventId: TVT.eventId, phase: TVT.phase, isRegistered: TVT.isRegistered, myTeam: TVT.myTeam, startsAt: TVT.startsAt, registrationEndsAt: TVT.registrationEndsAt, registeredCount: TVT.registeredCount, maxPlayers: TVT.maxPlayers, off: TVT.off, schedule: TVT.schedule, selfCombat, t: Date.now() } }); }
   if (/\/game\/tvt\/(combat\/sync|target|target\/clear)$/.test(path) && d.res && !d.res.error) TVTC = { ...d.res, t: Date.now() };
   if (path === '/game/tvt/action' && d.res && !d.res.error && TVTC?.selectedTarget) TVTC.selectedTarget = { ...TVTC.selectedTarget, hp: d.res.targetHp, cp: d.res.targetCp, alive: !d.res.targetDead };
   // 10.0.11 (лог 13.10 22:00): скиллы арены (MP, откат) и ответ на каждый удар — для выбора приёма по MP и для «клик ушёл на сервер?»
