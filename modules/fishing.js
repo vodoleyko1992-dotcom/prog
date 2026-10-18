@@ -182,7 +182,7 @@ function fishingTimeRemainingMs(raw) {
 // последнего отказа докупки попадает в строку паузы (автопокупка выключена / не хватает аден / дейлик / оплата сверяется).
 let timeWhy = '';
 const fishTimeWhy = () => timeWhy ? ` (${timeWhy})` : '';
-async function fishTimeTopUp() {
+async function fishTimeTopUp(again = true) {
   timeWhy = '';
   if (env.payments?.blocked()) { timeWhy = 'прошлая оплата сверяется'; await paymentReconcile(); return false; }
   if (!env.cfg.fishTimeAuto) { timeWhy = 'автопокупка времени выключена: «Рыбалка» → «Автоматически докупать время»'; return false; }
@@ -218,14 +218,33 @@ async function fishTimeTopUp() {
     env.rec('B','рыбалка: время', `на ${pack} не хватает (${adena} аден, резерв ${reserve}) — беру ${alt}`);
     pack = alt;
   }
-  const button = env.$q(`[data-fishing-time-package="${pack}"]`);
-  if (!button || button.disabled) return false;
+  const packBtn = () => env.$q(`[data-fishing-time-package="${pack}"]`);
+  const button = packBtn();
+  if (!button || button.disabled) { timeWhy = `кнопка пакета ${pack} в игре недоступна`; return false; }
   const payment=await paymentPrepare('time',pack,1,prices[pack],()=>env.cfg.fishTimeAuto&&!env.rt.dailyFish);
-  if(!payment)return false;
+  if(!payment){ timeWhy = timeWhy || 'сервер не подтвердил цену/адену пакета перед оплатой'; return false; }
   await env.setRt({ fishTimeBuyAt: now });  // дополнительная пауза, запрет повтора хранится в payment
   if (!fishOwn() || env.rt.dailyFish) { if(!payment.legacy)await env.payments.cancel(payment); return false; }
   env.setStatus(`Рыбалка: докупаю время (${pack})`);
-  if(!await paymentFire(payment,button))return false;
+  // 18.10 (журнал 21:55:40, сборка 20.16): «докупаю время (1h)» — и POST не ушёл: пока шла подготовка оплаты (два GET и запись),
+  // игра перерисовала блок «Время рыбалки» по своему GET /game/fishing/state, старая кнопка выпала из страницы, paymentFire молча
+  // отменял намерение, а через 3 мин (fishTimeBuyAt) — снова то же. Как с наживкой (16.10, 07:48): жмём живую кнопку с той же ценой.
+  const live = packBtn(), liveT = live?.querySelector('.l2-fishing-time-pass__package-price')?.textContent || '';
+  if (!live || live.disabled || env.shown?.(live) === false || +(liveT.replace(/\D/g, '') || 0) !== prices[pack]) {
+    if(!payment.legacy)await env.payments.cancel(payment);
+    await env.setRt({ fishTimeBuyAt: 0 });
+    timeWhy = `кнопка пакета ${pack} изменилась до клика — запрос не отправлен, перечитаю`;
+    env.rec('B','рыбалка: время', timeWhy);
+    if (again && fishOwn()) { await env.sleep(1500); return fishTimeTopUp(false); }   // одна повторная попытка по свежей странице
+    return false;
+  }
+  if(!await paymentFire(payment,live)){
+    await env.setRt({ fishTimeBuyAt: 0 });  // запрос не уходил — повтор не ждёт 3 мин
+    timeWhy = `клик по пакету ${pack} не отправлен — повторю`;
+    env.rec('B','рыбалка: время', timeWhy);
+    if (again && fishOwn()) { await env.sleep(1500); return fishTimeTopUp(false); }
+    return false;
+  }
   const ok = await env.waitFor(() => {
     const next = fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent);
     return next != null && next >= ms + 300000;
@@ -1086,7 +1105,15 @@ async function fishing() {
   if (!ready) {
     await env.sleep(3000);                            // помеха должна держаться, а не мелькнуть
     if (!still() || fSlot('fishing')) return;
-    return fishSoft(blocker() || 'Рыбалка: панель рыбалки не загрузилась');
+    let why = blocker();
+    // 18.10 (журнал 21:40–21:41): после 502 сервера страница не дорисовала данные — счётчик рыбака остался «0 / 3», и бот
+    // писал «изучите Fishing, Pumping и Reeling», хотя всё изучено. Нехватку навыков подтверждаем ответом сервера.
+    if (why && /изучите Fishing/.test(why)) {
+      const st = await paymentRead('/game/fishing/state');
+      if (!still()) return;
+      if (st?.learnedSkills && Number.isFinite(st.learnedCount) && Number.isFinite(st.skillTotal) && st.learnedCount >= st.skillTotal) why = 'Рыбалка: панель рыбалки не загрузилась (навыки изучены, сервер отвечал с ошибкой)';
+    }
+    return fishSoft(why || 'Рыбалка: панель рыбалки не загрузилась');
   }
   if (fishState()) return fishFight();
   if (env.rt.fishTgt?.done && !env.rt.fishCastActive) return fishTgtReached();
