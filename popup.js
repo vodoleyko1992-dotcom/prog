@@ -1854,8 +1854,8 @@ function workspaceState(rt, d, st, now = Date.now()) {
   const last = String(rt.status || 'Состояние от игры ещё не получено');
   const pending = rt.actionPayments?.pending || rt.petFull?.pending || rt.enchant?.pending;
   if (rt.abChal) return { state:'blocked', label:'Нужно ваше действие', text:'Игра ожидает проверку активности', hint:'Пройдите проверку во вкладке игры. Бот ждёт результата сервера.', tab:'svc' };
-  if (!st.on) return { state:st.paused ? 'paused' : 'stopped', label:st.paused ? 'Пауза' : 'Бот остановлен', text:st.paused ? 'Задачи приостановлены' : 'Задачи начнутся после «Старт»',
-    hint:(pending ? 'Остался неподтверждённый результат операции. ' : '') + 'Последнее: ' + last, tab:'overview' };
+  if (!st.on) return { state:st.paused ? 'paused' : 'stopped', label:st.paused ? 'Пауза' : 'Бот остановлен', text:st.paused ? 'Задачи приостановлены' : 'Выберите, чем заняться',
+    hint:(pending ? 'Остался неподтверждённый результат операции. ' : '') + 'Последнее: ' + last, tab:'overview', quick:!st.paused };
   if (pending) return { state:'blocked', label:'Проверка результата', text:'Есть операция без подтверждённого результата', hint:'Бот сверяет результат (ответ сервера, затем состояние героя). Повторная трата запрещена до подтверждения. ' + last, tab:rt.enchant?.pending ? 'enchant' : rt.petFull?.pending ? 'warlock' : 'svc' };
   if (st.failing || !st.heartbeatValid) return { state:'recovering', label:st.failing ? 'Восстановление' : st.booting ? 'Запуск' : 'Нет сигнала', text:st.failing ? 'Движок восстанавливает работу' : st.booting ? 'Жду подтверждения от движка' : 'Вкладка игры не подтвердила работу', hint:st.failing ? 'Последнее сообщение: ' + last : st.booting ? 'Выбранные задачи сохранены. Запуск подтверждается ответом вкладки.' : 'Откройте вкладку игры и проверьте сообщение под кнопками управления.', tab:'svc' };
   if ((rt.pveBlockUntil || 0) > now) return { state:'waiting', label:'Ограничение игры', text:'PvE-фарм временно заблокирован', hint:'До ' + new Date(rt.pveBlockUntil).toLocaleTimeString('ru', { timeZone:'Asia/Vladivostok', hour:'2-digit', minute:'2-digit' }) + ' (Владивосток). ' + last, tab:selected.includes('fish') ? 'fish' : 'svc' };
@@ -1900,6 +1900,14 @@ function renderWorkspace(rt, d, st) {
   if ($('activityPanel')) {
     $('activityPanel').dataset.state = activity.state; $('activityState').textContent = activity.label;
     $('activityText').textContent = activity.text; $('activityHint').textContent = activity.hint;
+    // 18.10: бот стоит — вместо «Последнее: …» кнопки быстрого запуска (подсказку оставляем только при неподтверждённой операции)
+    if ($('quickStart')) {
+      const main = selectedAutoTasks(d).find(k => AUTO_MAIN_TASKS.includes(k));
+      $('quickStart').hidden = !activity.quick;
+      if (activity.quick && !/неподтверждённый/.test(activity.hint)) $('activityHint').textContent = '';   // «Последнее: …» — подсказкой при наведении
+      $('activityText').title = activity.quick ? activity.hint : '';
+      document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => b.classList.toggle('on', b.dataset.quickTask === main));
+    }
     $('activityDetails').dataset.goto = activity.tab; $('activityDetails').textContent = activity.tab === 'overview' ? 'Обзор ↗' : 'Подробнее ↗';
   }
   if ($('paymentPendingBox')) {
@@ -2202,6 +2210,18 @@ $('start').onclick = async () => {
     if (generation === controlGeneration) await showWakeResult();
   } catch (error) { toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 };
+// 18.10 (игрок: «непонятно, что где нажимать, как запускать»): быстрый запуск — одно основное дело вместо прочих основных
+// (фоновые задачи TvT/Маммон/дейлики… сохраняются), затем обычный «Старт».
+async function quickStart(key) {
+  const generation = ++controlGeneration;
+  try {
+    const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
+    const was = selectedAutoTasks({ ...DEF, ...cfg });
+    const cfgPatch = { autoTasks: [...was.filter(k => !AUTO_MAIN_TASKS.includes(k)), key], ...(was.includes('quests') ? { campaign: false, storyTurnIn: false } : {}) };
+    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch }); if (generation !== controlGeneration) return;
+    await $('start').onclick();
+  } catch (error) { toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
+}
 async function botControl(action) {
   let timer;
   try {
@@ -2851,6 +2871,7 @@ document.addEventListener('keydown', async e => {
 
 if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings().catch(() => {}); };
 if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
+document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => { b.onclick = () => quickStart(b.dataset.quickTask); });
 if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { const was = !$('quickModeGrid').hidden; taskListToggle(); if (!was) document.querySelector('#autoTaskSelection input')?.focus({ preventScroll: true }); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');
 // 20.12 (ревизия 17.10): ручной выход только по решению игрока — второе нажатие в течение 6 с, через фон (как Stop/пауза).
