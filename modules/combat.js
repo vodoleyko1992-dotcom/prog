@@ -123,6 +123,26 @@ function freshBattleLines(before, after) {
   return after.slice();
 }
 
+// 18.10, журнал 23:31: добыча вытесняла строки смертей из DOM. Сравниваем мультимножества:
+// две Cave Maiden — два моба; одна смерть в DOM и в полном ответе — одно убийство.
+const killOwner = () => JSON.stringify([env.rt.char||'',env.rt.classCur?.prof||'',env.rt.classCur?.slot??'',env.battleExitContext?.()||'']);
+const killOwnerValid = ctx => env.on&&env.tabOwner!==false&&env.canAct?.()!==false&&(!ctx.killOwner||ctx.killOwner===killOwner());
+function serverKillNames(spawn,since=0) {
+  const s=env.battleKills?.(spawn,since);
+  return s?.spawn===spawn&&Number.isSafeInteger(s.t)&&s.t>=since&&Array.isArray(s.extras)?s.extras.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()).slice(0,200):[];
+}
+function missingKillNames(wanted,credited) {
+  const left=new Map();for(const name of credited)left.set(name,(left.get(name)||0)+1);
+  return wanted.filter(name=>{const n=left.get(name)||0;if(n){left.set(name,n-1);return false;}return true;});
+}
+const resultKills = lost => (lost?0:1)+serverKillNames(new URLSearchParams(location.search).get('spawnId')||'').length;
+async function battleDeath(ctx,countExtras) {
+  await countExtras(); if(!killOwnerValid(ctx))return;
+  const ticket=await ctx.quotaTicket();if(!killOwnerValid(ctx))return;
+  await env.finishFarmQuota?.(ticket,true,ctx.killed.length);
+  if(killOwnerValid(ctx))return env.onDeath();
+}
+
 // 20.6 (лог17.10 00:04): строки Cancel вытесняются наградами AoE ещё до победы.
 // Собираем их по ходу боя, сохраняя повторы между ходами, а не только последний хвост.
 function cancelCollect(ctx, current = env.logLines()) {
@@ -1241,20 +1261,26 @@ async function battle() {
   // и новый сосед мог заменить старого при неизменном количестве строк.
   let extraLog = ctx.logStart || [];
   const countExtras = async () => {
+    if(!killOwnerValid(ctx))return;
     const current = env.logLines(), added = freshBattleLines(extraLog, current);
     extraLog = current;
     cancelCollect(ctx, current);
     const fresh = env.extraKillsInLog(added);
-    if (!fresh.length) return;
     const sum = f => fresh.reduce((a, k) => a + k[f], 0);
     ctx.extraCredited ||= { exp: 0, sp: 0, adena: 0 };
     for (const k of ['exp', 'sp', 'adena']) ctx.extraCredited[k] += sum(k);
-    await env.setRt({ kills: env.rt.kills + fresh.length, exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
+    (ctx.domKilled||=[]).push(...fresh.map(k=>k.name));
+    const server=serverKillNames(ctx.spawnId||spawnId,t0),wanted=[...ctx.domKilled,...missingKillNames(server,ctx.domKilled)];
+    const missing=missingKillNames(wanted,ctx.killed);
+    if(!fresh.length&&!missing.length)return;
+    await env.setRt({ kills: env.rt.kills + missing.length, exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
+    if(!killOwnerValid(ctx))return;
     for (const k of fresh) {
       env.rec('B', 'доп. цель', `${k.name}: ${k.exp || k.sp || k.adena ? `EXP +${k.exp} · SP +${k.sp} · аден +${k.adena}` : 'повержена; награды учитываю в общем итоге боя'}${k.items.length ? ' · ' + k.items.join(', ') : ''}`);
-      if (env.isQuestName(k.name)) await env.trackQuest(k.name, true);
-      ctx.killed.push(k.name);
     }
+    if(missing.length>fresh.length)env.rec('B','учёт мобов',`Полный ответ боя подтвердил дополнительные убийства: ${missing.length} · всего соседей ${ctx.killed.length+missing.length}`);
+    ctx.killed.push(...missing);
+    for(const name of missing){if(!killOwnerValid(ctx))return;if(env.isQuestName(name))await env.trackQuest(name,true);}
   };
   // 20.12 (ревизия 17.10, аудит H1/F1): отметка лимита мобов больше не держит героя в уже открытом бою. Есть свежий счётчик из ответа
   // игры — запись идёт параллельно с ударами; нет — ждём только свой снимок (без него билет «неточно»). Неудача — бой продолжается.
@@ -1407,11 +1433,11 @@ async function battle() {
       env.setStatus('🛒 Закупка сейчас — бросаю бой'); location.href = '/char.html'; await env.sleep(4000); return;
     }
     if (ctx.tot) { const tn = Date.now(), k = env.totemActive()?.bn || '—'; ctx.tot[k] = (ctx.tot[k] || 0) + tn - ctx.totT; ctx.totT = tn; }
-    if (defeat()) { if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, 'death', Math.max(0, (ctx.chHp0 || 0) - (ctx.mobLast || 0)), (Date.now() - t0) / 1000)?.catch?.(() => {}); return env.onDeath(); }
+    if (defeat()) { if (ctx.champ && !ctx.rb) env.champs?.learn(ctx, 'death', Math.max(0, (ctx.chHp0 || 0) - (ctx.mobLast || 0)), (Date.now() - t0) / 1000)?.catch?.(() => {}); return battleDeath(ctx,countExtras); }
     if ((s = await epicRetreatWait()) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     const me = env.meHp(), mp = env.meMp(), mob = mobHp();
     ctx.mePct0 = me ? me.pct : null;                 // 10.0.5: HP на момент решения — для act(..., hpGuard)
-    if (me && me.cur === 0) return env.onDeath();
+    if (me && me.cur === 0) return battleDeath(ctx,countExtras);
     // 9.0 (лог 12.10 01:08:28–01:31:22): Fairy Queen Timiniel на 7 092 из 1,9 млн HP — её добили другие игроки, ход → 400 «Немає активного
     // бою», игра больше ходов не шлёт, а страница боя стоит. Бот 23 мин жал «урон 0 · MP 0» (HP героя от регена менялся — сторож «нет ответа
     // 20 с» не срабатывал), пока игрок не увёл героя в город. Теперь: сервер сказал «боя нет» после начала этого боя — бой окончен, на карту
@@ -1624,7 +1650,7 @@ async function battle() {
       // уже относится к неизвестному состоянию боя; только ограниченно ждём победу, поражение или живую следующую цель.
       const nx = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : ((mobHp()?.cur || 0) > 0 ? 'next' : null), 3000, 100);
       if (!env.on || !env.tabOwner) return;
-      if (nx === 'dead') return env.onDeath();
+      if (nx === 'dead') return battleDeath(ctx,countExtras);
       if (nx !== 'next') return END;
       if (mobName() !== ctx.name) {               // бой переключился на соседа
         ctx.name = mobName(); ctx.champ = env.isChamp(mobTitle());
@@ -2194,14 +2220,14 @@ async function battleOpen() {
     await env.setRt({ battleReload: 0 }); return env.toMap();
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
-  if (st === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(null, true); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
+  if (st === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(null, true, resultKills(true)); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
     const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
     if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
     return env.toMap();
   }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
-  if (st === 'win') { if (await env.finishFarmQuota?.()) return; return env.nextFight(); }                     // открыт уже экран победы
+  if (st === 'win') { if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
   if (env.rt.bounce || env.rt.mobClickAt) env.setRt({ bounce: 0, mobClickAt: 0 });   // 8.0: без ожидания записи   // бой открылся — счётчик петли сброшен
 
@@ -2277,7 +2303,7 @@ async function battleOpen() {
   const hpChamp = !!known && !!mob0 && mob0.max >= known * env.cfg.champHpMult;
   const blockW = weaponBlocks();
   const ctx = { lastStun: 0, block: blockW, weaponContext: weaponContext(), weaponBlocked: Object.keys(blockW), killed: [], seq: [], max: mob0?.max || 0, logStart: env.logLines(), champ: !color.ordinary && (color.champ || (same && t.champ) || env.isChamp(title) || hpChamp),
-                name: mobName(),
+                name: mobName(), killOwner:killOwner(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
   if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // замер слуги, включая пантеру воина
   if (nm && mob0 && !(same && t.champ))
@@ -2384,7 +2410,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   const result = await env.waitFor(() => defeat() ? 'dead' : victory() ? 'win' : null, 3000, 40);
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
-  if (result === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(await ctx.quotaTicket(), true, ctx.killed.length); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
+  if (result === 'dead') return battleDeath(ctx,countExtras);
   if (result !== 'win') {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
@@ -2392,6 +2418,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   await countExtras();
+  if(!killOwnerValid(ctx))return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.trySnap(300);                                   // экран победы (в т.ч. с квестовой строкой) — новый снимок, если структура новая
   const loot = env.$q('#battle-victory-lootline')?.textContent || '';

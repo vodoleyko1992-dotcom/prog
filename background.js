@@ -129,29 +129,54 @@ function farmQuotaChange(state, E, now) {
   // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
   const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0);   // 20.12: нет ключа — значение вкладки
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
-  const old = rt.farmQuota?.[E.task];
-  let row = old, dailyQuota=dailyQuotaToday(rt,now);
+  const old = rt.farmQuota?.[E.task], count = x => Number.isSafeInteger(x) && x >= 0;
+  // 18.10, журнал 13:34: подтверждённые дополнительные цели — нижняя граница. Общая отметка обеих охот
+  // резервирует уже учтённых мобов: запоздавший рост сервера не считается второй раз после reload/сброса/полуночи.
+  let mark = rt.farmKillMark, row = old, dailyQuota=dailyQuotaToday(rt,now), kills = count(rt.kills) ? rt.kills : 0;
+  if (!mark || !count(mark.counter) || !Number.isSafeInteger(mark.revision) || !count(mark.floor) || mark.floor < mark.counter) mark = null;
+  const startMark = (counter,revision) => !mark || revision > mark.revision && counter < mark.counter
+    ? {counter,revision,floor:counter} : {...mark,counter,revision,floor:Math.max(mark.floor,counter)};
+  const session = (baseline,t0,delta) => { if(count(baseline) && t0 === (rt.sessT0 ?? null) && count(baseline+delta))kills=Math.max(kills,baseline+delta); };
   if (E.op === 'begin') {
-    if (!Number.isSafeInteger(E.counter) || E.counter < 0 || !Number.isSafeInteger(E.revision) || typeof E.spawn !== 'string' || !E.spawn || E.spawn.length > 160) return { ok: false, reason: 'quota_snapshot' };
+    if (!count(E.counter) || !Number.isSafeInteger(E.revision) || typeof E.spawn !== 'string' || !E.spawn || E.spawn.length > 160) return { ok: false, reason: 'quota_snapshot' };
     if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
-    // Reload активного боя сохраняет исходную точку, включая уже убитых соседей.
-    if (!row.pending || row.pending.spawn !== E.spawn) row = { ...row, pending: { spawn: E.spawn, counter: E.counter, revision: E.revision, kick: E.kick || 0 } };
-    else row = { ...row, pending: { ...row.pending, kick: E.kick || 0 } };
+    // Reload активного боя сохраняет исходную точку, включая уже убитых соседей и начало счётчика сессии.
+    if (!row.pending || row.pending.spawn !== E.spawn) {
+      if (mark && (E.revision < mark.revision || E.revision === mark.revision && E.counter < mark.counter)) return {ok:false,reason:'quota_snapshot'};
+      mark = startMark(E.counter,E.revision);
+      row = { ...row, pending: { spawn:E.spawn,counter:E.counter,revision:E.revision,kick:E.kick||0,floor:mark.floor,...(count(E.sessionKills)?{sessionKills:E.sessionKills,sessionT0:E.sessionT0 ?? null}:{}) } };
+    } else row = { ...row, pending: { ...row.pending, kick: E.kick || 0 } };
   } else if (E.op === 'win') {
     if (!row || row.run !== E.run || row.done || row.pending?.spawn !== E.spawn || row.pending?.revision !== E.beforeRevision || row.pending.kick !== (E.kick || 0)) return { ok: false, reason: 'quota_battle_changed' };
-    if (!Number.isSafeInteger(E.counter) || (E.lost ? E.counter < row.pending.counter : E.counter <= row.pending.counter) || !Number.isSafeInteger(E.revision) || E.revision <= row.pending.revision) return { ok: false, reason: 'quota_unconfirmed' };
-    const delta=E.counter-row.pending.counter,got=row.got+delta;
+    const observed = count(E.seen) && E.seen <= 200 ? E.seen : 0, p = row.pending;
+    if (E.seen !== undefined && (!count(E.seen) || E.seen > 200)) return {ok:false,reason:'quota_snapshot'};
+    if (!count(E.counter) || !Number.isSafeInteger(E.revision) || E.revision <= p.revision || !E.lost && !observed && E.counter <= p.counter) return { ok: false, reason: 'quota_unconfirmed' };
+    if (mark && E.revision < mark.revision) return {ok:false,reason:'quota_snapshot'};
+    const reset = E.counter < p.counter, floor = Math.max(count(p.floor)?p.floor:p.counter,mark?.floor||0);
+    const delta = Math.max(reset ? 0 : E.counter-floor,observed), got=row.got+delta;
+    // При обнулении серверной статистики прежний прогресс квоты сохраняется, старая шкала больше неприменима.
+    mark = {counter:E.counter,revision:E.revision,floor:reset?Math.max(E.counter,observed):Math.max(floor+delta,E.counter)};
+    session(p.sessionKills,p.sessionT0 ?? null,delta);
     if(dailyLimit)dailyQuota[E.task]=(dailyQuota[E.task]||0)+delta;
     row = { ...row, got, pending: null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
   } else if (E.op === 'approx') {
-    // 20.12 (ревизия 17.10): счётчик сервера недоступен/не подтвердил итог — бой засчитан по журналу боя (n убитых), с пометкой approx.
-    // close — закрыть pending именно этого боя (иначе отказ: бой уже закрыт или заменён другим).
-    if (!Number.isSafeInteger(E.n) || E.n < 0 || E.n > 200 || typeof E.spawn !== 'string' || !E.spawn) return { ok: false, reason: 'quota_snapshot' };
-    if (E.close && (!row || row.done || row.pending?.spawn !== E.spawn)) return { ok: false, reason: 'quota_battle_changed' };
-    if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
-    const got = row.got + E.n;
-    if (dailyLimit) dailyQuota[E.task] = (dailyQuota[E.task] || 0) + E.n;
-    row = { ...row, got, approx: (row.approx || 0) + E.n, pending: E.close || row.pending?.spawn === E.spawn ? null : row.pending || null, done: limit > 0 && got >= limit, ...(limit > 0 && got >= limit ? { doneT: now } : {}) };
+    // Счётчик сервера недоступен: подтверждённые убийства не теряем, а поздний ответ не зачтёт их повторно.
+    if (!count(E.n) || E.n > 200 || typeof E.spawn !== 'string' || !E.spawn) return { ok: false, reason: 'quota_snapshot' };
+    if (E.approxId !== undefined && (typeof E.approxId !== 'string' || E.approxId.length > 240)) return {ok:false,reason:'quota_snapshot'};
+    const duplicate = typeof E.approxId === 'string' && row?.approxIds?.includes(E.approxId);
+    if (!duplicate && E.run !== undefined && row && E.run !== row.run && !(E.run === 0 && row.run === 1 && row.pending?.spawn === E.spawn && row.pending?.revision === E.beforeRevision)) return {ok:false,reason:'quota_battle_changed'};
+    if (!duplicate) {
+      if (E.close && (!row || row.done || row.pending?.spawn !== E.spawn || E.beforeRevision !== undefined && row.pending?.revision !== E.beforeRevision)) return { ok: false, reason: 'quota_battle_changed' };
+      if (!row || row.limit !== limit || row.done) row = { run: (old?.run || 0) + 1, limit, got: 0 };
+      const p = row.pending?.spawn === E.spawn ? row.pending : null;
+      if (!p && count(E.beforeCounter) && Number.isSafeInteger(E.beforeRevision) && (!mark || E.beforeRevision >= mark.revision)) mark=startMark(E.beforeCounter,E.beforeRevision);
+      const floor = Math.max(count(p?.floor)?p.floor:count(p?.counter)?p.counter:0,mark?.floor||0);
+      if(mark || p)mark={counter:mark?.counter??p.counter,revision:mark?.revision??p.revision,floor:floor+E.n};
+      session(p ? p.sessionKills : E.sessionKills,p ? p.sessionT0 ?? null : E.sessionT0 ?? null,E.n);
+      const got = row.got + E.n;
+      if (dailyLimit) dailyQuota[E.task] = (dailyQuota[E.task] || 0) + E.n;
+      row = { ...row, got, approx:(row.approx||0)+E.n, ...(typeof E.approxId==='string'?{approxIds:[...(row.approxIds||[]),E.approxId].slice(-20)}:{}), pending:E.close||p?null:row.pending||null, done:limit>0&&got>=limit, ...(limit>0&&got>=limit?{doneT:now}:{}) };
+    }
   } else return { ok: false, reason: 'quota_operation' };
   const next = { ...cfg };
   if (row.done) {
@@ -159,7 +184,7 @@ function farmQuotaChange(state, E, now) {
     if (Array.isArray(next.autoTasks)) next.autoTasks = next.autoTasks.filter(k => k !== E.task);
     else if (!['enchantMode','epicMode','rbHuntMode','fishMode','catMode','campaign','zoneAuto'].some(k => next[k])) next.taskOnly = true;
   }
-  return { ok: true, row, dailyQuota, dailyDone: dailyLimit>0 && dailyMobs(dailyQuota)>=dailyLimit, cfg: next, rt: { ...rt, ...(dailyLimit?{dailyQuota}:{}), farmQuota: { ...(rt.farmQuota || {}), [E.task]: row }, _src: 'farm-quota' } };
+  return { ok:true,row,kills,...(mark?{farmKillMark:mark}:{}),dailyQuota,dailyDone:dailyLimit>0&&dailyMobs(dailyQuota)>=dailyLimit,cfg:next,rt:{...rt,kills,...(mark?{farmKillMark:mark}:{}),...(dailyLimit?{dailyQuota}:{}),farmQuota:{...(rt.farmQuota||{}),[E.task]:row},_src:'farm-quota'} };
 }
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
@@ -189,7 +214,7 @@ async function statePatch(m, sender) {
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
       // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
-      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok: true, row: r.row, cfg: r.cfg, dailyQuota:r.dailyQuota, dailyDone:r.dailyDone };
+      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;

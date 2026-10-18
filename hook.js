@@ -104,7 +104,23 @@
     const finalLog = !tail && !battleLog && !!lastLog;
     const lt = tail || battleLog || lastLog || [];
     const sp = d.spoilAttemptResult, extras = d.whirlwindExtras ?? b?.whirlwindExtras;
+    // 18.10, автофарм: добыча вытесняла явные смерти соседей из последних40 строк.
+    // Передаём только имена подтверждённых смертей; одинаковые имена — разные мобы.
+    const cleanLine = x => line(x).replace(/\u2060\d+\u200b/g, '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').trim();
+    const deathName = x => cleanLine(x).match(/^(?:Додаткова ціль повалена|Дополнительная цель повержена)\s*:\s*(.+?)\.?$/i)?.[1]?.trim().slice(0, 80) || '';
+    const source = lastLog?.length ? lastLog : battleLog || lastLog, seq = n(d.logSeq ?? b?.logSeq);
+    const startLine = x => /^(?:Бой начат|Бій розпочато)(?:$|[\s:!.])/i.test(cleanLine(x));
+    let after = 0, tailAfter = 0;
+    if (source) for (let i = 0; i < source.length; i++) if (startLine(source[i])) after = i + 1;
+    const fullDeaths = source ? source.slice(after).map(deathName).filter(Boolean).slice(0, 200) : null;
+    const tailDeaths = [];
+    if (tail) for (let i = 0; i < tail.length; i++) if (startLine(tail[i])) tailAfter = i + 1;
+    if (tail) for (let i = tailAfter; i < tail.length && tailDeaths.length < 200 - (fullDeaths?.length || 0); i++) {
+      const name = deathName(tail[i]); if (name) tailDeaths.push({ name, seq: seq == null ? null : seq - tail.length + i + 1 });
+    }
     return { actor: String(ch?.name || '').slice(0, 80), actorId: String(ch?.id || o.characterId || '').slice(0, 80), rev: n(o.revision ?? ch?.revision),
+      prof: String(ch?.l2Profession || '').slice(0, 80), slot: n(ch?.classSlots?.activeSlot),
+      killEvidence: { full: fullDeaths, tail: tailDeaths, fullSeq: source ? n(source === lastLog ? d.logSeq ?? b?.logSeq : b?.logSeq) : null },
       extras: Array.isArray(extras) ? extras.slice(0, 30).map(x => ({ id: String(x.spawnId || x.id || ''), name: String(x.name || '').slice(0, 80), hp: n(x.mobHp), max: n(x.mobMaxHp) })) : null,
       mob: n(d.mobHp ?? b?.mobHp ?? (o.victory ? 0 : null)), mobMax: n(d.mobMaxHp ?? b?.mobMaxHp), hp: n(d.characterHp ?? ch?.hp), hpMax: n(d.characterMaxHp ?? ch?.maxHp), mp: n(d.characterMp ?? ch?.mp), mpMax: n(d.characterMaxMp ?? ch?.maxMp),
       log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: (!o.delta && !!b) || finalLog,
