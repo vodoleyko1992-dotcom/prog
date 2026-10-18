@@ -1,5 +1,12 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 19.10.2026, 08:46 UTC+10 — Codex — [PR #269](https://github.com/vodoleyko1992-dotcom/prog/pull/269): быстрая сборка20.18 Chrome + Firefox
+
+- Прямой запрос на оба браузера и ссылки подключения. Версия20.18 из готовой базы #265–#268; обновлены manifest/content, пять версионных тестов, CHANGELOG/CLAUDE, README-CHROME и новый README-FIREFOX. Firefox неподписан: about:debugging на ПК, для постоянного/обычного Android нужна подпись. [Релиз](https://github.com/vodoleyko1992-dotcom/prog/releases/tag/v20.18).
+- GitHub release assets отказали с HTTP401 на uploads.github.com; выбран доступный штатный путь: ZIP коммитятся в builds, ссылки релиза ведут на файлы тегаv20.18. Учётные данные не менялись.
+- Два ZIP из чистой runtime-папки, проверены manifest/все content_scripts/целостность/отсутствие work/tests/kb/docs/.git и auth/passw в профиле. Chrome загрузился в Chromium20.18 с204ключамиcfg и0ошибок; новый Firefox manifest(background engine-core+background,gecko/gecko_android128) проверен, web-ext lint0ошибок/42предупреждения о существующем innerHTML.
+- Выборочные MV3:5сценариев группового счётчика и5рыбалки PASS. Синтаксис всех runtimeJS и envcheck31 PASS. Первый полный runner447PASS/1FAIL: тест успел проверить оглавление до создания нового CHANGELOG-файла; файл создан, итоговый полный runner448PASS/0FAIL. Полный исторический smokes.sh и настоящий Firefox/Android по просьбе о быстрой сборке не запускались; живую игру не открывали. Следующий шаг — установка по README и контрольный журнал.
+
 ## 18.10.2026, 23:56 UTC+10 — Codex — [PR #268](https://github.com/vodoleyko1992-dotcom/prog/pull/268): групповой счётчик мобов
 
 - Запрос игрока: автофарм считает меньше мобов, чем убито. По файлам13:34(20.17):27побед/11событий соседей; короткий журнал терял явные смерти среди добычи, два одинаковых имени обозначали разных мобов. Полный runtime/mobsKilled в экспорте отсутствует, исторический итог не пересчитан. В actualMV3 воспроизведено расхождение: сервер/дневная квота/серия4, общий1. [Разбор](AUTOFARM-COUNTER-2026-10-18.md), HANDOFF обновлён.

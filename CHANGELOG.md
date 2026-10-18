@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [L2wap Bot 20.18: Chrome + Firefox, группы мобов, рыбалка после reload и авто-ЛС](docs/changelog/CHANGELOG-20.18.md)
 - [L2wap Bot 20.17: рыбалка — покупка времени, TvT во время пауз](docs/changelog/CHANGELOG-20.17.md)
 - [L2wap Bot 20.16: баффы за FA не в подземелье, мобы со снятием баффов, причина паузы рыбалки](docs/changelog/CHANGELOG-20.16.md)
 - [L2wap Bot 20.15: баффы к РБ без ложной неудачи, Spoil Festival у РБ по откату](docs/changelog/CHANGELOG-20.15.md)
