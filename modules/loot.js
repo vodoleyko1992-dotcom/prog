@@ -34,8 +34,12 @@ function festivalParse(lines) {                   // → [{ name, ok, ch }] из
 }
 
 async function massSpoilStep(ctx, act, mob) {
-  if (ctx.massTried || (ctx.rb && !env.cfg.spoilRb) || !mob?.max || mob.cur <= 0) return false;
+  if (ctx.massTried || !mob?.max || mob.cur <= 0) return false;
   const near = env.extraMobs().filter(x => x.cur > 0).length;
+  // 20.14 (просьба игрока 18.10): на РБ сам Festival не действует (новость игры 11.10), но метит обычных мобов
+  // рядом с РБ — их добыча спойла собирается, когда они гибнут от АОЕ/копья. Только при видимых живых соседях;
+  // галка «Спойлить и РБ» по-прежнему про обычный Spoil по самому РБ.
+  if (ctx.rb && (env.cfg.rbNearMobs === false || !near)) return false;
   // Festival выгоднее и по одной цели: гарантированная метка вместо повторов Spoil.
   // Соседи могут появиться в DOM только после первого хода.
   if (!near && (ctx.spoiled || env.mobSpoiled())) return false;
@@ -54,9 +58,10 @@ async function massSpoilStep(ctx, act, mob) {
   const res = festivalParse(fresh), mainR = res.find(x => env.nameLike(x.name, ctx.name));
   const oks = res.length ? res.filter(x => x.ok).length : fresh.filter(l => env.SPOIL_OK.test(l)).length;
   const bads = res.length ? res.filter(x => !x.ok).length : fresh.filter(l => env.SPOIL_FAIL.test(l)).length;
-  if (env.mobSpoiled() || mainR?.ok || (!res.length && oks && !bads)) ctx.spoiled = true;
+  if (env.mobSpoiled() || mainR?.ok || (!res.length && oks && !bads && !ctx.rb)) ctx.spoiled = true;
+  ctx.nearSpoiled = res.length ? res.filter(x => x.ok && !env.nameLike(x.name, ctx.name)).length : ctx.rb ? oks : Math.max(0, oks - 1);
   const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; S.massFail = (S.massFail || 0) + bads; await env.setRt({ spoilStat: S });
-  env.rec('B', 'спойл', `${ctx.name} +${near} рядом: масс-спойл → ${oks || bads ? `✅${oks} ✗${bads}${res.length ? ' (' + res.map(x => `${x.name} ${x.ok ? '✅' : '✗'}${x.ch ? x.ch + '%' : ''}`).join(', ') + ')' : ''}` : 'нажат'}${ctx.spoiled ? ' · главный помечен' : ' · главного добью обычным Spoil'}${fresh.length && !oks && !bads ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
+  env.rec('B', 'спойл', `${ctx.name} +${near} рядом: масс-спойл → ${oks || bads ? `✅${oks} ✗${bads}${res.length ? ' (' + res.map(x => `${x.name} ${x.ok ? '✅' : '✗'}${x.ch ? x.ch + '%' : ''}`).join(', ') + ')' : ''}` : 'нажат'}${ctx.rb ? ' · РБ масс-спойл не берёт, метим мобов рядом' : ctx.spoiled ? ' · главный помечен' : ' · главного добью обычным Spoil'}${fresh.length && !oks && !bads ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
   return true;
 }
 
