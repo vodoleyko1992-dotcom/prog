@@ -111,7 +111,7 @@
     learnShots:'Сохранять скриншоты при обнаружении изменений страниц при наличии разрешения браузера.'
   };
   // 20.12 (ревизия 17.10): шапка — одна строка-сводка задач; сами галки — в «Обзоре» (popup.js taskListToggle).
-  // Разделов шесть, навигация всегда на виду: выпадающий список «Разделы», строка заголовка раздела и её подписи убраны.
+  // 20.17: десять разделов с отдельными Маммоном, заточкой, ЛС и сервисом; навигация всегда на виду: выпадающий список «Разделы», строка заголовка раздела и её подписи убраны.
   const modeToggle = document.getElementById('modeToggle');
   modeToggle?.addEventListener('click', () => { if (typeof taskListToggle === 'function') taskListToggle(); });
   document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => {

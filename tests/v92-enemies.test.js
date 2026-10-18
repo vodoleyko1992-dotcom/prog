@@ -206,7 +206,7 @@ const flush = () => new Promise(r => setImmediate(r));
     assert.match(popup, /enemyHunt: true, enemyFlagOnly: true, enemyLvlAbove: 3, enemyMinHits: 3, enemyMaxLoss: 2, enemyScanS: 30/);
     for (const id of ['enemyHunt', 'enemyFlagOnly', 'enemyLvlAbove', 'enemyMinHits', 'enemyMaxLoss', 'enemyScanS', 'enemyBox']) assert.match(html, new RegExp(`id="${id}"`));
     // 20.12 (ревизия 17.10): лист врагов — подраздел «TvT/PvP и сервис» (рядом с PvP).
-    assert.ok(html.indexOf('id="tab-enemies"') > html.indexOf('<section id="tab-svc">') && /enemies: 'svc'/.test(popup), 'подраздел в «TvT/PvP и сервис»');
+    assert.ok(html.indexOf('id="tab-enemies"') > html.indexOf('<section id="tab-pvp">') && /enemies: 'pvp'/.test(popup), '20.17: подраздел в отдельном «TvT и PvP»');
     assert.match(html, /<script src="modules\/enemies\.js"><\/script>/);
     const bp = JSON.parse(read('base-profile.json')); assert.equal(bp.cfg.enemyHunt, true); assert.equal(bp.cfg.enemyMinHits, 3);
     const { en } = make(); assert.match(en.brief({ name: 'Dremia', lvl: 61, kills: 2, w: 1, l: 0, hitMax: 2996, lastKill: NOW - 120000 }, NOW), /^Dremia \(61 ур\.\): убил нас 2×, последний раз 2 мин назад · ответ: побед 1, поражений 0 · удар до 2/);
