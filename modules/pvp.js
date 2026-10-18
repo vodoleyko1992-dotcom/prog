@@ -136,14 +136,21 @@ const SELF_MAX=10*60000;
 const selfClan=()=>{const S=state.self;return S&&S.char===env.rt.char&&Date.now()-S.t<SELF_MAX?S:null};
 async function selfRead(){const T=token();if(!active(T)||pending()||!env.gameGet)return null;try{await selfRefresh(T,SELF_MAX)}catch(_){return null}return active(T)?selfClan():null}
 async function heroClan(id,name){const T=token();if(!active(T)||pending()||!env.gameGet||!id)return null;return profileClan(String(id),String(name||''),T)}
+// 20.14 (лог 17.10 21:53–22:53, 20.11): GET /game/map/around или /character не ответил за 6 с — обрыв fetch («signal is aborted
+// without reason») уходил из step() в главный цикл как сбой ядра; шаг повторялся каждые 2–13 с, и через 18 сбоев за 30 мин бот
+// остановился (СТОП 22:39 и 22:53, стоял в «Без режима» в ожидании TvT). Сетевой сбой опроса — не ошибка программы: шаг молча
+// пропускается, следующий опрос не раньше чем через 30 с
 async function refresh(){
  const T=token();if(!active(T)||pending())return false;
- if(!(await selfRefresh(T)))return false;
- if(Date.now()-state.heroesT>=5000){
-  const r=await env.gameGet('/game/map/around');if(!active(T)||pending()||!r?.ok)return false;
-  const j=await r.json();if(!active(T)||pending())return false;
-  if(Array.isArray(j.nearbyHeroes))heroesNote(rawHeroes(j.nearbyHeroes));
- }
+ if(Date.now()-(state.failT||0)<30000)return false;
+ try{
+  if(!(await selfRefresh(T)))return false;
+  if(Date.now()-state.heroesT>=5000){
+   const r=await env.gameGet('/game/map/around');if(!active(T)||pending()||!r?.ok)return false;
+   const j=await r.json();if(!active(T)||pending())return false;
+   if(Array.isArray(j.nearbyHeroes))heroesNote(rawHeroes(j.nearbyHeroes));
+  }
+ }catch(_){state.failT=Date.now();return false}
  // Только явная точная цель и лишь отсутствующее поле; null — штатный ответ «без клана».
  for(const h of state.heroes){
   if(h.clanKnown||h.party||!exact(targets()[h.id],h))continue;

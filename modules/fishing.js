@@ -705,7 +705,7 @@ function rodLvlGear() {
   return n >= 0 && n <= 10 ? n : null;
 }
 
-let shotBuyT = 0;                               // 8.0: время последней удачной покупки зарядов (страховка от повторов)
+let shotBuyT = 0, shotBuyN = 99;                // 8.0: время последней удачной покупки зарядов (страховка от повторов); 20.14: пакетов в ней
 async function fishPrepare() {                  // удочка, наживка выбрана и есть, заряды включены
   if (!(await fishRod())) return false;
   const want = baitWant();
@@ -721,14 +721,19 @@ async function fishPrepare() {                  // удочка, наживка 
   // Поэтому неудачу повторяем скоро — 30 с → 1 → 2 → 5 мин, а если не прошла покупка N пакетов — сразу пробуем 1 пакет.
   const F = () => env.rt.fishBuyFail || {};
   const buyOk = k => { const f = F()[k]; if (!f) return true; const t = typeof f === 'number' ? f : f.t, n = f.n || 1; return Date.now() - t > [30, 60, 120, 300][Math.min(n - 1, 3)] * 1000; };
+  let lastPacks = 0;                              // 20.14: сколько пакетов прошло в последней покупке (малую — можно повторить сразу)
   const buy = async (k, offer, packs, what) => {
     if (env.payments?.blocked?.()) return false;   // 20.12: покупка ждёт сверки прежней оплаты — это не «магазин не ответил»
     const cap = (env.rt.fishPackCap || {})[offer];
-    const useCap = cap && Date.now() - cap.t < 30 * 60000;          // «много пакетов не проходит» — помним 30 мин
+    // 20.14 (лог 17.10 13:29–13:35, 20.9): по старой метке «много пакетов не проходит» заряды покупались по 1 пакету (50 шт. ≈ 6 рыб)
+    // при нужных 35 пак.; через минуту заряды кончались, а повтор покупки ждал 2 мин — ловил без них (урон 35 вместо 70), пока игрок
+    // в 13:35 сам не купил 999 пакетов одной покупкой (прошла). Метку помним 10 мин (было 30), потом снова пробуем нужное количество
+    const useCap = cap && cap.n < packs && Date.now() - cap.t < 10 * 60000;
     let ok = await fishBuy(offer, useCap ? cap.n : packs, what);
+    lastPacks = ok ? (useCap ? cap.n : packs) : 0;
     if (!ok && !useCap && packs > 1 && env.on) {
       ok = await fishBuy(offer, 1, what + ' (1 пакет — проверка)');
-      if (ok) { await env.setRt({ fishPackCap: { ...(env.rt.fishPackCap || {}), [offer]: { n: 1, t: Date.now() } } }); env.rec('B', 'рыбалка: покупка', `${what}: ${packs} пак. не проходит, 1 пакет — да. 30 мин покупаю по 1 пакету, потом снова пробую ${packs}`); }
+      if (ok) { lastPacks = 1; await env.setRt({ fishPackCap: { ...(env.rt.fishPackCap || {}), [offer]: { n: 1, t: Date.now() } } }); env.rec('B', 'рыбалка: покупка', `${what}: ${packs} пак. не проходит, 1 пакет — да. 10 мин покупаю по 1 пакету, потом снова пробую ${packs}`); }
     }
     const f = F()[k];
     await env.setRt({ fishBuyFail: { ...F(), [k]: ok ? null : { t: Date.now(), n: (f?.n || 0) + 1 } } });
@@ -792,7 +797,8 @@ async function fishPrepare() {                  // удочка, наживка 
     // 8.0 (аудит рыбалки): заряды докупаем заранее — при ≤ 20 (раньше ровно при 0: забросы до покупки шли без зарядов, урон ≈35
     // вместо ≈70). Не чаще раза в 2 мин после удачной покупки (страховка от неверно прочитанного счётчика) и не во время лесенки неудач
     const sq = fishQty('soulshot');
-    if (sq != null && sq <= 20 && env.cfg.fishAutoBuy && buyOk('shot') && Date.now() - shotBuyT > 120000) {
+    // 20.14: 2 мин страховки — только после крупной покупки; 1–4 пакета (50–200 зарядов) кончаются за минуту — повтор через 20 с
+    if (sq != null && sq <= 20 && env.cfg.fishAutoBuy && buyOk('shot') && (Date.now() - shotBuyT > 120000 || shotBuyN < 5 && Date.now() - shotBuyT > 20000)) {
       env.setStatus(sq ? `Рыбалка: зарядов ${sq} — докупаю` : 'Рыбалка: кончились заряды — покупаю');
       // v4.56: соотношение — зарядов столько, чтобы кончились вместе с наживкой (по замеру расхода: наживки и зарядов на рыбу)
       let sp = env.cfg.fishShotPacks || 750, why = '';
@@ -805,7 +811,7 @@ async function fishPrepare() {                  // удочка, наживка 
         sp = Math.max(5, Math.min(1000, Math.ceil(fishLeft * shotPerFish / 50)));   // 7.2.4: до 1000 пак. — под 1000 пакетов наживки (было 400)
         why = ` (под наживку: ${baitNow} шт. ≈ ${Math.round(fishLeft)} рыб × ${shotPerFish.toFixed(1)} заряда)`;
       }
-      if (await buy('shot', 'soulshot_x50', sp, 'Fishing Soulshot ×50' + why)) shotBuyT = Date.now();
+      if (await buy('shot', 'soulshot_x50', sp, 'Fishing Soulshot ×50' + why)) { shotBuyT = Date.now(); shotBuyN = lastPacks; }
     }
     const s2 = fSlot('soulshot'), n2 = fishQty('soulshot');
     if (s2 && n2 > 0 && !/soulshot-on|toggle-on/.test(s2.className)) {
