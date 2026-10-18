@@ -430,6 +430,16 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   const cancelled = (env.rt.tbCancelT || 0) > (env.rt.tbT || 0);
   let wait = cancelled || interrupted ? 0 : env.rt.tbOk === false || urgent ? 60000 : 10 * 60000;
   if (cancelled) why += ' — сняты мобом';
+  // 20.14.1 (лог 18.10 18:32–18:33): сторож взял городской «basic», через 30 с тур РБ попросил полный набор FA — бот записал
+  // «после баффера баффы так и не появились (1/3)» и ждал баффера 24 с, хотя прошлый поход удался: просто теперь нужны ДРУГИЕ баффы.
+  // Прошлый поход помнит, за чем шёл (rt.tbWant); всё это висит в шапке — поход удался, новые баффы берём сразу, без счёта неудач.
+  const wantOf = p => [...(p.set ? [...(env.TB_KEYS[p.set] || []), ...(env.rt.tbSetIds?.[p.set] || [])] : []), ...(p.fa || [])].map(Number);
+  const Hp = hudBuffs(), prevW = Array.isArray(env.rt.tbWant) ? env.rt.tbWant : null;
+  if (!interrupted && !cancelled && Hp && prevW?.length && env.rt.tbT && since < 15 * 60000 && prevW.every(id => Hp[id])) {
+    const prevS = new Set(prevW), fresh = wantOf(n).filter(id => !prevS.has(id) && !Hp[id]);
+    if (env.rt.tbChk !== env.rt.tbT) { await env.setRt({ tbChk: env.rt.tbT, tbOk: true, tbFail: 0 }); if(!active())return false; }
+    if (fresh.length) wait = 0;
+  }
   if (!interrupted && !cancelled && env.rt.tbT && since > 40000 && since < 15 * 60000 && env.rt.tbChk !== env.rt.tbT) {
     const fails = (env.rt.tbFail || 0) + 1;
     await env.setRt({ tbChk: env.rt.tbT, tbOk: false, tbFail: fails });
@@ -443,7 +453,7 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   if (since < wait) { if (env.rt.tbWaitSaid !== env.rt.tbT) { await env.setRt({ tbWaitSaid: env.rt.tbT, tbWaitUntil:(env.rt.tbT||0)+wait }); env.rec('B', 'бафф', `баффы слетели (${why}), к бафферу через ${Math.ceil((wait - since) / 1000)} с`); } return false; }
   const H = hudBuffs() || {}, miss = [...(n.set ? [...new Set([...(env.TB_KEYS[n.set] || []), ...(env.rt.tbSetIds?.[n.set] || [])])] : []), ...n.fa].filter(id => !H[id] || H[id] - Date.now() < BUFF_LOW_MS);
   if (miss.length) why += ` (нет/кончается: ${miss.slice(0, 6).map(id => env.IL[id]?.n || env.rt.faCat?.[id]?.name || id).join(', ')})`;
-  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode), epicFa: !!(urgent && /^перед эпиком/.test(why) && env.cfg.epicFaFull !== false && env.epicFaOk?.()) }, tbT: Date.now(), tbInterrupted:null, tbWaitUntil:0 });
+  await env.setRt({ tbuff: { ...n, t: Date.now(), step: n.set ? 'town' : 'fa', rbTour: !!(urgent && /^перед РБ/.test(why) && env.cfg.rbHuntMode), epicFa: !!(urgent && /^перед эпиком/.test(why) && env.cfg.epicFaFull !== false && env.epicFaOk?.()) }, tbT: Date.now(), tbWant: wantOf(n), tbInterrupted:null, tbWaitUntil:0 });
   if(!active())return false;
   env.rec('B', 'бафф', `${why}: ${n.set ? 'городской «' + n.set + '»' : ''}${n.set && n.fa.length ? ' + ' : ''}${n.fa.length ? 'FA ' + n.fa.join(', ') : ''}`);
   location.href = n.set ? '/town-buffer.html' : '/fast-aden-buffer.html'; await env.sleep(4000);
