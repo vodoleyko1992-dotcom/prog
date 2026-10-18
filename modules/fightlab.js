@@ -162,6 +162,51 @@ function begin(bt, spawn, now) {
   F.key = keyOf({ spawn, name, champ, kind: rb ? 'raid' : '' });
   return F;
 }
+// 18.10, автофарм: подтверждения смертей — отдельно от модели урона и последних40 строк.
+// Полный журнал задаёт нижнюю границу количества каждого имени; свежий delta добавляет
+// отдельные события по абсолютному logSeq. Повтор GET/full/хвоста не убивает мобов заново.
+function killNote(bt, d, now) {
+  if (!F || F.groupOwner !== groupOwner()) return;
+  if (bt.actor && env.rt.char && low(bt.actor) !== low(env.rt.char)) return;
+  if (bt.prof && env.rt.classCur?.prof && low(bt.prof) !== low(env.rt.classCur.prof)) return;
+  if (bt.slot != null && env.rt.classCur?.slot != null && bt.slot !== env.rt.classCur.slot) return;
+  const k = F.killProof ||= { t: 0, win: false, lose: false, extras: [], fullSeq: -1, fullRev: null, fullUnknown: false, rev: null, seqs: new Set(), rids: new Set() };
+  if (bt.rev != null && k.rev != null && bt.rev < k.rev) return;
+  const proof = bt.killEvidence, full = Array.isArray(proof?.full) ? proof.full : null;
+  const append = name => { if (typeof name === 'string' && name.trim() && k.extras.length < 200) k.extras.push(name.trim().slice(0, 80)); };
+  const ridFresh = d.rid != null && !k.rids.has(d.rid);
+  let confirmed = false, usedRid = false;
+  if (full) {
+    const seen = new Map(), have = new Map();
+    for (const name of k.extras) have.set(low(name), (have.get(low(name)) || 0) + 1);
+    for (const name of full.slice(0, 200)) {
+      if (typeof name !== 'string' || !name.trim()) continue;
+      const key = low(name), count = (seen.get(key) || 0) + 1; seen.set(key, count);
+      if (count > (have.get(key) || 0)) append(name);
+    }
+    k.fullUnknown = !(Number.isSafeInteger(proof.fullSeq) && proof.fullSeq >= 0);
+    if (!k.fullUnknown) k.fullSeq = Math.max(k.fullSeq, proof.fullSeq);
+    k.fullRev = bt.rev ?? null;
+    confirmed = true;
+  }
+  for (const event of Array.isArray(proof?.tail) ? proof.tail.slice(0, 200) : []) {
+    const seq = Number.isSafeInteger(event?.seq) && event.seq >= 0 ? event.seq : null;
+    // Полный ответ без logSeq покрывает свой delta; без сравнимой ревизии новый
+    // хвост после такого снимка неоднозначен — ждём следующее полное подтверждение.
+    if (k.fullUnknown && (full || bt.rev == null || k.fullRev == null || bt.rev <= k.fullRev)) {
+      if (seq != null && k.seqs.size < 400) k.seqs.add(seq);
+      continue;
+    }
+    if (seq != null ? seq <= k.fullSeq || k.seqs.has(seq) : !ridFresh || full || (k.fullRev != null && (bt.rev == null || bt.rev <= k.fullRev))) continue;
+    append(event?.name); confirmed = true;
+    if (seq != null && k.seqs.size < 400) k.seqs.add(seq);
+    if (seq == null) usedRid = true;
+  }
+  if (usedRid && k.rids.size < 200) k.rids.add(d.rid);
+  if (bt.win === true) { k.win = true; confirmed = true; }
+  if (bt.lose === true) { k.lose = true; confirmed = true; }
+  if (confirmed) { k.t = now; if (bt.rev != null) k.rev = bt.rev; }
+}
 // новые строки полного лога: прошлый ответ кончался на prev, новый — cur; cur = prev.slice(k) + новое (лог игры растёт, старое уходит)
 function newLines(F, cur) {
   const prev = F.logPrev || [], c = Array.isArray(cur) ? cur.map(x => String(x ?? '')) : [];
@@ -218,6 +263,7 @@ function onNet(path, d) {
     // этому action, более ранняя — исходное состояние следующего action (в том числе чужой урон).
     if (F.mob == null && !F.turns) { begin(bt, spawnB || F.spawn, now); F.logPrev = (bt.log || []).slice(-40); }
     else if (!F.pendingSnapshot || (bt.rev != null && bt.rev >= (F.pendingSnapshot.rev ?? -1))) F.pendingSnapshot = bt;
+    killNote(bt, d, now);
     return null;
   }
   const spawn = spawnB || (F && !F.done ? F.spawn : '') || String(d.req?.battleSpawnId || urlSpawn() || '');
@@ -229,9 +275,11 @@ function onNet(path, d) {
     if (!act) {
       // 14.10: стартовый лог — уже виденная часть. Иначе после delta финальный fullLog повторно засчитывает первый удар и кота.
       F.logPrev = (bt.log || []).map(x => String(x ?? '')).slice(-40);
+      killNote(bt, d, now);
       if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F;
     }
   }
+  killNote(bt, d, now);
   const snapshot = F.pendingSnapshot;
   if (act && snapshot && (bt.rev == null || snapshot.rev == null || snapshot.rev < bt.rev)) {
     if (snapshot.mob != null) F.mob = snapshot.mob;
@@ -324,6 +372,13 @@ function damageFor(name, spawn, since = 0) {
   syncOwner();
   if (!F || low(name) !== low(F.name) || (spawn && F.spawn && spawn !== F.spawn) || F.tl < since - 500) return null;
   return { removed: F.removed + F.sideRemoved, main: F.removed, side: F.sideRemoved, unknownSides: F.unknownSides };
+}
+// Только явные подтверждения текущего/завершённого боя, в том числе GET после reload.
+function killsFor(spawn, since = 0) {
+  syncOwner();
+  if (env.pvpPending?.() || !F || !spawn || F.spawn !== spawn || F.groupOwner !== groupOwner()) return null;
+  const k = F.killProof; if (!k?.t || k.t < since) return null;
+  return { spawn: F.spawn, t: k.t, win: k.win, lose: k.lose, extras: [...k.extras] };
 }
 
 // ---------- итог боя → память на цель ----------
@@ -444,6 +499,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -205,10 +205,10 @@ const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
 // в 10 с); отметка начала боя не держит бой: без счётчика убитые считаются по журналу боя с пометкой «неточно»; подтверждение
 // итога — не больше 5 попыток / 30 с, затем бой засчитывается по журналу и бот идёт дальше.
 const KILL_SNAP = { name: '', k: -1, rev: -1, t: 0, stale: false }, QUOTA_WAIT = {};
-let KILL_FAIL_T = 0, quotaApproxNoteT = 0;
+let KILL_FAIL_T = 0, quotaApproxNoteT = 0, quotaTicketN = 0;
 function killSnapNote(x) {
   if (!x || typeof x.name !== 'string' || !Number.isSafeInteger(x.k) || x.k < 0 || !Number.isSafeInteger(x.rev)) return;
-  if (x.name === KILL_SNAP.name && x.rev < KILL_SNAP.rev) return;   // поздний ответ старее уже виденного
+  if (x.name === KILL_SNAP.name && (x.rev < KILL_SNAP.rev || x.rev === KILL_SNAP.rev && (x.k < KILL_SNAP.k || KILL_SNAP.stale && x.k === KILL_SNAP.k))) return;   // поздний ответ не омолаживает меньший счётчик
   Object.assign(KILL_SNAP, { name: x.name, k: x.k, rev: x.rev, t: Date.now(), stale: false });
 }
 // Конец любого боя (и РБ/PvP вне квоты): до нового снимка игры старый счётчик не годится как точка начала следующего боя.
@@ -224,8 +224,12 @@ async function farmQuotaSnapshot(char, need = null) {
   try {
     const r = await gameGet('/character'), c = r.ok ? (await r.json())?.character : null;
     if (!c || c.name !== char || !Number.isSafeInteger(c.mobsKilled) || c.mobsKilled < 0 || !Number.isSafeInteger(c.revision)) throw new Error('Счётчик убийств сервера пока не получен');
-    killSnapNote({ name: c.name, k: c.mobsKilled, rev: c.revision });
-    return c;
+    const direct = { name:c.name,k:c.mobsKilled,rev:c.revision };
+    killSnapNote(direct);
+    // Свой GET начат для сверки итога: одинаковая свежая квитанция допустима, повтор старого hook — нет.
+    if (KILL_SNAP.name === char && KILL_SNAP.rev === direct.rev && KILL_SNAP.k === direct.k && (!need || need(direct))) KILL_SNAP.stale = false;
+    if (!ok()) throw new Error('Счётчик убийств сервера ещё не подтверждает итог боя');
+    return snap();
   } catch (e) { KILL_FAIL_T = Date.now(); throw e; }
 }
 // Повтор подтверждения одного боя: не чаще раза в 2 с, не больше 5 попыток / 30 с.
@@ -247,10 +251,10 @@ async function beginFarmQuota(spawn) {
   const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
   const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
   if (!limit && !dailyLimit) return null;
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionKills = previous.length ? previous[0].row.pending.sessionKills : Number.isSafeInteger(rt.kills) && rt.kills >= 0 ? rt.kills : undefined, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
   const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
   // 20.12: без счётчика бой не бросаем — билет «неточно», убитые засчитаются по журналу боя.
-  const approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true });
+  const approxId = `${TAB_ID}:${Date.now()}:${++quotaTicketN}`, approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true, approxId, run:rt.farmQuota?.[task]?.run ?? 0, sessionKills, sessionT0, beforeCounter: c?.mobsKilled, beforeRevision: c?.revision });
   // Reload начатого боя: фон всё равно оставит сохранённую точку начала — свежий снимок не нужен.
   const prev = previous[0]?.row.pending;
   let c;
@@ -258,15 +262,16 @@ async function beginFarmQuota(spawn) {
   catch (e) { if (!valid()) return null; setStatus('Лимит мобов: счётчик сервера недоступен — считаю по журналу боя'); return approx(); }
   if (!valid()) return null;
   try {
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision }, expectedChar: char, epoch, src: TAB_ID });
-    if (!r?.ok || !valid()) { if (valid()) setStatus('Лимит мобов: начало боя не записано — продолжаю бой'); return null; }
-    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row } };
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision, sessionKills, sessionT0 }, expectedChar: char, epoch, src: TAB_ID });
+    if (!valid()) return null;
+    if (!r?.ok) { setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
+    rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}) };
     return { task, limit, dailyLimit, char, epoch, kick, run: r.row.run, spawn, beforeRevision: r.row.pending.revision };
   } catch (e) { if (!valid()) return null; setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
 }
 // Общий итог подтверждённого и приблизительного учёта: true — бой в этой задаче больше не продолжаем (лимит).
 function farmQuotaApply(T, r) {
-  rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row } }; cfg = mergeCfg(r.cfg);
+  rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}), ...(Number.isSafeInteger(r.kills) ? { kills: Math.max(+rt.kills || 0, r.kills) } : {}) }; cfg = mergeCfg(r.cfg);
   if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
   if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
   if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
@@ -275,18 +280,20 @@ function farmQuotaApply(T, r) {
 // 20.12: засчитать бой по журналу (n убитых) — счётчик сервера недоступен или не подтвердил итог. close — закрыть висящий pending боя.
 async function farmQuotaApprox(T, n, close = false) {
   if (T.done) return false;
-  T.done = true;
+  const valid = () => on && tabOwner && rt.char === T.char && leaseEpoch === T.epoch && (rt.manualKickAt || 0) === T.kick && farmQuotaLimit(T.task) === T.limit && farmDailyLimit(T.task) === (T.dailyLimit || 0);
+  if (!valid()) return true;
   const name = T.task === 'cat' ? 'Катакомбы' : 'Автофарм';
   try {
-    if (!await rtCommit()) return false;
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
-    if (!r?.ok) return false;
+    if (!await rtCommit() || !valid()) return false;
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close, run:T.run, approxId: T.approxId, sessionKills: T.sessionKills, sessionT0: T.sessionT0, beforeCounter: T.beforeCounter, beforeRevision: T.beforeRevision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    if (!r?.ok || !valid()) return false;
+    T.done = true;
     if (Date.now() - quotaApproxNoteT > 600000) { quotaApproxNoteT = Date.now(); rec('B', 'лимит мобов', `${name}: счётчик убийств сервера ${close ? 'не подтвердил итог боя' : 'недоступен'} — засчитал по журналу боя: ${n} (неточно), продолжаю`); }
     return farmQuotaApply(T, r);
   } catch (e) { return false; }
 }
 async function finishFarmQuota(ticket, lost = false, seen = null) {
-  const logN = Number.isSafeInteger(seen) && seen >= 0 ? seen : lost ? 0 : 1;
+  const observed = Number.isSafeInteger(seen) && seen >= 0 && seen <= 200 ? seen : null, logN = observed ?? (lost ? 0 : 1);
   if (!ticket) {
     const spawn = new URLSearchParams(location.search).get('spawnId') || '', previous = farmQuotaPending(spawn);
     if (previous.length > 1) {
@@ -312,9 +319,9 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
     return farmQuotaApprox(T, logN, true);
   };
   try {
-    const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || (lost ? s.k >= p.counter : s.k > p.counter));
+    const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || observed > 0 || lost || s.k > p.counter);
     const c = await farmQuotaSnapshot(T.char, need); if (!valid() || !await rtCommit()) return true;
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
     if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
     delete QUOTA_WAIT[key];
     return farmQuotaApply(T, r);
@@ -5179,6 +5186,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get applyQuestLog() { return applyQuestLog; }, set applyQuestLog(value) { applyQuestLog = value; },
   get autoRoles() { return autoRoles; }, set autoRoles(value) { autoRoles = value; },
   get battleSpawn() { return battleSpawn; }, set battleSpawn(value) { battleSpawn = value; }, get cdSpawn() { return cdSpawn; },
+  get battleKills() { return (spawn,since)=>L2V7Modules.fightlab?.killsFor?.(spawn,since); },
   get buffActive() { return buffActive; }, set buffActive(value) { buffActive = value; },
   get buffAuditStep() { return buffAuditStep; }, set buffAuditStep(value) { buffAuditStep = value; },
   get buffList() { return buffList; }, set buffList(value) { buffList = value; },
