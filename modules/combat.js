@@ -226,7 +226,7 @@ const uiReady = b => !!b && !b.disabled && b.getAttribute('aria-disabled') !== '
 // Items used as HP/MP potions have no local skill cooldown in this game.
 const potionSlot = b => !!b && env.slotKind(b) === 'предмет' &&
   /зілля|зелье|potion|elixir|еліксир|эликсир/i.test(b.title || '') &&
-  (env.HP_POT_RE.test(b.title || '') || /ман[аиы]|mana|\bmp\b|elixir|еліксир|эликсир/i.test(b.title || ''));
+  (env.HP_POT_RE.test(b.title || '') || /ман[аиы]|mana|\bmp\b|elixir|еліксир|эликсир|^#(?:726|728|920045)\b/i.test(b.title || ''));
 const ready  = b => uiReady(b) && env.ilOf?.(b)?.autoUse !== false && (potionSlot(b) || localCdLeft(b) <= 0) &&
   (!env.slotAction(b) || env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) <= 0);
 
@@ -2492,10 +2492,10 @@ function potModel() {                           // v4.40: все банки HP �
     // Prefer last real inventory scan (rather than an absent battle hotbar).
     if (bag?.n && Date.now() - bag.t < 6 * 3600000) {
       items = Object.entries(bag.n).filter(([name,qty]) => Number(qty) > 0 &&
-          /зілля\s*(?:зцілення|лікування|hp)|зелье\s*(?:исцеления|лечения|hp)|healing potion|greater healing/i.test(name))
+          /зілля\s*(?:зцілення|лікування|hp)|зелье\s*(?:исцеления|лечения|hp)|healing potion|greater healing|^#920044$/i.test(name))
         .map(([name, qty]) => {
           const historical = Object.values(env.rt.pots || {}).find(p => p.kind === 'hp' && (p.name || '').toLowerCase() === name.toLowerCase());
-          return { name, heal: historical?.pulse || Math.min(historical?.heal || (/велик|greater/i.test(name) ? 2500 : 600), /велик|greater/i.test(name) ? 2500 : 600),
+          return { name, heal: historical?.pulse || Math.min(historical?.heal || (/велик|больш|greater|^#920044$/i.test(name) ? 2500 : 600), /велик|больш|greater|^#920044$/i.test(name) ? 2500 : 600),
             n: +qty, est: !historical?.heal, cd: 0 };
         });
       const reserve = Math.max(0, env.cfg.rbPotReserve || 0);

@@ -656,7 +656,8 @@ async function potWatch(...args) { return L2V7Modules.resources.potWatch(...args
 function potInventory(...args) { return L2V7Modules.resources.potInventory(...args); }
 
 // банки HP: из роли «Банка HP» + любые лечебные зелья на панели (Велике зілля HP, Зілля зцілення…); лечение — по замеру
-const HP_POT_RE = /зілля\s*hp|зелье\s*hp|зцілен|исцелен|лікуван|лечен|healing|greater healing|здоров/i;
+// 18.10: «#1061 — зілля …» / «#920044 — зілля …» — слот без имени, пока каталог игры не загружен
+const HP_POT_RE = /зілля\s*hp|зелье\s*hp|зцілен|исцелен|лікуван|лечен|healing|greater healing|здоров|^#(?:1060|1061|920044)\b/i;
 function hpPots(...args) { return L2V7Modules.resources.hpPots(...args); }
 function hpPotByDeficit(...args) { return L2V7Modules.resources.hpPotByDeficit(...args); }
 function hpPotPick(...args) { return L2V7Modules.resources.hpPotPick(...args); }

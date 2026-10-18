@@ -63,29 +63,46 @@ function potInventory() {                        // банки на панели
   if (ch || cdChanged) env.setRt({ ...(ch ? { pots: P } : {}), ...(cdChanged ? { cdUntil: cd, skills } : {}) });
 }
 
+// 18.10 (игрок: «у меня есть усиленные HP и MP банки, бот их игнорирует»): «Велике зілля HP/MP» (#920044/#920045, «Большое зелье» в RU,
+// магазин FA/TvT, 2500 за импульс). Бот брал обычную HP-банку (из двух — «самую слабую»), а MP — «Зілля мани (велика банка)» по списку имён;
+// пока каталог игры не загружен, слот вообще подписан «#920044 — зілля …» и не узнавался. Теперь усиленные пьются первыми, обычные — запас.
+const BIG_POT = { 920044: 'hp', 920045: 'mp' };
+function bigPot(b) {
+  const t = String(b?.title || ''), id = +(t.match(/^#(\d+)\s*[—–-]/)?.[1] || 0);
+  if (BIG_POT[id]) return BIG_POT[id];
+  if (/^(?:велике зілля|большое зелье)\s*hp|^large hp potion/i.test(t)) return 'hp';
+  if (/^(?:велике зілля|большое зелье)\s*(?:mp|ман)|^large mp potion/i.test(t)) return 'mp';
+  return null;
+}
+
 function hpPots() {
-  const own = env.slotsBy(env.cfg.nHpPot || '').filter(b => !/ман|mana|\bmp\b/i.test(b.title || ''));   // 7.2.1: банку маны как лечебную не пьём
-  const auto = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'предмет' && env.HP_POT_RE.test(b.title || '') && !/ман|mana|\bmp\b/i.test(b.title || ''));
+  const own = env.slotsBy(env.cfg.nHpPot || '').filter(b => !/ман|mana|\bmp\b/i.test(b.title || '') && bigPot(b) !== 'mp');   // 7.2.1: банку маны как лечебную не пьём
+  const auto = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'предмет' && bigPot(b) !== 'mp' &&
+    (bigPot(b) === 'hp' || (env.HP_POT_RE.test(b.title || '') && !/ман|mana|\bmp\b/i.test(b.title || ''))));
   return [...new Set([...own, ...auto])].filter(b => env.qty(b) !== 0).map(b => {
     const P = env.rt.pots?.[env.potKey(b)], p = env.rt.skills?.[env.skKey(b)] || {};
-    return { b, key: env.potKey(b), name: env.potName(b),
-      heal: P?.pulse || Math.min(P?.heal || p.heal || (/велик|greater/i.test(b.title) ? 2500 : 600), /велик|greater/i.test(b.title) ? 2500 : 600),
+    const big = bigPot(b) === 'hp', cap = big || /велик|больш|greater/i.test(b.title) ? 2500 : 600;
+    return { b, key: env.potKey(b), name: env.potName(b), big,
+      heal: P?.pulse || Math.min(P?.heal || p.heal || cap, cap),
       est: !(P?.pulse || P?.heal), cd: 0, ready: env.ready(b) }; // Для банок действует только серверный GCD
   });
 }
 
 function hpPotByDeficit(deficit) {               // v4.46: недостача ≥1500 — самая сильная, иначе самая слабая (меньше перелива)
-  const L = hpPots().filter(x => x.ready).sort((a, b) => a.heal - b.heal);
+  const L = hpPots().filter(x => x.ready).sort((a, b) => a.heal - b.heal), B = L.filter(x => x.big);
+  if (B.length) return B[B.length - 1].b;        // 18.10: усиленная есть — она первая
   return (deficit >= 1500 ? L[L.length - 1] : L.find(x => x.heal <= deficit * 1.2) || L[0])?.b || null;
 }
 
 function hpPotPick(urgent) {                     // аварийно — самая сильная; обычно — самая слабая (их больше и они дешевле)
-  const L = hpPots().filter(x => x.ready).sort((a, b) => a.heal - b.heal);
+  const L = hpPots().filter(x => x.ready).sort((a, b) => a.heal - b.heal), B = L.filter(x => x.big);
+  if (B.length) return B[B.length - 1].b;        // 18.10: усиленная есть — она первая
   return (urgent ? L[L.length - 1] : L[0])?.b || null;
 }
 
 function mpPotSlot() {
-  return env.slotsBy(`${env.cfg.nMpPot || ''}, Велике зілля MP, Велике зілля мани`).find(b => env.qty(b) !== 0) || null;
+  const big = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'предмет' && bigPot(b) === 'mp' && env.qty(b) !== 0);
+  return big || env.slotsBy(`${env.cfg.nMpPot || ''}, Велике зілля MP, Большое зелье MP, Велике зілля мани, #728`).find(b => env.qty(b) !== 0) || null;
 }
 
 function longFightMp(ctx, mp, hp) {
@@ -213,6 +230,6 @@ async function keepShots() {
   if (await env.waitFor(() => env.shotsOn(b), 2000, 100)) env.setStatus('Соски включены');
   else console.info(env.TAG, 'соски не включились');
 }
- return { bar, meHp, meMp, potWatch, potInventory, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, keepShots, shotGradeOf, shotSlotSwap, shotSlotAdd };
+ return { bar, meHp, meMp, potWatch, potInventory, bigPot, hpPots, hpPotByDeficit, hpPotPick, mpPotSlot, longFightMp, keepShots, shotGradeOf, shotSlotSwap, shotSlotAdd };
  };
 })(globalThis);
