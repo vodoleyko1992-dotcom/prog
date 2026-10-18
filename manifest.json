@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.15",
-  "description": "L2wap Bot 20.15 — баффы к РБ без ложной неудачи, Spoil Festival у РБ по откату",
+  "version": "20.16",
+  "description": "L2wap Bot 20.16 — баффы за FA не в подземелье, мобы со снятием баффов, причина паузы рыбалки",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -136,5 +136,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.15"
+  "version_name": "20.16"
 }
