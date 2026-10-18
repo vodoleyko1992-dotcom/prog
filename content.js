@@ -656,7 +656,8 @@ async function potWatch(...args) { return L2V7Modules.resources.potWatch(...args
 function potInventory(...args) { return L2V7Modules.resources.potInventory(...args); }
 
 // банки HP: из роли «Банка HP» + любые лечебные зелья на панели (Велике зілля HP, Зілля зцілення…); лечение — по замеру
-const HP_POT_RE = /зілля\s*hp|зелье\s*hp|зцілен|исцелен|лікуван|лечен|healing|greater healing|здоров/i;
+// 18.10: «#1061 — зілля …» / «#920044 — зілля …» — слот без имени, пока каталог игры не загружен
+const HP_POT_RE = /зілля\s*hp|зелье\s*hp|зцілен|исцелен|лікуван|лечен|healing|greater healing|здоров|^#(?:1060|1061|920044)\b/i;
 function hpPots(...args) { return L2V7Modules.resources.hpPots(...args); }
 function hpPotByDeficit(...args) { return L2V7Modules.resources.hpPotByDeficit(...args); }
 function hpPotPick(...args) { return L2V7Modules.resources.hpPotPick(...args); }
@@ -1254,7 +1255,9 @@ function setRt(p) {
         rt = { ...rt, [k]: Array.isArray(rt[k]) ? [] : {} };
         patch[k] = rt[k]; cleared.push(k); size -= len;
       }
-      if (Date.now() - rtBigWarnT > 60000) {
+      // 20.14 (лог 17.10–18.10: 550 одинаковых строк «размер 1149 КБ — сброшены: нет» из 11 002 событий, раз в минуту): нечего
+      // сбросить — строка раз в 30 мин, иначе она вытесняет из журнала (лимит 20 000 событий) полезные события
+      if (Date.now() - rtBigWarnT > (cleared.length ? 60000 : 30 * 60000)) {
         rtBigWarnT = Date.now();
         try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена`); } catch (e) {}
       }
