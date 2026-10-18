@@ -116,6 +116,9 @@ const PAY_FREE_FISH = /^(?:fishing|pumping|reeling|soulshot|basicBait|goodBait)$
 function paymentFreeClick(el) {
   if (!el?.matches) return false;
   if (isMap() && el.matches(PAY_FREE_MAP)) return true;
+  // 18.10 (скрин игрока 12:08, «не закрывает меню после докупки»): после покупки зарядов оплата ждёт сверки, и общий запрет
+  // кликов глотал «Закрыть» — «Магазин рыбака» висел поверх рыбалки. Закрытие окна оплату не отправляет — разрешено.
+  if (isFishing() && el.matches('#fishing-shop-close,#fishing-rod-select-close')) return true;
   const slot = isFishing() && el.closest?.('.l2-fishing-hotbar-slot');
   return !!slot && PAY_FREE_FISH.test(slot.dataset?.slot || '');
 }
