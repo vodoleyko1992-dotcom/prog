@@ -318,9 +318,13 @@ function faBalOf(now = Date.now()) {
 function tourFaWanted() {
   return env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
+// 20.16 (игрок 18.10 21:45: «в подземелье не использовать бафы за ФА, не бафать их специально, если они уже висят на герое, то пусть»):
+// в катакомбах набор за FA не покупаем (ни свой список, ни Noblesse), а уже висящие платные баффы не мешают бить мобов, снимающих баффы
+const catNoFa = () => env.cfg.catNoFa !== false && (() => { try { return env.autonomyMode?.() === 'cat'; } catch (e) { return false; } })();
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
   if (env.rt.faSkipUntil && now < env.rt.faSkipUntil) return [];
+  if (catNoFa()) return [];
   // 7.2.1: РБ-сессия — её баффы покупаются один раз в начале; потом (после смерти) — только Noblesse Blessing (остальное он сохранил).
   // За 5 мин до конца сессии её баффы не нужны (иначе бот докупил бы их на новые 3 ч)
   const S = env.rt.rbSess, sess = S?.on && !(S.until && now > S.until - 5 * 60000) ? faFullIds() : [];
@@ -718,7 +722,7 @@ function cancelNote(lines, name, opt = {}) {         // после боя: ск�
   for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 30 * 86400000) delete C[k];
   env.setRt({ buffCancel: C, tbCancelT: Date.now() });
   const paid = faPaidLeft(0), RULE_P = { blue: 3, orange: 5, red: 7 }, rule = opt.champ && RULE_P[opt.tier];   // 10.0.8: правило игры, не свойство вида
-  const avoid = rule ? (env.cfg.champCancel || 'paid') !== 'always' : env.cfg.noCancelMobs !== false && (env.cfg.cancelFreeOk === false || cancelPaidHeld());
+  const avoid = rule ? (env.cfg.champCancel || 'paid') !== 'always' : env.cfg.noCancelMobs !== false && (env.cfg.cancelFreeOk === false || !catNoFa() && cancelPaidHeld());
   env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${rule ? ` (правило игры: ${tierRuOf(opt.tier)} ${rule} % за удар)` : ''}${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? (rule ? ', при платных баффах за FA чемпиона беру только если он стоит потери' : ', пока висят платные баффы за FA, такого не выбираю') : (rule || env.cfg.noCancelMobs === false ? '' : ', платных баффов за FA нет — таких мобов бью дальше')}`);
   return n;
 }
@@ -736,7 +740,7 @@ function cancelPaidHeld() {                         // false — шапка ви
 }
 function cancelRisk(name, champ, tier) {
   if (champ && tier) return null;
-  if (!champ && env.cfg.cancelFreeOk !== false && !cancelPaidHeld()) return null;
+  if (!champ && env.cfg.cancelFreeOk !== false && (catNoFa() || !cancelPaidHeld())) return null;
   const k = cancelKey(name, champ), o = env.rt.buffCancel?.[k];
   if (o && Date.now() - (o.t || 0) < 30 * 86400000) return o;
   const own = String(env.cfg.cancelMobs || '').split(/[,\n;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
@@ -749,6 +753,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
