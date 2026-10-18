@@ -166,6 +166,16 @@
   const TRACK = /^\/(?:character|game)(?:\/|$)/;
   let ridN = 0, mutationN = 0, storyRetry = null;
   const STORY_TP = /^\/game\/story-quests\/(?:noblesse|subclass)\/teleport$/;
+  // 18.10 (лог 22:27, рыбалка после обновления): postMessage и запись rt могли не дожить до reload.
+  // Точную revision своего заброса сохраняем синхронно до отправки; маркер ставит ядро перед native-кликом.
+  function fishRequestReceipt(u, method, req) {
+    if (method !== 'POST' || u.pathname !== '/game/fishing/action' || req?.action !== 'cast' || !Number.isSafeInteger(req.expectedRevision) || req.expectedRevision < 0) return;
+    try {
+      const key='l2bot.fishingCastRequest', marker=JSON.parse(sessionStorage.getItem(key)||'null'), now=Date.now();
+      if (!marker || typeof marker.char !== 'string' || !marker.char.trim() || !Number.isSafeInteger(marker.at) || marker.at <= 0 || !Number.isSafeInteger(marker.armedAt) || marker.armedAt < marker.at || now < marker.armedAt || now-marker.armedAt > 15000 || Number.isSafeInteger(marker.requestRevision) && marker.requestRevision >= 0) return;
+      sessionStorage.setItem(key,JSON.stringify({...marker,requestRevision:req.expectedRevision,requestAt:now}));
+    } catch (_) {} // Недоступное хранилище не меняет отправку настоящего запроса игры.
+  }
   // Native quest UI держит busy на весь409→resync→retry. Сопоставляем только
   // один такой retry; иной POST/истечение окна разрывает связь, GET её не забирает.
   function start(u, method, req) {
@@ -182,6 +192,7 @@
   if (ofetch) window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : input?.url || String(input);
     const u = same(url);
+    if (u?.pathname === '/game/fishing/action') fishRequestReceipt(u, String(init?.method || input?.method || 'GET').toUpperCase(), reqBody(init?.body));
     const p = ofetch.apply(this, arguments);
     if (!u) return p;
     const method = String(init?.method || input?.method || 'GET').toUpperCase(), t0 = performance.now(), req = reqBody(init?.body);
@@ -203,6 +214,7 @@
     const info = this.__l2, u = info && same(info.url);
     if (u) {
       const t0 = performance.now(), req = reqBody(body);
+      fishRequestReceipt(u, info.method, req);
       const {rid} = start(u, info.method, req);
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;

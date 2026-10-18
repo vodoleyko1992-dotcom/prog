@@ -978,11 +978,27 @@ async function fishFightLoop() {
 // у рыбака (по 100 000 SP), купить рыболовное место (10 000 000 Adena, один раз — только если после покупки останется резерв
 // закупок). Удочку, наживку, заряды и время бот уже покупает сам. Выключить: fishAutoSetup: false
 const castRejected=nf=>nf.ok===false&&!(nf.status>=500)&&['revision_conflict','in_battle'].includes(nf.code);
+// 18.10, журнал 22:27–22:42: async netStart/PATCH может потеряться при reload. Hook сохраняет точный запрос
+// синхронно до отправки; квитанция принадлежит только одному заранее сохранённому намерению этой вкладки.
+const CAST_REQUEST_KEY='l2bot.fishingCastRequest';
+function castRequestArm(p) {
+  try { root.sessionStorage?.setItem(CAST_REQUEST_KEY,JSON.stringify({char:p.char,at:p.at,armedAt:Date.now()})); } catch (_) {}
+}
+function castRequestReceipt(p) {
+  try {
+    const r=JSON.parse(root.sessionStorage?.getItem(CAST_REQUEST_KEY)||'null');
+    return r?.char===p.char&&r.at===p.at&&Number.isSafeInteger(r.requestRevision)&&r.requestRevision>=0&&Number.isSafeInteger(r.armedAt)&&r.armedAt>=p.at&&Number.isSafeInteger(r.requestAt)&&r.requestAt>=r.armedAt&&r.requestAt-r.armedAt<=15000&&r.requestAt<=Date.now()?r:null;
+  } catch (_) { return null; }
+}
 // 16.10, журнал 03:11: abort заброса оставлял вечный pending. Повтор только с исходной revision.
-function castRequestNote(d) {
+function castRequestNote(d,at=Date.now()) {
   const p=env.rt.fishCastPending;
-  if(!p||!fishOwn()||p.char!==env.rt.char||d.path!=='/game/fishing/action'||d.method!=='POST'||d.req?.action!=='cast'||!Number.isSafeInteger(d.req.expectedRevision)||Date.now()-p.at>15000||Number.isSafeInteger(p.requestRevision))return;
-  env.setRt({fishCastPending:{...p,requestRevision:d.req.expectedRevision}});env.rtCommit?.();
+  if(!p||!fishOwn()||p.char!==env.rt.char||d.path!=='/game/fishing/action'||d.method!=='POST'||d.req?.action!=='cast'||!Number.isSafeInteger(d.req.expectedRevision)||d.req.expectedRevision<0||!Number.isSafeInteger(at)||at<p.at||at-p.at>15000||at>Date.now()||Number.isSafeInteger(p.requestRevision))return;
+  bg(env.setRt({fishCastPending:{...p,requestRevision:d.req.expectedRevision}}));bg(env.rtCommit?.());
+}
+function castResponseNote(path,d,context) {
+  if(context?.char!==env.rt.char||context.lease!==env.leaseEpoch)return;
+  castRequestNote({...d,path},context.at);
 }
 let legacyCastCheck = null;
 async function castReconcile(options={}) {
@@ -999,14 +1015,23 @@ async function castReconcile(options={}) {
     await env.setRt(statTake({fishCastPending:null,fishCastActive:!!f}));if(f&&!observeOnly&&owned())await fishFight();return true;
   }
   if(!p.retryAt&&nf.act==='cast'&&nf.t>=p.at&&castRejected(nf)){await env.setRt({fishCastPending:null});return true;}
+  if(!Number.isSafeInteger(p.requestRevision)) {
+    const receipt=castRequestReceipt(p);
+    if(receipt){
+      const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,requestRevision:receipt.requestRevision}});
+      if(saved?.ok!==false&&valid()&&await commit()&&valid())env.rec('B','рыбалка','Исходная revision заброса восстановлена из квитанции вкладки');
+      return true;
+    }
+  }
   // Старые записи не имели revision: восстанавливаем её только по однозначному сохранённому запросу.
   if(!Number.isSafeInteger(p.requestRevision)&&env.castEvidence&&(!legacyCastCheck||legacyCastCheck.char!==char||legacyCastCheck.at!==p.at||Date.now()-legacyCastCheck.t>=30000)){
     legacyCastCheck={char,at:p.at,t:Date.now()};
     const evidence=await env.castEvidence(p.at);if(!valid())return true;
+    // Пока фон читает журнал, netStart/ответ мог уже дать точную revision и свежие поля этой попытки.
+    const current=env.rt.fishCastPending;if(Number.isSafeInteger(current.requestRevision))return true;
     if(Number.isSafeInteger(evidence?.revision)&&evidence.revision>=0){
-      const saved=await env.setRt({fishCastPending:{...p,requestRevision:evidence.revision}});
-      if(saved?.ok!==false)await commit();
-      if(valid())env.rec('B','рыбалка','Исходная revision старого заброса восстановлена из сохранённого сетевого журнала');
+      const saved=await env.setRt({fishCastPending:{...current,requestRevision:evidence.revision}});
+      if(saved?.ok!==false&&valid()&&await commit()&&valid())env.rec('B','рыбалка','Исходная revision старого заброса восстановлена из сохранённого сетевого журнала');
       return true;
     }
   }
@@ -1164,6 +1189,7 @@ async function fishing() {
   const saved=await env.setRt({fishCastPending:pending});
   const durable=saved?.ok!==false&&(!env.rtCommit||await env.rtCommit());
   if(!durable||!fishOwn()||env.rt.char!==castChar||env.leaseEpoch!==castLease||(env.rt.manualKickAt||0)!==castKick||env.rt.fishTgt?.done){if(env.rt.char===castChar&&env.rt.fishCastPending?.at===castT)await env.setRt({fishCastPending:null});return;}
+  castRequestArm(pending);
   if(env.fire(fb)===false){await env.setRt({fishCastPending:null});return;}
   let castSeen = false, gearMsg = '';
   env.fishCast = { bait, t: castT };
@@ -1478,6 +1504,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitAutoMeasured, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishTimeWhy, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { castRequestNote, castResponseNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitAutoMeasured, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishTimeWhy, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);
