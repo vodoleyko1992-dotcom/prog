@@ -178,14 +178,20 @@ function fishingTimeRemainingMs(raw) {
   if (!m) return null;
   return ((+m[1] || 0) * 3600 + (+m[2]) * 60 + (+m[3])) * 1000;
 }
+// 18.10 (журнал 20:59–21:28, «не покупает время рыбалки»): пауза писала только «время закончилось» — без причины. Теперь причина
+// последнего отказа докупки попадает в строку паузы (автопокупка выключена / не хватает аден / дейлик / оплата сверяется).
+let timeWhy = '';
+const fishTimeWhy = () => timeWhy ? ` (${timeWhy})` : '';
 async function fishTimeTopUp() {
-  if (env.payments?.blocked()) { await paymentReconcile(); return false; }
-  if (!env.cfg.fishTimeAuto || !env.on || env.rt.dailyFish) return false; // 15.10: попутный дейлик использует только уже оплаченное время.
+  timeWhy = '';
+  if (env.payments?.blocked()) { timeWhy = 'прошлая оплата сверяется'; await paymentReconcile(); return false; }
+  if (!env.cfg.fishTimeAuto) { timeWhy = 'автопокупка времени выключена: «Рыбалка» → «Автоматически докупать время»'; return false; }
+  if (!env.on || env.rt.dailyFish) { if (env.rt.dailyFish) timeWhy = 'рыбалка по дейлику берёт только оплаченное время'; return false; } // 15.10: попутный дейлик использует только уже оплаченное время.
   const ms = fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent);
   if (ms == null || ms > Math.min(60, Math.max(0, +env.cfg.fishTimeMin || 0)) * 60000) return false;
   if (fishState() && ms > 0) return false;          // 10.0.14: истекло во время вываживания — время можно купить с рыбой на крючке
   const now = Date.now();
-  if (now - (env.rt.fishTimeBuyAt || 0) < 180000 || now - (env.rt.fishTimeFailAt || 0) < 300000) return false;
+  if (now - (env.rt.fishTimeBuyAt || 0) < 180000 || now - (env.rt.fishTimeFailAt || 0) < 300000) { timeWhy = 'прошлая докупка не вышла — повтор не раньше чем через 5 мин'; return false; }
   // 8.0 (аудит рыбалки): пакет по умолчанию — 6 ч (2,33 млн/ч против 3 млн/ч у 1 ч, на 22 % дешевле)
   const ORDER = ['1h','2h','3h','6h'];
   let pack = ORDER.includes(env.cfg.fishTimePack) ? env.cfg.fishTimePack : '6h';
@@ -204,6 +210,7 @@ async function fishTimeTopUp() {
     // 8.0: на выбранный пакет аден не хватает — берём самый большой из меньших, который по карману (иначе время кончится и рыбалка встанет)
     const alt = ORDER.slice(0, ORDER.indexOf(pack)).reverse().find(k => prices[k] > 0 && adena - reserve >= prices[k] && !env.$q(`[data-fishing-time-package="${k}"]`)?.disabled);
     if (!alt) {
+      timeWhy = `не хватает аден: ${adena}, резерв ${reserve}, пакет ${pack} ${prices[pack]}`;
       env.rec('B','рыбалка: время', `не покупаю ${pack}: ${adena} аден, резерв ${reserve}, цена ${prices[pack]}`);
       await env.setRt({ fishTimeFailAt: now });
       return false;
@@ -915,7 +922,7 @@ async function fishFightLoop() {
     // 10.0.14: нулевое оплаченное время отключает оба приёма. Это не зависание DOM: пополняем или ждём пользователя.
     if (fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent) === 0) {
       if (await fishTimeTopUp()) { fishProgT = Date.now(); continue; }
-      if (env.on) await fishSoft('Рыбалка: оплаченное время закончилось');
+      if (env.on) await fishSoft('Рыбалка: оплаченное время закончилось' + fishTimeWhy());
       return;
     }
     if (await fishStallCheck(f)) return;
@@ -1093,7 +1100,7 @@ async function fishing() {
   if (!still()) return;
   await fishTimeTopUp();
   if (!still()) return;
-  if (fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent) === 0) return fishSoft('Рыбалка: оплаченное время закончилось');
+  if (fishingTimeRemainingMs(env.$q('#fishing-time-remaining')?.textContent) === 0) return fishSoft('Рыбалка: оплаченное время закончилось' + fishTimeWhy());
   const T = env.rt.fishTgt && !env.rt.fishTgt.done ? env.rt.fishTgt : null;
   if (T && (T.got || 0) >= T.n) return fishTgtReached();
   // цель «Proof»: менять улов, как только по прогнозу хватит (а не ждать N рыб до разделки)
@@ -1444,6 +1451,6 @@ async function goFishing() {
 }
 
 const fishNow = () => { const m = env.autonomyMode(); return m === 'fish' || (m === 'epic' && !!env.cfg.fishMode && (!env.rt.epic || env.rt.epic.step === 'pick' || !env.rt.epic.step)); };
- return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitAutoMeasured, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
+ return { castRequestNote, castReconcile, paymentNote, paymentReconcile, statFlush, rodLvlGear, fishCutValue, fishValOf, baitAuto, baitAutoMeasured, baitWant, baitVerdict, baitPph, fishingTimeRemainingMs, fishTimeTopUp, fishTimeWhy, fishSoft, isFishing, fSlot, fOk, fishState, fishLog, fishNewLines, fishStat, fishWatch, fishTop, fishCdLen, fishCdLeft, fishSrvOn, fishSrvMargin, fishNet, fishAct, fishQty, fishBuy, rodText, fishRod, fishPrepare, fishDmgNote, fishCaught, fishRateTxt, fishFight, fishing, fishBagPage, fishCut, fishExchange, fishSvcDone, fishTgtAdd, fishTgtReached, goFishing, fishNow, fishBattle };
  };
 })(globalThis);
