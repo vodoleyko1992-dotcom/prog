@@ -30,3 +30,23 @@ const read = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
   assert.match(read('defaults.js'), /fishTimeAuto: false/, 'заводское значение прежнее');
   console.log('PASS v2015-fish-time-why: fishing time top-up reason in pause line, one-time enable for fishing hero');
 })().catch(e => { console.error('FAIL v2015-fish-time-why', e); process.exit(1); });
+
+// 18.10 (журнал 21:55:40, сборка 20.16): кнопка пакета перерисована игрой между поиском и кликом — жмём живую кнопку
+(async () => {
+  const W = world({ cfg: { fishTimePack: '1h' } }); W.adena = 47092136;
+  const base = W.env.$q, made = [];
+  W.env.$q = s => { const r = base(s); if (r && /data-fishing-time-package/.test(s)) made.push(r); return r; };
+  const st = W.env.setStatus; W.env.setStatus = m => { if (/докупаю время/.test(m)) made.forEach(b => { b.isConnected = false; }); return st(m); };
+  assert.equal(await W.F.fishTimeTopUp(), true, 'куплено живой кнопкой');
+  assert.equal(W.clicks.length, 1); assert.notEqual(W.clicks[0].isConnected, false, 'клик не по выпавшей кнопке');
+  // живая кнопка с другой ценой — старым намерением не жмём; одна повторная попытка перечитывает цену заново
+  const V = world({ cfg: { fishTimePack: '1h' } }); V.adena = 47092136;
+  const vb = V.env.$q; let n = 0;
+  V.env.$q = s => { const r = vb(s); if (r && /data-fishing-time-package="1h"/.test(s) && ++n > 1) return { ...r, querySelector: () => ({ textContent: '9 000 000 Adena' }) }; return r; };
+  await V.F.fishTimeTopUp(); assert.ok(V.clicks.length <= 1, 'не больше одного клика');
+  assert.ok(V.logs.some(l => /изменилась до клика/.test(l)), V.logs.join('\n'));
+  // ложная «изучите Fishing» после 502: сервер говорит, что всё изучено → другая причина паузы
+  const src = read('modules/fishing.js');
+  assert.match(src, /learnedCount >= st\.skillTotal\) why = 'Рыбалка: панель рыбалки не загрузилась \(навыки изучены/);
+  console.log('PASS v2015-fish-time-why: live time-package button after native re-render, price change cancels');
+})().catch(e => { console.error('FAIL v2015-fish-time-why (live button)', e); process.exit(1); });
