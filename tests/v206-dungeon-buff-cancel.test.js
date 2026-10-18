@@ -1,11 +1,12 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
+// 20.16: фикстура без платных FA, поэтому cancelFreeOk:false держит прежнее правило «избегать всегда»; новое поведение — v2016-cancel-free-buffs
 function read(file){const base=path.basename(String(file)),old=process.env.BUFF_CANCEL_BASELINE&&['combat.js','buffs.js','mobfarm.js'].includes(base)?path.join(root,'work',base.replace('.js','-before-buff-cancel.js')):file;return fs.readFileSync(old,'utf8')}
 function fixture(){
  const now=Date.now(),recs=[],H={},loc={pathname:'/battle.html',search:'?spawnId=sdms_catacomb_of_the_branded_026',href:''};
  const hud={querySelectorAll:()=>Object.entries(H).map(([id,e])=>({dataset:{skillId:id,expiresAt:String(e)},getAttribute:()=>''}))};
- const env={on:true,tabOwner:true,cfg:{catMode:true,catDungeon:'auto',chain:true,noCancelMobs:true,townBuffSet:'basic',faBuffs:'',lvlBelow:5,lvlAbove:10,lvlMin:1,lvlMax:99},rt:{char:'Hero',manualKickAt:1,catCur:'catacomb_of_the_branded',tbT:now-50000,tbOk:true},routeLocation:loc,TB_KEYS:{basic:[1068,1268,1086,1045]},FA_KNOWN:{},IL:{},
+ const env={on:true,tabOwner:true,cfg:{catMode:true,catDungeon:'auto',chain:true,noCancelMobs:true,cancelFreeOk:false,townBuffSet:'basic',faBuffs:'',lvlBelow:5,lvlAbove:10,lvlMin:1,lvlMax:99},rt:{char:'Hero',manualKickAt:1,catCur:'catacomb_of_the_branded',tbT:now-50000,tbOk:true},routeLocation:loc,TB_KEYS:{basic:[1068,1268,1086,1045]},FA_KNOWN:{},IL:{},
  $q:s=>s==='#l2-hud-active-buffs'?hud:null,rec:(...a)=>recs.push(a.join(' ')),setRt:async p=>{Object.assign(env.rt,p);return {ok:true}},sleep:async()=>{},heroLvl:()=>45};
  const box={console,Date,Math,URLSearchParams,document:{querySelectorAll:()=>[]},location:loc};vm.createContext(box);
  for(const name of ['combat','buffs','mobfarm','dungeons'])vm.runInContext(read(path.join(root,'modules',name+'.js')),box);

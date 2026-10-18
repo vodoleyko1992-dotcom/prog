@@ -718,8 +718,8 @@ function cancelNote(lines, name, opt = {}) {         // после боя: ск�
   for (const k of Object.keys(C)) if (Date.now() - (C[k].t || 0) > 30 * 86400000) delete C[k];
   env.setRt({ buffCancel: C, tbCancelT: Date.now() });
   const paid = faPaidLeft(0), RULE_P = { blue: 3, orange: 5, red: 7 }, rule = opt.champ && RULE_P[opt.tier];   // 10.0.8: правило игры, не свойство вида
-  const avoid = rule ? (env.cfg.champCancel || 'paid') !== 'always' : env.cfg.noCancelMobs !== false;
-  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${rule ? ` (правило игры: ${tierRuOf(opt.tier)} ${rule} % за удар)` : ''}${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? (rule ? ', при платных баффах за FA чемпиона беру только если он стоит потери' : ', такого больше не выбираю') : ''}`);
+  const avoid = rule ? (env.cfg.champCancel || 'paid') !== 'always' : env.cfg.noCancelMobs !== false && (env.cfg.cancelFreeOk === false || cancelPaidHeld());
+  env.rec('B', 'бафф', `${name || who}${opt.champ ? ' [чемп]' : ''} снял с вас ${n} бафф(ов) за бой${rule ? ` (правило игры: ${tierRuOf(opt.tier)} ${rule} % за удар)` : ''}${paid ? ` — платных за FA осталось ${paid}` : ''}; бесплатный набор возьму у баффера сразу${avoid ? (rule ? ', при платных баффах за FA чемпиона беру только если он стоит потери' : ', пока висят платные баффы за FA, такого не выбираю') : (rule || env.cfg.noCancelMobs === false ? '' : ', платных баффов за FA нет — таких мобов бью дальше')}`);
   return n;
 }
 const tierRuOf = t => ({ blue: 'синий', orange: 'оранжевый', red: 'красный' })[t] || 'чемпион';
@@ -727,8 +727,16 @@ const cancelKey = (name, champ) => (champ ? 'ч:' : '') + String(name || '').toL
 // снимает ли этот моб баффы: память (30 дней, по факту снятия; чемпион и обычный моб вида — отдельно) или список игрока cfg.cancelMobs (любой вид)
 // 10.0.8 (анонсы 13.10): любой чемпион снимает баффы по правилу игры (синий 3 % раз в 30 с, оранжевый 5 %, красный 7 % за удар) — цену считает
 // champs.judge (cfg.champCancel), память по виду чемпионам не нужна; обычные мобы — по памяти и списку, как прежде
+// 20.16 (лог 18.10 19:55–21:25, игрок: «сильно замедлился в фарме»): в Necropolis of Devotion все виды снимают баффы; после шести
+// снятий (последние — уже без платных FA) все 110 мобов стали «не цели», и бот полтора часа стоял в подземелье. Обычный моб опасен
+// только платным баффам за FA: если их нет, снятие стоит одного бесплатного похода к бафферу — такого моба бьём (cfg.cancelFreeOk)
+function cancelPaidHeld() {                         // false — шапка видна и платных за FA нет; true — есть или шапку не прочитать
+  let H = null; try { H = hudBuffs(); } catch (e) {}
+  return !H || faPaidLeft() > 0;
+}
 function cancelRisk(name, champ, tier) {
   if (champ && tier) return null;
+  if (!champ && env.cfg.cancelFreeOk !== false && !cancelPaidHeld()) return null;
   const k = cancelKey(name, champ), o = env.rt.buffCancel?.[k];
   if (o && Date.now() - (o.t || 0) < 30 * 86400000) return o;
   const own = String(env.cfg.cancelMobs || '').split(/[,\n;]+/).map(x => x.trim().toLowerCase()).filter(Boolean);
