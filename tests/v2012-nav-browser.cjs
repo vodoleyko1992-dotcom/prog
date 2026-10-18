@@ -1,3 +1,4 @@
+// 20.17: Маммон, автозаточка и сервис выделены отдельно; прежние проверки полей/переходов сохраняются.
 'use strict';
 // 20.12 (ревизия 17.10, аудит §3 / UI-1..UI-15): настоящее MV3-меню после сведения 12 разделов в 6.
 // Старые имена разделов открывают нужный раздел и подраздел (TAB_GROUP), свёрнутое «Дополнительно» раскрывается ссылкой и поиском,
@@ -5,7 +6,7 @@
 const assert = require('node:assert/strict');
 const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
 const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
-  pet: 'panel', warlock: 'panel', enchant: 'panel', fight: 'panel', supply: 'fish', mammon: 'fish', loot: 'fish', pvp: 'svc', tvtshop: 'svc', enemies: 'svc', log: 'svc' };
+  pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'fish', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 (async () => {
   const h = await harness(); try {
     const P = h.popup;
@@ -13,8 +14,8 @@ const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'h
     await P.setViewportSize({ width: 800, height: 600 }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
     await P.evaluate(() => { try { localStorage.removeItem('ui5'); } catch (e) {} }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
     // 1. шесть кнопок, по умолчанию все «Дополнительно» свёрнуты
-    assert.equal(await P.locator('#moduleNav button[data-tab]').count(), 6);
-    assert.equal(await P.locator('.adv').count(), 6); assert.equal(await P.locator('.adv.closed').count(), 6);
+    assert.equal(await P.locator('#moduleNav button[data-tab]').count(), 10);
+    assert.equal(await P.locator('.adv').count(), 8); assert.equal(await P.locator('.adv.closed').count(), 8);
     // 2. старые имена → раздел и видимая метка (в т.ч. внутри «Дополнительно»: анализ боя, диагностика, добыча)
     for (const [old, sec] of Object.entries(OLD)) {
       await P.evaluate(t => showTab(t), old); await delay(80);
@@ -45,7 +46,7 @@ const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'h
     const m = await P.evaluate(() => ({ header: document.querySelector('header').offsetHeight, sec: document.querySelector('section.act').clientHeight, h: document.documentElement.scrollWidth > document.documentElement.clientWidth }));
     assert.ok(m.header <= 200 && m.sec > 170 && !m.h, JSON.stringify(m));
     await P.setViewportSize({ width: 360, height: 740 }); await P.goto('chrome-extension://' + h.id + '/popup.html?dock=1'); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
-    for (const t of ['overview', 'hunt', 'rb', 'panel', 'fish', 'svc']) {
+    for (const t of ['overview', 'hunt', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc']) {
       await P.locator('#moduleNav [data-tab="' + t + '"]').click(); await delay(80);
       await P.evaluate(() => document.querySelectorAll('section.act .adv.closed > .adv-h').forEach(b => b.click()));
       // широкие таблицы (маршрут автофарма и т.п.) листаются внутри своей рамки overflow:auto — это не прокрутка страницы
@@ -55,6 +56,6 @@ const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'h
     }
     assert.equal(await P.locator('#moduleNav [data-tab="svc"]').isVisible(), true);
     assert.deepEqual(h.errors, []);
-    console.log('PASS v2012-nav-browser: 6 разделов, 19 старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
+    console.log('PASS v2012-nav-browser: 10 разделов, 19 старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
   } finally { await h.ctx.close(); }
 })().catch(e => { console.error('FAIL v2012-nav-browser:', e); process.exitCode = 1; });

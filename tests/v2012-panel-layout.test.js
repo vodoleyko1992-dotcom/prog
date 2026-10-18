@@ -1,3 +1,4 @@
+// 20.17: Маммон, автозаточка и сервис выделены отдельно; прежние проверки полей/переходов сохраняются.
 'use strict';
 // 20.13 (ревизия 17.10, шаг 7, defaults/D12): заводские умолчания движка и меню теперь в defaults.js — литералы умолчаний ищем и там.
 // 20.12 (ревизия 17.10, аудит §3, UI-1..UI-15): меню сведено из 12 разделов в 6, тонкая настройка — в блоке «Дополнительно»
@@ -8,7 +9,7 @@ const html = read('popup.html'), js = (read('defaults.js') + '\n' + read('popup.
 const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
-const SECS = ['overview', 'hunt', 'rb', 'panel', 'fish', 'svc'];
+const SECS = ['overview', 'hunt', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
 assert.deepEqual(tabs, SECS); assert.deepEqual(secs, SECS);
@@ -18,8 +19,8 @@ for (const t of SECS) assert.match(html, new RegExp(`<button data-tab="${t}" dat
 const tg = js.match(/const TAB_GROUP = \{([\s\S]*?)\};/)[1];
 const map = Object.fromEntries([...tg.matchAll(/(\w+): '(\w+)'/g)].map(m => [m[1], m[2]]));
 const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb',
-  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', enchant: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
-  supply: 'fish', mammon: 'fish', loot: 'fish', pvp: 'svc', tvtshop: 'svc', enemies: 'svc', log: 'svc' };
+  analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
+  supply: 'fish', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 assert.deepEqual(map, OLD);
 const secRange = s => { const a = html.indexOf(`<section id="tab-${s}"`); return [a, html.indexOf('</section>', a)]; };
 for (const [old, sec] of Object.entries(OLD)) {
@@ -32,7 +33,7 @@ for (const m of tt.matchAll(/:'(\w+)'/g)) assert.ok(SECS.includes(m[1]) || OLD[m
 for (const m of html.matchAll(/data-goto="(\w+)"/g)) assert.ok(SECS.includes(m[1]) || OLD[m[1]], 'data-goto ' + m[1]);
 
 // 3. «Дополнительно» в каждом разделе, сворачивается и помнится (uiState.adv), поиск и ссылки его раскрывают
-for (const s of SECS) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
+for (const s of SECS.filter(s => !['enchant', 'lifestone'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
 assert.match(js, /uiState\.adv \|\|= \{\};/);
 assert.match(js, /function revealEl\(el\)/); assert.match(js, /function advSet\(a, open\)/);
 assert.match(js, /showTab\(r\.tab\); revealEl\(r\.el\);/, 'поиск раскрывает блок «Дополнительно»');
@@ -73,4 +74,4 @@ for (const m of html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)) if (!/
 assert.ok((read('ui-game.css').match(/!important/g) || []).length <= 8, 'ui-game.css: !important ' + (read('ui-game.css').match(/!important/g) || []).length);
 assert.match(css, /\.adv\.closed > \.adv-b|\.adv\.closed>\.adv-b/);
 assert.match(css, /html\.tabbed|html\.docked/);
-console.log('PASS 20.12 layout: 6 sections + nav, old #tab-* anchors via TAB_GROUP, «Дополнительно» in each section, compact header, no lost fields, dead rbTimers removed, unused CSS gone');
+console.log('PASS 20.12 layout: 10 sections + nav, old #tab-* anchors via TAB_GROUP, «Дополнительно» in each section, compact header, no lost fields, dead rbTimers removed, unused CSS gone');
