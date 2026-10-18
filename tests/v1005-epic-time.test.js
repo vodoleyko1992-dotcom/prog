@@ -16,8 +16,8 @@ const { vm, read, content, mk } = require('./epic-harness.cjs');
   assert.match(read('popup.html'), /мин \(0 — без предела\) <input id="epicMaxFightMin" type="number" min="0"/);
   assert.match(read('ui-v7.js'), /epicMaxFightMin:'[^']*0 — без предела/);
   assert.equal(JSON.parse(read('base-profile.json')).cfg.epicMaxFightMin, 0);
-  // обычные РБ не тронуты: свой предел 20 мин (rbMaxKillMin) на месте
-  assert.match(defs, /rbMaxKillMin: 20,/);
+  // обычные РБ не тронуты: свой предел (rbMaxKillMin, с 18.10 — 30 мин) на месте
+  assert.match(defs, /rbMaxKillMin: 30,/);
   // миграция: 30 → 0, своё число не трогаем
   const line = content.match(/once\('epicTime1005', (\(\) => \{[^\n]*?\})\);/)[1];
   for (const [was, want] of [[30, 0], [45, 45], [10, 10], [undefined, undefined]]) {
@@ -25,5 +25,5 @@ const { vm, read, content, mk } = require('./epic-harness.cjs');
     vm.runInNewContext('(' + line + ')()', { cf, C });
     assert.equal('epicMaxFightMin' in cf ? cf.epicMaxFightMin : was, want, `migrate ${was}`);
   }
-  console.log('PASS v1005-epic-time: epic fight time cap off by default (0), player value kept, migration 30 → 0 only, RB 20 min cap untouched');
+  console.log('PASS v1005-epic-time: epic fight time cap off by default (0), player value kept, migration 30 → 0 only, RB 30 min cap untouched');
 })().catch(e => { console.error(e); process.exit(1); });
