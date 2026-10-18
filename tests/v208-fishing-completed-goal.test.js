@@ -13,7 +13,8 @@ function fixture({active=false,target=false,legacy=false,done=true}={}){
  const ctx={env,fishOwn:()=>env.on&&env.tabOwner,fishNow:()=>true,castReconcile:async()=>{calls.reconcile++;return !!env.pending},
  fishSetup:async()=>{calls.setup++;return false},fishState:()=>target?{}:null,fishFight:async()=>{calls.fight++;env.rt.fishCastActive=false},
  fishTimeTopUp:async()=>{calls.time++},fishingTimeRemainingMs:()=>10000,fishTgtReached:()=>F.fishTgtReached(),
- fishPrepare:async()=>{calls.prepare++;return true},fSlot:()=>({}),fOk:()=>true,fishWatch(){},fishLog:()=>[],curBait:()=> 'basic',
+ // 18.10: квитанция запроса проверяется целой фабрикой в v2017-fishing-reload-recovery; здесь изолирована цель.
+ fishPrepare:async()=>{calls.prepare++;return true},fSlot:()=>({}),fOk:()=>true,fishWatch(){},fishLog:()=>[],curBait:()=> 'basic',castRequestArm(){},
  Date,Math,console};env.qty=()=>10;env.fire=()=>{calls.cast++;env.on=false;return false};env.payments={blocked:()=>false};
  const section=src.slice(src.indexOf('async function fishing()'),src.indexOf('// 10.0.13 (аудит 14.10): у рыболовной'));
  const run=vm.runInNewContext('('+section+')',ctx);return {env,F,calls,run};
