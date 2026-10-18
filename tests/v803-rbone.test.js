@@ -59,7 +59,7 @@ const mk = rt => {
   // меню: кнопка в «Центре управления» РБ; повторное нажатие во время работы не сбивает; выбор режима руками — обычный тур
   const html = read('popup.html'), popup = read('popup.js');
   const box = html.slice(html.indexOf('<div class="rb-summary')/* 20.12: класс no-card — сводка вне карточки */, html.indexOf('<div class="rb-primary">'));
-  assert.match(box, /<button id="rbOneBtn" type="button"[^>]*>🎯 Убить один РБ и ждать команды<\/button><div id="rbOneInfo" class="hint"><\/div>/);
+  assert.match(box, /<button id="rbOneBtn" type="button"[^>]*>🎯 Убить один РБ и ждать команды<\/button><button id="rbOneOff"[^>]*hidden[^>]*>[^<]*<\/button><div id="rbOneInfo" class="hint"><\/div>/);
   assert.match(popup, /if \(on && cfg\.rbHuntMode && rt\.rbOne\?\.on\) return toast\(/);
   assert.match(popup, /const one = \{ \.\.\.\(rt\.rbOne \|\| \{\}\), on: true, k0: rt\.rbKills \|\| 0, t: now \};/);
   assert.match(popup, /\.\.\.\(tour \? \{\} : \{ (?:rbRun: \{ t0: now, mode: 'one' \}, )?rbHunt: \{ step: 'pick', t: now, last: 'один РБ по команде' \}, rbGo: null, rbWant: null, rbListT: 0 \}\)/, 'tour already running — no list rescan');   // 10.0.6: + rbRun — новая «📦 Серия РБ»

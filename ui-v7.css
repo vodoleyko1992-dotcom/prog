@@ -34,7 +34,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 #rbToggle.on,#campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#epicToggle.on,#epicToggle2.on{background:linear-gradient(145deg,#164f57,#17504e);border-color:#46bba9;color:#b7ffea;font-weight:800}
 #rbToggle.on.susp{opacity:.55;border-style:dashed}
-.rb-one{margin-top:9px}.rb-one button{width:100%;font-weight:700;padding:9px 10px}.rb-one .hint{margin-top:5px}
+.rb-one{margin-top:9px}.rb-one #rbOneOff{margin-top:6px}.rb-one button{width:100%;font-weight:700;padding:9px 10px}.rb-one .hint{margin-top:5px}
 #rbOneBtn.on{background:linear-gradient(145deg,#164f57,#17504e);border-color:#46bba9;color:#b7ffea;font-weight:800}
 
 #status .st{font-size:11px;color:#dae8f6;font-weight:650;line-height:1.35;white-space:pre-line}
