@@ -318,17 +318,14 @@ label{min-height:36px;padding:5px 8px}
 input:not([type=checkbox]),select{min-height:30px;padding:4px 8px}
 .card>.ch{min-height:38px;padding:8px 12px}
 .card{margin:0 0 9px}
-/* ≥900 px во встроенном меню (×2): разделы — колонкой слева, поиск над ними */
-@media(min-width:900px){
- html.docked .app-shell{display:grid;grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
- html.docked .navbar{flex-direction:column;align-items:stretch;padding:10px 8px;border-bottom:0;border-right:1px solid #4f3f2c;overflow-y:auto}
- html.docked nav#moduleNav{flex-direction:column}
- html.docked nav#moduleNav button{justify-content:flex-start;min-height:38px}
-}
-/* после 20.13 (игрок 18.10: «вот это надо расширить»): 601–899 px — полные имена не влезали в одну строку и обрезались «Об…», «Ох…»;
-   теперь разделы в две строки по три, каждое имя целиком */
-@media(min-width:601px) and (max-width:899px){
- nav#moduleNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+/* ≥601 px (встроенное меню и окно меню): разделы — колонкой слева с полными именами.
+   После 20.13 (игрок 18.10: «вот это надо расширить», потом «левый вариант лучше»): раньше колонка была только от 900 px во встроенном меню,
+   а уже 601–899 px шесть кнопок в одну строку обрезались «Об…», «Ох…»; колонка 190 → 220 px — «Рыбалка и снабжение» целиком */
+@media(min-width:601px){
+ .app-shell{display:grid;grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+ .navbar{flex-direction:column;align-items:stretch;padding:10px 8px;border-bottom:0;border-right:1px solid #4f3f2c;overflow-y:auto}
+ nav#moduleNav{flex-direction:column;flex:0 0 auto}
+ nav#moduleNav button{justify-content:flex-start;flex:0 0 auto;min-height:38px}
 }
 /* узко (встроенное меню, планшет, 360 px): разделы — значок и короткое имя в одну строку, поиск ниже */
 @media(max-width:600px){
