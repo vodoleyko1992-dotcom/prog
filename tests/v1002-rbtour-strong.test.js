@@ -61,13 +61,14 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   assert.equal(Math.round(m3.R.rbDpsOn(GOLK)), Math.round(4200 * 0.5), '+14 → not below half');
   m3.env.rt.rbDb[GOLK] = { dps: 2400, sp: 2396 };
   const g = m3.R.rbPreCheck(GOLK, { hp: 6194391, patk: 9953, matk: 2500 });
-  assert.equal(g.ok, false); assert.equal(g.kind, 'slow', 'Golkonda 6.2M at 2.4k/s ≈ 43 min > 20'); assert.match(g.why, /долгий бой/); assert.match(g.why, /свой замер/);
+  assert.equal(g.ok, false); assert.equal(g.kind, 'slow', 'Golkonda 6.2M at 2.4k/s ≈ 43 min > 30'); assert.match(g.why, /долгий бой/); assert.match(g.why, /свой замер/);
   m3.env.cfg.rbMaxKillMin = 0; assert.notEqual(m3.R.rbPreCheck(GOLK, { hp: 6194391, patk: 9953, matk: 2500 }).kind, 'slow', '0 → no limit'); delete m3.env.cfg.rbMaxKillMin;
   m3.env.rt.rbDb[RAHHA] = { dps: 4300, sp: 2770, hitP90: 320 };
   { const r = m3.R.rbPreCheck(RAHHA, { hp: 2384041, patk: 8830, matk: 2500 }); assert.equal(r.ok, true, 'Rahha ≈9 min → go: ' + r.why); }
   // недобитый: HP с замера в бою (rbWound)
   m3.env.rt.rbDb[HALLATE] = { dps: 2500, sp: 2640, hitP90: 860 };
-  assert.equal(m3.R.rbPreCheck(HALLATE, { hp: 3561598, patk: 11974, matk: 2500 }).kind, 'slow', '3.56M / 2.5k ≈ 24 min');
+  assert.notEqual(m3.R.rbPreCheck(HALLATE, { hp: 3561598, patk: 11974, matk: 2500 }).kind, 'slow', '3.56M / 2.5k ≈ 24 min < 30 (18.10)');
+  m3.env.cfg.rbMaxKillMin = 20; assert.equal(m3.R.rbPreCheck(HALLATE, { hp: 3561598, patk: 11974, matk: 2500 }).kind, 'slow', 'own 20 min → 24 min slow'); delete m3.env.cfg.rbMaxKillMin;
   m3.env.rt.rbWound = { [HALLATE]: { cur: 2000000, max: 3561598, t: Date.now() } };
   assert.equal(m3.R.rbHpNow(HALLATE, 3561598), 2000000);
   assert.equal(m3.R.rbPreCheck(HALLATE, { hp: 3561598, patk: 11974, matk: 2500 }).ok, true, 'wounded to 2.0M ≈ 13 min → go');
@@ -101,8 +102,8 @@ const HALLATE = 'l2dop_rb_25220', GOLK = 'l2dop_rb_25126', RAHHA = 'l2dop_rb_250
   const combat = read('modules/combat.js');
   assert.equal((combat.match(/env\.leaveMark\?\.\(ctx\.rb\.id, ctx\.name\);\n\s*env\.fire\(leave\);/g) || []).length, 2, 'mark before both RB exits');
   // настройка
-  assert.match(content, /rbMaxKillMin: 20,/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /'rbMaxKillMin'/); assert.match(read('popup.html'), /id="rbMaxKillMin"/);
-  assert.equal(JSON.parse(read('base-profile.json')).cfg.rbMaxKillMin, 20);
+  assert.match(content, /rbMaxKillMin: 30,/); assert.match((read('defaults.js') + '\n' + read('popup.js')), /'rbMaxKillMin'/); assert.match(read('popup.html'), /id="rbMaxKillMin"/);
+  assert.equal(JSON.parse(read('base-profile.json')).cfg.rbMaxKillMin, 30);
   // ---------- 7. игрок 12.10: «как потом вернуться к этим боссам… надо учиться всегда» ----------
   const m7 = mk({ hero: 65, meHp: () => ({ max: 8313, cur: 8313, pct: 100 }), rt: { rbDps: 4300, rbList: { [GOLK]: { lvl: 79, alive: true } } } });
   m7.env.rt.rbDb = { [GOLK]: { dps: 2400, dpsLvl: 65, dpsBase: 4300, sp: 2396, hitP90: 675 } };

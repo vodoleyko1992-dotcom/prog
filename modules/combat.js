@@ -69,24 +69,31 @@ const skillView = () => env.damageSkills || env.rt.skills;
 // преимущества над дополнительными убийствами; личный откат готового умения — не время каста.
 function groupPlan(ctx, opts, eco = false) {
   const mob = mobHp();
-  if (ctx.rb || eco || !(mob?.cur > 0)) return null;
+  if (eco || !(mob?.cur > 0)) return null;
   const targets = extraMobs(), visible = targets.length > 0;
   const near = targets.filter(x => x.cur > 0), bestSingle = Math.max(0, ...opts.map(o => Math.min(mob.cur, o.dmg || 0)));
+  // 20.14 (просьба игрока 18.10): на РБ АОЕ (Whirlwind и др.) — только по видимым живым обычным мобам рядом
+  // (РБ остаётся основной целью). Урон по РБ теряем не больше 15 %, а при проспойленных соседях — до 40 %.
+  const rbK = ctx.rb ? (ctx.nearSpoiled > 0 ? .6 : .85) : .6;
+  if (ctx.rb && (env.cfg.rbNearMobs === false || !near.length)) return null;
   const ranked = [], DS = skillView();
   for (const o of opts) {
     if (o.charge || o.force || !(o.dmg > 0)) continue;
     const name = o.name.replace(/\s*\(.*$/, '').toLowerCase(), p = DS?.[name];
     const model = env.fightGroupOn?.(name, mob.max);
-    if (!(p?.aoe || model?.targets > 0)) continue;
+    // На РБ своей модели группы нет (другая полоса HP): АОЕ по каталогу (AREA/AURA) бьёт каждого соседа
+    // примерно как основную цель — так пишет игра у Whirlwind («до 4 цілей … 6138», соседи по −6138).
+    const ilArea = ctx.rb && /^(?:AREA|AURA|MULTIFACE)$/.test(env.ilOf?.(o.b)?.target || '');
+    if (!(p?.aoe || model?.targets > 0 || ilArea)) continue;
     const probability = env.fightKillP?.(o.name, mob.cur);
     const reliable = probability != null ? probability >= .85 : (p?.dmgN || 0) >= 3 && o.dmg >= mob.cur * 1.08;
-    const each = Math.min(o.dmg, model?.damage || (near.length && p?.splN ? p.spl / p.splN / near.length : 0));
+    const each = Math.min(o.dmg, model?.damage || (near.length && p?.splN && p.spl ? p.spl / p.splN / near.length : ilArea ? o.dmg : 0));
     const sideKills = visible ? near.filter(x => each * .85 >= x.cur).length : model?.kills || 0;
     const useful = Math.min(mob.cur, o.dmg) + (visible ? near.reduce((s, x) => s + Math.min(x.cur, each), 0) : 0);
     const probe = !visible && !model && reliable && !!p?.aoe;
-    if (!(reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * .6 || probe)) continue;
+    if (!(!ctx.rb && reliable && sideKills > .25 || bestSingle < mob.cur && visible && near.length && useful > bestSingle * 1.15 && o.dmg >= bestSingle * rbK || !ctx.rb && probe)) continue;
     ranked.push({ ...o, group: true, sideKills, useful, probe,
-      why: probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
+      why: ctx.rb ? `РБ: АОЕ по мобам рядом · живых ${near.length}${ctx.nearSpoiled > 0 ? ' · проспойлено ' + ctx.nearSpoiled : ''} · доп. убийств ≈${sideKills.toFixed(1)}` : probe ? 'АОЕ: проверяю дополнительную добычу; основной моб добивается одним ходом'
         : `АОЕ: ${visible ? 'живых соседей ' + near.length : 'по свежим боям'} · доп. убийств ≈${sideKills.toFixed(1)} · полезный урон ≈${Math.round(useful)}` });
   }
   return ranked.sort((a, b) => b.sideKills - a.sideKills || b.useful - a.useful || b.dmg - a.dmg || (b.cd || 0) - (a.cd || 0) || (a.mpCost || 0) - (b.mpCost || 0))[0] || null;
