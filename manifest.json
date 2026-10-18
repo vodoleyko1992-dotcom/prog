@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.13",
-  "description": "L2wap Bot 20.13 — ревизия: застревания задач и чистка кода",
+  "version": "20.14",
+  "description": "L2wap Bot 20.14 — панель с вкладками слева, быстрый старт, РБ до 30 мин, масс-спойл у РБ",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -136,5 +136,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.13"
+  "version_name": "20.14"
 }
