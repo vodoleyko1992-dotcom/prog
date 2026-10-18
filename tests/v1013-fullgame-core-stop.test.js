@@ -70,7 +70,7 @@ test('исключения для ручного инвентаря и пане�
 
 function postCore() {
   const src = read('content.js'), start = src.indexOf('async function gamePost('), end = src.indexOf('async function gameGet(', start);
-  const requests = [], box = { console, L2V7Modules: { pvp: { pending: () => false } }, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
+  const requests = [], box = { rt:{}, console, L2V7Modules: { pvp: { pending: () => false } }, on: true, tabOwner: true, AbortController, setTimeout, clearTimeout,
     autonomyMode: () => 'farm', // 15.10: проверяем Stop/lease обычного режима; смена на заточку покрыта отдельным диспетчерским тестом.
     gameAuth: () => ({}), fetch: async (url, init) => { requests.push({ url, method: init.method }); return { ok: true, json: async () => ({ clan: { name: 'Test' }, taskDefinitions: [], activeClanTasks: [], me: {} }) }; } };
   vm.createContext(box); vm.runInContext(src.slice(start, end) + '\nthis.gamePost=gamePost;', box);

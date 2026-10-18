@@ -81,7 +81,7 @@ const mk = ({ rt = {}, cfg = {}, posts = {}, gets = {} } = {}) => {
   const content = (read('defaults.js') + '\n' + read('content.js')), popup = (read('defaults.js') + '\n' + read('popup.js')), html = read('popup.html'), manifest = read('manifest.json'), fishing = read('modules/fishing.js');
   assert.match(manifest, /"modules\/dailies\.js"/); assert.match(html, /<script src="modules\/dailies\.js"><\/script>/);
   assert.match(content, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /dailyAuto: true, clanTasks: true, chain: true,/); assert.match(popup, /const BOOL = \['sealAuto', 'tsBuy', 'dailyAuto', 'clanTasks',/);
-  assert.match(content, /async function gamePost\(path, body, ms = 8000\)/);
+  assert.match(content, /async function gamePost\(path, body, ms = 8000, lsPermit\)/);
   // 15.10: между await теперь проверяется активность режима; сохраняем порядок tick → клан → дейлик и проверяем отсечение старого цикла.
   const dispatchStart = content.indexOf('L2V7Modules.dailies.tick().catch(() => {});');
   const dispatchEnd = content.indexOf('if (rt.petBufferTrip', dispatchStart);

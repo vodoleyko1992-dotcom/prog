@@ -83,7 +83,7 @@ assert.match(equip, /&& better && !augHold\) \{/);
 // ---- проводка ----
 assert.match(read('manifest.json'), /"fa-full.js",\s*"augment.js",/); assert.match(read('popup.html'), /<script src="augment.js"><\/script>/);
 assert.match(read('popup.js'), /function augLine\(rt\)/);
-// бот не вставляет ЛС сам: нет запроса /character/weapon-augmentation в коде бота
-for (const f of ['content.js', 'popup.js', 'background.js', 'hook.js', 'augment.js', ...fs.readdirSync(path.join(root, 'modules')).map(x => 'modules/' + x)])
+// Старый боевой слой не отправляет ЛС: новый модуль серии имеет отдельные проверки и лимиты.
+for (const f of ['popup.js', 'background.js', 'hook.js', 'augment.js', ...fs.readdirSync(path.join(root, 'modules')).filter(x => x !== 'lifestone.js').map(x => 'modules/' + x)])
   assert.ok(!/\/character\/weapon-augmentation/.test(read(f)), f + ': no augmentation request');
 console.log('PASS: 10.0.2 Life Stone — outcomes as in the game, hook aug, ls_* skills (Power 109) on the panel, rt.weaponAug, weapon with a good Life Stone is kept');

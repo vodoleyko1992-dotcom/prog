@@ -19,7 +19,7 @@ function coreFixture(){
 }
 function mainFixture(options={}){
  const c=coreFixture(),calls=c.calls,noop=()=>false,done=name=>async()=>{calls.push(name);c.on=false;return true};
- Object.assign(c,{running:false,window:{__lockT:Date.now()},deferredMigrations:{cfg:{},rt:{}},migApplied:noop,
+ Object.assign(c,{lifestoneCommandBusy:false,running:false,window:{__lockT:Date.now()},deferredMigrations:{cfg:{},rt:{}},migApplied:noop,
   isBattle:()=>!!options.battle,isMap:()=>!options.battle,isFishing:()=>!!options.catch,fishState:()=>!!options.catch,fishNow:noop,
   campEnabled:noop,farmDb:async()=>{},recipeDb:async()=>{},learnSkillDb(){},progressMonitor:{tick:(sig,active)=>{calls.push(['watchdog',active]);return 'progress'}},
   meHp:noop,mobHp:noop,serverDown:noop,loginPage:noop,leaveCheck:async()=>false,tvtStep:options.tvt?done('TvT'):async()=>false,

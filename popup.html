@@ -792,8 +792,18 @@
 <section id="tab-lifestone">
   <h4>💎 Life Stone на оружии</h4>
   <div id="lsCurrent" class="camp" style="white-space:pre-line">Данные ЛС ещё не получены — осмотрите оружие в игре</div>
-  <div class="hint">ЛС — аугментация оружия. Здесь показаны последний известный эффект и наличие активного умения на панели боя. Вставка и замена выполняются в игре: «Персонаж → Аугментація зброї».</div>
+  <div class="hint">ЛС — аугментация оружия. Здесь показаны последний известный эффект и наличие активного умения на панели боя. Для ручной вставки и авто-ЛС используется страница игры «Персонаж → Аугментація зброї».</div>
   <div class="row"><button type="button" data-goto="fight">🗡 Оружие и проверка инвентаря</button><button type="button" data-goto="mammon">🏺 Торговец Маммона</button></div>
+  <h4>🎯 Авто-ЛС — ловить выбранный эффект</h4>
+  <div class="hint">Откройте в игре «Персонаж → Аугментація зброї» и наденьте нужное оружие. Выберите один или несколько эффектов: серия остановится на любом из них. Каждая попытка навсегда заменяет прежний ЛС и расходует 1 Life Stone + 1 Gemstone грейда оружия. Покупок нет.</div>
+  <label>Нужные эффекты <select id="lsTargets" multiple size="8" aria-label="Нужные эффекты ЛС" style="width:100%;max-width:100%"></select></label>
+  <div class="hint">Для нескольких целей удерживайте Ctrl / Cmd. Каталог игры проверен 18.10.2026: 21 эффект, одинаковый список C/B/A/S.</div>
+  <label>Лимит попыток в серии <input id="lsMaxAttempts" type="number" min="1" max="10000" value="10"></label>
+  <div id="lsRun" class="camp" style="white-space:pre-line">Серия не запущена</div>
+  <div class="row"><button type="button" id="lsStart">🎯 Начать новую серию</button><button type="button" id="lsResume">▶ Продолжить</button><button type="button" id="lsPause">⏸ Пауза ЛС</button></div>
+  <div class="row"><button type="button" id="lsReconcile">🔍 Сверить результат</button><button type="button" id="lsClose">Закончить серию</button></div>
+  <button type="button" id="lsAcknowledge" hidden>Учесть неизвестную попытку в лимите</button>
+  <div class="hint">На время серии другие задачи бота ждут. После цели или лимита нажмите «Закончить серию», чтобы вернуться к ним. Стоп и перезагрузка требуют ручного продолжения ЛС. При неизвестном результате повтор заблокирован; ручной учёт требует проверки в игре и более новой ревизии героя.</div>
   <div class="subsec-title" id="tab-seals">💱 Камни печати → Ancient Adena</div>
   <label>💱 Автообмен камней печати на AA <input id="sealAuto" type="checkbox"></label>
   <label>Менять, когда камней не меньше <input id="sealMin" type="number" min="1"></label>
