@@ -318,7 +318,9 @@ async function load() {
   showCounts(reccount, snapcount);
 
   // режим РБ
-  $('epicToggle2').textContent = `🐉 Эпики: ${d.epicMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', !!d.epicMode);
+  // 18.10 (игрок: «при выключении кнопка не отключается»): в режиме задач кнопка меняет список autoTasks, а подпись читала старый
+  // плоский флаг epicMode/rbHuntMode — после «выкл» оставалось «ВКЛ». Подпись и нажатие — из одного источника (taskSel).
+  $('epicToggle2').textContent = `🐉 Эпики: ${taskSel(d, 'epic') ? 'ВКЛ' : 'ВЫКЛ'}`; $('epicToggle2').classList.toggle('on', taskSel(d, 'epic'));
   paintModes(d, on, rt);
   paintTaskOwned(d);   // 20.12 (UI-3): переключатели, которыми в режиме задач владеет список задач
   paintCls(d, rt);
@@ -327,7 +329,7 @@ async function load() {
   renderRbTimer(rt, d);
   renderMammon(rt, d); renderTvtShop(rt, d); renderDailies(rt, d);
   renderStory(rt); renderSub(rt, d);
-  $('huntToggle2').textContent = `🧭 Тур по РБ: ${d.rbHuntMode ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', !!d.rbHuntMode);
+  $('huntToggle2').textContent = `🧭 Тур по РБ: ${taskSel(d, 'raid') ? 'ВКЛ' : 'ВЫКЛ'}`; $('huntToggle2').classList.toggle('on', taskSel(d, 'raid'));
   renderHunt(rt, d);
   renderRb(rt);
   const forecast=$('rbForecastBox'), RF=rt.rbForecast;
@@ -1023,7 +1025,7 @@ function renderEpics(rt, d) {
     return Math.abs(t - now) > 20 * 3600000 ? `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')} ${s}` : s; };
   const e = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const L = E.hpLog || [], last = L[L.length - 1];
-  $('epicBox').textContent = (d.epicMode ? '▶ Идёт' : '■ Выключено') + (E.step ? ' · ' + (ST[E.step] || E.step) : '') + (E.name && E.step !== 'pick' ? `: ${E.name}` : '')
+  $('epicBox').textContent = ((Array.isArray(d.autoTasks) ? d.autoTasks.includes('epic') : d.epicMode) ? '▶ Идёт' : '■ Выключено') + (E.step ? ' · ' + (ST[E.step] || E.step) : '') + (E.name && E.step !== 'pick' ? `: ${E.name}` : '')
     + (E.deaths ? ` · смертей ${E.deaths}` : '') + (last?.max ? ` · у него ${Math.round(last.cur / last.max * 1000) / 10} %` : '') + (E.last ? `\n${E.last}` : '');
   const lim = Math.max(0, Math.floor(+(d.epicCoinDailyMax ?? 0) || 0)), per = Math.max(0, Math.floor(+(d.epicCoinPerBoss ?? 1) || 0));
   const recs = (rt.epicTpBudget || []).filter(x => x && x.t > now - 86400000), usedC = recs.filter(x => x.unit === 'Coin of Luck').reduce((a, x) => a + (+x.cost || 0), 0);
@@ -1208,7 +1210,7 @@ function petLineOf(rt) {
 }
 // ==== /8.0 сводка «Обзора» ====
 // Обычные рейдовые боссы доступны только в рейдовом туре.
-const rbEff = d => d.enchantMode !== true && !!d.rbHuntMode;
+const rbEff = d => d.enchantMode !== true && (Array.isArray(d.autoTasks) ? d.autoTasks.includes('raid') : !!d.rbHuntMode);   // 18.10: в режиме задач — по списку
 const hhmm = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 function renderDash(rt, d, st) {
   if (!$('dash')) return;
@@ -1731,8 +1733,8 @@ function renderHunt(rt, d) {
   const H = rt.rbHunt, db = rt.rbDb || {};
   const STEP = { pick: 'выбираю следующего', go: 'лечу (список РБ → «Телепорт»)', arrive: 'ищу на карте', fight: 'бой' };
   const kills = Object.values(db).reduce((a, x) => a + (x.kills || 0), 0);
-  $('huntBox').textContent = !d.rbHuntMode && !H?.t ? 'Тур не запускался — нажмите «🧭 Тур по РБ»'
-    : `${d.rbHuntMode ? '▶ Тур идёт' : '■ Тур выключен'}${H?.step ? ' · ' + (STEP[H.step] || H.step) : ''}${H?.name && H.step !== 'pick' ? `: ${H.name} (${H.lvl})` : ''}`
+  $('huntBox').textContent = !taskSel(d, 'raid') && !H?.t ? 'Тур не запускался — нажмите «🧭 Тур по РБ»'
+    : `${taskSel(d, 'raid') ? '▶ Тур идёт' : '■ Тур выключен'}${H?.step ? ' · ' + (STEP[H.step] || H.step) : ''}${H?.name && H.step !== 'pick' ? `: ${H.name} (${H.lvl})` : ''}`
       + (H?.last ? `\nПоследнее: ${H.last}` : '')
       + `\nУбито РБ (всего по базе): ${kills}`
       + `\nОценка до боя: удар РБ ≈ ${rt.rbK || 0.109} × P.Atk${rt.rbK ? ' (выучено)' : ' (старт)'} · наш ДПС по РБ ≈${rt.rbDps || 1150}${rt.rbDps ? ' (общая статистика, не гарантия)' : ' (ориентир по умолчанию)'} · учитываются спецудар, длительность боя и доступные банки с резервом`;
@@ -1924,6 +1926,8 @@ function selectedAutoTasks(d) {
   const flags = { tvt: d.tvtOn, enchant: d.enchantMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
   return Object.keys(AUTO_TASK_LABELS).filter(k => flags[k]);
 }
+// 18.10: задача выбрана так же, как её видит ядро — список autoTasks, без него прежние плоские флаги
+function taskSel(d, key) { return selectedAutoTasks(d).includes(key); }
 function autoTaskPatch(d, key, enabled) {
   const tasks = new Set(selectedAutoTasks(d)); enabled ? tasks.add(key) : tasks.delete(key);
   const flags = { tvt: 'tvtOn', quests: 'campaign', dailies: 'dailyAuto', clan: 'clanTasks', pvp: 'enemyHunt', petbuff: 'petFullAuto' };
@@ -2624,7 +2628,11 @@ confirmClick('recClear', async () => {                // удалить весь
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);
-  if (Array.isArray(cfg.autoTasks)) return editAutoTask('raid', !cfg.autoTasks.includes('raid'));
+  if (Array.isArray(cfg.autoTasks)) {   // 18.10: выключение тура снимает и «один РБ» — иначе его кнопка оставалась включённой
+    const v = !cfg.autoTasks.includes('raid');
+    if (!v && rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } });
+    return editAutoTask('raid', v);
+  }
   const v = !cfg.rbHuntMode;
   // включение: с начала — свежий список РБ; рыбалку выключаем (тур её заменяет)
   const patch = { rbHunt: { step: 'pick', t: Date.now(), last: v ? 'тур запущен' : 'тур выключен' }, rbGo: null, rbWant: null, ...(v ? { rbListT: 0, ...rbTourRestart(rt) } : {}), ...(rt.rbOne?.on ? { rbOne: { ...rt.rbOne, on: false } } : {}) };
@@ -2662,9 +2670,18 @@ $('rbOneBtn').onclick = async () => {
     { ...MODES_OFF, rbHuntMode: true, rbMode: true, campaign: false });
   toast('🎯 Иду за одним РБ — после убийства встану на паузу и буду ждать команды');
 };
+// 18.10 (игрок: «Ещё один РБ» не выключается): нажатие этой кнопки — всегда «ещё один РБ», поэтому выключение — отдельной кнопкой.
+// Снимает «один РБ» и сам тур (в режиме задач — галку «Тур по РБ»), остальные задачи остаются.
+$('rbOneOff').onclick = async () => {
+  const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
+  const tour = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes('raid') : !!cfg.rbHuntMode;
+  if (tour) await huntToggle(); else if (rt.rbOne?.on) await menuPatch({ rbOne: { ...rt.rbOne, on: false } });
+  toast('🎯 «Один РБ» выключен');
+};
 function paintRbOne(rt, on, paused) {
   const b = $('rbOneBtn'), inf = $('rbOneInfo'); if (!b) return;
   const o = rt?.rbOne?.on ? rt.rbOne : null, waiting = !!o && !on && !!paused && !!o.last;
+  const off = $('rbOneOff'); if (off) off.hidden = !o;
   b.textContent = !o ? '🎯 Убить один РБ и ждать команды' : on ? '🎯 Один РБ: в работе…' : '🎯 Ещё один РБ';
   b.classList.toggle('on', !!o);
   if (inf) inf.textContent = !o ? 'Бот найдёт и убьёт одного РБ (как тур: выбор, банки, телепорт), потом встанет на паузу и будет ждать твоей команды.'

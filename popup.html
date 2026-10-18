@@ -183,7 +183,7 @@
 <link rel="stylesheet" href="pvp-ui.css">
 </head><body>
 <header>
-  <div class="toprow"><div id="heroLine"></div><div id="uiSearchWrap"><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div></div>
+  <div class="toprow"><div id="heroLine"></div></div>
   <div class="row" style="margin-top:0"><button id="start" class="main" title="Запустить бота (Alt+S)">▶ Старт</button><button id="pause" class="main" title="Пауза: бот замирает, всё его состояние (цель, закупка, квест, локация) сохраняется. «Продолжить» — с того же места, без сброса">⏸ Пауза</button><button id="stop" class="main" title="Остановить бота (Alt+S)">■ Стоп</button><button id="shopNowTop" title="Закупить сейчас: бросить текущего моба / РБ / рыбу и сразу пойти в магазин">🛒</button><button id="reset" title="Новая сессия: обнулить счётчики боёв, опыта и добычи (темп в час считается с этого момента)">↺</button></div>
   <div id="controlWarn" class="wake-warn" role="alert" hidden></div>
   <div id="wakeWarn" class="wake-warn" role="alert" hidden></div>
@@ -205,6 +205,7 @@
 </nav>
 </div>
 <div class="workarea">
+<div id="uiSearchWrap"><!-- после 20.13 (игрок 18.10: «верни строку поиска настроек»): строка во всю ширину над настройками, как до 20.12 --><input id="uiSearch" type="search" placeholder="Найти настройку…  (Ctrl+K)" autocomplete="off" spellcheck="false" aria-label="Поиск настройки"><div id="uiResults" role="listbox"></div></div>
 <div id="settingsFeedback" class="settings-feedback" role="status" aria-live="polite" hidden><span id="settingsFeedbackText"></span><button id="settingsRetry" type="button" hidden>Повторить сохранение</button><button id="settingsDiscard" type="button">Отменить несохранённое</button></div>
 
 <section id="tab-overview" class="act">
@@ -428,7 +429,7 @@
     <strong>Рейд-боссы · Центр управления</strong>
     <p>Тур по РБ самостоятельно выбирает живых боссов из общего списка. Прогноз учитывает реальный урон, опасные удары и подтверждённые запасы лечения.</p>
     <div id="rbForecastBox" class="rb-forecast" data-status="idle">После начала боя здесь появится прогноз.</div>
-    <div class="rb-one"><button id="rbOneBtn" type="button" title="Найти и убить одного РБ, потом пауза до твоей команды">🎯 Убить один РБ и ждать команды</button><div id="rbOneInfo" class="hint"></div></div>
+    <div class="rb-one"><button id="rbOneBtn" type="button" title="Найти и убить одного РБ, потом пауза до твоей команды">🎯 Убить один РБ и ждать команды</button><button id="rbOneOff" type="button" hidden title="Выключить «один РБ» и тур по РБ">✖ Выключить «один РБ»</button><div id="rbOneInfo" class="hint"></div></div>
     <div class="rb-primary"><button data-goto="panel" type="button">Боевые умения</button><button data-goto="supply" type="button">Банки и расходники</button></div>
   </div>
   <h4>🧭 Тур по РБ</h4>
