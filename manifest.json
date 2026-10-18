@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.14",
-  "description": "L2wap Bot 20.14 — панель с вкладками слева, быстрый старт, РБ до 30 мин, масс-спойл у РБ",
+  "version": "20.15",
+  "description": "L2wap Bot 20.15 — баффы к РБ без ложной неудачи, Spoil Festival у РБ по откату",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -136,5 +136,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.14"
+  "version_name": "20.15"
 }
