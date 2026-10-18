@@ -31,6 +31,23 @@ test('РБ без соседей или с выключенной галкой: 
     await f.api.spoilStep(f.ctx, f.act, f.mob); assert.deepEqual(f.calls, []);
   }
 });
+test('20.15: на РБ новый непомеченный сосед — Festival снова (по откату); убитый помеченный не держит метку', async () => {
+  const near = [{ name: 'Side', cur: 3000, max: 3000 }], f = loot(near);
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.calls.length, 1);
+  near.push({ name: 'Other', cur: 2000, max: 2000 });
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.calls.length, 2);
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.calls.length, 2, 'все помечены — не жмём');
+  near.splice(0, 1);                                   // Side убит
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.calls.length, 2);
+  near.push({ name: 'Side', cur: 3000, max: 3000 });   // подошёл новый того же вида
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.equal(f.calls.length, 3);
+  assert.equal(f.ctx.nearSpoiled, 2);
+});
+test('20.15: на обычном мобе масс-спойл по-прежнему один раз за бой', async () => {
+  const near = [{ name: 'Side', cur: 3000, max: 3000 }], f = loot(near); delete f.ctx.rb; f.ctx.name = 'Main';
+  await f.api.spoilStep(f.ctx, f.act, f.mob); near.push({ name: 'Other', cur: 2000, max: 2000 });
+  await f.api.spoilStep(f.ctx, f.act, f.mob); assert.deepEqual(f.calls.filter(c => /festival/i.test(c)), ['Spoil Festival']);
+});
 function fight(spoiled = 0, cfg = {}) {
   const f = flowFixture('mage'), e = f.env, flame = { title: 'Flame Strike', getAttribute: () => null };
   f.slots.push(flame); f.hp.textContent = '900000 / 1000000';

@@ -33,13 +33,27 @@ function festivalParse(lines) {                   // → [{ name, ok, ch }] из
   }).filter(Boolean);
 }
 
+// 20.15 (лог 18.10 18:41–18:47): у РБ соседи гибнут за секунды и подходят новые — из 290 убитых соседей спойл дали 10.
+// Помним, сколько живых соседей каждого вида (имя|макс. HP) уже помечено; исчезнувшие — убиты, новые — не помечены.
+const nearKey = x => (x.name || '') + '|' + x.max;
+function nearCount(alive) { const c = {}; for (const x of alive) c[nearKey(x)] = (c[nearKey(x)] || 0) + 1; return c; }
+function nearUnspoiled(ctx, alive) {
+  const c = nearCount(alive), S = ctx.nearSpoiledKeys ||= {};
+  let spoiled = 0, fresh = 0;
+  for (const k of Object.keys(S)) { S[k] = Math.min(S[k], c[k] || 0); if (!S[k]) delete S[k]; else spoiled += S[k]; }
+  for (const k of Object.keys(c)) fresh += c[k] - (S[k] || 0);
+  ctx.nearSpoiled = spoiled;
+  return fresh;
+}
+
 async function massSpoilStep(ctx, act, mob) {
-  if (ctx.massTried || !mob?.max || mob.cur <= 0) return false;
-  const near = env.extraMobs().filter(x => x.cur > 0).length;
+  if ((ctx.massTried && !ctx.rb) || !mob?.max || mob.cur <= 0) return false;
+  const alive = env.extraMobs().filter(x => x.cur > 0), near = alive.length;
   // 20.14 (просьба игрока 18.10): на РБ сам Festival не действует (новость игры 11.10), но метит обычных мобов
   // рядом с РБ — их добыча спойла собирается, когда они гибнут от АОЕ/копья. Только при видимых живых соседях;
   // галка «Спойлить и РБ» по-прежнему про обычный Spoil по самому РБ.
-  if (ctx.rb && (env.cfg.rbNearMobs === false || !near)) return false;
+  // 20.15 (просьба игрока 18.10): на РБ — повтор по откату умения, как только рядом есть непомеченные соседи.
+  if (ctx.rb && (env.cfg.rbNearMobs === false || !near || !nearUnspoiled(ctx, alive))) return false;
   // Festival выгоднее и по одной цели: гарантированная метка вместо повторов Spoil.
   // Соседи могут появиться в DOM только после первого хода.
   if (!near && (ctx.spoiled || env.mobSpoiled())) return false;
@@ -60,6 +74,9 @@ async function massSpoilStep(ctx, act, mob) {
   const bads = res.length ? res.filter(x => !x.ok).length : fresh.filter(l => env.SPOIL_FAIL.test(l)).length;
   if (env.mobSpoiled() || mainR?.ok || (!res.length && oks && !bads && !ctx.rb)) ctx.spoiled = true;
   ctx.nearSpoiled = res.length ? res.filter(x => x.ok && !env.nameLike(x.name, ctx.name)).length : ctx.rb ? oks : Math.max(0, oks - 1);
+  // Festival метит всех живых в зоне со 100 %: на РБ помечаем соседей, видимых в момент нажатия (без ответа игры — тоже,
+  // чтобы не жать по кругу; новые соседи после этого снова разрешат нажатие)
+  if (ctx.rb) { const S = ctx.nearSpoiledKeys ||= {}; for (const [k, n] of Object.entries(nearCount(alive))) S[k] = Math.max(S[k] || 0, n); ctx.nearSpoiled = Math.max(ctx.nearSpoiled, near); }
   const S = { ...(env.rt.spoilStat || {}) }; S.mass = (S.mass || 0) + 1; S.massOk = (S.massOk || 0) + oks; S.massFail = (S.massFail || 0) + bads; await env.setRt({ spoilStat: S });
   env.rec('B', 'спойл', `${ctx.name} +${near} рядом: масс-спойл → ${oks || bads ? `✅${oks} ✗${bads}${res.length ? ' (' + res.map(x => `${x.name} ${x.ok ? '✅' : '✗'}${x.ch ? x.ch + '%' : ''}`).join(', ') + ')' : ''}` : 'нажат'}${ctx.rb ? ' · РБ масс-спойл не берёт, метим мобов рядом' : ctx.spoiled ? ' · главный помечен' : ' · главного добью обычным Spoil'}${fresh.length && !oks && !bads ? ' · лог: ' + fresh.slice(0, 3).join(' ⏎ ').slice(0, 160) : ''}`);
   return true;
