@@ -5,7 +5,7 @@ function fixture() {
  let now = 1900000000000, resolve, reads = 0, exits = 0;
  const location = { pathname: '/battle.html', search: '?spawnId=test', href: '' };
  const env = { on: true, tabOwner: true, cfg: { tvtOn: true }, rt: {},
-  TVT: { phase: 'IDLE', isRegistered: false, schedule: { next: { registrationOpensAt: now - 30000, battleStartsAt: now + 570000 } } },
+  TVT: { phase: 'IDLE', isRegistered: false, t: now, schedule: { next: { registrationOpensAt: now - 30000, battleStartsAt: now + 570000 } } },
   gameGet: () => { reads++; return new Promise(r => { resolve = r; }); },
   setRt: async p => Object.assign(env.rt, p), isBattle: () => true, victory: () => false,
   toMap: async () => { exits++; }, sleep: async () => {}, rec: () => {}, $q: () => null };
@@ -32,7 +32,7 @@ test('известная открытая регистрация не ждёт �
  f.env.on = false; await f.reply(); assert.equal(f.env.rt.tvt, undefined);
 });
 test('за пределами окна и после подтверждения регистрации лишних GET нет', async () => {
- const f = fixture(); f.advance(601000); await f.T.tvtRefresh(); assert.equal(f.reads(), 0);
+ const f = fixture(); f.advance(601000); f.env.TVT.t = 1900000601000; await f.T.tvtRefresh(); assert.equal(f.reads(), 0);   // 20.17: данные свежие (старше 5 мин — один опрос)
  const g = fixture(); g.env.TVT.isRegistered = true; await g.T.tvtRefresh(); assert.equal(g.reads(), 0);
 });
 test('неудавшийся опрос не создаёт запрос на каждый удар: повтор через5с', async () => {

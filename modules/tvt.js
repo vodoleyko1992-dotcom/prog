@@ -16,9 +16,12 @@ const active = T => canRun() && T.identity === identity() && T.kick === (+env.rt
 
 function tvtState() {
   const T = env.TVT || env.rt.tvt; if (!T) return null;
-  const nx = T.schedule?.next || {}, now = tvtNow();
+  const nx = T.schedule?.next || {}, now = tvtNow(), regEnd = tvtMs(T.registrationEndsAt);
+  // 20.17 (лог 18.10 21:30–21:55): во время регистрации schedule.next может уже показывать следующий слот — тогда старт берём
+  // от конца регистрации (подготовка 30 с), иначе записанный герой не видел «бой вот-вот» и не шёл на арену
+  const nxStart = tvtMs(nx.battleStartsAt), regStart = regEnd && /REGISTRATION/i.test(T.phase || '') ? regEnd + 30000 : 0;
   return { phase: T.phase || '', reg: !!(T.isRegistered || T.myTeam), team: T.myTeam, id: T.eventId || nx.slotKey || '',
-    start: tvtMs(T.startsAt) || tvtMs(nx.battleStartsAt), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000,
+    start: tvtMs(T.startsAt) || (regStart && !(nxStart >= regEnd && nxStart - regEnd < 10 * 60000) ? regStart : nxStart), end: tvtMs(T.endsAt), regEnd: tvtMs(T.registrationEndsAt), now, fresh: env.TVT && Date.now() - env.TVT.t < 120000,
     regOpen: tvtMs(nx.registrationOpensAt), count: +T.registeredCount || 0, max: +T.maxPlayers || 20, age: Date.now() - (+T.t || 0),
     eliminated: !!T.isRegistered && /^(ACTIVE|FINISHED)$/i.test(T.phase || '') && T.selfCombat?.alive === false };
 }
@@ -51,12 +54,17 @@ async function tvtRefresh(force = false) {
   // 20.13 (ревизия 17.10, шаг 5, pvp-misc/TVT-6): записанный герой тоже перечитывает статус, когда данные старше минуты, а бой идёт
   // или вот-вот начнётся, — иначе старая фаза ACTIVE после Stop жила, пока игра сама не опросит /game/tvt
   const hold = Math.max(1, +env.cfg.tvtHoldMin || 3) * 60000;
-  const stale = !!s?.reg && s.age > 60000 && (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(s.phase) || (s.start && s.start - s.now < hold && s.now - s.start < 20 * 60000));
+  const stale = !!s?.reg && s.age > 60000 && (/ACTIVE|PREPAR|STARTING|COMBAT/i.test(s.phase) || (s.start && s.start - s.now < hold && s.now - s.start < 20 * 60000)
+    || (/REGISTRATION/i.test(s.phase) && s.regEnd && s.regEnd - s.now < hold));
   // 20.13 (шаг 5, pvp-misc, ревью): 20/20 мест — регистрация не «пора», но освобождение места ловим опросом и без известного
   // registrationOpensAt (раньше due держала сама tvtRegistrationDue, теперь она false при полной записи)
   const regFull = !!s && !s.reg && /REGISTRATION/i.test(s.phase) && (!s.regEnd || s.now < s.regEnd) && s.count >= s.max && !regSkipped(s);
-  const due = !s || stale || !s.reg && (opening || pendingWindow || regFull || tvtRegistrationDue());
-  if (!force && (!due || now - readAt < (opening ? 1000 : !s ? emptyGap() : 5000))) return;
+  // 20.17 (лог 18.10 21:30–21:55): известное расписание устарело — окно его слота уже прошло (или слота нет), а свежих данных
+  // нет дольше 5 мин. Раньше бот сам /game/tvt в этом случае не читал вовсе и ждал, пока игра опросит её сама: после рестарта
+  // вкладки в rt.tvt лежал утренний слот, окно 21:50 открылось, а бот 5+ мин рыбачил/стоял в паузе и не записался
+  const outdated = !!s && !s.reg && !/REGISTRATION|ACTIVE|PREPAR|STARTING|COMBAT/i.test(s.phase) && s.age > 300000 && !(s.regOpen && s.now < closes);
+  const due = !s || stale || outdated || !s.reg && (opening || pendingWindow || regFull || tvtRegistrationDue());
+  if (!force && (!due || now - readAt < (opening ? 1000 : !s ? emptyGap() : outdated ? 60000 : 5000))) return;
   reading = T0; readAt = now;
   try {
     const response = await env.gameGet('/game/tvt', 8000), data = response?.ok ? await response.json() : null;
