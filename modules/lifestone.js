@@ -57,7 +57,7 @@
      if(!own(s)||current()?.pending?.id!==p.id||!snap||snap.revision<=p.revision||base(snap.inventory.eq.l1)!==s.base)throw Error('Нужна свежая ревизия героя и прежнее оружие. Сначала проверьте состояние в игре');
      const outcome=snap.inventory.eq.l1?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект');
      return await save({...s,pending:null,attempts:s.attempts+1,weapon:fingerprint(snap.inventory.eq.l1),status:'paused',reason:'Неизвестная попытка учтена в лимите; продолжение вручную',
-      history:[{t:now(),attempt:s.attempts+1,status:'unknown'},...s.history].slice(0,100)},snap.inventory.eq);
+      history:[{t:now(),attempt:s.attempts+1,status:'unknown',pending:p,checkedRevision:snap.revision},...s.history].slice(0,100)},snap.inventory.eq);
     }
     if(action==='close'){if(s.pending)throw Error('Результат попытки неизвестен — сначала сверить');trusted=null;return await save({...s,status:'closed',hold:false,reason:'Серия завершена игроком'});}
     if(action!=='resume')throw Error('Неизвестная команда ЛС');

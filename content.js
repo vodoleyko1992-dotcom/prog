@@ -4532,6 +4532,8 @@ addEventListener('message', e => {
   const d = e.data, path = apiPath(String(d.url || ''));
   if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();
   const netContext=netContextTake(d);if(netContext===false)return;
+  // 18.10, журнал 22:27: точный запрос из позднего ответа дополняет потерянный netStart только в прежнем контексте.
+  try { L2V7Modules.fishing?.castResponseNote?.(path,d,netContext); } catch (_) {}
   catPaymentNote(path,d,netContext);
   d.nativeNonce=netContext.nativeNonce||'';
   d.paymentId=netContext.paymentId||'';

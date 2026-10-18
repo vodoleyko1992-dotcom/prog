@@ -2984,12 +2984,12 @@ for(const [kind,label] of Object.entries(LS_GROUPS)){
 let lsEditing=false,lsActionBusy=false,lsRenderedChar=null;
 async function lsRefresh(){
   if(lsEditing||['lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
-  const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']),c=cfg.autoLs||{},s=rt.autoLs;
+  const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
   lsRenderedChar=rt.char;
   const labels={paused:'Пауза',running:'Работает',done:'Завершено',closed:'Закрыто'};
-  $('lsRun').textContent=s?`${labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
+  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
   $('lsAcknowledge').hidden=!s?.pending;
 }
 async function lsSave(){
