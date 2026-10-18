@@ -126,6 +126,7 @@ function fire(el) {
   if (!el || (on && !tabOwner)) return false;
   if (on && L2V7Modules.actions?.canAct?.() === false) return false;
   const login = !!el.closest?.('form')?.querySelector?.('input[type="password"]') && /войти|увійти|вход|вхід|login|sign in/i.test((el.textContent || '') + ' ' + (el.value || '')) && loginPage();
+  if (!login && (rt.autoLs?.hold || rt.autoLs?.pending)) return false;
   if (!login && L2V7Modules.payments?.blocked?.() && !L2V7Modules.payments.consumePermit()
       && !isBattle() && !/\/tvt-arena\.html$/i.test(location.pathname)
       && !el.matches?.('#tvt-register-btn,#map-defeat-tocity,#battle-defeat-tocity') && !paymentFreeClick(el)) return false;
@@ -2726,7 +2727,7 @@ setInterval(async () => {
       }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
   } catch (e) { quietErr('замок', e); }
 }, 5000);
@@ -2853,6 +2854,8 @@ async function loopGate() {
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
+  if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
+  if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
@@ -3482,7 +3485,8 @@ function serverDown() {
 // отсюда «цифры … у игры не получены» и «список эпиков с сервера не получен». Токен только в заголовок запроса — никуда не пишем
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
-async function gamePost(path, body, ms = 8000) {
+async function gamePost(path, body, ms = 8000, lsPermit) {
+  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body))) throw new Error('lifestone_session_active');
   if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
   if (L2V7Modules.pvp?.pending()) throw new Error('pvp_defeat_pending');
   if (L2V7Modules.actions?.canAct?.() === false) throw new Error('action_cancelled');
@@ -5755,6 +5759,43 @@ const awayFree = afterWin => L2V7Modules.mammon.modeFree(afterWin);
 // 9.0: смена класса — кот этого класса отозван игрой, прежний слуга не «живой»
 const classSwitched = () => { PET = null; };
 
+// Авто-ЛС удерживает обычные задачи до явного завершения серии; работа только на странице игры.
+let lifestoneCommandBusy = false;
+const lifestonePrepareFree = () => location.pathname === '/augmentation.html' && !!rt.char && heroNick() === rt.char && !serverDown() && !loginPage() && !antibotState() && !abHold()
+  && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
+  && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending
+  && !['shop','magister','tbuff','invScan','fishSvc','fishService','mmJob','tsJob','storyJob','petBufferTrip','rbGo','zoneGo','dailyFish','dailyRb','revive','actionOwner'].some(k => rt[k]);
+L2V7Modules.lifestone = L2V7Factories.lifestone({
+  get cfg(){return cfg}, get rt(){return rt}, get on(){return on}, get tabOwner(){return tabOwner},
+  get setRt(){return setRt}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
+  get canPrepare(){return lifestonePrepareFree},
+  get canRun(){return () => lifestonePrepareFree() && L2V7Modules.actions.canAct() && !tvtSoon()},
+  get context(){return () => JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname])}
+});
+async function lifestoneCommand(m) {
+  if (lifestoneCommandBusy) return {ok:false,reason:'Предыдущая команда ЛС выполняется'};
+  if (!['prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return {ok:false,reason:'Неизвестная команда ЛС'};
+  lifestoneCommandBusy=true;let manualEpoch=null;
+  try {
+    const saved=await chrome.storage.local.get(['rt','cfg','on']);
+    if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return {ok:false,reason:'Персонаж изменился — обновите меню'};
+    if (saved.on && (!on || !tabOwner || !leaseEpoch)) return {ok:false,reason:'Управление у другой вкладки игры'};
+    if (!saved.on) {if (!await tabLock()) return {ok:false,reason:'Управление у другой вкладки'};manualEpoch=leaseEpoch;}
+    if (rt.char!==m.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился'};
+    cfg=mergeCfg(saved.cfg);
+    if(m.action==='resume') L2V7Modules.actions.enterFrame();
+    const ok=await L2V7Modules.lifestone.command(m.action);
+    return {ok:!!ok,reason:ok?'':rt.autoLs?.reason||'Команда ЛС недоступна'};
+  } catch(e) {return {ok:false,reason:String(e?.message||e).slice(0,220)}}
+  finally {
+    if(manualEpoch && !on && leaseEpoch===manualEpoch) {
+      await rtWriter.recover().catch(e=>quietErr('запись памяти ЛС',e));await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(e=>quietErr('замок ЛС',e));
+      if(!on && leaseEpoch===manualEpoch){tabOwner=false;tabIdle=false;leaseEpoch=null;}
+    }
+    lifestoneCommandBusy=false;
+  }
+}
+
 // Автозаточка: команды меню и диспетчер используют одну фабрику; 15.10 — только в своём режиме.
 const enchantFree = (completedStart = false) => on && tabOwner && (cfg.enchantMode === true || completedStart && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) && !!heroNick() && heroNick() === rt.char && !antibotState()
   && L2V7Modules.mammon.modeFree(false, true) && !rt.petBufferTrip && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
@@ -6135,6 +6176,7 @@ async function warlockCommand(m) {
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
+  if (m.cmd === 'lifestoneCommand') { lifestoneCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
   if (m.cmd === 'lockLost') { if (tabOwner) { tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0; rec('S', 'ядро', 'управление передано другой вкладке игры — здесь жду'); } reply?.({ ok: true }); return; }
@@ -6199,9 +6241,11 @@ chrome.storage.onChanged.addListener(ch => {
     // Свежий импорт сильнее старого pending; canonical echo учитываем и у вкладки-писателя.
     if (timers) rt = { ...rt, rbTimer: timers };
   }
+  if (ch.cfg) L2V7Modules.lifestone.interrupt();
   if (ch.cfg || ch.rt) enchantModePause().catch(() => {});
   if (ch.on) {
     on = !!ch.on.newValue;
+    if (!on) L2V7Modules.lifestone.interrupt();
     if (!on && rt.enchant?.status === 'running' && rt.char === heroNick()) L2V7Modules.enchant.command('pause').catch(() => {});
     if (!on) abBlink(false);                      // 10.0 (аудит ядра): бот остановлен во время капчи — заголовок больше не мигает
     const stopMeta = ch.stopMeta?.newValue;

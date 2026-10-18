@@ -1277,9 +1277,9 @@ function augLine(rt) {
   const a = rt.weaponAug, A = typeof L2Aug !== 'undefined' ? L2Aug : null;
   if (!a || !A || !a.w) return '';
   const m = A.info(a.o);
-  if (!a.o) return '\n💎 Life Stone: нет (вставка — «Персонаж → Аугментація зброї», бот сам не вставляет)';
+  if (!a.o) return '\n💎 Life Stone: нет (выбор цели и запуск — в разделе «ЛС»)';
   const onPanel = (rt.panel || []).some(s => s.cdKey === 'ls_' + a.o);
-  return `\n💎 Life Stone: ${A.text(a)}${m?.p != null ? ` · шанс такого ${m.p} %` : ''}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
+  return `\n💎 Life Stone: ${A.text(a)}${m?.p != null ? ` · шанс по новости 12.10: ${m.p} %` : ''}${m?.k === 'active' ? (onPanel ? ' · умение на панели ✓' : ' · ⚠ поставьте умение на панель боя') : ''}`
     + (A.keep(a) ? ' · бот не меняет это оружие сам' : '');
 }
 // 20.17: отдельный раздел ЛС использует те же наблюдения, что и карточка оружия.
@@ -2971,3 +2971,58 @@ const pvpUI=L2PvpUI.mount($('pvpTargetsPanel'),{
   editTarget:(edit,context)=>menuPatch({},{pvpTargetEdit:edit,expectedChar:context.char})
 });
 panelRefresher($('pvpTargetsPanel'), () => pvpUI.refresh(), 250);   // 20.12 (UI-5): только видимая панель
+
+// Авто-ЛС запускается только явной командой. Выбор цели сам ничего не расходует.
+const LS_GROUPS={active:'Активные умения',positive:'Положительные пассивные',negative:'Отрицательные пассивные'};
+for(const [kind,label] of Object.entries(LS_GROUPS)){
+  const group=document.createElement('optgroup');group.label=label;
+  for(const [id,o] of Object.entries(L2Aug.OUT).filter(([,o])=>o.k===kind)){
+    const option=document.createElement('option');option.value=id;option.textContent=o.n;option.title=o.d;group.append(option);
+  }
+  $('lsTargets').append(group);
+}
+let lsEditing=false,lsActionBusy=false,lsRenderedChar=null;
+async function lsRefresh(){
+  if(lsEditing||['lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
+  const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
+  for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
+  $('lsMaxAttempts').value=c.maxAttempts??10;
+  lsRenderedChar=rt.char;
+  const labels={paused:'Пауза',running:'Работает',done:'Завершено',closed:'Закрыто'};
+  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
+  $('lsAcknowledge').hidden=!s?.pending;
+}
+async function lsSave(){
+  lsEditing=true;
+  try{const {rt={}}=await chrome.storage.local.get('rt');if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const autoLs={targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
+  finally{lsEditing=false;}
+}
+$('lsTargets').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
+$('lsMaxAttempts').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
+async function lsCommand(action,expectedChar){
+  const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
+  const tab=on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
+  if(!tab?.id||!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
+  if(expectedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');
+  const answer=await chrome.tabs.sendMessage(tab.id,{cmd:'lifestoneCommand',action,char:rt.char});
+  if(!answer?.ok)throw Error(answer?.reason||'Команда ЛС не выполнена');
+}
+async function lsAction(action){
+  if(lsActionBusy)return;lsActionBusy=true;let generation=controlGeneration;const who=lsRenderedChar;
+  try{
+    if(action==='prepare')await lsSave();
+    if(action==='prepare')await lsCommand('prepare',who);
+    if(['prepare','resume'].includes(action)){
+      const {on=false}=await chrome.storage.local.get('on');
+      if(generation!==controlGeneration)return;
+      if(!on){generation=++controlGeneration;await chrome.storage.local.set({paused:null});if(controlGeneration!==generation)return;await menuPatch({manualKickAt:Date.now()}, {on:true,expectedChar:who});await showWakeResult();if(controlGeneration!==generation)return;}
+      else if(controlGeneration!==generation)return;
+      if(!(await chrome.storage.local.get('on')).on)throw Error('Бот остановлен');
+      await lsCommand('resume',who);
+    } else await lsCommand(action,who);
+  }catch(e){toast('ЛС: '+String(e.message||e),'var(--bad)');}
+  finally{lsActionBusy=false;await lsRefresh();}
+}
+for(const [id,action] of Object.entries({lsStart:'prepare',lsResume:'resume',lsPause:'pause',lsReconcile:'reconcile',lsClose:'close',lsAcknowledge:'acknowledge'}))$(id).onclick=()=>lsAction(action);
+panelRefresher($('lsRun'),lsRefresh,500);
+lsRefresh().catch(()=>{});

@@ -53,7 +53,7 @@
     return { w, e: typeof l1 === 'object' ? +l1.enchant || 0 : 0, o: a && typeof a.outcomeId === 'string' ? a.outcomeId : null,
       g: a && a.grade ? String(a.grade).toUpperCase() : null };
   }
-  const info = o => (o && OUT[o]) || null;
+  const info = o => typeof o === 'string' && Object.hasOwn(OUT, o) ? OUT[o] : null;
   function text(a) {
     const m = a && info(a.o);
     if (!a || !a.o) return 'нет';
