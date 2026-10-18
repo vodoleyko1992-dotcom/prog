@@ -6,8 +6,8 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10);
  await h.sw.evaluate(async day=>{const {cfg,rt}=await chrome.storage.local.get(['cfg','rt']);await chrome.storage.local.set({on:false,cfg:{...cfg,autoTasks:['raid','fish','auto','tvt'],dailyFishLimit:10,dailyKillLimit:500,autoKillLimit:200,limitRanges:{}},rt:{...rt,status:'Жду доступного РБ; дневной лимит рыбалки выполнен',dailyQuota:{day,fish:10,auto:80},farmQuota:{auto:{limit:200,got:80}},rbHunt:{phase:'wait'},rbFishWait:{at:Date.now(),until:Date.now()+60000}}})},day);
  await h.popup.reload();await until(()=>h.popup.locator('#taskBoardRows .task-row').count().then(n=>n===4));await h.openTab('overview');
- assert.match(await h.popup.locator('#activityText').innerText(),/после «Старт»/);
- assert.match(await h.popup.locator('#activityHint').innerText(),/Последнее:/);
+ assert.match(await h.popup.locator('#activityText').innerText(),/Выберите, чем заняться/);assert.equal(await h.popup.locator('#quickStart').isVisible(),true);   // 18.10: быстрый запуск вместо «после «Старт»»
+ assert.match(await h.popup.locator('#activityText').getAttribute('title'),/Последнее:/);   // 18.10: бот стоит — строка «Последнее» уходит в подсказку, место под быстрый запуск
  assert.match(await h.popup.locator('#taskBoardRows').innerText(),/Сегодня: 10 \/ 10/);
  assert.match(await h.popup.locator('#taskBoardRows').innerText(),/До 00:00 Владивостока/);
  assert.equal((await h.get(['on'])).on,false);
