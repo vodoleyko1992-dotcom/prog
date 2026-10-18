@@ -225,6 +225,10 @@ function rbProbeBudget({ me, sp, p90, loss, pot, seconds = 8, entry = true }) {
 function rbPreCheck(id, st, slack = 1, dpsOver, hpOver) {
   const forecast = rbPreflightForecast(id, st || {}, slack, dpsOver, hpOver);
   if (!ordinaryLiveTour(id)) return forecast;
+  // 18.10 (игрок: «время боя со сложными РБ до 30 минут»; лог 15:21:55: Olkuth 75 «долгий бой ≈39:46, предел 20» — тур всё равно
+  // купил FA-набор и телепорт за 100 000, через 40 с аварийный выход): предел долгого боя (cfg.rbMaxKillMin) соблюдается и в обычном туре —
+  // такую цель не выбираем до оплаты. Остальной прогноз силы/банок в туре по-прежнему справочный.
+  if (forecast.kind === 'slow') return forecast;
   return { ...forecast, ok: true, kind: 'live', action: 'fight', probe: false, measure: false,
     advisory: { ok: forecast.ok, kind: forecast.kind, why: forecast.why },
     why: `обычный тур: прогноз справочный — ${forecast.why || 'данных о силе пока нет'}` };
