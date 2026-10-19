@@ -426,27 +426,59 @@ async function sealStep() {
     if (n >= 3) return finish('страница Ancient Trader не загрузилась 3 раза — обмен отложен на 20 мин');
     location.reload(); await env.sleep(4000); return;
   }
-  const done = [], fail = [];
-  for (const r of rows()) {
-    const st = r.dataset.stone, [, nm, rate0] = SEAL[st] || [0, st, 0];
-    const own = parseInt((r.querySelector('.l2-ancient-trader-owned__value')?.textContent || '').replace(/\D/g, ''), 10) || 0;
-    if (own < 1) continue;
-    const inp = r.querySelector('.l2-ancient-trader-exchange__input'), btn = r.querySelector('.l2-ancient-trader-exchange__btn');
-    if (!inp || !btn) { fail.push(`${nm}: нет поля/кнопки`); continue; }
-    await env.pause(); if (!active()) return;
-    inp.value = String(own); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
-    await env.waitX(() => !btn.disabled ? 1 : 0, 2000, 100);
-    if (!active()) return;
-    const t0 = Date.now(); if (env.fire(btn) === false) return;
-    const ans = await env.waitX(() => { const N = env.sealNet?.(); return N && N.t >= t0 ? N : null; }, 10000, 150);
-    if (!active()) return;
-    const errEl = r.querySelector('.l2-ancient-trader-exchange__err'), errTxt = env.shown(errEl) ? (errEl.textContent || '').trim() : '';
-    if (ans?.ok) { const rate = parseInt(r.getAttribute('data-aa-rate') || '', 10) || rate0; done.push(`${own} ${nm} → ${own * rate} AA`); await env.sleep(env.rnd ? env.rnd(400, 700) : 500); continue; }
-    const msg = ans?.msg || errTxt || (ans ? `ответ ${ans.status}` : 'нет ответа');
-    fail.push(`${nm}: ${msg}`);
-    // сервер просит быть в городе / у торговца — автообмен дальше только в городе
-    if (/міст|город|city|town|ближч|подойд|підійд|npc/i.test(msg) && !env.rt.sealTown) await env.setRt({ sealTown: true });
+  // 19.10, лог21:36: стек2 718 796 отклонён как invalid_quantity. Меняем партиями;
+  // точный серверный предел не предполагаем: явный отказ уменьшает следующую партию.
+  const fail = [], totals = { ...(env.rt.sealEx?.exchanged || {}) };
+  let limit = env.rt.sealEx?.batchLimit || 1000000, attempts = 0;
+  const progress = async extra => { const r = await env.setRt({ sealEx: { ...env.rt.sealEx, ...extra } }); return r?.ok !== false && active(); };
+  for (const initial of rows()) {
+    const st = initial.dataset.stone, spec = SEAL[st];
+    if (!spec) continue;
+    const [, nm] = spec;
+    const owned = row => parseInt((row?.querySelector('.l2-ancient-trader-owned__value')?.textContent || '').replace(/\D/g, ''), 10) || 0;
+    const saved = env.rt.sealEx?.remaining?.[st];
+    let remaining = Math.min(owned(initial), Number.isSafeInteger(saved) ? saved : Infinity);
+    while (remaining > 0) {
+      if (!active()) return;
+      if (attempts >= 8) return; // управление возвращается диспетчеру; подтверждённый прогресс уже сохранён
+      const r = rows().find(x => x.dataset.stone === st), inp = r?.querySelector('.l2-ancient-trader-exchange__input'), btn = r?.querySelector('.l2-ancient-trader-exchange__btn');
+      if (!inp || !btn) { fail.push(`${nm}: нет поля/кнопки`); break; }
+      const nativeMax = Number(inp.getAttribute?.('max'));
+      let qty = Math.min(remaining, limit, Number.isSafeInteger(nativeMax) && nativeMax > 0 ? nativeMax : Infinity);
+      env.setStatus(`Камни печати: ${nm}, партия ${qty} из остатка ${remaining}`);
+      await env.pause(); if (!active()) return;
+      inp.value = String(qty); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+      const actual = Number(inp.value);
+      if (!Number.isSafeInteger(actual) || actual < 1 || actual > qty) { fail.push(`${nm}: поле количества изменилось — обмен отменён`); break; }
+      if (actual < qty) { qty = actual; limit = Math.min(limit, actual); }
+      const enabled = await env.waitX(() => !btn.disabled ? 1 : 0, 2000, 100);
+      if (!active()) return;
+      if (!enabled) { fail.push(`${nm}: кнопка обмена недоступна`); break; }
+      const t0 = Date.now(), before = env.sealNet?.();
+      if (env.fire(btn) === false) return;
+      attempts++;
+      const ans = await env.waitX(() => { const N = env.sealNet?.(); return N && N !== before && N.t >= t0 && N.stone === st && N.qty === qty ? N : null; }, 10000, 150);
+      if (!active()) return;
+      if (ans?.ok) {
+        remaining -= qty; totals[st] = (totals[st] || 0) + qty;
+        if (!await progress({ exchanged: { ...totals }, remaining: { ...(env.rt.sealEx?.remaining || {}), [st]: remaining }, batchLimit: limit })) return;
+        await env.sleep(env.rnd ? env.rnd(400, 700) : 500); continue;
+      }
+      // Уменьшать и повторять можно только после явного отказа в количестве, а не таймаута.
+      const msg = ans?.msg || (ans ? `ответ ${ans.status}` : 'нет подтверждённого ответа; повтор партии запрещён');
+      if (ans?.status === 400 && (ans.code === 'invalid_quantity' || /invalid_quantity|некоректна кількість|некорректн.*колич/i.test(msg)) && qty > 1) {
+        limit = Math.max(1, Math.floor(qty / 2));
+        if (!await progress({ batchLimit: limit })) return;
+        env.rec('B', 'камни печати', `${nm}: игра отклонила партию ${qty}; уменьшаю до ${limit}`); continue;
+      }
+      fail.push(`${nm}: ${msg}`);
+      if (/міст|город|city|town|ближч|подойд|підійд|npc/i.test(msg) && !env.rt.sealTown) await env.setRt({ sealTown: true });
+      // Неизвестный исход и ошибки сервера завершают маршрут, не вызывая ещё один обмен.
+      break;
+    }
+    if (fail.length) break;
   }
+  const done = Object.entries(totals).filter(([st, n]) => SEAL[st] && n > 0).map(([st, n]) => `${n} ${SEAL[st][1]} → ${n * SEAL[st][2]} AA`);
   if (!active()) return;
   if (done.length && env.rt.sealTown && env.heroAt?.()?.loc !== 'city') await env.setRt({ sealTown: false });   // обмен прошёл вне города — ограничения нет
   await env.setRt({ sealErrN: 0 });

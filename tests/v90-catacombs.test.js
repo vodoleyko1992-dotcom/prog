@@ -127,7 +127,7 @@ const page = (mobs, p, star = '') => docOf(`<div id="dungeon-content"><ul id="du
     const L = load(env, { path: '/ancient-trader.html', search: '', doc: docOf(html) });
     for (const el of L.getDoc().querySelectorAll('input')) el.dispatchEvent = () => true;
     const sent = [];
-    env.fire = el => { const r = el.closest('.l2-ancient-trader-exchange'), inp = r.querySelector('input'); sent.push([r.dataset.stone, inp.value]); net = { t: Date.now(), ok: true, status: 200 }; return true; };
+    env.fire = el => { const r = el.closest('.l2-ancient-trader-exchange'), inp = r.querySelector('input'); sent.push([r.dataset.stone, inp.value]); net = { t: Date.now(), ok: true, status: 200, stone:r.dataset.stone, qty:+inp.value }; return true; };
     await L.M.sealStep();
     assert.equal(JSON.stringify(sent), '[["green","16000"],["red","5000"]]', 'all stones of each colour, empty colour skipped');
     assert.equal(env.rt.sealEx, null); assert.ok(env.rt.sealT > 0);
@@ -137,7 +137,7 @@ const page = (mobs, p, star = '') => docOf(`<div id="dungeon-content"><ul id="du
     net = { t: 0 }; const env2 = baseEnv({ rt: { sealEx: { t: Date.now(), stopAfter: true } }, sealNet: () => net, heroAt: () => ({ loc: 'zone', t: Date.now() }) });
     const L2 = load(env2, { path: '/ancient-trader.html', search: '', doc: docOf(html) });
     for (const el of L2.getDoc().querySelectorAll('input')) el.dispatchEvent = () => true;
-    env2.fire = () => { net = { t: Date.now(), ok: false, status: 400, msg: 'Обмін доступний лише в місті' }; return true; };
+    env2.fire = el => { net = { stone:el.closest('.l2-ancient-trader-exchange').dataset.stone, qty:+el.closest('.l2-ancient-trader-exchange').querySelector('input').value, t: Date.now(), ok: false, status: 400, msg: 'Обмін доступний лише в місті' }; return true; };
     await L2.M.sealStep();
     assert.equal(env2.rt.sealTown, true); assert.ok(env2.logs.some(l => /не вышло: зелёных: Обмін доступний лише в місті/.test(l)));
     assert.equal(L2.sb.stored?.on, false, 'stopAfter: the bot is off again');
