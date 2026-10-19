@@ -17,6 +17,7 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  });
  await h.g.p.goto('https://l2wap.com/augmentation.html');await until(()=>h.g.core('typeof lifestonePrepareFree === "function"'));
  await h.openTab('lifestone');assert.equal(await h.popup.locator('#lsTargets option').count(),21);
+ await h.popup.locator('#lsScanWeapons').click();await until(()=>h.popup.locator('#lsWeapon option').count().then(n=>n===2));await h.popup.locator('#lsWeapon').selectOption({index:1});await h.popup.locator('#lsWeapon').blur();await until(async()=>!!(await h.get(['cfg'])).cfg.autoLs?.weaponKey);
  await h.popup.locator('#lsTargets').selectOption(['prominence','matk_6']);await h.popup.locator('#lsTargets').blur();
  await h.popup.locator('#lsMaxAttempts').fill('3');await h.popup.locator('#lsMaxAttempts').blur();
  await until(async()=>{const c=(await h.get(['cfg'])).cfg.autoLs;return c?.maxAttempts===3&&c.targets.length===2;});
