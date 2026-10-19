@@ -39,6 +39,17 @@ const rbHi = h => h + Math.min(env.cfg.rbMaxAbove ?? env.RB_WIN, env.RB_WIN);
 
 const farmRbOn = () => !!env.rt.farmRb && Date.now() - (env.rt.farmRb.t || 0) < 15 * 60000;
 
+// 19.10, просьба игрока: сначала РБ со свитками. Только подтверждённые ID предметов из game-enchant.json;
+// свитки телепорта/удочки и неизвестные предметы не получают этот приоритет.
+const rbScrollDrop = d => d && typeof d === 'object' && Number.isInteger(+(d.l2ItemId ?? d.itemId))
+  && +(d.l2ItemId ?? d.itemId) >= 910510 && +(d.l2ItemId ?? d.itemId) <= 910529 && Number.isFinite(+d.chance) && +d.chance > 0;
+function rbHasScrolls(id) {
+  const live = env.rt.rbStats?.[id]?.scrollDrops;
+  if (typeof live === 'boolean') return live;
+  return RB_SCROLL_KNOWN.has(String(id || ''));
+}
+const rbScrollOrder = (a, b) => env.cfg.rbScrollFirst === true ? +rbHasScrolls(b.id) - +rbHasScrolls(a.id) : 0;
+
 function rbCandidates() {                      // окно уровня: ниже героя на rbMaxBelow (0 = любые), выше — на rbMaxAbove
   const h = env.heroLvl();
   const want = env.rt.rbWant && raidList().find(r => r.id === env.rt.rbWant);   // прилетели к нему по списку РБ — он первый (v4.30: и без места в списке — через метку)
@@ -47,7 +58,7 @@ function rbCandidates() {                      // окно уровня: ниж�
   const skip = id => !!env.rt.rbList?.[id]?.deny || Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000 || !!rbPreSkipWhy(id);
   if (want && want.lvl >= rbLo(h) && want.lvl <= rbHi(h) && !rbVerdictBlocks(want.id) && !skip(want.id)) return [want];
   return raidList().filter(r => r.lvl >= rbLo(h) && r.lvl <= rbHi(h) && !rbVerdictBlocks(r.id) && !skip(r.id))
-    .sort((a, b) => (env.cfg.rbOrder === 'down' ? b.lvl - a.lvl : a.lvl - b.lvl)            // 14.10: сохранённый rbCur не обгоняет порядок уровней
+    .sort((a, b) => rbScrollOrder(a, b) || (env.cfg.rbOrder === 'down' ? b.lvl - a.lvl : a.lvl - b.lvl) // сохранённый rbCur не обгоняет очередь
       || (env.rt.rbDb?.[b.id]?.verdict === 'ok') - (env.rt.rbDb?.[a.id]?.verdict === 'ok')   // при равном уровне — проверенные «по силам»
       || (b.idx >= 0) - (a.idx >= 0) || a.idx - b.idx);
 }
@@ -403,7 +414,14 @@ async function rbInfoNote(id, j, from = 'api') {
   const ad = drops.find(d => d.kind === 'adena');
   const top = env.epicById?.(id) ? drops.filter(d => d.kind !== 'adena').sort((a, b) => (+b.chance || 0) - (+a.chance || 0)).slice(0, 3)
     .map(d => ({ n: String(d.displayName || d.name || d.l2ItemId || '').slice(0, 40), c: +d.chance || 0 })) : null;
+  // Hook считает scrollDrops по полному ответу до обрезки drops до 8 строк. Пустой/обрезанный хвост без
+  // этого подтверждения не отменяет прежний факт; полный новый ответ вправе опровергнуть старый каталог.
+  const complete = Array.isArray(j.drops) && j.drops.every(d => d && typeof d === 'object' && !Array.isArray(d)
+    && d.chance != null && Number.isFinite(+d.chance) && +d.chance >= 0);
+  const scrolls = complete ? drops.some(rbScrollDrop) : from === 'page' && Array.isArray(j.drops) && typeof j.scrollDrops === 'boolean'
+    ? j.scrollDrops : drops.some(rbScrollDrop) ? true : null;
   const st = { ...have, hp: s.maxHp, patk: s.pAtk || 0, pdef: s.pDef || 0, matk: s.mAtk || 0, mdef: s.mDef || 0, t: Date.now(), src: 'api', from, ...(j.kind ? { kind: String(j.kind).slice(0, 12) } : {}),
+    ...(scrolls !== null ? { scrollDrops: scrolls, scrollDropsT: Date.now() } : {}),
     ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}),
     ...(+j.rewardExp > 0 ? { exp: +j.rewardExp } : {}), ...(+j.rewardSp > 0 ? { sp: +j.rewardSp } : {}), ...(top?.length ? { top } : {}),
     ...(typeof j.canAttackRaidBoss === 'boolean' ? { canAttack: j.canAttackRaidBoss } : {}), ...(+j.minRaidBossLevelForAttack > 0 ? { minLvl: +j.minRaidBossLevelForAttack } : {}) };
@@ -471,6 +489,18 @@ const RB_KNOWN = {
   '25319': [12403812, 9985, 8099, 9596, 9150], '25514': [14300896, 7714, 9511, 6088, 10270], '25527': [10727566, 12479, 8600, 9729, 9949], '29095': [6766049, 11920, 7865, 11385, 9942],
   '25517': [9874965, 3868, 8685, 9566, 9657], '29006': [876883, 3920, 2001, 3192, 2124], '29014': [487686, 3920, 1601, 3192, 1924] };
 const rbKnown = id => { const k = RB_KNOWN[String(id || '').replace(/^l2dop_rb_/, '')]; return k ? { hp: k[0], patk: k[1], pdef: k[2], matk: k[3], mdef: k[4], src: 'api', from: 'known' } : null; };
+// Исторические GET игры11–12.10: kb/data/game-raid-bosses.json,193 РБ с chance>0;
+// dropsSynthetic:true означает генерацию дропа СЕРВЕРОМ (kb/game-live.md), а не предположение бота.
+const RB_SCROLL_KNOWN = new Set(`25001 25004 25007 25010 25013 25016 25019 25020 25023 25026 25029 25032 25035 25038 25041 25044 25047 25050 25051 25054
+25057 25060 25063 25064 25067 25070 25073 25076 25079 25082 25085 25088 25089 25092 25095 25098 25099 25102 25103 25106
+25109 25112 25115 25118 25119 25122 25125 25126 25127 25128 25131 25134 25137 25140 25143 25146 25152 25155 25158 25159
+25162 25163 25166 25169 25170 25173 25176 25179 25182 25185 25188 25189 25192 25198 25199 25202 25205 25208 25211 25214
+25217 25220 25223 25226 25229 25230 25233 25234 25235 25238 25241 25244 25245 25248 25249 25252 25255 25256 25259 25260
+25263 25266 25269 25272 25273 25276 25277 25280 25281 25282 25283 25286 25290 25293 25296 25299 25302 25305 25306 25309
+25312 25315 25316 25319 25322 25325 25328 25352 25354 25357 25360 25362 25365 25366 25369 25373 25380 25383 25385 25388
+25391 25392 25394 25395 25398 25401 25404 25407 25410 25412 25415 25418 25420 25423 25426 25429 25431 25434 25437 25438
+25441 25444 25447 25450 25453 25456 25460 25463 25467 25470 25473 25475 25478 25481 25484 25487 25490 25493 25496 25498
+25501 25504 25506 25509 25512 25514 25517 25523 25524 25527 29056 29060 29095`.split(/\s+/).map(id => 'l2dop_rb_' + id));
 const rbInfoNotes = new Map();
 // 9.2.5 (игрок 12.10: «скинул список РБ, в которых бот не уверен, а он всё равно не шёл проверять»; лог 12.10 11:29): у 4 РБ 60–66
 // (Кастор, Фальстон, Тимініель, Гекатон) в памяти лежали неточные цифры базового профиля 8.0.3 (from 'base803': M.Atk Кастора 9339 при
@@ -777,7 +807,7 @@ function rbTourPlan() {
     if (block) blocked.push({ id, name: x.name || id, lvl: x.lvl, ...block });
     else ready.push({ id, ...x, evidence: rbDpsEvidence(id), ...(wound ? { wounded: wound } : {}), ...(quests.includes(id) ? { quest: true } : {}), ...(tried && at - tried <= env.RB_TRY_MS ? { retry: true } : {}) });
   }
-  ready.sort((a, b) => (mode === 'value' && !ordinaryLiveTour(a.id) && !ordinaryLiveTour(b.id) ? rbValueScore(b.id, b) - rbValueScore(a.id, a) : 0)
+  ready.sort((a, b) => rbScrollOrder(a, b) || (mode === 'value' && !ordinaryLiveTour(a.id) && !ordinaryLiveTour(b.id) ? rbValueScore(b.id, b) - rbValueScore(a.id, a) : 0)
     || dir * (a.lvl - b.lvl) || !!b.wounded - !!a.wounded
     || (a.wounded && b.wounded ? a.wounded.cur / a.wounded.max - b.wounded.cur / b.wounded.max : 0)
     || !!b.quest - !!a.quest || dir * ((a.ord ?? 1e9) - (b.ord ?? 1e9)) || a.id.localeCompare(b.id));
@@ -794,7 +824,7 @@ function rbPreparationCandidates() {
     if (ordinaryLiveTour(id)) { const check = rbEntryDecision(id, x); return check.ok || check.kind === 'funds'; }
     const ps = preSkip(id);
     return !(at - ps.t < 30 * 60000 && (ps.observed || /^аварийный выход:/.test(env.rt.rbDb?.[id]?.note || '')));
-  }).map(([id, x]) => ({ id, ...x })).sort((a, b) => (env.cfg.rbOrder === 'down' ? -1 : 1) * (a.lvl - b.lvl) || (a.ord ?? 1e9) - (b.ord ?? 1e9));
+  }).map(([id, x]) => ({ id, ...x })).sort((a, b) => rbScrollOrder(a, b) || (env.cfg.rbOrder === 'down' ? -1 : 1) * (a.lvl - b.lvl) || (a.ord ?? 1e9) - (b.ord ?? 1e9));
 }
 let rbTourViewSig = '', rbTourBlockedSig = '', rbTourBlockedAt = 0;
 function rbTourPublish(plan) {
@@ -1884,6 +1914,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { rbHasScrolls, rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

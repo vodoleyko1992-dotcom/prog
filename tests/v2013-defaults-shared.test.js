@@ -24,10 +24,10 @@ test('defaults.js грузится как обычный скрипт (content s
   const D = box.L2Defaults; assert.ok(D && D.CFG, 'L2Defaults.CFG в глобальном объекте');
   const N = require(path.join(root, 'defaults.js'));
   assert.equal(JSON.stringify(D.CFG), JSON.stringify(N.CFG));
-  assert.deepEqual({ ...N.DAILY_RANGE }, { min: 8434, max: 9119 });
-  assert.equal(N.DAILY_KILL_DEF, 8434); assert.equal(N.DAILY_FISH_DEF, 8434);
-  assert.equal(N.CFG.dailyKillLimit, 8434); assert.equal(N.CFG.dailyFishLimit, 8434);
-  assert.deepEqual(JSON.parse(JSON.stringify(N.CFG.limitRanges)), { dailyKillLimit: { min: 8434, max: 9119 }, dailyFishLimit: { min: 8434, max: 9119 } });
+  assert.deepEqual({ ...N.DAILY_RANGE }, { min: 1511, max: 1564 });
+  assert.equal(N.DAILY_KILL_DEF, 8000); assert.equal(N.DAILY_FISH_DEF, 1511);
+  assert.equal(N.CFG.dailyKillLimit, 8000); assert.equal(N.CFG.dailyFishLimit, 1511);
+  assert.deepEqual(JSON.parse(JSON.stringify(N.CFG.limitRanges)), { dailyFishLimit: { min: 1511, max: 1564 } });
   // точечные прежние значения (движок и меню раньше совпадали в них же)
   const want = { mmCrafter: 'Skye', champEvery: 30, tvtOn: true, warlordAggro: true, fishBait: 'auto', shopReserve: 200000, shopMaxSpend: 2000000,
     rbHuntMode: false, rbOrder: 'up', fighterMpPct: 25, epicMaxDeaths: 5, fishBuyPacks: 100, dockMin: false, magisterSkip: 'Curse Weakness, Poisonous Cloud' };

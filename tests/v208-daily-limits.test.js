@@ -59,12 +59,12 @@ test('stale character, owner or Stop cannot credit fish',async()=>{
  for(const type of ['char','owner','stop']){const f=fixture();f.state.rt.fish={t0:1,caught:0};await f.fish();f.state.rt.fish.caught=1;if(type==='char')f.state.rt.char='Other';if(type==='owner')f.state.lock.epoch=2;if(type==='stop')f.state.on=false;
  const r=await f.bg.statePatch({patch:{},dailyFish:{limit:2,kick:1},expectedChar:'Hero',epoch:1},{tab:{id:7},frameId:0,url:'https://l2wap.com/fishing.html'});assert.equal(r.ok,false);assert.equal(f.state.rt.dailyQuota.fish,0);}
 });
-test('limits tab owns all quota controls once; defaults are the player daily ranges 8434–9119 for mobs and fish',()=>{
+test('limits tab owns all quota controls once; defaults are fixed 8000 mobs and the fish range 1511–1564',()=>{
  const html=read('popup.html'),section=html.split('id="tab-limits"')[1].split('</section>')[0],base=JSON.parse(read('base-profile.json'));
  // 19.10: «Лимиты» — отдельный раздел; прежние ссылки limits ведут прямо в него.
  assert.match(html,/<section id="tab-limits">/);assert.doesNotMatch(read('popup.js'),/limits: 'overview'/);
  for(const id of ['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishTgtType','fishMaxCasts']){assert.ok(section.includes('id="'+id+'"'));assert.equal(html.split('id="'+id+'"').length,2);}
- for(const key of ['dailyFishLimit','dailyKillLimit']){assert.equal(base.cfg[key],8434);assert.deepEqual(base.cfg.limitRanges[key],{min:8434,max:9119});}assert.ok(!('dailyAutoKillLimit' in base.cfg)&&!('dailyCatKillLimit' in base.cfg));
+ assert.equal(base.cfg.dailyKillLimit,8000);assert.equal(base.cfg.limitRanges.dailyKillLimit,undefined);assert.equal(base.cfg.dailyFishLimit,1511);assert.deepEqual(base.cfg.limitRanges.dailyFishLimit,{min:1511,max:1564});assert.ok(!('dailyAutoKillLimit' in base.cfg)&&!('dailyCatKillLimit' in base.cfg));
 });
 
 test('content fish hook persists quota then avoids writes without a new catch',async()=>{

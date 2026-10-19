@@ -40,17 +40,18 @@ test('сброс «за сегодня» обнуляет оба счётчик�
  assert.deepEqual([f.state.rt.dailyQuota.auto,f.state.rt.dailyQuota.cat,f.state.rt.dailyQuota.fish],[0,0,9]);
  assert.equal(f.state.rt.farmQuota.auto.pending,null);assert.equal(f.state.rt.farmQuota.cat.pending,null);
 });
-test('миграция dailyKill2010: старые лимиты складываются, пустые получают диапазон игрока 8434–9119, диапазоны переезжают',()=>{
+test('миграция dailyKill2010: старые лимиты складываются, заводские мобы8000 без диапазона, рыба1511–1564',()=>{
  const src=read('content.js'),m=src.match(/once\('dailyKill2010', \(\) => \{[\s\S]*?rf\.limitRolls = rolls;\n  \}\);/)[0];
- const RANGE={min:8434,max:9119},run=(cfgIn,rtIn={})=>{const cf={},rf={},cfg={...cfgIn},rt={...rtIn},C=k=>(k in cf?cf[k]:cfg[k]);vm.runInNewContext(m,{cf,rf,rt,cfg,C,DAILY_RANGE:RANGE,DAILY_KILL_DEF:RANGE.min,DAILY_FISH_DEF:RANGE.min,once:(_,fn)=>fn()});return {cf,rf};};
+ const D=require('../defaults.js'),RANGE=D.DAILY_RANGE,run=(cfgIn,rtIn={})=>{const cf={},rf={},cfg={...cfgIn},rt={...rtIn},C=k=>(k in cf?cf[k]:cfg[k]);vm.runInNewContext(m,{cf,rf,rt,cfg,C,...D,once:(_,fn)=>fn()});return {cf,rf};};
  let r=run({dailyAutoKillLimit:200,dailyCatKillLimit:150,dailyFishLimit:0});
- assert.equal(r.cf.dailyKillLimit,350);assert.equal(r.cf.dailyFishLimit,8434);assert.equal(r.cf.dailyAutoKillLimit,0);assert.equal(r.cf.dailyCatKillLimit,0);assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyFishLimit:RANGE}));
+ assert.equal(r.cf.dailyKillLimit,350);assert.equal(r.cf.dailyFishLimit,1511);assert.equal(r.cf.dailyAutoKillLimit,0);assert.equal(r.cf.dailyCatKillLimit,0);assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyFishLimit:RANGE}));
  r=run({dailyAutoKillLimit:0,dailyCatKillLimit:0,dailyFishLimit:500});
- assert.equal(r.cf.dailyKillLimit,8434);assert.equal(r.cf.dailyFishLimit,undefined);assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyKillLimit:RANGE}));
+ assert.equal(r.cf.dailyKillLimit,8000);assert.equal(r.cf.dailyFishLimit,undefined);assert.equal(JSON.stringify(r.cf.limitRanges),'{}');
  r=run({dailyAutoKillLimit:10,dailyCatKillLimit:0,limitRanges:{dailyAutoKillLimit:{min:10,max:20},dailyCatKillLimit:{min:5,max:5},dailyFishLimit:{min:1,max:2}}},{limitRolls:{dailyAutoKillLimit:{value:10},dailyFishLimit:{value:1}}});
  assert.equal(JSON.stringify(r.cf.limitRanges),JSON.stringify({dailyFishLimit:{min:1,max:2},dailyKillLimit:{min:15,max:25}}));assert.equal(JSON.stringify(r.rf.limitRolls),JSON.stringify({dailyFishLimit:{value:1}}));
- const dsrc=read('defaults.js');   // 20.13 (ревизия 17.10, шаг 7): заводские умолчания и диапазон — в defaults.js
- const DEF=dsrc.match(/const DAILY_RANGE = \{ min: (\d+), max: (\d+) \}, DAILY_KILL_DEF = DAILY_RANGE\.min, DAILY_FISH_DEF = DAILY_RANGE\.min;/);assert.deepEqual([+DEF[1],+DEF[2]],[8434,9119]);assert.ok(/limitRanges: DAILY_RANGES_DEF\(\)/.test(dsrc));
+ for(const own of [0,6000])assert.equal(run({dailyKillLimit:own,dailyFishLimit:500}).cf.dailyKillLimit,own,'своё общее число сохраняется даже без прежнего флага');
+ const dsrc=read('defaults.js');
+ assert.equal(D.DAILY_KILL_DEF,8000);assert.deepEqual(D.DAILY_RANGE,{min:1511,max:1564});assert.deepEqual(D.DAILY_RANGES_DEF(),{dailyFishLimit:RANGE});assert.ok(/limitRanges: DAILY_RANGES_DEF\(\)/.test(dsrc));
  assert.ok(/dailyFishLimit: DAILY_FISH_DEF, dailyKillLimit: DAILY_KILL_DEF,/.test(dsrc));assert.ok(!/dailyAutoKillLimit: 0/.test(dsrc+src));
 });
 test('меню: один общий лимит мобов, остаток в «Лимитах» и в обзоре задач',()=>{
