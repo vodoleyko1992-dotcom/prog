@@ -164,7 +164,7 @@
       quests: ['storyTurnIn','campAuto'], dailies: ['dailyAuto'], clan: ['clanTasks'], // searchQuest — приоритет местных ★ мобов, а не разрешение вести кампанию.
       pvp: ['enemyHunt','pvpOnSight'], petbuff: ['petFullAuto'], resources: ['subHelpMain','mmFarmBest','mmFarmGuide'],
     };
-    const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','sealAuto','autoLearn'];
+    const support = ['autoMagister','weaponScanAuto','weaponClassEquip','weaponAuto','shopAuto','townBuff','autoLearn'];
     const view = new Proxy(raw, { get(target, key) {
       const active = selectedTask(target, runtime()), allowed = k => taskAllowed(target, k);
       const primary = {enchantMode:'enchant',epicMode:'epic',rbHuntMode:'raid',rbMode:'raid',fishMode:'fish',catMode:'cat',zoneAuto:'auto',campaign:'quests'};
@@ -205,6 +205,7 @@
     // 20.12 (ревизия 17.10, core-a/M2): разовые кнопки меню («🛒 Закупить сейчас», «Пересчитать в сумке», «Обновить список баффов FA»,
     // «Проверить оружие», чтение баз/телепорта) — явная команда игрока; раньше при выбранной рыбалке/«только задачах» их молча стирали.
     const job = rt[key];
+    if (key === 'sealEx') return !!job && (job.auto !== true || c.sealAuto === true);
     if (MANUAL_JOBS.includes(key) && job && typeof job === 'object' && (job.urgent === true || job.manual === true)) return true;
     const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
     // Ожидающий тур сохраняет место возврата после выбранной рыбалки; боевые маршруты не переносятся.

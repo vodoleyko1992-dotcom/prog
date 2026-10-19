@@ -2945,9 +2945,11 @@ async function loopTaskList() {
     // Снимаем только завершённую выбором сессию; покупки, статистика и квитанции остаются.
     // В pending нет rbSess-снимка: повтор после ошибки записи не перекрывает новый Start.
     if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.retireRaidSession = { start: rt.rbSess.start ?? null };
-    for (const key of ['tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
+    for (const key of ['sealEx','tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) blocked[key] = null;
     if (Object.keys(blocked).length) { if(blocked.tbuff===null)blocked.tbInterrupted={t:Date.now(),jobT:rt.tbuff.t}; await setRt(blocked); rec('S','авторежим', 'отменены несовместимые маршруты: ' + Object.keys(blocked).join(', ') + '; квитанции оплат сохранены'); return true; }
+    await sealQueue();
+    if (!on || !tabOwner) return true;
     if (autonomyMode() === 'tasks' && !L2EngineCore.taskList(cfg).some(k => ['mammon','quests','dailies','clan','pvp','petbuff','resources'].includes(k))) {
       if (L2V7Modules.actions && await L2V7Modules.actions.dispatch()) { await sleep(200); return true; }
       if (isBattle()) await battle();
@@ -3058,6 +3060,19 @@ async function loopMenuJobs() {
     await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
   }
 }
+// 20.24 (19.10: «АА не обменивает»): явный обмен — такой же маршрут диспетчера,
+// как сумка/снабжение. Автообмен сохраняет очередь до перехода, включая «Только задачи».
+function sealAvailable() {
+  return !isBattle() && !(isFishing() && fishState()) && !tvtSoon() && !/tvt/i.test(location.pathname)
+    && autonomyMode() !== 'enchant' && (rt.sealEx?.auto !== true && !!rt.sealEx || !rt.epic?.step && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick'));
+}
+async function sealQueue() {
+  if (!on || !tabOwner || !sealAvailable()) return false;
+  const sd = sealDue(); if (!sd) return false;
+  if (rt.sealEx) return true;
+  const saved = await setRt({ sealEx: { t: Date.now(), auto: true } });
+  return saved?.ok === true && await rtCommit();
+}
 // Сторож баффов, обслуживание рыбы (разделка/обмен/заточка удочки), камни печати.
 async function loopTownJobs() {
   if (loopStale()) return true;
@@ -3073,12 +3088,7 @@ async function loopTownJobs() {
     else if (svc === 'rod') { if (isChar()) await rodEnchant(); else { await rtCommit(); if (!on || !tabOwner || !rt.fishSvc || (rt.fishService || 'cut') !== svc) return true; (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/char.html')); await sleep(4000); } }
     await sleep(200); return true;
   }
-  // 9.0: камни печати → Ancient Adena (кнопка «Обменять сейчас» или автообмен) — вне боя, не посреди вываживания рыбы, не в TvT и не посреди
-  // захода на эпика/РБ (автообмен ждёт выбора следующего РБ)
-  if (!isBattle() && !(isFishing() && fishState()) && !tvtSoon() && !/tvt/i.test(location.pathname)) {
-    const sd = sealDue();
-    if (sd && (sd === 'по кнопке' || (!rt.epic?.step && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick')))) { await sealStep(); await sleep(200); return true; }
-  }
+  if (await sealQueue()) { await L2V7Modules.actions.dispatch(); await sleep(200); return true; }
 }
 // Фоновые опросы и сервисы: Маммон, квесты сабкласса/Noblesse, магазин TvT, дейлики/клан, Warlock (баффер кота), эпики.
 async function loopSideJobs() {
@@ -4613,7 +4623,7 @@ addEventListener('message', e => {
     if (tabOwner) try { L2V7Modules.tvtshop.shilNote(); } catch (er) {}   // 10.0: Shil Coins в сумке → rt.tsShil
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
     const sg = [6360, 6361, 6362, 5575].map(id => m[id] || 0), ss = rt.sealSeen;
-    if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && Date.now() - (ss?.t || 0) > 60000) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
+    if (tabOwner && (!ss || ss.q?.join() !== sg.join()) && (path === '/game/ancient-trader/exchange' || Date.now() - (ss?.t || 0) > 60000)) setRt({ sealSeen: { q: sg, t: Date.now() } }); } }
   // 10.0.2 (обновление игры 12.10 «Life Stone»): надетое оружие и его аугментация — для меню, боя и «не снимать оружие с ЛС»
   if (d.aug && tabOwner) try { augNote(d.aug, path); } catch (e) { console.warn(TAG, 'ЛС', e); }
   // 10.0.7 (ценность баффов): цифры героя из /character (hook.js hero) → rt.heroStats + снимки M.Atk под наборами баффов (rt.matkObs)
@@ -5054,6 +5064,7 @@ L2V7Modules.actions = L2V7Factories.actions({
  get runCombat(){return battle},get victory(){return victory},get freeWork(){return paymentFreeStep},
  get reconcile(){return async P=>{if(P.kind==='enchant'){await enchantAccounting();return;}const m=P.kind==='summon-buff'?'warlock':P.kind==='shop'?'economy':/buff$/.test(P.kind)?'buffs':P.kind==='raid-teleport'?'raid':P.kind==='cat-teleport'?'dungeons':P.kind==='fishing'?'fishing':P.kind==='tvt-shop'?'tvtshop':P.kind==='story-teleport'?'story':/^mammon(?:-|$)/.test(P.kind)?'mammon':null;if(m&&L2V7Modules[m]?.paymentReconcile)await L2V7Modules[m].paymentReconcile();if(L2V7Modules.payments?.pending?.())setStatus('Оплата не подтверждена: сверяю результат, повторно не плачу');}},
  get jobs(){return ()=>[
+  ...(sealAvailable()?[{key:'sealEx',run:sealStep}]:[]),
   {key:'tbuff',run:townBuffStep},{key:'petBufferTrip',run:warlockTripStep},{key:'shop',run:shopStep},
   {key:'magister',run:async()=>{await magisterDisable();if(rt.magister)await magisterStep();}},{key:'invScan',run:invScanStep},{key:'mmJob',run:()=>L2V7Modules.mammon.mmStep()},
   {key:'storyJob',run:()=>L2V7Modules.story.storyStep()},{key:'tsJob',run:()=>L2V7Modules.tvtshop.shopStep()},
