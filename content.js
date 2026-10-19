@@ -5829,7 +5829,7 @@ L2V7Modules.lifestone = L2V7Factories.lifestone({
 });
 async function lifestoneCommand(m) {
   if (lifestoneCommandBusy) return {ok:false,reason:'Предыдущая команда ЛС выполняется'};
-  if (!['prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return {ok:false,reason:'Неизвестная команда ЛС'};
+  if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return {ok:false,reason:'Неизвестная команда ЛС'};
   lifestoneCommandBusy=true;let manualEpoch=null;
   try {
     const saved=await chrome.storage.local.get(['rt','cfg','on']);

@@ -3093,20 +3093,29 @@ for(const [kind,label] of Object.entries(LS_GROUPS)){
 }
 let lsEditing=false,lsActionBusy=false,lsRenderedChar=null;
 async function lsRefresh(){
-  if(lsEditing||['lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
+  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
   const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
+  const weapons=rt.lsWeapons?.char===rt.char?rt.lsWeapons.items||[]:[],selected=c.weaponKey||'';
+  $('lsWeapon').replaceChildren();
+  const empty=document.createElement('option');empty.value='';empty.textContent='Выберите оружие';$('lsWeapon').append(empty);
+  for(const w of weapons){const o=document.createElement('option');o.value=w.key;o.textContent=`${w.name} +${w.enchant} · ${w.grade} · ${w.equipped?'надето':'рюкзак'}${w.ambiguous?' · одинаковые экземпляры':''}`;o.disabled=w.ambiguous;$('lsWeapon').append(o);}
+  if(selected&&!weapons.some(w=>w.key===selected)){const o=document.createElement('option');o.value=selected;o.textContent='Выбранная вещь не в списке — обновите оружие';$('lsWeapon').append(o);}
+  $('lsWeapon').value=selected;
+  const chosen=weapons.find(w=>w.key===selected);
+  $('lsWeaponHint').textContent=!weapons.length?'Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.':chosen?.ambiguous?'Одинаковые экземпляры нельзя различить — оставьте один и обновите список.':chosen&&!chosen.equipped?'Выбрана вещь из рюкзака. Сначала наденьте её в игре: запуск в другое оружие заблокирован.':chosen?'Серия привязана к выбранной вещи. Смена оружия остановит вставку.':'Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.';
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
   lsRenderedChar=rt.char;
   const labels={paused:'Пауза',running:'Работает',done:'Завершено',closed:'Закрыто'};
-  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
+  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nОружие: ${s.weaponName||'#'+s.itemId}\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
   $('lsAcknowledge').hidden=!s?.pending;
 }
 async function lsSave(){
   lsEditing=true;
-  try{const {rt={}}=await chrome.storage.local.get('rt');if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const autoLs={targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
+  try{const {rt={}}=await chrome.storage.local.get('rt');if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const autoLs={weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
   finally{lsEditing=false;}
 }
+$('lsWeapon').onchange=()=>lsSave().then(()=>lsRefresh()).catch(e=>toast(String(e.message||e)));
 $('lsTargets').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 $('lsMaxAttempts').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 async function lsCommand(action,expectedChar){
@@ -3120,6 +3129,7 @@ async function lsCommand(action,expectedChar){
 async function lsAction(action){
   if(lsActionBusy)return;lsActionBusy=true;let generation=controlGeneration;const who=lsRenderedChar;
   try{
+    if(action==='prepare'&&!$('lsWeapon').value)throw Error('Обновите список и выберите оружие для ЛС');
     if(action==='prepare')await lsSave();
     if(action==='prepare')await lsCommand('prepare',who);
     if(['prepare','resume'].includes(action)){
@@ -3133,6 +3143,6 @@ async function lsAction(action){
   }catch(e){toast('ЛС: '+String(e.message||e),'var(--bad)');}
   finally{lsActionBusy=false;await lsRefresh();}
 }
-for(const [id,action] of Object.entries({lsStart:'prepare',lsResume:'resume',lsPause:'pause',lsReconcile:'reconcile',lsClose:'close',lsAcknowledge:'acknowledge'}))$(id).onclick=()=>lsAction(action);
+for(const [id,action] of Object.entries({lsScanWeapons:'scan',lsStart:'prepare',lsResume:'resume',lsPause:'pause',lsReconcile:'reconcile',lsClose:'close',lsAcknowledge:'acknowledge'}))$(id).onclick=()=>lsAction(action);
 panelRefresher($('lsRun'),lsRefresh,500);
 lsRefresh().catch(()=>{});

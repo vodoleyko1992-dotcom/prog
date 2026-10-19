@@ -11,10 +11,31 @@
   const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
   const fingerprint=w=>JSON.stringify(canonical(typeof w==='number'?{itemId:w,enchant:0}:w));
   const base=w=>{const x=typeof w==='number'?{itemId:w,enchant:0}:{...w};delete x.augmentation;return fingerprint(x);};
+  // Выбор сохраняет экземпляр при переносе рюкзак ↔ слот, но не зависит от меняющегося ЛС.
+  const weaponKey=w=>{const x=typeof w==='number'?{itemId:w,enchant:0}:{...w};delete x.augmentation;delete x.qty;x.enchant=+x.enchant||0;return fingerprint(x);};
+  function weaponRows(s,h){
+   const rows=[],add=(w,equipped)=>{
+    const id=typeof w==='number'?w:+w?.itemId,grade=String(h?.itemGradeHints?.[id]||'').toUpperCase();
+    if(!id||!A.LIFE_STONE[grade]||!equipped&&h?.itemSlotHints?.[id]!=='rhand')return;
+    const n=typeof w==='number'?1:w.qty??1;if(!Number.isSafeInteger(n)||n<1)return;
+    rows.push({key:weaponKey(w),itemId:id,grade,enchant:+w?.enchant||0,equipped,ambiguous:n!==1,
+     name:h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id});
+   };
+   add(s.inventory.eq.l1,true);for(const w of s.inventory.stacks)add(w,false);
+   for(const r of rows)if(rows.filter(x=>x.key===r.key).length>1)r.ambiguous=true;
+   return rows;
+  }
+  async function scanWeapons(){
+   const who=char(),context=stamp(),[s,h]=await Promise.all([snapshot(),get('/character/catalog-hints')]);
+   if(!s||!h?.itemGradeHints||!h?.itemSlotHints)throw Error('Не удалось прочитать оружие и каталог; прежний список сохранён');
+   if(char()!==who||stamp()!==context||!own({char:who}))throw Error('Герой или управление изменились — обновите оружие');
+   const r=await env.setRt({lsWeapons:{char:who,t:now(),items:weaponRows(s,h)}});
+   if(r?.ok!==true)throw Error('Не удалось сохранить список оружия');return true;
+  }
   const known=id=>typeof id==='string'&&Object.hasOwn(A.OUT,id);
   function config(){const c=env.cfg.autoLs||{},targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[];
-   return {targets,maxAttempts:c.maxAttempts,delayMs:1500,valid:targets.length>0&&targets.every(known)&&Number.isSafeInteger(c.maxAttempts)&&c.maxAttempts>=1&&c.maxAttempts<=10000};}
-  const sig=c=>JSON.stringify([c.targets,c.maxAttempts]);
+   return {weaponKey:typeof c.weaponKey==='string'?c.weaponKey:'',targets,maxAttempts:c.maxAttempts,delayMs:1500,valid:targets.length>0&&targets.every(known)&&Number.isSafeInteger(c.maxAttempts)&&c.maxAttempts>=1&&c.maxAttempts<=10000};}
+  const sig=c=>JSON.stringify([c.targets,c.maxAttempts,c.weaponKey]);
   const stamp=()=>env.context();
   const allowed=s=>own(s)&&live()&&trusted===s.id&&s.status==='running'&&s.context===stamp()&&s.configSig===sig(config());
   async function save(s,eq){
@@ -34,19 +55,28 @@
    const old=current(),c=config(),who=char();
    if(old?.pending)throw Error('Сначала сверьте неизвестную попытку');
    if(!c.valid)throw Error('Выберите эффекты и лимит от 1 до 10 000 попыток');
+   if(Object.hasOwn(env.cfg.autoLs||{},'weaponKey')&&!c.weaponKey)throw Error('Выберите оружие для ЛС');
    if(!env.canPrepare())throw Error('Откройте аугментацию, завершите бой и служебные задачи');
    const [s,h]=await Promise.all([snapshot(),get('/character/catalog-hints')]);
    if(!s||char()!==who||current()!==old||!env.canPrepare()||sig(config())!==sig(c))throw Error('Состояние героя изменилось или не прочитано');
    const w=s.inventory.eq.l1,id=typeof w==='number'?w:w?.itemId,grade=String(h?.itemGradeHints?.[id]||'').toUpperCase();
    if(!A.LIFE_STONE[grade])throw Error('Нужно надеть оружие C/B/A/S грейда');
+   let chosen=null;
+   if(c.weaponKey){
+    const rows=weaponRows(s,h);chosen=rows.find(x=>x.key===c.weaponKey);
+    if(!chosen)throw Error('Выбранное оружие не найдено — обновите список и выберите заново');
+    if(chosen.ambiguous)throw Error('Несколько одинаковых экземпляров — выбранную вещь нельзя определить точно');
+    if(!chosen.equipped||weaponKey(w)!==c.weaponKey)throw Error('Сначала наденьте выбранное оружие: '+chosen.name+' +'+chosen.enchant+'. ЛС в другую вещь не вставляется');
+   }
    const outcome=w?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект — обновите каталог');
    trusted=null;permit=null;
    const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:'Серия подготовлена; нажмите «Продолжить»',
-    targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0};
+    weaponKey:c.weaponKey,weaponName:chosen?.name||h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id,targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0};
    if(!await save(row,s.inventory.eq))throw Error('Не удалось сохранить серию; расход не выполнялся');return true;
   }
   async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
    try{
+    if(action==='scan')return await scanWeapons();
     if(action==='prepare')return await prepare();
     const s=current();if(!own(s))throw Error('Нет серии этого персонажа');
     if(action==='pause')return await pause('Пауза игрока');
