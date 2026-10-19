@@ -1,10 +1,10 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 19.10.2026, 20:33 UTC+10 — Codex — PR в подготовке: быстрая сборка Chrome 20.24
+## 19.10.2026, 20:33 UTC+10 — Codex — [PR #283](https://github.com/vodoleyko1992-dotcom/prog/pull/283): быстрая сборка Chrome 20.24
 
 - По прямому «сборка хром быстро» собран только Chrome20.24:20.23 + PR#282 (анализ рюкзака в Маммоне по кнопке приOFF и автоматически при старте/смене цели/письме/раз5мин). Версия/пятьтестов/CHANGELOG/CLAUDE/README-CHROME/HANDOFF обновлены. FirefoxZIP20.23 сохранён; новыйFirefox не запрошен.
 - ZIP из чистых64runtime-файлов; CRC, manifest/HTMLrefs, отсутствиеauth/passwвпрофиле, сверка64/64файлов с исходниками и независимый повтор аудита PASS. SHA8211c55085f93e189dd834f00241c5a705df88ae0594a80ae1d79258e75a6ef5; размер1397295байт. Архив вChromium:20.24/205ключейcfg/0ошибок. Actual-MV3 bagbrowser израспакованногоZIP: manualOFF/auto/mail/5мин/goal/error/360px PASS;0POST/0pageerrors, всеHTTPSлокальные. Синтаксис54JS/envcheck31/diff-check PASS; полныйNode runner460PASS/0FAIL.
-- Полный историческийsmokes.sh/настоящийFirefox/игра по запросу быстрогоChrome не запускались. ZIPиSHAпубликуютсявbuilds и релизеv20.24. Следующийшаг — закончитьпроверки/публикацию, обновитьтужеChromeпапку и получитьконтрольныйжурнал.
+- Полный историческийsmokes.sh/настоящийFirefox/игра по запросу быстрогоChrome не запускались. ZIPиSHAвbuilds; [релиз и инструкции](https://github.com/vodoleyko1992-dotcom/prog/releases/tag/v20.24). Следующийшаг — обновитьтужеChromeпапку и получитьконтрольныйжурнал.
 
 ## 19.10.2026, 20:24 UTC+10 — Codex — [PR #282](https://github.com/vodoleyko1992-dotcom/prog/pull/282): анализ рюкзака в Маммоне
 
