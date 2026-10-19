@@ -1,0 +1,3 @@
+PASS actual missed-start after 3 server days + daily503: old exhausted quota/check seeded; no cast, bot remains ON {"oldDay":"2026-10-17","currentDay":"2026-10-20"}
+PASS actual reload during daily503: no extra action and automatic retry
+PASS actual API recovery after missed days without Start: exactly1 confirmed cast; new daily stamp/count persisted {"dailyGets":3,"timeGets":3,"accepted":1,"bait":99,"oldDay":"2026-10-17","newDay":"2026-10-20","dailyFish":0,"casts":1,"dailyStart":7}

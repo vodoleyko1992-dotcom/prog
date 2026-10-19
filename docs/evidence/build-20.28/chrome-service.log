@@ -1,0 +1,3 @@
+PASS actual popup при OFF + autoTasks=[] → dispatcher → Ancient Trader → три стека → +140 AA → OFF
+PASS injected daily API503 count=4
+PASS auto tasks-only → сохранённая очередь → +10 AA; только обмен, 0 покупок/боёв/телепортов, 0 ошибок
