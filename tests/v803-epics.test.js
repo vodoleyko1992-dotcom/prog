@@ -323,7 +323,8 @@ const { fs, path, vm, root, read, content, epicsSrc, raidSrc, EPICS, LV_RE, base
     assert.equal((read('base-profile.json').match(/passw|"auth"/gi) || []).length, 0);
     // survival: смерть на эпике считается за его появление; стоп — 2 × «смертей на эпика» (≤20) за час, вне эпика — 3 за 30 мин
     const surv = read('modules/survival.js');
-    assert.match(surv, /await env\.epicDbSet\(epicD\.k, \{ deathsLife:/); assert.match(surv, /epicCap = Math\.min\(20, 2 \* Math\.max\(1, \+env\.cfg\.epicMaxDeaths \|\| 5\)\)/);
+    // Счётчик появления и история смерти сохраняются вместе; поведение проверяет v2022-death-once.test.js.
+    assert.match(surv, /epicCap = Math\.min\(20, 2 \* Math\.max\(1, \+env\.cfg\.epicMaxDeaths \|\| 5\)\)/);
     assert.match(content, /L2V7Modules\.survival = L2V7Factories\.survival\(\{[^\n]* get epicDbSet\(\) \{ return epicDbSet; \}/);
     console.log('PASS T9: network routing, menu button, migrations, defaults, Frintezza 90, menu labels, base profile without password, survival');
   }
