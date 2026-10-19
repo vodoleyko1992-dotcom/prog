@@ -266,7 +266,7 @@ async function liveStatusInto(rt) {
 async function load() {
   const { cfg = {}, rt = {}, on = false, paused = null, reccount = 0, snapcount = 0, wdog = [], hbBg = null, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'paused', 'reccount', 'snapcount', 'wdog', 'hbBg', 'lock']);
   await liveStatusInto(rt);   // 20.13 (ревизия 17.10, шаг 7, core-a/L1): частый статус — из live@Ник
-  const d = { ...DEF, ...cfg };
+  const d = globalThis.L2Defaults?.withoutAutoEnchant ? L2Defaults.withoutAutoEnchant({ ...DEF, ...cfg }) : { ...DEF, ...cfg };
   if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
     // Черновик относится к герою, а не к DOM: после переключения профилей чужое значение не остаётся в поле.
     const unsaved = Object.assign({}, ...[...settingsFailed.values()].filter(f => f.char === (rt.char || '')).sort((a,b) => a.serial - b.serial).map(f => f.cfgPatch));
@@ -1664,6 +1664,7 @@ function restoreTabScroll() {
   if (sec && top > 0 && sec.scrollTop === 0) sec.scrollTop = top;
 }
 function showTab(t) {
+  if (t === 'enchant' && globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED) t = 'overview';
   const sub = TAB_GROUP[t] ? t : '';
   t = TAB_GROUP[t] || t;
   if (!document.querySelector('section#tab-' + t)) t = 'overview';
@@ -2038,6 +2039,7 @@ function renderWorkspace(rt, d, st) {
   const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
 }
 function selectedAutoTasks(d) {
+  if (globalThis.L2Defaults?.withoutAutoEnchant) d = L2Defaults.withoutAutoEnchant(d);
   if (Array.isArray(d.autoTasks)) return d.autoTasks.filter(k => Object.hasOwn(AUTO_TASK_LABELS, k));
   const flags = { tvt: d.tvtOn, enchant: d.enchantMode, epic: d.epicMode, raid: d.rbHuntMode, quests: d.campaign || d.storyTurnIn, fish: d.fishMode, cat: d.catMode, auto: d.zoneAuto, farm: !d.taskOnly && !d.zoneAuto && !d.enchantMode && !d.epicMode && !d.rbHuntMode && !d.fishMode && !d.catMode, mammon: d.mmOrders || d.mmUpgrade || d.mmMailClaim, dailies: d.dailyAuto, clan: d.clanTasks, pvp: d.enemyHunt, petbuff: d.petFullAuto, resources: !!(d.farmRes || d.recipeRes || d.mmGoalFarm) };
   return Object.keys(AUTO_TASK_LABELS).filter(k => flags[k]);
@@ -2207,6 +2209,7 @@ function rbTourRestart(rt) {
   return { rbTourView: null, ...(protective ? {} : { rbHuntIdle: 0, rbIdleMark: null, rbIdleN: 0 }) };
 }
 async function setMode(m, enabled) {
+  if (m === 'enchant' && globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED) return;
   const { cfg: selectedCfg = {} } = await chrome.storage.local.get('cfg');
   if (Array.isArray(selectedCfg.autoTasks)) {
     if (m === 'tasks') await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: { autoTasks: selectedCfg.autoTasks.filter(k => !AUTO_MAIN_TASKS.includes(k)) } });
@@ -2930,6 +2933,7 @@ function toast(msg, color) {
 function searchIndex() {
   const out = [];
   document.querySelectorAll('section').forEach(sec => {
+    if (sec.hasAttribute('data-disabled-auto-enchant')) return;
     const tab = sec.id.replace('tab-', ''), nb = document.querySelector(`nav button[data-tab="${tab}"]`), tabName = nb ? (nb.querySelector('.ic')?.textContent || '') + ' ' + nb.lastChild.textContent.trim() : tab;
     // 20.12 (ревизия 17.10): в «где» — ещё и подраздел (бывший раздел: «Автозаточка», «Маммон», «PvP»…), поиск по старому имени находит его
     const subOf = card => {
@@ -3012,6 +3016,7 @@ foldHints();
 
 // Настройки отдельного режима сохраняют только свой вложенный cfg; открытие раздела не запускает бота.
 async function enchantMenuCommand(action, context = {}) {
+  if (globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED) throw new Error('Автозаточка временно убрана');
   const { cfg = {}, rt = {}, on = false, lock = null } = await chrome.storage.local.get(['cfg', 'rt', 'on', 'lock']);
   if (['start', 'resume'].includes(action) && !(Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes('enchant') : cfg.enchantMode === true)) throw new Error('Сначала выберите режим «Автозаточка»');
   const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
@@ -3022,7 +3027,7 @@ async function enchantMenuCommand(action, context = {}) {
     new Promise((_, reject) => setTimeout(() => reject(new Error('Ответ пока не получен. Команда могла быть принята — проверьте состояние серии перед повтором.')), 20000))]);
   if (!answer?.ok) throw new Error(answer?.reason || 'Команда заточки не выполнена');
 }
-const enchantUI = L2EnchantUI.mount($('enchantPanel'), {
+const enchantUI = L2Defaults.AUTO_ENCHANT_DISABLED ? { refresh: async () => {} } : L2EnchantUI.mount($('enchantPanel'), {
   getState: async () => {
     const state = await chrome.storage.local.get(['cfg', 'rt', 'on']);
     const model = L2V7Factories.enchant({ cfg: state.cfg || {}, rt: state.rt || {} });

@@ -2,9 +2,11 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'popup.html'),'utf8'),js=fs.readFileSync(path.join(root,'popup.js'),'utf8');
 const section=id=>html.match(new RegExp('<section id="tab-'+id+'"[^>]*>([\\s\\S]*?)</section>'))?.[1]||'';
-test('Маммон, заточка, ЛС, PvP и сервис доступны напрямую, каждый контрол имеет одного владельца',()=>{
+test('Маммон, ЛС, PvP и сервис доступны напрямую; снятая автозаточка скрыта, контролы не дублируются',()=>{
  for(const [owner,ids]of Object.entries({mammon:['mmOrders','mmTpMax','mmGoalItem','mmGoalLvl','mmPlanBox','mmUpgrade','mmMailClaim'],enchant:['enchantModeToggle','enchantPanel'],lifestone:['lsCurrent','sealAuto','sealMin','sealNow','sealBox'],pvp:['tvtOn','tsGoalItem','pvpTargetsPanel','enemyHunt'],svc:['cfgExport','memSave','recClear']})){
-  assert.match(html,new RegExp('<button data-tab="'+owner+'"'));
+  // 20.25: по запросу игрока автозаточка временно убрана; старые ID сохранены для восстановления.
+  if(owner==='enchant') assert.match(html,/<button data-disabled-auto-enchant hidden data-tab="enchant"/);
+  else assert.match(html,new RegExp('<button data-tab="'+owner+'"'));
   for(const id of ids){assert.ok(section(owner).includes('id="'+id+'"'),owner+': '+id);assert.equal(html.split('id="'+id+'"').length-1,1,id+' не дублируется')}
  }
  assert.ok(!section('fish').includes('id="mmOrders"'));assert.ok(!section('panel').includes('id="enchantPanel"'));assert.ok(!section('svc').includes('id="tvtOn"'));
