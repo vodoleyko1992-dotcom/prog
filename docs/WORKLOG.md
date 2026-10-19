@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 20.10.2026, 08:46 UTC+10 — Codex — PR в подготовке: обе быстрые сборки 20.28
+## 20.10.2026, 08:46 UTC+10 — Codex — [PR #294](https://github.com/vodoleyko1992-dotcom/prog/pull/294): обе быстрые сборки 20.28
 
 - По запросу «Обе сборки быстрые» подготовлены Chrome и Firefox 128+: 20.27 + исправления аудита #293. Версия, пять проверок версии, README, CHANGELOG и CLAUDE обновлены. По 64 файла на ZIP, сборщик Firefox запускался в чистом staging. Контрольные суммы в `builds/SHA256SUMS-20.28.txt`.
 - 476 Node-файлов PASS / 0 FAIL, синтаксис/envcheck 31/31/diff-check PASS. Первый runner прочитал ещё не обновлённый индекс changelog и дал 475/1; после завершения документации отдельный тест и полный стабильный runner PASS, runtime не менялся. Независимый аудит архивов 28/28 PASS. Chromium из ZIP: версия 20.28, 206 ключей cfg, 0 ошибок; четыре actual-MV3 сценария (daily/settings/service/lifecycle) PASS с первого запуска, runtime до/после идентичен. Firefox lint: 0 ошибок, 45 прежних предупреждений. [Доказательства](evidence/build-20.28/).
