@@ -12,7 +12,8 @@ function fixture(){
  f.c.L2V7Modules={fightlab:{raidKillsFor:()=>structuredClone(report)}};
  f.report=x=>{report={spawn,t:now,win:false,lose:false,...x}};
  f.snapshot=(n,extra={})=>{const seq=n*3;f.report({stream:{seq,rev:10+n,start:'rev:10',deaths:Array.from({length:Math.min(n,4096)},(_,i)=>(n-Math.min(n,4096)+i+1)*3),fullN:n,fullSeq:seq,...extra}});f.c.killSnapNote({name:'Hero',k:100+n,rev:10+n});};
- f.note=begin=>f.c.noteRaidMobKills(spawn,begin);f.advance=ms=>{now+=ms;f.state.lock.t=now};
+ // 20.27: обе стороны IPC используют один clock fixture, независимо от реальной серверной даты.
+ f.clock=()=>now;f.note=begin=>f.c.noteRaidMobKills(spawn,begin);f.advance=ms=>{now+=ms;f.state.lock.t=now};
  f.snapshot(0);return f;
 }
 test('живой РБ: соседи сразу увеличивают оба счётчика, задача РБ и разовая серия не меняются',async()=>{
@@ -58,7 +59,7 @@ test('следующий респ того же РБ начинает новую
 });
 test('обычный моб/PvP не принимается как сосед РБ',async()=>{const f=fixture();assert.equal(await f.c.noteRaidMobKills('regular_spawn',true),false);assert.equal(f.state.rt.raidMobMarks,undefined)});
 test('уже учтённые соседи не попадают повторно в незакрытую квоту автофарма',async()=>{
- const f=fixture();f.state.cfg.autoKillLimit=99;f.state.rt.farmKillMark={counter:100,revision:10,floor:100};f.state.rt.farmQuota={auto:{run:1,limit:99,got:0,pending:{spawn:'old',counter:100,revision:10,floor:100,kick:1}}};f.refresh();await f.note(true);f.snapshot(3);await f.note();const r=f.bg.farmQuotaChange(f.state,{op:'win',task:'auto',limit:99,dailyLimit:1000,kick:1,run:1,spawn:'old',beforeRevision:10,revision:20,counter:104,seen:1},Date.now());assert.equal(r.row.got,1);assert.equal(r.dailyQuota.raid,3);assert.equal(r.dailyQuota.auto,1);
+ const f=fixture();f.state.cfg.autoKillLimit=99;f.state.rt.farmKillMark={counter:100,revision:10,floor:100};f.state.rt.farmQuota={auto:{run:1,limit:99,got:0,pending:{spawn:'old',counter:100,revision:10,floor:100,kick:1}}};f.refresh();await f.note(true);f.snapshot(3);await f.note();const r=f.bg.farmQuotaChange(f.state,{op:'win',task:'auto',limit:99,dailyLimit:1000,kick:1,run:1,spawn:'old',beforeRevision:10,revision:20,counter:104,seen:1},f.clock());assert.equal(r.row.got,1);assert.equal(r.dailyQuota.raid,3);assert.equal(r.dailyQuota.auto,1);
 });
 test('движок включает соседей РБ в общий дневной лимит автофарма и катакомб, тур не выключается',()=>{
  const c={};vm.runInNewContext(read('engine-core.js'),c);const rt={dailyQuota:{day:c.L2EngineCore.dailyDay(),auto:2,cat:1,raid:7}},cfg={autoTasks:['raid','auto'],dailyKillLimit:10};assert.equal(c.L2EngineCore.dailyCount(rt,'auto'),10);assert.equal(c.L2EngineCore.dailyBlocked(cfg,rt,'auto'),true);assert.equal(c.L2EngineCore.selectedTask(cfg,rt),'raid');
