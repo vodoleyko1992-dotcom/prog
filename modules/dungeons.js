@@ -392,27 +392,38 @@ function sealStones() {
 // пора ли менять: кнопка «Обменять сейчас» (rt.sealEx, 15 мин) или автообмен (cfg.sealAuto) — камни есть (≥ cfg.sealMin), не чаще раза в 20 мин,
 // и, если сервер уже ответил «только в городе» (rt.sealTown), — только когда герой в городе
 function sealDue() {
-  if (env.rt.sealEx && Date.now() - (env.rt.sealEx.t || 0) < 15 * 60000) return 'по кнопке';
+  if (env.rt.sealEx?.auto !== true && env.rt.sealEx && Date.now() - (env.rt.sealEx.t || 0) < 15 * 60000) return 'по кнопке';
   if (!env.cfg.sealAuto || Date.now() - (env.rt.sealT || 0) < 20 * 60000) return '';
   const n = sealStones(); if (n == null || n < Math.max(1, +env.cfg.sealMin || 1)) return '';
   if (env.rt.sealTown && env.heroAt?.()?.loc !== 'city') return '';
   return 'автообмен';
 }
-async function sealDone(why, back = true) {
+async function sealDone(why, back = true, active = () => env.on !== false) {
+  if (!active()) return;
   const S = env.rt.sealEx;
   await env.setRt({ sealEx: null, sealT: Date.now(), sealLast: { t: Date.now(), why: String(why).slice(0, 200) } });
+  if (!active()) return;
   env.rec('B', 'камни печати', why);
   if (S?.stopAfter) { env.setStatus(`Обмен камней: ${why} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); return; }
-  if (back && env.on) { await env.rtCommit?.(); location.href = env.cfg.catMode && env.rt.catCur ? env.CAT_URL : '/map.html'; await env.sleep(4000); }
+  if (back && env.on) { if (await env.rtCommit?.() === false || !active()) return; location.href = env.cfg.catMode && env.rt.catCur ? env.CAT_URL : '/map.html'; await env.sleep(4000); }
 }
 async function sealStep() {
-  if (!isSealPage()) { env.setStatus('Камни печати: иду к Ancient Trader'); await env.rtCommit?.(); location.href = '/ancient-trader.html'; await env.sleep(4000); return; }
+  const char = env.rt.char, lease = env.leaseEpoch, kick = env.rt.manualKickAt, jobT = env.rt.sealEx?.t;
+  // После завершения свой job уже снят, поэтому контекст и очередь проверяем отдельно.
+  const same = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.char === char && env.leaseEpoch === lease && env.rt.manualKickAt === kick;
+  const active = () => same() && env.canRun?.() !== false && env.rt.sealEx?.t === jobT && (env.rt.sealEx?.auto !== true || env.cfg.sealAuto === true);
+  const finish = why => active() && sealDone(why, true, same);
+  if (same() && env.rt.sealEx?.auto === true && !env.cfg.sealAuto) { await env.setRt({ sealEx: null }); return; }
+  if (!active()) return;
+  if (jobT && Date.now() - jobT >= 15 * 60000) return finish('очередь обмена устарела — поставьте обмен снова');
+  if (!isSealPage()) { env.setStatus('Камни печати: иду к Ancient Trader'); if (await env.rtCommit?.() === false || !active()) return; location.href = '/ancient-trader.html'; await env.sleep(4000); return; }
   const rows = () => [...document.querySelectorAll('.l2-ancient-trader-exchange[data-stone]')];
   // курс и «У тебе» подставляет игра после ответа offers — ждём, пока в строках появится число
   const ready = await env.waitX(() => rows().length && rows().every(r => /\d/.test(r.querySelector('.l2-ancient-trader-owned__value')?.textContent || '')) ? 1 : 0, 10000, 250);
+  if (!active()) return;
   if (!ready) {
     const n = (env.rt.sealErrN || 0) + 1; await env.setRt({ sealErrN: n >= 3 ? 0 : n });
-    if (n >= 3) return sealDone('страница Ancient Trader не загрузилась 3 раза — обмен отложен на 20 мин');
+    if (n >= 3) return finish('страница Ancient Trader не загрузилась 3 раза — обмен отложен на 20 мин');
     location.reload(); await env.sleep(4000); return;
   }
   const done = [], fail = [];
@@ -422,11 +433,13 @@ async function sealStep() {
     if (own < 1) continue;
     const inp = r.querySelector('.l2-ancient-trader-exchange__input'), btn = r.querySelector('.l2-ancient-trader-exchange__btn');
     if (!inp || !btn) { fail.push(`${nm}: нет поля/кнопки`); continue; }
-    await env.pause(); if (!env.on) return;
+    await env.pause(); if (!active()) return;
     inp.value = String(own); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
     await env.waitX(() => !btn.disabled ? 1 : 0, 2000, 100);
-    const t0 = Date.now(); env.fire(btn);
+    if (!active()) return;
+    const t0 = Date.now(); if (env.fire(btn) === false) return;
     const ans = await env.waitX(() => { const N = env.sealNet?.(); return N && N.t >= t0 ? N : null; }, 10000, 150);
+    if (!active()) return;
     const errEl = r.querySelector('.l2-ancient-trader-exchange__err'), errTxt = env.shown(errEl) ? (errEl.textContent || '').trim() : '';
     if (ans?.ok) { const rate = parseInt(r.getAttribute('data-aa-rate') || '', 10) || rate0; done.push(`${own} ${nm} → ${own * rate} AA`); await env.sleep(env.rnd ? env.rnd(400, 700) : 500); continue; }
     const msg = ans?.msg || errTxt || (ans ? `ответ ${ans.status}` : 'нет ответа');
@@ -434,9 +447,11 @@ async function sealStep() {
     // сервер просит быть в городе / у торговца — автообмен дальше только в городе
     if (/міст|город|city|town|ближч|подойд|підійд|npc/i.test(msg) && !env.rt.sealTown) await env.setRt({ sealTown: true });
   }
+  if (!active()) return;
   if (done.length && env.rt.sealTown && env.heroAt?.()?.loc !== 'city') await env.setRt({ sealTown: false });   // обмен прошёл вне города — ограничения нет
   await env.setRt({ sealErrN: 0 });
-  await sealDone(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
+  if (!active()) return;
+  await finish(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
  return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };

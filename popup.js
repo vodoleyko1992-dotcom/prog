@@ -205,7 +205,8 @@ async function activateMode(rtPatch, cfgPatch) {
   }
   // 15.10: любой явный выбор другого режима снимает заточку; разовые службы без смены режима сохраняют её.
   if (modeChanged) cfgPatch = { enchantMode: false, ...cfgPatch };
-  await menuPatch({ ...rtPatch, ...(modeChanged ? { dailyFish: null, dailyRb: null } : {}), manualKickAt: Date.now() }, { cfgPatch, on: true });
+  const kick = Date.now();
+  await menuPatch({ ...rtPatch, ...(rtPatch.sealEx?.manual ? { sealEx: { ...rtPatch.sealEx, t: kick } } : {}), ...(modeChanged ? { dailyFish: null, dailyRb: null } : {}), manualKickAt: kick }, { cfgPatch, on: true });
   return showWakeResult();
 }
 
@@ -744,7 +745,7 @@ function renderSeal(rt, d) {
 }
 $('sealNow').onclick = async () => {
   const { on = false } = await chrome.storage.local.get('on');
-  await activateMode({ sealEx: { t: Date.now(), stopAfter: !on }, sealT: 0 }, {});
+  await activateMode({ sealEx: { t: Date.now(), manual: true, stopAfter: !on }, sealT: 0 }, {});
   $('sealNow').textContent = 'Обмен поставлен в очередь';
 };
 // 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
