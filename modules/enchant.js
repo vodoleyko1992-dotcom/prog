@@ -108,6 +108,7 @@ async function archive(s) {
 function newItem(q,row) {return {key:q.key,itemId:q.itemId,name:row.name,targetInstanceId:row.targetInstanceId,slot:row.slot,category:row.category,grade:row.grade,
   level:row.level,start:row.level,peak:row.level,fingerprint:row.fingerprint,attempts:0,successes:0,failures:0,failStreak:0,scrolls:0,adena:0,unknown:0,reservedScrolls:0,done:row.level>=q.targetLevel};}
 async function command(cmd,args={}) {
+  if (root.L2Defaults?.AUTO_ENCHANT_DISABLED === true && ['start','resume','refresh'].includes(cmd)) return false;
   if(cmd==='refresh')return readItems();
   if(cmd==='pause')return pause('Пауза по команде игрока');
   if(cmd==='reset') {const s=current(),char=charKey();if(s?.pending)return pause('Результат попытки неизвестен: сначала сверить состояние');await archive(s);
@@ -211,6 +212,7 @@ function domReady(P) {
     (P.item.category!=='weapon'||mode?.value===(P.q.weaponMode||'balanced'))&&btn&&!btn.disabled;
 }
 async function step() {
+  if (root.L2Defaults?.AUTO_ENCHANT_DISABLED === true) { const p=current()?.pending; return p && now()-(p.lastCheck||0)>=15000 ? reconcile() : false; }
   if(busy)return false;busy=true;
   try {
     let s=current();if(!s)return false;

@@ -18,8 +18,8 @@ for(const key of ['quests','farm','auto','raid','epic','fish','cat','enchant','t
 assert(!ids.includes('shopBait'),'Removed GM bait control must not return');
 assert(html.includes('Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».'));
 const tabs=[...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(x=>x[1]);
-assert.equal(tabs.length,12); // 19.10: лимиты и снабжение отдельно. // 20.19: Маммон, заточка, ЛС и сервис отдельно. // 20.12 (ревизия 17.10): 12 разделов сведены в 6, прежние — подразделы с метками #tab-<старый>.
-assert(html.includes('<section id="tab-enchant">') && !/enchant: 'panel'/.test(fs.readFileSync(path.join(root,'popup.js'),'utf8')), '20.19: Автозаточка — отдельный раздел по прежнему имени');
+assert.equal(tabs.length,11); // 20.25: автозаточка временно убрана. // 19.10: лимиты и снабжение отдельно. // 20.19: Маммон, заточка, ЛС и сервис отдельно. // 20.12 (ревизия 17.10): 12 разделов сведены в 6, прежние — подразделы с метками #tab-<старый>.
+assert(html.includes('<section id="tab-enchant" data-disabled-auto-enchant hidden>') && !/enchant: 'panel'/.test(fs.readFileSync(path.join(root,'popup.js'),'utf8')), '20.25: Автозаточка временно скрыта, прежний ID сохранён');
 for(const tab of tabs) assert(ids.includes('tab-'+tab),`Missing section ${tab}`);
 assert.equal((html.match(/class="epicChk"/g)||[]).length,8);
 assert(html.includes('id="tab-epic"')&&html.includes('id="tab-dungeon"'));   // 7.1.31: подразделы «РБ и эпики» / «Охота»

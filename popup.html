@@ -3,6 +3,7 @@
 <!-- 8.0.7 (Firefox для Android): меню открывается отдельной вкладкой — без этой строки оно рисовалось мелко на «экране 980 px» -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+[data-disabled-auto-enchant] { display: none !important; }
   /* ===== L2wap Bot v5 — дизайн-система ===== */
   :root{
     --bg:#14100d;--panel:#1b1612;--card:#231d17;--card2:#2b241c;--inset:#120e0b;
@@ -200,7 +201,7 @@
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
   <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
   <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
-  <button data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+5)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
+  <button data-disabled-auto-enchant hidden data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+5)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
   <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+6)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
   <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+7)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
   <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+8)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
@@ -222,7 +223,7 @@
     <div id="quickModeGrid" hidden>
     <fieldset id="autoTaskSelection"><legend>Разрешённые задачи</legend>
       <div class="task-group-title">Основная работа — одна за раз, по приоритету</div>
-        <label><input type="checkbox" data-auto-task="enchant">Автозаточка</label>
+        <label data-disabled-auto-enchant hidden><input type="checkbox" disabled data-auto-task="enchant">Автозаточка</label>
         <label><input type="checkbox" data-auto-task="epic">Эпики</label>
         <label><input type="checkbox" data-auto-task="raid">Тур по РБ</label>
         <label><input type="checkbox" data-auto-task="quests">Квесты и кампания</label>
@@ -641,7 +642,7 @@
   <label>Реакция мин / макс, мс <span><input id="reactMin" type="number"> <input id="reactMax" type="number"></span></label>
 </section>
 
-<section id="tab-enchant">
+<section id="tab-enchant" data-disabled-auto-enchant hidden>
   <h4>✨ Режим и серия заточки</h4>
   <div class="row"><button id="enchantModeToggle" type="button" aria-pressed="false">✨ Включить режим автозаточки</button></div>
   <div class="hint">Выберите вещи и лимиты, разрешите попытки и добавьте автозаточку в список задач. После запуска бота нажмите «Начать серию». Когда серия завершится, бот перейдёт к следующей выбранной задаче. Очередь и результаты сохраняются.</div>

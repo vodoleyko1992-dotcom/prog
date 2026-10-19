@@ -9,10 +9,12 @@ const html = read('popup.html'), js = (read('defaults.js') + '\n' + read('popup.
 const css = read('ui-game.css') + read('ui-v7.css');
 
 // 1. шесть разделов, шесть кнопок навигации, порядок совпадает
-const SECS = ['overview', 'hunt', 'rb', 'panel', 'enchant', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply'];
+const SECS = ['overview', 'hunt', 'rb', 'panel', 'fish', 'mammon', 'lifestone', 'pvp', 'svc', 'limits', 'supply'];
 const tabs = [...html.matchAll(/<button data-tab="([a-z]+)"/g)].map(m => m[1]);
 const secs = [...html.matchAll(/<section id="tab-([a-z]+)"/g)].map(m => m[1]);
-assert.deepEqual(tabs, SECS); assert.deepEqual(secs, SECS);
+// 20.25: снятая автозаточка остаётся скрытым контейнером, доступных вкладок на одну меньше.
+assert.deepEqual(tabs, SECS); assert.deepEqual(secs.filter(t => t !== 'enchant'), SECS);
+assert.match(html, /<section id="tab-enchant" data-disabled-auto-enchant hidden>/);
 for (const t of SECS) assert.match(html, new RegExp(`<button data-tab="${t}" data-short="[^"]+"`), 'короткая подпись для узкой панели ' + t);
 
 // 2. старые имена разделов → новый раздел, метка на месте и лежит внутри него
@@ -29,8 +31,8 @@ for (const [old, sec] of Object.entries(OLD)) {
 }
 // TASK_TABS и data-goto по-прежнему ведут только на существующие имена
 const tt = js.match(/const TASK_TABS = \{([^}]*)\}/)[1];
-for (const m of tt.matchAll(/:'(\w+)'/g)) assert.ok(SECS.includes(m[1]) || OLD[m[1]], 'TASK_TABS ' + m[1]);
-for (const m of html.matchAll(/data-goto="(\w+)"/g)) assert.ok(SECS.includes(m[1]) || OLD[m[1]], 'data-goto ' + m[1]);
+for (const m of tt.matchAll(/:'(\w+)'/g)) assert.ok(secs.includes(m[1]) || OLD[m[1]], 'TASK_TABS ' + m[1]);
+for (const m of html.matchAll(/data-goto="(\w+)"/g)) assert.ok(secs.includes(m[1]) || OLD[m[1]], 'data-goto ' + m[1]);
 
 // 3. «Дополнительно» в каждом разделе, сворачивается и помнится (uiState.adv), поиск и ссылки его раскрывают
 for (const s of SECS.filter(s => !['overview', 'enchant', 'lifestone', 'supply'].includes(s))) { const [a, b] = secRange(s); assert.match(html.slice(a, b), /<div class="adv-start" data-adv="[a-z]+">⚙ /, 'adv в ' + s); }
