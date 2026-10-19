@@ -5,7 +5,7 @@
 // строка «Задачи бота» в шапке открывает список задач в «Обзоре»; 800×600 — область настроек выше 170 px, 360 px — без горизонтальной прокрутки.
 const assert = require('node:assert/strict');
 const { harness, until, delay } = require('./v1014-core-lifecycle-browser.cjs');
-const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
+const OLD = { limits: 'limits', autofarm: 'hunt', dungeon: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', analyze: 'panel', roles: 'panel',
   pet: 'panel', warlock: 'panel', fight: 'panel', supply: 'fish', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 (async () => {
   const h = await harness(); try {
@@ -14,7 +14,7 @@ const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'h
     await P.setViewportSize({ width: 800, height: 600 }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
     await P.evaluate(() => { try { localStorage.removeItem('ui5'); } catch (e) {} }); await P.reload(); await until(() => P.evaluate(() => !!document.querySelector('#start')?.onclick));
     // 1. шесть кнопок, по умолчанию все «Дополнительно» свёрнуты
-    assert.equal(await P.locator('#moduleNav button[data-tab]').count(), 10);
+    assert.equal(await P.locator('#moduleNav button[data-tab]').count(), 11);
     assert.equal(await P.locator('.adv').count(), 8); assert.equal(await P.locator('.adv.closed').count(), 8);
     // 2. старые имена → раздел и видимая метка (в т.ч. внутри «Дополнительно»: анализ боя, диагностика, добыча)
     for (const [old, sec] of Object.entries(OLD)) {
@@ -56,6 +56,6 @@ const OLD = { limits: 'overview', autofarm: 'hunt', dungeon: 'hunt', dailies: 'h
     }
     assert.equal(await P.locator('#moduleNav [data-tab="svc"]').isVisible(), true);
     assert.deepEqual(h.errors, []);
-    console.log('PASS v2012-nav-browser: 10 разделов, 19 старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
+    console.log('PASS v2012-nav-browser: 11 разделов, 19 старых ссылок → раздел и видимый подраздел, «Дополнительно» раскрывается ссылкой/поиском и помнится, «Задачи бота» открывает список, 800×600 раздел > 170 px, 360 px без прокрутки вбок');
   } finally { await h.ctx.close(); }
 })().catch(e => { console.error('FAIL v2012-nav-browser:', e); process.exitCode = 1; });

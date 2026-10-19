@@ -1530,9 +1530,9 @@ $('mmCraftForget')?.addEventListener('click', async () => { await menuPatch({ mm
 $('mmGoUp')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'up', t: Date.now() }, mmGoSay: null }); toast('⬆ Лечу к кузнецу улучшать вещь-цель'); });
 
 // 20.12 (ревизия 17.10, раздел 3 аудита): 12 разделов → 6 («Обзор», «Охота», «РБ и эпики», «Бой и класс», «Рыбалка и снабжение»,
-// «TvT/PvP и сервис»); 20.17: Маммон, заточка, ЛС и сервис выделены отдельно (10 разделов). Тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
+// «TvT/PvP и сервис»); 20.17: Маммон, заточка, ЛС и сервис выделены отдельно (10 разделов); 19.10 лимиты вынесены в 11-й раздел. Тонкая настройка — в свёрнутом блоке «Дополнительно» внизу раздела. Бывшие разделы и подразделы — метки
 // #tab-<старый> внутри новых: ссылки, кнопки «Подробнее ↗», поиск и сохранённая вкладка открывают нужный раздел и прокручивают к метке.
-const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb', limits: 'overview',
+const TAB_GROUP = { autofarm: 'hunt', dungeon: 'hunt', loc: 'hunt', dailies: 'hunt', epic: 'rb', rbtimer: 'rb',
   analyze: 'panel', roles: 'panel', pet: 'panel', warlock: 'panel', classes: 'panel', mage: 'panel', spoil: 'panel', fighter: 'panel', fight: 'panel',
   supply: 'fish', seals: 'lifestone', loot: 'fish', tvtshop: 'pvp', enemies: 'pvp', log: 'svc' };
 // 20.12 (ревизия 17.10, UI-7): встроенное меню — iframe, который грузится заново на каждом переходе страницы игры. Свёрнутый/раскрытый
@@ -1869,7 +1869,7 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if (st.failing || !st.heartbeatValid) return { state:'recovering', label:st.failing ? 'Восстановление' : st.booting ? 'Запуск' : 'Нет сигнала', text:st.failing ? 'Движок восстанавливает работу' : st.booting ? 'Жду подтверждения от движка' : 'Вкладка игры не подтвердила работу', hint:st.failing ? 'Последнее сообщение: ' + last : st.booting ? 'Выбранные задачи сохранены. Запуск подтверждается ответом вкладки.' : 'Откройте вкладку игры и проверьте сообщение под кнопками управления.', tab:'svc' };
   if ((rt.pveBlockUntil || 0) > now) return { state:'waiting', label:'Ограничение игры', text:'PvE-фарм временно заблокирован', hint:'До ' + new Date(rt.pveBlockUntil).toLocaleTimeString('ru', { timeZone:'Asia/Vladivostok', hour:'2-digit', minute:'2-digit' }) + ' (Владивосток). ' + last, tab:selected.includes('fish') ? 'fish' : 'svc' };
   if (!selected.length) return { state:'waiting', label:'Ожидание', text:'Задачи не выбраны', hint:'Выберите разрешённые задачи кнопкой «Изменить» в обзоре.', tab:'overview' };
-  if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в обзоре; дополнительные задачи остаются разрешены.', tab:'overview' };
+  if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в разделе «Лимиты»; дополнительные задачи остаются разрешены.', tab:'overview' };
   // 17.10: бой стоит дольше 6 с — причина ожидания навыков из журнала показана рядом с задачей (свежая, не старше 2 мин)
   const combatWait = rt.combatWait && now - (+rt.combatWait.t || 0) < 120000 && /^\/?battle|бой/i.test(String(rt.status || '')) ? ' · Бой ждёт: ' + String(rt.combatWait.text || '').slice(0, 160) : '';
   return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };

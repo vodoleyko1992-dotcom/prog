@@ -61,8 +61,8 @@ test('stale character, owner or Stop cannot credit fish',async()=>{
 });
 test('limits tab owns all quota controls once; defaults are the player daily ranges 8434–9119 for mobs and fish',()=>{
  const html=read('popup.html'),section=html.split('id="tab-limits"')[1].split('</section>')[0],base=JSON.parse(read('base-profile.json'));
- // 20.12: «Лимиты» — подраздел «Обзора»; старая ссылка limits открывает его через TAB_GROUP
- assert.match(html,/<div class="subsec-title" id="tab-limits">/);assert.match(read('popup.js'),/limits: 'overview'/);
+ // 19.10: «Лимиты» — отдельный раздел; прежние ссылки limits ведут прямо в него.
+ assert.match(html,/<section id="tab-limits">/);assert.doesNotMatch(read('popup.js'),/limits: 'overview'/);
  for(const id of ['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishTgtType','fishMaxCasts']){assert.ok(section.includes('id="'+id+'"'));assert.equal(html.split('id="'+id+'"').length,2);}
  for(const key of ['dailyFishLimit','dailyKillLimit']){assert.equal(base.cfg[key],8434);assert.deepEqual(base.cfg.limitRanges[key],{min:8434,max:9119});}assert.ok(!('dailyAutoKillLimit' in base.cfg)&&!('dailyCatKillLimit' in base.cfg));
 });

@@ -196,7 +196,7 @@
 <div class="app-shell">
 <div class="navbar">
 <nav id="moduleNav" aria-label="Разделы управления">
-  <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, дневные лимиты, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
+  <button data-tab="overview" data-short="Обзор" class="act" title="Что делает бот, выбранные задачи, сессия, логи (Alt+1)"><span class="ic">◈</span><span class="lb">Обзор</span></button>
   <button data-tab="hunt" data-short="Охота" title="Цепочка, чемпионы, окно уровней, автофарм, катакомбы, цель ресурса (Alt+2)"><span class="ic">◎</span><span class="lb">Охота</span></button>
   <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
   <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
@@ -206,6 +206,7 @@
   <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+8)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
   <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+9)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
   <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика (Alt+0)"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
+  <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -213,6 +214,8 @@
 <div id="settingsFeedback" class="settings-feedback" role="status" aria-live="polite" hidden><span id="settingsFeedbackText"></span><button id="settingsRetry" type="button" hidden>Повторить сохранение</button><button id="settingsDiscard" type="button">Отменить несохранённое</button></div>
 
 <section id="tab-overview" class="act">
+  <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
+  <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
   <!-- 8.0 (аудит меню): «Обзор» — живая сводка вместо статичного текста и плиток-дублей шапки -->
   <div id="taskBoard" class="task-board no-card" aria-label="Выбранные задачи и прогресс"><div class="task-board-head"><strong>Выбранные задачи</strong><button id="taskBoardEdit" type="button">Изменить</button></div><div id="taskBoardNote" class="task-board-note"></div><div id="taskBoardRows"></div>
     <div id="quickModeGrid" hidden>
@@ -245,55 +248,7 @@
     <div id="dashKpi" class="dash-kpi"></div>
     <div id="dashLines" class="dash-lines"></div>
   </div>
-  <div class="dash-actions no-card"><button id="logsAll" type="button" class="logs-btn" title="Одним нажатием три файла в «Загрузки»: журнал (новое с прошлой выгрузки, нет нового — за сегодня), новые снимки страниц и отчёт автообучения">📤 Логи для разбора</button></div>
-  <div id="logsNote" class="hint logs-note no-card" role="status" hidden></div>
   <div id="questBox" class="no-card"></div>
-  <div class="subsec-title" id="tab-limits">⏱ Лимиты</div>
-  <h4>⏱ Дневные лимиты</h4>
-  <div class="hint">0 — без ограничения. Достигнут лимит — задача ждёт следующего дня, бот продолжает остальные. Выбор задач сохраняется. Сброс суток в 00:00 по Владивостоку (UTC+10), затем выбранная задача доступна снова. Счёт начинается после включения лимита; прошлую добычу бот не восстанавливает.</div>
-  <div class="hint">Можно задать точное число или диапазон «от … до …». По диапазону бот выбирает целое число один раз на день или разовую серию и показывает его ниже. Пауза и перезагрузка число не меняют. Ввод точного числа отключает диапазон; «Точно» оставляет выбранное число фиксированным.</div>
-  <div id="dailyLimitsDay" class="hint"></div>
-  <label>🐟 Рыбы в день <input id="dailyFishLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="dailyFishLimit">
-    <div class="row"><input id="dailyFishLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyFishLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyFishLimitRangeSet" type="button">Диапазон</button><button id="dailyFishLimitRangeClear" type="button">Точно</button></div>
-    <div id="dailyFishLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="fishDailyProgress" class="hint"></span><button id="fishDailyReset" type="button">Сбросить за сегодня</button></div>
-  <label title="Один общий счётчик на автофарм и катакомбы: убитые в обеих охотах складываются, по достижении обе ждут 00:00">⚔ Мобов в день: автофарм + катакомбы вместе <input id="dailyKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="dailyKillLimit">
-    <div class="row"><input id="dailyKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyKillLimitRangeSet" type="button">Диапазон</button><button id="dailyKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="dailyKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="mobsDailyProgress" class="hint"></span><button id="mobsDailyReset" type="button">Сбросить за сегодня</button></div>
-  <div class="hint">Рыба считается по успешным поимкам. Мобы автофарма и катакомб идут в один общий счётчик по серверному числу убийств, включая массовые атаки; заводская настройка — диапазон 8434–9119 на мобов и столько же на рыбу (новое число каждые сутки), 0 снимает ограничение. Текущий бой завершается целиком, поэтому итог может превысить лимит. Пауза и перезагрузка не сбрасывают прогресс. Сброс статистики рыбалки тоже его сохраняет.</div>
-  <div class="adv-start" data-adv="overview">⚙ Дополнительно: разовые цели</div>
-  <h4>Разовая цель автофарма</h4>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="autoKillLimit">
-    <div class="row"><input id="autoKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="autoKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="autoKillLimitRangeSet" type="button">Диапазон</button><button id="autoKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="autoKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
-  <h4>Разовая цель катакомб</h4>
-  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
-  <div class="limit-range" data-limit-key="catKillLimit">
-    <div class="row"><input id="catKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="catKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="catKillLimitRangeSet" type="button">Диапазон</button><button id="catKillLimitRangeClear" type="button">Точно</button></div>
-    <div id="catKillLimitRangeInfo" class="hint"></div>
-  </div>
-  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
-  <div class="hint">Эти цели считаются с момента настройки. После выполнения снимается только соответствующая задача. Новый лимит или сброс начинают новую серию; автоматически на следующий день она не включается.</div>
-  <h4>🎯 Цель рыбалки</h4>
-  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select></div>
-  <div class="row"><input id="fishTgtN" type="number" min="1" placeholder="От / точно" style="width:80px;flex:1;min-width:0"><input id="fishTgtMax" class="limitRangeInput" type="number" min="0" step="1" placeholder="До (необяз.)" aria-label="До: цель рыбалки" style="width:80px;flex:1;min-width:0"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
-  <div class="hint">Для случайной цели укажите «от» и «до». Пустое «до» — точное число. Новая цель выбирается только по кнопке «Поставить»; рыба и Proof поддерживают диапазон.</div>
-  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
-  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
-  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
-  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
-  <div class="limit-range" data-limit-key="fishMaxCasts">
-    <div class="row"><input id="fishMaxCastsFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="fishMaxCastsTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="fishMaxCastsRangeSet" type="button">Диапазон</button><button id="fishMaxCastsRangeClear" type="button">Точно</button></div>
-    <div id="fishMaxCastsRangeInfo" class="hint"></div>
-  </div>
 </section>
 
 <section id="tab-hunt">
@@ -882,6 +837,54 @@
   <h4>Снимки страниц</h4>
   <div class="row"><button id="snapNew" class="main">⬇ Новые</button><button id="snapAll">⬇ Все</button><button id="recDom">📸 Эта стр.</button></div>
   <details><summary>Очистка</summary><div class="row"><button id="recClear">🧹 Удалить журнал и снимки</button></div></details>
+</section>
+
+<section id="tab-limits">
+  <h4>⏱ Дневные лимиты</h4>
+  <div class="hint">0 — без ограничения. Достигнут лимит — задача ждёт следующего дня, бот продолжает остальные. Выбор задач сохраняется. Сброс суток в 00:00 по Владивостоку (UTC+10), затем выбранная задача доступна снова. Счёт начинается после включения лимита; прошлую добычу бот не восстанавливает.</div>
+  <div class="hint">Можно задать точное число или диапазон «от … до …». По диапазону бот выбирает целое число один раз на день или разовую серию и показывает его ниже. Пауза и перезагрузка число не меняют. Ввод точного числа отключает диапазон; «Точно» оставляет выбранное число фиксированным.</div>
+  <div id="dailyLimitsDay" class="hint"></div>
+  <label>🐟 Рыбы в день <input id="dailyFishLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="dailyFishLimit">
+    <div class="row"><input id="dailyFishLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyFishLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyFishLimitRangeSet" type="button">Диапазон</button><button id="dailyFishLimitRangeClear" type="button">Точно</button></div>
+    <div id="dailyFishLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="fishDailyProgress" class="hint"></span><button id="fishDailyReset" type="button">Сбросить за сегодня</button></div>
+  <label title="Один общий счётчик на автофарм и катакомбы: убитые в обеих охотах складываются, по достижении обе ждут 00:00">⚔ Мобов в день: автофарм + катакомбы вместе <input id="dailyKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="dailyKillLimit">
+    <div class="row"><input id="dailyKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="dailyKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="dailyKillLimitRangeSet" type="button">Диапазон</button><button id="dailyKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="dailyKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="mobsDailyProgress" class="hint"></span><button id="mobsDailyReset" type="button">Сбросить за сегодня</button></div>
+  <div class="hint">Рыба считается по успешным поимкам. Мобы автофарма и катакомб идут в один общий счётчик по серверному числу убийств, включая массовые атаки; заводская настройка — диапазон 8434–9119 на мобов и столько же на рыбу (новое число каждые сутки), 0 снимает ограничение. Текущий бой завершается целиком, поэтому итог может превысить лимит. Пауза и перезагрузка не сбрасывают прогресс. Сброс статистики рыбалки тоже его сохраняет.</div>
+  <div class="adv-start" data-adv="limits">⚙ Дополнительно: разовые цели</div>
+  <h4>Разовая цель автофарма</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="autoKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="autoKillLimit">
+    <div class="row"><input id="autoKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="autoKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="autoKillLimitRangeSet" type="button">Диапазон</button><button id="autoKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="autoKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="autoKillProgress" class="hint"></span><button id="autoKillReset" type="button">Сбросить счётчик</button></div>
+  <h4>Разовая цель катакомб</h4>
+  <label>Убить мобов и отключить задачу (0 — без лимита) <input id="catKillLimit" type="number" min="0" step="1"></label>
+  <div class="limit-range" data-limit-key="catKillLimit">
+    <div class="row"><input id="catKillLimitFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="catKillLimitTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="catKillLimitRangeSet" type="button">Диапазон</button><button id="catKillLimitRangeClear" type="button">Точно</button></div>
+    <div id="catKillLimitRangeInfo" class="hint"></div>
+  </div>
+  <div class="row"><span id="catKillProgress" class="hint"></span><button id="catKillReset" type="button">Сбросить счётчик</button></div>
+  <div class="hint">Эти цели считаются с момента настройки. После выполнения снимается только соответствующая задача. Новый лимит или сброс начинают новую серию; автоматически на следующий день она не включается.</div>
+  <h4>🎯 Цель рыбалки</h4>
+  <div class="row"><select id="fishTgtType" style="flex:1"><option value="fish">🐟 Поймать рыб</option><option value="proof">🏅 Собрать Proof</option></select></div>
+  <div class="row"><input id="fishTgtN" type="number" min="1" placeholder="От / точно" style="width:80px;flex:1;min-width:0"><input id="fishTgtMax" class="limitRangeInput" type="number" min="0" step="1" placeholder="До (необяз.)" aria-label="До: цель рыбалки" style="width:80px;flex:1;min-width:0"><button id="fishTgtSet" style="flex:0 0 92px">Поставить</button></div>
+  <div class="hint">Для случайной цели укажите «от» и «до». Пустое «до» — точное число. Новая цель выбирается только по кнопке «Поставить»; рыба и Proof поддерживают диапазон.</div>
+  <div id="fishTgtBox" class="camp" style="margin-top:6px">Цели нет — бот рыбачит без остановки</div>
+  <div class="row"><button id="fishTgtClear">✕ Снять цель</button></div>
+  <div class="hint">Счёт — с момента постановки цели. Достигнута — рыбалка выключается, бот продолжает остальные выбранные задачи. «Рыбы»: перед выключением рыбалки разделает улов и сдаст на Proof (если включена разделка). «Proof»: засчитываются при обмене; бот сам идёт менять, как только по прогнозу улова хватит (разделка для этой цели включается сама). Покупки за Proof счёт не уменьшают.</div>
+  <label>Остановиться после N забросов (0 — без лимита) <input id="fishMaxCasts" type="number" min="0"></label>
+  <div class="limit-range" data-limit-key="fishMaxCasts">
+    <div class="row"><input id="fishMaxCastsFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="fishMaxCastsTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="fishMaxCastsRangeSet" type="button">Диапазон</button><button id="fishMaxCastsRangeClear" type="button">Точно</button></div>
+    <div id="fishMaxCastsRangeInfo" class="hint"></div>
+  </div>
 </section>
 
 </div><!-- /.workarea -->
