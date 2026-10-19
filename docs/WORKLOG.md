@@ -1,9 +1,9 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 19.10.2026, 21:19 UTC+10 — Codex — PR в подготовке: быстрая сборка Chrome20.25
+## 19.10.2026, 21:19 UTC+10 — Codex — [PR #287](https://github.com/vodoleyko1992-dotcom/prog/pull/287): быстрая сборка Chrome20.25
 
 - По прямому «быстрая сборка» выпущен только Chrome20.25:20.24 + #284/#285/#286 (VIP0CoL по классу/оружиеЛС/обменAA). Версия, пять тестов версии, CHANGELOG/CLAUDE/README-CHROME/HANDOFF обновлены. FirefoxZIP20.23 сохранён.
-- Полный Node runner463PASS/0FAIL; синтаксис54JS/envcheck31/diff-check PASS. ZIP64файла, CRC/manifestrefs+glob/HTMLrefs/профильбезauth-passw/побайтоваясверка64/64/независимыйаудит PASS. SHA01f59d7188b50628d6c6cb5485fca787bbf174f4229216f68c0d03b12dfb3c6a,1402014байт. Chromiumизархива:20.25/206ключейcfg/0ошибок. Actual-MV3 именно изZIP: manualOFF/auto AA; VIP0/0+истечение; выбор оружияЛС OFF/рюкзак/другоезапрещено/ручнаяэкипировка/reload/360px PASS. ВсеHTTPSлокальные; полныйисторическийbrowser-runner/Firefox/игра по запросу быстроговыпуска не запускались. ZIP/SHAвbuilds. Следующийшаг — обновлениетужеChromeпапки и контрольныйжурнал20.25.
+- Полный Node runner463PASS/0FAIL; синтаксис54JS/envcheck31/diff-check PASS. ZIP64файла, CRC/manifestrefs+glob/HTMLrefs/профильбезauth-passw/побайтоваясверка64/64/независимыйаудит PASS. SHA01f59d7188b50628d6c6cb5485fca787bbf174f4229216f68c0d03b12dfb3c6a,1402014байт. Chromiumизархива:20.25/206ключейcfg/0ошибок. Actual-MV3 именно изZIP: manualOFF/auto AA; VIP0/0+истечение; выбор оружияЛС OFF/рюкзак/другоезапрещено/ручнаяэкипировка/reload/360px PASS. ВсеHTTPSлокальные; полныйисторическийbrowser-runner/Firefox/игра по запросу быстроговыпуска не запускались. ZIP/SHAвbuilds; [релиз и инструкции](https://github.com/vodoleyko1992-dotcom/prog/releases/tag/v20.25). Следующийшаг — обновлениетужеChromeпапки и контрольныйжурнал20.25.
 
 
 ## 19.10.2026, 21:12 UTC+10 — Codex — [PR #286](https://github.com/vodoleyko1992-dotcom/prog/pull/286): обмен камней на АА

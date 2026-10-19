@@ -1,10 +1,10 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 19.10.2026 — быстрая сборка Chrome20.25 (Codex, PR в подготовке)
+## 19.10.2026 — быстрая сборка Chrome20.25 (Codex, [PR #287](https://github.com/vodoleyko1992-dotcom/prog/pull/287))
 
 По запросу «быстрая сборка» собран только Chrome20.25: последняя успешная20.24 + PR#284/#285/#286 (бесплатный полный городской VIP-бафф по текущему классу, выбор конкретного оружия дляЛС, очередь обмена камней наAA по кнопке и автоматически вtasks-only). Все изменения20.24 сохранены. Firefox остаётся20.23.
 
-Полный Node runner463PASS/0FAIL, синтаксис54JS/envcheck31/diff-check PASS. ZIP64файла: CRC, все manifest/HTML ссылки и glob, отсутствиеauth/passwвпрофиле, точная сверка64/64исходников и независимый аудит PASS; SHA-256 вbuilds/SHA256SUMS-20.25.txt. Архив вChromium:20.25/206ключейcfg/0ошибок. Actual-MV3 на файлах самого ZIP: AA manualOFF/три стека/auto tasks-only, VIP0/0/истечение, выбор оружияЛС OFF/рюкзак/запрет другого/ручнаяэкипировка/reload/360px PASS. ВсеHTTPSлокальные; игра, полный историческийsmokes.sh и Firefox не запускались по запросу быстрогоChrome. ZIP и SHAвbuilds; следующий шаг — обновитьтужеChromeпапку и получитьконтрольныйжурнал20.25.
+Полный Node runner463PASS/0FAIL, синтаксис54JS/envcheck31/diff-check PASS. ZIP64файла: CRC, все manifest/HTML ссылки и glob, отсутствиеauth/passwвпрофиле, точная сверка64/64исходников и независимый аудит PASS; SHA-256 вbuilds/SHA256SUMS-20.25.txt. Архив вChromium:20.25/206ключейcfg/0ошибок. Actual-MV3 на файлах самого ZIP: AA manualOFF/три стека/auto tasks-only, VIP0/0/истечение, выбор оружияЛС OFF/рюкзак/запрет другого/ручнаяэкипировка/reload/360px PASS. ВсеHTTPSлокальные; игра, полный историческийsmokes.sh и Firefox не запускались по запросу быстрогоChrome. ZIP и SHAвbuilds; [релиз и инструкции](https://github.com/vodoleyko1992-dotcom/prog/releases/tag/v20.25); следующий шаг — обновитьтужеChromeпапку и получитьконтрольныйжурнал20.25.
 
 
 ## 19.10.2026 — обмен камней печати на АА (Codex, [PR #286](https://github.com/vodoleyko1992-dotcom/prog/pull/286))
