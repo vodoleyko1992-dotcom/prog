@@ -1,0 +1,46 @@
+{
+  "runtime": "/workspace/work/build2028-chrome",
+  "version": "20.28",
+  "runtime_files": 64,
+  "runtime_unchanged": true,
+  "max_parallel": 2,
+  "per_test_timeout_seconds": 90,
+  "results": [
+    {
+      "name": "daily",
+      "test": "v2026-autonomy-daily-browser.cjs",
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 27.21,
+      "log": "/workspace/work/build2028-chrome-daily.log",
+      "passed": true
+    },
+    {
+      "name": "settings",
+      "test": "v2026-autonomy-settings-browser.cjs",
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 16.2,
+      "log": "/workspace/work/build2028-chrome-settings.log",
+      "passed": true
+    },
+    {
+      "name": "service",
+      "test": "v2026-autonomy-service-browser.cjs",
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 15.1,
+      "log": "/workspace/work/build2028-chrome-service.log",
+      "passed": true
+    },
+    {
+      "name": "lifecycle",
+      "test": "v1014-core-lifecycle-browser.cjs",
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 22.7,
+      "log": "/workspace/work/build2028-chrome-lifecycle.log",
+      "passed": true
+    }
+  ]
+}

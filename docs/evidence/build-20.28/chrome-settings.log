@@ -1,0 +1,3 @@
+PASS actualMV3 checkbox read delayed → Start stays OFF → cfg ACK → on=true → farm selected by runtime
+PASS actualMV3 checkbox read rejection → persistent error → no on=true/no runtime start
+PASS actualMV3 successful retry clears read failure → starts chosen task → Stop; all HTTPS mocked, 0 POST, 0 page errors

@@ -1,0 +1,12 @@
+CASE start
+PASS actual popup Start → background lock → content tasksIdle
+CASE pause
+PASS actual Pause → loop exits → resume retains tasks mode
+CASE reload
+PASS document reload resumes and rotates epoch
+CASE two tabs
+PASS second visible tab waits; only one owner
+PASS browser visibility seam hidden→visible preemption → old clicks and stale patch blocked
+CASE stop all
+PASS Stop reaches both documents and releases lease
+REQUESTS [{"path":"/map.html","method":"GET"},{"path":"/game/time","method":"GET"},{"path":"/game/daily-quests","method":"GET"},{"path":"/game/time","method":"GET"},{"path":"/game/daily-quests","method":"GET"},{"path":"/map.html","method":"GET"},{"path":"/game/mammon/merchant","method":"GET"},{"path":"/game/story-quests/noblesse","method":"GET"},{"path":"/game/mammon/blacksmith","method":"GET"},{"path":"/game/story-quests/subclass","method":"GET"},{"path":"/map.html","method":"GET"},{"path":"/game/mammon/merchant","method":"GET"},{"path":"/game/story-quests/noblesse","method":"GET"},{"path":"/game/mammon/blacksmith","method":"GET"},{"path":"/game/story-quests/subclass","method":"GET"}]
