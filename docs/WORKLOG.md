@@ -1,5 +1,11 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 20.10.2026, 07:36 UTC+10 — Codex — PR в подготовке: обе быстрые сборки20.27
+
+- По прямому запросу собраны Chrome+Firefox20.27:Chrome20.26 + #291, сервернаяполночь/сверкаполногоscoreприСтарте/партииAA≤100000. Firefox обновлён с20.23; все промежуточные исправления, включая отключённуюавтозаточку, включены. Версия/пятьпроверок/обаREADME/CHANGELOG/CLAUDE/HANDOFF обновлены. Firefoxbuilder работает вcleanstaging,64runtime-файла на пакет.
+- Аудит обоихZIP CRC/refs/globs/профильбезauth-passw/точнаясверка64/64/независимыйповтор PASS; SHA87f0070aea3f947b836997c7a4b887dc2c140c3866387703168d0ea5b8ee4e8d/0feae442a9c8ec2cabffaac9905501061119893506c2f410b2b7ddfb84dfdc1f. Chromium20.27/206ключейcfg/0ошибок. Firefoxlint0errors/0notices/45warnings(43innerHTML+2metadata). Полный Node runner467PASS/0FAIL, синтаксис56JS/envcheck31/diff-check PASS. Actual-MV3 изChromeZIP: старт8055/1600/все8задач/0POST/reload/новыйСтарт8056/1601; начатыйбой+3→полныйscore8055→0hunt-continue; сервернаяполночь→сбрособеихквот→однократныйreroll/меню;4906949камней→25432344AA за51партию≤100000/OFF/auto tasks-only; отключённаяавтозаточка/старые профили/0POST PASS. ВсеHTTPSлокальные. Две старые clock-fixture исправлены: один clock для IPC квоты и согласованные game-time/daily при реальной смене дня; RTчерезwriter, проверка rerollпоseq, assertionsсохранены. Полныйисторическийbrowser-runner/игра/настоящийFirefox/Android вбыстрыйвыпуск не входят. ZIP/SHAвbuilds, Firefoxнеподписан. Следующийшаг — контрольныйжурнал установленной20.27.
+
+
 ## 19.10.2026, 12:26 UTC — Codex — [PR #291](https://github.com/vodoleyko1992-dotcom/prog/pull/291): серверные дневные лимиты и партииAA100000
 
 - Решения игрока: сброс00:00 сервера; при Старте сверять дневные результаты; предел100000камней/обмен подтверждён администратором через игрока. Общий расчёт по `/game/time`, Europe/Kyiv/DST и однократный перенос текущего бюджета/случайной цели сUTC+10. Лимиты и обзор согласованы.

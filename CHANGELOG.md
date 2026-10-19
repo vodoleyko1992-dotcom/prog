@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [L2wap Bot 20.27: Chrome + Firefox, серверные сутки и партии АА100000](docs/changelog/CHANGELOG-20.27.md)
 - [L2wap Bot 20.26: Chrome, обмен больших стеков на АА, автозаточка отключена](docs/changelog/CHANGELOG-20.26.md)
 - [L2wap Bot 20.25: Chrome, обмен АА, бесплатный VIP-бафф и оружие для ЛС](docs/changelog/CHANGELOG-20.25.md)
 - [L2wap Bot 20.24: Chrome, анализ рюкзака в Маммоне](docs/changelog/CHANGELOG-20.24.md)
