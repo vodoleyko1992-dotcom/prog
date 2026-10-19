@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.19",
-  "description": "L2wap Bot 20.19 — логи вверху Обзора и отдельные Лимиты",
+  "version": "20.20",
+  "description": "L2wap Bot 20.20 — мобы рядом с РБ в статистике и дневном лимите",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.19"
+  "version_name": "20.20"
 }
