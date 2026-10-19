@@ -750,12 +750,12 @@ $('sealNow').onclick = async () => {
 };
 // 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
 const dailyLimitKeys={fish:'dailyFishLimit',mobs:'dailyKillLimit'};
-const dailyGotOf=(rt,task,day)=>rt.dailyQuota?.day!==day ? 0 : task==='fish' ? +rt.dailyQuota.fish||0 : (+rt.dailyQuota.auto||0)+(+rt.dailyQuota.cat||0)+(+rt.dailyQuota.raid||0);
+const dailyGotOf=(rt,task,day)=>L2EngineCore.dailyCount(rt,task==='fish'?'fish':'auto');
 function renderDailyLimits(rt,d) {
-  const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10);
-  $('dailyLimitsDay').textContent=`Сегодня: ${day} · UTC+10`;
+  const day=L2EngineCore.dailyDay(Date.now(),rt);
+  $('dailyLimitsDay').textContent=`Сегодня: ${day} · время сервера`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
-    const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&rt.dailyQuota?.day===day ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0}${+rt.dailyQuota.raid?`, рядом с РБ ${+rt.dailyQuota.raid}`:''})` : '';
+    const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&L2EngineCore.dailyCurrent(rt.dailyQuota,rt) ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0}${+rt.dailyQuota.raid?`, рядом с РБ ${+rt.dailyQuota.raid}`:''}${+rt.dailyQuota.server?`, ранее по серверу ${+rt.dailyQuota.server}`:''})` : '';
     if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got}${parts} · цель выберется при запуске`;continue;}
     $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · до 00:00':` · осталось ${limit-got}`}` : 'Без дневного лимита';
   }
@@ -1864,7 +1864,7 @@ function renderLimitRanges(rt,d) {
     if(!limitRangeDrafts.has(key)){
       $(key+'From').value=b?.min||'';$(key+'To').value=b?.max||'';
     }
-    const pending=b && key.startsWith('daily') && row?.day!==new Date(Date.now()+10*3600000).toISOString().slice(0,10);
+    const pending=b && key.startsWith('daily') && row?.day!==L2EngineCore.dailyDay(Date.now(),rt);
     $(key+'RangeInfo').textContent=b ? `${b.min}–${b.max} · ${pending?'новое число выберется при запуске':`выбрано: ${row?.value||d[key]}`}${key.startsWith('daily')?' · новое число каждые сутки':''}` : 'Точное число; для диапазона заполните «от» и «до»';
     $(key).title=b?'Введите точное число, чтобы отключить диапазон':'';
   }
@@ -1970,17 +1970,17 @@ function workspaceState(rt, d, st, now = Date.now()) {
 }
 function taskBoardRows(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
-  const day = new Date(now + 10 * 3600000).toISOString().slice(0, 10);
+  const day = L2EngineCore.dailyDay(now,rt);
   return selected.map(key => {
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
     const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
-    const dailyLimit = +d[dailyKey] || 0, q = rt.dailyQuota?.day === day ? rt.dailyQuota : {}, dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0) + (+q.raid || 0);
+    const dailyLimit = +d[dailyKey] || 0, q = L2EngineCore.dailyQuotaToday(rt,now), dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0) + (+q.raid || 0) + (+q.server || 0);
     const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
     if (dailyPending) progress.push('Дневная цель выберется при запуске');
     else if (dailyLimit > 0) {
-      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
-      if (dailyGot >= dailyLimit) { label = 'До 00:00 Владивостока'; state = 'waiting'; }
+      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' + (+q.server?' · ранее по серверу: '+q.server:'') : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
+      if (dailyGot >= dailyLimit) { label = 'До 00:00 сервера'; state = 'waiting'; }
     }
     if (['auto','cat'].includes(key)) {
       const limit = +d[key === 'auto' ? 'autoKillLimit' : 'catKillLimit'] || 0, row = rt.farmQuota?.[key];
@@ -2000,14 +2000,14 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
 }
 // 19.10: дневные мобы видны рядом с рыбалкой независимо от выбранной охоты; это сводка, а не задача.
 function dailyMobBoardRow(rt, d, now = Date.now()) {
-  const day = new Date(now + 10 * 3600000).toISOString().slice(0, 10), quota = rt.dailyQuota?.day === day ? rt.dailyQuota : {};
+  const day = L2EngineCore.dailyDay(now,rt), quota = L2EngineCore.dailyQuotaToday(rt,now);
   const num = x => Number.isFinite(+x) && +x > 0 ? Math.floor(+x) : 0;
-  const got = num(quota.auto) + num(quota.cat) + num(quota.raid), limit = num(d.dailyKillLimit);
+  const got = num(quota.auto) + num(quota.cat) + num(quota.raid) + num(quota.server), limit = num(d.dailyKillLimit);
   const pending = !!d.limitRanges?.dailyKillLimit && rt.limitRolls?.dailyKillLimit?.day !== day;
   return { key:'daily-mobs', summary:'mobs', name:'Мобы за сутки', tab:'limits',
     label:pending || !limit ? 'Дневной счётчик' : got >= limit ? 'Лимит достигнут' : 'Дневной лимит',
     state:!pending && limit > 0 && got >= limit ? 'waiting' : 'selected',
-    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ) · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) : 'без дневного лимита'}`,
+    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ)${+quota.server?' · ранее по серверу: '+quota.server:''} · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) : 'без дневного лимита'}`,
     percent:!pending && limit > 0 ? Math.min(100, Math.round(got / limit * 100)) : null };
 }
 function renderWorkspace(rt, d, st) {

@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8');
 function fixture(task='auto'){
- let now=Date.parse('2026-10-17T13:59:00Z');class Clock extends Date{constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
+ let now=Date.parse('2026-10-17T20:59:00Z');class Clock extends Date{constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
  const c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,Date:Clock,URL,URLSearchParams,structuredClone,console},source=read('tests/v208-farm-kill-quota.test.js');
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);const f=c.fixture(task),menu=f.menu;
  f.menu=m=>menu({expectedChar:'Hero',...m});let calls=0,rng=.5;f.bg.Math=Object.create(Math);f.bg.Math.random=()=>{calls++;return rng};
@@ -20,7 +20,7 @@ test('inclusive endpoints, equal bounds and safe integer maximum',async()=>{
  for(const [min,max,rng,want] of [[1,3,0,1],[1,3,1-Number.EPSILON,3],[7,7,.5,7],[Number.MAX_SAFE_INTEGER-2,Number.MAX_SAFE_INTEGER,1-Number.EPSILON,Number.MAX_SAFE_INTEGER]]){
  const f=fixture();f.random(rng);await f.edit('autoKillLimit',min,max);assert.equal(f.state.cfg.autoKillLimit,want);assert.ok(Number.isSafeInteger(want));}
 });
-test('new Vladivostok day rerolls daily quotas only, retaining all task choices',async()=>{
+test('new server day rerolls daily quotas only, retaining all task choices',async()=>{
  const f=fixture();await f.edit('dailyKillLimit',10,20);await f.edit('dailyFishLimit',100,200);await f.edit('catKillLimit',1000,2000);const cat=f.state.cfg.catKillLimit;
  f.random(0);f.advance();await f.resolve();assert.equal(f.state.cfg.dailyKillLimit,10);assert.equal(f.state.cfg.dailyFishLimit,100);assert.equal(f.state.cfg.catKillLimit,cat);assert.equal(f.state.rt.limitRolls.dailyKillLimit.day,'2026-10-18');assert.deepEqual(f.state.cfg.autoTasks,['auto','dailies']);
  const calls=f.calls();await f.resolve();assert.equal(f.calls(),calls);

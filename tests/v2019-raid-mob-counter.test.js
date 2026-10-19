@@ -73,8 +73,8 @@ test('сброс сессии после записи IPC не перетира�
  const f=fixture();await f.note(true);f.snapshot(3);const ipc=f.c.ipc;let reset=true;f.c.ipc=async m=>{const r=await ipc(m);if(reset){reset=false;await f.menu({rtPatch:{kills:0,sessT0:999}});f.refresh()}return r};await f.note();assert.equal(f.c.rt.kills,0);assert.equal(f.state.rt.dailyQuota.raid,3);f.snapshot(4);await f.note();assert.equal(f.state.rt.kills,1);
 });
 test('меню показывает общий итог и отдельную долю соседей РБ',()=>{
- const js=read('popup.js'),els={},ctx={$:id=>els[id]||(els[id]={}),Date};vm.runInNewContext(js.slice(js.indexOf('const dailyLimitKeys='),js.indexOf('for(const task of Object.keys(dailyLimitKeys))')),ctx);
- const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10);ctx.renderDailyLimits({dailyQuota:{day,auto:2,cat:1,raid:7}},{dailyKillLimit:20,dailyFishLimit:0});assert.match(els.mobsDailyProgress.textContent,/^10 \/ 20 /);assert.match(els.mobsDailyProgress.textContent,/рядом с РБ 7/);
+ const js=read('popup.js'),els={},ctx={$:id=>els[id]||(els[id]={}),Date,L2EngineCore:require('../engine-core.js')};vm.runInNewContext(js.slice(js.indexOf('const dailyLimitKeys='),js.indexOf('for(const task of Object.keys(dailyLimitKeys))')),ctx);
+ const day=require('../engine-core.js').dailyDay();ctx.renderDailyLimits({dailyQuota:{day,auto:2,cat:1,raid:7}},{dailyKillLimit:20,dailyFishLimit:0});assert.match(els.mobsDailyProgress.textContent,/^10 \/ 20 /);assert.match(els.mobsDailyProgress.textContent,/рядом с РБ 7/);
 });
 test('после завершённого РБ отсутствие первого курсора не оставляет новый респ на старой отметке',async()=>{
  const f=fixture();await f.note(true);f.snapshot(3);await f.note();f.report({win:true,stream:{seq:10,rev:20,deaths:[3,6,9],fullN:3,fullSeq:10}});await f.note();f.report({});assert.equal(await f.note(true),false);f.report({stream:{seq:3,rev:31,deaths:[3],fullN:1,fullSeq:3}});await f.note();f.report({stream:{seq:6,rev:32,deaths:[3,6],fullN:2,fullSeq:6}});await f.note();assert.equal(f.state.rt.kills,4);assert.equal(f.state.rt.dailyQuota.raid,4);

@@ -10,7 +10,7 @@ async function until(fn,ms=15000){const end=Date.now()+ms;let last,error;do{try{
 async function harness({cleanInstall=false,withPopup=true}={}){
  const ctx=await chromium.launchPersistentContext('',{headless:true,executablePath:process.env.CHROMIUM || '/opt/pw-browsers/chromium',args:['--no-sandbox',`--disable-extensions-except=${root}`,`--load-extension=${root}`]});
  try {
- const errors=[],requests=[]; await ctx.route('https://**/*',r=>{const pathname=new URL(r.request().url()).pathname;requests.push({path:pathname,method:r.request().method()});return r.fulfill({status:200,contentType:/\.html$/.test(pathname)?'text/html':'application/json',body:/\.html$/.test(pathname)?fixture:'{}'});});
+ const errors=[],requests=[]; await ctx.route('https://**/*',r=>{const pathname=new URL(r.request().url()).pathname;requests.push({path:pathname,method:r.request().method()});const d=require('./tools/daily-server-fixture.cjs')();if(pathname==='/game/time')return r.fulfill({json:d.clock});if(pathname==='/game/daily-quests')return r.fulfill({json:d.daily});return r.fulfill({status:200,contentType:/\.html$/.test(pathname)?'text/html':'application/json',body:/\.html$/.test(pathname)?fixture:'{}'});});
  const sw=ctx.serviceWorkers()[0]||await ctx.waitForEvent('serviceworker');const id=new URL(sw.url()).host;
  // Новая установка сначала завершает запись базового профиля; иначе onInstalled затирает синтетические данные теста.
  await until(()=>sw.evaluate(async()=>{const s=await chrome.storage.local.get(['cfg','rt']);return !!s.cfg&&!!s.rt;}));await delay(200);

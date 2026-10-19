@@ -427,9 +427,10 @@ async function sealStep() {
     location.reload(); await env.sleep(4000); return;
   }
   // 19.10, лог21:36: стек2 718 796 отклонён как invalid_quantity. Меняем партиями;
-  // точный серверный предел не предполагаем: явный отказ уменьшает следующую партию.
+  // Максимум100000 подтверждён администратором; более строгий отказ уменьшает следующую партию.
   const fail = [], totals = { ...(env.rt.sealEx?.exchanged || {}) };
-  let limit = env.rt.sealEx?.batchLimit || 1000000, attempts = 0;
+  // 19.10: администратор подтвердил максимум100000 за обмен; старую сохранённую партию тоже ограничиваем.
+  let limit = Math.min(100000, Math.max(1, Math.floor(+env.rt.sealEx?.batchLimit || 100000))), attempts = 0;
   const progress = async extra => { const r = await env.setRt({ sealEx: { ...env.rt.sealEx, ...extra } }); return r?.ok !== false && active(); };
   for (const initial of rows()) {
     const st = initial.dataset.stone, spec = SEAL[st];

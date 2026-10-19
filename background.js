@@ -78,13 +78,14 @@ function mergeTimerPatch(current, incoming) {
 // 20.8: лимиты фарма — свой прогресс, атомарное завершение только одной задачи.
 const FARM_QUOTA = { auto: ['autoKillLimit', 'zoneAuto'], cat: ['catKillLimit', 'catMode'] };
 const farmQuotaLimit = x => Number.isSafeInteger(+x) && +x > 0 ? +x : 0;
-const dailyQuotaDay = now => new Date(now + 10 * 3600000).toISOString().slice(0,10);
-const dailyQuotaToday = (rt,now) => rt.dailyQuota?.day === dailyQuotaDay(now) ? {...rt.dailyQuota} : {day:dailyQuotaDay(now),fish:0,auto:0,cat:0};
+const dailyQuotaDay = (now,rt) => L2EngineCore.dailyDay(now,rt);
+const dailyQuotaToday = (rt,now) => L2EngineCore.dailyQuotaToday(rt,now);
 // 20.8: диапазон выбирается один раз; фактическая цель остаётся в прежнем cfg-ключе.
 const RANGE_LIMITS = {dailyFishLimit:'daily',dailyKillLimit:'daily',autoKillLimit:'auto',catKillLimit:'cat',fishMaxCasts:'casts'};
 const quotaRandom = (min,max) => Math.min(max,min+Math.floor(Math.random()*(max-min+1)));
 function limitRangeChange(state,now,options={}) {
   const cfg={...(state.cfg||{})},rt={...(state.rt||{})},ranges={...(cfg.limitRanges||{})},rolls={...(rt.limitRolls||{})};
+  if(rt.dailyQuota)rt.dailyQuota=dailyQuotaToday(rt,now);
   const edit=options.edit;
   if(edit) {
     if(!Object.hasOwn(RANGE_LIMITS,edit.key) || !Number.isSafeInteger(edit.min) || edit.min<0 || !Number.isSafeInteger(edit.max) || edit.max<0 || edit.max>0 && (edit.min<1 || edit.max<edit.min)) return {ok:false,reason:'Диапазон: нужны целые числа от 1, «до» не меньше «от»'};
@@ -98,13 +99,15 @@ function limitRangeChange(state,now,options={}) {
     // испорченные границы раньше давали ok:false навсегда — цикл бота и все записи меню стояли. Теперь такой диапазон отбрасываем
     // (остаётся фиксированное значение лимита), остальные обрабатываем как прежде
     if(!Object.hasOwn(RANGE_LIMITS,key) || !b || !Number.isSafeInteger(b.min) || b.min<1 || !Number.isSafeInteger(b.max) || b.max<b.min) {delete ranges[key];delete rolls[key];dropped.push(key);continue;}
-    const kind=RANGE_LIMITS[key],old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
+    const kind=RANGE_LIMITS[key];
+    if(kind==='daily' && rolls[key]?.basis!=='server' && L2EngineCore.dailyCurrent(rolls[key],rt,now))rolls[key]={...rolls[key],day:dailyQuotaDay(now,rt),basis:'server'};
+    const old=rolls[key],row=rt.farmQuota?.[kind],enabled=Array.isArray(cfg.autoTasks)?cfg.autoTasks.includes(kind):cfg[kind==='auto'?'zoneAuto':'catMode']===true;
     const renew=!old || old.min!==b.min || old.max!==b.max || old.value!==cfg[key] || old.value<b.min || old.value>b.max
-      || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
+      || kind==='daily' && !options.deferDaily && old.day!==dailyQuotaDay(now,rt) || ['auto','cat'].includes(kind) && (options.resetFarmQuota===kind || row?.done && enabled)
       || kind==='casts' && options.resetCasts;
     if(!renew)continue;
     const value=quotaRandom(b.min,b.max);cfg[key]=value;
-    rolls[key]={...b,value,day:kind==='daily'?dailyQuotaDay(now):'',t:now,seq:(old?.seq||0)+1};
+    rolls[key]={...b,value,day:kind==='daily'?dailyQuotaDay(now,rt):'',...(kind==='daily'?{basis:'server'}:{}),t:now,seq:(old?.seq||0)+1};
     if(['auto','cat'].includes(kind))rt.farmQuota={...(rt.farmQuota||{}),[kind]:{run:(row?.run||0)+1,limit:value,got:0}};
   }
   cfg.limitRanges=ranges;rt.limitRolls=rolls;return {ok:true,cfg,rt,dropped};
@@ -113,6 +116,19 @@ function limitRangeChange(state,now,options={}) {
 // (DEF_CFG), фон сверяет с ним же. Раньше расхождение незаметно закрывала запись всей формы при Старте; без неё рыбалка и охота
 // ждали «daily_fish_interrupted» / «quota_changed» вечно. Явно сохранённое число по-прежнему сверяется строго.
 const dailyLimitOf = (cfg, key, tabLimit) => cfg?.[key] === undefined ? farmQuotaLimit(tabLimit) : farmQuotaLimit(cfg[key]);
+// 19.10: перед новой охотой/рыбалкой учитываем полный score дейликов, включая добытое без бота.
+function dailyServerChange(state,E,now) {
+  const rt=state.rt||{},clock=L2EngineCore.serverClockNote(E?.clock,E?.clockAt),integer=x=>Number.isSafeInteger(x)&&x>=0;
+  if(!state.on || (rt.manualKickAt||0)!==(E?.kick||0) || (rt.dailyStart||0)!==(E?.start||0))return {ok:false,reason:'daily_start_interrupted'};
+  const next={...rt,serverClock:clock},day=clock&&L2EngineCore.dailyDay(now,next),key=String(E?.daily?.dayKey||'').replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+  const tasks=E?.daily?.tasks,mobs=tasks?.hunt_start_500?.score,fish=tasks?.fishing_catch_50?.score;
+  if(!clock || !Number.isFinite(E.clockAt) || E.clockAt>now || now-E.clockAt>60000 || key!==day || !integer(mobs) || !integer(fish))return {ok:false,reason:'daily_start_snapshot'};
+  const dailyQuota=dailyQuotaToday(next,now),local=(dailyQuota.auto||0)+(dailyQuota.cat||0)+(dailyQuota.raid||0);
+  dailyQuota.server=Math.max(dailyQuota.server||0,mobs-local,0);dailyQuota.fish=Math.max(dailyQuota.fish||0,fish);
+  const clean={};for(const [id,r] of Object.entries(tasks))if(r&&typeof r==='object'&&!['__proto__','prototype','constructor'].includes(id))clean[id]={have:+r.have||0,need:+r.need||0,score:+r.score||0,done:!!r.done,claimed:!!r.claimed,place:r.place??null};
+  const daily={day:String(E.daily.dayKey),t:now,tasks:clean},dailyServerCheck={day,char:rt.char||'',start:rt.dailyStart||0,t:now};
+  return {ok:true,rt:{...next,dailyQuota,daily,dailyServerCheck,dailyFishMark:{t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0},_src:'daily-server'}};
+}
 function dailyFishChange(state,E,now) {
   const rt=state.rt||{},limit=dailyLimitOf(state.cfg,'dailyFishLimit',E?.limit);
   if(!state.on || !limit || limit!==E.limit || (rt.manualKickAt||0)!==(E.kick||0)) return {ok:false,reason:'daily_fish_interrupted'};
@@ -127,7 +143,7 @@ function farmQuotaChange(state, E, now) {
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
   const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
   // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
-  const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0)+(q.raid||0);   // 20.12: нет ключа — значение вкладки
+  const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0)+(q.raid||0)+(q.server||0);   // 20.12: нет ключа — значение вкладки
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
   const old = rt.farmQuota?.[E.task], count = x => Number.isSafeInteger(x) && x >= 0;
   // 18.10, журнал 13:34: подтверждённые дополнительные цели — нижняя граница. Общая отметка обеих охот
@@ -263,10 +279,14 @@ async function statePatch(m, sender) {
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
     if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
       return { ok: false, reason: 'ownership_lost' };
+    if(m.dailyServer) {
+      const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
+      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock};
+    }
     if(m.resolveLimitRanges) {
       if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
       const r=limitRangeChange(state,now);if(!r.ok)return r;
-      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,farmQuota:r.rt.farmQuota,dropped:r.dropped};
+      await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,dailyQuota:r.rt.dailyQuota,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
       const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
@@ -359,6 +379,7 @@ async function menuPatch(m, sender) {
     // 8.0 (аудит ядра): переключатель в меню больше не переписывает всю память персонажа (163 КБ) — rt только если есть что писать.
     // Раньше вкладка после такой записи заменяла свою память и теряла то, что держала только в памяти (метки отката атаки и т. п.)
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
+    if(m.on===true)change.rt={...state.rt,...change.rt,dailyStart:(state.rt?.dailyStart||0)+1,_src:'menu'};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
     if(m.setFishGoal) {
       const E=m.setFishGoal;
@@ -386,7 +407,7 @@ async function menuPatch(m, sender) {
       const reset=m.resetDailyQuota===task,edited=Object.hasOwn(cfgPatch,key)&&quotaLimit(cfgPatch[key])!==quotaLimit(state.cfg?.[key]);
       if(!reset&&!edited)continue;
       const rt={...state.rt,...change.rt,_src:'menu'};
-      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat','raid'])rt.dailyQuota[k]=0;}
+      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat','raid','server'])rt.dailyQuota[k]=0;}
       if(task==='fish')rt.dailyFishMark={t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0};
       else for(const k of ['auto','cat']){const row=rt.farmQuota?.[k];if(row)rt.farmQuota={...rt.farmQuota,[k]:{...row,run:(row.run||0)+1,pending:null}};}
       change.rt=rt;
