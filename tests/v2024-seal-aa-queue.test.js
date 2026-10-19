@@ -29,9 +29,9 @@ test('новая ручная очередь переживает отмену �
  const A=b.L2V7Factories.actions(env);A.enterFrame();await A.dispatch();assert.ok(rt.sealEx);assert.equal(rt.old,null);assert.equal(rt.actionOwner,null);
 });
 function dungeon(change){
- const rt={char:'Hero',manualKickAt:1,sealEx:{t:Date.now(),manual:true}},loc={pathname:'/ancient-trader.html',href:''};let clicks=0;
+ const rt={char:'Hero',manualKickAt:1,sealEx:{t:Date.now(),manual:true}},loc={pathname:'/ancient-trader.html',href:''};let clicks=0,net=null;
  const inp={value:'',dispatchEvent(){}},btn={disabled:false};const row={dataset:{stone:'green'},querySelector:s=>s.includes('owned__value')?{textContent:'10'}:s.includes('__input')?inp:s.includes('__btn')?btn:null,getAttribute:()=> '5'};
- const env={on:true,tabOwner:true,leaseEpoch:1,rt,cfg:{},routeLocation:loc,canAct:()=>true,waitX:async fn=>fn(),setRt:async p=>{Object.assign(rt,p);return{ok:true}},rtCommit:async()=>true,rec(){},setStatus(){},sleep:async()=>{},shown:()=>false,sealNet:()=>({t:Date.now()+10,ok:true}),pause:async()=>change?.(env),fire:()=>{clicks++;return true}};
+ const env={on:true,tabOwner:true,leaseEpoch:1,rt,cfg:{},routeLocation:loc,canAct:()=>true,waitX:async fn=>fn(),setRt:async p=>{Object.assign(rt,p);return{ok:true}},rtCommit:async()=>true,rec(){},setStatus(){},sleep:async()=>{},shown:()=>false,sealNet:()=>net,pause:async()=>change?.(env),fire:()=>{clicks++;net={t:Date.now(),ok:true,status:200,stone:'green',qty:+inp.value};return true}};
  const b={Date,Event:class{},document:{querySelectorAll:()=>[row]},chrome:{storage:{local:{set:async()=>{}}}}};vm.runInNewContext(read('modules/dungeons.js'),b);return{env,loc,clicks:()=>clicks,D:b.L2V7Factories.dungeons(env)};
 }
 for(const [name,change]of Object.entries({Stop:e=>e.on=false,lease:e=>e.leaseEpoch++,hero:e=>e.rt.char='Other',kick:e=>e.rt.manualKickAt++,queue:e=>e.rt.sealEx={t:1}}))test(name+' во время подготовки отменяет клик обмена',async()=>{const w=dungeon(change);await w.D.sealStep();assert.equal(w.clicks(),0);assert.equal(w.loc.href,'')});
