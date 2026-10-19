@@ -4387,6 +4387,7 @@ async function invRefresh(active = () => true) {
     INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(c?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY = invContext();
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
+    if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
     if (tabOwner && c?.inventory?.eq) await L2V7Modules.mammon.eqNote(c.inventory.eq);
     return active() ? m : null;
   } catch (e) { return null; }
@@ -4644,6 +4645,7 @@ addEventListener('message', e => {
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
+    if (['/character','/character/town/buffer','/character/subclasses/switch'].includes(path)) L2V7Modules.buffs?.vipNote?.(d.res.character);
     const m = path.match(/^\/game\/story-quests\/(noblesse|subclass)$/);
     if (m && d.res.quest) L2V7Modules.story.qNote(m[1], d.res.quest);
     if (/^\/game\/story-quests\/starter-saga(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.sagaNote(d.res.quest);   // 10.0.10: сюжетный квест новичка → rt.storySaga (кампания авто)
@@ -5513,7 +5515,7 @@ L2V7Modules.navigation = L2V7Factories.navigation({ get rtCommit(){return rtComm
   get sleep() { return sleep; }, set sleep(value) { sleep = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.buffs = L2V7Factories.buffs({ get faBuffEvidence(){return async p=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'faBuffEvidence',p}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get gamePost(){return gamePost},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get heroStatsFor() { return heroStatsFor; }, get epicBuffCol() { return (...a) => L2V7Modules.epics.epicBuffCol(...a); }, get epicBuffPay() { return (...a) => L2V7Modules.epics.epicBuffPay(...a); }, get epicBuffRelease() { return (...a) => L2V7Modules.epics.epicBuffRelease(...a); }, get epicFaOk() { return (...a) => L2V7Modules.epics.epicFaOk(...a); }, get heroRole() { return (...a) => L2V7Modules.fightlab?.role?.(...a); }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BUFF_CTX() { return BUFF_CTX; }, set BUFF_CTX(value) { BUFF_CTX = value; },
   get DEAD_RE() { return DEAD_RE; }, set DEAD_RE(value) { DEAD_RE = value; },
   get FA_KNOWN() { return FA_KNOWN; }, set FA_KNOWN(value) { FA_KNOWN = value; },

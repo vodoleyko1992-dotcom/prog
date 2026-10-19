@@ -499,6 +499,8 @@
 
   <h4>✨ Городской баффер</h4>
   <label>Набор <select id="townBuffSet"><option value="basic">Звичайний баф — бесплатно</option><option value="warrior">Повний баф воїна — 15 Coin of Luck</option><option value="mage">Повний баф мага — 15 Coin of Luck</option><option value="off">Не брать</option></select></label>
+  <label title="При обычном наборе и активном VIP бот берёт полный бафф по активному классу только с нулевой ценой из свежего каталога. По окончании VIP снова обычный набор.">Бесплатный полный бафф по классу во время VIP <input id="vipBuffAuto" type="checkbox"></label>
+  <div class="hint">Для воина и спойлера — полный бафф воина, для мага — мага. Действует при выборе обычного набора выше; платный бафф суммона не входит.</div>
   <div class="hint" style="margin:8px 0 2px;color:var(--txt)">💎 Баффы за Fast Aden (3 ч) — берутся по порядку списка</div>
   <div class="row add" style="margin-top:2px"><select id="faPick" style="flex:1" aria-label="Бафф за Fast Aden"></select><button id="faAdd" title="Добавить бафф в список" style="flex:0 0 38px">+</button></div>
   <div id="faList" style="display:flex;flex-direction:column;gap:4px;margin:6px 0"></div>

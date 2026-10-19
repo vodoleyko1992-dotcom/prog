@@ -203,17 +203,99 @@ function tbDowngrade(set, H) {                     // какие активны�
   const L = env.rt.tbLvl?.[set] || TB_LVL_DEF[set] || {}, lv = hudLevels(), now = Date.now();
   return Object.entries(L).map(([id, give]) => ({ id: +id, have: lv[id], give })).filter(x => H[x.id] && H[x.id] - now > 30 * 60000 && x.have > x.give);
 }
+// 20.24 (лог19.10 20:45): VIP даёт полный городской набор бесплатно, пока это подтверждает сервер.
+const vipUntil = v => { const n = typeof v === 'number' ? v : typeof v === 'string' ? Date.parse(v) : NaN; return Number.isFinite(n) ? n : v == null ? null : -1; };
+function vipNote(ch) {
+  if (env.tabOwner === false || ch?.name !== env.rt.char || typeof ch.vip?.active !== 'boolean') return false;
+  const set = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '';
+  const next = { char: env.rt.char, active: ch.vip.active, until: vipUntil(ch.vip.vipUntil), set, prof: ch.l2Profession || '', slot: ch.classSlots?.activeSlot ?? null, t: Date.now() };
+  const old = env.rt.vipBuff;
+  if (!old || Object.keys(next).some(k => k !== 't' && old[k] !== next[k]) || next.t - old.t > 30000) env.setRt({ vipBuff: next });
+  return true;
+}
+function vipPreferred() {
+  const v = env.rt.vipBuff, now = Date.now();
+  if (env.cfg.vipBuffAuto === false || (env.cfg.townBuffSet || 'basic') !== 'basic' || !v || v.char !== env.rt.char || !v.active || !v.set
+      || now - v.t > 120000 || v.t > now + 1000 || v.until !== null && v.until <= now + 3000 || (env.rt.classSwT || 0) > v.t) return '';
+  if (Number.isInteger(env.rt.classCur?.slot) && v.slot !== null && env.rt.classCur.slot !== v.slot) return '';
+  return v.set;
+}
+const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
+  && s.skills.every(x => Number.isSafeInteger(x.skillId) && x.skillId > 0 && Number.isSafeInteger(x.level) && x.level > 0);
+const vipEffects = (ch, q) => ch?.name === env.rt.char && ch.id === q.actor && Number.isSafeInteger(ch.revision) && ch.revision > q.revision
+  && Array.isArray(ch.activeBuffs) && q.skills.every(x => ch.activeBuffs.some(b => b.skillId === x.skillId && b.level >= x.level
+    && Number.isFinite(b.expiresAtMs ?? b.expiresAt) && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 60000));
+async function vipTownStep(st, active, done) {
+  // Только VIP-ветка: точная нулевая цена идёт в серверный запрос, не берётся из старого DOM/кэша.
+  const current = () => active() && env.rt.tbuff?.t === st.t;
+  const finish = async (ch, q) => {
+    if (!current() || !vipEffects(ch, q)) return false;
+    const levels = Object.fromEntries(q.skills.map(x => [x.skillId, x.level]));
+    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, ids: q.skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [q.set]: q.skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [q.set]: levels } });
+    if (!current()) return true;
+    env.rec('B', 'бафф', `VIP: полный ${q.set === 'mage' ? 'бафф мага' : 'бафф воина'} подтверждён — 0 адены, 0 Coin of Luck`);
+    if (st.fa?.length) { await env.setRt({ tbuff: { ...st, set: q.set, step: 'fa', vipFree: false, vipRequest: null } }); if (current()) location.href = '/fast-aden-buffer.html'; }
+    else await done('VIP-бафф готов — возвращаюсь');
+    return true;
+  };
+  if (st.vipRequest?.phase === 'prepared') { await env.setRt({ tbuff: { ...st, vipRequest: null } }); return; }
+  if (st.vipRequest) {
+    try { const r = await env.gameGet('/character'), d = r.ok ? await r.json() : null; if (await finish(d?.character, st.vipRequest)) return; } catch (_) {}
+    if (current()) env.setStatus('VIP-бафф: проверяю результат прежнего запроса; повтор не отправляю');
+    await env.sleep(3000); return;
+  }
+  let ch, catalog;
+  try { const [cr, lr] = await Promise.all([env.gameGet('/character'), env.gameGet('/character/town/buffer/catalog')]);
+    const [c, l] = await Promise.all([cr.json(), lr.json()]); if (!current()) return;
+    ch = cr.ok && c?.character; catalog = lr.ok && l;
+  } catch (_) { if (current()) { await env.setRt({ tbOk: false }); await done('VIP: цену не удалось проверить — набор не применяю'); } return; }
+  if (!ch || ch.name !== env.rt.char || !ch.id || !Number.isSafeInteger(ch.revision) || ch.inBattle !== false || !(ch.hp > 0) || !Array.isArray(ch.activeBuffs)) return done('VIP: состояние персонажа не подтверждено — набор не применяю');
+  vipNote(ch);
+  const eligible = ch.vip?.active === true && (vipUntil(ch.vip.vipUntil) === null || vipUntil(ch.vip.vipUntil) > Date.now() + 3000);
+  if (!eligible || env.cfg.vipBuffAuto === false || (env.cfg.townBuffSet || 'basic') !== 'basic') {
+    if (current()) await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false } }); return;
+  }
+  const set = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '', row = catalog?.sets?.find(x => x.id === set);
+  if (!set || !vipPriceZero(row)) { await env.setRt({ tbOk: false }); return done('VIP: полный набор не подтверждён бесплатным — не применяю'); }
+  const levels = Object.fromEntries(row.skills.map(x => [x.skillId, x.level]));
+  if (row.skills.some(x => ch.activeBuffs?.some(b => b.skillId === x.skillId && b.level > x.level && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 30 * 60000))) return done('VIP: набор понизил бы действующие баффы — пропускаю');
+  const q = { phase: 'prepared', set, actor: ch.id, revision: ch.revision, skills: row.skills.map(x => ({ skillId: x.skillId, level: x.level })) };
+  const saved = await env.setRt({ tbuff: { ...st, set, vipRequest: q }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
+  if (!current()) return;
+  if (saved?.ok !== true || !await env.rtCommit()) { if (current()) await env.setRt({ tbuff: st }); return; }
+  const permitted = () => current() && env.cfg.vipBuffAuto !== false && (env.cfg.townBuffSet || 'basic') === 'basic'
+    && !(Number.isInteger(env.rt.classCur?.slot) && ch.classSlots?.activeSlot != null && env.rt.classCur.slot !== ch.classSlots.activeSlot)
+    && (vipUntil(ch.vip.vipUntil) === null || vipUntil(ch.vip.vipUntil) > Date.now() + 1000);
+  await env.pause();
+  if (!permitted()) {
+    if (current()) await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false, vipRequest: null } }); return;
+  }
+  const sent = { ...q, phase: 'sent' };
+  const marked = await env.setRt({ tbuff: { ...st, set, vipRequest: sent } });
+  const flushed = marked?.ok === true && await env.rtCommit();
+  if (!permitted() || !flushed) {
+    if (active.same() && env.rt.tbuff?.t === st.t) await env.setRt({ tbuff: { ...st, vipRequest: null } }); return;
+  }
+  let r, d;
+  try { r = await env.gamePost('/character/town/buffer', { set, expectedRevision: ch.revision, expectedFeeAdena: '0', expectedFeeCoinOfLuck: 0 }); d = await r.json(); }
+  catch (_) { if (current()) env.setStatus('VIP-бафф: ответ неизвестен — сверю эффекты без повторного запроса'); return; }
+  if (!current()) return;
+  if (r.ok && !d?.error && await finish(d?.character, q)) return;
+  if ([400,401,403,404,409,412,422].includes(r.status)) { await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false, vipRequest: null }, tbOk: false }); env.rec('B','бафф','VIP: сервер отклонил бесплатный набор — возвращаюсь к обычному'); return; }
+  env.setStatus('VIP-бафф: эффект не подтверждён — сверю без повторного применения');
+}
 let tbDownLogT = 0;
 // 20.13 (ревизия 17.10, шаг 7, raid/BF-4): два порога «кончается» были разбросаны числами по модулю. Значения прежние:
 // FA_RENEW_MS — когда бафф за FA покупать заново (townBuffNeed, очередь шага fa); BUFF_LOW_MS — «кончается» для городского набора и строки
 // «нет/кончается» в журнале (та же 10-минутная граница у raid.rbBuffShortage). Порог «перед РБ» по длительности боя — отдельное решение
 const FA_RENEW_MS = 60000, BUFF_LOW_MS = 10 * 60000;
 function townBuffNeed() {                          // что взять: { set, fa: [id…] } или null
-  let set = env.cfg.townBuffSet || 'basic';
+  const vip = vipPreferred();
+  let set = vip || env.cfg.townBuffSet || 'basic';
   // 8.0.3 (эпики): платный «Повний баф» (15 Coin of Luck) во время эпика — только в пределах лимита Coin of Luck на эпиков, иначе
   // бесплатный «Звичайний баф». Признак — состояние эпика (rt.epic), поэтому и в «Восстановить», и после смерти; для РБ выбор не меняется
   // 8.0.3 (ревью): в режиме эпиков — всегда (и между эпиками), и только когда сам заход разрешён (epics.epicBuffWhy)
-  if ((set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
+  if (!vip && (set === 'warrior' || set === 'mage') && env.epicBuffCol?.() === false) set = 'basic';
   const H = hudBuffs();
   if (H) try { faDeathNote(H); } catch (e) {}       // 8.0.3: что смерть сделала с баффами за FA — в журнал
   // 8.0.3: городской набор выключен и своего списка FA нет — Noblesse при платных баффах (и РБ-сессия) всё равно докупается
@@ -232,7 +314,9 @@ function townBuffNeed() {                          // что взять: { set, 
   for (const [k, e] of Object.entries(H)) { const id = +k; if (e !== Infinity && (L[id] ? e - now > 25 * 60000 : e - now > 3.2 * 3600000) && !faIds.includes(id) && !sessIds.includes(id) && L[id] !== e) { L[id] = e; ch = true; } }
   for (const k of Object.keys(L)) if (L[k] < now - 3600000) { delete L[k]; ch = true; }
   if (ch) env.setRt({ hudLong: L });
-  const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000);
+  // После окончания VIP обычный набор не может восстановить его дополнительные эффекты.
+  const unavailableVip = !vip && set === 'basic' && env.rt.char && env.rt.vipApplied?.char === env.rt.char ? env.rt.vipApplied.ids || [] : [];
+  const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000 && (!unavailableVip.includes(id) || ids.includes(id)));
   let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0);
   const down = needSet ? tbDowngrade(set, H) : [];
   if (down.length) {                                 // 7.2.2: набор понизил бы баффы — не берём
@@ -240,7 +324,7 @@ function townBuffNeed() {                          // что взять: { set, 
     if (Date.now() - tbDownLogT > 1800000) { tbDownLogT = Date.now(); env.rec('B', 'бафф', `городской набор «${set}» не беру — он понизит ваши баффы: ${down.map(x => `${env.FA_KNOWN?.[x.id]?.[0] || env.rt.faCat?.[x.id]?.name || 'skill ' + x.id} Lv.${x.have}→${x.give}`).join(', ')}`); }
   }
   const fa = faWanted().filter(id => !H[id] || H[id] - Date.now() < FA_RENEW_MS || (id === 1323 && nobGone(H)) || faLow(id));
-  return needSet || fa.length ? { set: needSet ? set : null, fa } : null;
+  return needSet || fa.length ? { set: needSet ? set : null, fa, ...(vip && needSet ? { vipFree: true } : {}) } : null;
 }
 
 const faIdsOf = v => String(v || '').split(/[,\s]+/).map(x => +x).filter(x => x > 0);
@@ -579,6 +663,7 @@ async function townBuffStep() {
   }
   if (st.step === 'town') {
     if (!/\/town-buffer\.html/.test(location.pathname)) { location.href = '/town-buffer.html'; await env.sleep(4000); return; }
+    if (st.vipFree || st.vipRequest) return vipTownStep(st, active, done);
     if (st.set !== 'basic' && !['warrior', 'mage'].includes(env.cfg.townBuffSet)) return done('платный бафф не выбран в меню — пропускаю');
     // 8.0.3 (эпики): платный набор в режиме эпиков — в пределах лимита Coin of Luck; не разрешён — бесплатный «basic».
     // 8.0.3 (ревью): сначала только проверка (epicBuffCol, без резерва); резерв — прямо перед нажатием, после кнопки и проверки «не
@@ -753,6 +838,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { vipNote, vipPreferred, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);
