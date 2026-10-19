@@ -6490,13 +6490,27 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     const R = { ...(C('limitRanges') || {}) }, ra = R.dailyAutoKillLimit, rc = R.dailyCatKillLimit;
     if (ra || rc) R.dailyKillLimit = { min: (ra?.min || 0) + (rc?.min || 0), max: (ra?.max || 0) + (rc?.max || 0) };
     delete R.dailyAutoKillLimit; delete R.dailyCatKillLimit;
-    // Старых лимитов не было → заводской диапазон игрока на оба счётчика; свои прежние числа/диапазоны сохраняются.
-    if (!(a + c) && !R.dailyKillLimit) R.dailyKillLimit = { ...DAILY_RANGE };
+    // 19.10.2026: у мобов заводское число точное; свои прежние числа/диапазоны сохраняются.
     if (!q(C('dailyFishLimit')) && !R.dailyFishLimit) R.dailyFishLimit = { ...DAILY_RANGE };
     cf.limitRanges = R;
-    cf.dailyKillLimit = a + c || DAILY_KILL_DEF; if (!q(C('dailyFishLimit'))) cf.dailyFishLimit = DAILY_FISH_DEF;
+    const shared = C('dailyKillLimit');
+    cf.dailyKillLimit = a + c || (Number.isSafeInteger(+shared) && +shared >= 0 ? +shared : DAILY_KILL_DEF); if (!q(C('dailyFishLimit'))) cf.dailyFishLimit = DAILY_FISH_DEF;
     cf.dailyAutoKillLimit = 0; cf.dailyCatKillLimit = 0;
     const rolls = { ...(rt.limitRolls || {}) }; delete rolls.dailyAutoKillLimit; delete rolls.dailyCatKillLimit; rf.limitRolls = rolls;
+  });
+  // 19.10.2026: заменить только прежние заводские границы и выбранное в них число; произвольные числа,
+  // отключённый лимит и свои диапазоны не трогаем. Счётчики добычи и незавершённый бой сохраняются.
+  once('dailyLimits8000_20261019', () => {
+    const R = { ...(C('limitRanges') || {}) }, rolls = { ...(rf.limitRolls || rt.limitRolls || {}) };
+    let changed = false;
+    for (const key of ['dailyKillLimit', 'dailyFishLimit']) {
+      const b = R[key], n = +C(key), def = key === 'dailyKillLimit' ? DAILY_KILL_DEF : DAILY_FISH_DEF;
+      if (b?.min !== 8434 || b?.max !== 9119 || !(C(key) === undefined || n === def || Number.isSafeInteger(n) && n >= b.min && n <= b.max)) continue;
+      if (key === 'dailyKillLimit') { cf[key] = DAILY_KILL_DEF; delete R[key]; }
+      else { cf[key] = DAILY_FISH_DEF; R[key] = { ...DAILY_RANGE }; }
+      delete rolls[key]; changed = true;
+    }
+    if (changed) { cf.limitRanges = R; rf.limitRolls = rolls; }
   });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5

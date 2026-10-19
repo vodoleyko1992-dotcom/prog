@@ -94,13 +94,13 @@ const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); a
     assert.ok((await send({ cmd: 'cfgImport', cfg: { shopReserve: 5 }, perChar: { 'cfg@Hero': { b: 2 } } }, pop))?.ok);
     assert.strictEqual(store.cfg.shopReserve, 5); assert.strictEqual(store.cfg.nPower, 'Blaze', 'импорт сливается с текущими настройками в очереди фона');
     assert.strictEqual(JSON.stringify(store['cfg@Hero']), '{"a":1,"b":2}');
-    // Старт больше не пишет всю форму: нет ключа дневного лимита в cfg — фон берёт то же заводское значение, что и вкладка (8434)
-    assert.strictEqual(ctx.dailyFishChange({ on: true, cfg: {}, rt: { fish: { t0: 1, caught: 0 } } }, { limit: 8434, kick: 0 }, Date.now()).ok, true, 'нет ключа — заводской лимит');
-    assert.strictEqual(ctx.dailyFishChange({ on: true, cfg: { dailyFishLimit: 0 }, rt: {} }, { limit: 8434, kick: 0 }, Date.now()).ok, false, 'явный 0 — лимита нет');
+    // Старт больше не пишет всю форму: нет ключа дневного лимита в cfg — фон берёт то же заводское значение, что и вкладка (1511)
+    assert.strictEqual(ctx.dailyFishChange({ on: true, cfg: {}, rt: { fish: { t0: 1, caught: 0 } } }, { limit: 1511, kick: 0 }, Date.now()).ok, true, 'нет ключа — заводской лимит');
+    assert.strictEqual(ctx.dailyFishChange({ on: true, cfg: { dailyFishLimit: 0 }, rt: {} }, { limit: 1511, kick: 0 }, Date.now()).ok, false, 'явный 0 — лимита нет');
     // то же для общего дневного лимита мобов: нет ключа — сверка со значением вкладки; явное число — строго
     const fq = (cfg, dl) => ctx.farmQuotaChange({ on: true, cfg: { autoTasks: ['cat'], ...cfg }, rt: {} }, { task: 'cat', op: 'begin', limit: 0, dailyLimit: dl, counter: 0, revision: 1, spawn: 'sdms_x_001', kick: 0 }, Date.now());
-    assert.strictEqual(fq({}, 8434).ok, true, 'нет ключа dailyKillLimit — значение вкладки');
-    assert.strictEqual(fq({ dailyKillLimit: 9000 }, 8434).reason, 'quota_changed', 'явный другой лимит — сверка строгая'); }
+    assert.strictEqual(fq({}, 8000).ok, true, 'нет ключа dailyKillLimit — значение вкладки');
+    assert.strictEqual(fq({ dailyKillLimit: 9000 }, 8000).reason, 'quota_changed', 'явный другой лимит — сверка строгая'); }
   { const b = { Object, JSON, Number, Array, DEF: { shopReserve: 200000, nPower: 'x', tvtOn: true, autoTasks: null, enchant: { a: 1 }, petFullReserve: null } };
     vm.createContext(b); vm.runInContext(part(popup, 'const CFG_IMPORT_EXTRA', "$('cfgImport').onclick") + ';this.clean=cfgImportClean;', b);
     const r = b.clean({ shopReserve: 7, nPower: 'Blaze', tvtOn: 'yes', autoTasks: ['fish'], enchant: { q: 1 }, dockMin: true, petFullReserve: 5, deep25: 1, evil: { x: 1 }, stopHp: 1, shopMaxSpend: -5 });

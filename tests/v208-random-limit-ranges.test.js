@@ -59,7 +59,7 @@ test('range edits and resolve reject stale character or owner, Stop and write fa
  f.state.on=true;f.refresh();f.fail();assert.equal(await f.c.syncLimitRanges(),false);assert.equal(f.state.rt.limitRolls.dailyFishLimit.day,'2026-10-17');
 });
 test('same fixed existing defaults do not gain random limits; UI ranges use explicit Apply',()=>{
- const base=JSON.parse(read('base-profile.json'));assert.deepEqual(Object.keys(base.cfg.limitRanges).sort(),['dailyFishLimit','dailyKillLimit']);const html=read('popup.html');for(const key of ['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'])for(const suffix of ['From','To','RangeSet','RangeClear','RangeInfo'])assert.ok(html.includes('id="'+key+suffix+'"'));
+ const base=JSON.parse(read('base-profile.json'));assert.deepEqual(Object.keys(base.cfg.limitRanges).sort(),['dailyFishLimit']);const html=read('popup.html');for(const key of ['dailyFishLimit','dailyKillLimit','autoKillLimit','catKillLimit','fishMaxCasts'])for(const suffix of ['From','To','RangeSet','RangeClear','RangeInfo'])assert.ok(html.includes('id="'+key+suffix+'"'));
  /* 20.12 (UI-1): полной записи формы больше нет вовсе — выпавший лимит диапазона не перезаписывается старым числом формы */assert.match(read('popup.js'),/if \(!one\.length\) return false;/);assert.match(html,/id="fishTgtMax"/);
 });
 

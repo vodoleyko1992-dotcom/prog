@@ -21,6 +21,19 @@
   // 7.2.3: сумка из ответа (character.inventory.stacks) целиком — redact режет массивы до 8 элементов, а боту нужны все
   // количества (заряды, банки). Только [itemId, qty] — ничего личного
   const invOf = o => { try { const st = o?.character?.inventory?.stacks || o?.inventory?.stacks; return Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : undefined; } catch (e) { return undefined; } };
+  // 19.10: дроп РБ может содержать свитки после первых8строк. Только известные ID свитков
+  // оружия/брони и положительный шанс; итог считаем до redact, без полного массива в журнале.
+  const infoRes = (u, o) => {
+    const res = o == null ? null : redact(o);
+    if (!/^\/game\/spawn\/[^/]+\/info$/.test(u.pathname) || !res || typeof res !== 'object' || Array.isArray(res)) return res;
+    delete res.scrollDrops; // Сводка принадлежит hook, одноимённое произвольное поле сервера не принимаем.
+    if (Array.isArray(o?.drops)) {
+      const has = o.drops.some(d => d && typeof d === 'object' && Number.isInteger(+(d.l2ItemId ?? d.itemId)) && +(d.l2ItemId ?? d.itemId) >= 910510
+        && +(d.l2ItemId ?? d.itemId) <= 910529 && Number.isFinite(+d.chance) && +d.chance > 0);
+      if (has || o.drops.every(d => d && typeof d === 'object' && !Array.isArray(d) && d.chance != null && Number.isFinite(+d.chance) && +d.chance >= 0)) res.scrollDrops = has;
+    }
+    return res;
+  };
   // 10.0.2 (Life Stone): надетое оружие и его аугментация (inventory.eq.l1) — redact глубже 5 уровней не пускает. Только id/заточка/исход, без uid
   // 10.0.7 (ценность баффов): цифры героя из ответа /character — M.Atk, P.Atk, шанс/сила крита, баффы, кот (P.Atk, крит, точность)
   const heroOf = o => { try { const c = o?.character; if (!c || typeof c !== 'object' || !(c.mAtk > 0 || c.pAtk > 0) || !Array.isArray(c.activeBuffs)) return undefined;
@@ -225,7 +238,7 @@
         storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
       if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid,retryOf });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: o == null ? null : redact(o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: infoRes(u, o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid,retryOf }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
     return p;
@@ -241,7 +254,7 @@
       const {rid} = start(u, info.method, req);
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
-        try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = o == null ? null : redact(o); } catch (e) {}
+        try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = infoRes(u, o); } catch (e) {}
         post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
