@@ -42,8 +42,9 @@ assert.match(run({ pct: 80 }).recs.join('\n'), /цена хода: банка\/�
 assert.equal(run({ pct: 70, potOn: true, price: false }).potAt, 100, 'switch off → 8.0 band (65…75 %) keeps drinking');
 assert.equal(run({ pct: 79, known: false }).potAt, 100, 'unknown RB → careful 8.0 band from 80 %');
 
+// 19.10: доступность банки проверяет общий резерв HP, а не остаток одного типа.
 // 3. лечащий скилл на РБ уступает ход банке, пока банка есть (резерв бережём — тогда скилл)
-assert.match(combat, /const rbPotHas = !!ctx\.rb && env\.cfg\.rbTurnPrice !== false && .*q > \(env\.cfg\.rbPotReserve \|\| 0\)/);
+assert.match(combat, /const rbPotHas = !!ctx\.rb && env\.cfg\.rbTurnPrice !== false && .*hpReserveBlocked\(p, env\.cfg\.rbPotReserve\)/);
 assert.match(combat, /if \(me && me\.pct <= env\.cfg\.hpPotAt && !drainFirst && !rbPotHas\) \{/);
 
 // 4. настройка есть в меню, по умолчанию ВКЛ везде
