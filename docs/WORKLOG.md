@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 19.10.2026, 21:47 UTC+10 — Codex — PR в подготовке: быстрая сборка Chrome20.26
+## 19.10.2026, 21:47 UTC+10 — Codex — [PR #290](https://github.com/vodoleyko1992-dotcom/prog/pull/290): быстрая сборка Chrome20.26
 
 - По прямому запросу собран толькоChrome20.26:20.25 + #288/#289 (отключение автозаточки и большие стекиAA партиями). Обновленыmanifest/content/пятьпроверокверсии/README-CHROME/CHANGELOG/CLAUDE/HANDOFF. Firefox20.23 сохранён.
 - Общий Node runner465PASS/0FAIL, синтаксис54JS/envcheck31/diff-check PASS. ZIP64файла, CRC/88manifest-HTMLссылок/профильбезauth-passw/сверка64/64исходников/повторныйаудит PASS; различия с20.25только8ожидаемых runtime-файлов. Размер1403593байт, SHA3d7f9d9ac279176315ef6d94b791ad6f7aba4577c517c40ead442d651172b651. Chromiumизархива:20.26/206ключейcfg/0ошибок. ActualMV3 именноизZIP: все4906949камней→25432344AA с отказами/адаптацией/несколькимипроходами/OFF, auto tasks-only; отключение автозаточки/старые профили/команды/0POST PASS. ВсеHTTPSлокальные.
