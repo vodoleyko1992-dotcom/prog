@@ -1415,6 +1415,91 @@ const MM_RES = { 1864: 'Stem', 1865: 'Varnish', 1866: 'Suede', 1867: 'Animal Ski
   1881: 'Coarse Bone Powder', 1882: 'Leather', 1883: 'Steel Mold', 1884: 'Cord', 1886: 'Silver Mold', 1887: 'Varnish of Purity', 1888: 'Synthetic Cokes', 1889: 'Compound Braid', 5549: 'Metallic Thread' };
 const MM_SLOT = { cloak: 'плащ', belt: 'пояс', tattoo: 'тату', wings: 'крылья' };
 const mmTime = t => t ? new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' }) : '?';
+// 20.23: чтение рюкзака отдельно от похода/улучшения, в том числе при выключенном боте.
+const mmBagUi = { busy: false, context: null, displayContext: null, error: '', errorAt: 0 };
+function mammonGearLevel(rt, id) {
+  const gs = (rt.mmGear || []).filter(g => g.id === id), g = gs.find(x => x.eq) || gs[0];
+  const e = Object.values(rt.mmEq || {}).find(x => x[0] === id);
+  return e && (!g || rt.mmEqT > 0 && rt.mmEqT >= (rt.mmGearT || 0)) ? e[1] : g?.lvl ?? e?.[1] ?? 0;
+}
+function mammonBagContext(rt, d) {
+  const goal = +d.mmGoalItem || 0;
+  return JSON.stringify([rt.char || '', rt.classCur?.prof || '', rt.classCur?.slot ?? null, goal, +d.mmGoalLvl || 5, goal ? mammonGearLevel(rt, goal) : null]);
+}
+function mammonBagView(rt, d, now = Date.now()) {
+  const A = rt.mmBagAnalysis, goal = +d.mmGoalItem || 0, to = +d.mmGoalLvl || 5;
+  const context = mammonBagContext(rt, d), same = !!A && A.char === rt.char &&
+    (A.prof || '') === (rt.classCur?.prof || '') && (A.slot ?? null) === (rt.classCur?.slot ?? null) &&
+    (goal ? +A.goal?.id === goal && +A.goal?.to === to && +A.goal?.lvl === +mammonGearLevel(rt, goal) : !A.goal);
+  const success = same && Number.isFinite(A.t) && A.t > 0;
+  const currentError = mmBagUi.context === context && mmBagUi.error && mmBagUi.errorAt >= Math.max(A?.attemptAt || 0, A?.t || 0, A?.errorAt || 0) ? mmBagUi.error : same && A.status === 'error' ? A.error || 'Не удалось прочитать рюкзак' : '';
+  const stamp = t => new Date(t).toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const stale = success && now - A.t > 300000;
+  const lines = [];
+  if (mmBagUi.busy && mmBagUi.context === context) lines.push('⏳ Читаю рюкзак и пересчитываю материалы…');
+  if (currentError) lines.push('⚠ Анализ не обновлён: ' + currentError);
+  if (success) {
+    lines.push('Последний успешный анализ: ' + stamp(A.t) + (stale ? ' · данные старше 5 минут' : ''));
+    if (goal && A.levelVerified === false) lines.push('Уровень вещи вне экипировки — по последнему списку кузнеца; ресурсы перечитаны из рюкзака.');
+    if (!goal) lines.push('Рюкзак прочитан' + (Number.isFinite(A.resourceCount) ? ': видов ресурсов ' + fmt(A.resourceCount) : '') + '. Выберите вещь-цель, чтобы сравнить материалы.');
+    else if (currentError || stale) lines.push('Ниже данные прошлого анализа; обновите рюкзак перед улучшением.');
+    else if (+A.goal.lvl >= +A.goal.to) lines.push('Выбранный уровень вещи уже достигнут.');
+    else if (A.unknownCost) lines.push('Часть цен ещё неизвестна — состав материалов уточняется у кузнеца.');
+    else if (A.readyMaterials) lines.push('Материалы следующего уровня собраны. Валюта и возможность улучшения проверяются отдельно.');
+  } else lines.push(A && !same ? 'Персонаж, класс, цель или уровень вещи изменились — нужен новый анализ.' : 'Успешного анализа рюкзака ещё нет.');
+  lines.push('При выбранных задаче «Маммон» и вещи-цели работающий бот анализирует рюкзак автоматически.');
+  return { analysis: success ? A : null, text: lines.join('\n'), context, stale: stale || !!currentError };
+}
+function mammonBagTable(rows, kind) {
+  const number = n => Number.isFinite(n) && n >= 0 ? fmt(n) : '?';
+  return '<table class="mm-t" style="width:100%;table-layout:fixed;margin:3px 0 7px;font-size:11px"><thead><tr><th style="width:46%;text-align:left">Материал</th><th>Нужно</th><th>Есть</th><th>Не хватает</th></tr></thead><tbody>' +
+    rows.map(x => `<tr data-mm-bag-item="${Number.isSafeInteger(x.id) && x.id > 0 ? x.id : ''}" data-mm-bag-kind="${kind}"><td style="overflow-wrap:anywhere">${esc(x.name || 'Материал без названия')}</td><td>${number(x.need)}</td><td>${number(x.have)}</td><td>${x.missing === 0 ? '✅' : '<b>' + number(x.missing) + '</b>'}</td></tr>`).join('') + '</tbody></table>';
+}
+function mammonBagReport(A, stale) {
+  if (!A.goal) {
+    const rows = Array.isArray(A.known) ? A.known : [];
+    return `<div data-mm-bag-report="${stale ? 'previous' : 'ok'}"><b>${stale ? 'По прошлому анализу: ' : ''}Ресурсы в рюкзаке</b>` + (rows.length
+      ? '<table class="mm-t" style="width:100%;table-layout:fixed;margin:3px 0 7px;font-size:11px"><thead><tr><th style="width:70%;text-align:left">Ресурс</th><th>Есть</th></tr></thead><tbody>' + rows.map(x => `<tr data-mm-bag-item="${Number.isSafeInteger(x.id) && x.id > 0 ? x.id : ''}" data-mm-bag-kind="resource"><td style="overflow-wrap:anywhere">${esc(x.name || 'Ресурс без названия')}</td><td>${Number.isFinite(x.have) && x.have >= 0 ? fmt(x.have) : '?'}</td></tr>`).join('') + '</tbody></table>'
+      : '<div>Известных ресурсов в рюкзаке нет.</div>') + '</div>';
+  }
+  const items = Array.isArray(A.items) ? A.items : [], raw = Array.isArray(A.raw) ? A.raw : [], craft = Array.isArray(A.craft) ? A.craft : [];
+  if (+A.goal.lvl >= +A.goal.to) return '<div data-mm-bag-report="' + (stale ? 'previous' : 'ok') + '">Уровень вещи на момент анализа: Lv.' + esc(A.goal.lvl) + '. Выбранная цель достигнута.</div>';
+  return `<div data-mm-bag-report="${stale ? 'previous' : 'ok'}"><b>${stale ? 'По прошлому анализу: ' : ''}Готовые материалы для Lv.${esc(A.goal.lvl)} → Lv.${esc(+A.goal.lvl + 1)}</b>` +
+    (items.length ? mammonBagTable(items, 'material') : '<div>Материалы следующего уровня пока неизвестны.</div>') +
+    (raw.length ? `<b>Сырьё для крафта до Lv.${esc(A.goal.to)}</b>` + mammonBagTable(raw, 'raw') : '') +
+    (craft.length ? `<b>Изготовить до Lv.${esc(A.goal.to)}</b>` + mammonBagTable(craft, 'craft') : '') +
+    (A.estimated || A.unknownCost ? '<div>≈ Сырьё до цели оценено по известным ценам; состав уточняется у кузнеца.</div>' : '') +
+    (raw.length || craft.length ? '<div>Сырьё не заменяет готовые материалы у кузнеца. Промежуточные материалы сначала нужно изготовить по рецептам.</div>' : '') + '</div>';
+}
+function mammonBagSummary(A, name, stale) {
+  const g = A.goal, head = `${name} · Lv.${g.lvl} → Lv.${g.to}: `;
+  const missing = (A.items || []).filter(x => x.missing > 0);
+  return (stale ? 'По прошлому анализу: ' : '') + head + (g.lvl >= g.to ? 'цель достигнута' :
+    A.unknownCost ? 'цена материалов ещё уточняется у кузнеца' :
+    A.readyMaterials ? 'материалы следующего уровня собраны; валюта проверяется отдельно' :
+    missing.length ? 'не хватает ' + missing.map(x => `${x.name} ×${fmt(x.missing)}`).join(', ') : 'состав материалов ещё уточняется');
+}
+async function analyzeMammonBag() {
+  if (mmBagUi.busy) return;
+  const expectedChar = formChar, goalItem = +$('mmGoalItem').value || 0, goalLvl = +$('mmGoalLvl').value || 5;
+  mmBagUi.busy = true; mmBagUi.context = mmBagUi.displayContext; mmBagUi.error = ''; mmBagUi.errorAt = 0;
+  $('mmBagAnalyze').disabled = true;
+  $('mmBagStatus').textContent = '⏳ Читаю рюкзак и пересчитываю материалы…';
+  let timer;
+  try {
+    if (!expectedChar) throw Error('Дождитесь загрузки персонажа');
+    const { rt = {}, cfg = {}, on = false, lock = null } = await chrome.storage.local.get(['rt', 'cfg', 'on', 'lock']);
+    if (rt.char !== expectedChar) throw Error('Персонаж изменился — обновите меню');
+    mmBagUi.context = mammonBagContext(rt, { mmGoalItem: goalItem, mmGoalLvl: goalLvl });
+    if ((+cfg.mmGoalItem || 0) !== goalItem || (+cfg.mmGoalLvl || 5) !== goalLvl) throw Error('Дождитесь сохранения выбранной цели');
+    const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
+    if (!tab?.id) throw Error('Откройте вкладку игры');
+    const result = await Promise.race([chrome.tabs.sendMessage(tab.id, { cmd: 'mammonBagAnalyze', expectedChar, goalItem, goalLvl }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Не получен ответ анализа. Повторите после загрузки вкладки игры.')), 20000); })]);
+    if (!result?.ok) throw Error(result?.reason || 'Не удалось прочитать рюкзак');
+  } catch (e) { mmBagUi.error = String(e?.message || e); mmBagUi.errorAt = Date.now(); }
+  finally { clearTimeout(timer); mmBagUi.busy = false; $('mmBagAnalyze').disabled = false; await load(); }
+}
 function renderMammon(rt, d) {
   if (!$('tab-mammon')) return;
   const N = rt.mmNpc || {}, npc = (x, nm) => x ? `${nm}: ${esc(x.loc)} · до ${mmTime(x.at)}, дальше ${esc(x.next || '?')} · телепорт ${x.price ? fmt(x.price) + ' адены' : 'бесплатно'}` : `${nm}: ?`;
@@ -1435,8 +1520,7 @@ function renderMammon(rt, d) {
   // вещи: экипировка из ответов игры + список кузнеца + все из справочника (для выбора цели заранее)
   const eq = Object.entries(rt.mmEq || {}), gear = rt.mmGear || [], ids = [...new Set([...eq.map(([, v]) => v[0]), ...gear.map(g => g.id)])];
   // 14.10: дубликат в сумке не подменяет надетую цель; свежий /character важнее старого списка кузнеца.
-  const lvlOf = id => { const gs = gear.filter(g => g.id === id), g = gs.find(g => g.eq) || gs[0], e = eq.find(([, v]) => v[0] === id)?.[1];
-    return e && (!g || rt.mmEqT > 0 && rt.mmEqT >= (rt.mmGearT || 0)) ? e[1] : g?.lvl ?? e?.[1] ?? 0; };
+  const lvlOf = id => mammonGearLevel(rt, id);
   const nm = id => MMG?.[id]?.n || gear.find(g => g.id === id)?.n || '#' + id;
   if (MMG && document.activeElement?.id !== 'mmGoalItem') {
     const all = [...ids, ...Object.keys(MMG).map(Number).filter(id => !ids.includes(id))];
@@ -1451,21 +1535,28 @@ function renderMammon(rt, d) {
   const gid = +d.mmGoalItem || 0;
   $('mmGoalBox').innerHTML = !gid ? 'Цели нет' : esc(rt.mmGoalSt || `${nm(gid)}: считаю…`) + (rt.mmJob?.kind === 'smith' ? '<br>⏳ бот летит к кузнецу' : '');
   // 9.2 (игрок 11.10: «собрать ВСЕ ресурсы наперёд»): по уровням до цели, итог наперёд, сырьё (крафтовое разобрано) и что передать крафтеру
-  const P = gid && rt.mmGoalPlan?.id === gid ? rt.mmGoalPlan : null, n0 = v => v == null ? '?' : fmt(v);
+  const P = gid && rt.mmGoalPlan?.id === gid && +rt.mmGoalPlan.to === (+d.mmGoalLvl || 5) && +rt.mmGoalPlan.lvl === +lvlOf(gid) ? rt.mmGoalPlan : null, n0 = v => v == null ? '?' : fmt(v);
+  const bag = mammonBagView(rt, d);
+  if (bag.analysis?.goal) $('mmGoalBox').innerHTML = esc(mammonBagSummary(bag.analysis, nm(gid), bag.stale)) + (rt.mmJob?.kind === 'smith' ? '<br>⏳ бот летит к кузнецу' : '');
+  mmBagUi.displayContext = bag.context;
+  $('mmBagStatus').textContent = bag.text;
+  $('mmBagAnalyze').disabled = mmBagUi.busy;
   const tb = (head, rows) => `<table class="mm-t" style="width:100%;border-collapse:collapse;margin:3px 0 7px;font-size:11px"><tr>${head.map(h => `<th style="text-align:left;opacity:.75;padding-right:6px">${h}</th>`).join('')}</tr>${rows.join('')}</table>`;
-  $('mmPlanBox').innerHTML = !P ? '' : `<b>По уровням</b> (≈ — оценка по известной цене, уточню у кузнеца):`
+  const levelPlan = !P ? '' : `<b>По уровням</b> (≈ — оценка по известной цене, уточню у кузнеца):`
     + tb(['Уровень', 'Адена', 'CoL', 'Материалы'], P.lv.map(x => `<tr><td style="white-space:nowrap;padding-right:6px">${x.e ? '≈ ' : ''}Lv.${x.L}→${x.L + 1}</td>` + (x.unk ? '<td colspan="3">цена неизвестна — узнаю у кузнеца</td></tr>'
       : `<td style="white-space:nowrap;padding-right:6px">${fmt(x.a)}</td><td>${x.c}</td><td>${x.m.map(m => `${esc(m[0])} ${fmt(m[1])}`).join(', ')}</td></tr>`)))
-    + `<b>Всего наперёд до Lv.${P.to}</b>: ${fmt(P.a)} адены + ${P.c} Coin of Luck`
+    + `<b>Всего наперёд до Lv.${P.to}</b>: ${fmt(P.a)} адены + ${P.c} Coin of Luck`;
+  const farmPlan = !P?.cr.length ? '' : P.pt?.pts?.length ? `<b>Точка фарма</b> (по всем материалам сразу; ${P.pt.d ? 'дроп' : ''}${P.pt.d && P.pt.s ? ' + ' : ''}${P.pt.s ? `спойл, пометка ≈${P.pt.sk} %` : ''}${!P.pt.d && !P.pt.s ? 'дроп и спойл выключены' : ''}):`
+    + tb(['Локация', 'Мобы', 'Шт./бой', 'Боёв'], P.pt.pts.map((z, i) => `<tr${i ? ' style="opacity:.75"' : ''}><td>${i ? '' : '➜ '}${esc(z.loc || z.tp)}${z.w ? '' : ' <span title="Мобы вне предпочтительного окна уровней">·вне окна</span>'}</td><td>${z.m.map(m => `${esc(m[0])} ${m[1]}${m[2] ? ' ' + m[2] + '%' : ''}${m[3] ? ' сп. ' + m[3] + '%' : ''}`).join(', ')}</td><td>${z.r.map(r => `${esc(r[0])} ${r[1]}`).join(', ')}</td><td>≈${fmt(z.f)}</td></tr>`)) : d.mmFarmBest === false && P.raw.some(r => r[3] && r[4]) ? '<div class="hint">Точка выбирается по одному ресурсу (галка «точку по всем материалам» снята)</div>' : '';
+  const savedMaterials = !P ? '' : '<div>Сохранённый план: остатки ещё не сверены анализом рюкзака.</div>'
     + tb(['Материал', 'Нужно', 'Есть', 'Не хватает'], P.tot.map(t => `<tr><td>${esc(t[0])}</td><td>${fmt(t[1])}</td><td>${n0(t[2])}</td><td>${t[3] ? '<b>' + fmt(t[3]) + '</b>' : '✅'}</td></tr>`))
     + (P.cr.length ? `<b>Сырьё</b> (крафтовое разобрано по рецептам, сумка учтена):`
       + tb(['Ресурс', 'Нужно', 'Есть', 'Не хватает'], P.raw.map(r => `<tr><td>${esc(r[0])}${r[5] ? ` <span title="Продаётся в магазине: Розхідники › ${esc(r[5])} › Ресурси, ≈${fmt(r[6])} аден за штуку${d.mmShopBuy !== false ? ' — бот докупит сам при закупке' : ' — докупка выключена'}">·магазин ≈${fmt(r[6])}</span>` : r[4] ? '' : ' <span title="В базе фарма источников нет">·нет в фарме</span>'}</td><td>${fmt(r[1])}</td><td>${n0(r[2])}</td><td>${r[3] ? '<b>' + fmt(r[3]) + (r[5] ? ` <span style="opacity:.7">≈${fmt(r[3] * r[6])} аден</span>` : '') + '</b>' : '✅'}</td></tr>`))
       + (P.raw.some(r => r[5] && r[3]) ? `<div class="hint">🛒 ${d.mmShopBuy !== false ? 'Докуплю в магазине' : 'Можно купить в магазине (докупка выключена)'}: ${P.raw.filter(r => r[5] && r[3]).map(r => `${esc(r[0])} ${fmt(r[3])} ≈ ${fmt(r[3] * r[6])} аден`).join(', ')}</div>` : '')
-      // 10.0.7: точка фарма по всем недостающим материалам сразу (mammon.farmPlanPt): локация, мобы, шт./бой по ресурсам, боёв до закрытия
-      + (P.pt?.pts?.length ? `<b>Точка фарма</b> (по всем материалам сразу; ${P.pt.d ? 'дроп' : ''}${P.pt.d && P.pt.s ? ' + ' : ''}${P.pt.s ? `спойл, пометка ≈${P.pt.sk} %` : ''}${!P.pt.d && !P.pt.s ? 'дроп и спойл выключены' : ''}):`
-        + tb(['Локация', 'Мобы', 'Шт./бой', 'Боёв'], P.pt.pts.map((z, i) => `<tr${i ? ' style="opacity:.75"' : ''}><td>${i ? '' : '➜ '}${esc(z.loc || z.tp)}${z.w ? '' : ' <span title="Мобы вне предпочтительного окна уровней">·вне окна</span>'}</td><td>${z.m.map(m => `${esc(m[0])} ${m[1]}${m[2] ? ' ' + m[2] + '%' : ''}${m[3] ? ' сп. ' + m[3] + '%' : ''}`).join(', ')}</td><td>${z.r.map(r => `${esc(r[0])} ${r[1]}`).join(', ')}</td><td>≈${fmt(z.f)}</td></tr>`)) : d.mmFarmBest === false && P.raw.some(r => r[3] && r[4]) ? '<div class="hint">Точка выбирается по одному ресурсу (галка «точку по всем материалам» снята)</div>' : '')
+      + farmPlan
       + `<b>Нужно изготовить</b>:` + tb(['Скрафтить', 'Шт.', 'Рецепт'], P.cr.map(c => `<tr><td>${esc(c[0])}</td><td>${fmt(c[1])}</td><td>${esc(c[3])}${c[2] !== c[1] ? ` ×${c[2]}` : ''}</td></tr>`))
       + (P.snd?.length ? `<b>Сырьё в сумке на недостающие уровни Lv.${P.lvl} → Lv.${P.to}</b>${P.lk === 0 ? ' (уровень вещи бот ещё не видел — считаю от Lv.0; узнаю у кузнеца)' : ''}${P.cm ? ` (сырья на крафт не хватает ещё ${fmt(P.cm)})` : ' ✅ набор полный'}: ${P.snd.map(x => `${esc(x[0])} ${fmt(x[1])}`).join(', ')}` : '') : '');
+  $('mmPlanBox').innerHTML = levelPlan + (bag.analysis ? mammonBagReport(bag.analysis, bag.stale) + farmPlan : savedMaterials);
   // бонусы выбранной вещи Lv.0–5 (★ — надето/в сумке)
   const G = MMG?.[gid];
   $('mmGearBox').textContent = G ? `${G.n} (${G.g}, ${MM_SLOT[G.s] || G.s}) — бонусы по уровням:\n` + Object.keys(G.L[0]).map(k => `${MM_STAT[k] || k}: ${G.L.map(x => x[k]).join(' → ')}`).join('\n')
@@ -1523,6 +1614,7 @@ $('subHandNow')?.addEventListener('click', async () => { await menuPatch({ subHa
 $('mmGuideNow')?.addEventListener('click', async () => { await menuPatch({ farmGuideReq: Date.now() }); toast('🔄 Обновлю источники дропа и спойла из игры'); });
 $('mmPoll')?.addEventListener('click', () => menuPatch({ mmPollReq: Date.now() }));
 $('mmSmith')?.addEventListener('click', () => menuPatch({ mmSmithReq: Date.now() }));
+$('mmBagAnalyze').onclick = analyzeMammonBag;
 // 9.2.5: «идти сейчас» — разовая команда (mammon.goReq); бот летит, как только закончит бой/тур
 $('mmGoOrder')?.addEventListener('click', async () => { await menuPatch({ mmGoReq: { kind: 'order', t: Date.now() }, mmGoSay: null }); toast('📦 Лечу сдавать заказ Маммону'); });
 // Учёт прежних передач можно закрыть вручную; отправка удалена.

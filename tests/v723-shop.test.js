@@ -20,7 +20,8 @@ assert.equal(invOf({ ok: true }), undefined);
 assert.match(hook, /sp: spawns\(o\), inv: invOf\(o\), len: t\.length/);
 assert.match(hook, /req, res, sp: spawns\(o\), inv: invOf\(o\), len,/);
 const content = (read('defaults.js') + '\n' + read('content.js'));
-assert.match(content, /const m = invNote\(d\.inv\); if \(m\) \{ INV_NET = \{ m, char:rt.char, t: Date\.now\(\) \}; try \{ sessionStorage\.setItem\('l2bot-inv'/);
+// 20.23: вместе с полной сумкой сохраняются уровни экипировки для анализа Маммона.
+assert.match(content, /const m = invNote\(d\.inv\); if \(m\) \{ INV_NET = \{ m, char:rt.char, t: Date\.now\(\), levels: invLevels\(d\.res\?\.character\?\.inventory\?\.eq\) \}; try \{ sessionStorage\.setItem\('l2bot-inv'/);
 const invNote = vm.runInNewContext(`(${content.match(/const invNote = (inv => \{.*?return m; \});/)[1]})`);
 assert.deepEqual(invNote(inv)[3950], 139); assert.equal(Object.keys(invNote([])).length, 0); // 15.10: полный пустой snapshot обнуляет остатки
 

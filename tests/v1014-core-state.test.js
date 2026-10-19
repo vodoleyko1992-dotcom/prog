@@ -31,7 +31,9 @@ test('TvT: изменение alive сохраняется в том же соб
   assert.notEqual(box.rt.tvt.selfCombat?.alive, false, 'смерть старого события не переносится в новое');
 });
 function level(rt) {
-  const b = { rt, id: 7 }; vm.runInNewContext(slice(popup, '  const eq = Object.entries(rt.mmEq || {})', '  const nm = id =>') + '\nthis.actual = lvlOf(id);', b); return b.actual;
+  // 20.23: меню и анализ рюкзака используют общий настоящий выбор уровня экземпляра.
+  const b = { rt, id: 7 }; vm.runInNewContext(slice(popup, 'function mammonGearLevel(', 'function mammonBagContext(') +
+    slice(popup, '  const eq = Object.entries(rt.mmEq || {})', '  const nm = id =>') + '\nthis.actual = lvlOf(id);', b); return b.actual;
 }
 test('Маммон: popup показывает надетый экземпляр, а не первый дубликат', () => {
   assert.equal(level({ mmGear: [{ id: 7, lvl: 5 }, { id: 7, lvl: 0, eq: true }] }), 0);

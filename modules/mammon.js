@@ -60,7 +60,7 @@ let pollRetryAt = ssNum('l2bot-mmPollRetryAt'), npcRetryAt = ssNum('l2bot-mmNpcR
 // 9.2.5 (игрок 12.10: «ник кланового крафтера Skye — отправлять ему ресурсы для очередного / всех повышений вещи у Маммона, а он вернёт
 // улучшенные ресурсы почтой; учитывать ресурсы, полученные по почте, и проверять, что в рюкзаке по факту»): почта и сумка
 const MAIL_POLL = 10 * 60000, INV_EVERY = 5 * 60000, SEND_MAX = 8 * 60000, CLAIM_MAX = 30, PAGE_TR = '/item-transfer.html', PAGE_MAIL = '/mail.html', PAGE_MC = '/mail-compose.html', NOTE_MAX = 990;
-let mailT = ssNum('l2bot-mmMailT'), invT = ssNum('l2bot-mmInvT');
+let mailT = ssNum('l2bot-mmMailT');
 const crafter = () => String(env.cfg.mmCrafter ?? 'Skye').trim();
 const atC = () => env.rt.mmCraft?.at || {};      // что лежит у крафтера: отправили, он ещё не вернул (сырьё и промежуточное)
 async function gearDb() {                        // справочник улучшаемых вещей (mammon-gear.json: имя, грейд, слот, бонусы Lv.0–5)
@@ -113,18 +113,17 @@ async function npcPoll(strict = false, active = guard()) {
 }
 // 9.0: фоновый опрос (только GET): заказ раз в 90 с, где стоят NPC — раз в 30 мин и после смены места
 async function mmTick() {
+  await bagAuto();
   if (busy) return busy;
   const char = env.rt.char, active = () => env.on !== false && env.tabOwner !== false && env.rt.char === char;
   const now = Date.now(), np = env.rt.mmNpc;
   const wantNpc = now >= npcRetryAt && (now - npcT > NPC_POLL || (np?.order?.at && now > np.order.at + 5000 && now - npcT > (now - np.order.at < 10 * 60000 ? 60000 : 5 * 60000)) || env.rt.mmPollReq);
   const wantOrder = now >= pollRetryAt && (env.cfg.mmOrders !== false || env.rt.mmPollReq) && now - pollT > POLL;
-  // 9.2.5: сумка по факту — своим GET /character, если ответов игры с сумкой не было > 5 мин (бот считает план по сумке); почта — раз в 10 мин
-  const wantInv = !!env.cfg.mmGoalItem && env.invQty(0) == null && now - invT > INV_EVERY && !!env.invRefresh;
+  // Сумку читает bagAuto со своими fences и паузой ошибок; почта — раз в 10 мин.
   const wantMail = (env.cfg.mmMailClaim !== false || !!env.rt.mmCraft) && now - mailT > MAIL_POLL;
-  if (!wantNpc && !wantOrder && !wantInv && !wantMail) return null;
+  if (!wantNpc && !wantOrder && !wantMail) return null;
   busy = (async () => {
     try {
-      if (wantInv && active()) { invT = Date.now(); ssSet('l2bot-mmInvT', invT); await env.invRefresh(); }
       if (wantMail && active()) await mailPoll();
       if (wantOrder && active()) {
         try { await orderPoll(true, active); if (active()) { pollT = Date.now(); ssSet('l2bot-mmPollT', pollT); pollRetryAt = 0; ssSet('l2bot-mmPollRetryAt', 0); } }
@@ -152,7 +151,7 @@ function eqNote(eq) {
   }
   const old = env.rt.mmEq || {};
   // 10.0.14: ручной апгрейд между запусками не должен проигрывать вчерашнему списку кузнеца.
-  if (JSON.stringify(old) !== JSON.stringify(out) || !(env.rt.mmEqT > (env.rt.mmGearT || 0))) env.setRt({ mmEq: out, mmEqT: Date.now() });
+  if (JSON.stringify(old) !== JSON.stringify(out) || !(env.rt.mmEqT > (env.rt.mmGearT || 0))) return env.setRt({ mmEq: out, mmEqT: Date.now() });
 }
 function smithNote(items) {                      // ответ /upgrades: уровни вещей и цена следующего уровня
   if (!Array.isArray(items)) return 0;
@@ -178,16 +177,16 @@ function gearLvl(id) {                            // уровень вещи: и
 }
 const owned = id => (env.rt.mmGear || []).some(x => x.id === id) || Object.values(env.rt.mmEq || {}).some(x => x[0] === id);
 const nameEn = id => env.ITEMS?.[id]?.n || '';
-const itNm = id => nameEn(+id) || MM_RNAME[id] || MM_INAME[id] || `#${id}`;
-const haveOf = (id, snap) => { const q = env.invQty(id); return q != null ? q : snap ?? null; };
+const itNm = id => nameEn(+id) || MM_RNAME[id] || MM_INAME[id] || MM_SHOP_UK[id] || `#${id}`;
+const haveOf = (id, snap) => snap ? (snap[id] ?? 0) : env.invQty(id);
 // 9.0 (игрок 11.10: «копить на определённую задачу и последовательно идти её делать»): что нужно до цели, по порядку
-function goalPlan() {
+function goalPlan(snap) {
   const id = +env.cfg.mmGoalItem || 0; if (!id) return null;
   const to = Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), lvl = gearLvl(id), name = GEAR?.[id]?.n || (env.rt.mmGear || []).find(x => x.id === id)?.n || `#${id}`;
   if (lvl >= to) return { id, name, lvl, to, done: true };
   const c = costOf(id, lvl);
   if (!c) return { id, name, lvl, to, noCost: true, owned: owned(id) };
-  const mats = c.m.map(([mid, nm, need]) => { const have = haveOf(mid); const en = nameEn(mid) || nm;
+  const mats = c.m.map(([mid, nm, need]) => { const have = haveOf(mid, snap); const en = nameEn(mid) || nm;
     return { id: mid, nm: en, uk: nm, need, have, miss: have == null ? need : Math.max(0, need - have), craft: MM_CRAFT[mid] || '' }; });
   return { id, name, lvl, to, a: c.a, col: c.c, mats, ready: mats.every(m => m.have != null && m.miss === 0) };
 }
@@ -220,7 +219,7 @@ function levelCost(id, L) {
   return { a: Math.round(b.a * f), c: b.c, m: b.m.map(([mid, nm, n]) => [mid, nm, Math.ceil(n * f)]), est: best[0] === id ? 1 : 2 };
 }
 // весь план до цели: таблица по уровням, итог наперёд (минус сумка), разбор крафтового до сырья и список «передать крафтеру»
-function goalAll(upTo) {                          // upTo — только до этого уровня (ближайший шаг для фарма)
+function goalAll(upTo, bagOnly = false, snap) {     // upTo — только до этого уровня (ближайший шаг для фарма)
   const id = +env.cfg.mmGoalItem || 0; if (!id) return null;
   const lvl = gearLvl(id), to = upTo || Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5)), name = GEAR?.[id]?.n || (env.rt.mmGear || []).find(x => x.id === id)?.n || `#${id}`;
   if (lvl >= to) return { id, name, lvl, to, done: true, lv: [] };
@@ -236,10 +235,10 @@ function goalAll(upTo) {                          // upTo — только до 
   // сумка расходуется один раз на весь план: сначала готовые материалы, затем промежуточные (Сталь в сумке не надо крафтить), затем сырьё.
   // 9.2.5 (крафтер): то, что уже лежит у крафтера (rt.mmCraft.at — отправили, он ещё не вернул), идёт только на крафт (depth ≥ 1) и раньше
   // сумки; сырьё на крафт, взятое из сумки, — «отправить крафтеру» (snd); недостача сырья на крафт — cmiss; готовое от крафтера — ret
-  const stock = {}, unknownHave = new Set(), cst = { ...atC() }, snd = new Map(), ret = new Map();
+  const stock = {}, unknownHave = new Set(), cst = bagOnly ? {} : { ...atC() }, snd = new Map(), ret = new Map();
   let cmiss = 0;
   const take = (mid, n, depth) => {
-    if (!(mid in stock)) { const h = haveOf(mid); if (h == null) unknownHave.add(mid); stock[mid] = h || 0; }
+    if (!(mid in stock)) { const h = haveOf(mid, snap); if (h == null) unknownHave.add(mid); stock[mid] = h || 0; }
     let left = n;
     if (depth > 0 && cst[mid] > 0) { const c = Math.min(cst[mid], left); cst[mid] -= c; left -= c; }
     const u = Math.min(stock[mid], left); stock[mid] -= u;
@@ -260,15 +259,96 @@ function goalAll(upTo) {                          // upTo — только до 
     for (const [iid, inm, q] of R[1]) expand(iid, inm, q * k, L, depth + 1);
   };
   const tl = [...tot.values()].sort((x, y) => x.lv - y.lv);
-  for (const t of tl) { t.have = haveOf(t.id); t.miss = t.have == null ? t.need : Math.max(0, t.need - t.have); }
+  for (const t of tl) { t.have = haveOf(t.id, snap); t.miss = t.have == null ? t.need : Math.max(0, t.need - t.have); }
   for (const t of tl) expand(t.id, t.nm, t.need, t.lv);
   // 10.0.7 (скрин 13.10: «Залізна руда · нет в фарме» при «iron ore» в базе): справочник предметов есть не на каждой странице — имя сырья
   // могло быть украинским, а база фарма — по английским именам. Ищем источник по всем известным именам предмета
   const farmOf = r => [nameEn(r.id), MM_INAME[r.id], MM_RNAME[r.id], r.nm].filter(Boolean).some(n => env.FARM?.res?.[String(n).toLowerCase()]);
-  const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id), farm: farmOf(r), shop: MM_SHOP[r.id] ? { g: MM_SHOP[r.id][0], a: MM_SHOP[r.id][1] } : null }));
+  const rl = [...raw.values()].sort((x, y) => x.lv - y.lv).map(r => ({ ...r, have: unknownHave.has(r.id) ? null : haveOf(r.id, snap), farm: farmOf(r), shop: MM_SHOP[r.id] ? { g: MM_SHOP[r.id][0], a: MM_SHOP[r.id][1] } : null }));
   const nmOf = mid => nameEn(mid) || MM_RNAME[mid] || raw.get(mid)?.nm || `#${mid}`;
   return { id, name, lvl, to, a, col, lv, unk, tot: tl, raw: rl, craft: [...craft.values()].reverse(), est: lv.some(x => x.est), ready: !unk.length && tl.every(t => t.have != null && t.miss === 0),
     snd: [...snd].map(([mid, q]) => ({ id: mid, nm: nmOf(mid), q })), cmiss, ret: Object.fromEntries(ret) };
+}
+// 19.10: явная сверка рюкзака ничего не запускает и не снимает паузы кузнеца. Руда и готовый материал — разные itemId.
+let bagRead = null, bagRetryAt = 0, bagRetryKey = '', bagDirty = false, bagRevision = 0;
+const bagClaims = new Map();
+const bagContext = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof ?? null, env.rt.classCur?.slot ?? null,
+  env.leaseEpoch, env.actionGeneration?.(), +env.rt.manualKickAt || 0, env.on !== false, +env.cfg.mmGoalItem || 0, +env.cfg.mmGoalLvl || 5, bagRevision]);
+const bagAttemptKey = () => JSON.stringify([env.rt.char || '', env.rt.classCur?.prof ?? null, env.rt.classCur?.slot ?? null,
+  +env.rt.manualKickAt || 0, +env.cfg.mmGoalItem || 0, +env.cfg.mmGoalLvl || 5]);
+const bagEligible = () => env.on !== false && env.tabOwner === true && !!env.rt.char && !!+env.cfg.mmGoalItem && env.bagAllowed?.() === true;
+function bagAnalyze({ source = 'manual', current = () => true, snapshot = null } = {}) {
+  const key = bagContext();
+  if (bagRead) {
+    if (bagRead.key !== key) return Promise.resolve({ ok: false, reason: 'Контекст анализа изменился' });
+    // Кнопка всегда требует реального GET. Пересчёт из недавнего snapshot в полёте этого не заменяет.
+    if (source === 'manual' && bagRead.snapshot) return bagRead.promise.then(() => current() && bagContext() === key
+      ? bagAnalyze({ source, current }) : { ok: false, reason: 'Контекст анализа изменился' });
+    return bagRead.promise;
+  }
+  const active = () => current() && env.tabOwner === true && !!env.leaseEpoch && !!env.rt.char
+    && env.heroNick?.() === env.rt.char && bagContext() === key;
+  if (!active()) return Promise.resolve({ ok: false, reason: 'Нет управления текущим персонажем' });
+  const read = { key, promise: null, snapshot: !!snapshot };
+  read.promise = (async () => {
+    const attemptAt = Date.now(), previous = env.rt.mmBagAnalysis;
+    try {
+      const m = snapshot?.m || await env.invRefresh(active);
+      if (!active()) return { ok: false, reason: 'Контекст анализа изменился' };
+      if (!m) throw Error('Не удалось прочитать рюкзак с сервера');
+      const p = goalPlan(m), P = p && !p.done ? goalAll(undefined, true, m) : null;
+      const row = (r, kind) => ({ id: r.id, name: r.nm || itNm(r.id), need: r.need, have: m[r.id] || 0, missing: r.miss, kind });
+      const knownIds = new Set([...Object.keys(MM_INAME), ...Object.keys(MM_RNAME), ...Object.keys(MM_SHOP)].map(Number));
+      const known = Object.entries(m).filter(([id, q]) => q > 0 && knownIds.has(+id)).map(([id, have]) => ({ id: +id, name: itNm(+id), have, kind: MM_RECIPES[id] ? 'material' : 'raw' }));
+      const analysis = { t: snapshot?.t || Date.now(), attemptAt, status: 'ok', char: env.rt.char, prof: env.rt.classCur?.prof ?? '', slot: env.rt.classCur?.slot ?? null,
+        goal: p ? { id: p.id, lvl: p.lvl, to: p.to } : null, items: (p?.mats || []).map(r => row(r, 'material')),
+        raw: (P?.raw || []).map(r => row(r, 'raw')),
+        craft: (P?.craft || []).map(r => ({ id: r.id, name: r.nm, have: m[r.id] || 0, need: (m[r.id] || 0) + r.qty, missing: r.qty, kind: 'craft', runs: r.runs, recipe: r.rec })),
+        readyMaterials: !!(p?.ready || p?.done), levelVerified: !p || Number.isInteger((snapshot || env.invSnapshot?.())?.levels?.[p.id]), unknownCost: !!p?.noCost || !!P?.unk?.length, estimated: !!P?.est,
+        resources: { ...m }, resourceCount: known.length, known, source, kick: +env.rt.manualKickAt || 0 };
+      if (!active()) return { ok: false, reason: 'Контекст анализа изменился' };
+      const saved = await env.setRt({ mmBagAnalysis: analysis, mmGoalPlan: planOut(P) });
+      if (!active()) return { ok: false, reason: 'Контекст анализа изменился' };
+      if (saved?.ok !== true) throw Error('Не удалось сохранить анализ рюкзака');
+      bagDirty = false; bagRetryAt = 0;
+      return { ok: true, reason: '', analysis };
+    } catch (e) {
+      if (!active()) return { ok: false, reason: 'Контекст анализа изменился' };
+      const error = String(e?.message || e).slice(0, 180);
+      // Прошлый успешный снимок сохраняем с его героем/целью/временем: UI не выдаёт его за свежий остаток.
+      const analysis = { ...(previous || { t: 0, char: env.rt.char, prof: env.rt.classCur?.prof ?? '', slot: env.rt.classCur?.slot ?? null,
+        goal: +env.cfg.mmGoalItem ? { id: +env.cfg.mmGoalItem, lvl: gearLvl(+env.cfg.mmGoalItem), to: +env.cfg.mmGoalLvl || 5 } : null,
+        items: [], raw: [], craft: [], resources: {}, known: [], resourceCount: 0, readyMaterials: false }), attemptAt, errorAt: Date.now(), attemptKey: bagAttemptKey(), status: 'error', error, source };
+      bagRetryAt = Date.now() + 60000; bagRetryKey = key;
+      await env.setRt({ mmBagAnalysis: analysis });
+      return { ok: false, reason: error, analysis };
+    } finally { if (bagRead === read) bagRead = null; }
+  })();
+  bagRead = read;
+  return read.promise;
+}
+function bagAuto(source = 'auto') {
+  if (!bagEligible()) return Promise.resolve(null);
+  const key = bagContext(), a = env.rt.mmBagAnalysis;
+  if (key === bagRetryKey && Date.now() < bagRetryAt) return Promise.resolve(null);
+  if (!bagDirty && a?.status === 'error' && a.attemptKey === bagAttemptKey() && Date.now() - a.errorAt < 60000) return Promise.resolve(null);
+  const same = a?.char === env.rt.char && a.prof === (env.rt.classCur?.prof ?? '') && a.slot === (env.rt.classCur?.slot ?? null)
+    && a.goal?.id === +env.cfg.mmGoalItem && a.goal?.to === (+env.cfg.mmGoalLvl || 5) && a.goal?.lvl === gearLvl(+env.cfg.mmGoalItem) && a.kick === (+env.rt.manualKickAt || 0);
+  if (!bagDirty && same && a.status === 'ok' && Date.now() - a.t < INV_EVERY) return Promise.resolve(null);
+  // inventoryReady уже подтвердил полный ответ этой страницы/аренды: второй GET ради того же плана не нужен.
+  return bagAnalyze({ source, current: bagEligible, snapshot: !bagDirty ? env.invSnapshot?.() : null });
+}
+async function bagAfterClaim(receipt) {
+  if (receipt) {
+    const key = `${env.rt.char}:${receipt}`, now = Date.now();
+    if (now - (bagClaims.get(key) || 0) < 60000) return bagRead?.promise || null;
+    for (const [id, t] of bagClaims) if (now - t > 60000) bagClaims.delete(id);
+    bagClaims.set(key, now);
+  }
+  bagDirty = true; bagRevision++;
+  // GET, начатый до получения письма, не подтверждает новые остатки; дождёмся его отмены и перечитаем.
+  if (bagRead) await bagRead.promise;
+  return bagAuto('mail');
 }
 // цель фарма для content.farmGoal. 9.2: по всему плану до цели (наперёд), крафтовое — его сырьём; сначала сырьё ближайшего уровня,
 // затем остальное: первое недостающее сырьё, у которого есть источник в базе фарма форума (дроп/спойл)
@@ -1109,6 +1189,7 @@ async function claimStep(J) {
   if(!active())return;
   if (!ok) return finish(J, false, `не забрал ${what}: ${String(msg || 'нет подтверждения игры').slice(0, 80)}`);
   await env.setRt({ mmJob: { ...J, got: [...got, `${what}${from ? ' от ' + from : ''}`] } });
+  if (active()) bagAfterClaim(aid).catch(() => {}); // Нативное подтверждение — запасной путь, если hook не доставил ответ.
   await env.sleep(600);
 }
 // 9.0: шаг в главном цикле. true — занят Маммоном (цикл идёт на следующий круг)
@@ -1175,6 +1256,6 @@ async function mmStep() {
 // 10.0 (лог 12.10 12:01:20 «новый заказ … до 14:00» — сдан только в 12:20, когда игрок сам открыл карту): цепочка «Охотиться дальше» не уходит
 // со страницы боя, а mmStep работает только вне боя. После победы: есть дело у Маммона/почты — разово на карту, дальше mmStep
 function chainWant() { const g = goReq(); if (g?.drop) return null; const w = want(); return w && modeFree(true) ? w : null; }
-return { paymentNote, paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
+return { bagAnalyze, bagAuto, bagAfterClaim, paymentNote, paymentReconcile, homePoint, farmPlanPt, spoilOn, mmShopWant, MM_SHOP, shopNote, chainWant, noteOf, noteText, noteStep, mailNote, mailSeen, goReq, craftWant, craftPlan, mailPoll, mailList, unsend, sendStep, claimStep, candFind, pageGo, upgrade, upItem, upMiss, MM_KNOWN, MM_CRAFT, MM_RECIPES, levelCost, goalAll, gearDb, orderNote, orderPoll, npcPoll, mmTick, eqNote, smithNote, costOf, gearLvl, goalPlan, mmFarmGoal, goalNote, modeFree, want, isNear, finish, teleport, visit, claim, smith, mmStep };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
