@@ -1,0 +1,2 @@
+c655ce2d290886816ab91295228794f6f023fc78dc65f527d3e8b1007ea5af6d  l2wap-bot-v20.21.zip
+a7565ec7ed197d9db78bd0baf72974e069a9fbaae71b24c124fdbafbb218dbd3  l2wap-bot-v20.21-firefox.zip
