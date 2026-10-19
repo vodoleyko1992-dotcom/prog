@@ -778,7 +778,8 @@ function raidDrainPlan(ctx, opts, best) {
   if (!(missing > 0)) return null;
   // Заканчиваем короткий остаток боя уроном. Слуга здесь — только подтверждённый обычный удар.
   if ((mobHp()?.cur || 0) <= 3 * (best.dmg + petExpect(ctx))) return null;
-  const pots = (env.hpPots?.() || []).filter(p => env.potBag(p.b) > (ctx.rb.allIn ? 0 : env.cfg.rbPotReserve || 0));
+  const stock = hpPotStock(), reserve = ctx.rb.allIn ? 0 : env.cfg.rbPotReserve || 0;
+  const pots = hpReserveBlocked(stock[0]?.b, reserve) ? [] : stock.filter(p => env.potBag(p.b) > 0);
   // Для цены банки учитываем всё известное лечение, а не только один импульс регенерации.
   const potHeal = Math.max(0, ...pots.map(p => Math.max(p.heal || 0, env.rt.pots?.[p.key]?.heal || 0)));
   if (!(potHeal > 0)) return null;
@@ -975,6 +976,28 @@ function ultPick(ctx, mp) {
 // банка — целый ход без урона (≈1 500–2 000 у мага). У знакомого РБ (спецудар и удары замерены) пьём, только если после ещё одного
 // ударного хода худший обычный удар (P90) опустит HP ниже «спецудар + 2 удара»; без «долива до верхней границы» полосы.
 // Пересчёт по логу: 156 из 234 банок были не нужны. Аварийный порог (стоп-HP + 10 %) — всегда лечимся
+// 19.10 (аудит20.22 по жалобе на смерти): прогноз держал один резерв HP, а ход боя — отдельный у каждого типа.
+// Например,10 усиленных и1000обычных при резерве10 блокировали выбранную усиленную.
+function hpPotStock(pot) {
+  const seen = new Set();
+  return (env.hpPots?.() || (pot ? [{ b: pot }] : [])).filter(p => {
+    const key = p.key || p.b;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
+function hpReserveBlocked(pot, reserve) {
+  reserve = Math.max(0, reserve || 0);
+  if (!pot || !reserve) return false;
+  const count = b => env.potBag?.(b) ?? env.qty(b);
+  const counts = hpPotStock(pot).map(p => count(p.b));
+  const known = counts.reduce((sum, n) => sum + (n == null ? 0 : Math.max(0, n)), 0);
+  if (known > reserve) return false;
+  // Неизвестный остаток не доказывает наличие банок сверх резерва. Старое правило выбранной банки сохраняется.
+  if (counts.some(n => n == null)) { const n = count(pot); return n != null && n <= reserve; }
+  return known <= reserve;
+}
+
 function rbTurnHeal(o) {                          // o: { cur, max, spike, p90, stopPct } → { need, floor, at }
   const floor = Math.min(o.max * 0.96, o.spike + 2 * o.p90), at = floor + o.p90;
   const need = o.cur < at || o.cur / o.max * 100 <= (o.stopPct || 25) + 10;
@@ -999,7 +1022,7 @@ function drainBackoff(ctx, b, result) {
 }
 function drainPreferred(ctx, me, b, pot) {
   if (!pot || !ready(pot) || env.qty(pot) === 0) return true;
-  if (ctx.rb && !ctx.rb.allIn && me.pct > 35 && env.qty(pot) != null && env.qty(pot) <= (env.cfg.rbPotReserve || 0)) return true;
+  if (ctx.rb && !ctx.rb.allIn && me.pct > 35 && hpReserveBlocked(pot, env.cfg.rbPotReserve)) return true;
   const h = env.fightHealOn?.(env.cleanTitle(b.title));
   const heal = h?.n >= 2 ? Math.max(0, Math.min(me.max-me.cur, h.p20)) : 0;
   const item = env.hpPots?.().find(x => x.b === pot);
@@ -1611,7 +1634,7 @@ async function battle() {
     }
     const hpPot = me && me.pct <= potAt ? (ctx.rb ? env.hpPotByDeficit(me.max - me.cur) : env.hpPotPick(me.pct <= (env.cfg.stopHp || 25) + 10)) : null;
     const potLeft = env.qty(hpPot);
-    const potReserveHit = ctx.rb && !ctx.rb.allIn && me && me.pct > 35 && potLeft != null && potLeft <= (env.cfg.rbPotReserve || 0);   // v4.44: резерв бережём, пока не припёрло   // на РБ резерв не трогаем; в режиме заходов банки бережём
+    const potReserveHit = ctx.rb && !ctx.rb.allIn && me && me.pct > 35 && hpReserveBlocked(hpPot, env.cfg.rbPotReserve);   // v4.44: резерв бережём, пока не припёрло   // на РБ резерв не трогаем; в режиме заходов банки бережём
     // v5.3: на РБ банки — чаще: у банки в l2wap нет своего отката (только общий ~0,2 с; лог 08.10 14:14), а пили раз в 2–5 с —
     // 600 HP за глоток против потери 300–600 HP/с у РБ 50 ур. Теперь, пока держим полосу HP, — раз в 1,1 с
     if (hpPot && potLeft !== 0 && !potReserveHit && me && me.pct <= potAt && Date.now() - lastHpPot > (ctx.rb ? 1100 : 2000)) {
@@ -1958,7 +1981,7 @@ async function battle() {
     const drainFirst = mageCombat() && me && !!drainPick(ctx, mp);
     // 9.0 «цена хода» (лог 11.10 01:40, Gigantic Chaos Golem: Corpse Life Drain +225 HP за ход, банка +600): на РБ, пока банка HP есть,
     // ход лечения отдаём банке — лечащий скилл только без банок
-    const rbPotHas = !!ctx.rb && env.cfg.rbTurnPrice !== false && (() => { const p = env.hpPotPick(false); const q = p ? env.qty(p) : 0; return !!p && q !== 0 && (ctx.rb.allIn || q == null || q > (env.cfg.rbPotReserve || 0)); })();
+    const rbPotHas = !!ctx.rb && env.cfg.rbTurnPrice !== false && (() => { const p = env.hpPotPick(false); const q = p ? env.qty(p) : 0; return !!p && q !== 0 && (ctx.rb.allIn || me?.pct <= 35 || !hpReserveBlocked(p, env.cfg.rbPotReserve)); })();
     if (me && me.pct <= env.cfg.hpPotAt && !drainFirst && !rbPotHas) {
       const hs = healPick(ctx, mp);
       if (hs) { ctx.block['heal:' + hs.title] = Date.now() + 2500; const r = await act(hs, `Лечение скиллом (HP ${me.pct | 0}%): ${env.cleanTitle(hs.title)}`); if (r === 'lock') ctx.block['heal:' + hs.title] = 0; return AGAIN; }   // 8.0.3: 'lock' — повтор сразу
@@ -2521,7 +2544,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
 
 function potModel() {                           // v4.40: все банки HP с панели (резерв не трогаем): запас лечения и скорость питья
   if (!env.cfg.rbUsePots) return null;
-  let items = env.hpPots().map(x => ({ ...x, n: Math.max(0, env.potBag(x.b) ?? 0) })).filter(x => x.n > 0);
+  let items = hpPotStock().map(x => ({ ...x, n: Math.max(0, env.potBag(x.b) ?? 0) })).filter(x => x.n > 0);
   // Единый резерв, а не вычет резерва по каждому типу банки.
   let sharedReserve = Math.max(0, env.cfg.rbPotReserve || 0);
   items = items.map(x => { const k = Math.min(x.n, sharedReserve); sharedReserve -= k; return { ...x, n: x.n - k }; }).filter(x => x.n > 0);
@@ -2561,6 +2584,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);
