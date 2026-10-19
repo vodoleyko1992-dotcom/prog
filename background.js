@@ -27,6 +27,11 @@ async function lockCommand(m, sender) {
     const mine = lock?.k === key;
     const valid = mine && lock?.epoch && m.epoch === lock.epoch && now - lock.t < LOCK_TTL;
     if (m.cmd === 'lockRelease') {
+      if (m.onlyStopped) {
+        const state = await chrome.storage.local.get(['on', 'rt']);
+        if (state.on || String(state.rt?.char || '') !== String(m.expectedChar || '') || (+state.rt?.manualKickAt || 0) !== (+m.expectedKick || 0))
+          return { ok: false, reason: 'session_changed' };
+      }
       if (valid) await chrome.storage.local.set({ lock: null });
       return { ok: !!valid };
     }
@@ -48,9 +53,11 @@ async function lockCommand(m, sender) {
     const changed = !valid;
     // 10.0 (аудит ядра): замок уходит видимой вкладке — прежнему хозяину сразу сообщаем (раньше узнавал через ≤ 5 с при продлении)
     if (lock && !mine && Number.isInteger(lock.tab) && lock.tab !== tab) try { chrome.tabs.sendMessage(lock.tab, { cmd: 'lockLost' }).catch(() => {}); } catch (e) {}
-    // An old context may call acquire after navigation. Rotating epoch prevents
-    // its in-flight actions and heartbeat from regaining the lease.
-    const epoch = valid ? lock.epoch : makeLease();
+    // 19.10.2026 (аудит автономности): возврат своего протухшего замка сохраняет epoch.
+    // Иначе storage.onChanged до ответа IPC принимал его за чужую передачу и стирал очередь.
+    // Новый документ без epoch и другая вкладка по-прежнему получают новое поколение.
+    const resumed = !!(mine && m.epoch && lock?.epoch === m.epoch);
+    const epoch = resumed ? lock.epoch : makeLease();
     await chrome.storage.local.set({ lock: { k: key, epoch, t: now,
       url: String(m.page || '').slice(0, 120), vis: m.vis === true, tab } });
     if (changed) await noteAlive(tab, m.page || '');
@@ -58,7 +65,6 @@ async function lockCommand(m, sender) {
     if (changed) try { await chrome.tabs.update(tab, { autoDiscardable: false }); } catch (e) {}
     // 20.13 (шаг 5, core-b/F6): тот же документ вернул свой же (только протухший) замок — между продлениями хозяина не было,
     // вкладка может дописать свою очередь записей, а не выбрасывать её
-    const resumed = !!(mine && m.epoch && lock?.epoch === m.epoch);
     return { ok: true, key, epoch, changed, resumed };
   });
 }
@@ -277,7 +283,8 @@ async function statePatch(m, sender) {
     if (String(m.expectedChar || '') !== String(state.rt?.char || '')) return { ok: false, reason: 'character_changed' };
     if (state.on && (state.lock?.k !== 'tab' + tab || !m.epoch || state.lock.epoch !== m.epoch ||
         now - state.lock.t >= LOCK_TTL)) return { ok: false, reason: 'ownership_lost' };
-    if (!state.on && m.epoch && state.lock?.k === 'tab' + tab && state.lock.epoch !== m.epoch)
+    // Финальный flush при OFF допустим после TTL, но не после передачи/освобождения lease.
+    if (!state.on && m.epoch && (state.lock?.k !== 'tab' + tab || state.lock.epoch !== m.epoch))
       return { ok: false, reason: 'ownership_lost' };
     if(m.dailyServer) {
       const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
@@ -633,8 +640,15 @@ chrome.commands?.onCommand.addListener(async c => {
   if (c !== 'toggle-bot') return;
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   await serializeLock(async () => {
-    const { on = false } = await chrome.storage.local.get('on');
-    await chrome.storage.local.set({ on: !on, ...(!on ? {} : { stopMeta: { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: Date.now() } }) });
+    const { on = false, rt = {} } = await chrome.storage.local.get(['on', 'rt']), now = Date.now();
+    const change = { on: !on };
+    if (!on) {
+      // 19.10.2026: новый запуск отменяет старые release/ответы и требует сверки суточных лимитов, как Start в меню.
+      const next = { ...rt, manualKickAt: Math.max(now, (+rt.manualKickAt || 0) + 1), dailyStart: (+rt.dailyStart || 0) + 1, _src: 'hotkey' };
+      change.rt = next;
+      if (next.char) change['rt@' + next.char] = next;
+    } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };
+    await chrome.storage.local.set(change);
   });
 });
 

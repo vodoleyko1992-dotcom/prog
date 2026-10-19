@@ -6,7 +6,7 @@ const src = fs.readFileSync(path.join(__dirname, '../popup.js'), 'utf8'), html =
 function part(a, b) { const i = src.indexOf(a), j = src.indexOf(b, i); assert.ok(i >= 0 && j > i, a); return src.slice(i, j); }
 function box(cfg, rt) {
   const els = {}, toasts = [];
-  const b = { Date, Object, Set, Promise, cfg, rt, DEF: {}, toast: t => toasts.push(t), load: async () => {}, toasts,
+  const b = { Date, Object, Set, Promise, cfg, rt, formChar: 'Hero', settingsSerial: 0, DEF: {}, toast: t => toasts.push(t), load: async () => {}, toasts,
     $: id => els[id] ||= { id, textContent: '', hidden: false, classList: { toggle(k, v) { this[k] = v; } } },
     chrome: { storage: { local: { get: async () => ({ cfg, rt, on: false }) } } },
     menuPatch: async (p, o = {}) => { Object.assign(rt, p); Object.assign(cfg, o.cfgPatch || {}); },

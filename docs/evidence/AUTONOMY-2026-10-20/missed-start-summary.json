@@ -1,0 +1,30 @@
+{
+  "completed_utc": "2026-10-19T22:01:41.406130+00:00",
+  "parallel_workers": 1,
+  "per_file_timeout_seconds": 90,
+  "results": [
+    {
+      "script": "v2026-autonomy-daily-browser.cjs",
+      "exit": 0,
+      "seconds": 26.46,
+      "log": "/workspace/work/audit-missed-start-v2026-autonomy-daily-browser.cjs.log",
+      "sha_before": {
+        "content.js": "ca46d7c885918dcea808b970c8eaf2ab23440dac0c7f2d348b04ae3e10d93d6c",
+        "background.js": "ecbba328aafa7b0c0de306096552b2e1ccb1781133734ff18b1fa77c3373b3d1",
+        "modules/fishing.js": "3ca6ed0a4362ce4915bc0ef5644c562bf88a91b58c4437435559b7fcb27b6ca5",
+        "modules/mobfarm.js": "02b814b52d6c4361f14e66c0058cc595e1e46b716925754c165c162acd063535",
+        "modules/dungeons.js": "9f3c56522252844057407fbe43b412dc995a8729819f8e3b4a3c85f3b234644c",
+        "popup.js": "da1d77f158d1ab9b4b2d9d6577210a31c1d070dec3771c494fa7aa9d5a43b909"
+      },
+      "sha_after": {
+        "content.js": "ca46d7c885918dcea808b970c8eaf2ab23440dac0c7f2d348b04ae3e10d93d6c",
+        "background.js": "ecbba328aafa7b0c0de306096552b2e1ccb1781133734ff18b1fa77c3373b3d1",
+        "modules/fishing.js": "3ca6ed0a4362ce4915bc0ef5644c562bf88a91b58c4437435559b7fcb27b6ca5",
+        "modules/mobfarm.js": "02b814b52d6c4361f14e66c0058cc595e1e46b716925754c165c162acd063535",
+        "modules/dungeons.js": "9f3c56522252844057407fbe43b412dc995a8729819f8e3b4a3c85f3b234644c",
+        "popup.js": "da1d77f158d1ab9b4b2d9d6577210a31c1d070dec3771c494fa7aa9d5a43b909"
+      },
+      "changed": []
+    }
+  ]
+}

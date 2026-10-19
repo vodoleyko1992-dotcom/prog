@@ -74,9 +74,9 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 // Теперь в паузе бот сам читает /game/tvt (с прежними пределами частоты) и прерывает ожидание, когда пора записываться или на арену
 const idleTvtBreak = () => { if (!cfg.tvtOn || loginPage()) return false; const T = L2V7Modules.tvt; void T?.tvtRefresh?.(); return !!(T?.tvtRegistrationDue?.() || T?.tvtSoon?.()); };
 async function idle(ms, label) {
-  const t0 = Date.now();
+  const t0 = Date.now(), stamp = automationSnapshot();
   setStatus(label);                              // в журнал — один раз, дальше только отсчёт в статусе
-  while (on && tabOwner && !rt.shop?.urgent && Date.now() - t0 < ms) {
+  while (on && tabOwner && stamp === automationSnapshot() && !rt.shop?.urgent && Date.now() - t0 < ms) {
     if (idleTvtBreak()) { rec('B', 'TvT', `прерываю ожидание «${String(label).slice(0, 60)}» — пора на TvT`); return; } setStatus(`${label} · ${Math.ceil((ms - (Date.now() - t0)) / 1000)} с`); await sleep(Math.min(1000, ms - (Date.now() - t0))); }
 }
 // «реакция» между ходами. На РБ — быстрее (модель 100 000 боёв: 300 → 150 мс среднее = −7 % времени боя; 600 мс = +17 %)
@@ -404,6 +404,41 @@ function limitSyncBlock(ok, now = Date.now()) {
 
 // 19.10: на каждом явном Старте и после полуночи — свежая проверка сервера, независимо от галки дейликов.
 let dailyStartRetry=0,dailyStartRetryKey='';
+const dailyServerCurrent = () => rt.dailyServerCheck?.day===L2EngineCore.dailyDay(Date.now(),rt) && rt.dailyServerCheck.char===(rt.char||'') && rt.dailyServerCheck.start===(rt.dailyStart||0);
+let dailyFishProbe={key:'',at:0},dailyWorkWait=null;
+const dailyWorkWaiting = () => dailyWorkWait?.stamp===automationSnapshot() && Date.now()-dailyWorkWait.t<30000 && !dailyServerCurrent()
+  && !['actionOwner','shop','rbGo','zoneGo','mmJob','tbuff','invScan','magister','petBufferTrip','fishSvc','fishService'].some(k=>rt[k])
+  && !(isBattle()&&!victory()) && !(isFishing()&&fishState());
+// 19.10, аудит автономности: ожидание дневного API запрещает новую добычу, но не восстановление и службы.
+// Сохранённый fishCastActive сам по себе не подтверждает ни текущий улов, ни выполненную сверку лимитов.
+async function dailyWorkReady(kind) {
+  const stamp=automationSnapshot(),active=()=>automationCurrent(stamp),quotaTask=kind==='mobs'?farmQuotaTask():kind,task=quotaTask||'auto';
+  const wait=()=>{if(active())dailyWorkWait={stamp,t:Date.now()};return false;};
+  if(!active())return false;
+  // Исторически дневной cap снимает auto/cat, но не явно выбранные farm/raid/quests.
+  // Когда cap уже сменил auto на tasks, поздний прямой путь боя тоже закрыт.
+  const mode=autonomyMode();
+  if(kind==='mobs' && !['farm','cat','campaign','raid','epic'].includes(mode) && !(mode==='tasks' && L2EngineCore.taskAllowed(cfg,'resources') && lootGoal()))return false;
+  if(!quotaTask || !L2EngineCore.dailyLimit(cfg,task))return true;
+  if(!dailyServerCurrent()) {
+    if(rt.fishCastActive && !rt.fishCastPending && rt.actionPayments?.pending?.kind!=='fishing' && !(isFishing()&&fishState())) {
+      const key=JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt||0,rt.dailyStart||0,automationGeneration]);
+      if(dailyFishProbe.key===key && Date.now()-dailyFishProbe.at<15000)return wait();
+      dailyFishProbe={key,at:Date.now()};
+      try {
+        const r=await gameGet('/game/fishing/state'),s=r?.ok?await r.json():null;
+        if(!active() || !s || !Object.hasOwn(s,'target') || s.target!==null)return wait();
+        const saved=await setRt({fishCastActive:false});
+        if(saved?.ok!==true || !await rtCommit() || !active())return wait();
+      }catch(_){return wait();}
+    }
+    await dailyServerSync(true);
+    if(!active())return false;
+    if(!dailyServerCurrent()){setStatus('Лимиты дня: новая добыча ждёт проверки сервера; остальные задачи доступны');return wait();}
+  }
+  dailyWorkWait=null;
+  return active() && (!quotaTask || !L2EngineCore.dailyBlocked(cfg,rt,task));
+}
 async function dailyServerSync(afterBattle=false) {
   // Уже начатый бой/улов заканчиваем до сверки: их итог не должен посчитаться дважды.
   if(isBattle()&&!afterBattle || rt.fishCastActive || rt.fishCastPending || rt.actionPayments?.pending?.kind==='fishing' || isFishing()&&fishState())return true;
@@ -1402,7 +1437,7 @@ async function stopPendRetry() {
   const p = stopPendRead(); if (!p) return false;
   if (Date.now() - (+p.t || 0) > 1800000 || p.char !== (rt.char || '') || p.kick !== (rt.manualKickAt || 0)) { stopPendWrite(null); return false; }
   // 20.13 (шаг 5, core-a, ревью): после начала той остановки фон уже записал остановку (stopMeta.t ≥ t0) — она дошла, а нынешний
-  // on=true — новый запуск (горячая клавиша не меняет manualKickAt). Повторно не останавливаем
+  // on=true — новый запуск. Уже подтверждённую остановку повторно не отправляем
   let meta = null; try { ({ stopMeta: meta } = await chrome.storage.local.get('stopMeta')); } catch (_) {}
   if (+meta?.t >= (+p.t0 || +p.t || 0)) { stopPendWrite(null); return false; }
   stopPendWrite(null);
@@ -1436,7 +1471,7 @@ async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
 // выход из боя через нижнее меню «Окрестности» — прерывает бой (так выходят из боя с РБ)
 async function toOutskirts(...args) { return L2V7Modules.navigation.toOutskirts(...args); }
 
-async function nextFight(...args) { if(!await dailyServerSync(true))return; return L2V7Modules.mobfarm.nextFight(...args); }
+async function nextFight(...args) { await dailyServerSync(true); if(!on||!tabOwner)return; return L2V7Modules.mobfarm.nextFight(...args); }
 
 // ---------- карта ----------
 const tags = r => (r.quest ? ' [квест]' : '') + (r.champ ? ' [чемп]' : '');
@@ -2003,6 +2038,7 @@ async function attackSpawn(...args) { return L2V7Modules.mobfarm.attackSpawn(...
 
 async function map(...args) {
   if (Array.isArray(cfg.autoTasks) && ((L2EngineCore.selectedTask(cfg,rt) === 'quests' && !campOn()) || (!['farm','auto','quests'].includes(L2EngineCore.selectedTask(cfg,rt)) && !(L2EngineCore.taskAllowed(cfg,'resources') && lootGoal())))) return tasksIdle();
+  if(!await dailyWorkReady('mobs'))return;
   return L2V7Modules.mobfarm.map(...args);
 }
 
@@ -2521,6 +2557,8 @@ const isEpicPage = (...args) => L2V7Modules.epics.isEpicPage(...args);
 const epicOn = (...args) => cfg.enchantMode !== true && L2V7Modules.epics.epicOn(...args);
 // 10.0: «без режима» — между задачами стоим (не реже раза в 2 с проверяем, не появилось ли дело)
 async function tasksIdle() {
+  const fishWait=L2EngineCore.fishTaskWait(cfg,rt);
+  if(fishWait){const seconds=Math.max(0,Math.ceil((fishWait.until-Date.now())/1000));setStatus(`⏸ ${fishWait.why} · ${seconds?`повтор через ${seconds} с`:'повтор после завершения текущего действия'}; другие выбранные задачи пока недоступны`);await sleep(2000);return;}
   const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmMailClaim && 'почта',
     cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
   setStatus(`⏹ Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
@@ -2788,7 +2826,19 @@ setInterval(async () => {
       }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy && !mammonBagCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy && !mammonBagCommandBusy) {
+      // 19.10.2026 (аудит автономности): Stop не стирает финальную запись при backoff/сбое storage.
+      // Следующий тик повторит flush; замок при OFF не продлевается и остаётся ограничен своим TTL.
+      const epoch = leaseEpoch, char = rt.char || '', generation = automationGeneration, kick = +rt.manualKickAt || 0;
+      const saved = await rtWriter.recover();
+      if (!saved?.ok || on || !tabOwner || leaseEpoch !== epoch || (rt.char || '') !== char || automationGeneration !== generation
+          || enchantCommandBusy || warlockCommandBusy || lifestoneCommandBusy || mammonBagCommandBusy) return;
+      // Квитанция flush могла запустить следующий setRt раньше этого продолжения: его очередь тоже должна сохраниться.
+      if (Object.keys(rtWriter.peek()).length) return;
+      tabOwner = false; tabIdle = false; rtWriter.clear(); leaseEpoch = null;
+      // Start → Stop/смена героя могут прийти после проверки выше: фон проверяет также метку конкретного запуска.
+      await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch, onlyStopped: true, expectedChar: char, expectedKick: kick });
+    }
     else if (!on) tabIdle = false;
   } catch (e) { quietErr('замок', e); }
 }, 5000);
@@ -2911,7 +2961,9 @@ async function loopGate() {
   if (antibotState() === 'check' && await antibotGuard()) { await sleep(200); return true; }   // v5.5.6: проверка активности — ждём человека
   // 20.12 (аудит core-a/C1, farm/Q-4): отказ синхронизации диапазонов лимитов больше не держит весь цикл: пишем причину в журнал
   // один раз и продолжаем с прежними фиксированными значениями лимитов (повтор синхронизации — раз в 30 с)
-  if(typeof dailyServerSync==='function' && !await dailyServerSync()){if(await loopUrgent())return true;await sleep(500);return true;}
+  // Сбой сверки не перекрывает PvP/воскрешение, платежи, Маммона и клан. Новая добыча проверяется в dailyWorkReady.
+  if(typeof dailyServerSync==='function')await dailyServerSync();
+  if(!on||!tabOwner)return true;
   if((Object.keys(cfg.limitRanges||{}).length || rt.dailyQuota) && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);return true;}
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
@@ -2937,7 +2989,7 @@ async function loopWatchdog() {
   // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
   // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
   // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
-  const activeJob = !L2V7Modules.payments?.pending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
     !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
     !!rt.invScan || fishNow());
   // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -5047,19 +5099,30 @@ if (/\/forum/i.test(location.pathname)) {        // форум: кнопки т�
 
 // снимок разметки страницы (без скриптов и полей ввода)
 function domSnapshot() {
+  // 19.10, аудит автономности: малые поддеревья большой страницы очищаются так же, как обычный снимок.
+  // Клонируем только выбранный блок; рабочий DOM и предел 400 КБ не меняются.
+  const secret = /pass(?!ed\b)|token|auth|session|sid\b|cookie|secret|csrf|sign|captcha|email|phone|login|user(?!.?id)|nick|account|jwt|bearer|ticket|api.?key|refresh/i; // как в hook.js
+  const query = new URLSearchParams(location.search);
+  for (const k of [...query.keys()]) if (secret.test(k)) query.set(k, '***');
+  const address = location.pathname + (query.toString() ? '?' + query.toString() : '');
+  const clean = node => {
+    const c = node.cloneNode(true);
+    c.querySelectorAll('script,style,noscript,iframe').forEach(n => n.remove());
+    c.querySelectorAll('input,textarea').forEach(n => { n.removeAttribute('value'); n.textContent = ''; });
+    return c;
+  };
+  const attr = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   if (document.getElementsByTagName('*').length > 3500) {   // огромная страница: по частям, до 400 КБ, без клонирования всего
     let html = '', n = 0;
     const walk = el => { for (const ch of el.children) { if (html.length > 400000) return; if (/^(SCRIPT|STYLE|NOSCRIPT|IFRAME|INPUT|TEXTAREA)$/.test(ch.tagName)) continue;
-      const oh = ch.outerHTML; if (oh.length < 60000) { html += oh.replace(/\s{2,}/g, ' '); n++; } else { html += `<${ch.tagName.toLowerCase()} class="${ch.className}">`; walk(ch); html += `</${ch.tagName.toLowerCase()}>`; } } };
+      const oh = ch.outerHTML; if (oh.length < 60000) { html += clean(ch).outerHTML.replace(/\s{2,}/g, ' '); n++; } else { html += `<${ch.tagName.toLowerCase()} class="${attr(ch.className)}">`; walk(ch); html += `</${ch.tagName.toLowerCase()}>`; } } };
     walk(document.body);
-    return `<!-- ${location.pathname}${location.search} · ${new Date().toISOString()} · крупная страница, ${n} блоков -->\n<body class="${document.body.className}">${html.slice(0, 400000)}</body>`;
+    return `<!-- ${address} · ${new Date().toISOString()} · крупная страница, ${n} блоков -->\n<body class="${attr(document.body.className)}">${html.slice(0, 400000)}</body>`;
   }
-  const c = document.body.cloneNode(true);
-  c.querySelectorAll('script,style,noscript,iframe').forEach(n => n.remove());
-  c.querySelectorAll('input,textarea').forEach(n => { n.removeAttribute('value'); n.textContent = ''; });
+  const c = clean(document.body);
   let html = c.outerHTML.replace(/\s{2,}/g, ' ');
   if (html.length > 400000) html = html.slice(0, 400000) + '<!-- обрезано -->';
-  return `<!-- ${location.pathname}${location.search} · ${new Date().toISOString()} -->\n${html}`;
+  return `<!-- ${address} · ${new Date().toISOString()} -->\n${html}`;
 }
 
 // проверка панели: какие слоты нашлись по названиям
@@ -5119,7 +5182,7 @@ L2V7Modules.payments = L2V7Factories.payments({
 
 
 // ===== v7 dependency injection: lazy bindings preserve per-character dynamic state =====
-L2V7Modules.fishing = L2V7Factories.fishing({ get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.fishing = L2V7Factories.fishing({ get dailyWorkReady(){return dailyWorkReady}, get fishTaskWaitKey(){return ()=>L2EngineCore.fishTaskWaitKey(cfg,rt)}, get paymentFree(){return paymentFreeAllowed}, get actionGeneration(){return ()=>automationGeneration}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get castEvidence(){return async at=>{let timer;try{return await Promise.race([chrome.runtime.sendMessage({cmd:'fishingCastEvidence',at}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),2500)})]);}catch(_){return null}finally{clearTimeout(timer)}}}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; }, get pveFishingAllowed(){return pveFishingAllowed}, get antibotState() { return antibotState; }, get tabOwner() { return tabOwner; }, get dailyLimitFishSync(){return dailyLimitFishSync}, get dailyFishNote() { return () => L2V7Modules.dailies?.fishNote?.(); }, get waitX(){return waitX}, get rtCommit(){return rtCommit}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get canRun(){return ()=>!tvtSoon()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get $q() { return $q; }, set $q(value) { $q = value; },
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FCD() { return FCD; }, set FCD(value) { FCD = value; },
   get GEAR_RE() { return GEAR_RE; }, set GEAR_RE(value) { GEAR_RE = value; },
@@ -5372,7 +5435,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get waitX() { return waitX; }, set waitX(value) { waitX = value; },
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
-L2V7Modules.dungeons = L2V7Factories.dungeons({ get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.dungeons = L2V7Factories.dungeons({ get dailyWorkReady(){return dailyWorkReady}, get leaseEpoch(){return leaseEpoch}, get autonomyMode() { return autonomyMode; }, get victory() { return victory; }, get payments(){return L2V7Modules.payments},get gameGet(){return gameGet},get canAct(){return ()=>L2V7Modules.actions.canAct()},get canRun(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive},get catPaymentNet(){return ()=>catPaymentReceipt()}, get routeLocation(){return actionLocation}, get dungNet() { return dungNet; }, get heroAt() { return heroAt; }, get gameAlert() { return gameAlert; }, get sealNet() { return sealNet; }, get invQty() { return invQty; }, get rtCommit() { return rtCommit; }, get rnd() { return rnd; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get champs() { return L2V7Modules.champs; }, get champTier() { return (...args) => L2V7Modules.mobfarm.champTier(...args); },
   get cancelRisk() { return (...args) => L2V7Modules.buffs.cancelRisk(...args); },
@@ -5429,7 +5492,7 @@ L2V7Modules.tvt = L2V7Factories.tvt({ get routeLocation(){return actionLocation}
   get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get tabOwner() { return tabOwner; }, set tabOwner(value) { tabOwner = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get dailyWorkReady(){return dailyWorkReady}, get paymentHold(){return ()=>!!L2V7Modules.payments?.blocked?.()}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get scanContext(){return ()=>JSON.stringify([rt.char,leaseEpoch,rt.manualKickAt,autonomyMode()])}, get canScanMap(){return ()=>!tvtSoon()&&!antibotState()&&!L2V7Modules.pvp?.pending()&&!rt.revive}, get damageSkills() { return damageSkills(); }, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get syncShotWeapon() { return syncShotWeapon; },
   get warlock() { return L2V7Modules.warlock; }, get NET_ERR() { return NET_ERR; }, get magisterAfterWin() { return () => magisterStart(true); }, get magisterHold() { return magisterHold; }, get campEnabled() { return campEnabled; }, get champs() { return L2V7Modules.champs; }, get cancelRisk() { return (...a) => L2V7Modules.buffs.cancelRisk(...a); }, get actNet() { return actNet; }, get mmChainWant() { return () => L2V7Modules.mammon?.chainWant?.(); }, get storyChainWant() { return () => L2V7Modules.story?.chainWant?.(); }, get tsChainWant() { return () => L2V7Modules.tvtshop?.chainWant?.(); }, get lootGoal() { return lootGoal; }, get farmMapOn() { return farmMapOn; }, get invQty() { return invQty; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get rbModalIs() { return (...a) => L2V7Modules.raid.rbModalIs(...a); },
@@ -6351,10 +6414,18 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
 // v5.6: обработчики ошибок — один набор (выше, у записи журнала); второй дублировал каждую ошибку в журнале
 chrome.storage.onChanged.addListener(ch => {
   if (ch.on || ch.cfg && !ownCfgChange(ch.cfg) && !viewOnlyCfgChange(ch.cfg) || ch.rt?.newValue?.char !== undefined && ch.rt.newValue.char !== rt.char) automationGeneration++;
+  // 19.10.2026 (аудит автономности): очередь принадлежит прежнему герою, в том числе при OFF.
+  // После ошибки записи retry не должен подставить новый expectedChar и перенести чужие pending/счётчики.
+  // Свой switchChar сначала дописывает очередь; здесь отменяется только ещё не подтверждённая чужая запись.
+  if (ch.rt && String(ch.rt.newValue?.char || '') !== String(rt.char || '')) {
+    const pending = Object.keys(rtWriter.peek()).length;
+    rtWriter.clear();
+    if (pending) try { rec('S', 'память', 'Персонаж изменился: отложенные записи прежнего героя не применены к новому'); } catch (_) {}
+  }
   // Обновление справочников из меню должно быть видно без перезагрузки страницы.
   if (ch.farmDb) FARM = ch.farmDb.newValue || null;
   if (ch.recipeDb) RECIPES = ch.recipeDb.newValue || null;
-  if (ch.lock && on && tabOwner && ch.lock.newValue?.epoch !== leaseEpoch) {
+  if (ch.lock && tabOwner && ch.lock.newValue?.epoch !== leaseEpoch) {
     // Передача замка другой вкладке: прекращаем работу немедленно, не ждём очередные 5 с.
     tabOwner = false; tabIdle = true; leaseEpoch = null; rtWriter.clear(); window.__lockT = 0;
   }

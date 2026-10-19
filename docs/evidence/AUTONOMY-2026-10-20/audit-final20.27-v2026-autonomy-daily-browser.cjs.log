@@ -1,0 +1,3 @@
+PASS actual daily503: no cast, bot remains ON
+PASS actual reload during daily503: no extra action and automatic retry
+PASS actual API recovery without Start: exactly1 confirmed cast; durable cap retained {"dailyGets":3,"timeGets":3,"accepted":1,"bait":99}

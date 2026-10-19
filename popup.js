@@ -33,16 +33,28 @@ async function reloadBotUpdate() {
 // 17.10: подтверждение сохранения относится к ответу фона, а не к событию change.
 let settingsSerial = 0, settingsPending = 0;
 const settingsFailed = new Map(), settingsApplied = new Map();
+// 19.10.2026 (аудит автономности): поздний ответ старого героя не подтверждает настройки открытого профиля.
+const settingsPendingByChar = new Map(), settingsConfirmedByChar = new Set();
+const settingsReadFailures = new Map();
+function settingsReadFailed(char, serial, fields, error) {
+  for (const field of fields) {
+    const key = JSON.stringify([char, field]);
+    if ((settingsApplied.get(key) || 0) > serial || (settingsReadFailures.get(key)?.serial || 0) > serial) continue;
+    settingsReadFailures.set(key, { char, serial, reason: 'Не удалось прочитать настройки: ' + String(error?.message || error) + '. Измените поле ещё раз или отмените несохранённые изменения.' });
+  }
+  paintSettingsFeedback();
+}
+const settingsFailuresFor = char => [...settingsFailed.values(), ...settingsReadFailures.values()].filter(f => f.char === char).sort((a,b) => a.serial - b.serial);
 function paintSettingsFeedback() {
   const box = $('settingsFeedback'), text = $('settingsFeedbackText'), badge = $('settingsState'), retry = $('settingsRetry');
   if (!box || !badge) return;
-  const failure = [...settingsFailed.values()].at(-1);
-  box.hidden = !failure; box.dataset.state = failure ? 'error' : settingsPending ? 'saving' : 'saved';
+  const failures = settingsFailuresFor(formChar), failure = failures.at(-1), pending = settingsPendingByChar.get(formChar) || 0;
+  box.hidden = !failure; box.dataset.state = failure ? 'error' : pending ? 'saving' : 'saved';
   if (failure) text.textContent = 'Настройки не сохранены: ' + failure.reason;
-  if (retry) { retry.hidden = ![...settingsFailed.values()].some(f => f.retryable); retry.disabled = !!settingsPending; }
+  if (retry) { retry.hidden = !failures.some(f => f.retryable); retry.disabled = !!settingsPending; }
   if ($('settingsDiscard')) $('settingsDiscard').disabled = !!settingsPending;
-  badge.dataset.state = failure ? 'error' : settingsPending ? 'saving' : 'saved';
-  badge.textContent = failure ? 'Есть несохранённые изменения' : settingsPending ? 'Сохраняю настройки…' : settingsSerial ? '✓ Изменения сохранены' : 'Настройки сохраняются автоматически после изменения поля';
+  badge.dataset.state = failure ? 'error' : pending ? 'saving' : 'saved';
+  badge.textContent = failure ? 'Есть несохранённые изменения' : pending ? 'Сохраняю настройки…' : settingsConfirmedByChar.has(formChar) ? '✓ Изменения сохранены' : 'Настройки сохраняются автоматически после изменения поля';
 }
 async function menuPatch(rtPatch, extra = {}) {
   const editKind = ['limitRangeEdit','setFishGoal','pvpTargetEdit'].find(k => extra[k]);
@@ -51,14 +63,19 @@ async function menuPatch(rtPatch, extra = {}) {
   // Форма привязана к прочитанному герою; новая запись не может незаметно попасть другому.
   const request = tracked ? { ...extra, expectedChar: extra.expectedChar ?? formChar } : extra;
   const char = request.expectedChar;
-  if (tracked) { settingsPending++; paintSettingsFeedback(); }
+  if (tracked) { settingsPending++; settingsPendingByChar.set(char, (settingsPendingByChar.get(char) || 0) + 1); paintSettingsFeedback(); }
   let timer;
   try {
     const response = await Promise.race([chrome.runtime.sendMessage({ cmd: 'menuPatch', rtPatch, ...request }),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Фоновый процесс не отвечает (15 с)')), 15000); })]);
     if (!response?.ok) throw new Error('Не удалось сохранить изменение: ' + (response?.reason || 'фон недоступен'));
     if (tracked) {
-      for (const field of Object.keys(request.cfgPatch || {})) settingsApplied.set(JSON.stringify([char, field]), serial);
+      settingsConfirmedByChar.add(char);
+      for (const field of Object.keys(request.cfgPatch || {})) {
+        const key = JSON.stringify([char, field]);
+        settingsApplied.set(key, Math.max(serial, settingsApplied.get(key) || 0));
+        if ((settingsReadFailures.get(key)?.serial || 0) <= serial) settingsReadFailures.delete(key);
+      }
       // Успех другого поля не скрывает более раннюю ошибку. Повторное изменение того же поля заменяет старое.
       for (const [key, failure] of settingsFailed) {
         if (failure.char !== char) continue;
@@ -81,7 +98,7 @@ async function menuPatch(rtPatch, extra = {}) {
       rtPatch: Object.fromEntries(Object.entries(rtPatch || {}).filter(([k]) => ['manualKickAt','magEnabled'].includes(k))) });
     }
     throw error;
-  } finally { clearTimeout(timer); if (tracked) { settingsPending--; paintSettingsFeedback(); } }
+  } finally { clearTimeout(timer); if (tracked) { settingsPending--; const n = (settingsPendingByChar.get(char) || 1) - 1; if (n) settingsPendingByChar.set(char, n); else settingsPendingByChar.delete(char); paintSettingsFeedback(); } }
 }
 async function retrySettings() {
   if (settingsPending) return;
@@ -1333,7 +1350,7 @@ async function save(e) {
 }
 async function saveFields(e) {
   if (formChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
-  const { cfg = {} } = await chrome.storage.local.get('cfg');
+  const expectedChar = formChar;
   const n = {};
   if (/^nWeapon/.test(e?.target?.id || '')) n.weaponManual = !!String(e.target.value || '').trim();   // игрок выбрал оружие сам — проверка инвентаря его не перепишет
   // v5.6: сохраняем только изменённое поле — раньше форма целиком перезаписывала настройки, и то, что бот сам поменял
@@ -1347,6 +1364,13 @@ async function saveFields(e) {
   TXT.forEach(k => { if (one.includes(k)) n[k] = $(k).value; });
   BOOL.forEach(k => { if (one.includes(k)) n[k] = $(k).checked; });
   if (!Object.keys(n).length) return false;
+  // Значения формы и герой фиксируются до чтения storage: меню могло успеть показать другой профиль.
+  const readSerial = ++settingsSerial;
+  let stored;
+  try { stored = await chrome.storage.local.get('cfg'); }
+  catch (error) { settingsReadFailed(expectedChar, readSerial, one, error); throw error; }
+  const { cfg = {} } = stored;
+  if (formChar !== expectedChar) throw new Error('Персонаж изменился — измените настройку в его меню');
   if (['catMode', 'zoneAuto'].includes(id) && n[id]) n.enchantMode = false;
   // 20.12 (ревизия 17.10, UI-3): в режиме «Задачи бота» TvT/Катакомбы/Автофарм в разделах ведут тот же список задач,
   // а не только старый флаг, который движок в этом режиме не читает (раньше галка «Участвовать в TvT» молча не действовала).
@@ -1363,10 +1387,10 @@ async function saveFields(e) {
   // Повторное явное включение снова проверяет доступные сейчас ранги; receipt незавершённого POST сохраняется.
   const magReset = n.autoMagister === true && cfg.autoMagister !== true ? { magEnabled: false } : {};
   if (['autoKillLimit','catKillLimit','dailyFishLimit','dailyKillLimit'].includes(id) || taskOf && Array.isArray(cfg.autoTasks)) magReset.manualKickAt = Date.now();
-  try { await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar }); }
+  try { await menuPatch(magReset, { cfgPatch: n, expectedChar }); }
   catch (error) {
     const why = String(error?.message || error);
-    if (typeof toast === 'function') toast('Настройки не сохранены: ' + why);
+    if (formChar === expectedChar && typeof toast === 'function') toast('Настройки не сохранены: ' + why);
     throw error; // do not continue Start/Buy/Mode with unapplied configuration
   } // отдельные поля, без перезаписи всего cfg
   return true;
@@ -1391,12 +1415,17 @@ function numField(k) {
 // 20.12 (ревизия 17.10, UI-2): Старт/режимы/«Проверить» больше не отправляют форму целиком. Они ждут уже начатые записи
 // полей (change срабатывает до click) и не продолжают, если изменение так и не сохранилось.
 async function settingsFlush() {
+  const expectedChar = formChar;
   await Promise.resolve();
-  const busy = () => (typeof settingsPending !== 'undefined' && settingsPending) || saveRunning;
+  const busy = () => (typeof settingsPending !== 'undefined' && settingsPending) || saveRunning || (typeof autoTaskPending !== 'undefined' && autoTaskPending);
   for (let i = 0; busy() && i < 160; i++) await new Promise(r => setTimeout(r, 100));
+  if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
+  if (busy()) throw new Error('Сохранение настроек не завершилось за 16 с. Дождитесь результата и повторите запуск');
   if (typeof settingsFailed === 'undefined') return true;   // вырезка в тестах без очереди меню
-  if ([...settingsFailed.values()].some(f => f.retryable)) await retrySettings().catch(() => {});
-  if (settingsFailed.size) { const why = [...settingsFailed.values()].at(-1)?.reason || 'есть несохранённые изменения';
+  if ([...settingsFailed.values()].some(f => f.char === expectedChar && f.retryable)) await retrySettings().catch(() => {});
+  if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
+  const failures = settingsFailuresFor(expectedChar);
+  if (failures.length) { const why = failures.at(-1)?.reason || 'есть несохранённые изменения';
     if (typeof toast === 'function') toast('Настройки не сохранены: ' + why); throw new Error(why); }
 }
 
@@ -2056,13 +2085,20 @@ let autoTaskEditQueue = Promise.resolve();
 // галкам старое состояние из cfg — иначе быстрый второй клик «не меняет» галку. Финальный load() после записи рисует правду.
 let autoTaskPending = 0;
 function editAutoTask(key, enabled, extraRt = {}) {
+  if (formChar == null) return Promise.reject(new Error('Дождитесь загрузки настроек персонажа'));
+  const expectedChar = formChar, readSerial = ++settingsSerial;
   autoTaskPending++;
   const edit = autoTaskEditQueue.catch(() => {}).then(async () => {
   try {
-    const { cfg = {} } = await chrome.storage.local.get('cfg');
-    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now(), ...extraRt }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
+    if (formChar !== expectedChar) throw new Error('Персонаж изменился — выберите задачу в его меню');
+    let stored;
+    try { stored = await chrome.storage.local.get('cfg'); }
+    catch (error) { settingsReadFailed(expectedChar, readSerial, ['autoTasks'], error); throw error; }
+    const { cfg = {} } = stored;
+    if (formChar !== expectedChar) throw new Error('Персонаж изменился — выберите задачу в его меню');
+    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now(), ...extraRt }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled), expectedChar });
   } finally { autoTaskPending--; }
-  await load();
+  if (formChar === expectedChar) await load();
   });
   autoTaskEditQueue = edit; return edit;
 }
@@ -2323,26 +2359,32 @@ $('campNow').onclick = async () => {
 // Стоп/Пауза отменяют ещё ожидающий сохранения запуск: поздний ACK не включает бота снова.
 let controlGeneration = 0;
 $('start').onclick = async () => {
-  const generation = ++controlGeneration;
+  const generation = ++controlGeneration, expectedChar = formChar;
   try {
+    if (expectedChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
     await save(); if (generation !== controlGeneration) return;   // 20.12 (UI-2): save() без полей только ждёт записей, форму целиком не пишет
     const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
+    if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
     await chrome.storage.local.set({ paused: null }); if (generation !== controlGeneration) return;
-    await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true });
-    if (generation === controlGeneration) await showWakeResult();
-  } catch (error) { toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
+    if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
+    await menuPatch({ ...(cfg.zoneAuto ? { zoneAutoKick: Date.now(), zoneGoT: 0, zoneLvlT: 0 } : {}), sinceDeep: 999, deepHot: false, scan: null, mobClickAt: 0, bounce: 0, mapReload: 0, campaignDue: true, deaths: [], manualKickAt: Date.now() }, { on: true, expectedChar });
+    if (generation === controlGeneration && formChar === expectedChar) await showWakeResult();
+  } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 };
 // 18.10 (игрок: «непонятно, что где нажимать, как запускать»): быстрый запуск — одно основное дело вместо прочих основных
 // (фоновые задачи TvT/Маммон/дейлики… сохраняются), затем обычный «Старт».
 async function quickStart(key) {
-  const generation = ++controlGeneration;
+  const generation = ++controlGeneration, expectedChar = formChar;
   try {
+    if (expectedChar == null) throw new Error('Дождитесь загрузки настроек персонажа');
+    await save(); if (generation !== controlGeneration) return;
     const { cfg = {} } = await chrome.storage.local.get('cfg'); if (generation !== controlGeneration) return;
+    if (formChar !== expectedChar) throw new Error('Персонаж изменился — повторите запуск в его меню');
     const was = selectedAutoTasks({ ...DEF, ...cfg });
     const cfgPatch = { autoTasks: [...was.filter(k => !AUTO_MAIN_TASKS.includes(k)), key], ...(was.includes('quests') ? { campaign: false, storyTurnIn: false } : {}) };
-    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch }); if (generation !== controlGeneration) return;
+    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch, expectedChar }); if (generation !== controlGeneration || formChar !== expectedChar) return;
     await $('start').onclick();
-  } catch (error) { toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
+  } catch (error) { if (formChar === expectedChar) toast('⚠ Запуск не выполнен: ' + String(error?.message || error), 'var(--bad)'); }
 }
 async function botControl(action) {
   let timer;
@@ -2993,7 +3035,7 @@ document.addEventListener('keydown', async e => {
 // Подтверждение Стоп/Пауза показывается после успешного ответа фона.
 
 if ($('settingsRetry')) $('settingsRetry').onclick = () => { void retrySettings().catch(() => {}); };
-if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); paintSettingsFeedback(); void load(); };
+if ($('settingsDiscard')) $('settingsDiscard').onclick = () => { if (settingsPending) return; settingsFailed.clear(); settingsReadFailures.clear(); paintSettingsFeedback(); void load(); };
 document.querySelectorAll('#quickStart [data-quick-task]').forEach(b => { b.onclick = () => quickStart(b.dataset.quickTask); });
 if ($('taskBoardEdit')) $('taskBoardEdit').onclick = () => { const was = !$('quickModeGrid').hidden; taskListToggle(); if (!was) document.querySelector('#autoTaskSelection input')?.focus({ preventScroll: true }); };
 if ($('activityDetails')) $('activityDetails').onclick = () => showTab($('activityDetails').dataset.goto || 'overview');

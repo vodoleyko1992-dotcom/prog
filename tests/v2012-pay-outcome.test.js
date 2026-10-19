@@ -14,7 +14,8 @@ test('classify: явный отказ — 4xx из общего списка и 
  assert.equal(P.classify({status:200,res:{error:'not_enough_adena'}}),'rejected');
  assert.equal(P.classify({status:200,res:{ok:false}}),'rejected');
  assert.equal(P.classify({status:200,res:{ok:true}}),'applied');
- assert.equal(P.classify({status:201,res:null}),'applied');
+ // 20.26: статус принят, но тело потеряно — требуется сверка результата.
+ assert.equal(P.classify({status:201,res:null}),'unknown');
 });
 test('classify: 5xx, обрыв, нет ответа — исход неизвестен',()=>{
  const {P}=load();

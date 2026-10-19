@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),Module=require('node:module');
+const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),file=path.join(root,'tests/v2024-seal-aa-browser.cjs');
+let src=fs.readFileSync(file,'utf8');
+const marker=' const requests=[],posts=[];';if(!src.includes(marker))throw Error('fixture marker missing');
+src=src.replace(marker," let dailyFaults=0;await h.ctx.route('https://l2wap.com/game/time',r=>{dailyFaults++;return r.fulfill({status:503,json:{error:'independent_clock_unavailable'}})});\n"+marker);
+src=src.replace('autoTasks:[],taskOnly:true,sealAuto:false','autoTasks:[],taskOnly:true,sealAuto:false,dailyKillLimit:8000,dailyFishLimit:1');
+src=src.replace('180000);await until','30000);await until');
+src=src.replace(' assert.deepEqual(h.errors,[]);'," assert.ok(dailyFaults>0,'daily API outage was actually exercised');console.log('PASS injected daily API503 count='+dailyFaults);assert.deepEqual(h.errors,[]);");
+const mod=new Module(file,module);mod.filename=file;mod.paths=Module._nodeModulePaths(path.dirname(file));mod._compile(src,file);

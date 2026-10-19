@@ -15,7 +15,7 @@ assert.ok(!html.includes('Быстрые режимы'));assert.ok(html.includes
 console.log('PASS single task panel, retained detailed settings, no dangling legacy handlers, canonical summary');
 // Реальный обработчик первого изменения переводит legacy профиль в allowlist, не запуская бота.
 const vm=require('node:vm');const state={cfg:{autoTasks:null,fishMode:true,taskOnly:true,mmCraftSend:true,mmCrafter:'Craft',shopReserve:123456},rt:{dailyFish:{old:true}},on:false};
-const context={Date,Object,Set,Promise,DEF:{},chrome:{storage:{local:{get:async()=>({cfg:state.cfg})}}},load:async()=>{},
+const context={Date,Object,Set,Promise,formChar:'Hero',settingsSerial:0,DEF:{},chrome:{storage:{local:{get:async()=>({cfg:state.cfg})}}},load:async()=>{},
  menuPatch:async(p,o)=>{Object.assign(state.rt,p);Object.assign(state.cfg,o.cfgPatch)}};
 const start=js.indexOf('const AUTO_TASK_LABELS ='),end=js.indexOf('function currentMode(',start);
 vm.runInNewContext(js.slice(start,end)+'\nthis.selected=selectedAutoTasks;this.edit=editAutoTask;',context);

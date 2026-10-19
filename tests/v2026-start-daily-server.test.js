@@ -37,9 +37,13 @@ test('дневной счёт с сервера включён в UI и общи
  const now=Date.now(),rt={dailyQuota:{basis:'server',day:E.dailyDay(now),auto:100,server:7955}},row=ctx.dailyMobBoardRow(rt,{dailyKillLimit:8000},now);assert.match(row.progress,/8055 \/ 8000/);assert.equal(row.percent,100);assert.match(row.progress,/ранее по серверу: 7955/);assert.equal(E.dailyCount(rt,'auto',now+86400000),0);
 });
 
-test('ожидание проверки не перекрывает срочный TvT/воскрешение и не разрешает новую добычу',async()=>{
+test('ожидание проверки передаёт круг срочному TvT/воскрешению и следующим службам',async()=>{
  const src=read('content.js'),part=src.slice(src.indexOf('async function loopGate()'),src.indexOf('  if((Object.keys(cfg.limitRanges||{}).length'))+'}';
- for(const urgent of [true,false]){let calls=0,sleeps=0;const ctx={L2V7Modules:{actions:{enterFrame(){}}},rt:{},serverDown:()=>false,loginPage:()=>false,antibotState:()=>null,dailyServerSync:async()=>false,loopUrgent:async()=>{calls++;return urgent},sleep:async()=>{sleeps++}};vm.runInNewContext(part,ctx);assert.equal(await ctx.loopGate(),true);assert.equal(calls,1);assert.equal(sleeps,urgent?0:1);}
+ // 19.10, аудит автономности: gate больше не завершает круг; настоящий mainTick доходит до срочных и обычных служб.
+ for(const urgent of [true,false]){let calls=0,services=0;const ctx={on:true,tabOwner:true,L2V7Modules:{actions:{enterFrame(){}}},rt:{},serverDown:()=>false,loginPage:()=>false,antibotState:()=>null,dailyServerSync:async()=>false,loopUrgent:async()=>{calls++;return urgent}};vm.runInNewContext(part,ctx);assert.equal(await ctx.loopGate(),undefined);
+  for(const k of ['loopLease','loopMigrations','loopWatchdog','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopRaid','loopActivity'])ctx[k]=async()=>false;
+  ctx.loopSideJobs=async()=>{services++;return true};vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),ctx);await ctx.mainTick();assert.equal(calls,1);assert.equal(services,urgent?0:1);
+ }
 });
 
 test('цепочка после начатого боя проверяет сервер перед передачей в nextFight, даже на battle.html',async()=>{
