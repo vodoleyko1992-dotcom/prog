@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.18",
-  "description": "L2wap Bot 20.18 — групповые убийства, восстановление рыбалки, авто-ЛС",
+  "version": "20.19",
+  "description": "L2wap Bot 20.19 — логи вверху Обзора и отдельные Лимиты",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.18"
+  "version_name": "20.19"
 }
