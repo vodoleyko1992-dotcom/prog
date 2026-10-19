@@ -83,7 +83,7 @@ const content = read('content.js'), combat = read('modules/combat.js');
   // content.js: отметки из сети (и при остановленном боте)
   assert.match(content, /if \(path === '\/game\/battle\/action' && \+d\.ms > 8000\) srvHangMark\(`ответ на ход \$\{Math\.round\(d\.ms \/ 1000\)\} с`\);/);
   assert.match(content, /if \(path === '\/game\/battle\/return-to-town' && d\.status >= 200 && d\.status < 300\) try \{ sessionStorage\.setItem\('l2bot\.toTown', String\(Date\.now\(\)\)\); \}/);
-  assert.match(content, /const srvHangMark = why => \{ try \{ sessionStorage\.setItem\('l2bot\.srvHang', JSON\.stringify\(\{ t: Date\.now\(\), why:/);
+  assert.match(content, /const srvHangMark = \(why, kind = 'network'\) => \{ try \{ sessionStorage\.setItem\('l2bot\.srvHang', JSON\.stringify\(\{ t: Date\.now\(\), why:/);
   assert.match(content, /get srvUp\(\) \{ return srvUp; \}, get srvHangMark\(\) \{ return srvHangMark; \}/);
 
   // 4. бой: ход без ответа > 8 с — не жмём, отметка, проверка сервера; отвечает — перезагрузка; не отвечает — ждём, ≥ 20 с — перезагрузка
@@ -110,7 +110,7 @@ const content = read('content.js'), combat = read('modules/combat.js');
     x = await run({ hangMs: 21000, up: false, slots: 0 }); assert.equal(x.r, 'wait'); assert.equal(x.reloads.length, 0, 'reload budget spent — keep waiting');
     x = await run({ hangMs: 70000, up: false }); assert.equal(x.r, 'through', 'after 60 s — old behaviour (no permanent lock)');
     x = await run({ hangMs: 9000, up: false, start: 6, done: 6 }); assert.equal(x.r, 'through', 'nothing in flight'); }
-  assert.match(combat, /env\.srvHangMark\?\.\('нет ответа игры 20 с'\);/, 'the 20 s fight watchdog marks the hang too');
+  assert.match(combat, /env\.srvHangMark\?\.\(waiting \? 'нет ответа игры 20 с'/, '19.10: only an unanswered request is a network hang');
 
   // 5. Noblesse при платных баффах по 1 FA (лог 09:05: 9 баффов + Noblesse 5 FA) — после смерти докупается; без платных — нет
   { const base = require('./helpers/warlock52-rt.cjs')(); // 20.12: замеры Warlock 52 — из фикстуры

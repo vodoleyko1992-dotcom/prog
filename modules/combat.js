@@ -194,8 +194,9 @@ function cdBusy(b) {
   // принудительной атакой раз в 10 с): застывший RAF-рисунок КД держал не только атаку, но и навыки, а 10.0.26 доверял
   // серверу лишь для атаки. Теперь и для навыка: сервер прислал откат именно ЭТОГО нажатия (delta.skillCooldowns),
   // он истёк, запросов в полёте нет, потерянного клика нет, а рисунок «занят» ещё ≥ FROZEN_GRACE — жмём по серверу.
+  // 19.10 (20.22, смерти Barakiel/Skylancer/Sheshark): нативные whirlwind/wild_sweep тоже имеют точные серверные ID.
   // Отказ игры «ещё на КД» или потеря клика после такого нажатия считается; после двух за бой рисунку этого слота снова верим.
-  if (busy && /^l2_\d+$/.test(String(env.slotAction(b) || ''))) {
+  if (busy && env.slotKind(b) === 'скилл' && /^[a-z][a-z0-9_]*$/i.test(String(env.slotAction(b) || ''))) {
     const id = env.slotAction(b), k = env.skKey(b), net = env.actNet?.();
     const serverReady = !(net && net.start > net.done) && !((lostUntil.get(k) || 0) > Date.now())
       && env.combatCooldown.skillKnown?.(id, spawn, pressAt.get(k) || 0) && env.combatCooldown.skillWait(id, spawn) <= 0;
@@ -904,8 +905,9 @@ function dpsPlan(ctx, mp) {
     : b.dmg - a.dmg || (b.cd || 0) - (a.cd || 0))[0];
   if (kill) return { ...kill, why: `добивание (${hp} HP)` };
   if (ctx.rb) {
-    const atkD = env.expDmg('атака'), me = env.meHp();
-    // v4.46: на РБ — без скиллов с уроном < 1,6 атаки (Force Buster: урона почти как атака, а MP вдвое больше)
+    const atkD = opts.some(o => o.key === 'attack') ? env.expDmg('атака') : 0, me = env.meHp();
+    // 19.10: недоступная атака не вытесняет готовый удар — иначе воин простаивал с готовым Wild Sweep.
+    // v4.46: на РБ — без скиллов с уроном < 1,6 доступной атаки (Force Buster: урона почти как атака, а MP вдвое больше)
     for (let i = opts.length - 1; i >= 0; i--) if (opts[i].key !== 'attack' && !opts[i].force &&
       !/^(burning fist|soul breaker|iron punch)$/i.test(opts[i].name) &&
       !(env.ilOf(opts[i].b)?.l2Damage && !DS?.[env.skKey(opts[i].b)]?.dmgN) &&
@@ -1872,9 +1874,11 @@ async function battle() {
     const sig = mob.cur + '|' + (env.actNet?.().done ?? me?.cur ?? '') + '|' + env.logLines().length + '|' + (env.logLines()[0] || '');
     if (sig !== progSig) { progSig = sig; progT = Date.now(); }
     else if (Date.now() - progT > 20000) {
-      env.srvHangMark?.('нет ответа игры 20 с');   // 8.0.3: смерть сразу после — не «не по силам»
+      const pending = env.actNet?.();
+      const waiting = pending && pending.start > pending.done;
+      env.srvHangMark?.(waiting ? 'нет ответа игры 20 с' : 'бой не обновляется 20 с без отправленного хода', waiting ? 'network' : 'interface');   // 8.0.3: смерть сразу после — не «не по силам»
       if (reloadSlot()) {   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик)
-        env.rec('B', 'бой', `нет ответа игры 20 с (моб ${mob.cur}/${mob.max}) — обновляю страницу`);
+        env.rec('B', 'бой', `${waiting ? 'нет ответа игры' : 'нет боевых действий'} 20 с (моб ${mob.cur}/${mob.max}) — обновляю страницу`);
         location.reload(); await env.sleep(8000); return;
       }
       progT = Date.now();
@@ -2208,17 +2212,18 @@ async function battle() {
       if (reasons.length && (rsk !== ctx.mageWaitSig || Date.now() - (ctx.mageWaitLogT || 0) > 60000)) { ctx.mageWaitSig = rsk; ctx.mageWaitLogT = Date.now(); const waitText = (fighterIdle ? `воин ${Math.round((Date.now() - lastAct) / 1000)} с без действий · ` : '') + rs; env.rec('B', 'ожидание навыков', waitText);
         env.setRt({ combatWait: { t: Date.now(), text: waitText.slice(0, 200) } }); }   // 7.1.30: без спама; 17.10: причина видна и в «Обзоре» меню
     }
-    // 7.1.30 (лог 09.10 07:35): маг на MP 20, банки на панели нет, заклинания «готовы», а атака не жмётся — бот простоял 20 с до
-    // перезагрузки (после неё атака и MP 174 появились сразу: страница боя перестала обновляться). Теперь: 6 с без действий у мага —
-    // атака, если её кнопка свободна; если сервер КД не держит, а кнопка «занята» — интерфейс завис, обновляем страницу сразу
-    if (mageCombat() && Date.now() - lastAct > 6000 && env.combatCooldown.globalWait() <= 0) {
+    // 19.10 (20.22): воин тоже застывал с «интерфейс 0 мс» на 20–47 с до поражения.
+    // Не обходим disabled/запрет игры кликом: если сервер не держит КД и нет запроса в полёте,
+    // через6с без действий и прогресса перечитываем страницу. Лимит перезагрузок общий с остальными сторожами.
+    const pending = env.actNet?.();
+    if (Date.now() - lastAct > 6000 && env.combatCooldown.globalWait() <= 0 && !(pending && pending.start > pending.done)) {
       const atkB = [...document.querySelectorAll(env.SLOT)].find(b => env.slotKind(b) === 'атака');
       const act0 = atkB && env.slotAction(atkB), srvBusy = act0 && env.combatCooldown.skillWait(act0, (env.cdSpawn || env.battleSpawn)()) > 0;
-      if (atkB && uiReady(atkB) && !srvBusy) { console.info(env.TAG, 'маг: 6 с без действий — атака'); ctx.block.attack = 0; await act(atkB, 'Атака (простой мага)'); return AGAIN; }
-      let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
-      if (atkB && !srvBusy && Date.now() - lastAct > 9000 && Date.now() - progT > 9000 && rl.length < 2) {   // 7.1.30: только если бой стоит, не чаще 2 раз за 10 мин
-        try { sessionStorage.setItem('l2bot.mageReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
-        env.rec('B', 'бой', `маг стоит 9 с: кнопки «заняты», а сервер откат не держит — интерфейс завис, обновляю страницу`);
+      if (atkB && ready(atkB) && !srvBusy) { ctx.block.attack = 0; await act(atkB, `Атака (простой ${mageCombat() ? 'мага' : 'воина'})`); return AGAIN; }
+      if (atkB && !uiReady(atkB) && !srvBusy && Date.now() - progT > 6000 && reloadSlot()) {
+        if (!killOwnerValid(ctx)) return;
+        env.srvHangMark?.('кнопки боя заняты без серверного отката', 'interface');
+        env.rec('B', 'бой', `6 с без действий: кнопки заняты, серверный КД истёк — обновляю интерфейс боя`);
         location.reload(); await env.sleep(8000); return;
       }
     }
