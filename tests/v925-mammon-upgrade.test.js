@@ -56,7 +56,9 @@ const INV = { 57: 9e6, 4037: 3, 1458: 100, 1869: 100, 1876: 100, 1880: 3 };
   { const { env, M, fired } = mk({ inv: INV, lists: [[item({ itemId: 1 })]] });
     await M.smith({ kind: 'smith', up: true, step: 'act', t: Date.now() }); assert.equal(fired.length, 0); assert.match(env.rt.mmLog[0].why, /вещи-цели нет/); }
   { const { env, M, fired } = mk({ inv: INV, cards: [card('Пояс першопрохідця', 0, 'Покращити до Lv.1', true)], lists: [[item()]] });
-    await M.smith({ kind: 'smith', up: true, step: 'act', t: Date.now() }); assert.equal(fired.length, 0); assert.match(env.rt.mmLog[0].why, /недоступна/); }
+    // 20.29: disabled может означать ручной запрос в полёте — сохраняем задание без ложного отказа.
+    const J = { kind: 'smith', up: true, step: 'act', t: Date.now() }; env.rt.mmJob = J;
+    await M.smith(J); assert.equal(fired.length, 0); assert.equal(env.rt.mmJob, J); assert.equal(env.rt.mmLog, undefined); assert.equal(env.rt.mmUpFail, undefined); }
   // 6. клик был, уровень не подтвердился → следующий круг: вырос → ✓ без второго клика; не вырос после 2 попыток → ✗
   { const mine = card('Пояс першопрохідця', 0, 'Покращити до Lv.1');
     const { env, M, fired } = mk({ inv: INV, cards: [mine], lists: [[item()], [item()], [item({ level: 1 })]] });

@@ -1,0 +1,30 @@
+{
+  "version": "20.29",
+  "runtimeRoot": "/workspace/work/build2029-chrome",
+  "test": "tests/v2028-mammon-payment-browser.cjs",
+  "casesPassed": 2,
+  "casesFailed": 0,
+  "exitCode": 0,
+  "runtimeFiles": 64,
+  "runtimeUnchanged": true,
+  "browser": "Chromium actual MV3",
+  "localHttpsOnly": true,
+  "liveGame": false,
+  "sourceRuntimeUsed": false,
+  "nativePosts": {
+    "automatic": {
+      "freeTeleport": 1,
+      "upgrade4to5": 1,
+      "modeDuringPayment": "fish"
+    },
+    "manualHeldUpgrade": {
+      "upgrade4to5": 1,
+      "duplicatePost": 0,
+      "falseFailure": 0,
+      "prematureNavigation": 0
+    }
+  },
+  "pageErrors": 0,
+  "log": "/workspace/work/build2029-mammon-mv3.log",
+  "finishedUtc": "2026-10-19T23:03:35.050535+00:00"
+}

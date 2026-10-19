@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "checks": 28,
+  "failed": [],
+  "firefox_lint": {
+    "exit_code": 0,
+    "reused_identical_archive": false,
+    "log": "/workspace/work/build2029-webext-lint.json",
+    "stderr": "/workspace/work/build2029-webext-lint.stderr.log",
+    "summary": {
+      "errors": 0,
+      "notices": 0,
+      "warnings": 45
+    },
+    "warning_codes": {
+      "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "UNSAFE_VAR_ASSIGNMENT": 43
+    },
+    "error_codes": {},
+    "baseline_20_28": {
+      "summary": {
+        "errors": 0,
+        "notices": 0,
+        "warnings": 45
+      },
+      "warning_codes": {
+        "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+        "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+        "UNSAFE_VAR_ASSIGNMENT": 43
+      }
+    }
+  },
+  "version_header_review": {
+    "content_only_header_changed": true,
+    "headers": {
+      "content.js": "// ===== L2wap Bot v20.29 — оплата и ручное улучшение у Маммона =====",
+      "README-CHROME.txt": "L2wap Bot 20.29 — Google Chrome / Chromium",
+      "README-FIREFOX.txt": "L2wap Bot 20.29 — Firefox 128+ для компьютера"
+    }
+  }
+}

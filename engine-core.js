@@ -171,7 +171,9 @@
     const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
     const wait = rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
-    const raidPayment = !!rt.actionPayments?.pending && rt.actionPayments.pending.kind !== 'fishing';
+    // 20.28 (лог 20.10 08:51): подготовка услуги Маммона не возвращает отложенный рейд.
+    // Сам pending по-прежнему запрещает повторную оплату; удерживать рейд должен его собственный телепорт.
+    const raidPayment = rt.actionPayments?.pending?.kind === 'raid-teleport';
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
