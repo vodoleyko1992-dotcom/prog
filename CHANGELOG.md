@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [L2wap Bot 20.23: Chrome + Firefox, зависшие навыки и учёт поражений](docs/changelog/CHANGELOG-20.23.md)
 - [L2wap Bot20.22: Chrome + Firefox, Мобы за сутки рядом с рыбалкой](docs/changelog/CHANGELOG-20.22.md)
 - [L2wap Bot20.21: Chrome + Firefox, Снабжение, базовые лимиты и РБ с заточками](docs/changelog/CHANGELOG-20.21.md)
 - [L2wap Bot20.20: Chrome + Firefox, оба счётчика мобов рядом с РБ](docs/changelog/CHANGELOG-20.20.md)

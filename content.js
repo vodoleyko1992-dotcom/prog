@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.22 — дневные мобы рядом с рыбалкой в Обзоре =====
+// ===== L2wap Bot v20.23 — Маммон, навыки и учёт поражений =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -2940,6 +2940,10 @@ async function loopTaskList() {
   if (Array.isArray(cfg.autoTasks)) {
     taskPolicyNote();
     const blocked = {};
+    // 20.23 (журнал19.10 17:26): галка «Тур РБ» уже снята, rbSessTick больше не
+    // вызывается, а прежний rbSess.on бессрочно держал явный поход к Маммону.
+    // Снимаем только завершённую выбором сессию; покупки, статистика и квитанции остаются.
+    if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.rbSess = { ...rt.rbSess, on: false, end: Date.now() };
     for (const key of ['tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) blocked[key] = null;
     if (Object.keys(blocked).length) { if(blocked.tbuff===null)blocked.tbInterrupted={t:Date.now(),jobT:rt.tbuff.t}; await setRt(blocked); rec('S','авторежим', 'отменены несовместимые маршруты: ' + Object.keys(blocked).join(', ') + '; квитанции оплат сохранены'); return true; }

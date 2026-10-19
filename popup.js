@@ -1960,12 +1960,12 @@ let autoTaskEditQueue = Promise.resolve();
 // 20.12 (ревизия 17.10, UI-1): пока правка списка задач в очереди фона, промежуточная перерисовка (load по записи rt) не возвращает
 // галкам старое состояние из cfg — иначе быстрый второй клик «не меняет» галку. Финальный load() после записи рисует правду.
 let autoTaskPending = 0;
-function editAutoTask(key, enabled) {
+function editAutoTask(key, enabled, extraRt = {}) {
   autoTaskPending++;
   const edit = autoTaskEditQueue.catch(() => {}).then(async () => {
   try {
     const { cfg = {} } = await chrome.storage.local.get('cfg');
-    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now() }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
+    await menuPatch({ dailyFish: null, dailyRb: null, manualKickAt: Date.now(), ...extraRt }, { cfgPatch: autoTaskPatch({ ...DEF, ...cfg }, key, enabled) });
   } finally { autoTaskPending--; }
   await load();
   });
@@ -1982,8 +1982,11 @@ function paintModes(d, on, rt = {}) {   // 10.0.10: rt — для «кампан
   const note = $('autoTaskStatus'); if (note) note.textContent = strict ? (selected.length ? 'Разрешено: ' + selected.map(k => AUTO_TASK_LABELS[k]).join(', ') : 'Ничего не выбрано — бот ждёт') : 'Показаны прежние настройки. Измените список, чтобы разрешить только выбранные задачи.';
   $('rbSessStart').onclick = async () => {
   await save();
-  await menuPatch({ rbSess: { on: true, start: Date.now(), bought: false } });   // сначала сессия, потом режим (запуск ждёт ответа игры)
-  await setMode('rb', true);
+  const { cfg: current = {} } = await chrome.storage.local.get('cfg');
+  // 20.23: политика задач не должна увидеть новую сессию до разрешения её тура.
+  const session = { rbSess: { on: true, start: Date.now(), bought: false } };
+  if (Array.isArray(current.autoTasks)) await editAutoTask('raid', true, session);
+  else { await menuPatch(session); await setMode('rb', true); }
   toast('🔥 РБ-сессия: бот идёт к бафферу за баффами, потом — тур по РБ');
 };
 $('rbSessAuto').onclick = async () => { $('rbSessBuffs').value = 'auto'; await saveKeys(['rbSessBuffs']); toast('⚡ Фулл бафф под класс: список подставлен'); };
