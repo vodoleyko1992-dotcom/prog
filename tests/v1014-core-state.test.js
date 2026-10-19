@@ -113,7 +113,7 @@ for (const [name, start, end] of [
 });
 
 test('выбор кампании единой галкой очищает старые daily маршруты без запуска', async()=>{
- const b=modeBox();b.autoTaskPatch=(_d,key,enabled)=>({autoTasks:enabled?[key]:[]});b.load=async()=>{};b.DEF={};
+ const b=modeBox();b.autoTaskPatch=(_d,key,enabled)=>({autoTasks:enabled?[key]:[]});b.load=async()=>{};b.DEF={};b.formChar='Hero';b.settingsSerial=0;
  vm.runInNewContext(slice(popup,'let autoTaskEditQueue =','function currentMode('),b);
  await b.editAutoTask('quests',true);assert.equal(b.rt.dailyFish,null);assert.equal(b.rt.dailyRb,null);assert.equal(JSON.stringify(b.cfg.autoTasks),JSON.stringify(['quests']));
 });

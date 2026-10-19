@@ -1,0 +1,173 @@
+{
+  "startedAt": "2026-10-19T21:53:55.225Z",
+  "readOnly": true,
+  "blockedMutations": [
+    {
+      "phase": "page-load-off",
+      "path": "/game/world/enter-map",
+      "method": "POST"
+    },
+    {
+      "phase": "page-load-off",
+      "path": "/game/player-login-claim",
+      "method": "POST"
+    },
+    {
+      "phase": "page-load-off",
+      "path": "/game/player-interaction",
+      "method": "POST"
+    },
+    {
+      "phase": "native-page-reload",
+      "path": "/game/world/enter-map",
+      "method": "POST"
+    },
+    {
+      "phase": "native-page-reload",
+      "path": "/game/player-login-claim",
+      "method": "POST"
+    },
+    {
+      "phase": "native-page-reload",
+      "path": "/game/player-interaction",
+      "method": "POST"
+    }
+  ],
+  "pageErrors": [],
+  "samples": [
+    {
+      "phase": "loaded-off",
+      "at": "2026-10-19T21:54:18.099Z",
+      "bot": {
+        "on": false,
+        "paused": false,
+        "hero": "Warlock",
+        "tasks": [],
+        "hasLease": false
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373546,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      }
+    },
+    {
+      "phase": "started-empty-task-list",
+      "at": "2026-10-19T21:54:24.034Z",
+      "bot": {
+        "on": true,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "Проверяю серверное время и лимиты дня",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792446861615
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 0,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [],
+        "hasLease": true
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373546,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      }
+    },
+    {
+      "phase": "reloaded",
+      "at": "2026-10-19T21:54:34.299Z",
+      "bot": {
+        "on": true,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "⏹ Без режима — только задачи (ни одна не включена); сейчас дел нет, стою",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792446861615
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 0,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [],
+        "hasLease": true
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373546,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      }
+    },
+    {
+      "phase": "stopped",
+      "at": "2026-10-19T21:54:36.351Z",
+      "bot": {
+        "on": false,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "⏹ Без режима — только задачи (ни одна не включена); сейчас дел нет, стою",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792446861615
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 0,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [],
+        "hasLease": true
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373546,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      }
+    }
+  ],
+  "passed": true,
+  "finishedAt": "2026-10-19T21:54:36.352Z"
+}

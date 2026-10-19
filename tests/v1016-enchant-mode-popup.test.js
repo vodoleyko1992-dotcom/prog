@@ -47,7 +47,7 @@ test('разовая служба без изменения режима сох�
 });
 for (const id of ['catMode', 'zoneAuto']) test('явная галка ' + id + ' выключает заточку, фоновое сохранение формы — нет', async () => {
   const b = fixture(), inputs = { catMode: { checked: false }, zoneAuto: { checked: false } };
-  Object.assign(b, { BOOL: ['catMode', 'zoneAuto'], NUM: [], TXT: [], $: id => inputs[id] });
+  Object.assign(b, { settingsSerial: 0, BOOL: ['catMode', 'zoneAuto'], NUM: [], TXT: [], $: id => inputs[id] });
   vm.runInNewContext(part('async function save(e)', '// ---------- вкладки ----------'), b);
   await b.save(); assert.equal(b.cfg.enchantMode, true);
   inputs[id].checked = true; await b.save({ target: { id } }); assert.equal(b.cfg.enchantMode, false);

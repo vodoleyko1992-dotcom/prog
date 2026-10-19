@@ -49,7 +49,8 @@ assert.match(bg, /if \(Object\.keys\(change\)\.length\) await chrome\.storage\.l
 for (const k of ['lock', 'wdDown', 'stopMeta', 'paused', 'auth']) assert.ok(new RegExp(`MEM_SKIP = new Set\\([^)]*'${k}'`).test(popup), `MEM_SKIP has ${k}`);
 
 // 4. замок: сравнение только по эпохе; сигнал «жив» продлевает замок; вкладку бота не выгружать; старт сбрасывает метку простоя
-assert.match(content, /if \(ch\.lock && on && tabOwner && ch\.lock\.newValue\?\.epoch !== leaseEpoch\) \{/);
+// 19.10.2026: финальный flush после Stop тоже теряет право записи при передаче lease.
+assert.match(content, /if \(ch\.lock && tabOwner && ch\.lock\.newValue\?\.epoch !== leaseEpoch\) \{/);
 assert.match(bg, /if \(valid && Date\.now\(\) - lock\.t > 20000\) await chrome\.storage\.local\.set\(\{ lock: \{ \.\.\.lock, t: Date\.now\(\) \} \}\);/);
 assert.match(bg, /chrome\.tabs\.update\(tab, \{ autoDiscardable: false \}\)/);
 assert.match(bg, /hbBg: \{ \.\.\.nextHb \}, wdog: \[\], wdDown: null \}/);

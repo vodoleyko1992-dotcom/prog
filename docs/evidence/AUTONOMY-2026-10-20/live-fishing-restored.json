@@ -1,0 +1,21 @@
+{
+  "restoredOriginalBait": true,
+  "restoredShotsEnabled": true,
+  "target": null,
+  "basicBait": 9110,
+  "goodBait": 105,
+  "adena": "509727814",
+  "coinOfLuck": 180,
+  "inBattle": false,
+  "revision": 373560,
+  "requests": [
+    {
+      "action": "selectBait",
+      "status": 200
+    },
+    {
+      "action": "setFishingSoulshotEnabled",
+      "status": 200
+    }
+  ]
+}

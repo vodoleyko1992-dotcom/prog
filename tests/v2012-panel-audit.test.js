@@ -13,7 +13,7 @@ const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); a
     const sent = [], toasts = [];
     const b = { Date, Object, Array, JSON, Number, String, Math, Promise, setTimeout, console, cfg,
       NUM: ['shopReserve', 'stopHp'], TXT: ['nPower', 'fishGoal', 'rbSessBuffs'], BOOL: ['tvtOn', 'catMode', 'zoneAuto'],
-      DEF: { shopReserve: 200000, stopHp: 25, tvtOn: true, catMode: false, zoneAuto: false, autoTasks: null }, formChar: 'Hero',
+      DEF: { shopReserve: 200000, stopHp: 25, tvtOn: true, catMode: false, zoneAuto: false, autoTasks: null }, formChar: 'Hero', settingsSerial: 0,
       $: id => fields[id], toast: t => toasts.push(t), chrome: { storage: { local: { get: async () => ({ cfg: b.cfg }) } } },
       menuPatch: async (rtPatch, extra) => { sent.push({ rtPatch, cfgPatch: extra.cfgPatch }); } };
     vm.createContext(b);

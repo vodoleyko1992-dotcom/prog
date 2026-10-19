@@ -6,6 +6,14 @@
  root.L2V7Factories.fishing = function create_fishing(env) {
 const location = env.routeLocation || root.location;
 const fishOwn = () => env.on && env.tabOwner !== false && (!env.antibotState?.() || env.antibotState?.() === 'blocked' && env.pveFishingAllowed?.() === true);
+// 19.10, аудит автономности: все пути восстановления делят предел 3 обновления за 10 мин.
+// Неизвестный заброс хранит свой бюджет и паузу в rt: reload/потеря sessionStorage не обнуляют попытки.
+function fishReloadTimes() {
+  let saved=[];try{saved=JSON.parse(root.sessionStorage?.getItem('l2bot.fishReload')||'[]');}catch(_){}
+  const pending=env.rt.fishCastPending?.reloadTimes,now=Date.now();
+  return [...new Set([...(Array.isArray(saved)?saved:[]),...(Array.isArray(pending)?pending:[])])].filter(t=>Number.isFinite(t)&&t<=now&&now-t<600000).sort((a,b)=>a-b);
+}
+function fishReloadRemember(times) { try{root.sessionStorage?.setItem('l2bot.fishReload',JSON.stringify(times));}catch(_){} }
 // 17.10, реворк: старое ожидание не продолжает сервис после новой команды, даже если Stop → Start вернули прежний режим.
 function fishContinuation() {
   const char=env.rt.char,lease=env.leaseEpoch,kick=env.rt.manualKickAt||0,mode=env.autonomyMode?.(),generation=env.actionGeneration?.();
@@ -18,6 +26,29 @@ async function fishSoft(msg) {
   const n = Date.now() - (env.rt.fishSoftT || 0) < 15 * 60000 ? (env.rt.fishSoftN || 0) + 1 : 1;
   const STEPS = [5, 10, 20, 30, 40, 60, 120, 180, 240, 300];   // с: 5 → 10 → 20 → 30 → 40 с → 1 → 2 → 3 → 4 → 5 мин (дальше 5 мин)
   const wait = STEPS[Math.min(n - 1, STEPS.length - 1)] * 1000;
+  // 19.10, автономность: свободная рыбалка ждёт своей следующей попытки, остальные явно выбранные занятия продолжаются.
+  // Пустой DOM не доказывает отсутствие улова: перед передачей очереди сверяем target и персонажа на сервере.
+  const alternatives=Array.isArray(env.cfg.autoTasks)&&env.cfg.autoTasks.includes('fish')&&env.cfg.autoTasks.some(k=>['raid','epic','quests','cat','auto','farm'].includes(k));
+  const free=()=>valid()&&isFishing()&&!fishState()&&!env.rt.fishCastActive&&!env.rt.fishCastPending&&!env.payments?.blocked?.()&&!env.rt.actionPayments?.pending
+    &&!env.rt.fishService&&!env.rt.fishSvc&&!env.rt.actionOwner&&!env.rt.dailyFish;
+  if(alternatives&&env.fishTaskWaitKey&&free()){
+    const key=env.fishTaskWaitKey(),char=env.rt.char,lease=env.leaseEpoch,generation=env.actionGeneration?.();
+    const [raw,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);
+    if(!free()||key!==env.fishTaskWaitKey())return;
+    const state=raw?.fishing||raw,ch=j?.character||j;
+    if(state?.target===null&&ch?.name===char&&ch.id&&ch.inBattle===false&&Number.isSafeInteger(state.revision)&&state.revision===ch.revision){
+      const at=Date.now(),before=env.rt.taskWait?.fish||null,entry={at,until:at+wait,why:String(msg).slice(0,240),key};
+      const same=()=>fishOwn()&&env.rt.char===char&&env.leaseEpoch===lease&&env.actionGeneration?.()===generation&&env.fishTaskWaitKey()===key&&env.rt.taskWait?.fish?.at===at;
+      const saved=await env.setRt({fishSoftN:n,fishSoftT:at,taskWait:{...(env.rt.taskWait||{}),fish:entry}});
+      if(saved?.ok===false||!same()||!await commit()||!same()){
+        if(same())await env.setRt({taskWait:{...(env.rt.taskWait||{}),fish:before}});
+        return;
+      }
+      env.rec('B','рыбалка: пауза',`${msg} — повтор через ${wait/1000} с (попытка ${n}); продолжаю другие выбранные задачи`);
+      env.setStatus(`Рыбалка: ${msg} — повтор через ${wait/1000} с, остальные задачи продолжаются`);
+      return;
+    }
+  }
   await env.setRt({ fishSoftN: n, fishSoftT: Date.now() });
   if (!valid()) return;
   env.rec('B', 'рыбалка: пауза', `${msg} — повтор через ${wait / 1000} с (попытка ${n})`);
@@ -479,9 +510,9 @@ async function fishAct(name) {                   // нажать рыболов�
   if (env.canAct?.() === false || !fishOwn()) { const L = []; L.rej = false; L.tmo = true; return L; }
   if (busy) { await fishBattle(name); const L = []; L.rej = false; L.tmo = true; return L; }
   if (stuck && env.on) {
-    let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.fishReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
+    const rl = fishReloadTimes();
     if (rl.length >= 3) { stuck = false; await env.sleep(1500); }   // 7.1.30: не чаще 3 перезагрузок за 10 мин (общий счётчик со сторожем)
-    else try { sessionStorage.setItem('l2bot.fishReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
+    else fishReloadRemember([...rl, Date.now()]);
   }
   if (stuck && env.on) {
     const f = fishState(); env.rec('B', 'рыбалка', `${name}: сервер ответил, а экран не обновился 2,5 с${f ? ` (рыба ${f.cur}/${f.max})` : ''} — перезагружаю страницу`);
@@ -900,10 +931,10 @@ async function fishStallCheck(f) {
   if (!valid()) return false;
   fishProgress(f);
   if (!f || Date.now() - fishProgT < 8000) return false;
-  let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.fishReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
+  const rl = fishReloadTimes();
   if (rl.length >= 3) { if (Date.now() - fishProgT > 60000) { fishProgT = Date.now(); env.rec('B', 'рыбалка', 'экран рыбалки снова завис — 3 перезагрузки за 10 мин, жду'); } return false; }
   if (!await commit() || !valid()) return true;
-  try { sessionStorage.setItem('l2bot.fishReload', JSON.stringify([...rl, Date.now()])); } catch (e) {}
+  fishReloadRemember([...rl, Date.now()]);
   env.rec('B', 'рыбалка', `экран завис: ${f.name} ${f.cur}/${f.max}, кнопка «${f.need || '—'}» недоступна 8 с — перезагружаю страницу`);
   fishProgT = Date.now(); location.reload(); await env.sleep(6000); return true;
 }
@@ -1035,10 +1066,18 @@ async function castReconcile(options={}) {
       return true;
     }
   }
+  // Живой DOM и точная квитанция проверены выше: восстановившийся экран не ждёт паузы сетевого опроса.
+  if(p.probeAfter>Date.now()){env.setStatus(`Рыбалка: сверяю неизвестный заброс через ${Math.ceil((p.probeAfter-Date.now())/1000)} с`);await env.sleep(Math.min(1000,p.probeAfter-Date.now()));return true;}
   const [raw,j]=await Promise.all([paymentRead('/game/fishing/state'),paymentRead('/character')]);if(!valid())return true;
   const state=raw?.fishing||raw,ch=j?.character||j;
   const known=state&&ch?.name===char&&typeof ch.id==='string'&&ch.id&&(!p.charId||p.charId===ch.id)&&Number.isSafeInteger(state.revision)&&ch.revision===state.revision&&Object.hasOwn(state,'target');
-  const reload=async()=>{const saved=await env.setRt({fishCastPending:{...env.rt.fishCastPending,refreshed:true}});if(saved?.ok===false||!await commit())return;if(valid())location.reload();};
+  const reload=async()=>{
+    const now=Date.now(),history=fishReloadTimes(),allowed=history.length<3;
+    const next={...env.rt.fishCastPending,probeAfter:now+(allowed?[15000,30000,60000][history.length]:15000),reloadTimes:allowed?[...history,now]:history,...(allowed?{refreshed:true}:{})};
+    const saved=await env.setRt({fishCastPending:next});if(saved?.ok===false||!valid()||!await commit()||!valid())return;
+    if(!allowed){env.setStatus('Рыбалка: 3 обновления за 10 мин — сохраняю заброс, проверю сервер через 15 с');await env.sleep(1000);return;}
+    fishReloadRemember(next.reloadTimes);location.reload();
+  };
   if(known&&state.target&&typeof state.target==='object'){if(observeOnly)return true;await env.setRt({fishCastActive:true});if(valid())await reload();return true;}
   const R=p.requestRevision;
   if(known&&state.target===null&&Number.isSafeInteger(R)&&state.revision>R){
@@ -1060,6 +1099,8 @@ async function castReconcile(options={}) {
     env.setStatus('Рыбалка: сверяю исход защищённого повтора');await env.sleep(1000);return true;
   }
   if(state&&!p.refreshed){await reload();return true;}
+  // Несогласованный снимок/ошибка GET тоже оставляют исход неизвестным: без паузы здесь было два GET каждую секунду.
+  await env.setRt({fishCastPending:{...env.rt.fishCastPending,probeAfter:Date.now()+15000}});if(!valid())return true;
   env.setStatus(Number.isSafeInteger(R)?'Рыбалка: исход заброса неизвестен — жду согласованный снимок сервера':'Рыбалка: исход заброса неизвестен (старая запись без revision) — откройте рыбалку и выполните один заброс вручную');
   await env.sleep(1000);return true;
 }
@@ -1178,6 +1219,10 @@ async function fishing() {
   await env.sleep(env.rnd(20, 60));
   if (!still()) return;
   if (env.rt.fishTgt?.done) return fishTgtReached();
+  // 19.10, аудит автономности: текущую рыбу доводим, новый заброс требует свежей сверки дневного лимита.
+  if(env.dailyWorkReady&&!await env.dailyWorkReady('fish'))return;
+  if(!still())return;
+  if(env.rt.fishTgt?.done)return fishTgtReached();
   // снимок журнала и счётчика ДО нажатия: быстрый «Рыба не клюнула» может прийти вместе с забросом
   fishWatch();
   const pre = fishLog(), m0 = env.fishMut, castT = Date.now();

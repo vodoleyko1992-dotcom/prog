@@ -151,9 +151,24 @@
   const dailyLimit = (c,k) => { const n = +rawTaskConfig(c)?.[dailyKeys[k]]; return Number.isSafeInteger(n) && n > 0 ? n : 0; };
   const dailyCount = (rt,k,now = Date.now()) => !dailyCurrent(rt.dailyQuota,rt,now) ? 0 : k === 'fish' ? Math.max(0,+rt.dailyQuota.fish || 0) : Math.max(0,+rt.dailyQuota.auto || 0) + Math.max(0,+rt.dailyQuota.cat || 0) + Math.max(0,+rt.dailyQuota.raid || 0) + Math.max(0,+rt.dailyQuota.server || 0);
   const dailyBlocked = (c,rt,k,now = Date.now()) => dailyLimit(c,k) > 0 && dailyCount(rt,k,now) >= dailyLimit(c,k);
+  // 19.10, автономность: подтверждённая пауза рыбалки не удерживает другие выбранные занятия.
+  function fishTaskWaitKey(c,rt={},now=Date.now()) {
+    const raw=rawTaskConfig(c)||{};
+    const keys=Object.keys(raw).filter(k=>/^(fish|rod)/.test(k)||['shopReserve','shopMaxSpend','dailyFishLimit'].includes(k)).sort();
+    return JSON.stringify([rt.char||'',+rt.manualKickAt||0,rt.dailyStart||0,dailyDay(now,rt),taskList(c),keys.map(k=>[k,raw[k]])]);
+  }
+  function fishTaskWait(c,rt={},now=Date.now()) {
+    const w=rt.taskWait?.fish,list=taskList(c);
+    if(!w||!list?.includes('fish')||!list.some(k=>['raid','epic','quests','cat','auto','farm'].includes(k))||w.key!==fishTaskWaitKey(c,rt,now)
+      ||!Number.isFinite(w.at)||!Number.isFinite(w.until)||now<w.at||w.until<=w.at||w.until-w.at>300000
+      ||rt.fishCastActive===true||rt.fishCastPending||rt.actionPayments?.pending?.kind==='fishing'||rt.fishService||rt.fishSvc||rt.dailyFish)return null;
+    // Уже начатая закупка/дорога запасной задачи завершается до возврата: короткая пауза не обрывает её на полпути.
+    return w.until>now||rt.actionOwner||rt.actionPayments?.pending?w:null;
+  }
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
-    const fishOpen = rt.fishCastActive === true || !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
+    const fishWait=fishTaskWait(c,rt,now);
+    const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
     const wait = rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
     const raidPayment = !!rt.actionPayments?.pending && rt.actionPayments.pending.kind !== 'fishing';
@@ -161,7 +176,7 @@
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
-      if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy) && idleRaid && !raidPayment && (fishBusy || wait.until > now && !freshRaid)) return false;
+      if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy || fishWait) && idleRaid && (!raidPayment || fishWait && rt.actionOwner) && (fishBusy || fishWait && rt.actionOwner || wait.until > now && !freshRaid)) return false;
       if (k === 'fish') return fishOpen || !!idleRaid && fishBusy;
       if (k === 'quests') {
         const live = [rt.storySaga,rt.dionCampaign].some(q => q && !q.completed && q.stage !== 'completed');
@@ -231,7 +246,7 @@
     if (MANUAL_JOBS.includes(key) && job && typeof job === 'object' && (job.urgent === true || job.manual === true)) return true;
     const primary = {rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish'}[key];
     // Ожидающий тур сохраняет место возврата после выбранной рыбалки; боевые маршруты не переносятся.
-    if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && selectedTask(c,rt) === 'fish') return true;
+    if (key === 'rbHunt' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt.step || rt.rbHunt.step === 'pick') && !rt.rbHunt.id && (selectedTask(c,rt) === 'fish' || fishTaskWait(c,rt))) return true;
     if (primary) return selectedTask(c,rt) === primary;
     const group = {mmJob:'mammon',storyJob:'quests',dailyFish:'fish',dailyRb:'raid',petBufferTrip:'petbuff',rbGo:'raid',rbHunt:'raid',fishSvc:'fish',fishService:'fish',farmScan:'resources',recipeScan:'resources',rbScan:'raid'}[key];
     if (group) return taskAllowed(c,group);
@@ -308,6 +323,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -2,7 +2,7 @@
 const fs = require('fs'), vm = require('vm'), assert = require('assert');
 const source = fs.readFileSync(require('path').join(__dirname, '../popup.js'), 'utf8');
 let cfg = { autoTasks: ['tvt'] }, patches = [];
-const context = { console, Set, Date, Object, Promise, DEF: {}, chrome: { storage: { local: { get: async () => ({ cfg: JSON.parse(JSON.stringify(cfg)) }) } } }, menuPatch: async (rt, extra) => { patches.push({ rt, extra }); cfg = { ...cfg, ...extra.cfgPatch }; }, load: async () => {} };
+const context = { console, Set, Date, Object, Promise, formChar: 'Hero', settingsSerial: 0, DEF: {}, chrome: { storage: { local: { get: async () => ({ cfg: JSON.parse(JSON.stringify(cfg)) }) } } }, menuPatch: async (rt, extra) => { patches.push({ rt, extra }); cfg = { ...cfg, ...extra.cfgPatch }; }, load: async () => {} };
 vm.createContext(context);
 vm.runInContext(source.slice(source.indexOf('const AUTO_TASK_LABELS'), source.indexOf('const MODE_NAME')) + '\nthis.api={selectedAutoTasks,autoTaskPatch,currentMode,editAutoTask};', context);
 const { selectedAutoTasks, autoTaskPatch, currentMode, editAutoTask } = context.api;

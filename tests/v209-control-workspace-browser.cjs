@@ -9,7 +9,7 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  assert.match(await h.popup.locator('#activityText').innerText(),/Выберите, чем заняться/);assert.equal(await h.popup.locator('#quickStart').isVisible(),true);   // 18.10: быстрый запуск вместо «после «Старт»»
  assert.match(await h.popup.locator('#activityText').getAttribute('title'),/Последнее:/);   // 18.10: бот стоит — строка «Последнее» уходит в подсказку, место под быстрый запуск
  assert.match(await h.popup.locator('#taskBoardRows').innerText(),/Сегодня: 10 \/ 10/);
- assert.match(await h.popup.locator('#taskBoardRows').innerText(),/До 00:00 Владивостока/);
+ assert.match(await h.popup.locator('#taskBoardRows').innerText(),/До 00:00 сервера/);
  assert.equal((await h.get(['on'])).on,false);
  await h.popup.locator('#taskBoardRows [data-task-tab="limits"]').first().click();assert.equal(await h.popup.locator('#tab-limits').isVisible(),true);await h.openTab('overview');
  await h.popup.locator('#taskBoardEdit').click();assert.equal(await h.popup.locator('#autoTaskSelection').isVisible(),true);assert.equal(await h.popup.locator('#modeToggle').getAttribute('aria-expanded'),'true');
@@ -19,12 +19,15 @@ const {harness,until}=require('./v1014-core-lifecycle-browser.cjs');
  // Отклонённая запись через реальный popup→фон: источник expectedChar специально устарел.
  await h.openTab('panel');await h.popup.evaluate(()=>{formChar='StaleHero';document.getElementById('hpPotAt').value='31';return save({target:document.getElementById('hpPotAt')}).catch(()=>{});});
  await until(()=>h.popup.locator('#settingsFeedback').isVisible());assert.match(await h.popup.locator('#settingsFeedback').innerText(),/не сохранены/);assert.notEqual((await h.get(['cfg'])).cfg.hpPotAt,31);
- await h.popup.evaluate(()=>load());assert.equal(await h.popup.locator('#settingsFeedback').isVisible(),true);
- // Другой герой — кнопка retry не пишет в активный профиль.
- const cfgBefore=(await h.get(['cfg'])).cfg;await h.popup.locator('#settingsRetry').click();assert.match(await h.popup.locator('#settingsFeedback').innerText(),/Персонаж изменился/);assert.deepEqual((await h.get(['cfg'])).cfg,cfgBefore);
- // Новое изменение реального поля получает ACK и не стирает чужую ошибку.
- await h.popup.evaluate(()=>{document.activeElement?.blur();return load()});await h.popup.evaluate(()=>{document.getElementById('hpPotAt').value='37';return save({target:document.getElementById('hpPotAt')})});assert.equal((await h.get(['cfg'])).cfg.hpPotAt,37);assert.match(await h.popup.locator('#settingsState').innerText(),/несохранённые/);
- console.log('PASS actual MV3 storage refusal: persistent error after repaint, safe character-bound retry, independent successful field, no false success');
+ // 19.10.2026: чужая ошибка сохраняется в памяти исходной формы, но не выдаётся за ошибку текущего героя.
+ await h.popup.evaluate(()=>load());assert.equal(await h.popup.locator('#settingsFeedback').isVisible(),false);
+ // Возвращаем контекст неудавшейся формы: retry по-прежнему не пишет настройки в активный профиль.
+ const cfgBefore=(await h.get(['cfg'])).cfg;await h.popup.evaluate(()=>{formChar='StaleHero';paintSettingsFeedback();});
+ await h.popup.locator('#settingsRetry').click();assert.match(await h.popup.locator('#settingsFeedback').innerText(),/Персонаж изменился/);assert.deepEqual((await h.get(['cfg'])).cfg,cfgBefore);
+ // Новое изменение настоящего героя имеет свой ACK и честное подтверждение; прежний отказ не стирается.
+ await h.popup.evaluate(()=>{document.activeElement?.blur();return load()});await h.popup.evaluate(()=>{document.getElementById('hpPotAt').value='37';return save({target:document.getElementById('hpPotAt')})});assert.equal((await h.get(['cfg'])).cfg.hpPotAt,37);assert.match(await h.popup.locator('#settingsState').innerText(),/сохранены/);assert.equal(await h.popup.locator('#settingsFeedback').isVisible(),false);
+ await h.popup.evaluate(()=>{formChar='StaleHero';paintSettingsFeedback();});assert.equal(await h.popup.locator('#settingsFeedback').isVisible(),true);assert.match(await h.popup.locator('#settingsFeedback').innerText(),/Персонаж изменился/);
+ console.log('PASS actual MV3 storage refusal: original hero retains error, safe character-bound retry, current hero has independent success');
  await h.popup.locator('#settingsDiscard').click();await until(()=>h.popup.locator('#settingsFeedback').isHidden());
  // Имитируем краткий отказ транспорта, сохраняя настоящий фон для следующей попытки.
  await h.popup.evaluate(()=>{window.originalSendMessage=chrome.runtime.sendMessage;chrome.runtime.sendMessage=request=>request.cfgPatch?.hpPotAt===31?Promise.resolve({ok:false,reason:'fixture storage failure'}):window.originalSendMessage(request);document.getElementById('hpPotAt').value='31';return save({target:document.getElementById('hpPotAt')}).catch(()=>{});});

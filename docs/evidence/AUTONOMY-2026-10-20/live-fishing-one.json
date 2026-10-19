@@ -1,0 +1,371 @@
+{
+  "startedAt": "2026-10-19T21:57:27.440Z",
+  "readOnly": false,
+  "scenario": "one-cast-with-reload",
+  "maxDurationMs": 300000,
+  "blockedMutations": [],
+  "mutations": [
+    {
+      "phase": "page-load-off",
+      "path": "/game/player-login-claim",
+      "method": "POST",
+      "action": "",
+      "at": "2026-10-19T21:57:40.696Z"
+    },
+    {
+      "phase": "page-load-off",
+      "path": "/game/player-interaction",
+      "method": "POST",
+      "action": "",
+      "at": "2026-10-19T21:57:41.001Z"
+    },
+    {
+      "phase": "start",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "selectBait",
+      "at": "2026-10-19T21:57:47.483Z"
+    },
+    {
+      "phase": "start",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "setFishingSoulshotEnabled",
+      "at": "2026-10-19T21:57:48.294Z"
+    },
+    {
+      "phase": "start",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "cast",
+      "at": "2026-10-19T21:57:49.115Z"
+    },
+    {
+      "phase": "start",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "reeling",
+      "at": "2026-10-19T21:57:49.637Z"
+    },
+    {
+      "phase": "start",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "pumping",
+      "at": "2026-10-19T21:57:50.302Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "reeling",
+      "at": "2026-10-19T21:57:51.061Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/player-interaction",
+      "method": "POST",
+      "action": "",
+      "at": "2026-10-19T21:57:55.795Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "pumping",
+      "at": "2026-10-19T21:57:55.834Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "pumping",
+      "at": "2026-10-19T21:57:57.015Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "pumping",
+      "at": "2026-10-19T21:57:58.085Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "pumping",
+      "at": "2026-10-19T21:57:59.359Z"
+    },
+    {
+      "phase": "reload-after-cast",
+      "path": "/game/fishing/action",
+      "method": "POST",
+      "action": "reeling",
+      "at": "2026-10-19T21:57:59.946Z"
+    }
+  ],
+  "pageErrors": [],
+  "samples": [
+    {
+      "phase": "loaded-off",
+      "at": "2026-10-19T21:57:44.047Z",
+      "bot": {
+        "on": false,
+        "paused": false,
+        "hero": "Warlock",
+        "tasks": [],
+        "hasLease": false
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373546,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      },
+      "fishing": {
+        "revision": 373546,
+        "target": null,
+        "remainingMs": 65070385,
+        "basicBait": 9111,
+        "goodBait": 105,
+        "bait": 105
+      }
+    },
+    {
+      "phase": "started",
+      "at": "2026-10-19T21:57:48.526Z",
+      "bot": {
+        "on": true,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "Проверяю серверное время и лимиты дня",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792447066898
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 0,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [
+          "fish"
+        ],
+        "hasLease": true
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373547,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      },
+      "fishing": {
+        "revision": 373547,
+        "target": null,
+        "remainingMs": 65070385,
+        "basicBait": 9111,
+        "goodBait": 105,
+        "bait": 9111
+      }
+    },
+    {
+      "phase": "before-reload",
+      "at": "2026-10-19T21:57:51.431Z",
+      "bot": {
+        "on": true,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "Проверяю серверное время и лимиты дня",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792447066898
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 0,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [
+          "fish"
+        ],
+        "hasLease": true,
+        "fish": {
+          "bites": 1,
+          "byFish": {},
+          "casts": 1,
+          "caught": 0,
+          "lost": 0,
+          "nobite": 0,
+          "t0": 1792447069569
+        },
+        "pending": null,
+        "active": true
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373551,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      },
+      "fishing": {
+        "revision": 373551,
+        "target": {
+          "present": true,
+          "name": "White Fish"
+        },
+        "remainingMs": 65068332,
+        "basicBait": 9110,
+        "goodBait": 105,
+        "bait": 9110
+      }
+    },
+    {
+      "phase": "completed",
+      "at": "2026-10-19T21:58:01.651Z",
+      "bot": {
+        "on": true,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "Рыбалка: White Fish 142/250 — Pumping",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792447066898
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 1,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [
+          "fish"
+        ],
+        "hasLease": true,
+        "fish": {
+          "bites": 1,
+          "byFish": {
+            "White Fish": 1
+          },
+          "casts": 1,
+          "caught": 1,
+          "lost": 0,
+          "nobite": 0,
+          "t0": 1792447069569
+        },
+        "pending": null,
+        "active": false
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373558,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      },
+      "fishing": {
+        "revision": 373558,
+        "target": null,
+        "remainingMs": 65058135,
+        "basicBait": 9110,
+        "goodBait": 105,
+        "bait": 9110
+      }
+    },
+    {
+      "phase": "stopped",
+      "at": "2026-10-19T21:58:04.204Z",
+      "bot": {
+        "on": false,
+        "paused": null,
+        "hero": "Warlock",
+        "status": "Рыбалка: White Fish 142/250 — Pumping",
+        "check": {
+          "char": "Warlock",
+          "day": "2026-10-20",
+          "start": 1,
+          "t": 1792447066898
+        },
+        "quota": {
+          "auto": 0,
+          "basis": "server",
+          "cat": 0,
+          "day": "2026-10-20",
+          "fish": 1,
+          "raid": 0,
+          "server": 0
+        },
+        "tasks": [
+          "fish"
+        ],
+        "hasLease": true,
+        "fish": {
+          "bites": 1,
+          "byFish": {
+            "White Fish": 1
+          },
+          "casts": 1,
+          "caught": 1,
+          "lost": 0,
+          "nobite": 0,
+          "t0": 1792447069569
+        },
+        "pending": null,
+        "active": false
+      },
+      "hero": {
+        "name": "Warlock",
+        "level": 68,
+        "inBattle": false,
+        "revision": 373558,
+        "adena": "509727814",
+        "coinOfLuck": 180,
+        "hp": 16586,
+        "mp": 1752
+      },
+      "fishing": {
+        "revision": 373558,
+        "target": null,
+        "remainingMs": 65055577,
+        "basicBait": 9110,
+        "goodBait": 105,
+        "bait": 9110
+      }
+    }
+  ],
+  "reloaded": true,
+  "castRequests": 1,
+  "passed": true,
+  "finishedAt": "2026-10-19T21:58:04.207Z"
+}

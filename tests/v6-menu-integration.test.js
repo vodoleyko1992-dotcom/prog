@@ -41,7 +41,12 @@ const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battl
  assert(!popup.includes('chrome.storage.local.set({ rt: { ...rt'));
  assert(!popup.includes('chrome.storage.local.set({ cfg: { ...cfg'));
  // 14.10: rising-edge автомагистра атомарно сбрасывает только отметку проверки вместе с cfgPatch.
- assert(popup.includes('await menuPatch(magReset, { cfgPatch: n, expectedChar: formChar })'));
+ // 19.10: герой фиксируется до асинхронного чтения, а не берётся из уже переключённой формы.
+ const saveFields = popup.slice(popup.indexOf('async function saveFields(e)'), popup.indexOf('const TASK_FLAG_OF'));
+ const captureAt = saveFields.indexOf('const expectedChar = formChar;'), readAt = saveFields.indexOf("await chrome.storage.local.get('cfg')");
+ assert(captureAt >= 0 && captureAt < readAt, 'профиль захвачен до await чтения настроек');
+ assert(saveFields.includes('await menuPatch(magReset, { cfgPatch: n, expectedChar })'));
+ assert(saveFields.includes('if (formChar !== expectedChar) throw new Error('));
  assert(popup.includes('n.autoMagister === true && cfg.autoMagister !== true'));
  console.log('PASS: popup+inline-dock authentication, serialized UI/bot writes, cfg+rt isolation');
 })().catch(e=>{console.error(e);process.exitCode=1;});

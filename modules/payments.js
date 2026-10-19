@@ -14,6 +14,9 @@
   if (REJECT.includes(s)) return 'rejected';
   if (s >= 200 && s < 300) {
    const r = d.res;
+   // 20.26, аудит автономности: HTML/обрыв тела/пустой JSON не доказывают оплату.
+   // Неизвестный исход остаётся в очереди до обычной сверки запаса/состояния.
+   if (!r || typeof r !== 'object' || Array.isArray(r) || !Object.keys(r).length) return 'unknown';
    if (r && typeof r === 'object' && (r.error || r.ok === false)) return 'rejected';
    return d.error ? 'unknown' : 'applied';
   }

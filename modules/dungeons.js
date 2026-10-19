@@ -152,6 +152,7 @@ async function catNext() {
   if (!pick) return false;
   await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
   if (!active() || !catPick([pick], env.heroLvl())) return true;
+  if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active())return true;
   env.setStatus(`Катакомбы: следующий бой с ${pick.name} (${pick.lvl})`);
   location.href = '/battle.html?spawnId=' + encodeURIComponent(pick.id);
   return true;
@@ -174,6 +175,7 @@ async function catGo(id) {                        // в подземелье: е
   if (env.payments?.blocked()) { await paymentReconcile(); return; }
   const active = catGuard();
   if (!active()) return;
+  if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active())return;
   id ||= catTarget();
   if (!id) {
     // 20.13 (ревизия 17.10, шаг 5, farm/DG-1): все подземелья в часовом бане — это не «не знаю уровень героя»: честный статус и простой
@@ -324,13 +326,14 @@ async function catHunt(id) {
     ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, exp: pick.exp || 0, fa: pick.fa, valueT: Date.now(), probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
   if (!active()) return;
   const a = await showMob(pick.id, net ? pick.i : -1, active);
+  if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active())return;
   // Пауза и перелистывание асинхронны: запреты могли измениться до самого клика.
   if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
   if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (!active()) return; if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
   // ссылка не открыла бой (или моба не нашли на страницах) — через окно моба и «В бой»
   const info = a?.closest('li')?.querySelector('[data-spawn-id]') || [...document.querySelectorAll('#dungeon-mob-list [data-spawn-id]')].find(x => x.dataset.spawnId === pick.id);
   if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
-  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
+  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return; if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
   if (!active()) return;
   // бой не открылся: «подойди ближе» (герой снаружи подземелья) — входим заново; два раза подряд не помогло — через телепорт
   const far = /ближ|too_far|далеко/i.test(env.noticeText() + ' ' + (env.$q('#dungeon-load-err')?.textContent || '')) || env.NET_ERR.err === 'battle_too_far' && Date.now() - env.NET_ERR.t < 8000;

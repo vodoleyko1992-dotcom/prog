@@ -265,12 +265,15 @@ async function nextFight(ctx) {
   if (env.tvtSoon() || env.warlock?.chainBlocked?.()) return;
   if (env.autonomyMode() === 'enchant') return env.toMap();
   if (env.autonomyMode() === 'fish') return env.goFishing();
+  // 19.10, аудит: служебные шаги после победы доступны и при сбое дневного API; новый бой — только после сверки.
+  if(env.dailyWorkReady && !await env.dailyWorkReady('mobs')) { if(env.on && env.tabOwner!==false && env.victory() && env.canAct?.()!==false)return env.toMap();return; }
   // 10.0.22 (лог15.10 05:06): Ashen поддерживает штатную цепочку; список — только запасной путь.
   if (/^ashen_bastion_mob_/i.test(new URLSearchParams(location.search).get('spawnId') || '') && env.autonomyMode() === 'farm') {
     if (env.cfg.chain !== false) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) && !h.disabled ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false || env.autonomyMode() !== 'farm' || env.antibotState?.()) return;
       if (hunt) {
+        if(env.dailyWorkReady && !await env.dailyWorkReady('mobs'))return;
         const t0 = Date.now(); env.setStatus('Ashen Bastion: охотиться дальше'); env.setRt({ via: 'chain' }); env.fire(hunt);
         const started = () => !env.victory() && (env.mobHp()?.cur || 0) > 0;
         let ok = await env.waitFor(started, 8000, 50);
@@ -299,6 +302,7 @@ async function nextFight(ctx) {
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
       if (hunt) {
+        if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return;
         env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
         const href = location.href, t0 = Date.now(); env.fire(hunt);
         const started = () => (location.href !== href && !/\/dungeon\.html/i.test(location.pathname)) || (!env.victory() && (env.mobHp()?.cur || 0) > 0);
@@ -402,6 +406,7 @@ async function nextFight(ctx) {
     if (hunt) {
       await chainNote(true);
       if (!sameIntent() || env.tvtSoon() || env.antibotState?.()) return;
+      if(env.dailyWorkReady && !await env.dailyWorkReady('mobs'))return;
       env.setStatus('Охотиться дальше');
       // 10.0 (лог 12.10: от записи «Охотиться дальше» до запроса 273 мс против ≈45 мс у игрока): запись не ждём — rt в памяти уже новый,
       // хвост очереди досылается при уходе со страницы (pagehide); опрос 50 мс вместо 250
@@ -703,6 +708,7 @@ async function attackSpawn(c, label, opt = {}) {
   { const off = champEntryOff(c); if (off || !env.on) { if (off) champSkip(c, off); await env.setRt({ target: null }); return false; } }
   // Список перерисовывается во время паузы и сохранения цели. Detached link
   // не получит native обработчик; отказ fire не является отправленной атакой.
+  if(env.dailyWorkReady && !await env.dailyWorkReady('mobs') || !active())return false;
   a = env.$q(sel);
   if (!a || env.shown?.(a) === false || env.fire(a) === false) { await rollback(); return false; }
   if (!(await env.waitFor(env.isBattle, 10000)) && active()) {   // бой не открылся — обновляем карту; стоп только после 3 раз подряд
@@ -834,6 +840,7 @@ async function map() {
         await env.setRt({ target: { name: r.name, champ: true, quest: true, rb: true }, mobClickAt: Date.now(), via: 'map' });
         // 14.10: Stop/смена вкладки отменяют и прямой URL боя; старая кнопка окна другого РБ не подходит.
         if (!env.on || env.tabOwner === false) return;
+        if(env.dailyWorkReady && !await env.dailyWorkReady('mobs') || !env.on || env.tabOwner === false)return;
         if (go && env.rbModalIs?.(r) && env.shown(go)) { if (!env.fire(go)) return; }
         else location.href = '/battle.html?spawnId=' + encodeURIComponent(r.id);
         await env.waitFor(env.isBattle, 10000);
@@ -1050,6 +1057,7 @@ async function ashenStep() {
   const rows = ashenRows(), min = +env.cfg.lvlMin || 1, max = +env.cfg.lvlMax || 99;
   const target = rows.find(r => r.ready && r.lvl >= min && r.lvl <= max);
   if (target) {
+    if(env.dailyWorkReady && !await env.dailyWorkReady('mobs'))return;
     env.setStatus(`Ashen Bastion: ${target.name}`);
     const href = location.href;
     if (!env.fire(target.fight)) return;

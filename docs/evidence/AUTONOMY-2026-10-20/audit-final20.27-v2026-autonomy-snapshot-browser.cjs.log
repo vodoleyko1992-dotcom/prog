@@ -1,0 +1,4 @@
+PASS small {"length":274,"bodyClones":1,"ms":17}
+PASS large-block {"length":24812,"bodyClones":0,"ms":4}
+PASS large-recursive {"length":400145,"bodyClones":0,"ms":35}
+PASS large-bounded {"length":400145,"bodyClones":0,"ms":41}

@@ -1,0 +1,5 @@
+PASS actual MV3 board: quota/series progress, correct stopped action, limits link, task selector, retained scroll, keyboard/aria disclosure
+PASS actual MV3 storage refusal: original hero retains error, safe character-bound retry, current hero has independent success
+PASS actual MV3 transient failure: correct draft across character switch and exact-field retry to original profile
+PASS actual MV3 375×620 with expanded tasks and simultaneous persistent errors: settings remain accessible
+PASS actual MV3 1280/390/375 px screenshots and no overflow; no actions/POST/errors
