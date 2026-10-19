@@ -201,12 +201,13 @@
   <button data-tab="rb" data-short="РБ" title="Тур по РБ, фулл бафф за FA, таймеры, эпики (Alt+3)"><span class="ic">♛</span><span class="lb">РБ и эпики</span></button>
   <button data-tab="panel" data-short="Бой" title="Банки, магистр, оружие, баффер, суммоны и свой класс (Alt+4)"><span class="ic">⚔</span><span class="lb">Бой и класс</span></button>
   <button data-tab="enchant" data-short="Заточка" title="Очередь вещей, свитки, лимиты и результаты серии (Alt+5)"><span class="ic">✨</span><span class="lb">Автозаточка</span></button>
-  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, закупка расходников, добыча (Alt+6)"><span class="ic">◉</span><span class="lb">Рыбалка и снабжение</span></button>
+  <button data-tab="fish" data-short="Рыбалка" title="Рыбалка, снаряжение и добыча (Alt+6)"><span class="ic">◉</span><span class="lb">Рыбалка</span></button>
   <button data-tab="mammon" data-short="Маммон" title="Заказы торговца, кузнец, материалы и почта (Alt+7)"><span class="ic">🏺</span><span class="lb">Маммон</span></button>
   <button data-tab="lifestone" data-short="ЛС / AA" title="Life Stone на оружии и обмен камней печати на Ancient Adena (Alt+8)"><span class="ic">💎</span><span class="lb">ЛС — Life Stone</span></button>
   <button data-tab="pvp" data-short="PvP" title="TvT, магазин TvT, цели PvP и лист врагов (Alt+9)"><span class="ic">⚔</span><span class="lb">TvT и PvP</span></button>
   <button data-tab="svc" data-short="Сервис" title="Автовход, настройки, память и диагностика (Alt+0)"><span class="ic">⚙</span><span class="lb">Сервис</span></button>
   <button data-tab="limits" data-short="Лимиты" title="Дневные лимиты, разовые цели мобов и рыбалки"><span class="ic">⏱</span><span class="lb">Лимиты</span></button>
+  <button data-tab="supply" data-short="Снабжение" title="Закупка банок, сосок и руды, резерв адены"><span class="ic">🛒</span><span class="lb">Снабжение</span></button>
 </nav>
 </div>
 <div class="workarea">
@@ -644,6 +645,7 @@
  </section>
 
 <section id="tab-fish">
+  <div class="row"><button type="button" data-goto="supply">🛒 Банки и расходники — Снабжение</button></div>
   <h4>Как бот рыбачит</h4>
   <div class="hint">Выберите «Рыбалка» в списке задач сверху и нажмите «Старт»: бот идёт к рыбаку (Город → Рыбак), выбирает наживку, включает рыболовные заряды, забрасывает удочку и вываживает рыбу — перед каждым нажатием читает подсказку «Рыба замерла → Pumping» / «Рыба сопротивляется → Reeling». Бой и охота в этом режиме не ведутся.</div>
   <div id="fishBox" class="camp">Ещё не рыбачил</div>
@@ -684,20 +686,6 @@
   <div id="goalQueue" class="hint" style="white-space:pre-line"></div>
   <input id="fishGoal" hidden>
   <div class="hint">Инвентарь → «Рибалка» → рыба: MAX → «Разрезать», Old Box: MAX → «Открыть». Затем «Рыболовный магазин» → «Обмен материалов»: всё, чего хватает на Proof (Fish Oil 25→1, Fish Scale 5→1, Fish Gem 4→1…). Расходники за аден — «Магазин» на странице рыбалки; за Proof — «Рыболовный магазин» → «Товары».</div>
-  <div class="subsec-title" id="tab-supply">🛒 Закупка расходников</div>
-  <h4>🛒 Закупка расходников (Магазин вещей)</h4>
-  <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
-  <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
-  <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
-  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="200/1000"></label>
-  <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
-  <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
-  <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
-  <div class="hint">Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».</div>
-  <label>Не тратить ниже, аден <input id="shopReserve" class="sm money" type="number" min="0"></label>
-  <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
-  <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
-  <div id="shopBox" class="hint" style="white-space:pre-line"></div>
   <div class="adv-start" data-adv="fish">⚙ Дополнительно</div>
   <div class="subsec-title"><span id="tab-loot" class="tab-anchor"></span>🎒 Добыча</div>
   <h4>🎒 Статистика добычи</h4>
@@ -885,6 +873,23 @@
     <div class="row"><input id="fishMaxCastsFrom" class="limitRangeInput" type="number" min="1" step="1" placeholder="От" aria-label="От: диапазон лимита"><input id="fishMaxCastsTo" class="limitRangeInput" type="number" min="1" step="1" placeholder="До" aria-label="До: диапазон лимита"><button id="fishMaxCastsRangeSet" type="button">Диапазон</button><button id="fishMaxCastsRangeClear" type="button">Точно</button></div>
     <div id="fishMaxCastsRangeInfo" class="hint"></div>
   </div>
+</section>
+
+<section id="tab-supply">
+  <h4>🛒 Закупка расходников (Магазин вещей)</h4>
+  <label>Докупать автоматически <input id="shopAuto" type="checkbox"></label>
+  <div class="hint">Формат «мин/до»: когда в сумке меньше «мин» — докупить до «до». 0/0 — не покупать. Соски — по грейду надетого оружия (воин — Soulshot, маг — Blessed Spiritshot).</div>
+  <label>🧪 Банки HP <input id="shopHp" class="sm" placeholder="300/1000"></label>
+  <label>💧 Банки MP <input id="shopMp" class="sm" placeholder="200/1000"></label>
+  <label>✨ Соски <input id="shopShots" class="sm" placeholder="1000/5000"></label>
+  <label>🔷 Spirit Ore <input id="shopSpirit" class="sm" placeholder="0/1000"></label>
+  <label>🔶 Soul Ore <input id="shopSoul" class="sm" placeholder="0/1000"></label>
+  <div class="hint">Наживка и рыболовные заряды настраиваются в разделе «Рыбалка».</div>
+  <div class="row"><button type="button" data-goto="fish">🎣 Открыть настройки рыбалки</button></div>
+  <label>Не тратить ниже, аден <input id="shopReserve" class="sm money" type="number" min="0"></label>
+  <label>Не больше за раз, аден <input id="shopMaxSpend" class="sm money" type="number" min="0"></label>
+  <div class="row"><button id="shopNow" class="main" title="Бросает текущего моба / РБ / рыбу и сразу идёт в магазин">🛒 Закупить сейчас (бросить всё)</button></div>
+  <div id="shopBox" class="hint" style="white-space:pre-line"></div>
 </section>
 
 </div><!-- /.workarea -->
