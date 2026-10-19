@@ -2,6 +2,8 @@
 
 Браузерное расширение (Chrome MV3 + сборка для Firefox 128+), бот для браузерной игры **l2wap.com** (Lineage-2-подобная; интерфейс игры у игрока на русском (переключатель UA|RU в настройках персонажа), сообщения сервера, имена заклинаний и предметов — по-украински; журнал бота на русском). Текущая версия: **20.23** (Chrome и Firefox 128+). Код — ванильный JS без сборщика, ~12 000 строк. Все комментарии и журнал — по-русски, в комментариях принято ссылаться на версию и лог, по которому сделана правка («7.1.26 (лог 10.10 14:11): …»).
 
+**19.10, исходники после20.23:** кнопка анализа рюкзака в Маммоне (работает при OFF), автоматически при выбранной задаче и цели, после письма и раз в5мин. Готовые материалы/сырьё/крафт раздельно; ошибка сохраняет прежние данные. Паузы улучшений и оплаты не меняются. Подробности — kb/mammon.md и HANDOFF. Новая ZIP-сборка не запрошена.
+
 **19.10, включено в20.21:** заводские мобы8000 точным общим числом, рыба1511–1564; старые заводские границы заменяются однократно. В экспериментальных настройках РБ rbScrollFirst=true: сначала подтверждённые сервером свитки, внутри групп прежний порядок. Боевой стоп тура по дневной квоте пока прежний; это не строгий потолок всех PvE-убийств. Подробности — docs/HANDOFF.md и docs/FARM-KILL-LIMITS.md. Включено в обе сборки20.21.
 
 **17.10, ревизия кода:** шаги 5 и 7 — в сборке 20.13 (DEF_CFG теперь в defaults.js, не в content.js). Шаги 1–4 сводки `notes/code-audit-2026-10-17.md` — стоп-краны боя/входа/сторожа, оплаты (только платное ждёт, кнопка «Считать оплату не прошедшей»), дневной лимит из ответов игры, траты по умолчанию. Тур РБ сам не включается (ни профиль, ни дейлик), бафф за FA — только в «Туре РБ». ZIP не собран.
@@ -96,7 +98,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (458 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (460 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG.md           оглавление истории версий (ссылки); сами CHANGELOG-X.Y.Z.md — в docs/changelog/ (в zip не входят, код их не читает)
 ```
 
@@ -143,7 +145,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 458 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 460 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.

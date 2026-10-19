@@ -721,6 +721,8 @@
   <label title="Цены следующего уровня кузнец показывает только рядом с собой: бот слетает к нему (телепорт по лимиту выше), прочитает и вернётся. Не чаще раза в 6 ч">Узнавать цены у кузнеца сам <input id="mmSmithAuto" type="checkbox"></label>
   <label title="Разрешено игроком 12.10. Когда для следующего уровня вещи-цели всё собрано (материалы, адена, Coin of Luck), бот летит к кузнецу и жмёт «Покращити» — по одному уровню, только эту вещь и только до уровня цели. Coin of Luck тратится только здесь">Улучшать вещь-цель у кузнеца сам (тратит Coin of Luck) <input id="mmUpgrade" type="checkbox"></label>
   <div id="mmGoalBox" class="camp">Цели нет</div>
+  <div class="row"><button id="mmBagAnalyze" type="button" title="Перечитать рюкзак и пересчитать материалы цели. Работает и при выключенном боте; не запускает бой, перелёт или улучшение.">🔎 Проанализировать рюкзак</button></div>
+  <div id="mmBagStatus" class="hint" style="white-space:pre-line" role="status" aria-live="polite">Рюкзак ещё не анализировался. При выбранных задаче «Маммон» и вещи-цели работающий бот проверяет его автоматически.</div>
   <div id="mmPlanBox" class="hint mm-plan"></div>
   <div class="row"><button id="mmGuideNow" title="Прочитать источники дропа и спойла из игры сейчас (только чтение, ≈2 МБ)">🔄 Источники из игры</button><button id="mmSmith">⚒ Узнать цены у кузнеца</button><button id="mmGoUp" title="Лететь к кузнецу сейчас и улучшить вещь-цель на один уровень (тратит Coin of Luck). Если чего-то не хватает — кузнец покажет, бот ничего не нажмёт">⬆ Улучшить сейчас</button></div>
   <div id="mmGearBox" class="hint" style="white-space:pre-line"></div>

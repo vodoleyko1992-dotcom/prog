@@ -121,7 +121,11 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
     same(env.rt.mmJob.got, ['Steel ×3 от Skye']);
     await M.claimStep(env.rt.mmJob); assert.equal(env.rt.mmJob, null); assert.match(env.rt.mmLog[0].why, /забрал: Steel ×3 от Skye/); assert.equal(env.rt.mmClaimT > 0, true); }
   // 8. сумка по факту: ответов с сумкой > 5 мин не было → свой GET /character (раз в 5 мин); почта — раз в 10 мин
-  { const { env, M, gets } = mk({}); let n = 0; env.invRefresh = async () => { n++; return {}; };
+  { const { env, M, gets } = mk({ rt: { char: 'Warlock' } }); let n = 0;
+    // 20.23: автоматический анализ требует владельца, аренду и разрешённую задачу.
+    Object.assign(env, { on: true, tabOwner: true, leaseEpoch: 'test-lease', bagAllowed: () => true,
+      setRt: async p => { Object.assign(env.rt, p); return { ok: true }; } });
+    env.invRefresh = async () => { n++; return {}; };
     await M.mmTick(); assert.equal(n, 1); assert.ok(gets.some(g => /item-transfer\/received/.test(g)));
     await M.mmTick(); assert.equal(n, 1, 'not every loop'); }
   // 10. игрок 12.10: «нужно не на все 5 уровней, а на все недостающие» — вещь Lv.2, цель Lv.5: сырьё только на Lv.2→3, 3→4, 4→5
@@ -139,7 +143,8 @@ const INV = { 1458: 100, 1869: 115, 1876: 100, 1865: 20 };
   // 20.7: поля передачи удалены; старые ключи профилей остаются совместимыми.
   assert.doesNotMatch(pj, /const TXT {2}= \[[^\]]*'mmCrafter'/); assert.doesNotMatch(pj, /const BOOL = \[[^\]]*'mmCraftSend'/);
   assert.match(pj, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/); assert.match(c, /mmCrafter: 'Skye', mmCraftScope: 'next', mmCraftSend: true, (mmCraftNote: true, )?mmMailClaim: true/);
-  assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.match(c, /async function invRefresh\(\)[\s\S]{0,400}inventory\?\.stacks/);
-  assert.match(c, /item-transfer\/claim' && d\.status === 200\) \{ L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\); \}/);
+  // 20.23: анализ передаёт invRefresh guard; успешное письмо дополнительно обновляет рюкзак.
+  assert.match(c, /get invRefresh\(\) \{ return invRefresh; \}/); assert.match(c, /async function invRefresh\([^\n]*\)[\s\S]{0,400}inventory\?\.stacks/);
+  assert.match(c, /item-transfer\/claim' && d\.status === 200[^\n]*\) \{\s*L2V7Modules\.mammon\.mailNote\(\); L2V7Modules\.mammon\.mailSeen\(\);\s*L2V7Modules\.mammon\.bagAfterClaim\(d\.req\?\.attachmentId \|\| d\.res\.attachmentId\)/);
   console.log('PASS: 9.2.5 crafter — raw for crafting sent to Skye by «Передача предмета» (full set, one batch, recipient/qty checked in the confirm window, no double send), returns from mail written off by recipe, mail items claimed, bag checked by GET /character');
 })().catch(e => { console.error(e); process.exit(1); });

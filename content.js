@@ -2757,7 +2757,7 @@ setInterval(async () => {
       }
       lockMine = Date.now();
     }
-    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
+    else if (tabOwner && !on && !enchantCommandBusy && !warlockCommandBusy && !lifestoneCommandBusy && !mammonBagCommandBusy) { try { await rtWriter.recover(); } catch (e) { quietErr('запись памяти', e); } tabOwner = false; tabIdle = false; rtWriter.clear(); /* 7.1.30: дописать счётчики последнего боя */ await chrome.runtime.sendMessage({ cmd: 'lockRelease', epoch: leaseEpoch }); leaseEpoch = null; }
     else if (!on) tabIdle = false;
   } catch (e) { quietErr('замок', e); }
 }, 5000);
@@ -4371,23 +4371,24 @@ let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv
 let INV_READY = '', INV_READ = null, INV_RETRY = { key: '', n: 0, at: 0 };
 const invContext = () => JSON.stringify([rt.char||'',rt.classCur?.prof??null,rt.classCur?.slot??null,leaseEpoch]);
 const invNote = inv => { if (!Array.isArray(inv)) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
+const invLevels = eq => Object.fromEntries(Object.values(eq || {}).map(v => [+(v?.itemId || v), +(v?.specialGearLevel ?? v?.level ?? 0)]).filter(([id]) => id >= 910618));
 const invQty = id => INV_NET?.char === rt.char && !!rt.char && INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
-async function invRefresh() {
+async function invRefresh(active = () => true) {
   const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now();
   try {
     const r = await gameGet('/character'); if (!r.ok) return null;
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
-    if(!char||rt.char!==char||leaseEpoch!==lease||JSON.stringify(rt.classCur||null)!==classKey||c?.name!==char||(heroNick()&&heroNick()!==char))return null;
+    if(!active()||!char||rt.char!==char||leaseEpoch!==lease||JSON.stringify(rt.classCur||null)!==classKey||c?.name!==char||(heroNick()&&heroNick()!==char))return null;
     if(c.l2Profession&&rt.classCur?.prof&&c.l2Profession!==rt.classCur.prof||Number.isInteger(c.classSlots?.activeSlot)&&Number.isInteger(rt.classCur?.slot)&&c.classSlots.activeSlot!==rt.classCur.slot)return null;
     const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
     if (!m) return null;
-    INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+    INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(c?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY = invContext();
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
-    if (tabOwner && c?.inventory?.eq) L2V7Modules.mammon.eqNote(c.inventory.eq);
-    return m;
+    if (tabOwner && c?.inventory?.eq) await L2V7Modules.mammon.eqNote(c.inventory.eq);
+    return active() ? m : null;
   } catch (e) { return null; }
 }
 // 15.10, MV3 startup: hook начинает раньше content и первый netStart может быть
@@ -4606,7 +4607,7 @@ addEventListener('message', e => {
   // 7.2.3 (лог 10.10 23:19–23:30: зарядов 310 → 139 при минимуме 500, а закупки не было): сумка из ответов сервера
   // (character.inventory.stacks, hook.js отдаёт её целиком полем inv — в res массивы обрезаны) — количество не зависит
   // от того, видна ли кнопка на панели (после победы бот сразу уходит на карту)
-  { const m = invNote(d.inv); if (m) { INV_NET = { m, char:rt.char, t: Date.now() }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
+  { const m = invNote(d.inv); if (m) { INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(d.res?.character?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY=invContext();
     if (tabOwner) try { L2V7Modules.tvtshop.shilNote(); } catch (er) {}   // 10.0: Shil Coins в сумке → rt.tsShil
     // 9.0: камни печати и Ancient Adena — для меню (раздел «Катакомбы»): пишем при изменении, не чаще раза в минуту
@@ -4636,7 +4637,10 @@ addEventListener('message', e => {
     const ch = d.res.character; if (ch?.inventory?.eq) L2V7Modules.mammon.eqNote(ch.inventory.eq);
     if (path === '/game/mammon/blacksmith/upgrades' && Array.isArray(d.res.items)) L2V7Modules.mammon.smithNote(d.res.items);
     if (path === '/game/mammon/merchant/request' && d.res.request) L2V7Modules.mammon.orderNote(d.res.request);
-    if (path === '/game/item-transfer/claim' && d.status === 200) { L2V7Modules.mammon.mailNote(); L2V7Modules.mammon.mailSeen(); }   // 9.2.5: ресурсы с почты → спросить кузнеца, перечитать почту (учёт возврата от крафтера)
+    if (path === '/game/item-transfer/claim' && d.status === 200 && !d.error && !d.res.error && d.res.ok !== false && !d.res.duplicate) {
+      L2V7Modules.mammon.mailNote(); L2V7Modules.mammon.mailSeen();
+      L2V7Modules.mammon.bagAfterClaim(d.req?.attachmentId || d.res.attachmentId).catch(() => {});
+    }   // Успешное получение: новый GET сумки; сам анализ не создаёт поход/оплату.
   } catch (e) {}
   // 9.0 (новости игры 11.10): квесты сабкласса и Noblesse — из опросов самой игры (карта, страницы квестов); /character — свой Noblesse и класс
   if (tabOwner && meNow && d.status >= 200 && d.status < 300 && d.res && !d.res.error) try {
@@ -5714,7 +5718,7 @@ L2V7Modules.survival = L2V7Factories.survival({ get on(){return on}, get tabOwne
   get pvpPending() { return () => !!L2V7Modules.pvp?.pending(); }, get pvpRecoveryStep() { return () => L2V7Modules.pvp.recoveryStep(); }
 });
 
-L2V7Modules.mammon = L2V7Factories.mammon({ get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
+L2V7Modules.mammon = L2V7Factories.mammon({ get actionGeneration(){return ()=>automationGeneration}, get bagAllowed(){return ()=>L2EngineCore.taskAllowed(cfg,'mammon')}, get invSnapshot(){return ()=>INV_READY===invContext()&&invQty(0)!==null?INV_NET:null}, get payments(){return L2V7Modules.payments},get leaseEpoch(){return leaseEpoch},get rtCommit(){return rtCommit}, get routeLocation(){return actionLocation}, get $q() { return $q; }, get pauseBot() { return pauseBot; }, get FARM() { return FARM; }, get ITEMS() { return ITEMS; }, get autonomyMode() { return autonomyMode; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get farmZones() { return (drop, L, above, sp = [], spK = 0.8) => farmZones(drop, L, above, sp, spK, n => !hardNow(n)); }, get heroLvl() { return heroLvl; }, get canSpoil() { return canSpoil; }, get spoilK() { return spoilK; }, get craftSelf() { return () => L2V7Modules.subclass?.craftSelf?.(); }, get handWant() { return now => L2V7Modules.subclass?.handWant?.(now); },
   get cfg() { return cfg; }, get fire() { return el => cfg.enchantMode !== true && fire(el); }, get fishNow() { return fishNow; }, get fishState() { return fishState; }, get gameGet() { return gameGet; },
   get heroNick() { return heroNick; }, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get isBattle() { return isBattle; }, get isFishing() { return isFishing; }, get itemsDb() { return itemsDb; },
@@ -6212,7 +6216,42 @@ async function warlockCommand(m) {
   }
 }
 
+// 19.10: чтение рюкзака по кнопке доступно при OFF; временная аренда не отбирает управление у другой вкладки.
+let mammonBagCommandBusy = false;
+async function mammonBagCommand(m) {
+  if (mammonBagCommandBusy) return { ok: false, reason: 'Рюкзак уже проверяется' };
+  mammonBagCommandBusy = true; let manualEpoch = null;
+  const generation = automationGeneration;
+  try {
+    const state = await chrome.storage.local.get(['cfg', 'rt', 'on']);
+    if (generation !== automationGeneration) return { ok: false, reason: 'Состояние изменилось — повторите анализ' };
+    if (!m.expectedChar || m.expectedChar !== state.rt?.char || m.expectedChar !== rt.char || heroNick() !== rt.char)
+      return { ok: false, reason: 'Персонаж изменился — обновите меню' };
+    const freshCfg = mergeCfg(state.cfg);
+    if ((+m.goalItem || 0) !== (+freshCfg.mmGoalItem || 0) || (+m.goalLvl || 5) !== (+freshCfg.mmGoalLvl || 5))
+      return { ok: false, reason: 'Цель изменилась — обновите меню' };
+    if (state.on && (!on || !tabOwner || !leaseEpoch)) return { ok: false, reason: 'Управление у другой вкладки' };
+    if (!!state.on !== !!on) return { ok: false, reason: 'Состояние запуска изменилось' };
+    cfg = freshCfg;
+    if (!state.on) {
+      const lock = await ipc({ cmd: 'lockAcquire', epoch: leaseEpoch || documentLease, page: location.pathname, vis: tabVis(), focus: false });
+      if (!lock?.ok) return { ok: false, reason: 'Другая вкладка проверяет состояние' };
+      tabOwner = true; tabIdle = false; leaseEpoch = lock.epoch; documentLease = lock.epoch; lockMine = Date.now(); manualEpoch = lock.epoch;
+    }
+    if (generation !== automationGeneration) return { ok: false, reason: 'Состояние изменилось — повторите анализ' };
+    return await L2V7Modules.mammon.bagAnalyze({ source: 'manual', current: () => generation === automationGeneration });
+  } catch (e) { return { ok: false, reason: String(e?.message || e).slice(0, 180) }; }
+  finally {
+    if (manualEpoch && !on && leaseEpoch === manualEpoch) {
+      await rtWriter.recover().catch(e => quietErr('запись памяти', e));
+      await ipc({ cmd: 'lockRelease', epoch: manualEpoch }).catch(e => quietErr('замок', e));
+      if (!on && leaseEpoch === manualEpoch) { tabOwner = false; tabIdle = false; leaseEpoch = null; }
+    }
+    mammonBagCommandBusy = false;
+  }
+}
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m.cmd === 'mammonBagAnalyze') { mammonBagCommand(m).then(reply).catch(e => reply({ ok: false, reason: String(e) })); return true; }
   if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'lifestoneCommand') { lifestoneCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
@@ -6294,6 +6333,7 @@ chrome.storage.onChanged.addListener(ch => {
     rec('S', 'сессия', on ? '▶ бот запущен' : pz ? '⏸ пауза (состояние сохранено)' : '■ бот остановлен' + reason);
     if (on) main();
   }
+  if (ch.cfg && on && tabOwner) L2V7Modules.mammon.bagAuto().catch(() => {});
   if (ch.rt && rt.invScan && !ch.rt.oldValue?.invScan && !running) invScanDrive();   // «Проверить оружие» из меню
   if (ch.cfg) { try { dock(); } catch (e) {} }
   if (ch.cfg || ch.rt || ch.on) draw();
