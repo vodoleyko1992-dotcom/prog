@@ -26,7 +26,7 @@ const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] =
 // Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
 const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
 const withRb = c => L2EngineCore.taskConfig({ ...L2EngineCore.rawTaskConfig(c), rbMode: rbEff(c) }, () => rt);
-const mergeCfg = c => withRb({ ...DEF_CFG, ...L2EngineCore.rawTaskConfig(c || {}) });
+const mergeCfg = c => withRb((globalThis.L2Defaults?.withoutAutoEnchant || (x => x))({ ...DEF_CFG, ...L2EngineCore.rawTaskConfig(c || {}) }));
 const modeSig = c => Array.isArray(c.autoTasks) ? 'выбрано: ' + L2EngineCore.taskList(c).join(', ') : c.enchantMode === true ? 'заточка' + (c.tvtOn ? ' + TvT' : '') : [c.rbHuntMode && 'тур РБ', c.epicMode && 'эпики', c.fishMode && 'рыбалка', c.catMode && 'катакомбы', c.zoneAuto && 'автофарм',
   c.campaign && 'кампания', c.tvtOn && 'TvT'].filter(Boolean).join(' + ') || 'фарм на месте';
 
@@ -5852,7 +5852,7 @@ async function lifestoneCommand(m) {
 }
 
 // Автозаточка: команды меню и диспетчер используют одну фабрику; 15.10 — только в своём режиме.
-const enchantFree = (completedStart = false) => on && tabOwner && (cfg.enchantMode === true || completedStart && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) && !!heroNick() && heroNick() === rt.char && !antibotState()
+const enchantFree = (completedStart = false) => globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED !== true && on && tabOwner && (cfg.enchantMode === true || completedStart && Array.isArray(cfg.autoTasks) && cfg.autoTasks.includes('enchant') && rt.enchant?.status === 'done' && !rt.enchant.pending) && !!heroNick() && heroNick() === rt.char && !antibotState()
   && L2V7Modules.mammon.modeFree(false, true) && !rt.petBufferTrip && !rt.dailyFish && !rt.dailyRb && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.fishService;
 L2V7Modules.enchant = L2V7Factories.enchant({ get routeLocation(){return actionLocation},
   get on() { return on; }, get tabOwner() { return tabOwner; }, get cfg() { return cfg; }, get rt() { return rt; },
@@ -5869,11 +5869,13 @@ async function enchantModePause() {
   return setRt({enchant:{...s,status:'paused',reason:cfg.enchantMode === true ? 'Заточка выключена — продолжение только вручную' : 'Выбран другой режим — для продолжения заточки нажмите «Продолжить»'}});
 }
 async function enchantAccounting() {
+  if (globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED === true && Date.now() - (rt.enchant?.pending?.lastCheck || 0) < 15000) return false;
   if (!rt.enchant?.pending || !tabOwner || heroNick() !== rt.char) return false;
-  if (!enchantAccountingBusy) enchantAccountingBusy = Promise.resolve(L2V7Modules.enchant.step()).finally(() => { enchantAccountingBusy = null; });
+  if (!enchantAccountingBusy) enchantAccountingBusy = Promise.resolve(globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED === true ? L2V7Modules.enchant.reconcile() : L2V7Modules.enchant.step()).finally(() => { enchantAccountingBusy = null; });
   return enchantAccountingBusy;
 }
 async function enchantCommand(m) {
+  if (globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED === true && !['reconcile','archiveUnknown'].includes(m.action)) return { ok: false, reason: 'Автозаточка временно убрана' };
   if (enchantCommandBusy) return { ok: false, reason: 'Предыдущая команда заточки ещё выполняется' };
   const allowed = ['refresh', 'start', 'pause', 'resume', 'reset', 'reconcile', 'archiveUnknown'];
   if (!allowed.includes(m.action)) return { ok: false, reason: 'Неизвестная команда заточки' };
@@ -5912,6 +5914,7 @@ async function enchantCommand(m) {
   }
 }
 async function enchantDispatch() {
+  if (globalThis.L2Defaults?.AUTO_ENCHANT_DISABLED === true) return false;
   await enchantModePause();
   const s = rt.enchant;
   if (s?.pending) { await enchantAccounting(); return false; }

@@ -52,6 +52,15 @@ const DEF_CFG = { mmOrders: true, mmTpMax: 500000, mmGoalItem: 0, mmGoalLvl: 5, 
   // 20.13 (ревизия 17.10, шаг 5, defaults/D16): банка MP у воина — от доли MP (как mageMpPct у мага), а не только от 70 MP: «MP не экономим».
   fighterMpPct: 25,
 };
-root.L2Defaults = { DAILY_RANGE, DAILY_KILL_DEF, DAILY_FISH_DEF, DAILY_RANGES_DEF, CFG: DEF_CFG };
+// 20.25 (19.10, игрок: «пока убираем модуль автозаточки»): импорт и старые профили
+// сохраняют очередь/историю, но не могут выбрать снятую задачу или запустить фарм вместо неё.
+function withoutAutoEnchant(c = {}) {
+  const n = { ...c, enchantMode: false };
+  if (Array.isArray(c.autoTasks)) n.autoTasks = c.autoTasks.filter(k => k !== 'enchant');
+  else if (c.enchantMode === true) n.taskOnly = true;
+  if (c.enchant && typeof c.enchant === 'object') n.enchant = { ...c.enchant, enabled: false };
+  return n;
+}
+root.L2Defaults = { AUTO_ENCHANT_DISABLED: true, withoutAutoEnchant, DAILY_RANGE, DAILY_KILL_DEF, DAILY_FISH_DEF, DAILY_RANGES_DEF, CFG: DEF_CFG };
 if (typeof module !== 'undefined' && module.exports) module.exports = root.L2Defaults;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
