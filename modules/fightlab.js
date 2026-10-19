@@ -165,7 +165,7 @@ function begin(bt, spawn, now) {
 // 18.10, автофарм: подтверждения смертей — отдельно от модели урона и последних40 строк.
 // Полный журнал задаёт нижнюю границу количества каждого имени; свежий delta добавляет
 // отдельные события по абсолютному logSeq. Повтор GET/full/хвоста не убивает мобов заново.
-function killNote(bt, d, now) {
+function killNote(bt, d, now, fresh = false) {
   if (!F || F.groupOwner !== groupOwner()) return;
   if (bt.actor && env.rt.char && low(bt.actor) !== low(env.rt.char)) return;
   if (bt.prof && env.rt.classCur?.prof && low(bt.prof) !== low(env.rt.classCur.prof)) return;
@@ -176,6 +176,17 @@ function killNote(bt, d, now) {
   const append = name => { if (typeof name === 'string' && name.trim() && k.extras.length < 200) k.extras.push(name.trim().slice(0, 80)); };
   const ridFresh = d.rid != null && !k.rids.has(d.rid);
   let confirmed = false, usedRid = false;
+  const stream = proof?.stream;
+  if (Number.isSafeInteger(stream?.seq) && stream.seq >= 0) {
+    const s = k.stream ||= { seq: 0, deaths: [], rev: bt.rev };
+    if (stream.seq >= s.seq) {
+      const deaths = new Set([...s.deaths, ...(Array.isArray(stream.deaths) ? stream.deaths : []).filter(x=>Number.isSafeInteger(x)&&x>0&&x<=stream.seq)]);
+      s.deaths = [...deaths].sort((a,b)=>a-b).slice(-4096); s.seq = stream.seq; if (bt.rev != null) s.rev = bt.rev;
+      if (Number.isSafeInteger(stream.fullN) && stream.fullN >= 0 && stream.fullN <= stream.fullSeq && Number.isSafeInteger(stream.fullSeq) && stream.fullSeq <= s.seq && stream.fullSeq >= (s.fullSeq ?? -1)) { s.fullN = stream.fullN; s.fullSeq = stream.fullSeq; }
+      if (fresh && bt.rev != null) { s.start = 'rev:' + bt.rev; if(s.seq===0){s.fullN=0;s.fullSeq=0;} }
+      s.t = now;
+    }
+  }
   if (full) {
     const seen = new Map(), have = new Map();
     for (const name of k.extras) have.set(low(name), (have.get(low(name)) || 0) + 1);
@@ -263,7 +274,7 @@ function onNet(path, d) {
     // этому action, более ранняя — исходное состояние следующего action (в том числе чужой урон).
     if (F.mob == null && !F.turns) { begin(bt, spawnB || F.spawn, now); F.logPrev = (bt.log || []).slice(-40); }
     else if (!F.pendingSnapshot || (bt.rev != null && bt.rev >= (F.pendingSnapshot.rev ?? -1))) F.pendingSnapshot = bt;
-    killNote(bt, d, now);
+    killNote(bt, d, now, fresh);
     return null;
   }
   const spawn = spawnB || (F && !F.done ? F.spawn : '') || String(d.req?.battleSpawnId || urlSpawn() || '');
@@ -275,11 +286,11 @@ function onNet(path, d) {
     if (!act) {
       // 14.10: стартовый лог — уже виденная часть. Иначе после delta финальный fullLog повторно засчитывает первый удар и кота.
       F.logPrev = (bt.log || []).map(x => String(x ?? '')).slice(-40);
-      killNote(bt, d, now);
+      killNote(bt, d, now, fresh);
       if (bt.end) finish(bt.win ? 'win' : bt.lose ? 'lose' : 'end', now); return F;
     }
   }
-  killNote(bt, d, now);
+  killNote(bt, d, now, fresh);
   const snapshot = F.pendingSnapshot;
   if (act && snapshot && (bt.rev == null || snapshot.rev == null || snapshot.rev < bt.rev)) {
     if (snapshot.mob != null) F.mob = snapshot.mob;
@@ -379,6 +390,12 @@ function killsFor(spawn, since = 0) {
   if (env.pvpPending?.() || !F || !spawn || F.spawn !== spawn || F.groupOwner !== groupOwner()) return null;
   const k = F.killProof; if (!k?.t || k.t < since) return null;
   return { spawn: F.spawn, t: k.t, win: k.win, lose: k.lose, extras: [...k.extras] };
+}
+function raidKillsFor(spawn) {
+  syncOwner();
+  if(env.pvpPending?.()||!F||F.spawn!==spawn||F.groupOwner!==groupOwner())return null;
+  const k=F.killProof,s=k?.stream;if(!s?.t)return null;
+  return {spawn,t:s.t,win:k.win,lose:k.lose,stream:{...s,deaths:[...s.deaths]}};
 }
 
 // ---------- итог боя → память на цель ----------
@@ -499,6 +516,6 @@ function brief(key) {
     + `${top.length ? ' · ' + top.map(([k, v]) => `${k} ≈${v}`).join(', ') : ''}${m.h?.length >= 3 ? ` · бьёт ≈${q(m.h, 0.9)} (P90)` : ''}`
     + `${m.sp ? ` · спецудар до ${m.sp.mx}${m.sp.g?.length >= 3 ? ` раз в ≈${median(m.sp.g)} с` : ''}` : ''}`;
 }
-return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
+return { ROLES, role, parseLog, ensure, onNet, turnFor, damageFor, killsFor, raidKillsFor, healOn, groupOn, finish, flush, dmgOn, killP, spikeEta, fight, recall, lastSum, brief, keyOf, mem };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

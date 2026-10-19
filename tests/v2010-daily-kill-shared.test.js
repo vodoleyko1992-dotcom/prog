@@ -68,5 +68,5 @@ test('меню: один общий лимит мобов, остаток в «�
  const st={on:true},board={L2EngineCore:engine,Date};
  vm.runInNewContext(js.slice(js.indexOf('const AUTO_TASK_LABELS ='),js.indexOf('function workspaceState('))+'\n'+js.slice(js.indexOf('function taskBoardRows('),js.indexOf('function autoTaskPatch(')),board);
  const rows=board.taskBoardRows(rt,{autoTasks:['auto','cat'],dailyKillLimit:3000},st);
- assert.match(rows[0].progress,/Сегодня: 1500 \/ 3000 \(автофарм \+ катакомбы\) · осталось 1500/);assert.equal(rows[0].percent,50);
+ assert.match(rows[0].progress,/Сегодня: 1500 \/ 3000 \(автофарм \+ катакомбы \+ рядом с РБ\) · осталось 1500/);assert.equal(rows[0].percent,50);
 });

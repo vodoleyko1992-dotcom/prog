@@ -205,6 +205,29 @@ const farmDailyLimit = task => L2EngineCore.dailyLimit(cfg,task);
 // в 10 с); отметка начала боя не держит бой: без счётчика убитые считаются по журналу боя с пометкой «неточно»; подтверждение
 // итога — не больше 5 попыток / 30 с, затем бой засчитывается по журналу и бот идёт дальше.
 const KILL_SNAP = { name: '', k: -1, rev: -1, t: 0, stale: false }, QUOTA_WAIT = {};
+// 19.10: соседи РБ считаются по последовательности журнала, независимо от конца боя и лимита200 имён.
+const RAID_MOB_BASE = new Map();
+async function noteRaidMobKills(spawn,begin=false) {
+  if(!/^l2dop_(?:rb|eg)_/i.test(spawn||''))return false;
+  const prof=rt.classCur?.prof||'',slot=rt.classCur?.slot??null,key=JSON.stringify([prof,slot,spawn]);
+  const report=L2V7Modules.fightlab?.raidKillsFor?.(spawn),s=report?.stream;
+  if(!Number.isSafeInteger(s?.seq)||!Number.isSafeInteger(s?.rev)){if(begin)RAID_MOB_BASE.delete(key);return false;}
+  const kick=rt.manualKickAt||0,char=rt.char||'',epoch=leaseEpoch,sessT0=rt.sessT0??null,mode=autonomyMode(),dailyLimit=farmDailyLimit('auto');
+  const valid=()=>on&&tabOwner&&rt.char===char&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&(rt.classCur?.prof||'')===prof&&(rt.classCur?.slot??null)===slot&&(rt.sessT0??null)===sessT0&&autonomyMode()===mode&&(new URLSearchParams(location.search).get('spawnId')||'')===spawn;
+  if(!valid())return true;
+  const counter=killSnapFresh(char)&&KILL_SNAP.rev>=s.rev?{counter:KILL_SNAP.k,counterRevision:KILL_SNAP.rev}:{};
+  const snapshot={...s,deaths:[...s.deaths],...counter};
+  if(begin){RAID_MOB_BASE.set(key,{seq:s.seq,rev:s.rev,...(s.fullSeq===s.seq?{fullN:s.fullN,fullSeq:s.fullSeq}:{}),...counter});if(RAID_MOB_BASE.size>8)RAID_MOB_BASE.delete(RAID_MOB_BASE.keys().next().value);}
+  const old=rt.raidMobMarks?.[key];
+  const ended=!!(report.win||report.lose);
+  if(!begin&&old&&old.seq>=s.seq&&(!s.start||old.start===s.start)&&(!old.done||ended)&&(!ended||old.done)&&(!Number.isSafeInteger(s.fullN)||old.absolute>=s.fullN))return true;
+  try{
+    if(!await rtCommit()||!valid())return true;
+    const r=await ipc({cmd:'statePatch',patch:{},raidMobs:{...snapshot,op:begin?'begin':'count',spawn,prof,slot,kick,sessT0,dailyLimit,ended:!!(report.win||report.lose),base:RAID_MOB_BASE.get(key)},expectedChar:char,epoch,src:TAB_ID});
+    if(r?.ok&&valid())rt={...rt,kills:r.kills,raidMobMarks:r.raidMobMarks,...(r.dailyQuota?{dailyQuota:r.dailyQuota}:{}),...(r.farmKillMark?{farmKillMark:r.farmKillMark}:{})};
+  }catch(e){/* Следующий круг повторит неподтверждённую запись с тем же курсором. */}
+  return true;
+}
 let KILL_FAIL_T = 0, quotaApproxNoteT = 0, quotaTicketN = 0;
 function killSnapNote(x) {
   if (!x || typeof x.name !== 'string' || !Number.isSafeInteger(x.k) || x.k < 0 || !Number.isSafeInteger(x.rev)) return;
@@ -273,7 +296,7 @@ async function beginFarmQuota(spawn) {
 function farmQuotaApply(T, r) {
   rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}), ...(Number.isSafeInteger(r.kills) ? { kills: Math.max(+rt.kills || 0, r.kills) } : {}) }; cfg = mergeCfg(r.cfg);
   if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
-  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
+  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0} + рядом с РБ ${r.dailyQuota.raid||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)+(r.dailyQuota.raid||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
   if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
   return false;
 }
@@ -5187,6 +5210,8 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get autoRoles() { return autoRoles; }, set autoRoles(value) { autoRoles = value; },
   get battleSpawn() { return battleSpawn; }, set battleSpawn(value) { battleSpawn = value; }, get cdSpawn() { return cdSpawn; },
   get battleKills() { return (spawn,since)=>L2V7Modules.fightlab?.killsFor?.(spawn,since); },
+  get noteRaidMobKills() { return noteRaidMobKills; },
+  get raidMobReady() { return spawn=>{const s=L2V7Modules.fightlab?.raidKillsFor?.(spawn)?.stream;return Number.isSafeInteger(s?.seq)&&Number.isSafeInteger(s?.rev);}; },
   get buffActive() { return buffActive; }, set buffActive(value) { buffActive = value; },
   get buffAuditStep() { return buffAuditStep; }, set buffAuditStep(value) { buffAuditStep = value; },
   get buffList() { return buffList; }, set buffList(value) { buffList = value; },

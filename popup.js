@@ -749,12 +749,12 @@ $('sealNow').onclick = async () => {
 };
 // 20.10: «mobs» — общий дневной лимит мобов автофарма и катакомб (сумма счётчиков auto+cat).
 const dailyLimitKeys={fish:'dailyFishLimit',mobs:'dailyKillLimit'};
-const dailyGotOf=(rt,task,day)=>rt.dailyQuota?.day!==day ? 0 : task==='fish' ? +rt.dailyQuota.fish||0 : (+rt.dailyQuota.auto||0)+(+rt.dailyQuota.cat||0);
+const dailyGotOf=(rt,task,day)=>rt.dailyQuota?.day!==day ? 0 : task==='fish' ? +rt.dailyQuota.fish||0 : (+rt.dailyQuota.auto||0)+(+rt.dailyQuota.cat||0)+(+rt.dailyQuota.raid||0);
 function renderDailyLimits(rt,d) {
   const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10);
   $('dailyLimitsDay').textContent=`Сегодня: ${day} · UTC+10`;
   for(const [task,key] of Object.entries(dailyLimitKeys)) {
-    const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&rt.dailyQuota?.day===day ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0})` : '';
+    const limit=+d[key]||0,got=dailyGotOf(rt,task,day),parts=task==='mobs'&&rt.dailyQuota?.day===day ? ` (автофарм ${+rt.dailyQuota.auto||0}, катакомбы ${+rt.dailyQuota.cat||0}${+rt.dailyQuota.raid?`, рядом с РБ ${+rt.dailyQuota.raid}`:''})` : '';
     if(d.limitRanges?.[key] && rt.limitRolls?.[key]?.day!==day){$(task+'DailyProgress').textContent=`${got}${parts} · цель выберется при запуске`;continue;}
     $(task+'DailyProgress').textContent=limit ? `${got} / ${limit}${parts}${got>=limit?' · до 00:00':` · осталось ${limit-got}`}` : 'Без дневного лимита';
   }
@@ -1881,11 +1881,11 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
     const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
-    const dailyLimit = +d[dailyKey] || 0, q = rt.dailyQuota?.day === day ? rt.dailyQuota : {}, dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0);
+    const dailyLimit = +d[dailyKey] || 0, q = rt.dailyQuota?.day === day ? rt.dailyQuota : {}, dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0) + (+q.raid || 0);
     const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
     if (dailyPending) progress.push('Дневная цель выберется при запуске');
     else if (dailyLimit > 0) {
-      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы)' : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
+      progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
       if (dailyGot >= dailyLimit) { label = 'До 00:00 Владивостока'; state = 'waiting'; }
     }
     if (['auto','cat'].includes(key)) {

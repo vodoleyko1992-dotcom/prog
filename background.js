@@ -127,7 +127,7 @@ function farmQuotaChange(state, E, now) {
   if (!keys || !state.on || (rt.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'quota_interrupted' };
   const limit = farmQuotaLimit(cfg[keys[0]]), enabled = Array.isArray(cfg.autoTasks) ? cfg.autoTasks.includes(E.task) : cfg[keys[1]] === true;
   // 20.10: дневной лимит мобов общий для автофарма и катакомб — сумма auto+cat.
-  const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0);   // 20.12: нет ключа — значение вкладки
+  const dailyLimit=dailyLimitOf(cfg,'dailyKillLimit',E?.dailyLimit),dailyMobs=q=>(q.auto||0)+(q.cat||0)+(q.raid||0);   // 20.12: нет ключа — значение вкладки
   if (!enabled || !(limit || dailyLimit) || limit !== E.limit || dailyLimit !== (E.dailyLimit||0)) return { ok: false, reason: 'quota_changed' };
   const old = rt.farmQuota?.[E.task], count = x => Number.isSafeInteger(x) && x >= 0;
   // 18.10, журнал 13:34: подтверждённые дополнительные цели — нижняя граница. Общая отметка обеих охот
@@ -186,6 +186,49 @@ function farmQuotaChange(state, E, now) {
   }
   return { ok:true,row,kills,...(mark?{farmKillMark:mark}:{}),dailyQuota,dailyDone:dailyLimit>0&&dailyMobs(dailyQuota)>=dailyLimit,cfg:next,rt:{...rt,kills,...(mark?{farmKillMark:mark}:{}),...(dailyLimit?{dailyQuota}:{}),farmQuota:{...(rt.farmQuota||{}),[E.task]:row},_src:'farm-quota'} };
 }
+// 19.10, РБ: последовательность строк переживает reload/капчу; один и тот же сосед не считается заново.
+function raidMobChange(state,E,now) {
+  const rt=state.rt||{},cfg=state.cfg||{},integer=x=>Number.isSafeInteger(x)&&x>=0;
+  if(!state.on || (rt.manualKickAt||0)!==(E?.kick||0))return {ok:false,reason:'raid_count_interrupted'};
+  if(!E || !['begin','count'].includes(E.op) || typeof E.spawn!=='string' || E.spawn.length>160 || !/^l2dop_(?:rb|eg)_/i.test(E.spawn)
+      || typeof E.prof!=='string' || E.prof.length>80 || E.prof!==(rt.classCur?.prof||'') || E.slot!==(rt.classCur?.slot??null)
+      || !integer(E.seq) || !integer(E.rev) || !Array.isArray(E.deaths) || E.deaths.length>4096
+      || E.deaths.some((x,i)=>!integer(x)||x<1||x>E.seq||i>0&&x<=E.deaths[i-1])
+      || E.start!=null&&(typeof E.start!=='string'||E.start.length>120))return {ok:false,reason:'raid_count_snapshot'};
+  const limit=dailyLimitOf(cfg,'dailyKillLimit',E.dailyLimit);
+  if(limit!==E.dailyLimit)return {ok:false,reason:'raid_count_changed'};
+  const key=JSON.stringify([E.prof,E.slot,E.spawn]),marks={...(rt.raidMobMarks||{})};let row=marks[key];
+  if(row && (!integer(row.seq)||!integer(row.rev)))row=null;
+  if(row && E.rev<row.rev)return {ok:false,reason:'raid_count_old'};
+  const full=x=>integer(x?.fullN)&&integer(x?.fullSeq)&&x.fullSeq<=x.seq&&x.fullN<=x.fullSeq;
+  const base=E.base&&integer(E.base.seq)&&integer(E.base.rev)&&E.base.seq<=E.seq&&E.base.rev<=E.rev?E.base:E;
+  const restart=row&&E.rev>row.rev&&((E.start&&E.start!==row.start&&(row.start||E.seq<row.seq||row.done))||row.done&&!E.ended);
+  const newEntry=!row||restart;
+  if(newEntry)row={seq:base.seq,rev:base.rev,start:E.start||null,absolute:full(base)&&base.fullSeq===base.seq?base.fullN:null,t:now};
+  const oldSeq=row.seq;let delta=0;
+  if(E.op==='count'&&E.seq>=oldSeq){
+    const fresh=E.deaths.filter(x=>x>oldSeq).length,complete=full(E)&&E.fullSeq>=oldSeq;
+    const afterFull=complete?E.deaths.filter(x=>x>E.fullSeq).length:0;
+    delta=Math.max(fresh,complete&&integer(row.absolute)?Math.max(0,E.fullN-row.absolute)+afterFull:0);
+    row={...row,seq:E.seq,rev:E.rev,absolute:complete?Math.max(integer(row.absolute)?row.absolute+delta:0,E.fullN+afterFull):integer(row.absolute)?row.absolute+delta:null,done:!!E.ended,t:now};
+  }
+  if(!row.start&&E.start)row={...row,start:E.start};marks[key]=row;
+  const kept=Object.fromEntries(Object.entries(marks).sort((a,b)=>(b[1]?.t||0)-(a[1]?.t||0)).slice(0,8));
+  const dailyQuota=limit?dailyQuotaToday(rt,now):rt.dailyQuota;
+  if(limit&&delta)dailyQuota.raid=(dailyQuota.raid||0)+delta;
+  const kills=(integer(rt.kills)?rt.kills:0)+(E.sessT0===(rt.sessT0??null)?delta:0);
+  // Уже учтённые соседи не должны затем попасть в delta незавершённой квоты автофарма.
+  let mark=rt.farmKillMark;
+  const counter=integer(E.counter)&&integer(E.counterRevision)&&E.counterRevision>=E.rev;
+  if(!mark&&integer(base.counter)&&integer(base.counterRevision))mark={counter:base.counter,revision:base.counterRevision,floor:base.counter};
+  if(mark&&integer(mark.counter)&&integer(mark.floor)&&integer(mark.revision)){
+    const reset=counter&&E.counterRevision>mark.revision&&E.counter<mark.counter;
+    const pending=Object.values(rt.farmQuota||{}).some(x=>x?.pending);
+    const baseline=newEntry&&!pending&&integer(base.counter)?Math.max(mark.floor,base.counter):mark.floor;
+    mark=reset?{counter:E.counter,revision:E.counterRevision,floor:Math.max(E.counter,delta)}:{...mark,floor:baseline+delta};
+  }else mark=null;
+  return {ok:true,delta,kills,raidMobMarks:kept,dailyQuota,...(mark?{farmKillMark:mark}:{}),rt:{...rt,kills,raidMobMarks:kept,...(dailyQuota?{dailyQuota}:{}),...(mark?{farmKillMark:mark}:{}),_src:'raid-mobs'}};
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -220,6 +263,7 @@ async function statePatch(m, sender) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;
       await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.dailyQuota,dailyFishMark:r.dailyFishMark};
     }
+    if(m.raidMobs){const r=raidMobChange(state,m.raidMobs,now);if(!r.ok)return r;await chrome.storage.local.set({rt:r.rt});const {rt:_,...reply}=r;return reply;}
     // 17.10: завершение цели и снятие только рыбалки — одной записью, по свежему списку задач.
     if (m.finishFishGoal) {
       const T = state.rt?.fishTgt, E = m.finishFishGoal;
@@ -328,7 +372,7 @@ async function menuPatch(m, sender) {
       const reset=m.resetDailyQuota===task,edited=Object.hasOwn(cfgPatch,key)&&quotaLimit(cfgPatch[key])!==quotaLimit(state.cfg?.[key]);
       if(!reset&&!edited)continue;
       const rt={...state.rt,...change.rt,_src:'menu'};
-      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat'])rt.dailyQuota[k]=0;}
+      if(reset){rt.dailyQuota=dailyQuotaToday(rt,Date.now());for(const k of task==='fish'?['fish']:['auto','cat','raid'])rt.dailyQuota[k]=0;}
       if(task==='fish')rt.dailyFishMark={t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0};
       else for(const k of ['auto','cat']){const row=rt.farmQuota?.[k];if(row)rt.farmQuota={...rt.farmQuota,[k]:{...row,run:(row.run||0)+1,pending:null}};}
       change.rt=rt;

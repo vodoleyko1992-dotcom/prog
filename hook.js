@@ -118,9 +118,16 @@
     if (tail) for (let i = tailAfter; i < tail.length && tailDeaths.length < 200 - (fullDeaths?.length || 0); i++) {
       const name = deathName(tail[i]); if (name) tailDeaths.push({ name, seq: seq == null ? null : seq - tail.length + i + 1 });
     }
+    // 19.10, длинные бои РБ: порядковые номера смертей не ограничены первыми200 именами.
+    const sourceSeq = source ? n(source === lastLog ? d.logSeq ?? b?.logSeq : b?.logSeq) : Array.isArray(b?.log) ? n(b.logSeq) : null;
+    const cursor = Math.max(Number.isSafeInteger(sourceSeq) ? sourceSeq : -1, Array.isArray(d.logTail) && Number.isSafeInteger(seq) ? seq : -1);
+    const deaths = new Set(); let fullN = 0;
+    if (source) for (let i = after; i < source.length; i++) if (deathName(source[i])) { fullN++; const at = sourceSeq == null ? -1 : sourceSeq - source.length + i + 1; if (Number.isSafeInteger(at) && at > 0) deaths.add(at); }
+    if (tail) for (let i = tailAfter; i < tail.length; i++) if (deathName(tail[i])) { const at = seq == null ? -1 : seq - tail.length + i + 1; if (Number.isSafeInteger(at) && at > 0) deaths.add(at); }
+    const stream = cursor >= 0 ? { seq: cursor, deaths: [...deaths].sort((a,b)=>a-b).slice(-4096), ...(after > 0 && Number.isSafeInteger(sourceSeq) ? { fullN, fullSeq: sourceSeq } : {}) } : null;
     return { actor: String(ch?.name || '').slice(0, 80), actorId: String(ch?.id || o.characterId || '').slice(0, 80), rev: n(o.revision ?? ch?.revision),
       prof: String(ch?.l2Profession || '').slice(0, 80), slot: n(ch?.classSlots?.activeSlot),
-      killEvidence: { full: fullDeaths, tail: tailDeaths, fullSeq: source ? n(source === lastLog ? d.logSeq ?? b?.logSeq : b?.logSeq) : null },
+      killEvidence: { full: fullDeaths, tail: tailDeaths, fullSeq: source ? n(source === lastLog ? d.logSeq ?? b?.logSeq : b?.logSeq) : null, stream },
       extras: Array.isArray(extras) ? extras.slice(0, 30).map(x => ({ id: String(x.spawnId || x.id || ''), name: String(x.name || '').slice(0, 80), hp: n(x.mobHp), max: n(x.mobMaxHp) })) : null,
       mob: n(d.mobHp ?? b?.mobHp ?? (o.victory ? 0 : null)), mobMax: n(d.mobMaxHp ?? b?.mobMaxHp), hp: n(d.characterHp ?? ch?.hp), hpMax: n(d.characterMaxHp ?? ch?.maxHp), mp: n(d.characterMp ?? ch?.mp), mpMax: n(d.characterMaxMp ?? ch?.maxMp),
       log: lt.slice(-40).map(line), seq: n(d.logSeq ?? b?.logSeq), full: (!o.delta && !!b) || finalLog,
