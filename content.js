@@ -4274,7 +4274,7 @@ function logCooldownApi(d, path) {
 const netOutage = { failures: [], successes: [], since: 0, last: 0 };
 // 8.0.3: отметка «сервер завис в бою» (ход без ответа > 8 с, «нет ответа игры 20 с», серия 5xx) — в sessionStorage вкладки: смерть сразу после неё
 // не пишется как «не по силам» (survival.onDeath читает l2bot.srvHang)
-const srvHangMark = why => { try { sessionStorage.setItem('l2bot.srvHang', JSON.stringify({ t: Date.now(), why: String(why || '').slice(0, 60) })); } catch (e) {} };
+const srvHangMark = (why, kind = 'network') => { try { sessionStorage.setItem('l2bot.srvHang', JSON.stringify({ t: Date.now(), why: String(why || '').slice(0, 60), kind })); } catch (e) {} };
 function observeGameHttp(path, status, now = Date.now()) {
   if (!/^\/(game|character)(?:\/|$)/.test(path)) return;
   const code = Number(status);
