@@ -1,0 +1,129 @@
+✖ ручной POST: disabled до prepare сохраняет маршрут; свежий серверный Lv.5 завершает его без повторного клика (82.349231ms)
+✖ уровень 5 другого экземпляра не подтверждает ручное улучшение eq:tattoo (24.603642ms)
+✖ постоянно disabled без платежа: ожидание сохраняет исходный дедлайн и заканчивается через 4 минуты без клика (55.509205ms)
+✖ кнопка стала disabled во время prepare: отменяется только неотправленная квитанция, маршрут остаётся (92.71816ms)
+✖ кнопка стала disabled во время commit: отменяется только неотправленная квитанция, маршрут остаётся (8.017539ms)
+✖ DOM изменился перед кликом (disconnected): старую кнопку не нажимаем (5.815283ms)
+✖ DOM изменился перед кликом (next-level-label): старую кнопку не нажимаем (9.632368ms)
+✔ stop во время prepare не допускает поздний клик (9.46459ms)
+✔ lease во время prepare не допускает поздний клик (6.730954ms)
+✔ goal во время prepare не допускает поздний клик (7.138461ms)
+✔ stop во время commit не допускает поздний клик (4.144608ms)
+✔ lease во время commit не допускает поздний клик (3.475786ms)
+✔ goal во время commit не допускает поздний клик (3.489601ms)
+✔ контроль: доступная неизменённая карточка отправляет ровно один клик и подтверждает выросший уровень (283.849971ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 7
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 653.190872
+
+✖ failing tests:
+
+test at tests/v2028-mammon-manual-upgrade.test.js:42:1
+✖ ручной POST: disabled до prepare сохраняет маршрут; свежий серверный Lv.5 завершает его без повторного клика (82.349231ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:44:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:48:1
+✖ уровень 5 другого экземпляра не подтверждает ручное улучшение eq:tattoo (24.603642ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:50:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:52:1
+✖ постоянно disabled без платежа: ожидание сохраняет исходный дедлайн и заканчивается через 4 минуты без клика (55.509205ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:54:21)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:59:41
+✖ кнопка стала disabled во время prepare: отменяется только неотправленная квитанция, маршрут остаётся (92.71816ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:61:50)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:59:41
+✖ кнопка стала disabled во время commit: отменяется только неотправленная квитанция, маршрут остаётся (8.017539ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:61:50)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:64:59
+✖ DOM изменился перед кликом (disconnected): старую кнопку не нажимаем (5.815283ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:66:50)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-manual-upgrade.test.js:64:59
+✖ DOM изменился перед кликом (next-level-label): старую кнопку не нажимаем (9.632368ms)
+  AssertionError [ERR_ASSERTION]: незавершённое улучшение сохраняется
+      at waitingWithoutFailure (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:35:9)
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-manual-upgrade.test.js:66:50)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

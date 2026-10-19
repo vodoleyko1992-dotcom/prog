@@ -27,7 +27,7 @@ function guard(J) {
 // Локальная копия задания продолжает исходное действие, не захватывает новую аренду после await.
 function copyJob(J, patch) { const next = { ...J, ...patch }; jobGuards.set(next, guard(J)); return next; }
 const money = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? +v : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
-const waitPayment = () => { env.setStatus('Маммон: исход оплаты неизвестен — жду подтверждения игры, повтор запрещён'); };
+const waitPayment = () => { env.setStatus(env.payments?.pending() ? 'Маммон: исход оплаты неизвестен — жду подтверждения игры, повтор запрещён' : 'Маммон: жду готовности к оплате; запрос не отправлен'); };
 const NEAR = 12000 * 0.9;                       // радиус NPC с карты (mapRadii.npcInteractionRadius 12000), с запасом
 const POLL = 90000, NPC_POLL = 30 * 60000, JOB_MAX = 4 * 60000, SMITH_EVERY = 6 * 3600000;
 const COL_ID = 4037, UP_RETRY = 30 * 60000;          // 9.2.5: Coin of Luck; повтор улучшения после неудачи
@@ -763,17 +763,21 @@ async function upgrade(J, items) {
   if (location.pathname !== PAGE.smith) { env.setStatus(`Маммон: улучшаю ${nm} у кузнеца`); location.href = PAGE.smith; await env.sleep(4000); return; }
   // 10.0.13 (аудит 14.10): одинаковые имя и уровень не определяют экземпляр. Страница связывает кнопку с targetInstanceId,
   // а в карточке показывает место (надето/сумка). Неоднозначную карточку не нажимаем: иначе CoL уходили на дубликат из сумки.
-  const card = await env.waitX(() => {
+  const findCard = () => {
     const cards = [...document.querySelectorAll('.l2-mammon-upgrade-card')].filter(c =>
       (c.querySelector('.l2-mammon-upgrade-card__name')?.textContent || '').trim() === nm && new RegExp(`Lv\\.?\\s*${L}\\b`).test(c.querySelector('.l2-mammon-upgrade-card__level')?.textContent || ''));
     const place = String(it.locationLabelUk || '').trim(), meta = c => (c.querySelector('.l2-mammon-upgrade-card__meta')?.textContent || '').split('·').pop().trim();
     const exact = place ? cards.filter(c => meta(c) === place) : [];
     return exact.length === 1 ? exact[0] : cards.length === 1 && (!place || !meta(cards[0])) ? cards[0] : null;
-  }, 10000, 200);
+  };
+  const card = await env.waitX(findCard, 10000, 200);
   if (!active()) return;
   const btn = card?.querySelector('.l2-mammon-upgrade-card__btn');
   if (!btn) return finish(J, false, `${nm} Lv.${L}: карточки улучшения на странице кузнеца нет`);
-  if (btn.disabled || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
+  // 20.28 (лог 20.10 08:52:04): ручной запрос выключает кнопку до ответа. Это не отказ улучшения:
+  // сохраняем маршрут, следующий шаг перечитает точный экземпляр; общий JOB_MAX ограничивает ожидание.
+  if (btn.disabled) { env.setStatus(`Маммон: ${nm} — жду завершения действия игры, сверяю уровень`); return; }
+  if (!new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '')) return finish(J, false, `${nm}: кнопка «${(btn.textContent || '').trim().slice(0, 40)}» недоступна`);
   const col = +it.cost?.coinOfLuck || 0, a = +it.cost?.adena || 0;
   const allowed = () => active() && +env.cfg.mmGoalItem === id && (env.cfg.mmUpgrade !== false || J.cmd) && L < Math.min(5, Math.max(1, +env.cfg.mmGoalLvl || 5));
   if (!allowed()) return finish(copyJob(J, { cancelled: true }), false, 'улучшение отменено: настройка или цель изменена');
@@ -786,6 +790,13 @@ async function upgrade(J, items) {
   await env.setRt({ mmJob: { ...J, clicked: L, col, tries: (J.tries || 0) + 1, t: J.t } });
   if (ticket && !await env.rtCommit?.()) { await cancelUnsent(ticket,beforePayment); return; }
   if (!allowed()) { if(ticket)await cancelUnsent(ticket,beforePayment); return; }
+  // Игрок мог нажать кнопку или игра заменить карточку, пока сохранялось намерение. До sent клик точно не отправлен.
+  if (btn.disabled || btn.isConnected === false || !new RegExp(`Lv\\.?\\s*${L + 1}\\b`).test(btn.textContent || '') || findCard() !== card || card.querySelector('.l2-mammon-upgrade-card__btn') !== btn) {
+    if (ticket) { if (!await cancelUnsent(ticket,beforePayment)) return; }
+    else await env.setRt({ mmJob: beforePayment });
+    if (active()) env.setStatus(`Маммон: ${nm} — карточка занята или обновилась, сверяю уровень`);
+    return;
+  }
   env.rec('B', 'Маммон', `улучшение: жму «${(btn.textContent || '').trim()}» — ${nm}, ${fmtA(a)} адены + ${col} Coin of Luck + ${(it.cost?.materials || []).map(m => `${m.nameUk} ${m.required}`).join(', ')}`);
   try { document.documentElement.dataset.l2botConfirm = String(Date.now()); } catch (e) {}   // окно «точно?» игры — «да» (hook.js, 5 с)
   if (ticket && !env.payments.sent(ticket)) { await cancelUnsent(ticket,beforePayment); return; }

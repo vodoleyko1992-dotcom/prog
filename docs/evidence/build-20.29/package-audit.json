@@ -1,0 +1,398 @@
+{
+  "checked_utc": "2026-10-19T23:03:14.897740+00:00",
+  "source_root": "/workspace/work/log-2052-mammon",
+  "expected_files": 64,
+  "expected_runtime_changes": [
+    "content.js",
+    "engine-core.js",
+    "modules/mammon.js"
+  ],
+  "checks": [
+    {
+      "name": "chrome: valid CRC",
+      "ok": true
+    },
+    {
+      "name": "chrome: exact 64-file 20.28 allowlist",
+      "ok": true
+    },
+    {
+      "name": "chrome: no duplicate paths",
+      "ok": true
+    },
+    {
+      "name": "chrome: no prohibited/unsafe paths",
+      "ok": true,
+      "detail": {
+        "prohibited": [],
+        "unsafe": []
+      }
+    },
+    {
+      "name": "chrome: all manifest references present",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "chrome: version 20.29",
+      "ok": true
+    },
+    {
+      "name": "chrome: source bytes match",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "chrome: profile contains no populated credential fields",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "chrome: no high-confidence embedded secret signatures",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "chrome: expected 2 runtime fixes + content version from 20.28",
+      "ok": true,
+      "detail": [
+        "content.js",
+        "engine-core.js",
+        "modules/mammon.js"
+      ]
+    },
+    {
+      "name": "chrome: changed manifest and README only besides runtime",
+      "ok": true,
+      "detail": [
+        "README-CHROME.txt",
+        "README-FIREFOX.txt",
+        "manifest.json"
+      ]
+    },
+    {
+      "name": "firefox: valid CRC",
+      "ok": true
+    },
+    {
+      "name": "firefox: exact 64-file 20.28 allowlist",
+      "ok": true
+    },
+    {
+      "name": "firefox: no duplicate paths",
+      "ok": true
+    },
+    {
+      "name": "firefox: no prohibited/unsafe paths",
+      "ok": true,
+      "detail": {
+        "prohibited": [],
+        "unsafe": []
+      }
+    },
+    {
+      "name": "firefox: all manifest references present",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "firefox: version 20.29",
+      "ok": true
+    },
+    {
+      "name": "firefox: source bytes match",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "firefox: profile contains no populated credential fields",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "firefox: no high-confidence embedded secret signatures",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "firefox: expected 2 runtime fixes + content version from 20.28",
+      "ok": true,
+      "detail": [
+        "content.js",
+        "engine-core.js",
+        "modules/mammon.js"
+      ]
+    },
+    {
+      "name": "firefox: changed manifest and README only besides runtime",
+      "ok": true,
+      "detail": [
+        "README-CHROME.txt",
+        "README-FIREFOX.txt",
+        "manifest.json"
+      ]
+    },
+    {
+      "name": "Chrome/Firefox differ only in manifest.json",
+      "ok": true,
+      "detail": [
+        "manifest.json"
+      ]
+    },
+    {
+      "name": "Firefox manifest equals intended platform conversion",
+      "ok": true
+    },
+    {
+      "name": "Chrome manifest uses service worker and version_name",
+      "ok": true
+    },
+    {
+      "name": "chrome: SHA256SUMS matches",
+      "ok": true
+    },
+    {
+      "name": "firefox: SHA256SUMS matches",
+      "ok": true
+    },
+    {
+      "name": "Firefox web-ext lint has zero errors",
+      "ok": true,
+      "detail": {
+        "exit_code": 0,
+        "reused_identical_archive": false,
+        "log": "/workspace/work/build2029-webext-lint.json",
+        "stderr": "/workspace/work/build2029-webext-lint.stderr.log",
+        "summary": {
+          "errors": 0,
+          "notices": 0,
+          "warnings": 45
+        },
+        "warning_codes": {
+          "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+          "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+          "UNSAFE_VAR_ASSIGNMENT": 43
+        },
+        "error_codes": {},
+        "baseline_20_28": {
+          "summary": {
+            "errors": 0,
+            "notices": 0,
+            "warnings": 45
+          },
+          "warning_codes": {
+            "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+            "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+            "UNSAFE_VAR_ASSIGNMENT": 43
+          }
+        }
+      }
+    }
+  ],
+  "archives": {
+    "chrome": {
+      "path": "/workspace/work/log-2052-mammon/builds/l2wap-bot-v20.29.zip",
+      "bytes": 1412749,
+      "sha256": "4df0218b52d1f5806a5567b948698409bd7275055ada15b0c07af5a5e51c3551",
+      "file_count": 64,
+      "changed_from_20_28": [
+        "README-CHROME.txt",
+        "README-FIREFOX.txt",
+        "content.js",
+        "engine-core.js",
+        "manifest.json",
+        "modules/mammon.js"
+      ],
+      "manifest_reference_count": 58,
+      "files_sha256": {
+        "README-CHROME.txt": "450ac4528ea11dbf6ded249826b44540fbb988360a72f5e1285b36682035e68d",
+        "README-FIREFOX.txt": "c4b7fda0ea3c9801bd5cc0242177d9c1770190f11832720934685ddf10511e3e",
+        "augment.js": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+        "background.js": "ecbba328aafa7b0c0de306096552b2e1ccb1781133734ff18b1fa77c3373b3d1",
+        "base-profile.json": "782d9fcffaa70d485eeb769ff730c9c8fba0194891fcb7827540f1ed3f0b80a5",
+        "battle-cooldown.js": "47813457d85337528160c8e5148b90184c008012b4e3f8a04b6f5e34c5096a5d",
+        "buff-value.js": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+        "content.js": "5dd22d0902d4e4b39c9cbd1456ecd59c39d7366ed827143f2437929322b85867",
+        "defaults.js": "4b3ccd19f5fad841f798d1109b530ca3f85df2bdb726e76e0644eee66d93598a",
+        "enchant-ui.css": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+        "enchant-ui.js": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+        "engine-core.js": "dad49dfdd374353b4a79547d34345fc0b6968417101933184cdababd008379ac",
+        "fa-full.js": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+        "hook.js": "aa132061597f43802a61cf669a6d4e884090e491220593d586cfc2d34221c728",
+        "icons/128.png": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+        "icons/16.png": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+        "icons/48.png": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+        "items-il.json": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+        "mammon-gear.json": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+        "manifest.json": "9ffdcc878ef30ce148f789490ffb490291673e8b552cd1ef8035247efc0264b4",
+        "modules/actions.js": "4ca05e9be0268fd433813139d5b45c1abb8399528aee65823a21e16e29f49cb7",
+        "modules/buffs.js": "4067cc6c179821c316c437c261088c879fdf2bf33436a5833ceff8429d3927aa",
+        "modules/champs.js": "fb4ac3eb15c77509b19b1be539284741e989ba1e651938fefdf87c3868f19beb",
+        "modules/combat.js": "c3991cac4ef57f976bf5e87dd573ddc125b0959b3836adddabf7910664fe970e",
+        "modules/dailies.js": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+        "modules/dungeons.js": "9f3c56522252844057407fbe43b412dc995a8729819f8e3b4a3c85f3b234644c",
+        "modules/economy.js": "a11b234c8dba0c4faf3c98f8dd61b33ff0c6a716952fd0d656501d5439b807a6",
+        "modules/enchant.js": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+        "modules/enemies.js": "7bd9f356be55c61c7d4dcd7e704d8fd29fb4ccbad138eb4518d5e1d4146c18cd",
+        "modules/epics.js": "9a1fdc1a81f624126805eb72120153f781d3da56ed58dc8f1645d596b9358191",
+        "modules/equipment.js": "92c5958b36bc93dd8413ec5932e390296800e6b16a712dd429b1875bebbfcea8",
+        "modules/fightlab.js": "68b6898e31d844c85833ac94e889f70c3f000c4b0cd5163f4fad35a66a847385",
+        "modules/fishing.js": "3ca6ed0a4362ce4915bc0ef5644c562bf88a91b58c4437435559b7fcb27b6ca5",
+        "modules/lifestone.js": "da62a35d58e13770b34b734e25df1f5717f443fa0ef700904e5e9d4c8b870a4d",
+        "modules/loot.js": "141b0acae17b8a928254407dfd63f09bcdcc4a6642b204d7c7e662badf6b56e7",
+        "modules/mammon.js": "1a84003cb1f578c967b345fb565be5cd804b24c17675843aed87d4699098f7ef",
+        "modules/mobfarm.js": "02b814b52d6c4361f14e66c0058cc595e1e46b716925754c165c162acd063535",
+        "modules/navigation.js": "f3fb4e556b7b3bcdcb15f729930459c28137e4c8d043d455eccdc096a4e6dfa3",
+        "modules/payments.js": "fe3267c294a151c7da63be698f08874817041c738c0b576456d8ab2c714c0c91",
+        "modules/pvp.js": "441fc949b0b51020f920deab0c8ac1fd88320278eac303b4e108ec97a04cb2f1",
+        "modules/quests.js": "2277f2bbaaebadf60e48ff21de48e4ba7d0f014f6aec53bfee60c4ec3c101cfe",
+        "modules/raid.js": "4b6f445c90875c94cb49bbf8aa54349d5af02e16517df1da4b81c689f192315e",
+        "modules/rbrun.js": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+        "modules/rbtimer.js": "847cf0f1e05aeee313fc2c47be18c548fb773ed4d04beb70540ffd1ee2a8b02b",
+        "modules/resources.js": "6a52eb3f31a790f2c4aadd5ba7a407d2d284a77fb04f02b4c0ffba645d094478",
+        "modules/story.js": "6b28d7e6f19ec555805d9ce6625b15fc0a1f638f1334e7900e5fd34410fd2628",
+        "modules/subclass.js": "39f7dea054a937b066944172eab911d921644c2d0edb1b880ab1ccb365b65a18",
+        "modules/survival.js": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+        "modules/tvt.js": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+        "modules/tvtshop.js": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+        "modules/warlock.js": "1cd6861cd4217f06fce27bddefa36441f03f1a33e70be46d5004518b2278b6c3",
+        "notranslate.js": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+        "popup.html": "fc5380649927a5fed46455ca4a553210c697aeb944261641ec95b2cb9bd3e1a6",
+        "popup.js": "da1d77f158d1ab9b4b2d9d6577210a31c1d070dec3771c494fa7aa9d5a43b909",
+        "pvp-ui.css": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+        "pvp-ui.js": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+        "skills-il.js": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+        "ui-game.css": "d1459d704d10c41d8623e185d0b743c4659014a094e51fd3a92a55ca870e2105",
+        "ui-v7.css": "4d47008f165cc60f7f8eff3f26d53c68d83a17d1326b7ce6527955bf13c7e844",
+        "ui-v7.js": "41e6f973bcfb1c362152536d07e82d78d0acb4030a9e2016f4a3fe1764a2f238",
+        "warlock-ui.css": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+        "warlock-ui.js": "bd504c9d729e73af7f41775dcbeba2919a90e6011c0fb06c650ecac3e95621af",
+        "zone-db.js": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+        "zone-kpd.js": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515"
+      },
+      "extracted": "/workspace/work/build2029-audit-chrome"
+    },
+    "firefox": {
+      "path": "/workspace/work/log-2052-mammon/builds/l2wap-bot-v20.29-firefox.zip",
+      "bytes": 1423276,
+      "sha256": "400c9c6546ed2a83a3771b8ada4721d424281de2d9b655205c16c8c23dc2b50b",
+      "file_count": 64,
+      "changed_from_20_28": [
+        "README-CHROME.txt",
+        "README-FIREFOX.txt",
+        "content.js",
+        "engine-core.js",
+        "manifest.json",
+        "modules/mammon.js"
+      ],
+      "manifest_reference_count": 58,
+      "files_sha256": {
+        "README-CHROME.txt": "450ac4528ea11dbf6ded249826b44540fbb988360a72f5e1285b36682035e68d",
+        "README-FIREFOX.txt": "c4b7fda0ea3c9801bd5cc0242177d9c1770190f11832720934685ddf10511e3e",
+        "augment.js": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0",
+        "background.js": "ecbba328aafa7b0c0de306096552b2e1ccb1781133734ff18b1fa77c3373b3d1",
+        "base-profile.json": "782d9fcffaa70d485eeb769ff730c9c8fba0194891fcb7827540f1ed3f0b80a5",
+        "battle-cooldown.js": "47813457d85337528160c8e5148b90184c008012b4e3f8a04b6f5e34c5096a5d",
+        "buff-value.js": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3",
+        "content.js": "5dd22d0902d4e4b39c9cbd1456ecd59c39d7366ed827143f2437929322b85867",
+        "defaults.js": "4b3ccd19f5fad841f798d1109b530ca3f85df2bdb726e76e0644eee66d93598a",
+        "enchant-ui.css": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f",
+        "enchant-ui.js": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d",
+        "engine-core.js": "dad49dfdd374353b4a79547d34345fc0b6968417101933184cdababd008379ac",
+        "fa-full.js": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418",
+        "hook.js": "aa132061597f43802a61cf669a6d4e884090e491220593d586cfc2d34221c728",
+        "icons/128.png": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c",
+        "icons/16.png": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3",
+        "icons/48.png": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393",
+        "items-il.json": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41",
+        "mammon-gear.json": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b",
+        "manifest.json": "1c151a871d71b822cfe908eb71885601846a58c494e0ebe03294829dd00923ea",
+        "modules/actions.js": "4ca05e9be0268fd433813139d5b45c1abb8399528aee65823a21e16e29f49cb7",
+        "modules/buffs.js": "4067cc6c179821c316c437c261088c879fdf2bf33436a5833ceff8429d3927aa",
+        "modules/champs.js": "fb4ac3eb15c77509b19b1be539284741e989ba1e651938fefdf87c3868f19beb",
+        "modules/combat.js": "c3991cac4ef57f976bf5e87dd573ddc125b0959b3836adddabf7910664fe970e",
+        "modules/dailies.js": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf",
+        "modules/dungeons.js": "9f3c56522252844057407fbe43b412dc995a8729819f8e3b4a3c85f3b234644c",
+        "modules/economy.js": "a11b234c8dba0c4faf3c98f8dd61b33ff0c6a716952fd0d656501d5439b807a6",
+        "modules/enchant.js": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6",
+        "modules/enemies.js": "7bd9f356be55c61c7d4dcd7e704d8fd29fb4ccbad138eb4518d5e1d4146c18cd",
+        "modules/epics.js": "9a1fdc1a81f624126805eb72120153f781d3da56ed58dc8f1645d596b9358191",
+        "modules/equipment.js": "92c5958b36bc93dd8413ec5932e390296800e6b16a712dd429b1875bebbfcea8",
+        "modules/fightlab.js": "68b6898e31d844c85833ac94e889f70c3f000c4b0cd5163f4fad35a66a847385",
+        "modules/fishing.js": "3ca6ed0a4362ce4915bc0ef5644c562bf88a91b58c4437435559b7fcb27b6ca5",
+        "modules/lifestone.js": "da62a35d58e13770b34b734e25df1f5717f443fa0ef700904e5e9d4c8b870a4d",
+        "modules/loot.js": "141b0acae17b8a928254407dfd63f09bcdcc4a6642b204d7c7e662badf6b56e7",
+        "modules/mammon.js": "1a84003cb1f578c967b345fb565be5cd804b24c17675843aed87d4699098f7ef",
+        "modules/mobfarm.js": "02b814b52d6c4361f14e66c0058cc595e1e46b716925754c165c162acd063535",
+        "modules/navigation.js": "f3fb4e556b7b3bcdcb15f729930459c28137e4c8d043d455eccdc096a4e6dfa3",
+        "modules/payments.js": "fe3267c294a151c7da63be698f08874817041c738c0b576456d8ab2c714c0c91",
+        "modules/pvp.js": "441fc949b0b51020f920deab0c8ac1fd88320278eac303b4e108ec97a04cb2f1",
+        "modules/quests.js": "2277f2bbaaebadf60e48ff21de48e4ba7d0f014f6aec53bfee60c4ec3c101cfe",
+        "modules/raid.js": "4b6f445c90875c94cb49bbf8aa54349d5af02e16517df1da4b81c689f192315e",
+        "modules/rbrun.js": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3",
+        "modules/rbtimer.js": "847cf0f1e05aeee313fc2c47be18c548fb773ed4d04beb70540ffd1ee2a8b02b",
+        "modules/resources.js": "6a52eb3f31a790f2c4aadd5ba7a407d2d284a77fb04f02b4c0ffba645d094478",
+        "modules/story.js": "6b28d7e6f19ec555805d9ce6625b15fc0a1f638f1334e7900e5fd34410fd2628",
+        "modules/subclass.js": "39f7dea054a937b066944172eab911d921644c2d0edb1b880ab1ccb365b65a18",
+        "modules/survival.js": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7",
+        "modules/tvt.js": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9",
+        "modules/tvtshop.js": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99",
+        "modules/warlock.js": "1cd6861cd4217f06fce27bddefa36441f03f1a33e70be46d5004518b2278b6c3",
+        "notranslate.js": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523",
+        "popup.html": "fc5380649927a5fed46455ca4a553210c697aeb944261641ec95b2cb9bd3e1a6",
+        "popup.js": "da1d77f158d1ab9b4b2d9d6577210a31c1d070dec3771c494fa7aa9d5a43b909",
+        "pvp-ui.css": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea",
+        "pvp-ui.js": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26",
+        "skills-il.js": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327",
+        "ui-game.css": "d1459d704d10c41d8623e185d0b743c4659014a094e51fd3a92a55ca870e2105",
+        "ui-v7.css": "4d47008f165cc60f7f8eff3f26d53c68d83a17d1326b7ce6527955bf13c7e844",
+        "ui-v7.js": "41e6f973bcfb1c362152536d07e82d78d0acb4030a9e2016f4a3fe1764a2f238",
+        "warlock-ui.css": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568",
+        "warlock-ui.js": "bd504c9d729e73af7f41775dcbeba2919a90e6011c0fb06c650ecac3e95621af",
+        "zone-db.js": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3",
+        "zone-kpd.js": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515"
+      },
+      "extracted": "/workspace/work/build2029-audit-firefox"
+    }
+  },
+  "firefox_lint": {
+    "exit_code": 0,
+    "reused_identical_archive": false,
+    "log": "/workspace/work/build2029-webext-lint.json",
+    "stderr": "/workspace/work/build2029-webext-lint.stderr.log",
+    "summary": {
+      "errors": 0,
+      "notices": 0,
+      "warnings": 45
+    },
+    "warning_codes": {
+      "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+      "UNSAFE_VAR_ASSIGNMENT": 43
+    },
+    "error_codes": {},
+    "baseline_20_28": {
+      "summary": {
+        "errors": 0,
+        "notices": 0,
+        "warnings": 45
+      },
+      "warning_codes": {
+        "KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION": 1,
+        "KEY_FIREFOX_ANDROID_UNSUPPORTED_BY_MIN_VERSION": 1,
+        "UNSAFE_VAR_ASSIGNMENT": 43
+      }
+    }
+  },
+  "ok": true,
+  "scope": "Static packaging/source parity and Firefox lint; no native Firefox runtime validation.",
+  "credential_review": "Credential field names and high-confidence secret signatures checked. Baseline learn metadata includes a CSS author selector and /auth/login route counters with empty captured key sets; these are not credentials.",
+  "version_header_review": {
+    "content_only_header_changed": true,
+    "headers": {
+      "content.js": "// ===== L2wap Bot v20.29 — оплата и ручное улучшение у Маммона =====",
+      "README-CHROME.txt": "L2wap Bot 20.29 — Google Chrome / Chromium",
+      "README-FIREFOX.txt": "L2wap Bot 20.29 — Firefox 128+ для компьютера"
+    }
+  }
+}

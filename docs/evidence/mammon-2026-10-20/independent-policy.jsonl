@@ -1,0 +1,12 @@
+{"name":"waiting service","expected":"fish","actual":"fish"}
+{"name":"waiting shop","expected":"fish","actual":"fish"}
+{"name":"waiting fa-buff","expected":"fish","actual":"fish"}
+{"name":"own teleport","expected":"raid","actual":"raid"}
+{"name":"unknown kind","expected":"fish","actual":"fish"}
+{"name":"actual raid id","expected":"raid","actual":"raid"}
+{"name":"actual rbGo","expected":"raid","actual":"raid"}
+{"name":"raid wait expired","expected":"raid","actual":"raid"}
+{"name":"fresh raid","expected":"raid","actual":"raid"}
+{"name":"fish quota met","expected":"raid","actual":"raid"}
+{"name":"fish goal done","expected":"raid","actual":"raid"}
+{"name":"active fish despite quota","expected":"fish","actual":"fish"}

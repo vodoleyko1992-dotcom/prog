@@ -131,7 +131,8 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   // 10. безопасность: модуль не шлёт POST; «Покращити» жмёт только upgrade() (9.2.5: вещь-цель, cfg.mmUpgrade — tests/v925-mammon-upgrade.test.js)
   assert.ok(!/method:\s*['"]POST/i.test(src), 'no own POST');
   { const code = src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''), up = code.slice(code.indexOf('async function upgrade('), code.indexOf('async function mmStep('));
-    assert.equal((code.match(/l2-mammon-upgrade-card__btn/g) || []).length, 1, 'upgrade button only in upgrade()'); assert.ok(up.includes('l2-mammon-upgrade-card__btn'));
+    // 20.29: карточка повторно проверяется после записи намерения; все обращения по-прежнему только в upgrade().
+    assert.equal((code.match(/l2-mammon-upgrade-card__btn/g) || []).length, (up.match(/l2-mammon-upgrade-card__btn/g) || []).length, 'upgrade button only in upgrade()'); assert.ok(up.includes('l2-mammon-upgrade-card__btn'));
     assert.ok(!/blacksmith\/upgrade['"`]/.test(code), 'no own upgrade POST'); assert.match(up, /env\.cfg\.mmUpgrade === false/); }
   // 11. ядро: свои GET с токеном страницы (без него 401), РБ/эпики тоже; цель Маммона в farmGoal; шаг в цикле; манифест; меню
   const c = (read('defaults.js') + '\n' + read('content.js'));

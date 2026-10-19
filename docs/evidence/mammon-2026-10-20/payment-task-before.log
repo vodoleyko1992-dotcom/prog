@@ -1,0 +1,234 @@
+✖ Маммон teleport: настоящий модуль отправляет один клик после оплаты в выбранной рыбалке (23.50114ms)
+✖ Маммон upgrade: настоящий модуль отправляет один клик после оплаты в выбранной рыбалке (11.518513ms)
+✖ mammon: служебная оплата не становится оплатой рейда (4.539268ms)
+✖ shop: служебная оплата не становится оплатой рейда (5.390717ms)
+✖ fa-buff: служебная оплата не становится оплатой рейда (6.743795ms)
+✖ town-buff: служебная оплата не становится оплатой рейда (5.258639ms)
+✖ tvt-shop: служебная оплата не становится оплатой рейда (4.78343ms)
+✖ story-teleport: служебная оплата не становится оплатой рейда (4.975601ms)
+✖ cat-teleport: служебная оплата не становится оплатой рейда (5.510155ms)
+✖ summon-buff: служебная оплата не становится оплатой рейда (6.183597ms)
+✖ enchant: служебная оплата не становится оплатой рейда (7.0003ms)
+✖ неизвестная служебная оплата после reload сохраняется и не допускает новую prepare или запуск услуги (5.355858ms)
+✖ после отправки неизвестный исход запрещает второй клик и повторную prepare (14.484411ms)
+✔ только raid-teleport удерживает рейд при сохранённом rbFishWait (3.41142ms)
+✔ сверка fishing удерживает рыбалку даже после срока ожидания рейда (4.198168ms)
+✔ deadline: служебный владелец не обходит обычные границы выбора рыбалки (4.036605ms)
+✔ freshRaid: служебный владелец не обходит обычные границы выбора рыбалки (5.079684ms)
+✔ dailyLimit: служебный владелец не обходит обычные границы выбора рыбалки (42.594003ms)
+✔ fishGoal: служебный владелец не обходит обычные границы выбора рыбалки (1.938205ms)
+✔ char во время durable prepare отменяет старое действие без клика (2.532111ms)
+✔ kick во время durable prepare отменяет старое действие без клика (7.898086ms)
+✔ tasks во время durable prepare отменяет старое действие без клика (4.132403ms)
+✔ lease во время durable prepare отменяет старое действие без клика (4.618187ms)
+✔ stop во время durable prepare отменяет старое действие без клика (3.995092ms)
+✔ owner во время durable prepare отменяет старое действие без клика (5.321376ms)
+✔ generation во время durable prepare отменяет старое действие без клика (6.130646ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 13
+ℹ fail 13
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 380.980017
+
+✖ failing tests:
+
+test at tests/v2028-mammon-payment-task.test.js:32:44
+✖ Маммон teleport: настоящий модуль отправляет один клик после оплаты в выбранной рыбалке (23.50114ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:34:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:32:44
+✖ Маммон upgrade: настоящий модуль отправляет один клик после оплаты в выбранной рыбалке (11.518513ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:34:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ mammon: служебная оплата не становится оплатой рейда (4.539268ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ shop: служебная оплата не становится оплатой рейда (5.390717ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ fa-buff: служебная оплата не становится оплатой рейда (6.743795ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ town-buff: служебная оплата не становится оплатой рейда (5.258639ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ tvt-shop: служебная оплата не становится оплатой рейда (4.78343ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ story-teleport: служебная оплата не становится оплатой рейда (4.975601ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ cat-teleport: служебная оплата не становится оплатой рейда (5.510155ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ summon-buff: служебная оплата не становится оплатой рейда (6.183597ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:37:126
+✖ enchant: служебная оплата не становится оплатой рейда (7.0003ms)
+  AssertionError [ERR_ASSERTION]: подготовка оплаты должна завершиться
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:38:61)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:40:1
+✖ неизвестная служебная оплата после reload сохраняется и не допускает новую prepare или запуск услуги (5.355858ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'raid' !== 'fish'
+  
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:42:45)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'raid',
+    expected: 'fish',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2028-mammon-payment-task.test.js:45:1
+✖ после отправки неизвестный исход запрещает второй клик и повторную prepare (14.484411ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(p)
+  
+      at TestContext.<anonymous> (/workspace/work/log-2052-mammon/tests/v2028-mammon-payment-task.test.js:46:57)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
