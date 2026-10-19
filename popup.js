@@ -1904,6 +1904,18 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
   });
 }
+// 19.10: дневные мобы видны рядом с рыбалкой независимо от выбранной охоты; это сводка, а не задача.
+function dailyMobBoardRow(rt, d, now = Date.now()) {
+  const day = new Date(now + 10 * 3600000).toISOString().slice(0, 10), quota = rt.dailyQuota?.day === day ? rt.dailyQuota : {};
+  const num = x => Number.isFinite(+x) && +x > 0 ? Math.floor(+x) : 0;
+  const got = num(quota.auto) + num(quota.cat) + num(quota.raid), limit = num(d.dailyKillLimit);
+  const pending = !!d.limitRanges?.dailyKillLimit && rt.limitRolls?.dailyKillLimit?.day !== day;
+  return { key:'daily-mobs', summary:'mobs', name:'Мобы за сутки', tab:'limits',
+    label:pending || !limit ? 'Дневной счётчик' : got >= limit ? 'Лимит достигнут' : 'Дневной лимит',
+    state:!pending && limit > 0 && got >= limit ? 'waiting' : 'selected',
+    progress:`Сегодня: ${got}${!pending && limit > 0 ? ' / ' + limit : ''} (автофарм + катакомбы + рядом с РБ) · ${pending ? 'дневная цель выберется при запуске' : limit > 0 ? 'осталось ' + Math.max(0, limit - got) : 'без дневного лимита'}`,
+    percent:!pending && limit > 0 ? Math.min(100, Math.round(got / limit * 100)) : null };
+}
 function renderWorkspace(rt, d, st) {
   const activity = workspaceState(rt, d, st);
   if ($('activityPanel')) {
@@ -1927,7 +1939,9 @@ function renderWorkspace(rt, d, st) {
   if (!$('taskBoardRows')) return;
   const rows = taskBoardRows(rt, d, st);
   $('taskBoardNote').textContent = rows.length ? 'Выбрано: ' + rows.length + '. Приоритет определяет следующую задачу, фактическое действие показано выше.' : 'Ничего не выбрано. Разрешите нужные задачи; изменение списка не запускает бота.';
-  const markup = rows.map(r => `<div class="task-row" data-state="${r.state}"><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
+  const display = [...rows], fishAt = rows.findIndex(r => r.key === 'fish');
+  display.splice(fishAt < 0 ? display.length : fishAt + 1, 0, dailyMobBoardRow(rt, d));
+  const markup = display.map(r => `<div class="task-row" data-state="${r.state}"${r.summary ? ' data-task-summary="mobs"' : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
   const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
 }
 function selectedAutoTasks(d) {
