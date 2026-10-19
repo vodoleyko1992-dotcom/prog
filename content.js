@@ -2943,7 +2943,8 @@ async function loopTaskList() {
     // 20.23 (журнал19.10 17:26): галка «Тур РБ» уже снята, rbSessTick больше не
     // вызывается, а прежний rbSess.on бессрочно держал явный поход к Маммону.
     // Снимаем только завершённую выбором сессию; покупки, статистика и квитанции остаются.
-    if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.rbSess = { ...rt.rbSess, on: false, end: Date.now() };
+    // В pending нет rbSess-снимка: повтор после ошибки записи не перекрывает новый Start.
+    if (rt.rbSess?.on && !L2EngineCore.taskAllowed(cfg,'raid')) blocked.retireRaidSession = { start: rt.rbSess.start ?? null };
     for (const key of ['tbuff','petBufferTrip','shop','magister','invScan','mmJob','storyJob','tsJob','rbGo','rbHunt','zoneGo','bagCheck','faScan','recipeScan','farmScan','rbScan','zoneScan','fishSvc','fishService','dailyFish','dailyRb'])
       if (rt[key] && !L2EngineCore.taskJobAllowed(cfg,key,rt)) blocked[key] = null;
     if (Object.keys(blocked).length) { if(blocked.tbuff===null)blocked.tbInterrupted={t:Date.now(),jobT:rt.tbuff.t}; await setRt(blocked); rec('S','авторежим', 'отменены несовместимые маршруты: ' + Object.keys(blocked).join(', ') + '; квитанции оплат сохранены'); return true; }

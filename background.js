@@ -229,6 +229,20 @@ function raidMobChange(state,E,now) {
   }else mark=null;
   return {ok:true,delta,kills,raidMobMarks:kept,dailyQuota,...(mark?{farmKillMark:mark}:{}),rt:{...rt,kills,raidMobMarks:kept,...(dailyQuota?{dailyQuota}:{}),...(mark?{farmKillMark:mark}:{}),_src:'raid-mobs'}};
 }
+// 20.23: отмена снятой рейдовой сессии — условное намерение, а не старый снимок.
+// Повтор после write_failed не вправе затереть новую сессию, запущенную из меню.
+function retireRaidSessionPatch(patch, rt, cfg, now) {
+  if (!Object.hasOwn(patch,'retireRaidSession')) return { patch, retired: false };
+  const next = { ...patch }, intent = next.retireRaidSession, session = rt.rbSess;
+  delete next.retireRaidSession;
+  if (!Object.hasOwn(next,'rbSess') && session?.on && intent &&
+      (intent.start === null || Number.isSafeInteger(intent.start)) && intent.start === (session.start ?? null) &&
+      Array.isArray(cfg.autoTasks) && !cfg.autoTasks.includes('raid')) {
+    next.rbSess = { ...session, on: false, end: now };
+    return { patch: next, retired: true };
+  }
+  return { patch: next, retired: false };
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -277,10 +291,10 @@ async function statePatch(m, sender) {
       return { ok: true, fishTgt, cfg };
     }
     const change = {};
-    const writePatch=pvpSeedPatch(patch,state.rt||{});
+    const retirement=retireRaidSessionPatch(pvpSeedPatch(patch,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
     if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
     // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
-    if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
+    if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: retirement.retired ? 'raid-session-policy' : writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
