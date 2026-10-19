@@ -1272,8 +1272,11 @@ async function battle() {
     (ctx.domKilled||=[]).push(...fresh.map(k=>k.name));
     const server=serverKillNames(ctx.spawnId||spawnId,t0),wanted=[...ctx.domKilled,...missingKillNames(server,ctx.domKilled)];
     const missing=missingKillNames(wanted,ctx.killed);
+    const raidCounted=!!ctx.rb&&typeof env.noteRaidMobKills==='function';
+    if(raidCounted)await env.noteRaidMobKills(ctx.spawnId||spawnId);
+    if(!killOwnerValid(ctx))return;
     if(!fresh.length&&!missing.length)return;
-    await env.setRt({ kills: env.rt.kills + missing.length, exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
+    await env.setRt({ ...(raidCounted?{}:{kills:env.rt.kills+missing.length}), exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
     if(!killOwnerValid(ctx))return;
     for (const k of fresh) {
       env.rec('B', 'доп. цель', `${k.name}: ${k.exp || k.sp || k.adena ? `EXP +${k.exp} · SP +${k.sp} · аден +${k.adena}` : 'повержена; награды учитываю в общем итоге боя'}${k.items.length ? ' · ' + k.items.join(', ') : ''}`);
@@ -1289,6 +1292,11 @@ async function battle() {
     if (!env.farmQuotaCached?.()) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; }
   }
   ctx.quotaTicket = async () => { if (ctx.farmQuotaP) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; } return ctx.farmQuota || null; };
+  if(ctx.rb&&env.noteRaidMobKills){
+    if(env.raidMobReady&&!env.raidMobReady(ctx.spawnId||spawnId))await env.waitFor(()=>env.raidMobReady(ctx.spawnId||spawnId),1000,20);
+    if(!killOwnerValid(ctx))return;
+    await env.noteRaidMobKills(ctx.spawnId||spawnId,true);if(!killOwnerValid(ctx))return;
+  }
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
   const reloadSlot = () => { let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
@@ -2220,14 +2228,14 @@ async function battleOpen() {
     await env.setRt({ battleReload: 0 }); return env.toMap();
   }
   if (env.rt.battleReload) await env.setRt({ battleReload: 0 });
-  if (st === 'dead') { const char = env.rt.char; await env.finishFarmQuota?.(null, true, resultKills(true)); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
+  if (st === 'dead') { const char = env.rt.char, owner=killOwner(); await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; await env.finishFarmQuota?.(null, true, resultKills(true)); if (env.on && env.tabOwner && env.rt.char === char && env.canAct?.() !== false) return env.onDeath(); return; }
   if (st === 'err') {                            // 10.0.7 (лог 13.10 13:21: «Возврат на карту» из боя в подземелье без причины в журнале): текст ошибки игры — в журнал
     const txt = (env.$q('#battle-load-err')?.textContent || '').replace(/\s+/g, ' ').trim();
     if (Date.now() - (env.rt.battleErrNoteT || 0) > 60000) { env.rec('B', 'бой', `бой не открылся: «${txt.slice(0, 120) || 'без текста'}»${/spawnId=sdms_/i.test(location.search) ? ' — назад в подземелье' : ' — на карту'}`); env.setRt({ battleErrNoteT: Date.now() }); }
     return env.toMap();
   }
   await hotbarRows3();                           // все 3 ряда панели открыты — там могут быть нужные скиллы и банки
-  if (st === 'win') { if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
+  if (st === 'win') { const owner=killOwner(); await env.noteRaidMobKills?.(new URLSearchParams(location.search).get('spawnId')||''); if(!killOwnerValid({killOwner:owner}))return; if (await env.finishFarmQuota?.(null,false,resultKills(false))) return; return env.nextFight(); } // открыт уже экран победы
   const clickedAt = env.rt.mobClickAt, cameVia = env.rt.via;   // v5.6: запомнить ДО сброса — по ним видно, открыл ли бой бот/игрок или цепочка
   if (env.rt.bounce || env.rt.mobClickAt) env.setRt({ bounce: 0, mobClickAt: 0 });   // 8.0: без ожидания записи   // бой открылся — счётчик петли сброшен
 

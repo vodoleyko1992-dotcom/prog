@@ -18,7 +18,7 @@ async function scenario(task){
  await until(async()=>((await h.get(['rt'])).rt.dailyQuota?.[task]>=3),20000);
  const state=await h.get(['rt','cfg','on']);assert.equal(state.on,true);assert.equal(state.rt.farmQuota[task].got,3);assert.ok(state.cfg.autoTasks.includes(task));assert.equal(state.rt.dailyQuota[task],3);assert.ok(state.cfg.autoTasks.includes(task==='cat'?'auto':'dailies'));assert.deepEqual(acts,['attack']);await h.click('stop');
  await h.openTab('limits');const key='dailyKillLimit';
- assert.equal(await h.popup.locator('#tab-overview').evaluate(e=>e.classList.contains('act')),true);assert.equal(await h.popup.locator('#tab-limits').isVisible(),true);   // 20.12 (ревизия 17.10): «Лимиты» — подраздел «Обзора»
+ assert.equal(await h.popup.locator('#tab-limits').evaluate(e=>e.classList.contains('act')),true);assert.equal(await h.popup.locator('#tab-overview').isVisible(),false);   // 19.10, #270: «Лимиты» — отдельный раздел; прежние поля и сбросы сохранены.
  await h.popup.locator('#'+key).fill('12');await h.popup.locator('#'+key).dispatchEvent('change');await until(async()=>((await h.get(['cfg'])).cfg[key])===12);
  assert.equal((await h.get(['rt'])).rt.dailyQuota[task],3);await h.click('mobsDailyReset');await until(async()=>(await h.get(['rt'])).rt.dailyQuota[task]===0);   // 20.12: сброс идёт через async menuPatch — ждём запись, а не мгновенное состояние
  assert.deepEqual(h.errors,[]);console.log('PASS MV3 '+task+': victory +3 → daily pause / bot ON / task retained; limits menu and reset');
