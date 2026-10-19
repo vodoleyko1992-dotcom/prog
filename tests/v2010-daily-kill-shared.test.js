@@ -4,9 +4,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engine-core.js');
 // 20.13 (шаг 5): проверки идут на часах фикстуры — после 14:00 UTC 17.10 реальное Date.now() уже следующие сутки UTC+10 (тест падал по времени).
-const T0=Date.parse('2026-10-17T13:59:30Z');
+const T0=Date.parse('2026-10-17T20:59:30Z');
 function fixture(task='auto'){
- let now=Date.parse('2026-10-17T13:59:00Z');
+ let now=Date.parse('2026-10-17T20:59:00Z');
  Date.now=()=>now;   // 20.13 (шаг 5): engine-core в тесте брал настоящие часы — после 14:00 UTC 17.10 (полночь UTC+10) тест падал; часы теста везде одни
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
  globalThis.Date=Clock;   // 20.13: engine-core считает игровой день по общему Date — после 14:00 UTC 17.10 реальные часы уводили тест на другой день
@@ -26,7 +26,7 @@ test('убийства автофарма и катакомб складываю
  f.state.rt.dailyQuota.auto=2;f.refresh();   // ещё 2 моба на автофарме → 5/5
  assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'cat',T0),true);assert.equal(engine.dailyBlocked(f.state.cfg,f.state.rt,'auto',T0),true);
  assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,T0),'tasks');assert.equal(f.state.on,true);assert.deepEqual(f.state.cfg.autoTasks,['cat','auto','dailies']);
- f.advance();assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T14:01:00Z')),'cat');
+ f.advance();assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T21:01:00Z')),'cat');
 });
 test('итог боя ставит dailyDone по сумме: катакомбы 4 + автофарм 1 = 5/5, обе охоты остаются выбранными',async()=>{
  const f=fixture('cat');f.state.rt.dailyQuota={day:'2026-10-17',auto:4,cat:0,fish:0};f.refresh();
@@ -59,9 +59,9 @@ test('меню: один общий лимит мобов, остаток в «�
  assert.ok(section.includes('id="dailyKillLimit"'));assert.ok(section.includes('id="mobsDailyProgress"'));assert.ok(section.includes('id="mobsDailyReset"'));
  for(const id of ['dailyAutoKillLimit','dailyCatKillLimit','autoDailyProgress','catDailyProgress'])assert.ok(!html.includes('id="'+id+'"'),id);
  assert.ok(!/dailyAutoKillLimit|dailyCatKillLimit/.test(js));
- const els={},$=id=>els[id]||(els[id]={}),ctx={$,Date};
+ const els={},$=id=>els[id]||(els[id]={}),ctx={$,Date,L2EngineCore:engine};
  vm.runInNewContext(js.slice(js.indexOf('const dailyLimitKeys='),js.indexOf('for(const task of Object.keys(dailyLimitKeys))')),ctx);
- const day=new Date(Date.now()+10*3600000).toISOString().slice(0,10),rt={dailyQuota:{day,auto:1200,cat:300,fish:10}};
+ const day=engine.dailyDay(),rt={dailyQuota:{day,auto:1200,cat:300,fish:10}};
  ctx.renderDailyLimits(rt,{dailyKillLimit:3000,dailyFishLimit:0});
  assert.equal(els.mobsDailyProgress.textContent,'1500 / 3000 (автофарм 1200, катакомбы 300) · осталось 1500');assert.equal(els.fishDailyProgress.textContent,'Без дневного лимита');
  ctx.renderDailyLimits(rt,{dailyKillLimit:1500,dailyFishLimit:0});assert.match(els.mobsDailyProgress.textContent,/1500 \/ 1500 .* до 00:00$/);

@@ -81,7 +81,7 @@ const part = (src, a, b) => { const i = src.indexOf(a), j = src.indexOf(b, i); a
       storage: { local: { get: async k => Object.fromEntries([].concat(k || Object.keys(store)).map(x => [x, store[x]])), set: async v => Object.assign(store, JSON.parse(JSON.stringify(v))), remove: async () => {} }, onChanged: ev(), session: { get: async () => ({}), set: async () => {} } },
       alarms: { create() {}, clear: async () => {}, get: async () => null, onAlarm: ev() }, tabs: { onRemoved: ev(), onUpdated: ev(), query: async () => [], get: async () => ({}) }
     }, { get: (o, k) => k in o ? o[k] : new Proxy({}, { get: (_, kk) => kk.startsWith('on') ? ev() : async () => {} }) });
-    const ctx = { chrome, console, setTimeout, clearTimeout, setInterval, clearInterval, URL, indexedDB: undefined, self: {}, fetch: async () => ({ ok: false }) };
+    const ctx = { L2EngineCore:require('../engine-core.js'), chrome, console, setTimeout, clearTimeout, setInterval, clearInterval, URL, indexedDB: undefined, self: {}, fetch: async () => ({ ok: false }) };
     ctx.globalThis = ctx; vm.createContext(ctx); try { vm.runInContext(bgSrc, ctx); } catch (e) {}
     const send = (m, s) => new Promise(r => { let done = false; for (const f of L) { const ret = f(m, s, x => { done = true; r(x); }); if (ret === true || done) return; } r(undefined); });
     const game = { url: 'https://l2wap.com/battle.html', tab: { id: 7 } }, pop = { url: 'chrome-extension://x/popup.html?dock=1' };

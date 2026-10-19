@@ -43,6 +43,7 @@ test('limitSyncBlock: ждёт 30 с, затем пропускает цикл �
 // --- фон: устаревший ключ диапазона (импорт ≤20.9) не даёт вечный ok:false
 test('limitRangeChange отбрасывает неизвестный/неверный диапазон и обрабатывает остальные',()=>{
  const c={Date,Math,Number,Object,JSON};vm.createContext(c);
+ c.L2EngineCore=require('../engine-core.js');
  vm.runInContext(slice(bg,'const FARM_QUOTA =','function dailyFishChange(')+';this.L=limitRangeChange;',c);
  const r=c.L({cfg:{limitRanges:{dailyAutoKillLimit:{min:5,max:9},fishMaxCasts:{min:0,max:3},dailyKillLimit:{min:10,max:12}}},rt:{limitRolls:{dailyAutoKillLimit:{value:7}}}},Date.now());
  assert.equal(r.ok,true,r.reason);

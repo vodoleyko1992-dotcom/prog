@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=p=>fs.readFileSync(__dirname+'/../'+p,'utf8'),engine=require('../engine-core.js');
 // Тот же контур background/content, что у разовых целей; часы управляются тестом.
 function fixture(task='auto'){
- let now=Date.parse('2026-10-17T13:59:00Z');
+ let now=Date.parse('2026-10-17T20:59:00Z');
  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
  const source=read('tests/v208-farm-kill-quota.test.js'),c={require:x=>x==='node:test'?()=>{}:require(x),__dirname,Date:Clock,URL,URLSearchParams,structuredClone,console};
  vm.runInNewContext(source.slice(0,source.indexOf("for(const task of ['auto','cat'])")),c);
@@ -15,14 +15,14 @@ function fixture(task='auto'){
 for(const task of ['auto','cat'])test(task+': daily cap pauses only until midnight, retains selection and bot ON',async()=>{
  const f=fixture(task),t=await f.begin();f.grow(4);assert.equal(await f.win(t),true);
  assert.equal(f.state.rt.dailyQuota[task],4);assert.equal(f.state.on,true);assert.ok(f.state.cfg.autoTasks.includes(task));assert.equal(f.state.cfg[task==='cat'?'catMode':'zoneAuto'],true);
- assert.notEqual(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T13:59:00Z')),task);
- f.advance();f.refresh();assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T14:01:00Z')),task);
+ assert.notEqual(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T20:59:00Z')),task);
+ f.advance();f.refresh();assert.equal(engine.selectedTask(f.state.cfg,f.state.rt,Date.parse('2026-10-17T21:01:00Z')),task);
  const next=await f.begin();f.grow(1);await f.win(next);assert.equal(f.state.rt.dailyQuota[task],1);assert.equal(f.state.rt.dailyQuota.day,'2026-10-18');
 });
-test('Vladivostok midnight is exactly 14:00 UTC; disabled/manual-unselected never resumes',()=>{
+test('Server summer midnight is exactly 21:00 UTC; disabled/manual-unselected never resumes',()=>{
  const cfg={autoTasks:['fish','cat','auto'],dailyFishLimit:1,dailyKillLimit:1},rt={dailyQuota:{day:'2026-10-17',fish:1,auto:1,cat:1}};
- assert.equal(engine.selectedTask(cfg,rt,Date.parse('2026-10-17T13:59:59.999Z')),'tasks');assert.equal(engine.selectedTask(cfg,rt,Date.parse('2026-10-17T14:00:00Z')),'fish');
- assert.equal(engine.selectedTask({...cfg,autoTasks:[]},rt,Date.parse('2026-10-18T14:00:00Z')),'tasks');assert.equal(engine.dailyBlocked({...cfg,dailyFishLimit:0},rt,'fish'),false);
+ assert.equal(engine.selectedTask(cfg,rt,Date.parse('2026-10-17T20:59:59.999Z')),'tasks');assert.equal(engine.selectedTask(cfg,rt,Date.parse('2026-10-17T21:00:00Z')),'fish');
+ assert.equal(engine.selectedTask({...cfg,autoTasks:[]},rt,Date.parse('2026-10-18T21:00:00Z')),'tasks');assert.equal(engine.dailyBlocked({...cfg,dailyFishLimit:0},rt,'fish'),false);
 });
 test('legacy profiles project blocked flags without falling into unlimited default farm',()=>{
  const raw={catMode:true,zoneAuto:true,dailyKillLimit:4},rt={dailyQuota:{day:engine.dailyDay(),cat:2,auto:2}},view=engine.taskConfig(raw,()=>rt);

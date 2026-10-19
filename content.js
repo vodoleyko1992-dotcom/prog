@@ -296,7 +296,7 @@ async function beginFarmQuota(spawn) {
 function farmQuotaApply(T, r) {
   rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}), ...(Number.isSafeInteger(r.kills) ? { kills: Math.max(+rt.kills || 0, r.kills) } : {}) }; cfg = mergeCfg(r.cfg);
   if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
-  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0} + рядом с РБ ${r.dailyQuota.raid||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)+(r.dailyQuota.raid||0)}/${T.dailyLimit} — обе охоты ждут 00:00 (UTC+10), продолжаю остальные задачи`);return true;}
+  if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0} + рядом с РБ ${r.dailyQuota.raid||0}, ранее по серверу ${r.dailyQuota.server||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)+(r.dailyQuota.raid||0)+(r.dailyQuota.server||0)}/${T.dailyLimit} — обе охоты ждут 00:00 по времени сервера, продолжаю остальные задачи`);return true;}
   if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
   return false;
 }
@@ -354,7 +354,7 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
 async function dailyLimitFishSync() {
   const limit=L2EngineCore.dailyLimit(cfg,'fish');if(!limit)return true;
   const mark=rt.dailyFishMark,fish=rt.fish||{},t0=+fish.t0||0;
-  if(mark && rt.dailyQuota?.day===L2EngineCore.dailyDay() && (t0<mark.t0 || t0===mark.t0 && (+fish.caught||0)<=mark.caught))return true;
+  if(mark && rt.dailyQuota?.day===L2EngineCore.dailyDay(Date.now(),rt) && (t0<mark.t0 || t0===mark.t0 && (+fish.caught||0)<=mark.caught))return true;
   const before=L2EngineCore.dailyCount(rt,'fish');
   const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0;
   const valid=()=>on&&tabOwner&&rt.char===char&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&L2EngineCore.dailyLimit(cfg,'fish')===limit;
@@ -370,11 +370,11 @@ async function dailyLimitFishSync() {
 
 // 20.8: новое число только на новые сутки/серию, а не на каждую проверку цикла.
 async function syncLimitRanges() {
-  const raw=L2EngineCore.rawTaskConfig(cfg),ranges=raw.limitRanges||{},day=L2EngineCore.dailyDay();
-  const needed=Object.entries(ranges).some(([key,b])=>{
+  const raw=L2EngineCore.rawTaskConfig(cfg),ranges=raw.limitRanges||{},day=L2EngineCore.dailyDay(Date.now(),rt);
+  const needed=!!rt.dailyQuota && (rt.dailyQuota.basis!=='server' || rt.dailyQuota.day!==day) || Object.entries(ranges).some(([key,b])=>{
     if(!b || !Number.isSafeInteger(b.min) || !Number.isSafeInteger(b.max) || b.min<1 || b.max<b.min)return true;
     const old=rt.limitRolls?.[key],task={autoKillLimit:'auto',catKillLimit:'cat'}[key],enabled=task && (Array.isArray(raw.autoTasks)?raw.autoTasks.includes(task):raw[task==='auto'?'zoneAuto':'catMode']);
-    return !old || old.min!==b.min || old.max!==b.max || old.value!==raw[key] || key.startsWith('daily') && old.day!==day || enabled && rt.farmQuota?.[task]?.done;
+    return !old || old.min!==b.min || old.max!==b.max || old.value!==raw[key] || key.startsWith('daily') && (old.day!==day || old.basis!=='server') || enabled && rt.farmQuota?.[task]?.done;
   });
   if(!needed)return true;
   const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0,signature=JSON.stringify(ranges);
@@ -383,7 +383,7 @@ async function syncLimitRanges() {
     if(!await rtCommit()||!valid())return false;
     const r=await ipc({cmd:'statePatch',patch:{},resolveLimitRanges:true,rangeKick:kick,epoch,expectedChar:char,src:TAB_ID});
     if(!r?.ok||!valid()){if(valid())setStatus('Лимиты: '+(r?.reason||'жду подтверждение записи'));return false;}
-    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.farmQuota?{farmQuota:r.farmQuota}:{})};
+    cfg=mergeCfg(r.cfg);rt={...rt,limitRolls:r.limitRolls,...(r.dailyQuota?{dailyQuota:r.dailyQuota}:{}),...(r.farmQuota?{farmQuota:r.farmQuota}:{})};
     if(r.dropped?.length)rec('S','лимиты',`отброшены устаревшие/неверные диапазоны: ${r.dropped.join(', ')} — остаются фиксированные значения`);   // 20.12
     return true;
   } catch(e){if(valid())setStatus('Лимиты: жду сохранение выбранного диапазона');return false;}
@@ -400,6 +400,37 @@ function limitSyncBlock(ok, now = Date.now()) {
   limitSync.nextT = now + 30000;
   if (!limitSync.said) { limitSync.said = true; rec('S', 'лимиты', `диапазоны лимитов не синхронизируются ${Math.round((now - limitSync.since) / 1000)} с — продолжаю с прежними значениями лимитов, повторю позже`); }
   return false;
+}
+
+// 19.10: на каждом явном Старте и после полуночи — свежая проверка сервера, независимо от галки дейликов.
+let dailyStartRetry=0,dailyStartRetryKey='';
+async function dailyServerSync(afterBattle=false) {
+  // Уже начатый бой/улов заканчиваем до сверки: их итог не должен посчитаться дважды.
+  if(isBattle()&&!afterBattle || rt.fishCastActive || rt.fishCastPending || rt.actionPayments?.pending?.kind==='fishing' || isFishing()&&fishState())return true;
+  const day=L2EngineCore.dailyDay(Date.now(),rt),start=rt.dailyStart||0;
+  if(rt.dailyServerCheck?.day===day && rt.dailyServerCheck.char===(rt.char||'') && rt.dailyServerCheck.start===start)return true;
+  const retryKey=JSON.stringify([rt.char,start,day]);if(retryKey!==dailyStartRetryKey){dailyStartRetryKey=retryKey;dailyStartRetry=0;}
+  const limited=L2EngineCore.dailyLimit(cfg,'fish')||L2EngineCore.dailyLimit(cfg,'auto');
+  if(Date.now()<dailyStartRetry){if(limited)setStatus('Лимиты дня: жду повторной проверки сервера');return !limited;}
+  const char=rt.char||'',epoch=leaseEpoch,kick=rt.manualKickAt||0,generation=automationGeneration;
+  const active=()=>on&&tabOwner&&rt.char===char&&(!heroNick()||heroNick()===char)&&leaseEpoch===epoch&&(rt.manualKickAt||0)===kick&&(rt.dailyStart||0)===start&&automationGeneration===generation;
+  try {
+    if(!await rtCommit()||!active())return false;
+    setStatus('Проверяю серверное время и лимиты дня');
+    const time=await gameGet('/game/time'),raw=time?.ok?await time.json():null,clockAt=Date.now(),clock=L2EngineCore.serverClockNote(raw,clockAt);
+    if(!active())return false;
+    if(!clock)throw Error('не получено серверное время');
+    const r=await gameGet('/game/daily-quests'),daily=r?.ok?await r.json():null;
+    if(!active())return false;
+    if(!await rtCommit()||!active())return false;
+    const saved=await ipc({cmd:'statePatch',patch:{},dailyServer:{clock:raw,clockAt,daily,kick,start},expectedChar:char,epoch,src:TAB_ID});
+    if(!active())return false;
+    if(!saved?.ok)throw Error(saved?.reason||'не удалось сохранить проверку');
+    rt={...rt,dailyQuota:saved.dailyQuota,daily:saved.daily,dailyServerCheck:saved.dailyServerCheck,dailyFishMark:saved.dailyFishMark,serverClock:saved.serverClock};
+    dailyStartRetry=0;
+    rec('B','лимиты дня',`Сервер: ${L2EngineCore.dailyCount(rt,'auto')} мобов, ${L2EngineCore.dailyCount(rt,'fish')} рыб за ${saved.dailyServerCheck.day}; лимиты проверены до начала новых действий`);
+    return true;
+  }catch(e){if(active()){dailyStartRetry=Date.now()+15000;setStatus('Лимиты дня: '+String(e?.message||e)+'; повтор через15с');}return !limited;}
 }
 
 // ---------- персонаж (шапка есть на всех страницах) ----------
@@ -1405,7 +1436,7 @@ async function toMap(...args) { return L2V7Modules.navigation.toMap(...args); }
 // выход из боя через нижнее меню «Окрестности» — прерывает бой (так выходят из боя с РБ)
 async function toOutskirts(...args) { return L2V7Modules.navigation.toOutskirts(...args); }
 
-async function nextFight(...args) { return L2V7Modules.mobfarm.nextFight(...args); }
+async function nextFight(...args) { if(!await dailyServerSync(true))return; return L2V7Modules.mobfarm.nextFight(...args); }
 
 // ---------- карта ----------
 const tags = r => (r.quest ? ' [квест]' : '') + (r.champ ? ' [чемп]' : '');
@@ -2880,7 +2911,8 @@ async function loopGate() {
   if (antibotState() === 'check' && await antibotGuard()) { await sleep(200); return true; }   // v5.5.6: проверка активности — ждём человека
   // 20.12 (аудит core-a/C1, farm/Q-4): отказ синхронизации диапазонов лимитов больше не держит весь цикл: пишем причину в журнал
   // один раз и продолжаем с прежними фиксированными значениями лимитов (повтор синхронизации — раз в 30 с)
-  if(Object.keys(cfg.limitRanges||{}).length && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);return true;}
+  if(typeof dailyServerSync==='function' && !await dailyServerSync()){if(await loopUrgent())return true;await sleep(500);return true;}
+  if((Object.keys(cfg.limitRanges||{}).length || rt.dailyQuota) && limitSyncDue() && limitSyncBlock(await syncLimitRanges())){await sleep(500);return true;}
   L2V7Modules.actions?.enterFrame();
   // До сервисов/рейда: ACK не воскрешает, HP > 0 при pvp_defeat_pending не разрешает продолжение.
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
@@ -4720,6 +4752,12 @@ addEventListener('message', e => {
   if (path === '/game/tvt/action') try { L2V7Modules.tvt.tvtActNote(d.req, d.res && !d.res.error ? d.res : null); } catch (er) {}   // 20.11: энергия заряда и тип банки по ответу арены
   if (path === '/game/tvt/action' && d.res?.targetDead) L2V7Modules.tvt.tvtDeadNote(d.res.targetCharacterId || TVTC?.selectedTarget?.characterId);
   if (path === '/game/tvt/shop/catalog' && tabOwner && Array.isArray(d.res?.categories)) try { L2V7Modules.tvtshop.shopNote(d.res); } catch (er) {}
+  if(path==='/game/time' && tabOwner && d.status>=200 && d.status<300 && !d.error) {
+    const clock=L2EngineCore.serverClockNote(d.res);
+    if(clock && (!rt.serverClock || clock.serverNowMs>rt.serverClock.serverNowMs)) {
+      setRt({serverClock:clock}); // Счётчики переносит фон под общей блокировкой, без перезаписи параллельного улова/боя.
+    }
+  }
   if (path === '/game/daily-quests' && tabOwner && d.res?.tasks) try { L2V7Modules.dailies.dailyNote(d.res); } catch (er) {}   // 10.0: страница «Ежедневные задания»
   if (path === '/game/clan-tasks' && tabOwner && d.res && !d.error) try { L2V7Modules.dailies.clanNote(d.res); } catch (er) {}   // 10.0: страница «Клановые задания»   // 10.0: каталог магазина TvT
   if (path === '/game/tvt/target' && d.res?.error === 'tvt_target_dead') L2V7Modules.tvt.tvtDeadNote(d.req?.targetCharacterId);

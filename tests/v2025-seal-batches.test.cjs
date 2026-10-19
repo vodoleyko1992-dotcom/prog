@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(__dirname+'/../modules/dungeons.js','utf8');
-function fixture({counts={green:2718796,blue:1434738,red:753415},cap=1000000,nativeMax='',mode='normal',change}={}){
+function fixture({counts={green:2718796,blue:1434738,red:753415},cap=100000,nativeMax='',mode='normal',change}={}){
  let net=null,aa=0;const bag={...counts},sent=[],logs=[],rt={char:'Hero',manualKickAt:1,sealEx:{t:Date.now(),manual:true}},loc={pathname:'/ancient-trader.html',href:''};
  const rows=Object.keys(bag).map(st=>{const inp={value:'',getAttribute:()=>nativeMax,dispatchEvent(){if(mode==='clamped'&&+this.value>80)this.value='80'}},btn={disabled:mode==='disabled'},row={dataset:{stone:st},querySelector:q=>q.includes('owned__value')?{textContent:String(bag[st])}:q.includes('__input')?inp:q.includes('__btn')?btn:null};btn.row=row;btn.inp=inp;return row});
  const env={rt,cfg:{},on:true,tabOwner:true,leaseEpoch:1,routeLocation:loc,canAct:()=>true,canRun:()=>true,
@@ -20,10 +20,10 @@ function fixture({counts={green:2718796,blue:1434738,red:753415},cap=1000000,nat
  return {env,rt,bag,sent,logs,loc,get aa(){return aa},step:()=>module.sealStep(),reload:()=>{module=b.L2V7Factories.dungeons(env)},setNet:n=>{net=n}};
 }
 test('журнал21:36: миллионные стеки всех трёх цветов обмениваются партиями без invalid_quantity',async()=>{
- const f=fixture();await f.step();assert.deepEqual(f.sent,[{stone:'green',qty:1000000},{stone:'green',qty:1000000},{stone:'green',qty:718796},{stone:'blue',qty:1000000},{stone:'blue',qty:434738},{stone:'red',qty:753415}]);assert.deepEqual(f.bag,{green:0,blue:0,red:0});assert.equal(f.aa,25432344);assert.equal(f.rt.sealEx,null);assert.match(f.rt.sealLast.why,/2718796 зелёных/);assert.match(f.rt.sealLast.why,/1434738 синих/);assert.match(f.rt.sealLast.why,/753415 красных/);
+ const f=fixture();for(let i=0;i<10&&f.rt.sealEx;i++)await f.step();assert.equal(f.sent.length,51);assert.ok(f.sent.every(x=>x.qty<=100000));assert.deepEqual(f.bag,{green:0,blue:0,red:0});assert.equal(f.aa,25432344);assert.equal(f.rt.sealEx,null);assert.match(f.rt.sealLast.why,/2718796 зелёных/);assert.match(f.rt.sealLast.why,/1434738 синих/);assert.match(f.rt.sealLast.why,/753415 красных/);
 });
 test('более строгий сервер: только явный invalid_quantity уменьшает партию до принятой',async()=>{
- const f=fixture({counts:{green:1100000},cap:300000});for(let i=0;i<5&&f.rt.sealEx;i++)await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[1000000,500000,250000,250000,250000,250000,100000]);assert.equal(f.bag.green,0);assert.equal(f.aa,5500000);
+ const f=fixture({counts:{green:110000},cap:30000});for(let i=0;i<5&&f.rt.sealEx;i++)await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[100000,50000,25000,25000,25000,25000,10000]);assert.equal(f.bag.green,0);assert.equal(f.aa,550000);
 });
 test('предел поля количества учитывается до первого клика',async()=>{
  const f=fixture({counts:{green:250},cap:100,nativeMax:'100'});await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[100,100,50]);assert.equal(f.aa,1250);
@@ -41,7 +41,7 @@ test('размер1 с invalid_quantity завершает маршрут, а н
  const f=fixture({counts:{green:3},mode:'reject-all'});await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[3,1]);assert.match(f.rt.sealLast.why,/не вышло/);
 });
 test('большое число партий отдаёт управление диспетчеру; reload продолжает с сохранённого остатка',async()=>{
- const f=fixture({counts:{green:10000001}});await f.step();assert.equal(f.sent.length,8);assert.equal(f.rt.sealEx.remaining.green,2000001);assert.equal(f.rt.sealEx.exchanged.green,8000000);f.reload();await f.step();assert.equal(f.bag.green,0);assert.equal(f.sent.length,11);assert.equal(f.aa,50000005);assert.match(f.rt.sealLast.why,/10000001 зелёных/);
+ const f=fixture({counts:{green:1000001}});await f.step();assert.equal(f.sent.length,8);assert.equal(f.rt.sealEx.remaining.green,200001);assert.equal(f.rt.sealEx.exchanged.green,800000);f.reload();await f.step();assert.equal(f.bag.green,0);assert.equal(f.sent.length,11);assert.equal(f.aa,5000005);assert.match(f.rt.sealLast.why,/1000001 зелёных/);
 });
 for(const change of [e=>e.on=false,e=>e.tabOwner=false,e=>e.rt.char='Other',e=>e.rt.manualKickAt++,e=>e.leaseEpoch++])test('смена управления перед кликом не обменивает камни',async()=>{
  const f=fixture({change});await f.step();assert.equal(f.sent.length,0);
@@ -53,4 +53,11 @@ test('disabled и отклонённый центральным fire клик н
 
 test('native input нормализует количество: учитываем именно отправленную партию',async()=>{
  const f=fixture({counts:{green:200},mode:'clamped'});await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[80,80,40]);assert.equal(f.aa,1000);
+});
+
+for(const qty of [99999,100000,100001])test('точная граница100000: стек '+qty,async()=>{
+ const f=fixture({counts:{green:qty}});await f.step();assert.deepEqual(f.sent.map(x=>x.qty),qty<=100000?[qty]:[100000,1]);assert.equal(f.aa,qty*5);assert.equal(f.rt.sealEx,null);
+});
+test('сохранённый миллионный предел старой очереди ограничен до100000',async()=>{
+ const f=fixture({counts:{green:200001}});f.rt.sealEx.batchLimit=1000000;await f.step();assert.deepEqual(f.sent.map(x=>x.qty),[100000,100000,1]);assert.equal(f.aa,1000005);
 });

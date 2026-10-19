@@ -4,7 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const root=__dirname+'/../',source=fs.readFileSync(root+'popup.js','utf8');
 let count=0;const test=async(name,run)=>{await run();count++;console.log('PASS '+name)};
 const json=x=>JSON.parse(JSON.stringify(x));
-const now=Date.parse('2026-10-16T15:00:00Z'),st={on:true,heartbeatValid:true};
+const now=Date.parse('2026-10-16T22:00:00Z'),st={on:true,heartbeatValid:true};
 const c={Date,Object,Set,Array,Math,currentMode:()=> 'fish'};vm.createContext(c);vm.runInContext(fs.readFileSync(root+'engine-core.js','utf8'),c);
 vm.runInContext(source.slice(source.indexOf('const AUTO_TASK_LABELS ='),source.indexOf('let autoTaskEditQueue =')),c);
 const cfg={autoTasks:['raid','fish','auto','tvt'],dailyFishLimit:10,dailyKillLimit:100};
@@ -21,7 +21,7 @@ function settings(){
  await test('капча требует игрока, даже когда бот остановлен',()=>{const r=c.workspaceState({abChal:{t:1}},cfg,{on:false},now);assert.equal(r.state,'blocked');assert.match(r.hint,/Пройдите проверку/)});
  await test('неподтверждённая оплата имеет постоянную причину',()=>{const r=c.workspaceState({actionPayments:{pending:{kind:'shop'}}},cfg,st,now);assert.equal(r.state,'blocked');assert.match(r.hint,/Повторная трата запрещена/)});
  await test('heartbeat не объявляет задачу фактически выполняемой',()=>{const r=c.workspaceState({status:'Получаю сумку'},cfg,st,now);assert.equal(r.text,'Получаю сумку');assert.match(r.hint,/Следующая по приоритету: Тур по РБ/)});
- await test('дневная квота показывает ожидание, очередь продолжает автофарм',()=>{const d={autoTasks:['fish','auto'],dailyFishLimit:10},rt={dailyQuota:{day:'2026-10-17',fish:10}};const rows=json(c.taskBoardRows(rt,d,st,now));assert.equal(rows[0].state,'waiting');assert.equal(rows[0].percent,100);assert.match(rows[0].label,/Владивостока/);assert.equal(rows[1].state,'next')});
+ await test('дневная квота показывает ожидание, очередь продолжает автофарм',()=>{const d={autoTasks:['fish','auto'],dailyFishLimit:10},rt={dailyQuota:{day:'2026-10-17',fish:10}};const rows=json(c.taskBoardRows(rt,d,st,now));assert.equal(rows[0].state,'waiting');assert.equal(rows[0].percent,100);assert.match(rows[0].label,/сервера/);assert.equal(rows[1].state,'next')});
  await test('новый день сбрасывает отображение, сохраняя старую память',()=>{const rt={dailyQuota:{day:'2026-10-16',fish:100}};assert.equal(c.taskBoardRows(rt,{autoTasks:['fish'],dailyFishLimit:10},st,now)[0].percent,0);assert.equal(rt.dailyQuota.fish,100)});
  await test('случайная дневная цель не показывает вчерашнее выбранное число',()=>{const r=c.taskBoardRows({limitRolls:{dailyFishLimit:{day:'2026-10-16',value:4}}},{autoTasks:['fish'],dailyFishLimit:4,limitRanges:{dailyFishLimit:{min:3,max:6}}},st,now)[0];assert.equal(r.percent,null);assert.match(r.progress,/выберется/)});
  await test('разовая серия использует только совпавший лимит, завершение честное',()=>{let r=c.taskBoardRows({farmQuota:{auto:{limit:5,got:5,done:true}}},{autoTasks:['auto'],autoKillLimit:10},st,now)[0];assert.equal(r.percent,0);assert.notEqual(r.state,'done');r=c.taskBoardRows({farmQuota:{auto:{limit:10,got:11,done:true}}},{autoTasks:['auto'],autoKillLimit:10},st,now)[0];assert.equal(r.percent,100);assert.equal(r.state,'done')});

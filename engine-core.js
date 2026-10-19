@@ -122,12 +122,34 @@
   const rawTaskConfig = c => taskRaw.get(c) || c;
   const taskList = c => Array.isArray(rawTaskConfig(c)?.autoTasks) ? TASK_KEYS.filter(k => rawTaskConfig(c).autoTasks.includes(k)) : null;
   const taskAllowed = (c, key) => taskList(c) === null || taskList(c).includes(key);
-  // Дневные квоты профиля: календарные сутки Владивостока, независимо от часов браузера.
+  // 19.10: дневные квоты сбрасываются в полночь сервера; /game/time задаёт часы и зону (с учётом DST).
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие!»): один дневной лимит мобов на обе охоты, счётчики auto/cat складываются.
   const dailyKeys = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'};
-  const dailyDay = (now = Date.now()) => new Date(now + 10 * 3600000).toISOString().slice(0,10);
+  const dayFormats = new Map();
+  const serverDay = (now,zone='Europe/Kyiv') => {
+    if(!dayFormats.has(zone))dayFormats.set(zone,new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}));
+    const p=Object.fromEntries(dayFormats.get(zone).formatToParts(now).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;
+  };
+  const serverClockNote = (data,at=Date.now()) => {
+    if(!data || !Number.isSafeInteger(data.serverNowMs) || !Number.isSafeInteger(data.nextDailyResetAt) || data.nextDailyResetAt<=data.serverNowMs || data.nextDailyResetAt-data.serverNowMs>26*3600000 || typeof data.timeZone!=='string')return null;
+    const key=String(data.gameDayKey||'').replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+    try {if(serverDay(data.serverNowMs,data.timeZone)!==key)return null;}catch(_){return null;}
+    return {at,serverNowMs:data.serverNowMs,timeZone:data.timeZone,gameDayKey:key,nextDailyResetAt:data.nextDailyResetAt};
+  };
+  const dailyDay = (now=Date.now(),rt={}) => {
+    const c=rt.serverClock;
+    if(c && Number.isFinite(c.at) && Number.isFinite(c.serverNowMs) && now>=c.at) {
+      const serverNow=c.serverNowMs+(now-c.at);
+      if(serverNow<c.nextDailyResetAt && /^\d{4}-\d{2}-\d{2}$/.test(c.gameDayKey))return c.gameDayKey;
+      try{return serverDay(serverNow,c.timeZone);}catch(_){}
+    }
+    return serverDay(now);
+  };
+  // Однократно переносим старые сутки UTC+10 без выдачи дополнительного дневного бюджета.
+  const dailyCurrent = (row,rt={},now=Date.now()) => !!row && (row.day===dailyDay(now,rt) || row.basis!=='server' && row.day===new Date(now+10*3600000).toISOString().slice(0,10));
+  const dailyQuotaToday = (rt={},now=Date.now()) => ({...(dailyCurrent(rt.dailyQuota,rt,now)?rt.dailyQuota:{fish:0,auto:0,cat:0,raid:0}),day:dailyDay(now,rt),basis:'server'});
   const dailyLimit = (c,k) => { const n = +rawTaskConfig(c)?.[dailyKeys[k]]; return Number.isSafeInteger(n) && n > 0 ? n : 0; };
-  const dailyCount = (rt,k,now = Date.now()) => rt.dailyQuota?.day !== dailyDay(now) ? 0 : k === 'fish' ? Math.max(0,+rt.dailyQuota.fish || 0) : Math.max(0,+rt.dailyQuota.auto || 0) + Math.max(0,+rt.dailyQuota.cat || 0) + Math.max(0,+rt.dailyQuota.raid || 0);
+  const dailyCount = (rt,k,now = Date.now()) => !dailyCurrent(rt.dailyQuota,rt,now) ? 0 : k === 'fish' ? Math.max(0,+rt.dailyQuota.fish || 0) : Math.max(0,+rt.dailyQuota.auto || 0) + Math.max(0,+rt.dailyQuota.cat || 0) + Math.max(0,+rt.dailyQuota.raid || 0) + Math.max(0,+rt.dailyQuota.server || 0);
   const dailyBlocked = (c,rt,k,now = Date.now()) => dailyLimit(c,k) > 0 && dailyCount(rt,k,now) >= dailyLimit(c,k);
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
@@ -286,6 +308,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

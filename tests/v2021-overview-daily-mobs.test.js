@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync(__dirname+'/../popup.js','utf8'),ctx={Date};
+const source=fs.readFileSync(__dirname+'/../popup.js','utf8'),ctx={Date,L2EngineCore:require('../engine-core.js')};
 vm.runInNewContext(source.slice(source.indexOf('function dailyMobBoardRow('),source.indexOf('function renderWorkspace(')),ctx);
 const now=Date.parse('2026-10-19T03:00:00Z'),day='2026-10-19',cfg={dailyKillLimit:8000};
 test('дневная сводка суммирует автофарм, катакомбы и соседей РБ, исключая рыбу и общую статистику',()=>{
@@ -12,8 +12,8 @@ test('ровно достигнутый и превышенный лимит н�
   const row=ctx.dailyMobBoardRow({dailyQuota:{day,raid:got}},cfg,now);assert.equal(row.label,'Лимит достигнут');assert.equal(row.percent,100);assert.match(row.progress,/осталось 0$/);
  }
 });
-test('полночь Владивостока обнуляет только отображение вчерашнего счётчика',()=>{
- const rt={dailyQuota:{day:'2026-10-18',auto:8000}},before=JSON.stringify(rt),edge=Date.parse('2026-10-18T14:00:00Z');
+test('полночь сервера обнуляет только отображение вчерашнего счётчика',()=>{
+ const rt={dailyQuota:{day:'2026-10-18',auto:8000}},before=JSON.stringify(rt),edge=Date.parse('2026-10-18T21:00:00Z');
  assert.match(ctx.dailyMobBoardRow(rt,cfg,edge-1).progress,/Сегодня: 8000/);
  assert.match(ctx.dailyMobBoardRow(rt,cfg,edge).progress,/Сегодня: 0 \/ 8000/);assert.equal(JSON.stringify(rt),before);
 });
