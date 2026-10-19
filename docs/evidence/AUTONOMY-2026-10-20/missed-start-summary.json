@@ -7,7 +7,7 @@
       "script": "v2026-autonomy-daily-browser.cjs",
       "exit": 0,
       "seconds": 26.46,
-      "log": "/workspace/work/audit-missed-start-v2026-autonomy-daily-browser.cjs.log",
+      "log": "missed-start.log",
       "sha_before": {
         "content.js": "ca46d7c885918dcea808b970c8eaf2ab23440dac0c7f2d348b04ae3e10d93d6c",
         "background.js": "ecbba328aafa7b0c0de306096552b2e1ccb1781133734ff18b1fa77c3373b3d1",
