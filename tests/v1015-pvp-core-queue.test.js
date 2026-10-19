@@ -8,7 +8,8 @@ function setup(opt={}){
  let now=1000000;const clicks=[],requests=[],session=opt.session||new Map(),storage=opt.storage||{rt:{char:'Warlock'},on:true,lock:{k:'tab1',epoch:'epoch1',t:now},cfg:{}};
  const clock={now:()=>now};
  const bg={console:{warn(){}},Date:clock,URL,Number,MAX_PATCH_KEYS:400,LOCK_TTL:90000,lockQueue:Promise.resolve(),chrome:{storage:{local:{get:async keys=>{const r={};for(const k of keys)r[k]=clone(storage[k]??null);return r},set:async p=>{if(opt.beforeDiskWrite)await opt.beforeDiskWrite(p);if(opt.failWrite?.())throw Error('disk unavailable');Object.assign(storage,clone(p))}}}}};
- vm.createContext(bg);vm.runInContext(cut(background,'function serializeLock(fn)', 'async function lockCommand(')+cut(background,'async function statePatch(', '// Popup writes')+cut(background,'function pvpSeedPatch(', 'async function menuPatch('),bg);
+ // 20.23: statePatch исполняется вместе с новой условной отменой РБ-сессии.
+ vm.createContext(bg);vm.runInContext(cut(background,'function serializeLock(fn)', 'async function lockCommand(')+cut(background,'function retireRaidSessionPatch(', '// Popup writes')+cut(background,'function pvpSeedPatch(', 'async function menuPatch('),bg);
  const nodes={};const ctx={console:{warn(){}},Date:clock,Math,URLSearchParams,Object,JSON,Number,String,Array,Promise,AbortController,setTimeout,clearTimeout,
  location:{pathname:'/map.html',search:''},sessionStorage:{getItem:k=>session.get(k)||null,setItem:(k,v)=>session.set(k,v),removeItem:k=>session.delete(k)},
  document:{prerendering:false,querySelectorAll:()=>[]},window:{},CSS:{escape:x=>x},on:true,tabOwner:true,leaseEpoch:'epoch1',tabIdle:false,rt:clone(storage.rt),cfg:{autoRevive:true},RT_BULKY:[],rtSizeT:now,rtBigWarnT:0,TAG:'test',invBusy:false,running:true,

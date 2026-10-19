@@ -30,11 +30,16 @@ test('run-all: падение не останавливает прогон, ит
   fs.writeFileSync(path.join(dir,'b-ok.test.js'),'console.log("ok b")');
   fs.writeFileSync(path.join(dir,'c-ok.test.cjs'),'console.log("ok c")');
   // ORDER копии ссылается на файлы, которых в dir нет, — они попадут в MISSING; проверяем только новые файлы
-  const r=spawnSync(process.execPath,[path.join(dir,'run-all.cjs')],{encoding:'utf8'});
+  // stdout в pipe асинхронный: при заполнении очереди spawnSync задерживает заголовки родителя,
+  // а вложенные процессы уже печатают в унаследованный fd. Общий файл сохраняет порядок записей.
+  const output=path.join(dir,'stdout.log'),fd=fs.openSync(output,'w');let r;
+  try{r=spawnSync(process.execPath,[path.join(dir,'run-all.cjs')],{encoding:'utf8',stdio:['ignore',fd,'pipe']});}
+  finally{fs.closeSync(fd);}
+  const stdout=fs.readFileSync(output,'utf8');
   assert.equal(r.status,1);
-  assert.match(r.stdout,/== a-fail\.test\.js ==[\s\S]*== b-ok\.test\.js ==[\s\S]*ok b[\s\S]*== c-ok\.test\.cjs ==[\s\S]*ok c/);
-  assert.match(r.stdout,/ИТОГ: 2 PASS \/ \d+ FAIL/);
-  assert.match(r.stdout,/a-fail\.test\.js \(код 3\)/);
+  assert.match(stdout,/== a-fail\.test\.js ==[\s\S]*== b-ok\.test\.js ==[\s\S]*ok b[\s\S]*== c-ok\.test\.cjs ==[\s\S]*ok c/);
+  assert.match(stdout,/ИТОГ: 2 PASS \/ \d+ FAIL/);
+  assert.match(stdout,/a-fail\.test\.js \(код 3\)/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 

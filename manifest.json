@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.22",
-  "description": "L2wap Bot 20.22 — дневные мобы рядом с рыбалкой в Обзоре",
+  "version": "20.23",
+  "description": "L2wap Bot 20.23 — Маммон, навыки и учёт поражений",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.22"
+  "version_name": "20.23"
 }
