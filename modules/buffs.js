@@ -237,11 +237,12 @@ function vipPreferred() {
 function vipSession() {
   if(!vipNoFa())return null;
   const set=vipPreferred(),v=env.rt.vipBuff,p=env.rt.vipApplied,H=hudBuffs(),levels=hudLevels(),now=Date.now();
-  const ready=!!(set && p?.char===env.rt.char && p.actor===v.actor && p.set===set && p.slot===v.slot && p.prof===v.prof
+  const ready=!!(set && p?.bundleChecked===true && p?.char===env.rt.char && p.actor===v.actor && p.set===set && p.slot===v.slot && p.prof===v.prof
     && p.skills?.length && H && p.skills.every(x=>H[x.skillId]>now+60000 && levels[x.skillId]>=x.level));
   return {set,ready,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
 }
 const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
+  && Object.entries(s).every(([k,v]) => !/^fee/i.test(k) || ['feeAdena','feeCoinOfLuck','feeHintUk','feeHintRu','feeHintEn'].includes(k) || v === 0 || v === '0')
   && s.skills.every(x => Number.isSafeInteger(x.skillId) && x.skillId > 0 && Number.isSafeInteger(x.level) && x.level > 0);
 const vipEffects = (ch, q, existing=false) => ch?.name === env.rt.char && ch.id === q.actor && Number.isSafeInteger(ch.revision) && (existing ? ch.revision >= q.revision : ch.revision > q.revision)
   && Array.isArray(ch.activeBuffs) && q.skills.every(x => ch.activeBuffs.some(b => b.skillId === x.skillId && b.level >= x.level
@@ -251,10 +252,18 @@ async function vipTownStep(st, active, done) {
   const current = () => active() && env.rt.tbuff?.t === st.t;
   const finish = async (ch, q, existing=false) => {
     if (!current() || !vipEffects(ch, q, existing)) return false;
-    const levels = Object.fromEntries(q.skills.map(x => [x.skillId, x.level]));
-    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, actor:ch.id, set:q.set, slot:ch.classSlots?.activeSlot??null, prof:ch.l2Profession||'', skills:q.skills, ids: q.skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [q.set]: q.skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [q.set]: levels } });
+    const skills = q.bundleSkills || q.skills, set = q.baseSet || q.set;
+    // 20.10, дополнительный VIP-бафф: подтверждение первого набора ещё не разрешает вход в РБ.
+    // Следующий набор получает новый каталог/ревизию; неизвестный прежний запрос не повторяется.
+    if (!vipEffects(ch, {...q, skills}, true)) {
+      await env.setRt({ tbuff: { ...st, set, vipFree: true, vipRequest: null } });
+      if (current()) env.setStatus('VIP: набор подтверждён — проверяю дополнительный сильный бафф');
+      return true;
+    }
+    const levels = Object.fromEntries(skills.map(x => [x.skillId, x.level]));
+    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, actor:ch.id, set, slot:ch.classSlots?.activeSlot??null, prof:ch.l2Profession||'', bundleChecked:q.bundleChecked===true, skills, ids: skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [set]: skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
     if (!current()) return true;
-    env.rec('B', 'бафф', `VIP: полный ${q.set === 'mage' ? 'бафф мага' : 'бафф воина'} подтверждён — 0 адены, 0 Coin of Luck`);
+    env.rec('B', 'бафф', `VIP: полный ${set === 'mage' ? 'бафф мага' : 'бафф воина'}${q.greaterFree?' и дополнительный сильный бафф':''} подтверждён — 0 адены, 0 Coin of Luck`);
     await done('VIP-бафф готов — FA не трачу, возвращаюсь');
     return true;
   };
@@ -275,10 +284,15 @@ async function vipTownStep(st, active, done) {
   if (!eligible || env.cfg.vipBuffAuto === false || (env.cfg.townBuffSet || 'basic') !== 'basic') {
     if (current()) await env.setRt({ tbuff: { ...st, set: 'basic', vipFree: false } }); return;
   }
-  const set = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '', row = catalog?.sets?.find(x => x.id === set);
-  if (!set || !vipPriceZero(row)) { await env.setRt({ tbOk: false }); return done('VIP: полный набор не подтверждён бесплатным — не применяю'); }
+  const baseSet = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '', baseRow = catalog?.sets?.find(x => x.id === baseSet);
+  if (!baseSet || !vipPriceZero(baseRow)) { await env.setRt({ tbOk: false }); return done('VIP: полный набор не подтверждён бесплатным — не применяю'); }
+  const greater = catalog.sets.find(x => x.id === 'greater'), greaterFree = vipPriceZero(greater);
+  const rows = [baseRow, ...(greaterFree ? [greater] : [])], union = new Map();
+  for (const row of rows) for (const x of row.skills) union.set(x.skillId, Math.max(union.get(x.skillId)||0, x.level));
+  const bundleSkills = [...union].map(([skillId,level]) => ({skillId,level}));
+  const row = rows.find(x => !vipEffects(ch,{actor:ch.id,revision:ch.revision,skills:x.skills},true)) || baseRow, set = row.id;
   const levels = Object.fromEntries(row.skills.map(x => [x.skillId, x.level]));
-  const q = { phase: 'prepared', set, actor: ch.id, revision: ch.revision, skills: row.skills.map(x => ({ skillId: x.skillId, level: x.level })) };
+  const q = { phase: 'prepared', set, baseSet, bundleChecked:true, greaterFree, bundleSkills, actor: ch.id, revision: ch.revision, skills: row.skills.map(x => ({ skillId: x.skillId, level: x.level })) };
   if(await finish(ch,q,true))return;
   if (row.skills.some(x => ch.activeBuffs?.some(b => b.skillId === x.skillId && b.level > x.level && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 30 * 60000))) return done('VIP: набор понизил бы действующие баффы — пропускаю');
   const saved = await env.setRt({ tbuff: { ...st, set, vipRequest: q }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
