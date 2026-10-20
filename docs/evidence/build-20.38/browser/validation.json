@@ -1,0 +1,200 @@
+{
+  "checkedAtUTC": "2026-10-20T09:50:18.335193+00:00",
+  "browserVersion": "Google Chrome for Testing 156.0.8078.4",
+  "archiveSHA256": "2460eb3c298d21f87711909aa2c943e3e8c709c3cac4acb418720c5149c78042",
+  "archiveBytes": 1452969,
+  "manifestVersion": "20.38",
+  "cfgKeys": 208,
+  "runtimeFiles": 64,
+  "runtimeBeforeAfterSame": true,
+  "runtimeAllMatchSource": true,
+  "archiveCRC": "PASS",
+  "zipload": {
+    "status": "PASS",
+    "pageErrors": 0
+  },
+  "vipIconRegression": {
+    "file": "tests/v2037-vip-icon-browser.cjs",
+    "casesPassed": 7,
+    "pageErrors": 0,
+    "cases": [
+      {
+        "case": "mage default Water",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "fighter default Paagrio",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1414,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1414
+        ]
+      },
+      {
+        "case": "stale base-only receipt",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "preserve active Greater",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 50
+          }
+        ],
+        "catalogCalls": 1,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1413
+        ]
+      },
+      {
+        "case": "explicit Water replaces Magnus",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "Stop during fresh icon quote",
+        "posts": [],
+        "catalogCalls": 1,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html"
+        ],
+        "group": []
+      },
+      {
+        "case": "price increases between icons",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      }
+    ]
+  },
+  "greaterCompatibility": {
+    "file": "tests/v2031-vip-greater-buff-browser.cjs",
+    "casesPassed": 1,
+    "pageErrors": 0,
+    "requests": [
+      "warrior",
+      "greater:1414",
+      "greater:1323"
+    ],
+    "vipExpiryHasNoNewPost": true
+  },
+  "newScenarioPostCount": 10,
+  "gameTraffic": "all HTTPS responses locally mocked in actual MV3 harness",
+  "liveGameOpened": false,
+  "liveWireObserved": false,
+  "contractScope": "Full cached buffer-catalog.json, modeled pickByIcon skillId and mutually exclusive GROUP behavior; no live wire observation claimed.",
+  "testsAddedToExtractedStagingOnly": true,
+  "zipChangedByTests": false,
+  "logsSHA256": {
+    "zipload": "2c17592f84727c553a42fe75418cbfb42f603187a0bdccd89a989f6d4f6c5597",
+    "vip-icons": "1880b9165ffb210577f17a31a2c8e0a752cf49b293e0efe2d2b4dffdd7480383",
+    "vip-greater-legacy": "434375f1313df29f4c8858faee4d62f7ada699fe4d39a7da826b27ccf1f094d1"
+  }
+}

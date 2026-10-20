@@ -1,0 +1,49 @@
+DIAG mage default Water {"posts":[{"set":"greater","expectedRevision":50,"expectedFeeAdena":"0","expectedFeeCoinOfLuck":0,"feeAtRequest":0,"status":400}],"catalogCalls":1,"visits":["/map.html","/town-buffer.html"],"ids":[1040,1036,1045,1048,1062,1059,1085,1204,1389,273,276,1303,365,264,267,268,304,266,1268,4703]} {
+  on: true,
+  running: true,
+  tabOwner: true,
+  status: 'Проверяю серверное время и лимиты дня',
+  tbuff: {
+    epicFa: false,
+    fa: [],
+    rbTour: false,
+    set: 'basic',
+    step: 'town',
+    t: 1792489089799,
+    vipFree: false,
+    vipRequest: null
+  },
+  owner: {
+    id: 'c8f58625-8c8e-4388-abcf-f4ccf9fdd60f',
+    key: 'tbuff',
+    context: '["AuditHero","farm",1792489089219,"auto","","",["farm"]]',
+    stamp: '1792489089799',
+    at: 1792489089987,
+    phase: '["town",0,[],"",0,"","",""]',
+    progressAt: 1792489089987,
+    page: '/town-buffer.html',
+    visits: 1,
+    seen: {
+      '["/town-buffer.html","[\\"town\\",0,[],\\"\\",0,\\"\\",\\"\\",\\"\\"]"]': 1
+    }
+  },
+  vip: {
+    char: 'AuditHero',
+    actor: 'vip-icon-fixture',
+    active: true,
+    until: 1792575490001,
+    set: 'mage',
+    prof: 'human_archmage',
+    slot: 0,
+    t: 1792489090004
+  },
+  applied: null,
+  need: { set: 'mage', fa: [], vipFree: true },
+  session: { set: 'mage', ready: false, until: 0 }
+}
+AssertionError [ERR_ASSERTION]: Greater требует skillId; отправлен неверный запрос: [{"set":"greater","expectedRevision":50,"expectedFeeAdena":"0","expectedFeeCoinOfLuck":0,"feeAtRequest":0,"status":400}]
+
+1 !== 0
+
+    at scenario (/workspace/work/greater-browser-test/tests/v2037-vip-icon-browser.cjs:72:11)
+    at async /workspace/work/greater-browser-test/tests/v2037-vip-icon-browser.cjs:91:108

@@ -47,7 +47,8 @@ test('неизвестный исход без эффектов не повто�
  const f=fixture();f.applied=false;f.lost=true;await f.B.townBuffStep();f.ch.vip.active=false;for(let i=0;i<3;i++)await f.B.townBuffStep();assert.equal(f.posts.length,1);assert.ok(f.env.rt.tbuff.vipRequest);
 });
 test('отказ цены сервером не превращается в согласие на15CoL',async()=>{
- const f=fixture();f.status=409;await f.B.townBuffStep();assert.equal(f.posts.length,1);assert.equal(f.env.rt.tbuff.set,'basic');assert.equal(f.env.rt.tbuff.vipRequest,null);
+ // 20.37: явный отказ завершает попытку с tbOk=false, не переключая её на платный полный набор.
+ const f=fixture();f.status=409;await f.B.townBuffStep();assert.equal(f.posts.length,1);assert.equal(f.env.rt.tbuff,null);assert.equal(f.env.rt.tbOk,false);assert.ok(f.posts.every(x=>x.q.expectedFeeCoinOfLuck===0));
 });
 test('сильный действующий бафф не понижается бесплатным VIP-набором',async()=>{
  const f=fixture();f.ch.activeBuffs=[{skillId:1068,level:4,expiresAtMs:Date.now()+86400000}];await f.B.townBuffStep();assert.equal(f.posts.length,0);

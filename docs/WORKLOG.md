@@ -1,5 +1,11 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 20.10.2026, 19:51 UTC+10 — Codex — [PR #313](https://github.com/vodoleyko1992-dotcom/prog/pull/313): исправление VIP Greater и Chrome20.38
+
+- По повторной жалобе установлен реальный пробел: pickByIcon/data-skill-id vs bulk-request; старые fakebulk-tests давали ложныеPASS. Исправлены exact skillId/однаGROUP+1323, выбор/сохранение текущего Greater, schema2/старые pending иready, partialbase/readiness, отмена staleкласса/выбора и backoff. Исторические неверные выводы HANDOFF/отчёта исправлены, настройки/Firefox20.36 сохранены.
+- 506 Node PASS/0FAIL,36 новых+26 исправленныхlegacy, strictbaseline7PASS/16FAIL и2actualStart дефекта. Syntax49runtime/14changedJS/envcheck31/diff/bash PASS. Chrome20.38 из финальногоZIP:cfg208/0JS,8VIP-сценариев PASS,64SHA before=after. НезависимыйZIPaudit175/175/88refs/sourceSHA PASS. ZIP1452969B, SHA вbuilds/SHA256SUMS-20.38.txt; [доказательства](evidence/build-20.38/validation.json).
+- Живой аккаунт/бои/нативныйGreater wire не использовались; публичныйJS403 без обхода. Каталог/DOM реальные сохранённые, серверный ответ моделируется строго; границы отражены вproof. Публичное скачивание commit9bb1700 побайтно/SHA256 PASS ([доставка](evidence/build-20.38/download.json)); [Chrome20.38](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/9bb1700aa787aba5ba4d9fb2a3529d553786c395/builds/l2wap-bot-v20.38.zip). Далее установка20.38/↻/обновление игры/контрольный лог.
+
 ## 20.10.2026, 18:57 UTC+10 — Codex — [PR #312](https://github.com/vodoleyko1992-dotcom/prog/pull/312): Chrome20.37
 
 - По «Сборка на Хром» упакован Chrome20.37:20.36 + PR#311 (ответ/серверный КД, пересчёт целей/MP, запасной AoE после агро). Игровые функции при выпуске не менялись; manifest/header/README/5assertions и история обновлены. Настройки и базовый профиль сохранены, Firefox20.36 не пересобирался. Lite/PR#306 не включён.

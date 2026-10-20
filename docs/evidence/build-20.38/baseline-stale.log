@@ -1,0 +1,47 @@
+DIAG stale base-only receipt {"posts":[],"catalogCalls":0,"visits":["/map.html"],"ids":[1040,1036,1045,1048,1062,1059,1085,1204,1389,273,276,1303,365,264,267,268,304,266,1268,4703]} {
+  on: true,
+  running: true,
+  tabOwner: true,
+  status: 'Карта: жду список мобов · 24 с',
+  tbuff: null,
+  owner: null,
+  vip: {
+    char: 'AuditHero',
+    actor: 'vip-icon-fixture',
+    active: true,
+    until: 1792575521571,
+    set: 'mage',
+    prof: 'human_archmage',
+    slot: 0,
+    t: 1792489121597
+  },
+  applied: {
+    actor: 'vip-icon-fixture',
+    bundleChecked: true,
+    char: 'AuditHero',
+    ids: [
+      1040, 1036, 1045, 1048, 1062,
+      1059, 1085, 1204, 1389,  273,
+       276, 1303,  365,  264,  267,
+       268,  304,  266, 1268, 4703
+    ],
+    prof: 'human_archmage',
+    set: 'mage',
+    skills: [
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object], [Object],
+      [Object], [Object]
+    ],
+    slot: 0
+  },
+  need: null,
+  session: { set: 'mage', ready: true, until: 1792575520766 }
+}
+Error: timeout false
+    at until (/workspace/work/greater-browser-test/tests/v1014-core-lifecycle-browser.cjs:9:179)
+    at async scenario (/workspace/work/greater-browser-test/tests/v2037-vip-icon-browser.cjs:70:4)
+    at async /workspace/work/greater-browser-test/tests/v2037-vip-icon-browser.cjs:91:108
