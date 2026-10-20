@@ -93,5 +93,6 @@
     "nativeFixtures": "safe selected battle phrases from nine complete server logs; not raw full HTTP response replays",
     "allDpsCoverage": "Existing DOM fallback can overstate side damage; no coverage-contract change in this patch."
   },
-  "next": "Include source fixes in the next separately requested build, then obtain a full combat log after update."
+  "next": "Include source fixes in the next separately requested build, then obtain a full combat log after update.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/316"
 }

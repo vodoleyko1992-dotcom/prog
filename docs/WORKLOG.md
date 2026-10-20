@@ -1,7 +1,7 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
 
-## 20.10.2026, 20:59 UTC+10 — Codex — PR в подготовке: паузы статистики и native-урон
+## 20.10.2026, 20:59 UTC+10 — Codex — [PR #316](https://github.com/vodoleyko1992-dotcom/prog/pull/316): паузы статистики и native-урон
 
 - По повторной жалобе/выгрузкам10:43 разделены версии20.37/20.39. Свежие9боёв: после победы до следующегоstart медиана6,251с. Четыре телеметрическихawait сняты, durable-квоты/платежи/владелец/переход сохранены. Native parser распознаёт фактические строки36/245 и обучает группуWhirlwind; WS не выдаётся заAOE. [Разбор](COMBAT-SPEED-LOG-2026-10-20-1043.md).
 - Storage Node0/5→5/5, native16/16→32/0, полный509 Node-файлов PASS/0FAIL. Syntax7JS/CJS/envcheck31/bash/diff/independentreview PASS. Финальный actualChrome156MV3:3/3PASS,0JS, память1,3МиБ/сохранениепослеreload/квоты/Stop. При модельномstorage150мс ответ→следующийудар767→114мс, победа→nextpage6885→4170мс, записей23→18; реальный прирост не измерен. [Доказательства](evidence/combat-speed-2026-10-20-1043/validation.json).
