@@ -1483,7 +1483,11 @@ function setStatus(s) {
   if (s !== rt.status && shape !== statusShape) { statusShape = shape; recBot(s); RECENT.unshift({ t: Date.now(), s }); RECENT.length = Math.min(RECENT.length, 31); }
   if (s !== rt.status && Date.now() - statusW > 2500) {
     statusW = Date.now();
-    if (!liveStatus(s) || Date.now() - rtStatusW > 60000) { rtStatusW = Date.now(); setRt({ status: s }); }
+    // 20.41 (замер цепочки катакомб, память 1,3 МБ: на каждой новой странице боя первая строка статуса — полная запись памяти в фоне):
+    // меню берёт живой статус из live@Ник, rt.status — запасной показ и экспорт; раз в минуту он идёт отложенным пакетом (до 8 с).
+    // Живой статус не записался (вкладка без замка, предзагрузка) — как раньше, обычной записью.
+    const live = liveStatus(s);
+    if (!live || Date.now() - rtStatusW > 60000) { rtStatusW = Date.now(); (live ? setRtSoon : setRt)({ status: s }); }
     else rt = { ...rt, status: s };
   }
   else rt = { ...rt, status: s };
@@ -2904,6 +2908,11 @@ async function renewResume() {
 setInterval(async () => {
   try {
     if (tabOwner && on) {
+      // 20.41 (ревью battle-write-count, память 1,3 МБ, статистика боя пишется отложенно до 8 с): продление из фоновой вкладки публикует vis:false —
+      // после этого видимая вкладка с фокусом забирает замок, а очередь этой вкладки при потере замка сбрасывается (rtWriter.clear). Раньше
+      // в цепочке «Охотиться дальше» её почти каждый ход досылала лишняя запись слотов классов; теперь перед каждым продлением в фоне
+      // отложенное дописывается (пустая очередь — без записи; продление ждёт запись не дольше 3 с). Видимая вкладка — как прежде.
+      if (!tabVis()) { await L2EngineCore.withTimeout(rtWriter.recover(), 3000).catch(e => quietErr('запись памяти', e)); if (!(tabOwner && on)) return; }
       const r = await ipc({ cmd: 'lockRenew', epoch: leaseEpoch, page: location.pathname, vis: tabVis() }, 9000);   // без ответа фона — исключение, повтор через 5 с (как раньше)
       if (!r?.ok) {
         // 20.13 (ревизия 17.10, шаг 5, core-b/F6): продление не прошло (фон не ответил за 9 с, вкладку в фоне придержали дольше 90 с) —
