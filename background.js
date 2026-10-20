@@ -265,6 +265,18 @@ function retireRaidSessionPatch(patch, rt, cfg, now) {
   }
   return { patch: next, retired: false };
 }
+// 20.35: уменьшение серии по доступным AA — одной записью с её настройкой.
+function reduceLsAttemptsChange(state, edit) {
+  const s=state.rt?.autoLs,c=state.cfg?.autoLs;
+  if(!state.on || !s || !c || !edit || s.id!==edit.id || s.context!==edit.context || s.configSig!==edit.configSig ||
+    s.status!=='running' || !s.hold || s.pending || s.maxAttempts!==edit.from || s.attempts!==edit.attempts ||
+    (state.rt.manualKickAt||0)!==edit.kick || JSON.stringify(c)!==JSON.stringify(edit.expectedConfig))return {ok:false,reason:'ls_series_changed'};
+  const targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[],signature=n=>JSON.stringify([targets,n,typeof c.weaponKey==='string'?c.weaponKey:'']);
+  if(c.maxAttempts!==s.maxAttempts || s.configSig!==signature(s.maxAttempts) || !Number.isSafeInteger(edit.to) ||
+    edit.to<1 || edit.to<=s.attempts || edit.to>=s.maxAttempts || edit.to>10000)return {ok:false,reason:'invalid_ls_limit'};
+  const autoLs={...s,maxAttempts:edit.to,configSig:signature(edit.to),reason:`Лимит снижен по доступным AA: ${s.maxAttempts} → ${edit.to}`};
+  return {ok:true,autoLs,cfg:{...state.cfg,autoLs:{...c,maxAttempts:edit.to}}};
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -286,6 +298,11 @@ async function statePatch(m, sender) {
     // Финальный flush при OFF допустим после TTL, но не после передачи/освобождения lease.
     if (!state.on && m.epoch && (state.lock?.k !== 'tab' + tab || state.lock.epoch !== m.epoch))
       return { ok: false, reason: 'ownership_lost' };
+    if(m.reduceLsAttempts) {
+      const result=reduceLsAttemptsChange(state,m.reduceLsAttempts);if(!result.ok)return result;
+      await chrome.storage.local.set({cfg:result.cfg,rt:{...state.rt,autoLs:result.autoLs,_src:String(m.src||'').slice(0,60)}});
+      return result;
+    }
     if(m.dailyServer) {
       const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
       await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock};
@@ -523,7 +540,7 @@ async function switchCharacter(m, sender) {
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
       Object.assign(nextCfg,{"petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal"}); // Новый герой не наследует разрешение платной задачи.
-      nextCfg.autoLs = { targets: [], maxAttempts: 10 }; // Чужая цель ЛС не переносится новому герою.
+      nextCfg.autoLs = { targets: [], maxAttempts: 10, buyMaterials: true, aaBudget: 2000000, adenaBudget: 2000000, aaReserve: 0 }; // Чужая цель ЛС не переносится новому герою.
       nextCfg.enchantMode = false; // 15.10: новый герой сам выбирает отдельный режим заточки.
       nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)

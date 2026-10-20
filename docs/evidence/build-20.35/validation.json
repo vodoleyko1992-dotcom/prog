@@ -1,0 +1,75 @@
+{
+  "version": "20.35",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/304",
+  "base": "9d2c542085811a19b15b3fd6ee7ef0a6798b93a5",
+  "node": {
+    "passFiles": 498,
+    "failFiles": 0,
+    "newCases": 150,
+    "newCasesByArea": {
+      "core": 59,
+      "ui": 36,
+      "dispatchAndAtomicLimit": 54,
+      "install409": 1
+    }
+  },
+  "syntax": {
+    "runtimeFiles": 49,
+    "changedScripts": 17,
+    "ok": true
+  },
+  "envcheck": {
+    "modules": 31,
+    "ok": true
+  },
+  "archives": {
+    "l2wap-bot-v20.35.zip": {
+      "bytes": 1438036,
+      "sha256": "64a0635b7131cd2d3833376dbe87f5a6f1aa77828cf947d098e410aa3dc1d46f",
+      "files": 64
+    },
+    "l2wap-bot-v20.35-firefox.zip": {
+      "bytes": 1448455,
+      "sha256": "ca37eecbead1b16110d3830d287d092d940e88ab5b274ff8e1471fa45eb0a3f6",
+      "files": 64
+    }
+  },
+  "packageAudit": {
+    "checks": 88,
+    "ok": true
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45,
+    "sameWarningsAs20_34": true
+  },
+  "chromeBrowser": {
+    "status": "running"
+  },
+  "nativeFirefox": {
+    "status": "running"
+  },
+  "liveStudy": {
+    "minimalPairPurchased": true,
+    "installAttempts": 1,
+    "removals": 1,
+    "finalAugmentation": null,
+    "weaponEnchant": 25,
+    "spentAA": 160000,
+    "spentAdena": 100000,
+    "teleportAdena": 0,
+    "combatActions": 0,
+    "credentialsSaved": false
+  },
+  "limits": [
+    "Automated runtime purchase flows are verified against local responses, not on the live account.",
+    "Shop buy APIs expose no atomic expected unit price; fresh quotes and exact post-transaction proof are used.",
+    "Android was not tested; Firefox package is unsigned."
+  ],
+  "configKeys": {
+    "profile": 208,
+    "runtime": 208
+  },
+  "productionRuntimeFrozen": "module SHA256 5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797"
+}

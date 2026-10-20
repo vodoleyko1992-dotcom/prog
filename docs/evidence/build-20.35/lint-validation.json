@@ -1,0 +1,15 @@
+{
+  "checked_utc": "2026-10-20T05:24:20.570006+00:00",
+  "web_ext_version": "10.8.0",
+  "summary": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45
+  },
+  "warning_codes_messages_and_files_match20_34": true,
+  "rules_disabled": false,
+  "network_used": false,
+  "extracted_runtime_files_still_match_final_zip": 64,
+  "runtime_mismatches": [],
+  "ok": true
+}

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.34 — сумка после сабкласса и уровни авто-катакомб =====
+// ===== L2wap Bot v20.35 — закупка Life Stone и Gemstone на серию =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -5971,9 +5971,29 @@ const lifestonePrepareFree = () => location.pathname === '/augmentation.html' &&
   && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
   && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending
   && !['shop','magister','tbuff','invScan','fishSvc','fishService','mmJob','tsJob','storyJob','petBufferTrip','rbGo','zoneGo','dailyFish','dailyRb','revive','actionOwner'].some(k => rt[k]);
+async function reduceLsAttempts(next) {
+  const context=()=>JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname]);
+  const before=rt.autoLs,stamp=context(),id=before?.id,epoch=leaseEpoch,who=rt.char;
+  const valid=()=>on&&tabOwner&&leaseEpoch===epoch&&rt.char===who&&context()===stamp&&rt.autoLs?.id===id&&
+    rt.autoLs.status==='running'&&!rt.autoLs.pending&&next?.id===id&&next.context===stamp&&Number.isSafeInteger(next.maxAttempts)&&
+    next.maxAttempts>rt.autoLs.attempts&&next.maxAttempts<rt.autoLs.maxAttempts;
+  if(!valid()||!await rtCommit()||!valid())return {ok:false};
+  const autoLs={...cfg.autoLs,maxAttempts:next.maxAttempts};
+  OWN_CFG.push({patch:{autoLs},t:Date.now()});if(OWN_CFG.length>20)OWN_CFG.shift();
+  const response=await ipc({cmd:'statePatch',patch:{},src:TAB_ID,epoch,expectedChar:who,reduceLsAttempts:{
+    id,context:stamp,configSig:rt.autoLs.configSig,from:rt.autoLs.maxAttempts,to:next.maxAttempts,attempts:rt.autoLs.attempts,
+    kick:rt.manualKickAt||0,expectedConfig:cfg.autoLs}});
+  const current=rt.autoLs;
+  if(!response?.ok||!on||!tabOwner||leaseEpoch!==epoch||rt.char!==who||context()!==stamp||current?.id!==id||
+    current.status!=='running'||current.pending||current.attempts!==before.attempts||current.weapon!==before.weapon||
+    ![before.configSig,response.autoLs?.configSig].includes(current.configSig)||
+    ![before.maxAttempts,response.autoLs?.maxAttempts].includes(current.maxAttempts))return {ok:false};
+  cfg=withRb({...L2EngineCore.rawTaskConfig(cfg),autoLs:response.cfg.autoLs});
+  rt={...rt,autoLs:response.autoLs};return {ok:true};
+}
 L2V7Modules.lifestone = L2V7Factories.lifestone({
   get cfg(){return cfg}, get rt(){return rt}, get on(){return on}, get tabOwner(){return tabOwner},
-  get setRt(){return setRt}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
+  get setRt(){return setRt}, get reduceAttempts(){return reduceLsAttempts}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
   get canPrepare(){return lifestonePrepareFree},
   get canRun(){return () => lifestonePrepareFree() && L2V7Modules.actions.canAct() && !tvtSoon()},
   get context(){return () => JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname])}
