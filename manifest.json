@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.40",
-  "description": "L2wap Bot 20.40 — бой без ожидания статистики и разбор урона Whirlwind",
+  "version": "20.41",
+  "description": "L2wap Bot 20.41 — быстрый бой без ожидания записей памяти, катакомбы без перезагрузок",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.40"
+  "version_name": "20.41"
 }
