@@ -137,7 +137,7 @@ function missingKillNames(wanted,credited) {
 }
 const resultKills = lost => (lost?0:1)+serverKillNames(new URLSearchParams(location.search).get('spawnId')||'').length;
 async function battleDeath(ctx,countExtras) {
-  await countExtras(); if(!killOwnerValid(ctx))return;
+  await countExtras(true); if(!killOwnerValid(ctx))return;
   const ticket=await ctx.quotaTicket();if(!killOwnerValid(ctx))return;
   await env.finishFarmQuota?.(ticket,true,ctx.killed.length);
   if(killOwnerValid(ctx))return env.onDeath();
@@ -269,6 +269,9 @@ function cdLeft(b) {
   return Math.max(isNaN(v) ? 0 : v, potionSlot(b) ? 0 : localCdLeft(b), (env.slotAction(b) ? env.combatCooldown.skillWait(env.slotAction(b), (env.cdSpawn || env.battleSpawn)()) / 1000 : 0)) || 99;
 }
 
+// 20.41 (лог 20.10 21:09, память 1,3 МБ: каждая запись ≈0,5 с и подвисание страницы): память откатов и замеры боя пишутся отложенно
+// (content.setRtSoon — пакетом раз в 8 с, с любой обычной записью или при уходе со страницы); память вкладки обновлена сразу
+const rtSoon = p => (env.setRtSoon || env.setRt)(p)?.catch?.(() => {});
 async function rememberCd(b, how) {             // how: 'used' — нажат и ушёл в КД; 'cd' — игра сказала «на перезарядке»; 'lost' — клик потерян
   // 17.10: отказ/потеря после нажатия «по серверному дедлайну» при застывшем рисунке — после двух рисунку слота снова верим (cdBusy)
   if ((how === 'cd' || how === 'lost') && frozenSince.has(b)) frozenLost.set(b, (frozenLost.get(b) || 0) + 1);
@@ -280,7 +283,7 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
       const u = { ...(env.rt.cdUntil || {}) }, skills = { ...(env.rt.skills || {}) };
       delete u[k];
       if (skills[k]) skills[k] = { ...skills[k], cdFloor: 0, cd: 0, cdNet: 0 };
-      await env.setRt({ cdUntil: u, skills });
+      rtSoon({ cdUntil: u, skills });
     }
     return;
   }
@@ -291,19 +294,19 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
   // v5.5.1: для атаки «нижнюю границу» не учим — нажатие атаки в use[] не пишется, и граница считалась от старого нажатия
   // (росла до 4–6 с: с луком бот стрелял раз в ~5 с). Темп атаки теперь берётся из ответа сервера (ATK_NET)
   if (env.slotKind(b) === 'атака') {
-    if (env.rt.skills?.[k]?.cdFloor) await env.setRt({ skills: { ...env.rt.skills, [k]: { ...env.rt.skills[k], cdFloor: 0 } } });
-    if (how === 'cd' && !(env.ATK_NET && Date.now() - env.ATK_NET.t < 1500)) { until[k] = now + 300; await env.setRt({ cdUntil: until }); }   // сервер молчит — короткая пауза
+    if (env.rt.skills?.[k]?.cdFloor) rtSoon({ skills: { ...env.rt.skills, [k]: { ...env.rt.skills[k], cdFloor: 0 } } });
+    if (how === 'cd' && !(env.ATK_NET && Date.now() - env.ATK_NET.t < 1500)) { until[k] = now + 300; rtSoon({ cdUntil: until }); }   // сервер молчит — короткая пауза
     return;
   }
   if (how === 'cd' && use[k] && now - use[k] < 30000 && (now - use[k]) / 1000 + 0.3 > floor) {
     floor = Math.min(30, (now - use[k]) / 1000 + 0.3);
-    await env.setRt({ skills: { ...(env.rt.skills || {}), [k]: { ...(env.rt.skills?.[k] || {}), cdFloor: +floor.toFixed(1), cdFloorAt: now } } });
+    rtSoon({ skills: { ...(env.rt.skills || {}), [k]: { ...(env.rt.skills?.[k] || {}), cdFloor: +floor.toFixed(1), cdFloorAt: now } } });
   }
   if (how === 'used' && env.slotKind(b) === 'атака' && !floor) return;   // атака: готовность видна по кнопке, память — только если игра «спорила»
   const meas = (env.rt.skills?.[k]?.cd || 0) * 1000, net = (env.rt.skills?.[k]?.cdNet || 0) * 1000;
   // v5.5.5: откат, который назвал сервер (cdNet), важнее справочника Interlude (Spoil: справочник 10 с, в игре отката нет)
   const learned = net || Math.max(meas, floor * 1000); // observed game only; Interlude reuse is not authoritative
-  if (env.SK_NET[k] && now - env.SK_NET[k] < 2500) { if (how === 'used') { use[k] = now; env.setRt({ cdUse: use }); } return; }   // сервер только что сказал точное время
+  if (env.SK_NET[k] && now - env.SK_NET[k] < 2500) { if (how === 'used') { use[k] = now; rtSoon({ cdUse: use }); } return; }   // сервер только что сказал точное время
   if (how === 'used') {
     overlayReadySeen.delete(b);
     const tv = uiReady(b) ? NaN : env.uiTimer(b);
@@ -315,7 +318,7 @@ async function rememberCd(b, how) {             // how: 'used' — нажат и
     until[k] = Math.max(fromLast, now + Math.max(250, learned ? learned * 0.2 : 500));
   }
   for (const x in until) if (until[x] < now - 60000) delete until[x];
-  env.setRt({ cdUse: use, cdUntil: until });   // 8.0: без ожидания записи (≈0,1 с на каждом ходе; память вкладки обновлена сразу)
+  rtSoon({ cdUse: use, cdUntil: until });   // 8.0: без ожидания записи (≈0,1 с на каждом ходе; память вкладки обновлена сразу); 20.41: отложенно
 }
 
 // Mage/summoner profile is opt-in until profession metadata is available.
@@ -1330,7 +1333,22 @@ async function battle() {
   // Сравниваем сами строки, а не число маркеров: хвост журнала ограничен,
   // и новый сосед мог заменить старого при неизменном количестве строк.
   let extraLog = ctx.logStart || [];
-  const countExtras = async () => {
+  // 20.41 (лог 20.10 21:09, Krokian Padisha Sobekk 74: удар → удар 2,7–3,0 с при разрешённых сервером ≈1,2 с): учёт соседей РБ
+  // (19.10) перед КАЖДЫМ ударом ждал всю очередь записи и ещё один полный statePatch — при памяти 1,3 МБ это +0,6–1,5 с на ход.
+  // Теперь в бою запись идёт в фоне строго по одной: новый ответ сервера во время записи — ещё один проход после неё (курсор
+  // журнала тот же, повтор безопасен). Итог боя (победа/смерть) ждёт фоновую запись и делает последнюю — как раньше.
+  let raidCountP = null, raidCountAgain = false;
+  const raidCount = (sp, begin = false) => {
+    if (raidCountP) { raidCountAgain = true; return raidCountP; }
+    return raidCountP = (async () => {
+      try {
+        raidCountAgain = !begin;
+        if (begin) await env.noteRaidMobKills(sp, true);   // начало: снимок курсора берётся синхронно при вызове (RAID_MOB_BASE)
+        while (raidCountAgain && killOwnerValid(ctx)) { raidCountAgain = false; await env.noteRaidMobKills(sp); }
+      } catch (e) { /* следующий круг или итог боя повторят запись с тем же курсором */ } finally { raidCountP = null; }
+    })();
+  };
+  const countExtras = async (final = false) => {
     if(!killOwnerValid(ctx))return;
     const current = env.logLines(), added = freshBattleLines(extraLog, current);
     extraLog = current;
@@ -1343,7 +1361,7 @@ async function battle() {
     const server=serverKillNames(ctx.spawnId||spawnId,t0),wanted=[...ctx.domKilled,...missingKillNames(server,ctx.domKilled)];
     const missing=missingKillNames(wanted,ctx.killed);
     const raidCounted=!!ctx.rb&&typeof env.noteRaidMobKills==='function';
-    if(raidCounted)await env.noteRaidMobKills(ctx.spawnId||spawnId);
+    if(raidCounted){const sp=ctx.spawnId||spawnId;if(!final)void raidCount(sp);else{while(raidCountP)await raidCountP;await env.noteRaidMobKills(sp);}}
     if(!killOwnerValid(ctx))return;
     if(!fresh.length&&!missing.length)return;
     // Лог20.10 10:43UTC: не ставим дисковую запись статистики между подтверждённой победой и её обработкой.
@@ -1360,14 +1378,17 @@ async function battle() {
   // 20.12 (ревизия 17.10, аудит H1/F1): отметка лимита мобов больше не держит героя в уже открытом бою. Есть свежий счётчик из ответа
   // игры — запись идёт параллельно с ударами; нет — ждём только свой снимок (без него билет «неточно»). Неудача — бой продолжается.
   if (!ctx.rb && env.beginFarmQuota) {
-    ctx.farmQuotaP = Promise.resolve().then(() => env.beginFarmQuota(ctx.spawnId || spawnId)).then(t => t || null, () => null);
-    if (!env.farmQuotaCached?.()) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; }
+    // 20.41 (лог 20.10, память 1,3 МБ): без свежего счётчика ждём только снимок точки начала, не запись 'begin' (итог ждёт её в quotaTicket)
+    let baseR = null; const baseP = new Promise(r => { baseR = r; });
+    ctx.farmQuotaP = Promise.resolve().then(() => env.beginFarmQuota(ctx.spawnId || spawnId, baseR)).then(t => t || null, () => null);
+    if (!env.farmQuotaCached?.()) await Promise.race([baseP, ctx.farmQuotaP]);
   }
   ctx.quotaTicket = async () => { if (ctx.farmQuotaP) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; } return ctx.farmQuota || null; };
   if(ctx.rb&&env.noteRaidMobKills){
     if(env.raidMobReady&&!env.raidMobReady(ctx.spawnId||spawnId))await env.waitFor(()=>env.raidMobReady(ctx.spawnId||spawnId),1000,20);
     if(!killOwnerValid(ctx))return;
-    await env.noteRaidMobKills(ctx.spawnId||spawnId,true);if(!killOwnerValid(ctx))return;
+    // 20.41: запись начала тоже не держит первый удар (лог 21:09: ответ start → первый удар 4,9 с); курсор взят сразу при вызове.
+    void raidCount(ctx.spawnId||spawnId,true);
   }
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   const actionContext=()=>JSON.stringify([env.evidenceOwner?.(),env.battleExitContext?.(),env.rt.char||'',env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.manualKickAt||0,env.routeLocation?.href||env.routeLocation?.search||'']);
@@ -1488,7 +1509,7 @@ async function battle() {
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
     if (turnSamples.length >= 10) { const avg = turnSamples.reduce((x, y) => x + y, 0) / turnSamples.length; turnSamples.length = 0;
-      env.setRt({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }
+      rtSoon({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }   // 20.41: отложенно
     if (ans) done = ans;
     if(done==='nomp'&&env.skKey(b))mpUntil.set(env.skKey(b),{until:Date.now()+NOMP_MS,server:true,mp:env.meMp?.()?.cur});
     if (env.combatCooldown.recentlyGlobalRejected(firedAt)) done = 'cd';
@@ -1786,7 +1807,7 @@ async function battle() {
     if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) ctx.limitTranceUnverified = true;
     // Не предполагаем25% после клика: следующий круг читает настоящее HP. Неизвестный исход не повторяем сразу.
     ctx.block[key] = result === 'unavail' ? Infinity : Date.now() + (result === true ? (plan.kind === 'trance' ? 30000 : 5000) : result === 'nomp' ? NOMP_MS : 3000);
-    if (result === true && plan.kind === 'buff') await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [plan.bn]: Date.now() } });
+    if (result === true && plan.kind === 'buff') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [plan.bn]: Date.now() } })?.catch?.(() => {});   // 20.41: без ожидания записи (память вкладки обновлена сразу)
     return AGAIN;
   }
 
@@ -1816,7 +1837,7 @@ async function battle() {
         const r = await act(low[1], `Аварийный бафф (HP ${me.pct | 0}%): ${low[1].title}`);
         if (r === 'lock') ctx.block['buff:' + low[0]] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
         if (r === 'nomp') ctx.block['buff:' + low[0]] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота, не повтор сразу
-        if (r === true) await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [low[0]]: Date.now() } });
+        if (r === true) env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [low[0]]: Date.now() } })?.catch?.(() => {});   // 20.41: без ожидания записи
         return AGAIN;
       }
     }
@@ -2008,13 +2029,13 @@ async function battle() {
         const sums = [...document.querySelectorAll(env.SLOT)].filter(b => env.slotKind(b) === 'скилл' && servitorSummonSlot(b));   // 9.2: Feline Queen — бафф, не кот; 20.13 (C4): и не кубик
         const sb = (env.cfg.petSummon && slotsBy(env.cfg.petSummon)[0]) || petPick(sums, P.key);   // 8.0.3: не «первый на панели»
         if (sb && ready(sb) && (!mp || mp.cur >= (env.skillMp(env.cleanTitle(sb.title)) || 0) + 10 && affordable(sb, mp, 10))) {   // 20.12: и цена act()
-          await env.setRt({ petSummonT: Date.now() });
+          env.setRt({ petSummonT: Date.now() })?.catch?.(() => {});   // 20.41: таймеры призыва — без ожидания записи (память вкладки обновлена сразу)
           env.rec('B', 'питомец', `кота нет (умер или не призван) — призываю первым действием: ${env.cleanTitle(sb.title)}`);
           const sr = await act(sb, `Призыв слуги: ${env.cleanTitle(sb.title)}`);
-          if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } await env.setRt({ petBornT: Date.now() }); }   // 7.1.31
+          if (sr === true) { if (ctx.pet) { ctx.pet.summons++; ctx.pet.key = petKeyOf(env.cleanTitle(sb.title).replace(/^summon\s+/i, '')); } env.setRt({ petBornT: Date.now() })?.catch?.(() => {}); }   // 7.1.31
           // 7.2.2 (лог 10.10 23:18:59): клик призыва не ушёл в игру (сразу после включения зарядов) — раньше следующая попытка через 15 с,
           // и игрок призвал кота сам. Теперь повтор через ≈2 с; 8.0.3 (лог 11.10 10:00:45, 10:33:01): потерян в окне занятости игры ('lock') — сразу
-          else await env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 });   // 20.12: 'nomp' — повтор через ≈2 с, как непрошедший клик
+          else env.setRt({ petSummonT: sr === 'lock' ? 0 : Date.now() - 13000 })?.catch?.(() => {});   // 20.12: 'nomp' — повтор через ≈2 с, как непрошедший клик
           return AGAIN;
         }
       }
@@ -2051,7 +2072,7 @@ async function battle() {
           if (pr === 'lock') { ctx.block['petheal'] = 0; return AGAIN; }
           if (pr === 'nomp') { ctx.block['petheal'] = Date.now() + NOMP_MS; return AGAIN; }   // 20.12: не хватило MP — пауза, не повтор сразу
           if (pr !== true) return AGAIN; // Непринятое действие не даёт измерения лечения или запрета перепризыва.
-          if (useSummon) { if (ctx.pet) ctx.pet.resummons++; await env.setRt({ petBornT: Date.now() }); }
+          if (useSummon) { if (ctx.pet) ctx.pet.resummons++; env.setRt({ petBornT: Date.now() })?.catch?.(() => {}); }
           const P2 = await env.waitFor(() => { const q = env.petState?.(); return q && q.t > t0 && q.has && q.key === key0 && q.maxHp > 0 ? q : null; }, 2500, 150);
           if (!P2) ctx.block['petheal'] = Date.now() + 20000;
           if (P2) {
@@ -2134,7 +2155,7 @@ async function battle() {
         const r = await act(pb.b, `Бафф кота: ${env.cleanTitle(pb.b.title)}`, true);
         if (r === 'lock') ctx.block['petbuff:' + pb.n] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу
         if (r === 'nomp') ctx.block['petbuff:' + pb.n] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота
-        if (r === true) { await env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } }); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
+        if (r === true) { env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } })?.catch?.(() => {}); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
         else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
         return AGAIN;
       }
@@ -2157,7 +2178,7 @@ async function battle() {
       if (pcIL?.hp && (me?.pct ?? 100) > pcIL.hp) continue;
       if (!affordable(b, mp, 0)) continue;           // 20.12 (ревизия 17.10): MP ниже цены — act() откажет; не крутим цикл на этом баффе
       if (env.buffActive(bn, b)) {
-        if (!env.rt.buffSeen?.[bn]) await env.setRt({ buffSeen: { ...(env.rt.buffSeen || {}), [bn]: true } });
+        if (!env.rt.buffSeen?.[bn]) env.setRt({ buffSeen: { ...(env.rt.buffSeen || {}), [bn]: true } })?.catch?.(() => {});
         continue;
       }
       const since = Date.now() - (env.rt.buffAt?.[bn] || 0);
@@ -2169,12 +2190,12 @@ async function battle() {
       // 9.2.3 (игрок 11.10: «на кастетах уже не играем, функция писалась ради Тирана с копьём»): смена оружия ради баффа убрана —
       // Тиран носит кастеты основным, остальным она только тратила клики в бою. Бафф, недоступный с этим оружием, — до конца боя не жмём
       let r = await act(b, `Бафф: ${b.title}`); buffed = true;
-      if (r === true) { await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } }); ctx.block['buff:' + bn] = 0; }
+      if (r === true) { env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } })?.catch?.(() => {}); ctx.block['buff:' + bn] = 0; }   // 20.41: без ожидания записи
       if (r === 'unavail') {                      // с этим оружием бафф не работает — до конца боя не трогаем
         ctx.block['buff:' + bn] = Infinity;
         env.rec('B', 'недоступно', `бафф «${b.title}»: ${noticeText() || 'недоступен'}`);
         console.info(env.TAG, `бафф ${b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
-      } else if (r === 'cd') await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: 0 } });   // на КД — повторим, когда откатится (память КД)
+      } else if (r === 'cd') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: 0 } })?.catch?.(() => {});   // на КД — повторим, когда откатится (память КД)
       else if (r === 'lock') ctx.block['buff:' + bn] = 0;          // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
       else if (r === 'nomp') ctx.block['buff:' + bn] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота
       else if (!r) ctx.block['buff:' + bn] = Date.now() + 5000;   // не ушёл в КД — повтор не раньше чем через 5 с
@@ -2205,14 +2226,14 @@ async function battle() {
         if (/імунітет|иммунитет|immune/i.test(added)) {
           const kind = ctx.rb ? 'rb' : ctx.champ ? 'champ' : 'mob';
           if (ctx.debuffed) delete ctx.debuffed[dbf.k];
-          if (!env.rt.debuffImmune?.[kind]) { await env.setRt({ debuffImmune: { ...(env.rt.debuffImmune || {}), [kind]: Date.now() } }); env.rec('B', 'дебафф', `${kind === 'rb' ? 'рейд-боссы' : kind === 'champ' ? 'чемпионы' : 'мобы'} невосприимчивы к дебаффам («${(added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim()}») — больше не вешаю`); }
+          if (!env.rt.debuffImmune?.[kind]) { rtSoon({ debuffImmune: { ...(env.rt.debuffImmune || {}), [kind]: Date.now() } }); env.rec('B', 'дебафф', `${kind === 'rb' ? 'рейд-боссы' : kind === 'champ' ? 'чемпионы' : 'мобы'} невосприимчивы к дебаффам («${(added.match(/[^⏎]*(?:імунітет|иммунитет|immune)[^⏎]*/i) || [''])[0].trim()}») — больше не вешаю`); }
           return AGAIN;
         }
         if (ok || fail) {
           const S = { ...(env.rt.debuffStat || {}) }, s = { ok: 0, fail: 0, ...(S[dbf.k] || {}) };
           if (ok) s.ok++; else s.fail++;
           if (s.ok + s.fail >= 6 && s.ok / (s.ok + s.fail) < 0.3) { s.offUntil = Date.now() + 3600000; s.ok = 0; s.fail = 0; env.rec('B', 'дебафф', `${dbf.n}: почти не проходит — выключаю на час`); }
-          S[dbf.k] = s; await env.setRt({ debuffStat: S });
+          S[dbf.k] = s; rtSoon({ debuffStat: S });   // 20.41: статистика дебаффа — отложенно, удар не ждёт записи 1,3 МБ
         }
         return AGAIN;
       }
@@ -2236,13 +2257,14 @@ async function battle() {
       if ((a.probe || a.damageProbe) && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));
       if (a.charge || a.cost) {                     // энергия силы: по новым строкам лога, иначе свой учёт
-        await env.sleep(150);
+        // 20.41: строка энергии обычно уже пришла с ответом хода — не ждём лишние 150 мс; без строки — те же 150 мс
+        if (done !== 'noforce') await env.waitFor(() => env.newLines(logArr, env.logLines()).some(l => env.FORCE_CNT.test(l) || env.FORCE_SPEND.test(l)), 150, 30);
         if (done === 'noforce') { await env.forceSet(0, 0, `«${env.cleanTitle(a.b.title)}»: не хватает энергии`); ctx.block[a.key] = Date.now() + 1500; return AGAIN; }
         const added = env.newLines(logArr, env.logLines());
         const got = await env.forceFromLog(added);
         const skName = env.cleanTitle(a.b.title), skLine = added.find(l => l.toLowerCase().startsWith(env.logName(skName) + ':'));
         if (!got && a.cost && skLine && !env.FORCE_SPEND.test(skLine)) {   // удар прошёл без «−N енергії» — скилл энергию не тратит
-          await env.setRt({ forceFree: { ...(env.rt.forceFree || {}), [skName.toLowerCase()]: true } });
+          env.setRt({ forceFree: { ...(env.rt.forceFree || {}), [skName.toLowerCase()]: true } })?.catch?.(() => {});
           env.rec('B', 'энергия', `«${skName}» не тратит энергию силы — теперь это обычный силовой удар`);
         } else if (!got && done === true) {
           if (a.charge) {                             // игра молчит на «Концентрации» — заряды уже на максимуме
@@ -2255,7 +2277,7 @@ async function battle() {
       if (done === 'noforce' && !a.charge && !a.cost && !a.mpCost && !mageCombat()) {
         const k = env.cleanTitle(a.b.title).toLowerCase(), need = env.ilNum(env.ilOf(k)?.charges) || env.FORCE_KNOWN[env.logName(k)] || 1;
         const ff = { ...(env.rt.forceFree || {}) }; delete ff[k];
-        await env.setRt({ forceFree: ff, forceNeed: { ...(env.rt.forceNeed || {}), [k]: need } });
+        env.setRt({ forceFree: ff, forceNeed: { ...(env.rt.forceNeed || {}), [k]: need } })?.catch?.(() => {});
         env.rec('B', 'энергия', `«${env.cleanTitle(a.b.title)}» требует ${need} эн. — перевожу в удары за энергию`);
         ctx.block[a.key] = Date.now() + 15000; return AGAIN;
       }
@@ -2368,7 +2390,9 @@ async function battleOpen() {
   // панель: инвентаризация (в журнал — при изменении) и автоназначение ролей
   const inv = env.panelInventory(), invSig = inv.map(x => x.idx + ':' + x.name).join('|');
   if (invSig !== env.rt.panelSig) {
-    await env.setRt({ panel: inv, panelSig: invSig });
+    // 20.41 (лог 20.10 21:09: от ответа battle/start до первого удара 4,9 с — подряд ждались 7 полных записей памяти 1,3 МБ):
+    // опись панели — сведения для меню; память вкладки обновлена сразу, запись идёт в фоне и не держит первый удар
+    env.setRt({ panel: inv, panelSig: invSig })?.catch?.(() => {});
     env.rec('S', 'панель', inv.map(x => `#${x.idx} ${x.name} (${x.kind}${x.qty != null ? ' ×' + x.qty : ''})`).join(' · '));
   }
   await env.autoRoles();
@@ -2440,7 +2464,8 @@ async function battleOpen() {
                 name: mobName(), killOwner:killOwner(),
                 questKill: (same && !!t.quest) || env.isQuestName(nm), goalsAt: env.goalLines() };
   if (summonCombat()) { ctx.pet = { hits: 0, hitDmg: 0, crits: 0, misses: 0, dmg: 0, acts: 0, deaths: 0, summons: 0, resummons: 0, key: '', name: '', alive: false }; ctx.petLines = ctx.logStart; }   // замер слуги, включая пантеру воина
-  if (nm && mob0 && !(same && t.champ))
+  // 20.41: минимальное HP вида пишем только при новом минимуме (раньше — полная запись памяти на каждом бою, ≈0,5 с при 1,3 МБ)
+  if (nm && mob0 && !(same && t.champ) && !(known <= mob0.max))
     env.setRt({ hpMin: { ...(env.rt.hpMin || {}), [nm]: Math.min(known || Infinity, mob0.max) } });
   if (ctx.champ) console.log(env.TAG, 'чемпион:', title, hpChamp ? `(по HP ${mob0.max} vs ${known})` : '');
   // 10.0.5 (FA с чемпионов): цвет чемпиона и уровень моба — для учёта выпавших Fast Aden (loot.faNote)
@@ -2517,9 +2542,10 @@ async function battleOpen() {
     }
     ctx.rb.persist = !!(dbR.persist || wounded) && !(regen > 0 && mob0.cur >= mob0.max);   // ранен при входе ⇒ HP хранится
     ctx.rb.regen = regen;
-    if (ctx.rb.persist || regen != null) await env.rbNote(ctx.rb.id, { persist: ctx.rb.persist, regen: regen ?? dbR.regen });
+    // 20.41: статистика РБ (сохраняется ли HP, число заходов) — без ожидания записи перед первым ударом; rbNote меняет память вкладки сразу
+    if (ctx.rb.persist || regen != null) env.rbNote(ctx.rb.id, { persist: ctx.rb.persist, regen: regen ?? dbR.regen })?.catch?.(() => {});
     if (ctx.rb.persist) env.rec('B', 'РБ', `${nm}: HP сохранилось с прошлого захода ${mob0.cur}/${mob0.max}${regen != null ? ` · восстановление ${regen} HP/с` : ''}`);
-    await env.rbNote(ctx.rb.id, { name: ctx.name, lvl: rbLvl, tries: (env.rt.rbDb?.[ctx.rb.id]?.tries || 0) + 1 });
+    env.rbNote(ctx.rb.id, { name: ctx.name, lvl: rbLvl, tries: (env.rt.rbDb?.[ctx.rb.id]?.tries || 0) + 1 })?.catch?.(() => {});
     const prev = env.rt.rb?.[ctx.rb.id];
     if (prev?.hpAfter != null) {
       const regen = mob0.cur - prev.hpAfter;                // сколько РБ отхилился, пока мы отдыхали
@@ -2549,9 +2575,10 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
   }
+  if (!ctx.rb) try { env.catPrefetch?.(); } catch (e) {}   // 20.41: список подземелья для следующего моба — параллельно с учётом победы
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
-  await countExtras();
+  await countExtras(true);
   if(!killOwnerValid(ctx))return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   env.trySnap(300);                                   // экран победы (в т.ч. с квестовой строкой) — новый снимок, если структура новая
@@ -2602,7 +2629,9 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
   }
   if (ctx.rb) {
     const rb = { ...(env.rt.rb || {}) }; delete rb[ctx.rb.id];
-    await env.setRt({ rb, rbCur: null, sinceRb: 999, rbKills: (env.rt.rbKills || 0) + 1, ...(env.rt.rbList?.[ctx.rb.id] ? { rbList: { ...env.rt.rbList, [ctx.rb.id]: { ...env.rt.rbList[ctx.rb.id], alive: false } } } : {}) });   // v5.6: убит — в списке «мёртв»
+    // 20.41 (лог 20.10 21:09: после победы над РБ 4 записи памяти 1,3 МБ подряд, 2–4 с): одна точка ожидания — вердикт rbNote ниже
+    // (очередь FIFO дописывает и эту запись, и учёт серии/раны); память вкладки обновлена сразу
+    env.setRt({ rb, rbCur: null, sinceRb: 999, rbKills: (env.rt.rbKills || 0) + 1, ...(env.rt.rbList?.[ctx.rb.id] ? { rbList: { ...env.rt.rbList, [ctx.rb.id]: { ...env.rt.rbList[ctx.rb.id], alive: false } } } : {}) });   // v5.6: убит — в списке «мёртв»
     env.rbTimerKill?.(ctx.rb.id, ctx.name, ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || 0)?.catch?.(() => {});   // 10.0.2: таймеры боссов — время смерти точно
     // Actual per-boss rewards and fight duration: economic RB tour uses these
     // in preference to guesses from other bosses. Do not overwrite with zero
@@ -2624,8 +2653,8 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
       note: `убит за ${env.fmtT(fightS)}` });
     console.log(env.TAG, `РБ ${ctx.name} убит за ${env.fmtT((Date.now() - t0) / 1000)}`);
     // 10.0.6 (игрок 13.10: «кнопочка — что выпало в результате серии РБ»): награда и вещи этого РБ — в «📦 Серию РБ» (rt.rbRun)
-    try { await env.rbRun?.kill({ id: ctx.rb.id, name: ctx.name, lvl: ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || ctx.lvl || 0, adena, exp, sp: pick(/([\d\s.,]+)\s*SP/i), lines: env.newLines(ctx.logStart || [], env.logLines()), epic: !!env.epicById?.(ctx.rb.id), fightS }); } catch (e) { console.warn(env.TAG, 'серия РБ', e); }
-    if (env.rt.rbWound?.[ctx.rb.id]) { const W = { ...env.rt.rbWound }; delete W[ctx.rb.id]; await env.setRt({ rbWound: W }); }   // 7.2.2
+    try { env.rbRun?.kill({ id: ctx.rb.id, name: ctx.name, lvl: ctx.rb.lvl || env.rt.rbList?.[ctx.rb.id]?.lvl || ctx.lvl || 0, adena, exp, sp: pick(/([\d\s.,]+)\s*SP/i), lines: env.newLines(ctx.logStart || [], env.logLines()), epic: !!env.epicById?.(ctx.rb.id), fightS })?.catch?.(e => console.warn(env.TAG, 'серия РБ', e)); } catch (e) { console.warn(env.TAG, 'серия РБ', e); }
+    if (env.rt.rbWound?.[ctx.rb.id]) { const W = { ...env.rt.rbWound }; delete W[ctx.rb.id]; env.setRt({ rbWound: W }); }   // 7.2.2; 20.41: без ожидания
   }
   if (env.cfg.campaign) {
     // условия главы: строки «★ Квест · <цель> N / M · осталось K» в логе боя → модель целей
@@ -2634,8 +2663,8 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     const goalNew = env.goalLines() > ctx.goalsAt;   // новая строка «Цель выполнена!» (старые в логе не считаются)
     const allDone = env.campActive() && !env.campOpen().length;
     if (r.closed.length) env.setStatus(`✓ Цель главы выполнена: ${r.closed.join(', ')}`);
-    await env.setRt({ sinceCamp: (env.rt.sinceCamp || 0) + 1,
-                  campaignDue: env.rt.campaignDue || allDone || goalNew || r.verify || (env.rt.sinceCamp || 0) + 1 >= env.cfg.campaignEvery });
+    env.setRt({ sinceCamp: (env.rt.sinceCamp || 0) + 1,
+                  campaignDue: env.rt.campaignDue || allDone || goalNew || r.verify || (env.rt.sinceCamp || 0) + 1 >= env.cfg.campaignEvery })?.catch?.(() => {});   // 20.41: следующий шаг читает память вкладки
     if (allDone) env.setStatus('Все цели главы выполнены — иду сдавать главу');
   }
   // квест: прогресс с экрана победы («26 / 35 · осталось 9»), частота дропа, прогноз боёв

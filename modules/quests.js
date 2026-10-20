@@ -301,7 +301,7 @@ async function trackQuest(name, isQuestKill) {
   const drop = ok ? (prev.done == null ? 1 : Math.max(q.done > prev.done ? q.done - prev.done : 1, 0)) : 0;
   quests[name] = { ...prev, kills: prev.kills + (isQuestKill ? 1 : 0), drops: prev.drops + drop, t: Date.now(),
                    ...(ok ? { done: q.done, total: q.total, left: q.left, label: q.label || prev.label || '' } : {}) };
-  await env.setRt({ quests });
+  env.setRt({ quests })?.catch?.(() => {});   // 20.41: после победы не ждём запись памяти 1,3 МБ; память вкладки обновлена сразу
   const Q = quests[name];
   if (Q.total) console.log(env.TAG, `квест ${name}: ${Q.done}/${Q.total}, осталось ${Q.left}, дроп ${Q.drops}/${Q.kills}, ≈${questFights(Q)} боёв`);
   const tracked = Object.values(quests).filter(x => x.total);

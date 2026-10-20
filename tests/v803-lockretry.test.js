@@ -30,7 +30,7 @@ const combat = fs.readFileSync(path.join(__dirname, '..', 'modules/combat.js'), 
     [/const r = await act\(hpPot, [^\n]+\);\n\s+if \(r === 'lock'\) \{ lastHpPot = prevPot; ctx\.rb\?\.potT\?\.pop\(\); \}/, 'potion band'],
     [/if \(hs\) \{ ctx\.block\['heal:' \+ hs\.title\] = Date\.now\(\) \+ 2500; const r = await act\(hs, [^;]+\); if \(r === 'lock'\) ctx\.block\['heal:' \+ hs\.title\] = 0; (?:continue|return AGAIN); \}/, 'heal skill'],
     [/const prevMp = lastMpPot; lastMpPot = Date\.now\(\); if \(await act\(mpPot, [^\n]+?\) === 'lock'\) lastMpPot = prevMp; (?:continue|return AGAIN);/, 'MP potion'],
-    [/else await env\.setRt\(\{ petSummonT: sr === 'lock' \? 0 : Date\.now\(\) - 13000 \}\);/, 'pet summon'],
+    [/else env\.setRt\(\{ petSummonT: sr === 'lock' \? 0 : Date\.now\(\) - 13000 \}\)\?\.catch\?\.\(\(\) => \{\}\);/, 'pet summon'],   // 20.41: без ожидания записи
     [/if \(pr === 'lock'\) \{ ctx\.block\['petheal'\] = 0; (?:continue|return AGAIN); \}/, 'pet heal / resummon'],
     [/if \(r === 'lock'\) ctx\.block\['buff:' \+ low\[0\]\] = 0;/, 'emergency buff'],
     [/if \(r === 'lock'\) ctx\.block\['petbuff:' \+ pb\.n\] = 0;/, 'pet buff'],

@@ -52,7 +52,7 @@ function make({ rt = {}, cfg = {} } = {}) {
     const factory = content.match(new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{([\\s\\S]*?)\\}\\);`))?.[1] || '';
     assert.match(factory, /get rbRun\(\) \{ return L2V7Modules\.rbrun; \}/, m + ': геттер rbRun');
   }
-  assert.ok(/await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, name: ctx\.name, [^\n]*adena, exp, sp: pick\([^\n]*lines: env\.newLines\(ctx\.logStart \|\| \[\], env\.logLines\(\)\), epic: !!env\.epicById\?\.\(ctx\.rb\.id\), fightS \}\)/.test(combat), 'combat: /await env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, nam');
+  assert.ok(/ env\.rbRun\?\.kill\(\{ id: ctx\.rb\.id, name: ctx\.name, [^\n]*adena, exp, sp: pick\([^\n]*lines: env\.newLines\(ctx\.logStart \|\| \[\], env\.logLines\(\)\), epic: !!env\.epicById\?\.\(ctx\.rb\.id\), fightS \}\)\?\.catch\?\./.test(combat), 'combat: env.rbRun?.kill({ id: ctx.rb.id, … })?.catch?. (20.41: без ожидания записи)');
   assert.ok(combat.indexOf('env.rbRun?.kill(') > combat.indexOf("rbKills: (env.rt.rbKills || 0) + 1"), 'учёт после записи убийства РБ');
   // 19.10: survival сохраняет rbRun вместе с историей смерти; реальное поведение проверяет v2022-death-once.test.js.
   // 10.0.14: вход вынесен в enterDetour, который продолжает сохранённый дейлик после Stop; режим и старт серии остаются связаны.

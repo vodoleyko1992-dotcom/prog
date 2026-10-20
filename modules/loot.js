@@ -94,6 +94,8 @@ async function spoilStep(ctx, act, mob) {
   const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}`);
   if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую${/crush/i.test(x.bn) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
   if (r === 'cd' || r === 'noforce') { ctx.spoilTry--; return true; }
+  // 20.41: клик не ушёл ('lock' — окно занятости игры, 'nomp' — нет MP) — строки итога спойла не будет, 1,5 с не ждём
+  if (r === 'lock' || r === 'nomp') { ctx.spoilTry--; if (r === 'nomp') ctx.block['spoil:' + x.bn] = Date.now() + 1500; return true; }   // 1,5 с — как NOMP_MS боя
   await env.waitFor(() => env.mobSpoiled() || env.newLines(before, env.logLines()).some(l => env.SPOIL_OK.test(l) || env.SPOIL_FAIL.test(l)), 1500, 80);
   const fresh = env.newLines(before, env.logLines()), ok = fresh.find(l => env.SPOIL_OK.test(l)), bad = !ok && fresh.find(l => env.SPOIL_FAIL.test(l));
   const S = { ...(env.rt.spoilStat || {}) };

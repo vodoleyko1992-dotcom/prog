@@ -140,13 +140,23 @@ function mobList(id) {
 const mobLink = sid => [...document.querySelectorAll('#dungeon-mob-list a[href*="spawnId="]')].find(a => decodeURIComponent((a.getAttribute('href') || '').match(/spawnId=([^&]+)/)?.[1] || '') === sid) || null;
 // 20.7 (лог17.10 01:02): защита от Cancel не должна открывать карту после каждой победы.
 // Свежий список читаем без перехода; штатная страница выбранного боя сама запускает его.
+// 20.41 (аудит скорости: GET списка подземелья ≈0,6 с после каждой победы, строго после учёта квоты): запрос начинается сразу на экране
+// победы, параллельно с учётом убийств; catNext берёт его, если он для этой же страницы и не старше 8 с, иначе читает заново.
+let viewPre = null;
+const viewGet = id => env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)).then(r => r.ok ? r.json() : null).then(j => j?.dungeon || null, () => null);
+function catPrefetch() {
+  const sid = new URLSearchParams(location.search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
+  if (!id || !/\/battle\.html$/i.test(location.pathname) || env.cfg.chain === false || env.autonomyMode?.() !== 'cat' || typeof env.gameGet !== 'function') return;
+  viewPre = { id, href: location.href, t: Date.now(), p: viewGet(id) };
+}
 async function catNext() {
   const guard = catGuard(), href = location.href, search = location.search;
   const sid = new URLSearchParams(search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
   const active = () => guard() && (!env.autonomyMode || env.autonomyMode() === 'cat') && env.cfg.chain !== false && location.href === href && location.search === search && env.victory?.() === true;
   if (!id || !/\/battle\.html$/i.test(location.pathname) || !active()) return true;
+  const pre = viewPre?.id === id && viewPre.href === href && Date.now() - viewPre.t < 8000 ? viewPre.p : null; viewPre = null;
   let d;
-  try { const r = await env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)); if (r.ok) d = (await r.json())?.dungeon; } catch (_) {}
+  try { d = await (pre || viewGet(id)); } catch (_) {}
   if (!active()) return true;
   if (!d || d.id !== id || !Array.isArray(d.mobs)) return false;
   // Как штатная цепочка: только обычные мобы; чемпионов проверяет отдельный поиск.
@@ -516,6 +526,6 @@ async function sealStep() {
   await finish(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);

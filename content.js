@@ -223,9 +223,14 @@ async function noteRaidMobKills(spawn,begin=false) {
   if(begin){RAID_MOB_BASE.set(key,{seq:s.seq,rev:s.rev,...(s.fullSeq===s.seq?{fullN:s.fullN,fullSeq:s.fullSeq}:{}),...counter});if(RAID_MOB_BASE.size>8)RAID_MOB_BASE.delete(RAID_MOB_BASE.keys().next().value);}
   const old=rt.raidMobMarks?.[key];
   const ended=!!(report.win||report.lose);
-  if(!begin&&old&&old.seq>=s.seq&&(!s.start||old.start===s.start)&&(!old.done||ended)&&(!ended||old.done)&&(!Number.isSafeInteger(s.fullN)||old.absolute>=s.fullN))return true;
+  // 20.41 (лог 20.10 21:09): каждый ответ сервера двигает курсор, и бот писал весь rt (1,3 МБ) на каждый ход РБ, даже без новых
+  // смертей соседей. Курсор без новых смертей не меняет счёт (фон считает смерти после сохранённого seq) — такую запись пропускаем.
+  if(!begin&&old&&(old.seq>=s.seq||!ended&&!old.done&&!s.deaths.some(x=>x>old.seq))&&(!s.start||old.start===s.start)&&(!old.done||ended)&&(!ended||old.done)&&(!Number.isSafeInteger(s.fullN)||old.absolute>=s.fullN))return true;
   try{
-    if(!await rtCommit()||!valid())return true;
+    // 20.41 (лог 20.10 21:09): ждать всю очередь записи нужно, только если в ней ключи, которые фон меняет этой же записью
+    // (иначе старый патч вкладки затёр бы новый счёт). Замеры навыков/статистика в очереди — не повод ждать 0,5–1,5 с.
+    if(['kills','dailyQuota','farmKillMark','raidMobMarks'].some(k=>Object.hasOwn(rtWriter.peek(),k))&&!await rtCommit())return true;
+    if(!valid())return true;
     const r=await ipc({cmd:'statePatch',patch:{},raidMobs:{...snapshot,op:begin?'begin':'count',spawn,prof,slot,kick,sessT0,dailyLimit,ended:!!(report.win||report.lose),base:RAID_MOB_BASE.get(key)},expectedChar:char,epoch,src:TAB_ID});
     if(r?.ok&&valid())rt={...rt,kills:r.kills,raidMobMarks:r.raidMobMarks,...(r.dailyQuota?{dailyQuota:r.dailyQuota}:{}),...(r.farmKillMark?{farmKillMark:r.farmKillMark}:{})};
   }catch(e){/* Следующий круг повторит неподтверждённую запись с тем же курсором. */}
@@ -272,7 +277,7 @@ function farmQuotaPending(spawn) {
   return ['auto','cat'].map(task => ({ task, row: rt.farmQuota?.[task] })).filter(({task,row}) => enabled(task)
     && row?.pending && !row.done && row.pending.spawn === spawn && row.limit === farmQuotaLimit(task) && (farmQuotaLimit(task) || farmDailyLimit(task)));
 }
-async function beginFarmQuota(spawn) {
+async function beginFarmQuota(spawn, onBase = null) {
   if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
   const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
   const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
@@ -287,6 +292,9 @@ async function beginFarmQuota(spawn) {
   try { c = prev ? { mobsKilled: prev.counter, revision: prev.revision } : await farmQuotaSnapshot(char); }
   catch (e) { if (!valid()) return null; setStatus('Лимит мобов: счётчик сервера недоступен — считаю по журналу боя'); return approx(); }
   if (!valid()) return null;
+  // 20.41 (катакомбы: каждый моб — новая страница, свежего счётчика нет): точка начала уже снята — бой может начинать удары,
+  // запись 'begin' (полная память 1,3 МБ, 0,4–1,5 с) идёт параллельно; итог боя ждёт её через quotaTicket, фон пишет по порядку
+  try { onBase?.(); } catch (e) {}
   try {
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision, sessionKills, sessionT0 }, expectedChar: char, epoch, src: TAB_ID });
     if (!valid()) return null;
@@ -296,8 +304,14 @@ async function beginFarmQuota(spawn) {
   } catch (e) { if (!valid()) return null; setStatus('Лимит мобов: начало боя не записано — считаю по журналу боя'); return approx(); }
 }
 // Общий итог подтверждённого и приблизительного учёта: true — бой в этой задаче больше не продолжаем (лимит).
+// 20.41 (лог 20.10 21:09, память 1,3 МБ: ожидание всей очереди записи перед итогом стоило 0,5–1,5 с на моба): итог квоты больше не
+// ждёт очередь вкладки. Фон сам упорядочивает записи (serializeLock, FIFO), а farmQuota/farmKillMark/dailyQuota вкладка через setRt не
+// пишет. Общий ключ один — kills: если в очереди лежит патч победы со старым kills, ставим туда свежий (больший) — он заменит старый
+// в ещё не отправленном пакете и не даст ему понизить счёт фона.
+function farmQuotaKillsRequeue() { if (Object.hasOwn(rtWriter.peek(), 'kills')) setRt({ kills: rt.kills })?.catch?.(() => {}); }
 function farmQuotaApply(T, r) {
   rt = { ...rt, farmQuota: { ...(rt.farmQuota || {}), [T.task]: r.row }, ...(r.farmKillMark ? { farmKillMark: r.farmKillMark } : {}), ...(Number.isSafeInteger(r.kills) ? { kills: Math.max(+rt.kills || 0, r.kills) } : {}) }; cfg = mergeCfg(r.cfg);
+  farmQuotaKillsRequeue();
   if (T.dailyLimit) rt={...rt,dailyQuota:r.dailyQuota};
   if(r.dailyDone){rec('B','дневной лимит',`Мобы за сутки (автофарм ${r.dailyQuota.auto||0} + катакомбы ${r.dailyQuota.cat||0} + рядом с РБ ${r.dailyQuota.raid||0}, ранее по серверу ${r.dailyQuota.server||0}): ${(r.dailyQuota.auto||0)+(r.dailyQuota.cat||0)+(r.dailyQuota.raid||0)+(r.dailyQuota.server||0)}/${T.dailyLimit} — обе охоты ждут 00:00 по времени сервера, продолжаю остальные задачи`);return true;}
   if (r.row.done) { rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: ${r.row.got}/${T.limit} — задача отключена, продолжаю остальные`); return true; }
@@ -310,7 +324,7 @@ async function farmQuotaApprox(T, n, close = false) {
   if (!valid()) return true;
   const name = T.task === 'cat' ? 'Катакомбы' : 'Автофарм';
   try {
-    if (!await rtCommit() || !valid()) return false;
+    if (!valid()) return false;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'approx', task: T.task, limit: T.limit, dailyLimit: T.dailyLimit || 0, kick: T.kick, spawn: T.spawn, n, close, run:T.run, approxId: T.approxId, sessionKills: T.sessionKills, sessionT0: T.sessionT0, beforeCounter: T.beforeCounter, beforeRevision: T.beforeRevision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
     if (!r?.ok || !valid()) return false;
     T.done = true;
@@ -346,7 +360,7 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
   };
   try {
     const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || observed > 0 || lost || s.k > p.counter);
-    const c = await farmQuotaSnapshot(T.char, need); if (!valid() || !await rtCommit()) return true;
+    const c = await farmQuotaSnapshot(T.char, need); if (!valid()) return true;
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
     if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
     delete QUOTA_WAIT[key];
@@ -581,7 +595,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     const b = slotsBy(bn)[0]; if (!b || (ctx.block['tgl:' + bn] || 0) > Date.now()) continue;
     const st = toggleState(bn, b), il = ilOf(b);
     if (il?.autoUse === false) continue; // 20.3: ручной Focus Attack не переключаем даже из старого списка ролей.
-    if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) await setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } });
+    if (st === true && il && activeBuffs().some(x => x.id === il.id) && !rt.toggleSeen?.[bn]) setRt({ toggleSeen: { ...(rt.toggleSeen || {}), [bn]: true } })?.catch?.(() => {});   // 20.41: ход не ждёт записи
     let want = null;
     if (st !== true && mpP >= (st === false && rt.toggleOff?.[bn] ? onP : off + 1) && uiReady(b)) want = true;     // включить
     else if (st === true && mpP < off) want = false;                                                                  // выключить — бережём MP
@@ -594,7 +608,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
     // 20.13 (шаг 7, combat/C3): состояние тоггла пишем только по сработавшему нажатию (true). 'lock' — клик потерян в окне занятости
     // игры: повтор сразу, без записи; false/'cd'/'noforce' — пауза слота 4 с без записи (раньше их засчитывали как переключение)
     if (r === true) {   // у тоггла КД может не быть — act засчитывает нажатие без ухода в КД; дальше сверяемся со строкой баффов
-      await setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } });
+      setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } })?.catch?.(() => {});
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
     } else if (r === 'lock') ctx.block['tgl:' + bn] = 0;
     else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
@@ -657,7 +671,7 @@ function forceNow() {
 const forceMax = () => rt.force?.max || 0;
 async function forceSet(n, max, why) {
   const nf = { n: Math.max(0, n), t: Date.now(), max: max || rt.force?.max || 0, hud: hudForce() };
-  await setRt({ force: nf });
+  setRt({ force: nf })?.catch?.(() => {});   // 20.41 (память 1,3 МБ): энергия сверяется с HUD в начале каждого боя — удар не ждёт записи
   if (why) rec('B', 'энергия', `${why}: ${nf.n}${nf.max ? '/' + nf.max : ''}`);
 }
 // по новым строкам лога после нажатия: точное значение или списание
@@ -1005,7 +1019,7 @@ async function learnCd(key, name, sec, b) {
   const S = [...(p.cdS || []), Math.round(sec * 10) / 10].slice(-7);
   const med = [...S].sort((x, y) => x - y)[S.length >> 1];
   p.cdS = S; p.cd = med;
-  await setRt({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
+  await setRtSoon({ skills: { ...(rt.skills || {}), [key]: { ...p, name } } });
 }
 function observeOwner() { return JSON.stringify([rt.char || '', rt.classCur?.prof || '', rt.classCur?.slot ?? '', rt.classSwT || rt.classCur?.t || 0, typeof leaseEpoch === 'undefined' ? null : leaseEpoch]); }
 function damageSample(p, dmg, known, splash) {
@@ -1105,7 +1119,7 @@ function observeSlot(b, src) {
     p.kind = slotKind(b); p.img = (b.querySelector('img')?.getAttribute('src') || '').split('/').pop();
     p.last = txt.slice(0, 160);
     damageSample(p, dmg, damageKnown, slotKind(b) === 'скилл' && dmg > 0 ? splashDmg(added) : null);
-    await setRt({ skills: { ...(rt.skills || {}), [key]: p } });
+    await setRtSoon({ skills: { ...(rt.skills || {}), [key]: p } });
     rec(src, 'скилл', `«${name}»: урон ${damageKnown ? dmg : 'не измерен'} · MP ${mpd > 0 ? '−' + mpd : mpd < 0 ? '+' + -mpd : 0}`
       + `${hpd > 15 ? ' · HP +' + hpd : ''}${buff ? ' · бафф ' + buff[1] + ' с' : ''}${stun ? ' · стан' : ''}`
       + `${p.cd ? ' · КД ' + p.cd + ' с' : ''}${unav ? ' · ⚠ недоступен' : ''}`, { added: added.slice(0, 8) });
@@ -1317,6 +1331,16 @@ function quietErr(tag, e) {
 // потерю записи — теперь та же строка в журнал (не чаще раза в 10 мин на тег): «запись памяти» / «замок»
 const RT_BULKY = ['forumTp', 'rbForum', 'zoneMobs', 'spawns'];
 let rtBigWarnT = 0, rtSizeT = 0, rtRetryT = null;
+// 20.41 (лог 20.10 21:09: «размер 1328 КБ», каждая запись ≈0,5 с): в строку о размере — самые крупные части памяти, чтобы по журналу
+// было видно, что разрослось (замеры других классов classStash — по классам)
+function rtSizeTop() {
+  try {
+    const kb = v => Math.round(JSON.stringify(v ?? null).length / 1024);
+    const top = Object.keys(rt).map(k => [k, kb(rt[k])]).filter(x => x[1] >= 20).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k} ${n}`).join(', ');
+    const st = rt.classStash && typeof rt.classStash === 'object' ? Object.entries(rt.classStash).map(([c, v]) => `${c} ${kb(v)}`).join(', ') : '';
+    return top ? `; крупные части (КБ): ${top}${st ? `; classStash: ${st}` : ''}` : '';
+  } catch (e) { return ''; }
+}
 const rtWriter = L2EngineCore.createPatchQueue(
   patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }),
   () => !tabIdle && !document.prerendering && (!on || (tabOwner && !!leaseEpoch)),
@@ -1366,12 +1390,20 @@ function setRt(p) {
       // сбросить — строка раз в 30 мин, иначе она вытесняет из журнала (лимит 20 000 событий) полезные события
       if (Date.now() - rtBigWarnT > (cleared.length ? 60000 : 30 * 60000)) {
         rtBigWarnT = Date.now();
-        try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена`); } catch (e) {}
+        try { rec('S', 'состояние', `размер ${Math.round(size / 1024)} КБ — сброшены только временные кэши: ${cleared.join(', ') || 'нет'}; статистика сохранена${rtSizeTop()}`); } catch (e) {}
       }
     }
   }
   if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
   return rtWriter.enqueue(patch);
+}
+// 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
+// каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
+// уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
+function setRtSoon(p, ms = 8000) {
+  rt = { ...rt, ...p };
+  if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
+  return rtWriter.defer(p, ms);
 }
 const RECENT = [];                               // v4.47: последние действия — для индикатора
 // v5.6: статус с бегущим счётчиком («ждёт 37 с», «HP 512/900») — в журнал только когда меняется смысл (цифры не в счёт),
@@ -4699,7 +4731,7 @@ async function weaponEquipNote(req) {
 async function syncShotWeapon() {
   if (!on || !tabOwner || !rt.shotMismatchPending && Date.now() - (rt.shotEquipCheckT || 0) < 600000) return;
   const char = rt.char;
-  await setRt({shotEquipCheckT:Date.now()});
+  setRt({shotEquipCheckT:Date.now()})?.catch?.(() => {});   // 20.41: отметка «проверено» — память вкладки сразу, запись без ожидания
   try {
     const r = await gameGet('/character');
     if (!r?.ok || !on || !tabOwner || rt.char !== char) return;
@@ -5334,7 +5366,7 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get setRtSoon(){return setRtSoon}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
   get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
   get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
@@ -5387,7 +5419,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ()=>L2V7Modules.dungeons?.catPrefetch?.()}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
@@ -5398,7 +5430,7 @@ L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFar
   get CD_RE() { return CD_RE; }, set CD_RE(value) { CD_RE = value; },
   get FORCE_KNOWN() { return FORCE_KNOWN; }, set FORCE_KNOWN(value) { FORCE_KNOWN = value; },
   get FORCE_NEED() { return FORCE_NEED; }, set FORCE_NEED(value) { FORCE_NEED = value; },
-  get FORCE_SPEND() { return FORCE_SPEND; }, set FORCE_SPEND(value) { FORCE_SPEND = value; },
+  get FORCE_CNT() { return FORCE_CNT; }, get FORCE_SPEND() { return FORCE_SPEND; }, set FORCE_SPEND(value) { FORCE_SPEND = value; },
   get SK_NET() { return SK_NET; }, set SK_NET(value) { SK_NET = value; },
   get SLOT() { return SLOT; }, set SLOT(value) { SLOT = value; },
   get TAG() { return TAG; }, set TAG(value) { TAG = value; },
@@ -5931,7 +5963,7 @@ const actName = a => { a = String(a || ''); if (a === 'attack') return 'атак
   // старый селектор не находил ни одного слота, и анализатор боя (dmgOn/killP/turnFor) работал вслепую
   const b = /^(?:l2_\d+|ls_[a-z_]+)$/.test(a) ? (document.querySelector(`.l2-battle-hotbar-slot[data-slot-cd="${a}"]`) || document.querySelector(`[data-slot-cd="${a}"]`)?.closest('.l2-battle-hotbar-slot')) : null;
   return b ? cleanTitle(b.title || '').toLowerCase() : a; };
-L2V7Modules.fightlab = L2V7Factories.fightlab({ get routeLocation(){return actionLocation},
+L2V7Modules.fightlab = L2V7Factories.fightlab({ get setRtSoon(){return setRtSoon}, get routeLocation(){return actionLocation},
   get cfg() { return cfg; },
   get recoveryContext() { return () => L2V7Modules.warlock.heroContext(); }, get critNote() { return critNote; }, get critFlush() { return critFlush; }, get actName() { return actName; }, get fmtT() { return fmtT; }, get isBoss() { return isBoss; }, get isChamp() { return isChamp; },
   get mobTitle() { return mobTitle; }, get rec() { return rec; }, get rt() { return rt; }, get setRt() { return setRt; },

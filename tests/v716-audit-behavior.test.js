@@ -77,7 +77,7 @@ const source=(name)=>fs.readFileSync(path.join(root,name),'utf8');
     const seen={force:[],sleep:0,scan:0};let rt={};
     const env={rt,forceMax:()=>3,forceNow:()=>5,forceFromLog:async()=>{seen.scan++;return false},
       forceSet:async n=>seen.force.push(n),newLines:()=>[],logLines:()=>[],
-      sleep:async()=>{seen.sleep++},cleanTitle:s=>s,logName:s=>s.toLowerCase(),FORCE_SPEND:/energy spent/,
+      sleep:async()=>{seen.sleep++},waitFor:async()=>{seen.sleep++;return null}/* 20.41: ожидание строки энергии вместо sleep(150) */,cleanTitle:s=>s,logName:s=>s.toLowerCase(),FORCE_SPEND:/energy spent/,FORCE_CNT:/energy \(/,
       setRt:async p=>Object.assign(rt,p),rec:()=>{}};
     const context={a:action,done:true,env,ctx:{block:{}},logArr:[],mageCombat:()=>!!action.mpCost,Date};
     await vm.runInNewContext(postForce,context);

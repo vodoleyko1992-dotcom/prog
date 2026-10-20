@@ -91,9 +91,10 @@ test('РБ: отход сохраняет снятое HP и попытку, з�
  await m.R.rbHuntStep();assert.equal(m.env.rt.rbHunt.step,'pick');assert.ok(m.env.rt.rbHunt.last.includes('вернусь добить'));assert.equal(m.R.rbWounded(boss.id),true);
 });
 // 15.10: платный переход требует свежий подтверждённый кошелёк, независимо от кнопки.
-function teleportFixture(tour=false){
+// 20.41: loading — адрес уже ?page=1, а список ещё показывает прежнюю страницу (только тогда шаг ждёт отрисовку до 4 с)
+function teleportFixture(tour=false,loading=false){
  const id='l2dop_rb_99999',g={id,name:'Audit Raid',lvl:54,page:1,price:1000,unit:'аден',alive:true,t:Date.now()};
- const doc=docOf(`<div id="rb-list"><div class="l2-rb-row"><span class="l2-rb-row__label">Audit Raid</span><span class="l2-rb-row__level">54</span><span class="l2-rb-row__status l2-rb-row__status--alive">Живой</span><span class="l2-rb-row__price">1000 аден</span><button class="l2-rb-row__tp" data-spawn-id="${id}">Телепорт</button></div></div>`);
+ const doc=docOf(`${loading?'<div id="rb-pager-ind">2 / 3</div>':''}<div id="rb-list"><div class="l2-rb-row"><span class="l2-rb-row__label">Audit Raid</span><span class="l2-rb-row__level">54</span><span class="l2-rb-row__status l2-rb-row__status--alive">Живой</span><span class="l2-rb-row__price">1000 аден</span><button class="l2-rb-row__tp" data-spawn-id="${id}">Телепорт</button></div></div>`);
  const m=mk({path:'/rb-bosses.html',search:'?page=1',doc,cfg:{epicMode:false},rt:{adenaSeen:{v:1000000,t:Date.now()},rbGo:tour?null:g,rbHunt:tour?{...g,step:'go'}:null,rbList:{[id]:g},rbStats:{[id]:{hp:1000,patk:1,matk:1,mdef:1,pdef:1,src:'api'}},rbDb:{}},env:{tabOwner:true}});
  m.env.fire=el=>{if(!m.env.on||!m.env.tabOwner)return false;m.fires.push(el);return true};m.run=()=>tour?m.R.rbHuntStep():m.R.rbGoStep();m.id=id;return m;
 }
@@ -113,7 +114,7 @@ for(const tour of [false,true])test(`${tour?'тур':'разовый'} РБ: п�
  if(tour){assert.equal(m.env.rt.rbHunt.step,'arrive');assert.equal(m.env.rt.zone,null);assert.equal(m.env.rt.zonePend,null)}else assert.equal(m.env.rt.rbGo,null);
 });
 for(const tour of [false,true])for(const timeout of [4000,8000])test(`${tour?'тур':'разовый'} РБ: Stop при загрузке ${timeout===4000?'страницы':'кнопки'} не теряет job`,async()=>{
- const m=teleportFixture(tour);m.env.waitX=async(fn,ms)=>{if(ms===timeout){m.env.on=false;return null}return fn()};await m.run();
+ const m=teleportFixture(tour,timeout===4000);m.env.waitX=async(fn,ms)=>{if(ms===timeout){m.env.on=false;return null}return fn()};await m.run();
  assert.equal(m.loc.href,'');assert.equal(m.fires.length,0);assert.equal((m.env.rt.rbGoCnt?.[m.id]||[]).length,0);assert.ok(tour?m.env.rt.rbHunt?.step==='go':m.env.rt.rbGo?.id===m.id);
 });
 for(const tour of [false,true])test(`${tour?'тур':'разовый'} РБ: новый ручной режим во время pause отменяет старый телепорт`,async()=>{

@@ -150,7 +150,7 @@ function groupNote(name, parsed, mainMax, now) {
     targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
   groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === GROUP_EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: GROUP_EVIDENCE, t: now, samples };
   const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
-  env.setRt({ fightGroups: recent })?.catch?.(() => {});
+  (env.setRtSoon || env.setRt)({ fightGroups: recent })?.catch?.(() => {});   // 20.41 (лог 20.10 21:09): статистика AoE-ходов — отложенной записью
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();

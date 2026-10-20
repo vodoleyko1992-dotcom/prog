@@ -57,7 +57,8 @@ for(const [label,change] of [
  ['новая ручная цель',e=>{e.rt.manualKickAt=123}],
  ['сменился персонаж',e=>{e.rt.char='other'}]
 ])test(label+' во время записи журнала запрещает устаревший hunt',async()=>{
- const f=fixture(),e=f.env,write=e.setRt;e.setRt=async p=>{await write(p);if(p.chainWhy==='chain')change(e)};
+ // 20.41: метка цепочки пишется без ожидания — смена, видимая к моменту записи решения, ловится проверкой сразу после неё
+ const f=fixture(),e=f.env,write=e.setRt;e.setRt=p=>{const r=write(p);if(p.chainWhy==='chain')change(e);return r};
  await f.farm.nextFight(ctx);assert.ok(!f.events.includes('hunt'));
 });
 test('ручная смена режима во время ожидания кнопки отменяет продолжение',async()=>{
@@ -68,7 +69,7 @@ for(const [label,change] of [
  ['режим',e=>{e.autonomyMode=()=> 'fish'}],
  ['ручная цель',e=>{e.rt.manualKickAt=123}]
 ])test('изменился '+label+' при записи решения о карте — старый маршрут отменён',async()=>{
- const f=fixture(),e=f.env,write=e.setRt;e.rt.sinceDeep=20;e.setRt=async p=>{await write(p);if(p.chainWhy==='map')change(e)};
+ const f=fixture(),e=f.env,write=e.setRt;e.rt.sinceDeep=20;e.setRt=p=>{const r=write(p);if(p.chainWhy==='map')change(e);return r};   // 20.41: см. выше
  await f.farm.nextFight(ctx);assert.ok(!f.events.includes('map'));assert.ok(!f.events.includes('hunt'));
 });
 test('не появился следующий бой — честный переход на карту',async()=>{

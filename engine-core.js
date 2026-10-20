@@ -271,10 +271,17 @@
 
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
   // Serial execution and retry preserve update ordering even if storage is down.
-  function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
+  function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now(),
+    timers = { set: (f, ms) => setTimeout(f, ms), clear: t => clearTimeout(t) }) {
     // Реворк ядра: каждая выдача замка получает свою очередь. Ответ старого запроса
     // после clear() не подтверждает новую запись и не задерживает её своим backoff.
-    const fresh = () => ({ pending: {}, inflight: {}, flushing: null, retryAt: 0 });
+    // 20.41 (лог 20.10 21:09, память 1,3 МБ: каждая запись ≈0,5 с и подвисание страницы): later — отложенные патчи (замеры
+    // навыков после каждого удара). Они новее pending и уходят вместе с любой обычной записью, recover() или по таймеру.
+    const fresh = () => ({ pending: {}, inflight: {}, flushing: null, retryAt: 0, later: {}, laterT: null });
+    function promote(state) {
+      if (state.laterT != null) { timers.clear(state.laterT); state.laterT = null; }
+      if (Object.keys(state.later).length) { state.pending = { ...state.pending, ...state.later }; state.later = {}; }
+    }
     let current = fresh();
     const cleared = () => ({ ok: false, reason: 'cleared' });
     async function drain(state) {
@@ -311,14 +318,27 @@
     function enqueue(patch) {
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
       const state = current;
+      promote(state);
       Object.assign(state.pending, patch);
       if (state.retryAt > clock()) return Promise.resolve({ ok: false, reason: 'backoff' });
       return flush(state);
     }
-    function peek() { return { ...current.inflight, ...current.pending }; }
-    function recover() { return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
-    function clear() { current = fresh(); }
-    return { enqueue, peek, recover, clear };
+    function defer(patch, ms = 8000) {
+      if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
+      const state = current;
+      Object.assign(state.later, patch);
+      if (state.laterT == null) state.laterT = timers.set(() => {
+        state.laterT = null;
+        if (state !== current) return;
+        promote(state);
+        if (state.retryAt <= clock()) flush(state).catch(onError);
+      }, ms);
+      return Promise.resolve({ ok: true, deferred: true });
+    }
+    function peek() { return { ...current.inflight, ...current.pending, ...current.later }; }
+    function recover() { promote(current); return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
+    function clear() { if (current.laterT != null) timers.clear(current.laterT); current = fresh(); }
+    return { enqueue, defer, peek, recover, clear };
   }
 
   // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры

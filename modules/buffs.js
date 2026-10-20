@@ -98,7 +98,9 @@ async function buffAuditStep(ctx, me) {
   }
   const patch = { buffAudit: { t: now, list: out } };
   if (Object.keys(fix).length) { patch.buffAt = { ...(env.rt.buffAt || {}), ...fix }; patch.buffFixT = { ...(env.rt.buffFixT || {}), ...Object.fromEntries(Object.keys(fix).map(k => [k, now])) }; }
-  await env.setRt(patch);
+  // 20.41 (лог 20.10 21:09): проверка раз в 15 с в бою ждала полную запись памяти (0,6–1,5 с при 1,3 МБ) и держала удар.
+  // Причины — для меню, сброс таймеров баффов действует сразу в памяти вкладки; запись идёт в фоне
+  env.setRt(patch)?.catch?.(() => {});
   if (notes.length) env.rec('S', 'проверка баффов', notes.join(' · '));
 }
 
@@ -163,7 +165,7 @@ async function totemNote(ctx, dps) {
   const eff = Object.fromEntries(Object.entries(S).map(([x, v]) => [x, { n: v.n, r: v.w ? +(v.rs / v.w).toFixed(3) : 1,
     name: x === '—' ? 'без тотема' : env.cleanTitle(env.slotsBy(x)[0]?.title || '') || x }]));
   if (eff[k].n === env.TOTEM_MIN) env.rec('B', 'тотем', `${eff[k].name}: замер готов (${env.TOTEM_MIN} боёв) · скорость убийства ${eff[k].r >= 1 ? '+' : ''}${Math.round((eff[k].r - 1) * 100)} % к среднему`);
-  await env.setRt({ totemDps: T, buffEff: eff });
+  env.setRt({ totemDps: T, buffEff: eff })?.catch?.(() => {});   // 20.41: статистика тотема — победа не ждёт запись
 }
 
 let planningSnapshot = null;
@@ -523,6 +525,9 @@ async function townBuffStart(why, urgent) {         // urgent — перед Р�
   const active=contextGuard();if(!active())return false;
   if(env.payments?.blocked())return true;
   if(vipNoFa() && !vipPreferred()){
+    // 20.41 (аудит скорости): «Городской бафф: выкл.» при активном VIP — FA нельзя, бесплатный набор не нужен; раньше каждый вызов
+    // после победы возвращал «жду» и охота стояла с GET /character на каждом круге. Покупок здесь нет — просто продолжаем без баффа.
+    if((env.cfg.townBuffSet||'basic')==='off')return false;
     if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return true;}
     if(!active())return false;
     if(vipNoFa() && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен или отключён');return true;}
