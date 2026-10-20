@@ -1,12 +1,12 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
-## 20.10.2026 — быстрая Chrome20.31 (Codex, PR в подготовке)
+## 20.10.2026 — быстрая Chrome20.31 (Codex, [PR #298](https://github.com/vodoleyko1992-dotcom/prog/pull/298))
 
 По команде «Сборка быстрая» подготовлен только основной Chrome ZIP20.31:20.30 + PR#297 (BattleTrance → Frenzy → Zealot → лечение). Firefox не запрошен, остаётся20.30. Версия/пятьпроверок/READMEChrome/changelog/контекст обновлены; функциональные исправления и базовый профиль при сборке не менялись.
 
 Полный483Node-файла PASS/0FAIL; весьruntimeJSsyntax/envcheck31/diff-check PASS. Независимый аудитZIP23/23PASS:64файла,CRC/точныйwhitelist/64байта-в-байт/ресурсы/профильбезсекретов. Загрузка пакетаChrome155:20.31,cfg207,0JSошибок. ActualMV3/main/hook из распакованногоZIP:ВКЛ/OFF/Stop3/3PASS, Trance→Frenzy→Zealot→HPpot. При первом переносе harness вscratch отсутствовал относительныйdailyfixture; путь исправлен, runtime/проверкирезультата не менялись. [Доказательства](evidence/build-20.31/).
 
-ZIP вbuilds,1420059байт; SHA256 `7c65b015411c4fd274410c88e485603fc33c9f7ec550d236eb5a6959f0a8686a`. Живуюигру и полныйисторическийbrowser-runner не запускали. Следующий шаг — публикацияPR/релиза, затем установка поверх той же папки/↻расширения/обновлениеигры и контрольныйжурналTitan.
+ZIP вbuilds,1420059байт; SHA256 `7c65b015411c4fd274410c88e485603fc33c9f7ec550d236eb5a6959f0a8686a`. Живуюигру и полныйисторическийbrowser-runner не запускали. PR#298. Доставка: [Chrome20.31](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/v20.31/builds/l2wap-bot-v20.31.zip). После публикации тега проверяется скачивание/SHA. Следующий шаг пользователя — установка поверх той же папки/↻расширения/обновлениеигры и контрольныйжурналTitan.
 
 ## 20.10.2026 — Titan: Battle Trance и подготовка Frenzy/Zealot (Codex, [PR #297](https://github.com/vodoleyko1992-dotcom/prog/pull/297))
 
