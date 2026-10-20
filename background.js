@@ -313,9 +313,13 @@ async function statePatch(m, sender) {
       await chrome.storage.local.set({cfg:r.cfg,rt:{...r.rt,_src:'limit-ranges'}});return {ok:true,cfg:r.cfg,limitRolls:r.rt.limitRolls,dailyQuota:r.rt.dailyQuota,farmQuota:r.rt.farmQuota,dropped:r.dropped};
     }
     if (m.farmQuota) {
-      const r = farmQuotaChange(state, m.farmQuota, now); if (!r.ok) return r;
+      let r = farmQuotaChange(state, m.farmQuota, now);
+      // 20.41: итог боя без ожидания (fallback) — вкладка могла уже уйти на другую страницу. Неподтверждённый итог засчитываем по журналу
+      // боя здесь же, как approx close вкладки; иначе убитые этого боя не попали бы ни в задачу, ни в дневной лимит.
+      if (!r.ok && m.farmQuota.op === 'win' && m.farmQuota.fallback === true) { const a = farmQuotaChange(state, { ...m.farmQuota, op: 'approx', n: m.farmQuota.seen, close: true }, now); if (a.ok) r = { ...a, approx: true }; }
+      if (!r.ok) return r;
       // 20.12 (ревизия 17.10, F9): cfg пишется только когда задача снята по лимиту — не на каждого моба
-      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark };
+      await chrome.storage.local.set(r.row.done ? { rt: r.rt, cfg: r.cfg } : { rt: r.rt }); return { ok:true,row:r.row,cfg:r.cfg,dailyQuota:r.dailyQuota,dailyDone:r.dailyDone,kills:r.kills,farmKillMark:r.farmKillMark,...(r.approx?{approx:true}:{}) };
     }
     if(m.dailyFish) {
       const r=dailyFishChange(state,m.dailyFish,now);if(!r.ok)return r;

@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.40 — бой без ожидания статистики и native-урон =====
+// ===== L2wap Bot v20.41 — быстрый бой без ожидания записей памяти, катакомбы без перезагрузок =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -266,8 +266,8 @@ async function farmQuotaSnapshot(char, need = null) {
 // 20.41: итог боя без ожидания записи — только когда и до лимита задачи, и до дневного лимита дальше QUOTA_ASYNC_ROOM мобов
 // (с запасом на неподтверждённый ещё итог текущего боя и пачки до 10 целей). Ближе — как раньше: точная остановка на лимите.
 const QUOTA_ASYNC_ROOM = 40;
-let quotaWinP = null;
-function farmQuotaIdle() { return quotaWinP || Promise.resolve(); }
+let quotaWin = null;   // { T, p }: итог прошлого боя ещё пишется; p → счёт сессии фона после итога (или undefined)
+function farmQuotaIdle() { return quotaWin?.p || Promise.resolve(); }
 function farmQuotaRoom(T, n) {
   const row = rt.farmQuota?.[T.task], room = [];
   if (T.limit > 0) room.push(T.limit - (+row?.got || 0));
@@ -290,7 +290,9 @@ function farmQuotaPending(spawn) {
 }
 async function beginFarmQuota(spawn, onBase = null) {
   if (!spawn || new URLSearchParams(location.search).has('pvpTargetId')) return null;
-  const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
+  // 20.41 (ревью): итог прошлого боя ещё пишется — его pending с тем же ключом спавна (цепочка в той же странице) — не reload этого боя.
+  const W = quotaWin, winning = p => !!W && p.task === W.T.task && p.row.run === W.T.run && p.row.pending.revision === W.T.beforeRevision;
+  const previous = farmQuotaPending(spawn).filter(p => !winning(p)); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
   const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
   if (!limit && !dailyLimit) return null;
   const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
@@ -307,8 +309,9 @@ async function beginFarmQuota(spawn, onBase = null) {
   // 20.41 (катакомбы: каждый моб — новая страница, свежего счётчика нет): точка начала уже снята — бой может начинать удары,
   // запись 'begin' (полная память 1,3 МБ, 0,4–1,5 с) идёт параллельно; итог боя ждёт её через quotaTicket, фон пишет по порядку
   try { onBase?.(); } catch (e) {}
-  // 20.41: итог прошлого боя ещё пишется (без ожидания) — начало этого боя после него: счёт сессии берём уже с его убитыми.
-  if (quotaWinP) { await quotaWinP; if (!valid()) return null; if (!previous.length && Number.isSafeInteger(rt.kills) && rt.kills >= 0) sessionKills = rt.kills; }
+  // 20.41: итог прошлого боя ещё пишется (без ожидания) — начало этого боя после него. Счёт сессии — снятый до первого удара этого боя
+  // (живой rt.kills уже может включать его убитых — фон засчитал бы их дважды), но не меньше счёта фона после итога.
+  if (W) { const k = await W.p; if (!valid()) return null; if (!previous.length && Number.isSafeInteger(k) && k >= 0) sessionKills = Math.max(+sessionKills || 0, k); }
   try {
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision, sessionKills, sessionT0 }, expectedChar: char, epoch, src: TAB_ID });
     if (!valid()) return null;
@@ -378,11 +381,19 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
     const msg = { cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID };
     // 20.41 (замер цикла катакомб, память 1,3 МБ: запись итога 0,7–1,3 с держала экран победы до «Охотиться дальше»): счётчик сервера уже
     // подтвердил бой — до лимита далеко, следующий бой итог не ждёт. Фон пишет записи по очереди (serializeLock): итог раньше начала
-    // следующего боя, а beginFarmQuota ждёт этот ответ, прежде чем взять счёт сессии. Отказ фона — засчёт по журналу боя (approx).
+    // следующего боя, а beginFarmQuota ждёт этот ответ, прежде чем взять счёт сессии. Отказ подтверждения фон сам засчитывает по журналу
+    // боя (fallback: вкладка могла уже уйти на другую страницу); не дошедший запрос — approx отсюда.
     if (farmQuotaRoom(T, logN) > QUOTA_ASYNC_ROOM) {
       delete QUOTA_WAIT[key];
-      quotaWinP = ipc(msg).then(r => { if (!valid()) return; if (r?.ok) return void farmQuotaApply(T, r); return farmQuotaApprox(T, logN, true); }, () => valid() ? farmQuotaApprox(T, logN, true) : null)
-        .catch(e => console.warn(TAG, 'итог лимита', e)).finally(() => { quotaWinP = null; });
+      const W = { T, p: null };
+      W.p = ipc({ ...msg, farmQuota: { ...msg.farmQuota, fallback: true } }).then(async r => {
+        if (!valid()) return;
+        if (!r?.ok) { await farmQuotaApprox(T, logN, true); return; }
+        if (r.approx && Date.now() - quotaApproxNoteT > 600000) { quotaApproxNoteT = Date.now(); rec('B', 'лимит мобов', `${T.task === 'cat' ? 'Катакомбы' : 'Автофарм'}: счётчик убийств сервера не подтвердил итог боя — засчитал по журналу боя: ${logN} (неточно), продолжаю`); }
+        farmQuotaApply(T, r); return r.kills;
+      }, async () => { if (valid()) await farmQuotaApprox(T, logN, true); })
+        .catch(e => console.warn(TAG, 'итог лимита', e)).finally(() => { if (quotaWin === W) quotaWin = null; });
+      quotaWin = W;
       return false;
     }
     const r = await ipc(msg);
@@ -6633,6 +6644,12 @@ chrome.storage.onChanged.addListener(ch => {
     // 8.0.3 (разбор лога 11.10 09:16: тур выключали и включали из меню, а журнал этого не показывал): смена режима — строкой в журнал
     const m0 = modeSig(cfg); cfg = mergeCfg(ch.cfg.newValue); const m1 = modeSig(cfg);
     if (m0 !== m1 && tabOwner) try { rec('U', 'меню', `режим: ${m0} → ${m1}`); } catch (e) {}
+  }
+  // 20.41 (ревью: отложенная статистика до 8 с воскрешала сброс из меню — ↺ сессии, лут, память боя): ключи, которые меню изменило,
+  // убираем из своей ещё не отправленной очереди — решение игрока новее.
+  if (ch.rt?.newValue?._src === 'menu' && ch.rt.oldValue) {
+    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, keys = Object.keys(q).filter(k => JSON.stringify(o[k]) !== JSON.stringify(n[k]));
+    if (keys.length) rtWriter.drop(keys);
   }
   const timerPrevious = rt;
   if (ch.rt && ch.rt.newValue?._src !== TAB_ID) rt = { ...DEF_RT, ...ch.rt.newValue, ...rtWriter.peek() }; // свежий storage + наши неподтверждённые PATCHES

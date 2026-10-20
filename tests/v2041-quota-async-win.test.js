@@ -54,3 +54,33 @@ test('Stop во время записи: вкладка не применяет 
  assert.equal(await f.finish(t,2),false);f.c.on=false;open();await f.c.farmQuotaIdle();
  assert.equal(f.c.rt.dailyQuota?.auto||0,0);assert.equal(f.state.rt.dailyQuota.auto,2,'фон итог записал');
 });
+// 20.41 (ревью): в цепочке той же страницы новый бой может прийти с тем же ключом спавна, пока итог прошлого ещё пишется.
+test('тот же ключ спавна во время записи итога: новый бой не теряет своих убитых',async()=>{
+ const f=fixture(),t=await f.begin();f.server(2);const open=f.hold();
+ assert.equal(await f.finish(t,2),false);
+ const next=f.c.beginFarmQuota('sdms_test_001');await tick();await tick();open();const t2=await next;
+ assert.ok(t2&&!t2.approx,'не null и не «неточно»');assert.notEqual(t2.beforeRevision,t.beforeRevision);
+ f.server(3);assert.equal(await f.finish(t2,3),false);await f.c.farmQuotaIdle();
+ assert.equal(f.state.rt.dailyQuota.auto,5);assert.equal(f.state.rt.farmQuota.auto.pending,null);
+});
+test('убитые нового боя во время записи итога не попадают в его счёт сессии дважды',async()=>{
+ const f=fixture(),t=await f.begin();f.server(1);f.c.rt={...f.c.rt,kills:51};const open=f.hold();
+ assert.equal(await f.finish(t,1),false);f.c.location.search='?spawnId=sdms_test_002';
+ const next=f.c.beginFarmQuota('sdms_test_002');await tick();await tick();
+ f.c.rt={...f.c.rt,kills:53};   // AoE нового боя убил двух соседей, пока фон пишет итог прошлого
+ open();const t2=await next;assert.equal(f.state.rt.farmQuota.auto.pending.sessionKills,51);
+ f.server(3);assert.equal(await f.finish(t2,3),false);await f.c.farmQuotaIdle();assert.equal(f.state.rt.kills,54);
+});
+test('страница ушла, фон не подтвердил итог: засчёт по журналу боя делает сам фон',async()=>{
+ for(const stay of [false,true]){
+  const f=fixture(),t=await f.begin();f.server(2);const ipc=f.c.ipc;
+  f.c.ipc=async m=>{if(m.farmQuota?.op!=='win')return ipc(m);assert.equal(m.farmQuota.fallback,true);if(!stay)f.c.on=false;return ipc({...m,farmQuota:{...m.farmQuota,revision:1}})};
+  assert.equal(await f.finish(t,2),false);await f.c.farmQuotaIdle();
+  assert.equal(f.state.rt.farmQuota.auto.pending,null);assert.equal(f.state.rt.dailyQuota.auto,2,'ровно один раз');assert.equal(f.state.rt.farmQuota.auto.approx,2);
+  if(stay)assert.equal(f.c.rt.dailyQuota.auto,2);
+ }
+});
+test('итог у лимита (с ожиданием) не просит фон засчитывать сам',async()=>{
+ const f=fixture({autoKillLimit:3,dailyKillLimit:0}),t=await f.begin();f.server(3);const ipc=f.c.ipc;let fb;
+ f.c.ipc=async m=>{if(m.farmQuota?.op==='win')fb=m.farmQuota.fallback;return ipc(m)};await f.finish(t,3);assert.equal(fb,undefined);
+});

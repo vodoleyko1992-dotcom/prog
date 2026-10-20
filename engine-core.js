@@ -338,7 +338,9 @@
     function peek() { return { ...current.inflight, ...current.pending, ...current.later }; }
     function recover() { promote(current); return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
     function clear() { if (current.laterT != null) timers.clear(current.laterT); current = fresh(); }
-    return { enqueue, defer, peek, recover, clear };
+    // 20.41 (ревью): изменение из меню новее ещё не отправленных значений тех же ключей (отложенная статистика держится до 8 с).
+    function drop(keys) { for (const k of keys) { delete current.pending[k]; delete current.later[k]; } }
+    return { enqueue, defer, peek, recover, clear, drop };
   }
 
   // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры

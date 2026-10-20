@@ -48,3 +48,14 @@ test('catPrefetch: свежий список той же страницы не �
 test('ядро передаёт срок переиспользования в модуль подземелий',()=>{
  assert.match(read('content.js'),/get catPrefetch\(\)\{return ms=>L2V7Modules\.dungeons\?\.catPrefetch\?\.\(ms\)\}/);
 });
+// 20.41 (ревью: ↺ сессии в меню в пределах 8 с после победы откатывался отложенной статистикой).
+test('очередь: drop убирает ключи из обычной и отложенной очереди, остальное пишется',async()=>{
+ const core=require('../engine-core.js'),sent=[],timers=[];
+ const q=core.createPatchQueue(async b=>{sent.push(b);return{ok:true}},()=>true,()=>{},()=>Date.now(),{set:f=>timers.push(f),clear(){}});
+ q.defer({kills:58,exp:1100,lootStat:{a:1}});q.drop(['kills','exp']);assert.deepEqual(Object.keys(q.peek()),['lootStat']);
+ timers[0]();await new Promise(r=>setImmediate(r));assert.deepEqual(JSON.parse(JSON.stringify(sent)),[{lootStat:{a:1}}]);
+});
+test('изменение памяти из меню снимает свои неотправленные значения тех же ключей до пересборки rt',()=>{
+ const src=read('content.js'),a=src.indexOf('chrome.storage.onChanged.addListener(ch => {'),b=src.indexOf('const timerPrevious = rt;',a),part=src.slice(a,b);
+ assert.match(part,/_src === 'menu'[\s\S]*rtWriter\.drop\(keys\)/);assert.match(part,/JSON\.stringify\(o\[k\]\) !== JSON\.stringify\(n\[k\]\)/);
+});
