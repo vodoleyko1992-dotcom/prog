@@ -1,0 +1,2 @@
+PASS actual MV3: saved FA route + rbSess/rbFaFull → free warrior0/0, one POST, session ready by VIP effects, zero native FA POST
+PASS actual MV3: free auto OFF while VIP remains active → saved FA waits, zero native FA/extra free POST, settings preserved, 0 pageerrors

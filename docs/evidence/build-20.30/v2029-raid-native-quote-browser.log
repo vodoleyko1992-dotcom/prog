@@ -1,0 +1,7 @@
+PASS actual MV3 native quote: VIP/empty/0 → adena0; explicit FA/CoL and other ID stay blocked
+PASS actual MV3 native quote: wrong ID/page, missing per-boss proof and 503 do not authorise
+PASS actual MV3 native quote: delayed response after start change rejected
+PASS actual MV3 native quote: delayed response after class change rejected
+PASS actual MV3 native quote integration: recovery while OFF, 0 POST, 0 pageerrors; bot functions unchanged
+ACTIVE_REQUEST_CONTEXT {"lease":"mvfy9r93-2-1963a948-8d18-4166-aef3-5e33862f09c1","char":"AuditHero","classCur":{"prof":"human_warlock","slot":0},"start":"1:1792456416930:1","requests":[]}
+PASS actual MV3 active raid scan native quote: fresh context, initial GET → rows → ownership → verified list, 0 POST

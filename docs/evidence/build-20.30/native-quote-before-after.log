@@ -1,0 +1,12 @@
+Early native GET regression, clean isolated MV3 profile; no live game.
+Prefallback draft ZIP SHA256: 80549a43d255eb4aae16df747fdf07693e7629623d6cdde5d7bee8a330ffc1c8
+Final ZIP SHA256: e98317bef8037e3e9cba9d1df2732823fe19bb74ba52e224672194974fc5a7a3
+
+raid-native-active-live-targets-baseline.log
+ACTIVE_REQUEST_CONTEXT {"lease":"mvfy6ktw-3-f8a299cd-4804-479a-b969-28566b44779f","char":"AuditHero","classCur":{"prof":"human_warlock","slot":0},"start":"1:1792456266976:1","requests":[]}
+AssertionError [ERR_ASSERTION]: vip verified price
+null !== 0
+
+raid-native-active-live-targets-fixed.log
+ACTIVE_REQUEST_CONTEXT {"lease":"mvfy5z0a-3-c61291e1-0fa9-468d-8fcf-d08f1b84178d","char":"AuditHero","classCur":{"prof":"human_warlock","slot":0},"start":"1:1792456240348:1","requests":[]}
+PASS actual MV3 active raid scan native quote: fresh context, initial GET → rows → ownership → verified list, 0 POST

@@ -68,7 +68,8 @@ function queueFixture(){
  const local={rt:structuredClone(disk.rt)},saved=[],rebase=content.match(/if \(ch\.rt && ch\.rt\.newValue\?\._src !== TAB_ID\) rt = [^\n]+;/)?.[0];assert.ok(rebase);
  const reb={DEF_RT:{},TAB_ID:'client',rtWriter:null};Object.defineProperty(reb,'rt',{get:()=>local.rt,set:v=>{local.rt=v}});vm.createContext(reb);
  class Clock extends Date{static now(){return now}}
- const box={Date:Clock,URL,console,MAX_PATCH_KEYS:400,LOCK_TTL:90000,chrome:{runtime:{getURL:p=>'chrome-extension://bot/'+p},storage:{local:{
+ // 20.30: menuPatch использует общий расчёт нового списка при Start; настоящий core сохраняет прежние проверки гонки.
+ const box={L2EngineCore:E,Date:Clock,URL,console,MAX_PATCH_KEYS:400,LOCK_TTL:90000,chrome:{runtime:{getURL:p=>'chrome-extension://bot/'+p},storage:{local:{
   get:async keys=>Object.fromEntries([].concat(keys).map(k=>[k,structuredClone(disk[k])])),
   set:async change=>{if(fail)throw Error('storage failure');const before=structuredClone(disk);Object.assign(disk,structuredClone(change));saved.push(structuredClone(change));if(change.rt){reb.ch={rt:{oldValue:before.rt,newValue:structuredClone(change.rt)}};vm.runInContext(rebase,reb)}}
  }}}};

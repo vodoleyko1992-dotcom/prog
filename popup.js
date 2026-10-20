@@ -2006,11 +2006,16 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     const dailyKey = {fish:'dailyFishLimit',auto:'dailyKillLimit',cat:'dailyKillLimit'}[key];
     const dailyLimit = +d[dailyKey] || 0, q = L2EngineCore.dailyQuotaToday(rt,now), dailyGot = key === 'fish' ? +q.fish || 0 : (+q.auto || 0) + (+q.cat || 0) + (+q.raid || 0) + (+q.server || 0);
     const dailyPending = !!d.limitRanges?.[dailyKey] && rt.limitRolls?.[dailyKey]?.day !== day;
-    if (dailyPending) progress.push('Дневная цель выберется при запуске');
+    // 20.10: диапазон до запуска и нулевой лимит не скрывают счётчик рыбы и переход к настройкам.
+    if (dailyPending) {
+      const range = d.limitRanges[dailyKey];
+      progress.push(key === 'fish' ? `Сегодня: ${dailyGot} · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске` : 'Дневная цель выберется при запуске');
+    }
     else if (dailyLimit > 0) {
       progress.push(`Сегодня: ${dailyGot} / ${dailyLimit}${['auto','cat'].includes(key) ? ' (автофарм + катакомбы + рядом с РБ)' + (+q.server?' · ранее по серверу: '+q.server:'') : ''} · осталось ${Math.max(0, dailyLimit - dailyGot)}`); percent = Math.min(100, Math.round(dailyGot / dailyLimit * 100));
       if (dailyGot >= dailyLimit) { label = 'До 00:00 сервера'; state = 'waiting'; }
     }
+    else if (key === 'fish') progress.push(`Сегодня: ${dailyGot} · без дневного лимита`);
     if (['auto','cat'].includes(key)) {
       const limit = +d[key === 'auto' ? 'autoKillLimit' : 'catKillLimit'] || 0, row = rt.farmQuota?.[key];
       if (limit > 0) { const got = row?.limit === limit ? +row.got || 0 : 0; progress.push(`Серия: ${got} / ${limit}`); if (percent == null) percent = Math.min(100, Math.round(got / limit * 100)); if (row?.limit === limit && row.done) { label = 'Цель выполнена'; state = 'done'; } }
@@ -2026,6 +2031,15 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = 'Ждёт доступного РБ'; state = 'waiting'; }
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
   });
+}
+// 20.10 (журнал 09:58:23): снятие задачи рыбалки не прячет дневной счётчик и его лимит.
+function dailyFishBoardRow(rt, d, now = Date.now()) {
+  const day=L2EngineCore.dailyDay(now,rt),got=L2EngineCore.dailyCount(rt,'fish',now),limit=+d.dailyFishLimit||0,range=d.limitRanges?.dailyFishLimit;
+  const pending=!!range && rt.limitRolls?.dailyFishLimit?.day!==day;
+  return {key:'daily-fish',summary:'fish',name:'Рыба за сутки',tab:'limits',limits:true,
+    label:!pending&&limit>0?(got>=limit?'Лимит достигнут':'Дневной лимит'):'Дневной счётчик',state:!pending&&limit>0&&got>=limit?'waiting':'selected',
+    progress:`Сегодня: ${got}${pending?` · диапазон ${range.min}–${range.max} рыб · дневная цель выберется при запуске`:limit>0?` / ${limit} · осталось ${Math.max(0,limit-got)}`:' · без дневного лимита'}`,
+    percent:!pending&&limit>0?Math.min(100,Math.round(got/limit*100)):null};
 }
 // 19.10: дневные мобы видны рядом с рыбалкой независимо от выбранной охоты; это сводка, а не задача.
 function dailyMobBoardRow(rt, d, now = Date.now()) {
@@ -2063,8 +2077,9 @@ function renderWorkspace(rt, d, st) {
   const rows = taskBoardRows(rt, d, st);
   $('taskBoardNote').textContent = rows.length ? 'Выбрано: ' + rows.length + '. Приоритет определяет следующую задачу, фактическое действие показано выше.' : 'Ничего не выбрано. Разрешите нужные задачи; изменение списка не запускает бота.';
   const display = [...rows], fishAt = rows.findIndex(r => r.key === 'fish');
+  if (fishAt < 0) display.push(dailyFishBoardRow(rt, d));
   display.splice(fishAt < 0 ? display.length : fishAt + 1, 0, dailyMobBoardRow(rt, d));
-  const markup = display.map(r => `<div class="task-row" data-state="${r.state}"${r.summary ? ' data-task-summary="mobs"' : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
+  const markup = display.map(r => `<div class="task-row" data-state="${r.state}"${r.summary ? ` data-task-summary="${esc(r.summary)}"` : ''}><button type="button" class="task-name" data-task-tab="${r.tab}">${esc(r.name)} <span aria-hidden="true">↗</span></button><span class="task-state">${esc(r.label)}</span>${r.progress ? `<div class="task-progress">${esc(r.progress)}${r.limits ? ' <button type="button" data-task-tab="limits">Лимиты ↗</button>' : ''}</div>` : ''}${r.percent != null ? `<div class="task-meter" role="progressbar" aria-label="Прогресс: ${esc(r.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${r.percent}"><span style="width:${r.percent}%"></span></div>` : ''}</div>`).join('');
   const board = $('taskBoardRows'); if (board._markup !== markup) { board.innerHTML = markup; board._markup = markup; }
 }
 function selectedAutoTasks(d) {

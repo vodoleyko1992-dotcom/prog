@@ -9,7 +9,8 @@ function fixture(){
  const env={on:true,tabOwner:true,leaseEpoch:1,cfg:{townBuffSet:'off',faBuffs:'1059'},rt:{char:'Hero',manualKickAt:1,tbT:now-50000,tbFail:0,tbInterrupted:{t:now,jobT:now-50000}},TB_KEYS:{basic:[]},IL:{},FA_KNOWN:{},routeLocation:route,
   setRt:async p=>{writes.push(p);Object.assign(env.rt,p);return {ok:true}},faCost:()=>1,heroRole:()=> 'mage',autonomyMode:()=> 'raid',rec(){},setStatus(){},sleep:async()=>{},pause:async()=>{},rnd:()=>0,waitX:async f=>f(),fire:b=>{clicks.push(b);return true},
   $q:s=>s==='#l2-hud-active-buffs'?hud:s==='#fast-aden-balance'?{textContent:'1000'}:s.startsWith('.l2-fa-buy')?button:null,
-  payments:{blocked:()=>pending},gameGet:async()=>{reads++;await hook();return {ok,json:async()=>response}}};
+  // 20.29: fixture платных эффектов имеет явный свежий non-VIP; поля проверки отмены остаются прежними.
+  payments:{blocked:()=>pending},gameGet:async()=>{reads++;await hook();return {ok,json:async()=>response.character?{...response,character:{id:'fixture-actor',revision:10,vip:{active:false},...response.character}}:response}}};
  return {env,H,writes,clicks,route,now,B:box.L2V7Factories.buffs(env),get reads(){return reads},set hook(f){hook=f},set response(r){response=r},set ok(v){ok=v},set pending(v){pending=v}};
 }
 const start=f=>f.B.townBuffStart('перед РБ fixture',true);

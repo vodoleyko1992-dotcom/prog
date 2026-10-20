@@ -13,7 +13,8 @@ const chrome={runtime:{getURL:p=>'moz-extension://mock-uuid/'+p},storage:{local:
  async set(o){changes.push(Object.keys(o));for(const [k,v] of Object.entries(o))obj[k]=structuredClone(v);}
 }}};
 const idx=bg.indexOf('const LOCK_TTL ='),end=bg.indexOf('const paint =',idx);
-const ctx=vm.createContext({chrome,console,Date,URL,crypto:{randomUUID:()=>String(Math.random())},noteAlive(){}});
+// 20.30: реальное ядро нужно menuPatch для сброса списка при Start; проверки конкурентной записи прежние.
+const ctx=vm.createContext({L2EngineCore:require('../engine-core.js'),chrome,console,Date,URL,crypto:{randomUUID:()=>String(Math.random())},noteAlive(){}});
 vm.runInContext(bg.slice(idx,end)+'\nthis.menuPatch=menuPatch;this.lockCommand=lockCommand;this.statePatch=statePatch;',ctx);
 const sender=(id)=>({tab:{id,active:true},frameId:0,url:'https://l2wap.com/battle.html'});
 (async()=>{

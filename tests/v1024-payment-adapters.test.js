@@ -40,7 +40,8 @@ function buffs(){
  const env={on:true,rt:{char:'hero',tbuff:{step:'fa',fa:[1357],t:123}},cfg:{faBuffs:'1357',townBuffSet:'off'},FA_KNOWN:{1357:['Water']},TB_KEYS:{basic:[]},IL:{},
   faCost:()=>5,heroRole:()=> 'mage',$q:s=>s==='#l2-hud-active-buffs'?hud:s==='#fast-aden-balance'?{textContent:String(balance)}:s.startsWith('.l2-fa-buy')?b:null,
   pause:async()=>{},waitX:async f=>f(),sleep:async()=>{},rnd:()=>0,setStatus(){},rec(){},
-  gameGet:async()=>({ok:true,json:async()=>({character:{name:'hero',activeBuffs:Object.entries(H).map(([id,exp])=>({skillId:+id,expiresAtMs:exp}))}})})};
+  // 20.29: платный сценарий явно подтверждает отсутствие VIP, не отсутствие данных о нём.
+  gameGet:async()=>({ok:true,json:async()=>({character:{name:'hero',id:'fixture-actor',revision:10,vip:{active:false},activeBuffs:Object.entries(H).map(([id,exp])=>({skillId:+id,expiresAtMs:exp}))}})})};
  const reload=attach(env);env.fire=el=>{if(env.payments.blocked()&&!env.payments.consumePermit())return false;if(el===b){pays++;if(apply){balance-=5;H[1357]=Date.now()+3*3600000}}return true};
  return {env,B:box.L2V7Factories.buffs(env),H,reload,pays:()=>pays,apply:v=>apply=v};
 }
@@ -59,11 +60,12 @@ for(const event of ['character','lease','ownership','payment'])test(`FA: ${event
  assert.equal(await f.B.paymentReconcile(),false);assert.equal(JSON.stringify(f.env.rt.tbuff),before);assert.equal(f.env.rt.actionPayments.history,undefined);
 });
 function raid(){
- const env={on:true,rt:{char:'hero',rbHunt:{step:'go',id:'boss',price:100},rbWant:null},setStatus(){}};attach(env);let fires=0;
+ // 20.30: реальная фабрика и DOM цены нужны последней проверке перед sent; проверки оплаты остаются прежними.
+ const doc=require('./epic-harness.cjs').docOf('<div id="rb-list"><div class="l2-rb-row"><span class="l2-rb-row__status l2-rb-row__status--alive">Жив</span><span class="l2-rb-row__price">100 аден</span><button class="l2-rb-row__tp" data-spawn-id="boss">Телепорт</button></div></div>');
+ const env={on:true,cfg:{shopReserve:0,shopMaxSpend:1000000},routeLocation:{pathname:'/rb-bosses.html',search:'?page=1'},$q:s=>doc.querySelector(s),rt:{char:'hero',adenaSeen:{v:1000000,t:Date.now()},rbHunt:{step:'go',id:'boss',price:100},rbWant:null},setStatus(){}};attach(env);let fires=0;
  env.fire=()=>{if(env.payments.blocked()&&!env.payments.consumePermit())return false;fires++;return true};
- const source=read('modules/raid.js'),start=source.indexOf('async function rbTeleportFire('),end=source.indexOf('\nasync function paymentReconcile(',start);
- const box={env,console};vm.runInNewContext(source.slice(start,end)+'\nthis.fireTeleport=rbTeleportFire;',box);
- return {env,fire:()=>box.fireTeleport({}, {rbHunt:{...env.rt.rbHunt,step:'arrive'},rbWant:'boss'}),fires:()=>fires};
+ const box={console,document:doc,URLSearchParams};vm.runInNewContext(read('modules/raid.js'),box);const R=box.L2V7Factories.raid(env),button=doc.querySelector('.l2-rb-row__tp');
+ return {env,fire:()=>R.rbTeleportFire(button, {rbHunt:{...env.rt.rbHunt,step:'arrive'},rbWant:'boss'}),fires:()=>fires};
 }
 test('рейд: durable намерение и стадия arrive сохранены до единственного клика',async()=>{const f=raid(),steps=[];f.env.rtCommit=async()=>{steps.push(f.env.rt.rbHunt.step);return true};assert.ok(await f.fire());assert.equal(f.fires(),1);assert.deepEqual(steps,['go','arrive']);assert.ok(f.env.payments.blocked());assert.equal(await f.fire(),false);assert.equal(f.fires(),1)});
 test('рейд: ошибка сохранения arrive отменяет неотправленный платёж',async()=>{const f=raid();let n=0;f.env.rtCommit=async()=>++n!==2;assert.equal(await f.fire(),false);assert.equal(f.fires(),0);assert.equal(f.env.rt.rbHunt.step,'go')});

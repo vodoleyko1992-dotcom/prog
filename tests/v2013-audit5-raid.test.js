@@ -18,7 +18,8 @@ function buffsFixture({ cfg = {}, rt = {}, button = null, balance = '1000', resp
     setRt: async p => { writes.push(p); Object.assign(env.rt, p); return { ok: true }; }, faCost: () => 1, heroRole: () => 'mage', autonomyMode: () => 'raid',
     rec: (...a) => recs.push(a.join(' ')), setStatus() {}, sleep: async () => {}, pause: async () => {}, rnd: () => 0, waitX: async f => f(), fire: b => { clicks.push(b); return true; },
     $q: s => s === '#l2-hud-active-buffs' ? hud : s === '#fast-aden-balance' ? { textContent: balance } : s.startsWith('.l2-fa-buy') ? button : null,
-    payments: { blocked: () => false }, gameGet: async () => ({ ok: true, json: async () => response || { character: { name: 'Hero', activeBuffs: [] } } }) };
+    // Проверка перед FA требует свежего ответа сервера с идентичностью героя и явным отсутствием VIP.
+    payments: { blocked: () => false }, gameGet: async () => ({ ok: true, json: async () => response || { character: { name: 'Hero', id: 'fixture-actor', revision: 10, vip: { active: false }, activeBuffs: [] } } }) };
   return { env, H, writes, clicks, route, recs, now, B: box.L2V7Factories.buffs(env) };
 }
 

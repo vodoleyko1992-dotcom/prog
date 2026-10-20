@@ -5,7 +5,7 @@ const fs = require('node:fs'), path = require('node:path'), vm = require('node:v
 const root = process.env.L2_REPO || path.resolve(__dirname, '..');
 const bgSource = fs.readFileSync(path.join(root, 'background.js'), 'utf8');
 const content = fs.readFileSync(path.join(root, 'content.js'), 'utf8');
-const { createPatchQueue } = require(path.join(root, 'engine-core.js'));
+const E = require(path.join(root, 'engine-core.js')), { createPatchQueue } = E;
 const clone = value => structuredClone(value);
 const cut = (source, begin, end, from = 0) => {
   const i = source.indexOf(begin, from), j = source.indexOf(end, i);
@@ -26,7 +26,7 @@ function fixture() {
     quietErr: (...args) => errors.push(args), setInterval: fn => { tick = fn; },
     chrome: { storage: { onChanged: { addListener: fn => { listener = fn; } } }, runtime: {} } };
   vm.createContext(page);
-  const bg = { Date: { now: () => now }, URL, crypto: { randomUUID: () => 'new' }, noteAlive: async () => {},
+  const bg = { L2EngineCore: E, Date: { now: () => now }, URL, crypto: { randomUUID: () => 'new' }, noteAlive: async () => {},
     console: { warn() {} }, chrome: { storage: { local: {
       get: async keys => Object.fromEntries((Array.isArray(keys) ? keys : [keys]).map(k => [k, clone(state[k])])),
       set: async patch => {

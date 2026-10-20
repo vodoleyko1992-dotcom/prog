@@ -208,10 +208,24 @@ const vipUntil = v => { const n = typeof v === 'number' ? v : typeof v === 'stri
 function vipNote(ch) {
   if (env.tabOwner === false || ch?.name !== env.rt.char || typeof ch.vip?.active !== 'boolean') return false;
   const set = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '';
-  const next = { char: env.rt.char, active: ch.vip.active, until: vipUntil(ch.vip.vipUntil), set, prof: ch.l2Profession || '', slot: ch.classSlots?.activeSlot ?? null, t: Date.now() };
+  const next = { char: env.rt.char, actor: ch.id || '', active: ch.vip.active, until: vipUntil(ch.vip.vipUntil), set, prof: ch.l2Profession || '', slot: ch.classSlots?.activeSlot ?? null, t: Date.now() };
   const old = env.rt.vipBuff;
   if (!old || Object.keys(next).some(k => k !== 't' && old[k] !== next[k]) || next.t - old.t > 30000) env.setRt({ vipBuff: next });
   return true;
+}
+// 20.29 (20.10, правило игрока): при VIP FA не покупаем, даже если бесплатный набор отключён/ещё не проверен.
+// Старое/противоречивое положительное наблюдение не разрешает трату: сервер должен подтвердить active:false.
+function vipNoFa() {
+  const v=env.rt.vipBuff;
+  return !!(v && v.char===env.rt.char && v.active===true);
+}
+async function vipRefresh(active) {
+  if(typeof env.gameGet!=='function')return false;
+  try { const r=await env.gameGet('/character'),d=r.ok?await r.json():null;if(!active())return false;
+    const ch=d?.character;
+    if(ch?.id && Number.isSafeInteger(ch.revision) && vipNote(ch))return true;
+  } catch (_) {}
+  return false;
 }
 function vipPreferred() {
   const v = env.rt.vipBuff, now = Date.now();
@@ -220,22 +234,28 @@ function vipPreferred() {
   if (Number.isInteger(env.rt.classCur?.slot) && v.slot !== null && env.rt.classCur.slot !== v.slot) return '';
   return v.set;
 }
+function vipSession() {
+  if(!vipNoFa())return null;
+  const set=vipPreferred(),v=env.rt.vipBuff,p=env.rt.vipApplied,H=hudBuffs(),levels=hudLevels(),now=Date.now();
+  const ready=!!(set && p?.char===env.rt.char && p.actor===v.actor && p.set===set && p.slot===v.slot && p.prof===v.prof
+    && p.skills?.length && H && p.skills.every(x=>H[x.skillId]>now+60000 && levels[x.skillId]>=x.level));
+  return {set,ready,until:ready?Math.min(...p.skills.map(x=>H[x.skillId])):0};
+}
 const vipPriceZero = s => !!s && [s.feeAdena, s.feeCoinOfLuck].every(v => v === 0 || v === '0') && Array.isArray(s.skills) && s.skills.length > 0
   && s.skills.every(x => Number.isSafeInteger(x.skillId) && x.skillId > 0 && Number.isSafeInteger(x.level) && x.level > 0);
-const vipEffects = (ch, q) => ch?.name === env.rt.char && ch.id === q.actor && Number.isSafeInteger(ch.revision) && ch.revision > q.revision
+const vipEffects = (ch, q, existing=false) => ch?.name === env.rt.char && ch.id === q.actor && Number.isSafeInteger(ch.revision) && (existing ? ch.revision >= q.revision : ch.revision > q.revision)
   && Array.isArray(ch.activeBuffs) && q.skills.every(x => ch.activeBuffs.some(b => b.skillId === x.skillId && b.level >= x.level
     && Number.isFinite(b.expiresAtMs ?? b.expiresAt) && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 60000));
 async function vipTownStep(st, active, done) {
   // Только VIP-ветка: точная нулевая цена идёт в серверный запрос, не берётся из старого DOM/кэша.
   const current = () => active() && env.rt.tbuff?.t === st.t;
-  const finish = async (ch, q) => {
-    if (!current() || !vipEffects(ch, q)) return false;
+  const finish = async (ch, q, existing=false) => {
+    if (!current() || !vipEffects(ch, q, existing)) return false;
     const levels = Object.fromEntries(q.skills.map(x => [x.skillId, x.level]));
-    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, ids: q.skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [q.set]: q.skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [q.set]: levels } });
+    await env.setRt({ tbOk: true, tbFail: 0, hudLong: {}, vipApplied: { char: env.rt.char, actor:ch.id, set:q.set, slot:ch.classSlots?.activeSlot??null, prof:ch.l2Profession||'', skills:q.skills, ids: q.skills.map(x => x.skillId) }, tbSetIds: { ...(env.rt.tbSetIds || {}), [q.set]: q.skills.map(x => x.skillId) }, tbLvl: { ...(env.rt.tbLvl || {}), [q.set]: levels } });
     if (!current()) return true;
     env.rec('B', 'бафф', `VIP: полный ${q.set === 'mage' ? 'бафф мага' : 'бафф воина'} подтверждён — 0 адены, 0 Coin of Luck`);
-    if (st.fa?.length) { await env.setRt({ tbuff: { ...st, set: q.set, step: 'fa', vipFree: false, vipRequest: null } }); if (current()) location.href = '/fast-aden-buffer.html'; }
-    else await done('VIP-бафф готов — возвращаюсь');
+    await done('VIP-бафф готов — FA не трачу, возвращаюсь');
     return true;
   };
   if (st.vipRequest?.phase === 'prepared') { await env.setRt({ tbuff: { ...st, vipRequest: null } }); return; }
@@ -258,8 +278,9 @@ async function vipTownStep(st, active, done) {
   const set = ch.classBranch === 'fighter' ? 'warrior' : ch.classBranch === 'mystic' ? 'mage' : '', row = catalog?.sets?.find(x => x.id === set);
   if (!set || !vipPriceZero(row)) { await env.setRt({ tbOk: false }); return done('VIP: полный набор не подтверждён бесплатным — не применяю'); }
   const levels = Object.fromEntries(row.skills.map(x => [x.skillId, x.level]));
-  if (row.skills.some(x => ch.activeBuffs?.some(b => b.skillId === x.skillId && b.level > x.level && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 30 * 60000))) return done('VIP: набор понизил бы действующие баффы — пропускаю');
   const q = { phase: 'prepared', set, actor: ch.id, revision: ch.revision, skills: row.skills.map(x => ({ skillId: x.skillId, level: x.level })) };
+  if(await finish(ch,q,true))return;
+  if (row.skills.some(x => ch.activeBuffs?.some(b => b.skillId === x.skillId && b.level > x.level && (b.expiresAtMs ?? b.expiresAt) > Date.now() + 30 * 60000))) return done('VIP: набор понизил бы действующие баффы — пропускаю');
   const saved = await env.setRt({ tbuff: { ...st, set, vipRequest: q }, tbLvl: { ...(env.rt.tbLvl || {}), [set]: levels } });
   if (!current()) return;
   if (saved?.ok !== true || !await env.rtCommit()) { if (current()) await env.setRt({ tbuff: st }); return; }
@@ -317,7 +338,7 @@ function townBuffNeed() {                          // что взять: { set, 
   // После окончания VIP обычный набор не может восстановить его дополнительные эффекты.
   const unavailableVip = !vip && set === 'basic' && env.rt.char && env.rt.vipApplied?.char === env.rt.char ? env.rt.vipApplied.ids || [] : [];
   const lost = Object.keys(L).map(Number).filter(id => soon(id) && L[id] > now - 3600000 && (!unavailableVip.includes(id) || ids.includes(id)));
-  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0);
+  let needSet = set !== 'off' && (ids.some(soon) || lost.length > 0 || vip && !vipSession()?.ready);
   const down = needSet ? tbDowngrade(set, H) : [];
   if (down.length) {                                 // 7.2.2: набор понизил бы баффы — не берём
     needSet = false;
@@ -400,13 +421,14 @@ function faBalOf(now = Date.now()) {
   return B.v;
 }
 function tourFaWanted() {
-  return env.cfg.rbFaFull !== false && !env.rt.dailyRb;
+  return !vipNoFa() && env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
 // 20.16 (игрок 18.10 21:45: «в подземелье не использовать бафы за ФА, не бафать их специально, если они уже висят на герое, то пусть»):
 // в катакомбах набор за FA не покупаем (ни свой список, ни Noblesse), а уже висящие платные баффы не мешают бить мобов, снимающих баффы
 const catNoFa = () => env.cfg.catNoFa !== false && (() => { try { return env.autonomyMode?.() === 'cat'; } catch (e) { return false; } })();
 function faWanted() {
   const now = Date.now(), gone = env.rt.faGone || {};
+  if (vipNoFa()) return [];
   if (env.rt.faSkipUntil && now < env.rt.faSkipUntil) return [];
   if (catNoFa()) return [];
   // 7.2.1: РБ-сессия — её баффы покупаются один раз в начале; потом (после смерти) — только Noblesse Blessing (остальное он сохранил).
@@ -482,6 +504,12 @@ const TB_INTERRUPT_MS = 3 * 60000;
 let rbAskT = 0;                                     // 10.0.1: когда тур РБ последний раз спрашивал «баффы перед РБ …» (faWanted → tourWant)
 async function townBuffStart(why, urgent) {         // urgent — перед РБ: не ждём 10 мин с прошлого похода (только 1 мин)
   const active=contextGuard();if(!active())return false;
+  if(env.payments?.blocked())return true;
+  if(vipNoFa() && !vipPreferred()){
+    if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return true;}
+    if(!active())return false;
+    if(vipNoFa() && !vipPreferred()){env.setStatus('VIP активен: FA не трачу; бесплатный набор пока недоступен или отключён');return true;}
+  }
   if (urgent && /^перед РБ/.test(why)) rbAskT = Date.now();
   // Отмена маршрута не равна неудачной покупке. Перед новым планом читаем сервер:
   // HUD после ответа/перезагрузки может ещё не показывать уже оплаченные эффекты.
@@ -726,6 +754,15 @@ async function townBuffStep() {
     return done('готово — возвращаюсь');
   }
   if (st.step === 'fa') {
+    // Сохранённая очередь могла появиться до активации VIP. Pending выше сначала сверяется; новых оплат здесь ещё нет.
+    if(!await vipRefresh(active)){if(active())env.setStatus('VIP: сверяю состояние персонажа; FA пока не трачу');return;}
+    if(!active())return;
+    if(vipNoFa()){
+      const set=vipPreferred();
+      if(!set){env.setStatus('VIP активен: FA не трачу; жду подтверждения бесплатного набора и его настройки');return;}
+      await env.setRt({tbuff:{...st,step:'town',set,vipFree:true,fa:[]}});
+      if(active())location.href='/town-buffer.html';return;
+    }
     if (!/\/fast-aden-buffer\.html/.test(location.pathname)) { location.href = '/fast-aden-buffer.html'; await env.sleep(4000); return; }
     env.setStatus('Бафф: Fast Aden');
     await env.waitX(() => env.$q('.l2-fa-buy[data-skill-id]'), 10000, 200);
@@ -838,6 +875,6 @@ function faPaidLeft(minMs = 10 * 60000) {           // сколько платн
   const now = Date.now();
   return Object.entries(faPaidOn(H, now)).filter(([id, e]) => +id !== 1323 && e - now > minMs).length;
 }
- return { vipNote, vipPreferred, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
+ return { vipNote, vipPreferred, vipNoFa, vipSession, vipPriceZero, vipTownStep, paymentNote, paymentReconcile, hudLevels, tbLevelsNote, tbDowngrade, faIdsOf, faFullIds, tourFaWanted, faBalOf, faDropSum, faClashNote, faLow, catNoFa, activeBuffs, buffDur, ownBuffLeft, buffWaitBeforeRb, buffActive, buffAudit, buffAuditStep, buffList, totemSlots, totemActive, totemPick, totemNote, hudBuffs, townBuffNeed, faWanted, faCatalogNote, townBuffStart, townBuffStep, cancelNote, cancelRisk, cancelKey, faPaidLeft, CANCEL_RE };
  };
 })(globalThis);

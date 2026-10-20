@@ -3,13 +3,15 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const read=m=>fs.readFileSync(path.join(__dirname,'../modules/'+m+'.js'),'utf8');
 function faFixture({ids=[1059,1085],H={},interrupt=false,pauseChange=null}={}) {
- const state={balance:10,bought:[],H},rt={tbuff:{step:'fa',fa:ids,t:Date.now()}},cfg={faBuffs:ids.join(',')};
+ const state={balance:10,bought:[],H},rt={char:'Hero',tbuff:{step:'fa',fa:ids,t:Date.now()}},cfg={faBuffs:ids.join(',')};
  function create(crash=false){
   const buttons=ids.map(id=>({dataset:{skillId:String(id),cost:'1'},disabled:false,closest:()=>({querySelector:()=>({textContent:'Buff '+id})})}));
   const hud={querySelectorAll:()=>Object.entries(state.H).map(([id,exp])=>({dataset:{skillId:id,expiresAt:String(exp)},getAttribute:()=> 'Buff · Lv.3'}))};
   const query=s=>s==='#l2-hud-active-buffs'?hud:s==='#fast-aden-balance'?{textContent:String(state.balance)}:s==='.l2-fa-buy[data-skill-id]'?buttons[0]:buttons.find(b=>s===`.l2-fa-buy[data-skill-id="${b.dataset.skillId}"]`)||null;
   const box={document:{querySelectorAll:s=>s==='.l2-fa-buy[data-skill-id]'?buttons:[]},location:{pathname:'/fast-aden-buffer.html'}};vm.runInNewContext(read('buffs'),box);
   const env={rt,cfg,on:true,$q:query,TB_KEYS:{basic:[]},IL:{},FA_KNOWN:{1059:['Empower',1],1085:['Acumen',1]},faCost:()=>1,waitX:async f=>f(),pause:async()=>{pauseChange?.(env)},rnd:a=>a,sleep:async()=>{if(crash&&state.bought.length===1)throw Error('reload');},setStatus(){},rec(){},autonomyMode:()=> 'hunt',setRt:async p=>Object.assign(rt,p),fire:b=>{const id=+b.dataset.skillId;state.bought.push(id);state.balance--;state.H[id]=Date.now()+3*3600000;return true;}};
+  // 20.30: платный сценарий подтверждает свежий non-VIP и реальные эффекты синтетического героя.
+  env.gameGet=async()=>({ok:true,json:async()=>({character:{name:'Hero',id:'fixture-actor',revision:state.bought.length+1,vip:{active:false},activeBuffs:Object.entries(state.H).map(([id,expiresAtMs])=>({skillId:+id,level:3,expiresAtMs}))}})});
   return {M:box.L2V7Factories.buffs(env),env};
  }
  return {state,rt,cfg,create,first:create(interrupt)};

@@ -3,10 +3,11 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 function fixture(){
  const b={console,Date,document:{querySelectorAll:()=>[]}};for(const n of ['actions','buffs'])vm.runInNewContext(read('modules/'+n+'.js'),b);
- let rt={char:'HeroA',manualKickAt:1,tbuff:{step:'restore',buffDone:true,t:Date.now(),back:'/map.html'}};const writes=[],fires=[],route={pathname:'/town-buffer.html',search:'',href:''};let hook=()=>{},H={};
+ // 20.29: свежая проверка перед FA подтверждает, что синтетический герой не VIP.
+ let rt={char:'HeroA',manualKickAt:1,vipBuff:{char:'HeroA',actor:'fixture-actor',active:false,until:null,set:'',prof:'',slot:null,t:Date.now()},tbuff:{step:'restore',buffDone:true,t:Date.now(),back:'/map.html'}};const writes=[],fires=[],route={pathname:'/town-buffer.html',search:'',href:''};let hook=()=>{},H={};
  const env={get rt(){return rt},set rt(v){rt=v},cfg:{townBuffSet:'basic'},on:true,tabOwner:true,leaseEpoch:'A',TB_KEYS:{basic:[]},FA_KNOWN:{},IL:{},DEAD_RE:/unconscious/,
  setStatus(){},rec(){},setRt:async p=>{writes.push({char:rt.char,p});rt={...rt,...p};await hook('setRt',p);return {ok:true}},$q:s=>s==='#l2-hud-active-buffs'?{querySelectorAll:()=>Object.entries(H).map(([id,expiry])=>({dataset:{skillId:id,expiresAt:expiry},getAttribute:()=>''}))}:null,
- sleep:async()=>hook('sleep'),pause:async()=>hook('pause'),waitX:async f=>{await hook('waitX');return f()},autonomyMode:()=> 'farm'};
+ sleep:async()=>hook('sleep'),pause:async()=>hook('pause'),waitX:async f=>{await hook('waitX');return f()},autonomyMode:()=> 'farm',gameGet:async()=>({ok:true,json:async()=>({character:{name:rt.char,id:'fixture-actor',revision:1,vip:{active:false},activeBuffs:[]}})})};
  const a=b.L2V7Factories.actions({get rt(){return rt},cfg:{},get on(){return env.on},get tabOwner(){return env.tabOwner},mode:()=> 'auto',lease:()=>env.leaseEpoch});a.enterFrame();env.routeLocation=a.locationProxy(route);env.fire=el=>{if(!a.canAct())return false;fires.push(el);return true};
  const mutate=kind=>{if(kind==='actor')rt={char:'HeroB',tbuff:{step:'town',set:'basic',t:999},marker:'new'};if(kind==='lease')env.leaseEpoch='B';if(kind==='stop')env.on=false;if(kind==='owner')env.tabOwner=false;if(kind==='kick')rt={...rt,manualKickAt:2};};
  return {env,route,writes,fires,H,mutate,B:b.L2V7Factories.buffs(env),set hook(fn){hook=fn}};
