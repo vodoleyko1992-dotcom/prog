@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-20T03:18:17.954552+00:00",
+  "base": "01a09cd77b56a4700b25a02e9599ce64097b3030",
+  "nodeFiles": {
+    "pass": 487,
+    "fail": 0
+  },
+  "newScenarios": {
+    "lsScan": 17,
+    "lsSession": 19,
+    "pet": 31,
+    "vip": 19
+  },
+  "syntaxChangedJsCjs": 15,
+  "envcheckModules": 31,
+  "diffCheck": "PASS",
+  "browser": "Chrome for Testing 155.0.8059.84",
+  "browserFiles": {
+    "focus.log": "PASS",
+    "ls-session.log": "PASS",
+    "ls-choice.log": "PASS",
+    "vip.log": "PASS",
+    "pet.log": "PASS 2/2"
+  },
+  "boundary": "Actual extension MV3/main/parser/dispatcher/hook/fire; HTTPS and native game handler fully local; no live game/account",
+  "build": "Version and ZIP20.31 unchanged",
+  "review": "Independent review PASS; reproduced and fixed pet/LS race; own class enable → storage → running LS verified"
+}

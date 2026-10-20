@@ -24,6 +24,9 @@ OWN_CFG.length = 0; OWN_CFG.push({ patch: { nWeaponMain: 'Z' }, t: Date.now() - 
 assert.equal(ownCfgChange({ oldValue: base, newValue: { ...base, nWeaponMain: 'Z' } }), false);
 // слушатель хранилища использует проверку, Start/Stop (on) по-прежнему поднимает поколение
 // 20.12 (UI-10): к своей записи добавлена запись только вида меню (dockMin) — тоже не поднимает поколение
-assert.match(src, /if \(ch\.on \|\| ch\.cfg && !ownCfgChange\(ch\.cfg\) && !viewOnlyCfgChange\(ch\.cfg\) \|\|/);
+// 20.10 (ЛС): одна классификация также управляет interrupt серии; служебная/no-op запись её не отменяет.
+assert.match(src, /const cfgControlChange = !!ch\.cfg && !ownCfgChange\(ch\.cfg\) && !viewOnlyCfgChange\(ch\.cfg\);/);
+assert.match(src, /if \(ch\.on \|\| cfgControlChange \|\|/);
+assert.match(src, /if \(cfgControlChange\) L2V7Modules\.lifestone\.interrupt\(\)/);
 assert.match(src, /async function setCfg\(patch\) \{\n  OWN_CFG\.push/);
 console.log('PASS v2010-own-cfg-generation: своя запись cfg не отменяет свой маршрут, чужая/смешанная — отменяет');

@@ -3154,17 +3154,27 @@ for(const [kind,label] of Object.entries(LS_GROUPS)){
   $('lsTargets').append(group);
 }
 let lsEditing=false,lsActionBusy=false,lsRenderedChar=null;
-async function lsRefresh(){
-  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
-  const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
-  const weapons=rt.lsWeapons?.char===rt.char?rt.lsWeapons.items||[]:[],selected=c.weaponKey||'';
+// 20.10: touch/Firefox могут оставить фокус в поле при нажатии «Обновить оружие».
+// Явное чтение обновляет только список, не затирая черновик эффектов/лимита.
+function lsRenderWeapons(rt,c,preserveSelection=false){
+  const scanned=rt.lsWeapons?.char===rt.char, weapons=scanned?rt.lsWeapons.items||[]:[],selected=preserveSelection?$('lsWeapon').value:c.weaponKey||'';
   $('lsWeapon').replaceChildren();
   const empty=document.createElement('option');empty.value='';empty.textContent='Выберите оружие';$('lsWeapon').append(empty);
   for(const w of weapons){const o=document.createElement('option');o.value=w.key;o.textContent=`${w.name} +${w.enchant} · ${w.grade} · ${w.equipped?'надето':'рюкзак'}${w.ambiguous?' · одинаковые экземпляры':''}`;o.disabled=w.ambiguous;$('lsWeapon').append(o);}
   if(selected&&!weapons.some(w=>w.key===selected)){const o=document.createElement('option');o.value=selected;o.textContent='Выбранная вещь не в списке — обновите оружие';$('lsWeapon').append(o);}
   $('lsWeapon').value=selected;
   const chosen=weapons.find(w=>w.key===selected);
-  $('lsWeaponHint').textContent=!weapons.length?'Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.':chosen?.ambiguous?'Одинаковые экземпляры нельзя различить — оставьте один и обновите список.':chosen&&!chosen.equipped?'Выбрана вещь из рюкзака. Сначала наденьте её в игре: запуск в другое оружие заблокирован.':chosen?'Серия привязана к выбранной вещи. Смена оружия остановит вставку.':'Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.';
+  $('lsWeaponHint').textContent=!weapons.length?(scanned?'Оружие прочитано: подходящих C/B/A/S вещей не найдено.':'Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.'):chosen?.ambiguous?'Одинаковые экземпляры нельзя различить — оставьте один и обновите список.':chosen&&!chosen.equipped?'Выбрана вещь из рюкзака. Сначала наденьте её в игре: запуск в другое оружие заблокирован.':chosen?'Серия привязана к выбранной вещи. Смена оружия остановит вставку.':'Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.';
+}
+async function lsRefreshWeapons(who){
+  const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);
+  if(!who||who!==rt.char||lsRenderedChar!==rt.char)return;
+  lsRenderWeapons(rt,cfg.autoLs||{},lsEditing||document.activeElement?.id==='lsWeapon');
+}
+async function lsRefresh(){
+  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
+  const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
+  lsRenderWeapons(rt,c);
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
   lsRenderedChar=rt.char;
@@ -3203,7 +3213,7 @@ async function lsAction(action){
       await lsCommand('resume',who);
     } else await lsCommand(action,who);
   }catch(e){toast('ЛС: '+String(e.message||e),'var(--bad)');}
-  finally{lsActionBusy=false;await lsRefresh();}
+  finally{lsActionBusy=false;if(action==='scan')await lsRefreshWeapons(who);await lsRefresh();}
 }
 for(const [id,action] of Object.entries({lsScanWeapons:'scan',lsStart:'prepare',lsResume:'resume',lsPause:'pause',lsReconcile:'reconcile',lsClose:'close',lsAcknowledge:'acknowledge'}))$(id).onclick=()=>lsAction(action);
 panelRefresher($('lsRun'),lsRefresh,500);

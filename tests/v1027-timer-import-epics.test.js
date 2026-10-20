@@ -71,7 +71,8 @@ test('storage event updates paused dock despite pending stale timer and accepts 
   const stale = { b: { [id]: { n: 'Zaken', l: 60, al: true, e: 1, ls: now - H } } }, fresh = { b: { [id]: { n: 'Zaken', l: 60, al: false, e: 1, ls: now, dh: now, rh: 36 } } };
   const content = read('content.js'), start = content.indexOf('  const timerPrevious = rt;'), end = content.indexOf('\n  if (ch.cfg || ch.rt) enchantModePause', start);
   assert.ok(start > 0 && end > start);
-  Object.assign(box, { rt: { char: 'Hero', rbTimer: stale }, ch: { rt: { newValue: { char: 'Hero', rbTimer: fresh, _src: 'menu' } } }, DEF_RT: {}, TAB_ID: 'tab1', L2V7Modules: { rbtimer: T }, rtWriter: { peek: () => ({ rbTimer: stale }) } });
+  // 20.31: вырезка начинается после классификатора cfg; событие только rt не меняет управление ЛС.
+  Object.assign(box, { cfgControlChange: false, rt: { char: 'Hero', rbTimer: stale }, ch: { rt: { newValue: { char: 'Hero', rbTimer: fresh, _src: 'menu' } } }, DEF_RT: {}, TAB_ID: 'tab1', L2V7Modules: { rbtimer: T }, rtWriter: { peek: () => ({ rbTimer: stale }) } });
   vm.runInContext('{'+content.slice(start, end)+'}', box); assert.equal(box.rt.rbTimer.b[id].al, false);
   box.rt.rbTimer = stale; box.ch.rt.newValue._src = 'tab1';
   vm.runInContext('{'+content.slice(start, end)+'}', box); assert.equal(box.rt.rbTimer.b[id].ls, now);
