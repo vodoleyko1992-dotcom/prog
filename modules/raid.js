@@ -1166,7 +1166,8 @@ function tourFaOn() {
 }
 
 function rbSummonBuffReady() {
-  if (env.cfg.petFullAuto !== true || !/^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) return true;
+  if (env.warlock?.raidReady?.() === false) return false;
+  if (env.cfg.petFullAuto !== true || !/^(?:human_)?(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) return true;
   const s = env.warlock?.summary?.();
   return s?.status === 'active' && s.expiresAt > Date.now() + 60000;
 }
@@ -1395,6 +1396,8 @@ async function rbHuntStep() {
       return;
     }
     if (!active() || !sameJob()) return;
+    if (await env.warlock?.raidPrepare?.()) return;
+    if (!active() || !sameJob()) return;
     if (tourFaOn() && typeof env.hudBuffs === 'function' && !env.hudBuffs() || rbBuffShortage() || (env.townBuffNeed?.() && !rbBuffWaitOver(H.name)) || !rbSummonBuffReady())
       return huntDone(H.id, `${H.name}: баффы изменились перед перелётом — подготовлю снова`, false);
     const reason = rbTeleportCheck(H.id, g);
@@ -1479,6 +1482,8 @@ async function rbHuntStep() {
     const bw = env.buffWaitBeforeRb();                  // v4.41: тотем на откате ≤60 с — ждём, бой с РБ начинаем с баффом
     if (bw) { env.setRt({ status: `Тур РБ: жду откат «${bw.who}» ${bw.s} с, потом ${H.name}` }); env.draw(); await env.sleep(Math.min(bw.s, 10) * 1000); await huntSet({ at: Date.now() }); return; }
     if (await rbBuffHold(H.name, active)) { if (active() && sameJob()) await huntSet({ at: Date.now() }); return; }
+    if (!active() || !sameJob()) return;
+    if (await env.warlock?.raidPrepare?.()) return;
     if (!active() || !sameJob()) return;
     if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
@@ -1570,7 +1575,9 @@ async function rbHuntStep() {
       if (rbFaBudgetSaid !== preparing.id + faBudget) { rbFaBudgetSaid = preparing.id + faBudget; env.rec('B', 'тур РБ', `${preparing.name}: бафф за FA не беру — ${faBudget}`); }
     } else if (await rbBuffHold(preparing.name, active)) return;
     if (!active()) return;
-    if (env.cfg.petFullAuto === true && /^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
+    if (await env.warlock?.raidPrepare?.()) { if (active()) await rbHuntPhase('prepare', 'призываю и бафаю кота до боя с РБ'); return; }
+    if (!active()) return;
+    if (env.cfg.petFullAuto === true && /^(?:human_)?(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
       await env.warlock?.step?.({ forceRead: true });
       if (!active()) return;
       if (!rbSummonBuffReady()) {

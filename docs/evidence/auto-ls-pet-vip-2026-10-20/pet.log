@@ -1,0 +1,2 @@
+PASS actual MV3/main/hook pet raid prep native summon → Queen → Warrior → Final → fresh raidReady {"casts":[1276,1331,1346,1349],"paths":["/map.html","/skill-panel.html","/rb-bosses.html","/rb-bosses.html"],"gets":15}
+PASS actual MV3/main/hook pet raid prep Stop during fresh confirmation {"casts":[1276],"paths":["/map.html","/skill-panel.html"],"gets":5}

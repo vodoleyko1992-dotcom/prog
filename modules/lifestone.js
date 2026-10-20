@@ -29,8 +29,9 @@
    const who=char(),context=stamp(),[s,h]=await Promise.all([snapshot(),get('/character/catalog-hints')]);
    if(!s||!h?.itemGradeHints||!h?.itemSlotHints)throw Error('Не удалось прочитать оружие и каталог; прежний список сохранён');
    if(char()!==who||stamp()!==context||!own({char:who}))throw Error('Герой или управление изменились — обновите оружие');
-   const r=await env.setRt({lsWeapons:{char:who,t:now(),items:weaponRows(s,h)}});
-   if(r?.ok!==true)throw Error('Не удалось сохранить список оружия');return true;
+   const rows=weaponRows(s,h),r=await env.setRt({lsWeapons:{char:who,t:now(),items:rows}});
+   if(r?.ok!==true)throw Error('Не удалось сохранить список оружия');
+   env.rec?.('B','ЛС',`Оружие прочитано: ${rows.length} подходящих C/B/A/S вещей; вставка не запускалась`);return true;
   }
   const known=id=>typeof id==='string'&&Object.hasOwn(A.OUT,id);
   function config(){const c=env.cfg.autoLs||{},targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[];
