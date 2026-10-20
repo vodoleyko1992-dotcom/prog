@@ -1,0 +1,182 @@
+{
+  "at": "2026-10-20T11:04:09.998Z",
+  "boundary": "actual extension/main; fully local HTTPS, delayed document navigation; no live game",
+  "proof": [
+    {
+      "case": "single navigation then immediate new-document combat",
+      "browser": "156.0.8078.4",
+      "navigationDelayMs": 1200,
+      "stopBeforeDocument": null,
+      "statusTrace": [
+        {
+          "t": 1792494242934,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792494242945,
+          "s": "Проверяю серверное время и лимиты дня"
+        },
+        {
+          "t": 1792494243079,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        }
+      ],
+      "views": 1,
+      "navigations": 1,
+      "oldDocumentReloadStatuses": 0,
+      "newDocumentFirstActionMs": 167,
+      "pendingState": {
+        "target": {
+          "champ": false,
+          "name": "Nephilim Praetorian",
+          "rb": false
+        },
+        "status": "Бой: загрузка",
+        "observedAt": 1792494243591
+      },
+      "calls": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+          "method": "GET",
+          "at": 1792494241595
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "at": 1792494242951
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "at": 1792494242962
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792494243059
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+          "method": "GET",
+          "at": 1792494243095
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "at": 1792494244331
+        },
+        {
+          "path": "/character",
+          "query": "",
+          "method": "GET",
+          "at": 1792494244395
+        },
+        {
+          "path": "/game/battle/action",
+          "query": "",
+          "method": "POST",
+          "at": 1792494244463
+        }
+      ],
+      "paths": [
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+          "at": 1792494241595
+        },
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+          "at": 1792494243095
+        }
+      ],
+      "errors": []
+    },
+    {
+      "case": "Stop while document loads",
+      "browser": "156.0.8078.4",
+      "navigationDelayMs": 1200,
+      "stopBeforeDocument": true,
+      "statusTrace": [
+        {
+          "t": 1792494247629,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792494247650,
+          "s": "Проверяю серверное время и лимиты дня"
+        },
+        {
+          "t": 1792494247874,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        }
+      ],
+      "views": 1,
+      "navigations": 1,
+      "oldDocumentReloadStatuses": 0,
+      "newDocumentFirstActionMs": null,
+      "pendingState": {
+        "target": {
+          "champ": false,
+          "name": "Nephilim Praetorian",
+          "rb": false
+        },
+        "status": "Бой: загрузка",
+        "observedAt": 1792494248392
+      },
+      "calls": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+          "method": "GET",
+          "at": 1792494246746
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "at": 1792494247671
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "at": 1792494247678
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792494247835
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+          "method": "GET",
+          "at": 1792494247911
+        },
+        {
+          "path": "/game/battle/start",
+          "query": "",
+          "method": "POST",
+          "at": 1792494249168
+        }
+      ],
+      "paths": [
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+          "at": 1792494246746
+        },
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+          "at": 1792494247911
+        }
+      ],
+      "errors": []
+    }
+  ]
+}
