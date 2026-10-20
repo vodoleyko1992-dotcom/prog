@@ -73,5 +73,6 @@
     "zipBuilt": false,
     "settingsChanged": false
   },
-  "next": "Include source fix in the next separately requested build; collect battle/action events to measure hit intervals."
+  "next": "Include source fix in the next separately requested build; collect battle/action events to measure hit intervals.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/314"
 }

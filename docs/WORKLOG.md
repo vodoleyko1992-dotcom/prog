@@ -1,6 +1,6 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 20.10.2026, 20:03 UTC+10 — Codex — PR в подготовке: переход катакомб
+## 20.10.2026, 20:03 UTC+10 — Codex — [PR #314](https://github.com/vodoleyko1992-dotcom/prog/pull/314): переход катакомб
 
 - По TXT/HTML09:36 и жалобе на медленных мобов исправлен catNext: старый экран победы удерживается до ухода документа/отмены/10с. Chrome воспроизвёл повторные GET и навигацию; новый документ не ждёт старого таймаута. Код меняется только в modules/dungeons.js; новые Node/MV3-тесты зарегистрированы. Версия, ZIP и настройки прежние; сборка не запрошена. [Разбор](CAT-COMBAT-SPEED-LOG-2026-10-20.md).
 - Новый Node: baseline1PASS/10FAIL→11PASS; полный507 Node-файлов PASS/0FAIL. Actual Chrome156 MV3:2/2PASS, один GET/переход, без повторного battleOpen, первый удар через90мс после HTML; Stop до загрузки→0ударов,0JS-ошибок. Синтаксис4JS/CJS, envcheck31, bash/diff-check и независимое ревью PASS. [Доказательства](evidence/cat-navigation-2026-10-20/validation.json).
