@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-21T09:20:00+10:00",
+  "author": "Claude",
+  "version": "20.42",
+  "flavor": "Chrome + Firefox",
+  "request": "Разрешаю менять hook.js / как сделаешь, потом сборка хром + фаерфокс",
+  "includes": ["fast turn: hook.js strips delta.hotbarStale only for the bot's ordinary hit mid-battle when the game's own GET /character is <=5 s old; cfg.fastTurn (default on)"],
+  "archives": {
+    "builds/l2wap-bot-v20.42.zip": { "bytes": 1487568, "sha256": "5bb61f4205aa25c88d8a0715ae4f41fd349c1e4f4d9e1df0319da53d0ad696e1", "fileList": "same as 20.41" },
+    "builds/l2wap-bot-v20.42-firefox.zip": { "bytes": 1487646, "sha256": "c33ffd52f6746f8ac956a2c738306bc41936ad786a3309e0c732c4cae39e2a5d", "manifest": "background.scripts, gecko + gecko_android 128+" }
+  },
+  "checks": {
+    "nodeAllFiles": { "pass": 527, "fail": 0 },
+    "syntaxAllRuntimeJs": "PASS",
+    "envcheck": "PASS",
+    "baseProfileNoAuth": true,
+    "fastTurnModel": { "test": "tests/v2042-fast-turn-browser.cjs", "serverActionMs": 400, "characterGetMs": 350, "off": { "medianMs": 793, "characterGets": 24 }, "on": { "medianMs": 510, "characterGets": 3, "fastN": 24 } },
+    "browserFromSource": { "v2041-battle-writes-browser": "PASS 2", "v2041-cat-native-browser": "PASS 2", "v2039-combat-storage-browser": "PASS 3 cases", "v2038-cat-navigation-browser": "PASS 2", "v2041-sw-badge-browser": "PASS 6", "v1014-core-lifecycle-browser": "PASS 6" },
+    "chromeZipload": { "version": "20.42", "pageErrors": 0, "runtimeHashesZipEqualsSource": true },
+    "firefox": { "browser": "Firefox 153.5.0esr", "geckodriver": "0.37.1", "lint": { "errors": 0, "warnings": 43 }, "smokeDesktop": "PASS", "smokeAndroidApisRemoved": "PASS" }
+  },
+  "notChecked": ["live game", "full 148-file browser suite (only the six 20.41 build scenarios were rerun)", "Android device", "AMO signing"]
+}
