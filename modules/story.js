@@ -17,7 +17,8 @@ const POLL = 10 * 60000, JOB_MAX = 4 * 60000, RETRY = 30 * 60000;
 // 9.0: всё, что зависит от класса (скиллы и их замеры, кот, дебаффы, EXP/ч зон, вердикты РБ «по силам») — у каждого класса своё.
 // При переключении класса эти ключи памяти уходят в rt.classStash[<старый класс>] и возвращаются из stash нового (или пустые)
 const CLASS_KEYS = ['skills', 'skillDb', 'petStat', 'petAdvice', 'petLast', 'petBuffAt', 'petResummon', 'debuffStat', 'debuffGain', 'debuffEvidence', 'critStat', 'debuffImmune',
-  'zoneStat', 'mobVal', 'rbDb', 'rbK', 'rbDpsSample', 'hardMobs', 'profQuest', 'fightMem', 'fightLast', 'fightGroups', 'packLab'];   // 20.10: сравнение пачек тоже принадлежит классу
+  'zoneStat', 'mobVal', 'rbDb', 'rbK', 'rbDpsSample', 'rbDps', 'rbDpsContext', 'rbDpsOwner', 'rbLossK', 'rbLossKOwner', 'rbGapK',   // 20.41: общий ДПС/потери по РБ — свои у класса
+  'hardMobs', 'profQuest', 'fightMem', 'fightLast', 'fightGroups', 'packLab'];   // 20.10: сравнение пачек тоже принадлежит классу
 // 10.0 (аудит ядра): метка опроса — в sessionStorage, иначе 2 GET на каждой загрузке страницы (как Маммон в 9.2.2)
 const ssNum = k => { try { return +sessionStorage.getItem(k) || 0; } catch (e) { return 0; } };
 const ssSet = (k, v) => { try { sessionStorage.setItem(k, String(v)); } catch (e) {} };

@@ -4983,7 +4983,7 @@ addEventListener('message', e => {
   // рейдовая — ещё и в sessionStorage: удачный телепорт уводит со страницы, а переменная вкладки теряется.
   if (path === '/game/raid-boss/teleport' && d.method === 'POST') { RAID_PAY_NET = { t: Date.now(), id: String(d.req?.spawnId || ''), status: d.status, paymentId: d.paymentId || '', outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error && d.res?.ok !== false };
     if (d.paymentId) try { sessionStorage.setItem('l2bot.raidPayReceipt', JSON.stringify(RAID_PAY_NET)); } catch (_) {} }
-  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, outcome: L2V7Modules.payments?.classify?.(d) || '', ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
+  if (path === '/game/drops-shop/buy' && d.method === 'POST') SHOP_BUY = { t: Date.now(), status:d.status,paymentId:d.paymentId||'',key: String(d.req?.shopKey || ''), qty: +d.req?.qty || 0, outcome: L2V7Modules.payments?.classify?.(d) || '', msg: String(d.res?.message || '').slice(0, 60), ok: !d.error && /^2/.test(String(d.status)) && !d.res?.error };
   if(path==='/game/drops-shop/buy'&&d.method==='POST'&&d.paymentId)try{sessionStorage.setItem('l2bot.shopReceipt',JSON.stringify(SHOP_BUY));}catch(_){}
   // v5.3: для сторожа рыбалки. 8.0.3 (лог 11.10): + обрыв запроса (err — fishAct сразу жмёт снова, а не ждёт 15 с), отметка сервера
   // serverNowMs и длительность запроса (откат считается от того, когда сервер принял нажатие, — fishing.fishNet), fishing.cooldowns
@@ -6813,6 +6813,17 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   // Заводское значение и новый герой (NEW_HERO_PAID) — по-прежнему ВЫКЛ: платный режим включается только явно.
   // Только герою, который уже рыбачил: новый герой без своей рыбалки остаётся с выключенной докупкой.
   once('fishTimeAuto20261018', () => { if ((rt.fish?.casts || 0) > 0) cf.fishTimeAuto = true; });
+  // 20.41 (лог 20.10 21:09, Bounty Hunter — слот 1): общий ДПС/потери по РБ не были памятью класса — саб брал замер Warlock (≈34k/с) и
+  // шёл на Sobekk 3.6M с прогнозом «≈1:45» вместо 23–25 мин. Теперь они в story.CLASS_KEYS; старый замер без владельца, найденный у саба,
+  // переносим в память основного класса (единственный другой класс в classStash), у саба — с нуля (осторожная оценка до своих замеров).
+  once('rbDpsClass2041', () => {
+    const cur = rt.classCur, st = rt.classStash || {};
+    if (!cur?.prof || !(+cur.slot > 0) || rt.rbDpsOwner || !(rt.rbDps > 0 || rt.rbLossK > 0)) return;
+    const others = Object.keys(st).filter(p => p !== cur.prof && st[p] && typeof st[p] === 'object');
+    if (others.length !== 1 || st[others[0]].rbDps != null) return;
+    rf.classStash = { ...st, [others[0]]: { ...st[others[0]], rbDps: rt.rbDps ?? null, rbDpsContext: rt.rbDpsContext ?? null, rbLossK: rt.rbLossK ?? null, rbGapK: rt.rbGapK ?? null } };
+    Object.assign(rf, { rbDps: null, rbDpsContext: null, rbLossK: null, rbGapK: null });
+  });
   once('rbKill30_20261018', () => { if (+C('rbMaxKillMin') === 20) cf.rbMaxKillMin = 30; });
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });
   // 20.10 (игрок 17.10 04:33: «мобы на автофарм и каты — общие! количество в сумме ограничено, иначе нас замечают в статистике»):
