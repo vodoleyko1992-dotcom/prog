@@ -263,6 +263,17 @@ async function farmQuotaSnapshot(char, need = null) {
     return snap();
   } catch (e) { KILL_FAIL_T = Date.now(); throw e; }
 }
+// 20.41: итог боя без ожидания записи — только когда и до лимита задачи, и до дневного лимита дальше QUOTA_ASYNC_ROOM мобов
+// (с запасом на неподтверждённый ещё итог текущего боя и пачки до 10 целей). Ближе — как раньше: точная остановка на лимите.
+const QUOTA_ASYNC_ROOM = 40;
+let quotaWinP = null;
+function farmQuotaIdle() { return quotaWinP || Promise.resolve(); }
+function farmQuotaRoom(T, n) {
+  const row = rt.farmQuota?.[T.task], room = [];
+  if (T.limit > 0) room.push(T.limit - (+row?.got || 0));
+  if (T.dailyLimit > 0) room.push(T.dailyLimit - L2EngineCore.dailyCount(rt, 'auto'));
+  return room.length ? Math.min(...room) - Math.max(0, +n || 0) : 0;
+}
 // Повтор подтверждения одного боя: не чаще раза в 2 с, не больше 5 попыток / 30 с.
 function quotaWait(key) {
   const now = Date.now(), W = QUOTA_WAIT[key] ||= { n: 0, t0: now, t: 0 };
@@ -282,7 +293,8 @@ async function beginFarmQuota(spawn, onBase = null) {
   const previous = farmQuotaPending(spawn); if (previous.length > 1) { setStatus('Лимит мобов: сверяю владельца начатого боя'); return false; }
   const task = previous[0]?.task || farmQuotaTask(), limit = task && farmQuotaLimit(task), dailyLimit=task ? farmDailyLimit(task) : 0;
   if (!limit && !dailyLimit) return null;
-  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionKills = previous.length ? previous[0].row.pending.sessionKills : Number.isSafeInteger(rt.kills) && rt.kills >= 0 ? rt.kills : undefined, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
+  const char = rt.char || '', epoch = leaseEpoch, kick = rt.manualKickAt || 0, sessionT0 = previous.length ? previous[0].row.pending.sessionT0 : rt.sessT0 ?? null;
+  let sessionKills = previous.length ? previous[0].row.pending.sessionKills : Number.isSafeInteger(rt.kills) && rt.kills >= 0 ? rt.kills : undefined;
   const valid = () => on && tabOwner && rt.char === char && leaseEpoch === epoch && (rt.manualKickAt || 0) === kick && (previous.length ? farmQuotaPending(spawn).some(p => p.task === task && p.row.run === previous[0].row.run) : farmQuotaTask() === task) && farmQuotaLimit(task) === limit && farmDailyLimit(task) === dailyLimit;
   // 20.12: без счётчика бой не бросаем — билет «неточно», убитые засчитаются по журналу боя.
   const approxId = `${TAB_ID}:${Date.now()}:${++quotaTicketN}`, approx = () => ({ task, limit, dailyLimit, char, epoch, kick, spawn, approx: true, approxId, run:rt.farmQuota?.[task]?.run ?? 0, sessionKills, sessionT0, beforeCounter: c?.mobsKilled, beforeRevision: c?.revision });
@@ -295,6 +307,8 @@ async function beginFarmQuota(spawn, onBase = null) {
   // 20.41 (катакомбы: каждый моб — новая страница, свежего счётчика нет): точка начала уже снята — бой может начинать удары,
   // запись 'begin' (полная память 1,3 МБ, 0,4–1,5 с) идёт параллельно; итог боя ждёт её через quotaTicket, фон пишет по порядку
   try { onBase?.(); } catch (e) {}
+  // 20.41: итог прошлого боя ещё пишется (без ожидания) — начало этого боя после него: счёт сессии берём уже с его убитыми.
+  if (quotaWinP) { await quotaWinP; if (!valid()) return null; if (!previous.length && Number.isSafeInteger(rt.kills) && rt.kills >= 0) sessionKills = rt.kills; }
   try {
     const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { op: 'begin', task, limit, dailyLimit, kick, spawn, counter: c.mobsKilled, revision: c.revision, sessionKills, sessionT0 }, expectedChar: char, epoch, src: TAB_ID });
     if (!valid()) return null;
@@ -361,7 +375,17 @@ async function finishFarmQuota(ticket, lost = false, seen = null) {
   try {
     const p = rt.farmQuota?.[T.task]?.pending, need = s => s.rev > T.beforeRevision && (!p || observed > 0 || lost || s.k > p.counter);
     const c = await farmQuotaSnapshot(T.char, need); if (!valid()) return true;
-    const r = await ipc({ cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID });
+    const msg = { cmd: 'statePatch', patch: {}, farmQuota: { ...T, op: 'win', lost, seen:logN, counter: c.mobsKilled, revision: c.revision }, expectedChar: T.char, epoch: T.epoch, src: TAB_ID };
+    // 20.41 (замер цикла катакомб, память 1,3 МБ: запись итога 0,7–1,3 с держала экран победы до «Охотиться дальше»): счётчик сервера уже
+    // подтвердил бой — до лимита далеко, следующий бой итог не ждёт. Фон пишет записи по очереди (serializeLock): итог раньше начала
+    // следующего боя, а beginFarmQuota ждёт этот ответ, прежде чем взять счёт сессии. Отказ фона — засчёт по журналу боя (approx).
+    if (farmQuotaRoom(T, logN) > QUOTA_ASYNC_ROOM) {
+      delete QUOTA_WAIT[key];
+      quotaWinP = ipc(msg).then(r => { if (!valid()) return; if (r?.ok) return void farmQuotaApply(T, r); return farmQuotaApprox(T, logN, true); }, () => valid() ? farmQuotaApprox(T, logN, true) : null)
+        .catch(e => console.warn(TAG, 'итог лимита', e)).finally(() => { quotaWinP = null; });
+      return false;
+    }
+    const r = await ipc(msg);
     if (!r?.ok || !valid()) return miss('Лимит мобов: сверяю итог боя');
     delete QUOTA_WAIT[key];
     return farmQuotaApply(T, r);
@@ -1395,8 +1419,15 @@ function setRt(p) {
     }
   }
   if (tabIdle || document.prerendering) return Promise.resolve({ ok: false, reason: 'inactive' });
+  if (Object.keys(patch).every(k => RT_STAT_SOON.has(k))) return rtWriter.defer(patch, 8000);
   return rtWriter.enqueue(patch);
 }
+// Задаётся до первого вызова setRt: верхний уровень файла его не вызывает, только функции после загрузки.
+// 20.41 (замер цикла катакомб, память 1,3 МБ: на моба 4 полные записи памяти, фон пишет их по очереди ≈0,65 с каждую, и экран победы
+// ждал запись начала боя за ними): статистика обычного боя — награды, ДПС, замеры, счётчики, путь к цели — пишется отложенно, одним
+// пакетом раз в 8 с или вместе с любой обычной записью. Память вкладки обновлена сразу, при уходе со страницы остаток уходит по pagehide.
+const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 'sp', 'lastWinT', 'lastBattle', 'packLab', 'buffAudit', 'dps', 'mobVal',
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'eff', 'skills', 'via', 'catInT']);
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
 // уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
@@ -5419,7 +5450,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get townBuffStart() { return townBuffStart; }, set townBuffStart(value) { townBuffStart = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ()=>L2V7Modules.dungeons?.catPrefetch?.()}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+L2V7Modules.combat = L2V7Factories.combat({ get setRtSoon(){return setRtSoon}, get catPrefetch(){return ms=>L2V7Modules.dungeons?.catPrefetch?.(ms)}, get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
   get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },

@@ -1384,6 +1384,9 @@ async function battle() {
     if (!env.farmQuotaCached?.()) await Promise.race([baseP, ctx.farmQuotaP]);
   }
   ctx.quotaTicket = async () => { if (ctx.farmQuotaP) { ctx.farmQuota = await ctx.farmQuotaP; ctx.farmQuotaP = null; } return ctx.farmQuota || null; };
+  // 20.41 (замер цикла катакомб: список подземелья ≈0,3 с после победы ждал «Охотиться дальше»): список для следующего моба читаем уже
+  // в начале боя; на победе он переиспользуется, если не старше 4 с (долгий бой — читаем заново)
+  if (!ctx.rb) try { env.catPrefetch?.(); } catch (e) {}
   if(ctx.rb&&env.noteRaidMobKills){
     if(env.raidMobReady&&!env.raidMobReady(ctx.spawnId||spawnId))await env.waitFor(()=>env.raidMobReady(ctx.spawnId||spawnId),1000,20);
     if(!killOwnerValid(ctx))return;
@@ -2575,7 +2578,7 @@ async function battleWin(ctx, t0, spawnId, strength, countExtras) {
     env.rec('B', 'бой', `${ctx.name}: итог боя не подтверждён — сверяю состояние на карте, убийство и добычу не засчитываю`);
     return env.toMap();
   }
-  if (!ctx.rb) try { env.catPrefetch?.(); } catch (e) {}   // 20.41: список подземелья для следующего моба — параллельно с учётом победы
+  if (!ctx.rb) try { env.catPrefetch?.(4000); } catch (e) {}   // 20.41: список подземелья для следующего моба — параллельно с учётом победы
   try { await env.sweepStep(ctx); } catch (e) { console.info(env.TAG, 'свип', e); }   // v5.3: ⛏ собрать спойл
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   await countExtras(true);

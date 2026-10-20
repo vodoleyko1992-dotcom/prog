@@ -142,11 +142,25 @@ const mobLink = sid => [...document.querySelectorAll('#dungeon-mob-list a[href*=
 // Свежий список читаем без перехода; штатная страница выбранного боя сама запускает его.
 // 20.41 (аудит скорости: GET списка подземелья ≈0,6 с после каждой победы, строго после учёта квоты): запрос начинается сразу на экране
 // победы, параллельно с учётом убийств; catNext берёт его, если он для этой же страницы и не старше 8 с, иначе читает заново.
-let viewPre = null;
+let viewPre = null, nat = null;
+// 20.41 (лог 20.10 21:15: моб катакомб ≈9 с, из них ≈4 с — загрузка новой страницы боя между выбором и первым ударом): штатная кнопка
+// «Охотиться дальше» начинает следующий бой без перезагрузки, но моба выбирает сервер (живой замер 20.10: и свой nextHuntSpawnId он
+// не соблюдает, уровень ±3). Поэтому только при однородном списке: ≥3 соседних обычных моба, ≥80 % из них подходят выбору (уровень ±1,
+// без известных Cancel и запретов). Два неподходящих выбора сервера подряд — в этом документе снова свой выбор и переход.
+function catNative(id, list, pick, cur) {
+  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = Math.abs((+cur.level || 0) - nat.lvl) <= 1 ? 0 : nat.bad + 1; }
+  if (nat?.id === id && nat.bad >= 2) return false;
+  const L = catLevel(), fit = list.filter(x => Math.abs(x.lvl - pick.lvl) <= 1 && catPick([x], L));
+  if (list.length < 3 || fit.length < list.length * 0.8) return false;
+  if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
+  nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
+  return true;
+}
 const viewGet = id => env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)).then(r => r.ok ? r.json() : null).then(j => j?.dungeon || null, () => null);
-function catPrefetch() {
+function catPrefetch(reuseMs = 0) {
   const sid = new URLSearchParams(location.search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
   if (!id || !/\/battle\.html$/i.test(location.pathname) || env.cfg.chain === false || env.autonomyMode?.() !== 'cat' || typeof env.gameGet !== 'function') return;
+  if (reuseMs && viewPre?.id === id && viewPre.href === location.href && Date.now() - viewPre.t < reuseMs) return;
   viewPre = { id, href: location.href, t: Date.now(), p: viewGet(id) };
 }
 async function catNext() {
@@ -174,6 +188,7 @@ async function catNext() {
   if ((!env.cfg.catDungeon || env.cfg.catDungeon === 'auto') && pick.lvl < catLevel() && env.CAT_LIST?.[id]) {
     const next = catTarget(); if (next && next !== id) return false;
   }
+  if (catNative(id, list, pick, rows.find(x => x.id === sid))) return 'native';
   await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
   if (!active() || !catPick([pick], catLevel())) return true;
   if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active() || !catPick([pick], catLevel()))return true;

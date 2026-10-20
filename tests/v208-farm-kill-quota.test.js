@@ -9,6 +9,8 @@ function fixture(task='auto',legacy=false){
  const src=read('background.js');vm.runInNewContext(src.slice(src.indexOf('// 20.8: лимиты фарма'),src.indexOf('// Popup writes also')),bg);vm.runInNewContext(src.slice(src.indexOf('async function menuPatch('),src.indexOf('async function switchCharacter(')),bg);
  const c={Date,URLSearchParams,console,location:{search:'?spawnId=sdms_test_001'},rt:structuredClone(state.rt),cfg:structuredClone(state.cfg),on:true,tabOwner:true,leaseEpoch:1,TAB_ID:'tab7',rtCommit:async()=>true,rtWriter:{peek:()=>c.queued||{}}/* 20.41: очередь записи вкладки (учёт соседей РБ ждёт её только при ключах счёта) */,mergeCfg:x=>x,setStatus(){},rec(){},autonomyMode:()=>c.cfg.catMode?'cat':c.cfg.taskOnly?'tasks':'farm',gameGet:async()=>({ok:true,json:async()=>({character:{name:'Hero',mobsKilled:counter,revision}})}),ipc:m=>bg.statePatch(m,{tab:{id:7},frameId:0,url:'https://l2wap.com/battle.html'})};
  vm.runInNewContext(read('engine-core.js'),c);const source=read('content.js');vm.runInNewContext(source.slice(source.indexOf('// 20.8: считаем мобов'),source.indexOf('// ---------- персонаж')),c);
+ // 20.41: итог боя вдали от лимита пишется без ожидания — проверки памяти идут после этой записи (сам порядок — v2041-quota-async-win)
+ const fin=c.finishFarmQuotaRaw=c.finishFarmQuota;c.finishFarmQuota=async(...a)=>{const r=await fin(...a);await c.farmQuotaIdle();return r};
  const menu=m=>bg.menuPatch({rtPatch:{},cfgPatch:{},...m},{url:'chrome-extension://test/popup.html'});
  return{state,c,bg,begin:()=>c.beginFarmQuota('sdms_test_001'),win:t=>c.finishFarmQuota(t),grow:n=>{counter+=n;revision++},menu,refresh:()=>{c.rt=structuredClone(state.rt);c.cfg=structuredClone(state.cfg)},change:f=>before=f,fail:()=>fail=true,writes:()=>writes};
 }

@@ -292,13 +292,17 @@ async function nextFight(ctx) {
     if (dungeonBattle() && !env.victory()) return;
     // 20.10, лог13:41: native продолжение запросило67, сервер выдал62. В «Авто» каждую цель выбираем из свежего списка.
     const checkedChain = dungeonCancelBlocked() || !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
+    // 20.41: свежий список однородный — catNext отвечает 'native', и следующий бой даёт штатная кнопка (без загрузки страницы).
+    let native = false;
     if (env.cfg.chain !== false && dungeonBattle() && checkedChain && env.catNext) {
-      if (await env.catNext()) return;
+      const r = await env.catNext();
+      if (r === 'native') native = true;
+      else if (r) return;
       if (!env.on || env.tabOwner === false || !env.victory()) return;
     }
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
-    if (env.cfg.chain !== false && dungeonBattle() && !checkedChain) {
+    if (env.cfg.chain !== false && dungeonBattle() && (!checkedChain || native)) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
