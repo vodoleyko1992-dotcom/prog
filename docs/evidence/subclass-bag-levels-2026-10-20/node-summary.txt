@@ -1,0 +1,4 @@
+== ИТОГ: 490 PASS / 0 FAIL ==
+77 new behavioral cases: subclass/inventory33, catacombs37, server PoW7
+Changed JS/CJS18 and all runtime JS49: syntax PASS
+envcheck31 PASS; diff-check PASS

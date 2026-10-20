@@ -53,7 +53,8 @@ const sandbox = (loc, extra = {}) => { const sb = { console, Date, Math, JSON, U
     const loc = { pathname: '/battle.html', search: '?spawnId=sdms_necropolis_of_devotion_078', href: 'https://l2wap.com/battle.html?spawnId=sdms_necropolis_of_devotion_078' };
     const run = async ({ err, goesTo = 'dungeon', mode = 'cat', spawnId } = {}) => {
       if (spawnId) loc.search = '?spawnId=' + spawnId;
-      const logs = [], env = { cfg: { catMode: true, chain: true }, rt: { catIn: 'necropolis_of_devotion' }, on: true, campOn: () => false, huntOn: () => false, $q: () => ({ id: 'battle-victory-hunt' }), shown: () => true,
+      // 20.32: native-продолжение сохраняется для ручного подземелья; «Авто» проверяет каждый spawn отдельно.
+      const logs = [], env = { cfg: { catMode: true, catDungeon: 'necropolis_of_devotion', chain: true }, rt: { catIn: 'necropolis_of_devotion' }, on: true, campOn: () => false, huntOn: () => false, $q: () => ({ id: 'battle-victory-hunt' }), shown: () => true,
         autonomyMode: () => mode, toMap: async () => 'map',
         waitFor: async f => f() || null, setStatus() {}, setRt: p => Object.assign(env.rt, p), rec: (...a) => logs.push(a.slice(1).join(': ')), victory: () => true, mobHp: () => null, actNet: () => ({}),
         NET_ERR: err ? { t: Date.now() + 1000, err, path: '/game/battle/hunt-continue' } : { t: 0 }, catGo: async () => { env.cat = (env.cat || 0) + 1; return 'cat'; },

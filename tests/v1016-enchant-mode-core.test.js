@@ -47,7 +47,8 @@ test('готовая серия не уводит со страницы зато
 function chainFixture({cat=false,changeAt='',mode='farm'}={}) {
  const calls=[],box={console,Date,URLSearchParams,location:{pathname:'/battle.html',search:cat?'?spawnId=sdms_crypt_001':'?spawnId=dense_001',href:'/battle.html'}};
  vm.runInNewContext(read('modules/mobfarm.js'),box);
- const env={on:true,tabOwner:true,cfg:{chain:true,catMode:cat,priority:'[все]',shopAuto:false},rt:{catIn:cat?'crypt':null},
+ // 20.32: этот стенд проверяет отмену native-цепочки при смене режима; «Авто» теперь использует отдельный fresh-list путь.
+ const env={on:true,tabOwner:true,cfg:{chain:true,catMode:cat,catDungeon:cat?'crypt':'auto',priority:'[все]',shopAuto:false},rt:{catIn:cat?'crypt':null},
   autonomyMode:()=>mode,tvtSoon:()=>false,rnd:()=>0,sleep:async()=>{if(changeAt==='sleep')mode='enchant'},victory:()=>true,pvpPending:()=>false,
   pvpStep:async()=>{calls.push('pvp');return false},huntOn:()=>false,epicOn:()=>false,toMap:async()=>calls.push('map'),
   townBuffStart:async()=>{calls.push('buff');return false},shopNeedByPanel:()=>'',resQuests:()=>[],campOn:()=>false,campEnabled:()=>false,campMobOpen:()=>[],campActive:()=>false,

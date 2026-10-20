@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-20T04:06:56.854221+00:00",
+  "base": "b8b9dda5ea8da404f7b62061c3b9557fc1b6200e",
+  "nodeFiles": {
+    "pass": 490,
+    "fail": 0
+  },
+  "newCases": {
+    "classInventory": 33,
+    "catLevels": 37,
+    "serverPoW": 7
+  },
+  "syntaxChangedJsCjs": 18,
+  "envcheckModules": 31,
+  "diffCheck": "PASS",
+  "browser": {
+    "newFiles": 2,
+    "newCasesPass": 4,
+    "vipRegression": "PASS",
+    "jsErrors": 0
+  },
+  "boundary": "actual source MV3/main/hooks/storage, HTTPS/native handler entirely local models; no live account",
+  "build": "Both Chrome and Firefox20.33 packaged; final archived browser results in ../build-20.33/validation.json",
+  "review": "Independent reviews PASS; class/level cross-module race fixed and tested with actual invRefresh; proof missing/foreign ignored"
+}

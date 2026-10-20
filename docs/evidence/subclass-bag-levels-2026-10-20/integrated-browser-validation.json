@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-20T03:54:54.129328+00:00",
+  "scope": "Integrated /workspace/prog, actual MV3/main/storage/combat/mobfarm/dungeons, all HTTPS intercepted; no live game",
+  "browser": "155.0.8059.84",
+  "passed": 4,
+  "failed": 0,
+  "jsErrors": 0,
+  "cases": [
+    "stale-class-startup",
+    "stop-held-get",
+    "fresh-low-dungeon-reroute",
+    "fresh-list-pick-hero-plus-one"
+  ],
+  "proofs": [
+    "root-bag-proof.json",
+    "root-cat-proof.json"
+  ],
+  "baseline": "Both source baselines reproduced defects: stale-class inventory deadlock; native random hunt-continue POST"
+}
