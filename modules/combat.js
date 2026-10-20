@@ -1410,7 +1410,9 @@ async function battle() {
   // Запасы подстраиваются отдельно: клик потерян — растёт тот, что решал (A +30, B +15), дошёл впритык — тот же −2 / −1
   const clampL = (v, L) => Math.min(L[1], Math.max(L[0], +v || L[2]));
   let lockA = clampL(env.rt.clickLockA, LOCK_A), lockB = clampL(env.rt.clickLockB, LOCK_B);
-  const lockSave = () => { if (Math.abs(lockA - clampL(env.rt.clickLockA, LOCK_A)) >= 20 || Math.abs(lockB - clampL(env.rt.clickLockB, LOCK_B)) >= 10) env.setRt({ clickLockA: lockA, clickLockB: lockB })?.catch?.(() => {}); };
+  // 20.41 (лог 20.10 21:09, память 1,3 МБ: каждая запись — полный get+set памяти в фоне и рассылка её всем страницам): запасы клика —
+  // только подстройка этой же функции (других читателей нет); память вкладки обновлена сразу, запись — отложенным пакетом (до 8 с, уход со страницы его досылает)
+  const lockSave = () => { if (Math.abs(lockA - clampL(env.rt.clickLockA, LOCK_A)) >= 20 || Math.abs(lockB - clampL(env.rt.clickLockB, LOCK_B)) >= 10) (env.setRtSoon || env.setRt)({ clickLockA: lockA, clickLockB: lockB })?.catch?.(() => {}); };
   const gameFree = async (valid = () => true) => { // → { dT, gE } — ответ на ход и конец GET после него
     const t0 = Date.now();
     for (;;) {
@@ -2333,7 +2335,9 @@ async function battle() {
       const rs = reasons.join(' · '), rsk = rs.replace(/\d+ мс/g, '').replace(/MP \d+/, '');
       ctx.mageWaitNoteAt = Date.now();
       if (reasons.length && (rsk !== ctx.mageWaitSig || Date.now() - (ctx.mageWaitLogT || 0) > 60000)) { ctx.mageWaitSig = rsk; ctx.mageWaitLogT = Date.now(); const waitText = (fighterIdle ? `воин ${Math.round((Date.now() - lastAct) / 1000)} с без действий · ` : '') + rs; env.rec('B', 'ожидание навыков', waitText);
-        env.setRt({ combatWait: { t: Date.now(), text: waitText.slice(0, 200) } }); }   // 7.1.30: без спама; 17.10: причина видна и в «Обзоре» меню
+        // 7.1.30: без спама; 17.10: причина видна и в «Обзоре» меню. 20.41 (лог 20.10 21:09, память 1,3 МБ: каждая запись — полный get+set
+        // памяти в фоне): это только строка «Обзора» (меню показывает её 120 с), бой её не читает — отложенной записью до 8 с
+        rtSoon({ combatWait: { t: Date.now(), text: waitText.slice(0, 200) } }); }
     }
     // 19.10 (20.22): воин тоже застывал с «интерфейс 0 мс» на 20–47 с до поражения.
     // Не обходим disabled/запрет игры кликом: если сервер не держит КД и нет запроса в полёте,

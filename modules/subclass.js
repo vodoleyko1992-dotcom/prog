@@ -23,7 +23,11 @@ function charNote(ch) {
   const cs = ch?.classSlots; if (!cs || !Array.isArray(cs.slots)) return false;
   const slots = cs.slots.filter(x => x && (x.owned || x.profession)).map(x => ({ slot: +x.slot || 0, prof: String(x.profession || ''), lvl: +x.level || 0, on: !!x.active }));
   const patch = { subSlots: slots, subUnlock: !!cs.secondAndThirdUnlocked };
-  if (JSON.stringify(patch) === JSON.stringify({ subSlots: env.rt.subSlots, subUnlock: env.rt.subUnlock })) return false;
+  // 20.41 (замер цепочки катакомб, память 1,3 МБ: 1–2 лишние полные записи памяти на моба): хранилище Chrome отдаёт объекты с ключами
+  // по алфавиту — после любой чужой записи rt (итог квоты фона, дважды на моба) слоты приходили как {lvl,on,prof,slot}, строка не совпадала
+  // с {slot,prof,lvl,on}, и следующий GET /character (после каждого хода) снова писал ту же память. Сравниваем значения, не порядок ключей.
+  const sig = (s, u) => JSON.stringify([s.map(x => [x?.slot, x?.prof, x?.lvl, x?.on]), u]);
+  if (Array.isArray(env.rt.subSlots) && typeof env.rt.subUnlock === 'boolean' && sig(slots, patch.subUnlock) === sig(env.rt.subSlots, env.rt.subUnlock)) return false;
   env.setRt(patch);
   return true;
 }
