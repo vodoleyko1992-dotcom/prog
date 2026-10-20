@@ -1,0 +1,3 @@
+PASS MV3/main/hook Destroyer limits on battle_trance→l2_176→l2_420→battle_potion_use→attack
+PASS MV3/main/hook Destroyer limits off attack
+PASS MV3/main/hook Destroyer limits stop battle_trance
