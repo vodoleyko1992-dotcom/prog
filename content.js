@@ -2970,6 +2970,7 @@ async function loopGate() {
   if (await L2V7Modules.pvp.recoveryStep()) { await sleep(200); return true; }
   if (rt.autoLs?.hold && !rt.autoLs.pending && tvtSoon()) await L2V7Modules.lifestone.yieldToUrgent();
   if (lifestoneCommandBusy || rt.autoLs?.hold || rt.autoLs?.pending) { await L2V7Modules.lifestone.step(); await sleep(300); return true; }
+  if (rt.petRaidPrep && await L2V7Modules.warlock.raidPrepare()) { await sleep(300); return true; }
   await enchantModePause();
   if (rt.enchant?.pending) await enchantAccounting();
   if (!LOOP.servicesStarted) {
@@ -4747,6 +4748,7 @@ addEventListener('message', e => {
     if (/^\/game\/story-quests\/dion-campaign(?:\/[\w-]+)?$/.test(path) && d.res.quest) L2V7Modules.quests.dionNote(d.res.quest);
     // только свой герой: /character, /character/subclasses*, страницы квестов (в ответах рейтинга/арены бывает чужой character)
     const ch = d.res.character; if (ch && typeof ch === 'object' && /^\/(?:character(?:\/subclasses(?:\/\w+)?)?|game\/story-quests\/[\w-]+(?:\/\w+)?)$/.test(path)) L2V7Modules.story.charNote(ch), L2V7Modules.subclass.charNote(ch);   // 10.0.7: + слоты классов (заготовка под сабы)
+    if (ch && (path === '/character' || path === '/character/subclasses/switch')) L2V7Modules.warlock?.autoEnableClass?.(ch)?.catch?.(() => {});
   } catch (e) {}
   if (!path || /\.(png|jpe?g|gif|webp|svg|css|js|woff2?|ico)$/i.test(path)) return;
   if (!pageLeaving) observeGameHttp(path, d.status);
@@ -6284,7 +6286,24 @@ if (typeof addEventListener==='function') addEventListener('message',e=>{
 });
 const warlockCanRun = () => cfg.enchantMode !== true && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.() && (L2V7Modules.actions?.owns?.('petBufferTrip') || (!rt.magister && !rt.invScan && !rt.fishSvc && !rt.fishService && !rt.dailyFish && !rt.dailyRb
   && !rt.mmJob && !rt.tsJob && !rt.storyJob && !rt.rbGo && !rt.zoneGo && !rt.tbuff)) && !rt.enchant?.pending && rt.enchant?.status !== 'running';
+// Вне боя используем ту же родную панель и распознанные метаданные, что и в бою.
+function warlockNativePanel() {
+  const combat=L2V7Modules.combat,all=[...document.querySelectorAll(SLOT)],desc=b=>{
+    const il=ilOf(b),action=slotAction(b),skillId=il?.id;
+    return b&&Number.isSafeInteger(skillId)&&/^l2_\d+$/.test(action)?{button:b,action,skillId,effectId:skillId===1331?4699:skillId,name:cleanTitle(b.title),mp:combat.actionMp(b),ready:combat.ready(b)}:null;
+  };
+  const selected=cfg.petSummon?combat.slotsBy(cfg.petSummon):all;
+  const summon=desc(combat.petPick(selected,'')),wanted=cfg.petBuffAuto!==false?names(cfg.nPetBuffs||''):[];
+  const buffs=[],missing=[];
+  for(const n of wanted){const b=combat.slotsBy(n)[0];if(b&&noEffect(b))continue;const d=b&&ilOf(b)?.target==='PET'?desc(b):null;if(d)buffs.push(d);else missing.push(n);}
+  return {summon,buffs,incomplete:!document.querySelector('.l2-battle-hotbar')||missing.length>0};
+}
 L2V7Modules.warlock = L2V7Factories.warlock({ get leaseEpoch(){return leaseEpoch},
+  get setCfg(){return setCfg}, get setStatus(){return setStatus}, get classNote(){return ch=>{L2V7Modules.story.charNote(ch);L2V7Modules.subclass.charNote(ch)}},
+  get raidWanted(){return ()=>L2V7Modules.raid.huntOn()}, get canAct(){return ()=>L2V7Modules.actions?.canAct?.()!==false}, get nativePanel(){return warlockNativePanel},
+  get nativePanelOpen(){return ()=>L2V7Modules.combat.hotbarRows3()}, get nativePanelPath(){return ()=>location.pathname},
+  get nativeReturnPath(){return ()=>/^\/(?:map|rb-bosses|city|town-buffer|char|character)\.html$/.test(location.pathname)?location.pathname+location.search:'/map.html'},
+  get nativeNavigate(){return path=>{if(on&&tabOwner&&L2V7Modules.actions?.canAct?.()!==false&&/^\/[a-z-]+\.html(?:\?[^#]*)?$/.test(path))location.href=path}}, get nativeFire(){return fire},
   get townBufferReady() { return warlockTownReady; }, get townBufferStart() { return warlockTownStart; },
   get shotContext() { return warlockShotContext; }, get canRun() { return warlockCanRun; }, get cfg() { return cfg; }, get rt() { return rt; }, get on() { return on; }, get tabOwner() { return tabOwner; },
   get heroNick() { return heroNick; }, get isBattle() { return isBattle; }, get victory() { return victory; },
@@ -6293,7 +6312,7 @@ L2V7Modules.warlock = L2V7Factories.warlock({ get leaseEpoch(){return leaseEpoch
   get gameGet() { return gameGet; }, get gamePost() { return gamePost; }, get setRt() { return setRt; }, get rtCommit() { return rtCommit; }, get rec() { return rec; }
 });
 const warlockService = L2V7Modules.warlock;
-L2V7Modules.warlock = { ...warlockService, step: options => warlockCanRun() ? warlockService.step(options) : Promise.resolve(false) };
+L2V7Modules.warlock = { ...warlockService, step: async options => { if (!warlockCanRun()) return false; await warlockService.classAutoTick(); return warlockCanRun() ? warlockService.step(options) : false; } };
 let warlockCommandBusy = false;
 async function warlockCommand(m) {
   if (warlockCommandBusy) return {ok:false,reason:'Предыдущая команда кота ещё выполняется'};

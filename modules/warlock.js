@@ -20,17 +20,120 @@ const pendingSame = P => state().pending?.id === P?.id;
 let paymentPoll = null;
 let busy = false, serial = 0, latest = null, latestSeen = false, latestHero = null, latestCombat = null, latestCombatPlan = null, latestDefense = null, prepared = null, preparedSource = null, snapshotOwner = '', snapshotRevision = -1, snapshotEvidenceAt = 0;
 const unsent = new Set();
+const classProf = p => String(p || '').trim().toLowerCase().replace(/[ -]+/g,'_').replace(/^human_/, '');
+const catClass = p => /^(warlock|arcana_lord)$/.test(classProf(p));
+let classBusy = false, classReadAt = 0, classRevision = -1, classOwner = '', classSeenKey = '', raidBusy = false, raidProof = null;
+// 20.10: явное решение игрока — при выборе котовода включать полный бафф, без сброса бюджета.
+async function autoEnableClass(ch) {
+  if (!env.on || !env.tabOwner || ch?.name !== charName() || ch.name !== env.heroNick()
+    || !Number.isSafeInteger(ch.revision) || !Number.isInteger(ch.classSlots?.activeSlot) || !ch.l2Profession) return false;
+  const key = `${ch.classSlots.activeSlot}:${classProf(ch.l2Profession)}`, old = env.rt.petClassEntry;
+  if (classOwner !== ch.name) {classOwner=ch.name;classRevision=-1;classSeenKey='';}
+  if (ch.revision < Math.max(classRevision, old?.char === ch.name ? old.revision : -1) || ch.revision === classRevision && classSeenKey && classSeenKey !== key) return false;
+  classRevision = ch.revision;classSeenKey=key;
+  if (classBusy) return false;
+  if (old?.char === ch.name && old.key === key && old.kick === (+env.rt.manualKickAt || 0)) return false;
+  const who = ch.name, epoch = env.leaseEpoch, kick = +env.rt.manualKickAt || 0;
+  const valid = () => env.on && env.tabOwner && charName() === who && env.heroNick() === who && env.leaseEpoch === epoch && (+env.rt.manualKickAt || 0) === kick && classOwner === who && classSeenKey === key;
+  classBusy = true;
+  try {
+    if (catClass(ch.l2Profession) && typeof env.setCfg === 'function') {
+      if (!valid()) return false;
+      await env.setCfg({ petFullAuto:true, petBuffAuto:true });
+      if (!valid()) return false;
+      env.rec?.('B','суммон','Активен котовод — включён полный автобаф кота; бюджет и резерв сохранены');
+    }
+    if (!valid()) return false;
+    return (await env.setRt({ petClassEntry:{char:who,key,kick,revision:ch.revision,t:Date.now()} }))?.ok === true;
+  } finally { classBusy = false; }
+}
+async function classAutoTick() {
+  if (!env.on || !env.tabOwner || !charName() || charName() !== env.heroNick() || env.canRun?.() === false || env.isBattle() || Date.now() < classReadAt || classBusy) return false;
+  classReadAt = Date.now() + 15000;
+  const who = charName(), epoch = env.leaseEpoch;
+  try { const d = await read('/character'); if (env.on && env.tabOwner && who === charName() && epoch === env.leaseEpoch) { const ch=d.character||d;if(ch?.name===who&&Number.isSafeInteger(ch.revision)&&ch.revision>=Math.max(classOwner===who?classRevision:-1,env.rt.petClassEntry?.char===who?env.rt.petClassEntry.revision:-1)){env.classNote?.(ch);return autoEnableClass(ch);} } } catch (_) {}
+  return false;
+}
+const raidSettings = () => JSON.stringify([env.cfg.petAuto !== false,env.cfg.petBuffAuto !== false,env.cfg.petSummon || '',env.cfg.nPetBuffs || '']);
+const raidClass = () => `${env.rt.classCur?.slot}:${classProf(env.rt.classCur?.prof || env.rt.prof)}`;
+const raidManaged = () => /^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(classProf(env.rt.classCur?.prof || env.rt.prof)) && env.cfg.petAuto !== false;
+const raidSafe = () => env.on && env.tabOwner && priority(false) && env.canAct?.() !== false && env.raidWanted?.() !== false;
+const effectEnd = b => Number.isFinite(b?.expiresAtMs) ? b.expiresAtMs : Number.isFinite(b?.expiresAt) ? b.expiresAt : 0;
+const hasNative = (ch,x) => ch.activeSummon?.activeBuffs?.some(b => +b.skillId === x.effectId && effectEnd(b) > Date.now()+5000) === true;
+function raidReady() {
+  return !raidManaged() || !!raidProof && raidProof.char === charName() && raidProof.classKey === raidClass() && raidProof.settings === raidSettings()
+    && raidProof.kick === (+env.rt.manualKickAt || 0) && raidProof.until > Date.now() && !env.rt.petRaidPrep;
+}
+// Родная внебоевая панель сама формирует POST /character/skills/cast; тело запроса не выдумываем.
+async function raidPrepare() {
+  if (raidBusy) return true;
+  if (!raidManaged()) { if (env.rt.petRaidPrep && env.tabOwner) await env.setRt({petRaidPrep:null}); return false; }
+  if (!raidSafe()) return false;
+  if (raidReady()) return false;
+  raidBusy = true;
+  const who=charName(),epoch=env.leaseEpoch,kick=+env.rt.manualKickAt||0,key=raidClass(),settings=raidSettings();
+  const valid=()=>raidSafe()&&charName()===who&&env.heroNick()===who&&env.leaseEpoch===epoch&&(+env.rt.manualKickAt||0)===kick&&raidClass()===key&&raidSettings()===settings;
+  const save=async j=>valid()&&(await env.setRt({petRaidPrep:j}))?.ok===true&&await env.rtCommit()&&valid();
+  try {
+    const data=await read('/character'),ch=data.character||data;
+    if(!valid()||ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return true;
+    noteSnapshot(ch);
+    let J=env.rt.petRaidPrep;
+    if(J&&(J.char!==who||J.classKey!==key)){await save(null);return true;}
+    if(J&&!J.pending&&(J.settings!==settings||J.kick!==kick)){J={...J,settings,kick};if(!await save(J))return true;}
+    const pet=summon(ch),pending=J?.pending;
+    if(pending){
+      const confirmed=ch.revision>pending.revision&&(pending.kind==='summon'?pet&&+pet.summonSkillId===pending.skillId:pet&&hasNative(ch,pending));
+      if(!confirmed){env.setStatus?.(Date.now()-pending.at>15000?'Перед РБ: подтвердите «'+pending.name+'» вручную на панели — продолжу после свежей сверки; автоматически не повторяю':'Подготовка кота: жду подтверждения навыка');return true;}
+      J={...J,settings,kick,pending:null};if(!await save(J))return true;
+      if(pending.kind==='summon')await env.setRt({petBornT:Date.now()});
+    }
+    const cache=env.rt.petRaidSkills,cacheOk=cache?.char===who&&cache.classKey===key&&cache.settings===settings;
+    const buffWanted=env.cfg.petBuffAuto!==false&&String(env.cfg.nPetBuffs||'').trim();
+    let needs=!pet||buffWanted&&(!cacheOk||cache.rows.some(x=>!hasNative(ch,x)));
+    if(!needs){
+      raidProof={char:who,classKey:key,settings,kick,until:Date.now()+30000};
+      if(J){const back=J.back;if(!await save(null))return true;if(env.nativePanelPath?.()==='/skill-panel.html'&&back&&back!=='/skill-panel.html'){if(valid())env.nativeNavigate?.(back);return true;}}
+      return false;
+    }
+    const page=env.nativePanelPath?.();
+    if(page!=='/skill-panel.html'){
+      const back=env.nativeReturnPath?.()||'/map.html';
+      if(!J){J={char:who,classKey:key,settings,kick,back,pending:null,t:Date.now()};if(!await save(J))return true;}
+      if(valid())env.nativeNavigate?.('/skill-panel.html');return true;
+    }
+    if(!J){J={char:who,classKey:key,settings,kick,back:'/map.html',pending:null,t:Date.now()};if(!await save(J))return true;}
+    await env.nativePanelOpen?.();if(!valid())return true;
+    const panel=env.nativePanel?.(ch)||{},rows=panel.buffs||[];
+    if(panel.incomplete){env.setStatus?.('Перед РБ: жду родную панель навыков кота');return true;}
+    if((await env.setRt({petRaidSkills:{char:who,classKey:key,settings,rows:rows.map(({effectId,name})=>({effectId,name}))}}))?.ok!==true||!valid())return true;
+    const action=!pet?panel.summon:rows.find(x=>!hasNative(ch,x));
+    if(!action){
+      if(!pet){env.setStatus?.('Перед РБ: нужен навык призыва кота на панели');return true;}
+      raidProof={char:who,classKey:key,settings,kick,until:Date.now()+30000};const back=J.back;if(await save(null)&&valid()&&back!=='/skill-panel.html')env.nativeNavigate?.(back);return true;
+    }
+    if(!action.ready||!Number.isFinite(ch.mp)||ch.mp<(action.mp||0)){env.setStatus?.('Перед РБ: жду готовность и MP для '+action.name);return true;}
+    const P={kind:pet?'buff':'summon',action:action.action,skillId:action.skillId,effectId:action.effectId,name:action.name,revision:ch.revision,at:Date.now()};
+    if(!await save({...J,pending:P}))return true;
+    const fresh=env.nativePanel?.(ch),button=[fresh?.summon,...(fresh?.buffs||[])].find(x=>x?.action===P.action&&x.ready);
+    if(!valid()||!button){if(valid())await save({...J,pending:null});return true;}
+    if(!env.nativeFire?.(button.button)){await save({...J,pending:null});return true;}
+    env.rec?.('B','суммон','Перед РБ: '+P.name);return true;
+  } catch (_) { if(valid())env.setStatus?.('Перед РБ: не удалось подтвердить подготовку кота');return true; }
+  finally {raidBusy=false;}
+}
 function identity(ch) {
   const slot = ch?.classSlots?.activeSlot;
   if (!ch || ch.name !== charName() || ch.name !== env.heroNick() || !Number.isInteger(slot) || !Number.isSafeInteger(ch.revision)) return null;
-  const prof = String(ch.l2Profession || '');
-  if (!/^human_(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(prof)) return null;
+  const plain = classProf(ch.l2Profession);
+  if (!/^(warlock|arcana_lord|dark_avenger|hell_knight)$/.test(plain)) return null;
+  const prof = 'human_' + plain;
   return { char: ch.name, prof, slot, key: `${slot}:${prof}` };
 }
 // 10.0.23 (лог 15.10 07:18): полный городской набор доступен и Dark Panther (283).
 function summon(ch) {
   const p = ch?.activeSummon;
-  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^human_(?:dark_avenger|hell_knight)$/.test(ch.l2Profession || '') ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key) || p.key === 'feline_king' && number(p.summonSkillId) === 1406)
+  return p && p.kind === 'servitor' && typeof p.key === 'string' && (/^(dark_avenger|hell_knight)$/.test(classProf(ch.l2Profession)) ? p.key === 'dark_panther' && number(p.summonSkillId) === 283 : /^(?:kai|kat|mew)_the_cat$/.test(p.key) || p.key === 'feline_king' && number(p.summonSkillId) === 1406)
     && p.hp > 0 && number(p.summonSkillId) > 0 && number(p.summonSkillLevel) > 0 && Array.isArray(p.activeBuffs) ? p : null;
 }
 function catalogSet(data) {
@@ -462,6 +565,6 @@ async function noteBattle(ctx) {
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, raidPrepare, raidReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);
