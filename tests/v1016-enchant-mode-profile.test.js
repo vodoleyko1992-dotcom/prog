@@ -1,6 +1,7 @@
 'use strict';
 // 15.10: новый персонаж не наследует режим заточки; свой сохранённый профиль не теряет очередь и историю.
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const E=require('../engine-core.js');
 const source=fs.readFileSync(__dirname+'/../background.js','utf8');
 const start=source.indexOf('async function switchCharacter('),end=source.indexOf('// 8.0.6 (Firefox',start);
 assert.ok(start>=0&&end>start);
@@ -35,7 +36,7 @@ function menuFixture() {
  const session={runId:'run',status:'running',pending:{id:'pending',revision:7,state:'prepared'},totals:{attempts:3,reservedScrolls:1},history:[{id:'receipt3'}],items:[{key:'item',level:4}]};
  const state={on:false,cfg:{enchant:{enabled:true,queue:[{key:'item'}],maxAttempts:8,maxScrolls:9}},rt:{char:'Hero',enchant:clone(session),enchantArchive:[{runId:'past'}],keep:42}};
  let beforeLock=null;
- const writes=[],box={URL,Date,MAX_PATCH_KEYS:250,serializeLock:async fn=>{if(beforeLock)await beforeLock();return fn()},chrome:{runtime:{getURL:p=>'chrome-extension://fixture/'+p},storage:{local:{get:async()=>clone(state),set:async patch=>{writes.push(clone(patch));Object.assign(state,clone(patch));}}}}};
+ const writes=[],box={L2EngineCore:E,URL,Date,MAX_PATCH_KEYS:250,serializeLock:async fn=>{if(beforeLock)await beforeLock();return fn()},chrome:{runtime:{getURL:p=>'chrome-extension://fixture/'+p},storage:{local:{get:async()=>clone(state),set:async patch=>{writes.push(clone(patch));Object.assign(state,clone(patch));}}}}};
  const i=source.indexOf('async function menuPatch('),j=source.indexOf('async function switchCharacter(',i);assert.ok(i>=0&&j>i);vm.runInNewContext(source.slice(i,j),box);
  return {state,writes,session,lock:fn=>{beforeLock=fn},patch:m=>box.menuPatch({expectedChar:'Hero',rtPatch:{},...m},{url:'chrome-extension://fixture/popup.html'})};
 }

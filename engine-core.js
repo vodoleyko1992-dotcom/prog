@@ -165,11 +165,22 @@
     // Уже начатая закупка/дорога запасной задачи завершается до возврата: короткая пауза не обрывает её на полпути.
     return w.until>now||rt.actionOwner||rt.actionPayments?.pending?w:null;
   }
+  // 20.10: явный запуск тура выбрасывает прежний список живых/мёртвых, а не боевую память и платежи.
+  function raidFreshStartPatch(rt = {}, c = {}, now = Date.now()) {
+    const raw = rawTaskConfig(c) || {}, list = taskList(c);
+    if (!(list ? list.includes('raid') : raw.rbHuntMode || raw.rbMode)) return {};
+    const protective = rt.rbHuntIdle > now && rt.rbRefuse?.n >= 2 && now - (rt.rbRefuse.t || 0) < 600000;
+    const seq = Number.isSafeInteger(rt.rbListStartSeq) && rt.rbListStartSeq >= 0 && rt.rbListStartSeq < Number.MAX_SAFE_INTEGER ? rt.rbListStartSeq + 1 : 1;
+    return { rbList:{}, rbListT:0, rbListVerifiedAt:0, rbListIncomplete:true,
+      rbListReadStart:null, rbListStartSeq:seq, rbListStartRequired:`${rt.dailyStart || 0}:${rt.manualKickAt || 0}:${seq}`,
+      rbTourView:null, rbFishWait:null, rbListVerifyNextAt:0,
+      ...(protective ? {} : { rbHuntIdle:0, rbIdleMark:null, rbIdleN:0 }) };
+  }
   function selectedTask(c, rt = {}, now = Date.now()) {
     const list = taskList(c); if (list === null) return null;
     const fishWait=fishTaskWait(c,rt,now);
     const fishOpen = rt.fishCastActive === true || !fishWait && !dailyBlocked(c,rt,'fish',now) && !rt.fishTgt?.done && !(+rawTaskConfig(c).fishMaxCasts > 0 && (+rt.fish?.casts || 0) >= +rawTaskConfig(c).fishMaxCasts);
-    const wait = rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
+    const wait = rt.rbListStartRequired != null && rt.rbListReadStart !== rt.rbListStartRequired ? null : rt.rbFishWait, idleRaid = wait && rt.rbHunt?.phase === 'wait' && (!rt.rbHunt?.step || rt.rbHunt.step === 'pick') && !rt.rbHunt?.id && !rt.rbGo && !rt.rbPending;
     const fishBusy = rt.fishCastActive === true || !!rt.fishCastPending || rt.actionPayments?.pending?.kind === 'fishing';
     // 20.28 (лог 20.10 08:51): подготовка услуги Маммона не возвращает отложенный рейд.
     // Сам pending по-прежнему запрещает повторную оплату; удерживать рейд должен его собственный телепорт.
@@ -325,6 +336,6 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

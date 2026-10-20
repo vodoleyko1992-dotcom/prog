@@ -1,0 +1,32 @@
+{"name":"active VIP suppresses FA default","ok":true}
+{"name":"active VIP suppresses FA vipOptOut","ok":true}
+{"name":"active VIP suppresses FA townOff","ok":true}
+{"name":"active VIP suppresses FA paidTown","ok":true}
+{"name":"active VIP suppresses FA classUnknown","ok":true}
+{"name":"active VIP suppresses FA staleActive","ok":true}
+{"name":"active VIP suppresses FA nearExpiry","ok":true}
+{"name":"active VIP suppresses FA malformedExpiry","ok":true}
+{"name":"VIP success discards old FA queue","ok":true}
+{"name":"saved FA queue routes VIP without payment","ok":true}
+{"name":"stale active VIP plus failed server read never prepares FA","ok":true}
+{"name":"unknown current hero VIP status never prepares FA after offline","ok":true}
+{"name":"unknown current hero VIP status never prepares FA after wrongHero","ok":true}
+{"name":"unknown current hero VIP status never prepares FA after missingVIP","ok":true}
+{"name":"unknown FA pending reconciles before VIP route","ok":true}
+{"name":"saved route cancels after character read Stop","ok":true}
+{"name":"saved route cancels after character read hero","ok":true}
+{"name":"saved route cancels after character read lease","ok":true}
+{"name":"saved route cancels after character read kick","ok":true}
+{"name":"fresh activeWithPastExpiry permits FA only with explicit inactive","ok":true}
+{"name":"fresh inactive permits FA only with explicit inactive","ok":true}
+{"name":"VIP during FA pause prevents fire","ok":true}
+{"name":"VIP during FA prepare prevents fire","ok":true}
+{"name":"Stop during FA pause prevents fire","ok":true}
+{"name":"Stop during FA prepare prevents fire","ok":true}
+{"name":"hero during FA pause prevents fire","ok":true}
+{"name":"hero during FA prepare prevents fire","ok":true}
+{"name":"lease during FA pause prevents fire","ok":true}
+{"name":"lease during FA prepare prevents fire","ok":true}
+{"name":"kick during FA pause prevents fire","ok":true}
+{"name":"kick during FA prepare prevents fire","ok":true}
+{"passed":31,"total":31}

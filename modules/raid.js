@@ -591,9 +591,38 @@ function rbNextPageButton() {
 
 // 8.0.3 (эпики, ревью): у страницы «Рейдовые боссы» та же строка, что у эпиков, где цена — «1 Coin of Luck». Цена РБ (снимок 23:00) —
 // «(Аден 100000)». Валюта — как epics.unitOf; телепорт только за адену или бесплатно, иначе не летим (Coin of Luck бот не тратит)
-const unitOf = t => /coin|luck|монет|удач|\bcol\b/i.test(t || '') ? 'Coin of Luck' : /аден|adena/i.test(t || '') ? 'аден' : '';
-const rbPriceWhy = r => r && r.price > 0 && r.unit != null && r.unit !== 'аден' ? `телепорт не за адену («${r.priceText || r.price}») — Coin of Luck бот не тратит` : '';
-const btnPrice = b => { const t = (b?.closest?.('.l2-rb-row')?.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\s+/g, ' ').trim(); return { price: +(t.replace(/\D/g, '') || 0), unit: unitOf(t), priceText: t.slice(0, 40) }; };
+const unitOf = t => /coin|luck|монет|удач|\bcol\b/i.test(t || '') ? 'Coin of Luck' : /\bfa\b|fast\s*aden|быстр|швидк/i.test(t || '') ? 'FA' : /аден|adena/i.test(t || '') ? 'аден' : '';
+// 20.10 (лог 10:01:21 → ручной бесплатный переход к Tiphon): пустая валюта не означает платный переход.
+// Бесплатность подтверждает только явная цена; «VIP», пустая строка и чужая валюта не дают разрешения.
+let rbListPriceQuote = null;
+const rbListPriceContext = () => JSON.stringify([env.rt.char || '',env.rt.classCur?.prof ?? null,env.rt.classCur?.slot ?? null,env.leaseEpoch,env.rt.dailyStart || 0,env.rt.manualKickAt || 0,env.rt.rbListStartRequired]);
+function listPriceNote(path, d, context) {
+  if (path !== '/game/raid-bosses' || d?.method !== 'GET') return false;
+  const j = d.res, now = Date.now(), page = +j?.page, requested = +(new URLSearchParams(String(d.url || '').split('?')[1] || '').get('page') || 1);
+  const classKey = JSON.stringify([env.rt.classCur?.prof ?? null,env.rt.classCur?.slot ?? null]);
+  if (!context?.at || context.at < Math.max(+env.rt.dailyStart || 0,+env.rt.manualKickAt || 0) || context.at > now || now-context.at > 60000
+    || !env.rt.char || context.char !== env.rt.char || context.classKey !== classKey || context.lease !== env.leaseEpoch
+    || context.raidStart !== (env.rt.rbListStartRequired ?? null)) return false;
+  if (rbListPriceQuote?.at > context.at) return false;
+  rbListPriceQuote = {at:context.at,page:0,ids:new Set(),seen:new Set(),key:''};
+  const rows = Array.isArray(d.eb) ? d.eb : j?.bosses;
+  if (!(d.status >= 200 && d.status < 300) || d.error || j?.error || j?.ok === false || !Number.isInteger(page) || page < 1 || requested !== page || !Array.isArray(rows)) return false;
+  const ids = new Set(rows.filter(b => b && typeof b.spawnId === 'string' && b.bossType === 'raid' && b.adenaCost === 0 && b.vipFreeApplied === true
+    && !(+b.coinOfLuckCost > 0) && !(+b.faCost > 0)).map(b => b.spawnId));
+  const seen = new Set(rows.filter(b => b && typeof b.spawnId === 'string' && b.bossType === 'raid' && Number.isFinite(b.adenaCost) && b.adenaCost >= 0 && typeof b.vipFreeApplied === 'boolean').map(b => b.spawnId));
+  rbListPriceQuote = {at:context.at,page,ids,seen,key:rbListPriceContext()};
+  return true;
+}
+function rbPriceParse(text, id, page) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim(), unit = unitOf(t);
+  const label = t.replace(/[():·—–-]/g, ' ').replace(/\s+/g, ' ').trim();
+  const free = /^(?:(?:vip|вип|віп)\s+)?(?:бесплатно|безкоштовно|free)(?:\s+(?:(?:для|for)\s+)?(?:vip|вип|віп))?$/i.test(label);
+  const digits = t.replace(/\D/g, '');
+  const q = rbListPriceQuote, serverFree = /^(?:vip|вип|віп|0)?$/i.test(label) && !unit && q?.page === page && q.ids.has(id) && q.key === rbListPriceContext() && Date.now()-q.at >= 0 && Date.now()-q.at <= 60000;
+  return { price: free || serverFree ? 0 : digits ? +digits : NaN, unit: free || serverFree ? 'аден' : unit, priceText: serverFree ? `(Аден 0, сервер VIP) ${t}`.slice(0,40) : t.slice(0, 40) };
+}
+const rbPriceWhy = r => r && r.unit != null && r.unit !== 'аден' ? `${r.unit ? 'телепорт не за адену' : 'цена и валюта телепорта не подтверждены'} («${r.priceText || r.price}») — другую валюту не трачу` : '';
+const btnPrice = b => rbPriceParse(b?.closest?.('.l2-rb-row')?.querySelector('.l2-rb-row__price')?.textContent,b?.dataset?.spawnId,rbPageNow());
 function rbRowsParse() {
   const page = rbPageNow();
   const out = {};
@@ -607,21 +636,72 @@ function rbRowsParse() {
       name: (r.querySelector('.l2-rb-row__label')?.textContent || '').trim(),
       lvl: +((r.querySelector('.l2-rb-row__level')?.textContent || '').match(/\d+/) || [0])[0],
       alive: !!st && /--alive/.test(st.className), status: (st?.textContent || '').replace(/^\s*·\s*/, '').trim().slice(0, 40),
-      price: +((r.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\D/g, '') || 0),
-      unit: unitOf(r.querySelector('.l2-rb-row__price')?.textContent), priceText: (r.querySelector('.l2-rb-row__price')?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40),
+      ...rbPriceParse(r.querySelector('.l2-rb-row__price')?.textContent,b.dataset.spawnId,page),
       deny: /недоступ|unavailable/i.test(hint) ? hint.replace(/^Недоступно:\s*/i, '').slice(0, 60) : '', page, ord, t: Date.now(),
     };
   }
   return out;
 }
+const rbPriceRetry = new Map();
+async function rbPriceRefresh(active, id) {
+  const unknown = () => Object.entries(rbRowsParse()).filter(([key,r]) => (!id || id === key) && !r.unit && /^(?:vip|вип|віп|0)?$/i.test(String(r.priceText || '').replace(/[():·—–-]/g,' ').trim()));
+  if (!unknown().some(([,r]) => id || r.alive)) return true;
+  if (typeof env.gameGet !== 'function') return false;
+  const page = rbPageNow(), key = `${rbListPriceContext()}:${page}`, generation = env.actionGeneration?.(), now = Date.now();
+  const current = () => active() && env.canAct?.() !== false && rbListPriceContext() + ':' + rbPageNow() === key && env.actionGeneration?.() === generation;
+  if (!current()) return false;
+  const covered = () => unknown().every(([key,r]) => !id && !r.alive || rbListPriceQuote?.seen?.has(key));
+  const q = rbListPriceQuote;
+  if (q?.page === page && q.key === rbListPriceContext() && now-q.at >= 0 && now-q.at <= 60000 && covered()) return true;
+  if ((rbPriceRetry.get(key) || 0) > now) {
+    env.setStatus(`РБ: жду подтверждения бесплатной цены — повтор через ${Math.ceil((rbPriceRetry.get(key)-now)/1000)} с`); return false;
+  }
+  rbPriceRetry.set(key,now+15000); if (rbPriceRetry.size > 25) rbPriceRetry.delete(rbPriceRetry.keys().next().value);
+  const context = {at:now,char:env.rt.char,classKey:JSON.stringify([env.rt.classCur?.prof ?? null,env.rt.classCur?.slot ?? null]),lease:env.leaseEpoch,raidStart:env.rt.rbListStartRequired ?? null};
+  let timeout;
+  try {
+    // Первый native GET мог закончиться до загрузки content/аренды. Читаем цену сами уже под текущим управлением.
+    // Лимит включает чтение тела: gameGet ограничивает ожидание заголовков, json может задержаться отдельно.
+    const url = `/game/raid-bosses?page=${page}`, result = await Promise.race([
+      (async()=>{const response=await env.gameGet(url);return {status:response.status,body:response.ok ? await response.json() : null};})(),
+      new Promise(resolve=>{timeout=setTimeout(()=>resolve(null),6000);})
+    ]);
+    if (!current()) return false;
+    if (result && listPriceNote('/game/raid-bosses',{method:'GET',url,status:result.status,res:result.body,eb:result.body?.bosses},context) && covered()) return true;
+  } catch (_) { if (!current()) return false; }
+  finally { if (timeout != null) clearTimeout(timeout); }
+  env.setStatus('РБ: сервер пока не подтвердил бесплатную цену — переход отложен');
+  return false;
+}
 
 // После неполного чтения кэш должен жить ровно 3 мин и в обычном туре (15 мин),
 // и в ценностном (10 мин). Старый возраст12 мин немедленно истекал в ценностном туре.
 const rbPartialListT = () => Date.now() - ((env.cfg.rbValueTour ? 10 : 15) - 3) * 60000;
+const rbListFreshStart = () => env.rt.rbListStartRequired == null || env.rt.rbListReadStart === env.rt.rbListStartRequired
+  && env.rt.rbListVerifiedAt > 0 && env.rt.rbListVerifiedAt === env.rt.rbListT && !env.rt.rbListIncomplete;
+const rbListDocument = root.performance?.timeOrigin || `${Date.now()}:${Math.random()}`;
 
 async function rbListScan() {                     // все страницы списка (≈14), бесплатно
-  const active = () => env.on && env.tabOwner !== false && env.canAct?.() !== false;
+  const start = env.rt.rbListStartRequired, kick = env.rt.manualKickAt, daily = env.rt.dailyStart, char = env.rt.char,
+    cls = JSON.stringify(env.rt.classCur || null), lease = env.leaseEpoch;
+  const active = () => env.on && env.tabOwner !== false && env.canAct?.() !== false && env.leaseEpoch === lease
+    && env.rt.rbListStartRequired === start && env.rt.manualKickAt === kick && env.rt.dailyStart === daily
+    && env.rt.char === char && JSON.stringify(env.rt.classCur || null) === cls;
   if (!active()) return;
+  if (start != null && env.rt.rbListReadStart !== start && env.rt.rbScan?.start === start && env.rt.rbScan.document === rbListDocument) {
+    // Присваивание href могло не завершиться. Старый документ не выдаёт прежний DOM за новый список.
+    if (Date.now() - (env.rt.rbScan.at || 0) >= 15000) {
+      await env.setRt({rbScan:null,rbListReadStart:null,rbListVerifiedAt:0,rbListIncomplete:true,rbListVerifyNextAt:Date.now()+180000});
+      env.setStatus('РБ: новая страница списка не открылась — повторю через 3 мин');
+    } else env.setStatus('РБ: жду загрузки нового списка после запуска');
+    if (active()) await env.sleep(1000); return;
+  }
+  // Start на уже открытой первой странице тоже требует нового запроса игры, а не чтения прежнего DOM.
+  if (start != null && env.rt.rbListReadStart !== start && env.rt.rbScan?.start !== start) {
+    const saved = await env.setRt({rbScan:{start,document:rbListDocument,at:Date.now()}});
+    if (saved?.ok === false || !active() || typeof env.rtCommit === 'function' && !await env.rtCommit() || !active()) return;
+    location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return;
+  }
   // 14.10: после отказа на стр. N нельзя выдавать хвост списка за полный и терять младших РБ.
   if (rbPageNow() !== 1) { location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return; }
   env.setStatus('РБ: читаю список рейд-боссов (Меню → Рейдовые боссы)');
@@ -629,6 +709,11 @@ async function rbListScan() {                     // все страницы с�
   if (!active()) return;
   let all = {}, complete = false, pages = 0;
   for (let i = 0; i < 25 && active(); i++) {
+    if (typeof env.gameGet === 'function' && !await rbPriceRefresh(active)) {
+      if (!active()) return;
+      all = { ...all, ...rbRowsParse() }; pages++; break;
+    }
+    if (!active()) return;
     all = { ...all, ...rbRowsParse() }; pages++;
     const nx = rbNextPageButton();
     if (!nx) { complete = true; break; }
@@ -645,18 +730,21 @@ async function rbListScan() {                     // все страницы с�
   env.rbTimer?.domNote(all)?.catch?.(() => {});   // 10.0.2: таймеры боссов — кто жив / убит
   if (!n.length) {                                 // страница не загрузилась / не та — повтор через 3 мин, а не через 15
     env.rec('B', 'РБ', 'список рейд-боссов пуст (страница не загрузилась?) — повторю через 3 мин');
-    await env.setRt({ rbScan: null, rbListIncomplete: true, rbListVerifiedAt: 0, rbListT: rbPartialListT() });
+    await env.setRt({ rbList:{}, rbScan: null, rbListIncomplete: true, rbListVerifiedAt: 0, rbListT: rbPartialListT(), rbListReadStart: null, rbListVerifyNextAt: Date.now() + 180000 });
+    if (!active()) return;
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   // 8.0.3 (лог 11.10 09:04:36: пауза на 9-й странице из 14 — 135 РБ из 197 записались как полный свежий список на 15 мин): прочитан не до
-  // конца (пауза/страница не догрузилась) — дописываем к старому и перечитаем через 3 мин
+  // конца (пауза/страница не догрузилась) — сохраняем только заново прочитанные строки, перечитаем через 3 мин.
   if (!complete) {
-    await env.setRt({ rbList: { ...(env.rt.rbList || {}), ...all }, rbListT: rbPartialListT(), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null });
-    env.rec('B', 'РБ', `список игры прочитан частично (${pages} стр.) — дописал ${n.length} РБ к прежнему, перечитаю через 3 мин`);
+    await env.setRt({ rbList: all, rbListT: rbPartialListT(), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null, rbListReadStart: null, rbListVerifyNextAt: Date.now() + 180000 });
+    if (!active()) return;
+    env.rec('B', 'РБ', `список игры прочитан частично (${pages} стр.) — подтверждено ${n.length} строк, старый список не использую; перечитаю через 3 мин`);
     location.href = '/map.html'; await env.sleep(3000); return;
   }
   const verifiedAt = Date.now();
-  await env.setRt({ rbList: all, rbListT: verifiedAt, rbListVerifiedAt: verifiedAt, rbListIncomplete: false, rbScan: null });
+  await env.setRt({ rbList: all, rbListT: verifiedAt, rbListVerifiedAt: verifiedAt, rbListIncomplete: false, rbScan: null, rbListReadStart: start ?? null, rbListVerifyNextAt: 0 });
+  if (!active()) return;
   env.rec('B', 'РБ', `список игры: ${n.length} РБ · живых ${n.filter(x => x.alive).length} · доступно мне ${ok.length}`
     + (ok.length ? ` (${ok.sort((a, b) => Math.abs(a.lvl - L) - Math.abs(b.lvl - L)).slice(0, 6).map(x => `${x.name} ${x.lvl}`).join(', ')}…)` : ''));
 }
@@ -704,18 +792,23 @@ function rbPreSkipWhy(id) {
   return ps.kind === 'pots' ? 'мало банок (недавно)' : ps.kind === 'strong' ? 'не по силам по оценке (недавно)' : ps.kind === 'unknown' ? 'нет цифр игры (недавно)' : ps.kind === 'slow' ? 'долгий бой (недавно)' : ['context','unmeasured'].includes(ps.kind) ? 'нужен замер текущего состава' : 'пропуск после осмотра (недавно)';
 }
 function rbEntryDecision(id, x) {
+  // Start не отменяет уже оплаченный прилёт. Точная цель на текущей карте проверяется без цены нового телепорта.
+  const H = env.rt.rbHunt, arrived = ordinaryLiveTour(id) && ['arrive','fight'].includes(H?.step) && H.id === id && env.isMap?.()
+    ? raidList().find(r => r.id === id) : null;
+  if (arrived) x = { ...arrived, alive:true, t:Date.now() };
   if (ordinaryLiveTour(id)) {
+    if (!arrived && !rbListFreshStart()) return { ok: false, kind: 'stale', action: 'wait', why: 'после запуска нужен полный свежий список РБ' };
     const row = x || env.rt.rbList?.[id], L = env.heroLvl();
     if (!row?.lvl || row.lvl < rbLo(L) || row.lvl > rbHi(L)) return { ok: false, kind: 'level', action: 'wait', why: 'вне окна уровня' };
     if (row.alive !== true) return { ok: false, kind: 'dead', action: 'wait', why: 'живость по списку не подтверждена' };
     if (env.rt.rbStats?.[id]?.canAttack === false) return { ok: false, kind: 'deny', action: 'wait', why: 'игра запрещает атаковать этого РБ' };
     if (row.deny || row.canAttack === false) return { ok: false, kind: 'deny', action: 'wait', why: row.deny || 'игра не пускает' };
     if (Date.now() - (row.t || env.rt.rbListT || 0) > 15 * 60000) return { ok: false, kind: 'stale', action: 'wait', why: 'нужен свежий список живых РБ' };
-    if (!Number.isFinite(row.price) || row.price < 0 || row.unit !== 'аден') return { ok: false, kind: 'currency', action: 'wait', why: 'цена и валюта телепорта не подтверждены' };
+    if (!arrived && (!Number.isFinite(row.price) || row.price < 0 || row.unit !== 'аден')) return { ok: false, kind: 'currency', action: 'wait', why: `цена и валюта телепорта не подтверждены («${row.priceText || 'пустая цена'}»)` };
     if (Date.now() - (env.rt.rbSkip?.[id] || 0) < 30 * 60000) return { ok: false, kind: 'skip', action: 'wait', why: 'явный пропуск цели' };
     if (env.rt.rbDb?.[id]?.leaveBadUntil > Date.now()) return { ok: false, kind: 'exit', action: 'wait', why: 'штатный выход ранее не подтверждён' };
   }
-  const price = rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]);
+  const price = arrived ? '' : rbPriceWhy(x?.unit != null ? x : env.rt.rbList?.[id]);
   if (price) return { ok: false, kind: 'currency', action: 'wait', why: price };
   const wallet = env.rt.adenaSeen;
   const here = env.isMap?.() && raidList().some(r => r.id === id);
@@ -737,6 +830,7 @@ function rbEntryDecision(id, x) {
     why: chk.kind === 'pots' ? 'мало банок' : chk.kind === 'slow' ? 'долгий бой' : chk.kind === 'strong' ? 'не по силам (оценка)' : chk.why };
 }
 function rbTeleportCheck(id, x, quiet = false) {   // Совместимость старого разового тура; решение общее с основным режимом.
+  if (ordinaryLiveTour(id) && !rbListFreshStart()) return 'после запуска нужен полный свежий список РБ';
   const d = rbEntryDecision(id, x);
   if (!d.ok && !quiet) noteRbSkip(id, d.why + (d.detail ? ': ' + d.detail : ''));
   return d.ok ? null : d.why;
@@ -856,8 +950,15 @@ function rbListWhy(plan = rbTourPlan()) {
 }
 
 async function rbTeleportFire(b, patch) {
+  const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price, context=rbListPriceContext(), generation=env.actionGeneration?.();
+  const current = () => {
+    if (!id || !Number.isFinite(price) || price < 0 || !env.on || env.tabOwner === false || env.canAct?.() === false
+      || context !== rbListPriceContext() || generation !== env.actionGeneration?.() || !isRbPage() || !rbListFreshStart()
+      || b?.isConnected === false || b?.disabled || b?.dataset?.spawnId !== id) return false;
+    const row = rbRowsParse()[id];
+    return !!row?.alive && !row.deny && row.unit === 'аден' && row.price === price && !rbTravelBudget(row);
+  };
   if(env.payments){
-    const target=patch.rbHunt || env.rt.rbGo || {}, id=patch.rbWant || target.id, price=target.price;
     if(!id || !Number.isFinite(price) || price<0)return false;
     // 20.12 (ревизия 17.10, аудит RB-1): ревизия и адена героя до клика — сверка «телепорт не применился» без квитанции.
     let before0=null;
@@ -868,7 +969,13 @@ async function rbTeleportFire(b, patch) {
     // Откат относится только к нашему снимку: новая ручная цель не должна исчезнуть после await.
     const rollback=async()=>{if(env.payments.matchesContext(P)&&Object.keys(patch).every(k=>JSON.stringify(env.rt[k])===JSON.stringify(patch[k])))await env.setRt(before);};
     const saved=await env.setRt(patch);
-    if(saved?.ok!==true || typeof env.rtCommit!=='function' || !await env.rtCommit() || !env.payments.sent(P)){
+    if(saved?.ok!==true || typeof env.rtCommit!=='function' || !await env.rtCommit()){
+      await rollback();await env.payments.cancel(P);return false;
+    }
+    // После последнего await: цена/DOM/герой могли измениться, а серверная бесплатная цена — истечь.
+    // Непосланное намерение отменяем; между sent и кликом больше нет ожиданий.
+    if (!current() || !Object.keys(patch).every(k=>JSON.stringify(env.rt[k])===JSON.stringify(patch[k])) || !env.payments.sent(P)) {
+      env.setStatus('РБ: перед переходом изменилась цель или подтверждённая цена — перечитаю, оплату не отправляю');
       await rollback();await env.payments.cancel(P);return false;
     }
     const clicked=env.fire(b);
@@ -877,6 +984,7 @@ async function rbTeleportFire(b, patch) {
   }
   // setRt меняет память и очередь синхронно; pagehide ядра дописывает очередь при перелёте.
   // Между резервом и fire нельзя ждать storage: Stop мог бы оставить «оплаченный» шаг без клика.
+  if (!current()) return false;
   const before = Object.fromEntries(Object.keys(patch).map(k => [k, env.rt[k] ?? null]));
   const write = env.setRt(patch), accepted = env.fire(b);
   const rollback = accepted ? null : env.setRt(before);  // fire=false не отправил действие; откатываем только поля резерва
@@ -953,6 +1061,8 @@ async function rbGoStep() {                       // список РБ → ну�
   const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${g.id}"]`), 8000, 200);
   if (!active() || !sameJob()) return;
   if (!b) { env.rec('B', 'РБ-тур', `${g.name}: на странице ${g.page} нет — обновлю список`); await env.setRt({ rbGo: null, rbListT: 0 }); return; }
+  if (!await rbPriceRefresh(() => active() && sameJob(),g.id)) return;
+  if (!active() || !sameJob()) return;
   const row = rbRowsParse()[g.id];
   if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.rec('B', 'РБ-тур', `${g.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`); await env.setRt({ rbGo: null, rbList: { ...env.rt.rbList, [g.id]: row } }); location.href = '/map.html'; await env.sleep(3000); return; }
   if (!row && rbPriceWhy(btnPrice(b))) { env.rec('B', 'РБ-тур', `${g.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`); await env.setRt({ rbGo: null }); location.href = '/map.html'; await env.sleep(3000); return; }
@@ -1091,7 +1201,8 @@ async function rbRefreshState(id, active, force = false) {
 }
 
 function rbTravelBudget(row) {
-  if (!row || !Number.isFinite(row.price) || row.price < 0 || row.unit !== 'аден') return 'цена и валюта телепорта не подтверждены';
+  if (!row || !Number.isFinite(row.price) || row.price < 0 || row.unit !== 'аден') return `цена и валюта телепорта не подтверждены («${row?.priceText || 'пустая цена'}»)`;
+  if (row.price === 0) return ''; // Подтверждённый бесплатный переход не расходует резерв и лимит покупок.
   const balance = env.rt.adenaSeen, reserve = Math.max(0, env.cfg.shopReserve ?? 200000), cap = env.cfg.shopMaxSpend ?? 2000000;
   if (!(balance?.t > 0) || Date.now() - balance.t > 60000 || !Number.isFinite(balance.v)) return 'нужен свежий запас адены';
   if (!(cap > 0) || row.price > cap) return `цена ${row.price} выше лимита снабжения ${cap}`;
@@ -1135,6 +1246,14 @@ const sessIds = () => env.faFullIds ? env.faFullIds() : env.faIdsOf ? env.faIdsO
 const sessTime = t => new Date(t).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 async function rbSessTick() {
   const S = env.rt.rbSess; if (!S?.on) return false;
+  // 20.29 (20.10, правило игрока): VIP-сессия принимает бесплатный серверный набор, не ожидает FA-уровни/покупку.
+  const vip=env.vipSession?.();
+  if(vip){
+    if(!vip.ready){await env.townBuffStart('РБ-сессия: бесплатный VIP-бафф',true);env.setStatus('РБ-сессия: жду подтверждения бесплатного VIP-набора; FA не трачу');return true;}
+    if(!S.vip || !S.bought || S.until!==vip.until){const now=Date.now();await env.setRt({rbSess:{...S,vip:true,bought:true,until:vip.until,t0:S.t0||now,k0:S.k0??env.rt.rbKills??0,e0:S.e0??env.rt.exp??0,a0:S.a0??env.rt.adena??0,d0:S.d0??(env.rt.deaths||[]).length,fa:S.fa??env.rt.faBal?.v??null}});}
+    return false;
+  }
+  if(S.vip){await env.setRt({rbSess:{...S,vip:false,bought:false,start:Date.now(),until:0}});return true;}
   const now = Date.now(), H = env.hudBuffs?.() || null, gone = env.rt.faGone || {};
   const need = sessIds().filter(id => !(gone[id] && now - gone[id] < 6 * 3600000));   // чего у баффера нет — не ждём
   if (!S.bought) {
@@ -1240,6 +1359,19 @@ async function rbHuntStep() {
   const H = env.rt.rbHunt || { step: 'pick' };
   const kick = +env.rt.manualKickAt || 0, mode = env.cfg.rbHuntMode, char = env.rt.char, cls = JSON.stringify(env.rt.classCur || null);
   const active = () => env.on && env.tabOwner !== false && (+env.rt.manualKickAt || 0) === kick && env.cfg.rbHuntMode === mode && env.rt.char === char && JSON.stringify(env.rt.classCur || null) === cls;
+  // Каждый новый запуск читает все страницы до подготовки/выбора/нового перехода. Текущий бой и уже оплаченный прилёт сохраняются.
+  if (!['fight', 'arrive', 'exit'].includes(H.step) && !rbListFreshStart()) {
+    if ((env.rt.rbListVerifyNextAt || 0) > Date.now()) {
+      env.setStatus(`Тур РБ: полный список после запуска не подтверждён — повтор через ${Math.ceil((env.rt.rbListVerifyNextAt - Date.now()) / 1000)} с`);
+      await env.sleep(3000); return;
+    }
+    await rbHuntPhase('discover', 'после запуска заново читаю живых и мёртвых РБ');
+    if (!active()) return;
+    if (!(env.rt.rbHuntIdle > Date.now() && env.rt.rbRefuse?.n >= 2 && Date.now() - (env.rt.rbRefuse.t || 0) < 600000)) await env.setRt({rbHuntIdle:0,rbIdleMark:null});
+    if (!active()) return;
+    if (!isRbPage()) { location.href = '/rb-bosses.html?page=1'; await env.sleep(3000); return; }
+    return rbListScan();
+  }
   if (rbOneHit() && H.step !== 'fight') return rbOnePause(H.name);   // 8.0.3: РБ убит по команде «один РБ» (и вне шага боя)
   if (!rbOneHit() && await rbSessTick()) return;    // 7.2.1: РБ-сессия — сначала баффы, в конце — автофарм (10.0.2: не после «один РБ убит»)
   if (H.step === 'fight') {                         // снова не в бою — бой закончен, итог боя уже в базе РБ
@@ -1279,6 +1411,8 @@ async function rbHuntStep() {
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
     if (!active() || !sameJob()) return;
     if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
+    if (!await rbPriceRefresh(() => active() && sameJob(),H.id)) return;
+    if (!active() || !sameJob()) return;
     let row = rbRowsParse()[H.id];
     if (row) env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {});
     if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
@@ -1914,6 +2048,6 @@ async function rbShopFirst(label, retreat) {
   location.href = '/char.html'; await env.sleep(4000);
   return true;
 }
- return { rbHasScrolls, rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
+ return { listPriceNote, rbPriceRefresh, rbTeleportFire, rbHasScrolls, rbBuffShortage, rbDeathPauseMs, ordinaryLiveTour, rbIncomingKey, rbIncoming, rbProbePots, rbProbeBudget, rbExitAshen, paymentReconcile, rbDpsEvidence, rbEntryDecision, rbTravelBudget, rbPreparationCandidates, isEpicId, rbDpsOn, rbDpsLearn, rbHpNow, probeOk, probeGuard, probeFight, rbFlee, unitOf, rbPriceWhy, rbKnown, rbInfo, rbInfoNote, rbEligible, rbSpM, rbWoundNote, rbWounded, rbSessTick, rbSessEnd, sessIds, rbSpK, rbModalIs, rbValueScore, rbDue, raidList, rbVerdictBlocks, rbLo, rbHi, farmRbOn, rbCandidates, rbPinAttack, rbModalStats, rbPreCheck, rbScout, closeMobModal, rbEngage, rbNote, rbTourPick, isRbPage, rbPageNow, rbRowsParse, rbListScan, rbStatsGuess, rbTeleportCheck, rbListPick, rbListWhy, rbTourPlan, rbGoStep, huntOn, huntSet, huntDone, rbHuntStep, rbOneHit, rbOneStep, rbLearn, rbAssess, rbRetreat, rbAbort, rbShopFirst };
  };
 })(globalThis);

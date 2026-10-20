@@ -388,6 +388,13 @@ async function menuPatch(m, sender) {
     const change = Object.keys(rtPatch).length ? { rt: { ...(state.rt || {}), ...rtPatch, _src: 'menu' } } : {};
     if(m.on===true)change.rt={...state.rt,...change.rt,dailyStart:(state.rt?.dailyStart||0)+1,_src:'menu'};
     if (Object.keys(cfgPatch).length) change.cfg = { ...(state.cfg || {}), ...cfgPatch };
+    // 20.10: Start/Продолжить и включение тура требуют нового полного списка; старый fish fallback тоже недействителен.
+    const raidOn = c => Array.isArray(c?.autoTasks) ? c.autoTasks.includes('raid') : !!(c?.rbHuntMode || c?.rbMode);
+    const nextCfg = change.cfg || state.cfg;
+    if (m.on === true || !raidOn(state.cfg) && raidOn(nextCfg) || rtPatch.rbSess?.on && rtPatch.rbSess.start !== state.rt?.rbSess?.start) {
+      const next = { ...state.rt, ...change.rt };
+      change.rt = { ...next, ...L2EngineCore.raidFreshStartPatch(next, nextCfg), _src:'menu' };
+    }
     if(m.setFishGoal) {
       const E=m.setFishGoal;
       if(!m.expectedChar || !['fish','proof'].includes(E.type) || !Number.isSafeInteger(E.min) || E.min<1 || !Number.isSafeInteger(E.max) || E.max<E.min)return {ok:false,reason:'Цель: нужен положительный диапазон «от … до …»'};
@@ -640,11 +647,12 @@ chrome.commands?.onCommand.addListener(async c => {
   if (c !== 'toggle-bot') return;
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   await serializeLock(async () => {
-    const { on = false, rt = {} } = await chrome.storage.local.get(['on', 'rt']), now = Date.now();
+    const { on = false, rt = {}, cfg = {} } = await chrome.storage.local.get(['on', 'rt', 'cfg']), now = Date.now();
     const change = { on: !on };
     if (!on) {
       // 19.10.2026: новый запуск отменяет старые release/ответы и требует сверки суточных лимитов, как Start в меню.
       const next = { ...rt, manualKickAt: Math.max(now, (+rt.manualKickAt || 0) + 1), dailyStart: (+rt.dailyStart || 0) + 1, _src: 'hotkey' };
+      Object.assign(next, L2EngineCore.raidFreshStartPatch(next, cfg, now));
       change.rt = next;
       if (next.char) change['rt@' + next.char] = next;
     } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };

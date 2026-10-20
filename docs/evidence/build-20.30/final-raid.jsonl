@@ -1,0 +1,17 @@
+{"name":"full existing free effects prove raid readiness without POST","ok":true}
+{"name":"stronger existing effects satisfy free VIP without downgrade or FA","ok":true}
+{"name":"VIP proof invalidated by slot","ok":true}
+{"name":"VIP proof invalidated by profile","ok":true}
+{"name":"VIP proof invalidated by hero","ok":true}
+{"name":"VIP proof invalidated by actor","ok":true}
+{"name":"VIP proof invalidated by stale","ok":true}
+{"name":"VIP proof invalidated by lowLevel","ok":true}
+{"name":"VIP proof invalidated by lostEffect","ok":true}
+{"name":"VIP proof invalidated by expiringEffect","ok":true}
+{"name":"existing effects do not bypass free catalog adenapositive","ok":true}
+{"name":"existing effects do not bypass free catalog colpositive","ok":true}
+{"name":"existing effects do not bypass free catalog adenanull","ok":true}
+{"name":"existing effects do not bypass free catalog colmissing","ok":true}
+{"name":"existing effects do not bypass free catalog skillsEmpty","ok":true}
+{"name":"confirmed VIP end resets session to ordinary FA plan","ok":true}
+{"passed":16,"total":16}

@@ -8,7 +8,8 @@ const bgStart=background.indexOf('const LOCK_TTL ='),bgEnd=background.indexOf('c
 assert(bgStart>0&&bgEnd>bgStart);
 const state={on:false,lock:null,rt:{},cfg:{}};
 const chrome={runtime:{getURL:p=>'chrome-extension://testing/'+p},storage:{local:{async get(keys){let o={};for(const k of (typeof keys==='string'?[keys]:keys))if(Object.hasOwn(state,k))o[k]=structuredClone(state[k]);return o;},async set(o){Object.assign(state,structuredClone(o));}}}};
-const bg=vm.createContext({chrome,console,Date,URL,crypto:{randomUUID:()=> 'uuid'},noteAlive(){} });
+// 20.30: menuPatch использует ядро при Start; лимиты patch и поведение классов проверяются без изменений.
+const bg=vm.createContext({L2EngineCore:require('../engine-core.js'),chrome,console,Date,URL,crypto:{randomUUID:()=> 'uuid'},noteAlive(){} });
 vm.runInContext(background.slice(bgStart,bgEnd)+'\nthis.menuPatch=menuPatch; this.statePatch=statePatch;',bg);
 const sender={url:'chrome-extension://testing/popup.html?dock=1'};
 const owner={tab:{id:7},frameId:0,url:'https://l2wap.com/map.html'};

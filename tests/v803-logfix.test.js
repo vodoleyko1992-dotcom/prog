@@ -5,11 +5,11 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 (async () => {
-  // 1. пауза на 9-й странице из 14: старые записи на месте, список «несвежий» (перечитка через 3 мин)
+  // 1. пауза на 9-й странице из 14: частичный список «несвежий» (перечитка через 3 мин).
   const raidSrc = read('modules/raid.js');
   assert.match(raidSrc, /if \(!nx\) \{ complete = true; break; \}/);
-  // 20.2: частичный список сохраняется, но не доказывает полноту для перехода к рыбалке.
-  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: \{ \.\.\.\(env\.rt\.rbList \|\| \{\}\), \.\.\.all \}, rbListT: rbPartialListT\(\), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null \}\);/);
+  // 20.30: по просьбе игрока старый список больше не подмешивается. Частичные свежие строки не доказывают полноту или текущий Start.
+  assert.match(raidSrc, /if \(!complete\) \{\n    await env\.setRt\(\{ rbList: all, rbListT: rbPartialListT\(\), rbListIncomplete: true, rbListVerifiedAt: 0, rbScan: null, rbListReadStart: null, rbListVerifyNextAt: Date\.now\(\) \+ 180000 \}\);/);
   // 2. после платного телепорта тура зона сбрасывается (EXP/ч не уходит в прежнюю зону)
   // 10.0.14: резерв передан атомарному helper; очистка зоны по-прежнему идёт до платного клика.
   // 15.10: резерв также содержит явную фазу и время оплаты; сброс старой зоны обязателен по-прежнему.
@@ -31,7 +31,7 @@ const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(r
   assert.equal(ms({ fishMode: true, rbBetween: true }), 'рыбалка', 'suspended add-on is not shown');
   assert.equal(ms({}), 'фарм на месте');
   assert.match(content, /if \(m0 !== m1 && tabOwner\) try \{ rec\('U', 'меню', `режим: \$\{m0\} → \$\{m1\}`\); \} catch \(e\) \{\}/);
-  console.log('PASS: 8.0.3 log fixes — partial RB list merged and rescanned in 3 min, zone reset after a tour teleport, no band potions when the forecast says none needed, FA buffs not tracked as town buffs, weapons read in the tour, mode changes logged');
+  console.log('PASS: 8.0.3 log fixes — partial fresh RB list stays unverified and is rescanned in 3 min, zone reset after a tour teleport, no band potions when the forecast says none needed, FA buffs not tracked as town buffs, weapons read in the tour, mode changes logged');
 })().catch(e => { console.error(e); process.exit(1); });
 // 8.0.3 (лог 11.10 09:24:09): автообучение не считает страницу Cloudflare 502 заходом и снимает тревогу, когда селектор снова находится
 {

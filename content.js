@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.29 — оплата и ручное улучшение у Маммона =====
+// ===== L2wap Bot v20.30 — свежий поиск РБ, VIP без FA и лимит рыбалки =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -4543,7 +4543,7 @@ const NET_CONTEXT = new Map();
 const BUSY_PATH = /^\/(?:character|game\/battle\/(?:action|start|hunt-continue))$/;
 function netContextStart(d) {
   if(d.rid==null)return;
-  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
+  NET_CONTEXT.set(d.rid,{char:rt.char||'',hud:heroNick()||'',classKey:JSON.stringify([rt.classCur?.prof??null,rt.classCur?.slot??null]),lease:leaseEpoch,raidStart:rt.rbListStartRequired??null,paymentId:L2V7Modules.payments?.claimRequest?.(d)||'',retryOf:d.retryOf||0,nativeNonce:rt.zoneGo?.nativeTp?.nonce||'',at:Date.now()});
   try { L2V7Modules.fishing?.castRequestNote?.(d); } catch (_) {}
   if(NET_CONTEXT.size>1000)NET_CONTEXT.delete(NET_CONTEXT.keys().next().value);
 }
@@ -4665,6 +4665,7 @@ addEventListener('message', e => {
   const netContext=netContextTake(d);if(netContext===false)return;
   // 18.10, журнал 22:27: точный запрос из позднего ответа дополняет потерянный netStart только в прежнем контексте.
   try { L2V7Modules.fishing?.castResponseNote?.(path,d,netContext); } catch (_) {}
+  try { L2V7Modules.raid?.listPriceNote?.(path,d,netContext); } catch (_) {}
   catPaymentNote(path,d,netContext);
   d.nativeNonce=netContext.nativeNonce||'';
   d.paymentId=netContext.paymentId||'';
@@ -5263,7 +5264,9 @@ L2V7Modules.epics = L2V7Factories.epics({ get pauseBot(){return pauseBot}, get c
   get transitionMonitor() { return transitionMonitor; }, set transitionMonitor(value) { transitionMonitor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.economy.shopGap()}, get actionGeneration(){return ()=>automationGeneration}, get idleFarmAllowed(){return ()=>!Array.isArray(cfg.autoTasks)||['farm','auto'].includes(L2EngineCore.selectedTask(cfg,rt))||(L2EngineCore.selectedTask(cfg,rt)==='quests'&&campOn())||(L2EngineCore.taskAllowed(cfg,'resources')&&!!lootGoal())}, get IL(){return IL}, get tourReadReady(){return ()=>!rt.revive&&!L2V7Modules.pvp?.pending()&&!antibotState()&&!(cfg.tvtOn&&L2V7Modules.tvt.tvtHold())}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get raidPaymentNet(){return raidPayReceipt}, get rtCommit(){return rtCommit}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation},
+  get leaseEpoch(){return leaseEpoch;},
   get gameGet() { return gameGet; },
+  get vipSession(){return ()=>L2V7Modules.buffs.vipSession();},
   get warlock() { return L2V7Modules.warlock; }, get pauseBot() { return pauseBot; }, get rbTimer() { return L2V7Modules.rbtimer; }, get storyRbIds() { return () => L2V7Modules.story.rbIds(); }, get gameAuth() { return gameAuth; }, get shopNeedByPanel() { return shopNeedByPanel; }, get mobHp() { return mobHp; }, get faIdsOf() { return (...a) => L2V7Modules.buffs.faIdsOf(...a); }, get faFullIds() { return (...a) => L2V7Modules.buffs.faFullIds(...a); }, get tourFaWanted() { return () => L2V7Modules.buffs.tourFaWanted(); }, get faBalOf() { return (...a) => L2V7Modules.buffs.faBalOf(...a); }, get faCost() { return faCost; }, get faLow() { return (...a) => L2V7Modules.buffs.faLow(...a); }, get hudBuffs() { return hudBuffs; }, get townBuffNeed() { return () => L2V7Modules.buffs.townBuffNeed(); }, get setCfg() { return setCfg; }, get rbNote() { return rbNote; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get tabOwner() { return tabOwner; },
   get LV_RE() { return LV_RE; }, set LV_RE(value) { LV_RE = value; },

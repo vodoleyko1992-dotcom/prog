@@ -1,0 +1,13 @@
+{"name":"repeated Start has distinct stamp and preserves config/pending/battle","ok":true}
+{"name":"different sessions with same kick produce distinct stamp","ok":true}
+{"name":"disable and re-enable with same kick produce distinct stamp","ok":true}
+{"name":"old inflight list ack cannot satisfy newer session","ok":true}
+{"name":"old inflight list failure cannot satisfy newer session","ok":true}
+{"name":"content completes active fishing before newly selected raid","ok":true}
+{"name":"NET_CONTEXT list price same","ok":true}
+{"name":"NET_CONTEXT list price newStart","ok":true}
+{"name":"NET_CONTEXT list price hero","ok":true}
+{"name":"NET_CONTEXT list price class","ok":true}
+{"name":"NET_CONTEXT list price lease","ok":true}
+{"name":"NET_CONTEXT list price missingStart","ok":true}
+{"passed":12,"total":12}
