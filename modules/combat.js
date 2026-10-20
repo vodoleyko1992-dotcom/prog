@@ -1013,6 +1013,40 @@ function frenzyDive(ctx, me) {                    // «сливаться под
   return me.pct > lim && ready(b) && !env.buffActive('frenzy', b) && me.pct > (env.cfg.stopHp || 25);
 }
 
+// 20.10, журнал11:28–11:31: вампиризм держит Titan на95–100%, ожидание урона не включает лимиты.
+// Battle Trance остаётся запрещён в общих ролях; только этот план разрешает точный native-навык.
+function limitPlan(ctx, me, mp) {
+  ctx.limitSkip = ''; ctx.limitUnsafe = false;
+  const prof = String((env.rt.classCur ? env.rt.classCur.prof : env.rt.prof) || '').replace(/[_-]/g, ' ');
+  if (env.cfg.destroyerLimits === false || !/^(?:orc )?(?:destroyer|titan)$/i.test(prof) || !me || ![me.cur,me.max,me.pct,mp?.cur].every(Number.isFinite) || !(me.cur > 0 && me.max > 0)
+    || env.on === false || env.tabOwner === false || env.canAct?.() === false || env.pvpPending?.() || ctx.champ || ctx.rb?.retreated || env.rt.epic?.step === 'retreatVerify') return null;
+  const selected = [...new Set([...env.names(env.cfg.nKeyBuffs), ...env.names(env.cfg.nBuffs)])];
+  const buffs = selected.map(bn => ({ bn, b: slotsBy(bn)[0] })).filter(x => x.b)
+    .map(x => ({ ...x, il: env.ilOf(x.b) })).filter(x => [176,420].includes(x.il?.id) && x.il?.pc?.hp >= 25 && x.il.pc.hp <= 30)
+    .filter(x => !env.buffActive(x.bn, x.b) && ready(x.b) && (ctx.block?.['buff:' + x.bn] || 0) <= Date.now())
+    .sort((a,b) => (a.il.id === 176 ? 0 : 1) - (b.il.id === 176 ? 0 : 1));
+  if (!buffs.length) return null;
+  const d = ctx.rb ? env.rt.rbDb?.[ctx.rb.id] || {} : {}, hits = (ctx.rb?.hits || []).filter(n => Number.isFinite(n) && n > 0);
+  const hit = Math.max(d.hitP90 || 0, ...hits, 0), spike = Math.max(d.sp || 0, d.probe?.sp || 0, ctx.rb?.sp || 0);
+  const hpCost = x => Math.max(0, ...(Array.isArray(x.il.hp) ? x.il.hp : [x.il.hp]).filter(Number.isFinite));
+  const low = buffs.find(x => me.pct <= x.il.pc.hp && affordable(x.b, mp, 0));
+  if (low) {
+    // Ниже20% или перед смертельным ударом сначала обычное аварийное восстановление.
+    if (me.pct < 20 || me.cur - hpCost(low) <= spike + 2 * hit) { ctx.limitUnsafe = true; return null; }
+    return { kind: 'buff', b: low.b, bn: low.bn };
+  }
+  if (me.pct <= 30 || ctx.limitTranceUnverified || (ctx.block?.['limit:trance'] || 0) > Date.now()) return null;
+  const b = [...document.querySelectorAll(env.SLOT)].find(b => env.slotAction(b) === 'battle_trance');
+  if (!b || !uiReady(b) || localCdLeft(b) > 0 || env.combatCooldown.skillWait('battle_trance', (env.cdSpawn || env.battleSpawn)()) > 0) return null;
+  const need = actionMp(b) + buffs.reduce((sum,x) => sum + actionMp(x.b), 0);
+  if (!mp || mp.cur < need) { ctx.limitSkip = 'не хватает MP на Battle Trance и готовые лимиты'; return null; }
+  const after = Math.floor(me.max * .25) - buffs.reduce((sum,x) => sum + hpCost(x), 0);
+  if (after < me.max * .20 || ctx.rb && (!(hit > 0 || spike > 0) || after <= spike + hit * (buffs.length + 2))) {
+    ctx.limitSkip = 'HP после Battle Trance не покрывает запас под удары РБ или замер ударов неизвестен'; return null;
+  }
+  return { kind: 'trance', b };
+}
+
 // Принятый вампирик ждёт реального КД. Потерянный/неподтверждённый клик имеет короткий повтор.
 function drainBackoff(ctx, b, result) {
   const net = env.actNet?.(), exact = env.slotAction(b);
@@ -1517,6 +1551,7 @@ async function battle() {
     if (!victory() && await env.tvtStep?.()) return;
     if (victory()) break;
     if ((s = await mainTargetDead(mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
+    if ((s = await limitStep(me, mp)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await emergencyBuffStep(me, mp, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if ((s = await champFleeStep(me, mob)) !== NEXT) { if (s === AGAIN) continue; if (s === END) break; return s; }
     if (ctx.rb && me && mob && !ctx.rb.retreated) {
@@ -1695,8 +1730,31 @@ async function battle() {
     return NEXT;
   }
 
+  // Подготовка лимитов идёт раньше банок/Battle Roar и старого ограничения Zealot на добивании РБ.
+  async function limitStep(me, mp) {
+    if (me?.pct <= 30) ctx.limitTranceUnverified = false;
+    const plan = limitPlan(ctx, me, mp);
+    if (!plan) {
+      if (ctx.limitSkip && ctx.limitSkip !== ctx.limitSaid) { ctx.limitSaid = ctx.limitSkip; env.rec('B', 'лимиты', ctx.limitSkip); }
+      return NEXT;
+    }
+    const actor = () => JSON.stringify([env.rt.char, env.rt.classCur?.slot, env.rt.classCur?.prof || env.rt.prof, (env.cdSpawn || env.battleSpawn)()]);
+    const before = actor(), key = plan.kind === 'trance' ? 'limit:trance' : 'buff:' + plan.bn, netStart = env.actNet?.().start || 0;
+    const needed = () => actor() === before && limitPlan(ctx, env.meHp(), env.meMp())?.b === plan.b;
+    const result = await act(plan.b, plan.kind === 'trance'
+      ? 'Лимиты: Battle Trance — снижаю HP до 25% для Frenzy/Zealot'
+      : `Лимиты (HP ${me.pct | 0}%): ${env.cleanTitle(plan.b.title)}`, false, needed);
+    if (actor() !== before || env.canAct?.() === false || !env.on || !env.tabOwner) return AGAIN;
+    if (plan.kind === 'trance' && (result === true || (env.actNet?.().start || 0) > netStart && !['cd','nomp','unavail'].includes(result))) ctx.limitTranceUnverified = true;
+    // Не предполагаем25% после клика: следующий круг читает настоящее HP. Неизвестный исход не повторяем сразу.
+    ctx.block[key] = result === 'unavail' ? Infinity : Date.now() + (result === true ? (plan.kind === 'trance' ? 30000 : 5000) : result === 'nomp' ? NOMP_MS : 3000);
+    if (result === true && plan.kind === 'buff') await env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [plan.bn]: Date.now() } });
+    return AGAIN;
+  }
+
   // шаг: аварийные баффы при низком HP (Guts → Frenzy → прочие → Zealot)
   async function emergencyBuffStep(me, mp, mob) {
+    if (ctx.limitUnsafe) return NEXT; // После неожиданно глубокого сниженияHP сначала спасение, не старый путь баффов.
     // v4.42: «аварийные» баффы (Frenzy, Guts, Zealot — действуют только при HP ≤ 30 %): у Дестроера это главный урон и защита,
     // раньше их перебивала банка HP (при 50 % пили — до 30 % не доходило, а при 25 % первой срабатывала аварийная банка)
     // v5.3: + раздел «Важные баффы» (cfg.nKeyBuffs). Порядок: Guts (защита ×2) → Frenzy (атака ×2–3) → прочие → Zealot.
@@ -2589,6 +2647,6 @@ function potModel() {                           // v4.40: все банки HP �
   const H = pool / n;
   return { n, H: Math.round(H), C: H / rate, pool, rate, est: items.every(x => x.est), items };
 }
- return { warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
+ return { limitPlan, warlordSkipNote, summonCombat, actionMp, affordable, healPick, healSlot, weaponContext, weaponBlocks, cancelCollect, warlordPullPlan, warlordPullResult, champQuickExitCommit, rbTryExit, probeExitCommit, strengthSample, strengthReliable, logDmg, groupPlan, battleRewards, freshBattleLines, lostUntil, pressAt, petPick, petMul, spellSample, debuffGain, debuffGainFlush, dbfOn, petHits, petExpect, petAdvice, petFlush, petBuffPick, mageSpellSlots, magePlan, debuffPlan, potSlotRestore, mobHp, extraMobs, noticeText, mobTitle, mobName, victory, defeat, loadErr, slotsBy, cdBusy, uiReady, ready, cdLeft, rememberCd, dpsPlan, ultPick, frenzyDive, hpReserveBlocked, rbTurnHeal, drainBackoff, drainPreferred, drainPick, chooseAction, hotbarRows3, battle, potModel };
  };
 })(globalThis);

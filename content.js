@@ -802,7 +802,7 @@ const AUG = typeof L2Aug !== 'undefined' ? L2Aug : null;
 const LS_BY_NAME = Object.create(null);
 // 10.0.27: штатные actionId панели Warrior, снимки/карточки 15.10 10:26.
 // 15.10, живая проверка: Battle Trance расходует HP, это не атака и не автоматический бафф.
-const NATIVE_SKILL_META = { battle_trance: { n: 'Battle Trance', c: 'Расход HP', t: 'HP_SELF_COST', o: 'ACTIVE', target: 'SELF', autoUse: false, L: 'L2WAP: снижает текущее HP до 25% максимума; только вручную' } };
+const NATIVE_SKILL_META = { battle_trance: { n: 'Battle Trance', c: 'Расход HP', t: 'HP_SELF_COST', o: 'ACTIVE', target: 'SELF', autoUse: false, L: 'L2WAP: снижает текущее HP до 25% максимума; вручную или отдельной подготовкой Frenzy/Zealot' } };
 const NATIVE_SKILL_NAMES = { 'battle trance': 'battle_trance' };
 const NATIVE_SKILL_IL = { war_cry: 78, stun_attack: 100, wild_sweep: 245, power_smash: 255, vicious_stance: 312,
   // 20.3 (лог16.10 07:15): Warlord использует именованные actionId вместо l2_<id>.
