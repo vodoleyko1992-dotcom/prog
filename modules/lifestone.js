@@ -25,13 +25,42 @@
    for(const r of rows)if(rows.filter(x=>x.key===r.key).length>1)r.ambiguous=true;
    return rows;
   }
+  // 20.33 (лог20.10 04:24): свои GET не видны hook; только безопасная причина, без тела ответа/имени/токена.
+  const scanNote=message=>{try{env.rec?.('B','ЛС',message);}catch(_){}};
+  const scanReason=(part,why)=>`Не удалось прочитать ${part}: ${why}; прежний список сохранён`;
+  async function scanRead(url,part){
+   let timer;
+   const read=async()=>{
+    let response,data;
+    try{response=await env.gameGet(url);}
+    catch(e){return {error:scanReason(part,/AbortError|TimeoutError/.test(e?.name||'')||/timeout|timed out|aborted/i.test(e?.message||'')?'таймаут запроса':'ошибка соединения')};}
+    if(!response?.ok)return {error:scanReason(part,Number.isInteger(response?.status)&&response.status>=100&&response.status<=599?'HTTP '+response.status:'ответ не получен')};
+    try{data=await response.json();}catch(_){return {error:scanReason(part,'некорректный JSON')};}
+    return data&&typeof data==='object'&&!Array.isArray(data)?{data}:{error:scanReason(part,'JSON не содержит объект ответа')};
+   };
+   // fetch может вернуть заголовки, но тело JSON ещё не закончиться; список не блокирует кнопку навсегда.
+   try{return await Promise.race([read(),new Promise(resolve=>{if(typeof setTimeout==='function')timer=setTimeout(()=>resolve({error:scanReason(part,'таймаут запроса или чтения JSON')}),8000);})]);}
+   finally{if(timer!==undefined)clearTimeout(timer);}
+  }
   async function scanWeapons(){
-   const who=char(),context=stamp(),[s,h]=await Promise.all([snapshot(),get('/character/catalog-hints')]);
-   if(!s||!h?.itemGradeHints||!h?.itemSlotHints)throw Error('Не удалось прочитать оружие и каталог; прежний список сохранён');
-   if(char()!==who||stamp()!==context||!own({char:who}))throw Error('Герой или управление изменились — обновите оружие');
-   const rows=weaponRows(s,h),r=await env.setRt({lsWeapons:{char:who,t:now(),items:rows}});
-   if(r?.ok!==true)throw Error('Не удалось сохранить список оружия');
-   env.rec?.('B','ЛС',`Оружие прочитано: ${rows.length} подходящих C/B/A/S вещей; вставка не запускалась`);return true;
+   let reason='Не удалось обновить список оружия; прежний список сохранён';
+   scanNote('Обновляю список оружия из инвентаря и каталога; вставка не запускалась');
+   try{
+    const who=char(),context=stamp(),[character,catalog]=await Promise.all([scanRead('/character','инвентарь героя'),scanRead('/character/catalog-hints','каталог оружия')]);
+    if(character.error||catalog.error){reason=character.error||catalog.error;throw Error(reason);}
+    const s=character.data.character,h=catalog.data;
+    if(!s||typeof s!=='object'){reason=scanReason('инвентарь героя','нет character');throw Error(reason);}
+    if(typeof s.name!=='string'||!s.name){reason=scanReason('инвентарь героя','нет имени героя');throw Error(reason);}
+    if(s.name!==who){reason=scanReason('инвентарь героя','имя героя не совпадает');throw Error(reason);}
+    if(!Number.isSafeInteger(s.revision)||s.revision<0){reason=scanReason('инвентарь героя','нет корректной revision');throw Error(reason);}
+    if(!s.inventory?.eq||typeof s.inventory.eq!=='object'||Array.isArray(s.inventory.eq)||!Array.isArray(s.inventory.stacks)){reason=scanReason('инвентарь героя','нет inventory.eq или inventory.stacks');throw Error(reason);}
+    if(!h.itemGradeHints||typeof h.itemGradeHints!=='object'||Array.isArray(h.itemGradeHints)||!h.itemSlotHints||typeof h.itemSlotHints!=='object'||Array.isArray(h.itemSlotHints)){reason=scanReason('каталог оружия','нет itemGradeHints или itemSlotHints');throw Error(reason);}
+    if(char()!==who||stamp()!==context||!own({char:who})){reason='Герой или управление изменились — обновите оружие';throw Error(reason);}
+    const rows=weaponRows(s,h);reason='Не удалось сохранить список оружия';
+    const r=await env.setRt({lsWeapons:{char:who,t:now(),items:rows}});
+    if(r?.ok!==true)throw Error(reason);
+    scanNote(`Оружие прочитано: ${rows.length} подходящих C/B/A/S вещей; вставка не запускалась`);return true;
+   }catch(_){scanNote('Обновление оружия не выполнено: '+reason);throw Error(reason);}
   }
   const known=id=>typeof id==='string'&&Object.hasOwn(A.OUT,id);
   function config(){const c=env.cfg.autoLs||{},targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[];
