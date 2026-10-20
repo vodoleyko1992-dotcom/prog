@@ -4378,7 +4378,7 @@ function logCooldownApi(d, path) {
   const sc = r.skillCooldowns ?? inner.skillCooldowns;
   const fields = {
     action: d.req?.action ?? r.requestedAction ?? null,
-    battle: d.req?.battleSpawnId ?? battleSpawn(),
+    spawn: d.req?.battleSpawnId ?? battleSpawn(),   // 20.41 (выгрузка 20.10): не data.battle — это поле зарезервировано под объект боя (v2034)
     status: d.status,
     serverNowMs: r.serverNowMs ?? r.nowMs ?? inner.serverNowMs ?? null,
     blockedBy: r.blockedBy ?? null,
@@ -4395,7 +4395,8 @@ function logCooldownApi(d, path) {
   if (Date.now() - (cooldownDiagSeen.get(key) || 0) < 3000) return;
   cooldownDiagSeen.set(key, Date.now());
   if (cooldownDiagSeen.size > 100) cooldownDiagSeen.delete(cooldownDiagSeen.keys().next().value);
-  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: fields });
+  // 20.41 (выгрузка 20.10): поля КД — в data.cd; прежняя строка spawnId в data.battle печаталась в TXT посимвольно, а сами КД не выводились
+  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: { cd: fields } });
 }
 const netOutage = { failures: [], successes: [], since: 0, last: 0 };
 // 8.0.3: отметка «сервер завис в бою» (ход без ответа > 8 с, «нет ответа игры 20 с», серия 5xx) — в sessionStorage вкладки: смерть сразу после неё
