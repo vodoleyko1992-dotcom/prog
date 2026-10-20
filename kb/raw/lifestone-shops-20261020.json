@@ -1,0 +1,234 @@
+{
+  "at": "2026-10-20T05:09:58.337038+00:00",
+  "merchant": {
+    "categories": [
+      {
+        "categoryId": "life_stones",
+        "categoryUk": "Life Stones",
+        "items": [
+          {
+            "categoryId": "life_stones",
+            "itemKey": "c",
+            "itemId": 10409,
+            "nameEn": "Life Stone C",
+            "nameUk": "Life Stone C",
+            "iconUrl": "/icons/drops/resours/ls_c.jpg",
+            "aaPrice": 70000
+          },
+          {
+            "categoryId": "life_stones",
+            "itemKey": "b",
+            "itemId": 10410,
+            "nameEn": "Life Stone B",
+            "nameUk": "Life Stone B",
+            "iconUrl": "/icons/drops/resours/ls_b.jpg",
+            "aaPrice": 80000
+          },
+          {
+            "categoryId": "life_stones",
+            "itemKey": "a",
+            "itemId": 10411,
+            "nameEn": "Life Stone A",
+            "nameUk": "Life Stone A",
+            "iconUrl": "/icons/drops/resours/ls_a.jpg",
+            "aaPrice": 100000
+          },
+          {
+            "categoryId": "life_stones",
+            "itemKey": "s",
+            "itemId": 10412,
+            "nameEn": "Life Stone S",
+            "nameUk": "Life Stone S",
+            "iconUrl": "/icons/drops/resours/ls_s.jpg",
+            "aaPrice": 160000
+          }
+        ]
+      }
+    ]
+  },
+  "gmShop": {
+    "grades": [
+      {
+        "grade": "S",
+        "sections": [
+          {
+            "category": "consumable",
+            "categoryUk": "Розхідники",
+            "items": [
+              {
+                "shopKey": "consumable/resource_gemstone_s",
+                "category": "consumable",
+                "categoryUk": "Розхідники",
+                "grade": "S",
+                "iconUrl": "/icons/resources/gemstones/gemstone_s_grade.png",
+                "nameUk": "Самоцвіт: ранг S",
+                "itemId": 2134,
+                "previewItemId": 2134,
+                "priceAdena": 100000,
+                "priceCoinOfLuck": null,
+                "purchasable": true,
+                "nameEn": "Gemstone S",
+                "consumableSubtype": "resources",
+                "statsPreview": {
+                  "lines": [
+                    {
+                      "labelUk": "Тип",
+                      "valueUk": "Розхідник"
+                    },
+                    {
+                      "labelUk": "Примітка",
+                      "valueUk": "Не екіпірується; лише сумка."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "grade": "A",
+        "sections": [
+          {
+            "category": "consumable",
+            "categoryUk": "Розхідники",
+            "items": [
+              {
+                "shopKey": "consumable/resource_gemstone_a",
+                "category": "consumable",
+                "categoryUk": "Розхідники",
+                "grade": "A",
+                "iconUrl": "/icons/resources/gemstones/gemstone_a_grade.png",
+                "nameUk": "Самоцвіт: ранг A",
+                "itemId": 2133,
+                "previewItemId": 2133,
+                "priceAdena": 30000,
+                "priceCoinOfLuck": null,
+                "purchasable": true,
+                "nameEn": "Gemstone A",
+                "consumableSubtype": "resources",
+                "statsPreview": {
+                  "lines": [
+                    {
+                      "labelUk": "Тип",
+                      "valueUk": "Розхідник"
+                    },
+                    {
+                      "labelUk": "Примітка",
+                      "valueUk": "Не екіпірується; лише сумка."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "grade": "B",
+        "sections": [
+          {
+            "category": "consumable",
+            "categoryUk": "Розхідники",
+            "items": [
+              {
+                "shopKey": "consumable/resource_gemstone_b",
+                "category": "consumable",
+                "categoryUk": "Розхідники",
+                "grade": "B",
+                "iconUrl": "/icons/resources/gemstones/gemstone_b_grade.png",
+                "nameUk": "Самоцвіт: ранг B",
+                "itemId": 2132,
+                "previewItemId": 2132,
+                "priceAdena": 10000,
+                "priceCoinOfLuck": null,
+                "purchasable": true,
+                "nameEn": "Gemstone B",
+                "consumableSubtype": "resources",
+                "statsPreview": {
+                  "lines": [
+                    {
+                      "labelUk": "Тип",
+                      "valueUk": "Розхідник"
+                    },
+                    {
+                      "labelUk": "Примітка",
+                      "valueUk": "Не екіпірується; лише сумка."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "grade": "C",
+        "sections": [
+          {
+            "category": "consumable",
+            "categoryUk": "Розхідники",
+            "items": [
+              {
+                "shopKey": "consumable/resource_gemstone_c",
+                "category": "consumable",
+                "categoryUk": "Розхідники",
+                "grade": "C",
+                "iconUrl": "/icons/resources/gemstones/gemstone_c_grade.png",
+                "nameUk": "Самоцвіт: ранг C",
+                "itemId": 2131,
+                "previewItemId": 2131,
+                "priceAdena": 3000,
+                "priceCoinOfLuck": null,
+                "purchasable": true,
+                "nameEn": "Gemstone C",
+                "consumableSubtype": "resources",
+                "statsPreview": {
+                  "lines": [
+                    {
+                      "labelUk": "Тип",
+                      "valueUk": "Розхідник"
+                    },
+                    {
+                      "labelUk": "Примітка",
+                      "valueUk": "Не екіпірується; лише сумка."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "merchantState": {
+    "mammonMerchant": {
+      "npcId": 31113,
+      "nameEn": "Merchant of Mammon",
+      "nameUk": "Торговець Маммона",
+      "iconUrl": "/mobs/247.png",
+      "rotationMs": 14400000,
+      "rotatesAtMs": 1792483200000,
+      "slotIndex": 5,
+      "current": {
+        "id": "necropolis_of_martyrdom",
+        "labelEn": "Necropolis of Martyrdom",
+        "labelUk": "Некрополь мучеників",
+        "worldX": 114496,
+        "worldY": 132416,
+        "slotIndex": 5
+      },
+      "next": {
+        "id": "saints_necropolis",
+        "labelEn": "The Saint's Necropolis",
+        "labelUk": "Некрополь святих"
+      }
+    },
+    "teleport": {
+      "baseAdenaCost": 500000,
+      "adenaCost": 0,
+      "vipFreeApplied": true
+    }
+  }
+}

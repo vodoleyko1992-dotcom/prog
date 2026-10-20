@@ -3171,6 +3171,24 @@ function lsRenderWeapons(rt,c,preserveSelection=false){
   const chosen=weapons.find(w=>w.key===selected);
   $('lsWeaponHint').textContent=!weapons.length?(scanned?'Оружие прочитано: подходящих C/B/A/S вещей не найдено.':'Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.'):chosen?.ambiguous?'Одинаковые экземпляры нельзя различить — оставьте один и обновите список.':chosen&&!chosen.equipped?'Выбрана вещь из рюкзака. Сначала наденьте её в игре: запуск в другое оружие заблокирован.':chosen?'Серия привязана к выбранной вещи. Смена оружия остановит вставку.':'Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.';
 }
+// 20.34 (20.10, докупка ЛС): поля денег сохраняются вместе с выбранной вещью и не теряются при смене цели.
+const LS_MATERIAL_FIELDS={aaBudget:['lsAaBudget',2000000,'Лимит AA'],adenaBudget:['lsAdenaBudget',2000000,'Лимит адены'],aaReserve:['lsAaReserve',0,'Запас AA']};
+function lsMaterialDraft(c){
+  const result={buyMaterials:$('lsBuyMaterials')?$('lsBuyMaterials').checked:c.buyMaterials!==false};
+  for(const [key,[id,fallback,label]] of Object.entries(LS_MATERIAL_FIELDS)){
+    const raw=$(id)?String($(id).value).trim():c[key]??fallback,n=Number(raw);
+    if(raw===''||!Number.isSafeInteger(n)||n<0)throw Error(label+': укажите целое число не меньше нуля');
+    result[key]=n;
+  }
+  return result;
+}
+function lsMaterialStatus(s){
+  const amount=x=>x==null?'0':Number.isSafeInteger(+x)&&+x>=0?(+x).toLocaleString('ru'):'?';
+  const spent=s.spentAA!=null||s.spentAdena!=null?`\nНа докупку: ${amount(s.spentAA)} AA · ${amount(s.spentAdena)} аден`:'';
+  const held=+s.reservedAA>0||+s.reservedAdena>0?`\nОжидают сверки: ${amount(s.reservedAA)} AA · ${amount(s.reservedAdena)} аден`:'';
+  const pending=s.pending?.kind==='supply'?`\n${s.pending.action==='travel'?'Телепорт к Маммону':'Покупка: '+(s.pending.name||'материалы ЛС')+(Number.isSafeInteger(s.pending.qty)&&s.pending.qty>0?' ×'+s.pending.qty:'')} — результат ещё не подтверждён. Повтор заблокирован.`:'';
+  return spent+held+pending;
+}
 // 20.33 (лог20.10 04:24): причина чтения остаётся рядом с кнопкой, а не исчезает с toast.
 let lsScanFeedback=null,lsScanPending=false;
 function lsScanFeedbackView(who){
@@ -3189,24 +3207,27 @@ async function lsRefreshWeapons(who){
   return rt.lsWeapons?.char===rt.char?rt.lsWeapons.items||[]:null;
 }
 async function lsRefresh(){
-  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
+  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts','lsBuyMaterials','lsAaBudget','lsAdenaBudget','lsAaReserve'].includes(document.activeElement?.id))return;
   const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
   lsRenderWeapons(rt,c);
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
+  if($('lsBuyMaterials'))$('lsBuyMaterials').checked=c.buyMaterials!==false;
+  for(const [key,[id,fallback]] of Object.entries(LS_MATERIAL_FIELDS))if($(id))$(id).value=c[key]??fallback;
   lsRenderedChar=rt.char;
   const labels={paused:'Пауза',running:'Работает',done:'Завершено',closed:'Закрыто'};
-  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nОружие: ${s.weaponName||'#'+s.itemId}\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
-  $('lsAcknowledge').hidden=!s?.pending;
+  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nОружие: ${s.weaponName||'#'+s.itemId}\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${lsMaterialStatus(s)}${s.pending&&s.pending.kind!=='supply'?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
+  $('lsAcknowledge').hidden=!s?.pending||s.pending.kind==='supply';
 }
 async function lsSave(){
   lsEditing=true;
-  try{const {rt={}}=await chrome.storage.local.get('rt');if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const autoLs={weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
+  try{const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const c=cfg.autoLs||{},autoLs={...c,weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value),...lsMaterialDraft(c)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
   finally{lsEditing=false;}
 }
 $('lsWeapon').onchange=()=>lsSave().then(()=>lsRefresh()).catch(e=>toast(String(e.message||e)));
 $('lsTargets').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 $('lsMaxAttempts').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
+for(const id of ['lsBuyMaterials',...Object.values(LS_MATERIAL_FIELDS).map(([id])=>id)])if($(id))$(id).onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 // 20.33 (лог20.10 04:24): чтение ищет нужного героя; probe не захватывает управление и не запускает ЛС.
 async function lsScanTab(who,started,generation){
   const first=await activeTab(), all=await chrome.tabs.query({url:['https://l2wap.com/*','https://*.l2wap.com/*']}).catch(()=>[]);

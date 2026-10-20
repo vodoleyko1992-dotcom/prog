@@ -1,0 +1,54 @@
+{
+  "version": "20.35-candidate1",
+  "expectedSafetyAssertion": "FAIL",
+  "case": "lost batchLS3 receipt: no replay, explicit reconcile",
+  "fixtureErrors": [],
+  "wirePosts": [
+    {
+      "path": "/game/mammon/merchant/buy",
+      "body": {
+        "category": "life_stones",
+        "itemKey": "s",
+        "qty": 3,
+        "expectedRevision": 100
+      }
+    },
+    {
+      "path": "/game/mammon/merchant/buy",
+      "body": {
+        "category": "life_stones",
+        "itemKey": "s",
+        "qty": 3,
+        "expectedRevision": 100
+      }
+    }
+  ],
+  "appliedMutations": 1,
+  "automaticStaleRevisionConflicts": 1,
+  "resourceTimings": [
+    {
+      "duration": 8,
+      "initiatorType": "fetch",
+      "startTime": 1227
+    }
+  ],
+  "serverState": {
+    "revision": 101,
+    "aa": 1520000,
+    "ls": 3,
+    "gem": 3
+  },
+  "wrongRuntimeState": {
+    "status": "paused",
+    "pending": null,
+    "attempts": 0,
+    "spentAA": 0,
+    "reservedAA": 0,
+    "reason": "\u0418\u0433\u0440\u0430 \u043e\u0442\u043a\u043b\u043e\u043d\u0438\u043b\u0430 \u0437\u0430\u043a\u0443\u043f\u043a\u0443 (409); \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0435\u043d\u0438\u0435 \u0432\u0440\u0443\u0447\u043d\u0443\u044e"
+  },
+  "boundary": "Native Firefox153.5.0esr, loopback HTTPS only, no live account/credentials",
+  "candidateArchive": {
+    "bytes": 1448398,
+    "sha256": "8610b506028fa64fefebbce7f985ed455869f98de3301ee609b87a8892803ed1"
+  }
+}

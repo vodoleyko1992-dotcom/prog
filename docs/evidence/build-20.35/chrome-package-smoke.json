@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-20T05:34:58.175Z",
+  "source": "/workspace/work/build-20.35/chrome",
+  "browser": "155.0.8059.84",
+  "version": "20.35",
+  "keys": 208,
+  "on": false,
+  "storedOnPresent": false,
+  "buyMaterials": true,
+  "aaBudget": 2000000,
+  "adenaBudget": 2000000,
+  "aaReserve": 0,
+  "errors": [],
+  "requests": [],
+  "boundary": "fresh unpacked Chrome ZIP, real extension/UI, no game opened and every HTTPS route intercepted"
+}

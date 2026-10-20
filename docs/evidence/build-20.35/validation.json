@@ -1,0 +1,90 @@
+{
+  "version": "20.35",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/304",
+  "base": "9d2c542085811a19b15b3fd6ee7ef0a6798b93a5",
+  "node": {
+    "passFiles": 499,
+    "failFiles": 0,
+    "newCases": 162,
+    "newCasesByArea": {
+      "core": 59,
+      "ui": 36,
+      "dispatchAndAtomicLimit": 54,
+      "install409": 1,
+      "battleEvidenceFromPR305": 12
+    }
+  },
+  "syntax": {
+    "runtimeFiles": 49,
+    "changedScripts": 23,
+    "ok": true
+  },
+  "envcheck": {
+    "modules": 31,
+    "ok": true
+  },
+  "archives": {
+    "l2wap-bot-v20.35.zip": {
+      "bytes": 1439813,
+      "sha256": "2898f61778e45deced36a169ffefaff07a27f4c5ce3233f322a9d0d4429d0cfb",
+      "files": 64
+    },
+    "l2wap-bot-v20.35-firefox.zip": {
+      "bytes": 1450235,
+      "sha256": "1e4b4addcb0a3dfcf7840adabddf318e061bb28c53954760f11bafb0b5f1accb",
+      "files": 64
+    }
+  },
+  "packageAudit": {
+    "checks": 94,
+    "ok": true
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45,
+    "sameWarningsAs20_34": true
+  },
+  "chromeBrowser": {
+    "status": "PASS",
+    "materialsCases": 17,
+    "battleEvidenceCases": 2,
+    "runtimeKeys": 208,
+    "jsErrors": 0,
+    "sourceBeforeAfterArchiveMatches": 64
+  },
+  "nativeFirefox": {
+    "status": "PASS",
+    "version": "153.5.0esr",
+    "moduleCasesOnV2": 11,
+    "casesOnFinalV3Archive": 4,
+    "finalArchiveHashesUnchanged": 64,
+    "wire409Regression": "One fetch, two identical wire POST, one applied mutation; exact once reconciliation",
+    "proof": "native-firefox/validation.json"
+  },
+  "liveStudy": {
+    "minimalPairPurchased": true,
+    "installAttempts": 1,
+    "removals": 1,
+    "finalAugmentation": null,
+    "weaponEnchant": 25,
+    "spentAA": 160000,
+    "spentAdena": 100000,
+    "teleportAdena": 0,
+    "combatActions": 0,
+    "credentialsSaved": false
+  },
+  "limits": [
+    "Automated runtime purchase flows are verified against local responses, not on the live account.",
+    "Shop buy APIs expose no atomic expected unit price; fresh quotes and exact post-transaction proof are used.",
+    "Android was not tested; Firefox package is unsigned."
+  ],
+  "configKeys": {
+    "profile": 208,
+    "runtime": 208
+  },
+  "productionRuntimeFrozen": "module SHA256 5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797",
+  "includedDefaultHead": "e932942683e584938268f831f48d0f4dbe549068",
+  "status": "PASS",
+  "at": "2026-10-20T05:37:02.052768+00:00"
+}
