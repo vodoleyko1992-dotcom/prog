@@ -1,7 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
-- [L2wap Bot 20.31: Chrome, Battle Trance и подготовка Frenzy/Zealot](docs/changelog/CHANGELOG-20.31.md)
+- [L2wap Bot 20.31: Chrome + Firefox, Battle Trance и подготовка Frenzy/Zealot](docs/changelog/CHANGELOG-20.31.md)
 - [L2wap Bot 20.30: Chrome + Firefox, свежие списки РБ, VIP без FA и постоянный счётчик рыбы](docs/changelog/CHANGELOG-20.30.md)
 - [L2wap Bot 20.29: Chrome + Firefox, оплата Маммона и ручное улучшение без ложной неудачи](docs/changelog/CHANGELOG-20.29.md)
 - [L2wap Bot 20.28: Chrome + Firefox, сохранение прогресса и восстановление автономной работы](docs/changelog/CHANGELOG-20.28.md)
