@@ -2208,6 +2208,7 @@ function renderClsBox(d, rt, role, cls) {
 function renderFight(rt) {
   const box = $('fightBox'); if (!box) return;
   FL_RT = rt;
+  if ($('packBox')) $('packBox').textContent = FL?.packReport?.() || 'Пачки: замеров ещё нет';
   const M = rt.fightMem || {}, keys = Object.keys(M), rb = keys.filter(k => k.startsWith('rb:')), ch = keys.filter(k => k.startsWith('ch:')), mob = keys.filter(k => k.startsWith('m:'));
   const L = rt.fightLast, out = [];
   if (L) out.push(`Последний бой: ${L.name}${L.rb ? ' (РБ)' : L.champ ? ' (чемпион)' : ''} — ${L.outcome === 'win' ? 'победа' : L.outcome === 'lose' ? 'смерть' : 'бой окончен'} за ${L.sec} с, ходов ${L.turns}, урон ${L.dealt}${L.pet ? ' + кот ' + L.pet : ''}${L.dps ? ` (≈${L.dps}/с)` : ''}${L.pots ? `, банок ${L.pots}` : ''}${L.lost ? `, потерянных ходов ${L.lost}` : ''}`);
@@ -2245,7 +2246,7 @@ function renderEnemies(rt) {
   }
 }
 confirmClick('fightMemReset', async () => {
-  await menuPatch({ fightMem: {}, fightLast: null, fightGroups: {} });
+  await menuPatch({ fightMem: {}, fightLast: null, fightGroups: {}, packLab: null });
   toast('Память боя этого класса очищена');
 });
 $('showAllCls').onclick = async () => {
@@ -2538,6 +2539,7 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
     + `# | бой: JSON — безопасные поля сервера, rid запроса, цели, HP/MP, КД, исход и награда. log/finalLog: хвост до 200 строк / 32К знаков, строка до 2048; omitted/shortened/cut явно отмечают сокращения.\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
+    + `# Пачки: ${(() => { const before=FL_RT;FL_RT=rt;try{return (FL?.packReport?.()||'нет замеров').replace(/\n/g,'\n# ');}finally{FL_RT=before;} })()}\n`
     + `# Цель рыбалки: ${JSON.stringify(rt.fishTgt || null)} · активный заброс: ${rt.fishCastActive === true} · обслуживание: ${rt.fishService || '—'}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
     + `# Скиллы (по наблюдениям): ${Object.entries(rt.skills || {}).filter(([, p]) => p.uses || p.dmgN).map(([k, p]) => ({ ...p, name: p.name || k })).map(p => `${p.name}: исп ${p.uses || 0} (ваших ${p.usesU || 0})`

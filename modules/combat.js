@@ -1143,20 +1143,25 @@ function warlordPullPlan(ctx, mp) {
   const slots = [...document.querySelectorAll(env.SLOT)], free = k => (ctx.block[k] || 0) <= Date.now();
   const powers = new Set(env.names(env.cfg.nPower).map(n => n.toLowerCase()));
   const aoes = slots.filter(b => ['whirlwind','thunder_storm'].includes(env.slotAction(b)) && powers.has(env.cleanTitle(b.title).toLowerCase()) && ready(b) && free('power:' + b.title))
-    .map(b => ({ b, cost: warlordPullCost(b) })).filter(x => x.cost != null && mp.cur > x.cost).sort((a,b) => a.cost - b.cost);
+    .map(b => { const cost=warlordPullCost(b),name=env.cleanTitle(b.title),damage=env.expDmg(name),model=env.fightGroupOn?.(name,mob.max),each=Math.min(damage||0,model?.damage||0);
+      const near=extraMobs().filter(x=>x.cur>0),useful=Math.min(mob.cur,damage||0)+near.reduce((s,x)=>s+Math.min(x.cur,each),0),kills=(damage>=mob.cur?1:0)+near.filter(x=>each*.85>=x.cur).length;
+      return {b,cost,useful,kills}; }).filter(x => x.cost != null && mp.cur > x.cost).sort((a,b) => b.kills-a.kills || b.useful-a.useful || a.cost-b.cost);
   if (!aoes.length) return skip('нет готового массового удара из выбранных силовых или MP на него');
   const hit = aoes[0], previous = ctx.warlordPull;
   if (previous) {
     if (!previous.follow || previous.target !== target) return null;
     return { key: 'power:' + hit.b.title, name: env.cleanTitle(hit.b.title), b: hit.b, mpCost: hit.cost, warlordPull: 'hit', target, why: 'массовый удар после агро' };
   }
-  if (100 * me.cur / me.max < Math.max(75, (+env.cfg.stopHp || 25) + 25)) return skip('мало HP для сбора группы');
+  const advice=env.packAdvice?.(mobName(),mob.max,{hp:100*me.cur/me.max,mp:mp.max>0?100*mp.cur/mp.max:null})||{blocked:[],minHp:75};
+  if (100 * me.cur / me.max < Math.max(75, (+env.cfg.stopHp || 25) + 25, advice.minHp || 75)) return skip('мало HP для сбора группы по наблюдаемым боям');
   if (extraMobs().filter(x => x.cur > 0).length >= 3) return skip('группа уже собрана — бью массовыми');
   // 16.10, лог13:43: Howl тоже добавил соседей. Он запасной сбор, когда Provoke на КД
   // или дороже доступного MP. Раненая главная цель не мешает собрать новых полных соседей.
   const pulls = ['provoke', 'howl'].flatMap(action => slots.filter(b => env.slotAction(b) === action && warlordPullReady(b) && free('aggro:' + b.title)))
     .map(b => ({ b, cost: warlordPullCost(b) })).filter(x => x.cost != null);
-  const pick = pulls.find(x => mp.cur >= x.cost + Math.max(hit.cost, +env.cfg.skillMpMin || 0) + 10);
+  const available=pulls.filter(x=>!advice.blocked?.includes(env.slotAction(x.b))).sort((a,b)=>Number(env.slotAction(b.b)===advice.preferred)-Number(env.slotAction(a.b)===advice.preferred));
+  const pick = available.find(x => mp.cur >= x.cost + Math.max(hit.cost, +env.cfg.skillMpMin || 0) + 10);
+  if(!pick&&pulls.length&&!available.length)return skip('агро уступало обычным боям или давало повторные смерти в этих условиях');
   if (!pick) return skip(pulls.length ? 'не хватает MP на агро и массовый удар с запасом' : 'Provoke и Howl недоступны: панель, откат или неизвестная цена');
   return { key: 'aggro:' + pick.b.title, name: env.cleanTitle(pick.b.title), b: pick.b, mpCost: pick.cost, warlordPull: 'pull', target, why: 'собираю группу под массовый удар; MP на связку есть' };
 }
