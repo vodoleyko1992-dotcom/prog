@@ -1,0 +1,116 @@
+{
+  "at": "2026-10-21T03:05:00+10:00",
+  "author": "Claude",
+  "version": "20.41",
+  "flavor": "Chrome + Firefox",
+  "source": "27d770baf518c3c08f2b48d970b27ff716f8ae42",
+  "request": "еще более лучшая оптимизация, надо добиться выскокой скорости, желательно 0.6с / как сделаешь, потом сборка хром + фаерфокс",
+  "includes": [
+    "PR#318: shop inventory_full, RB DPS per class",
+    "PR#319: RB tour page check, native Whirlwind/Wild Sweep damage, CD export, Mammon price in tour",
+    "PR#320: non-blocking memory writes in combat, catacomb native hunt-continue chain, menuRev reset protection, petCohorts slim (1.1 MB -> 18 KB), background without storage.onChanged, fishing cast clear without await, fewer battle writes"
+  ],
+  "archives": {
+    "builds/l2wap-bot-v20.41.zip": {
+      "bytes": 1485873,
+      "sha256": "85b9710b8ccf563a97bbe0cf563b62ea0e7fa28f5da970ad136a9ee022548f65",
+      "runtimeFiles": 64
+    },
+    "builds/l2wap-bot-v20.41-firefox.zip": {
+      "bytes": 1485950,
+      "sha256": "99fa7f0d2aedcafd04a5e5d0d731c358aaaf59fb3433ecab51b4e1cc886f05eb",
+      "runtimeFiles": 64,
+      "manifest": "background.scripts, gecko + gecko_android 128+"
+    }
+  },
+  "checks": {
+    "nodeAllFiles": {
+      "pass": 526,
+      "fail": 0
+    },
+    "syntax": {
+      "runtimeJsFromZip": 49
+    },
+    "envcheck": "PASS",
+    "baseProfileNoAuth": true,
+    "zipExcludesTestsDocsKb": true,
+    "independentMergedReview": {
+      "lenses": [
+        "write ordering",
+        "background without onChanged",
+        "petCohorts slim"
+      ],
+      "confirmedDefects": 0
+    },
+    "browserFullSuiteFromSource": {
+      "files": 148,
+      "pass": 111,
+      "fail": 37,
+      "newFailuresVsBase": 0,
+      "note": "all 37 fail identically on the pre-PR base (base-failures-summary.txt; v1015-pvp-mv3 and v2036-combat-scheduler confirmed earlier with sequential base runs)",
+      "proof": "browser/full-suite-source-summary.txt"
+    },
+    "chromeFromFinalZip": {
+      "zipload": {
+        "version": "20.41",
+        "cfgKeys": 208,
+        "pageErrors": 0,
+        "proof": "browser/zipload.log"
+      },
+      "scenarios": {
+        "v2041-cat-native-browser": "PASS 2",
+        "v2041-battle-writes-browser": "PASS 2",
+        "v2041-sw-badge-browser": "PASS 6",
+        "v2039-combat-storage-browser": "PASS 3 cases",
+        "v2038-cat-navigation-browser": "PASS 2",
+        "v1014-core-lifecycle-browser": "PASS 6"
+      },
+      "runtimeHashesZipEqualsSource": true,
+      "runtimeHashesBeforeEqualsAfter": true,
+      "proof": "browser/"
+    },
+    "firefox": {
+      "browser": "Firefox 153.5.0esr",
+      "geckodriver": "0.37.1",
+      "lint": {
+        "errors": 0,
+        "notices": 0,
+        "warnings": 45
+      },
+      "smokeDesktop": "PASS",
+      "smokeAndroidApisRemoved": "PASS",
+      "nativeMammonDockStartStop": "PASS",
+      "proof": "firefox/"
+    }
+  },
+  "measurements": {
+    "model": "actual MV3, local server model, every response 400 ms, one-hit mobs, catacomb chain",
+    "fullMemoryWrite": {
+      "rt1_3MB_ms": 335,
+      "rt0_26MB_ms": 67
+    },
+    "cycleActionToAction": {
+      "before20_41_ms": 2600,
+      "after_rt1_3MB_median_ms": 1149,
+      "after_rt0_26MB_median_ms": 946,
+      "serverShare_ms": 800,
+      "botVictoryToHunt_ms": 17,
+      "botHuntAnswerToAction_ms": 129
+    },
+    "nativeChainRegularTabWritesPerMob": {
+      "before": 1,
+      "after": 0
+    }
+  },
+  "boundary": {
+    "liveGameOpened": false,
+    "liveFarmSpeedMeasured": false,
+    "hookJsChanged": false,
+    "remainingLimit": "game's own GET /character after every action (~0.3-0.45 s live); removing it needs a change to game responses in hook.js, awaiting the player's decision",
+    "firefoxSigned": false,
+    "androidDeviceTested": false,
+    "settingsOrBaseProfileChanged": false
+  },
+  "next": "Unpack over the existing folder and press reload; send a full combat log of 20.41 to measure live speed.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/320"
+}

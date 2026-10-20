@@ -39,7 +39,9 @@ const UUID = '7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5e';
     await drv.sleep(7000);
     res.hook = await drv.executeScript('return !!window.__l2botHook');                       // hook.js в MAIN world
     res.content = await drv.executeScript("return [...document.querySelectorAll('[id^=l2bot]')].map(e => e.id).join(',')");
-    await drv.get(`moz-extension://${UUID}/popup.html`);
+    // 20.41: Firefox 153 (marionette) не даёт driver.get на moz-extension — переход из страницы (как в v2036-mammon-dock-firefox)
+    await drv.executeScript('window.location.href=arguments[0]', `moz-extension://${UUID}/popup.html`);
+    await drv.wait(async () => (await drv.getCurrentUrl()).startsWith('moz-extension://'), 15000);
     await drv.sleep(2500);
     Object.assign(res, await drv.executeAsyncScript(`const done = arguments[arguments.length - 1];
       (async () => { const s = await chrome.storage.local.get(['cfg', 'ffSim', 'learn', 'lock']);

@@ -1,0 +1,2 @@
+PASS actual MV3 cat native {"startToFirstActionMs":1267,"huntToFirstActionMs":534,"docToFirstActionMs":null,"hunt":1,"navigations":0}
+PASS actual MV3 cat spread {"startToFirstActionMs":1606,"huntToFirstActionMs":null,"docToFirstActionMs":68,"hunt":0,"navigations":1}

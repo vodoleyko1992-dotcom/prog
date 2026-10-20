@@ -59,7 +59,7 @@
 
 **Передача дел:** `docs/HANDOFF.md` — правила пользователя, персонажи, решения, открытые темы (общий файл для всех проектов/аккаунтов Claude; обновлять при важных решениях).
 
-**Проверки текущей сборки:** Chrome20.40:509 Node-файлов PASS/0FAIL; syntax49runtime/5version-tests/envcheck31/diff-check PASS. ZIP64runtime, независимый аудит179/179 и88refs/sourceSHA PASS. Из готовогоZIP20.40/cfg208/0JS:5 MV3-сценариев (storage3, катакомбы2) и32 native-кейса PASS,64SHA before=after=source. Быстрый выпуск, живую игру/полный исторический runner не запускали. Доказательства — docs/evidence/build-20.40/. Firefox остаётся20.36.
+**Проверки текущей сборки:** Chrome + Firefox 20.41: 526 Node-файлов PASS/0FAIL, syntax49runtime, envcheck PASS. Все 148 браузерных проверок из исходников — новых падений нет (37 падают так же на базе до PR). Из готового ZIP: zipload 20.41/cfg208/0 ошибок, 6 MV3-сценариев (катакомбы, записи боя, значок/сторож, storage, переход, жизненный цикл) PASS, 64 SHA zip=исходники до/после. Firefox 153.5esr: web-ext lint 0 ошибок, смоук ПК и без API Android PASS, native Mammon dock со Старт/Стоп PASS. Живую игру не запускали. Доказательства — docs/evidence/build-20.41/.
 
 **Тестовая сборка 10.0.16 (14.10, «тест сборка сейчас»):** включает магистра каждый уровень, общую заточку, Warlock/автобаф кота, PvP и исправление кланового кастера/зарядов. 214 Node-файлов, envcheck28; функциональные браузерные проверки проведены в соответствующих PR. Новый лог16:20 с Flame Strike и его доработка остаются следующему PR и не входят в ZIP. Исторические отметки ниже про отсутствие функций в10.0.15 относятся только к старому архиву. Подробности — `docs/changelog/CHANGELOG-10.0.16.md`.
 
@@ -127,7 +127,7 @@ skills-il.js, items-il.json   справочники Interlude (скиллы п�
 zone-db.js             9.0: встроенная база зон (90 точек телепорта, 438 мобов: уровень/EXP) — из kb/data, `python3 -I tests/tools/zone-db-build.py`
 zone-kpd.js            9.0: модель КПД зоны (L2Kpd: learn/zoneEst/rank/route) — чистые функции для navigation и popup
 base-profile.json      базовый профиль игрока (cfg + chars.Warlock.rt + learn + farmDb)
-tests/                 node tests/run-all.cjs (509 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
+tests/                 node tests/run-all.cjs (526 файлов), *.py — playwright-смоуки (CHROMIUM=/opt/pw-browsers/chromium)
 CHANGELOG.md           оглавление истории версий (ссылки); сами CHANGELOG-X.Y.Z.md — в docs/changelog/ (в zip не входят, код их не читает)
 ```
 
@@ -174,7 +174,7 @@ Blaze ≈895 урона/22 MP/КД 3,1 с; Aura Burn ≈847/25/2,2; Energy Bolt 
 ## Как проверять
 
 ```
-cd <repo> && node tests/run-all.cjs            # 509 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
+cd <repo> && node tests/run-all.cjs            # 526 файлов; при смене версии обновить строку версии в tests/stage1,stage3,ios-fishing,v71-ui,v6-core
 for f in content.js background.js popup.js modules/*.js; do node --check $f; done
 ```
 Playwright-смоуки с реальным расширением (headless Chromium, подмена l2wap.com маршрутами): примеры были в scratchpad (base60.js — базовый профиль, shop60.js — магазин, fishsetup.js — настройка рыбалки, pausetest.js — меню/пауза, equipnet.js — надевание по сети, profq.js — квест профессии, baitswap.js — смена наживки, fishstall.js — зависание рыбалки). Схема: `chromium.launchPersistentContext` с `--load-extension`, `ctx.route('https://l2wap.com/**')` отдаёт мок-страницу, storage через service worker, итог читается из `chrome.storage.local`.
