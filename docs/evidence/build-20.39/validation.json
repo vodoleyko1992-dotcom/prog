@@ -48,5 +48,11 @@
     "FirefoxVersionUnchanged": "20.36",
     "baseProfileAndSettingsChanged": false
   },
-  "next": "Download verified ZIP, replace files in the same Chrome directory, reload extension and game tab; obtain a full combat log."
+  "next": "Download verified ZIP, replace files in the same Chrome directory, reload extension and game tab; obtain a full combat log.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/315",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/06ab8a75027fe9c886279df8fbb83690c5792297/builds/l2wap-bot-v20.39.zip",
+    "bytesAndSHA256Match": true,
+    "proof": "download.json"
+  }
 }
