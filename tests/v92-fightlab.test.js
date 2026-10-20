@@ -172,8 +172,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   assert.match(content, /L2V7Modules\.fightlab\?\.onNet\(path, d\)/);
   assert.match(content, /const ex = L2V7Modules\.fightlab\?\.turnFor\(key, before\.t, action, ACT_NET\.rid\);/);
   assert.match(content, /get fightDmgOn\(\) \{ return fightDmgOn; \}, get fightKillP\(\) \{ return fightKillP; \}, get fightSpikeEta\(\) \{ return fightSpikeEta; \}/);
-  // 15.10: свежая модель групп тоже принадлежит активному классу.
-  assert.match(story, /'profQuest', 'fightMem', 'fightLast', 'fightGroups'\]/);
+  // 20.10: сравнение пачек и прежняя модель групп принадлежат активному классу.
+  assert.match(story, /'profQuest', 'fightMem', 'fightLast', 'fightGroups', 'packLab'\]/);
   // 15.10: известный нулевой урон после промахов не заменяется общим положительным средним.
   assert.match(combat, /observed\?\.mean \?\? \(env\.expDmg\(k\)/);
   assert.match(combat, /по этой цели добивает в/);
