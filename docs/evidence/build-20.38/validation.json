@@ -82,5 +82,11 @@
     "publicTownBufferJsRead": "HTTP403; no bypass",
     "fullHistoricalSmokeRunner": false
   },
-  "next": "Update existing Chrome folder, reload extension and game tab; obtain a fresh real buff log."
+  "next": "Update existing Chrome folder, reload extension and game tab; obtain a fresh real buff log.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/313",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/9bb1700aa787aba5ba4d9fb2a3529d553786c395/builds/l2wap-bot-v20.38.zip",
+    "bytesAndSHA256Match": true,
+    "evidence": "download.json"
+  }
 }
