@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.30 — свежий поиск РБ, VIP без FA и лимит рыбалки =====
+// ===== L2wap Bot v20.31 — Battle Trance и подготовка Frenzy/Zealot =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);

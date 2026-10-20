@@ -1,5 +1,11 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+## 20.10.2026, 12:19 UTC+10 — Codex — PR в подготовке: быстрая Chrome20.31
+
+- По команде игрока собран основнойChrome20.31 поверх20.30+#297. Версия, пятьassertions, READMEChrome/changelog/контекст обновлены; функциональныйкод/профиль не меняются. Firefox20.30 остаётся прежним.
+- 483Node-файла PASS/0FAIL; весьruntimeJSsyntax/envcheck31/diff-check PASS. НезависимыйаудитZIP23/23PASS,64файла/CRC/refs/точныебайты. Chrome155изZIP:20.31/cfg207/0JSошибок;actualMV3ВКЛ/OFF/Stop3/3PASS. Первыйscratch-harness не нашёл относительныйdailyfixture; после исправленияпути все3сценарияPASS, runtimeне менялся. [Доказательства](evidence/build-20.31/).
+- Архив1420059байт, SHA256 `7c65b015411c4fd274410c88e485603fc33c9f7ec550d236eb5a6959f0a8686a`; ZIP/SHA вbuilds. HANDOFFобновлён. Живуюигру/полныйисторическийbrowser-runner не запускали. Осталось: публикацияPR/релиза и контрольныйжурнал установленной20.31.
+
 ## 20.10.2026, 11:56 UTC+10 — Codex — [PR #297](https://github.com/vodoleyko1992-dotcom/prog/pull/297): Titan, подготовка лимитов
 
 - По журналу11:28–11:31 подтверждены Titan76/слот2, доступная панель иHP≥95,68% без Frenzy/Zealot/Trance; HTML и заголовок другого героя не используются как его настройки. Отдельная включённая тактика `destroyerLimits`: точныйBattleTrance → выбранные готовыеFrenzy/Zealot → лечение, обычныйбой/РБ. Общий запрет ложной атакующей роли сохранён. [Разбор](TITAN-LIMITS-LOG-2026-10-20.md).
