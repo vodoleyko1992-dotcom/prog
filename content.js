@@ -4348,6 +4348,24 @@ function alignServerSkillCooldowns() {
   if (changed) setRt({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
 }
 const netSeen = new Map();
+// 20.10: боевые POST сохраняем каждый; GET — при изменении боевых данных, а не большого character.
+function recordNetworkLog(d, path, key, body, secret) {
+  if (cfg.netLog === false || !cfg.rec || d.error && pageLeaving) return;
+  const priv = privateNet(path);
+  const battle = !priv && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync|leave))?$/.test(path) && d.be?.schema === 1 ? d.be : null;
+  // Текущее время и убывающие секунды КД не означают нового хода. Дедлайны/лог/HP остаются в подписи.
+  const comparable = battle ? { ...battle, timing: { ...battle.timing, serverNowMs: undefined, skillRemainingMs: undefined, globalRemainingMs: undefined },
+    cooldowns: battle.cooldowns?.map(x => ({ ...x, remainingMs: undefined, remainingSec: undefined })) } : null;
+  const h = hashStr(battle ? JSON.stringify(comparable) : body), prev = netSeen.get(key), now = Date.now();
+  const okGet = d.method === 'GET' && !d.error && /^2/.test(String(d.status));
+  if (okGet && prev && prev.h === h && now - prev.t < 15000) return;
+  if (!battle && okGet && prev && (now - prev.t < 3000 || NET_NOISE.test(path) && (prev.h === h || now - prev.t < 60000))) return;
+  netSeen.set(key, { h, t: now });
+  if (netSeen.size > 500) netSeen.delete(netSeen.keys().next().value);
+  const st = d.error ? `ошибка: ${d.error}` : d.status;
+  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret && !priv ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
+    { data: priv ? { q: '(приватно)' } : battle ? { rid: d.rid, battle } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
+}
 const cooldownDiagSeen = new Map();
 function logCooldownApi(d, path) {
   if (!['/game/battle/action', '/game/battle/sync', '/game/battle'].includes(path) || !d.res || typeof d.res !== 'object') return;
@@ -4921,25 +4939,7 @@ addEventListener('message', e => {
   // делаем этих мобов целями квеста: уровень-окно к ним не применяется, бот не улетает «в зону своего уровня» (лог 10.10 13:22)
   if (/\/character\/profession-quest\/[\w-]+\/status$/.test(path) && d.res?.status && !d.res.error) try { profQuestNote(d.res.status); } catch (er) {}
   if (cfg.autoLearn !== false && LEARN) try { learnApi(key, secret ? {} : d); } catch (er) {}
-  if (cfg.netLog === false || !cfg.rec) return;
-  if (d.error && pageLeaving) return;
-  const h = hashStr(body), prev = netSeen.get(key), now = Date.now();
-  if (prev && prev.h === h && now - prev.t < 15000) return;                // одинаковый ответ опроса — реже
-  // v5.2: журнал разрастался до 40 МБ — игра опрашивает сервер по многу раз в секунду. Обычный GET с ответом 2xx
-  // по одному адресу — не чаще раза в 3 с (ошибки, POST и новые адреса — всегда); ответ в журнале — до 800 знаков
-  const okGet = d.method === 'GET' && !d.error && /^2/.test(String(d.status));
-  if (okGet && prev && now - prev.t < 3000) return;
-  // фоновые опросы игры (непрочитанные, чат, время, онлайн, ТвТ, новости, квесты профессий, синхронизация) — 90 % объёма
-  // журнала (лог 08.10: 38,7 из 43 МБ). Их — только при новом ответе и не чаще раза в минуту; ошибки — всегда
-  if (okGet && prev && NET_NOISE.test(path) && (prev.h === h || now - prev.t < 60000)) return;
-  netSeen.set(key, { h, t: now });
-  if (netSeen.size > 500) netSeen.delete(netSeen.keys().next().value);
-  const st = d.error ? `ошибка: ${d.error}` : d.status;
-  // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F12): почта, чат, личные сообщения, поддержка и полученные передачи — тексты и ники
-  // других игроков; в журнал только метод, путь, статус, время и размер (как клики на приватных страницах)
-  const priv = privateNet(path);
-  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret && !priv ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
-    { data: priv ? { q: '(приватно)' } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
+  recordNetworkLog(d, path, key, body, secret);
 });
 // сообщения игры: тосты, ошибки, результаты действий — всё, что всплывает на экране
 const GAME_MSG_SEL = '[role="alert"], [aria-live], [class*="toast"], [class*="notice"], [class*="notify"], [class*="-msg"], [class*="result"], [class*="error"], [class*="success"]';
