@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "reviewer": "independent-ls-materials-review",
+  "status": "PASS",
+  "blockingFindings": [],
+  "coreCommit": "c9f861452610ab3174cbd4dc879392de7c9d7926",
+  "coreCommitRole": "Base commit; final merged source also includes the reviewed Firefox transport409 fix identified by the runtime hash below.",
+  "uiCommit": "6095a3eefd6828f1d49ca5026d60ff5a269b09b5",
+  "reviewedSha256": {
+    "modules/lifestone.js": "5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797",
+    "content.js": "5ed46c783299a68274a91df096cdd75d9cf23716488a1bb43d5c277bc92ea31b",
+    "background.js": "d13c7dac30caf89ce3fadfb2b8254805d106ae493d0527128bc6de550fe34094",
+    "popup.js": "d0f58a242f980da899b2e69de66ab678ef946c179ca12d01074d293251e06444",
+    "popup.html": "ba9addb9010b7b92d2cc66c9a94e15e91ccdb462398654df47bf43506b651431"
+  },
+  "mergedComparison": {
+    "status": "PASS",
+    "releaseVersion": "20.35",
+    "mergedDefaultCommit": "e932942683e584938268f831f48d0f4dbe549068",
+    "defaultMerge": "Compared final source to feature merge c6f67c9: content/popup differences are only the default branch network/battle log changes; hook is byte-identical to merged default e932942.",
+    "core": "Reviewed base commit plus exactly three rejection-list changes excluding409 and one explanatory comment; final root/core fix hashes match.",
+    "popup": "LS controls, supply status and draft logic retain reviewed UI commit behavior; popup.html is byte-identical and popup.js only adds merged default battle-log export changes.",
+    "content": "LS bridge, DOCK routing, dispatch permits, atomic callback and 20.35 header are unchanged from the reviewed feature merge; only merged default network-log changes are added.",
+    "background": "Reviewed root atomic helper and statePatch branch retained; the only additional change is the reviewed UI new-character autoLs defaults reset.",
+    "finalTargetedCheck": "54/54 actual dispatch and atomic callback tests PASS again after merging default e932942 into final production files.",
+    "scope": "Read-only comparison; no runtime, live account or tests modified by reviewer."
+  },
+  "firefoxTransport409": {
+    "status": "PASS",
+    "finding": "A native Firefox wire retry can receive409 after the original revision-guarded POST applied and its socket closed before headers.",
+    "nativeBaselineChecked": "Clean offline Firefox proof: no fixture errors, one fetch, two identical wire POSTs with expectedRevision100, one mutation to revision101, LS+3 and AA-480000; old runtime lost its reservation and accounting.",
+    "fix": "Supply and augmentation409 responses retain durable unknown intents and reservations; only strict fresh reconciliation may confirm or recover them. No JavaScript POST retry was introduced.",
+    "independentChecks": "96/96 materials, legacy augmentation and weapon tests PASS; additional applied409 Gem batch, free teleport and paid teleport cases PASS with exact accounting and no JavaScript replay.",
+    "scope": "Other known refusal statuses remain unchanged; no additional proven related defect was found. Native offline browser rerun and full-suite/package validation are owned by the parent team."
+  },
+  "independentChecks": {
+    "coreTargeted": "59/59 PASS on final Firefox409 fix",
+    "legacyAutoAndWeapon": "37/37 PASS on final Firefox409 fix",
+    "actualDispatchAndAtomicLimitCallback": "54/54 PASS",
+    "uiMaterialsFocusAndFeedback": "88/88 PASS",
+    "deterministicBatchArithmetic": "350/350 stock, AA balance, budget and reserve combinations PASS",
+    "savedLiveCatalogs": "C/B/A/S exact native batch quantity and currency accounting PASS",
+    "coreSyntax": "PASS"
+  },
+  "checkedInvariants": [
+    "Batch quantities cover only missing materials for remaining attempts; existing stock and completed attempts count; native chunks are at most 9999.",
+    "AA shortage reduces cfg/runtime total atomically before spending; full Gem and teleport affordability is checked before the first expense.",
+    "Exact one-use supply permits retain Stop, owner, action, PvP and payment guards; changed session baselines and late reduction acknowledgements cannot overwrite pending state.",
+    "Typed durable intents reserve total cost before POST; exact revision, quantity and currency deltas confirm once; unknown requests never replay or count as augmentation attempts.",
+    "Reload preserves spent/reserved budgets; narrow superseded-revision recovery requires unchanged resources/currencies/weapon and travel origin, then pauses for manual resume.",
+    "Fresh teleport price and quoted/current destination are verified; CoL/FA balances remain unchanged; a later step refreshes merchant location.",
+    "UI preserves nested future settings, explicit zero/false values and focused drafts; purchase pending cannot be manually counted as an augmentation."
+  ],
+  "limitations": [
+    "Purchase APIs expose expectedRevision but no atomic catalog-price guard; an unexpected debit remains unknown and blocks further spending.",
+    "This reviewer made no live requests or account mutations. Live evidence and full-suite/browser results are maintained by the parent agent."
+  ]
+}

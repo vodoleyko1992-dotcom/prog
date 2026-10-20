@@ -1,0 +1,30 @@
+✔ wake context change during stable state read prevents main: hero (3.645047ms)
+✔ wake context change during stable state read prevents main: kick (0.907549ms)
+✔ wake context change during stable state read prevents main: stop (0.733296ms)
+✔ wake context change before ACK cannot acknowledge the replacement start: hero (1.69074ms)
+✔ wake context change before ACK cannot acknowledge the replacement start: kick (0.796431ms)
+✔ wake context change before ACK cannot acknowledge the replacement start: stop (1.417287ms)
+✔ unchanged explicit wake starts and acknowledges exactly its actor/start (0.869131ms)
+✔ dock wake rejects the obsolete explicit start: kick (1.210305ms)
+✔ dock wake rejects the obsolete explicit start: off (0.878996ms)
+✔ dock wake rejects the obsolete explicit start: falseOn (1.409546ms)
+✔ dock resume rejects the obsolete explicit start: kick (0.72252ms)
+✔ dock resume rejects the obsolete explicit start: off (0.551682ms)
+✔ dock resume rejects the obsolete explicit start: falseOn (0.570591ms)
+✔ wake requires a caller-captured start instead of adopting latest durable kick (0.607857ms)
+✔ wake/resume forward the same captured start, never a replacement kick (1.734305ms)
+✔ popup wake cannot replace captured context after await: kick (1.230956ms)
+✔ popup wake cannot replace captured context after await: off (0.526794ms)
+✔ popup wake cannot replace captured context after await: generation (0.707677ms)
+✔ popup resume cannot replace captured context after await: kick (0.658513ms)
+✔ popup resume cannot replace captured context after await: off (0.55672ms)
+✔ popup resume cannot replace captured context after await: generation (0.628138ms)
+✔ popup wake/resume retain caller startContext without touching unavailable tabs (2.094228ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 32.980915

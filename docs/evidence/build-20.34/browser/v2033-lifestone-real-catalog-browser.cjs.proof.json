@@ -1,0 +1,162 @@
+{
+  "version": "20.34",
+  "results": [
+    {
+      "items": [
+        {
+          "value": "",
+          "text": "Выберите оружие",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":25,\"instanceId\":\"audit-clan-caster\",\"itemId\":9002284}",
+          "text": "Клановий кастер +25 · S · надето",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":8,\"instanceId\":\"audit-spear\",\"itemId\":97}",
+          "text": "Спіс B-grade. Дворучна зброя. +8 · B · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":10,\"instanceId\":\"audit-daemon\",\"itemId\":8688}",
+          "text": "Кристал Даймона A-grade. Дворучна магічна зброя. +10 · A · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":5,\"instanceId\":\"audit-axe\",\"itemId\":175}",
+          "text": "Бойова сокира мистецтва B-grade. +5 · B · рюкзак",
+          "disabled": false
+        }
+      ],
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "focus": "lsWeapon",
+      "toast": "",
+      "label": "OFF real catalog",
+      "on": false,
+      "advanced": true,
+      "count": 4,
+      "ids": [
+        9002284,
+        97,
+        8688,
+        175
+      ]
+    },
+    {
+      "items": [
+        {
+          "value": "",
+          "text": "Выберите оружие",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":25,\"instanceId\":\"audit-clan-caster\",\"itemId\":9002284}",
+          "text": "Клановий кастер +25 · S · надето",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":8,\"instanceId\":\"audit-spear\",\"itemId\":97}",
+          "text": "Спіс B-grade. Дворучна зброя. +8 · B · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":10,\"instanceId\":\"audit-daemon\",\"itemId\":8688}",
+          "text": "Кристал Даймона A-grade. Дворучна магічна зброя. +10 · A · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":5,\"instanceId\":\"audit-axe\",\"itemId\":175}",
+          "text": "Бойова сокира мистецтва B-grade. +5 · B · рюкзак",
+          "disabled": false
+        }
+      ],
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "focus": "lsTargets",
+      "toast": "▶ Движок запущен и управляет вкладкой",
+      "label": "ON owner real catalog",
+      "on": true,
+      "advanced": true,
+      "count": 4,
+      "ids": [
+        9002284,
+        97,
+        8688,
+        175
+      ]
+    },
+    {
+      "items": [
+        {
+          "value": "",
+          "text": "Выберите оружие",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":25,\"instanceId\":\"audit-clan-caster\",\"itemId\":9002284}",
+          "text": "Клановий кастер +25 · S · надето",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":8,\"instanceId\":\"audit-spear\",\"itemId\":97}",
+          "text": "Спіс B-grade. Дворучна зброя. +8 · B · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":10,\"instanceId\":\"audit-daemon\",\"itemId\":8688}",
+          "text": "Кристал Даймона A-grade. Дворучна магічна зброя. +10 · A · рюкзак",
+          "disabled": false
+        },
+        {
+          "value": "{\"enchant\":5,\"instanceId\":\"audit-axe\",\"itemId\":175}",
+          "text": "Бойова сокира мистецтва B-grade. +5 · B · рюкзак",
+          "disabled": false
+        }
+      ],
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "focus": "lsMaxAttempts",
+      "toast": "■ Бот остановлен",
+      "label": "OFF after Stop real catalog",
+      "on": false,
+      "advanced": true,
+      "count": 4,
+      "ids": [
+        9002284,
+        97,
+        8688,
+        175
+      ]
+    }
+  ],
+  "api": [
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    }
+  ],
+  "errors": []
+}

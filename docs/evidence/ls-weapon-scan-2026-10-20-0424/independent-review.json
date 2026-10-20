@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-20T04:45:16.215675+00:00",
+  "result": "PASS",
+  "reviewer": "independent read-only agent",
+  "cases": {
+    "feedback": {
+      "path": "/workspace/work/ls-0424-feedback-worktree",
+      "newNodeCasesPass": 35,
+      "sourceSha256": {
+        "popup.js": "005163ecfe65d6d57342f82248eca2bb59e850bd0fac493805f326c5196be059",
+        "popup.html": "b08b3912084e7452a8fbee1be38b3ca8693da95781b238dc1f0fe8eb218174f5",
+        "modules/lifestone.js": "67f56955e5ab5eb1041e748e986e1318528eabdd9d9c6910b6eeb97b51c2990c"
+      }
+    },
+    "routing": {
+      "path": "/workspace/work/ls-0424-routing-worktree",
+      "newNodeCasesPass": 31,
+      "sourceSha256": {
+        "popup.js": "bc5799c093b059a42588422f3b7492cbe2b8f3e4a247a4fb40e55d57c2f09888",
+        "content.js": "b81b7436e20a74ab01e91249dc3cbdafe2bf5026f2ec4d6e355b6b99b4b54a0e"
+      }
+    },
+    "relay": {
+      "path": "/workspace/prog",
+      "independentContractCasesPass": 13,
+      "sourceSha256": {
+        "background.js": "1d58c6502c65a5adb3e57e150d392900e2554f63e0f687eefcf221f674a82ed3"
+      }
+    }
+  },
+  "findingResolved": "scan-only complete GET+JSON read now has8s deadline; hung headers/body regressions pass",
+  "validated": [
+    "Read-only probe uses no lease/gameGET/state write",
+    "One real scan action to confirmed target; no fanout/retry/POST/autostart",
+    "DOCK branch uses runtime before all tabs calls",
+    "Background validates popup dock sender, actual game parent and character; sends only sender.tab.id/frame0 without lock queue",
+    "Paid LSseries unchanged; original content actor/owner/revision/material guards retained",
+    "Persistent feedback preserves list and drafts, clears on hero change; late old hero feedback ignored",
+    "HTTP/timeout/JSON/schema failures sanitized without raw response or actual names"
+  ],
+  "boundary": "Source and local Node/VM review only; native browser validation performed separately",
+  "reviewCommits": {
+    "feedback": "ba6a9c6",
+    "routing": "170a558"
+  },
+  "mergedSourceSha256": {
+    "background.js": "5129d7cca714fb0c8afe8df3c8321efc454dfa2d394ea516d853c747c1ec5075",
+    "content.js": "1f3b6e09d21b88e6eb4087a624753cdabd5d13589f2a2188506f7ad2aafe3bf5",
+    "popup.js": "1deeeef5bc477642a6297df9aae3df56ba74e85363e805fd11885840483615b6",
+    "popup.html": "b08b3912084e7452a8fbee1be38b3ca8693da95781b238dc1f0fe8eb218174f5",
+    "modules/lifestone.js": "67f56955e5ab5eb1041e748e986e1318528eabdd9d9c6910b6eeb97b51c2990c"
+  },
+  "reviewedLogicSha256": {
+    "contentLifestone": "e50e86f225548a82713f9a0538b1e35daa4b11983fad41f57346b90ed4dfe119",
+    "expectedWakeKick": "221ebb247e16cc7b2123b922bae291a0b6c7a444ce1f46e437f6b6101b60db2a",
+    "dockRelay": "a69fb3a62e624f4fe6464c7926b758738fb7b440f03708d3309e35283aa02ab1",
+    "popupLifestone": "983597425cfd2ca41abac082672ffd5cc2c5ff4d61c2620473411b51cffde1ef",
+    "moduleLifestone": "67f56955e5ab5eb1041e748e986e1318528eabdd9d9c6910b6eeb97b51c2990c"
+  },
+  "mergedNodeChecks": {
+    "newFeedback": 35,
+    "newRouting": 31,
+    "newDockRelay": 41,
+    "legacyFocus": 17,
+    "legacyWeaponChoice": 18,
+    "allPass": true,
+    "newIndependentWakeContext": 22
+  },
+  "paidModuleFunctionsByteUnchangedFrom2033": true,
+  "lateWakeContextReview": {
+    "result": "PASS",
+    "newIndependentCasesPass": 22,
+    "test": "v2033-lifestone-wake-context.test.cjs",
+    "boundary": "Caller-captured startContext bound across popup, background wake/resume relay and content pre-main/post-ACK checks",
+    "findingResolved": "An initial-only actor check allowed the stable-state loop to adopt a replacement actor/start; exact caller kick now survives every hop and is revalidated before main and ACK",
+    "runtimeFrozen": true
+  }
+}

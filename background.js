@@ -265,6 +265,18 @@ function retireRaidSessionPatch(patch, rt, cfg, now) {
   }
   return { patch: next, retired: false };
 }
+// 20.35: уменьшение серии по доступным AA — одной записью с её настройкой.
+function reduceLsAttemptsChange(state, edit) {
+  const s=state.rt?.autoLs,c=state.cfg?.autoLs;
+  if(!state.on || !s || !c || !edit || s.id!==edit.id || s.context!==edit.context || s.configSig!==edit.configSig ||
+    s.status!=='running' || !s.hold || s.pending || s.maxAttempts!==edit.from || s.attempts!==edit.attempts ||
+    (state.rt.manualKickAt||0)!==edit.kick || JSON.stringify(c)!==JSON.stringify(edit.expectedConfig))return {ok:false,reason:'ls_series_changed'};
+  const targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[],signature=n=>JSON.stringify([targets,n,typeof c.weaponKey==='string'?c.weaponKey:'']);
+  if(c.maxAttempts!==s.maxAttempts || s.configSig!==signature(s.maxAttempts) || !Number.isSafeInteger(edit.to) ||
+    edit.to<1 || edit.to<=s.attempts || edit.to>=s.maxAttempts || edit.to>10000)return {ok:false,reason:'invalid_ls_limit'};
+  const autoLs={...s,maxAttempts:edit.to,configSig:signature(edit.to),reason:`Лимит снижен по доступным AA: ${s.maxAttempts} → ${edit.to}`};
+  return {ok:true,autoLs,cfg:{...state.cfg,autoLs:{...c,maxAttempts:edit.to}}};
+}
 async function statePatch(m, sender) {
   const tab = sender?.tab?.id;
   const patch = m?.patch || {}, config = m?.cfgPatch || {};
@@ -286,6 +298,11 @@ async function statePatch(m, sender) {
     // Финальный flush при OFF допустим после TTL, но не после передачи/освобождения lease.
     if (!state.on && m.epoch && (state.lock?.k !== 'tab' + tab || state.lock.epoch !== m.epoch))
       return { ok: false, reason: 'ownership_lost' };
+    if(m.reduceLsAttempts) {
+      const result=reduceLsAttemptsChange(state,m.reduceLsAttempts);if(!result.ok)return result;
+      await chrome.storage.local.set({cfg:result.cfg,rt:{...state.rt,autoLs:result.autoLs,_src:String(m.src||'').slice(0,60)}});
+      return result;
+    }
     if(m.dailyServer) {
       const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
       await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock};
@@ -523,7 +540,7 @@ async function switchCharacter(m, sender) {
       // 7.2: игрок ходит и магом, и спойлером — профиль боя (маг/воин), выбранный у одного героя, не переносим на другого
       nextCfg.combatProfile = 'auto';
       Object.assign(nextCfg,{"petFullAuto":false,"petFullBudget":10000000,"petFullMaxPrice":10000000,"petFullReserve":null,"petFullRenew":true,"petHealPrefer":"heal"}); // Новый герой не наследует разрешение платной задачи.
-      nextCfg.autoLs = { targets: [], maxAttempts: 10 }; // Чужая цель ЛС не переносится новому герою.
+      nextCfg.autoLs = { targets: [], maxAttempts: 10, buyMaterials: true, aaBudget: 2000000, adenaBudget: 2000000, aaReserve: 0 }; // Чужая цель ЛС не переносится новому герою.
       nextCfg.enchantMode = false; // 15.10: новый герой сам выбирает отдельный режим заточки.
       nextCfg.enchant = {"enabled":false,"queue":[],"scrollPolicy":"blessed","ordinaryUntil":3,"maxAttempts":0,"maxScrolls":0,"maxAdena":0,"maxConsecutiveFails":2,"maxDropFromStart":1,"maxDropFromPeak":2,"delayMs":1500,"purchase":false,"colBudget":0}; // У нового героя нет выбранных экземпляров чужой очереди.
       // 10.0 (аудит): вещь-цель Маммона — своя у каждого героя (иначе спойлер шлёт крафтеру своё сырьё на вещь Warlock)
@@ -1050,7 +1067,48 @@ chrome.tabs.onRemoved.addListener(tabId => {
   }).catch(e => console.warn('[L2bot] lock tab close', e));
 });
 
+// 20.33 (скрин20.10 14:31): Firefox не даёт tabs встроенному меню; фон адресует только его родителя.
+async function lifestoneDockCommand(m, sender) {
+  const denied=reason=>({ok:false,reason});
+  try {
+    const page=new URL(sender?.url||''),menu=new URL(chrome.runtime.getURL('popup.html'));
+    if(sender?.id!==chrome.runtime.id||page.protocol!==menu.protocol||page.host!==menu.host||page.pathname!==menu.pathname||page.searchParams.get('dock')!=='1'
+      ||!Number.isInteger(sender.frameId)||sender.frameId<=0||!Number.isInteger(sender.tab?.id)||sender.tab.id<0)return denied('Команда ЛС доступна только из встроенного меню игры');
+    if(!['scan','prepare','resume','pause','reconcile','acknowledge','close','wake'].includes(m.action)||typeof m.char!=='string'||!m.char)return denied('Некорректная команда ЛС');
+    const tab=await chrome.tabs.get(sender.tab.id),url=new URL(tab.url||'');
+    if(url.protocol!=='https:'||!/(^|\.)l2wap\.com$/i.test(url.hostname)||tab.pendingUrl)return denied('Вкладка игры закрыта или загружается — повторите команду ЛС');
+    const state=await chrome.storage.local.get(['rt','on']);
+    if(state.rt?.char!==m.char)return denied('Персонаж изменился — обновите раздел ЛС');
+    const command={cmd:'lifestoneCommand',action:m.action,char:m.char};
+    if(m.action==='wake'||m.startContext){
+      const context=m.startContext;
+      if(context?.on!==true||!Number.isSafeInteger(context?.kick)||context.kick<0||!state.on||context.kick!==(+(state.rt?.manualKickAt)||0))return denied('Запуск ЛС изменился — повторите команду');
+      command.startContext={on:true,kick:context.kick};
+    }
+    if(m.action==='wake'){
+      if(!state.on)return denied('Бот остановлен');
+      Object.assign(command,{cmd:'kick',expectedChar:m.char,expectedKick:m.startContext.kick});delete command.action;delete command.char;delete command.startContext;
+    }
+    if(m.action==='scan'){
+      const context=m.scanContext;
+      if(typeof context?.on!=='boolean'||!Number.isSafeInteger(context?.kick)||context.kick<0
+        ||context.on!==!!state.on||context.kick!==(+(state.rt?.manualKickAt)||0))return denied('Управление изменилось — обновите список оружия');
+      command.scanContext={on:context.on,kick:context.kick};
+    }
+    let timer;
+    try {
+      const answer=await Promise.race([chrome.tabs.sendMessage(sender.tab.id,command,{frameId:0}),
+        new Promise(resolve=>{timer=setTimeout(()=>resolve(denied('Вкладка игры не ответила на команду ЛС — обновите страницу')),30000);})]);
+      if(m.action==='wake'&&answer?.ok===true&&(!answer.running||!answer.owner||answer.v!==chrome.runtime.getManifest().version))return denied('Игра не подтвердила запуск — обновите её вкладку');
+      return answer?.ok===true?{ok:true}:denied(typeof answer?.reason==='string'?answer.reason.slice(0,220):'Команда ЛС не выполнена — обновите вкладку игры');
+    }finally{clearTimeout(timer);}
+  }catch(_){return denied('Не удалось передать команду ЛС во вкладку игры — обновите страницу');}
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if(m?.cmd==='lifestoneDockCommand'){
+    lifestoneDockCommand(m,_s).then(reply).catch(()=>reply({ok:false,reason:'Команда ЛС не выполнена'}));return true;
+  }
   if (m?.cmd === 'faBuffEvidence') {
     let game = false; try { game = /(^|\.)l2wap\.com$/i.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (_) {}
     if (!game || !Number.isInteger(_s?.tab?.id) || _s.frameId > 0 || (_s.id && _s.id !== chrome.runtime.id)) { reply(null); return true; }

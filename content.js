@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.33 — сумка после сабкласса и уровни авто-катакомб =====
+// ===== L2wap Bot v20.35 — закупка Life Stone и Gemstone на серию =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
@@ -3619,7 +3619,8 @@ function serverDown() {
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
 async function gamePost(path, body, ms = 8000, lsPermit) {
-  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body))) throw new Error('lifestone_session_active');
+  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body)
+    || L2V7Modules.lifestone?.consumeSupplyPermit?.(lsPermit, path, body))) throw new Error('lifestone_session_active');
   if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
   if (L2V7Modules.pvp?.pending()) throw new Error('pvp_defeat_pending');
   if (L2V7Modules.actions?.canAct?.() === false) throw new Error('action_cancelled');
@@ -4348,6 +4349,24 @@ function alignServerSkillCooldowns() {
   if (changed) setRt({ cdUntil: next }).catch(e => console.warn(TAG, 'sync server cooldown', e));
 }
 const netSeen = new Map();
+// 20.10: боевые POST сохраняем каждый; GET — при изменении боевых данных, а не большого character.
+function recordNetworkLog(d, path, key, body, secret) {
+  if (cfg.netLog === false || !cfg.rec || d.error && pageLeaving) return;
+  const priv = privateNet(path);
+  const battle = !priv && /^\/game\/battle(?:\/(?:action|start|hunt-continue|sync|leave))?$/.test(path) && d.be?.schema === 1 ? d.be : null;
+  // Текущее время и убывающие секунды КД не означают нового хода. Дедлайны/лог/HP остаются в подписи.
+  const comparable = battle ? { ...battle, timing: { ...battle.timing, serverNowMs: undefined, skillRemainingMs: undefined, globalRemainingMs: undefined },
+    cooldowns: battle.cooldowns?.map(x => ({ ...x, remainingMs: undefined, remainingSec: undefined })) } : null;
+  const h = hashStr(battle ? JSON.stringify(comparable) : body), prev = netSeen.get(key), now = Date.now();
+  const okGet = d.method === 'GET' && !d.error && /^2/.test(String(d.status));
+  if (okGet && prev && prev.h === h && now - prev.t < 15000) return;
+  if (!battle && okGet && prev && (now - prev.t < 3000 || NET_NOISE.test(path) && (prev.h === h || now - prev.t < 60000))) return;
+  netSeen.set(key, { h, t: now });
+  if (netSeen.size > 500) netSeen.delete(netSeen.keys().next().value);
+  const st = d.error ? `ошибка: ${d.error}` : d.status;
+  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret && !priv ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
+    { data: priv ? { q: '(приватно)' } : battle ? { rid: d.rid, battle } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
+}
 const cooldownDiagSeen = new Map();
 function logCooldownApi(d, path) {
   if (!['/game/battle/action', '/game/battle/sync', '/game/battle'].includes(path) || !d.res || typeof d.res !== 'object') return;
@@ -4921,25 +4940,7 @@ addEventListener('message', e => {
   // делаем этих мобов целями квеста: уровень-окно к ним не применяется, бот не улетает «в зону своего уровня» (лог 10.10 13:22)
   if (/\/character\/profession-quest\/[\w-]+\/status$/.test(path) && d.res?.status && !d.res.error) try { profQuestNote(d.res.status); } catch (er) {}
   if (cfg.autoLearn !== false && LEARN) try { learnApi(key, secret ? {} : d); } catch (er) {}
-  if (cfg.netLog === false || !cfg.rec) return;
-  if (d.error && pageLeaving) return;
-  const h = hashStr(body), prev = netSeen.get(key), now = Date.now();
-  if (prev && prev.h === h && now - prev.t < 15000) return;                // одинаковый ответ опроса — реже
-  // v5.2: журнал разрастался до 40 МБ — игра опрашивает сервер по многу раз в секунду. Обычный GET с ответом 2xx
-  // по одному адресу — не чаще раза в 3 с (ошибки, POST и новые адреса — всегда); ответ в журнале — до 800 знаков
-  const okGet = d.method === 'GET' && !d.error && /^2/.test(String(d.status));
-  if (okGet && prev && now - prev.t < 3000) return;
-  // фоновые опросы игры (непрочитанные, чат, время, онлайн, ТвТ, новости, квесты профессий, синхронизация) — 90 % объёма
-  // журнала (лог 08.10: 38,7 из 43 МБ). Их — только при новом ответе и не чаще раза в минуту; ошибки — всегда
-  if (okGet && prev && NET_NOISE.test(path) && (prev.h === h || now - prev.t < 60000)) return;
-  netSeen.set(key, { h, t: now });
-  if (netSeen.size > 500) netSeen.delete(netSeen.keys().next().value);
-  const st = d.error ? `ошибка: ${d.error}` : d.status;
-  // 20.13 (ревизия 17.10, шаг 7, аудит core-b/F12): почта, чат, личные сообщения, поддержка и полученные передачи — тексты и ники
-  // других игроков; в журнал только метод, путь, статус, время и размер (как клики на приватных страницах)
-  const priv = privateNet(path);
-  rec('N', 'сеть', `${key}${d.url.includes('?') && !secret && !priv ? ' ?' + d.url.split('?')[1].slice(0, 80) : ''} → ${st}${d.ms != null ? ` · ${d.ms} мс` : ''}${d.len ? ` · ${d.len} б` : ''}`,
-    { data: priv ? { q: '(приватно)' } : { q: secret ? '(скрыто)' : d.req ?? undefined, r: body.slice(0, 800) || undefined } });
+  recordNetworkLog(d, path, key, body, secret);
 });
 // сообщения игры: тосты, ошибки, результаты действий — всё, что всплывает на экране
 const GAME_MSG_SEL = '[role="alert"], [aria-live], [class*="toast"], [class*="notice"], [class*="notify"], [class*="-msg"], [class*="result"], [class*="error"], [class*="success"]';
@@ -5970,28 +5971,60 @@ const lifestonePrepareFree = () => location.pathname === '/augmentation.html' &&
   && !isBattle() && !(isFishing() && fishState()) && !L2V7Modules.pvp?.pending() && !L2V7Modules.payments?.blocked?.()
   && !rt.enchant?.pending && rt.enchant?.status !== 'running' && !rt.petFull?.pending
   && !['shop','magister','tbuff','invScan','fishSvc','fishService','mmJob','tsJob','storyJob','petBufferTrip','rbGo','zoneGo','dailyFish','dailyRb','revive','actionOwner'].some(k => rt[k]);
+async function reduceLsAttempts(next) {
+  const context=()=>JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname]);
+  const before=rt.autoLs,stamp=context(),id=before?.id,epoch=leaseEpoch,who=rt.char;
+  const valid=()=>on&&tabOwner&&leaseEpoch===epoch&&rt.char===who&&context()===stamp&&rt.autoLs?.id===id&&
+    rt.autoLs.status==='running'&&!rt.autoLs.pending&&next?.id===id&&next.context===stamp&&Number.isSafeInteger(next.maxAttempts)&&
+    next.maxAttempts>rt.autoLs.attempts&&next.maxAttempts<rt.autoLs.maxAttempts;
+  if(!valid()||!await rtCommit()||!valid())return {ok:false};
+  const autoLs={...cfg.autoLs,maxAttempts:next.maxAttempts};
+  OWN_CFG.push({patch:{autoLs},t:Date.now()});if(OWN_CFG.length>20)OWN_CFG.shift();
+  const response=await ipc({cmd:'statePatch',patch:{},src:TAB_ID,epoch,expectedChar:who,reduceLsAttempts:{
+    id,context:stamp,configSig:rt.autoLs.configSig,from:rt.autoLs.maxAttempts,to:next.maxAttempts,attempts:rt.autoLs.attempts,
+    kick:rt.manualKickAt||0,expectedConfig:cfg.autoLs}});
+  const current=rt.autoLs;
+  if(!response?.ok||!on||!tabOwner||leaseEpoch!==epoch||rt.char!==who||context()!==stamp||current?.id!==id||
+    current.status!=='running'||current.pending||current.attempts!==before.attempts||current.weapon!==before.weapon||
+    ![before.configSig,response.autoLs?.configSig].includes(current.configSig)||
+    ![before.maxAttempts,response.autoLs?.maxAttempts].includes(current.maxAttempts))return {ok:false};
+  cfg=withRb({...L2EngineCore.rawTaskConfig(cfg),autoLs:response.cfg.autoLs});
+  rt={...rt,autoLs:response.autoLs};return {ok:true};
+}
 L2V7Modules.lifestone = L2V7Factories.lifestone({
   get cfg(){return cfg}, get rt(){return rt}, get on(){return on}, get tabOwner(){return tabOwner},
-  get setRt(){return setRt}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
+  get setRt(){return setRt}, get reduceAttempts(){return reduceLsAttempts}, get gameGet(){return gameGet}, get gamePost(){return gamePost}, get rec(){return rec}, get setStatus(){return setStatus},
   get canPrepare(){return lifestonePrepareFree},
   get canRun(){return () => lifestonePrepareFree() && L2V7Modules.actions.canAct() && !tvtSoon()},
   get context(){return () => JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname])}
 });
+// Только проверка адресата: ни замка, ни сетевого запроса, ни изменения героя/памяти.
+async function lifestoneTarget(m) {
+  const saved=await chrome.storage.local.get(['rt','on']);
+  if(!m.char||m.char!==rt.char||m.char!==saved.rt?.char||m.char!==heroNick())return {ok:false};
+  if(!!m.on!==!!saved.on||!!m.on!==!!on||saved.on&&(!tabOwner||!leaseEpoch))return {ok:false};
+  return {ok:true};
+}
 async function lifestoneCommand(m) {
-  if (lifestoneCommandBusy) return {ok:false,reason:'Предыдущая команда ЛС выполняется'};
-  if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return {ok:false,reason:'Неизвестная команда ЛС'};
+  const reject=reason=>{if(m.action==='scan')try{rec('B','ЛС','Обновление оружия: '+reason);}catch(_){}return {ok:false,reason};};
+  if (lifestoneCommandBusy) return reject('Предыдущая команда ЛС выполняется');
+  if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return reject('Неизвестная команда ЛС');
   lifestoneCommandBusy=true;let manualEpoch=null;
   try {
     const saved=await chrome.storage.local.get(['rt','cfg','on']);
-    if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return {ok:false,reason:'Персонаж изменился — обновите меню'};
-    if (saved.on && (!on || !tabOwner || !leaseEpoch)) return {ok:false,reason:'Управление у другой вкладки игры'};
-    if (!saved.on) {if (!await tabLock()) return {ok:false,reason:'Управление у другой вкладки'};manualEpoch=leaseEpoch;}
-    if (rt.char!==m.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился'};
+    if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return reject('Персонаж изменился — обновите меню');
+    if(m.startContext&&(m.startContext.on!==true||!saved.on||m.startContext.kick!==(+(saved.rt?.manualKickAt)||0)))return reject('Запуск ЛС изменился — повторите команду');
+    if (m.action==='scan'&&m.scanContext&&(!!m.scanContext.on!==!!saved.on||m.scanContext.kick!==(+saved.rt?.manualKickAt||0))) return reject('Управление изменилось — обновите список оружия');
+    if (saved.on && (!on || !tabOwner || !leaseEpoch)) return reject('Управление у другой вкладки игры');
+    if (!saved.on) {if (!await tabLock()) return reject('Управление у другой вкладки');manualEpoch=leaseEpoch;}
+    if (rt.char!==m.char || heroNick()!==m.char) return reject('Персонаж изменился');
+    if(m.startContext&&(m.startContext.on!==true||!on||m.startContext.kick!==(+(rt.manualKickAt)||0)))return reject('Запуск ЛС изменился — повторите команду');
+    if (m.action==='scan'&&m.scanContext&&(!!m.scanContext.on!==!!on||m.scanContext.kick!==(+rt.manualKickAt||0))) return reject('Управление изменилось — обновите список оружия');
     cfg=mergeCfg(saved.cfg);
     if(m.action==='resume') L2V7Modules.actions.enterFrame();
     const ok=await L2V7Modules.lifestone.command(m.action);
-    return {ok:!!ok,reason:ok?'':rt.autoLs?.reason||'Команда ЛС недоступна'};
-  } catch(e) {return {ok:false,reason:String(e?.message||e).slice(0,220)}}
+    return ok?{ok:true,reason:''}:reject(rt.autoLs?.reason||'Команда ЛС недоступна');
+  } catch(e) {return reject(String(e?.message||e).slice(0,220))}
   finally {
     if(manualEpoch && !on && leaseEpoch===manualEpoch) {
       await rtWriter.recover().catch(e=>quietErr('запись памяти ЛС',e));await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(e=>quietErr('замок ЛС',e));
@@ -6436,6 +6469,7 @@ async function mammonBagCommand(m) {
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'mammonBagAnalyze') { mammonBagCommand(m).then(reply).catch(e => reply({ ok: false, reason: String(e) })); return true; }
   if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
+  if (m.cmd === 'lifestoneTarget') { lifestoneTarget(m).then(reply).catch(() => reply({ok:false})); return true; }
   if (m.cmd === 'lifestoneCommand') { lifestoneCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
@@ -6444,17 +6478,20 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     // ACK only after this document actually owns the lease and entered the loop.
     // A stored on=true is not proof that a single game action can be performed.
     (async () => {
+      // Запуск ЛС из iframe подтверждается только для героя и явного Старта, выбравших эту команду.
+      if(m.expectedChar){const saved=await chrome.storage.local.get(['rt','on']);if(!saved.on||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
       // 17.10.2026: запись on/cfg самим Стартом (save → menuPatch) меняет поколение почти одновременно с kick.
       // Прочитанное до неё состояние устарело — перечитываем хранилище, а не отказываем запуску; отказ только если
       // поколение не успокоилось за три чтения (идёт настоящая серия Stop/Start или смена героя).
       let generation = automationGeneration, state = null;
       for (let attempt = 0; attempt < 3 && !state; attempt++) {
         generation = automationGeneration;
-        const read = await chrome.storage.local.get(['on', 'cfg']);
+        const read = await chrome.storage.local.get(m.expectedChar?['on','cfg','rt']:['on', 'cfg']);
         if (generation === automationGeneration) state = read;
       }
       const v = chrome.runtime.getManifest().version;
       if (!state) return reply({ok:false,v,running,owner:false,reason:'start_superseded'});
+      if(m.expectedChar&&(!state.on||m.expectedChar!==state.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(state.rt?.manualKickAt)||0)))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});
       on = !!state.on; cfg = mergeCfg(state.cfg);
       if (!on) return reply({ ok: false, v, running: false, owner: false, reason: 'stopped' });
       void main();
@@ -6464,6 +6501,7 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
       if (generation !== automationGeneration || !on) return reply({ ok: false, v, running, owner: false, reason: 'stopped_during_start' });
       if (!running) return reply({ ok: false, v, running: false, owner: tabOwner, reason: 'loop_not_running' });
       if (!tabOwner || !leaseEpoch) return reply({ ok: false, v, running: true, owner: false, reason: 'another_tab_or_lock_unavailable' });
+      if(m.expectedChar){const saved=await chrome.storage.local.get(['rt','on']);if(!saved.on||generation!==automationGeneration||!on||!tabOwner||!leaseEpoch||m.expectedChar!==saved.rt?.char||m.expectedChar!==rt.char||m.expectedChar!==heroNick()||m.expectedKick!==(+(saved.rt?.manualKickAt)||0))return reply({ok:false,reason:'Герой или запуск изменились — повторите команду ЛС'});}
       heartbeat();
       reply({ ok: true, v, running: true, owner: true, reason: '' });
     })().catch(e => reply({ ok: false, reason: 'kick_error: ' + String(e?.message || e) }));

@@ -1,5 +1,26 @@
 # Life Stone — аугментация оружия (каталог проверен 18.10.2026)
 
+### Конфликт revision после обрыва соединения (Firefox)
+
+Настоящий Firefox может повторить тот же HTTP POST при закрытии сокета до заголовков ответа. Первая покупка уже применена, повтор с прежней `expectedRevision` получает 409. Поэтому 409 не доказывает отказ: pending и резерв сохраняются, затем точный GET подтверждает единственный расход и полученные предметы. То же относится к вставке ЛС: сохраняется pending для проверки нового UID/эффекта и расхода 1+1. Код не отправляет повторный POST. Сверка неприменённого supply возможна лишь при новой revision и точно неизменных остатках/валюте/оружии, после чего серия остаётся на ручной паузе.
+
+### Закупка на серию, 20.35
+
+`R = maxAttempts − attempts`. При недостатке Life Stone максимум оставшихся попыток равен `min(R, stockLS + floor(min(balanceAA − reserveAA, aaBudget − spentAA) / unitPriceLS))`, с нижней границей доступных AA 0. Сниженный общий лимит — `attempts + availableAttempts`; настройка и текущая серия записываются атомарно. Ноль доступных попыток ставит серию на паузу без невалидного лимита 0.
+
+Закупка: `needLS = max(0, R − stockLS)` и `needGem = max(0, R − stockGem)`. Вся стоимость Gemstone и необходимого перехода должна помещаться в остаток бюджета адены и сохранять общий резерв до первой покупки. Партии ограничены 9999; 10 000 разбиваются на два подтверждаемых шага. Каждый шаг заново читает состояние/каталог; pending с точными qty/price/revision и резервом сохраняется до POST. По неизвестному ответу сверяются точные остатки, валюта, оружие и revision; повторного POST нет. Цель, найденная раньше лимита, завершает серию с остатками в сумке.
+
+### Живая вставка и снятие, 20.10.2026
+
+По отдельным прямым командам игрока через родные кнопки выполнены ровно одна вставка и одно снятие. `POST /character/weapon-augmentation` принимает `{expectedRevision: freshRevision, operation: "install" | "remove"}`; оба ответа 200 содержат `character`, `outcomeId`, `gemstonesSpent`, revision увеличивается на 1.
+
+Вставка S: расход 1 Life Stone S + 1 Gemstone S, `gemstonesSpent: 1`, выпал `bad_pdef_9` (P.Def −9%). `eq.l1.augmentation` содержит `uid`, `outcomeId`, `grade`, `installedAtMs`. Снятие: `outcomeId: null`, `gemstonesSpent: 0`, `eq.l1.augmentation: null`; ни валюта, ни материалы не расходуются и не возвращаются. В обоих шагах остальная запись оружия, включая заточку +25, неизменна. Итог на герое: оружие без ЛС. Обезличенные подтверждения — `docs/evidence/ls-materials-2026-10-20/live-proof.json`.
+
+
+**20.10.2026 — повторная живая проверка по просьбе игрока:** текущий каталог Life Stone C/B/A/S — keys `c/b/a/s`,70/80/100/160тыс.AA. Бездатный старый `mammon-merchant-shop.json` с general/rare/special/unique не отражает текущие цены. Gemstone C/B/A/S — обычные `consumable/resource_gemstone_*`,3/10/30/100тыс.аден; бесплатные `craft_test_*` дубли исключаются. Freshfixture — `raw/lifestone-shops-20261020.json`.
+
+Native POST Маммона: `/game/mammon/merchant/buy {category:"life_stones",itemKey:"s",qty:1,expectedRevision}`. Вне NPC —400 `mammon_merchant_not_nearby`, расход0. Native телепорт `/game/mammon/teleport {kind:"merchant",expectedRevision,expectedAdenaCost}`; цена из свежего `/game/mammon/merchant.teleport.adenaCost`, по текущемуVIP0. Ответ `{character}`, ревизия+1, worldX/worldY совпадают сNPC, адена не списана. Native GMshop `/game/drops-shop/buy {shopKey:"consumable/resource_gemstone_s",qty:1,expectedRevision}`. На герое куплена ровно одна пара S:160000AA+100000аден, без CoL/FA и без аугментации. ПолныеGET после каждой операции подтвердили+1предмет и точный расход. Магазинные POST не передают expectedUnitPrice, поэтому клиент проверяет свежую цену доPOST и точный результат после; атомарную смену каталога без серверной версии quote гарантировать нельзя.
+
 Источники: новость игры 12.10 (прислал игрок), код страниц игры `augmentation.html` / `augmentation-page.js`, `weapon-augmentation-display.js`, `battle-hotbar.js` (версия `fe1ff486de47`), ответы `GET /character`, `GET /game/mammon/merchant/shop`, `GET /game/ancient-trader/offers`, `GET /game/drops-shop` (12.10 ≈11:35 UTC, только чтение; ничего не куплено и не вставлено). Сырой ответ магазина Маммона — `raw/mammon-merchant-shop-1210.json`, таблица — `data/game-lifestone.json`.
 
 

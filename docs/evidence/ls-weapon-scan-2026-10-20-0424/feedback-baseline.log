@@ -1,0 +1,861 @@
+✖ scan shows busy immediately and prevents duplicate command, then durable success with item count (6.77707ms)
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: null (3.393948ms)
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsWeapon (2.562674ms)
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsTargets (5.840959ms)
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsMaxAttempts (3.767752ms)
+✖ actor change clears previous error even while field has focus (3.137882ms)
+✔ late resolve from old hero cannot attach feedback to new hero (2.671178ms)
+✔ late reject from old hero cannot attach feedback to new hero (2.837809ms)
+✖ new scan replaces old error and reports an empty successful result (3.090261ms)
+✖ markup exposes persistent scan feedback as an atomic live status (1.987617ms)
+✖ module scan diagnoses snapshot without raw response/secret, cached fallback or mutation (2.084193ms)
+✖ module scan diagnoses catalog without raw response/secret, cached fallback or mutation (0.965796ms)
+✖ module scan diagnoses context without raw response/secret, cached fallback or mutation (2.214289ms)
+✖ module scan diagnoses write without raw response/secret, cached fallback or mutation (1.257116ms)
+✖ module scan diagnoses exception without raw response/secret, cached fallback or mutation (1.048661ms)
+✖ module success logs request and exact count, without a write command (1.191597ms)
+✖ scan-only API diagnostic distinguishes инвентарь героя: HTTP (1.477899ms)
+✖ scan-only API diagnostic distinguishes инвентарь героя: timeout (1.294963ms)
+✖ scan-only API diagnostic distinguishes инвентарь героя: JSON (1.092618ms)
+✖ scan-only API diagnostic distinguishes инвентарь героя: shape (0.911575ms)
+✖ scan-only API diagnostic distinguishes каталог оружия: HTTP (0.976653ms)
+✖ scan-only API diagnostic distinguishes каталог оружия: timeout (0.914749ms)
+✖ scan-only API diagnostic distinguishes каталог оружия: JSON (1.603388ms)
+✖ scan-only API diagnostic distinguishes каталог оружия: shape (0.852035ms)
+✖ scan diagnoses missing or mismatched character without exposing values (0.860467ms)
+✖ scan diagnoses missing or mismatched name without exposing values (0.806676ms)
+✖ scan diagnoses missing or mismatched foreignName without exposing values (0.798854ms)
+✖ scan diagnoses missing or mismatched revision without exposing values (0.763862ms)
+✖ scan diagnoses missing or mismatched eq without exposing values (0.984495ms)
+✖ scan diagnoses missing or mismatched stacks without exposing values (0.797963ms)
+✖ scan diagnoses missing or mismatched itemGradeHints without exposing values (0.786957ms)
+✖ scan diagnoses missing or mismatched itemSlotHints without exposing values (0.811724ms)
+✖ storage read failure in finally releases scan UI and keeps an error until retry succeeds (2.506069ms)
+✖ scan-only whole response deadline releases a hung headers read without publishing late data (0.953688ms)
+✖ scan-only whole response deadline releases a hung body read without publishing late data (3.237933ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 2
+ℹ fail 33
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.807891
+
+✖ failing tests:
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:15:1
+✖ scan shows busy immediately and prevents duplicate command, then durable success with item count (6.77707ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:17:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:20:66
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: null (3.393948ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Нет связи с вкладкой игры/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:22:54)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Нет связи с вкладкой игры/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:20:66
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsWeapon (2.562674ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Нет связи с вкладкой игры/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:22:54)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Нет связи с вкладкой игры/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:20:66
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsTargets (5.840959ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Нет связи с вкладкой игры/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:22:54)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Нет связи с вкладкой игры/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:20:66
+✖ scan failure remains visible through polling/focus and preserves prior list/drafts: lsMaxAttempts (3.767752ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Нет связи с вкладкой игры/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:22:54)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Нет связи с вкладкой игры/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:26:1
+✖ actor change clears previous error even while field has focus (3.137882ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Старая ошибка/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:27:142)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Старая ошибка/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:32:1
+✖ new scan replaces old error and reports an empty successful result (3.090261ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Прочитано оружия: 0/. Input:
+
+  ''
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:33:212)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Прочитано оружия: 0/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:35:1
+✖ markup exposes persistent scan feedback as an atomic live status (1.987617ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /<[^>]+id="lsScanStatus"[^>]*role="status"[^>]*aria-live="polite"[^>]*aria-atomic="true"/. Input:
+
+  '<!doctype html>\n' +
+    '<html lang="ru"><head><meta charset="utf-8">\n' +
+    '<!-- 8.0.7 (Firefox для Android): меню открывается отдельной вкладкой — без этой строки оно рисовалось мелко на «экране 980 px» -->\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+    '<style>\n' +
+    '[data-disabled-auto-enchant] { display: none !important; }\n' +
+    '  /* ===== L2wap Bot v5 — дизайн-система ===== */\n' +
+    '  :root{\n' +
+    '    --bg:#14100d;--panel:#1b1612;--card:#231d17;--card2:#2b241c;--inset:#120e0b;\n' +
+    '    --line:#3a2f24;--line2:#56452f;--txt:#efe6d6;--dim:#a39280;--mute:#7d6e5e;\n' +
+    '    --gold:#d4a856;--gold2:#f0cf86;--goldbg:rgba(212,168,86,.12);\n' +
+    '    --ok:#5cc27a;--okbg:rgba(92,194,122,.14);--bad:#e06352;--badbg:rgba(224,99,82,.14);--warn:#e3b04b;\n' +
+    '    --r:10px;--r2:7px;--sh:0 6px 20px rgba(0,0,0,.35)\n' +
+    '  }\n' +
+    '  *{box-sizing:border-box}\n' +
+    '  html{scrollbar-color:var(--line2) transparent;scrollbar-width:thin;-moz-text-size-adjust:none;-webkit-text-size-adjust:none;text-size-adjust:none}\n' +
+    '\n' +
+    '  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}\n' +
+    '\n' +
+    '  html.docked section{min-height:0}\n' +
+    '\n' +
+    '  html.docked .zbox{overflow-x:auto}\n' +
+    '  html.docked #lootBox td:last-child{white-space:normal;overflow-wrap:anywhere}\n' +
+    '\n' +
+    '  /* ---- шапка ---- */\n' +
+    '\n' +
+    '  #heroLine{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:20px}\n' +
+    '  #heroLine .hero{font-weight:700;color:var(--gold2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n' +
+    '\n' +
+    '  #heroLine .state{margin-left:auto;font-size:11px;font-weight:700;border-radius:20px;padding:2px 9px;white-space:nowrap}\n' +
+    '  #heroLine .state.on{background:var(--okbg);color:var(--ok);border:1px solid rgba(92,194,122,.45)}\n' +
+    '  #heroLine .state.off{background:rgba(255,255,255,.04);color:var(--dim);border:1px solid var(--line)}\n' +
+    "  #heroLine .state.on::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px;animation:blink 1.4s ease-in-out infinite}\n" +
+    '  @keyframes blink{50%{opacity:.25}}\n' +
+    '\n' +
+    '  #status .st{font-weight:600;font-size:12.5px;color:var(--txt);white-space:pre-line}\n' +
+    '  #status .chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}\n' +
+    '  #status .chip{font-size:11px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}\n' +
+    '  #status .chip b{color:var(--txt);font-weight:600}\n' +
+    '  #status .health{font-size:11px;color:var(--warn);margin-top:5px;white-space:pre-line}\n' +
+    '\n' +
+    '  #questBox:empty{display:none}\n' +
+    '  #questBox .qt{color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.02em}\n' +
+    '  #questBox .qchips{display:flex;flex-wrap:wrap;gap:3px;align-items:center}\n' +
+    '  #questBox .qchips span{color:var(--dim);margin-right:2px}\n' +
+    '  #questBox .qchips em{font-style:normal;color:var(--gold2);background:var(--goldbg);border:1px solid rgba(212,168,86,.45);border-radius:10px;padding:0 7px;line-height:17px}\n' +
+    '  #questBox .qc{background:linear-gradient(90deg,rgba(212,168,86,.15),rgba(212,168,86,.03));border:1px solid rgba(212,168,86,.35);border-left:3px solid var(--gold);border-radius:var(--r2);padding:4px 8px 5px}\n' +
+    '  #questBox .qh{display:flex;justify-content:space-between;gap:6px;align-items:baseline}\n' +
+    '  #questBox .qn{color:#f6e7c8;font-weight:700;font-size:12px}\n' +
+    '  #questBox .qv{color:var(--gold2);font-weight:700;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}\n' +
+    '  #questBox .qv i{font-style:normal;color:var(--dim);font-weight:400}\n' +
+    '  #questBox .qbar{height:4px;background:var(--inset);border-radius:3px;margin:3px 0 1px;overflow:hidden}\n' +
+    '  #questBox .qbar b{display:block;height:100%;background:linear-gradient(90deg,#a57e36,var(--gold2));border-radius:3px}\n' +
+    '  #questBox .qs{color:var(--dim);font-size:10.5px}\n' +
+    '  #questBox .qc.ok{opacity:.7;border-left-color:var(--ok)}\n' +
+    '  #questBox .qloc{color:var(--dim);font-weight:400;font-size:10.5px}\n' +
+    '  #questBox .qdone{color:var(--ok);font-size:10.5px}\n' +
+    '\n' +
+    '  /* ---- кнопки ---- */\n' +
+    '  .row{display:flex;gap:6px;margin-top:7px;align-items:center}\n' +
+    '  .row>*{min-width:0} .row>input:not([type=checkbox]),.row>select{flex-shrink:1}\n' +
+    '  button{flex:1;padding:7px 6px;cursor:pointer;background:linear-gradient(180deg,#2e261e,#261f18);color:var(--txt);border:1px solid var(--line2);border-radius:var(--r2);font:inherit;transition:border-color .12s,background .12s,transform .05s}\n' +
+    '  button:hover{border-color:var(--gold);background:linear-gradient(180deg,#352b21,#2b231b)}\n' +
+    '  button:active{transform:translateY(1px)}\n' +
+    '  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:1px}\n' +
+    '  button:disabled{opacity:.45;cursor:default}\n' +
+    '  button.main{font-weight:700}\n' +
+    '  #start,#stop{padding:10px 6px;font-size:14px;border-radius:var(--r)}\n' +
+    '  #start{background:linear-gradient(180deg,#2f5233,#244028);border-color:#4f8a55}\n' +
+    '  #stop{background:linear-gradient(180deg,#4f302b,#3e2521);border-color:#80504a}\n' +
+    '  #reset,#shopNowTop{flex:0 0 40px;font-size:15px;border-radius:var(--r)}\n' +
+    '  #start.running{background:linear-gradient(180deg,#38a24c,#2a7e3a);border-color:#7fe58e;color:#fff;animation:runPulse 1.6s ease-in-out infinite}\n' +
+    '  #stop.idle{opacity:.5}\n' +
+    '  #pause{padding:10px 6px;font-size:14px;border-radius:var(--r)}\n' +
+    '  #pause.paused{background:linear-gradient(180deg,#5a4a1f,#463a18);border-color:#a08a3a}\n' +
+    '  #pause.idle{opacity:.5}\n' +
+    '  @keyframes runPulse{0%,100%{box-shadow:0 0 0 0 rgba(111,224,127,.5)}50%{box-shadow:0 0 12px 3px rgba(111,224,127,.5)}}\n' +
+    '  @media (prefers-reduced-motion:reduce){#start.running,#heroLine .state.on::before{animation:none}#start.running{box-shadow:0 0 6px 2px rgba(111,224,127,.5)}}\n' +
+    '  #campToggle.on,#fishToggle.on,#huntToggle.on,#huntToggle2.on,#rbOrderUp.on,#rbOrderDown.on{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#20180f;font-weight:700;border-color:var(--gold2);box-shadow:0 0 0 1px rgba(240,207,134,.25),0 2px 8px rgba(212,168,86,.25)}\n' +
+    '\n' +
+    '  /* ---- вкладки ---- */\n' +
+    '\n' +
+    `  #uiSearch{width:100%;padding:6px 10px 6px 28px;border-radius:20px;background:var(--inset) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a39280' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 9px 50%}\n` +
+    '\n' +
+    '  #uiResults.show{display:block}\n' +
+    '  #uiResults div{padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--line);font-size:12px}\n' +
+    '  #uiResults div:last-child{border-bottom:none}\n' +
+    '  #uiResults div:hover,#uiResults div.sel{background:var(--goldbg)}\n' +
+    '  #uiResults small{color:var(--mute);margin-left:6px}\n' +
+    '  section{display:none;padding:2px 10px 16px;background:var(--panel);min-height:300px}\n' +
+    '  section.act{display:block;animation:fadeIn .14s ease-out}\n' +
+    '  @keyframes fadeIn{from{opacity:.4;transform:translateY(2px)}to{opacity:1;transform:none}}\n' +
+    '\n' +
+    '  /* ---- карточки разделов ---- */\n' +
+    '  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin:10px 0 0;overflow:hidden}\n' +
+    '  .card>.ch{display:flex;align-items:center;gap:6px;padding:9px 11px;cursor:pointer;user-select:none;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent)}\n' +
+    '  .card>.ch:hover{background:rgba(212,168,86,.06)}\n' +
+    '  .card>.ch h4{margin:0;flex:1}\n' +
+    '  .card>.ch .chev{color:var(--mute);font-size:11px;transition:transform .15s}\n' +
+    '  .card.closed>.ch .chev{transform:rotate(-90deg)}\n' +
+    '  .card>.cb{padding:2px 11px 11px;border-top:1px solid var(--line)}\n' +
+    '  .card.closed>.cb{display:none}\n' +
+    '  .card.hit{box-shadow:0 0 0 2px var(--gold)}\n' +
+    '  .flash{animation:flash 1.6s ease-out}\n' +
+    '  @keyframes flash{0%,30%{background:rgba(212,168,86,.28)}100%{background:transparent}}\n' +
+    '  h4{margin:12px 0 4px;color:var(--gold);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700}\n' +
+    '\n' +
+    '  /* ---- поля ---- */\n' +
+    '  label{display:flex;justify-content:space-between;align-items:center;margin:2px -6px;padding:5px 6px;gap:10px;border-radius:var(--r2)}\n' +
+    '  label:hover{background:rgba(255,255,255,.025)}\n' +
+    '  input,textarea,select{background:var(--inset);color:var(--txt);border:1px solid var(--line2);border-radius:var(--r2);padding:4px 7px;font:inherit;transition:border-color .12s}\n' +
+    '  input:hover,select:hover,textarea:hover{border-color:#6b5638}\n' +
+    '  input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none}\n' +
+    '  input[type=number]{width:68px;text-align:right;font-variant-numeric:tabular-nums}\n' +
+    '  input.sm{width:90px;text-align:center}\n' +
+    '  input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:0 0 36px;width:36px;height:20px;border-radius:20px;background:#3a3027;border:1px solid var(--line2);position:relative;cursor:pointer;padding:0;transition:background .15s,border-color .15s}\n' +
+    "  input[type=checkbox]::before{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#bfae95;transition:transform .15s,background .15s}\n" +
+    '  input[type=checkbox]:checked{background:linear-gradient(180deg,#4fb768,#3a9152);border-color:#7fe58e}\n' +
+    '  input[type=checkbox]:checked::before{transform:translateX(16px);background:#fff}\n' +
+    '  input[type=checkbox]:disabled{opacity:.4}\n' +
+    '  .nm{width:160px} select.nm{width:190px} .wide{width:100%;margin-top:5px}\n' +
+    '  .hint{font-size:11px;color:var(--dim);margin:3px 0 7px;line-height:1.45}\n' +
+    '  details.help{margin:2px 0 6px} details.help>summary{font-size:11px;color:var(--mute);list-style:none;display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:1px 0}\n' +
+    '  details.help>summary::-webkit-details-marker{display:none}\n' +
+    "  details.help>summary::before{content:'ⓘ';color:var(--gold);font-size:12px}\n" +
+    '  details.help[open]>summary{color:var(--dim)}\n' +
+    '  details.help>.hint{background:var(--inset);border:1px solid var(--line);border-radius:var(--r2);padding:6px 8px;margin-top:4px}\n' +
+    '  details{margin-top:8px} summary{cursor:pointer;color:var(--dim);font-size:12px}\n' +
+    '  .camp{background:var(--inset);border:1px solid var(--line);border-rad'... 104929 more characters
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:35:85)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<!doctype html>\n<html lang="ru"><head><meta charset="utf-8">\n<!-- 8.0.7 (Firefox для Android): меню открывается отдельной вкладкой — без этой строки оно рисовалось мелко на «экране 980 px» -->\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<style>\n[data-disabled-auto-enchant] { display: none !important; }\n  /* ===== L2wap Bot v5 — дизайн-система ===== */\n  :root{\n    --bg:#14100d;--panel:#1b1612;--card:#231d17;--card2:#2b241c;--inset:#120e0b;\n    --line:#3a2f24;--line2:#56452f;--txt:#efe6d6;--dim:#a39280;--mute:#7d6e5e;\n...',
+    expected: /<[^>]+id="lsScanStatus"[^>]*role="status"[^>]*aria-live="polite"[^>]*aria-atomic="true"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:42:75
+✖ module scan diagnoses snapshot without raw response/secret, cached fallback or mutation (2.084193ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /инвентарь героя/. Input:
+
+  'Не удалось прочитать оружие и каталог; прежний список сохранён'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:50:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Не удалось прочитать оружие и каталог; прежний список сохранён',
+    expected: /инвентарь героя/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:42:75
+✖ module scan diagnoses catalog without raw response/secret, cached fallback or mutation (0.965796ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /каталог оружия/. Input:
+
+  'Не удалось прочитать оружие и каталог; прежний список сохранён'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:50:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Не удалось прочитать оружие и каталог; прежний список сохранён',
+    expected: /каталог оружия/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:42:75
+✖ module scan diagnoses context without raw response/secret, cached fallback or mutation (2.214289ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 2
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:51:97)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:42:75
+✖ module scan diagnoses write without raw response/secret, cached fallback or mutation (1.257116ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 2
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:51:97)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:42:75
+✖ module scan diagnoses exception without raw response/secret, cached fallback or mutation (1.048661ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /сохранить список/. Input:
+
+  'token=private-value'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:50:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'token=private-value',
+    expected: /сохранить список/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:53:1
+✖ module success logs request and exact count, without a write command (1.191597ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 2
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:53:144)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes инвентарь героя: HTTP (1.477899ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes инвентарь героя: timeout (1.294963ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes инвентарь героя: JSON (1.092618ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes инвентарь героя: shape (0.911575ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes каталог оружия: HTTP (0.976653ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes каталог оружия: timeout (0.914749ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes каталог оружия: JSON (1.603388ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:54:108
+✖ scan-only API diagnostic distinguishes каталог оружия: shape (0.852035ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:62:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched character without exposing values (0.860467ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched name without exposing values (0.806676ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched foreignName without exposing values (0.798854ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched revision without exposing values (0.763862ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched eq without exposing values (0.984495ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched stacks without exposing values (0.797963ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched itemGradeHints without exposing values (0.786957ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:65:113
+✖ scan diagnoses missing or mismatched itemSlotHints without exposing values (0.811724ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+
+  Caught error:
+
+  Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Не удалось прочитать оружие и каталог; прежний список сохранён
+        at scanWeapons (evalmachine.<anonymous>:30:55)
+        at async Object.command (evalmachine.<anonymous>:80:31)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:69:2)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: [Function (anonymous)],
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:73:1
+✖ storage read failure in finally releases scan UI and keeps an error until retry succeeds (2.506069ms)
+  Error: storage unavailable
+      at f.box.chrome.storage.local.get (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:74:65)
+      at lsRefreshWeapons (evalmachine.<anonymous>:13:51)
+      at Object.lsAction [as action] (evalmachine.<anonymous>:44:55)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:74:95)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:78:39
+✖ scan-only whole response deadline releases a hung headers read without publishing late data (0.953688ms)
+  AssertionError [ERR_ASSERTION]: completed catalog deadline is already cleared
+
+  0 !== 1
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:82:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:78:39
+✖ scan-only whole response deadline releases a hung body read without publishing late data (3.237933ms)
+  AssertionError [ERR_ASSERTION]: completed catalog deadline is already cleared
+
+  0 !== 1
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/feedback-baseline/tests/v2033-lifestone-scan-feedback.test.cjs:82:9)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

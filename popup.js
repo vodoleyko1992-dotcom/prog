@@ -2439,9 +2439,12 @@ const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   e.added?.length ? `| +лог: ${e.added.join(' ⏎ ')}` : '',
   e.el ? `| эл: ${e.el}` : '',
   e.data?.q != null ? `| запрос: ${typeof e.data.q === 'string' ? e.data.q : JSON.stringify(e.data.q)}`.slice(0, 600) : '',
-  e.data?.r ? `| ответ: ${e.data.r}` : ''].filter(Boolean).join(' ');
+  e.data?.r ? `| ответ: ${e.data.r}` : '',
+  e.data?.battle ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
+// 20.10: безопасный боевой блок уже ограничен hook; прежние 4000 знаков теряли соседей и исход боя.
+const exportEventLine = e => { const t = fmtEv(e); return e.data?.battle || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-// v5.2: выгрузки — не больше 20 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
+// Выгрузки — не больше 6 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
 // и пишем в шапке, сколько не вошло. Файл собирается из частей (Blob), без одной гигантской строки в памяти.
 const EXPORT_MAX = 6 * 1024 * 1024;
 const u8len = t => { let n = t.length; for (let i = 0; i < t.length; i++) { const c = t.charCodeAt(i); if (c > 0x7f) n += c > 0x7ff ? 2 : 1; } return n; };
@@ -2533,6 +2536,7 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
   const head = `# L2wap Bot v${chrome.runtime.getManifest().version} — журнал: ${title} · ${rows.length} событий · ${new Date(rows[0][1].t).toLocaleString('ru')} — ${new Date(rows.at(-1)[1].t).toLocaleString('ru')}\n`
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
+    + `# | бой: JSON — безопасные поля сервера, rid запроса, цели, HP/MP, КД, исход и награда. log/finalLog: хвост до 200 строк / 32К знаков, строка до 2048; omitted/shortened/cut явно отмечают сокращения.\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
     + `# Цель рыбалки: ${JSON.stringify(rt.fishTgt || null)} · активный заброс: ${rt.fishCastActive === true} · обслуживание: ${rt.fishService || '—'}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
@@ -2549,11 +2553,11 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
     + `# Энергия: ${JSON.stringify(rt.force || {})} · бесплатные удары: ${Object.keys(rt.forceFree || {}).join(', ') || '—'} · ход ${rt.turnMs || '?'} мс · ДПС: ${JSON.stringify(rt.dps || {})}\n`
     + `# Умения (магистр): ${Object.values(rt.skillDb || {}).map(i => `${i.name}${i.rank ? ' р.' + i.rank : ''}: ${i.passive ? 'пассив' : `MP ${i.mp} · сила ${i.power} · КД ${i.cd}${i.force ? ' · эн. ' + i.force : ''}${i.fists ? ' · кастеты' : ''}`}`).join(' | ') || '—'}\n`
     + `# Глава: ${rt.campaign ? rt.campaign.title + ' · ' + rt.campaign.targets.map(t => `${t.name} ${t.done}/${t.total}${t.ok ? ' ✓' : ''}`).join(' · ') : '—'} · метки лога: ${JSON.stringify(rt.qAlias || {})}\n\n`;
-  const lines = rows.map(([, e]) => fmtEv(e).slice(0, 4000)), sum = logSummary(rows);
+  const lines = rows.map(([, e]) => exportEventLine(e)), sum = logSummary(rows);
   const f = fitTail(lines, EXPORT_MAX - u8len(head) - u8len(sum) - 400);
-  const cutNote = f.cut ? `# ⚠ Лимит файла 20 МБ: ${fmt(f.cut)} самых старых событий не вошли (в файле последние ${fmt(f.keep.length)}, с ${tm(rows[f.cut][1].t)})\n\n` : '';
+  const cutNote = f.cut ? `# ⚠ Лимит файла 6 МБ: ${fmt(f.cut)} самых старых событий не вошли (в файле последние ${fmt(f.keep.length)}, с ${tm(rows[f.cut][1].t)})\n\n` : '';
   download(`l2bot-log-${stamp()}.txt`, [head, cutNote, sum, f.keep.join('\n')]);
-  if (f.cut && typeof toast === 'function') toast(`Журнал урезан до 20 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
+  if (f.cut && typeof toast === 'function') toast(`Журнал урезан до 6 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
   if (markNew) await chrome.storage.local.set({ exLogKey: rows.at(-1)[0] });
   load();
   return true;
@@ -2583,10 +2587,10 @@ $('exJson').onclick = async () => {
   const rows = await readLog({ last: n });
   if (!rows.length) { $('recCount').textContent = 'JSON: событий нет'; return; }
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  const head = JSON.stringify({ l2botLog: 1, v: chrome.runtime.getManifest().version, t: Date.now(), n: rows.length, cfg: { ...cfg } });
+  const meta = { l2botLog: 1, v: chrome.runtime.getManifest().version, t: Date.now(), n: rows.length, cfg: { ...cfg } }, head = JSON.stringify(meta);
   const f = fitTail(rows.map(([k, e]) => JSON.stringify({ k, ...e })), EXPORT_MAX - u8len(head) - 200);
-  download(`l2bot-log-${stamp()}.jsonl`, [head, '\n', f.keep.join('\n')], 'application/x-ndjson');
-  if (f.cut && typeof toast === 'function') toast(`JSON урезан до 20 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
+  download(`l2bot-log-${stamp()}.jsonl`, [JSON.stringify({ ...meta, kept: f.keep.length, omitted: f.cut }), '\n', f.keep.join('\n')], 'application/x-ndjson');
+  if (f.cut && typeof toast === 'function') toast(`JSON урезан до 6 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
 };
 $('exNew').onclick = async () => {
   const { exLogKey = null } = await chrome.storage.local.get('exLogKey');
@@ -3163,43 +3167,97 @@ function lsRenderWeapons(rt,c,preserveSelection=false){
   for(const w of weapons){const o=document.createElement('option');o.value=w.key;o.textContent=`${w.name} +${w.enchant} · ${w.grade} · ${w.equipped?'надето':'рюкзак'}${w.ambiguous?' · одинаковые экземпляры':''}`;o.disabled=w.ambiguous;$('lsWeapon').append(o);}
   if(selected&&!weapons.some(w=>w.key===selected)){const o=document.createElement('option');o.value=selected;o.textContent='Выбранная вещь не в списке — обновите оружие';$('lsWeapon').append(o);}
   $('lsWeapon').value=selected;
+  lsScanFeedbackView(rt.char);
   const chosen=weapons.find(w=>w.key===selected);
   $('lsWeaponHint').textContent=!weapons.length?(scanned?'Оружие прочитано: подходящих C/B/A/S вещей не найдено.':'Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.'):chosen?.ambiguous?'Одинаковые экземпляры нельзя различить — оставьте один и обновите список.':chosen&&!chosen.equipped?'Выбрана вещь из рюкзака. Сначала наденьте её в игре: запуск в другое оружие заблокирован.':chosen?'Серия привязана к выбранной вещи. Смена оружия остановит вставку.':'Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.';
 }
+// 20.34 (20.10, докупка ЛС): поля денег сохраняются вместе с выбранной вещью и не теряются при смене цели.
+const LS_MATERIAL_FIELDS={aaBudget:['lsAaBudget',2000000,'Лимит AA'],adenaBudget:['lsAdenaBudget',2000000,'Лимит адены'],aaReserve:['lsAaReserve',0,'Запас AA']};
+function lsMaterialDraft(c){
+  const result={buyMaterials:$('lsBuyMaterials')?$('lsBuyMaterials').checked:c.buyMaterials!==false};
+  for(const [key,[id,fallback,label]] of Object.entries(LS_MATERIAL_FIELDS)){
+    const raw=$(id)?String($(id).value).trim():c[key]??fallback,n=Number(raw);
+    if(raw===''||!Number.isSafeInteger(n)||n<0)throw Error(label+': укажите целое число не меньше нуля');
+    result[key]=n;
+  }
+  return result;
+}
+function lsMaterialStatus(s){
+  const amount=x=>x==null?'0':Number.isSafeInteger(+x)&&+x>=0?(+x).toLocaleString('ru'):'?';
+  const spent=s.spentAA!=null||s.spentAdena!=null?`\nНа докупку: ${amount(s.spentAA)} AA · ${amount(s.spentAdena)} аден`:'';
+  const held=+s.reservedAA>0||+s.reservedAdena>0?`\nОжидают сверки: ${amount(s.reservedAA)} AA · ${amount(s.reservedAdena)} аден`:'';
+  const pending=s.pending?.kind==='supply'?`\n${s.pending.action==='travel'?'Телепорт к Маммону':'Покупка: '+(s.pending.name||'материалы ЛС')+(Number.isSafeInteger(s.pending.qty)&&s.pending.qty>0?' ×'+s.pending.qty:'')} — результат ещё не подтверждён. Повтор заблокирован.`:'';
+  return spent+held+pending;
+}
+// 20.33 (лог20.10 04:24): причина чтения остаётся рядом с кнопкой, а не исчезает с toast.
+let lsScanFeedback=null,lsScanPending=false;
+function lsScanFeedbackView(who){
+  if(lsScanFeedback&&lsScanFeedback.char!==who)lsScanFeedback=null;
+  const status=$('lsScanStatus'),button=$('lsScanWeapons');
+  if(status){status.textContent=lsScanFeedback?.message||'';if(status.dataset)status.dataset.state=lsScanFeedback?.phase||'';}
+  if(button){button.disabled=lsScanPending;button.setAttribute?.('aria-busy',String(lsScanPending));}
+}
+function lsScanFeedbackSet(who,phase,message){lsScanFeedback={char:who,phase,message};lsScanFeedbackView(who);}
+chrome.storage.onChanged?.addListener(ch=>{if(ch.rt&&String(ch.rt.oldValue?.char||'')!==String(ch.rt.newValue?.char||''))lsScanFeedbackView(ch.rt.newValue?.char);});
 async function lsRefreshWeapons(who){
   const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);
+  lsScanFeedbackView(rt.char);
   if(!who||who!==rt.char||lsRenderedChar!==rt.char)return;
   lsRenderWeapons(rt,cfg.autoLs||{},lsEditing||document.activeElement?.id==='lsWeapon');
+  return rt.lsWeapons?.char===rt.char?rt.lsWeapons.items||[]:null;
 }
 async function lsRefresh(){
-  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts'].includes(document.activeElement?.id))return;
+  if(lsEditing||['lsWeapon','lsTargets','lsMaxAttempts','lsBuyMaterials','lsAaBudget','lsAdenaBudget','lsAaReserve'].includes(document.activeElement?.id))return;
   const {cfg={},rt={},on=false}=await chrome.storage.local.get(['cfg','rt','on']),c=cfg.autoLs||{},s=rt.autoLs;
   lsRenderWeapons(rt,c);
   for(const o of $('lsTargets').options)o.selected=(c.targets||[]).includes(o.value);
   $('lsMaxAttempts').value=c.maxAttempts??10;
+  if($('lsBuyMaterials'))$('lsBuyMaterials').checked=c.buyMaterials!==false;
+  for(const [key,[id,fallback]] of Object.entries(LS_MATERIAL_FIELDS))if($(id))$(id).value=c[key]??fallback;
   lsRenderedChar=rt.char;
   const labels={paused:'Пауза',running:'Работает',done:'Завершено',closed:'Закрыто'};
-  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nОружие: ${s.weaponName||'#'+s.itemId}\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${s.pending?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
-  $('lsAcknowledge').hidden=!s?.pending;
+  $('lsRun').textContent=s?`${s.status==='running'&&!on?'Пауза — бот остановлен':labels[s.status]||s.status} · ${s.attempts}/${s.maxAttempts} попыток · ${s.grade}-grade\nОружие: ${s.weaponName||'#'+s.itemId}\nЦель: ${s.targets.map(id=>L2Aug.info(id)?.n||id).join(', ')}\n${s.last?'Последний эффект: '+(L2Aug.info(s.last)?.n||s.last)+'\n':''}${s.reason||''}${lsMaterialStatus(s)}${s.pending&&s.pending.kind!=='supply'?'\nЕсть неподтверждённая попытка. Повтор заблокирован.':''}`:'Серия не запущена';
+  $('lsAcknowledge').hidden=!s?.pending||s.pending.kind==='supply';
 }
 async function lsSave(){
   lsEditing=true;
-  try{const {rt={}}=await chrome.storage.local.get('rt');if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const autoLs={weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
+  try{const {cfg={},rt={}}=await chrome.storage.local.get(['cfg','rt']);if(!lsRenderedChar||lsRenderedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');const c=cfg.autoLs||{},autoLs={...c,weaponKey:$('lsWeapon').value,targets:[...$('lsTargets').selectedOptions].map(o=>o.value),maxAttempts:Number($('lsMaxAttempts').value),...lsMaterialDraft(c)};await menuPatch({}, {cfgPatch:{autoLs},expectedChar:rt.char});}
   finally{lsEditing=false;}
 }
 $('lsWeapon').onchange=()=>lsSave().then(()=>lsRefresh()).catch(e=>toast(String(e.message||e)));
 $('lsTargets').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 $('lsMaxAttempts').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
-async function lsCommand(action,expectedChar){
-  const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
-  const tab=on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
-  if(!tab?.id||!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
+for(const id of ['lsBuyMaterials',...Object.values(LS_MATERIAL_FIELDS).map(([id])=>id)])if($(id))$(id).onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
+// 20.33 (лог20.10 04:24): чтение ищет нужного героя; probe не захватывает управление и не запускает ЛС.
+async function lsScanTab(who,started,generation){
+  const first=await activeTab(), all=await chrome.tabs.query({url:['https://l2wap.com/*','https://*.l2wap.com/*']}).catch(()=>[]);
+  const ids=[...(started.on&&Number.isInteger(started.lock?.tab)&&Date.now()-(+started.lock.t||0)<85000?[started.lock.tab]:[]),first?.id,...all.map(t=>t.id)];
+  const unchanged=async()=>{const fresh=await chrome.storage.local.get(['rt','on']);if(controlGeneration!==generation||fresh.rt?.char!==who||!!fresh.on!==!!started.on||(+fresh.rt?.manualKickAt||0)!==(+started.rt.manualKickAt||0))throw Error('Персонаж или управление изменились — обновите список оружия');};
+  const deadline=Date.now()+6000;
+  for(const id of [...new Set(ids.filter(Number.isInteger))]){
+    await unchanged();if(Date.now()>=deadline)break;let target=null,timer;
+    try{target=await Promise.race([chrome.tabs.sendMessage(id,{cmd:'lifestoneTarget',char:who,on:!!started.on}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.min(1500,deadline-Date.now()));})]);}catch(_){}finally{clearTimeout(timer);}
+    await unchanged();if(target?.ok===true)return {id};
+  }
+  throw Error('Не найдена готовая вкладка этого героя. Откройте игру и обновите её вкладку');
+}
+async function lsCommand(action,expectedChar,expectedStart=null){
+  const generation=controlGeneration,started=await chrome.storage.local.get(['rt','on','lock']),{rt={},on=false,lock=null}=started;
+  if(!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
   if(expectedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');
-  const answer=await chrome.tabs.sendMessage(tab.id,{cmd:'lifestoneCommand',action,char:rt.char});
+  if(expectedStart&&(!on||expectedStart.on!==true||expectedStart.kick!==(+(rt.manualKickAt)||0)||generation!==controlGeneration))throw Error('Запуск ЛС изменился — повторите команду');
+  if(action==='scan'&&generation!==controlGeneration)throw Error('Управление изменилось — обновите список оружия');
+  const request={action,char:rt.char,...(action==='scan'?{scanContext:{on:!!on,kick:+rt.manualKickAt||0}}:{}),...(expectedStart?{startContext:{on:true,kick:expectedStart.kick}}:{})};
+  // Встроенный iframe Firefox не имеет chrome.tabs: фон адресует команду только родительской игре.
+  if(DOCKED){const answer=await chrome.runtime.sendMessage({cmd:'lifestoneDockCommand',...request});if(!answer?.ok)throw Error(answer?.reason||'Команда ЛС не выполнена');return;}
+  const tab=action==='scan'?await lsScanTab(rt.char,started,generation):on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
+  if(!tab?.id)throw Error('Откройте страницу аугментации и дождитесь героя');
+  const answer=await chrome.tabs.sendMessage(tab.id,{cmd:'lifestoneCommand',...request});
   if(!answer?.ok)throw Error(answer?.reason||'Команда ЛС не выполнена');
 }
 async function lsAction(action){
-  if(lsActionBusy)return;lsActionBusy=true;let generation=controlGeneration;const who=lsRenderedChar;
+  if(lsActionBusy)return;lsActionBusy=true;let generation=controlGeneration,scanOk=false,expectedStart=null;const who=lsRenderedChar;
+  if(action==='scan'){lsScanPending=true;lsScanFeedbackSet(who,'loading','Читаю оружие из инвентаря…');}
   try{
     if(action==='prepare'&&!$('lsWeapon').value)throw Error('Обновите список и выберите оружие для ЛС');
     if(action==='prepare')await lsSave();
@@ -3207,13 +3265,20 @@ async function lsAction(action){
     if(['prepare','resume'].includes(action)){
       const {on=false}=await chrome.storage.local.get('on');
       if(generation!==controlGeneration)return;
-      if(!on){generation=++controlGeneration;await chrome.storage.local.set({paused:null});if(controlGeneration!==generation)return;await menuPatch({manualKickAt:Date.now()}, {on:true,expectedChar:who});await showWakeResult();if(controlGeneration!==generation)return;}
+      if(!on){generation=++controlGeneration;await chrome.storage.local.set({paused:null});if(controlGeneration!==generation)return;const kick=Date.now();if(typeof DOCKED!=='undefined'&&DOCKED)expectedStart={on:true,kick};await menuPatch({manualKickAt:kick}, {on:true,expectedChar:who});if(expectedStart){await lsCommand('wake',who,expectedStart);wakeWarnSet(null);paintWakeWarn(false);}else await showWakeResult();if(controlGeneration!==generation)return;}
       else if(controlGeneration!==generation)return;
       if(!(await chrome.storage.local.get('on')).on)throw Error('Бот остановлен');
-      await lsCommand('resume',who);
-    } else await lsCommand(action,who);
-  }catch(e){toast('ЛС: '+String(e.message||e),'var(--bad)');}
-  finally{lsActionBusy=false;if(action==='scan')await lsRefreshWeapons(who);await lsRefresh();}
+      await lsCommand('resume',who,expectedStart);
+    } else {await lsCommand(action,who);scanOk=action==='scan';}
+  }catch(e){const message='ЛС: '+String(e.message||e).slice(0,220);if(action==='scan'&&lsScanFeedback?.char===who)lsScanFeedbackSet(who,'error',message);toast(message,'var(--bad)');}
+  finally{
+    if(action==='scan'){
+      try{const items=await lsRefreshWeapons(who);if(scanOk&&lsScanFeedback?.char===who)lsScanFeedbackSet(who,Array.isArray(items)?'success':'error',Array.isArray(items)?`Прочитано оружия: ${items.length}. Вставка не запускалась.`:'ЛС: Персонаж или раздел изменился — обновите раздел ЛС');}
+      catch(e){if(lsScanFeedback?.char===who)lsScanFeedbackSet(who,'error','ЛС: Не удалось показать список оружия — повторите чтение');}
+      lsScanPending=false;lsScanFeedbackView(lsScanFeedback?.char??who);
+    }
+    lsActionBusy=false;try{await lsRefresh();}catch(e){if(action!=='scan')throw e;if(lsScanFeedback?.char===who&&lsScanFeedback.phase!=='error')lsScanFeedbackSet(who,'error','ЛС: Не удалось прочитать сохранённый список — повторите чтение');}
+  }
 }
 for(const [id,action] of Object.entries({lsScanWeapons:'scan',lsStart:'prepare',lsResume:'resume',lsPause:'pause',lsReconcile:'reconcile',lsClose:'close',lsAcknowledge:'acknowledge'}))$(id).onclick=()=>lsAction(action);
 panelRefresher($('lsRun'),lsRefresh,500);

@@ -1,0 +1,1402 @@
+{
+  "at": "2026-10-20T05:31:06.561Z",
+  "version": "20.35",
+  "firefox": "153.5.0esr",
+  "geckodriver": "0.37.1",
+  "result": "PASS",
+  "nativeCases": 11,
+  "boundary": "Isolated native Firefox profiles; every game URL resolves via network.dns.localDomains to loopback HTTPS only, missing routes503. WebDriver acceptInsecureCerts applies only to this local fixture; download TLS verification unchanged. No live account or credentials.",
+  "cases": [
+    {
+      "name": "empty stock: VIP teleport, LS3 Gem3 batch, early goal leaves1pair",
+      "result": "PASS",
+      "attempts": 2,
+      "posts": [
+        {
+          "path": "/game/mammon/teleport",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          }
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 101
+          }
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 3,
+            "expectedRevision": 102
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 104,
+            "operation": "install"
+          }
+        }
+      ],
+      "postCount": 5,
+      "appliedMutations": 5,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 2,
+        "spentAA": 480000,
+        "spentAdena": 300000,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 1,
+        "gem": 1,
+        "aa": 1520000,
+        "adena": 1700000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 20000,
+        "worldY": 25000
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/teleport"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/merchant/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/drops-shop/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "only Life Stone deficit: batchLS3 and no extra Gemstone",
+      "result": "PASS",
+      "attempts": 1,
+      "posts": [
+        {
+          "path": "/game/mammon/teleport",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          }
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 101
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 102,
+            "operation": "install"
+          }
+        }
+      ],
+      "postCount": 3,
+      "appliedMutations": 3,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 1,
+        "spentAA": 480000,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 2,
+        "gem": 2,
+        "aa": 1520000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 20000,
+        "worldY": 25000
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/teleport"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/merchant/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "only Gemstone deficit: batchGem3 without merchant or LS",
+      "result": "PASS",
+      "attempts": 1,
+      "posts": [
+        {
+          "path": "/game/drops-shop/buy",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 3,
+            "expectedRevision": 100
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 101,
+            "operation": "install"
+          }
+        }
+      ],
+      "postCount": 2,
+      "appliedMutations": 2,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 1,
+        "spentAA": 0,
+        "spentAdena": 300000,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 2,
+        "gem": 2,
+        "aa": 2000000,
+        "adena": 1700000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/drops-shop/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "limited AA: stockLS1 AA500k max10 becomes4 atomically",
+      "result": "PASS",
+      "attempts": 4,
+      "posts": [
+        {
+          "path": "/game/mammon/teleport",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          }
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 101
+          }
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 4,
+            "expectedRevision": 102
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 104,
+            "operation": "install"
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 105,
+            "operation": "install"
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 106,
+            "operation": "install"
+          }
+        }
+      ],
+      "postCount": 7,
+      "appliedMutations": 7,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 4,
+        "spentAA": 480000,
+        "spentAdena": 400000,
+        "maxAttempts": 4,
+        "cfgMaxAttempts": 4,
+        "uiMaxAttempts": 4,
+        "ls": 0,
+        "gem": 0,
+        "aa": 20000,
+        "adena": 1600000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 20000,
+        "worldY": 25000
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/teleport"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/merchant/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/drops-shop/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "zero AA budget blocks all mutations without setting max0",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [],
+      "postCount": 0,
+      "appliedMutations": 0,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "paused",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 0,
+        "gem": 0,
+        "aa": 2000000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "zero adena budget pauses without reducing max or spending",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [],
+      "postCount": 0,
+      "appliedMutations": 0,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "paused",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 0,
+        "gem": 0,
+        "aa": 2000000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "insufficient adena reserve pauses before free teleport",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [],
+      "postCount": 0,
+      "appliedMutations": 0,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "paused",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 0,
+        "gem": 0,
+        "aa": 2000000,
+        "adena": 250000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/drops-shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "lost batchLS3 receipt: no replay, explicit reconcile",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [
+        {
+          "path": "/game/mammon/merchant/buy",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 100
+          }
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 100
+          }
+        }
+      ],
+      "postCount": 2,
+      "appliedMutations": 1,
+      "automaticStaleRevisionConflicts": 1,
+      "resourceTimings": [
+        {
+          "duration": 3,
+          "initiatorType": "fetch",
+          "startTime": 1389
+        }
+      ],
+      "final": {
+        "status": "paused",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 480000,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 3,
+        "gem": 3,
+        "aa": 1520000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 20000,
+        "worldY": 25000
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/merchant/buy"
+        },
+        {
+          "method": "POST",
+          "path": "/game/mammon/merchant/buy"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "lost augmentation receipt: Firefox retry409 keeps one applied attempt",
+      "result": "PASS",
+      "attempts": 1,
+      "posts": [
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 100,
+            "operation": "install"
+          }
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "body": {
+            "expectedRevision": 100,
+            "operation": "install"
+          }
+        }
+      ],
+      "postCount": 2,
+      "appliedMutations": 1,
+      "automaticStaleRevisionConflicts": 1,
+      "resourceTimings": [
+        {
+          "duration": 2,
+          "initiatorType": "fetch",
+          "startTime": 1045
+        }
+      ],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 1,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 2,
+        "gem": 2,
+        "aa": 2000000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "POST",
+          "path": "/character/weapon-augmentation"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    },
+    {
+      "name": "Stop during held batch quote cancels all spending",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [],
+      "postCount": 0,
+      "appliedMutations": 0,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "running",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 0,
+        "gem": 3,
+        "aa": 2000000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant/shop"
+        },
+        {
+          "method": "GET",
+          "path": "/game/mammon/merchant"
+        }
+      ]
+    },
+    {
+      "name": "existing target needs no material quotes or purchases",
+      "result": "PASS",
+      "attempts": 0,
+      "posts": [],
+      "postCount": 0,
+      "appliedMutations": 0,
+      "automaticStaleRevisionConflicts": 0,
+      "resourceTimings": [],
+      "final": {
+        "status": "done",
+        "pendingKind": null,
+        "attempts": 0,
+        "spentAA": 0,
+        "spentAdena": 0,
+        "maxAttempts": 3,
+        "cfgMaxAttempts": 3,
+        "uiMaxAttempts": 3,
+        "ls": 0,
+        "gem": 0,
+        "aa": 2000000,
+        "adena": 2000000,
+        "col": 17,
+        "fastAden": 11,
+        "worldX": 0,
+        "worldY": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/char.html"
+        },
+        {
+          "method": "GET",
+          "path": "/favicon.ico"
+        },
+        {
+          "method": "GET",
+          "path": "/augmentation.html"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        },
+        {
+          "method": "GET",
+          "path": "/character/catalog-hints"
+        },
+        {
+          "method": "GET",
+          "path": "/game/time"
+        },
+        {
+          "method": "GET",
+          "path": "/game/daily-quests"
+        },
+        {
+          "method": "GET",
+          "path": "/character"
+        }
+      ]
+    }
+  ]
+}
