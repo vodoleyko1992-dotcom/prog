@@ -1067,6 +1067,34 @@ chrome.tabs.onRemoved.addListener(tabId => {
   }).catch(e => console.warn('[L2bot] lock tab close', e));
 });
 
+// 20.10, лог06:56: чтение рюкзака из встроенного меню Firefox через фон, без запуска бота.
+async function mammonBagDockAnalyze(m, sender) {
+  const denied = reason => ({ ok: false, reason });
+  try {
+    const page = new URL(sender?.url || ''), menu = new URL(chrome.runtime.getURL('popup.html'));
+    if (sender?.id !== chrome.runtime.id || page.protocol !== menu.protocol || page.host !== menu.host || page.pathname !== menu.pathname || page.searchParams.get('dock') !== '1'
+      || !Number.isInteger(sender.frameId) || sender.frameId <= 0 || !Number.isInteger(sender.tab?.id) || sender.tab.id < 0)
+      return denied('Анализ доступен только из встроенного меню игры');
+    if (typeof m.expectedChar !== 'string' || !m.expectedChar || !Number.isSafeInteger(m.goalItem) || m.goalItem < 0 || !Number.isSafeInteger(m.goalLvl) || m.goalLvl < 1 || m.goalLvl > 5)
+      return denied('Некорректный запрос анализа рюкзака');
+    const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
+    if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl)
+      return denied('Вкладка игры закрыта или загружается — повторите анализ');
+    const { rt = {}, cfg = {}, lock = null } = await chrome.storage.local.get(['rt', 'cfg', 'lock']);
+    if (rt.char !== m.expectedChar) return denied('Персонаж изменился — обновите меню');
+    if ((+cfg.mmGoalItem || 0) !== m.goalItem || (+cfg.mmGoalLvl || 5) !== m.goalLvl) return denied('Цель изменилась — обновите меню');
+    if (Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < LOCK_TTL && lock.tab !== sender.tab.id)
+      return denied('Управление у другой вкладки — откройте её меню');
+    const command = { cmd: 'mammonBagAnalyze', expectedChar: m.expectedChar, goalItem: m.goalItem, goalLvl: m.goalLvl };
+    let timer;
+    try {
+      const answer = await Promise.race([chrome.tabs.sendMessage(sender.tab.id, command, { frameId: 0 }),
+        new Promise(resolve => { timer = setTimeout(() => resolve(denied('Вкладка игры не ответила на анализ — обновите страницу')), 20000); })]);
+      return answer?.ok === true ? { ok: true } : denied(typeof answer?.reason === 'string' ? answer.reason.slice(0, 220) : 'Не удалось прочитать рюкзак — обновите вкладку игры');
+    } finally { clearTimeout(timer); }
+  } catch (_) { return denied('Не удалось передать анализ во вкладку игры — обновите страницу'); }
+}
+
 // 20.33 (скрин20.10 14:31): Firefox не даёт tabs встроенному меню; фон адресует только его родителя.
 async function lifestoneDockCommand(m, sender) {
   const denied=reason=>({ok:false,reason});
@@ -1106,6 +1134,9 @@ async function lifestoneDockCommand(m, sender) {
 }
 
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'mammonBagDockAnalyze') {
+    mammonBagDockAnalyze(m, _s).then(reply).catch(() => reply({ ok: false, reason: 'Не удалось прочитать рюкзак' })); return true;
+  }
   if(m?.cmd==='lifestoneDockCommand'){
     lifestoneDockCommand(m,_s).then(reply).catch(()=>reply({ok:false,reason:'Команда ЛС не выполнена'}));return true;
   }
