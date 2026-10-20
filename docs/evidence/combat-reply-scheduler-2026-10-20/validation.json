@@ -100,5 +100,6 @@
     "zipChanged": false,
     "rigidMultiTurnPlanAdded": false
   },
-  "next": "Include in a separately requested build, then measure fresh real combat logs."
+  "next": "Include in a separately requested build, then measure fresh real combat logs.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/311"
 }
