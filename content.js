@@ -1395,6 +1395,9 @@ const rtWriter = L2EngineCore.createPatchQueue(
 );
 // 8.0 (аудит ядра/боя): часть записей в бою больше не ждём (память вкладки обновлена сразу). Чтобы при уходе со страницы
 // (location.href, перезагрузка) недописанное не пропало — отправляем остаток очереди сразу, без ожидания ответа
+let pageGone = false;   // 20.41 (ревью 2): только pagehide/pageshow — beforeunload ставит pageLeaving ещё до ответа сервера на переход
+addEventListener('pageshow', () => { pageGone = false; });
+addEventListener('pagehide', () => { pageGone = true; });
 addEventListener('pagehide', () => {
   try {
     try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
@@ -1404,8 +1407,9 @@ addEventListener('pagehide', () => {
 });
 // 20.41 (ревью): отложенная статистика (до 8 с) при уходе вкладки в фон пишется сразу: замок обычно переходит к другой вкладке,
 // когда эта не видна, а после потери замка неотправленная очередь сбрасывается. Уход со страницы — не здесь: остаток уже отправил
-// pagehide (pageLeaving ставят beforeunload/pagehide раньше скрытия документа), иначе каждая навигация писала бы память дважды.
-document.addEventListener('visibilitychange', () => { if (document.hidden && !pageLeaving && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
+// pagehide (он раньше скрытия документа при выгрузке), иначе каждая навигация писала бы память дважды. Переход, ещё ждущий ответа
+// сервера, и отменённый переход запись при уходе в фон не выключают.
+document.addEventListener('visibilitychange', () => { if (document.hidden && !pageGone && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };
@@ -6655,7 +6659,11 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.rt?.newValue?._src === 'menu' && ch.rt.oldValue) {
     // 20.41 (ревью): только чистая статистика (MENU_STAT_KEYS). rbTimer сливается, а намерения/оплаты/маршруты вкладки, как и раньше,
     // пишутся последней записью — их отмена из-за постороннего изменения меню потеряла бы подтверждённое намерение перед действием.
-    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], keys = Object.keys(q).filter(k => stat.includes(k) && JSON.stringify(o[k]) !== JSON.stringify(n[k]));
+    // Повторный сброс тех же нулей значение не меняет — признак сброса тогда новая метка menuKeyRev. Смена класса в очереди (classCur
+    // с памятью боя нового класса из classStash) — замена набора, а не старая статистика: её не трогаем.
+    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], rev = k => +(n.menuKeyRev?.[k] || 0) !== +(o.menuKeyRev?.[k] || 0);
+    const swap = q.classCur && JSON.stringify([q.classCur.prof, q.classCur.slot]) !== JSON.stringify([n.classCur?.prof, n.classCur?.slot]);
+    const keys = swap ? [] : Object.keys(q).filter(k => stat.includes(k) && (rev(k) || JSON.stringify(o[k]) !== JSON.stringify(n[k])));
     if (keys.length) rtWriter.drop(keys);
   }
   const timerPrevious = rt;

@@ -61,7 +61,7 @@ test('изменение памяти из меню снимает свои не
 });
 // 20.41 (ревью 2): уход со страницы (pageLeaving) остаток уже отправил pagehide — здесь только уход вкладки в фон.
 test('вкладка уходит в фон: отложенная статистика пишется сразу (recover), пока замок ещё у неё',()=>{
- const src=read('content.js');assert.match(src,/addEventListener\('visibilitychange', \(\) => \{ if \(document\.hidden && !pageLeaving && tabOwner && leaseEpoch && !tabIdle\) rtWriter\.recover\(\)/);
+ const src=read('content.js');assert.match(src,/addEventListener\('visibilitychange', \(\) => \{ if \(document\.hidden && !pageGone && tabOwner && leaseEpoch && !tabIdle\) rtWriter\.recover\(\)/);
  const core=require('../engine-core.js'),sent=[],q=core.createPatchQueue(async b=>{sent.push(b);return{ok:true}},()=>true,()=>{},()=>Date.now(),{set:()=>0,clear(){}});
  q.defer({exp:5});return q.recover().then(()=>assert.deepEqual(JSON.parse(JSON.stringify(sent)),[{exp:5}]));
 });

@@ -34,10 +34,10 @@ test('фон: без menuRev (старое сообщение) — прежня�
  const S=store(),B=background(S);await B.menu({lootStat:{}});
  await B.state({lootStat:{x:1},menuRev:0,menuKeyRev:{}});assert.deepEqual(S.rt.lootStat,{x:1});assert.equal(S.rt.menuRev,1);assert.deepEqual(S.rt.menuKeyRev,{lootStat:1});
 });
-test('меню: метка только у изменённой статистики; не статистика и равные значения её не получают',async()=>{
+test('меню: метка у статистики из команды меню; команды без статистики её не получают',async()=>{
  const S=store(),B=background(S);
  await B.menu({rbGo:null,fishTgt:null,manualKickAt:3});assert.equal(S.rt.menuRev,undefined,'команды меню без статистики — без метки');
- await B.menu({kills:500,exp:0});assert.equal(S.rt.menuRev,1);assert.deepEqual(S.rt.menuKeyRev,{exp:1},'kills не изменился');
+ await B.menu({exp:0});assert.equal(S.rt.menuRev,1);assert.deepEqual(S.rt.menuKeyRev,{exp:1},'только ключи команды');
  await B.menu({fightMem:{},fightLast:null,fightGroups:{},packLab:null});assert.equal(S.rt.menuRev,2);assert.deepEqual(S.rt.menuKeyRev,{exp:1,fightMem:2,fightLast:2,fightGroups:2,packLab:2});
 });
 test('гонка целиком: ↺ в очереди фона, пакет вкладки ушёл до того, как вкладка увидела сброс',async()=>{
@@ -54,9 +54,9 @@ test('гонка целиком: ↺ в очереди фона, пакет вк
 test('content: menuRev в каждой записи вкладки и в pagehide; сброс меню снимает только статистику (rbTimer и намерения — нет)',()=>{
  const src=read('content.js');
  assert.match(src,/patch => ipc\(\{ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt\.char \|\| '', menuRev: \+rt\.menuRev \|\| 0 \}\)/);
- const a=src.indexOf("addEventListener('pagehide', () => {"),ph=src.slice(a,src.indexOf('});',a));assert.match(ph,/menuRev: \+rt\.menuRev \|\| 0/);
+ const a=src.indexOf("addEventListener('pagehide', () => {\n"),ph=src.slice(a,src.indexOf('});',a));assert.match(ph,/menuRev: \+rt\.menuRev \|\| 0/);
  const b=src.indexOf('chrome.storage.onChanged.addListener(ch => {'),part=src.slice(b,src.indexOf('const timerPrevious = rt;',b));
- assert.match(part,/stat = globalThis\.L2EngineCore\?\.MENU_STAT_KEYS \|\| \[\], keys = Object\.keys\(q\)\.filter\(k => stat\.includes\(k\) && JSON\.stringify/);assert.ok(!core.MENU_STAT_KEYS.includes('rbTimer'));
+ assert.match(part,/stat = globalThis\.L2EngineCore\?\.MENU_STAT_KEYS \|\| \[\]/);assert.match(part,/keys = swap \? \[\] : Object\.keys\(q\)\.filter\(k => stat\.includes\(k\) && \(rev\(k\) \|\| JSON\.stringify/);assert.ok(!core.MENU_STAT_KEYS.includes('rbTimer'));
  for(const k of ['rbGo','actionPayments','actionOwner','fishCastPending','buffAt','farmQuota','dailyQuota'])assert.ok(!core.MENU_STAT_KEYS.includes(k),k);
 });
 test('↺ сессии и сбросы лута/памяти боя в меню целиком попадают под защиту (кроме намерений покупки баффов)',()=>{
@@ -65,9 +65,43 @@ test('↺ сессии и сбросы лута/памяти боя в меню 
  for(const k of [...loot,...mem])assert.ok(core.MENU_STAT_KEYS.includes(k),k);
  for(const k of ['kills','exp','sp','adena','rbKills','loot','lootSpecial','lootValue'])assert.ok(sess.includes(k)&&core.MENU_STAT_KEYS.includes(k),k);
 });
+// Только pagehide/pageshow: переход, ждущий ответа сервера (beforeunload уже был), запись при уходе вкладки в фон не выключает.
 test('уход со страницы пишет остаток один раз: скрытие документа при уходе не повторяет запись pagehide',()=>{
  const src=read('content.js');
- assert.match(src,/addEventListener\('visibilitychange', \(\) => \{ if \(document\.hidden && !pageLeaving && tabOwner && leaseEpoch && !tabIdle\) rtWriter\.recover\(\)/);
- assert.match(src,/addEventListener\('beforeunload', \(\) => \{ pageLeaving = true; \}\);\naddEventListener\('pagehide', \(\) => \{ pageLeaving = true; \}\);/);
- assert.match(src,/addEventListener\('pageshow', e => \{\n  pageLeaving = false;/);
+ assert.match(src,/addEventListener\('visibilitychange', \(\) => \{ if \(document\.hidden && !pageGone && tabOwner && leaseEpoch && !tabIdle\) rtWriter\.recover\(\)/);
+ assert.match(src,/let pageGone = false;[^\n]*\naddEventListener\('pageshow', \(\) => \{ pageGone = false; \}\);\naddEventListener\('pagehide', \(\) => \{ pageGone = true; \}\);/);
+ const fired=[],box={document:{hidden:false},addEventListener:(t,f)=>fired.push([t,f])},a=src.indexOf('let pageGone = false;'),b=src.indexOf('function setRt(p) {');
+ let recovers=0;Object.assign(box,{tabOwner:true,leaseEpoch:'e',tabIdle:false,rtWriter:{peek:()=>({}),recover:()=>{recovers++;return Promise.resolve()}},L2V7Modules:{},quietErr(){},chrome:{runtime:{sendMessage(){}}},rt:{}});
+ box.document.addEventListener=(t,f)=>fired.push(['doc:'+t,f]);vm.runInNewContext(src.slice(a,b),box);
+ const on=t=>fired.filter(x=>x[0]===t).forEach(x=>x[1]({}));
+ box.document.hidden=true;on('doc:visibilitychange');assert.equal(recovers,1,'уход в фон — запись');
+ on('pagehide');on('doc:visibilitychange');assert.equal(recovers,1,'выгрузка — без второй записи');
+ on('pageshow');on('doc:visibilitychange');assert.equal(recovers,2,'после bfcache снова пишет');
+});
+// 20.41 (ревью 2, проверка исправлений): повторный ↺ тех же нулей, смена класса в полёте, кэш памяти боя модуля.
+test('повторный ↺ при нулях в хранилище — тоже сброс: старая отложенная статистика не пишется',async()=>{
+ const S=store(),B=background(S);await B.menu({kills:0,exp:0});assert.equal(S.rt.menuRev,1);
+ await B.menu({kills:0,exp:0});assert.equal(S.rt.menuRev,2,'метка ставится и без изменения значения');
+ await B.state({kills:2,exp:40},{menuRev:1});assert.equal(S.rt.kills,0);assert.equal(S.rt.exp,0);
+ const src=read('content.js');assert.match(src,/rev = k => \+\(n\.menuKeyRev\?\.\[k\] \|\| 0\) !== \+\(o\.menuKeyRev\?\.\[k\] \|\| 0\)/);
+});
+test('смена класса со старым menuRev: память боя нового класса из classStash не отсекается',async()=>{
+ const S=store();S.rt.classCur={prof:'human_warlock',slot:0};const B=background(S);await B.menu({fightMem:{},fightLast:null,fightGroups:{},packLab:null});
+ await B.state({fightMem:{'m:x':{n:5}},packLab:{v:1},classCur:{prof:'bishop',slot:1,t:2},classStash:{}},{menuRev:0});
+ assert.deepEqual(S.rt.fightMem,{'m:x':{n:5}});assert.deepEqual(S.rt.packLab,{v:1});assert.equal(S.rt.classCur.prof,'bishop');
+ await B.state({fightMem:{'m:y':{n:1}},classCur:{prof:'bishop',slot:1,t:3}},{menuRev:0});assert.deepEqual(S.rt.fightMem,{'m:x':{n:5}},'тот же класс — обычная защита');
+});
+test('сброс памяти боя из меню сбрасывает и неписаный кэш модуля боя (rebase не возвращает старую память)',async()=>{
+ const hook=read('hook.js'),btOf=vm.runInNewContext(hook.slice(hook.indexOf('  const btOf = '),hook.indexOf('  const pvOf ='))+';btOf');
+ const seq=require('./fixtures/olkuth-battle-sequence.json'),spawn=seq[0].data.battle.spawnId;
+ const make=()=>{let now=100000,rid=0,fail=true;const rt={char:'Hero',classCur:{prof:'warlock',slot:0}},writes=[];
+  const env={rt,cfg:{},routeLocation:{search:'?spawnId='+spawn},mobTitle:()=>'Last Lesser Giant Olkuth',actName:x=>x,rec(){},
+   setRt:p=>{if(!('fightMem' in p))return Promise.resolve({ok:true});writes.push(p);if(fail){fail=false;return Promise.resolve({ok:false,reason:'ownership_lost'})}Object.assign(rt,p);return Promise.resolve({ok:true})}};
+  const box={Date:{now:()=>now},URLSearchParams};vm.runInNewContext(read('modules/fightlab.js'),box);const L=box.L2V7Factories.fightlab(env);
+  return {rt,L,writes,run:async()=>{for(const e of seq){now=100000+e.at;L.onNet(e.path,{status:200,rid:++rid,req:{action:'test-action'},res:e.data,bt:btOf({pathname:e.path},e.data)})}await flush()}}};
+ const a=make();await a.run();const n=a.writes.length;assert.ok(n>=1);
+ a.rt.fightMem={};a.rt.menuKeyRev={fightMem:1};a.L.flush();await flush();
+ assert.equal(a.writes.length,n,'после сброса старая память не дописывается');assert.deepEqual(a.rt.fightMem,{});
+ const b=make();await b.run();const m=b.writes.length;b.rt.fightMem={};b.L.flush();await flush();
+ assert.equal(b.writes.length,m+1,'без метки сброса — прежнее объединение и повтор');assert.ok(Object.keys(b.rt.fightMem).length);
 });

@@ -105,14 +105,21 @@ function parseLog(lines, mob, actor = '') {
 
 // ---------- текущий бой ----------
 const seenRequests = new Set();
-let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false;
+let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false, cacheRev = null;
+// 20.41 (ревью 2): «Сбросить память боя» в меню (метка menuKeyRev.fightMem) сбрасывает и кэш модуля с ещё не записанными боями —
+// иначе rebase/flush вернули бы в хранилище всю прежнюю память поверх сброса.
+function menuReset() {
+  const rev = +(env.rt.menuKeyRev?.fightMem || 0);
+  if (cacheRev === null) cacheRev = rev;
+  else if (rev !== cacheRev) { cacheRev = rev; cache = null; cacheCls = ''; dirty = false; lastFight = null; }
+}
 // 15.10, аудит: класс/персонаж сменился без reload — незавершённый старый бой не пишется в новую память.
 function syncOwner() {
   const current = groupOwner(); if (owner === current) return;
   ownerAwaiting = !!owner; owner = current; F = null; last = null; cache = null; cacheCls = ''; dirty = false; lastFight = null; flushT = 0;
 }
 function mem() {
-  syncOwner();
+  syncOwner(); menuReset();
   const cls = env.rt.classCur?.prof || '';
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
     cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
@@ -634,7 +641,7 @@ function finish(outcome, now = Date.now()) {
   return sum;
 }
 function flush() {
-  syncOwner();
+  syncOwner(); menuReset();
   packFlush();
   if (!dirty || !cache) return;
   rebase();

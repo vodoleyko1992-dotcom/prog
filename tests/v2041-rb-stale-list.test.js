@@ -135,3 +135,10 @@ test('явная цена страницы заменяет сохранённу
   await m2.R.rbHuntStep();
   assert.equal(m2.env.rt.rbList[OTHER].unit, '');assert.ok(!Number.isFinite(m2.env.rt.rbList[OTHER].price));
 });
+test('VIP: подпись «0» без единицы тоже не стирает подтверждённую бесплатную цену соседа', async () => {
+  const doc = docOf(`<div id="rb-list">${vipRow(ID, 'Audit Raid', false, 'VIP')}${vipRow(OTHER, 'Other Raid', true, '0')}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  Object.assign(m.env.rt.rbList[OTHER], { price: 0, unit: 'аден', priceText: '(Аден 0)' });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbList[OTHER].unit, 'аден');assert.equal(m.env.rt.rbList[OTHER].price, 0);
+});
