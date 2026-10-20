@@ -74,24 +74,78 @@ test('noteBattle без L2EngineCore пишет короткую строку и
  const r=x.env.rt.petCohorts[id];assert.equal(r.fights,2);assert.equal(r.hits,5);assert.equal(r.hitDmg,7500);assert.equal(r.misses,1);assert.equal(r.acts,7);
  assert.equal(Object.keys(x.env.rt.petCohorts).length,40);
 });
-// Очистка при загрузке: кусок блока миграций content.js от новой строки до записи rf, и начало loopMigrations (запись отложенного после замка).
-const loadCut=(()=>{const a=C.indexOf('{ const pc = rt.petCohorts;'),b=C.indexOf('else setRt(rf);\n  }',a)+'else setRt(rf);\n  }'.length;assert.ok(a>0&&b>a);return C.slice(a,b)})();
-const loopCut=(()=>{const a=C.indexOf('async function loopMigrations() {'),m='  if (cfgStale) deferredMigrations.cfg = {};',b=C.indexOf(m,a);assert.ok(a>0&&b>a);return C.slice(a,b)+'}'})();
-function boot(x,state){
- const calls=[],c={rt:{...state},rf:{},on:false,tabOwner:false,deferredMigrations:{cfg:{},rt:{}},L2V7Modules:{warlock:x.api()},L2EngineCore:{rawTaskConfig:v=>v},cfg:{},Object,
-  migApplied:(patch,...states)=>Object.keys(patch).some(k=>patch[k]===1&&states.some(s=>s&&s[k])),setRt:p=>{calls.push(JSON.parse(JSON.stringify(p)));Object.assign(c.rt,p);return Promise.resolve({ok:true})}};
- vm.runInNewContext(loopCut,c);return {c,calls,load:(o={})=>{Object.assign(c,{rf:{},...o});vm.runInNewContext(loadCut,c)}};
+// Очистка при загрузке и после замка — настоящие куски content.js в одной песочнице: верхние migApplied/petCohortsFat, блок миграций
+// от новой строки до записи rf, loopLease (перечитывает хранилище при получении замка) и loopMigrations. Хранилище и фон — модель:
+// statePatch принимает запись только для героя, который сейчас в хранилище (expectedChar = rt.char вкладки).
+const cut=(a,b)=>{const i=C.indexOf(a),j=C.indexOf(b,i);assert.ok(i>=0&&j>i,a);return C.slice(i,j)};
+const topCut=['const migApplied = ','const petCohortsFat = '].map(a=>cut(a,'\n')+'\n').join('');
+const loadCut=cut('{ const slim = L2V7Modules.warlock?.slimCohorts;','  try { dock(); }');
+const loopCut=cut('async function loopLease() {','// Сервер/вход/антибот');
+function tab(x,store,o={}){
+ const writes=[],order=[],c=vm.createContext({console,store,on:true,tabOwner:false,leaseOk:true,fail:0,hero:o.hero||store.rt.char,rf:{},cfg:{},rt:J(store.rt),DEF_RT:{},
+  deferredMigrations:{cfg:{},rt:{},petSlim:false},L2V7Modules:{warlock:x.api()},L2EngineCore:{rawTaskConfig:v=>v},window:{__lockT:0},location:{pathname:'/map.html'},
+  chrome:{runtime:{getManifest:()=>({version:'20.41'})},storage:{local:{get:async()=>J(store)}}},rtWriter:{clear(){}},mergeCfg:v=>v||{},
+  tabLock:async()=>{if(!c.leaseOk)return false;c.tabOwner=true;return true},setStatus(){},tabVis:()=>true,sleep:async()=>{},rec(){},stopPendRetry:async()=>false,setCfg:async()=>{},
+  heroNick:()=>c.hero,switchChar:async()=>{order.push('switch:'+c.hero)},
+  setRt:p=>{c.rt={...c.rt,...p};const char=c.rt.char||'';if(c.fail){c.fail--;return Promise.resolve({ok:false,reason:'write_failed'})}
+   if(store.rt.char!==char)return Promise.resolve({ok:false,reason:'char'});writes.push({char,keys:Object.keys(p)});order.push('write:'+char);Object.assign(store.rt,J(p));return Promise.resolve({ok:true})}});
+ vm.runInContext(topCut+loopCut,c);
+ return {c,writes,order,load:(v={})=>{Object.assign(c,{rf:{},...v});vm.runInContext(loadCut,c)},tick:async()=>await c.loopLease()||await c.loopMigrations()};
 }
-test('загрузка: старые строки ужимаются одной записью, следующая загрузка ничего не пишет',()=>{
- const x=fat(fixture()),b=boot(x,{char:'hero',petCohorts:legacy(x)});
- b.load();assert.equal(b.calls.length,1);const p=b.calls[0].petCohorts;assert.equal(Object.keys(p).length,40);assert.ok(Object.values(p).every(r=>!r.hero&&!r.snapshotKey));
- b.load();assert.equal(b.calls.length,1,'второй загрузке писать нечего');assert.equal(Object.keys(b.c.rf).length,0);
- const e=boot(x,{char:'hero'});e.load();assert.equal(e.calls.length,0);
+const heroB=()=>fat(fixture({rt:{char:'B'},char:{name:'B'}}));
+const ids=m=>Object.keys(m).sort();
+test('загрузка при выключенном боте: старые строки ужимаются одной записью, следующая загрузка ничего не пишет',()=>{
+ const x=fat(fixture()),store={rt:{char:'hero',petCohorts:legacy(x)}},t=tab(x,store);
+ t.load({on:false});assert.equal(t.writes.length,1);const p=store.rt.petCohorts;assert.equal(Object.keys(p).length,40);assert.ok(Object.values(p).every(r=>!r.hero&&!r.snapshotKey));
+ t.load({on:false});assert.equal(t.writes.length,1,'второй загрузке писать нечего');assert.equal(Object.keys(t.c.rf).length,0);
+ const e=tab(x,{rt:{char:'hero'}});e.load({on:false});assert.equal(e.writes.length,0);
  // Очистка не через once(): флаг в общий cfg не ложится, другие герои её тоже получат.
  assert.doesNotMatch(loadCut,/once\(/);
 });
-test('вкладка без замка при включённом боте только откладывает очистку; после замка loopMigrations пишет её',async()=>{
- const x=fat(fixture()),b=boot(x,{char:'hero',petCohorts:legacy(x)});
- b.load({on:true,tabOwner:false});assert.equal(b.calls.length,0);assert.equal(Object.keys(b.c.deferredMigrations.rt.petCohorts).length,40);
- b.c.tabOwner=true;await b.c.loopMigrations();assert.equal(b.calls.length,1);assert.equal(Object.keys(b.calls[0].petCohorts).length,40);assert.deepEqual(J(b.c.deferredMigrations.rt),{});
+// 20.41 (ревью petCohorts, 1): прежде вкладка без замка клала в deferredMigrations.rt готовый словарь, посчитанный при загрузке;
+// после замка он писался поверх строк, которые хозяин успел дописать (migApplied снимает только пакеты с флагом once() = 1).
+test('вкладка без замка откладывает только намерение; после замка ужимает свежий rt одной записью',async()=>{
+ const x=fat(fixture()),store={rt:{char:'hero',petCohorts:legacy(x)}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});assert.equal(t.writes.length,0);assert.equal('petCohorts' in t.c.deferredMigrations.rt,false,'словарь не откладывается');
+ assert.equal(t.c.deferredMigrations.petSlim,true);
+ await t.tick();assert.deepEqual(t.writes,[{char:'hero',keys:['petCohorts']}]);assert.equal(Object.keys(store.rt.petCohorts).length,40);assert.equal(t.c.deferredMigrations.petSlim,false);
+ await t.tick();assert.equal(t.writes.length,1,'повторно не пишет');
+});
+test('ревью 1: пока вкладка ждала замок, хозяин ужал и дописал строки — после замка ничего не затирается',async()=>{
+ const x=fat(fixture()),store={rt:{char:'hero',petCohorts:legacy(x)}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});
+ // Хозяин (другая вкладка): своя очистка, затем бои — счётчики растут, новая строка.
+ const S1=J(x.api().slimCohorts(store.rt.petCohorts)),k0=ids(S1)[0];Object.assign(S1[k0],{fights:51,hits:510});
+ S1['new:row:1']={...S1[k0],fights:1,hits:3,at:x.now()+5};store.rt.petCohorts=J(S1);
+ await t.tick();assert.equal(t.writes.length,0,'свежий rt уже короткий — писать нечего');
+ assert.deepEqual(store.rt.petCohorts,S1);assert.deepEqual(J(t.c.rt.petCohorts),S1);assert.equal(t.c.deferredMigrations.petSlim,false);
+});
+test('ревью 1: в хранилище всё ещё старые строки, но с новыми счётчиками — ужимаются именно они, не снимок загрузки',async()=>{
+ const x=fat(fixture()),old=legacy(x),store={rt:{char:'hero',petCohorts:J(old)}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});
+ const newest=Object.entries(old).sort((a,b)=>b[1].at-a[1].at)[0][0];Object.assign(store.rt.petCohorts[newest],{fights:51,hits:510});
+ await t.tick();assert.equal(t.writes.length,1);const r=store.rt.petCohorts[hash(newest)];assert.equal(r.fights,51);assert.equal(r.hits,510);
+});
+// 20.41 (ревью petCohorts, 2): смена героя не чистит deferredMigrations — словарь героя загрузки уходил в rt другого героя
+// (expectedChar = rt.char вкладки после перечтения).
+test('ревью 2: пока ждали замок, в хранилище сменился герой — строки нового героя целы, чужих строк нет',async()=>{
+ const x=fat(fixture()),xb=heroB(),store={rt:{char:'hero',petCohorts:legacy(x)}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});
+ const B=J(xb.api().slimCohorts(legacy(xb,5)));store.rt={char:'B',petCohorts:J(B)};t.c.hero='B';
+ await t.tick();assert.equal(t.writes.length,0);assert.deepEqual(store.rt.petCohorts,B);
+});
+test('ревью 2: у нового героя свои старые строки — ужимаются его строки, в его rt, до switchChar',async()=>{
+ const x=fat(fixture()),xb=heroB(),A=legacy(x),store={rt:{char:'hero',petCohorts:A}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});
+ const Bfat=legacy(xb,5);store.rt={char:'B',petCohorts:J(Bfat)};   // страница вкладки ещё показывает героя загрузки
+ await t.tick();assert.deepEqual(t.writes,[{char:'B',keys:['petCohorts']}]);assert.deepEqual(t.order,['write:B','switch:hero']);
+ assert.deepEqual(ids(store.rt.petCohorts),ids(Object.fromEntries(Object.keys(Bfat).map(k=>[hash(k),1]))));
+ for(const k of Object.keys(A))assert.equal(hash(k) in store.rt.petCohorts,false,'строк героя загрузки нет');
+});
+test('запись не прошла — намерение остаётся; после потери и нового замка ужимается свежий rt',async()=>{
+ const x=fat(fixture()),store={rt:{char:'hero',petCohorts:legacy(x)}},t=tab(x,store);
+ t.load({on:true,tabOwner:false});t.c.fail=1;
+ await t.tick();assert.equal(t.writes.length,0);assert.equal(t.c.deferredMigrations.petSlim,true);
+ t.c.tabOwner=false;await t.tick();assert.deepEqual(t.writes,[{char:'hero',keys:['petCohorts']}]);assert.equal(Object.keys(store.rt.petCohorts).length,40);
+ assert.equal(t.c.deferredMigrations.petSlim,false);
 });
