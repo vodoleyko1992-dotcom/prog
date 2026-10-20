@@ -72,3 +72,9 @@ test('страница подземелья первым делом сверяе
  assert.match(src.slice(a,a+200),/if \(!active\(\)\) return;[^\n]*\n\s*catNatFail\(id\);/);
  const mf=fs.readFileSync(require('node:path').join(__dirname,'../modules/mobfarm.js'),'utf8');assert.match(mf,/if \(ok\) env\.catNatOk\?\.\(\);[^\n]*\n\s*if \(ok \|\| !env\.on\) return;/);
 });
+test('старая метка (больше минуты) — не отказ; свежая в пределах минуты — отказ',()=>{
+ const f=fixture();f.env.rec=()=>{};
+ f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:dungeon,t:Date.now()-61000}}));assert.equal(f.D.catNatFail(dungeon),false);
+ f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:dungeon,t:Date.now()-40000}}));assert.equal(f.D.catNatFail(dungeon),true);
+ f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:'other_dungeon',t:Date.now()}}));assert.equal(f.D.catNatFail(dungeon),false);
+});

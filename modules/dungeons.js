@@ -154,7 +154,7 @@ const natMark = () => { try { return JSON.parse(sessionStorage.getItem(NAT_SS) |
 const natSave = m => { try { sessionStorage.setItem(NAT_SS, JSON.stringify(m)); } catch (_) {} };
 function catNatOk() { const m = natMark(); if (m.wait) natSave({ ...m, wait: null }); }
 function catNatFail(id) {
-  const m = natMark(); if (!m.wait || m.wait.id !== id || Date.now() - m.wait.t > 30000) return false;
+  const m = natMark(); if (!m.wait || m.wait.id !== id || Date.now() - m.wait.t > 60000) return false;   // ожидание до 15 с + загрузка страницы подземелья
   natSave({ ...m, wait: null, off: { ...(m.off || {}), [id]: Date.now() + 1800000 } });
   env.rec?.('B', 'катакомбы', `${env.CAT_LIST?.[id]?.[0] || id}: «Охотиться дальше» не начало бой — 30 мин выбираю мобов сам`);
   return true;
