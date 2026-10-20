@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-20T03:34:19.078212+00:00",
+  "transport": "curl --fail --location, normal session proxy and TLS verification",
+  "files": [
+    {
+      "file": "l2wap-bot-v20.32.zip",
+      "bytes": 1424343,
+      "sha256": "d9319c292014b5a709ea972cd6b46f96cf3dfc2f3721446f5e48c6ac3cd25152",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/529507f96a10e074e3050cd13426665321342a3c/builds/l2wap-bot-v20.32.zip",
+      "exactBytes": true
+    },
+    {
+      "file": "l2wap-bot-v20.32-firefox.zip",
+      "bytes": 1434801,
+      "sha256": "2f398a6bdba669c80d0ae3e8c3ac47c76483ee54ba90275129652ff7fb462474",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/529507f96a10e074e3050cd13426665321342a3c/builds/l2wap-bot-v20.32-firefox.zip",
+      "exactBytes": true
+    }
+  ],
+  "ok": true
+}
