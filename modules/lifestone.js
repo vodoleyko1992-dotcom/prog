@@ -1,10 +1,10 @@
-/* Авто-ЛС: точная цель из каталога игры, конечная серия, только материалы в сумке.
+/* Авто-ЛС: точная цель из каталога игры, конечная серия, ограниченная докупка материалов.
    После перезагрузки продолжение вручную; неизвестная попытка никогда не отправляется повторно. */
 (function(root){'use strict';
  root.L2V7Factories=root.L2V7Factories||Object.create(null);
  root.L2V7Factories.lifestone=function(env){
   const A=root.L2Aug, path='/character/weapon-augmentation';
-  let busy=false, trusted=null, permit=null;
+  let busy=false, trusted=null, permit=null, supplyPermit=null;
   const now=()=>Date.now(), current=()=>env.rt.autoLs, char=()=>String(env.rt.char||'');
   const own=s=>!!s&&s.char===char()&&env.tabOwner===true;
   const live=()=>env.on===true&&env.tabOwner===true&&env.canRun();
@@ -63,8 +63,11 @@
    }catch(_){scanNote('Обновление оружия не выполнено: '+reason);throw Error(reason);}
   }
   const known=id=>typeof id==='string'&&Object.hasOwn(A.OUT,id);
+  const money=v=>{const n=typeof v==='string'&&/^\d+$/.test(v)?+v:v;return Number.isSafeInteger(n)&&n>=0?n:null;};
   function config(){const c=env.cfg.autoLs||{},targets=Array.isArray(c.targets)?[...new Set(c.targets)]:[];
-   return {weaponKey:typeof c.weaponKey==='string'?c.weaponKey:'',targets,maxAttempts:c.maxAttempts,delayMs:1500,valid:targets.length>0&&targets.every(known)&&Number.isSafeInteger(c.maxAttempts)&&c.maxAttempts>=1&&c.maxAttempts<=10000};}
+   return {weaponKey:typeof c.weaponKey==='string'?c.weaponKey:'',targets,maxAttempts:c.maxAttempts,delayMs:1500,
+    buyMaterials:c.buyMaterials===undefined||c.buyMaterials===true,aaBudget:money(c.aaBudget??2000000),adenaBudget:money(c.adenaBudget??2000000),aaReserve:money(c.aaReserve??0),adenaReserve:money(env.cfg.shopReserve??200000),tpMax:money(env.cfg.mmTpMax??500000),
+    valid:targets.length>0&&targets.every(known)&&Number.isSafeInteger(c.maxAttempts)&&c.maxAttempts>=1&&c.maxAttempts<=10000};}
   const sig=c=>JSON.stringify([c.targets,c.maxAttempts,c.weaponKey]);
   const stamp=()=>env.context();
   const allowed=s=>own(s)&&live()&&trusted===s.id&&s.status==='running'&&s.context===stamp()&&s.configSig===sig(config());
@@ -79,8 +82,142 @@
   async function get(p){try{const r=await env.gameGet(p);return r?.ok?await r.json():null;}catch(_){return null;}}
   async function snapshot(){const who=char(),j=await get('/character'),s=j?.character;
    return char()===who&&s?.name===who&&s.inventory?.eq&&Array.isArray(s.inventory.stacks)&&Number.isSafeInteger(s.revision)&&s.revision>=0?s:null;}
-  async function pause(reason){trusted=null;permit=null;const s=current();if(!own(s))return false;await save({...s,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;}
-  async function finish(s,reason){trusted=null;permit=null;await save({...s,status:'done',reason});env.rec?.('B','ЛС',reason);return true;}
+  async function pause(reason){trusted=null;permit=null;supplyPermit=null;const s=current();if(!own(s))return false;await save({...s,status:'paused',reason});env.setStatus?.('ЛС: '+reason);return true;}
+  async function finish(s,reason){trusted=null;permit=null;supplyPermit=null;await save({...s,status:'done',reason});env.rec?.('B','ЛС',reason);return true;}
+  // 20.35: закупка на остаток серии; при нехватке AA предел уменьшается до доступного числа попыток.
+  const policy=c=>JSON.stringify([c.buyMaterials,c.aaBudget,c.adenaBudget,c.aaReserve,c.adenaReserve,c.tpMax]);
+  const policyValid=c=>[c.aaBudget,c.adenaBudget,c.aaReserve,c.adenaReserve,c.tpMax].every(x=>x!==null);
+  const supplyActive=(s,p)=>current()?.id===s.id&&['attempts','maxAttempts','weapon','configSig','context'].every(k=>current()[k]===s[k])&&allowed(current())&&config().buyMaterials&&policyValid(config())&&policy(config())===p;
+  const ledger=s=>{const r={spentAA:money(s.spentAA??0),spentAdena:money(s.spentAdena??0),reservedAA:money(s.reservedAA??0),reservedAdena:money(s.reservedAdena??0)};return Object.values(r).some(x=>x===null)?null:r;};
+  const position=x=>x&&x.worldX!=null&&x.worldY!=null&&String(x.worldX).trim()&&String(x.worldY).trim()&&Number.isFinite(+x.worldX)&&Number.isFinite(+x.worldY)?{x:+x.worldX,y:+x.worldY}:null;
+  const merchantTarget=j=>{const n=j?.mammonMerchant?.current,p=position(n);return p&&typeof n.id==='string'&&n.id?{...p,id:n.id}:null;};
+  const point=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
+  const at=(p,t)=>!!p&&!!t&&p.x===t.x&&p.y===t.y;
+  // Сохранённое намерение недоверенное: импорт/сбой записи не должны создавать отрицательный расход.
+  function validSupply(s,p){
+   if(!p||p.kind!=='supply'||!A.LIFE_STONE[s.grade]||!Number.isSafeInteger(s.maxAttempts)||s.maxAttempts<1||s.maxAttempts>10000||!Number.isSafeInteger(s.attempts)||s.attempts<0||s.attempts>=s.maxAttempts||typeof p.id!=='string'||!p.id||typeof p.policy!=='string'||!Number.isSafeInteger(p.revision)||p.revision<0
+    ||![p.amount,p.ls,p.gem,p.aa,p.adena,p.col,p.fa].every(x=>Number.isSafeInteger(x)&&x>=0)||!['aa','adena'].includes(p.currency)||p.amount>p[p.currency])return false;
+   let body;
+   if(p.action==='travel'){
+    if(p.material!=='teleport'||p.currency!=='adena'||p.qty!==0||p.itemId!=null||!point(p.origin)||!point(p.target)||typeof p.target.id!=='string'||!p.target.id||p.path!=='/game/mammon/teleport')return false;
+    body={kind:'merchant',expectedAdenaCost:p.amount,expectedRevision:p.revision};
+   }else if(p.action==='buy'&&Number.isSafeInteger(p.qty)&&p.qty>=1&&p.qty<=9999&&Number.isSafeInteger(p.unitPrice)&&p.unitPrice>=0&&Number.isSafeInteger(p.unitPrice*p.qty)&&p.amount===p.unitPrice*p.qty){
+    const stock=p.material==='ls'?p.ls:p.gem;if(p.qty!==Math.min(9999,s.maxAttempts-s.attempts-stock))return false;
+    if(p.material==='ls'&&p.currency==='aa'&&p.itemId===A.LIFE_STONE[s.grade]&&p.path==='/game/mammon/merchant/buy')body={category:'life_stones',itemKey:s.grade.toLowerCase(),qty:p.qty,expectedRevision:p.revision};
+    else if(p.material==='gem'&&p.currency==='adena'&&p.itemId===A.GEMSTONE[s.grade]&&p.path==='/game/drops-shop/buy')body={shopKey:'consumable/resource_gemstone_'+s.grade.toLowerCase(),qty:p.qty,expectedRevision:p.revision};
+    else return false;
+   }
+   else return false;
+   return fingerprint(p.body)===fingerprint(body);
+  }
+  async function supplyGet(url){let timer;const request=(async()=>{try{const r=await env.gameGet(url);if(!r?.ok)return null;const j=await r.json();return j&&typeof j==='object'&&!Array.isArray(j)?j:null;}catch(_){return null;}})();
+   try{return await Promise.race([request,new Promise(resolve=>{if(typeof setTimeout==='function')timer=setTimeout(()=>resolve(null),8000);})]);}finally{if(timer!==undefined)clearTimeout(timer);}}
+  async function supplySnapshot(){const who=char(),j=await supplyGet('/character'),s=j?.character;return char()===who&&s?.name===who&&s.inventory?.eq&&Array.isArray(s.inventory.stacks)&&Number.isSafeInteger(s.revision)&&s.revision>=0?s:null;}
+  async function supplyPost(p){let timer;const request=(async()=>{const response=await env.gamePost(p.path,p.body,8000,p.id);return {response,result:[400,401,403,404,409,412,422,423,429].includes(response.status)?null:await response.json()};})();
+   try{return await Promise.race([request,new Promise((_,reject)=>{if(typeof setTimeout==='function')timer=setTimeout(()=>reject(Error('supply_timeout')),8000);})]);}finally{if(timer!==undefined)clearTimeout(timer);}}
+  function quotes(grade,lsShop,gmShop){
+   const lower=grade.toLowerCase(),out={};
+   if(lsShop){const rows=(Array.isArray(lsShop.categories)?lsShop.categories:[]).filter(c=>c?.categoryId==='life_stones').flatMap(c=>Array.isArray(c.items)?c.items:[]).filter(r=>r?.categoryId==='life_stones'&&r.itemKey===lower&&+r.itemId===A.LIFE_STONE[grade]);
+    if(rows.length!==1||money(rows[0].aaPrice)===null||rows[0].priceCoinOfLuck!=null&&money(rows[0].priceCoinOfLuck)!==0||rows[0].priceFastAden!=null&&money(rows[0].priceFastAden)!==0)return null;
+    out.ls={action:'buy',material:'ls',itemId:A.LIFE_STONE[grade],name:'Life Stone '+grade,qty:1,currency:'aa',amount:money(rows[0].aaPrice),path:'/game/mammon/merchant/buy',body:{category:'life_stones',itemKey:lower,qty:1}};
+   }
+   if(gmShop){const rows=(Array.isArray(gmShop.grades)?gmShop.grades:[]).filter(g=>g?.grade===grade).flatMap(g=>Array.isArray(g.sections)?g.sections:[]).filter(c=>c?.category==='consumable').flatMap(c=>Array.isArray(c.items)?c.items:[])
+     .filter(r=>r?.shopKey==='consumable/resource_gemstone_'+lower&&r.category==='consumable'&&r.grade===grade&&r.consumableSubtype==='resources'&&+r.itemId===A.GEMSTONE[grade]&&r.purchasable===true);
+    if(rows.length!==1||money(rows[0].priceAdena)===null||rows[0].priceCoinOfLuck!=null&&money(rows[0].priceCoinOfLuck)!==0||rows[0].priceFastAden!=null&&money(rows[0].priceFastAden)!==0||rows[0].minPurchaseQty!=null&&rows[0].minPurchaseQty!==1)return null;
+    out.gem={action:'buy',material:'gem',itemId:A.GEMSTONE[grade],name:'Gemstone '+grade,qty:1,currency:'adena',amount:money(rows[0].priceAdena),path:'/game/drops-shop/buy',body:{shopKey:rows[0].shopKey,qty:1}};
+   }
+   return out;
+  }
+  async function settleSupply(s,snap,merchant){
+   const p=s.pending,L=ledger(s),ls=qty(snap,A.LIFE_STONE[s.grade]),gem=qty(snap,A.GEMSTONE[s.grade]),aa=qty(snap,5575),adena=money(snap.adena),col=qty(snap,4037),fa=qty(snap,920048);
+   if(!validSupply(s,p)||!L||snap.revision!==p.revision+1||fingerprint(snap.inventory.eq.l1)!==s.weapon||adena===null||ls!==p.ls+(p.material==='ls'?p.qty:0)||gem!==p.gem+(p.material==='gem'?p.qty:0)
+    ||aa!==p.aa-(p.currency==='aa'?p.amount:0)||adena!==p.adena-(p.currency==='adena'?p.amount:0)||col!==p.col||fa!==p.fa)return false;
+   const fresh=p.action==='travel'?merchantTarget(merchant):null,pos=p.action==='travel'?position(snap):null,target=p.action==='travel'?(at(pos,p.target)?p.target:at(pos,fresh)?fresh:null):null;
+   if(p.action==='travel'&&!target)return false;
+   const key=p.currency==='aa'?'AA':'Adena';if(L['reserved'+key]<p.amount||!Number.isSafeInteger(L['spent'+key]+p.amount))return false;
+   const running=allowed(s)&&p.policy===policy(config());
+   const next={...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,['spent'+key]:L['spent'+key]+p.amount,pending:null,status:running?'running':'paused',reason:running?'':'Покупка сверена; продолжение вручную',
+    supplies:[{t:now(),id:p.id,action:p.action,itemId:p.itemId||0,name:p.name,qty:p.qty||0,currency:p.currency,amount:p.amount,revision:snap.revision,...(target?{target,targetSource:target===p.target?'quoted':'current'}:{}),status:'confirmed'},...(s.supplies||[])].slice(0,40)};
+   if(!await save(next,snap.inventory.eq))return false;
+   if(!running){trusted=null;permit=null;supplyPermit=null;}
+   env.rec?.('B','ЛС',`${p.action==='travel'?'Прибытие к Маммону подтверждено':p.name+' +'+p.qty+' подтверждено'}: ${p.amount} ${p.currency==='aa'?'AA':'адены'}; попытки ${s.attempts}/${s.maxAttempts}`);return true;
+  }
+  async function recoverSupply(s,snap){
+   const p=s.pending,L=ledger(s);
+   // Новая revision делает старый POST неприменимым; неизменные остатки доказывают отсутствие покупки.
+   if(!validSupply(s,p)||!L||snap.revision<=p.revision||fingerprint(snap.inventory.eq.l1)!==s.weapon||qty(snap,A.LIFE_STONE[s.grade])!==p.ls||qty(snap,A.GEMSTONE[s.grade])!==p.gem
+    ||qty(snap,5575)!==p.aa||money(snap.adena)!==p.adena||qty(snap,4037)!==p.col||qty(snap,920048)!==p.fa||p.action==='travel'&&!at(position(snap),p.origin))return false;
+   const key=p.currency==='aa'?'AA':'Adena';if(L['reserved'+key]<p.amount)return false;
+   trusted=null;permit=null;supplyPermit=null;
+   return save({...s,...L,['reserved'+key]:L['reserved'+key]-p.amount,pending:null,status:'paused',reason:'Новая ревизия подтверждает отсутствие закупки; продолжение вручную',
+    supplies:[{t:now(),id:p.id,action:p.action,itemId:p.itemId||0,name:p.name,qty:0,currency:p.currency,amount:0,revision:snap.revision,status:'not_applied'},...(s.supplies||[])].slice(0,40)});
+  }
+  function consumeSupplyPermit(id,path,body){const s=current(),p=s?.pending,c=config();
+   if(!validSupply(s,p)||supplyPermit!==p.id||id!==p.id||!supplyActive(s,p.policy)||p.path!==path||fingerprint(body)!==fingerprint(p.body)||!policyValid(c))return false;
+   supplyPermit=null;return true;
+  }
+  async function supply(s,initial){
+   const c=config(),P=policy(c);if(!c.buyMaterials)return finish(s,'Закончились Life Stone или Gemstone '+s.grade+'; автодокупка выключена');
+   if(!policyValid(c))return pause('Неверные лимиты или резервы закупки ЛС');
+   const remaining=s.maxAttempts-s.attempts,missingLS=qty(initial,A.LIFE_STONE[s.grade])<remaining,missingGem=qty(initial,A.GEMSTONE[s.grade])<remaining;
+   const [lsShop,gmShop,merchant]=await Promise.all([missingLS?supplyGet('/game/mammon/merchant/shop'):null,missingGem?supplyGet('/game/drops-shop'):null,missingLS?supplyGet('/game/mammon/merchant'):null]);
+   if(!supplyActive(s,P)||current()?.pending)return true;
+   if(missingLS&&(!lsShop||!merchant)||missingGem&&!gmShop)return pause('Не удалось прочитать свежие цены материалов ЛС');
+   const Q=quotes(s.grade,lsShop,gmShop);if(!Q)return pause('Нет однозначной обычной цены нужного грейда; CoL и тестовые магазины запрещены');
+   const snap=await supplySnapshot();if(!supplyActive(s,P)||current()?.pending)return true;
+   if(!snap||fingerprint(snap.inventory.eq.l1)!==s.weapon)return pause('Оружие или герой изменились перед покупкой');
+   if(s.attempts>=s.maxAttempts)return finish(s,'Достигнут лимит попыток');
+   if(snap.inventory.eq.l1?.augmentation?.outcomeId&&s.targets.includes(snap.inventory.eq.l1.augmentation.outcomeId))return finish(s,'Нужный эффект уже на оружии');
+   const ls=qty(snap,A.LIFE_STONE[s.grade]),gem=qty(snap,A.GEMSTONE[s.grade]),aa=qty(snap,5575),adena=money(snap.adena),col=qty(snap,4037),fa=qty(snap,920048),L=ledger(current());
+   if([ls,gem,aa,adena,col,fa].some(x=>x===null)||!L||L.reservedAA||L.reservedAdena)return pause('Не прочитаны остатки, баланс или прежний резерв закупки');
+   if(ls>=remaining&&gem>=remaining)return true;
+   if(ls<remaining&&!Q.ls||gem<remaining&&!Q.gem)return pause('Материалы изменились во время чтения цен — повторите запуск');
+   if(ls<remaining&&Q.ls.amount>0){
+    const available=Math.max(0,Math.min(aa-c.aaReserve,c.aaBudget-L.spentAA)),extra=Math.floor(available/Q.ls.amount),possible=Math.min(remaining,ls+Math.min(remaining,extra));
+    if(possible<1)return pause('AA не хватает ни на одну оставшуюся попытку с учётом резерва и лимита');
+    if(possible<remaining){
+     const maxAttempts=s.attempts+possible,next={...current(),maxAttempts,configSig:sig({...c,maxAttempts}),reason:`Лимит снижен по доступным AA: ${s.maxAttempts} → ${maxAttempts}`};
+     if(!supplyActive(s,P)||current()?.pending)return true;
+     let reduced=false;try{reduced=(await env.reduceAttempts?.(next))?.ok===true;}catch(_){}
+     if(!reduced)return pause('Не удалось сохранить уменьшенный лимит попыток; закупка не выполнялась');
+     if(current()?.id!==s.id||current()?.maxAttempts!==maxAttempts||config().maxAttempts!==maxAttempts||!allowed(current()))return pause('Лимит изменён, но управление остановлено; продолжение вручную');
+     env.rec?.('B','ЛС',next.reason);return true;
+    }
+   }
+   const batch=(q,n)=>{const qty=Math.min(9999,n);return {...q,qty,unitPrice:q.amount,amount:q.amount*qty,totalAmount:q.amount*n,body:{...q.body,qty}};};
+   const plan=[];
+   if(ls<remaining){const target=merchantTarget(merchant),pos=position(snap),cost=money(merchant?.teleport?.adenaCost);
+    if(!target||!pos||cost===null)return pause('Не подтверждены положение Маммона или цена телепорта');
+    if(Math.hypot(pos.x-target.x,pos.y-target.y)>10800){
+     if(cost>c.tpMax)return pause('Телепорт к Маммону дороже разрешённого лимита');
+     plan.push({action:'travel',material:'teleport',name:'Телепорт к Торговцу Маммона',qty:0,currency:'adena',amount:cost,path:'/game/mammon/teleport',body:{kind:'merchant',expectedAdenaCost:cost},target,origin:pos});
+    }
+    plan.push(batch(Q.ls,remaining-ls));
+   }
+   if(gem<remaining)plan.push(batch(Q.gem,remaining-gem));
+   const costAA=plan.filter(x=>x.currency==='aa').reduce((n,x)=>n+(x.totalAmount??x.amount),0),costAdena=plan.filter(x=>x.currency==='adena').reduce((n,x)=>n+(x.totalAmount??x.amount),0);
+   if(!Number.isSafeInteger(costAA)||!Number.isSafeInteger(costAdena)||!Number.isSafeInteger(L.spentAA+costAA)||!Number.isSafeInteger(L.spentAdena+costAdena))return pause('Сумма закупки не подтверждена');
+   if(costAA>0&&L.spentAA+costAA>c.aaBudget||costAdena>0&&L.spentAdena+costAdena>c.adenaBudget)return pause('Лимит AA или адены для закупки серии исчерпан');
+   if(costAA>0&&aa-costAA<c.aaReserve||costAdena>0&&adena-costAdena<c.adenaReserve)return pause('Недостаточно AA или адены с учётом резерва');
+   const item=plan[0],key=item.currency==='aa'?'AA':'Adena',p={...item,kind:'supply',id:s.id+':supply:'+now()+':'+Math.random().toString(36).slice(2),t:now(),revision:snap.revision,ls,gem,aa,adena,col,fa,policy:P,body:{...item.body,expectedRevision:snap.revision}};
+   if(!supplyActive(s,P)||current()?.pending)return true;
+   if(!await save({...current(),...L,pending:p,['reserved'+key]:L['reserved'+key]+p.amount})){trusted=null;return true;}
+   if(!supplyActive(s,P)||current()?.pending?.id!==p.id){await pause('Закупка остановлена до отправки; сначала сверить состояние');return true;}
+   supplyPermit=p.id;let response,result;
+   try{({response,result}=await supplyPost(p));}
+   catch(_){await pause('Связь прервана при закупке; повтор запрещён, нужна сверка');return true;}
+   finally{supplyPermit=null;}
+   if(!own(s)||current()?.pending?.id!==p.id)return true;
+   if([400,401,403,404,409,412,422,423,429].includes(response.status)){
+    const cur=current(),funds=ledger(cur);if(!funds)return pause('Не подтверждён резерв отклонённой закупки');
+    trusted=null;await save({...cur,pending:null,['reserved'+key]:Math.max(0,funds['reserved'+key]-p.amount),status:'paused',reason:`Игра отклонила закупку (${response.status}); продолжение вручную`});return true;
+   }
+   if(!response.ok||result?.error||result?.ok===false||!result?.character)return pause('Ответ не подтверждает закупку; повтор запрещён, нужна сверка');
+   const after=await supplySnapshot(),freshMerchant=p.action==='travel'?await supplyGet('/game/mammon/merchant'):null;
+   if(!own(s)||current()?.pending?.id!==p.id)return true;
+   if(!after||!await settleSupply(current(),after,freshMerchant))await pause('Закупка и состояние героя расходятся; повтор запрещён');
+   return true;
+  }
   async function prepare(){
    const old=current(),c=config(),who=char();
    if(old?.pending)throw Error('Сначала сверьте неизвестную попытку');
@@ -99,12 +236,12 @@
     if(!chosen.equipped||weaponKey(w)!==c.weaponKey)throw Error('Сначала наденьте выбранное оружие: '+chosen.name+' +'+chosen.enchant+'. ЛС в другую вещь не вставляется');
    }
    const outcome=w?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект — обновите каталог');
-   trusted=null;permit=null;
+   trusted=null;permit=null;supplyPermit=null;
    const row={id:`${now()}:${Math.random().toString(36).slice(2)}`,char:who,status:'paused',hold:true,reason:'Серия подготовлена; нажмите «Продолжить»',
-    weaponKey:c.weaponKey,weaponName:chosen?.name||h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id,targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0};
+    weaponKey:c.weaponKey,weaponName:chosen?.name||h?.itemNamesRu?.[id]||h?.itemNamesUk?.[id]||h?.itemNamesEn?.[id]||'#'+id,targets:c.targets,maxAttempts:c.maxAttempts,configSig:sig(c),attempts:0,grade,itemId:id,weapon:fingerprint(w),base:base(w),pending:null,history:[],nextAt:0,spentAA:0,spentAdena:0,reservedAA:0,reservedAdena:0,supplies:[]};
    if(!await save(row,s.inventory.eq))throw Error('Не удалось сохранить серию; расход не выполнялся');return true;
   }
-  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
+  async function command(action){if(action==='pause'&&busy){trusted=null;permit=null;supplyPermit=null;return true;}if(busy)throw Error('Предыдущий шаг ЛС ещё выполняется');busy=true;
    try{
     if(action==='scan')return await scanWeapons();
     if(action==='prepare')return await prepare();
@@ -112,7 +249,7 @@
     if(action==='pause')return await pause('Пауза игрока');
     if(action==='reconcile')return await reconcile();
     if(action==='acknowledge'){
-     const p=s.pending;if(!p)throw Error('Нет неизвестной попытки');
+     const p=s.pending;if(!p)throw Error('Нет неизвестной попытки');if(p.kind==='supply')throw Error('Неизвестную покупку нельзя учесть как попытку; сначала сверьте материалы и оплату');
      trusted=null;permit=null;const snap=await snapshot();
      if(!own(s)||current()?.pending?.id!==p.id||!snap||snap.revision<=p.revision||base(snap.inventory.eq.l1)!==s.base)throw Error('Нужна свежая ревизия героя и прежнее оружие. Сначала проверьте состояние в игре');
      const outcome=snap.inventory.eq.l1?.augmentation?.outcomeId;if(outcome&&!known(outcome))throw Error('На оружии неизвестный эффект');
@@ -131,7 +268,7 @@
   }
   // Одно разрешение только на конкретный долговечно записанный POST; чужие gamePost его не получают.
   function consumePermit(id,body){const s=current(),p=s?.pending;
-   if(!p||permit!==p.id||id!==p.id||!allowed(s)||body?.operation!=='install'||body.expectedRevision!==p.revision)return false;
+   if(!p||p.kind==='supply'||permit!==p.id||id!==p.id||!allowed(s)||body?.operation!=='install'||body.expectedRevision!==p.revision)return false;
    permit=null;return true;
   }
   async function settle(s,snap,receipt){
@@ -147,7 +284,13 @@
    env.rec?.('B','ЛС',`${attempts}/${s.maxAttempts}: ${A.OUT[a.outcomeId].n}${done?' · '+row.reason:''}`);return true;
   }
   async function reconcile(){const s=current(),p=s?.pending;if(!own(s)||!p)return false;
-   trusted=null;permit=null;
+   trusted=null;permit=null;supplyPermit=null;
+   if(p.kind==='supply'){
+    const snap=await supplySnapshot(),merchant=p.action==='travel'?await supplyGet('/game/mammon/merchant'):null;
+    if(!own(s)||current()?.pending?.id!==p.id)return false;
+    if(snap&&(await settleSupply({...current(),status:'paused'},snap,merchant)||await recoverSupply(current(),snap)))return true;
+    await save({...current(),status:'paused',reason:'Закупка не подтверждена; повтор запрещён. Проверьте материалы и оплату',pending:{...p,lastCheck:now()}});return false;
+   }
    const snap=await snapshot();if(!own(s)||current()?.pending?.id!==p.id)return false;
    if(snap&&await settle({...current(),status:'paused'},snap))return true;
    await save({...current(),status:'paused',reason:'Результат не подтверждён; повтор запрещён. Проверьте оружие и материалы в игре',pending:{...p,lastCheck:now()}});return false;
@@ -167,7 +310,7 @@
     if(outcome&&s.targets.includes(outcome))return await finish(s,'Нужный эффект уже на оружии: '+A.OUT[outcome].n);
     const ls=qty(snap,A.LIFE_STONE[s.grade]),gem=qty(snap,A.GEMSTONE[s.grade]);
     if(ls==null||gem==null)return await pause('Количество материалов не прочитано');
-    if(ls<1||gem<1)return await finish(s,'Закончились Life Stone или Gemstone '+s.grade);
+    if(ls<1||gem<1||config().buyMaterials&&(ls<s.maxAttempts-s.attempts||gem<s.maxAttempts-s.attempts))return await supply(s,snap);
     const p={id:s.id+':'+s.attempts+':'+now(),t:now(),revision:snap.revision,ls,gem,uid:w?.augmentation?.uid||null};
     if(!await save({...s,pending:p})){trusted=null;return true;}
     // После любого сбоя сохранения pending остаётся блокировкой, даже если клик точно не отправлен.
@@ -184,9 +327,9 @@
     const after=await snapshot();if(!own(s)||current()?.pending?.id!==p.id)return true;
     if(!after||!await settle(current(),after,out.outcomeId))await pause('Результат и состояние оружия расходятся — повтор запрещён');
     return true;
-   }finally{permit=null;busy=false;}
+   }finally{permit=null;supplyPermit=null;busy=false;}
   }
   async function yieldToUrgent(){trusted=null;permit=null;const s=current();if(!own(s)||s.pending)return false;return save({...s,status:'paused',hold:false,reason:'ЛС прерван для TvT; продолжение вручную'});}
-  return {command,step,reconcile,consumePermit,yieldToUrgent,interrupt:()=>{trusted=null;permit=null;},config};
+  return {command,step,reconcile,consumePermit,consumeSupplyPermit,yieldToUrgent,interrupt:()=>{trusted=null;permit=null;supplyPermit=null;},config};
  };
 })(globalThis);
