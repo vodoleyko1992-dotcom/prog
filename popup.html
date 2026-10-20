@@ -759,7 +759,7 @@
   <label>Докупать Life Stone и Gemstone <input id="lsBuyMaterials" type="checkbox" checked></label>
   <div class="row"><label>Лимит AA на серию <input id="lsAaBudget" type="number" min="0" step="1" value="2000000"></label><label>Лимит адены на серию <input id="lsAdenaBudget" type="number" min="0" step="1" value="2000000"></label></div>
   <label>Оставлять AA в запасе <input id="lsAaReserve" type="number" min="0" step="1" value="0"></label>
-  <div class="hint">Перед попыткой докупается только недостающая пара нужного грейда: Life Stone — за AA, Gemstone — за адену. Необходимый телепорт к Маммону входит в лимит адены; резерв адены из снабжения тоже сохраняется. Нулевой лимит запрещает покупки за эту валюту. Coin of Luck и Fast Aden не расходуются.</div>
+  <div class="hint">Докупается недостающее количество материалов для всех оставшихся попыток: Life Stone — за AA, Gemstone — за адену. Если AA не хватает с учётом лимита и запаса, число попыток автоматически уменьшается до доступного. Необходимый телепорт к Маммону входит в лимит адены; резерв адены из снабжения тоже сохраняется. Нулевой лимит запрещает покупки за эту валюту. Coin of Luck и Fast Aden не расходуются.</div>
   <div id="lsRun" class="camp" style="white-space:pre-line">Серия не запущена</div>
   <div class="row"><button type="button" id="lsStart">🎯 Начать новую серию</button><button type="button" id="lsResume">▶ Продолжить</button><button type="button" id="lsPause">⏸ Пауза ЛС</button></div>
   <div class="row"><button type="button" id="lsReconcile">🔍 Сверить результат</button><button type="button" id="lsClose">Закончить серию</button></div>

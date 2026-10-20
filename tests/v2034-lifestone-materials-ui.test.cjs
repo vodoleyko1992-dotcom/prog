@@ -54,3 +54,13 @@ test('supply UI names ordinary currencies and explains zero budget and reserve s
  const html=read('popup.html');for(const id of ['lsBuyMaterials','lsAaBudget','lsAdenaBudget','lsAaReserve'])assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(html,/Нулевой лимит запрещает покупки/);assert.match(html,/Coin of Luck и Fast Aden не расходуются/);assert.doesNotMatch(html,/Покупок нет\./);
 });
+test('automatic AA-limited reduction refreshes saved input and actual series progress',async()=>{
+ const f=fixture();await f.api.refresh();f.state.cfg.autoLs.maxAttempts=5;f.state.rt.autoLs={status:'paused',attempts:2,maxAttempts:5,grade:'S',itemId:9002284,targets:['matk_6'],reason:'AA хватит на 3 оставшиеся попытки'};await f.api.refresh();assert.equal(f.fields.lsMaxAttempts.value,5);assert.match(f.fields.lsRun.textContent,/2\/5 попыток/);assert.match(f.fields.lsRun.textContent,/AA хватит/);
+});
+test('automatic reduction does not overwrite focused attempt draft; blur shows reduced config',async()=>{
+ const f=fixture();await f.api.refresh();f.document.activeElement=f.fields.lsMaxAttempts;f.fields.lsMaxAttempts.value='9';f.state.cfg.autoLs.maxAttempts=5;await f.api.refresh();assert.equal(f.fields.lsMaxAttempts.value,'9');f.document.activeElement=null;await f.api.refresh();assert.equal(f.fields.lsMaxAttempts.value,5);
+});
+test('batch pending displays exact purchased quantity without exposing request payload',async()=>{
+ const f=fixture();f.state.rt.autoLs={status:'paused',attempts:0,maxAttempts:10,grade:'S',itemId:9002284,targets:['matk_6'],pending:{kind:'supply',action:'buy',name:'Life Stone S',qty:8,body:{secret:'not for display'}}};await f.api.refresh();assert.match(f.fields.lsRun.textContent,/Покупка: Life Stone S ×8/);assert.doesNotMatch(f.fields.lsRun.textContent,/secret|not for display/);assert.equal(f.fields.lsAcknowledge.hidden,true);
+ const html=read('popup.html');assert.match(html,/для всех оставшихся попыток/);assert.match(html,/число попыток автоматически уменьшается/);assert.doesNotMatch(html,/Перед попыткой докупается только недостающая пара/);
+});

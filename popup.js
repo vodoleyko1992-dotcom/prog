@@ -3182,7 +3182,7 @@ function lsMaterialStatus(s){
   const amount=x=>x==null?'0':Number.isSafeInteger(+x)&&+x>=0?(+x).toLocaleString('ru'):'?';
   const spent=s.spentAA!=null||s.spentAdena!=null?`\nНа докупку: ${amount(s.spentAA)} AA · ${amount(s.spentAdena)} аден`:'';
   const held=+s.reservedAA>0||+s.reservedAdena>0?`\nОжидают сверки: ${amount(s.reservedAA)} AA · ${amount(s.reservedAdena)} аден`:'';
-  const pending=s.pending?.kind==='supply'?`\n${s.pending.action==='travel'?'Телепорт к Маммону':'Покупка: '+(s.pending.name||'материалы ЛС')} — результат ещё не подтверждён. Повтор заблокирован.`:'';
+  const pending=s.pending?.kind==='supply'?`\n${s.pending.action==='travel'?'Телепорт к Маммону':'Покупка: '+(s.pending.name||'материалы ЛС')+(Number.isSafeInteger(s.pending.qty)&&s.pending.qty>0?' ×'+s.pending.qty:'')} — результат ещё не подтверждён. Повтор заблокирован.`:'';
   return spent+held+pending;
 }
 // 20.33 (лог20.10 04:24): причина чтения остаётся рядом с кнопкой, а не исчезает с toast.
