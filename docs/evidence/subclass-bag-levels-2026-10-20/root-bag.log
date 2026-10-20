@@ -1,0 +1,2 @@
+PASS actual MV3 subclass bag stale Arcana78 → fresh Bounty70 → new inventory GET → ready, class stash preserved {"gets":3,"posts":0}
+PASS actual MV3 subclass bag Stop during held GET leaves old class/inventory untouched {"gets":1,"posts":0}

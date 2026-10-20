@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-20T04:07:12.113969+00:00",
+  "package": "20.33 Chrome and Firefox",
+  "browser": "Chrome for Testing 155.0.8059.84",
+  "zipload": {
+    "version": "20.33",
+    "cfgKeys": 207,
+    "jsErrors": 0
+  },
+  "mv3": {
+    "subclassBag": "PASS2/2; Arcana78 stale→Bounty70 fresh→new inventory GET→ready; Stop held GET no mutation",
+    "catLevel": "PASS2/2; fresh low dungeon reroutes;69/71/73→exact71; no random hunt-continue or payment",
+    "vip": "PASS warrior→greater two0/0POST→union proof→VIP expiry",
+    "lifestoneFocus": "PASS3fields; weapon list updates and drafts preserved",
+    "jsErrors": 0
+  },
+  "runtimeHashes": {
+    "files": 64,
+    "beforeEqualsAfter": true
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45
+  },
+  "boundary": "Actual extension from extracted ZIP; all HTTPS and native handlers fully local fixtures; no live game/account; native Firefox/Android not run",
+  "logs": [
+    "zipload.log",
+    "v2032-subclass-bag-startup-browser.cjs.log",
+    "v2032-cat-higher-level-browser.cjs.log",
+    "v2031-vip-greater-buff-browser.cjs.log",
+    "v2031-lifestone-scan-focus-browser.cjs.log",
+    "bag-proof.json",
+    "cat-level-proof.json",
+    "firefox-lint.json"
+  ]
+}

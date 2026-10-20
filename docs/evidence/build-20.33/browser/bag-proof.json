@@ -1,0 +1,167 @@
+{
+  "at": "2026-10-20T04:06:52.947Z",
+  "boundary": "actual MV3/main/storage, fully intercepted HTTPS, no live game",
+  "proof": [
+    {
+      "case": "stale-class-startup",
+      "browser": "155.0.8059.84",
+      "calls": [
+        {
+          "path": "/map.html",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "before": {
+            "classCur": {
+              "prof": "human_arcana_lord",
+              "slot": 0,
+              "t": 1
+            },
+            "ready": false,
+            "qty": null
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "before": {
+            "classCur": {
+              "prof": "dwarf_bounty_hunter",
+              "slot": 1,
+              "t": 1792469205612
+            },
+            "ready": false,
+            "qty": null
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "before": {
+            "classCur": {
+              "prof": "dwarf_bounty_hunter",
+              "slot": 1,
+              "t": 1792469205612
+            },
+            "ready": true,
+            "qty": 4153
+          }
+        }
+      ],
+      "state": {
+        "on": false,
+        "running": true,
+        "tabOwner": true,
+        "status": "Карта: жду список мобов · 2 с",
+        "classCur": {
+          "prof": "dwarf_bounty_hunter",
+          "slot": 1,
+          "t": 1792469205612
+        },
+        "lvl": 70,
+        "prof": "Bounty hunter",
+        "skills": {
+          "spoil": {
+            "n": 3
+          }
+        },
+        "classStash": {
+          "human_arcana_lord": {
+            "skills": {
+              "blaze": {
+                "n": 7
+              }
+            },
+            "rbDb": {},
+            "t": 1792469205612
+          }
+        },
+        "ready": true,
+        "qty": 4153,
+        "proof": {
+          "char": "AuditHero",
+          "prof": "dwarf_bounty_hunter",
+          "slot": 1,
+          "level": 70,
+          "revision": 100
+        },
+        "owner": null
+      },
+      "errors": []
+    },
+    {
+      "case": "stop-held-get",
+      "browser": "155.0.8059.84",
+      "calls": [
+        {
+          "path": "/map.html",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET",
+          "before": {
+            "classCur": {
+              "prof": "human_arcana_lord",
+              "slot": 0,
+              "t": 1
+            },
+            "ready": false,
+            "qty": null
+          }
+        }
+      ],
+      "state": {
+        "on": false,
+        "running": false,
+        "tabOwner": true,
+        "status": "Проверяю серверное время и лимиты дня",
+        "classCur": {
+          "prof": "human_arcana_lord",
+          "slot": 0,
+          "t": 1
+        },
+        "lvl": 78,
+        "prof": "Arcana lord",
+        "skills": {
+          "blaze": {
+            "n": 7
+          }
+        },
+        "classStash": {
+          "dwarf_bounty_hunter": {
+            "skills": {
+              "spoil": {
+                "n": 3
+              }
+            },
+            "t": 1
+          }
+        },
+        "ready": false,
+        "qty": null,
+        "proof": null,
+        "owner": null
+      },
+      "errors": []
+    }
+  ]
+}

@@ -88,8 +88,10 @@ async function catTeleport(id, active) {
   return true;
 }
 
+// Свежий собственный GET уже может знать новый уровень, пока HUD ещё показывает прежний.
+const catLevel = () => { const hud=+env.heroLvl?.()||0,P=env.rt.invClassProof,C=env.rt.classCur;return P?.char&&C?.prof&&Number.isInteger(C.slot)&&P.char===env.rt.char&&P.prof===C.prof&&P.slot===C.slot&&Number.isSafeInteger(P.level)&&P.level>0?Math.max(hud,P.level):hud; };
 const catGuard = () => {
-  const context = () => JSON.stringify([env.rt.char, env.rt.manualKickAt, env.cfg.catMode, env.cfg.catDungeon]);
+  const context = () => JSON.stringify([env.rt.char, env.rt.manualKickAt, env.rt.classCur?.prof, env.rt.classCur?.slot, env.rt.lvl, catLevel(), env.cfg.catMode, env.cfg.catDungeon, env.cfg.lvlBelow, env.cfg.lvlAbove, env.cfg.lvlMax]);
   const saved = context();
   return () => env.on !== false && env.tabOwner !== false && env.cfg.catMode !== false && env.canAct?.() !== false && env.canRun?.() !== false && context() === saved;
 };
@@ -98,9 +100,11 @@ const catLv = id => { const k = env.rt.catLv?.[id]; return k?.n >= 3 ? [k.lo, k.
 
 function catTarget() {                            // какое подземелье: выбранное в меню или «авто» — по уровню героя
   if (env.cfg.catDungeon && env.cfg.catDungeon !== 'auto' && env.CAT_LIST[env.cfg.catDungeon]) return env.cfg.catDungeon;
-  const L = env.heroLvl(); if (!L) return env.rt.catCur || null;
+  const L = catLevel(); if (!L) return env.rt.catCur || null;
+  // 20.10, лог13:41: герой70 выбирал Devotion60–67. «Авто» ищет прежде всего героя+1 в разрешённом окне.
+  const aim = Math.min(L + 1, catWin(L).hi);
   const bad = env.rt.catBad || {}, now = Date.now();
-  const c = Object.keys(env.CAT_LIST).filter(id => now - (bad[id] || 0) > 3600000).map(id => { const [lo, hi, seen] = catLv(id); return { id, lo, hi, seen, d: L < lo ? lo - L + 5 : L > hi ? L - hi : 0 }; })
+  const c = Object.keys(env.CAT_LIST).filter(id => now - (bad[id] || 0) > 3600000).map(id => { const [lo, hi, seen] = catLv(id); return { id, lo, hi, seen, d: aim < lo ? lo - aim + 5 : aim > hi ? aim - hi : 0 }; })
     .sort((a, b) => a.d - b.d || (b.seen - a.seen) || (a.id === env.rt.catCur ? -1 : b.id === env.rt.catCur ? 1 : 0));
   // 10.0.7 (лог 13.10 13:21): герой уже стоит в подземелье по уровню (character.activeDungeonId) — «авто» не уводит его в другое такое же
   // (Devotion/Martyrdom/Witch для 67 равны по уровню; раньше решал порядок списка — после боя могли улететь в соседнее за адену)
@@ -146,13 +150,23 @@ async function catNext() {
   if (!active()) return true;
   if (!d || d.id !== id || !Array.isArray(d.mobs)) return false;
   // Как штатная цепочка: только обычные мобы; чемпионов проверяет отдельный поиск.
-  const list = d.mobs.filter(x => x && typeof x.id === 'string' && x.id !== sid && x.id.startsWith('sdms_' + id + '_') && /^\d+$/.test(x.id.slice(('sdms_' + id + '_').length)) && x.inBattleRange !== false && !/champ|raid|epic|boss/i.test(x.kind || ''))
+  const rows = d.mobs.filter(x => x && typeof x.id === 'string' && x.id.startsWith('sdms_' + id + '_') && /^\d+$/.test(x.id.slice(('sdms_' + id + '_').length)) && !/champ|raid|epic|boss/i.test(x.kind || ''));
+  const list = rows.filter(x => x.id !== sid && x.inBattleRange !== false)
     .map(x => ({ id: x.id, name: x.name, lvl: +x.level || 0, rb: false, champ: false })).filter(x => x.name && x.lvl > 0);
-  const pick = catPick(list, env.heroLvl());
+  // Полный свежий каталог уточняет диапазон, но не доказывает доступность конкретного следующего спавна.
+  const lv = rows.map(x => +x.level || 0).filter(x => x > 0), prev = env.rt.catLv?.[id];
+  if (lv.length && (prev?.lo !== Math.min(...lv) || prev?.hi !== Math.max(...lv) || !(prev.n >= 3))) {
+    await env.setRt({ catLv: { ...(env.rt.catLv || {}), [id]: { lo:Math.min(...lv), hi:Math.max(...lv), n:Math.max(3,prev?.n||0), t:Date.now() } } });
+    if (!active()) return true;
+  }
+  const pick = catPick(list, catLevel());
   if (!pick) return false;
+  if ((!env.cfg.catDungeon || env.cfg.catDungeon === 'auto') && pick.lvl < catLevel() && env.CAT_LIST?.[id]) {
+    const next = catTarget(); if (next && next !== id) return false;
+  }
   await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
-  if (!active() || !catPick([pick], env.heroLvl())) return true;
-  if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active())return true;
+  if (!active() || !catPick([pick], catLevel())) return true;
+  if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active() || !catPick([pick], catLevel()))return true;
   env.setStatus(`Катакомбы: следующий бой с ${pick.name} (${pick.lvl})`);
   location.href = '/battle.html?spawnId=' + encodeURIComponent(pick.id);
   return true;
@@ -180,7 +194,7 @@ async function catGo(id) {                        // в подземелье: е
   if (!id) {
     // 20.13 (ревизия 17.10, шаг 5, farm/DG-1): все подземелья в часовом бане — это не «не знаю уровень героя»: честный статус и простой
     const bad = env.rt.catBad || {}, ids = Object.keys(env.CAT_LIST || {}), now = Date.now();
-    const until = env.heroLvl() && ids.length ? Math.min(...ids.map(k => (bad[k] || 0) + 3600000)) : 0;
+    const until = catLevel() && ids.length ? Math.min(...ids.map(k => (bad[k] || 0) + 3600000)) : 0;
     if (until > now) { const hh = new Date(until).toTimeString().slice(0, 5); await env.idle(Math.min(60000, until - now), `Катакомбы: все подземелья на паузе до ${hh} (см. журнал) — жду`); return; }
     env.setStatus('Катакомбы: не знаю уровень героя — жду'); await env.sleep(3000); return;
   }
@@ -280,7 +294,7 @@ async function catHunt(id) {
   if ((env.rt.catErrN || {})[id]) env.setRt({ catErrN: { ...env.rt.catErrN, [id]: 0 } });
   await env.setRt({ catIn: id, catInT: Date.now(), catBackTried: 0, catCur: id });
   if (!active()) return;
-  const { net, list } = mobList(id), L = env.heroLvl();
+  const { net, list } = mobList(id), L = catLevel();
   if (!ok || !list.length) {
     const n = (env.rt.catEmpty || 0) + 1; await env.setRt({ catEmpty: n });
     env.setStatus(`Катакомбы ${nm}: мобов нет — жду респаун (${n})`);
@@ -292,12 +306,19 @@ async function catHunt(id) {
   }
   if (env.rt.catEmpty) await env.setRt({ catEmpty: 0 });
   // уровни подземелья — по тому, что видим (для автовыбора); 9.0: по всему списку из ответа игры — сразу «видел» (n = 3)
-  const lv = list.filter(x => !x.rb).map(x => x.lvl);
+  const lv = list.filter(x => !x.rb && !x.champ).map(x => x.lvl);
   if (lv.length) { const k = env.rt.catLv?.[id] || { n: 0 }, lo = Math.min(...lv), hi = Math.max(...lv);
     if (k.lo !== lo || k.hi !== hi || (k.n || 0) < 3) { await env.setRt({ catLv: { ...(env.rt.catLv || {}), [id]: { lo: net ? lo : Math.min(lo, k.lo ?? lo), hi: net ? hi : Math.max(hi, k.hi ?? hi), n: net ? Math.max(3, (k.n || 0) + 1) : (k.n || 0) + 1, t: Date.now() } } });
       if (!k.n || (net && (k.lo !== lo || k.hi !== hi))) env.rec('B', 'катакомбы', `${nm}: мобы ${lo}–${hi} ур.${net ? `, ${list.length} шт.` : ''} (${[...new Set(list.map(x => x.name))].slice(0, 8).join(', ')})`); } }
   if (!active()) return;
   const pick = catPick(list, L);
+  if (net && pick && !pick.quest && !pick.champ && pick.lvl < L && (!env.cfg.catDungeon || env.cfg.catDungeon === 'auto')) {
+    const next = catTarget();
+    if (next && next !== id) {
+      env.rec('B', 'катакомбы', `${nm}: обычные мобы ниже героя${L} — выбираю ${env.CAT_LIST[next]?.[0] || next} по текущему окну уровней`);
+      if (!active()) return; location.href = env.CAT_URL; await env.sleep(3000); return;
+    }
+  }
   if (!pick) {
     const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto', w = catWin(L);
     // 20.13 (ревизия 17.10, шаг 5, farm/DG-1): мобы по уровню есть, но все отфильтрованы («не по зубам», снятие баффов, цвет/отказ чемпиона) —
@@ -321,19 +342,19 @@ async function catHunt(id) {
     await env.sleep(10000); if (!active()) return; location.reload(); await env.sleep(4000); return;
   }
   env.setStatus(`Катакомбы ${nm}: бой с ${pick.name} (${pick.lvl})${pick.champ ? ' — чемпион' : ''}`);
-  await env.pause(); if (!active() || !catPick([pick], env.heroLvl())) return;
+  await env.pause(); if (!active() || !catPick([pick], catLevel())) return;
   await env.setRt({ target: { name: pick.name, champ: pick.champ, quest: !!pick.quest, rb: pick.rb,
     ...(pick.champ ? { tier: pick.tier || '', lvl: pick.lvl, lim: pick.chLim || 0, exp: pick.exp || 0, fa: pick.fa, valueT: Date.now(), probe: !!pick.chProbe } : {}) }, mobClickAt: Date.now(), via: 'dungeon' });
   if (!active()) return;
   const a = await showMob(pick.id, net ? pick.i : -1, active);
   if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active())return;
   // Пауза и перелистывание асинхронны: запреты могли измениться до самого клика.
-  if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
+  if (!active() || !catPick([pick], catLevel())) { if (active()) await env.setRt({ target: null }); return; }
   if (a) { env.fire(a); if (await env.waitFor(env.isBattle, 6000)) { if (!active()) return; if (env.rt.catFar) env.setRt({ catFar: 0 }); return; } }
   // ссылка не открыла бой (или моба не нашли на страницах) — через окно моба и «В бой»
   const info = a?.closest('li')?.querySelector('[data-spawn-id]') || [...document.querySelectorAll('#dungeon-mob-list [data-spawn-id]')].find(x => x.dataset.spawnId === pick.id);
-  if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; }
-  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return; if (!active() || !catPick([pick], env.heroLvl())) { if (active()) await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
+  if (!active() || !catPick([pick], catLevel())) { if (active()) await env.setRt({ target: null }); return; }
+  if (info) { env.fire(info); const go = await env.waitFor(() => { const g = env.$q('#dungeon-mob-modal-battle'); return env.shown(g) ? g : null; }, 3000, 100); if (go) { if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return; if (!active() || !catPick([pick], catLevel())) { if (active()) await env.setRt({ target: null }); return; } env.fire(go); if (await env.waitFor(env.isBattle, 8000)) return; } }
   if (!active()) return;
   // бой не открылся: «подойди ближе» (герой снаружи подземелья) — входим заново; два раза подряд не помогло — через телепорт
   const far = /ближ|too_far|далеко/i.test(env.noticeText() + ' ' + (env.$q('#dungeon-load-err')?.textContent || '')) || env.NET_ERR.err === 'battle_too_far' && Date.now() - env.NET_ERR.t < 8000;
@@ -349,7 +370,7 @@ async function catHunt(id) {
 function catWin(L) {
   const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
   return auto ? { lo: L - Math.min(+env.cfg.lvlBelow > 0 ? +env.cfg.lvlBelow : 5, 5),   // 10.0.5: не ниже героя −5 (FA)
-     hi: L + (env.cfg.lvlAbove ?? 99) } : { lo: 0, hi: 999 };
+     hi: Math.min(L + (env.cfg.lvlAbove ?? 99), env.cfg.lvlMax ?? 999) } : { lo: 0, hi: 999 };
 }
 // 9.0: кого бить. В катакомбах РБ нет; неожиданные raid/epic-строки здесь не выбираем, РБ — только в туре;
 // первыми ★-цели квеста, затем чемпионы (≈×10 EXP и адены за ×2 HP — kb/README), затем ближе к «герой +1». Среди равных — случайный
@@ -374,8 +395,9 @@ function catPick(list, L) {
     return true;
   });
   if (!ok.length) return null;
-  const key = x => [x.quest ? 0 : 1, x.champ ? 0 : 1, Math.abs(x.lvl - L - 1)];
-  ok.sort((a, b) => { const A = key(a), B = key(b); return A[0] - B[0] || A[1] - B[1] || A[2] - B[2]; });
+  const auto = !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
+  const key = x => [x.quest ? 0 : 1, x.champ ? 0 : 1, auto && x.lvl < L ? 1 : 0, Math.abs(x.lvl - L - 1)];
+  ok.sort((a, b) => { const A = key(a), B = key(b); return A[0] - B[0] || A[1] - B[1] || A[2] - B[2] || A[3] - B[3]; });
   const k0 = JSON.stringify(key(ok[0])), best = ok.filter(x => JSON.stringify(key(x)) === k0);
   return best[Math.floor(Math.random() * best.length)];
 }

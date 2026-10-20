@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-20T04:07:40.600896+00:00",
+  "version": "20.33",
+  "nodeFiles": {
+    "pass": 490,
+    "fail": 0
+  },
+  "newBehaviorCases": 77,
+  "syntax": {
+    "changedJsCjs": 18,
+    "allRuntimeJs": 49,
+    "result": "PASS"
+  },
+  "envcheckModules": 31,
+  "audit": {
+    "pass": 58,
+    "fail": 0,
+    "path": "audit.json"
+  },
+  "browser": {
+    "filesPass": 4,
+    "newCasesPass": 4,
+    "jsErrors": 0,
+    "zipLoad": {
+      "version": "20.33",
+      "configKeys": 207,
+      "errors": 0
+    },
+    "unchangedChromeFiles": 64,
+    "path": "browser/validation.json"
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45,
+    "warningsUnchanged": true
+  },
+  "profileDefaultsUnchanged": true,
+  "boundary": "Quick build; mocked local HTTPS only, no live game, native Firefox/Android or full historical browser runner",
+  "archives": [
+    {
+      "name": "l2wap-bot-v20.33.zip",
+      "bytes": 1426756,
+      "sha256": "9e72119691086828395a3f8baea1eb5b2527873dd127357b7e3d0b5f52478feb"
+    },
+    {
+      "name": "l2wap-bot-v20.33-firefox.zip",
+      "bytes": 1437208,
+      "sha256": "d08249c8bf910166d1e14977fd336f7f7749c052636701ee538bdd87a7da3380"
+    }
+  ]
+}

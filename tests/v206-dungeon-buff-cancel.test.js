@@ -70,7 +70,8 @@ test('battle сохраняет снятие до победы и передаё
 });
 for(const blocked of [true,false])test('nextFight '+(blocked?'возвращается к фильтрованному списку':'сохраняет цепочку без снятий'),async()=>{
  const f=flow();f.location.search='?spawnId=sdms_catacomb_of_the_branded_026';
- f.env.cfg.catMode=true;f.env.cfg.noCancelMobs=true;f.env.cfg.farmRes='';f.env.cancelRisk=()=>blocked?{n:3}:null;
+ // 20.32: в «Авто» native-цепочка всегда заменена свежим выбором; здесь прежний ручной режим и влияние Cancel.
+ f.env.cfg.catMode=true;f.env.cfg.catDungeon='catacomb_of_the_branded';f.env.cfg.noCancelMobs=true;f.env.cfg.farmRes='';f.env.cancelRisk=()=>blocked?{n:3}:null;
  f.env.rt.buffCancel=blocked?{'grave priest':{name:'Grave Priest',dungeon:'catacomb_of_the_branded',champ:false}}:{};
  f.env.catGo=async()=>f.events.push('catGo');f.setWon(true);await f.farm.nextFight({name:'Safe Mob'});
  assert.equal(f.events.includes('hunt'),!blocked);assert.equal(f.events.includes('catGo'),blocked);

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "L2wap Bot",
-  "version": "20.32",
-  "description": "L2wap Bot 20.32 — авто-ЛС, баффы кота до РБ и дополнительный VIP-набор",
+  "version": "20.33",
+  "description": "L2wap Bot 20.33 — сумка после сабкласса и уровни авто-катакомб",
   "permissions": [
     "storage",
     "unlimitedStorage",
@@ -138,5 +138,5 @@
     "<all_urls>"
   ],
   "minimum_chrome_version": "116",
-  "version_name": "20.32"
+  "version_name": "20.33"
 }
