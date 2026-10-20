@@ -135,7 +135,7 @@ function suggestRoles() {
   for (const k of ['nPower', 'nStun', 'nBuffs', 'nCharge', 'nForce', 'nHeal', 'nKeyBuffs', 'nToggles', 'nSpoil', 'nSpoilMass', 'nUltra', 'nDrain', 'nPetBuffs'])
     out[k] = [...new Set((out[k] || '').split(',').map(x => x.trim()).filter(Boolean))].join(', ');
   const why = skills.map(s => { const p = pr(s.name);
-    return `• ${s.name} (слот ${s.idx}): ${il(s)?.autoUse === false ? 'снижает HP до 25%, только вручную' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
+    return `• ${s.name} (слот ${s.idx}): ${il(s)?.autoUse === false ? 'снижает HP до 25%, вручную или отдельной подготовкой Frenzy/Zealot' : isCharge(s) ? 'копит энергию силы' : isForce(s) ? `тратит ${env.skillCost(s.name)} эн. силы` : isBuff(s) ? 'бафф' : isStun(s) ? 'стан' : 'урон'}`
       + (il(s) ? ` · [${il(s).id != null ? 'IL #' + il(s).id : 'L2WAP'} ${il(s).n}: ${il(s).c}${il(s).reuse ? ', откат ' + il(s).reuse / 1000 + ' с' : ''}${il(s).dur ? ', ' + il(s).dur + ' с' : ''}${il(s).w ? ', ' + il(s).w : ''}]` : '')
       + (p.uses ? ` · исп. ${p.uses} (ваших ${p.usesU || 0})` : ' · ещё не применялся')
       + (p.dmgN && il(s)?.autoUse !== false ? ` · урон ≈${Math.round(avg(p))}` : '') + (p.mpN ? ` · MP ≈${Math.round(p.mp / p.mpN)}` : '')
