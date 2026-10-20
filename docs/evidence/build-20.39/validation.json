@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-20T20:18:53.019671+10:00",
+  "author": "Codex",
+  "version": "20.39",
+  "flavor": "Chrome",
+  "base": "7647d9695f725a010dd416c657858c4956e04c4a",
+  "request": "сборка быстрая",
+  "includes": [
+    "PR#314: no repeated old-victory cat navigation",
+    "PR#313: individual VIP Greater and legacy recovery"
+  ],
+  "archive": {
+    "file": "builds/l2wap-bot-v20.39.zip",
+    "bytes": 1453262,
+    "sha256": "5c18b8039172909779539e7a13cf6ee8358205abfcf958c5d5a2c3aa0e023ee9",
+    "files": 64
+  },
+  "checks": {
+    "nodeAllFiles": {
+      "pass": 507,
+      "fail": 0
+    },
+    "runtimeJavaScriptSyntax": 49,
+    "changedVersionTestSyntax": 5,
+    "envcheckFactories": 31,
+    "diffCheck": "PASS",
+    "independentArchiveAudit": {
+      "pass": 175,
+      "fail": 0,
+      "resourceReferences": 88,
+      "proof": "audit.json"
+    },
+    "actualChromeFromFinalZip": {
+      "version": "20.39",
+      "cfgKeys": 208,
+      "pageErrors": 0,
+      "catCasesPassed": 2,
+      "vipCasesPassed": 7,
+      "runtimeHashesBeforeAfterAndSourceMatch": true,
+      "proof": "browser/validation.json"
+    }
+  },
+  "boundary": {
+    "liveGameOpened": false,
+    "liveFarmSpeedMeasured": false,
+    "fullHistoricalBrowserRunner": false,
+    "reasonForFocusedBrowserScope": "User explicitly requested a quick build; final ZIP load plus affected cat/VIP scenarios verified.",
+    "FirefoxVersionUnchanged": "20.36",
+    "baseProfileAndSettingsChanged": false
+  },
+  "next": "Download verified ZIP, replace files in the same Chrome directory, reload extension and game tab; obtain a full combat log.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/315",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/06ab8a75027fe9c886279df8fbb83690c5792297/builds/l2wap-bot-v20.39.zip",
+    "bytesAndSHA256Match": true,
+    "proof": "download.json"
+  }
+}

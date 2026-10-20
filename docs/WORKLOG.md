@@ -1,5 +1,12 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
+
+## 20.10.2026, 20:18 UTC+10 — Codex — [PR #315](https://github.com/vodoleyko1992-dotcom/prog/pull/315): быстрая Chrome20.39
+
+- По «сборка быстрая» упакован Chrome20.39 из7647d96:20.38 + переход катакомб PR#314. Игровой код при выпуске не меняется, metadata/header/README/5assertions и история обновлены. Настройки и базовый профиль сохранены; Firefox20.36/LitePR#306 не затронуты.
+- Полный507 Node-файлов PASS/0FAIL, syntax49runtime/5version-tests/envcheck31/diff-check PASS. ZIP64runtime, независимый аудит175/175 и88refs/sourceSHA PASS. Настоящий Chrome156 из ZIP:20.39/cfg208/0JS,9 сценариев PASS (катакомбы2, VIP7),64SHA before=after=source. Архив1453262B; SHA в builds/SHA256SUMS-20.39.txt; [доказательства](evidence/build-20.39/validation.json).
+- Живую игру/Firefox/Android/полный исторический browser-runner не запускали; реальный прирост фарма не измерен. [Chrome20.39](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/06ab8a75027fe9c886279df8fbb83690c5792297/builds/l2wap-bot-v20.39.zip) опубликован; публичное скачивание побайтно/SHA256 PASS ([доставка](evidence/build-20.39/download.json)). Следующее — установка поверх прежней папки/↻/обновление игры, полный боевой лог.
+
 ## 20.10.2026, 20:03 UTC+10 — Codex — [PR #314](https://github.com/vodoleyko1992-dotcom/prog/pull/314): переход катакомб
 
 - По TXT/HTML09:36 и жалобе на медленных мобов исправлен catNext: старый экран победы удерживается до ухода документа/отмены/10с. Chrome воспроизвёл повторные GET и навигацию; новый документ не ждёт старого таймаута. Код меняется только в modules/dungeons.js; новые Node/MV3-тесты зарегистрированы. Версия, ZIP и настройки прежние; сборка не запрошена. [Разбор](CAT-COMBAT-SPEED-LOG-2026-10-20.md).

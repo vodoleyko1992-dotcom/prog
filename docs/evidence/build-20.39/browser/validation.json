@@ -1,0 +1,371 @@
+{
+  "checkedAtUTC": "2026-10-20T10:17:58.129612+00:00",
+  "browserVersion": "Google Chrome for Testing 156.0.8078.4",
+  "archiveSHA256": "5c18b8039172909779539e7a13cf6ee8358205abfcf958c5d5a2c3aa0e023ee9",
+  "archiveBytes": 1453262,
+  "manifestVersion": "20.39",
+  "cfgKeys": 208,
+  "runtimeFiles": 64,
+  "runtimeBeforeAfterSame": true,
+  "runtimeAllMatchSource": true,
+  "archiveCRC": "PASS",
+  "zipload": {
+    "status": "PASS",
+    "pageErrors": 0
+  },
+  "catNavigation": {
+    "file": "tests/v2038-cat-navigation-browser.cjs",
+    "casesPassed": 2,
+    "pageErrors": 0,
+    "proof": [
+      {
+        "case": "single navigation then immediate new-document combat",
+        "browser": "156.0.8078.4",
+        "navigationDelayMs": 1200,
+        "stopBeforeDocument": null,
+        "statusTrace": [
+          {
+            "t": 1792491455240,
+            "s": "Бой: загрузка"
+          },
+          {
+            "t": 1792491455258,
+            "s": "Проверяю серверное время и лимиты дня"
+          },
+          {
+            "t": 1792491455360,
+            "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+          }
+        ],
+        "views": 1,
+        "navigations": 1,
+        "oldDocumentReloadStatuses": 0,
+        "newDocumentFirstActionMs": 108,
+        "pendingState": {
+          "target": {
+            "champ": false,
+            "name": "Nephilim Praetorian",
+            "rb": false
+          },
+          "status": "Бой: загрузка",
+          "observedAt": 1792491455808
+        },
+        "calls": [
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+            "method": "GET",
+            "at": 1792491454158
+          },
+          {
+            "path": "/game/time",
+            "query": "",
+            "method": "GET",
+            "at": 1792491455267
+          },
+          {
+            "path": "/game/daily-quests",
+            "query": "",
+            "method": "GET",
+            "at": 1792491455271
+          },
+          {
+            "path": "/game/dungeon/view",
+            "query": "?dungeonId=necropolis_of_martyrdom",
+            "method": "GET",
+            "at": 1792491455340
+          },
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+            "method": "GET",
+            "at": 1792491455372
+          },
+          {
+            "path": "/game/battle/start",
+            "query": "",
+            "method": "POST",
+            "at": 1792491456601
+          },
+          {
+            "path": "/character",
+            "query": "",
+            "method": "GET",
+            "at": 1792491456653
+          },
+          {
+            "path": "/game/battle/action",
+            "query": "",
+            "method": "POST",
+            "at": 1792491456680
+          }
+        ],
+        "paths": [
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+            "at": 1792491454158
+          },
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+            "at": 1792491455372
+          }
+        ],
+        "errors": []
+      },
+      {
+        "case": "Stop while document loads",
+        "browser": "156.0.8078.4",
+        "navigationDelayMs": 1200,
+        "stopBeforeDocument": true,
+        "statusTrace": [
+          {
+            "t": 1792491459925,
+            "s": "Бой: загрузка"
+          },
+          {
+            "t": 1792491459954,
+            "s": "Проверяю серверное время и лимиты дня"
+          },
+          {
+            "t": 1792491460175,
+            "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+          }
+        ],
+        "views": 1,
+        "navigations": 1,
+        "oldDocumentReloadStatuses": 0,
+        "newDocumentFirstActionMs": null,
+        "pendingState": {
+          "target": {
+            "champ": false,
+            "name": "Nephilim Praetorian",
+            "rb": false
+          },
+          "status": "Бой: загрузка",
+          "observedAt": 1792491460668
+        },
+        "calls": [
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+            "method": "GET",
+            "at": 1792491458875
+          },
+          {
+            "path": "/game/time",
+            "query": "",
+            "method": "GET",
+            "at": 1792491459958
+          },
+          {
+            "path": "/game/daily-quests",
+            "query": "",
+            "method": "GET",
+            "at": 1792491459976
+          },
+          {
+            "path": "/game/dungeon/view",
+            "query": "?dungeonId=necropolis_of_martyrdom",
+            "method": "GET",
+            "at": 1792491460124
+          },
+          {
+            "path": "/battle.html",
+            "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+            "method": "GET",
+            "at": 1792491460222
+          },
+          {
+            "path": "/game/battle/start",
+            "query": "",
+            "method": "POST",
+            "at": 1792491461473
+          }
+        ],
+        "paths": [
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+            "at": 1792491458875
+          },
+          {
+            "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+            "at": 1792491460222
+          }
+        ],
+        "errors": []
+      }
+    ]
+  },
+  "vipIconRegression": {
+    "file": "tests/v2037-vip-icon-browser.cjs",
+    "casesPassed": 7,
+    "pageErrors": 0,
+    "cases": [
+      {
+        "case": "mage default Water",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "fighter default Paagrio",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1414,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1414
+        ]
+      },
+      {
+        "case": "stale base-only receipt",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "preserve active Greater",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 50
+          }
+        ],
+        "catalogCalls": 1,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1413
+        ]
+      },
+      {
+        "case": "explicit Water replaces Magnus",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          },
+          {
+            "set": "greater",
+            "skillId": 1323,
+            "status": 200,
+            "revision": 51
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      },
+      {
+        "case": "Stop during fresh icon quote",
+        "posts": [],
+        "catalogCalls": 1,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html"
+        ],
+        "group": []
+      },
+      {
+        "case": "price increases between icons",
+        "posts": [
+          {
+            "set": "greater",
+            "skillId": 1357,
+            "status": 200,
+            "revision": 50
+          }
+        ],
+        "catalogCalls": 2,
+        "visits": [
+          "/map.html",
+          "/town-buffer.html",
+          "/map.html"
+        ],
+        "group": [
+          1357
+        ]
+      }
+    ]
+  },
+  "browserCasesPassed": 9,
+  "gameTraffic": "all HTTPS responses locally mocked in actual MV3 harness",
+  "liveGameOpened": false,
+  "liveWireObserved": false,
+  "testsAddedToExtractedStagingOnly": true,
+  "zipChangedByTests": false,
+  "logsSHA256": {
+    "zipload": "1e2b82f00890ed0ee5e867bb70a99537db89a5efb411c676dbd3863e5d7d9955",
+    "cat-navigation": "a8095770628b127abb9d59232f6b26f45ff8acfa06e1122083acdfcecc38e73a",
+    "vip-icons": "1880b9165ffb210577f17a31a2c8e0a752cf49b293e0efe2d2b4dffdd7480383"
+  }
+}
