@@ -14,9 +14,9 @@ function fixture(rows=uniform()){
  env.routeLocation=loc;env.autonomyMode=()=>env.cfg.catMode?'cat':'farm';env.heroLvl=()=>71;env.CAT_LIST={[dungeon]:['Martyrdom',60,75]};env.canAct=()=>true;env.canRun=()=>true;
  env.cancelRisk=()=>null;env.catGo=async()=>events.push('catGo');
  env.gameGet=async path=>{events.push('GET '+path);return{ok:true,json:async()=>({dungeon:{id:dungeon,mobs:rows}})}};
- const box={console,Date,Math,URLSearchParams,document:{querySelectorAll:()=>[]},location:loc};vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../modules/dungeons.js'),'utf8'),box);
+ const ss=new Map(),box={console,Date,Math,URLSearchParams,document:{querySelectorAll:()=>[]},location:loc,sessionStorage:{getItem:k=>ss.has(k)?ss.get(k):null,setItem:(k,v)=>ss.set(k,String(v))}};vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../modules/dungeons.js'),'utf8'),box);
  const D=box.L2V7Factories.dungeons(env);env.catNext=()=>D.catNext();f.setWon(true);
- return {...f,D,setRows:r=>{rows.length=0;rows.push(...r)},run:()=>f.farm.nextFight({name:'Lilim Knight Banneret'})};
+ return {...f,D,ss,setRows:r=>{rows.length=0;rows.push(...r)},run:()=>f.farm.nextFight({name:'Lilim Knight Banneret'})};
 }
 const nav=f=>f.location.href.startsWith('/battle.html?spawnId=');
 test('однородный список: штатное «Охотиться дальше», без новой страницы',async()=>{
@@ -48,4 +48,27 @@ test('два чужих выбора сервера подряд: в этом д
 test('удачный выбор сервера сбрасывает счёт неудач',async()=>{
  const f=fixture();await f.run();const step=stepper(f);
  for(const [n,name,lvl] of [['081','Grave Warden',64],['082','Nephilim Praetorian',72],['083','Grave Warden',64],['084','Nephilim Praetorian',72]])assert.equal(await step(n,name,lvl),true,n);
+});
+// 20.41 (ревью): отказ сервера на штатное продолжение виден уже на странице подземелья — 30 мин свой выбор в этом подземелье.
+test('штатное продолжение не начало бой: на странице подземелья метка отказа, дальше свой выбор',async()=>{
+ const f=fixture();await f.run();assert.ok(f.events.includes('hunt'));
+ const recs=[];f.env.rec=(...a)=>recs.push(a.join(' '));assert.equal(f.D.catNatFail(dungeon),true,'игра увела на /dungeon.html');assert.match(recs.join('|'),/не начало бой/);
+ f.setWon(true);f.events.length=0;f.location.href='https://l2wap.com/battle.html'+f.location.search;await f.run();
+ assert.ok(!f.events.includes('hunt'));assert.ok(nav(f),'свой выбор и переход');
+});
+test('удачное штатное продолжение снимает метку: страница подземелья позже не считается отказом',async()=>{
+ const f=fixture();await f.run();f.D.catNatOk();assert.equal(f.D.catNatFail(dungeon),false);
+ f.setWon(true);f.events.length=0;await f.run();assert.ok(f.events.includes('hunt'));
+});
+test('предзагрузка списка не удалась: на победе список читается заново',async()=>{
+ const f=fixture();let n=0;const get=f.env.gameGet;f.env.gameGet=async p=>++n===1?{ok:false,status:503,json:async()=>({})}:get(p);
+ f.D.catPrefetch();await f.run();assert.equal(n,2);assert.ok(f.events.includes('hunt'));assert.ok(!f.events.includes('catGo'));
+});
+test('выбранное вручную подземелье: предзагрузки списка нет',()=>{
+ const f=fixture();f.env.cfg.catDungeon=dungeon;f.D.catPrefetch();assert.equal(f.events.filter(x=>x.startsWith('GET ')).length,0);
+});
+test('страница подземелья первым делом сверяет метку штатного продолжения; удачный старт в цепочке её снимает',()=>{
+ const src=fs.readFileSync(require('node:path').join(__dirname,'../modules/dungeons.js'),'utf8'),a=src.indexOf('async function catHunt(id) {');
+ assert.match(src.slice(a,a+200),/if \(!active\(\)\) return;[^\n]*\n\s*catNatFail\(id\);/);
+ const mf=fs.readFileSync(require('node:path').join(__dirname,'../modules/mobfarm.js'),'utf8');assert.match(mf,/if \(ok\) env\.catNatOk\?\.\(\);[^\n]*\n\s*if \(ok \|\| !env\.on\) return;/);
 });

@@ -315,6 +315,7 @@ async function nextFight(ctx) {
         // 10.0 (карта): запрос hunt-continue ещё в полёте — ждём ответ до 15 с, а не уходим
         const net = env.actNet?.();
         if (!ok && env.on && net && net.huntT >= t0 && !((net.huntDoneT || 0) >= net.huntT)) ok = await env.waitFor(started, 7000, 50);
+        if (ok) env.catNatOk?.();   // 20.41: штатное продолжение сработало — метка ожидания снята
         if (ok || !env.on) return;
         // 10.0.7 (игрок 13.10 03:20: «в катакомбах не работает кнопка охотиться дальше»; код игры battle.js huntContinueManual): в подземелье
         // отказ сервера на hunt-continue игра не показывает — молча уводит на страницу подземелья (/dungeon.html). Бот считал «бой начался»

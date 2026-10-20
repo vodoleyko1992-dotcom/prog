@@ -147,19 +147,35 @@ let viewPre = null, nat = null;
 // «Охотиться дальше» начинает следующий бой без перезагрузки, но моба выбирает сервер (живой замер 20.10: и свой nextHuntSpawnId он
 // не соблюдает, уровень ±3). Поэтому только при однородном списке: ≥3 соседних обычных моба, ≥80 % из них подходят выбору (уровень ±1,
 // без известных Cancel и запретов). Два неподходящих выбора сервера подряд — в этом документе снова свой выбор и переход.
+// 20.41 (ревью): отказ сервера на штатное продолжение (игра молча уводит на /dungeon.html или бой не начинается) — 30 мин в этом
+// подземелье снова свой выбор. Метка в sessionStorage: отказ виден уже на следующей странице.
+const NAT_SS = 'l2bot.catNat';
+const natMark = () => { try { return JSON.parse(sessionStorage.getItem(NAT_SS) || 'null') || {}; } catch (_) { return {}; } };
+const natSave = m => { try { sessionStorage.setItem(NAT_SS, JSON.stringify(m)); } catch (_) {} };
+function catNatOk() { const m = natMark(); if (m.wait) natSave({ ...m, wait: null }); }
+function catNatFail(id) {
+  const m = natMark(); if (!m.wait || m.wait.id !== id || Date.now() - m.wait.t > 30000) return false;
+  natSave({ ...m, wait: null, off: { ...(m.off || {}), [id]: Date.now() + 1800000 } });
+  env.rec?.('B', 'катакомбы', `${env.CAT_LIST?.[id]?.[0] || id}: «Охотиться дальше» не начало бой — 30 мин выбираю мобов сам`);
+  return true;
+}
 function catNative(id, list, pick, cur) {
-  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = Math.abs((+cur.level || 0) - nat.lvl) <= 1 ? 0 : nat.bad + 1; }
+  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = Math.abs((+cur.level || 0) - nat.lvl) <= 1 ? 0 : nat.bad + 1; catNatOk(); }
   if (nat?.id === id && nat.bad >= 2) return false;
+  if ((+natMark().off?.[id] || 0) > Date.now()) return false;
   const L = catLevel(), fit = list.filter(x => Math.abs(x.lvl - pick.lvl) <= 1 && catPick([x], L));
   if (list.length < 3 || fit.length < list.length * 0.8) return false;
   if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
   nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
+  const m = natMark(); natSave({ ...m, wait: { id, t: Date.now() } });
   return true;
 }
 const viewGet = id => env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)).then(r => r.ok ? r.json() : null).then(j => j?.dungeon || null, () => null);
 function catPrefetch(reuseMs = 0) {
   const sid = new URLSearchParams(location.search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
   if (!id || !/\/battle\.html$/i.test(location.pathname) || env.cfg.chain === false || env.autonomyMode?.() !== 'cat' || typeof env.gameGet !== 'function') return;
+  // 20.41 (ревью): выбранное вручную подземелье — следующий бой даёт штатная цепочка, список не читается.
+  if (env.cfg.catDungeon && env.cfg.catDungeon !== 'auto') return;
   if (reuseMs && viewPre?.id === id && viewPre.href === location.href && Date.now() - viewPre.t < reuseMs) return;
   viewPre = { id, href: location.href, t: Date.now(), p: viewGet(id) };
 }
@@ -170,7 +186,8 @@ async function catNext() {
   if (!id || !/\/battle\.html$/i.test(location.pathname) || !active()) return true;
   const pre = viewPre?.id === id && viewPre.href === href && Date.now() - viewPre.t < 8000 ? viewPre.p : null; viewPre = null;
   let d;
-  try { d = await (pre || viewGet(id)); } catch (_) {}
+  // 20.41 (ревью): предзагрузка в начале боя не удалась (5xx/429/обрыв) — на победе читаем заново, а не уходим на страницу подземелья.
+  try { d = await (pre || viewGet(id)); if (!d && pre && active()) d = await viewGet(id); } catch (_) {}
   if (!active()) return true;
   if (!d || d.id !== id || !Array.isArray(d.mobs)) return false;
   // Как штатная цепочка: только обычные мобы; чемпионов проверяет отдельный поиск.
@@ -304,6 +321,7 @@ async function catGo(id) {                        // в подземелье: е
 
 async function catHunt(id) {
   const active = catGuard(); if (!active()) return;                      // внутри подземелья: список мобов → бой
+  catNatFail(id);
   const nm = env.CAT_LIST[id]?.[0] || id;
   const netOk = () => { const N = env.dungNet?.(); return N && N.id === id && Date.now() - N.t < 30000; };
   const ok = await env.waitX(() => netOk() || dungeonMobs().length || env.shown(env.$q('#dungeon-load-err')) ? 1 : 0, 10000, 250);
@@ -541,6 +559,6 @@ async function sealStep() {
   await finish(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catNatOk, catNatFail, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);

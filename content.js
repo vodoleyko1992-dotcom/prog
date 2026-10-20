@@ -5667,7 +5667,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modul
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
   get catGo() { return catGo; }, set catGo(value) { catGo = value; },
-  get catNext() { return () => L2V7Modules.dungeons.catNext(); },
+  get catNext() { return () => L2V7Modules.dungeons.catNext(); }, get catNatOk() { return () => L2V7Modules.dungeons.catNatOk(); },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get deepN() { return deepN; }, set deepN(value) { deepN = value; },
   get draw() { return draw; }, set draw(value) { draw = value; },
