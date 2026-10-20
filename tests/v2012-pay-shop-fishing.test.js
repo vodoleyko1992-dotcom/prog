@@ -30,8 +30,9 @@ test('закупка: 502 без прироста запаса — ждём, а 
  const c=f.env.rt.actionPayments.history[0].confirmation;assert.equal(c.kind,'state-not-applied');assert.equal(c.spent,0);
  assert.equal(f.env.rt.shop.done[0].ok,false);assert.match(f.env.rt.shop.done[0].why,/не применилась/);
 });
-test('закупка: адена списана или ревизия выросла — «не применилась» не объявляется',async()=>{
- for(const patch of [{adena:500},{revision:6}]){
+// 20.41: одна выросшая ревизия при том же запасе и той же адене больше не держит оплату (v2041-shop-inventory-full).
+test('закупка: адена списана — «не применилась» не объявляется, даже при выросшей ревизии',async()=>{
+ for(const patch of [{adena:500},{revision:6,adena:999}]){
   const f=shop();await f.pay();f.ch(patch);
   for(let i=0;i<10;i++){f.tick(31000);assert.equal(await f.E.paymentReconcile(),false,JSON.stringify(patch))}
   assert.ok(f.env.payments.pending());

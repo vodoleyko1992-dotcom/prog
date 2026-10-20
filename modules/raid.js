@@ -140,6 +140,14 @@ function rbContext(id, preflight = false) {
   catch (_) { return { managed: true, key: null }; }
 }
 const rbSameContext = (c, saved) => c?.managed ? !!c.key && saved === c.key : !saved;
+// 20.41 (лог 20.10 21:09:44, Bounty Hunter 71, слот 1; основной слот Arcana Lord 78): общий rt.rbDps/rbLossK не входят в
+// story.CLASS_KEYS, а у «неуправляемого» класса контекст null — legacy-замер Warlock без контекста считался своим:
+// Krokian Padisha Sobekk 3.6M «≈1:45» (≈34k/с), реально ≈2,1k/с → 23–25 мин и ≈800 банок. Общие замеры без владельца-класса
+// принимаем, только пока класс героя неизвестен; иначе — запасная осторожная оценка (1150/с × поправка на уровни).
+const rbClassOwner = () => env.rt.classCur?.prof || null;
+// Замер без владельца (до 20.41) — от основного слота: у саба (slot ≠ 0) не принимаем, у основного — свой.
+const rbOwnerOk = owner => !rbClassOwner() || owner === rbClassOwner() || owner == null && !(+env.rt.classCur?.slot > 0);
+const rbSharedDps = c => env.rt.rbDps > 0 && rbSameContext(c, env.rt.rbDpsContext) && (c?.managed || rbOwnerOk(env.rt.rbDpsOwner)) ? env.rt.rbDps : 0;
 function rbDpsTarget(id) {
   const s = rbStatsOf(id), lvl = s?.lvl || s?.level || rbLvlOf(id), pdef = s?.pdef ?? s?.pDef, mdef = s?.mdef ?? s?.mDef;
   return !isEpicId(id) && s && !s.est && [lvl,pdef,mdef].every(x => Number.isFinite(x) && x > 0) ? { lvl, pdef, mdef } : null;
@@ -158,8 +166,8 @@ function rbTransferredDps(id, c) {
 }
 function rbDpsOn(id) {
   const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id), c = rbContext(id, true);
-  const base = rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : 1150;
-  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSameContext(c, env.rt.rbDpsContext) && env.rt.rbDps > 0 ? env.rt.rbDps : rbTransferredDps(id, c) || Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
+  const base = rbSharedDps(c) || 1150;
+  if (c?.managed) return d.dps > 0 && rbSameContext(c, d.dpsContext) ? d.dps : rbSharedDps(c) || rbTransferredDps(id, c) || Math.max(1, 1150 * gapF(lvl && L ? lvl - L : 0));
   if (d.dps > 0 && rbSameContext(c, d.dpsContext)) {
     const kb = d.dpsBase > 0 ? Math.min(3, Math.max(0.5, base / d.dpsBase)) : 1;
     const kl = lvl && L && d.dpsLvl ? gapF(lvl - L) / gapF(lvl - d.dpsLvl) : 1;
@@ -169,7 +177,7 @@ function rbDpsOn(id) {
 }
 function rbDpsEvidence(id) {
   const c = rbContext(id, true), d = env.rt.rbDb?.[id] || {};
-  const own = d.dps > 0 && rbSameContext(c, d.dpsContext), shared = env.rt.rbDps > 0 && rbSameContext(c, env.rt.rbDpsContext);
+  const own = d.dps > 0 && rbSameContext(c, d.dpsContext), shared = rbSharedDps(c) > 0;
   return { source: own ? 'own' : shared ? 'shared' : rbTransferredDps(id, c) ? 'transfer' : 'unknown', dps: rbDpsOn(id),
     prepared: !c?.managed || !!c.key || !!c.prepared, planned: !!c?.planned };
 }
@@ -178,7 +186,7 @@ async function rbDpsLearn(id, dps) {
   const c = rbContext(id);
   if (!(dps > 0) || !Number.isFinite(dps) || c?.managed && !c.key) return;
   const d = env.rt.rbDb?.[id] || {}, L = env.heroLvl(), lvl = rbLvlOf(id);
-  const base = rbSameContext(c, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+  const base = rbSharedDps(c);
   const od = d.dps > 0 && rbSameContext(c, d.dpsContext) ? rbDpsOn(id) : 0;
   if (c?.managed) return rbNote(id, { dps: Math.round(od > 0 ? od * .6 + dps * .4 : dps), dpsLvl: L || null, dpsBase: null, dpsContext: c.key });
   const gap = lvl && L ? lvl - L : 0;
@@ -248,7 +256,7 @@ function rbPreflightForecast(id, st, slack = 1, dpsOver, hpOver) {
   const me = env.meHp(), maxHp = hpOver > 0 ? hpOver : me?.max || 6000;
   const historical = env.rt.rbDb?.[id] || {}, context = rbContext(id, true), incoming = rbIncoming(id, context);
   const ownDps = historical.dps > 0 && rbSameContext(context, historical.dpsContext);
-  const transferred = !dpsOver && !ownDps && !(env.rt.rbDps > 0 && rbSameContext(context, env.rt.rbDpsContext)) && rbTransferredDps(id, context);
+  const transferred = !dpsOver && !ownDps && !rbSharedDps(context) && rbTransferredDps(id, context);
   const evidence = rbDpsEvidence(id), unknownDps = !dpsOver && evidence.source === 'unknown' && !!context?.managed;
   const k = env.rt.rbK || 0.109, base0 = Math.max(0, st.patk || 0) * k;
   // 8.0.3 (лог 11.10 11:42–11:44): Орфен бил КАЖДЫМ ударом 2508–2885 (0,64–0,74 × P.Atk 3920, крит почти не больше), а модель —
@@ -266,8 +274,8 @@ function rbPreflightForecast(id, st, slack = 1, dpsOver, hpOver) {
   const spPrior = Math.max(base0*rbSpK(),(st.matk||0)*rbSpM());
   const sp = incoming.source === 'prior' ? Math.max(incoming.sp||0,spPrior) : incoming.sp>0 ? incoming.sp : spPrior;
   const measured = incoming.sp > 0 && incoming.source !== 'prior';
-  const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext);
-  let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
+  const ownLoss = Number.isFinite(st.loss) && st.loss >= 0 && rbSameContext(context, st.lossContext) && (context?.managed || rbOwnerOk(st.lossOwner));
+  let loss = ownLoss ? st.loss : (!context?.managed && env.rt.rbLossK && rbOwnerOk(env.rt.rbLossKOwner) ? st.patk * env.rt.rbLossK : Math.max(0, base * 0.876 - 90));
   if (epic && !ownLoss) loss = Math.max(loss, base * 0.25);   // 8.0.3: своего замера потерь на эпике нет
   const need = loss * t;
   const potRate = pot?.rate || 0;
@@ -1854,10 +1862,10 @@ function rbAssess(ctx, me, mob) {
   }
   if (dt >= 20 && damageSamples >= 5 && dps > 0 && (!context?.managed || context.key) && now - (S.dpsT || 0) > 30000) {
     S.dpsT = now;
-    const old = rbSameContext(context, env.rt.rbDpsContext) ? env.rt.rbDps || 0 : 0;
+    const old = rbSharedDps(context);
     const target = rbDpsTarget(S.id);
     // Источник переноса создаётся только здесь: полный урон по HP за проверенное окно, не fightlab и не прогноз другого РБ.
-    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null,
+    env.setRt({ rbDps: Math.round(old > 0 ? old * .8 + dps * .2 : dps), rbDpsContext: context?.managed ? context.key : null, rbDpsOwner: rbClassOwner(),
       rbDpsSample: context?.powerKey && target ? { id: S.id, powerKey: context.powerKey, dps: Math.round(dps), target, t: now } : null });
   }   // v4.46: наш ДПС по РБ — для оценки до боя
   // чистая потеря HP героя без банок: банки, выпитые в окне, возвращаем в расчёт (их лечение не «держится» само)
@@ -1876,8 +1884,9 @@ function rbAssess(ctx, me, mob) {
       loss: Math.round(old == null ? Math.max(0, loss) : old * .6 + Math.max(0, loss) * .4), lossContext: context.key } } });
   }
   if (!context?.managed && dt >= 20 && stL?.patk && loss > 0 && now - (S.lossT || 0) > 30000) {
+    const kOld = env.rt.rbLossK && rbOwnerOk(env.rt.rbLossKOwner) ? env.rt.rbLossK : 0, lOld = stL.loss && !stL.lossContext && rbOwnerOk(stL.lossOwner) ? stL.loss : 0;
     S.lossT = now; const k = loss / stL.patk, epicL = isEpicId(S.id);   // 8.0.3: потери на эпике — только в его цифры, не в общий rbLossK
-    env.setRt({ ...(epicL ? {} : { rbLossK: +(env.rt.rbLossK ? env.rt.rbLossK * 0.7 + k * 0.3 : k).toFixed(4) }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(stL.loss && !stL.lossContext ? stL.loss * 0.6 + loss * 0.4 : loss), lossContext: null } } });
+    env.setRt({ ...(epicL ? {} : { rbLossK: +(kOld ? kOld * 0.7 + k * 0.3 : k).toFixed(4), rbLossKOwner: rbClassOwner() }), rbStats: { ...(env.rt.rbStats || {}), [S.id]: { ...stL, loss: Math.round(lOld ? lOld * 0.6 + loss * 0.4 : loss), lossContext: null, lossOwner: rbClassOwner() } } });
   }
   const tKill = dps > 0 ? mob.cur / dps : Infinity;
   const B = me.cur - me.max * env.cfg.stopHp / 100;              // запас HP до аварийного порога
