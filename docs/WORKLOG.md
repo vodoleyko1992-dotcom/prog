@@ -1,10 +1,10 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
-## 20.10.2026, 12:24 UTC+10 — Codex — PR в подготовке: Firefox20.31
+## 20.10.2026, 12:24 UTC+10 — Codex — [PR #299](https://github.com/vodoleyko1992-dotcom/prog/pull/299): Firefox20.31
 
 - Дополнительнаяпрямаякоманда «и фаерфокс сборка тоже»: Firefox20.31 изChrome20.31, штатныйbuilder/чистыйstaging. Теже64runtime-файла, различия толькоmanifest иREADMEFirefox; JS/настройки/ChromeZIPне менялись. SHAFirefox `ba5415a2d2d1e8c9b2316c60d0ec1e1669c6461bddb1fbaa6940ea588b7f41b8`,1430193байт.
 - Независимыйаудит25/25PASS; web-ext10.8.0:0errors/0notices/45прежнихwarnings; envcheck31/diff-checkPASS. ПолныйNode-прогон483PASS/0FAIL. HANDOFF/README/changelog/контекст обновлены, [доказательства](evidence/firefox-20.31/). НативныйFirefox/Android/игра не запускались, пакетнеподписан.
-- Осталось: опубликоватьPR иFirefoxasset вv20.31, проверитьскачивание/SHA; затем пользовательставитвременночерезabout:debugging и присылаетконтрольныйжурнал.
+- PR#299; uploadasset вернул401наuploads.github.com. Доставка через неизменяемыйrawcommit,HTTP200/точныебайты/SHA PASS; ссылкадобавлена к релизуv20.31. Следующийшаг — временнаяустановкаabout:debugging и контрольныйжурнал.
 
 ## 20.10.2026, 12:19 UTC+10 — Codex — [PR #298](https://github.com/vodoleyko1992-dotcom/prog/pull/298): быстрая Chrome20.31
 
