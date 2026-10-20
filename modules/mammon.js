@@ -437,7 +437,7 @@ function goalNote() {                             // раз на изменен�
   let st = '';
   if (!p) st = '';
   else if (p.done) st = `✅ ${p.name}: уже Lv.${p.lvl} (цель Lv.${p.to})`;
-  else if (p.noCost && !P?.lv.some(x => !x.unk)) st = p.owned ? `${p.name} Lv.${p.lvl} → Lv.${p.lvl + 1}: цены неизвестны — узнаю у кузнеца` : `${p.name}: у героя этой вещи не вижу — кузнец покажет цены, только когда она будет в сумке или надета`;
+  else if (p.noCost && !P?.lv.some(x => !x.unk)) st = p.owned ? `${p.name} Lv.${p.lvl} → Lv.${p.lvl + 1}: цены неизвестны — узнаю у кузнеца${env.autonomyMode() === 'raid' ? ' (в туре РБ — когда тур ждёт РБ, или кнопкой «⚒ Кузнец Маммона»)' : ''}` : `${p.name}: у героя этой вещи не вижу — кузнец покажет цены, только когда она будет в сумке или надета`;
   else {
     const miss = P.raw.filter(r => r.miss > 0), f = mmFarmGoal();
     const next = p.ready ? `✅ на Lv.${p.lvl + 1} всё собрано: ${fmtA(p.a)} адены + ${p.col} Coin of Luck — ${env.cfg.mmUpgrade !== false ? 'лечу к кузнецу улучшать' : 'улучшение жмёшь сам у кузнеца'}. ` : '';
@@ -455,12 +455,15 @@ function goalNote() {                             // раз на изменен�
   return p;
 }
 // ---- поход к NPC ----
-function modeFree(afterWin = false, allowEnchant = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
+function modeFree(afterWin = false, allowEnchant = false, priceOnly = false) {             // можно ли отлучиться: не в бою, не в походе, не в туре РБ/эпиков/РБ-сессии, не перед TvT
   if (env.cfg.enchantMode === true && !allowEnchant) return false; // 15.10: отдельная заточка запрещает новые служебные походы.
   const r = env.rt;                               // afterWin — 10.0: экран победы в цепочке (страница боя, но бой окончен)
   if ((!afterWin && env.isBattle()) || r.shop || r.rbGo || r.zoneGo || r.revive || r.tbuff || r.magister || r.invScan || r.fishSvc || r.petBufferTrip || r.enchantJob || r.subTrip || env.payments?.blocked()) return false;
   if (r.rbSess?.on || (r.epic?.step && r.epic.step !== 'pick')) return false;
-  if (['epic', 'raid'].includes(env.autonomyMode())) return false;
+  // 20.41 (игрок 20.10 «не покупает С кристаллы»): в туре РБ цену кузнеца не узнавали никогда → план Маммона пуст → закупка без кристаллов.
+  // priceOnly — разовый поход только за ценой и только пока тур простаивает ещё ≥ 3 мин (rbHuntIdle); отдельный поход на улучшение, бой и эпики — по-прежнему нет
+  const mode = env.autonomyMode();
+  if (mode === 'epic' || (mode === 'raid' && !(priceOnly && (+r.rbHuntIdle || 0) - Date.now() > 180000))) return false;
   if (env.cfg.tvtOn && env.tvtSoon?.()) return false;
   if (env.isFishing() && env.fishState()) return false;          // рыба на крючке — сначала вываживаем
   return true;
@@ -509,7 +512,7 @@ function want() {
   const smithNo = !!(p && so && so.ok === false && so.id === p.id && so.lvl === p.lvl && now - (so.t || 0) < 2 * 3600000);
   if (p && !p.done && !failStop && (smithOk || (p.ready && !smithNo && (colHave == null || colHave >= (p.col || 0)))) && env.cfg.mmUpgrade !== false && now - (env.rt.mmUpT || 0) > UP_RETRY)
     return { kind: 'smith', up: true, id: `up:${p.id}:${p.lvl}`, why: `улучшить ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
-  if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
+  if (p?.noCost && p.owned && env.cfg.mmSmithAuto !== false && now - (env.rt.mmSmithT || 0) > SMITH_EVERY) return { kind: 'smith', priceOnly: true, why: `цены ${p.name} Lv.${p.lvl} → ${p.lvl + 1}` };
   return null;
 }
 async function heroXY() { const { ok, j } = await getJson('/character'); const c = ok && (j?.character || j); return c && Number.isFinite(+c.worldX) ? { x: +c.worldX, y: +c.worldY } : null; }
@@ -1254,7 +1257,7 @@ async function mmStep() {
   if (g?.drop) { env.rec('B', 'Маммон', `кнопка «${env.rt.mmGoReq.kind === 'order' ? 'сдать заказ' : env.rt.mmGoReq.kind === 'visit' ? `прийти к ${NPC_NAME[env.rt.mmGoReq.npc] || 'торговцу'}` : 'улучшить'} сейчас»: ${g.drop} — не лечу`); await env.setRt({ mmGoReq: null, mmGoSay: { t: Date.now(), why: g.drop } }); return false; }
   const w = want();
   if (!w) return false;
-  if (!modeFree()) { if (w.cmd) env.setStatus('Маммон: по кнопке полечу, как только закончу бой/тур/поход'); return false; }
+  if (!modeFree(false, false, !!w.priceOnly)) { if (w.cmd) env.setStatus('Маммон: по кнопке полечу, как только закончу бой/тур/поход'); return false; }
   // точка возврата: зона охоты (рыбалка, катакомбы и туры возвращаются сами)
   // почта и передача предметов — без телепорта, со своей страницы игры (после — на карту, точка та же)
   const mail = w.kind === 'send' || w.kind === 'claim';
