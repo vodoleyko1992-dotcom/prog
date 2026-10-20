@@ -1264,7 +1264,10 @@ async function fishing() {
     return null;
   }, 25000, 40);
   if (!fishOwn() || env.rt.char!==castChar || env.leaseEpoch!==castLease || res === 'interrupted') { statFlush(); return; }
-  if(res && res!=='unknown')await env.setRt({fishCastPending:null,fishCastActive:res==='bite'});
+  // 20.41 (лог 20.10 21:09: память 1,3 МБ, запись ≈0,4–0,75 с): снятие отметки заброса больше не ждёт хранилища — первая Pumping/Reeling
+  // и следующий заброс шли только после полной записи памяти. Память вкладки меняется сразу, патч уходит одним пакетом со статистикой исхода
+  // (statFlush); новый заброс по-прежнему ждёт своей записи намерения + rtCommit (они дописывают и это снятие), Stop/замок проверяются ниже.
+  if(res && res!=='unknown')bg(env.setRt({fishCastPending:null,fishCastActive:res==='bite'}));
   if(!fishOwn()||env.rt.char!==castChar||env.leaseEpoch!==castLease)return;
   if (res === 'rejected') {
     env.fishCast = null; statFlush();
