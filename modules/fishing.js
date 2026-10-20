@@ -1511,7 +1511,7 @@ async function fishSvcDone(why) {
   await env.setRt({ fishSvc: null });
   if (!valid() || env.rt.fishSvc) return true;
   env.rec('B', 'рыбалка', `«Разделать всю рыбу» из меню — готово${why ? ': ' + why : ''}`);
-  if (S.stopAfter) { env.setStatus(`Разделка готова${why ? ' · ' + why : ''} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); return true; }
+  if (S.stopAfter) { env.setStatus(`Разделка готова${why ? ' · ' + why : ''} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); env.badgeSync?.(); return true; }   // 20.41: значок — у фона нет слушателя хранилища
   return false;
 }
 

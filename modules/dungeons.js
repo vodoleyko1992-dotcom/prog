@@ -478,7 +478,7 @@ async function sealDone(why, back = true, active = () => env.on !== false) {
   await env.setRt({ sealEx: null, sealT: Date.now(), sealLast: { t: Date.now(), why: String(why).slice(0, 200) } });
   if (!active()) return;
   env.rec('B', 'камни печати', why);
-  if (S?.stopAfter) { env.setStatus(`Обмен камней: ${why} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); return; }
+  if (S?.stopAfter) { env.setStatus(`Обмен камней: ${why} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); env.badgeSync?.(); return; }   // 20.41: значок — у фона нет слушателя хранилища
   if (back && env.on) { if (await env.rtCommit?.() === false || !active()) return; location.href = env.cfg.catMode && env.rt.catCur ? env.CAT_URL : '/map.html'; await env.sleep(4000); }
 }
 async function sealStep() {

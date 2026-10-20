@@ -4,7 +4,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const background=fs.readFileSync(path.join(root,'background.js'),'utf8');
-const bgStart=background.indexOf('const LOCK_TTL ='),bgEnd=background.indexOf('const paint =',bgStart);
+// 20.41: до конца блока значка — menuPatch после записи «on» зовёт afterOnWrite (слушателя storage.onChanged в фоне нет)
+const bgStart=background.indexOf('const LOCK_TTL ='),bgEnd=background.indexOf("chrome.storage.local.get('on').then(s => paintOn",bgStart);
 assert(bgStart>0&&bgEnd>bgStart);
 const state={on:false,lock:null,rt:{},cfg:{}};
 const chrome={runtime:{getURL:p=>'chrome-extension://testing/'+p},storage:{local:{async get(keys){let o={};for(const k of (typeof keys==='string'?[keys]:keys))if(Object.hasOwn(state,k))o[k]=structuredClone(state[k]);return o;},async set(o){Object.assign(state,structuredClone(o));}}}};
