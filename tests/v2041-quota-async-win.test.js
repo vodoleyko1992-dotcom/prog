@@ -84,3 +84,10 @@ test('итог у лимита (с ожиданием) не просит фон 
  const f=fixture({autoKillLimit:3,dailyKillLimit:0}),t=await f.begin();f.server(3);const ipc=f.c.ipc;let fb;
  f.c.ipc=async m=>{if(m.farmQuota?.op==='win')fb=m.farmQuota.fallback;return ipc(m)};await f.finish(t,3);assert.equal(fb,undefined);
 });
+// 20.41 (ревью): отложенный kills вкладки (старый +1) не понижает счёт, который фон уже поднял по итогу AoE-боя.
+test('фон: меньший kills вкладки не понижает сохранённый счёт сессии; сброс из меню — по-прежнему',async()=>{
+ const f=fixture(),patch=p=>f.c.ipc({cmd:'statePatch',patch:p,expectedChar:'Hero',epoch:1,src:'tab7'});
+ f.state.rt.kills=60;assert.equal((await patch({kills:55,exp:7})).ok,true);assert.equal(f.state.rt.kills,60);assert.equal(f.state.rt.exp,7);
+ await patch({kills:61});assert.equal(f.state.rt.kills,61);
+ await f.menu({rtPatch:{kills:0,sessT0:5}});assert.equal(f.state.rt.kills,0);await patch({kills:1});assert.equal(f.state.rt.kills,1);
+});

@@ -1452,11 +1452,12 @@ async function rbHuntStep() {
     // 20.41: записи перед huntDone не ждём — его запись шага дописывает очередь целиком (FIFO)
     if (!b) { env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
     // 20.41 (лог 21:09:15–18, Cloe «Убит — пропускаю»): убитый/запрещённый РБ виден в строке сразу — без запроса свежей цены
-    let row = rbRowsParse()[H.id];
-    if (row && (!row.alive || row.deny)) { env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {}); env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`, false); }
+    // 20.41 (ревью): и здесь освежаем все строки открытой страницы — иначе следующий выбор шёл к соседу, убитому на этой же странице.
+    let pageRows = rbRowsParse(), row = pageRows[H.id];
+    if (row && (!row.alive || row.deny)) { env.rbTimer?.domNote(pageRows)?.catch?.(() => {}); env.setRt({ rbList: rbListDomMerge(pageRows) }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`, false); }
     if (!await rbPriceRefresh(() => active() && sameJob(),H.id)) return;
     if (!active() || !sameJob()) return;
-    const pageRows = rbRowsParse();
+    pageRows = rbRowsParse();
     row = pageRows[H.id];
     // 20.41 (лог 21:12:12 Kernon): страница уже открыта — таймеры и очередь тура по всем её строкам, а не только по цели,
     // иначе следующие выборы шли по тому же старому списку.

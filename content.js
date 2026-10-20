@@ -1401,6 +1401,9 @@ addEventListener('pagehide', () => {
     if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }, () => void chrome.runtime.lastError);
   } catch (e) {}
 });
+// 20.41 (ревью): отложенная статистика (до 8 с) при уходе вкладки в фон пишется сразу: замок обычно переходит к другой вкладке,
+// когда эта не видна, а после потери замка неотправленная очередь сбрасывается.
+document.addEventListener('visibilitychange', () => { if (document.hidden && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };

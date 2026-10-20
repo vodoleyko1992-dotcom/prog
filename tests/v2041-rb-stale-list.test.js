@@ -101,3 +101,12 @@ test('pageCheck уважает занятый опрос тура и смену 
   assert.equal(gets.length, n + 1);
   assert.equal(env.rt.rbList[ID].alive, false, 'ответ чужого героя не записан');
 });
+// 20.41 (ревью): цель убита на открытой странице — и тогда освежаются все строки страницы, а не только она.
+test('цель на открытой странице убита: соседняя убитая строка тоже уходит из очереди тура', async () => {
+  const doc = docOf(`<div id="rb-list">${rowHtml(ID, 'Audit Raid', false)}${rowHtml(OTHER, 'Other Raid', false)}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbHunt.step, 'pick');assert.equal(m.env.rt.rbList[ID].alive, false);
+  assert.equal(m.env.rt.rbList[OTHER].alive, false, 'сосед на той же странице');
+  await new Promise(r => setImmediate(r));assert.equal(m.env.rt.rbTimer.b[OTHER].al, false);assert.equal(m.fires.length, 0);
+});

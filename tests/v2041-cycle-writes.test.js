@@ -59,3 +59,8 @@ test('изменение памяти из меню снимает свои не
  const src=read('content.js'),a=src.indexOf('chrome.storage.onChanged.addListener(ch => {'),b=src.indexOf('const timerPrevious = rt;',a),part=src.slice(a,b);
  assert.match(part,/_src === 'menu'[\s\S]*rtWriter\.drop\(keys\)/);assert.match(part,/JSON\.stringify\(o\[k\]\) !== JSON\.stringify\(n\[k\]\)/);
 });
+test('вкладка уходит в фон: отложенная статистика пишется сразу (recover), пока замок ещё у неё',()=>{
+ const src=read('content.js');assert.match(src,/addEventListener\('visibilitychange', \(\) => \{ if \(document\.hidden && tabOwner && leaseEpoch && !tabIdle\) rtWriter\.recover\(\)/);
+ const core=require('../engine-core.js'),sent=[],q=core.createPatchQueue(async b=>{sent.push(b);return{ok:true}},()=>true,()=>{},()=>Date.now(),{set:()=>0,clear(){}});
+ q.defer({exp:5});return q.recover().then(()=>assert.deepEqual(JSON.parse(JSON.stringify(sent)),[{exp:5}]));
+});

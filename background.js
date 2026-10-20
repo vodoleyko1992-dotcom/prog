@@ -341,6 +341,9 @@ async function statePatch(m, sender) {
     const change = {};
     const retirement=retireRaidSessionPatch(pvpSeedPatch(patch,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
     if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
+    // 20.41 (ревью): kills вкладки может прийти отложенным пакетом уже после итога квоты фона (max по серверу). Вкладка счёт сессии
+    // только увеличивает (сброс — только из меню), поэтому меньшее значение сохранённое не понижает.
+    if (Number.isSafeInteger(writePatch.kills) && Number.isSafeInteger(state.rt?.kills) && writePatch.kills < state.rt.kills) writePatch.kills = state.rt.kills;
     // Intent-only seed не содержит локального stale map; canonical echo принимается владельцем тоже.
     if (Object.keys(writePatch).length) change.rt = { ...(state.rt || {}), ...writePatch, _src: retirement.retired ? 'raid-session-policy' : writePatch.pvpSeedDremia1410===true&&writePatch.pvpTargets ? 'pvp-seed' : String(m.src || '').slice(0, 60) };
     if (Object.keys(config).length) change.cfg = { ...(state.cfg || {}), ...config };
