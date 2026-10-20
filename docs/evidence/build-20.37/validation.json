@@ -58,5 +58,12 @@
     "Живую игру, настоящий Firefox/Android и полный исторический browser-runner в этом выпуске не запускали.",
     "Реальный прирост ДПС пока не измерен; браузерные тайминги относятся к локальным ответам."
   ],
-  "next": "Обновить файлы в прежней папке, нажать ↻ расширения, обновить вкладку игры и записать контрольный боевой лог."
+  "next": "Обновить файлы в прежней папке, нажать ↻ расширения, обновить вкладку игры и записать контрольный боевой лог.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/312",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/cef843593c13f38c41089c650dc9a07a25a3924f/builds/l2wap-bot-v20.37.zip",
+    "publicDownloadChecked": true,
+    "sha256Match": true,
+    "evidence": "download.json"
+  }
 }
