@@ -1,0 +1,487 @@
+✖ OFF: первая вкладка чужого героя не блокирует чтение из второй, команды только одной вкладке (7.196043ms)
+✖ ON: мёртвая сохранённая вкладка не скрывает подтверждённого владельца (2.618038ms)
+✖ подтверждённая активная вкладка читается один раз без обхода остальных (1.185427ms)
+✖ ни одна вкладка не подтвердила героя: никакой команды и понятная ошибка (2.039756ms)
+✖ изменение hero во время probe отменяет чтение без команды (2.052495ms)
+✖ изменение on во время probe отменяет чтение без команды (0.895631ms)
+✖ изменение kick во время probe отменяет чтение без команды (0.841659ms)
+✖ изменение generation во время probe отменяет чтение без команды (0.803571ms)
+✖ зависший readonly probe ограничен таймером и не блокирует правильную вторую вкладку (1.370837ms)
+✔ prepare/resume/reconcile используют прежний путь без probe и без fanout (2.378166ms)
+✖ readonly OFF probe подтверждает героя без захвата lease, GET или записи (0.959316ms)
+✖ readonly probe отклоняет hud (0.505722ms)
+✖ readonly probe отклоняет memory (0.448666ms)
+✖ readonly probe отклоняет saved (0.403368ms)
+✖ readonly probe отклоняет mode (0.385051ms)
+✖ readonly probe отклоняет owner (0.413774ms)
+✖ readonly probe отклоняет lease (0.375947ms)
+✖ readonly ON probe подтверждает только работающего владельца (0.455477ms)
+✖ command повторно отклоняет изменение on после успешного probe до доставки сообщения (1.760174ms)
+✖ command повторно отклоняет изменение kick после успешного probe до доставки сообщения (0.966637ms)
+✔ сбой записи диагностического журнала не теряет отказ команды (0.939126ms)
+✖ DOCK iframe без chrome.tabs отправляет чтение через runtime к своей игре (0.930033ms)
+✖ DOCK prepare использует тот же relay без chrome.tabs и смены команды (0.795069ms)
+✖ DOCK resume использует тот же relay без chrome.tabs и смены команды (0.773106ms)
+✖ DOCK pause использует тот же relay без chrome.tabs и смены команды (0.798083ms)
+✖ DOCK reconcile использует тот же relay без chrome.tabs и смены команды (0.840938ms)
+✖ DOCK acknowledge использует тот же relay без chrome.tabs и смены команды (0.91489ms)
+✖ DOCK close использует тот же relay без chrome.tabs и смены команды (0.752114ms)
+✖ DOCK показывает отказ текущей игры и не пробует другую вкладку (1.063304ms)
+✖ DOCK/manual scan отменяется при изменении on во время захвата lease (1.076052ms)
+✖ DOCK/manual scan отменяется при изменении kick во время захвата lease (1.048441ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 2
+ℹ fail 29
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.18033
+
+✖ failing tests:
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:19:1
+✖ OFF: первая вкладка чужого героя не блокирует чтение из второй, команды только одной вкладке (7.196043ms)
+  Error: Персонаж изменился
+      at lsCommand (evalmachine.<anonymous>:7:24)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:20:20)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:22:1
+✖ ON: мёртвая сохранённая вкладка не скрывает подтверждённого владельца (2.618038ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  +   9
+  -   2
+    ]
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:23:101)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 9 ],
+    expected: [ 2 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:25:1
+✖ подтверждённая активная вкладка читается один раз без обхода остальных (1.185427ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  0 !== 1
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:26:146)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:28:1
+✖ ни одна вкладка не подтвердила героя: никакой команды и понятная ошибка (2.039756ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /вкладк|обновите/i. Input:
+
+  'Error: Персонаж изменился'
+
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:29:30)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Персонаж изменился
+        at lsCommand (evalmachine.<anonymous>:7:24)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:29:30)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: /вкладк|обновите/i,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:31:53
+✖ изменение hero во время probe отменяет чтение без команды (2.052495ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:33:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /измен|останов|обновите/i,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:31:53
+✖ изменение on во время probe отменяет чтение без команды (0.895631ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:33:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /измен|останов|обновите/i,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:31:53
+✖ изменение kick во время probe отменяет чтение без команды (0.841659ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:33:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /измен|останов|обновите/i,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:31:53
+✖ изменение generation во время probe отменяет чтение без команды (0.803571ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:33:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /измен|останов|обновите/i,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:36:1
+✖ зависший readonly probe ограничен таймером и не блокирует правильную вторую вкладку (1.370837ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  +   1
+  -   2
+    ]
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:37:121)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 1 ],
+    expected: [ 2 ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:47:1
+✖ readonly OFF probe подтверждает героя без захвата lease, GET или записи (0.959316ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:47:98)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет hud (0.505722ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет memory (0.448666ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет saved (0.403368ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет mode (0.385051ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет owner (0.413774ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:48:67
+✖ readonly probe отклоняет lease (0.375947ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:49:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:53:1
+✖ readonly ON probe подтверждает только работающего владельца (0.455477ms)
+  AssertionError [ERR_ASSERTION]: readonly probe присутствует
+      at probe (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:43:130)
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:53:86)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:55:33
+✖ command повторно отклоняет изменение on после успешного probe до доставки сообщения (1.760174ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Управление изменилось/. Input:
+
+  'lease must not be acquired'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:60:39)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'lease must not be acquired',
+    expected: /Управление изменилось/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:55:33
+✖ command повторно отклоняет изменение kick после успешного probe до доставки сообщения (0.966637ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Управление изменилось/. Input:
+
+  'lease must not be acquired'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:60:39)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'lease must not be acquired',
+    expected: /Управление изменилось/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:69:1
+✖ DOCK iframe без chrome.tabs отправляет чтение через runtime к своей игре (0.930033ms)
+  Error: no tabs in dock
+      at f.box.activeTab (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:70:107)
+      at lsCommand (evalmachine.<anonymous>:3:96)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:71:2)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK prepare использует тот же relay без chrome.tabs и смены команды (0.795069ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK resume использует тот же relay без chrome.tabs и смены команды (0.773106ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK pause использует тот же relay без chrome.tabs и смены команды (0.798083ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK reconcile использует тот же relay без chrome.tabs и смены команды (0.840938ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK acknowledge использует тот же relay без chrome.tabs и смены команды (0.91489ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:73:84
+✖ DOCK close использует тот же relay без chrome.tabs и смены команды (0.752114ms)
+  TypeError: Cannot read properties of undefined (reading 'sendMessage')
+      at lsCommand (evalmachine.<anonymous>:6:34)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:74:163)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:77:1
+✖ DOCK показывает отказ текущей игры и не пробует другую вкладку (1.063304ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Персонаж изменился/. Input:
+
+  "TypeError: Cannot read properties of undefined (reading 'sendMessage')"
+
+      at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:78:148)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: TypeError: Cannot read properties of undefined (reading 'sendMessage')
+        at lsCommand (evalmachine.<anonymous>:6:34)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:78:148)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:960:7),
+    expected: /Персонаж изменился/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:81:33
+✖ DOCK/manual scan отменяется при изменении on во время захвата lease (1.076052ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Управление изменилось/. Input:
+
+  'mergeCfg is not defined'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:86:129)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'mergeCfg is not defined',
+    expected: /Управление изменилось/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:81:33
+✖ DOCK/manual scan отменяется при изменении kick во время захвата lease (1.048441ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Управление изменилось/. Input:
+
+  'mergeCfg is not defined'
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424-routing-baseline/tests/v2033-lifestone-scan-routing.test.cjs:86:129)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'mergeCfg is not defined',
+    expected: /Управление изменилось/,
+    operator: 'match',
+    diff: 'simple'
+  }

@@ -1,0 +1,43 @@
+✔ scan shows busy immediately and prevents duplicate command, then durable success with item count (6.468555ms)
+✔ scan failure remains visible through polling/focus and preserves prior list/drafts: null (6.288464ms)
+✔ scan failure remains visible through polling/focus and preserves prior list/drafts: lsWeapon (7.489866ms)
+✔ scan failure remains visible through polling/focus and preserves prior list/drafts: lsTargets (9.864376ms)
+✔ scan failure remains visible through polling/focus and preserves prior list/drafts: lsMaxAttempts (16.969882ms)
+✔ actor change clears previous error even while field has focus (7.708275ms)
+✔ late resolve from old hero cannot attach feedback to new hero (2.806222ms)
+✔ late reject from old hero cannot attach feedback to new hero (3.543925ms)
+✔ new scan replaces old error and reports an empty successful result (3.138323ms)
+✔ markup exposes persistent scan feedback as an atomic live status (1.549597ms)
+✔ module scan diagnoses snapshot without raw response/secret, cached fallback or mutation (2.895396ms)
+✔ module scan diagnoses catalog without raw response/secret, cached fallback or mutation (1.143314ms)
+✔ module scan diagnoses context without raw response/secret, cached fallback or mutation (1.111376ms)
+✔ module scan diagnoses write without raw response/secret, cached fallback or mutation (1.556247ms)
+✔ module scan diagnoses exception without raw response/secret, cached fallback or mutation (1.450387ms)
+✔ module success logs request and exact count, without a write command (4.552886ms)
+✔ scan-only API diagnostic distinguishes инвентарь героя: HTTP (1.654224ms)
+✔ scan-only API diagnostic distinguishes инвентарь героя: timeout (1.142022ms)
+✔ scan-only API diagnostic distinguishes инвентарь героя: JSON (1.212829ms)
+✔ scan-only API diagnostic distinguishes инвентарь героя: shape (1.076213ms)
+✔ scan-only API diagnostic distinguishes каталог оружия: HTTP (1.082773ms)
+✔ scan-only API diagnostic distinguishes каталог оружия: timeout (0.832816ms)
+✔ scan-only API diagnostic distinguishes каталог оружия: JSON (1.228433ms)
+✔ scan-only API diagnostic distinguishes каталог оружия: shape (1.971072ms)
+✔ scan diagnoses missing or mismatched character without exposing values (1.516361ms)
+✔ scan diagnoses missing or mismatched name without exposing values (0.94167ms)
+✔ scan diagnoses missing or mismatched foreignName without exposing values (0.785655ms)
+✔ scan diagnoses missing or mismatched revision without exposing values (0.811013ms)
+✔ scan diagnoses missing or mismatched eq without exposing values (0.889412ms)
+✔ scan diagnoses missing or mismatched stacks without exposing values (0.825305ms)
+✔ scan diagnoses missing or mismatched itemGradeHints without exposing values (0.85576ms)
+✔ scan diagnoses missing or mismatched itemSlotHints without exposing values (0.871394ms)
+✔ storage read failure in finally releases scan UI and keeps an error until retry succeeds (2.690358ms)
+✔ scan-only whole response deadline releases a hung headers read without publishing late data (1.130955ms)
+✔ scan-only whole response deadline releases a hung body read without publishing late data (1.832714ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.479555

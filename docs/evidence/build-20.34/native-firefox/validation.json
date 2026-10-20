@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-20T04:47:28.258881+00:00",
+  "version": "20.34",
+  "firefox": "153.5.0esr",
+  "geckodriver": "0.37.1",
+  "result": "PASS",
+  "nativeCases": 6,
+  "strictFinalArchive": {
+    "bytes": 1441279,
+    "sha256": "fa81f69f1843cdfe14e60006b938fbb6710132be084948cde7769963b8123846",
+    "runtimeFiles": 64,
+    "unchangedBeforeAfter": true
+  },
+  "iframe": {
+    "chromeTabs": "undefined",
+    "chromeRuntime": "object",
+    "chromeStorage": "object",
+    "senderTabAndFrameId": "PASS",
+    "backgroundToTopFrameRelay": "PASS"
+  },
+  "offOnAfterStopScans": "PASS",
+  "realPublicItemIds": [
+    9002284,
+    97,
+    175,
+    8688
+  ],
+  "catalog503ErrorPersistsAndPreviousListPreserved": "PASS",
+  "offStartWith1500msClockDelay": {
+    "result": "PASS",
+    "falseWakeWarnings": 0,
+    "mockPosts": 1,
+    "itemId": 9002284,
+    "grade": "S",
+    "last": "matk_6",
+    "status": "done"
+  },
+  "localFixtureRequests": 23,
+  "unpromptedPosts": 0,
+  "boundary": "Isolated native Firefox profile; all game URLs resolve via network.dns.localDomains to local HTTPS fixture only, missing routes503, no live account/credentials. WebDriver acceptInsecureCerts is used only for this local fixture; download TLS verification remained enabled.",
+  "cleanup": "All WebDriver sessions quit in finally; no active Firefox or geckodriver process"
+}

@@ -1,0 +1,2 @@
+{"at":"2026-10-20T04:34:51.679Z","source":"/workspace/prog","capability":{"docked":true,"tabs":"undefined","send":"undefined","runtime":"function"},"limitedIframeApi":true,"expectedBaselineFailure":true,"advanced":false,"count":0,"popup":{"count":1,"hint":"Нажмите «Обновить оружие» на открытой вкладке игры. Подходят оружия C/B/A/S.","toast":"ЛС: Cannot read properties of undefined (reading 'sendMessage')","status":"","max":"37"},"api":[],"errors":[],"posts":0}
+PASS baseline dock reproduces missing chrome.tabs and no API scan

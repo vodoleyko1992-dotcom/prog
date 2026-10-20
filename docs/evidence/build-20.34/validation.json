@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-20T04:48:12.071305+00:00",
+  "version": "20.34",
+  "nodeFiles": {
+    "pass": 494,
+    "fail": 0
+  },
+  "newCases": {
+    "feedback": 35,
+    "routing": 31,
+    "relay": 41,
+    "wakeContext": 22,
+    "total": 129
+  },
+  "syntax": {
+    "changedJsCjs": 17,
+    "allRuntimeJs": 49,
+    "result": "PASS"
+  },
+  "envcheckModules": 31,
+  "audit": {
+    "pass": 72,
+    "fail": 0,
+    "path": "audit.json"
+  },
+  "archiveChrome": {
+    "browserFilesPass": 5,
+    "jsErrors": 0,
+    "cfgKeys": 207,
+    "version": "20.34",
+    "unchangedRuntimeFiles": 64,
+    "path": "browser/validation.json"
+  },
+  "nativeFirefox": {
+    "version": "153.5.0esr",
+    "casesPass": 6,
+    "falseWakeWarnings": 0,
+    "unchangedRuntimeFiles": 64,
+    "path": "native-firefox/validation.json"
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45,
+    "warningsUnchanged": true
+  },
+  "profileDefaultsUnchanged": true,
+  "boundary": "No live game/account or Android. All game responses local; native Firefox local HTTPS isolated WebDriver accepts local fixture certificate. Full historical browser runner not repeated.",
+  "archives": [
+    {
+      "name": "l2wap-bot-v20.34.zip",
+      "bytes": 1430822,
+      "sha256": "bfb0fe4a8d849da699b39f7b9b45611dc31b5cc97c80fe7d5e388047c62447a0"
+    },
+    {
+      "name": "l2wap-bot-v20.34-firefox.zip",
+      "bytes": 1441279,
+      "sha256": "fa81f69f1843cdfe14e60006b938fbb6710132be084948cde7769963b8123846"
+    }
+  ]
+}

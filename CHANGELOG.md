@@ -1,6 +1,7 @@
 # L2wap Bot — история версий
 
 Подробное описание каждой версии лежит в `docs/changelog/` (по файлу на версию, новые сверху). В zip-пакет расширения эта папка не входит: расширению для работы она не нужна.
+- [20.34 — авто-ЛС во встроенном меню Firefox](docs/changelog/CHANGELOG-20.34.md)
 - [L2wap Bot 20.33: Chrome + Firefox, сумка после саба и уровни авто-катакомб](docs/changelog/CHANGELOG-20.33.md)
 - [L2wap Bot 20.32: Chrome + Firefox, авто-ЛС и баффы кота до РБ](docs/changelog/CHANGELOG-20.32.md)
 - [L2wap Bot 20.31: Chrome + Firefox, Battle Trance и подготовка Frenzy/Zealot](docs/changelog/CHANGELOG-20.31.md)
