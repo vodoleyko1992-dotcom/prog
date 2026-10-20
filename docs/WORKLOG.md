@@ -1,11 +1,11 @@
 # Журнал работ: Claude и ChatGPT/Codex
 
 
-## 20.10.2026, 21:05 UTC+10 — Codex — PR в подготовке: быстрая Chrome20.40
+## 20.10.2026, 21:05 UTC+10 — Codex — [PR #317](https://github.com/vodoleyko1992-dotcom/prog/pull/317): быстрая Chrome20.40
 
 - По «потом быстрая сборка» упакован Chrome20.40 изff2aee7:20.39 + PR#316 (статистика без ожиданий/native-урон). Игровых изменений при выпуске нет, metadata/header/инструкции/5assertions обновлены. Настройки/профиль и Firefox20.36 сохранены, LitePR#306 не затронут.
 - Полный509 Node-файлов PASS/0FAIL, syntax49runtime/5version-tests/envcheck31/diff-check PASS. Независимый ZIP-аудит179/179/88refs/sourceSHA PASS,64runtime. Actual Chrome156 изZIP:20.40/cfg208/0JS,5 MV3(storage3+cat2)+32 native PASS;64SHA before=after=source. ZIP1454077B, SHA в builds/SHA256SUMS-20.40.txt; [доказательства](evidence/build-20.40/validation.json).
-- Живую игру/Firefox/Android/полный исторический runner не запускали; реальный прирост фарма не измерен. Публикация с проверкой публичных байтов/SHA в процессе. Следующее — установка поверх прежней папки/↻/обновление игры и полный боевой лог.
+- Живую игру/Firefox/Android/полный исторический runner не запускали; реальный прирост фарма не измерен. [Chrome20.40](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/8a9aa89ec61658f7e3b070fb40c1f9f162d93088/builds/l2wap-bot-v20.40.zip) опубликован; публичное скачивание побайтно/SHA256 PASS ([доставка](evidence/build-20.40/download.json)). Следующее — установка поверх прежней папки/↻/обновление игры и полный боевой лог.
 
 
 ## 20.10.2026, 20:59 UTC+10 — Codex — [PR #316](https://github.com/vodoleyko1992-dotcom/prog/pull/316): паузы статистики и native-урон

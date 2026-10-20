@@ -52,5 +52,11 @@
     "settingsOrBaseProfileChanged": false,
     "allDpsCoverageUnchanged": true
   },
-  "next": "Replace files in the existing Chrome folder, reload extension and game tab; obtain a full combat log."
+  "next": "Replace files in the existing Chrome folder, reload extension and game tab; obtain a full combat log.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/317",
+  "delivery": {
+    "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/8a9aa89ec61658f7e3b070fb40c1f9f162d93088/builds/l2wap-bot-v20.40.zip",
+    "bytesAndSHA256Match": true,
+    "proof": "download.json"
+  }
 }
