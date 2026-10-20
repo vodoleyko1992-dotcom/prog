@@ -1,0 +1,618 @@
+{
+  "20.37": {
+    "networkCount": 3295,
+    "actionCount": 712,
+    "actions": {
+      "l2_302": 290,
+      "whirlwind": 187,
+      "battle_potion_use": 102,
+      "wild_sweep": 118,
+      "fighter_soulshot_toggle": 1,
+      "attack": 14
+    },
+    "statuses": {
+      "200": 683,
+      "502": 29
+    },
+    "prof": {
+      "dwarf_bounty_hunter": 683,
+      "": 29
+    },
+    "timingFields": {
+      "serverNowMs": 393
+    },
+    "battles": 290,
+    "actionRTT": {
+      "n": 712,
+      "min": 188,
+      "p25": 424,
+      "median": 527.5,
+      "p75": 670,
+      "p90": 908,
+      "max": 1791,
+      "mean": 585.8
+    },
+    "startRTT": {
+      "n": 290,
+      "min": 269,
+      "p25": 366,
+      "median": 416.5,
+      "p75": 488,
+      "p90": 602,
+      "max": 1109,
+      "mean": 447.7
+    },
+    "characterRTT": {
+      "n": 290,
+      "min": 234,
+      "p25": 296,
+      "median": 448.0,
+      "p75": 490,
+      "p90": 533,
+      "max": 1503,
+      "mean": 429.6
+    },
+    "withinBattleResponseToNextRequest": {
+      "n": 421,
+      "min": 495,
+      "p25": 830,
+      "median": 1102,
+      "p75": 1483,
+      "p90": 1637,
+      "max": 2706,
+      "mean": 1164.9
+    },
+    "byPair": {
+      "l2_302→battle_potion_use": {
+        "n": 95,
+        "min": 881,
+        "p25": 985,
+        "median": 1355,
+        "p75": 1500,
+        "p90": 1630,
+        "max": 2196,
+        "mean": 1279.0
+      },
+      "battle_potion_use→whirlwind": {
+        "n": 66,
+        "min": 495,
+        "p25": 621,
+        "median": 668.0,
+        "p75": 713,
+        "p90": 793,
+        "max": 1056,
+        "mean": 676.8
+      },
+      "l2_302→whirlwind": {
+        "n": 113,
+        "min": 934,
+        "p25": 1138,
+        "median": 1405,
+        "p75": 1563,
+        "p90": 1695,
+        "max": 2706,
+        "mean": 1379.9
+      },
+      "battle_potion_use→wild_sweep": {
+        "n": 29,
+        "min": 512,
+        "p25": 628,
+        "median": 684,
+        "p75": 716,
+        "p90": 805,
+        "max": 937,
+        "mean": 686.0
+      },
+      "fighter_soulshot_toggle→l2_302": {
+        "n": 1,
+        "min": 857,
+        "p25": 857,
+        "median": 857,
+        "p75": 857,
+        "p90": 857,
+        "max": 857,
+        "mean": 857
+      },
+      "battle_potion_use→l2_302": {
+        "n": 7,
+        "min": 917,
+        "p25": 969,
+        "median": 1317,
+        "p75": 1326,
+        "p90": 1385,
+        "max": 1569,
+        "mean": 1218
+      },
+      "l2_302→wild_sweep": {
+        "n": 81,
+        "min": 932,
+        "p25": 1121,
+        "median": 1432,
+        "p75": 1567,
+        "p90": 1675,
+        "max": 2212,
+        "mean": 1394.6
+      },
+      "whirlwind→wild_sweep": {
+        "n": 3,
+        "min": 674,
+        "p25": 674,
+        "median": 830,
+        "p75": 830,
+        "p90": 830,
+        "max": 1256,
+        "mean": 920
+      },
+      "wild_sweep→attack": {
+        "n": 7,
+        "min": 655,
+        "p25": 762,
+        "median": 783,
+        "p75": 819,
+        "p90": 832,
+        "max": 834,
+        "mean": 779.4
+      },
+      "attack→attack": {
+        "n": 2,
+        "min": 1720,
+        "p25": 1720,
+        "median": 1720.5,
+        "p75": 1720,
+        "p90": 1720,
+        "max": 1721,
+        "mean": 1720.5
+      },
+      "attack→whirlwind": {
+        "n": 7,
+        "min": 669,
+        "p25": 683,
+        "median": 857,
+        "p75": 984,
+        "p90": 1267,
+        "max": 1557,
+        "mean": 967.4
+      },
+      "whirlwind→attack": {
+        "n": 5,
+        "min": 599,
+        "p25": 721,
+        "median": 749,
+        "p75": 788,
+        "p90": 788,
+        "max": 800,
+        "mean": 731.4
+      },
+      "attack→wild_sweep": {
+        "n": 5,
+        "min": 685,
+        "p25": 726,
+        "median": 792,
+        "p75": 878,
+        "p90": 878,
+        "max": 912,
+        "mean": 798.6
+      }
+    },
+    "startResponseToFirstRequest": {
+      "n": 289,
+      "min": 496,
+      "p25": 1402,
+      "median": 1517,
+      "p75": 1880,
+      "p90": 2160,
+      "max": 4807,
+      "mean": 1760.5
+    },
+    "winToSkill": {
+      "n": 289,
+      "min": 816,
+      "p25": 974,
+      "median": 1354,
+      "p75": 1454,
+      "p90": 1803,
+      "max": 3228,
+      "mean": 1321.4
+    },
+    "winToResult": {
+      "n": 288,
+      "min": 0,
+      "p25": 958,
+      "median": 1735.0,
+      "p75": 2202,
+      "p90": 2401,
+      "max": 3156,
+      "mean": 1477.3
+    },
+    "winToNextCat": {
+      "n": 265,
+      "min": 2671,
+      "p25": 4155,
+      "median": 4899,
+      "p75": 5354,
+      "p90": 5942,
+      "max": 9144,
+      "mean": 4813.1
+    },
+    "winToNextStartRequest": {
+      "n": 288,
+      "min": 3985,
+      "p25": 5565,
+      "median": 6250.0,
+      "p75": 6975,
+      "p90": 8398,
+      "max": 58338,
+      "mean": 7771.4
+    },
+    "excludedDetailedPairs": 421,
+    "excludedDetailedWins": 289,
+    "scope": "Historical20.37 aggregates only; detailed current20.39 pairs/wins retained below."
+  },
+  "20.39": {
+    "networkCount": 105,
+    "actionCount": 21,
+    "actions": {
+      "l2_302": 9,
+      "battle_potion_use": 3,
+      "wild_sweep": 5,
+      "whirlwind": 4
+    },
+    "statuses": {
+      "200": 21
+    },
+    "prof": {
+      "dwarf_bounty_hunter": 21
+    },
+    "timingFields": {
+      "serverNowMs": 12
+    },
+    "battles": 9,
+    "actionRTT": {
+      "n": 21,
+      "min": 435,
+      "p25": 488,
+      "median": 641,
+      "p75": 865,
+      "p90": 1023,
+      "max": 1081,
+      "mean": 686.0
+    },
+    "startRTT": {
+      "n": 9,
+      "min": 352,
+      "p25": 381,
+      "median": 450,
+      "p75": 508,
+      "p90": 551,
+      "max": 582,
+      "mean": 456.8
+    },
+    "characterRTT": {
+      "n": 9,
+      "min": 246,
+      "p25": 473,
+      "median": 590,
+      "p75": 611,
+      "p90": 624,
+      "max": 708,
+      "mean": 519.2
+    },
+    "withinBattleResponseToNextRequest": {
+      "n": 12,
+      "min": 577,
+      "p25": 863,
+      "median": 1202.5,
+      "p75": 1460,
+      "p90": 1596,
+      "max": 1664,
+      "mean": 1195.2
+    },
+    "byPair": {
+      "l2_302→battle_potion_use": {
+        "n": 3,
+        "min": 1075,
+        "p25": 1075,
+        "median": 1106,
+        "p75": 1106,
+        "p90": 1106,
+        "max": 1178,
+        "mean": 1119.7
+      },
+      "battle_potion_use→wild_sweep": {
+        "n": 1,
+        "min": 577,
+        "p25": 577,
+        "median": 577,
+        "p75": 577,
+        "p90": 577,
+        "max": 577,
+        "mean": 577
+      },
+      "l2_302→wild_sweep": {
+        "n": 4,
+        "min": 1227,
+        "p25": 1227,
+        "median": 1616.5,
+        "p75": 1637,
+        "p90": 1637,
+        "max": 1664,
+        "mean": 1531
+      },
+      "l2_302→whirlwind": {
+        "n": 2,
+        "min": 1246,
+        "p25": 1246,
+        "median": 1353.0,
+        "p75": 1246,
+        "p90": 1246,
+        "max": 1460,
+        "mean": 1353
+      },
+      "battle_potion_use→whirlwind": {
+        "n": 2,
+        "min": 713,
+        "p25": 713,
+        "median": 788.0,
+        "p75": 713,
+        "p90": 713,
+        "max": 863,
+        "mean": 788
+      }
+    },
+    "startResponseToFirstRequest": {
+      "n": 9,
+      "min": 1768,
+      "p25": 2008,
+      "median": 2062,
+      "p75": 2196,
+      "p90": 2378,
+      "max": 3678,
+      "mean": 2242.1
+    },
+    "winToSkill": {
+      "n": 9,
+      "min": 948,
+      "p25": 1000,
+      "median": 1034,
+      "p75": 1063,
+      "p90": 1097,
+      "max": 2030,
+      "mean": 1135.9
+    },
+    "winToResult": {
+      "n": 9,
+      "min": 0,
+      "p25": 1019,
+      "median": 1066,
+      "p75": 2035,
+      "p90": 2147,
+      "max": 2479,
+      "mean": 1417.2
+    },
+    "winToNextCat": {
+      "n": 8,
+      "min": 3568,
+      "p25": 4772,
+      "median": 4914.5,
+      "p75": 5175,
+      "p90": 5297,
+      "max": 6283,
+      "mean": 4969
+    },
+    "winToNextStartRequest": {
+      "n": 8,
+      "min": 4966,
+      "p25": 6232,
+      "median": 6353.0,
+      "p75": 6853,
+      "p90": 7798,
+      "max": 23183,
+      "mean": 8498.6
+    },
+    "pairs": [
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1075,
+        "answer": "20:41:04.231",
+        "request": "20:41:05.306",
+        "rtt": 463,
+        "line": 9496,
+        "nextLine": 9502
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 577,
+        "answer": "20:41:05.769",
+        "request": "20:41:06.346",
+        "rtt": 653,
+        "line": 9502,
+        "nextLine": 9506
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1596,
+        "answer": "20:41:34.734",
+        "request": "20:41:36.330",
+        "rtt": 448,
+        "line": 9570,
+        "nextLine": 9577
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1460,
+        "answer": "20:41:45.825",
+        "request": "20:41:47.285",
+        "rtt": 1023,
+        "line": 9593,
+        "nextLine": 9600
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1664,
+        "answer": "20:41:58.214",
+        "request": "20:41:59.878",
+        "rtt": 528,
+        "line": 9620,
+        "nextLine": 9627
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1178,
+        "answer": "20:42:10.043",
+        "request": "20:42:11.221",
+        "rtt": 488,
+        "line": 9643,
+        "nextLine": 9649
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 863,
+        "answer": "20:42:11.709",
+        "request": "20:42:12.572",
+        "rtt": 830,
+        "line": 9649,
+        "nextLine": 9654
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1637,
+        "answer": "20:42:24.431",
+        "request": "20:42:26.068",
+        "rtt": 849,
+        "line": 9673,
+        "nextLine": 9680
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1106,
+        "answer": "20:42:36.447",
+        "request": "20:42:37.553",
+        "rtt": 600,
+        "line": 9696,
+        "nextLine": 9702
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 713,
+        "answer": "20:42:38.153",
+        "request": "20:42:38.866",
+        "rtt": 987,
+        "line": 9702,
+        "nextLine": 9707
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1227,
+        "answer": "20:42:48.986",
+        "request": "20:42:50.213",
+        "rtt": 1078,
+        "line": 9728,
+        "nextLine": 9736
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1246,
+        "answer": "20:42:59.646",
+        "request": "20:43:00.892",
+        "rtt": 1081,
+        "line": 9750,
+        "nextLine": 9757
+      }
+    ],
+    "wins": [
+      {
+        "action": "wild_sweep",
+        "line": 9506,
+        "answer": "20:41:06.999",
+        "toSkill": 1016,
+        "toResult": 1019,
+        "toNextCat": null,
+        "toNextStart": 23183
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9577,
+        "answer": "20:41:36.778",
+        "toSkill": 1000,
+        "toResult": 1001,
+        "toNextCat": 4828,
+        "toNextStart": 6251
+      },
+      {
+        "action": "whirlwind",
+        "line": 9600,
+        "answer": "20:41:48.308",
+        "toSkill": 1097,
+        "toResult": 2147,
+        "toNextCat": 5297,
+        "toNextStart": 6853
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9627,
+        "answer": "20:42:00.406",
+        "toSkill": 1063,
+        "toResult": 1064,
+        "toNextCat": 4995,
+        "toNextStart": 6455
+      },
+      {
+        "action": "whirlwind",
+        "line": 9654,
+        "answer": "20:42:13.402",
+        "toSkill": 948,
+        "toResult": 1944,
+        "toNextCat": 6283,
+        "toNextStart": 7798
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9680,
+        "answer": "20:42:26.917",
+        "toSkill": 1063,
+        "toResult": 1066,
+        "toNextCat": 4834,
+        "toNextStart": 6251
+      },
+      {
+        "action": "whirlwind",
+        "line": 9707,
+        "answer": "20:42:39.853",
+        "toSkill": 1034,
+        "toResult": 2035,
+        "toNextCat": 4772,
+        "toNextStart": 6232
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9736,
+        "answer": "20:42:51.291",
+        "toSkill": 972,
+        "toResult": 0,
+        "toNextCat": 3568,
+        "toNextStart": 4966
+      },
+      {
+        "action": "whirlwind",
+        "line": 9757,
+        "answer": "20:43:01.973",
+        "toSkill": 2030,
+        "toResult": 2479,
+        "toNextCat": 5175,
+        "toNextStart": null
+      }
+    ]
+  }
+}

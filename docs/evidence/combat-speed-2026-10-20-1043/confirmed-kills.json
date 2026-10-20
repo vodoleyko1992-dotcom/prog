@@ -1,0 +1,152 @@
+[
+  {
+    "time": "20:41:06.999",
+    "line": 9506,
+    "action": "wild_sweep",
+    "extraKills": 0,
+    "confirmedTotalKills": 1,
+    "rewardLines": [
+      "EXP + 33903",
+      "SP + 1541"
+    ],
+    "fullLogTotal": 17,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:41:36.778",
+    "line": 9577,
+    "action": "wild_sweep",
+    "extraKills": 0,
+    "confirmedTotalKills": 1,
+    "rewardLines": [
+      "EXP + 33903",
+      "SP + 1541"
+    ],
+    "fullLogTotal": 12,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:41:48.308",
+    "line": 9600,
+    "action": "whirlwind",
+    "extraKills": 3,
+    "confirmedTotalKills": 4,
+    "rewardLines": [
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 2315",
+      "SP + 322",
+      "EXP + 3600",
+      "SP + 2160"
+    ],
+    "fullLogTotal": 49,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:42:00.406",
+    "line": 9627,
+    "action": "wild_sweep",
+    "extraKills": 0,
+    "confirmedTotalKills": 1,
+    "rewardLines": [
+      "EXP + 33903",
+      "SP + 1541"
+    ],
+    "fullLogTotal": 15,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:42:13.402",
+    "line": 9654,
+    "action": "whirlwind",
+    "extraKills": 3,
+    "confirmedTotalKills": 4,
+    "rewardLines": [
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 2315",
+      "SP + 322",
+      "EXP + 33903",
+      "SP + 1541"
+    ],
+    "fullLogTotal": 55,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:42:26.917",
+    "line": 9680,
+    "action": "wild_sweep",
+    "extraKills": 0,
+    "confirmedTotalKills": 1,
+    "rewardLines": [
+      "EXP + 33903",
+      "SP + 1541"
+    ],
+    "fullLogTotal": 18,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:42:39.853",
+    "line": 9707,
+    "action": "whirlwind",
+    "extraKills": 3,
+    "confirmedTotalKills": 4,
+    "rewardLines": [
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 2315",
+      "SP + 322",
+      "EXP + 3600",
+      "SP + 2160"
+    ],
+    "fullLogTotal": 57,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:42:51.291",
+    "line": 9736,
+    "action": "wild_sweep",
+    "extraKills": 0,
+    "confirmedTotalKills": 1,
+    "rewardLines": [
+      "EXP + 3600",
+      "SP + 2160"
+    ],
+    "fullLogTotal": 10,
+    "omitted": 0,
+    "shortened": 0
+  },
+  {
+    "time": "20:43:01.973",
+    "line": 9757,
+    "action": "whirlwind",
+    "extraKills": 3,
+    "confirmedTotalKills": 4,
+    "rewardLines": [
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 4123",
+      "SP + 574",
+      "EXP + 2315",
+      "SP + 322",
+      "EXP + 3600",
+      "SP + 2160"
+    ],
+    "fullLogTotal": 46,
+    "omitted": 0,
+    "shortened": 0
+  }
+]

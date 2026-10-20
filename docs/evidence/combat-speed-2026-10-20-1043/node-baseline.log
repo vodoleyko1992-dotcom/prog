@@ -1,0 +1,100 @@
+✖ mass: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (6.622385ms)
+✖ single: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (2.602997ms)
+✖ sweep: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (1.356471ms)
+✖ настоящий battle учитывает соседа без дискового барьера, затем ждёт сохранения перед следующим боем (22.588138ms)
+✖ отказ записи сохраняет подтверждённый спойл в очереди и повторяет только сохранение (2.398737ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42.370844
+
+✖ failing tests:
+
+test at tests/v2039-combat-storage.test.cjs:24:45
+✖ mass: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (6.622385ms)
+  AssertionError [ERR_ASSERTION]: действие закончено до ACK статистики
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/storage-nodebaseline1043/tests/v2039-combat-storage.test.cjs:27:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-combat-storage.test.cjs:24:45
+✖ single: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (2.602997ms)
+  AssertionError [ERR_ASSERTION]: действие закончено до ACK статистики
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/storage-nodebaseline1043/tests/v2039-combat-storage.test.cjs:27:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-combat-storage.test.cjs:24:45
+✖ sweep: подтверждённый спойл не ждёт медленный диск или более позднюю статистику (1.356471ms)
+  AssertionError [ERR_ASSERTION]: действие закончено до ACK статистики
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/storage-nodebaseline1043/tests/v2039-combat-storage.test.cjs:27:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-combat-storage.test.cjs:41:1
+✖ настоящий battle учитывает соседа без дискового барьера, затем ждёт сохранения перед следующим боем (22.588138ms)
+  AssertionError [ERR_ASSERTION]: учёт соседа не задерживает расчёт победы
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/storage-nodebaseline1043/tests/v2039-combat-storage.test.cjs:49:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2039-combat-storage.test.cjs:55:1
+✖ отказ записи сохраняет подтверждённый спойл в очереди и повторяет только сохранение (2.398737ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/work/storage-nodebaseline1043/tests/v2039-combat-storage.test.cjs:58:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

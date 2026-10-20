@@ -1,0 +1,590 @@
+{
+  "at": "2026-10-20T10:58:14.343Z",
+  "proof": [
+    {
+      "mode": "hold",
+      "browser": "156.0.8078.4",
+      "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+      "beforeReleaseActions": [
+        "l2_302",
+        "whirlwind"
+      ],
+      "actions": [
+        {
+          "action": "l2_302",
+          "at": 1792493875291
+        },
+        {
+          "action": "whirlwind",
+          "at": 1792493875452
+        }
+      ],
+      "ackToNextActionMs": 120,
+      "victoryToNextPageMs": 1961,
+      "storageWrites": 20,
+      "storageTrace": [
+        {
+          "at": 1792493873888,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493873953
+        },
+        {
+          "at": 1792493874239,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt",
+            "on"
+          ],
+          "done": 1792493874300
+        },
+        {
+          "at": 1792493874357,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "cfg",
+            "rt"
+          ],
+          "done": 1792493874395
+        },
+        {
+          "at": 1792493874943,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493874990
+        },
+        {
+          "at": 1792493875016,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493875059
+        },
+        {
+          "at": 1792493875088,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493875122
+        },
+        {
+          "at": 1792493875143,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493875189
+        },
+        {
+          "at": 1792493875215,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493875262
+        },
+        {
+          "at": 1792493875355,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493875401
+        },
+        {
+          "at": 1792493875426,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "gate": true,
+          "done": 1792493876058
+        },
+        {
+          "at": 1792493876088,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876141
+        },
+        {
+          "at": 1792493876360,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876437
+        },
+        {
+          "at": 1792493876483,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876557
+        },
+        {
+          "at": 1792493876582,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876620
+        },
+        {
+          "at": 1792493876648,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876705
+        },
+        {
+          "at": 1792493876747,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876777
+        },
+        {
+          "at": 1792493876951,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493876990
+        },
+        {
+          "at": 1792493877012,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493877060
+        },
+        {
+          "at": 1792493877196,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493877248
+        },
+        {
+          "at": 1792493877279,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493877330
+        }
+      ],
+      "saved": {
+        "kills": 3,
+        "mass": 1,
+        "massOk": 3,
+        "Coal": 5,
+        "daily": 3,
+        "quota": 3,
+        "padding": 1331200
+      },
+      "paths": [
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_013",
+          "at": 1792493873732
+        },
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_032",
+          "at": 1792493877082
+        },
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_032",
+          "at": 1792493877453
+        }
+      ],
+      "errors": []
+    },
+    {
+      "mode": "delay",
+      "browser": "156.0.8078.4",
+      "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+      "beforeReleaseActions": null,
+      "actions": [
+        {
+          "action": "l2_302",
+          "at": 1792493882895
+        },
+        {
+          "action": "whirlwind",
+          "at": 1792493883049
+        }
+      ],
+      "ackToNextActionMs": 114,
+      "victoryToNextPageMs": 4170,
+      "storageWrites": 18,
+      "storageTrace": [
+        {
+          "at": 1792493879621,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493879816
+        },
+        {
+          "at": 1792493879975,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt",
+            "on"
+          ],
+          "done": 1792493880168
+        },
+        {
+          "at": 1792493880376,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "cfg",
+            "rt"
+          ],
+          "done": 1792493880574
+        },
+        {
+          "at": 1792493881248,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493881442
+        },
+        {
+          "at": 1792493881605,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493881802
+        },
+        {
+          "at": 1792493881970,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493882173
+        },
+        {
+          "at": 1792493882333,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493882530
+        },
+        {
+          "at": 1792493882689,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493882882
+        },
+        {
+          "at": 1792493883109,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493883298
+        },
+        {
+          "at": 1792493883468,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493883658
+        },
+        {
+          "at": 1792493884109,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493884306
+        },
+        {
+          "at": 1792493884520,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493884712
+        },
+        {
+          "at": 1792493884887,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493885099
+        },
+        {
+          "at": 1792493885294,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493885490
+        },
+        {
+          "at": 1792493885726,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493885948
+        },
+        {
+          "at": 1792493886115,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493886316
+        },
+        {
+          "at": 1792493886606,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493886806
+        },
+        {
+          "at": 1792493887135,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ]
+        }
+      ],
+      "saved": {
+        "kills": 3,
+        "mass": 1,
+        "massOk": 3,
+        "Coal": 5,
+        "daily": 3,
+        "quota": 3,
+        "padding": 1331200
+      },
+      "paths": [
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_013",
+          "at": 1792493879299
+        },
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_032",
+          "at": 1792493886337
+        },
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_032",
+          "at": 1792493887259
+        }
+      ],
+      "errors": []
+    },
+    {
+      "mode": "stop",
+      "browser": "156.0.8078.4",
+      "boundary": "actual MV3/main, synthetic 1.3MiB state, locally modeled game and programmable storage latency",
+      "beforeReleaseActions": [
+        "l2_302"
+      ],
+      "actions": [
+        {
+          "action": "l2_302",
+          "at": 1792493890582
+        }
+      ],
+      "ackToNextActionMs": null,
+      "victoryToNextPageMs": null,
+      "storageWrites": 11,
+      "storageTrace": [
+        {
+          "at": 1792493889276,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493889338
+        },
+        {
+          "at": 1792493889618,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt",
+            "on"
+          ],
+          "done": 1792493889668
+        },
+        {
+          "at": 1792493889717,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "cfg",
+            "rt"
+          ],
+          "done": 1792493889775
+        },
+        {
+          "at": 1792493890294,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890341
+        },
+        {
+          "at": 1792493890353,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890404
+        },
+        {
+          "at": 1792493890416,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890463
+        },
+        {
+          "at": 1792493890474,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890516
+        },
+        {
+          "at": 1792493890527,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890570
+        },
+        {
+          "at": 1792493890652,
+          "big": true,
+          "mass": 0,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493890704
+        },
+        {
+          "at": 1792493890738,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "gate": true,
+          "done": 1792493892917
+        },
+        {
+          "at": 1792493892956,
+          "big": true,
+          "mass": 1,
+          "keys": [
+            "rt"
+          ],
+          "done": 1792493893006
+        }
+      ],
+      "saved": {
+        "kills": 0,
+        "mass": 1,
+        "massOk": 3,
+        "daily": 0,
+        "quota": 0,
+        "padding": 1331200
+      },
+      "paths": [
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_013",
+          "at": 1792493889142
+        },
+        {
+          "spawn": "sdms_necropolis_of_martyrdom_013",
+          "at": 1792493894111
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "runtimeSHA256": {
+    "modules/combat.js": "c26722c6e11bccc0e80d442b5a5747dd156b06599aab9053824d853080b21e72",
+    "modules/loot.js": "4eb9c6efd3966f1705ac140333a737c2cc5d8726a6fbd2d04f2a1e0b3b4d3c33",
+    "modules/fightlab.js": "8782e6ce5860f4240e8871c0c165beb55ef27b823a2054e3a94662df187a899a"
+  },
+  "testSHA256": "708ab38a87f93dcdb24aff3329961dbb43154d672cb0b299f0644072ffa9a469"
+}
