@@ -3190,12 +3190,30 @@ async function lsSave(){
 $('lsWeapon').onchange=()=>lsSave().then(()=>lsRefresh()).catch(e=>toast(String(e.message||e)));
 $('lsTargets').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
 $('lsMaxAttempts').onchange=()=>lsSave().catch(e=>toast(String(e.message||e)));
+// 20.33 (лог20.10 04:24): чтение ищет нужного героя; probe не захватывает управление и не запускает ЛС.
+async function lsScanTab(who,started,generation){
+  const first=await activeTab(), all=await chrome.tabs.query({url:['https://l2wap.com/*','https://*.l2wap.com/*']}).catch(()=>[]);
+  const ids=[...(started.on&&Number.isInteger(started.lock?.tab)&&Date.now()-(+started.lock.t||0)<85000?[started.lock.tab]:[]),first?.id,...all.map(t=>t.id)];
+  const unchanged=async()=>{const fresh=await chrome.storage.local.get(['rt','on']);if(controlGeneration!==generation||fresh.rt?.char!==who||!!fresh.on!==!!started.on||(+fresh.rt?.manualKickAt||0)!==(+started.rt.manualKickAt||0))throw Error('Персонаж или управление изменились — обновите список оружия');};
+  const deadline=Date.now()+6000;
+  for(const id of [...new Set(ids.filter(Number.isInteger))]){
+    await unchanged();if(Date.now()>=deadline)break;let target=null,timer;
+    try{target=await Promise.race([chrome.tabs.sendMessage(id,{cmd:'lifestoneTarget',char:who,on:!!started.on}),new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.min(1500,deadline-Date.now()));})]);}catch(_){}finally{clearTimeout(timer);}
+    await unchanged();if(target?.ok===true)return {id};
+  }
+  throw Error('Не найдена готовая вкладка этого героя. Откройте игру и обновите её вкладку');
+}
 async function lsCommand(action,expectedChar){
-  const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
-  const tab=on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
-  if(!tab?.id||!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
+  const generation=controlGeneration,started=await chrome.storage.local.get(['rt','on','lock']),{rt={},on=false,lock=null}=started;
+  if(!rt.char)throw Error('Откройте страницу аугментации и дождитесь героя');
   if(expectedChar!==rt.char)throw Error('Персонаж изменился — обновите раздел ЛС');
-  const answer=await chrome.tabs.sendMessage(tab.id,{cmd:'lifestoneCommand',action,char:rt.char});
+  if(action==='scan'&&generation!==controlGeneration)throw Error('Управление изменилось — обновите список оружия');
+  const request={action,char:rt.char,...(action==='scan'?{scanContext:{on:!!on,kick:+rt.manualKickAt||0}}:{})};
+  // Встроенный iframe Firefox не имеет chrome.tabs: фон адресует команду только родительской игре.
+  if(DOCKED){const answer=await chrome.runtime.sendMessage({cmd:'lifestoneDockCommand',...request});if(!answer?.ok)throw Error(answer?.reason||'Команда ЛС не выполнена');return;}
+  const tab=action==='scan'?await lsScanTab(rt.char,started,generation):on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
+  if(!tab?.id)throw Error('Откройте страницу аугментации и дождитесь героя');
+  const answer=await chrome.tabs.sendMessage(tab.id,{cmd:'lifestoneCommand',...request});
   if(!answer?.ok)throw Error(answer?.reason||'Команда ЛС не выполнена');
 }
 async function lsAction(action){

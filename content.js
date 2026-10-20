@@ -5977,21 +5977,31 @@ L2V7Modules.lifestone = L2V7Factories.lifestone({
   get canRun(){return () => lifestonePrepareFree() && L2V7Modules.actions.canAct() && !tvtSoon()},
   get context(){return () => JSON.stringify([rt.char,leaseEpoch,automationGeneration,rt.manualKickAt,location.pathname])}
 });
+// Только проверка адресата: ни замка, ни сетевого запроса, ни изменения героя/памяти.
+async function lifestoneTarget(m) {
+  const saved=await chrome.storage.local.get(['rt','on']);
+  if(!m.char||m.char!==rt.char||m.char!==saved.rt?.char||m.char!==heroNick())return {ok:false};
+  if(!!m.on!==!!saved.on||!!m.on!==!!on||saved.on&&(!tabOwner||!leaseEpoch))return {ok:false};
+  return {ok:true};
+}
 async function lifestoneCommand(m) {
-  if (lifestoneCommandBusy) return {ok:false,reason:'Предыдущая команда ЛС выполняется'};
-  if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return {ok:false,reason:'Неизвестная команда ЛС'};
+  const reject=reason=>{if(m.action==='scan')try{rec('B','ЛС','Обновление оружия: '+reason);}catch(_){}return {ok:false,reason};};
+  if (lifestoneCommandBusy) return reject('Предыдущая команда ЛС выполняется');
+  if (!['scan','prepare','resume','pause','reconcile','acknowledge','close'].includes(m.action)) return reject('Неизвестная команда ЛС');
   lifestoneCommandBusy=true;let manualEpoch=null;
   try {
     const saved=await chrome.storage.local.get(['rt','cfg','on']);
-    if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return {ok:false,reason:'Персонаж изменился — обновите меню'};
-    if (saved.on && (!on || !tabOwner || !leaseEpoch)) return {ok:false,reason:'Управление у другой вкладки игры'};
-    if (!saved.on) {if (!await tabLock()) return {ok:false,reason:'Управление у другой вкладки'};manualEpoch=leaseEpoch;}
-    if (rt.char!==m.char || heroNick()!==m.char) return {ok:false,reason:'Персонаж изменился'};
+    if (!m.char || m.char!==rt.char || m.char!==saved.rt?.char || m.char!==heroNick()) return reject('Персонаж изменился — обновите меню');
+    if (m.action==='scan'&&m.scanContext&&(!!m.scanContext.on!==!!saved.on||m.scanContext.kick!==(+saved.rt?.manualKickAt||0))) return reject('Управление изменилось — обновите список оружия');
+    if (saved.on && (!on || !tabOwner || !leaseEpoch)) return reject('Управление у другой вкладки игры');
+    if (!saved.on) {if (!await tabLock()) return reject('Управление у другой вкладки');manualEpoch=leaseEpoch;}
+    if (rt.char!==m.char || heroNick()!==m.char) return reject('Персонаж изменился');
+    if (m.action==='scan'&&m.scanContext&&(!!m.scanContext.on!==!!on||m.scanContext.kick!==(+rt.manualKickAt||0))) return reject('Управление изменилось — обновите список оружия');
     cfg=mergeCfg(saved.cfg);
     if(m.action==='resume') L2V7Modules.actions.enterFrame();
     const ok=await L2V7Modules.lifestone.command(m.action);
-    return {ok:!!ok,reason:ok?'':rt.autoLs?.reason||'Команда ЛС недоступна'};
-  } catch(e) {return {ok:false,reason:String(e?.message||e).slice(0,220)}}
+    return ok?{ok:true,reason:''}:reject(rt.autoLs?.reason||'Команда ЛС недоступна');
+  } catch(e) {return reject(String(e?.message||e).slice(0,220))}
   finally {
     if(manualEpoch && !on && leaseEpoch===manualEpoch) {
       await rtWriter.recover().catch(e=>quietErr('запись памяти ЛС',e));await ipc({cmd:'lockRelease',epoch:manualEpoch}).catch(e=>quietErr('замок ЛС',e));
@@ -6436,6 +6446,7 @@ async function mammonBagCommand(m) {
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m.cmd === 'mammonBagAnalyze') { mammonBagCommand(m).then(reply).catch(e => reply({ ok: false, reason: String(e) })); return true; }
   if (m.cmd === 'warlockCommand') { warlockCommand(m).then(reply).catch(e=>reply({ok:false,reason:String(e)})); return true; }
+  if (m.cmd === 'lifestoneTarget') { lifestoneTarget(m).then(reply).catch(() => reply({ok:false})); return true; }
   if (m.cmd === 'lifestoneCommand') { lifestoneCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   if (m.cmd === 'enchantCommand') { enchantCommand(m).then(reply).catch(e => reply({ok:false,reason:String(e)})); return true; }
   // 10.0 (аудит ядра): фон отдал замок видимой вкладке — прежний хозяин останавливается сразу, а не через ≤ 5 с при продлении
