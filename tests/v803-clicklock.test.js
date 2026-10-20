@@ -71,8 +71,9 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   assert.match(hook, /const TRACK = \/\^\\\/\(\?:character\|game\)\(\?:\\\/\|\$\)\/;/);
   // 10.0.27: fetch также передаёт retryOf; rid остаётся во всех ответах.
   assert.equal((hook.match(/, rid(?:,retryOf)? \}\)/g) || []).length >= 4, true, 'every end message carries the rid');
-  assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); \}/);
-  assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) GAME_END = Date\.now\(\);/);
+  // 20.36: старт хранит rid/owner, завершение GET будит проверку готовности.
+  assert.match(content, /if \(p === '\/game\/battle\/action'\) \{ ACT_NET\.start\+\+; ACT_NET\.t = Date\.now\(\); ACT_NET\.startRid=e\.data\.rid; ACT_NET\.startOwner=observeOwner\(\); \}/);
+  assert.match(content, /if \(d\.rid != null && GAME_REQ\.delete\(d\.rid\)\) \{ GAME_END = Date\.now\(\); combatSignal\.notify\(\); \}/);
   assert.match(content, /get gameBusy\(\) \{ return gameBusy; \}/);
   assert.match(content, /if \(\/\^\\\/game\\\/battle\\\/\(\?:action\|start\|hunt-continue\)\$\/\.test\(path\)\) ACT_NET\.doneT = Date\.now\(\);/);
   // 4. откаты из delta-ответа (лог 11.10 09:11:56)

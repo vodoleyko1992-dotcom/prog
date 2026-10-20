@@ -61,7 +61,7 @@ test('MP после ожидания игрового GET перепроверя
  Object.assign(f.env,{on:true,tabOwner:true,isBattle:()=>true,gameBusy:()=>({busy,end:0}),actNet:()=>({start:1,done:1,doneT:0}),sleep:async()=>{busy=false;f.state.mp=50},fire:()=>{fires++;return true}});
  Object.assign(f.env.combatCooldown,{globalWait:()=>0});
  const actSrc=source.slice(source.indexOf('  let lastHpPot = 0, lastMpPot = 0'),source.indexOf('  const t0 = Date.now();\n  let progSig'));
- const box={console,Date,Math,Map,env:f.env,ctx:f.ctx,LOCK_A:[60,500,120],LOCK_B:[30,200,50],victory:()=>false,defeat:()=>false,affordable:f.C.affordable,lostUntil:new Map(),NOMP_MS:1500};
+ const box={console,Date,Math,Map,env:f.env,ctx:f.ctx,LOCK_A:[60,500,120],LOCK_B:[30,200,50],victory:()=>false,defeat:()=>false,affordable:f.C.affordable,lostUntil:new Map(),mpUntil:new Map(),NOMP_MS:1500};
  // 20.12 (ревизия 17.10): нехватка MP — отдельный результат 'nomp' (слот на паузе), 'lock' — только потерянный клик
  vm.runInNewContext(actSrc+'\nthis.act=act;',box);assert.equal(await box.act(b,'Power'), 'nomp');assert.equal(fires,0);
 });

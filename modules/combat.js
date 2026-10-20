@@ -219,9 +219,10 @@ function cdBusy(b) {
 // считала заклинание на откате, а бот после потерянного клика жал его же снова. Потерянный клик — заклинание «занято» 0,7 с, бьём другим
 const lostUntil = new Map();
 const NOMP_MS = 1500;   // 20.12 (ревизия 17.10): сколько держим слот после отказа act() «не хватает MP»
+const mpUntil = new Map(); // 20.36: нехватка MP — отдельная причина, свежая банка снимает только её.
 const pressAt = new Map();                         // 8.0.3: skKey → время клика (откат сервера, полученный раньше, об этом нажатии не знает)
 const ownLeft = b => {
-  const k = env.skKey(b), lost = Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000;
+  const k = env.skKey(b), lost = Math.max(Math.max(0, (lostUntil.get(k) || 0) - Date.now()) / 1000, mpLeft(b));
   const u = env.rt.cdUse?.[k] || 0, S = env.rt.skills?.[k] || {};
   if (!k || !u || Date.now() - u > 5000 || env.slotKind(b) !== 'скилл') return lost;
   // 8.0 (аудит боя, лог 13-30): «нижняя граница» cdFloor жила в памяти вечно (Aura Burn 3,4 с при настоящих 1,1 с; Vampiric Touch
@@ -235,7 +236,11 @@ const ownLeft = b => {
 // 8.0.2 (игрок 11.10: «откат может сильно меняться от моих баффов»): игра на экране показала откат ЭТОГО нажатия и он кончился —
 // верим экрану сразу (баффы вроде «Дара Серафима» −30 % уже учтены игрой). Своя оценка (ownLeft) — только пока откат на экране
 // ещё не появился после нажатия; потерянный клик по-прежнему держит заклинание «занятым» 0,7 с (lostUntil)
-const lostLeft = b => Math.max(0, (lostUntil.get(env.skKey(b)) || 0) - Date.now()) / 1000;
+function mpLeft(b) { const k=env.skKey(b),hold=mpUntil.get(k),until=hold?.until||hold||0;if(!until)return 0;
+  const mp=env.meMp?.(),enough=mp&&affordable(b,mp,0);
+  if(until<=Date.now()||enough&&(!hold.server||mp.cur!==hold.mp)){mpUntil.delete(k);return 0;}
+  if(hold.server&&mp&&!enough)hold.mp=mp.cur;return (until-Date.now())/1000; }
+const lostLeft = b => Math.max(Math.max(0, (lostUntil.get(env.skKey(b)) || 0) - Date.now()) / 1000,mpLeft(b));
 function localCdLeft(b) {
   const action = env.slotAction(b), spawn = (env.cdSpawn || env.battleSpawn)();
   const own = overlayReadySeen.has(b) ? lostLeft(b) : ownLeft(b);
@@ -1169,6 +1174,7 @@ function warlordPullResult(ctx, a, result) {
   if (!a?.warlordPull || result === 'lock' || result === 'nomp') return;   // 20.12: 'nomp' — нажатия не было
   // Явный отказ до применения разрешает запасной навык, но не повтор того же агро.
   if (a.warlordPull === 'pull' && (result === 'cd' || result === 'unavail')) { ctx.block[a.key] = Infinity; return; }
+  if (a.warlordPull === 'hit' && (result === 'cd' || result === 'unavail')) return; // удар не принят: сохраняем намерение, выбираем другой AoE
   // Неизвестный ответ: повторное агро в этом бою не спамим.
   if (a.warlordPull === 'pull') ctx.warlordPull = { target: a.target, follow: true };
   else if (ctx.warlordPull) ctx.warlordPull.follow = false;
@@ -1362,6 +1368,10 @@ async function battle() {
     await env.noteRaidMobKills(ctx.spawnId||spawnId,true);if(!killOwnerValid(ctx))return;
   }
   let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
+  const actionContext=()=>JSON.stringify([env.evidenceOwner?.(),env.battleExitContext?.(),env.rt.char||'',env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.manualKickAt||0,env.routeLocation?.href||env.routeLocation?.search||'']);
+  const battleOwner=actionContext(),pulse=ms=>env.combatPulse?env.combatPulse(ms):env.sleep(ms),waitNet=(fn,ms,step)=>env.combatWait?env.combatWait(fn,ms,step):env.waitFor(fn,ms,step);
+  let pendingTurn=null; // 20.36: таймаут ожидания не разрешает второй ход до ответа на первый.
+  const turnAnswered=n=>env.actReceipt&&n.rid!=null?!!env.actReceipt(n.rid):env.actNet().done>=n.count;
   // 7.1.30: перезагрузка страницы боя — не чаще 3 раз за 10 мин (общий счётчик вкладки); 8.0.3: и для зависшего хода
   const reloadSlot = () => { let rl = []; try { rl = JSON.parse(sessionStorage.getItem('l2bot.mageReload') || '[]').filter(t => Date.now() - t < 600000); } catch (e) {}
     if (rl.length >= 3) return false; try { sessionStorage.setItem('l2bot.mageReload', JSON.stringify([...rl, Date.now()])); } catch (e) {} return true; };
@@ -1375,34 +1385,43 @@ async function battle() {
   const clampL = (v, L) => Math.min(L[1], Math.max(L[0], +v || L[2]));
   let lockA = clampL(env.rt.clickLockA, LOCK_A), lockB = clampL(env.rt.clickLockB, LOCK_B);
   const lockSave = () => { if (Math.abs(lockA - clampL(env.rt.clickLockA, LOCK_A)) >= 20 || Math.abs(lockB - clampL(env.rt.clickLockB, LOCK_B)) >= 10) env.setRt({ clickLockA: lockA, clickLockB: lockB })?.catch?.(() => {}); };
-  const gameFree = async () => {                  // → { dT, gE } — ответ на ход и конец GET после него (0 — нет), или null — бой кончился / бот выключен
+  const gameFree = async (valid = () => true) => { // → { dT, gE } — ответ на ход и конец GET после него
     const t0 = Date.now();
     for (;;) {
       const g = env.gameBusy ? env.gameBusy() : { busy: false, end: 0 }, dT = env.actNet?.().doneT || 0, gE = g.end > dT ? g.end : 0;
       const need = g.busy ? 40 : Math.max(dT ? dT + lockA - Date.now() : 0, gE ? gE + lockB - Date.now() : 0);
       if (need <= 0 || Date.now() - t0 > 1500) return { dT, gE };
-      await env.sleep(Math.min(need, 60));
-      if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return null;
+      await pulse(Math.min(need, 60));
+      if (!valid() || !env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return null;
     }
   };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
   // 20.13 (ревизия 17.10, шаг 7, аудит combat/C3): mpFree — действие бесплатно (выключение тоггла), цену в MP не сверяем
   const act = async (b, status, hpGuard = false, stillNeeded = null, mpFree = false) => {
+    const owner=actionContext(),valid=()=>owner===battleOwner&&owner===actionContext()&&env.on&&env.tabOwner&&env.canAct?.()!==false&&env.isBattle()&&!env.pvpPending?.(),canSend=()=>valid()&&!victory()&&!defeat();
+    if(pendingTurn&&!turnAnswered(pendingTurn)){
+      await waitNet(()=>turnAnswered(pendingTurn)||!canSend(),1000,40);
+      if(!canSend())return false;if(!turnAnswered(pendingTurn))return 'lock';
+    }
+    pendingTurn=null;
     // Серверная общая пауза распространяется на все действия, включая банки и спойл.
     // Не полагаемся на визуально готовую кнопку, когда сервер сообщил blockedBy=global.
     while (env.combatCooldown.globalWait() > 0) {
-      if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
-      await env.sleep(Math.min(850, env.combatCooldown.globalWait() + 60));
+      if (!canSend()) return false;
+      await pulse(Math.min(850, env.combatCooldown.globalWait()));
+      if(stillNeeded&&!stillNeeded())return 'lock';
     }
-    if (!env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
+    if (!canSend()) return false;
     const exact = env.slotAction(b);
     if (exact && env.combatCooldown.skillWait(exact, (env.cdSpawn || env.battleSpawn)()) > 0) return 'cd';
-    const free = await gameFree();
-    if (!free || !env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return false;
+    const free = await gameFree(canSend);
+    if (!free || !canSend()) return false;
+    // Ответ во время gameFree мог назначить новый КД. Сначала новый выбор, затем клик.
+    if(env.combatCooldown.globalWait()>0||exact&&env.combatCooldown.skillWait(exact,(env.cdSpawn||env.battleSpawn)())>0)return 'lock';
     if (stillNeeded && !stillNeeded()) return 'lock';
     // 20.12 (ревизия 17.10): MP не хватает — не 'lock' (тот значит «клик потерян в окне занятости», вызывающий повторяет сразу,
     // и цикл боя крутился без единой паузы — вкладка замирала), а 'nomp': слот «занят» 1,5 с, цикл идёт к банкам/другим действиям
-    if (!mpFree && env.meMp && !affordable(b, env.meMp(), 0)) { if (env.skKey(b)) lostUntil.set(env.skKey(b), Math.max(lostUntil.get(env.skKey(b)) || 0, Date.now() + NOMP_MS)); return 'nomp'; } // MP мог измениться за ожидание ответа игры
+    if (!mpFree && env.meMp && !affordable(b, env.meMp(), 0)) { if (env.skKey(b)) mpUntil.set(env.skKey(b), Date.now() + NOMP_MS); return 'nomp'; } // MP мог измениться за ожидание ответа игры
     // 10.0.5 (лог 13.10 10:51:56): удар выбран при HP 55 %, а пока ждали ответ хода после лага, HP стал 19 % — бот всё равно нажал Blaze.
     // Удар (hpGuard) не жмём, если за время ожидания HP упал до опасного: 'lock' — цикл сразу решает заново (банка, вампирик, лечение)
     if (hpGuard && !healSlot(b)) { const m2 = env.meHp(), p0 = ctx.mePct0;
@@ -1423,14 +1442,23 @@ async function battle() {
     const petActAlive = ctx.pet && env.petState?.()?.has !== false;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)
     // 7.1.17: ждём, пока игра отправит ход (до 0,6 с) и получит ответ сервера (до 6 с) — иначе следующий клик теряется
     // 8.0.3: запрос уходит сразу после клика — ждём 400 мс (было 600: потерянный клик стоил лишние 0,2 с)
-    const sent = !!env.actNet && !!(await env.waitFor(() => env.actNet().start > net0 ? 1 : null, 400, 40));
-    if (sent) await env.waitFor(() => env.actNet().done >= env.actNet().start || victory() || defeat() ? 1 : null, 6000, 40);
+    let ownStart=null;
+    const sent = !!env.actNet && !!(await waitNet(() => {const n=env.actNet();if(n.start>net0){ownStart={count:n.start,rid:n.startRid,owner:n.startOwner};return 1;}return !valid()?1:null;}, 400, 40))&&!!ownStart;
+    if(sent)pendingTurn=ownStart;
+    if (sent) await waitNet(() => (ownStart.rid!=null&&env.actReceipt?env.actReceipt(ownStart.rid):env.actNet().done>=env.actNet().start)||!valid()||victory()||defeat()?1:null,6000,40);
+    // Stop запрещает следующий клик; уже полученный ответ своего героя можно учесть. Смена контекста отменяет и учёт.
+    if(owner!==actionContext()||!env.tabOwner||!env.isBattle())return false;
+    if(sent&&!turnAnswered(ownStart)&&!victory()&&!defeat())return 'lock';
+    pendingTurn=null;
+    const receipt=sent&&ownStart.rid!=null?env.actReceipt?.(ownStart.rid):null;
+    const matched=receipt&&ownStart.count===net0+1&&receipt.owner===ownStart.owner&&receipt.owner===env.evidenceOwner?.()&&(!exact||receipt.action===exact);
     env.setStatus(status);
     // 7.2.1 (лог 10.10 21:07–21:14, 9 из 44 боёв): 1) первый клик сразу после «Охотиться дальше» игра не принимает (запрос не уходит),
     // а бот ещё секунду ждал, не уйдёт ли кнопка в КД; 2) ход принят сервером, но игра перерисовала панель (ответ «full») — кнопка
     // не показала откат, бот счёл ход несработавшим и жал то же заклинание снова («Blaze: урон 0», «ещё на КД — бью другим», +2–3 с).
     // Теперь: ход ушёл и сервер ответил 2xx на это действие — нажатие засчитано; запрос не ушёл (а хук работает) — без секундного ожидания
-    const netOk = sent && env.actNet().ok && (!exact || env.actNet().action === exact);
+    const netOk = sent && (env.actReceipt&&ownStart.rid!=null?!!matched&&receipt.ok:env.actNet().done>=env.actNet().start&&env.actNet().ok&&(!exact||env.actNet().action===exact));
+    const confirmed=!!(netOk&&matched&&receipt.rid===ownStart.rid&&env.actNet().start===ownStart.count&&env.actNet().startRid===ownStart.rid&&owner===actionContext());
     // 20.13 (ревизия 17.10, шаг 7, аудит combat/C11): на свежей странице боя счётчик ходов ещё 0 — первый потерянный клик не распознавался
     // (net0 > 0), и лучший удар блокировался на 3 с вместо 0,7 с. Хук считается живым и по другим признакам: ответ боя/«Охотиться
     // дальше» (doneT) или конец запроса игры (gameBusy().end); без признаков хука — как раньше, по рисунку отката
@@ -1445,7 +1473,7 @@ async function battle() {
     if (lost) void rememberCd(b, 'lost');          // 17.10: нажатие «по серверу» при застывшем рисунке потеряно — считаем (см. cdBusy)
     ctx.lastLost = lost && !lockLost;             // 10.0 (аудит боя): потерянный клик — слот «занят» 0,7 с (lostUntil), а не 3 с паузы вызывающего
     // 10.0 (аудит боя): сервер уже ответил отказом на этот ход — не ждём по экрану до 1 с, откат учтён моделью (combatCooldown)
-    const refused = sent && !netOk && env.actNet().done >= env.actNet().start && (!exact || env.actNet().action === exact) && !victory() && !defeat();
+    const refused = sent && !netOk && (env.actReceipt&&ownStart.rid!=null?matched:env.actNet().done >= env.actNet().start && (!exact || env.actNet().action === exact)) && !victory() && !defeat();
     if (lockLost) return 'lock';
     // v5.4: моб умер от этого удара — победа приходит вместо отката, не ждём 1 с «ушёл ли слот в КД» (лог 08.10 15:05:
     // удар Soul Breaker → «итог боя» через 1,7 с, хотя моб умирал с первого удара; на цепочке это ~1,2 с лишних на моба)
@@ -1453,25 +1481,27 @@ async function battle() {
     let done = lost || refused ? false : env.slotCd(b) ? !!(await env.waitFor(() => !uiReady(b) || dead() || netOk, 1000, 40)) : true;
     // ответ игры: «скилл недоступен» (оружие) или «Скіл на перезарядці»
     // 8.0: сервер принял именно этот ход (2xx) — «на перезарядке»/«недоступен» к нему не относится, 250 мс не ждём
-    const ans = dead() || (done === true && netOk) ? null : await env.waitFor(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost || refused ? 300 : 600, 50);
+    const code=receipt?.code||'',serverAnswer=matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp':/unavail|weapon|not_learned/i.test(code)?'unavail':null):null;
+    const ans = serverAnswer || (dead() || (done === true && netOk) ? null : await waitNet(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost || refused ? 300 : 600, 50));
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
     if (turnSamples.length >= 10) { const avg = turnSamples.reduce((x, y) => x + y, 0) / turnSamples.length; turnSamples.length = 0;
       env.setRt({ turnMs: Math.round(env.rt.turnMs ? env.rt.turnMs * 0.7 + avg * 0.3 : avg) }); }
     if (ans) done = ans;
+    if(done==='nomp'&&env.skKey(b))mpUntil.set(env.skKey(b),{until:Date.now()+NOMP_MS,server:true,mp:env.meMp?.()?.cur});
     if (env.combatCooldown.recentlyGlobalRejected(firedAt)) done = 'cd';
     if (petActAlive && !ctx.petActsKnown && (netOk || (!env.actNet && done === true))) ctx.pet.acts++;
     if (done === true) await rememberCd(b, 'used');
     else if (done === 'cd') {
       if (!env.combatCooldown.recentlyGlobalRejected(firedAt)) await rememberCd(b, 'cd');
       // 8.0.3: отказ «на перезарядке» держит именно этот скилл (ветка «сервер знает откат» rt.cdUntil не читает — иначе жал бы его снова и снова)
-      if (env.skKey(b)) lostUntil.set(env.skKey(b), Date.now() + Math.max(300, env.memLeft(b) * 1000));
+      if (env.skKey(b)&&!env.combatCooldown.recentlyGlobalRejected(firedAt)&&!(exact&&env.combatCooldown.skillKnown?.(exact,(env.cdSpawn||env.battleSpawn)(),firedAt))) lostUntil.set(env.skKey(b), Date.now() + Math.max(300, env.memLeft(b) * 1000));
       env.rec('B', 'перезарядка', `«${env.cleanTitle(b.title)}» ещё на КД — жду ${env.memLeft(b).toFixed(1)} с, бью другим`);
       console.info(env.TAG, `${b.title}: на перезарядке, ещё ≈${env.memLeft(b).toFixed(1)} с`);
-      await env.sleep(env.rnd(80, 160));
+      if(!receipt)await env.sleep(env.rnd(80, 160));
       return 'cd';
     }
-    if (!victory() && !((mobHp()?.cur ?? 1) === 0)) await env.pause();   // добили — без «реакции», сразу к итогу
+    if (!confirmed && !serverAnswer && !victory() && !((mobHp()?.cur ?? 1) === 0)) await env.pause(); // точный ответ: следующий круг ждёт только сервер/готовность игры
     if (env.names(env.cfg.nDrain).some(n => slotsBy(n)[0] === b)) drainBackoff(ctx,b,done);
     return done;
   };
@@ -1492,6 +1522,7 @@ async function battle() {
   // висит), выход от РБ (rbFlee), «мало HP», полоса банок HP на РБ и сама банка HP — тесты выполняют эти куски как тело цикла
   let s;
   while (env.on && env.tabOwner) {
+    if(actionContext()!==battleOwner)return;
     env.champs?.observe?.(ctx);
     // 20.6: смена задач запрещает клики старого frame — продолжаем бой со следующего тика main.
     if (env.canAct?.() === false) return;
@@ -2191,12 +2222,14 @@ async function battle() {
   async function strikeStep(mp, mob, tc) {
     const a = chooseAction(ctx, mp);
     if (a) {
-      if (a.key.startsWith('stun')) ctx.lastStun = Date.now();
       const logBefore = new Set(env.logLines());
       const logArr = env.logLines();
       const done = await act(a.b, `Бой${tc}: ${a.name} · моб ${mob.pct | 0}%${a.why ? ' · ' + a.why : ''}`, true,
-        a.warlordPull ? () => { const fresh = warlordPullPlan(ctx, env.meMp()); return fresh?.b === a.b && fresh.target === a.target && fresh.warlordPull === a.warlordPull; } : a.raidDrain ? () => magePlan(ctx, env.meMp())?.b === a.b : null);
+        () => { const fresh=chooseAction(ctx,env.meMp());return fresh?.b===a.b&&fresh.key===a.key&&fresh.warlordPull===a.warlordPull&&fresh.target===a.target; });
+      if(actionContext()!==battleOwner)return;
       warlordPullResult(ctx, a, done);
+      if(done==='lock'||done==='nomp')return AGAIN;
+      if(a.key.startsWith('stun')&&done===true)ctx.lastStun=Date.now();
       if (a.damageProbe && done === true) { const k = env.skKey(a.b), counts = ctx.damageProbeActs ||= {}; counts[k] = (counts[k] || 0) + 1; }
       if ((a.probe || a.damageProbe) && done === true) await env.sleep(950);   // замер нового заклинания — без других нажатий в окне (урон, MP, имя в логе)
       ctx.seq.push(a.charge ? '⚡' : a.key === 'attack' ? 'А' : a.key.startsWith('stun') ? 'стан' : env.cleanTitle(a.b.title).split(' ').map(w => w[0]).join(''));

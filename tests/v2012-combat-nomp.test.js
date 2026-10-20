@@ -30,7 +30,9 @@ test('act() при нехватке MP отвечает nomp, а не lock, и �
  f.env.gameBusy=()=>{mpNow=5;return {busy:false,end:0};};
  try{await f.combat.battle();}catch(e){if(e.message!=='bounded-loop')throw e;}
  assert.ok(!f.events.includes('Frenzy'));
- assert.ok((f.combat.lostUntil.get('frenzy')||0)>Date.now(),'слот Frenzy на паузе после nomp');
+ // 20.36: MP держит слот отдельно от потерянного клика; восстановление MP снимает только эту причину.
+ assert.ok(f.combat.cdLeft(f.frenzy)>0,'слот Frenzy на паузе после nomp');
+ assert.equal(f.combat.lostUntil.has('frenzy'),false);
 });
 test('исходник: act() возвращает nomp на проверке MP',()=>{
  const s=fs.readFileSync(root+'/modules/combat.js','utf8');

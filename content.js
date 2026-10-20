@@ -4601,6 +4601,22 @@ setInterval(onMark, 500);
 // 8.0.3 (логи 11.10, разбор откатов: клик, ушедший пока в полёте GET /character игры, потерян в 770 случаях из 770; через 25–200 мс после
 // его конца — дошёл в 95 %): «игра занята» — пока в полёте её GET /character или запрос хода/начала боя (старше 3 с — забываем)
 const GAME_REQ = new Map(); let GAME_END = 0;
+// 20.36: сетевой ответ будит ожидание боя сразу; таймер — страховка и точный дедлайн КД.
+// schedule использует sleep/bgSleep, поэтому фоновая вкладка не ждёт секундного DOM-таймера.
+function createCombatSignal(schedule, clock = () => Date.now()) {
+  const listeners=new Set();let revision=0;
+  function wait(test,timeout=1000,step=40){return new Promise((resolve,reject)=>{
+    const end=clock()+Math.max(0,timeout);let active=true,armed=false;
+    const finish=(value,error,failed=false)=>{if(!active)return;active=false;listeners.delete(check);failed?reject(error):resolve(value);};
+    function check(){if(!active)return;let value;try{value=test();}catch(e){finish(null,e,true);return;}
+      if(value){finish(value);return;}const left=end-clock();if(left<=0){finish(null);return;}
+      if(!armed){armed=true;Promise.resolve().then(()=>schedule(Math.min(Math.max(1,step),left))).then(()=>{armed=false;check();},e=>finish(null,e,true));}}
+    listeners.add(check);check();
+  });}
+  return {wait,pulse(ms){const before=revision;return wait(()=>revision!==before,ms,ms);},notify(){revision++;for(const check of [...listeners])check();}};
+}
+const combatSignal=createCombatSignal(ms=>sleep(ms)),battleReceipts=new Map();
+const combatWait=(...args)=>combatSignal.wait(...args),combatPulse=ms=>combatSignal.pulse(ms);
 // 15.10, ревизия: ответ без имени героя (TvT/карта/дейлики) принадлежит контексту начала запроса.
 // Отдельно от трёхсекундного busy: поздний ответ не становится ответом нового персонажа.
 const NET_CONTEXT = new Map();
@@ -4633,9 +4649,10 @@ addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'netStart') return;
   netContextStart(e.data);
   const p = e.data.path || '/game/battle/action';
-  if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); }   // 8.0.3: GET /character — не «ход ушёл»
+  if (p === '/game/battle/action') { ACT_NET.start++; ACT_NET.t = Date.now(); ACT_NET.startRid=e.data.rid; ACT_NET.startOwner=observeOwner(); }   // GET /character — не «ход ушёл»
   if (p === '/game/battle/hunt-continue') ACT_NET.huntT = Date.now();             // 10.0: «Охотиться дальше» в полёте (сервер замирает до ≈8,4 с)
   if (e.data.rid != null && BUSY_PATH.test(p)) { GAME_REQ.set(e.data.rid, Date.now()); if (GAME_REQ.size > 50) GAME_REQ.delete(GAME_REQ.keys().next().value); }
+  combatSignal.notify();
 });
 async function weaponEquipNote(req) {
   const char = rt.char, id = +req.itemId;
@@ -4725,7 +4742,7 @@ const zoneMoveNet = (d, path) => ZONE_MOVE_RE.test(path) && d.method === 'POST' 
 addEventListener('message', e => {
   if (e.source !== window || e.origin !== location.origin || e.data?.__l2bot !== 'net') return;   // 7.1.30: только из hook.js этой же страницы
   const d = e.data, path = apiPath(String(d.url || ''));
-  if (d.rid != null && GAME_REQ.delete(d.rid)) GAME_END = Date.now();
+  if (d.rid != null && GAME_REQ.delete(d.rid)) { GAME_END = Date.now(); combatSignal.notify(); }
   const netContext=netContextTake(d);if(netContext===false)return;
   // 18.10, журнал 22:27: точный запрос из позднего ответа дополняет потерянный netStart только в прежнем контексте.
   try { L2V7Modules.fishing?.castResponseNote?.(path,d,netContext); } catch (_) {}
@@ -4743,7 +4760,7 @@ addEventListener('message', e => {
   // 8.0.3 (логи 11.10 09:11–09:35): сразу после ответа на ход (и начала боя / «Охотиться дальше») игра ещё занята — время ответа нужно бою
   if (/^\/game\/battle\/(?:action|start|hunt-continue)$/.test(path)) ACT_NET.doneT = Date.now();
   if (path === '/game/battle/hunt-continue') ACT_NET.huntDoneT = Date.now();
-  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = d.status >= 200 && d.status < 300 && !d.res?.error && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
+  if (path === '/game/battle/action') { ACT_NET.done++; ACT_NET.ok = !d.error && d.status >= 200 && d.status < 300 && !d.res?.error && d.res?.ok !== false && !d.res?.blockedBy; ACT_NET.action = d.req?.action || ''; ACT_NET.rid = d.rid;
     if (ACT_NET.ok) ACT_NET.okN = (ACT_NET.okN || 0) + 1;                       // 10.0.8: принятых ходов всего — «не по зубам» считается только по ним
     if (+d.ms > 5000) ACT_NET.slowT = Date.now(); }                              // 10.0.8 (лог 13.10 17:17:49: банка 8,4 с): сервер висел — удары за это время не «урон 0»
   // 15.10 (лог 00:32): 207 отказов A-зарядам при S-кастере. Серверный отказ немедленно отменяет кэш оружия.
@@ -4886,13 +4903,20 @@ addEventListener('message', e => {
   if (path === '/game/battle/action' && d.res && d.req?.action) {
     if (d.req.battleSpawnId) GAME_SPAWN = String(d.req.battleSpawnId);
     combatCooldown.observe(d.req, d.res, d.status, cdSpawn());
+    if(d.be?.schema===1)combatCooldown.observe(d.req,d.be,d.status,cdSpawn());
   }
   // Mage rotations must respect server GCD from background battle sync.
   // The page hotbar often reports a spell ready while globalCooldownUntilMs
   // still prohibits every action (observed Wind Strike HTTP 400).
   if (['/game/battle/sync', '/game/battle', '/game/battle/start', '/game/battle/hunt-continue'].includes(path) && d.res && !d.res.error && d.status >= 200 && d.status < 300) {
     combatCooldown.observeSync(d.res, cdSpawn());
+    if(d.be?.schema===1)combatCooldown.observeSync(d.be,cdSpawn());
   }
+  if(path==='/game/battle/action'&&d.rid!=null){
+    battleReceipts.set(d.rid,{rid:d.rid,owner:observeOwner(),action:d.req?.action||'',ok:ACT_NET.ok,t:Date.now(),code:String(d.res?.code||d.res?.error||''),blockedBy:String(d.res?.blockedBy||''),transportError:!!d.error});
+    if(battleReceipts.size>64)battleReceipts.delete(battleReceipts.keys().next().value);
+  }
+  if(BUSY_PATH.test(path)||path==='/game/battle/sync'||path==='/game/battle')combatSignal.notify();
   if (/^\/game\/battle(?:\/(?:sync|action))?$/.test(path) && d.res) alignServerSkillCooldowns();
   // 7.1.16-fix: слуга мага — из ответа сервера (activeSummon: {key, hp, maxHp…} или null). Только явное поле, без догадок по разметке
   if (/^\/game\/battle(?:\/(?:sync|action|start|hunt-continue))?$/.test(path) && d.res && typeof d.res === 'object' && !d.res.error) try {
@@ -5364,6 +5388,7 @@ L2V7Modules.raid = L2V7Factories.raid({ get shopGap(){return ()=>L2V7Modules.eco
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
 L2V7Modules.combat = L2V7Factories.combat({ get beginFarmQuota(){return beginFarmQuota}, get farmQuotaCached(){return ()=>killSnapFresh(rt.char||"")}, get finishFarmQuota(){return finishFarmQuota}, get canAct(){return ()=>L2V7Modules.actions.canAct()}, get ordinaryLiveTour(){return (...args)=>L2V7Modules.raid.ordinaryLiveTour(...args)}, get battleExitContext(){return ()=>JSON.stringify([rt.char||'',leaseEpoch,rt.manualKickAt||0,autonomyMode()])}, get evidenceOwner() { return observeOwner; }, get damageSkills() { return damageSkills(); }, get activeBuffs(){return activeBuffs}, get routeLocation(){return actionLocation}, get tvtStep() { return tvtStep; },
+  get combatWait(){return combatWait;},get combatPulse(){return combatPulse;},get actReceipt(){return rid=>battleReceipts.get(rid);},
   get packAdvice(){return (...args)=>L2V7Modules.fightlab?.packAdvice?.(...args);},
   get fightHealOn() { return n => L2V7Modules.fightlab.healOn(n); },
   get warlock() { return L2V7Modules.warlock; }, get champs() { return L2V7Modules.champs; }, get rbRun() { return L2V7Modules.rbrun; }, get farmRules() { return farmRules; }, get recipeRules() { return recipeRules; }, get cancelNote() { return (...a) => L2V7Modules.buffs.cancelNote(...a); }, get champTier() { return (...a) => L2V7Modules.mobfarm.champTier(...a); }, get leaveMark() { return leaveMark; }, get rbTimerKill() { return (...a) => L2V7Modules.rbtimer?.kill(...a); }, get fightGroupOn() { return (...a) => L2V7Modules.fightlab.groupOn(...a); }, get fightDamage() { return (...a) => L2V7Modules.fightlab.damageFor(...a); }, get fightDmgOn() { return fightDmgOn; }, get fightKillP() { return fightKillP; }, get fightSpikeEta() { return fightSpikeEta; }, get campChampOpen() { return campChampOpen; }, get campChampMin() { return campChampMin; }, get rbFlee() { return (...a) => L2V7Modules.raid.rbFlee(...a); }, get probeFight() { return (...a) => L2V7Modules.raid.probeFight(...a); }, get srvUp() { return srvUp; }, get srvHangMark() { return srvHangMark; }, get noEffect() { return noEffect; }, get actNet() { return actNet; }, get gameBusy() { return gameBusy; }, get petState() { return petState; }, get combatProfileKind() { return combatProfileKind; }, get HP_POT_RE() { return HP_POT_RE; }, get rbRetreat() { return rbRetreat; }, get $q() { return $q; }, set $q(value) { $q = value; },
