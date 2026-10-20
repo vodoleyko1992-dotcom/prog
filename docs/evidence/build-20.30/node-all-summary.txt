@@ -3,3 +3,4 @@ Exit: 0
 Result: 482 PASS / 0 FAIL
 New regressions: 136 PASS / 0 FAIL
 First discovery run: 475 PASS / 7 FAIL (legacy fixtures and old partial-cache expectation). Next run: 481 PASS / 1 FAIL (isolated raid payment snippet lacked real price helpers). Fixtures now use real core/module/DOM or fresh non-VIP character; payment assertions retained. Final run after price timeout/coverage fixes: all green.
+Before final PR296 documentation commit: node tests/run-all.cjs, Exit0, 482 PASS / 0 FAIL. Runtime/ZIP bytes unchanged.
