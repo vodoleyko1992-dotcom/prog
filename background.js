@@ -868,7 +868,9 @@ async function faBuffEvidence(p) {
 // Теперь и по объёму разметки: больше 50 МБ — удаляем самые старые. Сумма хранится в storage «snapbytes» (один раз считается по
 // уже лежащим снимкам), «Очистить журнал» в меню сбрасывает её в 0
 const MAX_SNAP_BYTES = 50 * 1024 * 1024;
-// 20.41: без слушателя storage.onChanged — «Очистить журнал» после записи snapbytes:0 шлёт snapBytesReset, следующий снимок перечитает объём
+// 20.41 (лог 20.10 21:09, ревью): слушателя storage.onChanged для snapbytes у фона больше нет, сообщения от меню тоже не нужно —
+// пустое хранилище снимков всегда 0 байт (см. addSnap): «Очистить журнал» (IndexedDB очищена, snapbytes:0) сбрасывает сумму сама,
+// даже если меню закрылось сразу после записи или снимок уже стоял в очереди writing
 let snapBytes = null;
 async function snapBytesNow(db) {
   if (snapBytes != null) return snapBytes;
@@ -888,7 +890,7 @@ function addSnap({ key, state, html }) {
     const tx = db.transaction('snaps', 'readwrite'), st = tx.objectStore('snaps');
     let added = 0, n = 0;
     st.count().onsuccess = e => {
-      n = e.target.result;
+      n = e.target.result; if (!n) total = 0;   // 20.41 (ревью): снимков нет — объём 0, а не старая сумма из памяти/хранилища (иначе 50 МБ «заняты» пустотой)
       st.getKey(key).onsuccess = g => {
         if (g.target.result != null) return;
         st.put({ key, state: state || '', t: Date.now(), html }); added = 1; n++; total += size;
@@ -1274,10 +1276,6 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
   if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
   // 20.41: прямая запись on:false (модуль/импорт памяти) — значок по факту; та же запись при уже остановленном боте значок не трогает
   if (m?.cmd === 'badgeSync') chrome.storage.local.get('on').then(s => { if (!!s.on !== paintedOn) paintOn(s.on); }).catch(() => {});
-  if (m?.cmd === 'snapBytesReset') {   // 20.41: только со страницы расширения («Очистить журнал» в меню), после записи snapbytes:0
-    const ext = _s?.id === chrome.runtime.id && String(_s?.url || '').startsWith(chrome.runtime.getURL(''));
-    if (ext) writing = writing.then(() => { snapBytes = null; });
-  }
   if (m?.cmd === 'rec') { buf.push(m.ev); if (!timer) timer = setTimeout(flush, 1500); }
   if (m?.cmd === 'snap' && m.key && m.html) addSnap(m);
   if (m?.cmd === 'shot' && _s?.tab) addShot(_s.tab, m);

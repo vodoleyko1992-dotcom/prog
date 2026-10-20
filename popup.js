@@ -2822,7 +2822,7 @@ confirmClick('recClear', async () => {                // удалить весь
   const db = await idb();
   const tx = db.transaction(['log', 'snaps', 'shots'], 'readwrite');   // v5.6: и скриншоты
   tx.objectStore('log').clear(); tx.objectStore('snaps').clear(); tx.objectStore('shots').clear();
-  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); try { chrome.runtime.sendMessage({ cmd: 'snapBytesReset' })?.catch?.(() => {}); } catch (_) {} load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков; 20.41: фон перечитает его сам (слушателя хранилища у фона больше нет)
+  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);

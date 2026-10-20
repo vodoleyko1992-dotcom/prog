@@ -2,7 +2,8 @@
 // 20.41 (лог 20.10 21:09: «бот стал очень медленный», память rt 1,3 МБ): у фона больше нет слушателей chrome.storage.onChanged —
 // каждая запись rt раньше доставлялась им целиком (старое+новое значение) в том же потоке фона, что и statePatch.
 // Их работу делают сами писатели «on»: значок, controlSeq и новый отсчёт сторожа только при настоящем запуске off→on;
-// прямые записи on:false зовут badgeSync, «Очистить журнал» — snapBytesReset. Фон загружается целиком, как в браузере.
+// прямые записи on:false зовут badgeSync. Объём снимков после «Очистить журнал» (ревью 20.41): пустое хранилище снимков = 0 байт,
+// без сообщения от меню и при любом порядке записей. Фон загружается целиком, как в браузере.
 const test = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const bgSrc = read('background.js'), clone = x => x === undefined ? undefined : structuredClone(x);
@@ -139,19 +140,8 @@ test('сторож останавливает бота после 3 неудач
   assert.equal(f.state.on, false); assert.equal(f.state.stopMeta.source, 'watchdog'); assert.equal(f.badges.at(-1), ''); assert.equal(f.painted(), false); assert.equal(f.seq(), seq0 + 1);
 });
 
-test('snapBytesReset: только со страницы расширения; следующий снимок перечитывает объём из хранилища', async () => {
-  const f = load({ on: false, snapbytes: 0 }); await tick(); const ctx = f.ctx;
-  vm.runInContext('snapBytes = 48 * 1024 * 1024', ctx);
-  for (const s of [f.game, { id: 'other', url: 'chrome-extension://other/popup.html' }, { id: 'test', url: 'https://l2wap.com/chrome-extension://test/' }]) {
-    await f.send({ cmd: 'snapBytesReset' }, s); await vm.runInContext('writing', ctx); assert.equal(f.vmGet('snapBytes'), 48 * 1024 * 1024, JSON.stringify(s));
-  }
-  await f.send({ cmd: 'snapBytesReset' }, f.popup); await vm.runInContext('writing', ctx);
-  assert.equal(f.vmGet('snapBytes'), null); assert.equal(await vm.runInContext('snapBytesNow(null)', ctx), 0, 'перечитано 0 из storage');
-});
-
-test('snapBytesReset сериализован с записью снимков: снимок после очистки считает объём заново', async () => {
-  const f = load({ on: false, snapbytes: 0 }); await tick(); const ctx = f.ctx, rows = new Map(), MB = 1024 * 1024;
-  // Минимальная IndexedDB: хранит снимки, считает, отдаёт курсор по времени.
+// Минимальная IndexedDB для снимков: хранит, считает, отдаёт курсор по времени (как tests/v2013-core-step7-misc.test.js).
+function snapDb(f, rows = new Map()) {
   const later = g => setImmediate(g);
   const db = { transaction: () => { const tx = { pending: 0, oncomplete: null, check() { if (!tx.pending) later(() => { if (!tx.pending && tx.oncomplete && !tx.done) { tx.done = true; tx.oncomplete(); } }); } };
     const req = fn => { const r = {}; Object.defineProperty(r, 'onsuccess', { set(cb) { tx.pending++; later(() => { r.result = fn(); cb({ target: r }); tx.pending--; tx.check(); }); } }); return r; };
@@ -159,20 +149,57 @@ test('snapBytesReset сериализован с записью снимков: 
       Object.defineProperty(r, 'onsuccess', { set(g) { cb = g; step(); } }); return r; };
     const st = { count: () => req(() => rows.size), getKey: k => req(() => rows.has(k) ? k : undefined), put: v => { rows.set(v.key, v); }, openCursor: () => cur([...rows.values()]), index: () => ({ openCursor: () => cur([...rows.values()].sort((a, b) => a.t - b.t)) }) };
     tx.objectStore = () => st; return tx; } };
-  ctx.__db = db; vm.runInContext('idb = async () => __db;', ctx);
-  vm.runInContext('snapBytes = 49 * 1024 * 1024', ctx);   // меню очистило IndexedDB и записало snapbytes:0; в памяти фона — старая сумма
-  await f.send({ cmd: 'snapBytesReset' }, f.popup);
-  await f.send({ cmd: 'snap', key: 'a', state: '', html: 'x'.repeat(2 * MB) }, f.game); await vm.runInContext('writing', ctx);
-  assert.ok(rows.has('a'), 'новый снимок не удалён как «сверх 50 МБ»'); assert.equal(f.state.snapbytes, 2 * MB); assert.equal(f.vmGet('snapBytes'), 2 * MB);
+  f.ctx.__db = db; vm.runInContext('idb = async () => __db;', f.ctx);
+  const snap = async (key, bytes) => { await f.send({ cmd: 'snap', key, state: '', html: key.repeat(bytes) }, f.game); await vm.runInContext('writing', f.ctx); await tick(); };
+  const real = () => [...rows.values()].reduce((a, r) => a + r.html.length, 0);
+  return { rows, snap, real };
+}
+const MB = 1024 * 1024, K300 = 300 * 1024;
+// «Очистить журнал» в меню (popup.js recClear): IndexedDB очищена, затем snapbytes:0 — фону ничего не шлётся
+const menuClear = async (f, rows) => { rows.clear(); await f.chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); };
+
+test('ревью 20.41: «Очистить журнал» без сообщения фону — следующие снимки не вытесняются, объём верный и после перезапуска фона', async () => {
+  const f = load({ on: false, snapbytes: 49.5 * MB }); await tick(); const d = snapDb(f, new Map([['old', { key: 'old', t: 1, html: 'o'.repeat(1000) }]]));
+  vm.runInContext('snapBytes = 49.5 * 1024 * 1024', f.ctx);   // фон бодрствует, в памяти — сумма почти полного хранилища
+  await menuClear(f, d.rows); await tick();
+  for (const k of ['a', 'b', 'c', 'd', 'e']) await d.snap(k, K300);
+  assert.deepEqual([...d.rows.keys()], ['a', 'b', 'c', 'd', 'e'], 'ни один новый снимок не удалён «сверх 50 МБ»');
+  assert.equal(f.state.snapbytes, 5 * K300); assert.equal(f.state.snapbytes, d.real()); assert.equal(f.state.snapcount, 5);
+  vm.runInContext('snapBytes = null', f.ctx);   // перезапуск фона: сумма перечитывается из хранилища
+  for (const k of ['f', 'g']) await d.snap(k, K300);
+  assert.equal(d.rows.size, 7); assert.equal(f.state.snapbytes, 7 * K300); assert.equal(f.state.snapbytes, d.real());
 });
 
-test('писатели on:false вне фона зовут badgeSync; меню после очистки журнала — snapBytesReset', () => {
+test('ревью 20.41: снимок, вставший в очередь writing до очистки журнала, считает объём с нуля', async () => {
+  const f = load({ on: false, snapbytes: 49 * MB }); await tick(); const d = snapDb(f, new Map([['old', { key: 'old', t: 1, html: 'o'.repeat(49 * MB) }]]));
+  vm.runInContext('snapBytes = 49 * 1024 * 1024', f.ctx);
+  const gate = defer(); f.ctx.__gate = gate.promise; vm.runInContext('writing = writing.then(() => __gate)', f.ctx);   // очередь занята медленной записью журнала
+  f.chrome.runtime.onMessage.l[0]({ cmd: 'snap', key: 'a', state: '', html: 'a'.repeat(K300) }, f.game, () => {}); await tick();
+  await menuClear(f, d.rows); await tick(10);
+  gate.resolve(); await vm.runInContext('writing', f.ctx); await tick();
+  for (const k of ['b', 'c', 'd']) await d.snap(k, K300);
+  assert.deepEqual([...d.rows.keys()], ['a', 'b', 'c', 'd']); assert.equal(f.state.snapbytes, 4 * K300); assert.equal(f.state.snapbytes, d.real());
+});
+
+test('ревью 20.41: старая сумма в хранилище при пустом хранилище снимков (запись снимка легла после snapbytes:0) не занимает предел', async () => {
+  const f = load({ on: false, snapbytes: 49.8 * MB }); await tick(); const d = snapDb(f);   // фон перезапущен: кэша нет, в storage — устаревшие 49,8 МБ
+  await d.snap('x', 2 * MB); await d.snap('y', K300);
+  assert.deepEqual([...d.rows.keys()], ['x', 'y']); assert.equal(f.state.snapbytes, 2 * MB + K300); assert.equal(f.state.snapbytes, d.real());
+  // контроль: непустое хранилище по-прежнему копит сумму и вытесняет самые старые сверх 50 МБ
+  const g = load({ on: false }); await tick(); const e = snapDb(g, new Map([['big', { key: 'big', t: 1, html: 'b'.repeat(49 * MB) }]]));
+  await e.snap('p', K300); assert.equal(g.state.snapbytes, 49 * MB + K300); assert.ok(e.rows.has('big'));
+  await e.snap('q', 2 * MB); assert.ok(!e.rows.has('big'), 'старый снимок вытеснен'); assert.deepEqual([...e.rows.keys()], ['p', 'q']); assert.equal(g.state.snapbytes, e.real());
+});
+
+test('писатели on:false вне фона зовут badgeSync; «Очистить журнал» фону ничего не шлёт (команды snapBytesReset нет)', () => {
   const content = read('content.js'), popup = read('popup.js');
   for (const file of ['modules/dungeons.js', 'modules/fishing.js']) assert.match(read(file), /await chrome\.storage\.local\.set\(\{ on: false \}\); env\.badgeSync\?\.\(\);/, file);
   assert.match(content, /const badgeSync = \(\) => \{ try \{ chrome\.runtime\.sendMessage\(\{ cmd: 'badgeSync' \}\)/);
   for (const m of ['fishing', 'dungeons']) assert.match(content, new RegExp(`L2V7Modules\\.${m} = L2V7Factories\\.${m}\\(\\{ get badgeSync\\(\\)\\{return badgeSync\\}`), m);
   assert.match(popup, /on: false, stopMeta: \{ source: 'memory-import'[^\n]*\n\s*try \{ chrome\.runtime\.sendMessage\(\{ cmd: 'badgeSync' \}\)/);
-  assert.match(popup, /snapbytes: 0, exLogKey: null, exSnapT: 0 \}\); try \{ chrome\.runtime\.sendMessage\(\{ cmd: 'snapBytesReset' \}\)/);
+  assert.match(popup, /snapbytes: 0, exLogKey: null, exSnapT: 0 \}\); load\(\); \};/);
+  for (const [file, src] of [['background.js', bgSrc], ['popup.js', popup]]) assert.doesNotMatch(src, /snapBytesReset/, file);
+  assert.match(bgSrc, /n = e\.target\.result; if \(!n\) total = 0;/);
   // Других прямых записей «on» мимо фона нет: остальные идут через menuPatch/botControl/горячую клавишу/сторожа.
   const direct = [];
   for (const file of ['content.js', 'popup.js', 'ui-v7.js', ...fs.readdirSync(path.join(root, 'modules')).map(x => 'modules/' + x)])
