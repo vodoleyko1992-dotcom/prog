@@ -2812,6 +2812,7 @@ $('memFile').onchange = async e => {
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
     if (data.rt) data.rt = { ...data.rt, _src: 'menu' };
     await chrome.storage.local.set({ ...data, on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
+    try { chrome.runtime.sendMessage({ cmd: 'badgeSync' })?.catch?.(() => {}); } catch (_) {}   // 20.41 (лог 20.10 21:09): у фона нет слушателя storage.onChanged — значок по факту
     const rt = data.rt || {};
     $('memNote').textContent = `✅ Загружено (v${j.v}, ${new Date(j.t).toLocaleString('ru')}): РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}. Бот остановлен — нажмите ▶ Старт.`;
     load();

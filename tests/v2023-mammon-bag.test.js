@@ -45,6 +45,11 @@ test('ручная IPC при OFF всегда читает весь рюкза�
  assert.equal(r.analysis.resources[10019],1,'полный инвентарь, не первые8/20строк');assert.equal(r.analysis.levelVerified,true);assert.equal(r.analysis.goal.lvl,4);assert.equal(f.state.rt.mmJob,undefined);assert.equal(f.state.rt.mmSmithReq,undefined);assert.equal(f.state.rt.mmGoReq,undefined);assert.equal(f.logs.length,0);
  f.stocks={...f.stocks,1893:13};const r2=await f.manual();assert.equal(r2.ok,true);assert.equal(r2.analysis.readyMaterials,true);assert.equal(row(r2.analysis,1893).missing,0);assert.equal(f.gets.length,2,'ручная команда не читает прошлый кэш');
 });
+// 20.41 (смоук v2023 падал на 1 мс): время анализа — время чтения сумки, иначе пересчёт по тому же снимку «выдумывает» новое время.
+test('время анализа равно времени чтения сумки, даже если расчёт закончился позже',async()=>{
+ const f=fixture(),read=f.env.invRefresh;f.env.invRefresh=async a=>{const m=await read(a);f.tick(5);return m};
+ const r=await f.manual();assert.equal(r.ok,true);assert.ok(f.box.cache()?.t);assert.equal(r.analysis.t,f.box.cache().t);
+});
 test('при OFF актуальная экипировка исправляет старый уровень цели; достигнутая цель не строит лишний уровень',async()=>{
  const f=fixture({level:3});const r=await f.manual();assert.equal(r.analysis.goal.lvl,3);assert.equal(row(r.analysis,1893).need,7);assert.equal(f.state.rt.mmGoalPlan.lvl,3);
  f.eq={tattoo:{itemId:910624,specialGearLevel:5}};const done=await f.manual();assert.equal(done.analysis.goal.lvl,5);assert.equal(done.analysis.readyMaterials,true);assert.equal(done.analysis.items.length,0);assert.equal(done.analysis.raw.length,0);assert.equal(f.state.rt.mmGoalPlan,null);

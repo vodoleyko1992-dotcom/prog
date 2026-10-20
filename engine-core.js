@@ -271,10 +271,17 @@
 
   // Each update is a PATCH. Never rewrite a stale copy of the full runtime state.
   // Serial execution and retry preserve update ordering even if storage is down.
-  function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now()) {
+  function createPatchQueue(send, canWrite = () => true, onError = () => {}, clock = () => Date.now(),
+    timers = { set: (f, ms) => setTimeout(f, ms), clear: t => clearTimeout(t) }) {
     // Реворк ядра: каждая выдача замка получает свою очередь. Ответ старого запроса
     // после clear() не подтверждает новую запись и не задерживает её своим backoff.
-    const fresh = () => ({ pending: {}, inflight: {}, flushing: null, retryAt: 0 });
+    // 20.41 (лог 20.10 21:09, память 1,3 МБ: каждая запись ≈0,5 с и подвисание страницы): later — отложенные патчи (замеры
+    // навыков после каждого удара). Они новее pending и уходят вместе с любой обычной записью, recover() или по таймеру.
+    const fresh = () => ({ pending: {}, inflight: {}, flushing: null, retryAt: 0, later: {}, laterT: null });
+    function promote(state) {
+      if (state.laterT != null) { timers.clear(state.laterT); state.laterT = null; }
+      if (Object.keys(state.later).length) { state.pending = { ...state.pending, ...state.later }; state.later = {}; }
+    }
     let current = fresh();
     const cleared = () => ({ ok: false, reason: 'cleared' });
     async function drain(state) {
@@ -311,14 +318,31 @@
     function enqueue(patch) {
       if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
       const state = current;
+      promote(state);
       Object.assign(state.pending, patch);
       if (state.retryAt > clock()) return Promise.resolve({ ok: false, reason: 'backoff' });
       return flush(state);
     }
-    function peek() { return { ...current.inflight, ...current.pending }; }
-    function recover() { return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
-    function clear() { current = fresh(); }
-    return { enqueue, peek, recover, clear };
+    function defer(patch, ms = 8000) {
+      if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw new TypeError('patch must be an object');
+      const state = current;
+      Object.assign(state.later, patch);
+      if (state.laterT == null) state.laterT = timers.set(() => {
+        state.laterT = null;
+        if (state !== current) return;
+        promote(state);
+        if (state.retryAt <= clock()) flush(state).catch(onError);
+      }, ms);
+      return Promise.resolve({ ok: true, deferred: true });
+    }
+    function peek() { return { ...current.inflight, ...current.pending, ...current.later }; }
+    function recover() { promote(current); return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
+    function clear() { if (current.laterT != null) timers.clear(current.laterT); current = fresh(); }
+    // 20.41 (ревью): изменение из меню новее ещё не отправленных значений тех же ключей (отложенная статистика держится до 8 с).
+    // Пакет уже в полёте тоже: peek() больше не возвращает его старые значения в память вкладки, а неудачная отправка не вернёт их
+    // в очередь (inflight — тот же объект, что batch). Уже отправленное отсекает фон по menuRev.
+    function drop(keys) { for (const k of keys) { delete current.pending[k]; delete current.later[k]; delete current.inflight[k]; } }
+    return { enqueue, defer, peek, recover, clear, drop };
   }
 
   // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры
@@ -336,6 +360,11 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
+  // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
+  // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
+  const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
+    'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups']);
+  root.L2EngineCore = { MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

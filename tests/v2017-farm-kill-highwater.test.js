@@ -100,8 +100,9 @@ test('same revision точный повтор старого hook не сним�
 test('свой GET обязан удовлетворять need и не возвращает старую revision как подтверждение',async()=>{
  const f=fixture();f.c.killSnapNote({name:'Hero',k:100,rev:10});await assert.rejects(()=>f.c.farmQuotaSnapshot('Hero',s=>s.rev>10));assert.equal(f.gets,1);
 });
+// 20.41: approx больше не ждёт очередь записи вкладки (rtCommit) — смена состояния моделируется между началом и итогом боя.
 for(const change of ['stop','lease','kick','char'])test('approx после '+change+' не пишет старое завершение',async()=>{
- const f=fixture();f.c.gameGet=async()=>({ok:false});const t=await f.begin();f.c.rtCommit=async()=>{if(change==='stop')f.c.on=false;if(change==='lease')f.c.leaseEpoch++;if(change==='kick')f.c.rt.manualKickAt++;if(change==='char')f.c.rt.char='Other';return true};await f.done(t,3);assert.notEqual(t.done,true);assert.equal(f.state.rt.dailyQuota,undefined);
+ const f=fixture();f.c.gameGet=async()=>({ok:false});const t=await f.begin();let commits=0;f.c.rtCommit=async()=>{commits++;return true};if(change==='stop')f.c.on=false;if(change==='lease')f.c.leaseEpoch++;if(change==='kick')f.c.rt.manualKickAt++;if(change==='char')f.c.rt.char='Other';await f.done(t,3);assert.equal(commits,0,'итог не ждёт очередь записи');assert.notEqual(t.done,true);assert.equal(f.state.rt.dailyQuota,undefined);
 });
 test('approx после сброса серии отвергает старый run',async()=>{
  const f=fixture();await f.begin();const ipc=f.c.ipc;f.c.ipc=async()=>({ok:false});f.c.location.search='?spawnId=sdms_test_002';const t=await f.c.beginFarmQuota('sdms_test_002');f.c.ipc=ipc;await f.menu({resetFarmQuota:'auto'});f.refresh();await f.done(t,3);assert.equal(f.state.rt.farmQuota.auto.got,0);

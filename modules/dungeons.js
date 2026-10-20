@@ -140,13 +140,56 @@ function mobList(id) {
 const mobLink = sid => [...document.querySelectorAll('#dungeon-mob-list a[href*="spawnId="]')].find(a => decodeURIComponent((a.getAttribute('href') || '').match(/spawnId=([^&]+)/)?.[1] || '') === sid) || null;
 // 20.7 (лог17.10 01:02): защита от Cancel не должна открывать карту после каждой победы.
 // Свежий список читаем без перехода; штатная страница выбранного боя сама запускает его.
+// 20.41 (аудит скорости: GET списка подземелья ≈0,6 с после каждой победы, строго после учёта квоты): запрос начинается сразу на экране
+// победы, параллельно с учётом убийств; catNext берёт его, если он для этой же страницы и не старше 8 с, иначе читает заново.
+let viewPre = null, nat = null;
+// 20.41 (лог 20.10 21:15: моб катакомб ≈9 с, из них ≈4 с — загрузка новой страницы боя между выбором и первым ударом): штатная кнопка
+// «Охотиться дальше» начинает следующий бой без перезагрузки, но моба выбирает сервер (живой замер 20.10: и свой nextHuntSpawnId он
+// не соблюдает, уровень ±3). Поэтому только при однородном списке: ≥3 соседних обычных моба, ≥80 % из них подходят выбору (уровень ±1,
+// без известных Cancel и запретов). Два неподходящих выбора сервера подряд — в этом документе снова свой выбор и переход.
+// 20.41 (ревью): отказ сервера на штатное продолжение (игра молча уводит на /dungeon.html или бой не начинается) — 30 мин в этом
+// подземелье снова свой выбор. Метка в sessionStorage: отказ виден уже на следующей странице.
+const NAT_SS = 'l2bot.catNat';
+const natMark = () => { try { return JSON.parse(sessionStorage.getItem(NAT_SS) || 'null') || {}; } catch (_) { return {}; } };
+const natSave = m => { try { sessionStorage.setItem(NAT_SS, JSON.stringify(m)); } catch (_) {} };
+function catNatOk() { const m = natMark(); if (m.wait) natSave({ ...m, wait: null }); }
+function catNatFail(id) {
+  const m = natMark(); if (!m.wait || m.wait.id !== id || Date.now() - m.wait.t > 60000) return false;   // ожидание до 15 с + загрузка страницы подземелья
+  natSave({ ...m, wait: null, off: { ...(m.off || {}), [id]: Date.now() + 1800000 } });
+  env.rec?.('B', 'катакомбы', `${env.CAT_LIST?.[id]?.[0] || id}: «Охотиться дальше» не начало бой — 30 мин выбираю мобов сам`);
+  return true;
+}
+function catNative(id, list, pick, cur) {
+  if (nat?.id === id && nat.wait && cur) { nat.wait = false; nat.bad = Math.abs((+cur.level || 0) - nat.lvl) <= 1 ? 0 : nat.bad + 1; catNatOk(); }
+  if (nat?.id === id && nat.bad >= 2) return false;
+  if ((+natMark().off?.[id] || 0) > Date.now()) return false;
+  const L = catLevel(), fit = list.filter(x => Math.abs(x.lvl - pick.lvl) <= 1 && catPick([x], L));
+  if (list.length < 3 || fit.length < list.length * 0.8) return false;
+  if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
+  nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
+  return true;
+}
+// 20.41 (ревью): метка ожидания ставится прямо перед нажатием «Охотиться дальше» (mobfarm), а не при выборе: без нажатия
+// (кнопки нет, Stop, дневной лимит) страница подземелья не считается отказом сервера.
+function catNatArm() { if (nat?.wait) natSave({ ...natMark(), wait: { id: nat.id, t: Date.now() } }); }
+const viewGet = id => env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)).then(r => r.ok ? r.json() : null).then(j => j?.dungeon || null, () => null);
+function catPrefetch(reuseMs = 0) {
+  const sid = new URLSearchParams(location.search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
+  if (!id || !/\/battle\.html$/i.test(location.pathname) || env.cfg.chain === false || env.autonomyMode?.() !== 'cat' || typeof env.gameGet !== 'function') return;
+  // 20.41 (ревью): выбранное вручную подземелье — следующий бой даёт штатная цепочка, список не читается.
+  if (env.cfg.catDungeon && env.cfg.catDungeon !== 'auto') return;
+  if (reuseMs && viewPre?.id === id && viewPre.href === location.href && Date.now() - viewPre.t < reuseMs) return;
+  viewPre = { id, href: location.href, t: Date.now(), p: viewGet(id) };
+}
 async function catNext() {
   const guard = catGuard(), href = location.href, search = location.search;
   const sid = new URLSearchParams(search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
   const active = () => guard() && (!env.autonomyMode || env.autonomyMode() === 'cat') && env.cfg.chain !== false && location.href === href && location.search === search && env.victory?.() === true;
   if (!id || !/\/battle\.html$/i.test(location.pathname) || !active()) return true;
+  const pre = viewPre?.id === id && viewPre.href === href && Date.now() - viewPre.t < 8000 ? viewPre.p : null; viewPre = null;
   let d;
-  try { const r = await env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)); if (r.ok) d = (await r.json())?.dungeon; } catch (_) {}
+  // 20.41 (ревью): предзагрузка в начале боя не удалась (5xx/429/обрыв) — на победе читаем заново, а не уходим на страницу подземелья.
+  try { d = await (pre || viewGet(id)); if (!d && pre && active()) d = await viewGet(id); } catch (_) {}
   if (!active()) return true;
   if (!d || d.id !== id || !Array.isArray(d.mobs)) return false;
   // Как штатная цепочка: только обычные мобы; чемпионов проверяет отдельный поиск.
@@ -164,6 +207,7 @@ async function catNext() {
   if ((!env.cfg.catDungeon || env.cfg.catDungeon === 'auto') && pick.lvl < catLevel() && env.CAT_LIST?.[id]) {
     const next = catTarget(); if (next && next !== id) return false;
   }
+  if (catNative(id, list, pick, rows.find(x => x.id === sid))) return 'native';
   await env.setRt({ target: { name: pick.name, champ: false, rb: false }, mobClickAt: Date.now(), via: 'dungeon', catInT: Date.now() });
   if (!active() || !catPick([pick], catLevel())) return true;
   if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active() || !catPick([pick], catLevel()))return true;
@@ -279,6 +323,7 @@ async function catGo(id) {                        // в подземелье: е
 
 async function catHunt(id) {
   const active = catGuard(); if (!active()) return;                      // внутри подземелья: список мобов → бой
+  catNatFail(id);
   const nm = env.CAT_LIST[id]?.[0] || id;
   const netOk = () => { const N = env.dungNet?.(); return N && N.id === id && Date.now() - N.t < 30000; };
   const ok = await env.waitX(() => netOk() || dungeonMobs().length || env.shown(env.$q('#dungeon-load-err')) ? 1 : 0, 10000, 250);
@@ -433,7 +478,7 @@ async function sealDone(why, back = true, active = () => env.on !== false) {
   await env.setRt({ sealEx: null, sealT: Date.now(), sealLast: { t: Date.now(), why: String(why).slice(0, 200) } });
   if (!active()) return;
   env.rec('B', 'камни печати', why);
-  if (S?.stopAfter) { env.setStatus(`Обмен камней: ${why} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); return; }
+  if (S?.stopAfter) { env.setStatus(`Обмен камней: ${why} — бот остановлен, как и был`); await chrome.storage.local.set({ on: false }); env.badgeSync?.(); return; }   // 20.41: значок — у фона нет слушателя хранилища
   if (back && env.on) { if (await env.rtCommit?.() === false || !active()) return; location.href = env.cfg.catMode && env.rt.catCur ? env.CAT_URL : '/map.html'; await env.sleep(4000); }
 }
 async function sealStep() {
@@ -516,6 +561,6 @@ async function sealStep() {
   await finish(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catNext, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catNatOk, catNatArm, catNatFail, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);

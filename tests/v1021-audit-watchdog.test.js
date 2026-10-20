@@ -7,7 +7,8 @@ for (const mode of ['stop', 'restart', 'heartbeat']) test(`сторож отме
   const now = Date.now(), old = { tab: 1, t: now - 180000, page: '/map.html' };
   const state = { on: true, hbBg: old, wdog: mode === 'restart' ? [now - 10000, now - 20000, now - 30000] : [], cfg: {}, lock: { k: 'tab1', epoch: 'e1' }, wdDown: null };
   let release, requested = false, listener; const gate = new Promise(r => { release = r; }), reloads = [];
-  const box = { URL, console, Date, watchdogRunning: false, controlSeq: 0, serializeLock: async f => f(), hbMem: copy(old), hbPersistedAt: 0, buf: [], flush: noop,
+  // 20.41: сторож сам сверяет значок с «on» (слушателя storage.onChanged в фоне нет) — paintedOn/paintOn из блока значка
+  const box = { URL, console, Date, watchdogRunning: false, controlSeq: 0, serializeLock: async f => f(), hbMem: copy(old), hbPersistedAt: 0, buf: [], flush: noop, paintedOn: null, paintOn: noop,
     chrome: { storage: { local: storage(state) }, alarms: { onAlarm: { addListener: f => { listener = f; } } },
       tabs: { get: async id => ({ id, url: 'https://l2wap.com/map.html' }), reload: async id => reloads.push(id), update: async () => {} } },
     srvProbe: async () => { requested = true; return gate; } };

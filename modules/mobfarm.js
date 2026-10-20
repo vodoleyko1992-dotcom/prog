@@ -209,7 +209,6 @@ async function nextFight(ctx) {
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   if (await env.tvtStep?.()) return;
   if (env.tvtSoon() && !ctx?.rb) { env.rec('B', 'TvT', 'бой TvT скоро — после этого моба на арену'); location.href = '/tvt-arena.html'; await env.sleep(4000); return; }
-  await env.sleep(env.rnd(40, 120));                      // после победы — сразу дальше (v5.4: было 150–350 мс)
   if (!env.on || !env.tabOwner) return;
   if (env.pvpPending?.()) return env.pvpRecoveryStep();
   // 15.10: начатый бой доводим до конца, после него отдельная заточка не начинает новую охоту/обслуживание.
@@ -293,25 +292,30 @@ async function nextFight(ctx) {
     if (dungeonBattle() && !env.victory()) return;
     // 20.10, лог13:41: native продолжение запросило67, сервер выдал62. В «Авто» каждую цель выбираем из свежего списка.
     const checkedChain = dungeonCancelBlocked() || !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
+    // 20.41: свежий список однородный — catNext отвечает 'native', и следующий бой даёт штатная кнопка (без загрузки страницы).
+    let native = false;
     if (env.cfg.chain !== false && dungeonBattle() && checkedChain && env.catNext) {
-      if (await env.catNext()) return;
+      const r = await env.catNext();
+      if (r === 'native') native = true;
+      else if (r) return;
       if (!env.on || env.tabOwner === false || !env.victory()) return;
     }
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
-    if (env.cfg.chain !== false && dungeonBattle() && !checkedChain) {
+    if (env.cfg.chain !== false && dungeonBattle() && (!checkedChain || native)) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
       if (hunt) {
         if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return;
         env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
-        const href = location.href, t0 = Date.now(); env.fire(hunt);
+        const href = location.href, t0 = Date.now(); if (native) env.catNatArm?.(); env.fire(hunt);
         const started = () => (location.href !== href && !/\/dungeon\.html/i.test(location.pathname)) || (!env.victory() && (env.mobHp()?.cur || 0) > 0);
         let ok = await env.waitFor(started, 8000, 50);
         // 10.0 (карта): запрос hunt-continue ещё в полёте — ждём ответ до 15 с, а не уходим
         const net = env.actNet?.();
         if (!ok && env.on && net && net.huntT >= t0 && !((net.huntDoneT || 0) >= net.huntT)) ok = await env.waitFor(started, 7000, 50);
+        if (ok) env.catNatOk?.();   // 20.41: штатное продолжение сработало — метка ожидания снята
         if (ok || !env.on) return;
         // 10.0.7 (игрок 13.10 03:20: «в катакомбах не работает кнопка охотиться дальше»; код игры battle.js huntContinueManual): в подземелье
         // отказ сервера на hunt-continue игра не показывает — молча уводит на страницу подземелья (/dungeon.html). Бот считал «бой начался»
@@ -364,8 +368,8 @@ async function nextFight(ctx) {
   const qOpen = !resourceFarm && qRule && env.cfg.searchQuest !== false && !camp && +env.cfg.deepEvery > 0 && questHere();
   if (ctx && qOpen && !tgt && !ctx.rb) {
     offQuest = true;
-    if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); await env.setRt({ chainWhy: 'qmap' }); }
-  } else if (ctx && qOpen && tgt && env.rt.chainWhy === 'qmap') await env.setRt({ chainWhy: 'chain' });
+    if (env.rt.chainWhy !== 'qmap') { env.rec('B', 'цепочка', `${ctx.name} — не ★ цель квеста; иду на карту за целью`); env.setRt({ chainWhy: 'qmap' })?.catch?.(() => {}); }
+  } else if (ctx && qOpen && tgt && env.rt.chainWhy === 'qmap') env.setRt({ chainWhy: 'chain' })?.catch?.(() => {});
   let due = env.mapDue(rules);
   // 15.10 (лог11:11,21:06:12): 43% целей давали ≈6 с/цель против ≈10 с через карту,
   // но deepHot после дальней страницы отменял решение. Убираем только внеплановый hot-выход;
@@ -376,12 +380,13 @@ async function nextFight(ctx) {
   // цепочку. Так было: Leto Lizardman Archer на 8-й странице → после КАЖДОГО боя карта (+5–8 с на бой)
   if (!resourceFarm && due && tgt && env.rt.deepHot && !env.rbDue() && !env.campRbOpen().length && (+env.cfg.deepEvery > 0 || env.farmMapOn?.())) {
     if (env.rt.chainWhy !== 'hot') env.rec('B', 'цепочка', `${ctx.name} — цель; цепочка приносит цели, карту не проверяю`);
-    await env.setRt({ chainWhy: 'hot', sinceDeep: Math.min(env.rt.sinceDeep || 0, env.deepN() - 1) });
+    // 20.41 (лог 20.10, память 1,3 МБ: запись ≈0,5 с перед каждым «Охотиться дальше»): метка журнала цепочки — только при изменении и без ожидания
+    { const nd = Math.min(env.rt.sinceDeep || 0, env.deepN() - 1); if (env.rt.chainWhy !== 'hot' || env.rt.sinceDeep !== nd) env.setRt({ chainWhy: 'hot', sinceDeep: nd })?.catch?.(() => {}); }
     due = false;
   }
   if (!resourceFarm && due && !env.rbDue() && !env.campRbOpen().length && chainCarries()) {
     if (env.rt.chainWhy !== 'carry') env.rec('B', 'цепочка', `цели идут цепочкой (${Math.round((env.rt.chainQ.reduce((a, b) => a + b, 0) / env.rt.chainQ.length) * 100)} % боёв) — плановую проверку карты откладываю`);
-    await env.setRt({ chainWhy: 'carry' });
+    if (env.rt.chainWhy !== 'carry') env.setRt({ chainWhy: 'carry' })?.catch?.(() => {});
     due = false;
   }
   // 10.0 (лог 12.10 12:01): заказ Маммона / почта / готовая часть квеста ждали, пока идёт цепочка — после этой победы разово на карту, дальше mmStep/storyStep
@@ -396,7 +401,7 @@ async function nextFight(ctx) {
     if (!campChain) return;
     const key = continuing ? 'chain' : 'map';
     if (env.rt.chainWhy !== key) env.rec('B', 'цепочка', `${ctx.name} — не цель главы; ${campChain.why} → ${continuing ? 'продолжаю цепочку' : `на карту${reason ? ': ' + reason : ' за целью'}`}`);
-    await env.setRt({ chainWhy: key });
+    if (env.rt.chainWhy !== key) env.setRt({ chainWhy: key })?.catch?.(() => {});
   };
   if (env.cfg.chain && !offQuest && !due) {
     // кнопка «Охотиться дальше» появляется на экране победы не сразу (иногда через 0,3–1 с) —
@@ -408,7 +413,7 @@ async function nextFight(ctx) {
     if (hunt) {
       await chainNote(true);
       if (!sameIntent() || env.tvtSoon() || env.antibotState?.()) return;
-      if(env.dailyWorkReady && !await env.dailyWorkReady('mobs'))return;
+      if(env.dailyWorkReady && (!await env.dailyWorkReady('mobs') || !sameIntent()))return;   // 20.41: после ожидания — снова тот же замысел
       env.setStatus('Охотиться дальше');
       // 10.0 (лог 12.10: от записи «Охотиться дальше» до запроса 273 мс против ≈45 мс у игрока): запись не ждём — rt в памяти уже новый,
       // хвост очереди досылается при уходе со страницы (pagehide); опрос 50 мс вместо 250

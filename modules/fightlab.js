@@ -105,14 +105,21 @@ function parseLog(lines, mob, actor = '') {
 
 // ---------- текущий бой ----------
 const seenRequests = new Set();
-let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false;
+let F = null, last = null, cache = null, cacheCls = '', dirty = false, flushT = 0, lastFight = null, owner = '', ownerAwaiting = false, cacheRev = null;
+// 20.41 (ревью 2): «Сбросить память боя» в меню (метка menuKeyRev.fightMem) сбрасывает и кэш модуля с ещё не записанными боями —
+// иначе rebase/flush вернули бы в хранилище всю прежнюю память поверх сброса.
+function menuReset() {
+  const rev = +(env.rt.menuKeyRev?.fightMem || 0);
+  if (cacheRev === null) cacheRev = rev;
+  else if (rev !== cacheRev) { cacheRev = rev; cache = null; cacheCls = ''; dirty = false; lastFight = null; }
+}
 // 15.10, аудит: класс/персонаж сменился без reload — незавершённый старый бой не пишется в новую память.
 function syncOwner() {
   const current = groupOwner(); if (owner === current) return;
   ownerAwaiting = !!owner; owner = current; F = null; last = null; cache = null; cacheCls = ''; dirty = false; lastFight = null; flushT = 0;
 }
 function mem() {
-  syncOwner();
+  syncOwner(); menuReset();
   const cls = env.rt.classCur?.prof || '';
   if (!cache || cacheCls !== cls || (!dirty && cache.__src !== env.rt.fightMem)) {
     cache = { ...(env.rt.fightMem || {}) }; cacheCls = cls;
@@ -150,7 +157,7 @@ function groupNote(name, parsed, mainMax, now) {
     targets: parsed.splash.length, damage: parsed.splash.length ? parsed.splash.reduce((s, x) => s + x.damage, 0) / parsed.splash.length : 0 }].slice(-SAMPLES);
   groups[key] = { ...groups[key], legacySamples: groups[key]?.evidence === GROUP_EVIDENCE ? groups[key].legacySamples : groups[key]?.samples, evidence: GROUP_EVIDENCE, t: now, samples };
   const recent = Object.fromEntries(Object.entries(groups).filter(([, g]) => now - g.t < 300000).sort((a, b) => b[1].t - a[1].t).slice(0, 24));
-  env.setRt({ fightGroups: recent })?.catch?.(() => {});
+  (env.setRtSoon || env.setRt)({ fightGroups: recent })?.catch?.(() => {});   // 20.41 (лог 20.10 21:09): статистика AoE-ходов — отложенной записью
 }
 function groupOn(name, hp) {
   const g = env.rt.fightGroups?.[groupScope() + '|' + low(name)], now = Date.now();
@@ -634,7 +641,7 @@ function finish(outcome, now = Date.now()) {
   return sum;
 }
 function flush() {
-  syncOwner();
+  syncOwner(); menuReset();
   packFlush();
   if (!dirty || !cache) return;
   rebase();

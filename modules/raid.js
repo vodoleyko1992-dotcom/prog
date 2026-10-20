@@ -364,7 +364,8 @@ async function rbScout(r) {
   if (!st) return null;
   // 8.0: сливаем с прошлой записью — раньше повторный осмотр стирал замер потерь HP по этому РБ (loss)
   const merged = { ...(env.rt.rbStats?.[r.id] || {}), ...st, t: Date.now() };
-  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: merged } });
+  // 20.41: цифры окна — в памяти вкладки сразу; запись цели боя ниже (с ожиданием) дописывает очередь целиком
+  env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [r.id]: merged } });
   return rbPreCheck(r.id, merged);
 }
 
@@ -394,9 +395,9 @@ async function rbEngage(r, label, opt = {}) {
     return 'skip';
   }
   if (chk) env.rec('B', 'РБ', `${r.name} (${r.lvl}): иду — ${chk.why}`);
-  if (chk?.probe && (chk.measure || !probeFight(r.id))) await rbNote(r.id, { name: r.name, lvl: r.lvl,
-    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey, ...(chk.probeSeconds ? { checkpointSeconds: chk.probeSeconds, reserve: chk.probeReserve, loss: chk.probeLoss, p90: chk.probeP90, defense: chk.probeDefense } : {}) } : {}) } });
-  await env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });
+  if (chk?.probe && (chk.measure || !probeFight(r.id))) rbNote(r.id, { name: r.name, lvl: r.lvl,
+    probe: { t: Date.now(), lvl: env.heroLvl(), sp: chk.sp, ...(chk.measure ? { kind: 'dps', key: chk.probeKey, ...(chk.probeSeconds ? { checkpointSeconds: chk.probeSeconds, reserve: chk.probeReserve, loss: chk.probeLoss, p90: chk.probeP90, defense: chk.probeDefense } : {}) } : {}) } })?.catch?.(() => {});   // 20.41: без ожидания — запись цели ниже дописывает очередь
+  env.setRt({ rbPlan: { name: `${r.name} (${r.lvl})`, ok: chk ? chk.ok : null, why: chk ? chk.why : 'окна РБ нет — без оценки', t: Date.now() } });   // 20.41: без ожидания
   const go = env.$q('#map-mob-modal-battle');
   if (chk && rbModalIs(r) && env.shown(go)) {
     env.setStatus(label);
@@ -433,7 +434,7 @@ async function rbInfoNote(id, j, from = 'api') {
     ...(ad ? { adena: Math.round(((+ad.min || 0) + (+ad.max || 0)) / 2 * (ad.chance ?? 1)) } : {}),
     ...(+j.rewardExp > 0 ? { exp: +j.rewardExp } : {}), ...(+j.rewardSp > 0 ? { sp: +j.rewardSp } : {}), ...(top?.length ? { top } : {}),
     ...(typeof j.canAttackRaidBoss === 'boolean' ? { canAttack: j.canAttackRaidBoss } : {}), ...(+j.minRaidBossLevelForAttack > 0 ? { minLvl: +j.minRaidBossLevelForAttack } : {}) };
-  await env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });
+  env.setRt({ rbStats: { ...(env.rt.rbStats || {}), [id]: st } });   // 20.41: ответ API — в памяти сразу, запись в фоне
   return st;
 }
 
@@ -635,8 +636,11 @@ const btnPrice = b => rbPriceParse(b?.closest?.('.l2-rb-row')?.querySelector('.l
 function rbListDomMerge(rows, now = Date.now()) {
   const L = { ...(env.rt.rbList || {}) }, T = env.rbTimer?.state?.()?.b || {};
   for (const [id, r] of Object.entries(rows || {})) {
-    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000;
-    L[id] = { ...(L[id] || {}), ...r, ...(lag ? { alive: false, status: 'Убит' } : {}) };
+    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000, p = L[id] || {};
+    // 20.41 (ревью): подпись «VIP»/«0»/пусто без котировки сервера не стирает цену, уже подтверждённую JSON списка (listNote).
+    // Перед телепортом шаг go всё равно перечитывает строку после rbPriceRefresh; явная цена страницы (адена/CoL/FA) заменяет сохранённую.
+    const keep = !r.unit && (!Number.isFinite(r.price) || r.price === 0) && p.unit === 'аден' && Number.isFinite(p.price) ? { price: p.price, unit: p.unit, priceText: p.priceText } : {};
+    L[id] = { ...p, ...r, ...keep, ...(lag ? { alive: false, status: 'Убит' } : {}) };
   }
   return L;
 }
@@ -1072,7 +1076,7 @@ async function rbGoStep() {                       // список РБ → ну�
     if (!env.isMap()) { location.href = '/map.html'; await env.sleep(3000); }
     return;
   }
-  const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === g.page, 4000, 200);
+  const pageReady = isRbPage() && (rbPageNow() === g.page || +(new URLSearchParams(location.search).get('page') || 1) === g.page && await env.waitX(() => rbPageNow() === g.page, 4000, 200));   // 20.41: см. шаг go
   if (!active() || !sameJob()) return;
   if (!pageReady) { env.setStatus(`РБ: лечу к ${g.name} (${g.lvl})`); location.href = `/rb-bosses.html?page=${g.page}`; await env.sleep(4000); return; }
   const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${g.id}"]`), 8000, 200);
@@ -1199,7 +1203,9 @@ async function rbRefreshState(id, active, force = false) {
   if (old?.nextAt > Date.now()) return false;
   if (typeof env.gameGet !== 'function') return !c?.managed;
   const char = env.rt.char, at = Date.now();
-  await env.setRt({ rbStateRead: { t: at, nextAt: at + 15000, why: 'читаю состав и запас адены' } });
+  // 20.41 (лог 21:09:11–13,6: две записи вокруг GET по 0,5–1,4 с): метки сверки и кошелёк — в памяти вкладки сразу, на диск без
+  // ожидания; перед оплатой телепорта payments.prepare всё равно дописывает очередь
+  env.setRt({ rbStateRead: { t: at, nextAt: at + 15000, why: 'читаю состав и запас адены' } });
   if (!active()) return false;
   try {
     const response = await env.gameGet('/character'), body = response.ok ? await response.json() : null, ch = body?.character;
@@ -1208,12 +1214,12 @@ async function rbRefreshState(id, active, force = false) {
     env.warlock?.noteSnapshot?.(ch);
     const next = rbContext(id, true), ready = ordinaryLiveTour(id) || !next?.managed || !!next.key || !!next.prepared;
     const adena = typeof ch.adena === 'string' && /^\d+$/.test(ch.adena) ? Number(ch.adena) : ch.adena;
-    await env.setRt({ rbStateRead: { t: Date.now(), nextAt: ready ? 0 : Date.now() + 15000,
+    env.setRt({ rbStateRead: { t: Date.now(), nextAt: ready ? 0 : Date.now() + 15000,
       why: ready ? '' : 'состав или заряды ещё не подтверждены' },
       ...(Number.isSafeInteger(adena) && adena >= 0 ? { adenaSeen: { v: adena, t: Date.now() } } : {}) });
     return active() && ready;
   } catch (_) {
-    if (active()) await env.setRt({ rbStateRead: { t: Date.now(), nextAt: Date.now() + 60000, why: 'сверка персонажа не ответила' } });
+    if (active()) env.setRt({ rbStateRead: { t: Date.now(), nextAt: Date.now() + 60000, why: 'сверка персонажа не ответила' } });
     return false;
   }
 }
@@ -1239,17 +1245,20 @@ async function rbFaBudgetWhy(row, active) {
   return rbTravelBudget(env.rt.rbList?.[row.id] || row);
 }
 
+// 20.41 (лог 20.10 21:09: 3–5 смен этапа на цель, каждая ждала полную запись памяти 1,3 МБ ≈0,7–1,4 с): этап и подсказка — для
+// меню, шаг тура (step) пишется отдельно с ожиданием; память вкладки обновлена сразу
 async function rbHuntPhase(phase, next, extra = {}) {
   const H = env.rt.rbHunt || {};
-  if (phase !== 'wait' && env.rt.rbFishWait) await env.setRt({rbFishWait:null});
+  if (phase !== 'wait' && env.rt.rbFishWait) env.setRt({rbFishWait:null});
   if (H.phase === phase && H.next === next && !Object.keys(extra).length) return;
-  await huntSet({ phase, next, ...extra });
+  huntSet({ phase, next, ...extra }).catch(() => {});
   env.setStatus(`Тур РБ: ${next}`);
 }
 
 async function huntDone(id, why, attempted = true) {
   // 15.10: отказ до клика не считается попыткой; пополнение адены сразу открывает подходящую цель.
-  if (id) await env.setRt({ ...(attempted ? { rbGoTried: { ...(env.rt.rbGoTried || {}), [id]: Date.now() } } : {}), rbWant: null, rbCur: null });
+  // 20.41: одна точка ожидания записи — шаг pick ниже (очередь FIFO дописывает и эту запись)
+  if (id) env.setRt({ ...(attempted ? { rbGoTried: { ...(env.rt.rbGoTried || {}), [id]: Date.now() } } : {}), rbWant: null, rbCur: null });
   env.rec('B', 'тур РБ', why);
   await huntSet({ step: 'pick', phase: 'learn', id: null, last: why, next: 'выбираю следующего живого РБ', kills0: null, fightAt: null });
 }
@@ -1432,7 +1441,10 @@ async function rbHuntStep() {
       // Изменение силы/банок не делает прочитанный список мёртвым: повторная подготовка без 14 новых страниц.
       return huntDone(H.id, `${H.name}: перед телепортом ${reason || 'список устарел'} — проверю повторно`, false);
     }
-    const pageReady = isRbPage() && await env.waitX(() => rbPageNow() === H.page, 4000, 200);
+    // 20.41 (лог 20.10 21:09:21–26: показана стр. 11, цель на стр. 12 — 4 с ждали страницу, которая сама не сменится): ждём
+    // отрисовку только адреса нужной страницы; на другой странице списка — сразу переход
+    const urlPage = +(new URLSearchParams(location.search).get('page') || 1);
+    const pageReady = isRbPage() && (rbPageNow() === H.page || urlPage === H.page && await env.waitX(() => rbPageNow() === H.page, 4000, 200));
     if (!active() || !sameJob()) return;
     if (!pageReady) {
       env.setStatus(`Тур РБ: к ${H.name} (${H.lvl}) — список, стр. ${H.page}`);
@@ -1440,11 +1452,16 @@ async function rbHuntStep() {
     }
     const b = await env.waitX(() => env.$q(`.l2-rb-row__tp[data-spawn-id="${CSS.escape(H.id)}"]`), 8000, 200);
     if (!active() || !sameJob()) return;
-    if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
+    // 20.41: записи перед huntDone не ждём — его запись шага дописывает очередь целиком (FIFO)
+    if (!b) { env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
+    // 20.41 (лог 21:09:15–18, Cloe «Убит — пропускаю»): убитый/запрещённый РБ виден в строке сразу — без запроса свежей цены
+    // 20.41 (ревью): и здесь освежаем все строки открытой страницы — иначе следующий выбор шёл к соседу, убитому на этой же странице.
+    let pageRows = rbRowsParse(), row = pageRows[H.id];
+    if (row && (!row.alive || row.deny)) { env.rbTimer?.domNote(pageRows)?.catch?.(() => {}); env.setRt({ rbList: rbListDomMerge(pageRows) }); return huntDone(H.id, `${H.name}: ${row.deny || row.status} — пропускаю`, false); }
     if (!await rbPriceRefresh(() => active() && sameJob(),H.id)) return;
     if (!active() || !sameJob()) return;
-    const pageRows = rbRowsParse();
-    let row = pageRows[H.id];
+    pageRows = rbRowsParse();
+    row = pageRows[H.id];
     // 20.41 (лог 21:12:12 Kernon): страница уже открыта — таймеры и очередь тура по всем её строкам, а не только по цели,
     // иначе следующие выборы шли по тому же старому списку.
     if (Object.keys(pageRows).length) {
@@ -1452,7 +1469,7 @@ async function rbHuntStep() {
       await env.setRt({ rbList: rbListDomMerge(pageRows) });
       if (!active() || !sameJob()) return;
     }
-    if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
+    if (row && (!row.alive || row.deny || rbPriceWhy(row))) { env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
     if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`, false);
     // Stop во время паузы — ещё не попытка телепорта: сохраняем шаг «go» и прежний лимит.
     await env.pause();
@@ -1522,7 +1539,8 @@ async function rbHuntStep() {
     if (!rbSummonBuffReady()) return huntDone(H.id, `${H.name}: бафф кота не подтверждён — подготовлю снова`, false);
     if (!await rbRefreshState(H.id, active)) return;
     if (!active() || !sameJob()) return;
-    await huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() });
+    // 20.41 (лог 21:09:40–45: 4–6 записей подряд перед боем): шаг fight и текущий РБ — одной точкой ожидания (FIFO)
+    huntSet({ step: 'fight', phase: 'engage', mapLoadT: 0, mapLoadReloads: 0, next: `открываю бой с ${H.name}`, kills0: env.rt.rbDb?.[r.id]?.kills || 0, fightAt: Date.now() }).catch(() => {});
     if (!active()) return;
     await env.setRt({ rbCur: r.id });
     if (!active()) return;
@@ -1986,7 +2004,8 @@ function rbAssess(ctx, me, mob) {
   // Отдельное краткое состояние доступно в Control Center и переживает переход между вкладками.
   if (!S.forecastAt || now - S.forecastAt > 6000 || S.forecastVerdict !== verdict) {
     S.forecastAt = now; S.forecastVerdict = verdict;
-    env.setRt({ rbForecast: { id: S.id, name: ctx.name, t: now, status: verdict,
+    // 20.41 (лог 20.10 21:09): прогноз для меню раз в 6 с — отложенной записью (пакетом, с ближайшей обычной записью или при уходе)
+    (env.setRtSoon || env.setRt)({ rbForecast: { id: S.id, name: ctx.name, t: now, status: verdict,
       note: S.note, dps: Math.round(dps), tKill: Number.isFinite(tKill) ? Math.round(tKill) : null,
       hpPct: Math.round(mob.cur / Math.max(1, mob.max) * 100), samples: S.samples.length, hits: hitCount,
       worstHit: Math.round(worstHit), loss: Math.round(loss) } });

@@ -49,7 +49,9 @@ async function scenario(stop){
   await until(()=>h.g.core('typeof on!=="undefined"'),10000);
   if(stop){assert.ok(stoppedAt>nextStarted&&stoppedAt<nextFulfilled,'Stop пришёл во время загрузки, до нового документа');await delay(700);assert.equal(firstAction,0,'Stop до загрузки нового боя запрещает удар');assert.equal(await h.g.core('on'),false);}
   else{await until(()=>firstAction,10000);assert.ok(firstAction-nextFulfilled<2800,'новый документ не ждёт таймаут старой навигации');await h.click('stop');await until(async()=>!(await h.get(['on'])).on);}
-  assert.equal(calls.filter(x=>x.path==='/game/dungeon/view').length,1);
+  // 20.41: новый бой сам заранее читает список подземелья (catPrefetch в начале боя) — это уже новый документ; старый список не перечитывает.
+  assert.equal(calls.filter(x=>x.path==='/game/dungeon/view'&&x.at<nextFulfilled).length,1);
+  assert.ok(calls.filter(x=>x.path==='/game/dungeon/view').length<=(stop?1:2));
   assert.equal(paths.filter(x=>x.url.includes('spawnId='+next)).length,1);
   assert.equal(paths.some(x=>x.url.startsWith('/dungeon.html')),false,'старый документ не перекрывает новый бой возвратом в подземелье');
   assert.deepEqual(routeErrors,[]);assert.deepEqual(h.errors,[]);

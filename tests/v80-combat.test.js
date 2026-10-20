@@ -19,13 +19,13 @@ assert.match(content, /once\('cdFloor80', \(\) => \{ for \(const \[k, p\] of Obj
 const skills = require('./helpers/warlock52-rt.cjs')().skills; // 20.12: замеры Warlock 52 — из фикстуры
 assert.ok(Object.values(skills).every(s => !s.cdFloor && !s.cdFloorAt), 'base profile has no cdFloor');
 // 3. записи без ожидания на ходе и после победы; остаток очереди уходит при уходе со страницы
-assert.match(combat, /env\.setRt\(\{ cdUse: use, cdUntil: until \}\);   \/\/ 8\.0/);
+assert.match(combat, /rtSoon\(\{ cdUse: use, cdUntil: until \}\);   \/\/ 8\.0/);   // 20.41: тот же патч без ожидания, отложенным пакетом
 assert.doesNotMatch(combat, /await env\.setRt\(\{ dps: \{ n: d\.n \+ 1/);
 assert.doesNotMatch(combat, /await env\.trackEfficiency\(|await env\.trackLoot\(/);
 assert.match(combat, /env\.setRt\(\{\s+kills: env\.rt\.kills \+ 1,/);
 // 20.36: точный серверный отказ разбирается сразу; принятый ход по-прежнему не ждёт toast.
 assert.match(combat, /const ans = serverAnswer \|\| \(dead\(\) \|\| \(done === true && netOk\) \? null : await waitNet\(/, 'no 250 ms toast wait after an accepted action');
-assert.match(content, /addEventListener\('pagehide', \(\) => \{[\s\S]{0,200}const p = rtWriter\.peek\(\);[\s\S]{0,200}chrome\.runtime\.sendMessage\(\{ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt\.char \|\| '' \}/);
+assert.match(content, /addEventListener\('pagehide', \(\) => \{[\s\S]{0,200}const p = rtWriter\.peek\(\);[\s\S]{0,200}chrome\.runtime\.sendMessage\(\{ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt\.char \|\| ''(?:, menuRev: \+rt\.menuRev \|\| 0)? \}/);   // 20.41: + menuRev (ревью 2, сброс из меню)
 assert.match(content, /const now = Date\.now\(\), dt = rt\.lastWinT \? \(now - rt\.lastWinT\) \/ 1000 : 0, via0 = rt\.via;/, 'chain/map attribution captured before nextFight changes via');
 // 4. на РБ с включённой полосой банок вампирик раньше банки
 assert.match(combat, /me\.pct <= \(ctx\.rb\?\.potOn \? 100 : env\.cfg\.drainHp \?\? 85\)/);

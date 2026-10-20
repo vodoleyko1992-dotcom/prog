@@ -38,6 +38,7 @@ test('горячая клавиша Start использует тот же сб�
  const f=fixture(),s=f.state;s.on=false;let command;
  const c={Date,L2EngineCore:E,serializeLock:async fn=>fn(),chrome:{commands:{onCommand:{addListener:fn=>command=fn}},storage:{local:{get:async()=>structuredClone(s),set:async p=>Object.assign(s,structuredClone(p))}}}};
  const src=read('background.js');vm.runInNewContext(src.slice(src.indexOf("chrome.commands?.onCommand.addListener"),src.indexOf('// ===== журнал и снимки')),c);
+ vm.runInNewContext(src.slice(src.indexOf('const paint ='),src.indexOf("chrome.storage.local.get('on').then(s => paintOn")),c);   // 20.41: afterOnWrite — после записи «on» (слушателя хранилища в фоне нет)
  await command('toggle-bot');assert.equal(s.on,true);assertReset(s.rt);assert.equal(s['rt@Hero'].rbListStartRequired,s.rt.rbListStartRequired);assert.equal(s.rt.actionPayments.pending.id,'unsettled');
 });
 

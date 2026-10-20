@@ -296,11 +296,14 @@ function bagAnalyze({ source = 'manual', current = () => true, snapshot = null }
       const m = snapshot?.m || await env.invRefresh(active);
       if (!active()) return { ok: false, reason: 'Контекст анализа изменился' };
       if (!m) throw Error('Не удалось прочитать рюкзак с сервера');
+      // 20.41 (смоук v2023: первый анализ брал Date.now() после расчёта, пересчёт по снимку — время чтения, на 1 мс раньше):
+      // время анализа — всегда время чтения сумки.
+      const readAt = snapshot?.t || (env.invSnapshot?.()?.m === m ? env.invSnapshot().t : 0) || Date.now();
       const p = goalPlan(m), P = p && !p.done ? goalAll(undefined, true, m) : null;
       const row = (r, kind) => ({ id: r.id, name: r.nm || itNm(r.id), need: r.need, have: m[r.id] || 0, missing: r.miss, kind });
       const knownIds = new Set([...Object.keys(MM_INAME), ...Object.keys(MM_RNAME), ...Object.keys(MM_SHOP)].map(Number));
       const known = Object.entries(m).filter(([id, q]) => q > 0 && knownIds.has(+id)).map(([id, have]) => ({ id: +id, name: itNm(+id), have, kind: MM_RECIPES[id] ? 'material' : 'raw' }));
-      const analysis = { t: snapshot?.t || Date.now(), attemptAt, status: 'ok', char: env.rt.char, prof: env.rt.classCur?.prof ?? '', slot: env.rt.classCur?.slot ?? null,
+      const analysis = { t: readAt, attemptAt, status: 'ok', char: env.rt.char, prof: env.rt.classCur?.prof ?? '', slot: env.rt.classCur?.slot ?? null,
         goal: p ? { id: p.id, lvl: p.lvl, to: p.to } : null, items: (p?.mats || []).map(r => row(r, 'material')),
         raw: (P?.raw || []).map(r => row(r, 'raw')),
         craft: (P?.craft || []).map(r => ({ id: r.id, name: r.nm, have: m[r.id] || 0, need: (m[r.id] || 0) + r.qty, missing: r.qty, kind: 'craft', runs: r.runs, recipe: r.rec })),

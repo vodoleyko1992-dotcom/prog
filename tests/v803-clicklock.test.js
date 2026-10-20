@@ -86,7 +86,7 @@ const mk = ({ accept = true, doneAgo = 5, getMs = 0, lockA } = {}) => {
   assert.match(content, /mysticSkillCdUntil: r\.mysticSkillCdUntil \?\? inner\.mysticSkillCdUntil \?\? null,/, 'unknown field logged for the next analysis');
   // 5. короткие настоящие откаты под баффами не выбрасываются; старые замеры стёрты
   const lc = content.slice(content.indexOf('async function learnCd('), content.indexOf('let lastObserve = 0;'));
-  const saved = []; const sb = { ilOf: () => ({ reuse: 3000 }), slotKind: () => 'скилл', rt: { skills: {} }, setRt: async p => saved.push(p), Math };
+  const saved = []; const sb = { ilOf: () => ({ reuse: 3000 }), slotKind: () => 'скилл', rt: { skills: {} }, setRt: async p => saved.push(p), setRtSoon: async p => saved.push(p) /* 20.41: замеры навыков — отложенная запись */, Math };
   vm.runInNewContext(`${lc}; this.learnCd = learnCd;`, sb);
   await sb.learnCd('blaze', 'Blaze', 0.8, {});
   assert.equal(saved.length, 1, '0.8 s Blaze (reference 3 s) is accepted now');

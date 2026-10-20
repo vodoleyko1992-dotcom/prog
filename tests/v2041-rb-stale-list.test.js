@@ -101,3 +101,44 @@ test('pageCheck уважает занятый опрос тура и смену 
   assert.equal(gets.length, n + 1);
   assert.equal(env.rt.rbList[ID].alive, false, 'ответ чужого героя не записан');
 });
+// 20.41 (ревью): цель убита на открытой странице — и тогда освежаются все строки страницы, а не только она.
+test('цель на открытой странице убита: соседняя убитая строка тоже уходит из очереди тура', async () => {
+  const doc = docOf(`<div id="rb-list">${rowHtml(ID, 'Audit Raid', false)}${rowHtml(OTHER, 'Other Raid', false)}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbHunt.step, 'pick');assert.equal(m.env.rt.rbList[ID].alive, false);
+  assert.equal(m.env.rt.rbList[OTHER].alive, false, 'сосед на той же странице');
+  await new Promise(r => setImmediate(r));assert.equal(m.env.rt.rbTimer.b[OTHER].al, false);assert.equal(m.fires.length, 0);
+});
+// 20.41 (ревью 2): VIP — подпись цены соседа «VIP» без котировки сервера не стирает цену 0 аден, подтверждённую JSON списка;
+// иначе живой бесплатный сосед уходил бы из тура как «цена не подтверждена». Явная цена страницы по-прежнему заменяет сохранённую.
+const vipRow = (id, name, alive, price) => rowHtml(id, name, alive).replace('<span class="l2-rb-row__price">1000 аден</span>', `<span class="l2-rb-row__price">${price}</span>`);
+test('VIP: убитая цель на странице не стирает подтверждённую бесплатную цену живого соседа', async () => {
+  const doc = docOf(`<div id="rb-list">${vipRow(ID, 'Audit Raid', false, 'VIP')}${vipRow(OTHER, 'Other Raid', true, 'VIP')}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  Object.assign(m.env.rt.rbList[OTHER], { price: 0, unit: 'аден', priceText: '(Аден 0)' });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbHunt.step, 'pick');
+  assert.equal(m.env.rt.rbList[OTHER].alive, true);
+  assert.equal(m.env.rt.rbList[OTHER].price, 0);assert.equal(m.env.rt.rbList[OTHER].unit, 'аден');
+  assert.equal(m.fires.length, 0);
+});
+test('явная цена страницы заменяет сохранённую; без подтверждённой цены «VIP» остаётся неподтверждённой', async () => {
+  const doc = docOf(`<div id="rb-list">${vipRow(ID, 'Audit Raid', false, 'VIP')}${vipRow(OTHER, 'Other Raid', true, '2500 аден')}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  Object.assign(m.env.rt.rbList[OTHER], { price: 0, unit: 'аден' });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbList[OTHER].price, 2500);
+  const d2 = docOf(`<div id="rb-list">${vipRow(ID, 'Audit Raid', false, 'VIP')}${vipRow(OTHER, 'Other Raid', true, 'VIP')}</div>`);
+  const m2 = fixture({ onPage: true, doc: d2, net: () => reply(false) });
+  Object.assign(m2.env.rt.rbList[OTHER], { price: NaN, unit: '' });
+  await m2.R.rbHuntStep();
+  assert.equal(m2.env.rt.rbList[OTHER].unit, '');assert.ok(!Number.isFinite(m2.env.rt.rbList[OTHER].price));
+});
+test('VIP: подпись «0» без единицы тоже не стирает подтверждённую бесплатную цену соседа', async () => {
+  const doc = docOf(`<div id="rb-list">${vipRow(ID, 'Audit Raid', false, 'VIP')}${vipRow(OTHER, 'Other Raid', true, '0')}</div>`);
+  const m = fixture({ onPage: true, doc, net: () => reply(false) });
+  Object.assign(m.env.rt.rbList[OTHER], { price: 0, unit: 'аден', priceText: '(Аден 0)' });
+  await m.R.rbHuntStep();
+  assert.equal(m.env.rt.rbList[OTHER].unit, 'аден');assert.equal(m.env.rt.rbList[OTHER].price, 0);
+});
