@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L2wap Lite</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<header>
+  <b>L2wap Lite</b> <span id="ver" class="dim"></span>
+  <span id="hero" class="dim right"></span>
+</header>
+
+<section class="top">
+  <button id="run" type="button">▶ Старт</button>
+  <div id="status" class="status">—</div>
+</section>
+
+<section>
+  <div class="row"><span>Убито мобов</span><b id="kills">0</b><button id="reset" type="button" class="small">Сбросить</button></div>
+  <div id="now" class="dim"></div>
+</section>
+
+<section>
+  <h2>1. Где охотиться</h2>
+  <label class="col">Место охоты
+    <select id="zone"><option value="">Где стоит герой при Старте</option></select>
+  </label>
+  <label class="row">Сколько мобов убить <input id="limit" type="number" min="0" max="100000" step="1"> <span class="dim">0 — без лимита</span></label>
+  <p class="hint">Бот бьёт ближайших обычных мобов; РБ, чемпионов и охрану эпиков не трогает. Ушёл с места (TvT, смерть) — вернётся телепортом за адену.</p>
+</section>
+
+<section>
+  <h2>2. TvT</h2>
+  <label class="chk"><input id="tvt" type="checkbox"> <span>Сам записываться и биться на TvT (08:00, 15:00, 20:00)</span></label>
+  <div id="tvtInfo" class="dim"></div>
+</section>
+
+<section>
+  <h2>3. Скиллы</h2>
+  <p class="hint">Галка — бот жмёт этот скилл. Обычная атака и банки HP/MP — всегда автоматически.</p>
+  <div id="skills"></div>
+</section>
+
+<details>
+  <summary>Ещё</summary>
+  <label class="row">Банка HP при HP ≤ <input id="hpPot" type="number" min="10" max="95" step="5"> %</label>
+  <label class="row">Банка MP при MP ≤ <input id="mpPot" type="number" min="5" max="95" step="5"> %</label>
+  <label class="row">Остановиться после <input id="maxDeaths" type="number" min="1" max="20" step="1"> смертей за 30 мин</label>
+</details>
+
+<section>
+  <h2>Журнал <button id="dl" type="button" class="small">Скачать</button></h2>
+  <div id="log" class="log"></div>
+</section>
+<script src="logic.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

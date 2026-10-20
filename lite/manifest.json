@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "L2wap Lite — Дестр",
+  "version": "1.0",
+  "version_name": "1.0 Lite",
+  "description": "L2wap Lite 1.0 — автономная охота Destroyer/Titan: место охоты и число мобов, TvT, возврат, свои скиллы",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://l2wap.com/*",
+    "https://*.l2wap.com/*"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "L2wap Lite",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "notranslate.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://l2wap.com/*",
+        "https://*.l2wap.com/*"
+      ],
+      "js": [
+        "logic.js",
+        "battle-cooldown.js",
+        "bot.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "minimum_chrome_version": "116"
+}
