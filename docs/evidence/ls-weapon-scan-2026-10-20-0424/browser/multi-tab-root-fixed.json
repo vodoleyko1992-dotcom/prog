@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-20T04:37:04.955Z",
+  "source": "/workspace/prog",
+  "expectedBaselineFailure": false,
+  "before": {
+    "first": {
+      "hero": "OtherHero",
+      "char": "OtherHero",
+      "on": false,
+      "owner": false
+    },
+    "second": {
+      "hero": "AuditHero",
+      "char": "AuditHero",
+      "on": false,
+      "owner": false
+    },
+    "stored": {
+      "char": "AuditHero",
+      "on": false
+    }
+  },
+  "advanced": true,
+  "storedCount": 4,
+  "popup": {
+    "count": 5,
+    "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+    "toast": ""
+  },
+  "api": [
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    }
+  ],
+  "errors": []
+}

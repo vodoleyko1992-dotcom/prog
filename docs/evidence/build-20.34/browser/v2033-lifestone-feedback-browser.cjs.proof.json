@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-20T04:46:31.793Z",
+  "source": "/workspace/work/build-20.34/chrome",
+  "successful": {
+    "status": "Прочитано оружия: 4. Вставка не запускалась.",
+    "state": "success",
+    "disabled": false,
+    "aria": "false",
+    "count": 5,
+    "targets": [],
+    "max": "10",
+    "focus": ""
+  },
+  "loading": {
+    "status": "Читаю оружие из инвентаря…",
+    "state": "loading",
+    "disabled": true,
+    "aria": "true",
+    "count": 5,
+    "targets": [
+      "matk_6"
+    ],
+    "max": "37",
+    "focus": "lsMaxAttempts"
+  },
+  "errorAfter4_6s": {
+    "status": "ЛС: Не удалось прочитать каталог оружия: HTTP 503; прежний список сохранён",
+    "state": "error",
+    "disabled": false,
+    "aria": "false",
+    "count": 5,
+    "targets": [
+      "matk_6"
+    ],
+    "max": "37",
+    "focus": "lsMaxAttempts"
+  },
+  "recovered": {
+    "status": "Прочитано оружия: 4. Вставка не запускалась.",
+    "state": "success",
+    "disabled": false,
+    "aria": "false",
+    "count": 5,
+    "targets": [
+      "matk_6"
+    ],
+    "max": "37",
+    "focus": "lsMaxAttempts"
+  },
+  "api": [
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    }
+  ],
+  "errors": [],
+  "posts": 0
+}

@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-20T04:34:51.223Z",
+  "tabs": "undefined",
+  "runtime": "object",
+  "storage": "object",
+  "sender": {
+    "id": "l2-dock-audit@local",
+    "url": "moz-extension://9b8535f9-570e-4211-91fc-d882547aa191/popup.html?dock=1",
+    "origin": "moz-extension://9b8535f9-570e-4211-91fc-d882547aa191",
+    "tab": {
+      "id": 1,
+      "url": "http://127.0.0.1:37881/fixture.html"
+    },
+    "frameId": 17179869185
+  },
+  "reply": {
+    "ok": true,
+    "frame": "top",
+    "href": "http://127.0.0.1:37881/fixture.html"
+  }
+}

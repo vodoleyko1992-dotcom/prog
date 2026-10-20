@@ -1,0 +1,193 @@
+{
+  "at": "2026-10-20T04:47:02.042Z",
+  "version": "20.34",
+  "firefox": "153.5.0esr",
+  "boundary": "Isolated native Firefox profile; all game URLs resolve via network.dns.localDomains to local HTTPS fixture only, missing routes503, no live account/credentials. WebDriver acceptInsecureCerts is used only for this local fixture; download TLS verification remained enabled.",
+  "cases": [
+    {
+      "label": "OFF actual dock runtime relay",
+      "count": 5,
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "items": [
+        "Выберите оружие",
+        "Клановий кастер +25 · S · надето",
+        "Спіс B-grade. Дворучна зброя. +6 · B · рюкзак",
+        "Бойова сокира мистецтва B-grade. +0 · B · рюкзак",
+        "Кристал Даймона A-grade. Дворучна магічна зброя. +0 · A · рюкзак"
+      ],
+      "status": "Прочитано оружия: 4. Вставка не запускалась.",
+      "tabs": "undefined"
+    },
+    {
+      "label": "ON actual dock runtime relay",
+      "count": 5,
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "items": [
+        "Выберите оружие",
+        "Клановий кастер +25 · S · надето",
+        "Спіс B-grade. Дворучна зброя. +6 · B · рюкзак",
+        "Бойова сокира мистецтва B-grade. +0 · B · рюкзак",
+        "Кристал Даймона A-grade. Дворучна магічна зброя. +0 · A · рюкзак"
+      ],
+      "status": "Прочитано оружия: 4. Вставка не запускалась.",
+      "tabs": "undefined"
+    },
+    {
+      "label": "OFF after Stop",
+      "count": 5,
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "items": [
+        "Выберите оружие",
+        "Клановий кастер +25 · S · надето",
+        "Спіс B-grade. Дворучна зброя. +6 · B · рюкзак",
+        "Бойова сокира мистецтва B-grade. +0 · B · рюкзак",
+        "Кристал Даймона A-grade. Дворучна магічна зброя. +0 · A · рюкзак"
+      ],
+      "status": "Прочитано оружия: 4. Вставка не запускалась.",
+      "tabs": "undefined"
+    },
+    {
+      "label": "503 error stays after toast expiry, previous list preserved",
+      "status": "ЛС: Не удалось прочитать каталог оружия: HTTP 503; прежний список сохранён"
+    },
+    {
+      "label": "OFF augmentation scan",
+      "count": 5,
+      "hint": "Выберите конкретную вещь. Обновление списка и выбор не расходуют материалы.",
+      "items": [
+        "Выберите оружие",
+        "Клановий кастер +25 · S · надето",
+        "Спіс B-grade. Дворучна зброя. +6 · B · рюкзак",
+        "Бойова сокира мистецтва B-grade. +0 · B · рюкзак",
+        "Кристал Даймона A-grade. Дворучна магічна зброя. +0 · A · рюкзак"
+      ],
+      "status": "Прочитано оружия: 4. Вставка не запускалась.",
+      "tabs": "undefined"
+    },
+    {
+      "label": "LS Start from OFF with delayed server time",
+      "attempts": 1,
+      "itemId": 9002284,
+      "grade": "S",
+      "status": "done",
+      "last": "matk_6"
+    }
+  ],
+  "wakeObservations": [
+    {
+      "hidden": true,
+      "text": "",
+      "toast": ""
+    },
+    {
+      "hidden": true,
+      "text": "",
+      "toast": ""
+    },
+    {
+      "hidden": true,
+      "text": "",
+      "toast": ""
+    },
+    {
+      "hidden": true,
+      "text": "",
+      "toast": ""
+    }
+  ],
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/favicon.ico"
+    },
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/game/time"
+    },
+    {
+      "method": "GET",
+      "path": "/game/daily-quests"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/augmentation.html"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character/catalog-hints"
+    },
+    {
+      "method": "GET",
+      "path": "/game/time"
+    },
+    {
+      "method": "GET",
+      "path": "/game/daily-quests"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "POST",
+      "path": "/character/weapon-augmentation"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    }
+  ],
+  "pass": true
+}

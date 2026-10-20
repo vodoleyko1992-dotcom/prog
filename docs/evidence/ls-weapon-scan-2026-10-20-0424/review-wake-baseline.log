@@ -1,0 +1,286 @@
+✖ wake context change during stable state read prevents main: hero (3.502642ms)
+✖ wake context change during stable state read prevents main: kick (0.764553ms)
+✖ wake context change during stable state read prevents main: stop (0.782169ms)
+✖ wake context change before ACK cannot acknowledge the replacement start: hero (0.7557ms)
+✖ wake context change before ACK cannot acknowledge the replacement start: kick (0.791834ms)
+✖ wake context change before ACK cannot acknowledge the replacement start: stop (0.688258ms)
+✔ unchanged explicit wake starts and acknowledges exactly its actor/start (4.488669ms)
+✖ dock wake rejects the obsolete explicit start: kick (0.764834ms)
+✖ dock wake rejects the obsolete explicit start: off (0.72895ms)
+✖ dock wake rejects the obsolete explicit start: falseOn (0.780036ms)
+✖ dock resume rejects the obsolete explicit start: kick (0.573705ms)
+✖ dock resume rejects the obsolete explicit start: off (0.539633ms)
+✖ dock resume rejects the obsolete explicit start: falseOn (0.485142ms)
+✖ wake requires a caller-captured start instead of adopting latest durable kick (0.72295ms)
+✖ wake/resume forward the same captured start, never a replacement kick (0.619845ms)
+✔ popup wake cannot replace captured context after await: kick (0.918325ms)
+✔ popup wake cannot replace captured context after await: off (0.543069ms)
+✔ popup wake cannot replace captured context after await: generation (0.490259ms)
+✔ popup resume cannot replace captured context after await: kick (0.50435ms)
+✔ popup resume cannot replace captured context after await: off (0.561857ms)
+✔ popup resume cannot replace captured context after await: generation (0.720506ms)
+✖ popup wake/resume retain caller startContext without touching unavailable tabs (0.788098ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 7
+ℹ fail 15
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 30.224528
+
+✖ failing tests:
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:16:42
+✖ wake context change during stable state read prevents main: hero (3.502642ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:17:69)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:16:42
+✖ wake context change during stable state read prevents main: kick (0.764553ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:17:69)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:16:42
+✖ wake context change during stable state read prevents main: stop (0.782169ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:17:69)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:19:42
+✖ wake context change before ACK cannot acknowledge the replacement start: hero (0.7557ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:20:66)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:19:42
+✖ wake context change before ACK cannot acknowledge the replacement start: kick (0.791834ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:20:66)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:19:42
+✖ wake context change before ACK cannot acknowledge the replacement start: stop (0.688258ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:20:66)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock wake rejects the obsolete explicit start: kick (0.764834ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock wake rejects the obsolete explicit start: off (0.72895ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock wake rejects the obsolete explicit start: falseOn (0.780036ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock resume rejects the obsolete explicit start: kick (0.573705ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock resume rejects the obsolete explicit start: off (0.539633ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:31:82
+✖ dock resume rejects the obsolete explicit start: falseOn (0.485142ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:32:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:34:1
+✖ wake requires a caller-captured start instead of adopting latest durable kick (0.72295ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:34:104)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:35:1
+✖ wake/resume forward the same captured start, never a replacement kick (0.619845ms)
+  evalmachine.<anonymous>:1
+  ;this.run=lifestoneDockCommand;
+            ^
+
+  ReferenceError: lifestoneDockCommand is not defined
+      at evalmachine.<anonymous>:1:11
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at relayFixture (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:29:27)
+      at TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:36:49)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+
+test at ../work/ls-0424/v2033-lifestone-wake-context.test.cjs:46:1
+✖ popup wake/resume retain caller startContext without touching unavailable tabs (0.788098ms)
+  ReferenceError: activeTab is not defined
+      at Object.lsCommand (evalmachine.<anonymous>:3:90)
+      at async TestContext.<anonymous> (/workspace/work/ls-0424/v2033-lifestone-wake-context.test.cjs:47:72)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

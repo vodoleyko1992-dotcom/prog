@@ -1,0 +1,38 @@
+{
+  "at": "2026-10-20T04:46:50.247359+00:00",
+  "package": "20.34 Chrome and Firefox",
+  "browser": "Chrome for Testing155.0.8059.84",
+  "zipload": {
+    "version": "20.34",
+    "cfgKeys": 207,
+    "jsErrors": 0
+  },
+  "actualChromeMv3": {
+    "dockFirefoxApiModel": "PASS: chrome.tabs undefined in actual dock iframe; OFF/ON scans4items; explicit exact S weapon2attempt goal; pause; Stop held GET;0 unpromptedPOST; no visible false wake warning",
+    "multiTab": "PASS: matching second hero tab read exactly once; first different hero not used",
+    "realCatalog": "PASS3: OFF/ON/Stop scans real offline catalog,4weaponIDs,0POST",
+    "feedback": "PASS: held loading; HTTP503 status persists4.6s; prior4items+drafts retained; recovery;0POST",
+    "focusRegression": "PASS3fields; list refreshed, effect/limit drafts preserved",
+    "jsErrors": 0
+  },
+  "runtimeHashes": {
+    "files": 64,
+    "beforeEqualsAfter": true
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45
+  },
+  "boundary": "Actual Chrome extension loaded from extracted ZIP; all HTTPS/native game handlers local; chrome.tabs undefined is a Firefox API model only. Native Firefox result belongs to separate ls_dock_firefox_runtime agent; no claim here of native Firefox/Android execution. No live game/account.",
+  "scratchChanges": "Only archive root, external offline KB fixture path, and proof version metadata adjusted; runtime/package unchanged",
+  "logs": [
+    "zipload.log",
+    "v2033-lifestone-dock-browser.cjs.log",
+    "v2033-lifestone-multi-tab-browser.cjs.log",
+    "v2033-lifestone-real-catalog-browser.cjs.log",
+    "v2033-lifestone-feedback-browser.cjs.log",
+    "v2031-lifestone-scan-focus-browser.cjs.log",
+    "firefox-lint.json"
+  ]
+}

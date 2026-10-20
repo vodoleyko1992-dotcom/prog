@@ -1050,7 +1050,48 @@ chrome.tabs.onRemoved.addListener(tabId => {
   }).catch(e => console.warn('[L2bot] lock tab close', e));
 });
 
+// 20.33 (скрин20.10 14:31): Firefox не даёт tabs встроенному меню; фон адресует только его родителя.
+async function lifestoneDockCommand(m, sender) {
+  const denied=reason=>({ok:false,reason});
+  try {
+    const page=new URL(sender?.url||''),menu=new URL(chrome.runtime.getURL('popup.html'));
+    if(sender?.id!==chrome.runtime.id||page.protocol!==menu.protocol||page.host!==menu.host||page.pathname!==menu.pathname||page.searchParams.get('dock')!=='1'
+      ||!Number.isInteger(sender.frameId)||sender.frameId<=0||!Number.isInteger(sender.tab?.id)||sender.tab.id<0)return denied('Команда ЛС доступна только из встроенного меню игры');
+    if(!['scan','prepare','resume','pause','reconcile','acknowledge','close','wake'].includes(m.action)||typeof m.char!=='string'||!m.char)return denied('Некорректная команда ЛС');
+    const tab=await chrome.tabs.get(sender.tab.id),url=new URL(tab.url||'');
+    if(url.protocol!=='https:'||!/(^|\.)l2wap\.com$/i.test(url.hostname)||tab.pendingUrl)return denied('Вкладка игры закрыта или загружается — повторите команду ЛС');
+    const state=await chrome.storage.local.get(['rt','on']);
+    if(state.rt?.char!==m.char)return denied('Персонаж изменился — обновите раздел ЛС');
+    const command={cmd:'lifestoneCommand',action:m.action,char:m.char};
+    if(m.action==='wake'||m.startContext){
+      const context=m.startContext;
+      if(context?.on!==true||!Number.isSafeInteger(context?.kick)||context.kick<0||!state.on||context.kick!==(+(state.rt?.manualKickAt)||0))return denied('Запуск ЛС изменился — повторите команду');
+      command.startContext={on:true,kick:context.kick};
+    }
+    if(m.action==='wake'){
+      if(!state.on)return denied('Бот остановлен');
+      Object.assign(command,{cmd:'kick',expectedChar:m.char,expectedKick:m.startContext.kick});delete command.action;delete command.char;delete command.startContext;
+    }
+    if(m.action==='scan'){
+      const context=m.scanContext;
+      if(typeof context?.on!=='boolean'||!Number.isSafeInteger(context?.kick)||context.kick<0
+        ||context.on!==!!state.on||context.kick!==(+(state.rt?.manualKickAt)||0))return denied('Управление изменилось — обновите список оружия');
+      command.scanContext={on:context.on,kick:context.kick};
+    }
+    let timer;
+    try {
+      const answer=await Promise.race([chrome.tabs.sendMessage(sender.tab.id,command,{frameId:0}),
+        new Promise(resolve=>{timer=setTimeout(()=>resolve(denied('Вкладка игры не ответила на команду ЛС — обновите страницу')),30000);})]);
+      if(m.action==='wake'&&answer?.ok===true&&(!answer.running||!answer.owner||answer.v!==chrome.runtime.getManifest().version))return denied('Игра не подтвердила запуск — обновите её вкладку');
+      return answer?.ok===true?{ok:true}:denied(typeof answer?.reason==='string'?answer.reason.slice(0,220):'Команда ЛС не выполнена — обновите вкладку игры');
+    }finally{clearTimeout(timer);}
+  }catch(_){return denied('Не удалось передать команду ЛС во вкладку игры — обновите страницу');}
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if(m?.cmd==='lifestoneDockCommand'){
+    lifestoneDockCommand(m,_s).then(reply).catch(()=>reply({ok:false,reason:'Команда ЛС не выполнена'}));return true;
+  }
   if (m?.cmd === 'faBuffEvidence') {
     let game = false; try { game = /(^|\.)l2wap\.com$/i.test(new URL(_s?.url || _s?.tab?.url || '').hostname); } catch (_) {}
     if (!game || !Number.isInteger(_s?.tab?.id) || _s.frameId > 0 || (_s.id && _s.id !== chrome.runtime.id)) { reply(null); return true; }

@@ -1,0 +1,136 @@
+{
+  "at": "2026-10-20T04:46:31.400Z",
+  "boundary": "actual Chrome MV3 dock; Firefox iframe capability chrome.tabs unavailable explicitly modeled; all HTTPS local, no live game",
+  "capabilities": {
+    "docked": true,
+    "tabs": "undefined",
+    "runtime": "function"
+  },
+  "weaponIds": [
+    9002284,
+    97,
+    8688,
+    175
+  ],
+  "offScan": "PASS",
+  "onScan": "PASS",
+  "startFromOff": "PASS",
+  "wakeObservations": [
+    {
+      "hidden": true,
+      "text": "⚠ Бот включён, но вкладка игры не отвечает — откройте l2wap.com",
+      "toast": "■ Бот остановлен"
+    },
+    {
+      "hidden": true,
+      "text": "⚠ Бот включён, но вкладка игры не отвечает — откройте l2wap.com",
+      "toast": "■ Бот остановлен"
+    },
+    {
+      "hidden": true,
+      "text": "⚠ Бот включён, но вкладка игры не отвечает — откройте l2wap.com",
+      "toast": "■ Бот остановлен"
+    },
+    {
+      "hidden": true,
+      "text": "⚠ Бот включён, но вкладка игры не отвечает — откройте l2wap.com",
+      "toast": "■ Бот остановлен"
+    },
+    {
+      "hidden": true,
+      "text": "⚠ Бот включён, но вкладка игры не отвечает — откройте l2wap.com",
+      "toast": "■ Бот остановлен"
+    }
+  ],
+  "unpromptedPosts": 0,
+  "series": {
+    "status": "done",
+    "attempts": 2,
+    "last": "matk_6",
+    "itemId": 9002284,
+    "grade": "S",
+    "maxAttempts": 3
+  },
+  "pause": "PASS",
+  "stopHeldScan": "PASS",
+  "posts": 2,
+  "calls": [
+    {
+      "path": "/augmentation.html",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/catalog-hints",
+      "method": "GET"
+    },
+    {
+      "path": "/game/time",
+      "method": "GET"
+    },
+    {
+      "path": "/game/daily-quests",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/catalog-hints",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/catalog-hints",
+      "method": "GET"
+    },
+    {
+      "path": "/game/time",
+      "method": "GET"
+    },
+    {
+      "path": "/game/daily-quests",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/weapon-augmentation",
+      "method": "POST"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/weapon-augmentation",
+      "method": "POST"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character",
+      "method": "GET"
+    },
+    {
+      "path": "/character/catalog-hints",
+      "method": "GET"
+    }
+  ],
+  "errors": []
+}
