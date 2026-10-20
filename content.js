@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.31 — Battle Trance и подготовка Frenzy/Zealot =====
+// ===== L2wap Bot v20.32 — авто-ЛС, баффы кота до РБ и дополнительный VIP-набор =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
