@@ -1,0 +1,14 @@
+абора требует новой проверки каталога (0.783622ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46.429109
+
+== v2141-buff-new-need.test.js ==
+PASS: 20.14.1 buffer visit that succeeded is not counted as failed when a new plan (FA before RB) needs other buffs; goes right away
+
+== ИТОГ: 487 PASS / 0 FAIL ==

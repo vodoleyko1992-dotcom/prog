@@ -1,0 +1,34 @@
+{
+  "at": "2026-10-20T03:32:28.930707+00:00",
+  "package": "20.32 Chrome and Firefox",
+  "browser": "Chrome for Testing 155.0.8059.84",
+  "zipload": {
+    "version": "20.32",
+    "cfgKeys": 207,
+    "jsErrors": 0
+  },
+  "mv3": {
+    "lifestoneFocus": "PASS 3 focus fields; drafts preserved",
+    "vip": "PASS warrior→greater two0/0POST→union proof→VIP expiry",
+    "pet": "PASS 2/2; summon→Queen→Warrior→Final→GET; Stop no further casts",
+    "jsErrors": 0
+  },
+  "runtimeHashes": {
+    "files": 64,
+    "beforeEqualsAfter": true
+  },
+  "firefoxLint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45
+  },
+  "boundary": "Actual extension from extracted ZIP; all HTTPS/native handlers fully local fixtures; no live game/account; native Firefox/Android not run",
+  "logs": [
+    "zipload.log",
+    "v2031-lifestone-scan-focus-browser.cjs.log",
+    "v2031-vip-greater-buff-browser.cjs.log",
+    "v2031-pet-raid-prep-browser.cjs.log",
+    "pet-proof.json",
+    "firefox-lint.json"
+  ]
+}

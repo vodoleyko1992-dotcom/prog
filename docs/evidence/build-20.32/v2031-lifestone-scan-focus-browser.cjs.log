@@ -1,0 +1,2 @@
+RESULTS [{"focus":"lsWeapon","options":2,"targets":[],"max":"10","field":"lsWeapon","stored":1},{"focus":"lsTargets","options":2,"targets":["prominence"],"max":"10","field":"lsTargets","stored":1},{"focus":"lsMaxAttempts","options":2,"targets":["prominence"],"max":"37","field":"lsMaxAttempts","stored":1}]
+PASS MV3: явное обновление оружия сохраняет фокус и черновики целей/лимита
