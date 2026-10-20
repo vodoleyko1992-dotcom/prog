@@ -636,8 +636,11 @@ const btnPrice = b => rbPriceParse(b?.closest?.('.l2-rb-row')?.querySelector('.l
 function rbListDomMerge(rows, now = Date.now()) {
   const L = { ...(env.rt.rbList || {}) }, T = env.rbTimer?.state?.()?.b || {};
   for (const [id, r] of Object.entries(rows || {})) {
-    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000;
-    L[id] = { ...(L[id] || {}), ...r, ...(lag ? { alive: false, status: 'Убит' } : {}) };
+    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000, p = L[id] || {};
+    // 20.41 (ревью): подпись «VIP»/«0»/пусто без котировки сервера не стирает цену, уже подтверждённую JSON списка (listNote).
+    // Перед телепортом шаг go всё равно перечитывает строку после rbPriceRefresh; явная цена страницы (адена/CoL/FA) заменяет сохранённую.
+    const keep = !r.unit && !Number.isFinite(r.price) && p.unit === 'аден' && Number.isFinite(p.price) ? { price: p.price, unit: p.unit, priceText: p.priceText } : {};
+    L[id] = { ...p, ...r, ...keep, ...(lag ? { alive: false, status: 'Убит' } : {}) };
   }
   return L;
 }

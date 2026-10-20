@@ -339,7 +339,9 @@
     function recover() { promote(current); return current.flushing || (!Object.keys(current.pending).length ? Promise.resolve({ ok: true }) : enqueue({})); }
     function clear() { if (current.laterT != null) timers.clear(current.laterT); current = fresh(); }
     // 20.41 (ревью): изменение из меню новее ещё не отправленных значений тех же ключей (отложенная статистика держится до 8 с).
-    function drop(keys) { for (const k of keys) { delete current.pending[k]; delete current.later[k]; } }
+    // Пакет уже в полёте тоже: peek() больше не возвращает его старые значения в память вкладки, а неудачная отправка не вернёт их
+    // в очередь (inflight — тот же объект, что batch). Уже отправленное отсекает фон по menuRev.
+    function drop(keys) { for (const k of keys) { delete current.pending[k]; delete current.later[k]; delete current.inflight[k]; } }
     return { enqueue, defer, peek, recover, clear, drop };
   }
 
@@ -358,6 +360,11 @@
     return same && same.m && same.free <= f ? same : { vw: viewport, free: f, m: 1 };
   }
 
-  root.L2EngineCore = { MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  // 20.41 (ревью): чистая статистика, которую меню сбрасывает (↺ сессии, лут, память боя) и которую вкладка может держать в очереди
+  // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
+  // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
+  const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
+    'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups']);
+  root.L2EngineCore = { MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

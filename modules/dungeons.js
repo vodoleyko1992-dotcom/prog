@@ -167,9 +167,11 @@ function catNative(id, list, pick, cur) {
   if (list.length < 3 || fit.length < list.length * 0.8) return false;
   if (env.cfg.noCancelMobs !== false && list.some(x => env.cancelRisk?.(x.name, false))) return false;
   nat = { id, lvl: pick.lvl, bad: nat?.id === id ? nat.bad : 0, wait: true };
-  const m = natMark(); natSave({ ...m, wait: { id, t: Date.now() } });
   return true;
 }
+// 20.41 (ревью): метка ожидания ставится прямо перед нажатием «Охотиться дальше» (mobfarm), а не при выборе: без нажатия
+// (кнопки нет, Stop, дневной лимит) страница подземелья не считается отказом сервера.
+function catNatArm() { if (nat?.wait) natSave({ ...natMark(), wait: { id: nat.id, t: Date.now() } }); }
 const viewGet = id => env.gameGet('/game/dungeon/view?dungeonId=' + encodeURIComponent(id)).then(r => r.ok ? r.json() : null).then(j => j?.dungeon || null, () => null);
 function catPrefetch(reuseMs = 0) {
   const sid = new URLSearchParams(location.search).get('spawnId') || '', id = sid.match(/^sdms_(.+)_\d+$/)?.[1];
@@ -559,6 +561,6 @@ async function sealStep() {
   await finish(done.length || fail.length ? `обмен на Ancient Adena: ${done.join(', ') || '—'}${fail.length ? ' · не вышло: ' + fail.join('; ') : ''}` : 'камней печати нет — менять нечего');
 }
 
- return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catNatOk, catNatFail, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
+ return { paymentReconcile, isCatPage, isDungeon, dungeonHere, catLv, catTarget, dungeonMobs, mobList, mobLink, showMob, catPrefetch, catNext, catNatOk, catNatArm, catNatFail, catWin, catPick, catGo, catHunt, BOSS_KIND, SEAL, isSealPage, sealStones, sealDue, sealStep };
  };
 })(globalThis);

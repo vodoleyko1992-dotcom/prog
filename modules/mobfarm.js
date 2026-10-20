@@ -309,7 +309,7 @@ async function nextFight(ctx) {
       if (hunt) {
         if(env.dailyWorkReady && !await env.dailyWorkReady('cat'))return;
         env.setStatus('Катакомбы: охотиться дальше'); env.setRt({ via: 'chain', catInT: Date.now() });   // 10.0: запись не ждём
-        const href = location.href, t0 = Date.now(); env.fire(hunt);
+        const href = location.href, t0 = Date.now(); if (native) env.catNatArm?.(); env.fire(hunt);
         const started = () => (location.href !== href && !/\/dungeon\.html/i.test(location.pathname)) || (!env.victory() && (env.mobHp()?.cur || 0) > 0);
         let ok = await env.waitFor(started, 8000, 50);
         // 10.0 (карта): запрос hunt-continue ещё в полёте — ждём ответ до 15 с, а не уходим

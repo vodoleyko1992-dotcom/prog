@@ -1381,7 +1381,8 @@ function rtSizeTop() {
   } catch (e) { return ''; }
 }
 const rtWriter = L2EngineCore.createPatchQueue(
-  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }),
+  // 20.41 (ревью): menuRev — последняя увиденная вкладкой запись меню; фон по ней отсекает в пакете ключи, изменённые меню позже.
+  patch => ipc({ cmd: 'statePatch', patch, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }),
   () => !tabIdle && !document.prerendering && (!on || (tabOwner && !!leaseEpoch)),
   e => {
     console.warn(TAG, 'запись состояния отложена', e);
@@ -1398,12 +1399,13 @@ addEventListener('pagehide', () => {
   try {
     try { if (tabOwner) L2V7Modules.fightlab?.flush?.(); } catch (e) {}   // 10.0 (аудит боя): память боя пишется раз в 30 с — при уходе дописываем в очередь
     const p = rtWriter.peek();
-    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '' }, () => void chrome.runtime.lastError);
+    if (p && Object.keys(p).length && tabOwner && leaseEpoch && !tabIdle) chrome.runtime.sendMessage({ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt.char || '', menuRev: +rt.menuRev || 0 }, () => void chrome.runtime.lastError);
   } catch (e) {}
 });
 // 20.41 (ревью): отложенная статистика (до 8 с) при уходе вкладки в фон пишется сразу: замок обычно переходит к другой вкладке,
-// когда эта не видна, а после потери замка неотправленная очередь сбрасывается.
-document.addEventListener('visibilitychange', () => { if (document.hidden && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
+// когда эта не видна, а после потери замка неотправленная очередь сбрасывается. Уход со страницы — не здесь: остаток уже отправил
+// pagehide (pageLeaving ставят beforeunload/pagehide раньше скрытия документа), иначе каждая навигация писала бы память дважды.
+document.addEventListener('visibilitychange', () => { if (document.hidden && !pageLeaving && tabOwner && leaseEpoch && !tabIdle) rtWriter.recover().catch(e => quietErr('запись памяти', e)); });
 function setRt(p) {
   rt = { ...rt, ...p };
   let patch = { ...p };
@@ -5670,7 +5672,7 @@ L2V7Modules.mobfarm = L2V7Factories.mobfarm({ get shopGap(){return ()=>L2V7Modul
   get campOpen() { return campOpen; }, set campOpen(value) { campOpen = value; },
   get campRbOpen() { return campRbOpen; }, set campRbOpen(value) { campRbOpen = value; },
   get catGo() { return catGo; }, set catGo(value) { catGo = value; },
-  get catNext() { return () => L2V7Modules.dungeons.catNext(); }, get catNatOk() { return () => L2V7Modules.dungeons.catNatOk(); },
+  get catNext() { return () => L2V7Modules.dungeons.catNext(); }, get catNatOk() { return () => L2V7Modules.dungeons.catNatOk(); }, get catNatArm() { return () => L2V7Modules.dungeons.catNatArm(); },
   get cfg() { return cfg; }, set cfg(value) { cfg = mergeCfg(value); },
   get deepN() { return deepN; }, set deepN(value) { deepN = value; },
   get draw() { return draw; }, set draw(value) { draw = value; },
@@ -6651,7 +6653,9 @@ chrome.storage.onChanged.addListener(ch => {
   // 20.41 (ревью: отложенная статистика до 8 с воскрешала сброс из меню — ↺ сессии, лут, память боя): ключи, которые меню изменило,
   // убираем из своей ещё не отправленной очереди — решение игрока новее.
   if (ch.rt?.newValue?._src === 'menu' && ch.rt.oldValue) {
-    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, keys = Object.keys(q).filter(k => JSON.stringify(o[k]) !== JSON.stringify(n[k]));
+    // 20.41 (ревью): только чистая статистика (MENU_STAT_KEYS). rbTimer сливается, а намерения/оплаты/маршруты вкладки, как и раньше,
+    // пишутся последней записью — их отмена из-за постороннего изменения меню потеряла бы подтверждённое намерение перед действием.
+    const q = rtWriter.peek(), o = ch.rt.oldValue, n = ch.rt.newValue, stat = globalThis.L2EngineCore?.MENU_STAT_KEYS || [], keys = Object.keys(q).filter(k => stat.includes(k) && JSON.stringify(o[k]) !== JSON.stringify(n[k]));
     if (keys.length) rtWriter.drop(keys);
   }
   const timerPrevious = rt;

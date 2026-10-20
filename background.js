@@ -339,7 +339,12 @@ async function statePatch(m, sender) {
       return { ok: true, fishTgt, cfg };
     }
     const change = {};
-    const retirement=retireRaidSessionPatch(pvpSeedPatch(patch,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
+    // 20.41 (ревью 2): пакет вкладки, собранный до сброса из меню (отложенная статистика до 8 с, пакет в очереди за записью меню),
+    // не возвращает старые значения статистики (MENU_STAT_KEYS: ↺ сессии, сброс лута/памяти боя). menuRev — последняя увиденная
+    // вкладкой запись меню. Прочие ключи (намерения, оплаты, маршруты, rbTimer) — как раньше, последней записью. Метки меню вкладка не пишет.
+    const fresh = { ...patch }, menuRevs = state.rt?.menuKeyRev || {}; delete fresh.menuRev; delete fresh.menuKeyRev;
+    if (Number.isSafeInteger(m.menuRev)) for (const k of globalThis.L2EngineCore?.MENU_STAT_KEYS || []) if (Object.hasOwn(fresh, k) && (+menuRevs[k] || 0) > m.menuRev) delete fresh[k];
+    const retirement=retireRaidSessionPatch(pvpSeedPatch(fresh,state.rt||{}),state.rt||{},{...(state.cfg||{}),...config},now),writePatch=retirement.patch;
     if (Object.hasOwn(writePatch, 'rbTimer')) writePatch.rbTimer = mergeTimerPatch(state.rt?.rbTimer, writePatch.rbTimer);
     // 20.41 (ревью): kills вкладки может прийти отложенным пакетом уже после итога квоты фона (max по серверу). Вкладка счёт сессии
     // только увеличивает (сброс — только из меню), поэтому меньшее значение сохранённое не понижает.
@@ -457,6 +462,9 @@ async function menuPatch(m, sender) {
         reason: cfgPatch.enchantMode === true ? 'Режим выбран — нажмите «Продолжить серию»' : 'Выбран другой режим — продолжение заточки только вручную' } };
     }
     if (typeof m.on === 'boolean') { change.on = m.on; if (!m.on) change.stopMeta = { source: 'popup-menu', reason: 'Команда остановки из панели', t: Date.now() }; }
+    // 20.41 (ревью 2): метка записи меню у изменённой по значению статистики (см. statePatch); копии с прежним содержимым её не получают.
+    const menuStat = change.rt ? (globalThis.L2EngineCore?.MENU_STAT_KEYS || []).filter(k => Object.hasOwn(change.rt, k) && change.rt[k] !== state.rt?.[k] && JSON.stringify(change.rt[k]) !== JSON.stringify(state.rt?.[k])) : [];
+    if (menuStat.length) { const rev = (+state.rt?.menuRev || 0) + 1; change.rt = { ...change.rt, menuRev: rev, menuKeyRev: { ...(state.rt?.menuKeyRev || {}), ...Object.fromEntries(menuStat.map(k => [k, rev])) } }; }
     if (Object.keys(change).length) await chrome.storage.local.set(change);
     return { ok: true };
   });

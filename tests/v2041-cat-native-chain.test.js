@@ -15,7 +15,7 @@ function fixture(rows=uniform()){
  env.cancelRisk=()=>null;env.catGo=async()=>events.push('catGo');
  env.gameGet=async path=>{events.push('GET '+path);return{ok:true,json:async()=>({dungeon:{id:dungeon,mobs:rows}})}};
  const ss=new Map(),box={console,Date,Math,URLSearchParams,document:{querySelectorAll:()=>[]},location:loc,sessionStorage:{getItem:k=>ss.has(k)?ss.get(k):null,setItem:(k,v)=>ss.set(k,String(v))}};vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../modules/dungeons.js'),'utf8'),box);
- const D=box.L2V7Factories.dungeons(env);env.catNext=()=>D.catNext();f.setWon(true);
+ const D=box.L2V7Factories.dungeons(env);env.catNext=()=>D.catNext();env.catNatArm=()=>D.catNatArm();f.setWon(true);
  return {...f,D,ss,setRows:r=>{rows.length=0;rows.push(...r)},run:()=>f.farm.nextFight({name:'Lilim Knight Banneret'})};
 }
 const nav=f=>f.location.href.startsWith('/battle.html?spawnId=');
@@ -77,4 +77,15 @@ test('старая метка (больше минуты) — не отказ; �
  f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:dungeon,t:Date.now()-61000}}));assert.equal(f.D.catNatFail(dungeon),false);
  f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:dungeon,t:Date.now()-40000}}));assert.equal(f.D.catNatFail(dungeon),true);
  f.ss.set('l2bot.catNat',JSON.stringify({wait:{id:'other_dungeon',t:Date.now()}}));assert.equal(f.D.catNatFail(dungeon),false);
+});
+// 20.41 (ревью 2): метка ожидания — только перед самим нажатием. Без нажатия (дневной лимит, Stop, нет кнопки) страница подземелья
+// не считается отказом сервера и не выключает штатное продолжение на 30 мин.
+test('выбрано штатное продолжение, но кнопку не нажали: страница подземелья — не отказ',async()=>{
+ const f=fixture();f.env.dailyWorkReady=async()=>false;await f.run();assert.ok(!f.events.includes('hunt'));
+ f.env.rec=()=>{};assert.equal(f.D.catNatFail(dungeon),false);assert.equal(JSON.parse(f.ss.get('l2bot.catNat')||'{}').off,undefined);
+});
+test('метку ставит нажатие: mobfarm вызывает catNatArm прямо перед fire(hunt), catNative её не пишет',()=>{
+ const mf=fs.readFileSync(require('node:path').join(__dirname,'../modules/mobfarm.js'),'utf8');assert.match(mf,/if \(native\) env\.catNatArm\?\.\(\); env\.fire\(hunt\);/);
+ const src=fs.readFileSync(require('node:path').join(__dirname,'../modules/dungeons.js'),'utf8'),a=src.indexOf('function catNative('),b=src.indexOf('\n}',a);assert.ok(!/natSave/.test(src.slice(a,b)));
+ assert.match(fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8'),/get catNatArm\(\) \{ return \(\) => L2V7Modules\.dungeons\.catNatArm\(\); \}/);
 });
