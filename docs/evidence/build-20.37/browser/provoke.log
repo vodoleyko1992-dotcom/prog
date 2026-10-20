@@ -1,0 +1,4 @@
+PASS MV3/main/hook Provoke on provoke→whirlwind
+PASS MV3/main/hook Provoke off whirlwind
+PASS MV3/main/hook Provoke stop provoke
+PASS MV3/main/hook Provoke switch provoke→whirlwind

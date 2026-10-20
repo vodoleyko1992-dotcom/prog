@@ -1,0 +1,62 @@
+{
+  "version": "20.37",
+  "flavor": "Chrome",
+  "builtAt": "2026-10-20T18:57:54.344208+10:00",
+  "base": "d479df4400eb5f7041a0c41fcf5bb78abd292b45",
+  "includedPRs": [
+    311
+  ],
+  "node": {
+    "passFiles": 505,
+    "failFiles": 0,
+    "logSHA256": "10b8e6803356ef18b1332b83eceb41103c74e0a0c6119b77e72bd6959ef33777"
+  },
+  "syntax": {
+    "runtimeFiles": 49,
+    "changedVersionTests": 5,
+    "ok": true
+  },
+  "envcheck": {
+    "modules": 31,
+    "ok": true
+  },
+  "diffCheck": true,
+  "archive": {
+    "name": "l2wap-bot-v20.37.zip",
+    "bytes": 1451443,
+    "sha256": "1eb84da9465a92bd0b160cfc218c8dee2cd22db0bf823b9f4247751d2aec56eb",
+    "files": 64,
+    "sourceHashesMatch": true,
+    "independentAuditPassed": 173,
+    "auditEvidence": "audit.json"
+  },
+  "chrome": {
+    "version": "156.0.8078.4",
+    "packageLoad": {
+      "version": "20.37",
+      "configKeys": 208,
+      "jsErrors": 0
+    },
+    "browserFiles": [
+      "v2036-combat-scheduler-browser.cjs",
+      "v205-warlord-provoke-browser.cjs"
+    ],
+    "passedScenarios": 9,
+    "failedScenarios": 0,
+    "jsErrors": 0,
+    "allHTTPSMocked": true,
+    "runtimeHashesBeforeAfterMatch": true,
+    "evidence": "browser/validation.json"
+  },
+  "preserved": {
+    "baseProfile": true,
+    "settings": true,
+    "firefoxVersion": "20.36",
+    "firefoxArchiveUnchanged": true
+  },
+  "limits": [
+    "Живую игру, настоящий Firefox/Android и полный исторический browser-runner в этом выпуске не запускали.",
+    "Реальный прирост ДПС пока не измерен; браузерные тайминги относятся к локальным ответам."
+  ],
+  "next": "Обновить файлы в прежней папке, нажать ↻ расширения, обновить вкладку игры и записать контрольный боевой лог."
+}
