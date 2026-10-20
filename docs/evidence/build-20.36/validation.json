@@ -72,5 +72,6 @@
     "Firefox ZIP неподписан."
   ],
   "configUnchanged": true,
-  "status": "PASS"
+  "status": "PASS",
+  "pr": "https://github.com/vodoleyko1992-dotcom/prog/pull/309"
 }
