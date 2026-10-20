@@ -76,6 +76,11 @@ function shopPlan() {
   return list.filter(x => x.mm[1] > 0 && !((bad || guess || sg.blocked) && x.key === 'shots'));
 }
 
+let mmInvKickT = 0;
+function mmInvKick(now = Date.now()) {
+  if (typeof env.invRefresh !== 'function' || now - mmInvKickT < 300000) return false;
+  mmInvKickT = now; Promise.resolve().then(() => env.invRefresh()).catch(() => {}); return true;
+}
 function shopNeedByPanel() {
   if (!env.cfg.shopAuto) return '';
   const low = [];
@@ -95,7 +100,12 @@ function shopNeedByPanel() {
     if (q < sp.mm[0]) low.push(`заряды ${sp.grade} ${q} < ${sp.mm[0]}`);
   }
   // 10.0.7: сырьё Маммона из магазина — только по сумке из сети (панели боя у него нет); сумка не прочитана — ждём её
-  for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) chk(null, it.mm, it.label, it.ids[0]);
+  // 20.41 (игрок 20.10 «не покупает С кристаллы»): сумка не прочитана/старше 5 мин — сырьё молча пропускалось и сумку никто не перечитывал.
+  // Теперь фоновое чтение GET /character (не чаще раза в 5 мин); решение о закупке — на следующей проверке по свежей сумке
+  for (const it of shopPlan().filter(x => /^mm\d+$/.test(x.key))) {
+    if (it.ids.some(id => env.invQty?.(id) == null)) { mmInvKick(); continue; }
+    chk(null, it.mm, it.label, it.ids[0]);
+  }
   return low.join(', ');
 }
 

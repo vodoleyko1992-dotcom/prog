@@ -834,7 +834,10 @@ const NAME_ALIAS = { 'force buster': 'force burst',
   // 7.1.16-fix: в логе боя заклинания мага — по-украински («Вампірний дотик 596», «Полум’я 618»). Без этого урон Vampiric Touch
   // и Blaze не узнавался (урон 0, «урон ≈2»), и бот выбирал заклинания вслепую
   'vampiric touch': 'вампірний дотик', 'aura burn': 'опік аури', 'energy bolt': 'енергетична блискавка', 'blaze': 'полум’я',
-  'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
+  'flame strike': 'удар полум’я', 'corpse plague': 'чума трупа', 'hamstring': 'підріз сухожилля',
+  // 20.41 (лог 20.10 21:09, Bounty Hunter): native-удары в журнале по-украински — «Дикий розмах: power 326 · КРИТ 14635»,
+  // «Вихор: power 2033; до 4 цілей (головна + 3 поруч) 9893». Без алиаса урон из DOM не читался (запасной путь не учит алиас при «power N»)
+  'wild sweep': 'дикий розмах', 'whirlwind': 'вихор' };   // остальные имена бот запоминает сам (rt.logAlias) по первому одиночному нажатию
 const apos = s => String(s || '').toLowerCase().replace(/[’'`ʼ]/g, '’');
 const logName = n => apos(rt.logAlias?.[(n || '').toLowerCase()] || NAME_ALIAS[(n || '').toLowerCase()] || n);
 for (const [a, b] of Object.entries(NAME_ALIAS)) if (IL_BY_NAME[b] != null && IL_BY_NAME[a] == null) IL_BY_NAME[a] = IL_BY_NAME[b];
@@ -989,7 +992,8 @@ function dmgFromLog(name, lines, allowAlt = true) {
     return hits.reduce((a, b) => a + b, 0) + splashDmg(lines);   // главная цель + задетые рядом
   }
   // Лог 14.10 16:20: урон соседям — отдельный канал, даже если его строка идёт перед главным попаданием.
-  lines = lines.filter(l => !/(?:поруч|додаткові цілі\s*[—–:-])/i.test(String(l)));
+  // 20.41 (лог 20.10 21:09): «(головна + 3 поруч) 9893» — основная строка Whirlwind, не канал соседей; «… поруч −123.» по-прежнему отбрасывается
+  lines = lines.filter(l => !/(?:поруч(?!\s*\))|додаткові цілі\s*[—–:-])/i.test(String(l)));
   // строка этого заклинания: сначала та, что НАЧИНАЕТСЯ с его имени («Полум’я 618», а не «Удар полум’я 610»), потом любая с именем
   const ln = logName(name), eng = apos(name);
   const has = (l, n) => !BUFF_RE.test(l) && apos(l).includes(n);
@@ -4437,7 +4441,7 @@ function logCooldownApi(d, path) {
   const sc = r.skillCooldowns ?? inner.skillCooldowns;
   const fields = {
     action: d.req?.action ?? r.requestedAction ?? null,
-    battle: d.req?.battleSpawnId ?? battleSpawn(),
+    spawn: d.req?.battleSpawnId ?? battleSpawn(),   // 20.41 (выгрузка 20.10): не data.battle — это поле зарезервировано под объект боя (v2034)
     status: d.status,
     serverNowMs: r.serverNowMs ?? r.nowMs ?? inner.serverNowMs ?? null,
     blockedBy: r.blockedBy ?? null,
@@ -4454,7 +4458,8 @@ function logCooldownApi(d, path) {
   if (Date.now() - (cooldownDiagSeen.get(key) || 0) < 3000) return;
   cooldownDiagSeen.set(key, Date.now());
   if (cooldownDiagSeen.size > 100) cooldownDiagSeen.delete(cooldownDiagSeen.keys().next().value);
-  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: fields });
+  // 20.41 (выгрузка 20.10): поля КД — в data.cd; прежняя строка spawnId в data.battle печаталась в TXT посимвольно, а сами КД не выводились
+  if (cfg.rec !== false) rec('N', 'КД сервера', key, { data: { cd: fields } });
 }
 const netOutage = { failures: [], successes: [], since: 0, last: 0 };
 // 8.0.3: отметка «сервер завис в бою» (ход без ответа > 8 с, «нет ответа игры 20 с», серия 5xx) — в sessionStorage вкладки: смерть сразу после неё
@@ -5844,7 +5849,7 @@ L2V7Modules.equipment = L2V7Factories.equipment({ get actionGeneration(){return 
   get slotKind() { return slotKind; }, set slotKind(value) { slotKind = value; }, get slotsBy() { return slotsBy; }, set slotsBy(value) { slotsBy = value; },
   get waitFor() { return waitFor; }, set waitFor(value) { waitFor = value; },
   get waitX() { return waitX; }, set waitX(value) { waitX = value; } });
-L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
+L2V7Modules.economy = L2V7Factories.economy({ get tabOwner(){return tabOwner}, get leaseEpoch(){return leaseEpoch}, get gameGet(){return gameGet}, get payments(){return L2V7Modules.payments}, get routeLocation(){return actionLocation}, get shopBuyNet(){return shopBuyReceipt}, get invQty() { return invQty; }, get invRefresh() { return invRefresh; }, get mmShopWant() { return () => L2V7Modules.mammon?.mmShopWant?.() || []; },  get GRADE_LV() { return GRADE_LV; }, get SLOT() { return SLOT; }, get combatProfileKind() { return combatProfileKind; }, get heroLevel() { return heroLevel; }, get autonomyMode() { return autonomyMode; }, get $q() { return $q; }, set $q(value) { $q = value; },
   get BSPS_IDS() { return BSPS_IDS; }, set BSPS_IDS(value) { BSPS_IDS = value; },
   get HP_BIG_RE() { return HP_BIG_RE; }, set HP_BIG_RE(value) { HP_BIG_RE = value; },
   get HP_SHOP_RE() { return HP_SHOP_RE; }, set HP_SHOP_RE(value) { HP_SHOP_RE = value; },
@@ -6854,6 +6859,32 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (others.length !== 1 || st[others[0]].rbDps != null) return;
     rf.classStash = { ...st, [others[0]]: { ...st[others[0]], rbDps: rt.rbDps ?? null, rbDpsContext: rt.rbDpsContext ?? null, rbLossK: rt.rbLossK ?? null, rbGapK: rt.rbGapK ?? null } };
     Object.assign(rf, { rbDps: null, rbDpsContext: null, rbLossK: null, rbGapK: null });
+  });
+  // 20.41 (лог 20.10 21:09, Bounty Hunter): до PR#316 native Whirlwind/Wild Sweep учились по снятым HP главной цели и DOM-нулям
+  // (Whirlwind ≈4.4k вместо 10–20k, Wild Sweep ≈40k вместо 6–15k): на РБ Whirlwind вырезался, добивание всегда брало Wild Sweep.
+  // Стираем их damageEvidence и средние (dmg/spl) в rt.skills и в каждой памяти класса rt.classStash[*].skills, и выборки rolls/s в
+  // fightMem — до новых замеров expDmg оценивает по power. Счётчики нажатий и откаты не трогаем.
+  once('nativeDmg2041', () => {
+    const NATIVE = ['whirlwind', 'wild sweep'];
+    const fixSkills = sks => { let ch = false; const o = { ...(sks || {}) };
+      for (const k of NATIVE) { const p = o[k]; if (!p || typeof p !== 'object') continue;
+        const { damageEvidence, ...rest } = p; o[k] = { ...rest, dmg: 0, dmgN: 0, spl: 0, splN: 0 }; ch = true; }
+      return ch ? o : null; };
+    const fixMem = fm => { let ch = false; const o = { ...(fm || {}) };
+      for (const [key, m] of Object.entries(o)) { if (!m?.a || typeof m.a !== 'object') continue;
+        let a = null;
+        for (const k of NATIVE) { const x = m.a[k]; if (!x || typeof x !== 'object') continue;
+          const { rolls, legacyRolls, ...rest } = x; (a ||= { ...m.a })[k] = { ...rest, s: [] }; }
+        if (a) { o[key] = { ...m, a }; ch = true; } }
+      return ch ? o : null; };
+    const s2 = fixSkills(S); if (s2) { S = s2; sk = true; }
+    const f2 = fixMem(rt.fightMem); if (f2) rf.fightMem = f2;
+    const st = rf.classStash || rt.classStash;
+    if (st && typeof st === 'object') { let ch = false; const o = { ...st };
+      for (const [cls, v] of Object.entries(st)) { if (!v || typeof v !== 'object') continue;
+        const ss = fixSkills(v.skills), fm = fixMem(v.fightMem);
+        if (ss || fm) { o[cls] = { ...v, ...(ss ? { skills: ss } : {}), ...(fm ? { fightMem: fm } : {}) }; ch = true; } }
+      if (ch) rf.classStash = o; }
   });
   once('rbKill30_20261018', () => { if (+C('rbMaxKillMin') === 20) cf.rbMaxKillMin = 30; });
   once('champInterval30_20261017', () => { if (+C('champEvery') === 20) cf.champEvery = 30; if ([10, 20].includes(+C('deepEvery'))) cf.deepEvery = 30; });

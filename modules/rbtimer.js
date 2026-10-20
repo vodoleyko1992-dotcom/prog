@@ -319,10 +319,31 @@ async function tourTick({ active: callerActive } = {}) {
   }
   return updated;
 }
+// 20.41 (лог 20.10 21:09:13–21:09:31, 21:12:12): тур выбирал РБ из списка 3–6 мин давности и узнавал «Убит» только после
+// перехода на страницу списка. Перед переходом — один JSON-GET страницы цели: освежает все строки rbList/таймеров тем же
+// listNote (защита LAG_MS после своего килла) и возвращает строку цели. Занят опрос тура / смена героя / ошибка — null (прежний путь).
+async function pageCheck(page, id, callerActive) {
+  page = +page;
+  if (!(Number.isInteger(page) && page > 0) || !id || typeof env.gameGet !== 'function' || busy) return null;
+  const context = pollContext(), active = () => pollContext() === context && (typeof callerActive !== 'function' || !!callerActive());
+  if (!active()) return null;
+  busy = true;
+  try {
+    const r = await env.gameGet(`/game/raid-bosses?page=${page}`);
+    if (!active() || !r?.ok) return null;
+    const j = await r.json();
+    if (!active() || +j?.page !== page) return null;
+    const rows = rowsOf(j).filter(x => !x.e && typeof x.al === 'boolean');
+    if (!rows.length) return null;
+    await listNote(j, 'тур');
+    if (!active() || !rows.some(x => x.id === String(id))) return null;   // цель сместилась на другую страницу — прежний путь
+    return env.rt.rbList?.[id] || null;
+  } catch (e) { return null; } finally { busy = false; }
+}
 // 15.10: отдельная слежка через игровые аккаунты выключена по решению игрока.
 // Совместимость со старым вызывающим кодом; активный тур использует только tourTick.
 async function tick() { return false; }
 
-return { tourPages, tourPagesDue, replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, state };
+return { tourPages, tourPagesDue, replay, merge, parseFile, observe, killed, band, globalResp, respOf, timerOf, table, nextUp, revivedSince, hm, dur, deathTxt, upTxt, respTxt, rowsOf, listNote, domNote, kill, tick, tourTick, pageCheck, state };
  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

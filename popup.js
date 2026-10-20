@@ -2441,6 +2441,7 @@ confirmClick('reset', async () => {
 // ---------- журнал: IndexedDB расширения (пишет фоновый скрипт, читает попап) ----------
 const pad = (n, w = 2) => String(n).padStart(w, '0');
 const tm = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`; };
+const evBattle = e => !!e.data?.battle && typeof e.data.battle === 'object';   // 20.41: только объект боя (v2034), не строка spawnId
 const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   `| ${e.st?.page || ''} HP ${e.st?.hp || ''} MP ${e.st?.mp || ''}${e.st?.mob ? ' · моб ' + e.st.mob : ''}`,
   e.slots ? `| слоты: ${e.slots}` : '',
@@ -2448,9 +2449,13 @@ const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   e.el ? `| эл: ${e.el}` : '',
   e.data?.q != null ? `| запрос: ${typeof e.data.q === 'string' ? e.data.q : JSON.stringify(e.data.q)}`.slice(0, 600) : '',
   e.data?.r ? `| ответ: ${e.data.r}` : '',
-  e.data?.battle ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
+  // 20.41 (выгрузка 20.10): «КД сервера» — поля в data.cd; старые события хранили строку spawnId в data.battle
+  // и плоские поля КД в data — печатаем их целиком, без разложения строки по символам.
+  e.data?.cd && typeof e.data.cd === 'object' ? `| кд: ${JSON.stringify(e.data.cd)}`.slice(0, 1200) : '',
+  e.data && typeof e.data.battle === 'string' ? `| кд: ${JSON.stringify({ ...e.data, spawn: e.data.battle, battle: undefined })}`.slice(0, 1200) : '',
+  evBattle(e) ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
 // 20.10: безопасный боевой блок уже ограничен hook; прежние 4000 знаков теряли соседей и исход боя.
-const exportEventLine = e => { const t = fmtEv(e); return e.data?.battle || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
+const exportEventLine = e => { const t = fmtEv(e); return evBattle(e) || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
 // Выгрузки — не больше 6 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
 // и пишем в шапке, сколько не вошло. Файл собирается из частей (Blob), без одной гигантской строки в памяти.
