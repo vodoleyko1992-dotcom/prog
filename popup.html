@@ -748,7 +748,7 @@
   <div class="hint">ЛС — аугментация оружия. Здесь показаны последний известный эффект и наличие активного умения на панели боя. Для ручной вставки и авто-ЛС используется страница игры «Персонаж → Аугментація зброї».</div>
   <div class="row"><button type="button" data-goto="fight">🗡 Оружие и проверка инвентаря</button><button type="button" data-goto="mammon">🏺 Торговец Маммона</button></div>
   <h4>🎯 Авто-ЛС — ловить выбранный эффект</h4>
-  <div class="hint">Обновите список и выберите оружие C/B/A/S. Вещь из рюкзака сначала наденьте в игре, затем откройте «Персонаж → Аугментація зброї». Выберите один или несколько эффектов: серия остановится на любом из них. Каждая попытка навсегда заменяет прежний ЛС и расходует 1 Life Stone + 1 Gemstone грейда оружия. Покупок нет.</div>
+  <div class="hint">Обновите список и выберите оружие C/B/A/S. Вещь из рюкзака сначала наденьте в игре, затем откройте «Персонаж → Аугментація зброї». Выберите один или несколько эффектов: серия остановится на любом из них. Каждая попытка навсегда заменяет прежний ЛС и расходует 1 Life Stone + 1 Gemstone грейда оружия.</div>
   <div class="row"><button type="button" id="lsScanWeapons">↻ Обновить оружие</button></div>
   <div id="lsScanStatus" class="hint" role="status" aria-live="polite" aria-atomic="true"></div>
   <label>В какую вещь вставлять ЛС <select id="lsWeapon" aria-label="Оружие для ЛС" style="width:100%;max-width:100%"><option value="">Обновите список и выберите оружие</option></select></label>
@@ -756,6 +756,10 @@
   <label>Нужные эффекты <select id="lsTargets" multiple size="8" aria-label="Нужные эффекты ЛС" style="width:100%;max-width:100%"></select></label>
   <div class="hint">Для нескольких целей удерживайте Ctrl / Cmd. Каталог игры проверен 18.10.2026: 21 эффект, одинаковый список C/B/A/S.</div>
   <label>Лимит попыток в серии <input id="lsMaxAttempts" type="number" min="1" max="10000" value="10"></label>
+  <label>Докупать Life Stone и Gemstone <input id="lsBuyMaterials" type="checkbox" checked></label>
+  <div class="row"><label>Лимит AA на серию <input id="lsAaBudget" type="number" min="0" step="1" value="2000000"></label><label>Лимит адены на серию <input id="lsAdenaBudget" type="number" min="0" step="1" value="2000000"></label></div>
+  <label>Оставлять AA в запасе <input id="lsAaReserve" type="number" min="0" step="1" value="0"></label>
+  <div class="hint">Перед попыткой докупается только недостающая пара нужного грейда: Life Stone — за AA, Gemstone — за адену. Необходимый телепорт к Маммону входит в лимит адены; резерв адены из снабжения тоже сохраняется. Нулевой лимит запрещает покупки за эту валюту. Coin of Luck и Fast Aden не расходуются.</div>
   <div id="lsRun" class="camp" style="white-space:pre-line">Серия не запущена</div>
   <div class="row"><button type="button" id="lsStart">🎯 Начать новую серию</button><button type="button" id="lsResume">▶ Продолжить</button><button type="button" id="lsPause">⏸ Пауза ЛС</button></div>
   <div class="row"><button type="button" id="lsReconcile">🔍 Сверить результат</button><button type="button" id="lsClose">Закончить серию</button></div>
