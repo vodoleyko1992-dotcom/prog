@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-20T04:08:11.333802+00:00",
+  "commit": "3589a4f3888bd8afef46506b32d97f331b60ab45",
+  "result": "PASS",
+  "archives": [
+    {
+      "name": "l2wap-bot-v20.33.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/3589a4f3888bd8afef46506b32d97f331b60ab45/builds/l2wap-bot-v20.33.zip",
+      "bytes": 1426756,
+      "sha256": "9e72119691086828395a3f8baea1eb5b2527873dd127357b7e3d0b5f52478feb",
+      "exactMatch": true
+    },
+    {
+      "name": "l2wap-bot-v20.33-firefox.zip",
+      "url": "https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/3589a4f3888bd8afef46506b32d97f331b60ab45/builds/l2wap-bot-v20.33-firefox.zip",
+      "bytes": 1437208,
+      "sha256": "d08249c8bf910166d1e14977fd336f7f7749c052636701ee538bdd87a7da3380",
+      "exactMatch": true
+    }
+  ]
+}
