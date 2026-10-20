@@ -1,0 +1,73 @@
+{
+  "at": "2026-10-20T07:10:13.235Z",
+  "version": "20.36",
+  "result": "PASS",
+  "browser": "firefox",
+  "browserVersion": "153.5.0",
+  "capabilities": {
+    "docked": true,
+    "runtime": "function",
+    "tabs": "undefined"
+  },
+  "offFreshRead": "PASS",
+  "refreshChangedBag": "PASS",
+  "errorKeepsPreviousSuccess": "PASS",
+  "buttonRecovered": "PASS",
+  "onSameOwnerRead": "PASS",
+  "startStopControls": "PASS",
+  "reads": 6,
+  "posts": 0,
+  "navigation": false,
+  "boundary": "Native Firefox; chrome.tabs absent without mocking. Every game address resolves to loopback TLS fixture; no live account, credentials, game network or mutations.",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/favicon.ico"
+    },
+    {
+      "method": "GET",
+      "path": "/char.html"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/game/time"
+    },
+    {
+      "method": "GET",
+      "path": "/game/daily-quests"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/game/mammon/merchant"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    },
+    {
+      "method": "GET",
+      "path": "/character"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,43 @@
+{
+  "version": "20.36",
+  "result": "PASS",
+  "firefox": "153.5.0esr",
+  "geckodriver": "0.37.1",
+  "selenium": "4.51.0",
+  "zipSHA256": "068494a7ae4b79b277aa99d4c1be8280c19351772b580a86899afaa9c9d6f92c",
+  "lint": {
+    "errors": 0,
+    "notices": 0,
+    "warnings": 45
+  },
+  "nativeResult": "native-mammon-dock-result.json",
+  "boundaries": [
+    "Native Firefox iframe chrome.tabs is undefined without mocking",
+    "Every l2wap.com request resolves to loopback TLS server via network.dns.localDomains; missing routes return503",
+    "Synthetic fixture and token only; no live game account or credentials",
+    "OFF staysOFF; ON begins solely after explicit Start; Stop returnsOFF",
+    "NoPOST/payment/navigation during analysis"
+  ],
+  "initialHarnessFailures": [
+    {
+      "run": "v1",
+      "result": "setup failure",
+      "reason": "extension page navigation timed out during installation startup; no game API requests or POST"
+    },
+    {
+      "run": "v2",
+      "result": "setup failure",
+      "reason": "geckodriver0.37.0 rejected direct moz-extension navigation; no game API requests or POST"
+    },
+    {
+      "run": "v3",
+      "result": "fixture failure",
+      "reason": "autoTasks:[] masks mmGoalItem in effective config; button properly rejected stale goal before GET"
+    },
+    {
+      "run": "v4",
+      "result": "PASS",
+      "reason": "current geckodriver0.37.1; installation ready; fixture allows Mammon task; runtime package unchanged"
+    }
+  ]
+}
