@@ -6,7 +6,7 @@
 
 В popup.js добавлен dock→runtime путь, в background.js — узкий mammonBagDockAnalyze. Проверяются собственный popup iframe, родительская HTTPS-вкладка игры, герой, сохранённая цель и чужая свежая аренда; передаётся только чтение mammonBagAnalyze в frame0 родителя. Проверки content/Маммона после асинхронных действий сохранены. Отдельное меню сохраняет прежний путь. Настройки, версия и ZIP не менялись.
 
-39 новых Node-сценариев: исходный код 2 PASS/37 FAIL, патч39 PASS. Настоящий локальный MV3 dock с chrome.tabs undefined: OFF, изменённая сумка, ошибка с прежним успешным результатом и ON-владелец PASS; отдельное меню PASS. 0 ошибок страницы/POST/переходов/незапрошенных запусков. Firefox отдельно не запускался. Полный runner501 файл PASS/0 FAIL; синтаксис7 JS/CJS, envcheck31 и diff-check PASS. [Доказательства](evidence/mammon-dock-analysis-2026-10-20/validation.json). PR в подготовке. Следующий шаг: публикация, затем включить в отдельно запрошенную сборку.
+39 новых Node-сценариев: исходный код 2 PASS/37 FAIL, патч39 PASS. Настоящий локальный MV3 dock с chrome.tabs undefined: OFF, изменённая сумка, ошибка с прежним успешным результатом и ON-владелец PASS; отдельное меню PASS. 0 ошибок страницы/POST/переходов/незапрошенных запусков. Firefox отдельно не запускался. Полный runner501 файл PASS/0 FAIL; синтаксис7 JS/CJS, envcheck31 и diff-check PASS. [Доказательства](evidence/mammon-dock-analysis-2026-10-20/validation.json). [PR #308](https://github.com/vodoleyko1992-dotcom/prog/pull/308). Следующий шаг: публикация, затем включить в отдельно запрошенную сборку.
 
 
 ## 20.10.2026 — эффективность агро и сводка пачек (Codex, [PR #307](https://github.com/vodoleyko1992-dotcom/prog/pull/307))
