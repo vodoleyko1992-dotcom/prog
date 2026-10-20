@@ -4466,28 +4466,67 @@ function augNote(a, path) {
   else if (!a.o && p.o && p.w === a.w) rec('S', 'ЛС', `Life Stone снят с ${wn}`, { path });
 }
 let INV_NET = (() => { try { return JSON.parse(sessionStorage.getItem('l2bot-inv') || 'null'); } catch (e) { return null; } })();
-let INV_READY = '', INV_READ = null, INV_RETRY = { key: '', n: 0, at: 0 };
+let INV_READY = '', INV_READ = null, INV_RETRY = { key: '', n: 0, at: 0 }, INV_CLASS_WAIT = null;
 const invContext = () => JSON.stringify([rt.char||'',rt.classCur?.prof??null,rt.classCur?.slot??null,leaseEpoch]);
 const invNote = inv => { if (!Array.isArray(inv)) return null; const m = {}; for (const x of inv) if (Array.isArray(x) && x[0]) m[x[0]] = (m[x[0]] || 0) + (+x[1] || 0); return m; };
 const invLevels = eq => Object.fromEntries(Object.values(eq || {}).map(v => [+(v?.itemId || v), +(v?.specialGearLevel ?? v?.level ?? 0)]).filter(([id]) => id >= 910618));
 const invQty = id => INV_NET?.char === rt.char && !!rt.char && INV_NET?.m && Date.now() - (INV_NET.t || 0) < 300000 ? (INV_NET.m[id] ?? 0) : null;
+// 20.10 (лог13:36): свой GET сумки не проходит hook; пропущенная смена саба не должна навсегда запирать запуск.
+// Для восстановления класса нужна полная согласованная серверная запись, portrait* — лишь внешний вид основного класса.
+function invClassIdentity(c) {
+  const slot=c?.classSlots?.activeSlot,prof=c?.l2Profession,rows=c?.classSlots?.slots;
+  if(!Number.isSafeInteger(c?.revision)||c.revision<0||!Number.isInteger(slot)||slot<0||slot>3||typeof prof!=='string'||!prof||!Array.isArray(rows)
+    ||!Number.isInteger(c.level)||c.level<1||!['fighter','mystic'].includes(c.classBranch))return null;
+  const own=rows.filter(x=>x?.slot===slot),active=rows.filter(x=>x?.active===true);
+  return own.length===1&&active.length===1&&active[0]===own[0]&&own[0].owned===true&&own[0].profession===prof&&Number.isInteger(own[0].level)&&own[0].level===c.level?{char:c.name,prof,slot,revision:c.revision}:null;
+}
+const invClassDisplay = p => String(p).replace(/^(?:dark_elf|human|elf|orc|dwarf)_/,'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
 // 9.2.5 (игрок 12.10: «не забывать проверять состояние рюкзака — что там у нас есть по факту»): сумка своим GET /character — свой запрос
 // hook.js не видит, поэтому разбираем здесь (character.inventory.stacks, как invOf в hook.js). Адена — отдельно (character.adena)
 async function invRefresh(active = () => true) {
-  const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now();
+  const char=rt.char,lease=leaseEpoch,classKey=JSON.stringify(rt.classCur||null),at=Date.now(),kick=+rt.manualKickAt||0;
+  const running=typeof on==='boolean'?on:null,owner=typeof tabOwner==='boolean'?tabOwner:null,generation=typeof automationGeneration==='number'?automationGeneration:null;
+  const same=()=>active()&&!!char&&rt.char===char&&leaseEpoch===lease&&(+rt.manualKickAt||0)===kick&&(heroNick()?heroNick()===char:true)
+    &&(running===null||on===running)&&(owner===null||tabOwner===owner)&&(generation===null||automationGeneration===generation);
+  const current=()=>same()&&JSON.stringify(rt.classCur||null)===classKey;
   try {
     const r = await gameGet('/character'); if (!r.ok) return null;
     const j = await r.json(), c = j?.character || j, st = c?.inventory?.stacks;
-    if(!active()||!char||rt.char!==char||leaseEpoch!==lease||JSON.stringify(rt.classCur||null)!==classKey||c?.name!==char||(heroNick()&&heroNick()!==char))return null;
-    if(c.l2Profession&&rt.classCur?.prof&&c.l2Profession!==rt.classCur.prof||Number.isInteger(c.classSlots?.activeSlot)&&Number.isInteger(rt.classCur?.slot)&&c.classSlots.activeSlot!==rt.classCur.slot)return null;
+    if(!current()||c?.name!==char)return null;
+    const I=invClassIdentity(c),P=rt.invClassProof?.char===char?rt.invClassProof:null,W=INV_CLASS_WAIT?.char===char?INV_CLASS_WAIT:null;
+    // Старый ответ и равная ревизия с другим активным классом не отменяют уже подтверждённый класс.
+    for(const seen of [P,W])if(seen&&(!I||I.revision<seen.revision||I.revision===seen.revision&&(I.prof!==seen.prof||I.slot!==seen.slot)))return null;
+    const mismatch=!!(c.l2Profession&&rt.classCur?.prof&&c.l2Profession!==rt.classCur.prof||Number.isInteger(c.classSlots?.activeSlot)&&Number.isInteger(rt.classCur?.slot)&&c.classSlots.activeSlot!==rt.classCur.slot);
+    const changed=I&&(I.prof!==rt.classCur?.prof||I.slot!==rt.classCur?.slot);
+    const canConfirm=()=>same()&&running===true&&owner===true&&!!lease&&heroNick()===char&&typeof rtCommit==='function';
+    if(mismatch&&!I)return null;
+    if(changed){
+      if(!canConfirm()||typeof L2V7Modules.story?.charNote!=='function')return null;
+      INV_READY='';INV_NET=null;try{sessionStorage.removeItem('l2bot-inv');}catch(_){}
+      INV_CLASS_WAIT=I;
+      L2V7Modules.story.charNote(c);L2V7Modules.subclass?.charNote?.(c);
+      const targetKey=JSON.stringify(rt.classCur||null),target=()=>canConfirm()&&JSON.stringify(rt.classCur||null)===targetKey&&rt.classCur?.prof===I.prof&&rt.classCur?.slot===I.slot;
+      if(!target())return null;
+      const saved=await setRt({invClassProof:I,prof:invClassDisplay(I.prof),lvl:c.level,weaponsT:0,weaponRec:null});
+      if(!target()||saved?.ok!==true||!await rtCommit()||!target())return null;
+      // Этот ответ меняет контекст. Сумку публикует только следующий GET уже под новым ключом класса.
+      return null;
+    }
+    if(W&&!I)return null;
+    if(I&&canConfirm()){
+      const saved=await setRt({invClassProof:I,prof:invClassDisplay(I.prof),lvl:c.level});
+      if(!current()||saved?.ok!==true||!await rtCommit()||!current())return null;
+      INV_CLASS_WAIT=null;
+    }else if(W)return null;
     const m = invNote(Array.isArray(st) ? st.filter(x => x && x.itemId).map(x => [+x.itemId, +x.qty || 0]) : null);
     if (!m) return null;
+    if (tabOwner && c?.inventory?.eq) await L2V7Modules.mammon.eqNote(c.inventory.eq);
+    if(!current())return null;
     INV_NET = { m, char:rt.char, t: Date.now(), levels: invLevels(c?.inventory?.eq) }; try { sessionStorage.setItem('l2bot-inv', JSON.stringify(INV_NET)); } catch (e) {}
     INV_READY = invContext();
     if (tabOwner) L2V7Modules.warlock?.noteSnapshot?.({...c,requestStartedAt:at});
     if (tabOwner) L2V7Modules.buffs?.vipNote?.(c);
-    if (tabOwner && c?.inventory?.eq) await L2V7Modules.mammon.eqNote(c.inventory.eq);
-    return active() ? m : null;
+    return current() ? m : null;
   } catch (e) { return null; }
 }
 // 15.10, MV3 startup: hook начинает раньше content и первый netStart может быть
@@ -4497,14 +4536,16 @@ async function inventoryReady() {
   if (!on || !tabOwner || !rt.char || heroNick()!==rt.char) return false;
   // Ручные задачи и сверка уже отправленной оплаты имеют собственный preflight.
   if (cfg.taskOnly || L2V7Modules.payments?.pending?.()) return true;
-  const key=invContext();
-  if (INV_READY===key && invQty(0)!==null) return true;
+  const key=invContext(),kick=+rt.manualKickAt||0,generation=typeof automationGeneration==='number'?automationGeneration:null;
+  const current=()=>on&&tabOwner&&heroNick()===rt.char&&key===invContext()&&(+rt.manualKickAt||0)===kick&&(generation===null||automationGeneration===generation);
+  const classReady=()=>INV_CLASS_WAIT?.char!==rt.char&&(!rt.invClassProof||rt.invClassProof.char!==rt.char||rt.invClassProof.prof===rt.classCur?.prof&&rt.invClassProof.slot===rt.classCur?.slot);
+  if (classReady()&&INV_READY===key && invQty(0)!==null) return true;
   if (INV_RETRY.key===key && Date.now()<INV_RETRY.at) return false;
-  if (INV_READ) { await INV_READ; return on && tabOwner && key===invContext() && INV_READY===key; }
+  if (INV_READ) { await INV_READ; return current()&&classReady()&&INV_READY===key&&invQty(0)!==null; }
   const read=invRefresh(); INV_READ=read;
   try {
     const m=await read;
-    if (!on || !tabOwner || key!==invContext()) return false;
+    if (!current()) return false;
     if (m) { INV_RETRY={key,n:0,at:0}; return INV_READY===key; }
     const n=INV_RETRY.key===key?INV_RETRY.n+1:1;
     INV_RETRY={key,n,at:Date.now()+Math.min(30000,2000*2**Math.min(4,n-1))};
