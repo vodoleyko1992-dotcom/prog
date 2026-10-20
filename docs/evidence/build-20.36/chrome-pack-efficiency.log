@@ -1,0 +1,2 @@
+PASS actual fetch → full battle ledger → background persistence → reload restores pull → popup totals/useful damage
+PASS actual TXT includes the same session report; 0 page errors; no live game traffic

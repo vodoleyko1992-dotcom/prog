@@ -1,4 +1,4 @@
-// ===== L2wap Bot v20.35 — закупка Life Stone и Gemstone на серию =====
+// ===== L2wap Bot v20.36 — анализ Маммона в Firefox и эффективность пачек =====
 // Бой: точные селекторы по разметке battle.html (снимок 2026-10-07).
 // Карта: точные селекторы map.html + кэш спавнов локации.
 const L2V7Modules = Object.create(null);
