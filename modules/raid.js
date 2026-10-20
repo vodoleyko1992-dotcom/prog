@@ -631,6 +631,15 @@ function rbPriceParse(text, id, page) {
 }
 const rbPriceWhy = r => r && r.unit != null && r.unit !== 'аден' ? `${r.unit ? 'телепорт не за адену' : 'цена и валюта телепорта не подтверждены'} («${r.priceText || r.price}») — другую валюту не трачу` : '';
 const btnPrice = b => rbPriceParse(b?.closest?.('.l2-rb-row')?.querySelector('.l2-rb-row__price')?.textContent,b?.dataset?.spawnId,rbPageNow());
+// 20.41: строки открытой страницы → rt.rbList. Как listNote таймеров: «жив» ≤10 мин после своего килла — список игры отстал.
+function rbListDomMerge(rows, now = Date.now()) {
+  const L = { ...(env.rt.rbList || {}) }, T = env.rbTimer?.state?.()?.b || {};
+  for (const [id, r] of Object.entries(rows || {})) {
+    const k = +T[id]?.k || 0, lag = r.alive && T[id]?.al === false && k > 0 && now >= k && now - k < 10 * 60000;
+    L[id] = { ...(L[id] || {}), ...r, ...(lag ? { alive: false, status: 'Убит' } : {}) };
+  }
+  return L;
+}
 function rbRowsParse() {
   const page = rbPageNow();
   const out = {};
@@ -1397,7 +1406,17 @@ async function rbHuntStep() {
   if (H.step === 'go') {
     const sameJob = () => env.rt.rbHunt?.step === 'go' && env.rt.rbHunt?.id === H.id && env.rt.rbHunt?.t === H.t;
     if (!active() || !sameJob()) return;
-    const g = env.rt.rbList?.[H.id] || H;
+    let g = env.rt.rbList?.[H.id] || H;
+    // 20.41 (лог 20.10 21:09:13–21:09:31): Cloe «осталось 4%» и Bumbalump уже были убиты, а тур узнавал это только после сверки
+    // состава/подготовки и перехода на страницу списка. Один JSON-GET страницы цели освежает все её строки; строка свежее 60 с
+    // или нужная страница уже открыта — без запроса. Занятый опрос/ошибка — прежний путь через страницу.
+    if (!(isRbPage() && rbPageNow() === H.page) && Date.now() - (+env.rt.rbList?.[H.id]?.t || 0) > 60000 && typeof env.rbTimer?.pageCheck === 'function') {
+      const fresh = await env.rbTimer.pageCheck(H.page, H.id, () => active() && sameJob());
+      if (!active() || !sameJob()) return;
+      if (fresh && (!fresh.alive || fresh.deny || rbPriceWhy(fresh)))
+        return huntDone(H.id, `${H.name}: ${fresh.deny || rbPriceWhy(fresh) || fresh.status || 'Убит'} по свежему списку игры (стр. ${H.page}) — пропускаю без перехода`, false);
+      if (fresh) g = fresh;
+    }
     const freshWallet = env.rt.adenaSeen?.t > (env.rt.rbPaidAt || 0) && Date.now() - env.rt.adenaSeen.t <= 60000;
     if (!await rbRefreshState(H.id, active, !freshWallet)) {
       if (active()) env.setStatus(`Тур РБ: перед полётом ${env.rt.rbStateRead?.why || 'нужна сверка состава и адены'}`);
@@ -1424,8 +1443,15 @@ async function rbHuntStep() {
     if (!b) { await env.setRt({ rbListT: 0 }); return huntDone(H.id, `${H.name}: нет на странице ${H.page} — перечитаю список`, false); }
     if (!await rbPriceRefresh(() => active() && sameJob(),H.id)) return;
     if (!active() || !sameJob()) return;
-    let row = rbRowsParse()[H.id];
-    if (row) env.rbTimer?.domNote({ [H.id]: row })?.catch?.(() => {});
+    const pageRows = rbRowsParse();
+    let row = pageRows[H.id];
+    // 20.41 (лог 21:12:12 Kernon): страница уже открыта — таймеры и очередь тура по всем её строкам, а не только по цели,
+    // иначе следующие выборы шли по тому же старому списку.
+    if (Object.keys(pageRows).length) {
+      env.rbTimer?.domNote(pageRows)?.catch?.(() => {});
+      await env.setRt({ rbList: rbListDomMerge(pageRows) });
+      if (!active() || !sameJob()) return;
+    }
     if (row && (!row.alive || row.deny || rbPriceWhy(row))) { await env.setRt({ rbList: { ...(env.rt.rbList || {}), [H.id]: row } }); return huntDone(H.id, `${H.name}: ${row.deny || rbPriceWhy(row) || row.status} — пропускаю`, false); }
     if (!row && rbPriceWhy(btnPrice(b))) return huntDone(H.id, `${H.name}: ${rbPriceWhy(btnPrice(b))} — пропускаю`, false);
     // Stop во время паузы — ещё не попытка телепорта: сохраняем шаг «go» и прежний лимит.
