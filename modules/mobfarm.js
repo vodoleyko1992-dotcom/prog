@@ -291,13 +291,15 @@ async function nextFight(ctx) {
   if (env.cfg.catMode && !env.campOn() && !env.huntOn()) {    // 🏛 фарм катакомб: после боя — «Охотиться дальше» внутри подземелья
     // 20.7: игрок уже мог начать следующий бой, пока старый nextFight обслуживал победу.
     if (dungeonBattle() && !env.victory()) return;
-    if (env.cfg.chain !== false && dungeonBattle() && dungeonCancelBlocked() && env.catNext) {
+    // 20.10, лог13:41: native продолжение запросило67, сервер выдал62. В «Авто» каждую цель выбираем из свежего списка.
+    const checkedChain = dungeonCancelBlocked() || !env.cfg.catDungeon || env.cfg.catDungeon === 'auto';
+    if (env.cfg.chain !== false && dungeonBattle() && checkedChain && env.catNext) {
       if (await env.catNext()) return;
       if (!env.on || env.tabOwner === false || !env.victory()) return;
     }
     // v5.3.1: раньше после каждого моба бот уходил на страницу подземелья и выбирал заново (≈3 с на моба, лог 08.10 14:49).
     // «Охотиться дальше» в подземелье даёт следующего моба оттуда же — цепочкой, как на карте
-    if (env.cfg.chain !== false && dungeonBattle() && !dungeonCancelBlocked()) {
+    if (env.cfg.chain !== false && dungeonBattle() && !checkedChain) {
       const hunt = await env.waitFor(() => { const h = env.$q('#battle-victory-hunt'); return env.shown(h) ? h : null; }, 2500, 50);
       if (!env.on || env.tabOwner === false) return;
       if (env.autonomyMode() === 'enchant') return env.toMap();
