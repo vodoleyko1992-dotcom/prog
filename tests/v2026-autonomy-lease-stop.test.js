@@ -39,6 +39,8 @@ function fixture() {
     cut(bgSource, 'function retireRaidSessionPatch(', '// Popup writes') +
     cut(bgSource, 'function pvpSeedPatch(', 'async function menuPatch('), bg);
   bg.chrome.commands = { onCommand: { addListener: fn => { hotkey = fn; } } };
+  // 20.41: горячая клавиша после записи «on» зовёт afterOnWrite (слушателя storage.onChanged в фоне нет)
+  vm.runInContext(cut(bgSource, 'const paint =', "chrome.storage.local.get('on').then(s => paintOn"), bg);
   vm.runInContext(cut(bgSource, 'chrome.commands?.onCommand.addListener(', '// ===== журнал'), bg);
   const sender = id => ({ frameId: 0, url: 'https://l2wap.com/map.html', tab: { id } });
   page.rtWriter = createPatchQueue(async patch => {

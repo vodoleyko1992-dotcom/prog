@@ -12,7 +12,8 @@ const chrome={runtime:{getURL:p=>'moz-extension://mock-uuid/'+p},storage:{local:
  async get(keys){const found={};for(const k of (typeof keys==='string'?[keys]:keys))if(Object.hasOwn(obj,k))found[k]=structuredClone(obj[k]);return found;},
  async set(o){changes.push(Object.keys(o));for(const [k,v] of Object.entries(o))obj[k]=structuredClone(v);}
 }}};
-const idx=bg.indexOf('const LOCK_TTL ='),end=bg.indexOf('const paint =',idx);
+// 20.41: до конца блока значка — menuPatch после записи «on» зовёт afterOnWrite (слушателя storage.onChanged в фоне нет)
+const idx=bg.indexOf('const LOCK_TTL ='),end=bg.indexOf("chrome.storage.local.get('on').then(s => paintOn",idx);
 // 20.30: реальное ядро нужно menuPatch для сброса списка при Start; проверки конкурентной записи прежние.
 const ctx=vm.createContext({L2EngineCore:require('../engine-core.js'),chrome,console,Date,URL,crypto:{randomUUID:()=>String(Math.random())},noteAlive(){}});
 vm.runInContext(bg.slice(idx,end)+'\nthis.menuPatch=menuPatch;this.lockCommand=lockCommand;this.statePatch=statePatch;',ctx);

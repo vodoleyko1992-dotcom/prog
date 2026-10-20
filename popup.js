@@ -2812,6 +2812,7 @@ $('memFile').onchange = async e => {
       for (const k of Object.keys(data)) if ((k === 'rt' || /^rt@/.test(k)) && data[k] && typeof data[k] === 'object') { const c = byChar[data[k].char || k.slice(3)]; if (c) data[k] = colLedgerKeep(c, data[k]); } }
     if (data.rt) data.rt = { ...data.rt, _src: 'menu' };
     await chrome.storage.local.set({ ...data, on: false, stopMeta: { source: 'memory-import', reason: 'Импорт памяти', t: Date.now() } });          // бота останавливаем — запустите заново
+    try { chrome.runtime.sendMessage({ cmd: 'badgeSync' })?.catch?.(() => {}); } catch (_) {}   // 20.41 (лог 20.10 21:09): у фона нет слушателя storage.onChanged — значок по факту
     const rt = data.rt || {};
     $('memNote').textContent = `✅ Загружено (v${j.v}, ${new Date(j.t).toLocaleString('ru')}): РБ в базе ${Object.keys(rt.rbDb || {}).length}, скиллов ${Object.keys(rt.skills || {}).length}. Бот остановлен — нажмите ▶ Старт.`;
     load();
@@ -2821,7 +2822,7 @@ confirmClick('recClear', async () => {                // удалить весь
   const db = await idb();
   const tx = db.transaction(['log', 'snaps', 'shots'], 'readwrite');   // v5.6: и скриншоты
   tx.objectStore('log').clear(); tx.objectStore('snaps').clear(); tx.objectStore('shots').clear();
-  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков
+  tx.oncomplete = async () => { await chrome.storage.local.set({ reccount: 0, snapcount: 0, snapbytes: 0, exLogKey: null, exSnapT: 0 }); try { chrome.runtime.sendMessage({ cmd: 'snapBytesReset' })?.catch?.(() => {}); } catch (_) {} load(); };   // 20.13 (шаг 7, core-b/F13): и объём снимков; 20.41: фон перечитает его сам (слушателя хранилища у фона больше нет)
 });
 async function huntToggle() {
   const { cfg = {}, rt = {}, on = false } = await chrome.storage.local.get(['cfg', 'rt', 'on']);

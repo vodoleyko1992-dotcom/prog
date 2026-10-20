@@ -399,7 +399,7 @@ async function menuPatch(m, sender) {
   if (!valid(rtPatch) || !valid(cfgPatch)) return { ok: false, reason: 'invalid_patch' };
   if (typeof m.on === 'boolean' || Object.hasOwn(rtPatch, 'manualKickAt')) serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
   return serializeLock(async () => {
-    const state = await chrome.storage.local.get(['rt', 'cfg']);
+    const state = await chrome.storage.local.get(['rt', 'cfg', 'on']);   // 20.41: «on» — для afterOnWrite (новый отсчёт сторожа только при off→on)
     if (m.expectedChar != null && String(state.rt?.char || '') !== m.expectedChar) return { ok: false, reason: 'Персонаж изменился — обновите меню' };
     if (m.pvpTargetEdit) {
       if (!m.expectedChar) return {ok:false,reason:'Персонаж изменился — обновите меню'};
@@ -458,6 +458,7 @@ async function menuPatch(m, sender) {
     }
     if (typeof m.on === 'boolean') { change.on = m.on; if (!m.on) change.stopMeta = { source: 'popup-menu', reason: 'Команда остановки из панели', t: Date.now() }; }
     if (Object.keys(change).length) await chrome.storage.local.set(change);
+    if (typeof m.on === 'boolean') await afterOnWrite(state.on, m.on);
     return { ok: true };
   });
 }
@@ -492,6 +493,7 @@ async function botControl(m, sender) {
     const now = Date.now(), reason = String(m.reason || (m.action === 'pause' ? 'Пауза' : 'Команда остановки')).slice(0, 240);
     await chrome.storage.local.set({ on: false, paused: m.action === 'pause' ? { t: now, why: reason.slice(0, 160) } : null,
       stopMeta: { source: String(user ? 'content-user' : m.source || (popup ? 'popup-' : 'content-') + m.action).slice(0, 60), reason, t: now } });
+    await afterOnWrite(state.on, false);
     return { ok: true };
   });
 }
@@ -569,12 +571,19 @@ async function switchCharacter(m, sender) {
 const paint = on => {
   try { chrome.action?.setBadgeText?.({ text: on ? 'ON' : '' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#27ae60' })?.catch?.(() => {}); } catch (e) {}
 };
-chrome.storage.local.get('on').then(s => paint(s.on));
-chrome.storage.onChanged.addListener(ch => {
-  if (!ch.on) return;
+// 20.41 (лог 20.10 21:09: память rt 1,3 МБ — каждая запись rt доставлялась двум слушателям storage.onChanged фона целиком, старое+новое
+// значение, ≈100–190 мс на каждый цикл statePatch в том же потоке фона): слушателей хранилища в фоне больше нет. Их работу делают сами
+// писатели «on» после удачной записи: значок, controlSeq (отмена ещё не отправленного восстановления сторожа) и новый отсчёт сторожа
+// только при настоящем запуске off→on — Chrome не сообщал о неизменном «on», выбор режима при работающем боте сторожа не сбрасывал.
+// Прямые записи on:false (модули, импорт памяти) зовут badgeSync; сторож и так перечитывает on/замок/эпоху под очередью перед reload.
+let paintedOn = null;                              // что сейчас на значке: «работает/стоит» ('!' капчи это значение не меняет)
+const paintOn = on => { paintedOn = !!on; paint(on); };
+async function afterOnWrite(prevOn, nextOn) {      // только внутри serializeLock и только после удачной записи «on»
+  if (!!prevOn === !!nextOn) { if (paintedOn !== !!nextOn) paintOn(nextOn); return; }
   serializeLock.controlSeq = (serializeLock.controlSeq || 0) + 1; // Stop отменяет ещё не отправленное восстановление.
-  paint(ch.on.newValue);
-  if (ch.on.newValue) serializeLock(async () => {   // старт — отсчёт сторожа заново, в очереди владельца
+  paintOn(nextOn);
+  if (!nextOn) return;
+  try {   // старт — отсчёт сторожа заново, в очереди владельца
     const { on, hbBg, lock } = await chrome.storage.local.get(['on', 'hbBg', 'lock']);
     if (!on) return; // Пока ждали хранилище, игрок мог уже остановить бота.
     const h = hbMem && hbMem.t >= (hbBg?.t || 0) ? hbMem : hbBg;
@@ -582,8 +591,9 @@ chrome.storage.onChanged.addListener(ch => {
     const nextHb = { ...h, t: Date.now() };
     await chrome.storage.local.set({ hbBg: { ...nextHb }, wdog: [], wdDown: null });
     hbMem = nextHb; hbPersistedAt = Date.now();
-  }).catch(() => {});
-});
+  } catch (_) {}
+}
+chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {});
 
 // после установки/обновления расширения старый скрипт во вкладках игры «отключается» —
 // перезагружаем открытые вкладки l2wap, чтобы бот подхватил новую версию
@@ -681,6 +691,7 @@ chrome.commands?.onCommand.addListener(async c => {
       if (next.char) change['rt@' + next.char] = next;
     } else change.stopMeta = { source: 'hotkey', reason: 'Горячая клавиша Alt+Shift+B', t: now };
     await chrome.storage.local.set(change);
+    await afterOnWrite(on, !on);
   });
 });
 
@@ -857,8 +868,8 @@ async function faBuffEvidence(p) {
 // Теперь и по объёму разметки: больше 50 МБ — удаляем самые старые. Сумма хранится в storage «snapbytes» (один раз считается по
 // уже лежащим снимкам), «Очистить журнал» в меню сбрасывает её в 0
 const MAX_SNAP_BYTES = 50 * 1024 * 1024;
+// 20.41: без слушателя storage.onChanged — «Очистить журнал» после записи snapbytes:0 шлёт snapBytesReset, следующий снимок перечитает объём
 let snapBytes = null;
-chrome.storage.onChanged.addListener(ch => { if (ch.snapbytes) snapBytes = Number.isFinite(ch.snapbytes.newValue) ? ch.snapbytes.newValue : null; });
 async function snapBytesNow(db) {
   if (snapBytes != null) return snapBytes;
   const { snapbytes } = await chrome.storage.local.get('snapbytes');
@@ -968,6 +979,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
   try {
     const before = await serializeLock(async () => {
       const state = await chrome.storage.local.get(['on', 'hbBg', 'wdog', 'cfg', 'lock', 'wdDown', 'rt']);
+      if (!!state.on !== paintedOn) paintOn(state.on);   // 20.41: страховка значка раз в минуту; совпадает — не трогаем ('!' капчи остаётся)
       const hb = hbMem && hbMem.t >= (state.hbBg?.t || 0) ? hbMem : state.hbBg;
       if (!state.on || !Number.isInteger(hb?.tab) || state.lock?.k !== 'tab' + hb.tab) return null;
       const quiet = Date.now() - hb.t, wdDown = state.wdDown;
@@ -1046,6 +1058,7 @@ chrome.alarms?.onAlarm.addListener(async a => {
         ev.what = `бот молчит ${Math.round(quiet / 1000)} с, 3 перезагрузки за 20 мин не помогли — останавливаю`;
         buf.push(ev); flush();
         await chrome.storage.local.set({ on: false, wdog: recent, stopMeta: { source: 'watchdog', reason: ev.what, t: Date.now() } });
+        await afterOnWrite(on, false);
         return;
       }
       ev.what = `бот молчит ${Math.round(quiet / 1000)} с (${hb.page || '?'}) — перезагружаю вкладку ${recent.length + 1}/3`;
@@ -1258,7 +1271,13 @@ chrome.runtime.onMessage.addListener((m, _s, reply) => {
     try { chrome.notifications?.create('l2bot-' + (m.id || 'alert'), { type: 'basic', iconUrl: 'icons/128.png', title: m.title || 'L2wap Bot', message: m.text || '', priority: 2, requireInteraction: !!m.sticky }); } catch (e) {}
     try { chrome.action?.setBadgeText?.({ text: m.badge || '!' })?.catch?.(() => {}); chrome.action?.setBadgeBackgroundColor?.({ color: '#c0392b' })?.catch?.(() => {}); } catch (e) {}
   }
-  if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paint(s.on)); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
+  if (m?.cmd === 'alertClear') { try { chrome.notifications?.clear('l2bot-' + (m.id || 'alert')); chrome.storage.local.get('on').then(s => paintOn(s.on)).catch(() => {}); } catch (e) {} }   // v5.6: значок по факту «работает/стоит»
+  // 20.41: прямая запись on:false (модуль/импорт памяти) — значок по факту; та же запись при уже остановленном боте значок не трогает
+  if (m?.cmd === 'badgeSync') chrome.storage.local.get('on').then(s => { if (!!s.on !== paintedOn) paintOn(s.on); }).catch(() => {});
+  if (m?.cmd === 'snapBytesReset') {   // 20.41: только со страницы расширения («Очистить журнал» в меню), после записи snapbytes:0
+    const ext = _s?.id === chrome.runtime.id && String(_s?.url || '').startsWith(chrome.runtime.getURL(''));
+    if (ext) writing = writing.then(() => { snapBytes = null; });
+  }
   if (m?.cmd === 'rec') { buf.push(m.ev); if (!timer) timer = setTimeout(flush, 1500); }
   if (m?.cmd === 'snap' && m.key && m.html) addSnap(m);
   if (m?.cmd === 'shot' && _s?.tab) addShot(_s.tab, m);
