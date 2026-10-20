@@ -1423,6 +1423,11 @@ async function battle() {
       if (!valid() || !env.on || !env.tabOwner || !env.isBattle() || env.pvpPending?.() || victory() || defeat()) return null;
     }
   };
+  // 20.42 (быстрый удар, решение John 20.10): одноразовая метка для hook.js — после ответа на обычный удар игра не ждёт свой GET /character.
+  // Только атака и урон/дебафф по цели; банки, заряды, тогглы, призыв, баффы и лечение идут как прежде
+  const FAST_T = new Set(['PDAM', 'MDAM', 'BLOW', 'CHARGEDAM', 'DRAIN', 'DOT', 'MDOT', 'DEATHLINK', 'MANADAM', 'CPDAM', 'FATALCOUNTER', 'DEBUFF', 'WEAKNESS', 'POISON', 'BLEED']);
+  const fastHit = (b, exact) => { if (exact === 'attack') return true; if (!/^l2_\d+$/.test(exact || '')) return false; const il = env.ilOf?.(b); return !!il && il.o !== 'TOGGLE' && FAST_T.has(il.t) && !healSlot(b); };
+  const fastMark = (b, exact) => { try { const d = document.documentElement.dataset; if (env.cfg.fastTurn !== false && fastHit(b, exact)) d.l2botFast = exact + '|' + Date.now(); else delete d.l2botFast; } catch (_) {} };
   // результат: true — сработал; false — не ушёл в КД; 'unavail' — игра ответила «скилл недоступен» (неподходящее оружие)
   // 20.13 (ревизия 17.10, шаг 7, аудит combat/C3): mpFree — действие бесплатно (выключение тоггла), цену в MP не сверяем
   const act = async (b, status, hpGuard = false, stillNeeded = null, mpFree = false) => {
@@ -1464,7 +1469,8 @@ async function battle() {
     const firedAt = Date.now(), slackA = free.dT ? firedAt - (free.dT + lockA) : 1e9, slackB = free.gE ? firedAt - (free.gE + lockB) : 1e9;
     const bindB = slackB < slackA, gap = Math.min(slackA, slackB);   // какой запас решал и насколько впритык
     const net0 = env.actNet?.().start || 0;
-    if (!env.fire(b)) return false;
+    fastMark(b, exact);
+    if (!env.fire(b)) { try { delete document.documentElement.dataset.l2botFast; } catch (_) {} return false; }
     lastAct = Date.now();
     if (env.skKey(b)) pressAt.set(env.skKey(b), firedAt);
     const petActAlive = ctx.pet && env.petState?.()?.has !== false;   // 7.1.31: действие хозяина, пока кот жив (кот бьёт вместе с ним)

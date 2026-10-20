@@ -1,7 +1,8 @@
 // ===== L2wap Bot — сетевой «жучок» (мир страницы, document_start) =====
 // Видит запросы игры к своему серверу (fetch / XMLHttpRequest) и передаёт боту краткую сводку:
 // метод, путь, статус, время ответа, тело запроса и ответа (JSON, урезанно). Пароли, токены, сессии — вымарываются.
-// Только свой сайт и только JSON; картинки, скрипты и стили не трогаем. Работу игры не меняет: ответ отдаётся как был.
+// Только свой сайт и только JSON; картинки, скрипты и стили не трогаем. Работу игры не меняет: ответ отдаётся как был
+// (20.42: единственное исключение — «быстрый удар», см. fastTake ниже).
 (() => {
   if (window.__l2botHook) return;
   window.__l2botHook = 1;
@@ -275,6 +276,35 @@
     try { window.postMessage({ __l2bot:'netStart',path:u.pathname,method,rid,...(detail?{req:detail}:fa?{req:fa}:method==='POST'&&u.pathname==='/game/fishing/action'&&req?.action==='cast'&&Number.isSafeInteger(req.expectedRevision)?{req:{action:'cast',expectedRevision:req.expectedRevision}}:{}),...(retryOf?{retryOf,retryAt:r.at}:{}) },location.origin); } catch (_) {}
     return {rid,retryOf,mutation:mutationN,detail};
   }
+  // 20.42 (быстрый удар, решение John 20.10 22:12, выключатель cfg.fastTurn в «Бой»): после ответа хода с delta.hotbarStale игра под замком
+  // действия ждёт свой GET /character (0,3–0,45 с), и клик бота в это время теряется. Только для обычного удара бота (метка data-l2bot-fast
+  // от combat.act: «действие|время», одноразовая) в середине боя снимаем hotbarStale, если собственный GET /character игры был не позже 5 с
+  // назад — так персонаж всё равно обновляется не реже раза в 5 с. Победа/поражение/PvP/конец боя/банки/заряды/тогглы/призыв — как было.
+  let charT = 0;
+  const FAST_ACT = /^(?:attack|l2_\d+)$/;
+  const fastTake = (u, method, req) => { try {
+    if (method !== 'POST' || u.pathname !== '/game/battle/action') return false;
+    const h = document.documentElement, m = String(h?.dataset?.l2botFast || ''), i = m.lastIndexOf('|');
+    if (!m) return false;
+    delete h.dataset.l2botFast;
+    const act = m.slice(0, i), age = Date.now() - +m.slice(i + 1);
+    return i > 0 && FAST_ACT.test(act) && act === req?.action && age >= 0 && age < 1500;
+  } catch (_) { return false; } };   // запрос игры уходит в любом случае
+  const fastOk = o => {
+    const d = o?.delta;
+    if (!o || o.kind !== 'delta' || !d || typeof d !== 'object' || d.hotbarStale !== true) return false;
+    if (o.victory || o.defeat || o.pvpDefeat || o.pvpIncoming || o.pvpEnd || o.lethalMeta || o.battleEnded || o.outcome || o.partyReward) return false;
+    if (d.battleEnded || d.mobDead || d.characterDead || d.outcome || d.pvpEnd || d.pvp || d.victory || d.defeat) return false;
+    return Number.isFinite(+d.characterHp) && +d.characterHp > 0 && Number.isFinite(+d.mobHp) && +d.mobHp > 0 && Date.now() - charT < 5000;
+  };
+  const fastRes = res => !res.ok ? res : res.clone().text().then(t => {
+    const o = raw(t, res.headers.get('content-type'));
+    if (!fastOk(o)) return res;
+    delete o.delta.hotbarStale;
+    const hd = new Headers(res.headers); hd.delete('content-length'); hd.delete('content-encoding');
+    const h = document.documentElement; if (h) h.dataset.l2botFastN = String((+h.dataset.l2botFastN || 0) + 1);
+    return new Response(JSON.stringify(o), { status: res.status, statusText: res.statusText, headers: hd });
+  }).catch(() => res);
   const ofetch = window.fetch;
   if (ofetch) window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : input?.url || String(input);
@@ -283,8 +313,9 @@
     const p = ofetch.apply(this, arguments);
     if (!u) return p;
     const method = String(init?.method || input?.method || 'GET').toUpperCase(), t0 = performance.now(), req = reqBody(init?.body);
-    const request = start(u, method, req), {rid,retryOf}=request;
+    const request = start(u, method, req), {rid,retryOf}=request, fast = fastTake(u, method, req);
     p.then(res => {
+      if (method === 'GET' && u.pathname === '/character' && res.ok) charT = Date.now();
       if(res.status===409&&!retryOf&&request.detail&&request.mutation===mutationN)
         storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
@@ -292,7 +323,7 @@
       res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: infoRes(u, o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), be: battleOf(u, o, req), rid,retryOf }); })
         .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, be: battleOf(u, null, req), rid,retryOf }));   // 8.0.3: конец запроса не теряем
     }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), be: battleOf(u, null, req), rid }));
-    return p;
+    return fast ? p.then(fastRes) : p;
   };
 
   const XO = XMLHttpRequest.prototype.open, XS = XMLHttpRequest.prototype.send;
@@ -304,6 +335,7 @@
       fishRequestReceipt(u, info.method, req);
       const {rid} = start(u, info.method, req);
       this.addEventListener('loadend', function onEnd() {
+        if (info.method === 'GET' && u.pathname === '/character' && this.status >= 200 && this.status < 300) charT = Date.now();
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = infoRes(u, o); } catch (e) {}
         post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), be: battleOf(u, o, req), error: this.status ? undefined : 'нет ответа', rid });
