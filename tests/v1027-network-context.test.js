@@ -6,6 +6,8 @@ function fixture(){
  const box={console,Date,Map,rt:{char:'Old'},leaseEpoch:'old-lease',ACT_NET:{start:0},location:{origin:'https://l2wap.com'},window:win,
  heroNick:()=>hero,apiPath:x=>new URL(x,'https://l2wap.com').pathname,TAG:'test',L2V7Modules:{pvp:{onNet:(p,d)=>notes.push(p)},payments:{claimRequest:()=> 'intent-1',pending:()=>({id:'intent-1'})}},
  sessionStorage:{getItem:k=>stored[k],setItem:(k,v)=>stored[k]=v},addEventListener:(_,f)=>listeners.push(f)};
+ // 20.36: владелец старта хода также фиксируется для точной квитанции ответа.
+ box.observeOwner=()=>JSON.stringify([box.rt.char,box.leaseEpoch,box.rt.classCur]);
  let start=source.slice(source.indexOf('const GAME_REQ ='),source.indexOf('async function weaponEquipNote'));
  let end=source.slice(source.indexOf("addEventListener('message', e => {",source.indexOf('const zoneMoveNet =')),source.indexOf('  // 8.0.3 (логи 11.10 09:11'))+'});';
  vm.runInNewContext(start+end+'\nthis.busy=gameBusy',box);

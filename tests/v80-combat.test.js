@@ -23,7 +23,8 @@ assert.match(combat, /env\.setRt\(\{ cdUse: use, cdUntil: until \}\);   \/\/ 8\.
 assert.doesNotMatch(combat, /await env\.setRt\(\{ dps: \{ n: d\.n \+ 1/);
 assert.doesNotMatch(combat, /await env\.trackEfficiency\(|await env\.trackLoot\(/);
 assert.match(combat, /env\.setRt\(\{\s+kills: env\.rt\.kills \+ 1,/);
-assert.match(combat, /const ans = dead\(\) \|\| \(done === true && netOk\) \? null : await env\.waitFor\(/, 'no 250 ms toast wait after an accepted action');
+// 20.36: точный серверный отказ разбирается сразу; принятый ход по-прежнему не ждёт toast.
+assert.match(combat, /const ans = serverAnswer \|\| \(dead\(\) \|\| \(done === true && netOk\) \? null : await waitNet\(/, 'no 250 ms toast wait after an accepted action');
 assert.match(content, /addEventListener\('pagehide', \(\) => \{[\s\S]{0,200}const p = rtWriter\.peek\(\);[\s\S]{0,200}chrome\.runtime\.sendMessage\(\{ cmd: 'statePatch', patch: p, src: TAB_ID, epoch: leaseEpoch, expectedChar: rt\.char \|\| '' \}/);
 assert.match(content, /const now = Date\.now\(\), dt = rt\.lastWinT \? \(now - rt\.lastWinT\) \/ 1000 : 0, via0 = rt\.via;/, 'chain/map attribution captured before nextFight changes via');
 // 4. на РБ с включённой полосой банок вампирик раньше банки

@@ -41,7 +41,7 @@ function actBox({net,gameEnd=0,send=false,mp=null,cost=0}){
   sleep:async ms=>{now+=ms;},waitFor:async(fn,ms)=>{const r=fn();if(!r)now+=ms;return r;},setStatus:()=>{},skKey:()=>'blaze',
   slotCd:()=>({}),petState:()=>null,pause:async()=>{},rnd:a=>a,rec:()=>{},TAG:'',cleanTitle:s=>s,memLeft:()=>0,FORCE_NEED:/x^/,UNAVAIL:/x^/,CD_RE:/x^/,
   slotKind:()=>'скилл',ilOf:()=>({}),noEffect:()=>false};
- const sb={env,Date:{now:()=>now},Math,Map,Number,console,ctx:{pet:null,block:{}},lostUntil:new Map(),pressAt:new Map(),victory:()=>false,defeat:()=>false,noticeText:()=>'',
+ const sb={env,Date:{now:()=>now},Math,Map,Number,console,ctx:{pet:null,block:{}},lostUntil:new Map(),mpUntil:new Map(),pressAt:new Map(),victory:()=>false,defeat:()=>false,noticeText:()=>'',
   uiReady:()=>true,mobHp:()=>({cur:100}),rememberCd:async()=>{},mageCombat:()=>true,healSlot:()=>false,slotsBy:()=>[],drainBackoff:()=>{},
   affordable:(b,m,r=1)=>!m||m.cur>=cost+(cost>0?r:0)};
  vm.runInNewContext(`${consts}\n${actSrc}\nthis.act = act;`,sb);
