@@ -518,12 +518,31 @@ function capture(ctx, ch, shots) {
     ctx.petCohort = cohort;
   } else ctx.petCohort.validUntil = cohort.validUntil;
 }
+// 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с): строка petCohorts хранила весь снимок (hero.setup — снаряжение и умения,
+// key/snapshotKey — JSON-строки) ≈10 КБ × 100 ≈ 1 МБ, а цель в ключе со spawnId — словарь всегда полный. Ключ хранилища — короткий хэш
+// полного ключа (алгоритм packHash из fightlab.js; L2EngineCore модулю не нужен), строка — только поля для warlock-ui.js и счётчики,
+// не больше 40 (меню показывает 30). Полный ключ остаётся в памяти боя ctx.petCohort — сравнение условий внутри боя прежнее.
+const cohortId = s => { let a=2166136261,b=5381; for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,16777619);b=Math.imul(b,33)^c;}return (a>>>0).toString(36)+':'+(b>>>0).toString(36)+':'+s.length; };
+const COHORT_N = ['hits','hitDmg','crits','misses','dmg','acts'], COHORT_MAX = 40;
+const cohortRow = (c, s) => ({ petKey: c.petKey, petLevel: c.petLevel, level: c.level, classKey: c.classKey, buffs: c.buffs, pAtk: c.pAtk, accuracy: c.accuracy,
+  critRate: c.critRate, critDmgMul: c.critDmgMul, shots: c.shots, target: c.target, fights: +s.fights || 0, ...Object.fromEntries(COHORT_N.map(k => [k, +s[k] || 0])), at: +s.at || 0 });
+// Старые полные строки (ключ длиннее 64, hero/snapshotKey) — под хэш того же полного ключа со счётчиками; самые свежие 40.
+function slimCohorts(map) {
+  const out = {};
+  for (const [k, v] of Object.entries(map && typeof map === 'object' ? map : {})) {
+    if (!v || typeof v !== 'object') continue;
+    const fat = k.length > 64 || !!v.hero || !!v.snapshotKey, id = fat ? cohortId(k) : k, o = out[id];
+    out[id] = !o ? fat ? cohortRow(v, v) : v
+      : cohortRow(o, { fights: (+o.fights || 0) + (+v.fights || 0), ...Object.fromEntries(COHORT_N.map(n => [n, (+o[n] || 0) + (+v[n] || 0)])), at: Math.max(+o.at || 0, +v.at || 0) });
+  }
+  return Object.fromEntries(Object.entries(out).sort((a,b) => (+b[1].at || 0) - (+a[1].at || 0)).slice(0, COHORT_MAX));
+}
 function petExpected(ctx) {
   if (!modelManaged()) return null;
   capture(ctx);
   const c = ctx?.petCohort, p = ctx?.pet;
   if (!c || !p || !c.target || c.shots === 'unknown' || ctx.petCohortMixed) return 0;
-  const S = env.rt.petCohorts?.[c.key] || {}, sum = k => (+S[k] || 0) + (+p[k] || 0);
+  const S = env.rt.petCohorts?.[cohortId(c.key)] || {}, sum = k => (+S[k] || 0) + (+p[k] || 0);
   const hits = sum('hits'), acts = sum('acts'), swings = hits + sum('crits') + sum('misses');
   if (hits < 5 || acts < 5 || swings / acts < 0.8 || sum('misses') / swings > 0.25) return 0;
   const avg = p.hits >= 2 ? p.hitDmg / p.hits : sum('hitDmg') / hits;
@@ -559,12 +578,13 @@ async function noteBattle(ctx) {
     || c.validUntil <= Date.now() || (latestSeen && (!latest || latest.key !== c.snapshotKey)) || ctx.petActsKnown === false || ctx.petCohortMixed || p.resummons || p.deaths || ctx.petCohortDone || p.key !== c.petKey) return;
   // Только наблюдаемый урон. Не смешиваем ранг суммона, бафы и заряды; неизвестные заряды помечены явно.
   ctx.petCohortDone = true;
-  const all = { ...(env.rt.petCohorts || {}) }, old = all[c.key] || {}, fields = ['hits','hitDmg','crits','misses','dmg','acts'];
-  all[c.key] = { ...c, fights: (old.fights || 0) + 1, ...Object.fromEntries(fields.map(k => [k, (old[k] || 0) + (+p[k] || 0)])), at: Date.now() };
-  const kept = Object.fromEntries(Object.entries(all).sort((a,b) => b[1].at - a[1].at).slice(0,100));
+  // 20.41: короткая строка под хэшем полного ключа; старые полные строки заодно ужимаются (slimCohorts).
+  const id = cohortId(c.key), all = slimCohorts(env.rt.petCohorts), old = all[id] || {};
+  all[id] = cohortRow(c, { fights: (+old.fights || 0) + 1, ...Object.fromEntries(COHORT_N.map(k => [k, (+old[k] || 0) + (+p[k] || 0)])), at: Date.now() });
+  const kept = Object.fromEntries(Object.entries(all).sort((a,b) => (+b[1].at || 0) - (+a[1].at || 0)).slice(0, COHORT_MAX));
   await env.setRt({ petCohorts: kept });
 }
 const chainBlocked = () => !!env.rt.petBufferTrip || env.canRun?.() === false || env.tvtHold() || env.abHold() || !!env.antibotState() || !!env.rt.shop?.urgent || !!env.rt.zoneGo || !!env.rt.bagCheck || !!env.rt.revive;
-return { autoEnableClass, classAutoTick, raidPrepare, raidReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, petBuffState, petBuffActive, catalogSet, coverage, DEF };
+return { autoEnableClass, classAutoTick, raidPrepare, raidReady, paymentReconcile, step, preview, summary, chainBlocked, archiveUnknown, resetBudget, capture, noteSnapshot, invalidateSnapshot, noteBattle, snapshot, defenseContext, heroContext, combatContext, raidContext, petExpected, slimCohorts, petBuffState, petBuffActive, catalogSet, coverage, DEF };
  };
 })(globalThis);

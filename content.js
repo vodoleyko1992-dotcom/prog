@@ -6946,6 +6946,11 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (on && !tabOwner) deferredMigrations.cfg = { ...deferredMigrations.cfg, ...cf };
     else setCfg(cf).catch(() => {});
   }
+  // 20.41 (лог 20.10 21:09: память 1,3 МБ, из них ≈1 МБ — 100 полных снимков petCohorts): ужать старые строки сравнения суммонов при каждой
+  // загрузке, пока они есть. Не once(): флаг once() ложится и в общий cfg — другие герои очистки не получили бы. У героя без суммона
+  // (активный Bounty Hunter на нике Warlock) noteBattle не идёт, и без этого старые строки остались бы навсегда. Запись — общим путём rf:
+  // вкладка без замка при включённом боте откладывает её до замка (loopMigrations); после очистки следующая загрузка ничего не пишет.
+  { const pc = rt.petCohorts; if (pc && typeof pc === 'object' && Object.entries(pc).some(([k, v]) => k.length > 64 || v?.hero || v?.snapshotKey)) { const slim = L2V7Modules.warlock?.slimCohorts; if (slim) rf.petCohorts = slim(pc); } }
   if (Object.keys(rf).length) {
     if (on && !tabOwner) deferredMigrations.rt = { ...deferredMigrations.rt, ...rf };
     else setRt(rf);
