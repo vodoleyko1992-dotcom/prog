@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-20T21:05:11.693691+10:00",
+  "author": "Codex",
+  "version": "20.40",
+  "flavor": "Chrome",
+  "base": "ff2aee797c23df122d3a33c9bbf80a381becaac6",
+  "request": "потом быстрая сборка",
+  "includes": [
+    "PR#316: non-blocking combat telemetry and native Whirlwind/WildSweep damage parser",
+    "previous cat-navigation and individual VIP Greater fixes"
+  ],
+  "archive": {
+    "file": "builds/l2wap-bot-v20.40.zip",
+    "bytes": 1454077,
+    "sha256": "7e57d29e902900ed0659d68635b3556a618fc4cd70d3bc6e8b4cda636f2b968c",
+    "runtimeFiles": 64
+  },
+  "checks": {
+    "nodeAllFiles": {
+      "pass": 509,
+      "fail": 0
+    },
+    "syntax": {
+      "runtimeFiles": 49,
+      "versionTests": 5
+    },
+    "envcheckFactories": 31,
+    "diffCheck": "PASS",
+    "independentArchiveAudit": {
+      "pass": 179,
+      "fail": 0,
+      "resourceReferences": 88,
+      "proof": "audit.json"
+    },
+    "actualChromeFromFinalZip": {
+      "version": "20.40",
+      "cfgKeys": 208,
+      "pageErrors": 0,
+      "storageCasesPassed": 3,
+      "catCasesPassed": 2,
+      "nativeNodeCasesPassed": 32,
+      "all64RuntimeHashesBeforeAfterAndSourceMatch": true,
+      "proof": "browser/validation.json"
+    }
+  },
+  "boundary": {
+    "liveGameOpened": false,
+    "liveFarmSpeedMeasured": false,
+    "fullHistoricalBrowserRunner": false,
+    "focusedBrowserScope": "User requested quick build: ZIP load, affected storage/cat flows and native parser cases verified.",
+    "FirefoxVersionUnchanged": "20.36",
+    "settingsOrBaseProfileChanged": false,
+    "allDpsCoverageUnchanged": true
+  },
+  "next": "Replace files in the existing Chrome folder, reload extension and game tab; obtain a full combat log."
+}

@@ -1,0 +1,1005 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-20T11:03:31.595852+00:00",
+  "base": "ff2aee797c23df122d3a33c9bbf80a381becaac6",
+  "archive": "/workspace/prog/builds/l2wap-bot-v20.40.zip",
+  "bytes": 1454077,
+  "sha256": "7e57d29e902900ed0659d68635b3556a618fc4cd70d3bc6e8b4cda636f2b968c",
+  "runtimeFiles": 64,
+  "checksPassed": 179,
+  "resourceReferences": 88,
+  "sourceAndStageAndZipHashesMatch": true,
+  "runtimeChangedFiles": [
+    "README-CHROME.txt",
+    "content.js",
+    "manifest.json"
+  ],
+  "allowedFunctionalDiff": [],
+  "checks": [
+    {
+      "name": "artifactExists",
+      "ok": true
+    },
+    {
+      "name": "priorAllowlist64",
+      "ok": true
+    },
+    {
+      "name": "noDuplicateEntries",
+      "ok": true
+    },
+    {
+      "name": "sameRuntimeAllowlist64",
+      "ok": true,
+      "detail": {
+        "count": 64,
+        "extra": [],
+        "missing": []
+      }
+    },
+    {
+      "name": "zipCRC",
+      "ok": true
+    },
+    {
+      "name": "noPrivateOrDevPaths",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "noSymlinks",
+      "ok": true
+    },
+    {
+      "name": "allRuntimeFilesTracked",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:README-CHROME.txt",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:README-FIREFOX.txt",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:augment.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:background.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:base-profile.json",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:battle-cooldown.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:buff-value.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:content.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:defaults.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:enchant-ui.css",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:enchant-ui.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:engine-core.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:fa-full.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:hook.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:icons/128.png",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:icons/16.png",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:icons/48.png",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:items-il.json",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:mammon-gear.json",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:manifest.json",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/actions.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/buffs.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/champs.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/combat.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/dailies.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/dungeons.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/economy.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/enchant.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/enemies.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/epics.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/equipment.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/fightlab.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/fishing.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/lifestone.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/loot.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/mammon.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/mobfarm.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/navigation.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/payments.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/pvp.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/quests.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/raid.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/rbrun.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/rbtimer.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/resources.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/story.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/subclass.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/survival.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/tvt.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/tvtshop.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:modules/warlock.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:notranslate.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:popup.html",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:popup.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:pvp-ui.css",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:pvp-ui.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:skills-il.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:ui-game.css",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:ui-v7.css",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:ui-v7.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:warlock-ui.css",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:warlock-ui.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:zone-db.js",
+      "ok": true
+    },
+    {
+      "name": "sourceAndStageAndZip:zone-kpd.js",
+      "ok": true
+    },
+    {
+      "name": "stageAllowlist64",
+      "ok": true
+    },
+    {
+      "name": "chromeMV3",
+      "ok": true
+    },
+    {
+      "name": "version20.40",
+      "ok": true
+    },
+    {
+      "name": "versionDescription",
+      "ok": true
+    },
+    {
+      "name": "versionContentHeader",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/16.png",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/48.png",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/128.png",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:background.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:popup.html",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/16.png",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/48.png",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:hook.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:notranslate.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:defaults.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:skills-il.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:zone-db.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:zone-kpd.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:buff-value.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:fa-full.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:augment.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:battle-cooldown.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:engine-core.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/fishing.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/epics.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/raid.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/combat.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/dungeons.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/tvt.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/mobfarm.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/quests.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/navigation.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/buffs.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/equipment.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/economy.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/resources.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/loot.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/survival.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/mammon.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/story.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/fightlab.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/pvp.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/enemies.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/tvtshop.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/dailies.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/champs.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/rbtimer.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/rbrun.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/subclass.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/enchant.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/lifestone.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/warlock.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/actions.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/payments.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:content.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:popup.html",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:popup.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:icons/*",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:items-il.json",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:mammon-gear.json",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:enchant-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:enchant-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/enchant.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/lifestone.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:modules/warlock.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:warlock-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:warlock-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:pvp-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:manifest.json:pvp-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:ui-v7.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:ui-game.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:enchant-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:warlock-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:pvp-ui.css",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:defaults.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:zone-db.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:zone-kpd.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:buff-value.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:fa-full.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:augment.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/enemies.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/tvtshop.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/dailies.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/rbtimer.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:engine-core.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/fightlab.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/enchant.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:enchant-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:modules/warlock.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:warlock-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:pvp-ui.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:popup.js",
+      "ok": true
+    },
+    {
+      "name": "resource:popup.html:ui-v7.js",
+      "ok": true
+    },
+    {
+      "name": "baseProfileNoPasswordOrAuth",
+      "ok": true
+    },
+    {
+      "name": "baseProfileUnchanged",
+      "ok": true
+    },
+    {
+      "name": "defaultsUnchanged",
+      "ok": true
+    },
+    {
+      "name": "manifestOnlyReleaseMetadataChanged",
+      "ok": true
+    },
+    {
+      "name": "contentOnlyHeaderChanged",
+      "ok": true
+    },
+    {
+      "name": "runtimeOnlyReleaseMetadataChanged",
+      "ok": true,
+      "detail": [
+        "README-CHROME.txt",
+        "content.js",
+        "manifest.json"
+      ]
+    },
+    {
+      "name": "catNavigationFixIsIncluded",
+      "ok": true
+    },
+    {
+      "name": "VIPBuffFixIsIncluded",
+      "ok": true
+    },
+    {
+      "name": "storageAndNativeFixIncluded:modules/combat.js",
+      "ok": true
+    },
+    {
+      "name": "storageAndNativeFixIncluded:modules/loot.js",
+      "ok": true
+    },
+    {
+      "name": "storageAndNativeFixIncluded:modules/fightlab.js",
+      "ok": true
+    },
+    {
+      "name": "nativePowerDamageParserIncluded",
+      "ok": true
+    },
+    {
+      "name": "FirefoxReadmeUnchanged",
+      "ok": true
+    },
+    {
+      "name": "priorFirefoxArchiveUnchanged",
+      "ok": true
+    }
+  ],
+  "files": {
+    "README-CHROME.txt": {
+      "bytes": 6424,
+      "sha256": "c5953c44589eea7a2bf15d5e9c7ebef5de357cbb820b6bf6f0c7830c509863ae"
+    },
+    "README-FIREFOX.txt": {
+      "bytes": 5129,
+      "sha256": "8cbd14ac39d4c8c6eea26520a6b95729da054649a820107a45ef7d301dfe1b2f"
+    },
+    "augment.js": {
+      "bytes": 7591,
+      "sha256": "ba51dc7ff9f24117af32c5398c9d8eb42cfff6b86d3bc3835e2a0a11d4fb0cd0"
+    },
+    "background.js": {
+      "bytes": 106970,
+      "sha256": "b345a30e79e8b5e131c18165e5ae5564c44a00b722703f919a30474b075d634b"
+    },
+    "base-profile.json": {
+      "bytes": 995311,
+      "sha256": "8499cbe7a3a1132758aba3f2e35890deca4d4cd58643014b0eea9dc7b611c664"
+    },
+    "battle-cooldown.js": {
+      "bytes": 10549,
+      "sha256": "363cc85fedf75a47bff19e3d6f359b506ca4ea844434e157f706d52f2420a992"
+    },
+    "buff-value.js": {
+      "bytes": 16418,
+      "sha256": "47f1106d698ce8236eb97e81a29b42846f634100a7fc6dddaf5b0732d09895c3"
+    },
+    "content.js": {
+      "bytes": 666127,
+      "sha256": "f36cc63028d61bc5b44517ad191858fffca4e038cc9c2f09d8c2cb8657927070"
+    },
+    "defaults.js": {
+      "bytes": 10341,
+      "sha256": "02ed4c4d7a68255f39f7a4dbb2499d1f4ec65255715e6eea723053f17feca2ab"
+    },
+    "enchant-ui.css": {
+      "bytes": 3846,
+      "sha256": "cbda1e37cc3f40ab26a2807b9724198af39035c665716b1df0a2dc945a925b7f"
+    },
+    "enchant-ui.js": {
+      "bytes": 24178,
+      "sha256": "bed5adda7012a304fb3f01aab2c6a8174529092f7cf0bcec8149602cc5b4364d"
+    },
+    "engine-core.js": {
+      "bytes": 27954,
+      "sha256": "714301bd2dfeed9e2b4fefc9f0202818983a1fcb046b75c4198df81aafd43480"
+    },
+    "fa-full.js": {
+      "bytes": 8427,
+      "sha256": "1fc556ebb238fc1255a96053791b67bf038e5960b7de56e12263d8dc6b513418"
+    },
+    "hook.js": {
+      "bytes": 38273,
+      "sha256": "c3a74b9bb5d8ab33146393e8c3abd462428db42cf771b8873bcadcd5a23eac7a"
+    },
+    "icons/128.png": {
+      "bytes": 1232,
+      "sha256": "485cd3d326825187ad21aa35cdf43eb4c17d8ee577a4d7a6f5e574561037fa4c"
+    },
+    "icons/16.png": {
+      "bytes": 200,
+      "sha256": "790e24be53b40885d698d50147f7262a8449d804e44700c659f55962dcef71a3"
+    },
+    "icons/48.png": {
+      "bytes": 515,
+      "sha256": "7db2a8130f31abab7837577b91c47ff3b1bf9ec55de0ffc2e479a1a318b78393"
+    },
+    "items-il.json": {
+      "bytes": 1531835,
+      "sha256": "ea6c439239f3d3c61a8595879c211efe82dfd94f2e9feea874f8e06d5fb75e41"
+    },
+    "mammon-gear.json": {
+      "bytes": 17575,
+      "sha256": "678c5011a3957c5d72f2fc94844964f429d552300b5b41972f08894a4fbc258b"
+    },
+    "manifest.json": {
+      "bytes": 3242,
+      "sha256": "79d23f2854e719283df5bf42c018f69127274d5bc4da8584d9e7f403bd088b66"
+    },
+    "modules/actions.js": {
+      "bytes": 9319,
+      "sha256": "4ca05e9be0268fd433813139d5b45c1abb8399528aee65823a21e16e29f49cb7"
+    },
+    "modules/buffs.js": {
+      "bytes": 89164,
+      "sha256": "fff056146de866cd368d353693e98eca9610cd01e2421d2fa9c1134c1eca2290"
+    },
+    "modules/champs.js": {
+      "bytes": 22912,
+      "sha256": "fb4ac3eb15c77509b19b1be539284741e989ba1e651938fefdf87c3868f19beb"
+    },
+    "modules/combat.js": {
+      "bytes": 265824,
+      "sha256": "c26722c6e11bccc0e80d442b5a5747dd156b06599aab9053824d853080b21e72"
+    },
+    "modules/dailies.js": {
+      "bytes": 21972,
+      "sha256": "82ae4a1444138dc45d32208b3fb918e05bc06f743dbe79967bf992148b8a69bf"
+    },
+    "modules/dungeons.js": {
+      "bytes": 50536,
+      "sha256": "eb8afbb448386e29eb1b942bd10993274f47237709f8577f17f211576c1bd3e9"
+    },
+    "modules/economy.js": {
+      "bytes": 40555,
+      "sha256": "a11b234c8dba0c4faf3c98f8dd61b33ff0c6a716952fd0d656501d5439b807a6"
+    },
+    "modules/enchant.js": {
+      "bytes": 39630,
+      "sha256": "6006bba7f710510c5738b398cc5de0d64ed00bacfa50e9bfdb7a21f5f23c66e6"
+    },
+    "modules/enemies.js": {
+      "bytes": 23182,
+      "sha256": "7bd9f356be55c61c7d4dcd7e704d8fd29fb4ccbad138eb4518d5e1d4146c18cd"
+    },
+    "modules/epics.js": {
+      "bytes": 83177,
+      "sha256": "9a1fdc1a81f624126805eb72120153f781d3da56ed58dc8f1645d596b9358191"
+    },
+    "modules/equipment.js": {
+      "bytes": 48004,
+      "sha256": "9ddd3e0a8455f146d819c84cbfdc7660d5e1ae2d084c723b4ee1395f51e90beb"
+    },
+    "modules/fightlab.js": {
+      "bytes": 62473,
+      "sha256": "8782e6ce5860f4240e8871c0c165beb55ef27b823a2054e3a94662df187a899a"
+    },
+    "modules/fishing.js": {
+      "bytes": 140981,
+      "sha256": "3ca6ed0a4362ce4915bc0ef5644c562bf88a91b58c4437435559b7fcb27b6ca5"
+    },
+    "modules/lifestone.js": {
+      "bytes": 37840,
+      "sha256": "5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797"
+    },
+    "modules/loot.js": {
+      "bytes": 19942,
+      "sha256": "4eb9c6efd3966f1705ac140333a737c2cc5d8726a6fbd2d04f2a1e0b3b4d3c33"
+    },
+    "modules/mammon.js": {
+      "bytes": 131277,
+      "sha256": "1a84003cb1f578c967b345fb565be5cd804b24c17675843aed87d4699098f7ef"
+    },
+    "modules/mobfarm.js": {
+      "bytes": 102223,
+      "sha256": "8e240397bdd56163378cc90e2334e48abc6f7fd09598b5cd3ff3cd7bc34e7503"
+    },
+    "modules/navigation.js": {
+      "bytes": 59890,
+      "sha256": "f3fb4e556b7b3bcdcb15f729930459c28137e4c8d043d455eccdc096a4e6dfa3"
+    },
+    "modules/payments.js": {
+      "bytes": 11340,
+      "sha256": "fe3267c294a151c7da63be698f08874817041c738c0b576456d8ab2c714c0c91"
+    },
+    "modules/pvp.js": {
+      "bytes": 18860,
+      "sha256": "441fc949b0b51020f920deab0c8ac1fd88320278eac303b4e108ec97a04cb2f1"
+    },
+    "modules/quests.js": {
+      "bytes": 52882,
+      "sha256": "2277f2bbaaebadf60e48ff21de48e4ba7d0f014f6aec53bfee60c4ec3c101cfe"
+    },
+    "modules/raid.js": {
+      "bytes": 198666,
+      "sha256": "1019add2d1e000f559394858a5262065f0581a0cea316bc934c89f9072747204"
+    },
+    "modules/rbrun.js": {
+      "bytes": 7364,
+      "sha256": "b357b9f927c54582d611b2c41ae7c08bb1beb46b343469d2a3a574e7b59e39b3"
+    },
+    "modules/rbtimer.js": {
+      "bytes": 25499,
+      "sha256": "847cf0f1e05aeee313fc2c47be18c548fb773ed4d04beb70540ffd1ee2a8b02b"
+    },
+    "modules/resources.js": {
+      "bytes": 18192,
+      "sha256": "6a52eb3f31a790f2c4aadd5ba7a407d2d284a77fb04f02b4c0ffba645d094478"
+    },
+    "modules/story.js": {
+      "bytes": 23158,
+      "sha256": "7e0a816268c5858115cfc16875a055a16b698e08d5840fb1f2b3e8ad1fdc8ed5"
+    },
+    "modules/subclass.js": {
+      "bytes": 13064,
+      "sha256": "39f7dea054a937b066944172eab911d921644c2d0edb1b880ab1ccb365b65a18"
+    },
+    "modules/survival.js": {
+      "bytes": 18759,
+      "sha256": "13c63af5229f65a6d83613ce0ed5ddb9827596561e5ad23c6fae7faebea9bff7"
+    },
+    "modules/tvt.js": {
+      "bytes": 39854,
+      "sha256": "2939f6ed2f4f566a625ad5ceaa4583c3f145eee47d8faaff69fd2cd0e4e73ef9"
+    },
+    "modules/tvtshop.js": {
+      "bytes": 18228,
+      "sha256": "e66fed9173fb946ae930e5749e69a6a1547a7c3480735359568515ab151e5a99"
+    },
+    "modules/warlock.js": {
+      "bytes": 51323,
+      "sha256": "62281bacfa2a184c19e86554de5e90cd66290266ad5c72a8aecc31b9815f8a76"
+    },
+    "notranslate.js": {
+      "bytes": 699,
+      "sha256": "aad68a36ed390730c97b5fce3e0b4f6507ea4e7268bd850df77dbc76ff8cc523"
+    },
+    "popup.html": {
+      "bytes": 158681,
+      "sha256": "7503366eb57a4911fbed2815a6579f5e2732fca847f387bc5d038806317befd1"
+    },
+    "popup.js": {
+      "bytes": 340595,
+      "sha256": "8e315519dd2fe2d0fa5e982f72d0181c1879ea3092be87abf6241a306b8ef378"
+    },
+    "pvp-ui.css": {
+      "bytes": 582,
+      "sha256": "e552ec20258e627851414cc6e69a840068f31625583ed96e1436e71809c8e1ea"
+    },
+    "pvp-ui.js": {
+      "bytes": 5944,
+      "sha256": "a765a20bbdcbfcc3680aa87478b5c2728a12ab571be4973d3f71a1b4da1dea26"
+    },
+    "skills-il.js": {
+      "bytes": 348160,
+      "sha256": "5c4f7022b108bcad97c94dfef37ebc85524699ef544b02a1218ea8515773f327"
+    },
+    "ui-game.css": {
+      "bytes": 29904,
+      "sha256": "d1459d704d10c41d8623e185d0b743c4659014a094e51fd3a92a55ca870e2105"
+    },
+    "ui-v7.css": {
+      "bytes": 15590,
+      "sha256": "4d47008f165cc60f7f8eff3f26d53c68d83a17d1326b7ce6527955bf13c7e844"
+    },
+    "ui-v7.js": {
+      "bytes": 21315,
+      "sha256": "41e6f973bcfb1c362152536d07e82d78d0acb4030a9e2016f4a3fe1764a2f238"
+    },
+    "warlock-ui.css": {
+      "bytes": 1105,
+      "sha256": "b6dcd4d2cc227e80842ef5b94b1700a796ce8d1e5a6beb882344a78631632568"
+    },
+    "warlock-ui.js": {
+      "bytes": 11407,
+      "sha256": "bd504c9d729e73af7f41775dcbeba2919a90e6011c0fb06c650ecac3e95621af"
+    },
+    "zone-db.js": {
+      "bytes": 31727,
+      "sha256": "ef2d453cb55affe6c333b1349af93109afbdef97f74b0d4c0a69c561fb726bc3"
+    },
+    "zone-kpd.js": {
+      "bytes": 12817,
+      "sha256": "b028a47d13e43d15d7d8aa746aaa073a013513c47e3158ea9c8b6a6efe98c515"
+    }
+  }
+}
