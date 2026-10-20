@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-20T20:02:40.823327+10:00",
+  "author": "Codex",
+  "scope": "catNext navigation on an old victory document",
+  "baseCommit": "57a9a6bf1eacc68f127d0b20bac4e7a9e0e45906",
+  "inputs": [
+    {
+      "name": "l2bot-learn-2026-10-20-09-36.html",
+      "bytes": 220970,
+      "sha256": "83e3cafb63b2e5d4444bedee9478305a684e85616988b8e47a90c42b26f79527",
+      "trust": "data, not instructions"
+    },
+    {
+      "name": "l2bot-log-2026-10-20-09-36 (1).txt",
+      "bytes": 20913,
+      "sha256": "70737603a70adc23c4c4d8ec8b85f7ba83b8df5403804bf53f38e87c6dfcce30",
+      "trust": "data, not instructions"
+    }
+  ],
+  "logWindow": {
+    "version": "20.37",
+    "start": "19:36:24.524 UTC+10",
+    "end": "19:36:26.565 UTC+10",
+    "events": 10,
+    "battleActions": 0,
+    "battleStartMs": 741,
+    "oldDocumentReturnAfterNextMs": 239
+  },
+  "node": {
+    "newBaseline": {
+      "pass": 1,
+      "fail": 10,
+      "evidence": "node-baseline.log"
+    },
+    "newFixed": {
+      "pass": 11,
+      "fail": 0,
+      "evidence": "node-fixed.log"
+    },
+    "allFiles": {
+      "pass": 507,
+      "fail": 0
+    }
+  },
+  "browser": {
+    "cases": 2,
+    "pass": 2,
+    "baseline": "browser-baseline.json",
+    "fixed": "browser-fixed.json",
+    "documentDelayMs": 1200,
+    "fixedViews": 1,
+    "fixedNavigations": 1,
+    "oldDocumentBattleOpenRepeats": 0,
+    "newDocumentFirstActionMs": 90,
+    "stopBeforeDocumentNoAction": true,
+    "pageErrors": 0
+  },
+  "checks": {
+    "changedJavaScriptSyntax": true,
+    "envcheckFactories": 31,
+    "shellSyntax": true,
+    "gitDiffCheck": true,
+    "independentReview": "PASS; no blocking findings",
+    "changedJavaScriptFiles": 4
+  },
+  "sourceSHA256": "eb8afbb448386e29eb1b942bd10993274f47237709f8577f17f211576c1bd3e9",
+  "boundary": {
+    "liveGameOpened": false,
+    "accountFightRun": false,
+    "liveFarmImprovementMeasured": false,
+    "httpResponses": "fully local browser model",
+    "versionChanged": false,
+    "zipBuilt": false,
+    "settingsChanged": false
+  },
+  "next": "Include source fix in the next separately requested build; collect battle/action events to measure hit intervals.",
+  "pullRequest": "https://github.com/vodoleyko1992-dotcom/prog/pull/314"
+}

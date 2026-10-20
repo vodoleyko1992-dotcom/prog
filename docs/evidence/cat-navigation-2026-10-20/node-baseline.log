@@ -1,0 +1,191 @@
+✖ старый документ не возвращает управление диспетчеру до commit нового боя (15.948298ms)
+✖ ожидание навигации: Stop освобождает старый контекст без нового перехода (4.627498ms)
+✖ ожидание навигации: lease освобождает старый контекст без нового перехода (5.010658ms)
+✖ ожидание навигации: class освобождает старый контекст без нового перехода (4.169064ms)
+✖ ожидание навигации: mode освобождает старый контекст без нового перехода (4.870204ms)
+✖ ожидание навигации: chain освобождает старый контекст без нового перехода (7.058134ms)
+✖ ожидание навигации: manual освобождает старый контекст без нового перехода (4.340614ms)
+✖ ожидание навигации: hold освобождает старый контекст без нового перехода (4.195564ms)
+✖ ожидание навигации: route освобождает старый контекст без нового перехода (3.494124ms)
+✖ несостоявшийся переход имеет ограниченное ожидание и не выключает бота (3.693265ms)
+✔ ошибка каталога оставляет запасной список без ожидания неотправленной навигации (4.070386ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 1
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.177296
+
+✖ failing tests:
+
+test at tests/v2038-cat-navigation-wait.test.cjs:28:1
+✖ старый документ не возвращает управление диспетчеру до commit нового боя (15.948298ms)
+  AssertionError [ERR_ASSERTION]: после href ещё открыт прежний экран победы
+
+  1 !== 0
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:32:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: Stop освобождает старый контекст без нового перехода (4.627498ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: lease освобождает старый контекст без нового перехода (5.010658ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: class освобождает старый контекст без нового перехода (4.169064ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: mode освобождает старый контекст без нового перехода (4.870204ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: chain освобождает старый контекст без нового перехода (7.058134ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: manual освобождает старый контекст без нового перехода (4.340614ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: hold освобождает старый контекст без нового перехода (4.195564ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:40:82
+✖ ожидание навигации: route освобождает старый контекст без нового перехода (3.494124ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:43:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/v2038-cat-navigation-wait.test.cjs:56:1
+✖ несостоявшийся переход имеет ограниченное ожидание и не выключает бота (3.693265ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/prog/tests/v2038-cat-navigation-wait.test.cjs:59:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

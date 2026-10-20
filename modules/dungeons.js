@@ -169,6 +169,10 @@ async function catNext() {
   if(env.dailyWorkReady && !await env.dailyWorkReady('cat') || !active() || !catPick([pick], catLevel()))return true;
   env.setStatus(`Катакомбы: следующий бой с ${pick.name} (${pick.lvl})`);
   location.href = '/battle.html?spawnId=' + encodeURIComponent(pick.id);
+  // Лог20.10 19:36: до commit навигации Location и экран победы ещё старые.
+  // Не отдаём их следующему кругу: он повторял выбор и перекрывал переход возвратом в подземелье.
+  // Ждёт только уходящий документ; новый бой запускает собственный цикл без этой паузы.
+  await env.waitFor(() => !active(), 10000, 50);
   return true;
 }
 // 9.0: ссылка на моба — свежая, прямо перед кликом. Игра перерисовывает список каждые 5 с (опрос /game/dungeon/view, innerHTML = ''), а клик по

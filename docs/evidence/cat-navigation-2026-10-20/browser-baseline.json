@@ -1,0 +1,231 @@
+{
+  "at": "2026-10-20T10:01:15.193Z",
+  "boundary": "actual extension/main; fully local HTTPS, delayed document navigation; no live game",
+  "proof": [
+    {
+      "case": "single navigation",
+      "failed": "пока новый документ грузится, старый не перечитывает список целей\n\n4 !== 1\n",
+      "calls": [
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_013",
+          "method": "GET",
+          "at": 1792490472746
+        },
+        {
+          "path": "/game/time",
+          "query": "",
+          "method": "GET",
+          "at": 1792490473594
+        },
+        {
+          "path": "/game/daily-quests",
+          "query": "",
+          "method": "GET",
+          "at": 1792490473599
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490473666
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+          "method": "GET",
+          "at": 1792490473693
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490473843
+        },
+        {
+          "path": "/battle.html",
+          "query": "?spawnId=sdms_necropolis_of_martyrdom_032",
+          "method": "GET",
+          "at": 1792490473869
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490473942
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474043
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474203
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474309
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474483
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474632
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474783
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474892
+        },
+        {
+          "path": "/game/dungeon/view",
+          "query": "?dungeonId=necropolis_of_martyrdom",
+          "method": "GET",
+          "at": 1792490474994
+        }
+      ],
+      "paths": [
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_013",
+          "at": 1792490472746
+        },
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+          "at": 1792490473693
+        },
+        {
+          "url": "/battle.html?spawnId=sdms_necropolis_of_martyrdom_032",
+          "at": 1792490473869
+        }
+      ],
+      "statusTrace": [
+        {
+          "t": 1792490473579,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490473589,
+          "s": "Проверяю серверное время и лимиты дня"
+        },
+        {
+          "t": 1792490473681,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490473730,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490473849,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490473891,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490473947,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490473990,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474049,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474091,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474211,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474260,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474326,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474370,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474489,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474530,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474637,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474680,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474797,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474840,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490474897,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490474940,
+          "s": "Бой: загрузка"
+        },
+        {
+          "t": 1792490475002,
+          "s": "Катакомбы: следующий бой с Nephilim Praetorian (72)"
+        },
+        {
+          "t": 1792490475050,
+          "s": "Бой: загрузка"
+        }
+      ],
+      "pendingState": {
+        "target": {
+          "champ": false,
+          "name": "Nephilim Praetorian",
+          "rb": false
+        },
+        "status": "Бой: загрузка",
+        "observedAt": 1792490474147
+      },
+      "routeErrors": [],
+      "state": "Error: no content world"
+    }
+  ]
+}
