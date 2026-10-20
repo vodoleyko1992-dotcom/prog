@@ -1346,7 +1346,9 @@ async function battle() {
     if(raidCounted)await env.noteRaidMobKills(ctx.spawnId||spawnId);
     if(!killOwnerValid(ctx))return;
     if(!fresh.length&&!missing.length)return;
-    await env.setRt({ ...(raidCounted?{}:{kills:env.rt.kills+missing.length}), exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
+    // Лог20.10 10:43UTC: не ставим дисковую запись статистики между подтверждённой победой и её обработкой.
+    // setRt меняет локальную память сразу; обязательные квоты и сохранение перед навигацией ждут общую очередь ниже.
+    env.setRt({ ...(raidCounted?{}:{kills:env.rt.kills+missing.length}), exp: env.rt.exp + sum('exp'), sp: env.rt.sp + sum('sp'), adena: env.rt.adena + sum('adena') });
     if(!killOwnerValid(ctx))return;
     for (const k of fresh) {
       env.rec('B', 'доп. цель', `${k.name}: ${k.exp || k.sp || k.adena ? `EXP +${k.exp} · SP +${k.sp} · аден +${k.adena}` : 'повержена; награды учитываю в общем итоге боя'}${k.items.length ? ' · ' + k.items.join(', ') : ''}`);

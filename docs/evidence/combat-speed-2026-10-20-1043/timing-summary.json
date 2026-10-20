@@ -1,0 +1,7430 @@
+{
+  "20.37": {
+    "networkCount": 3295,
+    "actionCount": 712,
+    "actions": {
+      "l2_302": 290,
+      "whirlwind": 187,
+      "battle_potion_use": 102,
+      "wild_sweep": 118,
+      "fighter_soulshot_toggle": 1,
+      "attack": 14
+    },
+    "statuses": {
+      "200": 683,
+      "502": 29
+    },
+    "prof": {
+      "dwarf_bounty_hunter": 683,
+      "": 29
+    },
+    "timingFields": {
+      "serverNowMs": 393
+    },
+    "battles": 290,
+    "actionRTT": {
+      "n": 712,
+      "min": 188,
+      "p25": 424,
+      "median": 527.5,
+      "p75": 670,
+      "p90": 908,
+      "max": 1791,
+      "mean": 585.8
+    },
+    "startRTT": {
+      "n": 290,
+      "min": 269,
+      "p25": 366,
+      "median": 416.5,
+      "p75": 488,
+      "p90": 602,
+      "max": 1109,
+      "mean": 447.7
+    },
+    "characterRTT": {
+      "n": 290,
+      "min": 234,
+      "p25": 296,
+      "median": 448.0,
+      "p75": 490,
+      "p90": 533,
+      "max": 1503,
+      "mean": 429.6
+    },
+    "withinBattleResponseToNextRequest": {
+      "n": 421,
+      "min": 495,
+      "p25": 830,
+      "median": 1102,
+      "p75": 1483,
+      "p90": 1637,
+      "max": 2706,
+      "mean": 1164.9
+    },
+    "byPair": {
+      "l2_302→battle_potion_use": {
+        "n": 95,
+        "min": 881,
+        "p25": 985,
+        "median": 1355,
+        "p75": 1500,
+        "p90": 1630,
+        "max": 2196,
+        "mean": 1279.0
+      },
+      "battle_potion_use→whirlwind": {
+        "n": 66,
+        "min": 495,
+        "p25": 621,
+        "median": 668.0,
+        "p75": 713,
+        "p90": 793,
+        "max": 1056,
+        "mean": 676.8
+      },
+      "l2_302→whirlwind": {
+        "n": 113,
+        "min": 934,
+        "p25": 1138,
+        "median": 1405,
+        "p75": 1563,
+        "p90": 1695,
+        "max": 2706,
+        "mean": 1379.9
+      },
+      "battle_potion_use→wild_sweep": {
+        "n": 29,
+        "min": 512,
+        "p25": 628,
+        "median": 684,
+        "p75": 716,
+        "p90": 805,
+        "max": 937,
+        "mean": 686.0
+      },
+      "fighter_soulshot_toggle→l2_302": {
+        "n": 1,
+        "min": 857,
+        "p25": 857,
+        "median": 857,
+        "p75": 857,
+        "p90": 857,
+        "max": 857,
+        "mean": 857
+      },
+      "battle_potion_use→l2_302": {
+        "n": 7,
+        "min": 917,
+        "p25": 969,
+        "median": 1317,
+        "p75": 1326,
+        "p90": 1385,
+        "max": 1569,
+        "mean": 1218
+      },
+      "l2_302→wild_sweep": {
+        "n": 81,
+        "min": 932,
+        "p25": 1121,
+        "median": 1432,
+        "p75": 1567,
+        "p90": 1675,
+        "max": 2212,
+        "mean": 1394.6
+      },
+      "whirlwind→wild_sweep": {
+        "n": 3,
+        "min": 674,
+        "p25": 674,
+        "median": 830,
+        "p75": 830,
+        "p90": 830,
+        "max": 1256,
+        "mean": 920
+      },
+      "wild_sweep→attack": {
+        "n": 7,
+        "min": 655,
+        "p25": 762,
+        "median": 783,
+        "p75": 819,
+        "p90": 832,
+        "max": 834,
+        "mean": 779.4
+      },
+      "attack→attack": {
+        "n": 2,
+        "min": 1720,
+        "p25": 1720,
+        "median": 1720.5,
+        "p75": 1720,
+        "p90": 1720,
+        "max": 1721,
+        "mean": 1720.5
+      },
+      "attack→whirlwind": {
+        "n": 7,
+        "min": 669,
+        "p25": 683,
+        "median": 857,
+        "p75": 984,
+        "p90": 1267,
+        "max": 1557,
+        "mean": 967.4
+      },
+      "whirlwind→attack": {
+        "n": 5,
+        "min": 599,
+        "p25": 721,
+        "median": 749,
+        "p75": 788,
+        "p90": 788,
+        "max": 800,
+        "mean": 731.4
+      },
+      "attack→wild_sweep": {
+        "n": 5,
+        "min": 685,
+        "p25": 726,
+        "median": 792,
+        "p75": 878,
+        "p90": 878,
+        "max": 912,
+        "mean": 798.6
+      }
+    },
+    "startResponseToFirstRequest": {
+      "n": 289,
+      "min": 496,
+      "p25": 1402,
+      "median": 1517,
+      "p75": 1880,
+      "p90": 2160,
+      "max": 4807,
+      "mean": 1760.5
+    },
+    "winToSkill": {
+      "n": 289,
+      "min": 816,
+      "p25": 974,
+      "median": 1354,
+      "p75": 1454,
+      "p90": 1803,
+      "max": 3228,
+      "mean": 1321.4
+    },
+    "winToResult": {
+      "n": 288,
+      "min": 0,
+      "p25": 958,
+      "median": 1735.0,
+      "p75": 2202,
+      "p90": 2401,
+      "max": 3156,
+      "mean": 1477.3
+    },
+    "winToNextCat": {
+      "n": 265,
+      "min": 2671,
+      "p25": 4155,
+      "median": 4899,
+      "p75": 5354,
+      "p90": 5942,
+      "max": 9144,
+      "mean": 4813.1
+    },
+    "winToNextStartRequest": {
+      "n": 288,
+      "min": 3985,
+      "p25": 5565,
+      "median": 6250.0,
+      "p75": 6975,
+      "p90": 8398,
+      "max": 58338,
+      "mean": 7771.4
+    },
+    "pairs": [
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1323,
+        "answer": "19:36:39.270",
+        "request": "19:36:40.593",
+        "rtt": 382,
+        "line": 69,
+        "nextLine": 75
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 588,
+        "answer": "19:36:40.975",
+        "request": "19:36:41.563",
+        "rtt": 436,
+        "line": 75,
+        "nextLine": 79
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1098,
+        "answer": "19:36:50.650",
+        "request": "19:36:51.748",
+        "rtt": 793,
+        "line": 97,
+        "nextLine": 105
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1713,
+        "answer": "19:36:59.842",
+        "request": "19:37:01.555",
+        "rtt": 1012,
+        "line": 126,
+        "nextLine": 134
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1394,
+        "answer": "19:37:12.474",
+        "request": "19:37:13.868",
+        "rtt": 339,
+        "line": 154,
+        "nextLine": 160
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 549,
+        "answer": "19:37:14.207",
+        "request": "19:37:14.756",
+        "rtt": 337,
+        "line": 160,
+        "nextLine": 164
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 943,
+        "answer": "19:37:22.753",
+        "request": "19:37:23.696",
+        "rtt": 406,
+        "line": 182,
+        "nextLine": 189
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1084,
+        "answer": "19:37:32.882",
+        "request": "19:37:33.966",
+        "rtt": 364,
+        "line": 208,
+        "nextLine": 214
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 558,
+        "answer": "19:37:34.330",
+        "request": "19:37:34.888",
+        "rtt": 664,
+        "line": 214,
+        "nextLine": 220
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1018,
+        "answer": "19:37:44.171",
+        "request": "19:37:45.189",
+        "rtt": 409,
+        "line": 242,
+        "nextLine": 249
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1133,
+        "answer": "19:37:54.673",
+        "request": "19:37:55.806",
+        "rtt": 372,
+        "line": 269,
+        "nextLine": 276
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1071,
+        "answer": "19:38:03.784",
+        "request": "19:38:04.855",
+        "rtt": 372,
+        "line": 298,
+        "nextLine": 304
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 552,
+        "answer": "19:38:05.227",
+        "request": "19:38:05.779",
+        "rtt": 626,
+        "line": 304,
+        "nextLine": 308
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 2706,
+        "answer": "19:38:15.716",
+        "request": "19:38:18.422",
+        "rtt": 509,
+        "line": 329,
+        "nextLine": 337
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 883,
+        "answer": "19:38:26.677",
+        "request": "19:38:27.560",
+        "rtt": 425,
+        "line": 359,
+        "nextLine": 365
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 536,
+        "answer": "19:38:27.985",
+        "request": "19:38:28.521",
+        "rtt": 527,
+        "line": 365,
+        "nextLine": 369
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1652,
+        "answer": "19:38:37.951",
+        "request": "19:38:39.603",
+        "rtt": 386,
+        "line": 390,
+        "nextLine": 397
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 896,
+        "answer": "19:38:48.741",
+        "request": "19:38:49.637",
+        "rtt": 397,
+        "line": 419,
+        "nextLine": 426
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 626,
+        "answer": "19:38:50.034",
+        "request": "19:38:50.660",
+        "rtt": 575,
+        "line": 426,
+        "nextLine": 430
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1610,
+        "answer": "19:39:00.156",
+        "request": "19:39:01.766",
+        "rtt": 425,
+        "line": 450,
+        "nextLine": 457
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1375,
+        "answer": "19:39:10.591",
+        "request": "19:39:11.966",
+        "rtt": 915,
+        "line": 479,
+        "nextLine": 486
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1049,
+        "answer": "19:39:22.403",
+        "request": "19:39:23.452",
+        "rtt": 488,
+        "line": 508,
+        "nextLine": 514
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 793,
+        "answer": "19:39:23.940",
+        "request": "19:39:24.733",
+        "rtt": 600,
+        "line": 514,
+        "nextLine": 519
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 949,
+        "answer": "19:39:34.796",
+        "request": "19:39:35.745",
+        "rtt": 777,
+        "line": 539,
+        "nextLine": 545
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1419,
+        "answer": "19:39:46.312",
+        "request": "19:39:47.731",
+        "rtt": 605,
+        "line": 569,
+        "nextLine": 575
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 700,
+        "answer": "19:39:48.336",
+        "request": "19:39:49.036",
+        "rtt": 851,
+        "line": 575,
+        "nextLine": 580
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1985,
+        "answer": "19:39:58.013",
+        "request": "19:39:59.998",
+        "rtt": 681,
+        "line": 600,
+        "nextLine": 609
+      },
+      {
+        "prev": "fighter_soulshot_toggle",
+        "next": "l2_302",
+        "gap": 857,
+        "answer": "19:41:30.250",
+        "request": "19:41:31.107",
+        "rtt": 596,
+        "line": 727,
+        "nextLine": 730
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 935,
+        "answer": "19:41:31.703",
+        "request": "19:41:32.638",
+        "rtt": 633,
+        "line": 730,
+        "nextLine": 735
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1468,
+        "answer": "19:41:45.249",
+        "request": "19:41:46.717",
+        "rtt": 774,
+        "line": 757,
+        "nextLine": 764
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1229,
+        "answer": "19:41:57.399",
+        "request": "19:41:58.628",
+        "rtt": 707,
+        "line": 786,
+        "nextLine": 794
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1267,
+        "answer": "19:42:08.512",
+        "request": "19:42:09.779",
+        "rtt": 387,
+        "line": 814,
+        "nextLine": 821
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1163,
+        "answer": "19:42:19.807",
+        "request": "19:42:20.970",
+        "rtt": 932,
+        "line": 842,
+        "nextLine": 848
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1292,
+        "answer": "19:42:32.682",
+        "request": "19:42:33.974",
+        "rtt": 401,
+        "line": 868,
+        "nextLine": 874
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1695,
+        "answer": "19:42:43.090",
+        "request": "19:42:44.785",
+        "rtt": 719,
+        "line": 895,
+        "nextLine": 902
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 1569,
+        "answer": "19:42:54.034",
+        "request": "19:42:55.603",
+        "rtt": 359,
+        "line": 922,
+        "nextLine": 927
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1585,
+        "answer": "19:42:55.962",
+        "request": "19:42:57.547",
+        "rtt": 1317,
+        "line": 927,
+        "nextLine": 934
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1583,
+        "answer": "19:43:07.005",
+        "request": "19:43:08.588",
+        "rtt": 401,
+        "line": 957,
+        "nextLine": 964
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 966,
+        "answer": "19:43:18.898",
+        "request": "19:43:19.864",
+        "rtt": 423,
+        "line": 986,
+        "nextLine": 991
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 655,
+        "answer": "19:43:20.287",
+        "request": "19:43:20.942",
+        "rtt": 524,
+        "line": 991,
+        "nextLine": 995
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1519,
+        "answer": "19:43:31.372",
+        "request": "19:43:32.891",
+        "rtt": 578,
+        "line": 1017,
+        "nextLine": 1024
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1814,
+        "answer": "19:43:42.978",
+        "request": "19:43:44.792",
+        "rtt": 490,
+        "line": 1045,
+        "nextLine": 1051
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 495,
+        "answer": "19:43:45.282",
+        "request": "19:43:45.777",
+        "rtt": 810,
+        "line": 1051,
+        "nextLine": 1055
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1246,
+        "answer": "19:43:54.672",
+        "request": "19:43:55.918",
+        "rtt": 606,
+        "line": 1075,
+        "nextLine": 1082
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1462,
+        "answer": "19:44:06.348",
+        "request": "19:44:07.810",
+        "rtt": 564,
+        "line": 1103,
+        "nextLine": 1110
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1526,
+        "answer": "19:44:16.348",
+        "request": "19:44:17.874",
+        "rtt": 433,
+        "line": 1132,
+        "nextLine": 1139
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 595,
+        "answer": "19:44:18.307",
+        "request": "19:44:18.902",
+        "rtt": 785,
+        "line": 1139,
+        "nextLine": 1144
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1786,
+        "answer": "19:44:27.033",
+        "request": "19:44:28.819",
+        "rtt": 908,
+        "line": 1163,
+        "nextLine": 1170
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 959,
+        "answer": "19:44:38.713",
+        "request": "19:44:39.672",
+        "rtt": 399,
+        "line": 1191,
+        "nextLine": 1197
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 512,
+        "answer": "19:44:40.071",
+        "request": "19:44:40.583",
+        "rtt": 410,
+        "line": 1197,
+        "nextLine": 1201
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1379,
+        "answer": "19:44:50.475",
+        "request": "19:44:51.854",
+        "rtt": 625,
+        "line": 1219,
+        "nextLine": 1226
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 944,
+        "answer": "19:45:00.822",
+        "request": "19:45:01.766",
+        "rtt": 676,
+        "line": 1246,
+        "nextLine": 1255
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1066,
+        "answer": "19:45:10.512",
+        "request": "19:45:11.578",
+        "rtt": 371,
+        "line": 1271,
+        "nextLine": 1277
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 685,
+        "answer": "19:45:11.949",
+        "request": "19:45:12.634",
+        "rtt": 846,
+        "line": 1277,
+        "nextLine": 1281
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1487,
+        "answer": "19:45:21.615",
+        "request": "19:45:23.102",
+        "rtt": 736,
+        "line": 1301,
+        "nextLine": 1309
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1679,
+        "answer": "19:45:30.882",
+        "request": "19:45:32.561",
+        "rtt": 631,
+        "line": 1324,
+        "nextLine": 1332
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 956,
+        "answer": "19:45:41.750",
+        "request": "19:45:42.706",
+        "rtt": 335,
+        "line": 1352,
+        "nextLine": 1358
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 660,
+        "answer": "19:45:43.041",
+        "request": "19:45:43.701",
+        "rtt": 489,
+        "line": 1358,
+        "nextLine": 1365
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1115,
+        "answer": "19:46:13.642",
+        "request": "19:46:14.757",
+        "rtt": 527,
+        "line": 1428,
+        "nextLine": 1436
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 972,
+        "answer": "19:46:22.818",
+        "request": "19:46:23.790",
+        "rtt": 588,
+        "line": 1451,
+        "nextLine": 1458
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1837,
+        "answer": "19:46:32.836",
+        "request": "19:46:34.673",
+        "rtt": 382,
+        "line": 1478,
+        "nextLine": 1485
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 584,
+        "answer": "19:46:35.055",
+        "request": "19:46:35.639",
+        "rtt": 574,
+        "line": 1485,
+        "nextLine": 1490
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1419,
+        "answer": "19:46:44.223",
+        "request": "19:46:45.642",
+        "rtt": 503,
+        "line": 1507,
+        "nextLine": 1515
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1017,
+        "answer": "19:46:54.519",
+        "request": "19:46:55.536",
+        "rtt": 415,
+        "line": 1536,
+        "nextLine": 1546
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1491,
+        "answer": "19:47:03.365",
+        "request": "19:47:04.856",
+        "rtt": 444,
+        "line": 1562,
+        "nextLine": 1568
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 726,
+        "answer": "19:47:05.300",
+        "request": "19:47:06.026",
+        "rtt": 526,
+        "line": 1568,
+        "nextLine": 1573
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1464,
+        "answer": "19:47:19.291",
+        "request": "19:47:20.755",
+        "rtt": 854,
+        "line": 1594,
+        "nextLine": 1602
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1372,
+        "answer": "19:47:28.219",
+        "request": "19:47:29.591",
+        "rtt": 378,
+        "line": 1618,
+        "nextLine": 1624
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 505,
+        "answer": "19:47:29.969",
+        "request": "19:47:30.474",
+        "rtt": 753,
+        "line": 1624,
+        "nextLine": 1628
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1455,
+        "answer": "19:47:41.192",
+        "request": "19:47:42.647",
+        "rtt": 419,
+        "line": 1649,
+        "nextLine": 1657
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1265,
+        "answer": "19:47:50.601",
+        "request": "19:47:51.866",
+        "rtt": 630,
+        "line": 1674,
+        "nextLine": 1681
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1437,
+        "answer": "19:48:02.053",
+        "request": "19:48:03.490",
+        "rtt": 462,
+        "line": 1703,
+        "nextLine": 1709
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 684,
+        "answer": "19:48:03.952",
+        "request": "19:48:04.636",
+        "rtt": 797,
+        "line": 1709,
+        "nextLine": 1714
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 967,
+        "answer": "19:48:12.672",
+        "request": "19:48:13.639",
+        "rtt": 761,
+        "line": 1729,
+        "nextLine": 1737
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1425,
+        "answer": "19:48:24.317",
+        "request": "19:48:25.742",
+        "rtt": 520,
+        "line": 1758,
+        "nextLine": 1766
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 2025,
+        "answer": "19:48:33.001",
+        "request": "19:48:35.026",
+        "rtt": 455,
+        "line": 1782,
+        "nextLine": 1788
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 669,
+        "answer": "19:48:35.481",
+        "request": "19:48:36.150",
+        "rtt": 600,
+        "line": 1788,
+        "nextLine": 1792
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1551,
+        "answer": "19:48:47.302",
+        "request": "19:48:48.853",
+        "rtt": 556,
+        "line": 1813,
+        "nextLine": 1820
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 2196,
+        "answer": "19:48:56.900",
+        "request": "19:48:59.096",
+        "rtt": 386,
+        "line": 1837,
+        "nextLine": 1844
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 682,
+        "answer": "19:48:59.482",
+        "request": "19:49:00.164",
+        "rtt": 594,
+        "line": 1844,
+        "nextLine": 1848
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1384,
+        "answer": "19:49:11.378",
+        "request": "19:49:12.762",
+        "rtt": 944,
+        "line": 1869,
+        "nextLine": 1876
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1478,
+        "answer": "19:49:22.314",
+        "request": "19:49:23.792",
+        "rtt": 600,
+        "line": 1894,
+        "nextLine": 1901
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1598,
+        "answer": "19:49:34.312",
+        "request": "19:49:35.910",
+        "rtt": 513,
+        "line": 1921,
+        "nextLine": 1927
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 915,
+        "answer": "19:49:36.423",
+        "request": "19:49:37.338",
+        "rtt": 624,
+        "line": 1927,
+        "nextLine": 1931
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1603,
+        "answer": "19:49:46.018",
+        "request": "19:49:47.621",
+        "rtt": 379,
+        "line": 1950,
+        "nextLine": 1957
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1505,
+        "answer": "19:49:58.140",
+        "request": "19:49:59.645",
+        "rtt": 534,
+        "line": 1978,
+        "nextLine": 1986
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1528,
+        "answer": "19:50:07.989",
+        "request": "19:50:09.517",
+        "rtt": 391,
+        "line": 2002,
+        "nextLine": 2008
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 743,
+        "answer": "19:50:09.908",
+        "request": "19:50:10.651",
+        "rtt": 597,
+        "line": 2008,
+        "nextLine": 2012
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1492,
+        "answer": "19:50:21.133",
+        "request": "19:50:22.625",
+        "rtt": 530,
+        "line": 2033,
+        "nextLine": 2040
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1447,
+        "answer": "19:50:31.205",
+        "request": "19:50:32.652",
+        "rtt": 898,
+        "line": 2058,
+        "nextLine": 2064
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 499,
+        "answer": "19:50:33.550",
+        "request": "19:50:34.049",
+        "rtt": 566,
+        "line": 2064,
+        "nextLine": 2068
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1486,
+        "answer": "19:51:05.087",
+        "request": "19:51:06.573",
+        "rtt": 768,
+        "line": 2137,
+        "nextLine": 2144
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1547,
+        "answer": "19:51:17.022",
+        "request": "19:51:18.569",
+        "rtt": 512,
+        "line": 2162,
+        "nextLine": 2169
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1405,
+        "answer": "19:51:28.338",
+        "request": "19:51:29.743",
+        "rtt": 551,
+        "line": 2190,
+        "nextLine": 2198
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1492,
+        "answer": "19:51:38.020",
+        "request": "19:51:39.512",
+        "rtt": 430,
+        "line": 2216,
+        "nextLine": 2222
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 702,
+        "answer": "19:51:39.942",
+        "request": "19:51:40.644",
+        "rtt": 824,
+        "line": 2222,
+        "nextLine": 2226
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1656,
+        "answer": "19:51:51.015",
+        "request": "19:51:52.671",
+        "rtt": 475,
+        "line": 2247,
+        "nextLine": 2254
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1993,
+        "answer": "19:52:01.965",
+        "request": "19:52:03.958",
+        "rtt": 515,
+        "line": 2272,
+        "nextLine": 2279
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 1326,
+        "answer": "19:52:11.475",
+        "request": "19:52:12.801",
+        "rtt": 383,
+        "line": 2298,
+        "nextLine": 2304
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1431,
+        "answer": "19:52:13.184",
+        "request": "19:52:14.615",
+        "rtt": 606,
+        "line": 2304,
+        "nextLine": 2313
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1021,
+        "answer": "19:52:22.490",
+        "request": "19:52:23.511",
+        "rtt": 665,
+        "line": 2328,
+        "nextLine": 2336
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 987,
+        "answer": "19:52:32.981",
+        "request": "19:52:33.968",
+        "rtt": 488,
+        "line": 2358,
+        "nextLine": 2363
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 770,
+        "answer": "19:52:34.456",
+        "request": "19:52:35.226",
+        "rtt": 638,
+        "line": 2363,
+        "nextLine": 2369
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1647,
+        "answer": "19:52:43.999",
+        "request": "19:52:45.646",
+        "rtt": 393,
+        "line": 2385,
+        "nextLine": 2392
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1675,
+        "answer": "19:53:17.074",
+        "request": "19:53:18.749",
+        "rtt": 399,
+        "line": 2459,
+        "nextLine": 2466
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1503,
+        "answer": "19:53:28.078",
+        "request": "19:53:29.581",
+        "rtt": 513,
+        "line": 2484,
+        "nextLine": 2491
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1365,
+        "answer": "19:54:02.470",
+        "request": "19:54:03.835",
+        "rtt": 515,
+        "line": 2559,
+        "nextLine": 2566
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 690,
+        "answer": "19:54:04.350",
+        "request": "19:54:05.040",
+        "rtt": 531,
+        "line": 2566,
+        "nextLine": 2571
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1515,
+        "answer": "19:54:14.710",
+        "request": "19:54:16.225",
+        "rtt": 736,
+        "line": 2590,
+        "nextLine": 2597
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1067,
+        "answer": "19:54:26.860",
+        "request": "19:54:27.927",
+        "rtt": 573,
+        "line": 2618,
+        "nextLine": 2625
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1611,
+        "answer": "19:54:35.859",
+        "request": "19:54:37.470",
+        "rtt": 452,
+        "line": 2640,
+        "nextLine": 2647
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 850,
+        "answer": "19:54:37.922",
+        "request": "19:54:38.772",
+        "rtt": 771,
+        "line": 2647,
+        "nextLine": 2651
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1428,
+        "answer": "19:54:48.101",
+        "request": "19:54:49.529",
+        "rtt": 762,
+        "line": 2672,
+        "nextLine": 2681
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1690,
+        "answer": "19:54:57.881",
+        "request": "19:54:59.571",
+        "rtt": 463,
+        "line": 2696,
+        "nextLine": 2703
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 824,
+        "answer": "19:55:00.034",
+        "request": "19:55:00.858",
+        "rtt": 675,
+        "line": 2703,
+        "nextLine": 2707
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1681,
+        "answer": "19:55:13.967",
+        "request": "19:55:15.648",
+        "rtt": 406,
+        "line": 2729,
+        "nextLine": 2736
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1499,
+        "answer": "19:55:24.182",
+        "request": "19:55:25.681",
+        "rtt": 609,
+        "line": 2755,
+        "nextLine": 2762
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1528,
+        "answer": "19:55:35.332",
+        "request": "19:55:36.860",
+        "rtt": 513,
+        "line": 2784,
+        "nextLine": 2790
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 677,
+        "answer": "19:55:37.373",
+        "request": "19:55:38.050",
+        "rtt": 666,
+        "line": 2790,
+        "nextLine": 2798
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1225,
+        "answer": "19:55:46.529",
+        "request": "19:55:47.754",
+        "rtt": 719,
+        "line": 2814,
+        "nextLine": 2821
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1687,
+        "answer": "19:55:56.325",
+        "request": "19:55:58.012",
+        "rtt": 630,
+        "line": 2841,
+        "nextLine": 2851
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1045,
+        "answer": "19:56:06.547",
+        "request": "19:56:07.592",
+        "rtt": 399,
+        "line": 2867,
+        "nextLine": 2873
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 657,
+        "answer": "19:56:07.991",
+        "request": "19:56:08.648",
+        "rtt": 761,
+        "line": 2873,
+        "nextLine": 2877
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1018,
+        "answer": "19:56:18.575",
+        "request": "19:56:19.593",
+        "rtt": 600,
+        "line": 2898,
+        "nextLine": 2904
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 966,
+        "answer": "19:56:29.728",
+        "request": "19:56:30.694",
+        "rtt": 638,
+        "line": 2922,
+        "nextLine": 2929
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 917,
+        "answer": "19:56:39.101",
+        "request": "19:56:40.018",
+        "rtt": 532,
+        "line": 2949,
+        "nextLine": 2954
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 989,
+        "answer": "19:56:40.550",
+        "request": "19:56:41.539",
+        "rtt": 685,
+        "line": 2954,
+        "nextLine": 2962
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1733,
+        "answer": "19:57:12.923",
+        "request": "19:57:14.656",
+        "rtt": 1791,
+        "line": 3028,
+        "nextLine": 3035
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1591,
+        "answer": "19:57:28.453",
+        "request": "19:57:30.044",
+        "rtt": 422,
+        "line": 3054,
+        "nextLine": 3061
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1005,
+        "answer": "19:57:38.456",
+        "request": "19:57:39.461",
+        "rtt": 480,
+        "line": 3080,
+        "nextLine": 3085
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 665,
+        "answer": "19:57:39.941",
+        "request": "19:57:40.606",
+        "rtt": 693,
+        "line": 3085,
+        "nextLine": 3089
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1524,
+        "answer": "19:57:51.067",
+        "request": "19:57:52.591",
+        "rtt": 781,
+        "line": 3110,
+        "nextLine": 3117
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1679,
+        "answer": "19:58:02.064",
+        "request": "19:58:03.743",
+        "rtt": 1007,
+        "line": 3138,
+        "nextLine": 3145
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1079,
+        "answer": "19:58:13.534",
+        "request": "19:58:14.613",
+        "rtt": 401,
+        "line": 3163,
+        "nextLine": 3169
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 777,
+        "answer": "19:58:15.014",
+        "request": "19:58:15.791",
+        "rtt": 697,
+        "line": 3169,
+        "nextLine": 3173
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 987,
+        "answer": "19:58:24.944",
+        "request": "19:58:25.931",
+        "rtt": 1060,
+        "line": 3195,
+        "nextLine": 3201
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1358,
+        "answer": "19:58:36.246",
+        "request": "19:58:37.604",
+        "rtt": 561,
+        "line": 3221,
+        "nextLine": 3227
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 667,
+        "answer": "19:58:38.165",
+        "request": "19:58:38.832",
+        "rtt": 1109,
+        "line": 3227,
+        "nextLine": 3231
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1923,
+        "answer": "19:58:48.035",
+        "request": "19:58:49.958",
+        "rtt": 758,
+        "line": 3251,
+        "nextLine": 3258
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1542,
+        "answer": "19:58:59.298",
+        "request": "19:59:00.840",
+        "rtt": 856,
+        "line": 3278,
+        "nextLine": 3285
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 974,
+        "answer": "19:59:10.857",
+        "request": "19:59:11.831",
+        "rtt": 761,
+        "line": 3308,
+        "nextLine": 3313
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 720,
+        "answer": "19:59:12.592",
+        "request": "19:59:13.312",
+        "rtt": 544,
+        "line": 3313,
+        "nextLine": 3318
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1050,
+        "answer": "19:59:23.853",
+        "request": "19:59:24.903",
+        "rtt": 1015,
+        "line": 3338,
+        "nextLine": 3345
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1500,
+        "answer": "19:59:35.260",
+        "request": "19:59:36.760",
+        "rtt": 448,
+        "line": 3366,
+        "nextLine": 3372
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 726,
+        "answer": "19:59:37.208",
+        "request": "19:59:37.934",
+        "rtt": 572,
+        "line": 3372,
+        "nextLine": 3376
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1483,
+        "answer": "20:00:09.443",
+        "request": "20:00:10.926",
+        "rtt": 880,
+        "line": 3444,
+        "nextLine": 3452
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 972,
+        "answer": "20:01:14.826",
+        "request": "20:01:15.798",
+        "rtt": 1015,
+        "line": 3607,
+        "nextLine": 3614
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1439,
+        "answer": "20:01:25.109",
+        "request": "20:01:26.548",
+        "rtt": 1119,
+        "line": 3633,
+        "nextLine": 3640
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1901,
+        "answer": "20:01:36.834",
+        "request": "20:01:38.735",
+        "rtt": 986,
+        "line": 3660,
+        "nextLine": 3667
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1043,
+        "answer": "20:01:48.890",
+        "request": "20:01:49.933",
+        "rtt": 517,
+        "line": 3688,
+        "nextLine": 3693
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 735,
+        "answer": "20:01:50.450",
+        "request": "20:01:51.185",
+        "rtt": 1014,
+        "line": 3693,
+        "nextLine": 3698
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1217,
+        "answer": "20:02:03.737",
+        "request": "20:02:04.954",
+        "rtt": 1308,
+        "line": 3720,
+        "nextLine": 3726
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1494,
+        "answer": "20:02:15.517",
+        "request": "20:02:17.011",
+        "rtt": 578,
+        "line": 3747,
+        "nextLine": 3753
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 696,
+        "answer": "20:02:17.589",
+        "request": "20:02:18.285",
+        "rtt": 735,
+        "line": 3753,
+        "nextLine": 3758
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1121,
+        "answer": "20:02:29.488",
+        "request": "20:02:30.609",
+        "rtt": 1067,
+        "line": 3781,
+        "nextLine": 3788
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1777,
+        "answer": "20:02:39.910",
+        "request": "20:02:41.687",
+        "rtt": 572,
+        "line": 3807,
+        "nextLine": 3814
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1457,
+        "answer": "20:02:53.357",
+        "request": "20:02:54.814",
+        "rtt": 667,
+        "line": 3837,
+        "nextLine": 3843
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 688,
+        "answer": "20:02:55.481",
+        "request": "20:02:56.169",
+        "rtt": 948,
+        "line": 3843,
+        "nextLine": 3850
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1411,
+        "answer": "20:03:26.477",
+        "request": "20:03:27.888",
+        "rtt": 1056,
+        "line": 3913,
+        "nextLine": 3921
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1775,
+        "answer": "20:03:37.781",
+        "request": "20:03:39.556",
+        "rtt": 750,
+        "line": 3939,
+        "nextLine": 3946
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 960,
+        "answer": "20:03:48.674",
+        "request": "20:03:49.634",
+        "rtt": 651,
+        "line": 3967,
+        "nextLine": 3973
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 985,
+        "answer": "20:03:59.624",
+        "request": "20:04:00.609",
+        "rtt": 517,
+        "line": 3993,
+        "nextLine": 3998
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 701,
+        "answer": "20:04:01.126",
+        "request": "20:04:01.827",
+        "rtt": 777,
+        "line": 3998,
+        "nextLine": 4002
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1217,
+        "answer": "20:04:11.496",
+        "request": "20:04:12.713",
+        "rtt": 1009,
+        "line": 4023,
+        "nextLine": 4032
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1390,
+        "answer": "20:04:21.403",
+        "request": "20:04:22.793",
+        "rtt": 385,
+        "line": 4049,
+        "nextLine": 4055
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 666,
+        "answer": "20:04:23.178",
+        "request": "20:04:23.844",
+        "rtt": 469,
+        "line": 4055,
+        "nextLine": 4059
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1500,
+        "answer": "20:04:34.375",
+        "request": "20:04:35.875",
+        "rtt": 1084,
+        "line": 4081,
+        "nextLine": 4088
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1420,
+        "answer": "20:04:46.333",
+        "request": "20:04:47.753",
+        "rtt": 774,
+        "line": 4107,
+        "nextLine": 4114
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1599,
+        "answer": "20:05:20.021",
+        "request": "20:05:21.620",
+        "rtt": 489,
+        "line": 4184,
+        "nextLine": 4190
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 897,
+        "answer": "20:05:22.109",
+        "request": "20:05:23.006",
+        "rtt": 1179,
+        "line": 4190,
+        "nextLine": 4195
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1033,
+        "answer": "20:05:33.742",
+        "request": "20:05:34.775",
+        "rtt": 720,
+        "line": 4218,
+        "nextLine": 4225
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1577,
+        "answer": "20:05:43.190",
+        "request": "20:05:44.767",
+        "rtt": 842,
+        "line": 4245,
+        "nextLine": 4252
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1023,
+        "answer": "20:05:55.528",
+        "request": "20:05:56.551",
+        "rtt": 358,
+        "line": 4273,
+        "nextLine": 4279
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 656,
+        "answer": "20:05:56.909",
+        "request": "20:05:57.565",
+        "rtt": 405,
+        "line": 4279,
+        "nextLine": 4283
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1608,
+        "answer": "20:06:07.273",
+        "request": "20:06:08.881",
+        "rtt": 576,
+        "line": 4305,
+        "nextLine": 4312
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1031,
+        "answer": "20:06:19.902",
+        "request": "20:06:20.933",
+        "rtt": 599,
+        "line": 4332,
+        "nextLine": 4337
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 521,
+        "answer": "20:06:21.532",
+        "request": "20:06:22.053",
+        "rtt": 1103,
+        "line": 4337,
+        "nextLine": 4342
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1012,
+        "answer": "20:06:32.562",
+        "request": "20:06:33.574",
+        "rtt": 588,
+        "line": 4363,
+        "nextLine": 4370
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1164,
+        "answer": "20:06:43.821",
+        "request": "20:06:44.985",
+        "rtt": 1164,
+        "line": 4394,
+        "nextLine": 4401
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1363,
+        "answer": "20:06:54.641",
+        "request": "20:06:56.004",
+        "rtt": 493,
+        "line": 4422,
+        "nextLine": 4428
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 724,
+        "answer": "20:06:56.497",
+        "request": "20:06:57.221",
+        "rtt": 1045,
+        "line": 4428,
+        "nextLine": 4433
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1423,
+        "answer": "20:07:08.402",
+        "request": "20:07:09.825",
+        "rtt": 1111,
+        "line": 4452,
+        "nextLine": 4460
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1106,
+        "answer": "20:07:19.561",
+        "request": "20:07:20.667",
+        "rtt": 519,
+        "line": 4483,
+        "nextLine": 4490
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 700,
+        "answer": "20:07:21.186",
+        "request": "20:07:21.886",
+        "rtt": 911,
+        "line": 4490,
+        "nextLine": 4494
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 973,
+        "answer": "20:07:31.917",
+        "request": "20:07:32.890",
+        "rtt": 1289,
+        "line": 4513,
+        "nextLine": 4519
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1605,
+        "answer": "20:07:43.404",
+        "request": "20:07:45.009",
+        "rtt": 1097,
+        "line": 4542,
+        "nextLine": 4549
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1675,
+        "answer": "20:07:56.122",
+        "request": "20:07:57.797",
+        "rtt": 774,
+        "line": 4569,
+        "nextLine": 4575
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 713,
+        "answer": "20:07:58.571",
+        "request": "20:07:59.284",
+        "rtt": 1490,
+        "line": 4575,
+        "nextLine": 4580
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1379,
+        "answer": "20:08:10.631",
+        "request": "20:08:12.010",
+        "rtt": 1121,
+        "line": 4600,
+        "nextLine": 4608
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1177,
+        "answer": "20:08:21.099",
+        "request": "20:08:22.276",
+        "rtt": 976,
+        "line": 4627,
+        "nextLine": 4634
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 1043,
+        "answer": "20:08:33.788",
+        "request": "20:08:34.831",
+        "rtt": 762,
+        "line": 4656,
+        "nextLine": 4661
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 983,
+        "answer": "20:08:35.593",
+        "request": "20:08:36.576",
+        "rtt": 1319,
+        "line": 4661,
+        "nextLine": 4667
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1384,
+        "answer": "20:08:47.364",
+        "request": "20:08:48.748",
+        "rtt": 1444,
+        "line": 4685,
+        "nextLine": 4692
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1370,
+        "answer": "20:09:01.269",
+        "request": "20:09:02.639",
+        "rtt": 693,
+        "line": 4714,
+        "nextLine": 4720
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 621,
+        "answer": "20:09:03.332",
+        "request": "20:09:03.953",
+        "rtt": 613,
+        "line": 4720,
+        "nextLine": 4722
+      },
+      {
+        "prev": "whirlwind",
+        "next": "wild_sweep",
+        "gap": 830,
+        "answer": "20:09:04.566",
+        "request": "20:09:05.396",
+        "rtt": 193,
+        "line": 4722,
+        "nextLine": 4724
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 762,
+        "answer": "20:09:05.589",
+        "request": "20:09:06.351",
+        "rtt": 189,
+        "line": 4724,
+        "nextLine": 4726
+      },
+      {
+        "prev": "attack",
+        "next": "attack",
+        "gap": 1721,
+        "answer": "20:09:06.540",
+        "request": "20:09:08.261",
+        "rtt": 191,
+        "line": 4726,
+        "nextLine": 4728
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 669,
+        "answer": "20:09:08.452",
+        "request": "20:09:09.121",
+        "rtt": 197,
+        "line": 4728,
+        "nextLine": 4729
+      },
+      {
+        "prev": "whirlwind",
+        "next": "wild_sweep",
+        "gap": 674,
+        "answer": "20:09:09.318",
+        "request": "20:09:09.992",
+        "rtt": 192,
+        "line": 4729,
+        "nextLine": 4731
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 655,
+        "answer": "20:09:10.184",
+        "request": "20:09:10.839",
+        "rtt": 193,
+        "line": 4731,
+        "nextLine": 4733
+      },
+      {
+        "prev": "attack",
+        "next": "attack",
+        "gap": 1720,
+        "answer": "20:09:11.032",
+        "request": "20:09:12.752",
+        "rtt": 190,
+        "line": 4733,
+        "nextLine": 4735
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 683,
+        "answer": "20:09:12.942",
+        "request": "20:09:13.625",
+        "rtt": 201,
+        "line": 4735,
+        "nextLine": 4736
+      },
+      {
+        "prev": "whirlwind",
+        "next": "wild_sweep",
+        "gap": 1256,
+        "answer": "20:09:13.826",
+        "request": "20:09:15.082",
+        "rtt": 189,
+        "line": 4736,
+        "nextLine": 4738
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 771,
+        "answer": "20:09:15.271",
+        "request": "20:09:16.042",
+        "rtt": 195,
+        "line": 4738,
+        "nextLine": 4740
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 1557,
+        "answer": "20:09:16.237",
+        "request": "20:09:17.794",
+        "rtt": 191,
+        "line": 4740,
+        "nextLine": 4742
+      },
+      {
+        "prev": "whirlwind",
+        "next": "attack",
+        "gap": 788,
+        "answer": "20:09:17.985",
+        "request": "20:09:18.773",
+        "rtt": 194,
+        "line": 4742,
+        "nextLine": 4744
+      },
+      {
+        "prev": "attack",
+        "next": "wild_sweep",
+        "gap": 685,
+        "answer": "20:09:18.967",
+        "request": "20:09:19.652",
+        "rtt": 195,
+        "line": 4744,
+        "nextLine": 4746
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 834,
+        "answer": "20:09:19.847",
+        "request": "20:09:20.681",
+        "rtt": 191,
+        "line": 4746,
+        "nextLine": 4748
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 984,
+        "answer": "20:09:20.872",
+        "request": "20:09:21.856",
+        "rtt": 212,
+        "line": 4748,
+        "nextLine": 4750
+      },
+      {
+        "prev": "whirlwind",
+        "next": "attack",
+        "gap": 721,
+        "answer": "20:09:22.068",
+        "request": "20:09:22.789",
+        "rtt": 189,
+        "line": 4750,
+        "nextLine": 4752
+      },
+      {
+        "prev": "attack",
+        "next": "wild_sweep",
+        "gap": 792,
+        "answer": "20:09:22.978",
+        "request": "20:09:23.770",
+        "rtt": 196,
+        "line": 4752,
+        "nextLine": 4754
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 783,
+        "answer": "20:09:23.966",
+        "request": "20:09:24.749",
+        "rtt": 191,
+        "line": 4754,
+        "nextLine": 4756
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 857,
+        "answer": "20:09:24.940",
+        "request": "20:09:25.797",
+        "rtt": 191,
+        "line": 4756,
+        "nextLine": 4758
+      },
+      {
+        "prev": "whirlwind",
+        "next": "attack",
+        "gap": 749,
+        "answer": "20:09:25.988",
+        "request": "20:09:26.737",
+        "rtt": 191,
+        "line": 4758,
+        "nextLine": 4760
+      },
+      {
+        "prev": "attack",
+        "next": "wild_sweep",
+        "gap": 726,
+        "answer": "20:09:26.928",
+        "request": "20:09:27.654",
+        "rtt": 188,
+        "line": 4760,
+        "nextLine": 4762
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 819,
+        "answer": "20:09:27.842",
+        "request": "20:09:28.661",
+        "rtt": 189,
+        "line": 4762,
+        "nextLine": 4764
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 1267,
+        "answer": "20:09:28.850",
+        "request": "20:09:30.117",
+        "rtt": 200,
+        "line": 4764,
+        "nextLine": 4766
+      },
+      {
+        "prev": "whirlwind",
+        "next": "attack",
+        "gap": 599,
+        "answer": "20:09:30.317",
+        "request": "20:09:30.916",
+        "rtt": 188,
+        "line": 4766,
+        "nextLine": 4768
+      },
+      {
+        "prev": "attack",
+        "next": "wild_sweep",
+        "gap": 878,
+        "answer": "20:09:31.104",
+        "request": "20:09:31.982",
+        "rtt": 189,
+        "line": 4768,
+        "nextLine": 4770
+      },
+      {
+        "prev": "wild_sweep",
+        "next": "attack",
+        "gap": 832,
+        "answer": "20:09:32.171",
+        "request": "20:09:33.003",
+        "rtt": 197,
+        "line": 4770,
+        "nextLine": 4772
+      },
+      {
+        "prev": "attack",
+        "next": "whirlwind",
+        "gap": 755,
+        "answer": "20:09:33.200",
+        "request": "20:09:33.955",
+        "rtt": 201,
+        "line": 4772,
+        "nextLine": 4774
+      },
+      {
+        "prev": "whirlwind",
+        "next": "attack",
+        "gap": 800,
+        "answer": "20:09:34.156",
+        "request": "20:09:34.956",
+        "rtt": 188,
+        "line": 4774,
+        "nextLine": 4776
+      },
+      {
+        "prev": "attack",
+        "next": "wild_sweep",
+        "gap": 912,
+        "answer": "20:09:35.144",
+        "request": "20:09:36.056",
+        "rtt": 1774,
+        "line": 4776,
+        "nextLine": 4780
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1428,
+        "answer": "20:09:55.065",
+        "request": "20:09:56.493",
+        "rtt": 664,
+        "line": 4799,
+        "nextLine": 4808
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1309,
+        "answer": "20:10:06.518",
+        "request": "20:10:07.827",
+        "rtt": 1588,
+        "line": 4825,
+        "nextLine": 4832
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1057,
+        "answer": "20:10:18.665",
+        "request": "20:10:19.722",
+        "rtt": 997,
+        "line": 4852,
+        "nextLine": 4859
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 975,
+        "answer": "20:10:54.623",
+        "request": "20:10:55.598",
+        "rtt": 517,
+        "line": 4928,
+        "nextLine": 4935
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 952,
+        "answer": "20:11:04.872",
+        "request": "20:11:05.824",
+        "rtt": 532,
+        "line": 4953,
+        "nextLine": 4958
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 667,
+        "answer": "20:11:06.356",
+        "request": "20:11:07.023",
+        "rtt": 762,
+        "line": 4958,
+        "nextLine": 4963
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1766,
+        "answer": "20:11:16.780",
+        "request": "20:11:18.546",
+        "rtt": 670,
+        "line": 4984,
+        "nextLine": 4991
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1421,
+        "answer": "20:11:28.024",
+        "request": "20:11:29.445",
+        "rtt": 1063,
+        "line": 5012,
+        "nextLine": 5019
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 927,
+        "answer": "20:11:38.594",
+        "request": "20:11:39.521",
+        "rtt": 641,
+        "line": 5039,
+        "nextLine": 5045
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 805,
+        "answer": "20:11:40.162",
+        "request": "20:11:40.967",
+        "rtt": 989,
+        "line": 5045,
+        "nextLine": 5051
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1405,
+        "answer": "20:11:50.041",
+        "request": "20:11:51.446",
+        "rtt": 1244,
+        "line": 5067,
+        "nextLine": 5074
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1376,
+        "answer": "20:12:02.159",
+        "request": "20:12:03.535",
+        "rtt": 1266,
+        "line": 5096,
+        "nextLine": 5104
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1484,
+        "answer": "20:12:12.309",
+        "request": "20:12:13.793",
+        "rtt": 801,
+        "line": 5120,
+        "nextLine": 5126
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 1056,
+        "answer": "20:12:14.594",
+        "request": "20:12:15.650",
+        "rtt": 1403,
+        "line": 5126,
+        "nextLine": 5131
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1729,
+        "answer": "20:12:25.825",
+        "request": "20:12:27.554",
+        "rtt": 835,
+        "line": 5150,
+        "nextLine": 5159
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1387,
+        "answer": "20:12:35.191",
+        "request": "20:12:36.578",
+        "rtt": 453,
+        "line": 5177,
+        "nextLine": 5183
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 669,
+        "answer": "20:12:37.031",
+        "request": "20:12:37.700",
+        "rtt": 1146,
+        "line": 5183,
+        "nextLine": 5187
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1512,
+        "answer": "20:12:48.335",
+        "request": "20:12:49.847",
+        "rtt": 1090,
+        "line": 5210,
+        "nextLine": 5217
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1455,
+        "answer": "20:12:59.579",
+        "request": "20:13:01.034",
+        "rtt": 1370,
+        "line": 5235,
+        "nextLine": 5241
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1374,
+        "answer": "20:13:11.524",
+        "request": "20:13:12.898",
+        "rtt": 472,
+        "line": 5262,
+        "nextLine": 5268
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 765,
+        "answer": "20:13:13.370",
+        "request": "20:13:14.135",
+        "rtt": 896,
+        "line": 5268,
+        "nextLine": 5274
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1470,
+        "answer": "20:13:22.530",
+        "request": "20:13:24.000",
+        "rtt": 843,
+        "line": 5292,
+        "nextLine": 5299
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1446,
+        "answer": "20:13:34.502",
+        "request": "20:13:35.948",
+        "rtt": 713,
+        "line": 5320,
+        "nextLine": 5328
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1420,
+        "answer": "20:13:44.314",
+        "request": "20:13:45.734",
+        "rtt": 365,
+        "line": 5344,
+        "nextLine": 5350
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 692,
+        "answer": "20:13:46.099",
+        "request": "20:13:46.791",
+        "rtt": 890,
+        "line": 5350,
+        "nextLine": 5354
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1354,
+        "answer": "20:13:56.438",
+        "request": "20:13:57.792",
+        "rtt": 482,
+        "line": 5374,
+        "nextLine": 5382
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1630,
+        "answer": "20:14:04.883",
+        "request": "20:14:06.513",
+        "rtt": 431,
+        "line": 5401,
+        "nextLine": 5408
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 695,
+        "answer": "20:14:06.944",
+        "request": "20:14:07.639",
+        "rtt": 521,
+        "line": 5408,
+        "nextLine": 5412
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1493,
+        "answer": "20:14:17.202",
+        "request": "20:14:18.695",
+        "rtt": 844,
+        "line": 5432,
+        "nextLine": 5440
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1508,
+        "answer": "20:14:26.519",
+        "request": "20:14:28.027",
+        "rtt": 473,
+        "line": 5459,
+        "nextLine": 5466
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 994,
+        "answer": "20:14:36.898",
+        "request": "20:14:37.892",
+        "rtt": 398,
+        "line": 5487,
+        "nextLine": 5493
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 716,
+        "answer": "20:14:38.290",
+        "request": "20:14:39.006",
+        "rtt": 494,
+        "line": 5493,
+        "nextLine": 5498
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1364,
+        "answer": "20:14:47.369",
+        "request": "20:14:48.733",
+        "rtt": 699,
+        "line": 5517,
+        "nextLine": 5524
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1379,
+        "answer": "20:14:58.518",
+        "request": "20:14:59.897",
+        "rtt": 734,
+        "line": 5544,
+        "nextLine": 5551
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 982,
+        "answer": "20:15:07.503",
+        "request": "20:15:08.485",
+        "rtt": 420,
+        "line": 5567,
+        "nextLine": 5573
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 662,
+        "answer": "20:15:08.905",
+        "request": "20:15:09.567",
+        "rtt": 748,
+        "line": 5573,
+        "nextLine": 5577
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1578,
+        "answer": "20:15:41.250",
+        "request": "20:15:42.828",
+        "rtt": 666,
+        "line": 5648,
+        "nextLine": 5655
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1138,
+        "answer": "20:15:52.797",
+        "request": "20:15:53.935",
+        "rtt": 584,
+        "line": 5677,
+        "nextLine": 5683
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1684,
+        "answer": "20:16:02.801",
+        "request": "20:16:04.485",
+        "rtt": 403,
+        "line": 5702,
+        "nextLine": 5709
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 673,
+        "answer": "20:16:04.888",
+        "request": "20:16:05.561",
+        "rtt": 595,
+        "line": 5709,
+        "nextLine": 5714
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1599,
+        "answer": "20:16:14.018",
+        "request": "20:16:15.617",
+        "rtt": 641,
+        "line": 5730,
+        "nextLine": 5737
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1661,
+        "answer": "20:16:26.346",
+        "request": "20:16:28.007",
+        "rtt": 569,
+        "line": 5757,
+        "nextLine": 5767
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 937,
+        "answer": "20:16:36.809",
+        "request": "20:16:37.746",
+        "rtt": 732,
+        "line": 5785,
+        "nextLine": 5790
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 1008,
+        "answer": "20:16:38.478",
+        "request": "20:16:39.486",
+        "rtt": 629,
+        "line": 5790,
+        "nextLine": 5795
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 965,
+        "answer": "20:16:48.566",
+        "request": "20:16:49.531",
+        "rtt": 1159,
+        "line": 5815,
+        "nextLine": 5823
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1379,
+        "answer": "20:17:21.338",
+        "request": "20:17:22.717",
+        "rtt": 1518,
+        "line": 5890,
+        "nextLine": 5898
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1625,
+        "answer": "20:17:32.337",
+        "request": "20:17:33.962",
+        "rtt": 694,
+        "line": 5914,
+        "nextLine": 5920
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 757,
+        "answer": "20:17:34.656",
+        "request": "20:17:35.413",
+        "rtt": 1334,
+        "line": 5920,
+        "nextLine": 5925
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1455,
+        "answer": "20:17:48.198",
+        "request": "20:17:49.653",
+        "rtt": 1458,
+        "line": 5946,
+        "nextLine": 5953
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1830,
+        "answer": "20:17:58.916",
+        "request": "20:18:00.746",
+        "rtt": 1158,
+        "line": 5971,
+        "nextLine": 5979
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1924,
+        "answer": "20:18:11.750",
+        "request": "20:18:13.674",
+        "rtt": 513,
+        "line": 5999,
+        "nextLine": 6005
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 694,
+        "answer": "20:18:14.187",
+        "request": "20:18:14.881",
+        "rtt": 556,
+        "line": 6005,
+        "nextLine": 6010
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1360,
+        "answer": "20:18:23.116",
+        "request": "20:18:24.476",
+        "rtt": 779,
+        "line": 6026,
+        "nextLine": 6033
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1610,
+        "answer": "20:18:35.350",
+        "request": "20:18:36.960",
+        "rtt": 648,
+        "line": 6054,
+        "nextLine": 6062
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1567,
+        "answer": "20:18:44.037",
+        "request": "20:18:45.604",
+        "rtt": 631,
+        "line": 6078,
+        "nextLine": 6084
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 596,
+        "answer": "20:18:46.235",
+        "request": "20:18:46.831",
+        "rtt": 496,
+        "line": 6084,
+        "nextLine": 6088
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1325,
+        "answer": "20:18:57.522",
+        "request": "20:18:58.847",
+        "rtt": 655,
+        "line": 6108,
+        "nextLine": 6117
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1403,
+        "answer": "20:19:06.318",
+        "request": "20:19:07.721",
+        "rtt": 1007,
+        "line": 6133,
+        "nextLine": 6140
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 969,
+        "answer": "20:19:17.545",
+        "request": "20:19:18.514",
+        "rtt": 640,
+        "line": 6159,
+        "nextLine": 6165
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1479,
+        "answer": "20:19:19.154",
+        "request": "20:19:20.633",
+        "rtt": 833,
+        "line": 6165,
+        "nextLine": 6172
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1715,
+        "answer": "20:19:28.857",
+        "request": "20:19:30.572",
+        "rtt": 1025,
+        "line": 6188,
+        "nextLine": 6195
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1571,
+        "answer": "20:19:40.505",
+        "request": "20:19:42.076",
+        "rtt": 525,
+        "line": 6217,
+        "nextLine": 6223
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 727,
+        "answer": "20:19:42.601",
+        "request": "20:19:43.328",
+        "rtt": 828,
+        "line": 6223,
+        "nextLine": 6227
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1563,
+        "answer": "20:19:53.358",
+        "request": "20:19:54.921",
+        "rtt": 695,
+        "line": 6245,
+        "nextLine": 6252
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1623,
+        "answer": "20:20:06.270",
+        "request": "20:20:07.893",
+        "rtt": 931,
+        "line": 6273,
+        "nextLine": 6281
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 937,
+        "answer": "20:20:15.916",
+        "request": "20:20:16.853",
+        "rtt": 515,
+        "line": 6297,
+        "nextLine": 6302
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 800,
+        "answer": "20:20:17.368",
+        "request": "20:20:18.168",
+        "rtt": 580,
+        "line": 6302,
+        "nextLine": 6307
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1637,
+        "answer": "20:20:29.005",
+        "request": "20:20:30.642",
+        "rtt": 646,
+        "line": 6328,
+        "nextLine": 6337
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1232,
+        "answer": "20:20:38.490",
+        "request": "20:20:39.722",
+        "rtt": 800,
+        "line": 6353,
+        "nextLine": 6360
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 940,
+        "answer": "20:20:49.572",
+        "request": "20:20:50.512",
+        "rtt": 618,
+        "line": 6381,
+        "nextLine": 6387
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 689,
+        "answer": "20:20:51.130",
+        "request": "20:20:51.819",
+        "rtt": 1037,
+        "line": 6387,
+        "nextLine": 6393
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1566,
+        "answer": "20:21:00.175",
+        "request": "20:21:01.741",
+        "rtt": 1202,
+        "line": 6411,
+        "nextLine": 6418
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1580,
+        "answer": "20:21:12.373",
+        "request": "20:21:13.953",
+        "rtt": 391,
+        "line": 6439,
+        "nextLine": 6445
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 628,
+        "answer": "20:21:14.344",
+        "request": "20:21:14.972",
+        "rtt": 496,
+        "line": 6445,
+        "nextLine": 6449
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1432,
+        "answer": "20:21:24.421",
+        "request": "20:21:25.853",
+        "rtt": 1181,
+        "line": 6467,
+        "nextLine": 6474
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1039,
+        "answer": "20:21:36.730",
+        "request": "20:21:37.769",
+        "rtt": 1262,
+        "line": 6497,
+        "nextLine": 6505
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 993,
+        "answer": "20:21:45.715",
+        "request": "20:21:46.708",
+        "rtt": 444,
+        "line": 6521,
+        "nextLine": 6526
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 768,
+        "answer": "20:21:47.152",
+        "request": "20:21:47.920",
+        "rtt": 1192,
+        "line": 6526,
+        "nextLine": 6530
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1400,
+        "answer": "20:21:58.754",
+        "request": "20:22:00.154",
+        "rtt": 672,
+        "line": 6551,
+        "nextLine": 6558
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1370,
+        "answer": "20:22:09.212",
+        "request": "20:22:10.582",
+        "rtt": 1072,
+        "line": 6576,
+        "nextLine": 6583
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1503,
+        "answer": "20:22:20.100",
+        "request": "20:22:21.603",
+        "rtt": 676,
+        "line": 6604,
+        "nextLine": 6610
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 679,
+        "answer": "20:22:22.279",
+        "request": "20:22:22.958",
+        "rtt": 900,
+        "line": 6610,
+        "nextLine": 6615
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1491,
+        "answer": "20:22:31.288",
+        "request": "20:22:32.779",
+        "rtt": 796,
+        "line": 6631,
+        "nextLine": 6638
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1680,
+        "answer": "20:22:42.788",
+        "request": "20:22:44.468",
+        "rtt": 770,
+        "line": 6659,
+        "nextLine": 6665
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 715,
+        "answer": "20:22:45.238",
+        "request": "20:22:45.953",
+        "rtt": 537,
+        "line": 6665,
+        "nextLine": 6669
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1662,
+        "answer": "20:22:54.855",
+        "request": "20:22:56.517",
+        "rtt": 1108,
+        "line": 6687,
+        "nextLine": 6694
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1924,
+        "answer": "20:23:07.063",
+        "request": "20:23:08.987",
+        "rtt": 687,
+        "line": 6718,
+        "nextLine": 6725
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1034,
+        "answer": "20:23:16.917",
+        "request": "20:23:17.951",
+        "rtt": 625,
+        "line": 6742,
+        "nextLine": 6748
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 552,
+        "answer": "20:23:18.576",
+        "request": "20:23:19.128",
+        "rtt": 657,
+        "line": 6748,
+        "nextLine": 6752
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1485,
+        "answer": "20:23:29.250",
+        "request": "20:23:30.735",
+        "rtt": 676,
+        "line": 6773,
+        "nextLine": 6781
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 985,
+        "answer": "20:23:38.012",
+        "request": "20:23:38.997",
+        "rtt": 700,
+        "line": 6797,
+        "nextLine": 6803
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 952,
+        "answer": "20:23:48.013",
+        "request": "20:23:48.965",
+        "rtt": 406,
+        "line": 6826,
+        "nextLine": 6831
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 842,
+        "answer": "20:23:49.371",
+        "request": "20:23:50.213",
+        "rtt": 668,
+        "line": 6831,
+        "nextLine": 6836
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1422,
+        "answer": "20:23:58.461",
+        "request": "20:23:59.883",
+        "rtt": 503,
+        "line": 6853,
+        "nextLine": 6861
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 918,
+        "answer": "20:24:09.484",
+        "request": "20:24:10.402",
+        "rtt": 463,
+        "line": 6885,
+        "nextLine": 6891
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 663,
+        "answer": "20:24:10.865",
+        "request": "20:24:11.528",
+        "rtt": 580,
+        "line": 6891,
+        "nextLine": 6896
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1031,
+        "answer": "20:24:19.599",
+        "request": "20:24:20.630",
+        "rtt": 797,
+        "line": 6913,
+        "nextLine": 6920
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 968,
+        "answer": "20:24:30.695",
+        "request": "20:24:31.663",
+        "rtt": 410,
+        "line": 6943,
+        "nextLine": 6950
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 904,
+        "answer": "20:24:40.788",
+        "request": "20:24:41.692",
+        "rtt": 346,
+        "line": 6970,
+        "nextLine": 6976
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 652,
+        "answer": "20:24:42.038",
+        "request": "20:24:42.690",
+        "rtt": 563,
+        "line": 6976,
+        "nextLine": 6980
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1498,
+        "answer": "20:25:12.351",
+        "request": "20:25:13.849",
+        "rtt": 553,
+        "line": 7050,
+        "nextLine": 7057
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 971,
+        "answer": "20:25:23.771",
+        "request": "20:25:24.742",
+        "rtt": 1242,
+        "line": 7078,
+        "nextLine": 7084
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1395,
+        "answer": "20:25:33.297",
+        "request": "20:25:34.692",
+        "rtt": 494,
+        "line": 7105,
+        "nextLine": 7112
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 589,
+        "answer": "20:25:35.186",
+        "request": "20:25:35.775",
+        "rtt": 819,
+        "line": 7112,
+        "nextLine": 7116
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1646,
+        "answer": "20:25:45.918",
+        "request": "20:25:47.564",
+        "rtt": 571,
+        "line": 7135,
+        "nextLine": 7143
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 881,
+        "answer": "20:25:56.587",
+        "request": "20:25:57.468",
+        "rtt": 433,
+        "line": 7164,
+        "nextLine": 7170
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 664,
+        "answer": "20:25:57.901",
+        "request": "20:25:58.565",
+        "rtt": 1005,
+        "line": 7170,
+        "nextLine": 7174
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 959,
+        "answer": "20:26:08.893",
+        "request": "20:26:09.852",
+        "rtt": 534,
+        "line": 7193,
+        "nextLine": 7201
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 981,
+        "answer": "20:26:16.975",
+        "request": "20:26:17.956",
+        "rtt": 430,
+        "line": 7218,
+        "nextLine": 7224
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1453,
+        "answer": "20:26:27.417",
+        "request": "20:26:28.870",
+        "rtt": 480,
+        "line": 7244,
+        "nextLine": 7250
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 571,
+        "answer": "20:26:29.350",
+        "request": "20:26:29.921",
+        "rtt": 537,
+        "line": 7250,
+        "nextLine": 7254
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1360,
+        "answer": "20:26:39.347",
+        "request": "20:26:40.707",
+        "rtt": 719,
+        "line": 7276,
+        "nextLine": 7283
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 952,
+        "answer": "20:26:49.785",
+        "request": "20:26:50.737",
+        "rtt": 447,
+        "line": 7303,
+        "nextLine": 7309
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 653,
+        "answer": "20:26:51.184",
+        "request": "20:26:51.837",
+        "rtt": 507,
+        "line": 7309,
+        "nextLine": 7313
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1759,
+        "answer": "20:27:00.929",
+        "request": "20:27:02.688",
+        "rtt": 863,
+        "line": 7333,
+        "nextLine": 7341
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1893,
+        "answer": "20:27:11.738",
+        "request": "20:27:13.631",
+        "rtt": 364,
+        "line": 7360,
+        "nextLine": 7367
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 673,
+        "answer": "20:27:13.995",
+        "request": "20:27:14.668",
+        "rtt": 699,
+        "line": 7367,
+        "nextLine": 7371
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1631,
+        "answer": "20:27:24.196",
+        "request": "20:27:25.827",
+        "rtt": 615,
+        "line": 7395,
+        "nextLine": 7402
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1333,
+        "answer": "20:27:36.756",
+        "request": "20:27:38.089",
+        "rtt": 738,
+        "line": 7424,
+        "nextLine": 7431
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1548,
+        "answer": "20:27:47.412",
+        "request": "20:27:48.960",
+        "rtt": 421,
+        "line": 7452,
+        "nextLine": 7458
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 676,
+        "answer": "20:27:49.381",
+        "request": "20:27:50.057",
+        "rtt": 665,
+        "line": 7458,
+        "nextLine": 7463
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1314,
+        "answer": "20:28:20.641",
+        "request": "20:28:21.955",
+        "rtt": 801,
+        "line": 7532,
+        "nextLine": 7539
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1317,
+        "answer": "20:28:31.353",
+        "request": "20:28:32.670",
+        "rtt": 607,
+        "line": 7558,
+        "nextLine": 7566
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1016,
+        "answer": "20:28:41.784",
+        "request": "20:28:42.800",
+        "rtt": 415,
+        "line": 7589,
+        "nextLine": 7594
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 695,
+        "answer": "20:28:43.215",
+        "request": "20:28:43.910",
+        "rtt": 1302,
+        "line": 7594,
+        "nextLine": 7598
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1255,
+        "answer": "20:28:54.728",
+        "request": "20:28:55.983",
+        "rtt": 505,
+        "line": 7619,
+        "nextLine": 7625
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1048,
+        "answer": "20:29:04.997",
+        "request": "20:29:06.045",
+        "rtt": 670,
+        "line": 7648,
+        "nextLine": 7653
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 569,
+        "answer": "20:29:06.715",
+        "request": "20:29:07.284",
+        "rtt": 723,
+        "line": 7653,
+        "nextLine": 7658
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1149,
+        "answer": "20:29:17.555",
+        "request": "20:29:18.704",
+        "rtt": 672,
+        "line": 7677,
+        "nextLine": 7683
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1045,
+        "answer": "20:29:27.524",
+        "request": "20:29:28.569",
+        "rtt": 475,
+        "line": 7704,
+        "nextLine": 7711
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1003,
+        "answer": "20:29:36.670",
+        "request": "20:29:37.673",
+        "rtt": 360,
+        "line": 7726,
+        "nextLine": 7732
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 585,
+        "answer": "20:29:38.033",
+        "request": "20:29:38.618",
+        "rtt": 470,
+        "line": 7732,
+        "nextLine": 7736
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1442,
+        "answer": "20:29:47.243",
+        "request": "20:29:48.685",
+        "rtt": 430,
+        "line": 7757,
+        "nextLine": 7766
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1562,
+        "answer": "20:30:16.169",
+        "request": "20:30:17.731",
+        "rtt": 650,
+        "line": 7829,
+        "nextLine": 7838
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1409,
+        "answer": "20:30:44.410",
+        "request": "20:30:45.819",
+        "rtt": 559,
+        "line": 7901,
+        "nextLine": 7909
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 942,
+        "answer": "20:30:53.781",
+        "request": "20:30:54.723",
+        "rtt": 410,
+        "line": 7927,
+        "nextLine": 7933
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 663,
+        "answer": "20:30:55.133",
+        "request": "20:30:55.796",
+        "rtt": 546,
+        "line": 7933,
+        "nextLine": 7937
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1419,
+        "answer": "20:31:04.069",
+        "request": "20:31:05.488",
+        "rtt": 491,
+        "line": 7959,
+        "nextLine": 7966
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1405,
+        "answer": "20:31:14.251",
+        "request": "20:31:15.656",
+        "rtt": 392,
+        "line": 7984,
+        "nextLine": 7990
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 698,
+        "answer": "20:31:16.048",
+        "request": "20:31:16.746",
+        "rtt": 512,
+        "line": 7990,
+        "nextLine": 7994
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1560,
+        "answer": "20:31:27.329",
+        "request": "20:31:28.889",
+        "rtt": 349,
+        "line": 8016,
+        "nextLine": 8025
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1536,
+        "answer": "20:31:58.200",
+        "request": "20:31:59.736",
+        "rtt": 354,
+        "line": 8090,
+        "nextLine": 8097
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 988,
+        "answer": "20:32:07.908",
+        "request": "20:32:08.896",
+        "rtt": 402,
+        "line": 8113,
+        "nextLine": 8120
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1143,
+        "answer": "20:32:17.500",
+        "request": "20:32:18.643",
+        "rtt": 396,
+        "line": 8143,
+        "nextLine": 8151
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 522,
+        "answer": "20:32:19.039",
+        "request": "20:32:19.561",
+        "rtt": 462,
+        "line": 8151,
+        "nextLine": 8155
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1466,
+        "answer": "20:32:48.471",
+        "request": "20:32:49.937",
+        "rtt": 468,
+        "line": 8221,
+        "nextLine": 8231
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1102,
+        "answer": "20:32:57.437",
+        "request": "20:32:58.539",
+        "rtt": 520,
+        "line": 8247,
+        "nextLine": 8254
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 985,
+        "answer": "20:33:07.470",
+        "request": "20:33:08.455",
+        "rtt": 375,
+        "line": 8274,
+        "nextLine": 8281
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 615,
+        "answer": "20:33:08.830",
+        "request": "20:33:09.445",
+        "rtt": 428,
+        "line": 8281,
+        "nextLine": 8286
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1627,
+        "answer": "20:33:16.870",
+        "request": "20:33:18.497",
+        "rtt": 412,
+        "line": 8301,
+        "nextLine": 8309
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 988,
+        "answer": "20:33:26.748",
+        "request": "20:33:27.736",
+        "rtt": 379,
+        "line": 8332,
+        "nextLine": 8339
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1387,
+        "answer": "20:33:36.559",
+        "request": "20:33:37.946",
+        "rtt": 347,
+        "line": 8357,
+        "nextLine": 8363
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 546,
+        "answer": "20:33:38.293",
+        "request": "20:33:38.839",
+        "rtt": 587,
+        "line": 8363,
+        "nextLine": 8367
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1404,
+        "answer": "20:33:48.315",
+        "request": "20:33:49.719",
+        "rtt": 521,
+        "line": 8390,
+        "nextLine": 8398
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1355,
+        "answer": "20:33:58.115",
+        "request": "20:33:59.470",
+        "rtt": 410,
+        "line": 8414,
+        "nextLine": 8420
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 652,
+        "answer": "20:33:59.880",
+        "request": "20:34:00.532",
+        "rtt": 669,
+        "line": 8420,
+        "nextLine": 8424
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 932,
+        "answer": "20:34:31.506",
+        "request": "20:34:32.438",
+        "rtt": 823,
+        "line": 8494,
+        "nextLine": 8501
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1085,
+        "answer": "20:34:42.503",
+        "request": "20:34:43.588",
+        "rtt": 1057,
+        "line": 8519,
+        "nextLine": 8526
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 941,
+        "answer": "20:34:52.764",
+        "request": "20:34:53.705",
+        "rtt": 564,
+        "line": 8548,
+        "nextLine": 8554
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 680,
+        "answer": "20:34:54.269",
+        "request": "20:34:54.949",
+        "rtt": 417,
+        "line": 8554,
+        "nextLine": 8558
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1453,
+        "answer": "20:35:04.104",
+        "request": "20:35:05.557",
+        "rtt": 963,
+        "line": 8578,
+        "nextLine": 8585
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1592,
+        "answer": "20:35:14.226",
+        "request": "20:35:15.818",
+        "rtt": 663,
+        "line": 8608,
+        "nextLine": 8616
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 925,
+        "answer": "20:35:24.888",
+        "request": "20:35:25.813",
+        "rtt": 543,
+        "line": 8632,
+        "nextLine": 8637
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 801,
+        "answer": "20:35:26.356",
+        "request": "20:35:27.157",
+        "rtt": 631,
+        "line": 8637,
+        "nextLine": 8642
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1044,
+        "answer": "20:35:36.643",
+        "request": "20:35:37.687",
+        "rtt": 852,
+        "line": 8663,
+        "nextLine": 8670
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1463,
+        "answer": "20:35:47.235",
+        "request": "20:35:48.698",
+        "rtt": 588,
+        "line": 8688,
+        "nextLine": 8695
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1063,
+        "answer": "20:36:18.612",
+        "request": "20:36:19.675",
+        "rtt": 441,
+        "line": 8763,
+        "nextLine": 8768
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 704,
+        "answer": "20:36:20.116",
+        "request": "20:36:20.820",
+        "rtt": 771,
+        "line": 8768,
+        "nextLine": 8772
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1410,
+        "answer": "20:36:30.147",
+        "request": "20:36:31.557",
+        "rtt": 669,
+        "line": 8790,
+        "nextLine": 8797
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1061,
+        "answer": "20:36:41.420",
+        "request": "20:36:42.481",
+        "rtt": 691,
+        "line": 8820,
+        "nextLine": 8828
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1317,
+        "answer": "20:36:50.428",
+        "request": "20:36:51.745",
+        "rtt": 655,
+        "line": 8843,
+        "nextLine": 8850
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 513,
+        "answer": "20:36:52.400",
+        "request": "20:36:52.913",
+        "rtt": 990,
+        "line": 8850,
+        "nextLine": 8854
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1567,
+        "answer": "20:37:01.175",
+        "request": "20:37:02.742",
+        "rtt": 591,
+        "line": 8874,
+        "nextLine": 8882
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1032,
+        "answer": "20:37:10.641",
+        "request": "20:37:11.673",
+        "rtt": 483,
+        "line": 8899,
+        "nextLine": 8906
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 1385,
+        "answer": "20:37:19.336",
+        "request": "20:37:20.721",
+        "rtt": 371,
+        "line": 8926,
+        "nextLine": 8932
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1659,
+        "answer": "20:37:21.092",
+        "request": "20:37:22.751",
+        "rtt": 480,
+        "line": 8932,
+        "nextLine": 8938
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1084,
+        "answer": "20:37:31.813",
+        "request": "20:37:32.897",
+        "rtt": 445,
+        "line": 8955,
+        "nextLine": 8962
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1623,
+        "answer": "20:37:42.251",
+        "request": "20:37:43.874",
+        "rtt": 387,
+        "line": 8984,
+        "nextLine": 8990
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 937,
+        "answer": "20:37:44.261",
+        "request": "20:37:45.198",
+        "rtt": 458,
+        "line": 8990,
+        "nextLine": 8995
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1399,
+        "answer": "20:37:53.436",
+        "request": "20:37:54.835",
+        "rtt": 380,
+        "line": 9012,
+        "nextLine": 9020
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1371,
+        "answer": "20:38:03.306",
+        "request": "20:38:04.677",
+        "rtt": 424,
+        "line": 9042,
+        "nextLine": 9050
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 933,
+        "answer": "20:38:13.056",
+        "request": "20:38:13.989",
+        "rtt": 416,
+        "line": 9068,
+        "nextLine": 9073
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 649,
+        "answer": "20:38:14.405",
+        "request": "20:38:15.054",
+        "rtt": 551,
+        "line": 9073,
+        "nextLine": 9078
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1085,
+        "answer": "20:38:23.779",
+        "request": "20:38:24.864",
+        "rtt": 546,
+        "line": 9097,
+        "nextLine": 9104
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 934,
+        "answer": "20:38:34.559",
+        "request": "20:38:35.493",
+        "rtt": 1224,
+        "line": 9122,
+        "nextLine": 9129
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "l2_302",
+        "gap": 1317,
+        "answer": "20:38:43.389",
+        "request": "20:38:44.706",
+        "rtt": 477,
+        "line": 9148,
+        "nextLine": 9154
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1576,
+        "answer": "20:38:45.183",
+        "request": "20:38:46.759",
+        "rtt": 345,
+        "line": 9154,
+        "nextLine": 9162
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1111,
+        "answer": "20:38:55.396",
+        "request": "20:38:56.507",
+        "rtt": 506,
+        "line": 9178,
+        "nextLine": 9185
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 933,
+        "answer": "20:39:05.699",
+        "request": "20:39:06.632",
+        "rtt": 398,
+        "line": 9205,
+        "nextLine": 9211
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 515,
+        "answer": "20:39:07.030",
+        "request": "20:39:07.545",
+        "rtt": 418,
+        "line": 9211,
+        "nextLine": 9215
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1375,
+        "answer": "20:39:16.062",
+        "request": "20:39:17.437",
+        "rtt": 561,
+        "line": 9235,
+        "nextLine": 9242
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 2212,
+        "answer": "20:39:26.610",
+        "request": "20:39:28.822",
+        "rtt": 510,
+        "line": 9263,
+        "nextLine": 9271
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 959,
+        "answer": "20:39:37.915",
+        "request": "20:39:38.874",
+        "rtt": 413,
+        "line": 9288,
+        "nextLine": 9294
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 665,
+        "answer": "20:39:39.287",
+        "request": "20:39:39.952",
+        "rtt": 618,
+        "line": 9294,
+        "nextLine": 9298
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1445,
+        "answer": "20:39:49.239",
+        "request": "20:39:50.684",
+        "rtt": 434,
+        "line": 9322,
+        "nextLine": 9329
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1432,
+        "answer": "20:40:19.277",
+        "request": "20:40:20.709",
+        "rtt": 419,
+        "line": 9396,
+        "nextLine": 9403
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1082,
+        "answer": "20:40:51.898",
+        "request": "20:40:52.980",
+        "rtt": 390,
+        "line": 9471,
+        "nextLine": 9478
+      }
+    ],
+    "wins": [
+      {
+        "action": "whirlwind",
+        "line": 79,
+        "answer": "19:36:41.999",
+        "toSkill": 1742,
+        "toResult": 1745,
+        "toNextCat": 5201,
+        "toNextStart": 6355
+      },
+      {
+        "action": "whirlwind",
+        "line": 105,
+        "answer": "19:36:52.541",
+        "toSkill": 872,
+        "toResult": 1335,
+        "toNextCat": 3648,
+        "toNextStart": 4833
+      },
+      {
+        "action": "whirlwind",
+        "line": 134,
+        "answer": "19:37:02.567",
+        "toSkill": 1473,
+        "toResult": 2368,
+        "toNextCat": 5564,
+        "toNextStart": 7128
+      },
+      {
+        "action": "wild_sweep",
+        "line": 164,
+        "answer": "19:37:15.093",
+        "toSkill": 1282,
+        "toResult": 1285,
+        "toNextCat": 4018,
+        "toNextStart": 5249
+      },
+      {
+        "action": "whirlwind",
+        "line": 189,
+        "answer": "19:37:24.102",
+        "toSkill": 1433,
+        "toResult": 2269,
+        "toNextCat": 5433,
+        "toNextStart": 6681
+      },
+      {
+        "action": "whirlwind",
+        "line": 220,
+        "answer": "19:37:35.552",
+        "toSkill": 889,
+        "toResult": 1851,
+        "toNextCat": 4433,
+        "toNextStart": 5614
+      },
+      {
+        "action": "whirlwind",
+        "line": 249,
+        "answer": "19:37:45.598",
+        "toSkill": 1412,
+        "toResult": 2396,
+        "toNextCat": 5612,
+        "toNextStart": 6730
+      },
+      {
+        "action": "whirlwind",
+        "line": 276,
+        "answer": "19:37:56.178",
+        "toSkill": 915,
+        "toResult": 1593,
+        "toNextCat": 4249,
+        "toNextStart": 5417
+      },
+      {
+        "action": "whirlwind",
+        "line": 308,
+        "answer": "19:38:06.405",
+        "toSkill": 1413,
+        "toResult": 1866,
+        "toNextCat": 5256,
+        "toNextStart": 6521
+      },
+      {
+        "action": "whirlwind",
+        "line": 337,
+        "answer": "19:38:18.931",
+        "toSkill": 917,
+        "toResult": 1384,
+        "toNextCat": 4008,
+        "toNextStart": 5390
+      },
+      {
+        "action": "whirlwind",
+        "line": 369,
+        "answer": "19:38:29.048",
+        "toSkill": 1381,
+        "toResult": 2193,
+        "toNextCat": 5682,
+        "toNextStart": 6863
+      },
+      {
+        "action": "whirlwind",
+        "line": 397,
+        "answer": "19:38:39.989",
+        "toSkill": 1820,
+        "toResult": 2303,
+        "toNextCat": 5200,
+        "toNextStart": 6372
+      },
+      {
+        "action": "whirlwind",
+        "line": 430,
+        "answer": "19:38:51.235",
+        "toSkill": 1250,
+        "toResult": 1642,
+        "toNextCat": 5602,
+        "toNextStart": 6724
+      },
+      {
+        "action": "whirlwind",
+        "line": 457,
+        "answer": "19:39:02.191",
+        "toSkill": 1446,
+        "toResult": 2383,
+        "toNextCat": 4889,
+        "toNextStart": 6137
+      },
+      {
+        "action": "whirlwind",
+        "line": 486,
+        "answer": "19:39:12.881",
+        "toSkill": 1044,
+        "toResult": 2032,
+        "toNextCat": 5466,
+        "toNextStart": 6676
+      },
+      {
+        "action": "whirlwind",
+        "line": 519,
+        "answer": "19:39:25.333",
+        "toSkill": 1327,
+        "toResult": 1821,
+        "toNextCat": 5190,
+        "toNextStart": 6673
+      },
+      {
+        "action": "whirlwind",
+        "line": 545,
+        "answer": "19:39:36.522",
+        "toSkill": 999,
+        "toResult": 1925,
+        "toNextCat": 6059,
+        "toNextStart": 7415
+      },
+      {
+        "action": "whirlwind",
+        "line": 580,
+        "answer": "19:39:49.887",
+        "toSkill": 856,
+        "toResult": 1288,
+        "toNextCat": 4118,
+        "toNextStart": 5314
+      },
+      {
+        "action": "whirlwind",
+        "line": 609,
+        "answer": "19:40:00.679",
+        "toSkill": 988,
+        "toResult": null,
+        "toNextCat": null,
+        "toNextStart": 11689
+      },
+      {
+        "action": "whirlwind",
+        "line": 735,
+        "answer": "19:41:33.271",
+        "toSkill": 1366,
+        "toResult": 2316,
+        "toNextCat": 6283,
+        "toNextStart": 8640
+      },
+      {
+        "action": "whirlwind",
+        "line": 764,
+        "answer": "19:41:47.491",
+        "toSkill": 1044,
+        "toResult": 2165,
+        "toNextCat": 5043,
+        "toNextStart": 6601
+      },
+      {
+        "action": "whirlwind",
+        "line": 794,
+        "answer": "19:41:59.335",
+        "toSkill": 1195,
+        "toResult": 2362,
+        "toNextCat": 5620,
+        "toNextStart": 6815
+      },
+      {
+        "action": "whirlwind",
+        "line": 821,
+        "answer": "19:42:10.166",
+        "toSkill": 1826,
+        "toResult": 2792,
+        "toNextCat": 5687,
+        "toNextStart": 6966
+      },
+      {
+        "action": "whirlwind",
+        "line": 848,
+        "answer": "19:42:21.902",
+        "toSkill": 1363,
+        "toResult": 2394,
+        "toNextCat": 6376,
+        "toNextStart": 7641
+      },
+      {
+        "action": "whirlwind",
+        "line": 874,
+        "answer": "19:42:34.375",
+        "toSkill": 1408,
+        "toResult": 2418,
+        "toNextCat": 5451,
+        "toNextStart": 6619
+      },
+      {
+        "action": "whirlwind",
+        "line": 902,
+        "answer": "19:42:45.504",
+        "toSkill": 961,
+        "toResult": 1875,
+        "toNextCat": 5522,
+        "toNextStart": 6706
+      },
+      {
+        "action": "whirlwind",
+        "line": 934,
+        "answer": "19:42:58.864",
+        "toSkill": 1176,
+        "toResult": 2198,
+        "toNextCat": 4691,
+        "toNextStart": 5871
+      },
+      {
+        "action": "whirlwind",
+        "line": 964,
+        "answer": "19:43:08.989",
+        "toSkill": 1535,
+        "toResult": 2474,
+        "toNextCat": 5670,
+        "toNextStart": 7301
+      },
+      {
+        "action": "whirlwind",
+        "line": 995,
+        "answer": "19:43:21.466",
+        "toSkill": 1293,
+        "toResult": 2212,
+        "toNextCat": 5763,
+        "toNextStart": 6980
+      },
+      {
+        "action": "whirlwind",
+        "line": 1024,
+        "answer": "19:43:33.469",
+        "toSkill": 1160,
+        "toResult": 2236,
+        "toNextCat": 6061,
+        "toNextStart": 7223
+      },
+      {
+        "action": "whirlwind",
+        "line": 1055,
+        "answer": "19:43:46.587",
+        "toSkill": 1460,
+        "toResult": 1914,
+        "toNextCat": 4741,
+        "toNextStart": 5913
+      },
+      {
+        "action": "whirlwind",
+        "line": 1082,
+        "answer": "19:43:56.524",
+        "toSkill": 912,
+        "toResult": 2004,
+        "toNextCat": 5497,
+        "toNextStart": 7032
+      },
+      {
+        "action": "whirlwind",
+        "line": 1110,
+        "answer": "19:44:08.374",
+        "toSkill": 1329,
+        "toResult": 2225,
+        "toNextCat": 4630,
+        "toNextStart": 5857
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1144,
+        "answer": "19:44:19.687",
+        "toSkill": 932,
+        "toResult": 0,
+        "toNextCat": 3816,
+        "toNextStart": 5083
+      },
+      {
+        "action": "whirlwind",
+        "line": 1170,
+        "answer": "19:44:29.727",
+        "toSkill": 974,
+        "toResult": 1924,
+        "toNextCat": 4864,
+        "toNextStart": 6107
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1201,
+        "answer": "19:44:40.993",
+        "toSkill": 1480,
+        "toResult": 1482,
+        "toNextCat": 5242,
+        "toNextStart": 6457
+      },
+      {
+        "action": "whirlwind",
+        "line": 1226,
+        "answer": "19:44:52.479",
+        "toSkill": 1309,
+        "toResult": 2251,
+        "toNextCat": 4799,
+        "toNextStart": 6008
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1255,
+        "answer": "19:45:02.442",
+        "toSkill": 1277,
+        "toResult": 0,
+        "toNextCat": 3786,
+        "toNextStart": 5110
+      },
+      {
+        "action": "whirlwind",
+        "line": 1281,
+        "answer": "19:45:13.480",
+        "toSkill": 979,
+        "toResult": 1485,
+        "toNextCat": 4322,
+        "toNextStart": 5460
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1309,
+        "answer": "19:45:23.838",
+        "toSkill": 2846,
+        "toResult": 0,
+        "toNextCat": 3597,
+        "toNextStart": 4874
+      },
+      {
+        "action": "whirlwind",
+        "line": 1332,
+        "answer": "19:45:33.192",
+        "toSkill": 1432,
+        "toResult": 2377,
+        "toNextCat": 4888,
+        "toNextStart": 6238
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1365,
+        "answer": "19:45:44.190",
+        "toSkill": 1383,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 23662
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1436,
+        "answer": "19:46:15.284",
+        "toSkill": 1344,
+        "toResult": 0,
+        "toNextCat": 3949,
+        "toNextStart": 5344
+      },
+      {
+        "action": "whirlwind",
+        "line": 1458,
+        "answer": "19:46:24.378",
+        "toSkill": 1383,
+        "toResult": 1991,
+        "toNextCat": 4735,
+        "toNextStart": 6035
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1490,
+        "answer": "19:46:36.213",
+        "toSkill": 1454,
+        "toResult": 0,
+        "toNextCat": 4752,
+        "toNextStart": 5986
+      },
+      {
+        "action": "whirlwind",
+        "line": 1515,
+        "answer": "19:46:46.145",
+        "toSkill": 1400,
+        "toResult": 2353,
+        "toNextCat": 4864,
+        "toNextStart": 6010
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1546,
+        "answer": "19:46:55.951",
+        "toSkill": 2849,
+        "toResult": 0,
+        "toNextCat": 3531,
+        "toNextStart": 4692
+      },
+      {
+        "action": "whirlwind",
+        "line": 1573,
+        "answer": "19:47:06.552",
+        "toSkill": 1481,
+        "toResult": 2425,
+        "toNextCat": 9144,
+        "toNextStart": 10441
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1602,
+        "answer": "19:47:21.609",
+        "toSkill": 939,
+        "toResult": 0,
+        "toNextCat": 2671,
+        "toNextStart": 3987
+      },
+      {
+        "action": "whirlwind",
+        "line": 1628,
+        "answer": "19:47:31.227",
+        "toSkill": 1417,
+        "toResult": 2361,
+        "toNextCat": 6364,
+        "toNextStart": 7543
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1657,
+        "answer": "19:47:43.066",
+        "toSkill": 1510,
+        "toResult": 1512,
+        "toNextCat": 3985,
+        "toNextStart": 5231
+      },
+      {
+        "action": "whirlwind",
+        "line": 1681,
+        "answer": "19:47:52.496",
+        "toSkill": 1464,
+        "toResult": 2401,
+        "toNextCat": 6180,
+        "toNextStart": 7314
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1714,
+        "answer": "19:48:05.433",
+        "toSkill": 1446,
+        "toResult": 0,
+        "toNextCat": 3575,
+        "toNextStart": 4829
+      },
+      {
+        "action": "whirlwind",
+        "line": 1737,
+        "answer": "19:48:14.400",
+        "toSkill": 1471,
+        "toResult": 2423,
+        "toNextCat": 6118,
+        "toNextStart": 7400
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1766,
+        "answer": "19:48:26.262",
+        "toSkill": 1398,
+        "toResult": 0,
+        "toNextCat": 3144,
+        "toNextStart": 4474
+      },
+      {
+        "action": "whirlwind",
+        "line": 1792,
+        "answer": "19:48:36.750",
+        "toSkill": 2024,
+        "toResult": 2026,
+        "toNextCat": 6231,
+        "toNextStart": 7564
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1820,
+        "answer": "19:48:49.409",
+        "toSkill": 1147,
+        "toResult": 1149,
+        "toNextCat": 3708,
+        "toNextStart": 4942
+      },
+      {
+        "action": "whirlwind",
+        "line": 1848,
+        "answer": "19:49:00.758",
+        "toSkill": 2170,
+        "toResult": 2753,
+        "toNextCat": 6780,
+        "toNextStart": 8070
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1876,
+        "answer": "19:49:13.706",
+        "toSkill": 1114,
+        "toResult": 1117,
+        "toNextCat": 4143,
+        "toNextStart": 5341
+      },
+      {
+        "action": "whirlwind",
+        "line": 1901,
+        "answer": "19:49:24.392",
+        "toSkill": 1404,
+        "toResult": 2119,
+        "toNextCat": 6256,
+        "toNextStart": 7549
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1931,
+        "answer": "19:49:37.962",
+        "toSkill": 870,
+        "toResult": 874,
+        "toNextCat": 3889,
+        "toNextStart": 5189
+      },
+      {
+        "action": "whirlwind",
+        "line": 1957,
+        "answer": "19:49:48.000",
+        "toSkill": 1423,
+        "toResult": 2331,
+        "toNextCat": 5928,
+        "toNextStart": 7486
+      },
+      {
+        "action": "wild_sweep",
+        "line": 1986,
+        "answer": "19:50:00.179",
+        "toSkill": 1349,
+        "toResult": 0,
+        "toNextCat": 3363,
+        "toNextStart": 4969
+      },
+      {
+        "action": "whirlwind",
+        "line": 2012,
+        "answer": "19:50:11.248",
+        "toSkill": 1369,
+        "toResult": 2273,
+        "toNextCat": 6044,
+        "toNextStart": 7297
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2040,
+        "answer": "19:50:23.155",
+        "toSkill": 1398,
+        "toResult": 1400,
+        "toNextCat": 3918,
+        "toNextStart": 5432
+      },
+      {
+        "action": "whirlwind",
+        "line": 2068,
+        "answer": "19:50:34.615",
+        "toSkill": 944,
+        "toResult": 1880,
+        "toNextCat": null,
+        "toNextStart": 25461
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2144,
+        "answer": "19:51:07.341",
+        "toSkill": 1530,
+        "toResult": 1533,
+        "toNextCat": 5154,
+        "toNextStart": 6738
+      },
+      {
+        "action": "whirlwind",
+        "line": 2169,
+        "answer": "19:51:19.081",
+        "toSkill": 1334,
+        "toResult": 2222,
+        "toNextCat": 4868,
+        "toNextStart": 6428
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2198,
+        "answer": "19:51:30.294",
+        "toSkill": 1502,
+        "toResult": 0,
+        "toNextCat": 3847,
+        "toNextStart": 5298
+      },
+      {
+        "action": "whirlwind",
+        "line": 2226,
+        "answer": "19:51:41.468",
+        "toSkill": 1369,
+        "toResult": 2338,
+        "toNextCat": 5933,
+        "toNextStart": 7065
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2254,
+        "answer": "19:51:53.146",
+        "toSkill": 1362,
+        "toResult": 1365,
+        "toNextCat": 4752,
+        "toNextStart": 5885
+      },
+      {
+        "action": "whirlwind",
+        "line": 2279,
+        "answer": "19:52:04.473",
+        "toSkill": 979,
+        "toResult": 1579,
+        "toNextCat": 4158,
+        "toNextStart": 5489
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2313,
+        "answer": "19:52:15.221",
+        "toSkill": 1506,
+        "toResult": 0,
+        "toNextCat": 3795,
+        "toNextStart": 4990
+      },
+      {
+        "action": "whirlwind",
+        "line": 2336,
+        "answer": "19:52:24.176",
+        "toSkill": 1548,
+        "toResult": 2589,
+        "toNextCat": 5095,
+        "toNextStart": 6446
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2369,
+        "answer": "19:52:35.864",
+        "toSkill": 3106,
+        "toResult": 0,
+        "toNextCat": 3837,
+        "toNextStart": 5136
+      },
+      {
+        "action": "whirlwind",
+        "line": 2392,
+        "answer": "19:52:46.039",
+        "toSkill": 1377,
+        "toResult": 2313,
+        "toNextCat": null,
+        "toNextStart": 25660
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2466,
+        "answer": "19:53:19.148",
+        "toSkill": 1514,
+        "toResult": 1518,
+        "toNextCat": 5090,
+        "toNextStart": 6385
+      },
+      {
+        "action": "whirlwind",
+        "line": 2491,
+        "answer": "19:53:30.094",
+        "toSkill": 1890,
+        "toResult": 2367,
+        "toNextCat": null,
+        "toNextStart": 27435
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2571,
+        "answer": "19:54:05.571",
+        "toSkill": 998,
+        "toResult": 1000,
+        "toNextCat": 4751,
+        "toNextStart": 6067
+      },
+      {
+        "action": "whirlwind",
+        "line": 2597,
+        "answer": "19:54:16.961",
+        "toSkill": 2018,
+        "toResult": 2577,
+        "toNextCat": 5522,
+        "toNextStart": 7032
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2625,
+        "answer": "19:54:28.500",
+        "toSkill": 1015,
+        "toResult": 0,
+        "toNextCat": 3557,
+        "toNextStart": 4849
+      },
+      {
+        "action": "whirlwind",
+        "line": 2651,
+        "answer": "19:54:39.543",
+        "toSkill": 1357,
+        "toResult": 2264,
+        "toNextCat": 4913,
+        "toNextStart": 6219
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2681,
+        "answer": "19:54:50.291",
+        "toSkill": 1381,
+        "toResult": 0,
+        "toNextCat": 3929,
+        "toNextStart": 5187
+      },
+      {
+        "action": "whirlwind",
+        "line": 2707,
+        "answer": "19:55:01.533",
+        "toSkill": 1432,
+        "toResult": 2372,
+        "toNextCat": 5275,
+        "toNextStart": 9714
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2736,
+        "answer": "19:55:16.054",
+        "toSkill": 1893,
+        "toResult": 926,
+        "toNextCat": 4447,
+        "toNextStart": 5725
+      },
+      {
+        "action": "whirlwind",
+        "line": 2762,
+        "answer": "19:55:26.290",
+        "toSkill": 1376,
+        "toResult": 2430,
+        "toNextCat": 5377,
+        "toNextStart": 6682
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2798,
+        "answer": "19:55:38.716",
+        "toSkill": 936,
+        "toResult": 0,
+        "toNextCat": 3792,
+        "toNextStart": 5366
+      },
+      {
+        "action": "whirlwind",
+        "line": 2821,
+        "answer": "19:55:48.473",
+        "toSkill": 934,
+        "toResult": 1853,
+        "toNextCat": 4448,
+        "toNextStart": 5523
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2851,
+        "answer": "19:55:58.642",
+        "toSkill": 1011,
+        "toResult": 0,
+        "toNextCat": 4220,
+        "toNextStart": 5437
+      },
+      {
+        "action": "whirlwind",
+        "line": 2877,
+        "answer": "19:56:09.409",
+        "toSkill": 1368,
+        "toResult": 1789,
+        "toNextCat": 5002,
+        "toNextStart": 6319
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2904,
+        "answer": "19:56:20.193",
+        "toSkill": 1414,
+        "toResult": 1417,
+        "toNextCat": 5260,
+        "toNextStart": 6574
+      },
+      {
+        "action": "whirlwind",
+        "line": 2929,
+        "answer": "19:56:31.332",
+        "toSkill": 1370,
+        "toResult": 2320,
+        "toNextCat": 4877,
+        "toNextStart": 6108
+      },
+      {
+        "action": "wild_sweep",
+        "line": 2962,
+        "answer": "19:56:42.224",
+        "toSkill": 1798,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 24163
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3035,
+        "answer": "19:57:16.447",
+        "toSkill": 865,
+        "toResult": 870,
+        "toNextCat": 5641,
+        "toNextStart": 8704
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3061,
+        "answer": "19:57:30.466",
+        "toSkill": 1395,
+        "toResult": 1397,
+        "toNextCat": 4161,
+        "toNextStart": 5695
+      },
+      {
+        "action": "whirlwind",
+        "line": 3089,
+        "answer": "19:57:41.299",
+        "toSkill": 1577,
+        "toResult": 2548,
+        "toNextCat": 6064,
+        "toNextStart": 7628
+      },
+      {
+        "action": "whirlwind",
+        "line": 3117,
+        "answer": "19:57:53.372",
+        "toSkill": 1400,
+        "toResult": 2358,
+        "toNextCat": 5136,
+        "toNextStart": 6381
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3145,
+        "answer": "19:58:04.750",
+        "toSkill": 1059,
+        "toResult": 1062,
+        "toNextCat": 5127,
+        "toNextStart": 6378
+      },
+      {
+        "action": "whirlwind",
+        "line": 3173,
+        "answer": "19:58:16.488",
+        "toSkill": 880,
+        "toResult": 1824,
+        "toNextCat": 4800,
+        "toNextStart": 6135
+      },
+      {
+        "action": "whirlwind",
+        "line": 3201,
+        "answer": "19:58:26.991",
+        "toSkill": 956,
+        "toResult": 1927,
+        "toNextCat": 5322,
+        "toNextStart": 6975
+      },
+      {
+        "action": "whirlwind",
+        "line": 3231,
+        "answer": "19:58:39.941",
+        "toSkill": 935,
+        "toResult": 1475,
+        "toNextCat": 4909,
+        "toNextStart": 5994
+      },
+      {
+        "action": "whirlwind",
+        "line": 3258,
+        "answer": "19:58:50.716",
+        "toSkill": 975,
+        "toResult": 1408,
+        "toNextCat": 4879,
+        "toNextStart": 6134
+      },
+      {
+        "action": "whirlwind",
+        "line": 3285,
+        "answer": "19:59:01.696",
+        "toSkill": 943,
+        "toResult": 2066,
+        "toNextCat": 5120,
+        "toNextStart": 6612
+      },
+      {
+        "action": "whirlwind",
+        "line": 3318,
+        "answer": "19:59:13.856",
+        "toSkill": 1920,
+        "toResult": 2402,
+        "toNextCat": 6032,
+        "toNextStart": 7356
+      },
+      {
+        "action": "whirlwind",
+        "line": 3345,
+        "answer": "19:59:25.918",
+        "toSkill": 952,
+        "toResult": 1914,
+        "toNextCat": 4907,
+        "toNextStart": 6322
+      },
+      {
+        "action": "whirlwind",
+        "line": 3376,
+        "answer": "19:59:38.506",
+        "toSkill": 1648,
+        "toResult": 2202,
+        "toNextCat": null,
+        "toNextStart": 26261
+      },
+      {
+        "action": "whirlwind",
+        "line": 3452,
+        "answer": "20:00:11.806",
+        "toSkill": 967,
+        "toResult": 1894,
+        "toNextCat": null,
+        "toNextStart": 58338
+      },
+      {
+        "action": "whirlwind",
+        "line": 3614,
+        "answer": "20:01:16.813",
+        "toSkill": 873,
+        "toResult": 1826,
+        "toNextCat": 4423,
+        "toNextStart": 5798
+      },
+      {
+        "action": "whirlwind",
+        "line": 3640,
+        "answer": "20:01:27.667",
+        "toSkill": 935,
+        "toResult": 1389,
+        "toNextCat": 5120,
+        "toNextStart": 6542
+      },
+      {
+        "action": "whirlwind",
+        "line": 3667,
+        "answer": "20:01:39.721",
+        "toSkill": 864,
+        "toResult": 1341,
+        "toNextCat": 4947,
+        "toNextStart": 6494
+      },
+      {
+        "action": "whirlwind",
+        "line": 3698,
+        "answer": "20:01:52.199",
+        "toSkill": 1416,
+        "toResult": 2979,
+        "toNextCat": 7324,
+        "toNextStart": 8911
+      },
+      {
+        "action": "whirlwind",
+        "line": 3726,
+        "answer": "20:02:06.262",
+        "toSkill": 892,
+        "toResult": 1968,
+        "toNextCat": 5030,
+        "toNextStart": 6364
+      },
+      {
+        "action": "whirlwind",
+        "line": 3758,
+        "answer": "20:02:19.020",
+        "toSkill": 1418,
+        "toResult": 2431,
+        "toNextCat": 6057,
+        "toNextStart": 7328
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3788,
+        "answer": "20:02:31.676",
+        "toSkill": 1019,
+        "toResult": 1022,
+        "toNextCat": 3941,
+        "toNextStart": 5085
+      },
+      {
+        "action": "whirlwind",
+        "line": 3814,
+        "answer": "20:02:42.259",
+        "toSkill": 1435,
+        "toResult": 2446,
+        "toNextCat": 6209,
+        "toNextStart": 7777
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3850,
+        "answer": "20:02:57.117",
+        "toSkill": 2977,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 24662
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3921,
+        "answer": "20:03:28.944",
+        "toSkill": 946,
+        "toResult": 949,
+        "toNextCat": 4473,
+        "toNextStart": 5750
+      },
+      {
+        "action": "whirlwind",
+        "line": 3946,
+        "answer": "20:03:40.306",
+        "toSkill": 1342,
+        "toResult": 1768,
+        "toNextCat": 4334,
+        "toNextStart": 5509
+      },
+      {
+        "action": "wild_sweep",
+        "line": 3973,
+        "answer": "20:03:50.285",
+        "toSkill": 1394,
+        "toResult": 1397,
+        "toNextCat": 4845,
+        "toNextStart": 6468
+      },
+      {
+        "action": "whirlwind",
+        "line": 4002,
+        "answer": "20:04:02.604",
+        "toSkill": 1451,
+        "toResult": 2371,
+        "toNextCat": 5008,
+        "toNextStart": 6228
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4032,
+        "answer": "20:04:13.722",
+        "toSkill": 908,
+        "toResult": 0,
+        "toNextCat": 3770,
+        "toNextStart": 5185
+      },
+      {
+        "action": "whirlwind",
+        "line": 4059,
+        "answer": "20:04:24.313",
+        "toSkill": 1354,
+        "toResult": 2262,
+        "toNextCat": 5649,
+        "toNextStart": 7210
+      },
+      {
+        "action": "whirlwind",
+        "line": 4088,
+        "answer": "20:04:36.959",
+        "toSkill": 908,
+        "toResult": 1375,
+        "toNextCat": 5113,
+        "toNextStart": 6856
+      },
+      {
+        "action": "whirlwind",
+        "line": 4114,
+        "answer": "20:04:48.527",
+        "toSkill": 941,
+        "toResult": 1867,
+        "toNextCat": null,
+        "toNextStart": 26320
+      },
+      {
+        "action": "whirlwind",
+        "line": 4195,
+        "answer": "20:05:24.185",
+        "toSkill": 916,
+        "toResult": 1846,
+        "toNextCat": 5406,
+        "toNextStart": 6778
+      },
+      {
+        "action": "whirlwind",
+        "line": 4225,
+        "answer": "20:05:35.495",
+        "toSkill": 957,
+        "toResult": 1405,
+        "toNextCat": 3952,
+        "toNextStart": 5239
+      },
+      {
+        "action": "whirlwind",
+        "line": 4252,
+        "answer": "20:05:45.609",
+        "toSkill": 1130,
+        "toResult": 2132,
+        "toNextCat": 5797,
+        "toNextStart": 7053
+      },
+      {
+        "action": "whirlwind",
+        "line": 4283,
+        "answer": "20:05:57.970",
+        "toSkill": 1898,
+        "toResult": 2425,
+        "toNextCat": 5558,
+        "toNextStart": 7113
+      },
+      {
+        "action": "whirlwind",
+        "line": 4312,
+        "answer": "20:06:09.457",
+        "toSkill": 1369,
+        "toResult": 2237,
+        "toNextCat": 6360,
+        "toNextStart": 7623
+      },
+      {
+        "action": "whirlwind",
+        "line": 4342,
+        "answer": "20:06:23.156",
+        "toSkill": 926,
+        "toResult": 1812,
+        "toNextCat": 4442,
+        "toNextStart": 6389
+      },
+      {
+        "action": "whirlwind",
+        "line": 4370,
+        "answer": "20:06:34.162",
+        "toSkill": 1426,
+        "toResult": 2302,
+        "toNextCat": 6202,
+        "toNextStart": 7404
+      },
+      {
+        "action": "whirlwind",
+        "line": 4401,
+        "answer": "20:06:46.149",
+        "toSkill": 1006,
+        "toResult": 1928,
+        "toNextCat": 4668,
+        "toNextStart": 5845
+      },
+      {
+        "action": "whirlwind",
+        "line": 4433,
+        "answer": "20:06:58.266",
+        "toSkill": 1359,
+        "toResult": 2688,
+        "toNextCat": 6050,
+        "toNextStart": 7332
+      },
+      {
+        "action": "whirlwind",
+        "line": 4460,
+        "answer": "20:07:10.936",
+        "toSkill": 1769,
+        "toResult": 2203,
+        "toNextCat": 5192,
+        "toNextStart": 6465
+      },
+      {
+        "action": "whirlwind",
+        "line": 4494,
+        "answer": "20:07:22.797",
+        "toSkill": 898,
+        "toResult": 1407,
+        "toNextCat": 4940,
+        "toNextStart": 6467
+      },
+      {
+        "action": "whirlwind",
+        "line": 4519,
+        "answer": "20:07:34.179",
+        "toSkill": 880,
+        "toResult": 1765,
+        "toNextCat": 4465,
+        "toNextStart": 5972
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4549,
+        "answer": "20:07:46.106",
+        "toSkill": 1372,
+        "toResult": 1375,
+        "toNextCat": 5342,
+        "toNextStart": 6889
+      },
+      {
+        "action": "whirlwind",
+        "line": 4580,
+        "answer": "20:08:00.774",
+        "toSkill": 892,
+        "toResult": 2198,
+        "toNextCat": 5225,
+        "toNextStart": 6848
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4608,
+        "answer": "20:08:13.131",
+        "toSkill": 980,
+        "toResult": 982,
+        "toNextCat": 3964,
+        "toNextStart": 5565
+      },
+      {
+        "action": "whirlwind",
+        "line": 4634,
+        "answer": "20:08:23.252",
+        "toSkill": 1334,
+        "toResult": 2239,
+        "toNextCat": 5928,
+        "toNextStart": 7548
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4667,
+        "answer": "20:08:37.895",
+        "toSkill": 1012,
+        "toResult": 1014,
+        "toNextCat": 4134,
+        "toNextStart": 6295
+      },
+      {
+        "action": "whirlwind",
+        "line": 4692,
+        "answer": "20:08:50.192",
+        "toSkill": 1315,
+        "toResult": 1737,
+        "toNextCat": 6399,
+        "toNextStart": 8303
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4780,
+        "answer": "20:09:37.830",
+        "toSkill": 816,
+        "toResult": 819,
+        "toNextCat": 4418,
+        "toNextStart": 14780
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4808,
+        "answer": "20:09:57.157",
+        "toSkill": 1358,
+        "toResult": 0,
+        "toNextCat": 3947,
+        "toNextStart": 5463
+      },
+      {
+        "action": "whirlwind",
+        "line": 4832,
+        "answer": "20:10:09.415",
+        "toSkill": 840,
+        "toResult": 1696,
+        "toNextCat": 4586,
+        "toNextStart": 6064
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4859,
+        "answer": "20:10:20.719",
+        "toSkill": 867,
+        "toResult": 870,
+        "toNextCat": null,
+        "toNextStart": 28880
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4935,
+        "answer": "20:10:56.115",
+        "toSkill": 1380,
+        "toResult": 1384,
+        "toNextCat": 4811,
+        "toNextStart": 6046
+      },
+      {
+        "action": "whirlwind",
+        "line": 4963,
+        "answer": "20:11:07.785",
+        "toSkill": 898,
+        "toResult": 1828,
+        "toNextCat": 4878,
+        "toNextStart": 6247
+      },
+      {
+        "action": "wild_sweep",
+        "line": 4991,
+        "answer": "20:11:19.216",
+        "toSkill": 1447,
+        "toResult": 1449,
+        "toNextCat": 5153,
+        "toNextStart": 6482
+      },
+      {
+        "action": "whirlwind",
+        "line": 5019,
+        "answer": "20:11:30.508",
+        "toSkill": 858,
+        "toResult": 1303,
+        "toNextCat": 4215,
+        "toNextStart": 5650
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5051,
+        "answer": "20:11:41.956",
+        "toSkill": 3228,
+        "toResult": 0,
+        "toNextCat": 4003,
+        "toNextStart": 5616
+      },
+      {
+        "action": "whirlwind",
+        "line": 5074,
+        "answer": "20:11:52.690",
+        "toSkill": 871,
+        "toResult": 1733,
+        "toNextCat": 4775,
+        "toNextStart": 6245
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5104,
+        "answer": "20:12:04.801",
+        "toSkill": 881,
+        "toResult": 0,
+        "toNextCat": 3504,
+        "toNextStart": 5026
+      },
+      {
+        "action": "whirlwind",
+        "line": 5131,
+        "answer": "20:12:17.053",
+        "toSkill": 1013,
+        "toResult": 2505,
+        "toNextCat": 5128,
+        "toNextStart": 6319
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5159,
+        "answer": "20:12:28.389",
+        "toSkill": 1374,
+        "toResult": 0,
+        "toNextCat": 3345,
+        "toNextStart": 4732
+      },
+      {
+        "action": "whirlwind",
+        "line": 5187,
+        "answer": "20:12:38.846",
+        "toSkill": 936,
+        "toResult": 1427,
+        "toNextCat": 5216,
+        "toNextStart": 6570
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5217,
+        "answer": "20:12:50.937",
+        "toSkill": 1986,
+        "toResult": 1006,
+        "toNextCat": 4022,
+        "toNextStart": 5356
+      },
+      {
+        "action": "whirlwind",
+        "line": 5241,
+        "answer": "20:13:02.404",
+        "toSkill": 1006,
+        "toResult": 1478,
+        "toNextCat": 5117,
+        "toNextStart": 6462
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5274,
+        "answer": "20:13:15.031",
+        "toSkill": 1589,
+        "toResult": 0,
+        "toNextCat": 3329,
+        "toNextStart": 4967
+      },
+      {
+        "action": "whirlwind",
+        "line": 5299,
+        "answer": "20:13:24.843",
+        "toSkill": 970,
+        "toResult": 1907,
+        "toNextCat": 5735,
+        "toNextStart": 7193
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5328,
+        "answer": "20:13:36.661",
+        "toSkill": 1039,
+        "toResult": 0,
+        "toNextCat": 3108,
+        "toNextStart": 4624
+      },
+      {
+        "action": "whirlwind",
+        "line": 5354,
+        "answer": "20:13:47.681",
+        "toSkill": 880,
+        "toResult": 1368,
+        "toNextCat": 5000,
+        "toNextStart": 6233
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5382,
+        "answer": "20:13:58.274",
+        "toSkill": 1409,
+        "toResult": 0,
+        "toNextCat": 3039,
+        "toNextStart": 4495
+      },
+      {
+        "action": "whirlwind",
+        "line": 5412,
+        "answer": "20:14:08.160",
+        "toSkill": 1345,
+        "toResult": 1747,
+        "toNextCat": 5061,
+        "toNextStart": 6243
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5440,
+        "answer": "20:14:19.539",
+        "toSkill": 972,
+        "toResult": 0,
+        "toNextCat": 3018,
+        "toNextStart": 4281
+      },
+      {
+        "action": "whirlwind",
+        "line": 5466,
+        "answer": "20:14:28.500",
+        "toSkill": 1448,
+        "toResult": 1911,
+        "toNextCat": 5191,
+        "toNextStart": 6227
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5498,
+        "answer": "20:14:39.500",
+        "toSkill": 1383,
+        "toResult": 1386,
+        "toNextCat": 4389,
+        "toNextStart": 5588
+      },
+      {
+        "action": "whirlwind",
+        "line": 5524,
+        "answer": "20:14:49.432",
+        "toSkill": 1458,
+        "toResult": 1892,
+        "toNextCat": 5190,
+        "toNextStart": 6355
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5551,
+        "answer": "20:15:00.631",
+        "toSkill": 862,
+        "toResult": 0,
+        "toNextCat": 3123,
+        "toNextStart": 4354
+      },
+      {
+        "action": "whirlwind",
+        "line": 5577,
+        "answer": "20:15:10.315",
+        "toSkill": 1359,
+        "toResult": 1796,
+        "toNextCat": null,
+        "toNextStart": 26056
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5655,
+        "answer": "20:15:43.494",
+        "toSkill": 1023,
+        "toResult": 1025,
+        "toNextCat": 4626,
+        "toNextStart": 5886
+      },
+      {
+        "action": "whirlwind",
+        "line": 5683,
+        "answer": "20:15:54.519",
+        "toSkill": 1102,
+        "toResult": 1591,
+        "toNextCat": 4574,
+        "toNextStart": 6019
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5714,
+        "answer": "20:16:06.156",
+        "toSkill": 1418,
+        "toResult": 0,
+        "toNextCat": 4354,
+        "toNextStart": 5733
+      },
+      {
+        "action": "whirlwind",
+        "line": 5737,
+        "answer": "20:16:16.258",
+        "toSkill": 1663,
+        "toResult": 2803,
+        "toNextCat": 6071,
+        "toNextStart": 7495
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5767,
+        "answer": "20:16:28.576",
+        "toSkill": 1106,
+        "toResult": 0,
+        "toNextCat": 4205,
+        "toNextStart": 5606
+      },
+      {
+        "action": "whirlwind",
+        "line": 5795,
+        "answer": "20:16:40.115",
+        "toSkill": 1560,
+        "toResult": 2075,
+        "toNextCat": 4890,
+        "toNextStart": 6008
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5823,
+        "answer": "20:16:50.690",
+        "toSkill": 895,
+        "toResult": 900,
+        "toNextCat": null,
+        "toNextStart": 25420
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5898,
+        "answer": "20:17:24.235",
+        "toSkill": 977,
+        "toResult": 0,
+        "toNextCat": 3847,
+        "toNextStart": 5198
+      },
+      {
+        "action": "whirlwind",
+        "line": 5925,
+        "answer": "20:17:36.747",
+        "toSkill": 1167,
+        "toResult": 2981,
+        "toNextCat": 6713,
+        "toNextStart": 8398
+      },
+      {
+        "action": "wild_sweep",
+        "line": 5953,
+        "answer": "20:17:51.111",
+        "toSkill": 875,
+        "toResult": 878,
+        "toNextCat": 4154,
+        "toNextStart": 5339
+      },
+      {
+        "action": "whirlwind",
+        "line": 5979,
+        "answer": "20:18:01.904",
+        "toSkill": 861,
+        "toResult": 1340,
+        "toNextCat": 5703,
+        "toNextStart": 7158
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6010,
+        "answer": "20:18:15.437",
+        "toSkill": 1442,
+        "toResult": 0,
+        "toNextCat": 3669,
+        "toNextStart": 4918
+      },
+      {
+        "action": "whirlwind",
+        "line": 6033,
+        "answer": "20:18:25.255",
+        "toSkill": 1261,
+        "toResult": 2106,
+        "toNextCat": 5939,
+        "toNextStart": 7209
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6062,
+        "answer": "20:18:37.608",
+        "toSkill": 985,
+        "toResult": 0,
+        "toNextCat": 2844,
+        "toNextStart": 4013
+      },
+      {
+        "action": "whirlwind",
+        "line": 6088,
+        "answer": "20:18:47.327",
+        "toSkill": 1353,
+        "toResult": 1794,
+        "toNextCat": 5400,
+        "toNextStart": 7113
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6117,
+        "answer": "20:18:59.502",
+        "toSkill": 1247,
+        "toResult": 0,
+        "toNextCat": 3173,
+        "toNextStart": 4639
+      },
+      {
+        "action": "whirlwind",
+        "line": 6140,
+        "answer": "20:19:08.728",
+        "toSkill": 867,
+        "toResult": 1715,
+        "toNextCat": 5164,
+        "toNextStart": 6786
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6172,
+        "answer": "20:19:21.466",
+        "toSkill": 1355,
+        "toResult": 0,
+        "toNextCat": 2974,
+        "toNextStart": 4604
+      },
+      {
+        "action": "whirlwind",
+        "line": 6195,
+        "answer": "20:19:31.597",
+        "toSkill": 990,
+        "toResult": 1517,
+        "toNextCat": 5024,
+        "toNextStart": 6136
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6227,
+        "answer": "20:19:44.156",
+        "toSkill": 1445,
+        "toResult": 1447,
+        "toNextCat": 5028,
+        "toNextStart": 6579
+      },
+      {
+        "action": "whirlwind",
+        "line": 6252,
+        "answer": "20:19:55.616",
+        "toSkill": 1043,
+        "toResult": 2305,
+        "toNextCat": 6234,
+        "toNextStart": 7696
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6281,
+        "answer": "20:20:08.824",
+        "toSkill": 965,
+        "toResult": 0,
+        "toNextCat": 2689,
+        "toNextStart": 3985
+      },
+      {
+        "action": "whirlwind",
+        "line": 6307,
+        "answer": "20:20:18.748",
+        "toSkill": 1965,
+        "toResult": 3156,
+        "toNextCat": 6762,
+        "toNextStart": 7980
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6337,
+        "answer": "20:20:31.288",
+        "toSkill": 1322,
+        "toResult": 0,
+        "toNextCat": 2973,
+        "toNextStart": 4234
+      },
+      {
+        "action": "whirlwind",
+        "line": 6360,
+        "answer": "20:20:40.522",
+        "toSkill": 888,
+        "toResult": 1815,
+        "toNextCat": 5190,
+        "toNextStart": 6697
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6393,
+        "answer": "20:20:52.856",
+        "toSkill": 1002,
+        "toResult": 0,
+        "toNextCat": 3152,
+        "toNextStart": 4810
+      },
+      {
+        "action": "whirlwind",
+        "line": 6418,
+        "answer": "20:21:02.943",
+        "toSkill": 2071,
+        "toResult": 2074,
+        "toNextCat": 5942,
+        "toNextStart": 7130
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6449,
+        "answer": "20:21:15.468",
+        "toSkill": 1464,
+        "toResult": 1467,
+        "toNextCat": 4679,
+        "toNextStart": 6040
+      },
+      {
+        "action": "whirlwind",
+        "line": 6474,
+        "answer": "20:21:27.034",
+        "toSkill": 863,
+        "toResult": 1801,
+        "toNextCat": 5419,
+        "toNextStart": 6922
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6505,
+        "answer": "20:21:39.031",
+        "toSkill": 844,
+        "toResult": 0,
+        "toNextCat": 2707,
+        "toNextStart": 3985
+      },
+      {
+        "action": "whirlwind",
+        "line": 6530,
+        "answer": "20:21:49.112",
+        "toSkill": 909,
+        "toResult": 1846,
+        "toNextCat": 5311,
+        "toNextStart": 6514
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6558,
+        "answer": "20:22:00.826",
+        "toSkill": 1814,
+        "toResult": 886,
+        "toNextCat": 4487,
+        "toNextStart": 6131
+      },
+      {
+        "action": "whirlwind",
+        "line": 6583,
+        "answer": "20:22:11.654",
+        "toSkill": 855,
+        "toResult": 1284,
+        "toNextCat": 4999,
+        "toNextStart": 6113
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6615,
+        "answer": "20:22:23.858",
+        "toSkill": 937,
+        "toResult": 0,
+        "toNextCat": 3170,
+        "toNextStart": 4742
+      },
+      {
+        "action": "whirlwind",
+        "line": 6638,
+        "answer": "20:22:33.575",
+        "toSkill": 913,
+        "toResult": 1813,
+        "toNextCat": 5295,
+        "toNextStart": 6629
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6669,
+        "answer": "20:22:46.490",
+        "toSkill": 979,
+        "toResult": 982,
+        "toNextCat": 3923,
+        "toNextStart": 5159
+      },
+      {
+        "action": "whirlwind",
+        "line": 6694,
+        "answer": "20:22:57.625",
+        "toSkill": 943,
+        "toResult": 1885,
+        "toNextCat": 5856,
+        "toNextStart": 7155
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6725,
+        "answer": "20:23:09.674",
+        "toSkill": 895,
+        "toResult": 897,
+        "toNextCat": 3498,
+        "toNextStart": 4852
+      },
+      {
+        "action": "whirlwind",
+        "line": 6752,
+        "answer": "20:23:19.785",
+        "toSkill": 2033,
+        "toResult": 2035,
+        "toNextCat": 5430,
+        "toNextStart": 6733
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6781,
+        "answer": "20:23:31.411",
+        "toSkill": 1409,
+        "toResult": 0,
+        "toNextCat": 3037,
+        "toNextStart": 4247
+      },
+      {
+        "action": "whirlwind",
+        "line": 6803,
+        "answer": "20:23:39.697",
+        "toSkill": 966,
+        "toResult": 1430,
+        "toNextCat": 4875,
+        "toNextStart": 6238
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6836,
+        "answer": "20:23:50.881",
+        "toSkill": 1878,
+        "toResult": 958,
+        "toNextCat": 4114,
+        "toNextStart": 5314
+      },
+      {
+        "action": "whirlwind",
+        "line": 6861,
+        "answer": "20:24:00.386",
+        "toSkill": 1298,
+        "toResult": 1761,
+        "toNextCat": 5059,
+        "toNextStart": 6731
+      },
+      {
+        "action": "wild_sweep",
+        "line": 6896,
+        "answer": "20:24:12.108",
+        "toSkill": 1344,
+        "toResult": 0,
+        "toNextCat": 3414,
+        "toNextStart": 4758
+      },
+      {
+        "action": "whirlwind",
+        "line": 6920,
+        "answer": "20:24:21.427",
+        "toSkill": 1353,
+        "toResult": 2325,
+        "toNextCat": 5784,
+        "toNextStart": 7079
+      },
+      {
+        "action": "whirlwind",
+        "line": 6950,
+        "answer": "20:24:32.073",
+        "toSkill": 2115,
+        "toResult": 2622,
+        "toNextCat": 5376,
+        "toNextStart": 6665
+      },
+      {
+        "action": "whirlwind",
+        "line": 6980,
+        "answer": "20:24:43.253",
+        "toSkill": 1261,
+        "toResult": 2161,
+        "toNextCat": null,
+        "toNextStart": 24211
+      },
+      {
+        "action": "whirlwind",
+        "line": 7057,
+        "answer": "20:25:14.402",
+        "toSkill": 1374,
+        "toResult": 1815,
+        "toNextCat": 5334,
+        "toNextStart": 6919
+      },
+      {
+        "action": "whirlwind",
+        "line": 7084,
+        "answer": "20:25:25.984",
+        "toSkill": 870,
+        "toResult": 1778,
+        "toNextCat": 4351,
+        "toNextStart": 5381
+      },
+      {
+        "action": "whirlwind",
+        "line": 7116,
+        "answer": "20:25:36.594",
+        "toSkill": 898,
+        "toResult": 1326,
+        "toNextCat": 5354,
+        "toNextStart": 6801
+      },
+      {
+        "action": "whirlwind",
+        "line": 7143,
+        "answer": "20:25:48.135",
+        "toSkill": 1556,
+        "toResult": 2489,
+        "toNextCat": 4999,
+        "toNextStart": 6023
+      },
+      {
+        "action": "whirlwind",
+        "line": 7174,
+        "answer": "20:25:59.570",
+        "toSkill": 909,
+        "toResult": 1740,
+        "toNextCat": 5528,
+        "toNextStart": 6673
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7201,
+        "answer": "20:26:10.386",
+        "toSkill": 1362,
+        "toResult": 0,
+        "toNextCat": 3142,
+        "toNextStart": 4308
+      },
+      {
+        "action": "whirlwind",
+        "line": 7224,
+        "answer": "20:26:18.386",
+        "toSkill": 1333,
+        "toResult": 2267,
+        "toNextCat": 5611,
+        "toNextStart": 6906
+      },
+      {
+        "action": "whirlwind",
+        "line": 7254,
+        "answer": "20:26:30.458",
+        "toSkill": 1356,
+        "toResult": 2277,
+        "toNextCat": 5397,
+        "toNextStart": 6663
+      },
+      {
+        "action": "whirlwind",
+        "line": 7283,
+        "answer": "20:26:41.426",
+        "toSkill": 1297,
+        "toResult": 1709,
+        "toNextCat": 4943,
+        "toNextStart": 6148
+      },
+      {
+        "action": "whirlwind",
+        "line": 7313,
+        "answer": "20:26:52.344",
+        "toSkill": 1318,
+        "toResult": 2354,
+        "toNextCat": 4959,
+        "toNextStart": 6411
+      },
+      {
+        "action": "whirlwind",
+        "line": 7341,
+        "answer": "20:27:03.551",
+        "toSkill": 843,
+        "toResult": 1724,
+        "toNextCat": 4997,
+        "toNextStart": 6028
+      },
+      {
+        "action": "whirlwind",
+        "line": 7371,
+        "answer": "20:27:15.367",
+        "toSkill": 1413,
+        "toResult": 2371,
+        "toNextCat": 5163,
+        "toNextStart": 6585
+      },
+      {
+        "action": "whirlwind",
+        "line": 7402,
+        "answer": "20:27:26.442",
+        "toSkill": 1472,
+        "toResult": 2423,
+        "toNextCat": 6314,
+        "toNextStart": 7441
+      },
+      {
+        "action": "whirlwind",
+        "line": 7431,
+        "answer": "20:27:38.827",
+        "toSkill": 1089,
+        "toResult": 1622,
+        "toNextCat": 4487,
+        "toNextStart": 6172
+      },
+      {
+        "action": "whirlwind",
+        "line": 7463,
+        "answer": "20:27:50.722",
+        "toSkill": 904,
+        "toResult": 1802,
+        "toNextCat": null,
+        "toNextStart": 24881
+      },
+      {
+        "action": "whirlwind",
+        "line": 7539,
+        "answer": "20:28:22.756",
+        "toSkill": 901,
+        "toResult": 1807,
+        "toNextCat": 5204,
+        "toNextStart": 6341
+      },
+      {
+        "action": "whirlwind",
+        "line": 7566,
+        "answer": "20:28:33.277",
+        "toSkill": 1255,
+        "toResult": 2127,
+        "toNextCat": 4652,
+        "toNextStart": 6133
+      },
+      {
+        "action": "whirlwind",
+        "line": 7598,
+        "answer": "20:28:45.212",
+        "toSkill": 924,
+        "toResult": 1805,
+        "toNextCat": 5199,
+        "toNextStart": 6756
+      },
+      {
+        "action": "whirlwind",
+        "line": 7625,
+        "answer": "20:28:56.488",
+        "toSkill": 1469,
+        "toResult": 2478,
+        "toNextCat": 5034,
+        "toNextStart": 6213
+      },
+      {
+        "action": "whirlwind",
+        "line": 7658,
+        "answer": "20:29:08.007",
+        "toSkill": 1999,
+        "toResult": 2001,
+        "toNextCat": 5801,
+        "toNextStart": 7234
+      },
+      {
+        "action": "whirlwind",
+        "line": 7683,
+        "answer": "20:29:19.376",
+        "toSkill": 1299,
+        "toResult": 1818,
+        "toNextCat": 4483,
+        "toNextStart": 5740
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7711,
+        "answer": "20:29:29.044",
+        "toSkill": 1542,
+        "toResult": 0,
+        "toNextCat": 3990,
+        "toNextStart": 5189
+      },
+      {
+        "action": "whirlwind",
+        "line": 7736,
+        "answer": "20:29:39.088",
+        "toSkill": 1305,
+        "toResult": 1771,
+        "toNextCat": 4560,
+        "toNextStart": 5696
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7766,
+        "answer": "20:29:49.115",
+        "toSkill": 1433,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 22796
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7838,
+        "answer": "20:30:18.381",
+        "toSkill": 1375,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 21645
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7909,
+        "answer": "20:30:46.378",
+        "toSkill": 1502,
+        "toResult": 0,
+        "toNextCat": 3867,
+        "toNextStart": 5098
+      },
+      {
+        "action": "whirlwind",
+        "line": 7937,
+        "answer": "20:30:56.342",
+        "toSkill": 1334,
+        "toResult": 1793,
+        "toNextCat": 4462,
+        "toNextStart": 5671
+      },
+      {
+        "action": "wild_sweep",
+        "line": 7966,
+        "answer": "20:31:05.979",
+        "toSkill": 1741,
+        "toResult": 880,
+        "toNextCat": 4155,
+        "toNextStart": 5456
+      },
+      {
+        "action": "whirlwind",
+        "line": 7994,
+        "answer": "20:31:17.258",
+        "toSkill": 1487,
+        "toResult": 2409,
+        "toNextCat": 6182,
+        "toNextStart": 7578
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8025,
+        "answer": "20:31:29.238",
+        "toSkill": 1578,
+        "toResult": 0,
+        "toNextCat": null,
+        "toNextStart": 24565
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8097,
+        "answer": "20:32:00.090",
+        "toSkill": 1856,
+        "toResult": 929,
+        "toNextCat": 4571,
+        "toNextStart": 5776
+      },
+      {
+        "action": "whirlwind",
+        "line": 8120,
+        "answer": "20:32:09.298",
+        "toSkill": 1337,
+        "toResult": 2254,
+        "toNextCat": 4901,
+        "toNextStart": 6029
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8155,
+        "answer": "20:32:20.023",
+        "toSkill": 1803,
+        "toResult": 824,
+        "toNextCat": null,
+        "toNextStart": 24327
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8231,
+        "answer": "20:32:50.405",
+        "toSkill": 1340,
+        "toResult": 0,
+        "toNextCat": 3617,
+        "toNextStart": 4723
+      },
+      {
+        "action": "whirlwind",
+        "line": 8254,
+        "answer": "20:32:59.059",
+        "toSkill": 1933,
+        "toResult": 2416,
+        "toNextCat": 4969,
+        "toNextStart": 6079
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8286,
+        "answer": "20:33:09.873",
+        "toSkill": 2705,
+        "toResult": 0,
+        "toNextCat": 3822,
+        "toNextStart": 4940
+      },
+      {
+        "action": "whirlwind",
+        "line": 8309,
+        "answer": "20:33:18.909",
+        "toSkill": 1698,
+        "toResult": 2121,
+        "toNextCat": 4696,
+        "toNextStart": 5887
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8339,
+        "answer": "20:33:28.115",
+        "toSkill": 1429,
+        "toResult": 1432,
+        "toNextCat": 4567,
+        "toNextStart": 5951
+      },
+      {
+        "action": "whirlwind",
+        "line": 8367,
+        "answer": "20:33:39.426",
+        "toSkill": 1357,
+        "toResult": 2237,
+        "toNextCat": 5141,
+        "toNextStart": 6430
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8398,
+        "answer": "20:33:50.240",
+        "toSkill": 1342,
+        "toResult": 0,
+        "toNextCat": 3806,
+        "toNextStart": 5100
+      },
+      {
+        "action": "whirlwind",
+        "line": 8424,
+        "answer": "20:34:01.201",
+        "toSkill": 1727,
+        "toResult": 2183,
+        "toNextCat": null,
+        "toNextStart": 25920
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8501,
+        "answer": "20:34:33.261",
+        "toSkill": 1543,
+        "toResult": 1547,
+        "toNextCat": 5464,
+        "toNextStart": 6915
+      },
+      {
+        "action": "whirlwind",
+        "line": 8526,
+        "answer": "20:34:44.645",
+        "toSkill": 905,
+        "toResult": 1838,
+        "toNextCat": 4715,
+        "toNextStart": 5862
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8558,
+        "answer": "20:34:55.366",
+        "toSkill": 1320,
+        "toResult": 1322,
+        "toNextCat": 5056,
+        "toNextStart": 6521
+      },
+      {
+        "action": "whirlwind",
+        "line": 8585,
+        "answer": "20:35:06.520",
+        "toSkill": 856,
+        "toResult": 1725,
+        "toNextCat": 4350,
+        "toNextStart": 5564
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8616,
+        "answer": "20:35:16.481",
+        "toSkill": 1420,
+        "toResult": 0,
+        "toNextCat": 4001,
+        "toNextStart": 5572
+      },
+      {
+        "action": "whirlwind",
+        "line": 8642,
+        "answer": "20:35:27.788",
+        "toSkill": 1780,
+        "toResult": 2223,
+        "toNextCat": 4730,
+        "toNextStart": 5947
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8670,
+        "answer": "20:35:38.539",
+        "toSkill": 1435,
+        "toResult": 1438,
+        "toNextCat": 5243,
+        "toNextStart": 6458
+      },
+      {
+        "action": "whirlwind",
+        "line": 8695,
+        "answer": "20:35:49.286",
+        "toSkill": 1372,
+        "toResult": 2244,
+        "toNextCat": null,
+        "toNextStart": 24385
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8772,
+        "answer": "20:36:21.591",
+        "toSkill": 1487,
+        "toResult": 1490,
+        "toNextCat": 4882,
+        "toNextStart": 6256
+      },
+      {
+        "action": "whirlwind",
+        "line": 8797,
+        "answer": "20:36:32.226",
+        "toSkill": 1535,
+        "toResult": 2550,
+        "toNextCat": 5096,
+        "toNextStart": 6288
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8828,
+        "answer": "20:36:43.172",
+        "toSkill": 1372,
+        "toResult": 0,
+        "toNextCat": 3765,
+        "toNextStart": 5103
+      },
+      {
+        "action": "whirlwind",
+        "line": 8854,
+        "answer": "20:36:53.903",
+        "toSkill": 819,
+        "toResult": 1258,
+        "toNextCat": 3855,
+        "toNextStart": 5131
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8882,
+        "answer": "20:37:03.333",
+        "toSkill": 1375,
+        "toResult": 0,
+        "toNextCat": 3739,
+        "toNextStart": 5008
+      },
+      {
+        "action": "whirlwind",
+        "line": 8906,
+        "answer": "20:37:12.156",
+        "toSkill": 1497,
+        "toResult": 1994,
+        "toNextCat": 4522,
+        "toNextStart": 5628
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8938,
+        "answer": "20:37:23.231",
+        "toSkill": 1527,
+        "toResult": 1530,
+        "toNextCat": 4962,
+        "toNextStart": 6171
+      },
+      {
+        "action": "whirlwind",
+        "line": 8962,
+        "answer": "20:37:33.342",
+        "toSkill": 1516,
+        "toResult": 2417,
+        "toNextCat": 5500,
+        "toNextStart": 6680
+      },
+      {
+        "action": "wild_sweep",
+        "line": 8995,
+        "answer": "20:37:45.656",
+        "toSkill": 1893,
+        "toResult": 969,
+        "toNextCat": 4588,
+        "toNextStart": 5772
+      },
+      {
+        "action": "whirlwind",
+        "line": 9020,
+        "answer": "20:37:55.215",
+        "toSkill": 1305,
+        "toResult": 2197,
+        "toNextCat": 4899,
+        "toNextStart": 6013
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9050,
+        "answer": "20:38:05.101",
+        "toSkill": 1405,
+        "toResult": 1407,
+        "toNextCat": 4664,
+        "toNextStart": 5800
+      },
+      {
+        "action": "whirlwind",
+        "line": 9078,
+        "answer": "20:38:15.605",
+        "toSkill": 1450,
+        "toResult": 1852,
+        "toNextCat": 4663,
+        "toNextStart": 5789
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9104,
+        "answer": "20:38:25.410",
+        "toSkill": 2441,
+        "toResult": 982,
+        "toNextCat": 4925,
+        "toNextStart": 6198
+      },
+      {
+        "action": "whirlwind",
+        "line": 9129,
+        "answer": "20:38:36.717",
+        "toSkill": 974,
+        "toResult": 1446,
+        "toNextCat": 3929,
+        "toNextStart": 5054
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9162,
+        "answer": "20:38:47.104",
+        "toSkill": 1533,
+        "toResult": 0,
+        "toNextCat": 4156,
+        "toNextStart": 5590
+      },
+      {
+        "action": "whirlwind",
+        "line": 9185,
+        "answer": "20:38:57.013",
+        "toSkill": 1871,
+        "toResult": 2379,
+        "toNextCat": 5036,
+        "toNextStart": 6263
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9215,
+        "answer": "20:39:07.963",
+        "toSkill": 1924,
+        "toResult": 943,
+        "toNextCat": 4793,
+        "toNextStart": 5983
+      },
+      {
+        "action": "whirlwind",
+        "line": 9242,
+        "answer": "20:39:17.998",
+        "toSkill": 1478,
+        "toResult": 2492,
+        "toNextCat": 4967,
+        "toNextStart": 6067
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9271,
+        "answer": "20:39:29.332",
+        "toSkill": 1440,
+        "toResult": 1443,
+        "toNextCat": 5044,
+        "toNextStart": 6253
+      },
+      {
+        "action": "whirlwind",
+        "line": 9298,
+        "answer": "20:39:40.570",
+        "toSkill": 1002,
+        "toResult": 2037,
+        "toNextCat": 5135,
+        "toNextStart": 6371
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9329,
+        "answer": "20:39:51.118",
+        "toSkill": 1429,
+        "toResult": 1432,
+        "toNextCat": null,
+        "toNextStart": 23923
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9403,
+        "answer": "20:40:21.128",
+        "toSkill": 1323,
+        "toResult": 1326,
+        "toNextCat": null,
+        "toNextStart": 25451
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9478,
+        "answer": "20:40:53.370",
+        "toSkill": 1438,
+        "toResult": 1441,
+        "toNextCat": null,
+        "toNextStart": null
+      }
+    ]
+  },
+  "20.39": {
+    "networkCount": 105,
+    "actionCount": 21,
+    "actions": {
+      "l2_302": 9,
+      "battle_potion_use": 3,
+      "wild_sweep": 5,
+      "whirlwind": 4
+    },
+    "statuses": {
+      "200": 21
+    },
+    "prof": {
+      "dwarf_bounty_hunter": 21
+    },
+    "timingFields": {
+      "serverNowMs": 12
+    },
+    "battles": 9,
+    "actionRTT": {
+      "n": 21,
+      "min": 435,
+      "p25": 488,
+      "median": 641,
+      "p75": 865,
+      "p90": 1023,
+      "max": 1081,
+      "mean": 686.0
+    },
+    "startRTT": {
+      "n": 9,
+      "min": 352,
+      "p25": 381,
+      "median": 450,
+      "p75": 508,
+      "p90": 551,
+      "max": 582,
+      "mean": 456.8
+    },
+    "characterRTT": {
+      "n": 9,
+      "min": 246,
+      "p25": 473,
+      "median": 590,
+      "p75": 611,
+      "p90": 624,
+      "max": 708,
+      "mean": 519.2
+    },
+    "withinBattleResponseToNextRequest": {
+      "n": 12,
+      "min": 577,
+      "p25": 863,
+      "median": 1202.5,
+      "p75": 1460,
+      "p90": 1596,
+      "max": 1664,
+      "mean": 1195.2
+    },
+    "byPair": {
+      "l2_302→battle_potion_use": {
+        "n": 3,
+        "min": 1075,
+        "p25": 1075,
+        "median": 1106,
+        "p75": 1106,
+        "p90": 1106,
+        "max": 1178,
+        "mean": 1119.7
+      },
+      "battle_potion_use→wild_sweep": {
+        "n": 1,
+        "min": 577,
+        "p25": 577,
+        "median": 577,
+        "p75": 577,
+        "p90": 577,
+        "max": 577,
+        "mean": 577
+      },
+      "l2_302→wild_sweep": {
+        "n": 4,
+        "min": 1227,
+        "p25": 1227,
+        "median": 1616.5,
+        "p75": 1637,
+        "p90": 1637,
+        "max": 1664,
+        "mean": 1531
+      },
+      "l2_302→whirlwind": {
+        "n": 2,
+        "min": 1246,
+        "p25": 1246,
+        "median": 1353.0,
+        "p75": 1246,
+        "p90": 1246,
+        "max": 1460,
+        "mean": 1353
+      },
+      "battle_potion_use→whirlwind": {
+        "n": 2,
+        "min": 713,
+        "p25": 713,
+        "median": 788.0,
+        "p75": 713,
+        "p90": 713,
+        "max": 863,
+        "mean": 788
+      }
+    },
+    "startResponseToFirstRequest": {
+      "n": 9,
+      "min": 1768,
+      "p25": 2008,
+      "median": 2062,
+      "p75": 2196,
+      "p90": 2378,
+      "max": 3678,
+      "mean": 2242.1
+    },
+    "winToSkill": {
+      "n": 9,
+      "min": 948,
+      "p25": 1000,
+      "median": 1034,
+      "p75": 1063,
+      "p90": 1097,
+      "max": 2030,
+      "mean": 1135.9
+    },
+    "winToResult": {
+      "n": 9,
+      "min": 0,
+      "p25": 1019,
+      "median": 1066,
+      "p75": 2035,
+      "p90": 2147,
+      "max": 2479,
+      "mean": 1417.2
+    },
+    "winToNextCat": {
+      "n": 8,
+      "min": 3568,
+      "p25": 4772,
+      "median": 4914.5,
+      "p75": 5175,
+      "p90": 5297,
+      "max": 6283,
+      "mean": 4969
+    },
+    "winToNextStartRequest": {
+      "n": 8,
+      "min": 4966,
+      "p25": 6232,
+      "median": 6353.0,
+      "p75": 6853,
+      "p90": 7798,
+      "max": 23183,
+      "mean": 8498.6
+    },
+    "pairs": [
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1075,
+        "answer": "20:41:04.231",
+        "request": "20:41:05.306",
+        "rtt": 463,
+        "line": 9496,
+        "nextLine": 9502
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "wild_sweep",
+        "gap": 577,
+        "answer": "20:41:05.769",
+        "request": "20:41:06.346",
+        "rtt": 653,
+        "line": 9502,
+        "nextLine": 9506
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1596,
+        "answer": "20:41:34.734",
+        "request": "20:41:36.330",
+        "rtt": 448,
+        "line": 9570,
+        "nextLine": 9577
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1460,
+        "answer": "20:41:45.825",
+        "request": "20:41:47.285",
+        "rtt": 1023,
+        "line": 9593,
+        "nextLine": 9600
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1664,
+        "answer": "20:41:58.214",
+        "request": "20:41:59.878",
+        "rtt": 528,
+        "line": 9620,
+        "nextLine": 9627
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1178,
+        "answer": "20:42:10.043",
+        "request": "20:42:11.221",
+        "rtt": 488,
+        "line": 9643,
+        "nextLine": 9649
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 863,
+        "answer": "20:42:11.709",
+        "request": "20:42:12.572",
+        "rtt": 830,
+        "line": 9649,
+        "nextLine": 9654
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1637,
+        "answer": "20:42:24.431",
+        "request": "20:42:26.068",
+        "rtt": 849,
+        "line": 9673,
+        "nextLine": 9680
+      },
+      {
+        "prev": "l2_302",
+        "next": "battle_potion_use",
+        "gap": 1106,
+        "answer": "20:42:36.447",
+        "request": "20:42:37.553",
+        "rtt": 600,
+        "line": 9696,
+        "nextLine": 9702
+      },
+      {
+        "prev": "battle_potion_use",
+        "next": "whirlwind",
+        "gap": 713,
+        "answer": "20:42:38.153",
+        "request": "20:42:38.866",
+        "rtt": 987,
+        "line": 9702,
+        "nextLine": 9707
+      },
+      {
+        "prev": "l2_302",
+        "next": "wild_sweep",
+        "gap": 1227,
+        "answer": "20:42:48.986",
+        "request": "20:42:50.213",
+        "rtt": 1078,
+        "line": 9728,
+        "nextLine": 9736
+      },
+      {
+        "prev": "l2_302",
+        "next": "whirlwind",
+        "gap": 1246,
+        "answer": "20:42:59.646",
+        "request": "20:43:00.892",
+        "rtt": 1081,
+        "line": 9750,
+        "nextLine": 9757
+      }
+    ],
+    "wins": [
+      {
+        "action": "wild_sweep",
+        "line": 9506,
+        "answer": "20:41:06.999",
+        "toSkill": 1016,
+        "toResult": 1019,
+        "toNextCat": null,
+        "toNextStart": 23183
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9577,
+        "answer": "20:41:36.778",
+        "toSkill": 1000,
+        "toResult": 1001,
+        "toNextCat": 4828,
+        "toNextStart": 6251
+      },
+      {
+        "action": "whirlwind",
+        "line": 9600,
+        "answer": "20:41:48.308",
+        "toSkill": 1097,
+        "toResult": 2147,
+        "toNextCat": 5297,
+        "toNextStart": 6853
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9627,
+        "answer": "20:42:00.406",
+        "toSkill": 1063,
+        "toResult": 1064,
+        "toNextCat": 4995,
+        "toNextStart": 6455
+      },
+      {
+        "action": "whirlwind",
+        "line": 9654,
+        "answer": "20:42:13.402",
+        "toSkill": 948,
+        "toResult": 1944,
+        "toNextCat": 6283,
+        "toNextStart": 7798
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9680,
+        "answer": "20:42:26.917",
+        "toSkill": 1063,
+        "toResult": 1066,
+        "toNextCat": 4834,
+        "toNextStart": 6251
+      },
+      {
+        "action": "whirlwind",
+        "line": 9707,
+        "answer": "20:42:39.853",
+        "toSkill": 1034,
+        "toResult": 2035,
+        "toNextCat": 4772,
+        "toNextStart": 6232
+      },
+      {
+        "action": "wild_sweep",
+        "line": 9736,
+        "answer": "20:42:51.291",
+        "toSkill": 972,
+        "toResult": 0,
+        "toNextCat": 3568,
+        "toNextStart": 4966
+      },
+      {
+        "action": "whirlwind",
+        "line": 9757,
+        "answer": "20:43:01.973",
+        "toSkill": 2030,
+        "toResult": 2479,
+        "toNextCat": 5175,
+        "toNextStart": null
+      }
+    ]
+  }
+}

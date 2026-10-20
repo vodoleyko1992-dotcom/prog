@@ -1,0 +1,45 @@
+{
+  "atUTC": "2026-10-20T10:57:48.718055+00:00",
+  "scope": [
+    "modules/fightlab.js",
+    "tests/v2039-native-damage.test.cjs",
+    "tests/fixtures/native-damage-20261020.json"
+  ],
+  "baseline": {
+    "pass": 16,
+    "fail": 16,
+    "actualVictoryMainDamageRecognized": 0,
+    "actualVictoryCases": 9,
+    "log": "native-parser-baseline.log"
+  },
+  "fixed": {
+    "pass": 32,
+    "fail": 0,
+    "actualVictoryMainDamageRecognized": 9,
+    "actualVictoryCases": 9,
+    "log": "native-parser-fixed.log"
+  },
+  "integration": "real hook btOf → fightlab.onNet → groupOn → combat.chooseAction; Whirlwind learns 3 confirmed neighbors and beats single-target Wild Sweep with greater overkill; no forced catalog group inference",
+  "relatedFilesPassed": [
+    "v1027-polearm-damage.test.js",
+    "v2034-pack-efficiency.test.cjs",
+    "v1017-aoe-finisher.test.js",
+    "v1021-combat-group-rebuild.test.js",
+    "v1021-raid-fightlab-hp-delta.test.js",
+    "v1027-fightlab-sync-history.test.js",
+    "v1028-fightlab-full-prefix.test.js",
+    "v2013-fightlab-flush-retry.test.js",
+    "v92-fightlab.test.js"
+  ],
+  "checks": {
+    "syntax": "PASS (module + new CJS test)",
+    "gitDiffCheck": "PASS"
+  },
+  "sourceSHA256": "8782e6ce5860f4240e8871c0c165beb55ef27b823a2054e3a94662df187a899a",
+  "boundary": {
+    "liveGameOpened": false,
+    "allDpsAggregationChanged": false,
+    "genericCatalogChanged": false,
+    "sourceFixture": "Actual battle phrases only; character IDs, credentials, full input log excluded."
+  }
+}

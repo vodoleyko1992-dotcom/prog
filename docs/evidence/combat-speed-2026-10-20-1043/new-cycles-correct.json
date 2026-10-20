@@ -1,0 +1,149 @@
+[
+  {
+    "start": "20:41:01.372",
+    "spawn": "sdms_necropolis_of_martyrdom_039",
+    "firstRequestAfterStartResponse": 2378,
+    "firstAction": "l2_302",
+    "win": "20:41:06.999",
+    "startRequestToWin": 6052,
+    "winToResult": 1019,
+    "winToCat": null,
+    "winToNextRequest": 23183,
+    "winToNextResponse": 23563,
+    "actions": [
+      "l2_302",
+      "battle_potion_use",
+      "wild_sweep"
+    ]
+  },
+  {
+    "start": "20:41:30.562",
+    "spawn": "sdms_necropolis_of_martyrdom_023",
+    "firstRequestAfterStartResponse": 3678,
+    "firstAction": "l2_302",
+    "win": "20:41:36.778",
+    "startRequestToWin": 6596,
+    "winToResult": 1001,
+    "winToCat": 4828,
+    "winToNextRequest": 6251,
+    "winToNextResponse": 6632,
+    "actions": [
+      "l2_302",
+      "wild_sweep"
+    ]
+  },
+  {
+    "start": "20:41:43.410",
+    "spawn": "sdms_necropolis_of_martyrdom_084",
+    "firstRequestAfterStartResponse": 1768,
+    "firstAction": "l2_302",
+    "win": "20:41:48.308",
+    "startRequestToWin": 5279,
+    "winToResult": 2147,
+    "winToCat": 5297,
+    "winToNextRequest": 6853,
+    "winToNextResponse": 7303,
+    "actions": [
+      "l2_302",
+      "whirlwind"
+    ]
+  },
+  {
+    "start": "20:41:55.611",
+    "spawn": "sdms_necropolis_of_martyrdom_030",
+    "firstRequestAfterStartResponse": 2106,
+    "firstAction": "l2_302",
+    "win": "20:42:00.406",
+    "startRequestToWin": 5245,
+    "winToResult": 1064,
+    "winToCat": 4995,
+    "winToNextRequest": 6455,
+    "winToNextResponse": 7006,
+    "actions": [
+      "l2_302",
+      "wild_sweep"
+    ]
+  },
+  {
+    "start": "20:42:07.412",
+    "spawn": "sdms_necropolis_of_martyrdom_039",
+    "firstRequestAfterStartResponse": 2196,
+    "firstAction": "l2_302",
+    "win": "20:42:13.402",
+    "startRequestToWin": 6541,
+    "winToResult": 1944,
+    "winToCat": 6283,
+    "winToNextRequest": 7798,
+    "winToNextResponse": 8380,
+    "actions": [
+      "l2_302",
+      "battle_potion_use",
+      "whirlwind"
+    ]
+  },
+  {
+    "start": "20:42:21.782",
+    "spawn": "sdms_necropolis_of_martyrdom_023",
+    "firstRequestAfterStartResponse": 2008,
+    "firstAction": "l2_302",
+    "win": "20:42:26.917",
+    "startRequestToWin": 5717,
+    "winToResult": 1066,
+    "winToCat": 4834,
+    "winToNextRequest": 6251,
+    "winToNextResponse": 6603,
+    "actions": [
+      "l2_302",
+      "wild_sweep"
+    ]
+  },
+  {
+    "start": "20:42:33.520",
+    "spawn": "sdms_necropolis_of_martyrdom_013",
+    "firstRequestAfterStartResponse": 2062,
+    "firstAction": "l2_302",
+    "win": "20:42:39.853",
+    "startRequestToWin": 6685,
+    "winToResult": 2035,
+    "winToCat": 4772,
+    "winToNextRequest": 6232,
+    "winToNextResponse": 6740,
+    "actions": [
+      "l2_302",
+      "battle_potion_use",
+      "whirlwind"
+    ]
+  },
+  {
+    "start": "20:42:46.593",
+    "spawn": "sdms_necropolis_of_martyrdom_103",
+    "firstRequestAfterStartResponse": 1943,
+    "firstAction": "l2_302",
+    "win": "20:42:51.291",
+    "startRequestToWin": 5206,
+    "winToResult": -15,
+    "winToCat": 3568,
+    "winToNextRequest": 4966,
+    "winToNextResponse": 5448,
+    "actions": [
+      "l2_302",
+      "wild_sweep"
+    ]
+  },
+  {
+    "start": "20:42:56.739",
+    "spawn": "sdms_necropolis_of_martyrdom_098",
+    "firstRequestAfterStartResponse": 2040,
+    "firstAction": "l2_302",
+    "win": "20:43:01.973",
+    "startRequestToWin": 5716,
+    "winToResult": 2479,
+    "winToCat": 5175,
+    "winToNextRequest": null,
+    "winToNextResponse": null,
+    "actions": [
+      "l2_302",
+      "whirlwind"
+    ]
+  }
+]

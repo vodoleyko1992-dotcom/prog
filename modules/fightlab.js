@@ -55,11 +55,20 @@ const RE_DOT = /^(.+?)\s*·\s*(.+?)\s+([\d][\d\s  ]*)\s*(?:HP|урона|ур
 const RE_PLAIN = /^([^\[\d+×:][^+×:]*?)\s+([\d][\d\s  ]*)\.?\s*$/;
 const RE_PHYSICAL = /^(Крит!\s*)?(?:Ти|Ты|Вы)\s+(?:завдав|завдали|нан[её]с(?:ли)?)\s*(?:\[[^\]]+\]\s*)?([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i;
 const RE_SKIP = /^(?:Бой начат|Бій розпочато|Победа|Перемога|аден|адена|SP\b|EXP\b|Випав|Выпал|Спойл|Spoil)|×\s*\d/i;
+// Лог20.10 10:43UTC: native skills содержат power/число целей перед фактическим уроном.
+// Берём только последний damage с единицей; ID-префикс должен соответствовать имени, splash идёт отдельной строкой.
+const RE_NATIVE_POWER = /^(?:\u2060(\d{1,6})\u200b)?(Вихор|Whirlwind|Дикий розмах|Wild Sweep)\s*:\s*power\s+\d+(?:\s*;\s*до\s+\d+\s+ціл(?:ей|і|ь)\s*\(головна\s*\+\s*\d+\s+поруч\))?\s*[—–-]\s*(\d+(?:[ \u00a0\u202f]\d{3})*)\s*урон[ау]\.?$/i;
 function parseLog(lines, mob, actor = '') {
   const player = low(actor);
   const m = low(mob).replace(/\s*·.*$/, '');
   const r = { own: 0, ownN: 0, crit: 0, pet: 0, petN: 0, petCrit: 0, petMiss: 0, hits: [], spikes: [], splash: [], extraKills: [], rewards: { exp: 0, sp: 0 }, pot: 0, selfHeal: 0, resist: 0, miss: 0 };
   for (const raw of lines || []) {
+    const source = String(raw || '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').trim(), native = source.match(RE_NATIVE_POWER);
+    if (native) {
+      const id = /^(?:Вихор|Whirlwind)$/i.test(native[2]) ? '36' : '245', damage = num(native[3]);
+      if ((!native[1] || native[1] === id) && Number.isSafeInteger(damage) && damage >= 0) { r.own += damage; r.ownN++; }
+      continue;
+    }
     // 14.10 (живой бой Changed Creation 74): «\u20601220\u200bПолум’я — 5002 урона» раньше давало ноль, особенно на добивании без mobHp.
     const l = String(raw || '').replace(/^\[\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\]\s*/, '').replace(/\u2060\d+\u200b/g, '').replace(/\s+[—–-]\s*([\d][\d\s  ]*)\s*(?:урона|урону|шкоди)\.?$/i, ' $1').trim(); if (!l) continue;
     let x;
