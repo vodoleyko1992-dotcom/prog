@@ -3,7 +3,7 @@
 ## 20.10.2026, 17:08 UTC+10 — Codex — Chrome и Firefox20.36
 
 - Прямая команда «Сборка)» после фиксаFirefox. Включены PR #307/#308 из cc54095; версия/описание/header/README/changelog обновлены, функциональных правок нет. Профиль/настройки сохранены. Оба ZIP64runtime-файла; чистый staging исключает work/, тесты и документацию. Независимый аудит allowlist/refs/каждого SHA PASS.
-- Полный501 Node PASS/0FAIL, syntax49runtime/5version-tests/envcheck31/diff-check PASS; Chrome151 ZIPload20.36/cfg208/0JS и четыре связанных browser-файла PASS. Firefoxlint0errors/0notices/45 прежнихwarnings. Настоящий Firefox153.5.0esr на финальномZIP: dockбезtabs/OFF/обновление/ошибка/ON-владелец/Stop PASS,0POST/переходов. [Доказательства](evidence/build-20.36/validation.json). Android/весь историческийbrowser-runner не запускались; живой аккаунт не открывался. PR в подготовке, публикация после слияния.
+- Полный501 Node PASS/0FAIL, syntax49runtime/5version-tests/envcheck31/diff-check PASS; Chrome151 ZIPload20.36/cfg208/0JS и четыре связанных browser-файла PASS. Firefoxlint0errors/0notices/45 прежнихwarnings. Настоящий Firefox153.5.0esr на финальномZIP: dockбезtabs/OFF/обновление/ошибка/ON-владелец/Stop PASS,0POST/переходов. [Доказательства](evidence/build-20.36/validation.json). Android/весь историческийbrowser-runner не запускались; живой аккаунт не открывался. [PR #309](https://github.com/vodoleyko1992-dotcom/prog/pull/309), публикация после слияния.
 
 
 ## 20.10.2026, 17:01 UTC+10 — Codex — анализ рюкзака в Firefox dock
