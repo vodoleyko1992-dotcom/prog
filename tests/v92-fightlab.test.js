@@ -160,8 +160,8 @@ const start = (fl, bt, spawn = 'dense_1') => fl.onNet('/game/battle/start', { st
   const s = btOf({ pathname: '/game/battle/start' }, { battle: { spawnId: 'dense_1', mobName: 'Banshee', mobLevel: 63, mobHp: 3060, mobMaxHp: 3060, kind: 'normal', log: ['Бой начат'] } });
   assert.equal(s.spawn, 'dense_1'); assert.equal(s.name, 'Banshee'); assert.equal(s.lvl, 63); assert.equal(s.full, true);
   assert.equal(btOf({ pathname: '/character' }, { character: {} }), undefined);
-  // 10.0.27: fetch завершение несёт также retryOf; боевые данные и rid сохранены.
-  assert.match(hook, /bt: btOf\(u, o\), rid(?:,retryOf)? \}\); \}\)/); assert.match(hook, /bt: btOf\(u, o\), error: this\.status/);
+  // 20.10: be — отдельный журнал; прежний bt и привязка rid/retryOf в fetch/XHR сохранены.
+  assert.match(hook, /bt: btOf\(u, o\), be: battleOf\(u, o, req\), rid(?:,retryOf)? \}\); \}\)/); assert.match(hook, /bt: btOf\(u, o\), be: battleOf\(u, o, req\), error: this\.status/);
 }
 
 // 7. проводка: модуль в manifest до content.js, геттеры, память по классам, бой берёт подсказки

@@ -1,0 +1,762 @@
+{
+  "at": "2026-10-20T05:35:48.691979+00:00",
+  "version": "20.35",
+  "candidate": "V3 final, 409 unknown retention + PR305 battle evidence",
+  "casesPass": 17,
+  "casesFail": 0,
+  "cases": [
+    {
+      "kind": "happy",
+      "counts": {
+        "travel": 1,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "two-attempts",
+      "counts": {
+        "travel": 1,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 2
+      },
+      "series": {
+        "status": "done",
+        "attempts": 2,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 8,
+        "gem": 8
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "ready-stock",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "partial-stock",
+      "counts": {
+        "travel": 1,
+        "ls": 9,
+        "gem": 9,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1440000,
+        "spentAdena": 900000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 9,
+            "currency": "adena",
+            "amount": 900000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 9,
+            "currency": "aa",
+            "amount": 1440000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1560000,
+        "adena": 4100000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "gem-only",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "limited-AA",
+      "counts": {
+        "travel": 1,
+        "ls": 3,
+        "gem": 4,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 4,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 480000,
+        "spentAdena": 400000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 4,
+            "currency": "adena",
+            "amount": 400000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 3,
+            "currency": "aa",
+            "amount": 480000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 4,
+      "balances": {
+        "aa": 20000,
+        "adena": 4600000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 3,
+        "gem": 3
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "one-limit",
+      "counts": {
+        "travel": 1,
+        "ls": 1,
+        "gem": 1,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 1,
+        "last": "tempest",
+        "reason": "Достигнут лимит попыток",
+        "spentAA": 160000,
+        "spentAdena": 100000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 1,
+            "currency": "adena",
+            "amount": 100000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 1,
+            "currency": "aa",
+            "amount": 160000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 1,
+      "balances": {
+        "aa": 2840000,
+        "adena": 4900000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "unknown",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "paused",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Закупка не подтверждена; повтор запрещён. Проверьте материалы и оплату",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 1600000,
+        "reservedAdena": 0,
+        "pending": {
+          "kind": "supply",
+          "action": "buy",
+          "material": "ls",
+          "qty": 10,
+          "currency": "aa",
+          "amount": 1600000,
+          "revision": 100
+        },
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "unknown-confirmed",
+      "counts": {
+        "travel": 0,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "applied-409",
+      "counts": {
+        "travel": 0,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "install-applied-409",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "stop-held-quote",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "paused",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Остановлено, страница или настройки изменились; продолжение вручную",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "zero-budget",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "paused",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "AA не хватает ни на одну оставшуюся попытку с учётом резерва и лимита",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "adena-budget",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "paused",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Лимит AA или адены для закупки серии исчерпан",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "reserve",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "paused",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Недостаточно AA или адены с учётом резерва",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 250000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "disabled",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "done",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Закончились Life Stone или Gemstone S; автодокупка выключена",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    },
+    {
+      "kind": "already-goal",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 0
+      },
+      "series": {
+        "status": "done",
+        "attempts": 0,
+        "maxAttempts": 10,
+        "reason": "Нужный эффект уже на оружии: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "jsErrors": 0
+    }
+  ],
+  "battleEvidence": {
+    "status": "PASS",
+    "checks": 2,
+    "boundaries": "Actual MV3 MAIN fetch and XHR, synthetic battle events, all HTTPS mocked"
+  },
+  "packageSmoke": {
+    "at": "2026-10-20T05:34:58.175Z",
+    "source": "/workspace/work/build-20.35/chrome",
+    "browser": "155.0.8059.84",
+    "version": "20.35",
+    "keys": 208,
+    "on": false,
+    "storedOnPresent": false,
+    "buyMaterials": true,
+    "aaBudget": 2000000,
+    "adenaBudget": 2000000,
+    "aaReserve": 0,
+    "errors": [],
+    "requests": [],
+    "boundary": "fresh unpacked Chrome ZIP, real extension/UI, no game opened and every HTTPS route intercepted"
+  },
+  "identity": {
+    "status": "PASS",
+    "runtimeFiles": 64,
+    "sourceBeforeAfterExtractedArchiveEqual": true,
+    "testFilesUnchanged": true,
+    "zip": {
+      "path": "/workspace/prog/builds/l2wap-bot-v20.35.zip",
+      "bytes": 1439813,
+      "sha256": "2898f61778e45deced36a169ffefaff07a27f4c5ce3233f322a9d0d4429d0cfb",
+      "crc": "PASS"
+    }
+  },
+  "boundaries": [
+    "Actual Chrome MV3 extension/background/content/dock/browser storage",
+    "Firefox chrome.tabs-unavailable capability modeled; native Firefox proof handled separately",
+    "All HTTPS mocked locally; zero live game access",
+    "Applied409 cases explicitly model server apply plus same-revision retry; no claim of native Chrome wire retry",
+    "No runtime code edits during validation"
+  ]
+}

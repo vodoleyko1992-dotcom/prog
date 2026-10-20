@@ -150,6 +150,57 @@
       spoil: sp && typeof sp === 'object' ? { ok: !!(sp.ok ?? sp.success), text: String(sp.messageUk || sp.message || '').slice(0, 120) } : sp == null ? undefined : String(sp).slice(0, 60),
       now: n(d.serverNowMs ?? o.serverNowMs) };
   } catch (e) { return undefined; } };
+  // 20.10: доказательства боя для журнала отдельно от краткого bt для автоматики.
+  // Только известные боевые поля: без character целиком, аккаунта, заголовков и произвольных полей ответа.
+  const battleOf = (u, o, req) => { try {
+    if (!/^\/game\/battle(?:\/(?:action|start|hunt-continue|sync|leave))?$/.test(u.pathname)) return undefined;
+    const obj = x => x && typeof x === 'object' && !Array.isArray(x) ? x : {}, r = obj(o), d = obj(r.delta), b = obj(r.battle), c = obj(r.character), v = obj(r.victory), f = obj(r.defeat);
+    const n = x => (typeof x === 'number' || typeof x === 'string' && x.trim() !== '') && Number.isFinite(+x) ? +x : null;
+    const cut = { text: 0, extras: 0, cooldowns: 0 };
+    const s = (x, cap = 120) => {
+      if (typeof x !== 'string' && typeof x !== 'number') return '';
+      const t = String(x).replace(/\b(?:bearer\s+\S+|(?:password|passwd|token|session|cookie|secret|csrf|jwt|api[_-]?key)\s*[:=]\s*[^\s,;]+)/gi, '***');
+      if (t.length > cap) cut.text++; return t.slice(0, cap);
+    };
+    const nums = (x, keys) => Object.fromEntries(keys.filter(k => n(x?.[k]) != null).map(k => [k, n(x[k])]));
+    const log = (a, source, seq) => {
+      if (!Array.isArray(a)) return null;
+      const start = Math.max(0, a.length - 200), lines = []; let chars = 0, shortened = 0, omitted = start;
+      // Хвост важнее начала: общий бюджет 32К знаков плюс 200 строк, до 2048 знаков на строку.
+      for (let i = a.length - 1; i >= start; i--) {
+        const x = a[i], raw = typeof x === 'string' ? x : x?.text ?? x?.message ?? x?.line;
+        const t = s(raw, 2048);
+        if (chars + t.length > 32768) { omitted += i - start + 1; break; }
+        if (typeof raw === 'string' && raw.length > 2048) shortened++;
+        lines.push(t); chars += t.length;
+      }
+      return { source, seq: n(seq), total: a.length, omitted, shortened, lines: lines.reverse() };
+    };
+    const tail = Array.isArray(d.logTail) ? d.logTail : r.logTail, final = Array.isArray(v.fullLog) ? v.fullLog : f.fullLog;
+    const primary = tail?.length ? log(tail, Array.isArray(d.logTail) ? 'delta.logTail' : 'logTail', d.logSeq ?? r.logSeq) : b.log?.length ? log(b.log, 'battle.log', b.logSeq) : log(final, r.victory ? 'victory.fullLog' : 'defeat.fullLog', d.logSeq ?? b.logSeq);
+    const extras = d.whirlwindExtras ?? b.whirlwindExtras ?? r.whirlwindExtras;
+    if (Array.isArray(extras)) cut.extras = Math.max(0, extras.length - 256);
+    const cdKeys = ['skillId','readyAt','readyAtMs','untilMs','remainingSec','remainingMs','level'];
+    const sc = d.skillCooldowns ?? b.skillCooldowns ?? r.skillCooldowns ?? c.skillCooldowns;
+    const entries = sc && typeof sc === 'object' ? Object.entries(sc) : [];
+    cut.cooldowns = Math.max(0, entries.length - 128);
+    const cooldowns = entries.slice(0,128).filter(([k]) => !SECRET.test(k)).map(([k,x]) => ({ key: s(k,80), ...(n(x) != null ? { until: n(x) } : nums(obj(x),cdKeys)) }));
+    const timeKeys = ['serverNowMs','globalCooldownUntilMs','cooldownUntilMs','readyAtMs','skillRemainingMs','globalRemainingMs','mysticSkillCdUntil'];
+    const rewards = x => nums(x, ['exp','sp','adena','rewardExp','rewardSp','rewardAdena']);
+    const result = { schema: 1, request: { action: s(req?.action,80), spawn: s(req?.battleSpawnId ?? req?.spawnId), expectedRevision: n(req?.expectedRevision) },
+      revision: n(r.revision ?? c.revision), seq: n(d.logSeq ?? b.logSeq ?? r.logSeq), spawn: s(b.spawnId ?? v.spawnId ?? f.spawnId), name: s(b.mobName ?? v.mobName ?? f.mobName),
+      prof: s(c.l2Profession,80), slot: n(c.classSlots?.activeSlot), kind: s(b.kind,30), tier: s(b.championTier,20), level: n(b.mobLevel),
+      hp: n(d.characterHp ?? c.hp), hpMax: n(d.characterMaxHp ?? c.maxHp), mp: n(d.characterMp ?? c.mp), mpMax: n(d.characterMaxMp ?? c.maxMp),
+      mobHp: n(d.mobHp ?? b.mobHp ?? (r.victory ? 0 : null)), mobMax: n(d.mobMaxHp ?? b.mobMaxHp),
+      end: !!(d.battleEnded || r.battleEnded || r.victory || r.defeat || d.outcome === 'DEFEAT' || r.outcome === 'DEFEAT' || r.lethalMeta?.battleEnded), win: !!r.victory, lose: !!(r.defeat || d.outcome === 'DEFEAT' || r.outcome === 'DEFEAT'), ok: typeof r.ok === 'boolean' ? r.ok : null,
+      error: s(r.error,160), code: s(r.code,80), message: s(r.messageRu ?? r.messageUk ?? r.message,512),
+      spoil: d.spoilAttemptResult && typeof d.spoilAttemptResult === 'object' ? { ok: !!(d.spoilAttemptResult.ok ?? d.spoilAttemptResult.success), text: s(d.spoilAttemptResult.messageUk ?? d.spoilAttemptResult.message,512) } : null,
+      blockedBy: s(r.blockedBy,80), timing: { ...nums(b,timeKeys), ...nums(d,timeKeys), ...nums(r,timeKeys) }, cooldowns,
+      extras: Array.isArray(extras) ? extras.slice(0,256).map(x => ({ id: s(x?.spawnId ?? x?.id), name: s(x?.name), hp: n(x?.mobHp), max: n(x?.mobMaxHp) })) : null,
+      log: primary, finalLog: primary && primary.source !== 'victory.fullLog' && primary.source !== 'defeat.fullLog' ? log(final, r.victory ? 'victory.fullLog' : 'defeat.fullLog', d.logSeq ?? b.logSeq) : null,
+      reward: { ...rewards(v), ...rewards(v.reward), ...rewards(v.rewards) }, cut };
+    return result;
+  } catch (_) { return undefined; } };
   // 9.2 (лист врагов; живой ответ 11.10 17:39 — Warlock убит игроком Dremia): смерть от игрока (pvpDefeat — в /character, /game/map/sync,
   // ответе боя), игроки на локации (/game/map/sync → around.nearbyHeroes, /game/map/around → nearbyHeroes; redact режет массив до 8 и
   // вымарывает поля с «nick») и кто напал сейчас (pvpIncoming). Кратко: id, ник, уровень, цвет ника, можно ли напасть, удары убийцы из лога
@@ -237,10 +288,10 @@
       if(res.status===409&&!retryOf&&request.detail&&request.mutation===mutationN)
         storyRetry={rid,path:u.pathname,targetId:request.detail.targetId,revision:request.detail.expectedRevision,at:Date.now()};
       const ms = Math.round(performance.now() - t0), ct = res.headers.get('content-type') || '';
-      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, rid,retryOf });
-      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: infoRes(u, o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), rid,retryOf }); })
-        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, rid,retryOf }));   // 8.0.3: конец запроса не теряем
-    }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), rid }));
+      if (!/json|text/i.test(ct)) return post({ url: cleanUrl(u), method, status: res.status, ms, req, ct, be: battleOf(u, null, req), rid,retryOf });
+      res.clone().text().then(t => { const o = raw(t, ct); post({ url: cleanUrl(u), method, status: res.status, ms, req, res: infoRes(u, o), sp: spawns(o), inv: invOf(o), len: t.length, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), be: battleOf(u, o, req), rid,retryOf }); })
+        .catch(() => post({ url: cleanUrl(u), method, status: res.status, ms, req, be: battleOf(u, null, req), rid,retryOf }));   // 8.0.3: конец запроса не теряем
+    }, err => post({ url: cleanUrl(u), method, ms: Math.round(performance.now() - t0), req, error: String(err?.message || err).slice(0, 120), be: battleOf(u, null, req), rid }));
     return p;
   };
 
@@ -255,7 +306,7 @@
       this.addEventListener('loadend', function onEnd() {
         let res = null, len = 0, o = null;
         try { if (!this.responseType || this.responseType === 'text') { len = (this.responseText || '').length; o = raw(this.responseText, this.getResponseHeader('content-type')); } else if (this.responseType === 'json') o = this.response; res = infoRes(u, o); } catch (e) {}
-        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), error: this.status ? undefined : 'нет ответа', rid });
+        post({ url: cleanUrl(u), method: info.method, status: this.status, ms: Math.round(performance.now() - t0), req, res, sp: spawns(o), inv: invOf(o), len, eb: epicsOf(u, o), aug: augOf(o), hero: heroOf(o), pet: petOf(u, o), kc: killsOf(o), dm: dungMobs(u, o), pv: pvOf(o), bt: btOf(u, o), be: battleOf(u, o, req), error: this.status ? undefined : 'нет ответа', rid });
       }, { once: true });                                // v5.6: повторно используемый XHR не копит слушателей
     }
     return XS.apply(this, arguments);

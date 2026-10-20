@@ -1,2 +1,2 @@
-64a0635b7131cd2d3833376dbe87f5a6f1aa77828cf947d098e410aa3dc1d46f  l2wap-bot-v20.35.zip
-ca37eecbead1b16110d3830d287d092d940e88ab5b274ff8e1471fa45eb0a3f6  l2wap-bot-v20.35-firefox.zip
+2898f61778e45deced36a169ffefaff07a27f4c5ce3233f322a9d0d4429d0cfb  l2wap-bot-v20.35.zip
+1e4b4addcb0a3dfcf7840adabddf318e061bb28c53954760f11bafb0b5f1accb  l2wap-bot-v20.35-firefox.zip

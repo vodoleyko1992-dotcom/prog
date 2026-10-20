@@ -1,5 +1,6 @@
 {
-  "checked_utc": "2026-10-20T05:24:20.570006+00:00",
+  "checked_utc": "2026-10-20T05:33:11.908577+00:00",
+  "candidate": "final_v3_after_Firefox409_fix_and_merged_PR305",
   "web_ext_version": "10.8.0",
   "summary": {
     "errors": 0,
@@ -11,5 +12,8 @@
   "network_used": false,
   "extracted_runtime_files_still_match_final_zip": 64,
   "runtime_mismatches": [],
+  "archive_sha256": "1e4b4addcb0a3dfcf7840adabddf318e061bb28c53954760f11bafb0b5f1accb",
+  "lifestone_module_sha256": "5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797",
+  "hook_sha256": "c3a74b9bb5d8ab33146393e8c3abd462428db42cf771b8873bcadcd5a23eac7a",
   "ok": true
 }

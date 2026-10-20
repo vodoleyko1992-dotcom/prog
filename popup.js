@@ -2439,9 +2439,12 @@ const fmtEv = e => [tm(e.t), `[${e.src}]`, e.kind, e.what,
   e.added?.length ? `| +лог: ${e.added.join(' ⏎ ')}` : '',
   e.el ? `| эл: ${e.el}` : '',
   e.data?.q != null ? `| запрос: ${typeof e.data.q === 'string' ? e.data.q : JSON.stringify(e.data.q)}`.slice(0, 600) : '',
-  e.data?.r ? `| ответ: ${e.data.r}` : ''].filter(Boolean).join(' ');
+  e.data?.r ? `| ответ: ${e.data.r}` : '',
+  e.data?.battle ? `| бой: ${JSON.stringify({ rid: e.data.rid, ...e.data.battle })}` : ''].filter(Boolean).join(' ');
+// 20.10: безопасный боевой блок уже ограничен hook; прежние 4000 знаков теряли соседей и исход боя.
+const exportEventLine = e => { const t = fmtEv(e); return e.data?.battle || t.length <= 4000 ? t : t.slice(0,4000) + ' … [событие сокращено до 4000 знаков]'; };
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-// v5.2: выгрузки — не больше 20 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
+// Выгрузки — не больше 6 МБ. Берём события с конца (самые свежие), пока влезают в лимит; старые — отбрасываем
 // и пишем в шапке, сколько не вошло. Файл собирается из частей (Blob), без одной гигантской строки в памяти.
 const EXPORT_MAX = 6 * 1024 * 1024;
 const u8len = t => { let n = t.length; for (let i = 0; i < t.length; i++) { const c = t.charCodeAt(i); if (c > 0x7f) n += c > 0x7ff ? 2 : 1; } return n; };
@@ -2533,6 +2536,7 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
   const { cfg = {}, rt = {} } = await chrome.storage.local.get(['cfg', 'rt']);
   const head = `# L2wap Bot v${chrome.runtime.getManifest().version} — журнал: ${title} · ${rows.length} событий · ${new Date(rows[0][1].t).toLocaleString('ru')} — ${new Date(rows.at(-1)[1].t).toLocaleString('ru')}\n`
     + `# [U] ваш клик · [B] бот · [S] страница/сессия/снимок · [N] сеть (запросы игры к серверу) · [G] сообщения игры · [L] автообучение (изменения игры)\n`
+    + `# | бой: JSON — безопасные поля сервера, rid запроса, цели, HP/MP, КД, исход и награда. log/finalLog: хвост до 200 строк / 32К знаков, строка до 2048; omitted/shortened/cut явно отмечают сокращения.\n`
     + `# Настройки: ${JSON.stringify(cfg)}\n`
     + `# Цель рыбалки: ${JSON.stringify(rt.fishTgt || null)} · активный заброс: ${rt.fishCastActive === true} · обслуживание: ${rt.fishService || '—'}\n`
     + `# Панель: ${(rt.panel || []).map(x => `#${x.idx} ${x.name} [${x.kind}${x.cdKey ? ', cd=' + x.cdKey : ''}${x.img ? ', ' + x.img : ''}]`).join(' · ')}\n`
@@ -2549,11 +2553,11 @@ async function exportLog(rows, title, markNew) {   // 8.0: вернёт true, е
     + `# Энергия: ${JSON.stringify(rt.force || {})} · бесплатные удары: ${Object.keys(rt.forceFree || {}).join(', ') || '—'} · ход ${rt.turnMs || '?'} мс · ДПС: ${JSON.stringify(rt.dps || {})}\n`
     + `# Умения (магистр): ${Object.values(rt.skillDb || {}).map(i => `${i.name}${i.rank ? ' р.' + i.rank : ''}: ${i.passive ? 'пассив' : `MP ${i.mp} · сила ${i.power} · КД ${i.cd}${i.force ? ' · эн. ' + i.force : ''}${i.fists ? ' · кастеты' : ''}`}`).join(' | ') || '—'}\n`
     + `# Глава: ${rt.campaign ? rt.campaign.title + ' · ' + rt.campaign.targets.map(t => `${t.name} ${t.done}/${t.total}${t.ok ? ' ✓' : ''}`).join(' · ') : '—'} · метки лога: ${JSON.stringify(rt.qAlias || {})}\n\n`;
-  const lines = rows.map(([, e]) => fmtEv(e).slice(0, 4000)), sum = logSummary(rows);
+  const lines = rows.map(([, e]) => exportEventLine(e)), sum = logSummary(rows);
   const f = fitTail(lines, EXPORT_MAX - u8len(head) - u8len(sum) - 400);
-  const cutNote = f.cut ? `# ⚠ Лимит файла 20 МБ: ${fmt(f.cut)} самых старых событий не вошли (в файле последние ${fmt(f.keep.length)}, с ${tm(rows[f.cut][1].t)})\n\n` : '';
+  const cutNote = f.cut ? `# ⚠ Лимит файла 6 МБ: ${fmt(f.cut)} самых старых событий не вошли (в файле последние ${fmt(f.keep.length)}, с ${tm(rows[f.cut][1].t)})\n\n` : '';
   download(`l2bot-log-${stamp()}.txt`, [head, cutNote, sum, f.keep.join('\n')]);
-  if (f.cut && typeof toast === 'function') toast(`Журнал урезан до 20 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
+  if (f.cut && typeof toast === 'function') toast(`Журнал урезан до 6 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
   if (markNew) await chrome.storage.local.set({ exLogKey: rows.at(-1)[0] });
   load();
   return true;
@@ -2583,10 +2587,10 @@ $('exJson').onclick = async () => {
   const rows = await readLog({ last: n });
   if (!rows.length) { $('recCount').textContent = 'JSON: событий нет'; return; }
   const { cfg = {} } = await chrome.storage.local.get('cfg');
-  const head = JSON.stringify({ l2botLog: 1, v: chrome.runtime.getManifest().version, t: Date.now(), n: rows.length, cfg: { ...cfg } });
+  const meta = { l2botLog: 1, v: chrome.runtime.getManifest().version, t: Date.now(), n: rows.length, cfg: { ...cfg } }, head = JSON.stringify(meta);
   const f = fitTail(rows.map(([k, e]) => JSON.stringify({ k, ...e })), EXPORT_MAX - u8len(head) - 200);
-  download(`l2bot-log-${stamp()}.jsonl`, [head, '\n', f.keep.join('\n')], 'application/x-ndjson');
-  if (f.cut && typeof toast === 'function') toast(`JSON урезан до 20 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
+  download(`l2bot-log-${stamp()}.jsonl`, [JSON.stringify({ ...meta, kept: f.keep.length, omitted: f.cut }), '\n', f.keep.join('\n')], 'application/x-ndjson');
+  if (f.cut && typeof toast === 'function') toast(`JSON урезан до 6 МБ: последние ${fmt(f.keep.length)} событий`, 'var(--warn)');
 };
 $('exNew').onclick = async () => {
   const { exLogKey = null } = await chrome.storage.local.get('exLogKey');

@@ -1,0 +1,1962 @@
+{
+  "at": "2026-10-20T05:34:15.186Z",
+  "proof": [
+    {
+      "kind": "happy",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 1,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/teleport",
+          "method": "POST",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "travel",
+              "material": "teleport",
+              "qty": 0,
+              "currency": "adena",
+              "amount": 0,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "method": "POST",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 10,
+            "expectedRevision": 101
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 1600000,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "ls",
+              "qty": 10,
+              "currency": "aa",
+              "amount": 1600000,
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 10,
+            "expectedRevision": 102
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1600000,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 1000000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 10,
+              "currency": "adena",
+              "amount": 1000000,
+              "revision": 102
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 10,
+                "currency": "aa",
+                "amount": 1600000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1600000,
+            "spentAdena": 1000000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 103
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 10,
+                "currency": "adena",
+                "amount": 1000000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 10,
+                "currency": "aa",
+                "amount": 1600000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "two-attempts",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 1,
+        "ls": 10,
+        "gem": 10,
+        "augmentation": 2
+      },
+      "series": {
+        "status": "done",
+        "attempts": 2,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1600000,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 10,
+            "currency": "aa",
+            "amount": 1600000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1400000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 8,
+        "gem": 8
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/teleport",
+          "method": "POST",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "travel",
+              "material": "teleport",
+              "qty": 0,
+              "currency": "adena",
+              "amount": 0,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "method": "POST",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 10,
+            "expectedRevision": 101
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 1600000,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "ls",
+              "qty": 10,
+              "currency": "aa",
+              "amount": 1600000,
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 10,
+            "expectedRevision": 102
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1600000,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 1000000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 10,
+              "currency": "adena",
+              "amount": 1000000,
+              "revision": 102
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 10,
+                "currency": "aa",
+                "amount": 1600000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1600000,
+            "spentAdena": 1000000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 103
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 10,
+                "currency": "adena",
+                "amount": 1000000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 10,
+                "currency": "aa",
+                "amount": 1600000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 104,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 1,
+            "maxAttempts": 10,
+            "last": "tempest",
+            "reason": "",
+            "spentAA": 1600000,
+            "spentAdena": 1000000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 104
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 10,
+                "currency": "adena",
+                "amount": 1000000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 10,
+                "currency": "aa",
+                "amount": 1600000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "ready-stock",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 0,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 0,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": []
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 5000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 100,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "partial-stock",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 1,
+        "ls": 9,
+        "gem": 9,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 1440000,
+        "spentAdena": 900000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 9,
+            "currency": "adena",
+            "amount": 900000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 9,
+            "currency": "aa",
+            "amount": 1440000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 1560000,
+        "adena": 4100000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/teleport",
+          "method": "POST",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "travel",
+              "material": "teleport",
+              "qty": 0,
+              "currency": "adena",
+              "amount": 0,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "method": "POST",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 9,
+            "expectedRevision": 101
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 1440000,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "ls",
+              "qty": 9,
+              "currency": "aa",
+              "amount": 1440000,
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 9,
+            "expectedRevision": 102
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1440000,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 900000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 9,
+              "currency": "adena",
+              "amount": 900000,
+              "revision": 102
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 9,
+                "currency": "aa",
+                "amount": 1440000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 1440000,
+            "spentAdena": 900000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 103
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 9,
+                "currency": "adena",
+                "amount": 900000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 9,
+                "currency": "aa",
+                "amount": 1440000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "gem-only",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 0,
+        "ls": 0,
+        "gem": 10,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 10,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 0,
+        "spentAdena": 1000000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 10,
+            "currency": "adena",
+            "amount": 1000000,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 10,
+      "balances": {
+        "aa": 3000000,
+        "adena": 4000000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 9,
+        "gem": 9
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 10,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 1000000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 10,
+              "currency": "adena",
+              "amount": 1000000,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 101,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 10,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 1000000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 10,
+                "currency": "adena",
+                "amount": 1000000,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "limited-AA",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 1,
+        "ls": 3,
+        "gem": 4,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 4,
+        "last": "matk_6",
+        "reason": "Получен выбранный эффект: P.Atk +10% / M.Atk +15%",
+        "spentAA": 480000,
+        "spentAdena": 400000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 4,
+            "currency": "adena",
+            "amount": 400000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 3,
+            "currency": "aa",
+            "amount": 480000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 4,
+      "balances": {
+        "aa": 20000,
+        "adena": 4600000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 3,
+        "gem": 3
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/teleport",
+          "method": "POST",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 4,
+            "reason": "Лимит снижен по доступным AA: 10 → 4",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "travel",
+              "material": "teleport",
+              "qty": 0,
+              "currency": "adena",
+              "amount": 0,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "method": "POST",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 3,
+            "expectedRevision": 101
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 4,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 480000,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "ls",
+              "qty": 3,
+              "currency": "aa",
+              "amount": 480000,
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 4,
+            "expectedRevision": 102
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 4,
+            "reason": "",
+            "spentAA": 480000,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 400000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 4,
+              "currency": "adena",
+              "amount": 400000,
+              "revision": 102
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 3,
+                "currency": "aa",
+                "amount": 480000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 4,
+            "reason": "",
+            "spentAA": 480000,
+            "spentAdena": 400000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 103
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 4,
+                "currency": "adena",
+                "amount": 400000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 3,
+                "currency": "aa",
+                "amount": 480000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "kind": "one-limit",
+      "version": "20.35",
+      "boundary": "Actual Chrome MV3 dock; Firefox tabs-unavailable capability explicitly modeled; every HTTPS response local",
+      "counts": {
+        "travel": 1,
+        "ls": 1,
+        "gem": 1,
+        "augmentation": 1
+      },
+      "series": {
+        "status": "done",
+        "attempts": 1,
+        "maxAttempts": 1,
+        "last": "tempest",
+        "reason": "Достигнут лимит попыток",
+        "spentAA": 160000,
+        "spentAdena": 100000,
+        "reservedAA": 0,
+        "reservedAdena": 0,
+        "pending": null,
+        "supplies": [
+          {
+            "action": "buy",
+            "itemId": 2134,
+            "qty": 1,
+            "currency": "adena",
+            "amount": 100000,
+            "status": "confirmed"
+          },
+          {
+            "action": "buy",
+            "itemId": 10412,
+            "qty": 1,
+            "currency": "aa",
+            "amount": 160000,
+            "status": "confirmed"
+          },
+          {
+            "action": "travel",
+            "itemId": 0,
+            "qty": 0,
+            "currency": "adena",
+            "amount": 0,
+            "status": "confirmed"
+          }
+        ]
+      },
+      "cfgMaxAttempts": 1,
+      "balances": {
+        "aa": 2840000,
+        "adena": 4900000,
+        "col": 7,
+        "fastAden": 11,
+        "ls": 0,
+        "gem": 0
+      },
+      "calls": [
+        {
+          "path": "/augmentation.html",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/catalog-hints",
+          "method": "GET"
+        },
+        {
+          "path": "/game/time",
+          "method": "GET"
+        },
+        {
+          "path": "/game/daily-quests",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/teleport",
+          "method": "POST",
+          "body": {
+            "kind": "merchant",
+            "expectedAdenaCost": 0,
+            "expectedRevision": 100
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 1,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "travel",
+              "material": "teleport",
+              "qty": 0,
+              "currency": "adena",
+              "amount": 0,
+              "revision": 100
+            },
+            "supplies": []
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/mammon/merchant/buy",
+          "method": "POST",
+          "body": {
+            "category": "life_stones",
+            "itemKey": "s",
+            "qty": 1,
+            "expectedRevision": 101
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 1,
+            "reason": "",
+            "spentAA": 0,
+            "spentAdena": 0,
+            "reservedAA": 160000,
+            "reservedAdena": 0,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "ls",
+              "qty": 1,
+              "currency": "aa",
+              "amount": 160000,
+              "revision": 101
+            },
+            "supplies": [
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/game/drops-shop/buy",
+          "method": "POST",
+          "body": {
+            "shopKey": "consumable/resource_gemstone_s",
+            "qty": 1,
+            "expectedRevision": 102
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 1,
+            "reason": "",
+            "spentAA": 160000,
+            "spentAdena": 0,
+            "reservedAA": 0,
+            "reservedAdena": 100000,
+            "pending": {
+              "kind": "supply",
+              "action": "buy",
+              "material": "gem",
+              "qty": 1,
+              "currency": "adena",
+              "amount": 100000,
+              "revision": 102
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 1,
+                "currency": "aa",
+                "amount": 160000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        },
+        {
+          "path": "/character/weapon-augmentation",
+          "method": "POST",
+          "body": {
+            "expectedRevision": 103,
+            "operation": "install"
+          },
+          "before": {
+            "status": "running",
+            "attempts": 0,
+            "maxAttempts": 1,
+            "reason": "",
+            "spentAA": 160000,
+            "spentAdena": 100000,
+            "reservedAA": 0,
+            "reservedAdena": 0,
+            "pending": {
+              "revision": 103
+            },
+            "supplies": [
+              {
+                "action": "buy",
+                "itemId": 2134,
+                "qty": 1,
+                "currency": "adena",
+                "amount": 100000,
+                "status": "confirmed"
+              },
+              {
+                "action": "buy",
+                "itemId": 10412,
+                "qty": 1,
+                "currency": "aa",
+                "amount": 160000,
+                "status": "confirmed"
+              },
+              {
+                "action": "travel",
+                "itemId": 0,
+                "qty": 0,
+                "currency": "adena",
+                "amount": 0,
+                "status": "confirmed"
+              }
+            ]
+          }
+        },
+        {
+          "path": "/character",
+          "method": "GET"
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

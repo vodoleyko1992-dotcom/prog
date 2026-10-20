@@ -9,19 +9,21 @@
   "uiCommit": "6095a3eefd6828f1d49ca5026d60ff5a269b09b5",
   "reviewedSha256": {
     "modules/lifestone.js": "5a9bfc5f8eeff4daf76d2fa1a568bc1b0d4a41682c5313f12ae28f13dfedc797",
-    "content.js": "a97c4b5832596c10a0fe239e5347bbf5617f792eca2f774ab40ecd87a0fae369",
+    "content.js": "5ed46c783299a68274a91df096cdd75d9cf23716488a1bb43d5c277bc92ea31b",
     "background.js": "d13c7dac30caf89ce3fadfb2b8254805d106ae493d0527128bc6de550fe34094",
-    "popup.js": "a8987bbe5e4d53484c09f80e553b41d77e05fde4e277d117dc0f9a384781fc3c",
+    "popup.js": "d0f58a242f980da899b2e69de66ab678ef946c179ca12d01074d293251e06444",
     "popup.html": "ba9addb9010b7b92d2cc66c9a94e15e91ccdb462398654df47bf43506b651431"
   },
   "mergedComparison": {
     "status": "PASS",
     "releaseVersion": "20.35",
+    "mergedDefaultCommit": "e932942683e584938268f831f48d0f4dbe549068",
+    "defaultMerge": "Compared final source to feature merge c6f67c9: content/popup differences are only the default branch network/battle log changes; hook is byte-identical to merged default e932942.",
     "core": "Reviewed base commit plus exactly three rejection-list changes excluding409 and one explanatory comment; final root/core fix hashes match.",
-    "popup": "Both files byte-identical to reviewed UI commit 6095a3eefd6828f1d49ca5026d60ff5a269b09b5.",
-    "content": "Byte-identical to the reviewed root snapshot, including final atomic callback and 20.35 version header; no dispatch guard changes.",
+    "popup": "LS controls, supply status and draft logic retain reviewed UI commit behavior; popup.html is byte-identical and popup.js only adds merged default battle-log export changes.",
+    "content": "LS bridge, DOCK routing, dispatch permits, atomic callback and 20.35 header are unchanged from the reviewed feature merge; only merged default network-log changes are added.",
     "background": "Reviewed root atomic helper and statePatch branch retained; the only additional change is the reviewed UI new-character autoLs defaults reset.",
-    "finalTargetedCheck": "54/54 actual dispatch and atomic callback tests PASS on final merged production files.",
+    "finalTargetedCheck": "54/54 actual dispatch and atomic callback tests PASS again after merging default e932942 into final production files.",
     "scope": "Read-only comparison; no runtime, live account or tests modified by reviewer."
   },
   "firefoxTransport409": {
