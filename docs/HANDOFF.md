@@ -1,5 +1,11 @@
 # Передача дел: L2wap Bot (живой файл, создан 14.10.2026)
 
+## 20.10.2026 — Firefox20.31 по дополнительной просьбе (Codex, [PR #299](https://github.com/vodoleyko1992-dotcom/prog/pull/299))
+
+Прямая команда игрока: «и фаерфокс сборка тоже». На основе уже проверенногоChrome20.31 собран Firefox20.31 через штатныйbuilder в чистомstaging: тот же код подготовкилимитов и профиль, изменены только manifest и инструкцияFirefox. Вmanifest background.scripts(engine-core/background), geckoID иdesktop/Android128+, Chrome-onlyполя исключены. ИсходникиJS и ChromeZIP не менялись; SHAChrome прежний.
+
+Независимый аудит25/25PASS:64runtime-файла, CRC/точныебайты/refs/privacy/профиль. web-ext10.8.0:0ошибок/0notices/45прежнихпредупреждений. [Доказательства](evidence/firefox-20.31/). Полный обязательныйNode-прогон:483PASS/0FAIL. ZIP1430193байт, SHA256 `ba5415a2d2d1e8c9b2316c60d0ec1e1669c6461bddb1fbaa6940ea588b7f41b8`; добавлен в общийSHA256SUMS20.31. НативныйFirefox/Android и игру не открывали. Пакет неподписан; временнаяустановка about:debugging, перед закрытием экспортнастроек. ОбычныйAndroid требуетподписиAMO. PR#299. Загрузкаrelease-asset получила401отuploads.github.com; интерактивнаяавторизация не менялась. Доставка через проверенный[rawZIP](https://raw.githubusercontent.com/vodoleyko1992-dotcom/prog/6afc141d82a0cbc6f63eba0e4015e7552dec9741/builds/l2wap-bot-v20.31-firefox.zip),HTTP200/точныебайты/SHA PASS; ссылкадобавлена к существующемурелизуv20.31. Следующийшаг — установка и контрольныйжурнал.
+
 ## 20.10.2026 — быстрая Chrome20.31 (Codex, [PR #298](https://github.com/vodoleyko1992-dotcom/prog/pull/298))
 
 По команде «Сборка быстрая» подготовлен только основной Chrome ZIP20.31:20.30 + PR#297 (BattleTrance → Frenzy → Zealot → лечение). Firefox не запрошен, остаётся20.30. Версия/пятьпроверок/READMEChrome/changelog/контекст обновлены; функциональные исправления и базовый профиль при сборке не менялись.
