@@ -20,9 +20,14 @@ const BACK  = /^(Назад на карту|Назад на мапу)$/i;
 const QUEST = /[★☆⭐✩✪✫✭✮✯]/;
 
 let cfg = DEF_CFG, rt = DEF_RT, on = false, running = false;
-let deferredMigrations = { cfg: {}, rt: {} }; // execute only after acquiring ownership
+let deferredMigrations = { cfg: {}, rt: {}, petSlim: false }; // execute only after acquiring ownership
 // флаг разовой миграции (значение 1) уже есть в свежем хранилище — значит, хозяин её применил: отложенный пакет устарел
 const migApplied = (patch, ...states) => Object.keys(patch).some(k => patch[k] === 1 && states.some(s => s && s[k]));
+// 20.41 (ревью petCohorts: готовый ужатый словарь в deferredMigrations.rt писался после замка поверх свежих строк хозяина и даже
+// в rt другого героя — migApplied снимает только пакеты с флагом once(), а смена героя отложенное не чистит): вкладка без замка
+// откладывает не данные, а намерение (deferredMigrations.petSlim). Ужатие считается в loopMigrations по свежему rt (loopLease перечитал
+// хранилище) и герою этого rt.
+const petCohortsFat = pc => !!pc && typeof pc === 'object' && Object.entries(pc).some(([k, v]) => k.length > 64 || !!v?.hero || !!v?.snapshotKey);
 // Рейдовый бой в обычном фарме отключён; старый сохранённый rbBetween не оживляет его.
 const rbEff = c => c.enchantMode !== true && !!c.rbHuntMode;
 const withRb = c => L2EngineCore.taskConfig({ ...L2EngineCore.rawTaskConfig(c), rbMode: rbEff(c) }, () => rt);
@@ -3029,6 +3034,13 @@ async function loopMigrations() {
     const patch = deferredMigrations.rt; deferredMigrations.rt = {};
     const result = await setRt(patch);
     if (!result?.ok) deferredMigrations.rt = { ...patch, ...deferredMigrations.rt };
+  }
+  // 20.41 (ревью petCohorts): отложенное при загрузке ужатие — по свежему rt и его герою (до switchChar, как и пакет выше). Хозяин уже
+  // ужал или у героя этого rt старых строк нет — писать нечего; запись не прошла — намерение остаётся до следующего замка.
+  if (deferredMigrations.petSlim) {
+    deferredMigrations.petSlim = false;
+    const slim = L2V7Modules.warlock?.slimCohorts;
+    if (slim && petCohortsFat(rt.petCohorts) && !(await setRt({ petCohorts: slim(rt.petCohorts) }))?.ok) deferredMigrations.petSlim = true;
   }
   // 8.0.3 (проверка правок по чемпионам): и для настроек — иначе вкладка, ждавшая замок, позже записывала свой старый пакет
   // разовых миграций вслепую: игрок включил «Искать чемпионов», вкладка перехватила управление — и галочка молча выключилась
@@ -6967,6 +6979,12 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
     if (on && !tabOwner) deferredMigrations.cfg = { ...deferredMigrations.cfg, ...cf };
     else setCfg(cf).catch(() => {});
   }
+  // 20.41 (лог 20.10 21:09: память 1,3 МБ, из них ≈1 МБ — 100 полных снимков petCohorts): ужать старые строки сравнения суммонов при каждой
+  // загрузке, пока они есть. Не once(): флаг once() ложится и в общий cfg — другие герои очистки не получили бы. У героя без суммона
+  // (активный Bounty Hunter на нике Warlock) noteBattle не идёт, и без этого старые строки остались бы навсегда. Запись — вместе с rf;
+  // вкладка без замка при включённом боте откладывает только намерение (deferredMigrations.petSlim): словарь считается после замка по свежему rt
+  // (loopMigrations), иначе снимок загрузки затёр бы строки, которые хозяин дописал позже. После очистки следующая загрузка ничего не пишет.
+  { const slim = L2V7Modules.warlock?.slimCohorts; if (slim && petCohortsFat(rt.petCohorts)) { if (on && !tabOwner) deferredMigrations.petSlim = true; else rf.petCohorts = slim(rt.petCohorts); } }
   if (Object.keys(rf).length) {
     if (on && !tabOwner) deferredMigrations.rt = { ...deferredMigrations.rt, ...rf };
     else setRt(rf);
