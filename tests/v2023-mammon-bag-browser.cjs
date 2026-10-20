@@ -52,7 +52,8 @@ const {harness,until,delay}=require('./v1014-core-lifecycle-browser.cjs');
  assert.match(await P.locator('[data-mm-bag-kind="raw"][data-mm-bag-item="1874"]').innerText(),/Ore|руд/i);
  await staysOff();
  await P.setViewportSize({width:360,height:900});
- await P.goto('chrome-extension://'+h.id+'/popup.html?dock=1');
+ // 20.10: dock проверяется настоящим iframe в v2035-mammon-dock-browser; здесь отдельное узкое меню.
+ await P.goto('chrome-extension://'+h.id+'/popup.html');
  await until(()=>P.evaluate(()=>!!document.querySelector('#mmBagAnalyze')?.onclick));
  await h.openTab('mammon');await h.reveal('#mmBagAnalyze');
  assert.equal(await P.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth),false,'таблицы на360px без горизонтальной прокрутки');

@@ -11,7 +11,7 @@ function fixture() {
   const state = { on: false, cfg: { mmGoalItem: 920018, mmGoalLvl: 1 }, rt: {
     char: 'AuditHero', classCur: { prof: 'human_warlock', slot: 0 }, mmEq: { belt: [920018, 0] }, mmEqT: now,
   }, lock: { tab: 99, t: now } };
-  const sent = [], ctx = { Date, Number, JSON, Math, setTimeout, clearTimeout, formChar: 'AuditHero',
+  const sent = [], ctx = { Date, Number, JSON, Math, setTimeout, clearTimeout, formChar: 'AuditHero', DOCKED: false,
     $: id => els[id], fmt: n => String(n), esc: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
     chrome: { storage: { local: { get: async () => state } }, tabs: { sendMessage: async (...args) => { sent.push(args); return { ok: true }; } } },
     activeTab: async () => ({ id: 7 }), load: async () => {},

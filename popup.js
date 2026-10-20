@@ -1522,9 +1522,16 @@ async function analyzeMammonBag() {
     if (rt.char !== expectedChar) throw Error('Персонаж изменился — обновите меню');
     mmBagUi.context = mammonBagContext(rt, { mmGoalItem: goalItem, mmGoalLvl: goalLvl });
     if ((+cfg.mmGoalItem || 0) !== goalItem || (+cfg.mmGoalLvl || 5) !== goalLvl) throw Error('Дождитесь сохранения выбранной цели');
-    const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
-    if (!tab?.id) throw Error('Откройте вкладку игры');
-    const result = await Promise.race([chrome.tabs.sendMessage(tab.id, { cmd: 'mammonBagAnalyze', expectedChar, goalItem, goalLvl }),
+    // 20.10, лог06:56: встроенное меню Firefox не имеет tabs; фон адресует анализ родительской игре.
+    const request = { expectedChar, goalItem, goalLvl };
+    let response;
+    if (DOCKED) response = chrome.runtime.sendMessage({ cmd: 'mammonBagDockAnalyze', ...request });
+    else {
+      const tab = on && Number.isInteger(lock?.tab) && Date.now() - (+lock.t || 0) < 85000 ? { id: lock.tab } : await activeTab();
+      if (!Number.isInteger(tab?.id) || tab.id < 0) throw Error('Откройте вкладку игры');
+      response = chrome.tabs.sendMessage(tab.id, { cmd: 'mammonBagAnalyze', ...request });
+    }
+    const result = await Promise.race([response,
       new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Не получен ответ анализа. Повторите после загрузки вкладки игры.')), 20000); })]);
     if (!result?.ok) throw Error(result?.reason || 'Не удалось прочитать рюкзак');
   } catch (e) { mmBagUi.error = String(e?.message || e); mmBagUi.errorAt = Date.now(); }
