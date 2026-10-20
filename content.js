@@ -3619,7 +3619,8 @@ function serverDown() {
 const gameAuth = () => { try { const t = localStorage.getItem('token'); return t ? { Authorization: 'Bearer ' + t } : {}; } catch (e) { return {}; } };
 // 10.0: свой POST с токеном страницы (клановые задания) — JSON, без переходов
 async function gamePost(path, body, ms = 8000, lsPermit) {
-  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body))) throw new Error('lifestone_session_active');
+  if ((rt.autoLs?.hold || rt.autoLs?.pending) && !(path === '/character/weapon-augmentation' && L2V7Modules.lifestone?.consumePermit(lsPermit, body)
+    || L2V7Modules.lifestone?.consumeSupplyPermit?.(lsPermit, path, body))) throw new Error('lifestone_session_active');
   if (!on || !tabOwner) throw new Error('bot_inactive');   // 10.0.13: прямой POST подчиняется Stop и замку, как fire.
   if (L2V7Modules.pvp?.pending()) throw new Error('pvp_defeat_pending');
   if (L2V7Modules.actions?.canAct?.() === false) throw new Error('action_cancelled');

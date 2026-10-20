@@ -1,5 +1,9 @@
 # Life Stone — аугментация оружия (каталог проверен 18.10.2026)
 
+**20.10.2026 — повторная живая проверка по просьбе игрока:** текущий каталог Life Stone C/B/A/S — keys `c/b/a/s`,70/80/100/160тыс.AA. Бездатный старый `mammon-merchant-shop.json` с general/rare/special/unique не отражает текущие цены. Gemstone C/B/A/S — обычные `consumable/resource_gemstone_*`,3/10/30/100тыс.аден; бесплатные `craft_test_*` дубли исключаются. Freshfixture — `raw/lifestone-shops-20261020.json`.
+
+Native POST Маммона: `/game/mammon/merchant/buy {category:"life_stones",itemKey:"s",qty:1,expectedRevision}`. Вне NPC —400 `mammon_merchant_not_nearby`, расход0. Native телепорт `/game/mammon/teleport {kind:"merchant",expectedRevision,expectedAdenaCost}`; цена из свежего `/game/mammon/merchant.teleport.adenaCost`, по текущемуVIP0. Ответ `{character}`, ревизия+1, worldX/worldY совпадают сNPC, адена не списана. Native GMshop `/game/drops-shop/buy {shopKey:"consumable/resource_gemstone_s",qty:1,expectedRevision}`. На герое куплена ровно одна пара S:160000AA+100000аден, без CoL/FA и без аугментации. ПолныеGET после каждой операции подтвердили+1предмет и точный расход. Магазинные POST не передают expectedUnitPrice, поэтому клиент проверяет свежую цену доPOST и точный результат после; атомарную смену каталога без серверной версии quote гарантировать нельзя.
+
 Источники: новость игры 12.10 (прислал игрок), код страниц игры `augmentation.html` / `augmentation-page.js`, `weapon-augmentation-display.js`, `battle-hotbar.js` (версия `fe1ff486de47`), ответы `GET /character`, `GET /game/mammon/merchant/shop`, `GET /game/ancient-trader/offers`, `GET /game/drops-shop` (12.10 ≈11:35 UTC, только чтение; ничего не куплено и не вставлено). Сырой ответ магазина Маммона — `raw/mammon-merchant-shop-1210.json`, таблица — `data/game-lifestone.json`.
 
 

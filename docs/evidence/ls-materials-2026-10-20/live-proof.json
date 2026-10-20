@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-20T05:12:45.197453+00:00",
+  "authorization": "User explicitly requested login and learning material purchase; minimal one-pair verification",
+  "readOnlyLogin": "Normal browser login200; direct non-browser client403/1010, no captcha bypass",
+  "weapon": {
+    "itemId": 9002284,
+    "enchant": 25,
+    "grade": "S"
+  },
+  "distantBuy": {
+    "status": 400,
+    "error": "mammon_merchant_not_nearby",
+    "spent": 0
+  },
+  "travel": {
+    "status": 200,
+    "error": null,
+    "replyKeys": [],
+    "locationFields": {
+      "x": "number",
+      "y": "number"
+    },
+    "targetMatched": true,
+    "spentAdena": "0",
+    "verified": true
+  },
+  "purchases": [
+    {
+      "kind": "life",
+      "path": "/game/mammon/merchant/buy",
+      "status": 200,
+      "error": null,
+      "replyKeys": [],
+      "itemId": 10412,
+      "increased": true,
+      "spent": 160000,
+      "verified": true
+    },
+    {
+      "kind": "gem",
+      "path": "/game/drops-shop/buy",
+      "status": 200,
+      "error": null,
+      "replyKeys": [],
+      "itemId": 2134,
+      "increased": true,
+      "spent": 100000,
+      "verified": true
+    }
+  ],
+  "totals": {
+    "aa": 160000,
+    "adena": 100000,
+    "teleportAdena": 0,
+    "coinOfLuck": 0,
+    "fastAden": 0,
+    "augmentationAttempts": 0
+  },
+  "accountIdentityStored": false,
+  "credentialsOrSessionStored": false
+}
