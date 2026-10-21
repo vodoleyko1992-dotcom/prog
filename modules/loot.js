@@ -62,7 +62,7 @@ async function massSpoilStep(ctx, act, mob) {
   if (mp && need && mp.cur < need) return false;  // маны мало — обойдёмся обычным Spoil
   const before = env.logLines();
   const r = await act(x.b, `Масс-спойл: ${env.cleanTitle(x.b.title)} (мобов ${near + 1})`);
-  if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
+  if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${ctx.refuseText || env.noticeText() || 'недоступен'} — до конца боя не использую`); return true; }
   if (r === 'cd' || r === 'noforce') return true;
   if (r !== true) return true; // потерянный клик не подтверждает применение
   ctx.massTried = true;
@@ -112,7 +112,7 @@ async function spoilStep(ctx, act, mob) {
   const x = spoilPick(ctx); if (!x) return false;
   const before = env.logLines(); ctx.spoilTry = (ctx.spoilTry || 0) + 1; ctx.block['spoil:' + x.bn] = Date.now() + 700;
   const r = await act(x.b, `Спойл (${ctx.spoilTry}): ${env.cleanTitle(x.b.title)}`);
-  if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${env.noticeText() || 'недоступен'} — до конца боя не использую${/crush/i.test(x.bn) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
+  if (r === 'unavail') { ctx.block['spoil:' + x.bn] = Infinity; env.rec('B', 'спойл', `«${env.cleanTitle(x.b.title)}»: ${ctx.refuseText || env.noticeText() || 'недоступен'} — до конца боя не использую${/crush/i.test(x.bn) ? ' (Spoil Crush — только с дубиной)' : ''}`); return true; }
   if (r === 'cd' || r === 'noforce') { ctx.spoilTry--; return true; }
   // 20.41: клик не ушёл ('lock' — окно занятости игры, 'nomp' — нет MP) — строки итога спойла не будет, 1,5 с не ждём
   if (r === 'lock' || r === 'nomp') { ctx.spoilTry--; if (r === 'nomp') ctx.block['spoil:' + x.bn] = Date.now() + 1500; return true; }   // 1,5 с — как NOMP_MS боя

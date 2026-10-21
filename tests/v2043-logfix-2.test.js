@@ -50,7 +50,7 @@ function actFixture(receipt, toast = NOT_ALLOWED) {
   const box = { console: { info: () => {} }, Date: { now: () => now }, Math, Map, String, env, ctx: { pet: null, block: {} }, LOCK_A: [60, 500, 120], LOCK_B: [30, 200, 50], NOMP_MS: 1500,
     lostUntil: new Map(), mpUntil: new Map(), pressAt: new Map(), victory: () => false, defeat: () => false, affordable: () => true, healSlot: () => false,
     noticeText: () => toast, uiReady: () => ready, mobHp: () => ({ cur: 1000 }), rememberCd: async () => {}, slotsBy: () => [], drainBackoff: () => {} };
-  vm.runInNewContext(actSource + '\nthis.act=act;this.refuse=()=>refuseText;', box);
+  vm.runInNewContext(actSource + '\nthis.act=act;this.refuse=()=>ctx.refuseText;', box);
   return { act: () => box.act({ title: 'Wild Sweep', mp: 30 }, 'AoE'), fired, pauses, now: () => now, refuse: () => box.refuse() };
 }
 test('22:07:37: второй отказ подряд с тем же тостом — сразу «недоступно» по тексту сервера, без паузы реакции', async () => {
@@ -183,4 +183,78 @@ test('23:07:57: Full Plate Shield (вид «—») — не оружие: ни �
   assert.deepEqual([...bag.map(w => w.id)], [2503], 'в сумке оружия — только булава');
   assert.equal(E.weaponRescanWhy({ 2497: 1 }, 42), '', 'щит в сумке — не повод перечитывать');
   assert.match(E.weaponRescanWhy({ 2503: 1, 2497: 1 }, 42), /новое оружие в сумке: Yaksa Mace$/, 'настоящее новое оружие — повод, без щита в списке');
+});
+
+// ── 6. ревью logfix-2 ──
+// 6.1: запись rt.weapons «надето» устарела (смена без POST, который видит бот) — навыки настоящего оружия не прячутся.
+// Живая правая рука — rt.weaponAug.w из GET /character игры (hook aug, eq.l1); верим ей, только если она не старше записи
+function weaponLiveFixture(aug, wt = 'дубина', order = 'Whirlwind, Hammer Crush') {
+  const f = combatFixture({ wt }); f.add('Whirlwind', 36); f.add('Hammer Crush', 260); f.env.cfg.nPower = order;
+  if (aug) f.env.rt.weaponAug = aug; return f;    // запись: id 2503 (Yaksa Mace) от weaponsT 5
+}
+test('ревью: в записи дубина, в руке (GET /character) пика новее записи — Whirlwind выбирается, как до 20.43', () => {
+  assert.equal(weaponLiveFixture({ w: 299, e: 0, o: null, t: 10 }).pick(), 'Whirlwind', 'живая пика новее записи');
+  assert.equal(weaponLiveFixture({ w: 0, t: 10 }).pick(), 'Whirlwind', 'в руке ничего — запись неверна, решает сервер');
+  assert.equal(weaponLiveFixture({ w: 2503, t: 10 }).pick(), 'Hammer Crush', 'живое = записи — Whirlwind под дубину не выбирается');
+  assert.equal(weaponLiveFixture({ w: 299, t: 1 }).pick(), 'Hammer Crush', 'живое старше записи (свой POST набора крафтера мимо hook) — верим записи');
+  assert.equal(weaponLiveFixture({ w: 299 }).pick(), 'Hammer Crush', 'отметки t нет (запись lifestone) — верим записи');
+  assert.equal(weaponLiveFixture(null).pick(), 'Hammer Crush', 'rt.weaponAug нет — как в 20.43');
+  // обратная ошибка: в записи пика, в руке дубина — Hammer Crush не прячется
+  const r = weaponLiveFixture({ w: 2503, t: 10 }, 'древковое', 'Hammer Crush, Whirlwind'); r.env.rt.weapons[0].id = 299;
+  assert.equal(r.pick(), 'Hammer Crush', 'живая дубина новее записи «пика»');
+  r.env.rt.weaponAug = { w: 299, t: 10 }; assert.equal(r.pick(), 'Whirlwind', 'живая пика = записи — Hammer Crush под пику не выбирается');
+});
+test('ревью: content.augNote освежает отметку правой руки при расхождении с более новой записью — одна запись', () => {
+  const an = contentSrc.match(/function augNote\(a, path\) \{[\s\S]*?\n\}\n/)[0];
+  let now = 1000; const writes = [];
+  const f = weaponLiveFixture({ w: 299, e: 0, o: null, t: 100 });
+  f.env.rt.weaponsT = 500;                        // запись «надето Yaksa Mace» после того, как пика попала в rt.weaponAug
+  const sb = { rt: f.env.rt, AUG: { info: () => null, text: () => '' }, itemOf: () => null, rec: () => {}, Date: { now: () => now },
+    setRt: p => { writes.push(p); Object.assign(sb.rt, p); } };
+  vm.runInNewContext(an + 'this.augNote = augNote;', sb);
+  assert.equal(f.pick(), 'Hammer Crush', 'до GET игры верим записи');
+  sb.augNote({ w: 299, e: 0, o: null, g: null }, '/character');
+  assert.equal(writes.length, 1); assert.equal(f.env.rt.weaponAug.t, 1000); assert.equal(f.env.rt.weaponAug.w, 299);
+  assert.equal(f.pick(), 'Whirlwind', 'после первого GET /character игры — навыки настоящей пики');
+  now = 2000; sb.augNote({ w: 299, e: 0, o: null, g: null }, '/character'); assert.equal(writes.length, 1, 'повтор того же — без записи');
+  // набор крафтера: свой POST надел булаву (запись новее), GET игры показывает её же — прежняя запись смены, согласие
+  f.env.rt.weaponsT = 3000; now = 3500; sb.augNote({ w: 2503, e: 0, o: null, g: null }, '/character');
+  assert.equal(writes.length, 2); assert.equal(f.pick(), 'Hammer Crush', 'булава в руке и в записи — Whirlwind не выбирается');
+  now = 4000; sb.augNote({ w: 2503, e: 0, o: null, g: null }, '/character'); assert.equal(writes.length, 2, 'согласие — без записи');
+});
+
+// 6.2: «недоступно» в строках баффа, баффа кота, спойла и тоггла — текст отказа сервера (ctx.refuseText из act), не старый тост
+const OLD_TOAST = 'Whirlwind: Скіл на перезарядці.';
+test('ревью: строка «недоступно» спойла (loot) — текст отказа сервера; без него — тост, как раньше', async () => {
+  const solo = { title: 'Spoil' }, recs = [];
+  const env = { cfg: { nSpoil: 'Spoil', nSpoilMass: '' }, rt: { char: 'Hero' }, weaponNow: () => null, roleNow: () => 'spoiler',
+    names: s => String(s || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean), slotsBy: n => n.toLowerCase() === 'spoil' ? [solo] : [],
+    ready: () => true, cleanTitle: s => s, extraMobs: () => [], meMp: () => ({ cur: 900, max: 900 }), skillMp: () => 40, logLines: () => [], newLines: () => [],
+    mobSpoiled: () => false, nameLike: (a, b) => a === b, SPOIL_OK: /^$/, SPOIL_FAIL: /^$/, waitFor: async fn => fn(), noticeText: () => OLD_TOAST,
+    rec: (...a) => recs.push(a.join(' ')), setRt: async () => {} };
+  const box = { console, URLSearchParams, Date, Math }; vm.runInNewContext(read('modules/loot.js'), box);
+  const L = box.L2V7Factories.loot(env);
+  let ctx = { block: {}, name: 'Buffalo' };
+  assert.equal(await L.spoilStep(ctx, async () => { ctx.refuseText = NOT_ALLOWED; return 'unavail'; }, { cur: 3000, max: 3000 }), true);
+  assert.equal(recs.length, 1); assert.ok(recs[0].includes('«Spoil»: ' + NOT_ALLOWED), recs[0]); assert.ok(!recs[0].includes(OLD_TOAST));
+  ctx = { block: {}, name: 'Buffalo' };
+  await L.spoilStep(ctx, async () => { ctx.refuseText = ''; return 'unavail'; }, { cur: 3000, max: 3000 });
+  assert.ok(recs[1].includes('«Spoil»: ' + OLD_TOAST), recs[1]);
+});
+test('ревью: строка «недоступно» тоггла (content.toggleStep) — текст отказа сервера', async () => {
+  const b = { title: 'Vicious Stance' }, recs = [];
+  const box = { cfg: { nToggles: 'vicious stance', toggleMpOff: 10, toggleMpOn: 30 }, rt: {}, names: s => String(s || '').split(',').map(x => x.trim()).filter(Boolean),
+    meMp: () => ({ cur: 400, max: 500 }), slotsBy: () => [b], toggleState: () => false, ilOf: () => null, activeBuffs: () => [], uiReady: () => true, cleanTitle: s => s,
+    noticeText: () => OLD_TOAST, setRt: async () => {}, rec: (...a) => recs.push(a.join(' | ')), Date };
+  vm.runInNewContext(contentSrc.slice(contentSrc.indexOf('async function toggleStep('), contentSrc.indexOf('// ---------- 🩺')) + '\nthis.step=toggleStep;', box);
+  const ctx = { block: {} };
+  assert.equal(await box.step(ctx, {}, async () => { ctx.refuseText = NOT_ALLOWED; return 'unavail'; }), true);
+  assert.equal(ctx.block['tgl:vicious stance'], Infinity); assert.ok(recs[0].includes('Vicious Stance: ' + NOT_ALLOWED), recs[0]);
+});
+test('ревью: бафф, бафф кота и удар пишут ctx.refuseText раньше тоста; act ставит его в каждом ходе', () => {
+  assert.match(combatSrc, /бафф кота «\$\{env\.cleanTitle\(pb\.b\.title\)\}»: \$\{ctx\.refuseText \|\| noticeText\(\) \|\| 'недоступен'\}/);
+  assert.match(combatSrc, /`бафф «\$\{b\.title\}»: \$\{ctx\.refuseText \|\| noticeText\(\) \|\| 'недоступен'\}`/);
+  assert.match(combatSrc, /`«\$\{a\.b\.title\}»: \$\{ctx\.refuseText \|\| noticeText\(\) \|\| 'скилл недоступен'\}`/);
+  assert.equal((combatSrc.match(/ctx\.refuseText=/g) || []).length, 1, 'одно место записи — в act, до ответа «unavail»');
+  assert.equal((combatSrc.replace(/ctx\.refuseText/g, '').match(/\brefuseText\b/g) || []).length, 0, 'локальной refuseText больше нет');
 });

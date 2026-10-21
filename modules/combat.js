@@ -1152,9 +1152,15 @@ function weaponNeed(b) {
   const need = String(w).split(',').map(wtKind);
   return need.length && need.every(Boolean) ? need : null;
 }
+// 20.43 (ревью): запись rt.weapons «надето» устаревает без POST смены, который видит бот (смена руками до старта, вторая вкладка,
+// облачная сессия). Правая рука из GET /character игры (hook aug → rt.weaponAug.w = eq.l1, приходит и после каждого хода) другая
+// и не старше записи — записи не верим: навык не прячем, решает отказ сервера (unavailW), как до 20.43. Старше записи — верим записи:
+// свой POST набора крафтера (gamePost) мимо hook, rt.weaponAug догонит на первом GET игры (content.augNote освежает t при расхождении)
 function weaponBarred(b) {
   const need = weaponNeed(b); if (!need) return false;
-  const wt = wtKind(combatWeapon()?.wt);
+  const w = combatWeapon(), live = env.rt.weaponAug;
+  if (!w || live?.w != null && +live.w !== +w.id && +(live.t || 0) >= +(env.rt.weaponsT || 0)) return false;
+  const wt = wtKind(w.wt);
   return !!wt && !need.includes(wt);
 }
 function refreshWeaponBlocks(ctx) {
@@ -1435,7 +1441,7 @@ async function battle() {
     // 20.41: запись начала тоже не держит первый удар (лог 21:09: ответ start → первый удар 4,9 с); курсор взят сразу при вызове.
     void raidCount(ctx.spawnId||spawnId,true);
   }
-  let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0, refuseText = '';   // 20.43: текст отказа сервера «недоступно» — в журнал
+  let lastHpPot = 0, lastMpPot = 0, lastAct = Date.now(), lastActT = 0;
   const actionContext=()=>JSON.stringify([env.evidenceOwner?.(),env.battleExitContext?.(),env.rt.char||'',env.rt.classCur?.prof,env.rt.classCur?.slot,env.rt.manualKickAt||0,env.routeLocation?.href||env.routeLocation?.search||'']);
   const battleOwner=actionContext(),pulse=ms=>env.combatPulse?env.combatPulse(ms):env.sleep(ms),waitNet=(fn,ms,step)=>env.combatWait?env.combatWait(fn,ms,step):env.waitFor(fn,ms,step);
   let pendingTurn=null; // 20.36: таймаут ожидания не разрешает второй ход до ответа на первый.
@@ -1563,7 +1569,8 @@ async function battle() {
     const code=receipt?.code||'',refuseMsg=String(receipt?.message||''),fightGone=receipt?.error==='battle_none'||receipt?.reason==='not_in_battle';
     const serverAnswer=matched&&!receipt.ok?(receipt.blockedBy==='global'||receipt.blockedBy==='skill'||/cooldown/i.test(code)?'cd':/(?:^|_)(?:mp|mana)(?:_|$)/i.test(code)?'nomp'
       :!fightGone&&(/unavail|weapon|not_learned/i.test(code)||!env.FORCE_NEED?.test(refuseMsg)&&env.UNAVAIL?.test(refuseMsg))?'unavail':null):null;
-    refuseText=serverAnswer==='unavail'?refuseMsg:'';
+    // 20.43: текст отказа сервера «недоступно» — в строки журнала боя, баффов, спойла (loot) и тогглов (content) через ctx
+    ctx.refuseText=serverAnswer==='unavail'?refuseMsg:'';
     const ans = serverAnswer || (dead() || (done === true && netOk) ? null : await waitNet(() => { const n = noticeText(); return n !== before && (env.FORCE_NEED.test(n) ? 'noforce' : env.UNAVAIL.test(n) ? 'unavail' : env.CD_RE.test(n) ? 'cd' : null); }, done ? 250 : lost || refused ? 300 : 600, 50));
     if (lastActT && Date.now() - lastActT < 3000) turnSamples.push(Date.now() - lastActT);   // длина хода — для расчёта ДПС
     lastActT = Date.now();
@@ -2217,7 +2224,7 @@ async function battle() {
         if (r === 'lock') ctx.block['petbuff:' + pb.n] = 0;   // 8.0.3: клик потерян в окне занятости игры — повтор сразу
         if (r === 'nomp') ctx.block['petbuff:' + pb.n] = Date.now() + NOMP_MS;   // 20.12: не хватило MP — пауза слота
         if (r === true) { env.setRt({ petBuffAt: { ...(env.rt.petBuffAt || {}), [pb.n]: Date.now() } })?.catch?.(() => {}); env.rec('B', 'питомец', `бафф кота: ${env.cleanTitle(pb.b.title)}`); }
-        else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
+        else if (r === 'unavail') { ctx.block['petbuff:' + pb.n] = Infinity; env.rec('B', 'питомец', `бафф кота «${env.cleanTitle(pb.b.title)}»: ${ctx.refuseText || noticeText() || 'недоступен'} — до конца боя не трогаю`); }
         return AGAIN;
       }
     }
@@ -2254,7 +2261,7 @@ async function battle() {
       if (r === true) { env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: Date.now() } })?.catch?.(() => {}); ctx.block['buff:' + bn] = 0; }   // 20.41: без ожидания записи
       if (r === 'unavail') {                      // с этим оружием бафф не работает — до конца боя не трогаем
         ctx.block['buff:' + bn] = Infinity;
-        env.rec('B', 'недоступно', `бафф «${b.title}»: ${noticeText() || 'недоступен'}`);
+        env.rec('B', 'недоступно', `бафф «${b.title}»: ${ctx.refuseText || noticeText() || 'недоступен'}`);
         console.info(env.TAG, `бафф ${b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
       } else if (r === 'cd') env.setRt({ buffAt: { ...(env.rt.buffAt || {}), [bn]: 0 } })?.catch?.(() => {});   // на КД — повторим, когда откатится (память КД)
       else if (r === 'lock') ctx.block['buff:' + bn] = 0;          // 8.0.3: клик потерян в окне занятости игры — повтор сразу, а не через 5 с
@@ -2364,7 +2371,7 @@ async function battle() {
         (ctx.weaponBlocked ||= []).push(a.key);
         await env.setRt({ unavailW: { ...(env.rt.unavailW || {}), [a.key]: { context: weaponContext(), t: Date.now() } } });
         if (a.key.startsWith('stun')) ctx.lastStun = 0;
-        env.rec('B', 'недоступно', `«${a.b.title}»: ${refuseText || noticeText() || 'скилл недоступен'}`);
+        env.rec('B', 'недоступно', `«${a.b.title}»: ${ctx.refuseText || noticeText() || 'скилл недоступен'}`);
         console.info(env.TAG, `${a.b.title}: недоступен (неподходящее оружие?) — до конца боя не используется`);
       } else if (done === 'cd') {                 // «на перезарядке» — сразу другим скиллом/атакой (ready() учтёт память КД)
         if (a.key.startsWith('stun')) ctx.lastStun = 0;

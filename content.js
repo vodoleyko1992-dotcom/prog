@@ -663,7 +663,7 @@ async function toggleStep(ctx, me, act) {   // act — нажатие из бо�
       setRt({ toggleOn: { ...(rt.toggleOn || {}), [bn]: want }, toggleOff: { ...(rt.toggleOff || {}), [bn]: !want } })?.catch?.(() => {});
       rec('B', 'тоггл', `${cleanTitle(b.title)}: ${want ? 'включён' : `выключен — MP ${mpP | 0}% < ${off}%, включу при ≥ ${onP}%`}`);
     } else if (r === 'lock') ctx.block['tgl:' + bn] = 0;
-    else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${noticeText() || 'недоступен'} — до конца боя не трогаю`); }
+    else if (r === 'unavail') { ctx.block['tgl:' + bn] = Infinity; rec('B', 'тоггл', `${cleanTitle(b.title)}: ${ctx.refuseText || noticeText() || 'недоступен'} — до конца боя не трогаю`); }
     return true;
   }
   return false;
@@ -4722,7 +4722,10 @@ function critFlush() { if (critOwner !== observeOwner()) { CRIT_ACC = null; crit
 function augNote(a, path) {
   if (!a || typeof a !== 'object' || !AUG) return;
   const p = rt.weaponAug || {}, m = AUG.info(a.o);
-  if (p.w === a.w && p.o === a.o && p.e === a.e && Date.now() - (p.t || 0) < 6 * 3600000) return;
+  // 20.43 (ревью): правая рука не та, что в записи rt.weapons «надето», а отметка t старше записи — освежаем t (одна запись на расхождение):
+  // бой (combat.weaponBarred) верит живому оружию только не старше записи и иначе прятал бы навыки настоящего оружия
+  const worn = (rt.weapons || []).filter(w => w.where === 'надето'), recOff = !!rt.weaponsT && worn.length === 1 && +worn[0].id !== +a.w && (+p.t || 0) < +rt.weaponsT;
+  if (!recOff && p.w === a.w && p.o === a.o && p.e === a.e && Date.now() - (p.t || 0) < 6 * 3600000) return;
   const same = p.w === a.w && p.o === a.o && p.e === a.e;
   setRt({ weaponAug: { w: a.w, e: a.e, o: a.o, g: a.g, k: m?.k || (a.o ? '?' : ''), n: m?.n || a.o || '', t: Date.now() } });
   if (same || p.w == null && !a.o) return;            // тот же ЛС (освежили отметку) / первая запись без ЛС — в журнал не пишем
