@@ -14,6 +14,8 @@ const S = 1000, MIN = 60 * S;
 // outcome: что делает сервер на клик телепорта (POST): ok | refuse400 | biz500 | plain500 | lost502 | grew502 | moved502 | movedFree502
 // 20.43 (ревью): applied409 / applied401 — сервер применил телепорт (ревизия +1, адена −цена, герой в цели) и ответил 409/401;
 // refuse409 — не применил и ответил 409; refuse400grew — отказ 400, но ревизия героя выросла по другой причине
+// 20.43 (доводка 21.10): grewSpent502 — 502, ревизия выросла другим действием и адены убыло меньше цены телепорта, герой на месте:
+// ни «оплата прошла», ни «следов перелёта нет» — неоднозначный исход (grew502 теперь доказуем: «не прошёл» двумя сверками)
 function fixture(o = {}) {
   const clock = { t: 1800000000000 };
   class FakeDate extends Date { constructor(...a) { super(...(a.length ? a : [clock.t])); } static now() { return clock.t; } }
@@ -23,7 +25,7 @@ function fixture(o = {}) {
   const srv = { id: 'hero-1', name: 'Hero', revision: 100, adena: 1000000, currentZoneId: 'giran_field', cityId: 'l2dop_giran', inBattle: false, activeDungeonId: null };
   const row = { textContent: '50 000 аден', querySelector: s => s.includes('currency') ? { textContent: 'аден', querySelectorAll: () => [] } : s.includes('price-num') ? { textContent: '50 000' } : null };
   const btn = { closest: () => row, dataset: { baseAdenaCost: '50000', adenaCost: '50000' }, textContent: 'Телепорт 50 000 Adena' };
-  const records = [], pauses = [], session = new Map();
+  const records = [], pauses = [], session = new Map(), store = { on: true, paused: null, stopMeta: null };
   const env = {
     on: true, tabOwner: true, cfg: { shopReserve: 200000 },
     rt: { char: 'Hero', manualKickAt: 5, zoneGo: forum ? { id: target, url: '/forum-farm-resources.html', forum: true, t: clock.t - 1000 } : { id: target, t: clock.t - 1000 },
@@ -31,7 +33,9 @@ function fixture(o = {}) {
     rec: (...a) => records.push(a.join(' | ')), setStatus() {}, heroLvl: () => 40, shown: () => true, isFarmPage: () => forum, $q: () => btn,
     sleep: async () => {}, waitX: async f => f(), rnd: (a) => o.gap ?? a,
     setRt: async p => { writes++; Object.assign(env.rt, p); disk = clone(env.rt); return { ok: true }; },
-    pauseBot: async (why, opt) => { pauses.push({ why, opt }); if (!o.serverDown) env.on = false; },
+    // 20.43 (доводка 21.10, ревью сверки): пауза — как фон botControl: on=false, paused и stopMeta 'content-pause' с причиной в хранилище
+    // (метку «была пауза» navigation ставит только по этой записи, а не по on=false вкладки); сервер лежит — паузы и записи нет
+    pauseBot: async (why, opt) => { pauses.push({ why, opt }); if (!o.serverDown) { env.on = false; store.on = false; store.paused = { t: clock.t, why: String(why).slice(0, 160) }; store.stopMeta = { source: 'content-pause', reason: String(why).slice(0, 240), t: clock.t }; } },
     gameGet: async () => { gets++; o.onGet?.(F, gets); if (o.getFail?.(gets)) return { ok: false, json: async () => ({}) }; return { ok: true, json: async () => ({ character: { ...srv } }) }; },
     fire: () => {
       clicks++;
@@ -45,7 +49,7 @@ function fixture(o = {}) {
       else if (out === 'plain500') { status = 500; res = { message: 'Internal server error' }; }
       else if (out === 'applied409' || out === 'applied401') { apply(); status = out === 'applied409' ? 409 : 401; res = { error: out === 'applied409' ? 'revision_conflict' : 'unauthorized', serverRevision: srv.revision }; }
       else if (out === 'refuse409') { status = 409; res = { error: 'revision_conflict', serverRevision: srv.revision }; }
-      else { status = 502; if (out === 'grew502') srv.revision++; if (out === 'moved502') apply('cruma_alt'); if (out === 'movedFree502') { srv.revision++; srv.currentZoneId = 'cruma_alt'; } }
+      else { status = 502; if (out === 'grew502') srv.revision++; if (out === 'grewSpent502') { srv.revision++; srv.adena -= 10000; } if (out === 'moved502') apply('cruma_alt'); if (out === 'movedFree502') { srv.revision++; srv.currentZoneId = 'cruma_alt'; } }
       const req = forum ? { teleportId: target, expectedRevision: p.revision, expectedAdenaCost: p.cost } : { teleportId: target, expectedRevision: p.revision, expectedAdenaCost: p.cost };
       N.onForumTeleportNet(forum ? '/game/farm-guide/resource-teleport' : '/game/teleport', { method: 'POST', status, nativeNonce: forum ? '' : p.nonce, req, res });
       if (out === 'ok' || out === 'moved502') href = '/map.html';
@@ -53,14 +57,15 @@ function fixture(o = {}) {
   };
   function load() {
     const box = { console, URL, URLSearchParams, Date: FakeDate, location: loc, document: { querySelectorAll: () => [{}], body: { innerText: '' } },
-      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) } };
+      sessionStorage: { getItem: k => session.get(k) ?? null, setItem: (k, v) => session.set(k, String(v)), removeItem: k => session.delete(k) },
+      chrome: { storage: { local: { get: async keys => clone(Object.fromEntries([].concat(keys).filter(k => store[k] !== undefined).map(k => [k, store[k]]))) } } } };   // 20.43: хранилище фона (on/paused/stopMeta)
     vm.runInNewContext(PAY, box); vm.runInNewContext(NAV, box); vm.runInNewContext(ACT, box); return box;
   }
   let box = load(), N = box.L2V7Factories.navigation(env);
   const F = {
     env, srv, clock, records, pauses, session, loc, target, step: () => N.zoneGoStep(), advance: ms => { clock.t += ms; },
     clicks: () => clicks, gets: () => gets, writes: () => writes, disk: () => disk, N: () => N, box: () => box,
-    reload() { env.rt = clone(disk); env.on = true; session.clear(); box = load(); N = box.L2V7Factories.navigation(env); },
+    reload() { env.rt = clone(disk); env.on = true; Object.assign(store, { on: true, paused: null }); session.clear(); box = load(); N = box.L2V7Factories.navigation(env); },
     log: re => records.some(r => re.test(r)),
     tc: () => env.rt.travelCheck,
   };
@@ -123,8 +128,10 @@ test('502, а потом сервер показал героя в цели с �
   closed(f); assert.equal(f.env.rt.zone, f.target); assert.equal(f.clicks(), 1); assert.equal(f.pauses.length, 0);
   assert.ok(f.log(/прибытие подтверждено сервером \(сверка 2\)/));
 });
-test('502 и ревизия выросла, а герой на месте: вывода нет, сверка до 30 мин, затем одна пауза с причиной (fault)', async () => {
-  const f = fixture({ outcome: 'grew502' }); await f.step();
+// 20.43 (доводка 21.10): ревизия выросла, герой на месте и адена та же — теперь вывод «не прошёл» (v2043-fx-travel-verify);
+// без вывода остаётся неоднозначный исход — адены убыло, но меньше цены телепорта (grewSpent502)
+test('502 и ревизия выросла, адены убыло меньше цены, герой на месте: вывода нет, сверка до 30 мин, затем одна пауза с причиной (fault)', async () => {
+  const f = fixture({ outcome: 'grewSpent502' }); await f.step();
   let t = 0; while (f.pauses.length === 0 && t < 40 * MIN) { f.advance(30 * S); t += 30 * S; await f.step(); }
   assert.equal(f.pauses.length, 1); assert.ok(t >= 30 * MIN - 30 * S && t <= 31 * MIN, 'пауза только через 30 мин: ' + t);
   assert.equal(f.pauses[0].opt?.fault, true); assert.match(f.pauses[0].why, /^Телепорт: прибытие не подтверждено: исход перелёта в «Cruma» не удалось сверить за 30 мин \(\d+ сверок\)\. Проверьте положение героя$/);
@@ -139,7 +146,8 @@ test('сервер лежит на 30-й минуте: pauseBot ждал сер�
 });
 test('ревизия выросла, герой в другом месте, адены убыло на цену — перелёт состоялся (id зоны не совпал), повтора нет', async () => {
   const f = fixture({ outcome: 'moved502' }); await f.step();
-  closed(f); assert.equal(f.env.rt.zone, undefined, 'зону определит карта'); assert.equal(f.pauses.length, 0); assert.equal(f.clicks(), 1);
+  // 20.43 (доводка 21.10): прибытие записывается (rt.zone = цель, как forumFinish) — иначе тот же телепорт покупался снова; уточнит карта
+  closed(f); assert.equal(f.env.rt.zone, f.target, 'прибытие записано'); assert.equal(f.pauses.length, 0); assert.equal(f.clicks(), 1);
   assert.ok(f.log(/герой уже в другом месте \(было giran_field, сейчас cruma_alt\) — перелёт состоялся, оплату считаю прошедшей/));
 });
 test('герой в другом месте, но адена не убыла — это не доказательство оплаты: сверка продолжается', async () => {
@@ -287,11 +295,13 @@ test('старая квитанция внутри zoneGo (до этой пра�
   f.advance(30 * S); await f.step();
   assert.equal(f.env.rt.zoneGo, null); assert.ok(f.tc()?.nativeTp); assert.equal(f.tc().check.n, 1); assert.equal(f.clicks(), 1);
 });
+// 20.43 (доводка 21.10): неоднозначный исход (grewSpent502 — grew502 теперь доказуем); Старт игрока — это и новый manualKickAt, и +1 к
+// rt.dailyStart (фон: menuPatch on:true); одна правка меню (только manualKickAt) квитанцию не закрывает — v2043-fx-travel-verify
 test('Старт игрока после паузы «Проверьте положение героя»: одна сверка — квитанция закрыта по его решению, без нового окна 30 мин; платное снова можно', async () => {
-  const f = fixture({ outcome: 'grew502' }); await f.step();
+  const f = fixture({ outcome: 'grewSpent502' }); await f.step();
   let t = 0; while (f.pauses.length === 0 && t < 40 * MIN) { f.advance(30 * S); t += 30 * S; await f.step(); }
   assert.equal(f.pauses.length, 1); assert.equal(f.env.on, false); assert.ok(f.disk().travelCheck.check.gaveUp, 'метка паузы сохранена');
-  f.reload(); f.env.rt.manualKickAt = 1234; f.advance(5 * MIN); await f.step();
+  f.reload(); f.env.rt.manualKickAt = 1234; f.env.rt.dailyStart = (f.env.rt.dailyStart || 0) + 1; f.advance(5 * MIN); await f.step();
   closed(f); assert.equal(f.pauses.length, 1); assert.equal(f.clicks(), 1); assert.equal(f.env.rt.zoneBad, undefined);
   assert.ok(f.log(/после паузы «Проверьте положение героя» игрок нажал Старт — исход перелёта сервер так и не подтвердил \(ревизия 101, до клика 100\); квитанцию закрываю по решению игрока/));
   assert.equal(f.N().travelPending(), false);
@@ -303,7 +313,8 @@ test('Старт после паузы, а герой уже в цели — п�
     let t = 0; await f.step(); while (f.pauses.length === 0 && t < 40 * MIN) { f.advance(30 * S); t += 30 * S; await f.step(); }
     assert.equal(f.pauses.length, 1, kind);
     if (kind === 'arrived') { f.srv.revision++; f.srv.currentZoneId = f.target; }
-    down = false; f.reload(); f.env.rt.manualKickAt = 4321; f.advance(5 * MIN); await f.step();
+    // 20.43 (доводка 21.10): Старт игрока — новый manualKickAt и +1 к rt.dailyStart
+    down = false; f.reload(); f.env.rt.manualKickAt = 4321; f.env.rt.dailyStart = (f.env.rt.dailyStart || 0) + 1; f.advance(5 * MIN); await f.step();
     closed(f); assert.equal(f.clicks(), 1);
     if (kind === 'arrived') assert.equal(f.env.rt.zone, f.target); else assert.ok(f.log(/телепорт не прошёл — ревизия героя \(100\) и адена не изменились \(сверка после Старта игрока\)/));
   }
