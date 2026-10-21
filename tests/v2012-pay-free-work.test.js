@@ -71,9 +71,11 @@ test('fire: рыбалка из сумки (заброс, подсечка, на
 });
 test('сторож прогресса: неизвестная оплата — не «нет прогресса»; платные походы не начинаются',async()=>{
  assert.match(src,/const activeJob = !L2V7Modules\.payments\?\.pending\?\.\(\) && \(/);
- const box={cfg:{},rt:{},L2EngineCore:{selectedTask:()=> 'farm'},L2V7Modules:{payments:{blocked:()=>true},buffs:{townBuffStart:async()=>true}}};
+ // 20.43 (ревью au/breather): + selfHoldMain — основная работа на передышке баффы под себя не покупает
+ const box={cfg:{},rt:{},L2EngineCore:{selectedTask:()=> 'farm'},L2V7Modules:{payments:{blocked:()=>true},buffs:{townBuffStart:async()=>true}},selfHoldMain:()=>false};
  vm.runInNewContext(src.match(/^async function townBuffStart\(.*$/m)[0],box);assert.equal(await box.townBuffStart('баффов нет'),false);
  box.L2V7Modules.payments.blocked=()=>false;assert.equal(await box.townBuffStart('баффов нет'),true);
+ box.selfHoldMain=()=>true;assert.equal(await box.townBuffStart('баффов нет'),false,'передышка основной работы — набор не покупаем');
  assert.match(cut('async function magisterStart(','async function magisterStep'),/payments\?\.blocked\?\.\(\)\) return false/);
  const mf=read('modules/mobfarm.js');assert.match(mf,/if \(env\.rt\.shop && !payHold\)/);assert.match(mf,/if \(!payHold && \(low \|\| \(oreDue/);
 });

@@ -140,7 +140,8 @@ const req = (o = {}) => ({ requestId: 'r1', status: 'OPEN', resourceItemId: 1864
   for (const f of ['modules/raid.js', 'modules/epics.js']) assert.match(read(f), /headers: env\.gameAuth\?\.\(\) \|\| \{\}/, f);
   assert.match(c, /cfg\.mmGoalItem\) \{ const m = L2V7Modules\.mammon\.mmFarmGoal\(\); if \(m\) return m; \}/);
   assert.ok(c.indexOf('L2V7Modules.mammon.mmStep()') > c.indexOf("if (rt.zoneGo && !isBattle())"), 'mammon step after zoneGo (return trip works)');
-  assert.ok(c.indexOf('L2V7Modules.mammon.mmStep()') < c.indexOf("if (autonomyMode() === 'epic' && !isBattle())"));
+  // 20.43 (ревью au/breather): у шага эпиков добавилась проверка передышки (&& !selfHoldMain()) — ищем начало условия
+  assert.ok(c.indexOf("if (autonomyMode() === 'epic' && !isBattle()") > 0 && c.indexOf('L2V7Modules.mammon.mmStep()') < c.indexOf("if (autonomyMode() === 'epic' && !isBattle()"));
   const mf = JSON.parse(read('manifest.json'));
   assert.ok(mf.content_scripts.some(s => s.js.indexOf('modules/mammon.js') >= 0 && s.js.indexOf('modules/mammon.js') < s.js.indexOf('content.js')));
   assert.ok(mf.web_accessible_resources[0].resources.includes('mammon-gear.json'));

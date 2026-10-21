@@ -24,7 +24,8 @@ test('сбой /game/time не перекрывает PvP-восстановле
  // Этот результат передаёт круг следующим шагам mainTick, а не возвращает true из gate.
  vm.runInNewContext(src.slice(src.indexOf('async function mainTick()'),src.indexOf('// Замок вкладки:')),c);
  // 20.43: в mainTick новый шаг loopTravel (сверка квитанции перелёта) — заглушка, как у прочих шагов; проверка прежняя
- for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopRaid','loopActivity'])c[key]=async()=>false;
+ // 20.43 (автономность): новый шаг передышки loopSelfHold — здесь без передышки; 20.43 (ревью au/breather): + ожидание loopSelfHoldWait после служб
+ for(const key of ['loopLease','loopMigrations','loopWatchdog','loopUrgent','loopSelfHold','loopTravel','loopTaskList','loopEnchant','loopPriority','loopMenuJobs','loopTownJobs','loopSelfHoldWait','loopRaid','loopActivity'])c[key]=async()=>false;
  c.loopSideJobs=async()=>{events.push('services');return true};await c.mainTick();assert.deepEqual(events,['pvp','pvp','services']);
 });
 test('без серверного stamp новый фарм закрыт, повтор GET ограничен15с',async()=>{
@@ -35,7 +36,8 @@ test('без серверного stamp новый фарм закрыт, пов
 test('сторож не перезагружает ожидающую дневной API рыбалку, но следит за зависшим сервисом',async()=>{
  const f=fixture(),c=f.c,active=[];c.cfg.autoTasks=['fish'];c.gameGet=async()=>({ok:false});
  assert.equal(await c.dailyWorkReady('fish'),false);
- Object.assign(c,{L2V7Modules:{},fishNow:()=>true,antibotState:()=>null,meHp:()=>null,mobHp:()=>null,progressMonitor:{tick:(_,watch)=>{active.push(watch);return 'ok'}}});
+ // 20.43 (ревью au/breather): сторож спрашивает selfHoldMain (передышки здесь нет)
+ Object.assign(c,{L2V7Modules:{},fishNow:()=>true,antibotState:()=>null,meHp:()=>null,mobHp:()=>null,selfHoldMain:()=>false,LOOP:{holdWaitT:0},progressMonitor:{tick:(_,watch)=>{active.push(watch);return 'ok'}}});
  vm.runInNewContext(src.slice(src.indexOf('async function loopWatchdog()'),src.indexOf('// Повтор ранних веток после долгих шагов')),c);
  await c.loopWatchdog();c.rt.mmJob={t:Date.now()};await c.loopWatchdog();assert.deepEqual(active,[false,true]);
 });

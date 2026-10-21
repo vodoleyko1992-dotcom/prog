@@ -84,9 +84,15 @@ test('F4: четыре перезагрузки за 20 мин, каждая п�
  }
  assert.equal(f.state.on,true);assert.ok(f.box.Date.now()-now<=20*60000,'всё в пределах 20 мин');
 });
-test('F4: три перезагрузки подряд без восстановления — прежний стоп',async()=>{
+// 20.43 (автономность, разбор 21.10): три перезагрузки подряд без восстановления — уже не стоп, а редкая перезагрузка раз в 15 мин;
+// стоп сторожа (stopMeta.source='watchdog') — только когда тишина непрерывно длится 2,5 ч
+test('F4: три перезагрузки подряд без восстановления — редкая перезагрузка, стоп только после 2,5 ч тишины',async()=>{
  const now=Date.UTC(2026,9,17),f=fixture({state:{cfg:{autoTasks:['auto']},wdog:[now-360000,now-420000,now-480000]}});
- await f.tick();assert.equal(f.state.on,false);assert.equal(f.state.stopMeta.source,'watchdog');
+ await f.tick();assert.equal(f.state.on,true);assert.equal(f.reloads.length,0,'последняя перезагрузка 6 мин назад — ждём 15 мин');
+ f.advance(10*60000);f.box.hbMem={tab:1,t:f.box.Date.now()-160000,page:'/map.html'};await f.tick();
+ assert.equal(f.state.on,true);assert.equal(f.reloads.length,1,'редкая перезагрузка');assert.ok(f.state.wdSilent?.n>=1);
+ const g=fixture({state:{cfg:{autoTasks:['auto']},wdog:[now-360000,now-420000,now-480000],wdSilent:{since:now-150*60000,n:12,last:now-360000}}});
+ await g.tick();assert.equal(g.state.on,false);assert.equal(g.state.stopMeta.source,'watchdog');assert.match(g.state.stopMeta.reason,/мин подряд/);
 });
 test('F4: короткий пульс сразу после перезагрузки счётчик не сбрасывает',async()=>{
  const now=Date.UTC(2026,9,17),f=fixture({state:{wdog:[now-60000]},hb:{tab:1,t:now,page:'/map.html'}});

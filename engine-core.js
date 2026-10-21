@@ -190,6 +190,23 @@
     // Уже начатая закупка/дорога запасной задачи завершается до возврата: короткая пауза не обрывает её на полпути.
     return w.until>now||rt.actionOwner||rt.actionPayments?.pending?w:null;
   }
+  // 20.43 (автономность, разбор 21.10): «передышка» вместо стопа. Временный технический сбой (клик по мобу не открыл бой, список мобов
+  // не грузится, нет прогресса 9 мин ×3) раньше выключал бота до утра. Теперь — общий шаг rt.selfHold = {kind, why, at, until, n, task,
+  // mode, kick}: на это время выбранная задача (task) пропускается в selectedTask и идут другие выбранные задачи, а если их нет — бот ждёт
+  // с пульсом, TvT и проверкой капчи и потом продолжает сам. Новый Старт игрока (другой manualKickAt) передышку снимает. Предел — 3 передышки
+  // одного вида за 6 ч (rt.selfHoldLog[kind]): нужна 4-я — полный стоп с причиной (selfHoldPlan → stop).
+  const SELF_HOLD_WINDOW = 6 * 3600000, SELF_HOLD_MAX = 3;
+  function selfHoldActive(rt = {}, now = Date.now()) {
+    const h = rt?.selfHold;
+    if (!h || typeof h !== 'object' || !Number.isFinite(+h.until) || !Number.isFinite(+h.at) || +h.at > now + 60000 || +h.until <= now) return null;
+    return (+h.kick || 0) === (+rt.manualKickAt || 0) ? h : null;
+  }
+  function selfHoldPlan(rt = {}, kind = '', steps = [30], now = Date.now()) {
+    const log = (Array.isArray(rt?.selfHoldLog?.[kind]) ? rt.selfHoldLog[kind] : []).filter(t => Number.isFinite(+t) && now - t < SELF_HOLD_WINDOW && t <= now);
+    if (log.length >= SELF_HOLD_MAX) return { stop: true, n: log.length, log };
+    const list = Array.isArray(steps) && steps.length ? steps : [30], min = +list[Math.min(log.length, list.length - 1)] || 30;
+    return { stop: false, n: log.length + 1, ms: min * 60000, log: [...log, now] };
+  }
   // 20.10: явный запуск тура выбрасывает прежний список живых/мёртвых, а не боевую память и платежи.
   function raidFreshStartPatch(rt = {}, c = {}, now = Date.now()) {
     const raw = rawTaskConfig(c) || {}, list = taskList(c);
@@ -211,8 +228,10 @@
     // Сам pending по-прежнему запрещает повторную оплату; удерживать рейд должен его собственный телепорт.
     const raidPayment = rt.actionPayments?.pending?.kind === 'raid-teleport';
     const freshRaid = rt.rbTourView?.at > (wait?.at || 0) && rt.rbTourView?.ready?.length > 0;
+    const hold = selfHoldActive(rt, now);   // 20.43 (автономность): задача на передышке уступает другим; начатый заброс доводится
     return ['enchant','epic','raid','quests','fish','cat','auto','farm'].find(k => {
       if (!list.includes(k) || dailyBlocked(c,rt,k,now) && !(k === 'fish' && fishBusy)) return false;
+      if (hold?.task === k && k !== 'enchant' && !(k === 'fish' && fishBusy)) return false;
       if (k === 'enchant') return !['done','completed'].includes(rt.enchant?.status);
       if (k === 'raid' && list.includes('fish') && (fishOpen || fishBusy || fishWait) && idleRaid && (!raidPayment || fishWait && rt.actionOwner) && (fishBusy || fishWait && rt.actionOwner || wait.until > now && !freshRaid)) return false;
       if (k === 'fish') return fishOpen || !!idleRaid && fishBusy;
@@ -405,6 +424,6 @@
   const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
     'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
     'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
-  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, SELF_HOLD_WINDOW, SELF_HOLD_MAX, selfHoldActive, selfHoldPlan, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

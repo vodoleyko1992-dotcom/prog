@@ -2090,11 +2090,12 @@ function workspaceState(rt, d, st, now = Date.now()) {
   if (primary === 'tasks') return { state:'waiting', label:'Ожидание', text:last, hint:'Сейчас нет доступной основной задачи. Лимиты и завершённые цели показаны в разделе «Лимиты»; дополнительные задачи остаются разрешены.', tab:'overview' };
   // 17.10: бой стоит дольше 6 с — причина ожидания навыков из журнала показана рядом с задачей (свежая, не старше 2 мин)
   const combatWait = rt.combatWait && now - (+rt.combatWait.t || 0) < 120000 && /^\/?battle|бой/i.test(String(rt.status || '')) ? ' · Бой ждёт: ' + String(rt.combatWait.text || '').slice(0, 160) : '';
-  return { state:'running', label:'Движок активен', text:last, hint:'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
+  const hold = selfHoldView(rt, d, now), holdNote = hold ? `Передышка${hold.key && AUTO_TASK_LABELS[hold.key] ? ` «${AUTO_TASK_LABELS[hold.key]}»` : ''} до ${hold.hm}: ${hold.why}. ` : '';   // 20.43
+  return { state:'running', label:'Движок активен', text:last, hint:holdNote + 'Следующая по приоритету: ' + (AUTO_TASK_LABELS[primary] || AUTO_TASK_LABELS[currentMode(d) === 'rb' ? 'raid' : currentMode(d)] || 'дополнительные задачи') + '. TvT и обслуживание могут её прервать.' + combatWait, tab:TASK_TABS[primary] || 'overview' };
 }
 function taskBoardRows(rt, d, st, now = Date.now()) {
   const selected = selectedAutoTasks(d), primary = Array.isArray(d.autoTasks) && typeof L2EngineCore !== 'undefined' ? L2EngineCore.selectedTask(d, rt, now) : null;
-  const day = L2EngineCore.dailyDay(now,rt);
+  const day = L2EngineCore.dailyDay(now,rt), hold = selfHoldView(rt, d, now);
   return selected.map(key => {
     let label = !st.on ? st.paused ? 'На паузе' : 'Выбрано' : key === primary ? 'Первая по приоритету' : AUTO_MAIN_TASKS.includes(key) ? 'В очереди' : 'Разрешено';
     let state = key === primary && st.on ? 'next' : 'selected', progress = [], percent = null;
@@ -2125,8 +2126,20 @@ function taskBoardRows(rt, d, st, now = Date.now()) {
     }
     // 20.43 (ревью): ход рыбалке отдан на время отсрочки призыва кота (rbFishWait.pet) — тур ждёт кота, а не доступного РБ
     if (key === 'raid' && rt.rbFishWait && rt.rbHunt?.phase === 'wait' && !rt.rbHunt?.id) { label = rt.rbFishWait.pet ? 'Ждёт кота: призыв не подтвердился' : 'Ждёт доступного РБ'; state = 'waiting'; }
+    // 20.43 (автономность): задача на передышке после временного сбоя — «Передышка до HH:MM» и причина
+    if (st.on && hold && hold.key === key) { label = `Передышка до ${hold.hm}`; state = 'waiting'; progress.unshift(hold.text); }
     return { key, name:AUTO_TASK_LABELS[key], tab:TASK_TABS[key], label, state, progress:progress.join(' · '), percent, limits:!!dailyKey };
   });
+}
+// 20.43 (автономность, разбор 21.10): передышка после временного сбоя (rt.selfHold) — в меню видно, какая задача ждёт, до скольки и почему
+// (стоит после taskBoardRows: срезы тестов доски задач берут код от taskBoardRows до сводки дневных мобов)
+function selfHoldView(rt, d, now = Date.now()) {
+  const h = typeof L2EngineCore !== 'undefined' && L2EngineCore.selfHoldActive ? L2EngineCore.selfHoldActive(rt, now) : null;
+  if (!h) return null;
+  const key = h.task || { farm: d?.zoneAuto ? 'auto' : 'farm', campaign: 'quests', raid: 'raid', epic: 'epic', fish: 'fish', cat: 'cat' }[h.mode] || null;
+  const hm = new Date(+h.until).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+  const why = String(h.why || 'сбой').slice(0, 160);
+  return { key, hm, why, text: `передышка до ${hm}: ${why}` };
 }
 // 20.10 (журнал 09:58:23): снятие задачи рыбалки не прячет дневной счётчик и его лимит.
 function dailyFishBoardRow(rt, d, now = Date.now()) {
@@ -2746,7 +2759,7 @@ $('recDom').onclick = async () => {
   } catch (e) { toast('⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com')); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
-const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
+const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'wdSilent', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
 $('memSave').onclick = async () => {
   const all = await chrome.storage.local.get(null);
   const data = Object.fromEntries(Object.entries(all).filter(([k]) => !MEM_SKIP.has(k) && !isLiveKey(k)));   // 20.13 (шаг 7): живой статус — не память

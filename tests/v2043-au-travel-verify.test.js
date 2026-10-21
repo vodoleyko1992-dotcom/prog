@@ -269,7 +269,9 @@ test('ядро: «Задачи бота» и диспетчер не знают 
   const s = read('content.js');
   const list = s.slice(s.indexOf('async function loopTaskList'), s.indexOf('async function loopEnchant'));
   assert.ok(/for \(const key of \[[^\]]*'zoneGo'[^\]]*\]\)/.test(list) && !list.includes('travelCheck'), 'список «Задачи бота» снимает маршруты, не квитанцию');
-  assert.match(s, /await loopUrgent\(\)\s*\|\| await loopTravel\(\) \|\| await loopTaskList\(\)/);
+  // 20.43 (слияние au/travel + au/breather): между срочными и сверкой — loopSelfHold (только снимает истёкшую передышку, круг не держит);
+  // сверка перелёта по-прежнему раньше списка задач и диспетчера
+  assert.match(s, /await loopUrgent\(\) \|\| await loopSelfHold\(\)\s*\|\| await loopTravel\(\) \|\| await loopTaskList\(\)/);
   assert.match(s, /async function loopTravel\(\) \{\s*if \(!L2V7Modules\.navigation\?\.travelPending\?\.\(\) \|\| isBattle\(\) \|\| \(isFishing\(\) && fishState\(\)\)\) return;\s*await L2V7Modules\.navigation\.travelStep\(\); await sleep\(200\); return true;/);
   const jobs = s.slice(s.indexOf('get jobs(){return ()=>['), s.indexOf('const actionLocation='));
   assert.ok(!jobs.includes('travelCheck'), 'квитанция — не маршрут диспетчера');

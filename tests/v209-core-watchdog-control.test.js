@@ -58,15 +58,21 @@ test('одновременные alarm не выполняют два probe и �
  const gate=defer(),f=fixture({probe:gate});const a=f.tick();await tick();const b=f.tick();gate.resolve('up');await Promise.all([a,b]);
  assert.equal(f.probes(),1);assert.deepEqual(f.reloads,[1]);
 });
+// 20.43 (автономность, разбор 21.10): после 3 перезагрузок за 20 мин не-рыбалка больше не выключается — редкая перезагрузка раз в 15 мин
+// (здесь последняя была 6 мин назад — ни перезагрузки, ни стопа); стоп — только после 2,5 ч непрерывной тишины (wdSilent.since).
+// Различие рыбалки и автофарма по выбранным задачам сохранено: рыбалка — /fishing.html раз в 5 мин.
 for(const fish of [true,false])test('сторож использует выбранные задачи вместо старого fishMode: '+fish,async()=>{
  const now=Date.UTC(2026,9,17),f=fixture({state:{cfg:{autoTasks:fish?['fish']:['auto'],fishMode:!fish},wdog:[now-360000,now-420000,now-480000]}});
- await f.tick();assert.equal(f.state.on,fish);
+ await f.tick();assert.equal(f.state.on,true);
  if(fish){assert.deepEqual(f.updates,[[1,{url:'https://l2wap.com/fishing.html'}]]);assert.equal(f.state.wdog.length,4)}
- else {assert.deepEqual(f.updates,[]);assert.equal(f.state.stopMeta.source,'watchdog')}
+ else {assert.deepEqual(f.updates,[]);assert.deepEqual(f.reloads,[]);assert.equal(f.state.stopMeta,undefined)}
 });
 test('лимит/цель рыбалки не возвращают выбранный автофарм в fishing',async()=>{
  const now=Date.UTC(2026,9,17),f=fixture({state:{cfg:{autoTasks:['fish','auto'],fishMode:true},rt:{char:'Hero',manualKickAt:1,fishTgt:{done:true}},wdog:[now-360000,now-420000,now-480000]}});
- await f.tick();assert.equal(f.state.on,false);assert.deepEqual(f.updates,[]);
+ await f.tick();assert.equal(f.state.on,true);assert.deepEqual(f.updates,[]);assert.deepEqual(f.reloads,[]);
+ // 20.43: та же серия, но тишина длится 2,5 ч — стоп сторожа (на рыбалку не уводит)
+ const g=fixture({state:{cfg:{autoTasks:['fish','auto'],fishMode:true},rt:{char:'Hero',manualKickAt:1,fishTgt:{done:true}},wdog:[now-360000,now-420000,now-480000],wdSilent:{since:now-151*60000,n:9,last:now-360000}}});
+ await g.tick();assert.equal(g.state.on,false);assert.deepEqual(g.updates,[]);assert.equal(g.state.stopMeta.source,'watchdog');
 });
 test('старт с задержанным чтением не откатывает более свежий heartbeat',async()=>{
  const f=fixture(),gate=defer(),entered=defer();let first=true;

@@ -67,11 +67,15 @@ test('пауза от самого бота (content-pause): уведомлен�
   assert.equal(f.badges.at(-1), ''); assert.equal(f.notes.length, 1);
 });
 
-test('стоп сторожа фона (3 перезагрузки не помогли): уведомление «сторож: …» и «!»', async () => {
-  const now = Date.now(), f = load(running({ hbBg: { tab: 1, t: now - 180000, page: '/map.html' }, wdog: [now - 360000, now - 420000, now - 480000] })); await tick();
+// 20.43 (автономность, разбор 21.10): 3 перезагрузки за 20 мин больше не стоп (дальше раз в 15 мин); стоп сторожа — после 2,5 ч тишины,
+// уведомление и «!» на этом пути прежние
+test('стоп сторожа фона (2,5 ч тишины, перезагрузки не помогли): уведомление «сторож: …» и «!»; 3 перезагрузки — ещё не стоп', async () => {
+  const now = Date.now(), e = load(running({ hbBg: { tab: 1, t: now - 180000, page: '/map.html' }, wdog: [now - 360000, now - 420000, now - 480000] })); await tick();
+  await e.alarm(); await tick(); assert.equal(e.state.on, true); assert.equal(e.notes.length, 0); assert.notEqual(e.badges.at(-1), '!');
+  const f = load(running({ hbBg: { tab: 1, t: now - 180000, page: '/map.html' }, wdog: [now - 360000, now - 420000, now - 480000], wdSilent: { since: now - 155 * 60000, n: 11, last: now - 360000 } })); await tick();
   await f.alarm(); await tick();
   assert.equal(f.state.on, false); assert.equal(f.state.stopMeta.source, 'watchdog');
-  assert.equal(f.badges.at(-1), '!'); assert.equal(f.notes.length, 1); assert.match(f.notes[0].message, /сторож: бот молчит \d+ с, 3 перезагрузки за 20 мин не помогли/);
+  assert.equal(f.badges.at(-1), '!'); assert.equal(f.notes.length, 1); assert.match(f.notes[0].message, /сторож: бот молчит 15\d мин подряд \(с \d\d:\d\d\), перезагрузки вкладки \(11\) не помогли/);
 });
 
 for (const via of ['popup-stop', 'popup-pause', 'menuPatch', 'hotkey', 'esc']) test(`ручная остановка (${via}) — без уведомления и без «!»`, async () => {
@@ -163,8 +167,11 @@ test('pauseBot: сбой при живом сервере — пауза как 
 });
 test('паузы из-за сбоя помечены fault (карта, Ashen, телепорт); «один РБ» и визит к Маммону — нет', () => {
   const raid = read('modules/raid.js'), epics = read('modules/epics.js'), nav = read('modules/navigation.js'), mammon = read('modules/mammon.js');
-  for (const re of [/выход из Ashen Bastion не подтверждён за минуту; проверь город и продолжи',\{fault:true\}\)/, /не найдена штатная кнопка выхода из Ashen Bastion в город',\{fault:true\}\)/,
-    /сервер не подтвердил выход из Ashen Bastion; проверь город и продолжи',\{fault:true\}\)/, /карта не загрузилась после обновления; цель \$\{H\.name\} сохранена\. Проверь игру и продолжи`, \{ fault: true \}\)/]) assert.match(raid, re);
+  // 20.43 (автономность, разбор 21.10): бесплатный выход из Ashen не ставит паузу через минуту и без кнопки — бот сам повторяет выход раз в
+  // минуту и обновляет страницу; единственная оставшаяся пауза выхода (60 промахов подряд) и запасная пауза карты (старое ядро без selfHold) — fault
+  for (const re of [/выход из Ashen Bastion не подтверждён \$\{ASHEN_MISS_MAX\} раз подряд \(≈1 ч\); проверь город и продолжи`,\{fault:true\}\)/,
+    /карта не загрузилась после обновления; цель \$\{H\.name\} сохранена\. Проверь игру и продолжи`, \{ fault: true \}\)/]) assert.match(raid, re);
+  for (const re of [/выход из Ashen Bastion не подтверждён за минуту; проверь город/, /не найдена штатная кнопка выхода из Ashen Bastion в город'/, /сервер не подтвердил выход из Ashen Bastion; проверь город/]) assert.doesNotMatch(raid, re);
   assert.match(epics, /Эпики: карта не загрузилась после обновления; цель \$\{e\.nm\} сохранена\. Проверь игру и продолжи`, \{ fault: true \}\)/);
   assert.match(nav, /pauseBot\?\.\(`Телепорт: \$\{why\}\. Проверьте положение героя`, \{ fault: true \}\)/); assert.match(nav, /pauseBot\(`Возврат в Ashen Bastion: \$\{why\}`, \{ fault: true \}\)/);
   assert.doesNotMatch(raid.match(/return env\.pauseBot\(`🎯 По одному РБ[^\n]*/)[0], /fault/); assert.doesNotMatch(mammon.match(/await env\.pauseBot\(`пришёл к [^\n]*/)[0], /fault/);

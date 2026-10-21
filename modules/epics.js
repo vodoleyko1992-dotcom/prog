@@ -525,6 +525,10 @@ function epicWhyNone() {
   return epicWant().map(k => `${epicOf(k).nm}: ${(epicPickWhy(k) || '?').slice(0, 140)}`).join(' · ');
 }
 
+const EPIC_MAP_WAITS = [30000, 60000, 120000];   // 20.43 (автономность): ожидание карты после прилёта перед 1-й, 2-й и 3-й перезагрузкой
+// 20.43 (ревью au/breather): метка «карта не подтверждена» (rt.mapBad) — бесплатная проверка карты (content.mapGate) до подготовки и дороги;
+// не загрузилась — передышка режима эпиков (вид epicMap), без логова и телепорта
+const epicMapGate = active => !!env.rt.mapBad?.at && typeof env.mapGate === 'function' && env.mapGate('epicMap', 'Эпики', active);
 async function epicGiveUp(k, min, why) {
   const e = epicOf(k);
   await epicDbSet(k, { skipT: Date.now() + min * 60000, why });
@@ -753,6 +757,9 @@ async function epicStep() {
   }
   // ---- подготовка: банки → бафф → хил (полные HP/MP) ----
   if (E.step === 'prep') {
+    // 20.43 (ревью au/breather): карта не подтверждена после сбоя — ни подготовки (банки, платный бафф), ни дороги до бесплатной проверки
+    if (await epicMapGate(active)) return;
+    if (!active()) return;
     if (await env.rbShopFirst(e.nm)) return;
     if (!active()) return;
     // 8.0.3 (ревью): платный набор разрешён только по свежему (≤3 мин) ответу сервера «жив» — спросим заранее (GET, бесплатно)
@@ -779,6 +786,8 @@ async function epicStep() {
   }
   // ---- дорога: (1) он на этой карте → (2) логово за адену → (3) «Телепорт» за Coin of Luck через epicPayGate ----
   if (E.step === 'go') {
+    if (await epicMapGate(active)) return;           // 20.43 (ревью au/breather): платная дорога — только после подтверждённой карты
+    if (!active()) return;
     if (env.isMap()) {
       const here = await env.waitX(() => epicPins().find(x => x.k === E.k), 3000, 300);
       if (!active()) return;
@@ -874,16 +883,30 @@ async function epicStep() {
       const since = E.mapLoadT || Date.now();
       if (!E.mapLoadT) await epicSet({ mapLoadT: since });
       if (!active()) return;
-      if (Date.now() - since < 30000) { await env.sleep(1500); return; }
-      if (!E.mapLoadReloads) {
-        await epicSet({ mapLoadT: Date.now(), mapLoadReloads: 1 });
-        if (!active()) return; location.reload(); await env.sleep(3000); return;
+      // 20.43 (автономность, разбор 21.10): одна перезагрузка и пауза до утра → 3 перезагрузки с растущей паузой (30 → 60 → 120 с), затем
+      // этот эпик откладывается на 30 мин, режим идёт дальше. Второй платный заход в это появление по-прежнему не разрешён (paidN, лимит
+      // Coin of Luck), неизвестный телепорт — отдельная сверка. Стоп с причиной — 4-я такая отсрочка за 6 ч (content.selfHoldStart)
+      const reloads = +E.mapLoadReloads || 0;
+      if (Date.now() - since < EPIC_MAP_WAITS[Math.min(reloads, EPIC_MAP_WAITS.length - 1)]) { env.setStatus?.(`Эпики: карта ещё не загружена — жду ${e.nm}${reloads ? ` (обновлений ${reloads}/3)` : ''}`); await env.sleep(1500); return; }
+      if (reloads < 3) {
+        await epicSet({ mapLoadT: Date.now(), mapLoadReloads: reloads + 1 });
+        if (!active()) return;
+        if (!reloads) env.rec('B', 'эпики', `${e.nm}: карта не загрузилась — обновляю страницу (до 3 раз с растущей паузой)`);
+        location.reload(); await env.sleep(3000); return;
       }
       await epicSet({ mapLoadT: 0, mapLoadReloads: 0 });
       if (!active()) return;
-      return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      if (!env.selfHold) return env.pauseBot(`Эпики: карта не загрузилась после обновления; цель ${e.nm} сохранена. Проверь игру и продолжи`, { fault: true });   // 20.43: сервер лежит — ждём его
+      const held = await env.selfHold('epicMap', `Эпики: карта не загрузилась после 3 обновлений (цель ${e.nm})`, { noWait: true });
+      if (held !== 'defer' || !active()) return;
+      // 20.43 (ревью au/breather): метка «карта не подтверждена» (rt.mapBad) — следующая платная дорога (логово/телепорт) только после
+      // бесплатной проверки карты (content.mapGate), иначе при общем сбое карты режим платил бы за каждого следующего эпика
+      await env.setRt({ mapBad: { at: Date.now(), why: `эпики, ${e.nm}`, loadAt: 0 } });
+      if (!active()) return;
+      return epicGiveUp(E.k, 30, 'карта не загрузилась после 3 обновлений');
     }
     if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
+    if (env.rt.mapBad) { await env.setRt({ mapBad: null }); if (!active()) return; }   // 20.43 (ревью): карта загрузилась — метка снята
     const r = await env.waitX(() => epicPins().find(x => x.k === E.k), 5000, 300);
     if (!active()) return;
     if (!r) {
