@@ -133,6 +133,14 @@ function dailyServerChange(state,E,now) {
   dailyQuota.server=Math.max(dailyQuota.server||0,mobs-local,0);dailyQuota.fish=Math.max(dailyQuota.fish||0,fish);
   const clean={};for(const [id,r] of Object.entries(tasks))if(r&&typeof r==='object'&&!['__proto__','prototype','constructor'].includes(id))clean[id]={have:+r.have||0,need:+r.need||0,score:+r.score||0,done:!!r.done,claimed:!!r.claimed,place:r.place??null};
   const daily={day:String(E.daily.dayKey),t:now,tasks:clean},dailyServerCheck={day,char:rt.char||'',start:rt.dailyStart||0,t:now};
+  // 20.43: цель рыбалки — на игровые сутки. После сброса сервера (новый dayKey) — новая цель: диапазон «от–до» выбирает новое
+  // число, счёт с нуля. Цель без дня (до 20.43): выполненная — обновляется, незавершённая — получает текущий день без сброса счёта.
+  const T=rt.fishTgt;
+  if(T&&typeof T==='object'&&T.day!==day) {
+    if(T.day||T.done){const ranged=Number.isSafeInteger(T.min)&&Number.isSafeInteger(T.max)&&T.min>=1&&T.max>=T.min;
+      next.fishTgt={type:T.type,n:ranged?quotaRandom(T.min,T.max):T.n,...(ranged?{min:T.min,max:T.max}:{}),got:0,t:now,day,renewFrom:T.day||null};}
+    else next.fishTgt={...T,day};
+  }
   return {ok:true,rt:{...next,dailyQuota,daily,dailyServerCheck,dailyFishMark:{t0:+rt.fish?.t0||0,caught:+rt.fish?.caught||0},_src:'daily-server'}};
 }
 function dailyFishChange(state,E,now) {
@@ -305,7 +313,7 @@ async function statePatch(m, sender) {
     }
     if(m.dailyServer) {
       const r=dailyServerChange(state,m.dailyServer,now);if(!r.ok)return r;
-      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock};
+      await chrome.storage.local.set({rt:r.rt});return {ok:true,dailyQuota:r.rt.dailyQuota,daily:r.rt.daily,dailyServerCheck:r.rt.dailyServerCheck,dailyFishMark:r.rt.dailyFishMark,serverClock:r.rt.serverClock,fishTgt:r.rt.fishTgt??null};
     }
     if(m.resolveLimitRanges) {
       if(!state.on || (state.rt?.manualKickAt||0)!==(m.rangeKick||0))return {ok:false,reason:'ranges_interrupted'};
@@ -332,9 +340,12 @@ async function statePatch(m, sender) {
       if (!state.on || (state.rt?.manualKickAt || 0) !== (E.kick || 0)) return { ok: false, reason: 'fish_goal_interrupted' };
       if (!T || !['type','n','t'].every(k => T[k] === E[k])) return { ok: false, reason: 'fish_goal_changed' };
       if (!T.done && !(T.n > 0 && T.got >= T.n)) return { ok: false, reason: 'fish_goal_incomplete' };
-      const fishTgt = T.done ? T : { ...T, done: true, doneT: now };
+      // 20.43 (John 21.10: «смотрел ежедневно … сброс произошёл и наша цель»): цель рыбалки — на игровые сутки. В режиме задач
+      // рыбалка остаётся выбранной и ждёт сброса (selectedTask её пропускает), новые сутки обновляют цель в dailyServerChange.
+      // Старый плоский режим (fishMode) по-прежнему выключается.
+      const day = globalThis.L2EngineCore?.dailyDay?.(now, state.rt || {}) || null;
+      const fishTgt = T.done ? { ...T, day: T.day || day } : { ...T, done: true, doneT: now, day: T.day || day };
       const cfg = { ...(state.cfg || {}), fishMode: false };
-      if (Array.isArray(cfg.autoTasks)) cfg.autoTasks = cfg.autoTasks.filter(k => k !== 'fish');
       await chrome.storage.local.set({ rt: { ...state.rt, fishTgt, fishService: null, _src: String(m.src || '').slice(0, 60) }, cfg });
       return { ok: true, fishTgt, cfg };
     }
@@ -427,14 +438,14 @@ async function menuPatch(m, sender) {
       change.rt = { ...next, ...L2EngineCore.raidFreshStartPatch(next, nextCfg), _src:'menu' };
     }
     // 20.43 (лог 21.10 17:13): выполненная цель рыбалки снимает рыбалку с задач; новое явное включение рыбалки — новая работа,
-    // а не продолжение старой цели (так же «Старт» с выбранной рыбалкой). Раньше «✅ Выполнено 1679 рыб» от 18.10 оставалось, и выбранная рыбалка молча не начиналась.
+    // а не продолжение старой цели (так же «Старт» с выбранной рыбалкой, если цель прошлых суток). Раньше «✅ Выполнено 1679 рыб» от 18.10 оставалось, и выбранная рыбалка молча не начиналась.
     const fishOn = c => Array.isArray(c?.autoTasks) ? c.autoTasks.includes('fish') : !!c?.fishMode;
-    if (state.rt?.fishTgt?.done && !Object.hasOwn(rtPatch, 'fishTgt') && fishOn(nextCfg) && (!fishOn(state.cfg) || m.on === true))
+    if (state.rt?.fishTgt?.done && !Object.hasOwn(rtPatch, 'fishTgt') && fishOn(nextCfg) && (!fishOn(state.cfg) || m.on === true && state.rt.fishTgt.day !== L2EngineCore.dailyDay(Date.now(), state.rt)))
       change.rt = { ...state.rt, ...change.rt, fishTgt: null, _src: 'menu' };
     if(m.setFishGoal) {
       const E=m.setFishGoal;
       if(!m.expectedChar || !['fish','proof'].includes(E.type) || !Number.isSafeInteger(E.min) || E.min<1 || !Number.isSafeInteger(E.max) || E.max<E.min)return {ok:false,reason:'Цель: нужен положительный диапазон «от … до …»'};
-      change.rt={...state.rt,...change.rt,fishTgt:{type:E.type,n:quotaRandom(E.min,E.max),min:E.min,max:E.max,got:0,t:Date.now()},_src:'menu'};
+      change.rt={...state.rt,...change.rt,fishTgt:{type:E.type,n:quotaRandom(E.min,E.max),min:E.min,max:E.max,got:0,t:Date.now(),day:L2EngineCore.dailyDay(Date.now(),state.rt||{})},_src:'menu'};
     }
     if(m.on!==false && (m.limitRangeEdit || Object.keys(state.cfg?.limitRanges||{}).length || Object.hasOwn(cfgPatch,'limitRanges'))) {
       if(m.limitRangeEdit && !m.expectedChar)return {ok:false,reason:'Персонаж изменился — обновите меню'};

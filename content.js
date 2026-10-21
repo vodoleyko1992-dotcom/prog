@@ -520,7 +520,8 @@ async function dailyServerSync(afterBattle=false) {
     const saved=await ipc({cmd:'statePatch',patch:{},dailyServer:{clock:raw,clockAt,daily,kick,start},expectedChar:char,epoch,src:TAB_ID});
     if(!active())return false;
     if(!saved?.ok)throw Error(saved?.reason||'не удалось сохранить проверку');
-    rt={...rt,dailyQuota:saved.dailyQuota,daily:saved.daily,dailyServerCheck:saved.dailyServerCheck,dailyFishMark:saved.dailyFishMark,serverClock:saved.serverClock};
+    rt={...rt,dailyQuota:saved.dailyQuota,daily:saved.daily,dailyServerCheck:saved.dailyServerCheck,dailyFishMark:saved.dailyFishMark,serverClock:saved.serverClock,fishTgt:saved.fishTgt??null};
+    if(saved.fishTgt?.renewFrom!==undefined&&saved.fishTgt.t>=Date.now()-60000&&saved.fishTgt.got===0)rec('B','рыбалка',`🎯 новые игровые сутки ${saved.dailyServerCheck.day}: цель рыбалки обновлена — ${saved.fishTgt.type==='proof'?'собрать':'поймать'} ${saved.fishTgt.n} ${saved.fishTgt.type==='proof'?'Proof':'рыб'}`);
     dailyStartRetry=0;
     rec('B','лимиты дня',`Сервер: ${L2EngineCore.dailyCount(rt,'auto')} мобов, ${L2EngineCore.dailyCount(rt,'fish')} рыб за ${saved.dailyServerCheck.day}; лимиты проверены до начала новых действий`);
     return true;
@@ -2707,8 +2708,11 @@ async function tasksIdle() {
   const why = [cfg.mmOrders && 'заказ Маммона', cfg.mmUpgrade && cfg.mmGoalItem && 'кузнец', cfg.mmMailClaim && 'почта',
     cfg.storyTurnIn && 'квесты', cfg.tvtOn && 'TvT', (cfg.farmRes || '').trim() && `цель фарма «${cfg.farmRes.trim()}»`, (cfg.recipeRes || '').trim() && `рецепт «${cfg.recipeRes.trim()}»`].filter(Boolean);
   // 20.43 (лог 21.10 17:13): рыбалка выбрана, но старая цель уже выполнена — говорим прямо, а не «дел нет»
-  const T = rt.fishTgt, fishDone = Array.isArray(cfg.autoTasks) && L2EngineCore.taskAllowed(cfg, 'fish') && T?.done
-    ? `рыбалка не идёт: цель «${T.type === 'proof' ? 'собрать' : 'поймать'} ${T.n} ${T.type === 'proof' ? 'Proof' : 'рыб'}» уже выполнена — нажмите «Старт» заново или сбросьте цель в «Рыбалке»; ` : '';
+  // 20.43: цель на сегодня выполнена — рыбалка ждёт сброса сервера и новой цели (dailyServerChange)
+  const T = rt.fishTgt, goal = T && `${T.type === 'proof' ? 'собрать' : 'поймать'} ${T.n} ${T.type === 'proof' ? 'Proof' : 'рыб'}`;
+  const fishDone = !(Array.isArray(cfg.autoTasks) && L2EngineCore.taskAllowed(cfg, 'fish') && T?.done) ? ''
+    : T.day === L2EngineCore.dailyDay(Date.now(), rt) ? `рыбалка: цель на сегодня «${goal}» выполнена, новая цель — ${L2EngineCore.dailyResetText(Date.now(), rt)}; `
+    : `рыбалка не идёт: цель «${goal}» уже выполнена — нажмите «Старт» заново или сбросьте цель в «Рыбалке»; `;
   setStatus(`⏹ ${fishDone}Без режима — только задачи${why.length ? ': ' + why.join(', ') : ' (ни одна не включена)'}; сейчас дел нет, стою`);
   if (Date.now() - (window.__tasksIdleT || 0) > 30 * 60000) { window.__tasksIdleT = Date.now(); rec('S', 'режим', `${fishDone}без режима: жду задачи (${why.join(', ') || 'ни одна не включена'}) — мобов не бью`); }
   await sleep(2000);
