@@ -426,6 +426,7 @@ async function load() {
     : rt.questList?.length ? rt.questList.map(q => `${q.title}\n${q.lines.join('\n')}`).join('\n') : 'Ещё не проверялась';
 
   renderFaDrop(rt);
+  renderDebuffImm(rt);   // 20.43
   renderCancelList(rt);
   renderDps(rt, showAllCls ? '' : heroCls(d, rt));
   renderFight(rt);
@@ -1209,7 +1210,7 @@ function renderEff(rt) {
   const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1]);
   const special = top(rt.lootSpecial), loot = top(rt.loot).slice(0, 12);
   const valueLine = rt.lootValue ? `\n💰 Добыча при продаже в магазин ≈ ${fmt(rt.lootValue)} аден (цены Interlude ÷ 2)` : '';
-  box.textContent = `${line('🔁 Цепочка', c)}\n${line('🗺 Через карту', m)}\n${verdict}`;
+  box.textContent = `${line('🔁 Цепочка', c)}\n${line('🗺 Через карту', m)}\n${verdict}${E.cat ? `\n${line('🏛 Катакомбы (отдельно, 20.43)', E.cat)}` : ''}`;
   if ($('lootExtra')) $('lootExtra').textContent = (special.length ? `⭐ Особая: ${special.map(([k, v]) => `${k} ×${v}`).join(', ')}` : '⭐ Особой добычи пока нет')
     + (loot.length ? `\n🎒 За сессию: ${loot.map(([k, v]) => `${k} ×${fmt(v)}`).join(', ')}` : '') + valueLine;
 }
@@ -1798,7 +1799,23 @@ function champLearnText(M) {
   }
   return out.join('\n');
 }
-function renderFaDrop(rt) { const el = $('faDropBox'); if (el) el.textContent = faDropText(rt.faDrop) + '\n' + champLearnText(rt.champLearn); }
+// 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: ≥ 4 % FA за обычный бой при анонсе 1 %): по какому шансу бот сейчас считает цену
+// чемпионов и «Cancel» — свой замер класса (rt.faRate, loot.faRateNote), сглаженный анонсом (L2EngineCore.faRate — та же формула, что в бою)
+function faRateText(rt) {
+  const C = globalThis.L2EngineCore; if (!C?.faRate) return '';
+  const cls = C.faClass(rt.classCur?.prof || rt.prof), S = rt.faRate?.[cls], n = Object.values(S?.k || {}).reduce((a, x) => a + (+x || 0), 0);
+  const pc = k => (C.faRate(S, k) * 100).toFixed(1).replace('.', ',') + ' %';
+  return `Цена чемпионов считается по: обычный бой ${pc('mob')}, синий ${pc('blue')}, оранжевый ${pc('orange')}, красный ${pc('red')} (${n ? `свои замеры класса «${cls}»: ${n} боёв, сглажены анонсом` : 'по анонсу — своих замеров у класса ещё нет'})`;
+}
+// 20.43 (разбор 21.10): невосприимчивые к дебаффам цели — РБ общим флагом, мобы и чемпионы по виду на сутки (rt.debuffImmune.sp, combat.js)
+function debuffImmText(I) {
+  const now = Date.now(), day = 24 * 3600000, sp = Object.entries(I?.sp || {}).filter(([, t]) => +t > 0).sort((a, b) => b[1] - a[1]).slice(0, 20);
+  const rows = sp.map(([k, t]) => `· ${k.startsWith('ч:') ? k.slice(2) + ' (чемпион)' : k}: ${now - t < day ? `не вешаю ещё ≈${Math.max(1, Math.ceil((day - (now - t)) / 3600000))} ч` : 'сутки прошли — в следующем бою одна проба'}`);
+  return `🛡 Иммунитет к дебаффам: рейд-боссы — ${I?.rb ? 'да, на РБ не вешаю' : 'не замечен'}\n`
+    + (rows.length ? `Мобы и чемпионы — только эти виды (на сутки, потом одна проба):\n${rows.join('\n')}` : 'Мобы и чемпионы: невосприимчивых видов не встречал — дебаффы вешаются по обычным правилам');
+}
+function renderDebuffImm(rt) { const el = $('debuffImmBox'); if (el) el.textContent = debuffImmText(rt.debuffImmune); }
+function renderFaDrop(rt) { const el = $('faDropBox'); if (el) el.textContent = faDropText(rt.faDrop) + (faRateText(rt) ? '\n' + faRateText(rt) : '') + '\n' + champLearnText(rt.champLearn); }
 // 10.0.7: выученные мобы, снимающие баффы (rt.buffCancel — buffs.cancelNote)
 function cancelListText(C) {
   const L = Object.values(C || {}).filter(o => o && o.name).sort((a, b) => (b.n || 0) - (a.n || 0));
@@ -2402,6 +2419,12 @@ $('farmReset').onclick = async () => {
   await menuPatch({ farmGot: {} });
 };
 // 8.0: confirm() во встроенном меню Chrome молча блокирует — подтверждение вторым нажатием
+// 20.43 (разбор 21.10): замеры охоты — EXP/с видов (rt.mobVal), EXP/ч зон (rt.zoneStat) и темп цепочки/карты/катакомб (rt.eff) — с нуля
+// (после смены оружия/ЛС или испорченные паузами до 20.43). Все три ключа — чистая статистика (MENU_STAT_KEYS): отложенная запись вкладки сброс не вернёт
+confirmClick('huntStatReset', async () => {
+  try { await menuPatch({ mobVal: {}, zoneStat: {}, eff: {}, lastWinT: 0 }); toast('↺ Замеры охоты сброшены: виды мобов, зоны, цепочка/карта/катакомбы'); await load(); }
+  catch (e) { toast(e.message); }
+});
 confirmClick('petStatReset', async () => {
   await menuPatch({ petStat: {}, petAdvice: null });
   toast('🐱 Статистика котов сброшена');   // 8.0: в #status текст стирала ближайшая перерисовка

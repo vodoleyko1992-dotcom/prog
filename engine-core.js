@@ -370,6 +370,20 @@
     return { enqueue, defer, peek, recover, clear, drop };
   }
 
+  // 20.43 (разбор 21.10, ночной лог alt2 Warlord 48: 40 FA за 572 боя, чемпионов из них 18 — обычным боям остаётся ≥ 22 FA на 554 боя,
+  // т. е. ≥ 4 % за бой; агро собирает пачку, и в одном бою падает несколько мобов): цену чемпиона и «Cancel» бот считал по анонсу —
+  // 1 % за обычный бой. Теперь шанс FA за бой — свой замер класса (rt.faRate[класс] = { k: {вид: боёв}, f: {вид: FA} }, loot.faRateNote),
+  // сглаженный анонсом: (FA + анонс × N0) / (боёв + N0); N0 = 100 обычных и 30 боёв с чемпионом. Обычный бой — не ниже анонса 1 %:
+  // в каждом таком бою есть хотя бы один моб с шансом 1 %, меньше бывает только при нераспознанных строках добычи (тогда — как раньше).
+  // Чистые функции — для combat/champs/mobfarm и для меню (popup).
+  const FA_PRIOR = Object.freeze({ mob: 0.01, blue: 0.1, orange: 0.2, red: 0.6 }), FA_N0 = Object.freeze({ mob: 100, blue: 30, orange: 30, red: 30 });
+  const faClass = prof => String(prof || '').toLowerCase().replace(/^(?:dark[_\s]elf|human|elf|elven|orc|dwarf|kamael)[_\s]+/, '').replace(/[_\s-]+/g, ' ').trim() || '?';
+  function faRate(S, kind) {
+    const key = Object.hasOwn(FA_PRIOR, kind) ? kind : 'blue', p = FA_PRIOR[key], n0 = FA_N0[key];
+    const k = Math.max(0, +S?.k?.[key] || 0), f = Math.max(0, +S?.f?.[key] || 0), r = (f + p * n0) / (k + n0);
+    return key === 'mob' ? Math.max(p, r) : r;
+  }
+
   // 7.2.3 (игрок 10.10: «окно постоянно скачет, то больше, то меньше — нравится, когда больше»): свободное поле слева от игры
   // мерится по видимым элементам, а они на разных экранах (бой, победа, карта, загрузка) разные. Запоминаем самое широкое поле
   // для этой ширины окна браузера и не сужаем окно, пока ширина браузера та же (новая ширина — мерим заново)
@@ -389,7 +403,8 @@
   // (отложенно до 8 с) или в полёте. После записи меню старые значения этих ключей из вкладки не возвращаются ни в её память,
   // ни в хранилище (фон, menuRev). Намерения/оплаты/маршруты сюда не входят: для них по-прежнему последняя запись вкладки.
   const MENU_STAT_KEYS = Object.freeze(['kills','sinceDeep','target','adena','exp','sp','lastWinT','lastBattle','packLab','buffAudit','dps','mobVal',
-    'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups']);
-  root.L2EngineCore = { MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
+    'lootStat','lootStatT0','mobKills','faDrop','eff','skills','via','catInT','rbKills','loot','lootSpecial','lootValue','fightMem','fightLast','fightGroups',
+    'zoneStat']);   // 20.43: «Сбросить замеры охоты» (mobVal, zoneStat, eff) — отложенная запись вкладки сброс не воскрешает
+  root.L2EngineCore = { FA_PRIOR, FA_N0, faClass, faRate, MENU_STAT_KEYS, MODE_KEYS, BASE_CFG_SKIP, BASE_RT_SKIP, NEW_HERO_PAID, baseProfileCfg, baseProfileRt, newHeroCfg, serverClockNote, dailyCurrent, dailyQuotaToday, dailyDay, dailyResetAt, dailyResetText, dailyLimit, dailyCount, dailyBlocked, fishTaskWaitKey, fishTaskWait, raidFreshStartPatch, TASK_KEYS, taskList, taskAllowed, selectedTask, taskConfig, rawTaskConfig, taskJobAllowed, stickyFree, createRecoveryController, createTransitionMonitor, createProgressMonitor, withTimeout, chooseMode, createPatchQueue };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.L2EngineCore;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1210,23 +1210,35 @@ function parseRules(...args) { return L2V7Modules.mobfarm.parseRules(...args); }
 function champRuleOn(...args) { return L2V7Modules.mobfarm.champRuleOn(...args); }
 // эффективность: опыт в минуту за «цепочку» и за «поиск по карте» (включая время на карту и листание)
 function chainBetter(...args) { return L2V7Modules.mobfarm.chainBetter(...args); }
+// 20.43 (разбор 21.10): время на моба = «эта победа − прошлая», отсекался только разрыв > 180 с, а lastWinT больше нигде не обнулялся —
+// поход в магазин/к бафферу, ожидание оплаты, пауза или Стоп/Старт короче 3 мин целиком доставались следующему виду (mobVal), зоне
+// (zoneStat) и темпу цепочки/карты (rt.eff). Теперь бой не меряется, если после прошлой победы был служебный маршрут (actions: владелец
+// маршрута обнуляет lastWinT), страница вне охоты (метка HUNT_GAP_SS) или Старт/Продолжить (manualKickAt новее победы); после РБ — с нуля;
+// вклад одного боя — не больше 3× обычного времени на такую награду (mobfarm.winSecCap). Бои в подземелье (spawnId sdms_*) — своя корзина
+// rt.eff.cat: zoneStat прошлой зоны «Окрестностей» и общие «цепочка/карта» они больше не пополняют (rt.zone телепорт в катакомбы не меняет)
+const HUNT_PAGE_RE = /\/(?:battle|map|dungeon|catacombs|ashen-bastion)\.html$/i, HUNT_GAP_SS = 'l2bot-huntGapT';
+const huntGapT = () => { try { return +sessionStorage.getItem(HUNT_GAP_SS) || 0; } catch (e) { return 0; } };
+const catBattleOf = (ctx, via0) => /^sdms_/i.test(ctx?.spawnId || '') || via0 === 'dungeon' || L2V7Modules.mobfarm.dungeonBattle();
 async function trackEfficiency(exp, ctx) {
   // 8.0: вызывается без ожидания — способ прихода к этому мобу (цепочка/карта) берём сразу, пока nextFight не записал новый
-  const now = Date.now(), dt = rt.lastWinT ? (now - rt.lastWinT) / 1000 : 0, via0 = rt.via;
-  setRt({ lastWinT: now });
+  const now = Date.now(), last = +rt.lastWinT || 0, via0 = rt.via, gap = Math.max(+rt.manualKickAt || 0, huntGapT()) > last;
+  let dt = last && !gap ? (now - last) / 1000 : 0;
+  setRt({ lastWinT: ctx?.rb ? 0 : now });          // 20.43: после РБ дорога назад к мобам — не время следующего моба
   const pct = expPctGain();                       // прирост полоски опыта, % (с учётом нового уровня)
-  if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, долгий перерыв или РБ — не считаем
+  if (!dt || dt > 180 || !exp || ctx?.rb) return;      // первая победа сессии, перерыв (служебный маршрут, пауза, > 3 мин) или РБ — не считаем
+  const cat = catBattleOf(ctx, via0), via = cat ? 'cat' : via0 === 'chain' ? 'chain' : 'map';
   // 8.0 (аудит фарма B1): ценность вида моба (EXP/с) для выбора цели на карте — без ожидания записи. Приход через карту дольше
   // цепочки на одну и ту же величину для любого моба — вычитаем её, чтобы виды, добытые цепочкой и картой, сравнивались честно
-  { const E0 = rt.eff || {}, mapX = via0 === 'chain' ? 0 : Math.max(0, (E0.map?.sec || 0) - (E0.chain?.sec || 0));
+  { const E0 = rt.eff || {}, mapX = cat || via0 === 'chain' ? 0 : Math.max(0, (E0.map?.sec || 0) - (E0.chain?.sec || 0));
+    dt = Math.min(dt, L2V7Modules.mobfarm.winSecCap(ctx?.name, !!ctx?.champ, exp, via, mapX));
     try { L2V7Modules.mobfarm.mobValNote(ctx?.name, !!ctx?.champ, exp, Math.max(dt * 0.5, dt - mapX))?.catch?.(e => console.warn(TAG, 'ценность моба', e)); } catch (e) { console.warn(TAG, 'ценность моба', e); } }
-  await zoneTrack(exp, dt, pct);
-  const via = via0 === 'chain' ? 'chain' : 'map';
+  if (!cat) await zoneTrack(exp, dt, pct);
   const E = { ...(rt.eff || {}) }, e = E[via] || { n: 0, rate: 0 };
   const rate = exp / dt * 60, k = e.n < 20 ? 1 / (e.n + 1) : 0.05;
   E[via] = { n: e.n + 1, rate: Math.round(e.rate ? e.rate * (1 - k) + rate * k : rate), sec: +((e.sec || dt) * (1 - k) + dt * k).toFixed(1) };
   await setRt({ eff: E });
-  if (E.chain?.n === 5 || E.map?.n === 5) rec('B', 'эффективность', `цепочка ${E.chain?.rate || '?'} EXP/мин (${E.chain?.sec || '?'} с/моб) · карта ${E.map?.rate || '?'} EXP/мин (${E.map?.sec || '?'} с/моб)`);
+  // 20.43: строка — когда корзина этого боя набрала 5 боёв (раньше — на каждом бою, пока у другой корзины ровно 5)
+  if (E[via].n === 5) rec('B', 'эффективность', via === 'cat' ? `катакомбы ${E.cat.rate} EXP/мин (${E.cat.sec} с/моб)` : `цепочка ${E.chain?.rate || '?'} EXP/мин (${E.chain?.sec || '?'} с/моб) · карта ${E.map?.rate || '?'} EXP/мин (${E.map?.sec || '?'} с/моб)`);
 }
 // ---------- локации для кача: где герой сейчас, EXP/ч и %/ч по каждой, рекомендации ----------
 // Каталог зон — со страницы «Телепорт» (Окрестности городов: имя, цена, уровни мобов «60-70»).
@@ -1458,7 +1470,7 @@ function setRt(p) {
 // ждал запись начала боя за ними): статистика обычного боя — награды, ДПС, замеры, счётчики, путь к цели — пишется отложенно, одним
 // пакетом раз в 8 с или вместе с любой обычной записью. Память вкладки обновлена сразу, при уходе со страницы остаток уходит по pagehide.
 const RT_STAT_SOON = new Set(['kills', 'sinceDeep', 'target', 'adena', 'exp', 'sp', 'lastWinT', 'lastBattle', 'packLab', 'buffAudit', 'dps', 'mobVal',
-  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'eff', 'skills', 'via', 'catInT']);
+  'lootStat', 'lootStatT0', 'mobKills', 'faDrop', 'faRate', 'eff', 'skills', 'via', 'catInT']);   // 20.43: + faRate (свой шанс FA класса, loot.faRateNote)
 // 20.41 (лог 20.10 21:09: память 1,3 МБ, каждая запись ≈0,5 с и подвисание страницы игры при её завершении): замеры навыков после
 // каждого удара пишутся отложенно — одним пакетом раз в 8 с. Память вкладки обновлена сразу; обычная запись, rtCommit/recover и
 // уход со страницы (pagehide → peek) забирают отложенное с собой, смена героя/замка его отменяет (rtWriter.clear)
@@ -6741,6 +6753,9 @@ chrome.storage.onChanged.addListener(ch => {
 // запускался и в этой невидимой копии: второй бот в той же вкладке («⏸ работает в другой вкладке», лог 09.10 12:08; вероятно, и
 // «две вкладки» 08.10). Теперь в предзагруженной странице бот спит, пока игрок на неё не перейдёт
 const whenActive = fn => document.prerendering ? document.addEventListener('prerenderingchange', fn, { once: true }) : fn();
+// 20.43 (разбор 21.10): страница вне охоты (магазин, баффер, Маммон, рыбалка, телепорт, город, TvT, вход…) — метка разрыва во вкладке:
+// время до следующей победы — не время на моба (trackEfficiency). sessionStorage: переживает переходы, запись памяти не нужна
+whenActive(() => { if (!HUNT_PAGE_RE.test(location.pathname)) try { sessionStorage.setItem(HUNT_GAP_SS, String(Date.now())); } catch (e) {} });
 whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
   cfg = mergeCfg(s.cfg); rt = { ...DEF_RT, ...s.rt }; on = !!s.on;
   onMarkReady = true; onMark();                      // ревью шага 7 (F11): метка для hook.js сразу по прочитанному on
@@ -6992,6 +7007,12 @@ whenActive(() => chrome.storage.local.get(['cfg', 'rt', 'on']).then(s => {
       delete rolls[key]; changed = true;
     }
     if (changed) { cf.limitRanges = R; rf.limitRolls = rolls; }
+  });
+  // 20.43 (разбор 21.10): общие флаги 7.2.1 «мобы/чемпионы невосприимчивы к дебаффам» без срока выключали дебаффы на всех таких целях.
+  // Теперь иммунитет моба/чемпиона — по виду на сутки (combat: rt.debuffImmune.sp); старые флаги снимаем, РБ (.rb) остаётся
+  once('dbfImm2043', () => {
+    const I = rf.debuffImmune || rt.debuffImmune;
+    if (I && typeof I === 'object' && (Object.hasOwn(I, 'mob') || Object.hasOwn(I, 'champ'))) { const { mob, champ, ...rest } = I; rf.debuffImmune = rest; }
   });
   const ha = S['hurricane assault'];
   if (ha?.dmgN && Math.abs(ha.dmg / ha.dmgN - 535) < 1) { S['hurricane assault'] = { ...ha, dmg: 0, dmgN: 0 }; sk = true; }   // v3.5
