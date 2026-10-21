@@ -4,7 +4,7 @@
 // --android: те же проверки, но без API, которых нет в Firefox для Android (горячие клавиши, значок, уведомления, снимок экрана).
 // FIREFOX=…/firefox GECKODRIVER=…/geckodriver NODE_PATH=…(selenium-webdriver) node tests/tools/firefox-smoke.cjs <пакет-firefox.zip> [--android]
 const fs = require('fs'), os = require('os'), path = require('path'), https = require('https'), { execFileSync } = require('child_process');
-const { Builder } = require('selenium-webdriver'), firefox = require('selenium-webdriver/firefox');
+const { Builder, By, until } = require('selenium-webdriver'), firefox = require('selenium-webdriver/firefox');
 const zipIn = path.resolve(process.argv[2]), android = process.argv.includes('--android');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'l2ffs-'));
 let zip = zipIn;
@@ -48,9 +48,26 @@ const UUID = '7d0c2b4e-8f8a-4c1e-9b7a-5a1f2d3c4b5e';
         const lock = await chrome.runtime.sendMessage({ cmd: 'lockCheck' }).catch(e => ({ err: String(e) }));
         done({ ver: chrome.runtime.getManifest().version, cfgKeys: Object.keys(s.cfg || {}).length, epicCoin: s.cfg?.epicCoinDailyMax,
           sim: s.ffSim || '', bgReply: lock, popupText: document.body.innerText.length }); })().catch(e => done({ err: String(e) }));`));
+    // 20.43 (разбор 21.10): встроенное меню (iframe на странице игры) — в Firefox без chrome.tabs. «Проверить панель» и kick идут
+    // через фон только в родительскую вкладку (dockGameCommand); чужая команда не пересылается. Бот выключен: kick = stopped, без запуска.
+    await drv.executeAsyncScript(`const done = arguments[arguments.length - 1];
+      chrome.storage.local.get('cfg').then(s => chrome.storage.local.set({ on: false, cfg: { ...(s.cfg || {}), dock: true, dockMin: false } })).then(() => done(true), e => done(String(e)));`);
+    await drv.get('https://l2wap.com/map.html');
+    const dockFrame = await drv.wait(until.elementLocated(By.css('#l2bot-dock iframe')), 20000);
+    await drv.switchTo().frame(dockFrame);
+    await drv.wait(() => drv.executeScript("return typeof document.getElementById('check')?.onclick === 'function'"), 15000);
+    res.dock = await drv.executeAsyncScript(`const done = arguments[arguments.length - 1];
+      (async () => { const { rt = {} } = await chrome.storage.local.get('rt'), char = rt.char || '', ask = message => chrome.runtime.sendMessage({ cmd: 'dockGameCommand', char, message });
+        const slots = await ask({ cmd: 'slots' }), kick = await ask({ cmd: 'kick' }), foreign = await ask({ cmd: 'lifestoneCommand', action: 'scan', char });
+        document.getElementById('check').click(); await new Promise(r => setTimeout(r, 1500));
+        done({ tabs: typeof chrome.tabs, slots: slots?.relayed === true && Array.isArray(slots.answer?.panel), kick: kick?.relayed === true ? kick.answer : kick,
+          foreign: foreign?.relayed === false, checkText: document.getElementById('slots')?.textContent || '', on: (await chrome.storage.local.get('on')).on }); })().catch(e => done({ err: String(e) }));`);
+    await drv.switchTo().defaultContent();
   } finally { await drv.quit(); srv.close(); }
   const ok = res.hook && res.content && res.bgReply && typeof res.bgReply.ok === 'boolean' && res.cfgKeys > 100 && res.epicCoin === 0 && res.popupText > 200
-    && (!android || res.sim === 'undefined,undefined,undefined');
+    && (!android || res.sim === 'undefined,undefined,undefined')
+    && res.dock?.slots === true && res.dock.kick?.v === res.ver && res.dock.kick.reason === 'stopped' && res.dock.foreign === true && res.dock.on === false
+    && !!res.dock.checkText && !/Откройте вкладку/.test(res.dock.checkText);
   console.log((ok ? 'PASS' : 'FAIL') + ` firefox${android ? ' (без API Android)' : ''}: ` + JSON.stringify(res));
   process.exit(ok ? 0 : 1);
 })().catch(e => { console.error('FAIL', e); srv.close(); process.exit(1); });

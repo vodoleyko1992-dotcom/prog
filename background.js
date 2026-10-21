@@ -1166,7 +1166,55 @@ async function lifestoneDockCommand(m, sender) {
   }catch(_){return denied('Не удалось передать команду ЛС во вкладку игры — обновите страницу');}
 }
 
+// 20.43 (разбор 21.10): во встроенном меню Firefox (iframe с runtime/storage, без tabs) Старт, кнопки Warlock и проверки панели
+// падали на chrome.tabs: kick не уходил (ложное «вкладка игры не отвечает»), неизвестную оплату кота нельзя было закрыть.
+// Фон пересылает команду только родительской вкладке этого меню (frame 0) и только из белого списка; отправитель и герой —
+// как у lifestoneDockCommand. Ответ — только поля, которые читает меню (роли «Предложить» — целиком: «Применить» пишет их в настройки).
+// Ожидание ответа: kick 6 с (меню повторяет до 12 с, как в Chrome), кот 20 с, проверки панели 8–15 с.
+const DOCK_GAME_WAIT = { kick: 6000, warlockCommand: 20000, slots: 8000, suggest: 15000, dom: 15000 };
+function dockGameAnswer(cmd, a) {
+  if (!a || typeof a !== 'object') return null;
+  const s = (x, n = 220) => typeof x === 'string' ? x.slice(0, n) : '', list = x => Array.isArray(x) ? x.slice(0, 400).map(y => s(y, 400)) : [];
+  if (cmd === 'kick') return { ok: a.ok === true, v: s(a.v, 40), running: a.running === true, owner: a.owner === true, reason: s(a.reason) };
+  if (cmd === 'warlockCommand') return { ok: a.ok === true, reason: s(a.reason) };
+  if (cmd === 'slots') return { battle: a.battle === true, roles: list(a.roles), panel: list(a.panel) };
+  if (cmd === 'suggest') return { battle: a.battle === true, roles: Object.fromEntries(Object.entries(a.roles && typeof a.roles === 'object' ? a.roles : {}).filter(([k]) => /^n[A-Z]\w{0,40}$/.test(k)).map(([k, v]) => [k, typeof v === 'string' ? v : ''])),
+    buffsNote: s(a.buffsNote, 400), why: list(a.why) };
+  return { html: typeof a.html === 'string' ? a.html.slice(0, 1000000) : '', page: s(a.page, 80) };
+}
+async function dockGameCommand(m, sender) {
+  const fail = (reason, retry = false) => ({ relayed: false, reason, retry });
+  try {
+    const page = new URL(sender?.url || ''), menu = new URL(chrome.runtime.getURL('popup.html'));
+    if (sender?.id !== chrome.runtime.id || page.protocol !== menu.protocol || page.host !== menu.host || page.pathname !== menu.pathname || page.searchParams.get('dock') !== '1'
+      || !Number.isInteger(sender.frameId) || sender.frameId <= 0 || !Number.isInteger(sender.tab?.id) || sender.tab.id < 0) return fail('Команда доступна только из встроенного меню игры');
+    const q = m?.message, cmd = q?.cmd;
+    if (!q || typeof q !== 'object' || !Object.hasOwn(DOCK_GAME_WAIT, cmd) || typeof m.char !== 'string' || m.char.length > 64) return fail('Команда не поддерживается встроенным меню');
+    let command = { cmd };
+    if (cmd === 'warlockCommand') {
+      const num = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
+      if (!['preview', 'resetBudget', 'archiveUnknown'].includes(q.action) || typeof q.id !== 'string' || !q.id || q.id.length > 80 || !m.char || q.char !== m.char
+        || !num(q.budgetEpoch) || !num(q.spent) || q.pendingId != null && (typeof q.pendingId !== 'string' || !q.pendingId || q.pendingId.length > 80)) return fail('Некорректная команда кота');
+      command = { cmd, id: q.id, action: q.action, char: q.char, budgetEpoch: q.budgetEpoch, spent: q.spent, ...(q.pendingId != null ? { pendingId: q.pendingId } : {}) };
+    }
+    const tab = await chrome.tabs.get(sender.tab.id), url = new URL(tab.url || '');
+    if (url.protocol !== 'https:' || !/(^|\.)l2wap\.com$/i.test(url.hostname) || tab.pendingUrl) return fail('Вкладка игры закрыта или загружается — повторите после загрузки', true);
+    const { rt = {} } = await chrome.storage.local.get('rt');
+    if ((rt.char || '') !== m.char) return fail('Персонаж изменился — обновите меню');
+    const late = {}; let timer;
+    try {
+      const answer = await Promise.race([chrome.tabs.sendMessage(sender.tab.id, command, { frameId: 0 }),
+        new Promise(resolve => { timer = setTimeout(() => resolve(late), DOCK_GAME_WAIT[cmd]); })]);
+      if (answer === late) return fail(cmd === 'warlockCommand' ? 'Ответ ещё не получен. Команда могла быть принята; проверьте состояние перед повтором.' : 'Вкладка игры не ответила — обновите страницу', cmd !== 'warlockCommand');
+      return { relayed: true, answer: dockGameAnswer(cmd, answer) };
+    } finally { clearTimeout(timer); }
+  } catch (_) { return fail('Не удалось передать команду во вкладку игры — обновите страницу', true); }
+}
+
 chrome.runtime.onMessage.addListener((m, _s, reply) => {
+  if (m?.cmd === 'dockGameCommand') {
+    dockGameCommand(m, _s).then(reply).catch(() => reply({ relayed: false, reason: 'Команда не передана во вкладку игры', retry: false })); return true;
+  }
   if (m?.cmd === 'mammonBagDockAnalyze') {
     mammonBagDockAnalyze(m, _s).then(reply).catch(() => reply({ ok: false, reason: 'Не удалось прочитать рюкзак' })); return true;
   }

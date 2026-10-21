@@ -131,8 +131,49 @@ function paintWakeWarn(show, text) {
   el.hidden = !show;
   if (show) el.textContent = '⚠ ' + text;
 }
+// 20.43 (разбор 21.10): одна отправка команды в игру — Старт/быстрый запуск/смена режима, кнопки Warlock, проверки панели.
+// Есть chrome.tabs (Chrome, отдельное меню Firefox) — как раньше: вкладка от вызывающего или активная вкладка игры.
+// Нет (встроенное меню Firefox: iframe с runtime/storage, без tabs) — команда уходит в фон, а он пересылает её только
+// родительской вкладке этого меню (frame 0) и только из белого списка (dockGameCommand в background.js).
+const gameTabsApi = () => !!chrome.tabs?.sendMessage;
+async function gameSend(message, { tab = null, char = '' } = {}) {
+  if (!gameTabsApi()) {
+    const r = await chrome.runtime.sendMessage({ cmd: 'dockGameCommand', char, message });
+    if (r?.relayed === true) return r.answer;
+    throw Object.assign(Error(r?.reason || 'Команда не передана во вкладку игры — обновите страницу'), { dock: true, retry: r?.retry === true });
+  }
+  const target = tab || await activeTab();
+  if (!Number.isInteger(target?.id) || target.id < 0) throw Error('Откройте вкладку l2wap.com');
+  return chrome.tabs.sendMessage(target.id, message);
+}
+// те же подсказки, что у ответа движка в wakeGame ниже (путь с chrome.tabs оставлен как был)
+const WAKE_HINTS = {
+  stopped: 'Режим не включён в хранилище',
+  stopped_during_start: 'Запуск был отменён',
+  loop_not_running: 'Игровой цикл не запустился',
+  another_tab_or_lock_unavailable: 'Вкладка не получила управление: закройте другие вкладки L2WAP и повторите Старт'
+};
+const wakeAck = pong => pong.ok === true && pong.running === true && pong.owner === true ? { ok: true, status: 'Движок запущен и управляет вкладкой' }
+  : { ok: false, reason: WAKE_HINTS[pong.reason] || ('Движок не подтвердил запуск: ' + (pong.reason || 'неизвестно')) };
+// 20.43 (разбор 21.10): встроенное меню Firefox — kick через фон в свою родительскую вкладку. Вкладку не ищем и не перезагружаем:
+// это меню создал content той же страницы. Подтверждение то же, что в Chrome: версия, игровой цикл, владелец вкладки.
+async function wakeDockGame(expected) {
+  const char = formChar ?? '', deadline = Date.now() + 12000;
+  let pong = null, why = '';
+  for (let attempt = 0; pong?.v !== expected && Date.now() < deadline && attempt < 4; attempt++) {
+    if (attempt) await new Promise(resolve => setTimeout(resolve, 900));
+    if ((await chrome.storage.local.get('on')).on !== true) return { ok: false, reason: 'Запуск был отменён (бот выключен)' };
+    let timer;
+    try { pong = await Promise.race([gameSend({ cmd: 'kick' }, { char }), new Promise(resolve => { timer = setTimeout(() => resolve(null), 7000); })]); }
+    catch (e) { why = String(e?.message || e); if (!e?.retry) return { ok: false, reason: why }; pong = null; }
+    finally { clearTimeout(timer); }
+  }
+  if (pong?.v === expected) return wakeAck(pong);
+  return { ok: false, reason: pong?.v ? 'Вкладка игры работает со старой версией бота — обновите страницу игры' : why || 'Вкладка игры не ответила на запуск — обновите страницу игры' };
+}
 // Запуск режимов централизован: запись on=true НЕ доказывает, что игра исполняет цикл.
 async function wakeGame() {
+  if (!chrome.tabs?.sendMessage) return wakeDockGame(chrome.runtime.getManifest().version);   // 20.43: встроенное меню Firefox (без tabs)
   let tabs = [];
   try {
     const active = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -1885,6 +1926,7 @@ confirmClick('rbReset', async () => {                 // сбросить вер
 
 // 8.0.6 (Firefox для Android): меню из «⋮ → Расширения» открывается отдельной вкладкой — активная вкладка там само меню, берём вкладку игры
 async function activeTab() {
+  if (!chrome.tabs?.query) return null;   // 20.43: встроенное меню Firefox — вкладок не видно, команды идут через gameSend/фон
   const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (t && /^https:\/\/([\w-]+\.)?l2wap\.com\//.test(t.url || '')) return t;
   const g = (await chrome.tabs.query({ url: ['https://l2wap.com/*', 'https://*.l2wap.com/*'] }).catch(() => [])).filter(x => x.id != null);
@@ -1925,10 +1967,10 @@ $('check').onclick = async () => {
   const box = $('slots');
   box.style.whiteSpace = 'pre-line';
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'slots' });
+    const r = await gameSend({ cmd: 'slots' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox (без chrome.tabs)
     box.textContent = !r.battle ? '⚠ Откройте страницу боя и нажмите ещё раз'
       : r.roles.join('\n') + '\n— панель —\n' + (r.panel.join('\n') || 'слоты не найдены');
-  } catch { box.textContent = '⚠ Откройте вкладку l2wap.com (страницу боя)'; }
+  } catch (e) { box.textContent = '⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com (страницу боя)'); }
 };
 let proposed = null;
 const ROLE_RU = { nWeaponMain: 'Основное оружие', nAttack: 'Атака', nPower: 'Силовые', nStun: 'Станы', nBuffs: 'Баффы', nShots: 'Соски', nMpPot: 'Банка MP', nHpPot: 'Банка HP', nHeal: 'Лечение', nKeyBuffs: 'Важные баффы', nToggles: 'Постоянные баффы', nSpoil: 'Спойл', nSpoilMass: 'Масс-спойл', nSweep: 'Сбор спойла', nUltra: 'Сверхсильные', nDrain: 'Вампиризм', nCharge: 'Копит энергию', nForce: 'Тратит энергию', nDebuff: 'Дебаффы' };
@@ -1936,7 +1978,7 @@ $('suggest').onclick = async () => {
   await save();
   const box = $('slots'); box.style.whiteSpace = 'pre-line';
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'suggest' });
+    const r = await gameSend({ cmd: 'suggest' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox
     proposed = r.roles;
     const { cfg = {} } = await chrome.storage.local.get('cfg');
     box.textContent = '🤖 Предложение (сейчас → будет):\n'
@@ -1944,7 +1986,7 @@ $('suggest').onclick = async () => {
       + `\n(${r.buffsNote})\n\nЧто бот знает о скиллах:\n` + (r.why.join('\n') || 'скиллов на панели нет')
       + (r.battle ? '' : '\n\n⚠ Не на странице боя — использована последняя сохранённая панель');
     $('applyRow').hidden = false;
-  } catch { box.textContent = '⚠ Откройте вкладку l2wap.com (лучше страницу боя)'; }
+  } catch (e) { box.textContent = '⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com (лучше страницу боя)'); }
 };
 $('apply').onclick = async () => {
   if (!proposed) return;
@@ -2634,9 +2676,9 @@ $('snapAll').onclick = async () => exportSnaps(await readSnaps(0), 'все сн�
 
 $('recDom').onclick = async () => {
   try {
-    const r = await chrome.tabs.sendMessage((await activeTab()).id, { cmd: 'dom' });
+    const r = await gameSend({ cmd: 'dom' }, { char: formChar ?? '' });   // 20.43: и во встроенном меню Firefox
     download(`l2wap-${r.page}-${stamp()}.html`, r.html, 'text/html');
-  } catch { toast('⚠ Откройте вкладку l2wap.com'); }
+  } catch (e) { toast('⚠ ' + (e?.dock ? e.message : 'Откройте вкладку l2wap.com')); }
 };
 // ---------- 💾 память бота: сохранить в файл / загрузить из файла (переживает переустановку расширения) ----------
 const MEM_SKIP = new Set(['auth', 'on', 'reccount', 'snapcount', 'snapbytes', 'exLogKey', 'exSnapT', 'hbBg', 'wdog', 'lock', 'wdDown', 'stopMeta', 'paused']);   // логин/пароль и служебное — не сохраняем (8.0: и замок вкладки, метка простоя, причина остановки, пауза)
@@ -3142,9 +3184,11 @@ panelRefresher($('enchantPanel'), () => enchantUI.refresh(), 350);
 async function warlockMenuCommand(action,context={}) {
   const {rt={},on=false,lock=null}=await chrome.storage.local.get(['rt','on','lock']);
   if (!context.char || rt.char!==context.char) throw Error('Персонаж изменился — обновите меню');
-  const tab=on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
-  if (!tab?.id) throw Error('Откройте вкладку игры');
-  const answer=await Promise.race([chrome.tabs.sendMessage(tab.id,{cmd:'warlockCommand',id:crypto.randomUUID(),action,...context}),
+  // 20.43 (разбор 21.10): без chrome.tabs (встроенное меню Firefox) — через фон в родительскую вкладку меню: «Проверить цену»,
+  // «Сбросить бюджет» и «Завершить неопределённую попытку» кота раньше падали там на chrome.tabs; с tabs — как раньше.
+  const tabs=gameTabsApi(),tab=!tabs?null:on&&Number.isInteger(lock?.tab)&&Date.now()-(+lock.t||0)<85000?{id:lock.tab}:await activeTab();
+  if (tabs&&!tab?.id) throw Error('Откройте вкладку игры');
+  const answer=await Promise.race([gameSend({cmd:'warlockCommand',id:crypto.randomUUID(),action,...context},{tab,char:context.char}),
     new Promise((_,reject)=>setTimeout(()=>reject(Error('Ответ ещё не получен. Команда могла быть принята; проверьте состояние перед повтором.')),20000))]);
   if (!answer?.ok) throw Error(answer?.reason||'Команда не выполнена');
 }
