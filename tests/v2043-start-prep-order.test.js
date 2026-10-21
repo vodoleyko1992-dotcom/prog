@@ -15,7 +15,8 @@ function load(o={}){
   L2V7Modules:{warlock:W,payments:{blocked:()=>!!o.payBlocked}},
   loopStale:()=>false,isBattle:()=>!!o.battle,fishNow:()=>false,tvtSoon:()=>!!o.tvt,
   setRt:async p=>{Object.assign(sb.rt,p);return {ok:true}},rtCommit:async()=>true,rec:(...x)=>logs.push(x.join(' ')),setStatus:()=>{},
-  townBuffStart:async why=>{calls.push('self');return o.self?.(why)??false}};
+  townBuffStart:async why=>{calls.push('self');return o.self?.(why)??false},
+  sleep:async ms=>{sb.slept=(sb.slept||0)+ms}};   // 20.43 (доводка 21.10, ревью): занятый шаг кота в loopStartPrep — со сном
  vm.createContext(sb);vm.runInContext(block+';this.loopStartPrep=loopStartPrep;this.prepHold=prepHold;this.startPrepWanted=startPrepWanted;',sb);
  return {sb,W,logs,calls,tick:n=>now+=n,phase:()=>sb.rt.startPrep?.phase};
 }

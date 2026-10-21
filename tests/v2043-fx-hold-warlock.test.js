@@ -2,7 +2,7 @@
 // 20.43 (автономность, доводка 21.10): подготовка кота перед РБ (warlock.raidPrepare). Сбой чтения /character (исключение: 429/5xx/HTML)
 // и снимок не того героя / в бою / не того класса возвращали true без later(): loopGate спал 0,3 с и снова слал свой GET /character —
 // 2–3 запроса в секунду всё время сбоя (при 429 это ещё и усиливало ограничение игры). Теперь растущая пауза 1,5 → 3 → 6 → 12 с,
-// удачное чтение её сбрасывает; на Старте ожидание прежнее.
+// удачное чтение её сбрасывает. 20.43 (доводка 21.10, ревью): на Старте теперь тоже пауза (1,5 → 3 → 6 с) — tests/v2043-fx-rev-start-read.test.js.
 const test = require('node:test'), assert = require('node:assert/strict');
 const { fixture } = require('./warlock-fixture.cjs');
 const wanted = 'Summon Feline Queen, Warrior Servitor, Final Servitor';

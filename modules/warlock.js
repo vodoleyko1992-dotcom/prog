@@ -73,6 +73,13 @@ const hasNative = (ch,x) => ch.activeSummon?.activeBuffs?.some(b => +b.skillId =
 const RAID_CONFIRM_MS = 120000, RAID_READ_FAST = 1500, RAID_READ_SLOW = 12000, RAID_READ_WAIT = 3000, RAID_SKIP_BUFF_MS = 3600000, RAID_HOLD_SUMMON_MS = 1800000;
 let raidReadAt = null;                 // {char, until, fail} — следующее чтение /character во время ожидания (fail — после сбоя чтения)
 let raidFailMs = 0;                    // 20.43 (доводка 21.10): растущая пауза после сбоя чтения /character перед РБ: 1,5 → 3 → 6 → 12 с
+// 20.43 (автономность, доводка 21.10, ревью): и подготовка после Старта — {char, gen, until, fail}. Раньше на Старте ни later(), ни failLater()
+// паузы не ставили: при 429/5xx/HTML на GET /character задача petPrep ещё не записана (она пишется после удачного чтения), ветка loopGate со
+// сном 0,3 с не срабатывала, а loopStartPrep возвращал true без сна — GET /character шёл с частотой ответов сервера (при быстрых 429 — 5–20 в
+// секунду) все 2 мин этапа, на каждом Старте и после воскрешения; удачное чтение в ожидании подтверждения/MP/панели — ≈3 раза в секунду.
+// Теперь сбой — пауза 1,5 → 3 → 6 с (этап Старта всё равно ≤ 2 мин), ожидание — 1,5 с (подтверждение, панель) или 3 с (MP, откат).
+let startReadAt = null, startFailMs = 0;
+const START_READ_FAIL_MAX = 6000;
 const raidWaitSince = new Map();       // вид ожидания → {at, last, said}: с какого момента ждём панель/призыв (перерыв > 30 с — заново)
 const raidSkip = () => { const S = env.rt.petRaidSkip; return S && S.char === charName() && S.classKey === raidClass() && S.settings === raidSettings() && S.kick === (+env.rt.manualKickAt || 0) ? S : null; };
 const buffSkipped = x => (raidSkip()?.buffs?.[x.effectId] || 0) > Date.now();
@@ -112,6 +119,9 @@ async function petPrepare(o = {}) {
     // Бесплатные касты: задача Старта не держит бота дольше 2 мин, даже если GET или панель не отвечают.
     if (J0 && Date.now() - (+J0.t || 0) > 120000) return startGiveUp(J0, 'подготовка кота не уложилась в 2 мин');
     if (startReady(buffs ? 'pet' : 'summon')) return false;
+    // 20.43 (автономность, доводка 21.10, ревью): ожидание и сбой чтения на Старте — с паузой (startReadAt), а не GET на каждом круге;
+    // новое поколение подготовки (новый Старт, воскрешение, «кот пропал вне боя») читает сразу, срок 2 мин выше проверяется и в паузе
+    if ((env.rt.petPrep || startReadAt?.fail) && startReadAt?.char === charName() && startReadAt.gen === startGen() && Date.now() < startReadAt.until) return true;
   } else {
     if (raidReady() || !buffs && raidSummonProof?.char === charName() && raidSummonProof.classKey === raidClass() && raidSummonProof.kick === (+env.rt.manualKickAt || 0) && raidSummonProof.until > Date.now()) return false;
     // 20.43 (разбор 21.10): отсрочка после двух неподтверждённых призывов — без GET и родной панели; тур ждёт сам (raid → raidBlocked)
@@ -129,12 +139,16 @@ async function petPrepare(o = {}) {
   // Старт: задача идёт без кота (касты бесплатные), призыв и баффы — в бою
   const giveUp=async(J,why)=>{if(!await save(null))return true;proof('pet',true);env.rec?.('B','суммон',tag+': '+why+' — начинаю задачу, призыв и баффы кота будут в бою');
     if(J?.back&&env.nativePanelPath?.()==='/skill-panel.html'&&J.back!=='/skill-panel.html'&&valid())env.nativeNavigate?.(J.back);return false;};
-  // 20.43: тур РБ — ожидание с редким чтением /character (raidReadAt); на Старте ожидание прежнее (каждый круг)
-  const later=ms=>{if(!start)raidReadAt={char:who,until:Date.now()+ms};return true;};
+  // 20.43: тур РБ — ожидание с редким чтением /character (raidReadAt)
+  // 20.43 (автономность, доводка 21.10, ревью): на Старте — тоже (startReadAt), раньше там каждый круг
+  const later=ms=>{if(start)startReadAt={char:who,gen,until:Date.now()+ms};else raidReadAt={char:who,until:Date.now()+ms};return true;};
   // 20.43 (автономность, доводка 21.10): сбой чтения /character (исключение, d.error, HTML) и снимок не того героя/в бою/не того класса
   // возвращали true без later(): loopGate спал 0,3 с и снова слал свой GET /character — 2–3 раза в секунду всё время сбоя, а при 429 это
-  // ещё и усиливало ограничение игры. Теперь растущая пауза 1,5 → 3 → 6 → 12 с; удачное чтение её сбрасывает. На Старте — как раньше
-  const failLater=()=>{if(start)return true;raidFailMs=Math.min(RAID_READ_SLOW,raidFailMs?raidFailMs*2:RAID_READ_FAST);raidReadAt={char:who,until:Date.now()+raidFailMs,fail:true};return true;};
+  // ещё и усиливало ограничение игры. Теперь растущая пауза 1,5 → 3 → 6 → 12 с; удачное чтение её сбрасывает.
+  // Ревью: на Старте то же, пауза 1,5 → 3 → 6 с (этап Старта ≤ 2 мин) — раньше на Старте паузы не было вовсе
+  const failLater=()=>{
+    if(start){startFailMs=Math.min(START_READ_FAIL_MAX,startFailMs?startFailMs*2:RAID_READ_FAST);startReadAt={char:who,gen,until:Date.now()+startFailMs,fail:true};return true;}
+    raidFailMs=Math.min(RAID_READ_SLOW,raidFailMs?raidFailMs*2:RAID_READ_FAST);raidReadAt={char:who,until:Date.now()+raidFailMs,fail:true};return true;};
   // 20.43: тур РБ, окончательный отказ от навыка — бафф пропускается на час, призыв откладывает тур на 30 мин; запись до снятия pending
   const raidGiveUp=async(P,note)=>{
     const now=Date.now(),old=raidSkip(),buffs=Object.fromEntries(Object.entries(old?.buffs||{}).filter(([,t])=>t>now));
@@ -153,7 +167,7 @@ async function petPrepare(o = {}) {
     const data=await read('/character'),ch=data.character||data;
     if(!valid())return true;
     if(ch.name!==who||ch.inBattle!==false||!Number.isSafeInteger(ch.revision)||`${ch.classSlots?.activeSlot}:${classProf(ch.l2Profession)}`!==key)return failLater();
-    if(!start){raidFailMs=0;if(raidReadAt?.fail)raidReadAt=null;}
+    if(start){startFailMs=0;if(startReadAt?.fail)startReadAt=null;}else{raidFailMs=0;if(raidReadAt?.fail)raidReadAt=null;}
     noteSnapshot(ch);
     let J=env.rt[jobKey];
     if(J&&(J.char!==who||J.classKey!==key)){await save(null);return true;}
@@ -170,7 +184,9 @@ async function petPrepare(o = {}) {
             if(!await save({...J,pending:null,retries:n}))return true;
             env.rec?.('B','суммон',tag+': «'+pending.name+'» не подтверждён сервером — повторю ('+n+'/2)');return true;
           }
-          env.setStatus?.(Date.now()-pending.at>15000?tag+': подтвердите «'+pending.name+'» вручную на панели — продолжу после свежей сверки; автоматически не повторяю':'Подготовка кота: жду подтверждения навыка');return true;
+          // 20.43 (автономность, доводка 21.10, ревью): следующее чтение — через 1,5 с (первые 15 с) или 3 с, а не на каждом круге
+          const age=Date.now()-pending.at;
+          env.setStatus?.(age>15000?tag+': подтвердите «'+pending.name+'» вручную на панели — продолжу после свежей сверки; автоматически не повторяю':'Подготовка кота: жду подтверждения навыка');return later(age<15000?RAID_READ_FAST:RAID_READ_WAIT);
         }
         J={...J,settings,kick,pending:null};if(!await save(J))return true;
         if(pending.kind==='summon'){const t=Date.now();await env.setRt({petBornT:t,petSummonOkT:t});}   // 20.43: и отметка принятого призыва (combat.petAlive)
@@ -220,7 +236,7 @@ async function petPrepare(o = {}) {
         if(panel.hotbar===false||!panel.summon&&!pet){
           if(!J.hotbarWait){if(!await save({...J,hotbarWait:Date.now()}))return true;}
           else if(Date.now()-J.hotbarWait>10000)return giveUp(J,'панель навыков кота не открылась');
-          env.setStatus?.(tag+': жду родную панель навыков кота');return true;
+          env.setStatus?.(tag+': жду родную панель навыков кота');return later(RAID_READ_FAST);   // 20.43 (доводка 21.10, ревью): чтение раз в 1,5 с
         }
         if(buffs&&Array.isArray(panel.missing)&&panel.missing.length&&!J.missing){
           if(!await save(J={...J,missing:panel.missing.slice(0,10)}))return true;

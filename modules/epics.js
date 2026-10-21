@@ -997,6 +997,8 @@ async function epicStep() {
     }
     if (E.mapLoadT || E.mapLoadReloads) { await epicSet({ mapLoadT: 0, mapLoadReloads: 0 }); if (!active()) return; }
     if (env.rt.mapBad) { await env.setRt({ mapBad: null }); if (!active()) return; }   // 20.43 (ревью): карта загрузилась — метка снята
+    // 20.43 (автономность, доводка 21.10, ревью): и цепочка «отсрочка карты → проверка не прошла» прервана (content.selfHoldMapChain)
+    { const ok = env.mapArriveOk?.('epicMap'); if (ok) { await ok; if (!active()) return; } }
     const r = await env.waitX(() => epicPins().find(x => x.k === E.k), 5000, 300);
     if (!active()) return;
     if (!r) {

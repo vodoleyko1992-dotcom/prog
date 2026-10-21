@@ -1632,6 +1632,8 @@ async function rbHuntStep() {
       return huntDone(H.id, `${H.name}: карта не загрузилась после 3 обновлений — откладываю этого РБ на 30 мин; следующий платный перелёт — только после проверки карты`);
     }
     if (env.rt.mapBad) { await env.setRt({ mapBad: null }); if (!active() || !sameJob()) return; }   // 20.43 (ревью): карта загрузилась — метка снята
+    // 20.43 (автономность, доводка 21.10, ревью): и цепочка «отсрочка карты → проверка не прошла» прервана — следующая отсрочка снова обычная
+    { const ok = env.mapArriveOk?.('raidMap'); if (ok) { await ok; if (!active() || !sameJob()) return; } }
     const r = await env.waitX(() => raidList().find(x => x.id === H.id), 5000, 300);
     if (!active() || !sameJob()) return;
     if (!r) {
