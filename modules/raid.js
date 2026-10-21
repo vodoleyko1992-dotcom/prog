@@ -1196,11 +1196,21 @@ function tourFaOn() {
   return env.tourFaWanted ? !!env.tourFaWanted() : env.cfg.rbFaFull !== false && !env.rt.dailyRb;
 }
 
+// 20.45 (лог 22.10 09:03): платный бафф суммона — и голему Warsmith/Maestro (warlock.fullClass). Голем живёт 60 мин: после перепризыва
+// набор пропадает, а за оплаченный срок повторно не покупаем (early-loss). Поэтому у голема «купить нельзя по правилам» (бюджет, цена,
+// резерв, автообновление, срок прошлого суммона, архив) — тур идёт без набора, а не ждёт вечно. Кот/пантера ждут, как раньше (10.0.21–23).
+const SUMMON_NO_BUY = /^(?:budget|price|reserve|renew|early-loss|archived)$/;
+function rbSummonFullOn() {
+  const prof = env.rt.classCur?.prof || '';
+  return env.cfg.petFullAuto === true && (env.warlock?.fullClass ? !!env.warlock.fullClass(prof)
+    : /^(?:human_|dwarf_)?(?:warlock|arcana_lord|dark_avenger|hell_knight|warsmith|maestro)$/.test(prof));
+}
+const rbSummonGolem = () => /^(?:dwarf_)?(?:warsmith|maestro)$/.test(env.rt.classCur?.prof || '');
 function rbSummonBuffReady() {
   if (env.warlock?.raidReady?.() === false) return false;
-  if (env.cfg.petFullAuto !== true || !/^(?:human_)?(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) return true;
+  if (!rbSummonFullOn()) return true;
   const s = env.warlock?.summary?.();
-  return s?.status === 'active' && s.expiresAt > Date.now() + 60000;
+  return s?.status === 'active' && s.expiresAt > Date.now() + 60000 || rbSummonGolem() && SUMMON_NO_BUY.test(s?.status || '');
 }
 
 async function huntSet(p) { await env.setRt({ rbHunt: { ...(env.rt.rbHunt || {}), ...p, t: Date.now() } }); }
@@ -1246,7 +1256,7 @@ function rbTravelBudget(row) {
 
 // 20.12 (ревизия 17.10): бюджет телепорта до покупки набора за FA. РБ на этой карте — без телепорта, бюджет не нужен.
 // Несвежий кошелёк перечитывается (GET /character, бесплатно); не подтвердился — FA не тратим.
-let rbFaBudgetSaid = '', rbPetHoldSaid = '';
+let rbFaBudgetSaid = '', rbPetHoldSaid = '', rbSummonNoBuySaid = '';
 async function rbFaBudgetWhy(row, active) {
   if (!row || !tourFaOn()) return '';
   if (env.isMap?.() && raidList().some(r => r.id === row.id)) return '';
@@ -1784,9 +1794,14 @@ async function rbHuntStep() {
     if (!active()) return;
     if (await env.warlock?.raidPrepare?.()) { if (active()) await rbHuntPhase('prepare', 'призываю и бафаю кота до боя с РБ'); return; }
     if (!active()) return;
-    if (env.cfg.petFullAuto === true && /^(?:human_)?(?:warlock|arcana_lord|dark_avenger|hell_knight)$/.test(env.rt.classCur?.prof || '')) {
+    if (rbSummonFullOn()) {
       await env.warlock?.step?.({ forceRead: true });
       if (!active()) return;
+      const s0 = env.warlock?.summary?.();
+      if (rbSummonGolem() && SUMMON_NO_BUY.test(s0?.status || '') && rbSummonNoBuySaid !== preparing.id + s0.status) {
+        rbSummonNoBuySaid = preparing.id + s0.status;
+        env.rec('B', 'тур РБ', `${preparing.name}: полный бафф суммона не беру — ${s0.reason || s0.status}; иду без него`);
+      }
       if (!rbSummonBuffReady()) {
         const s = env.warlock?.summary?.();
         await rbHuntPhase('prepare', `жду полный бафф суммона: ${s?.reason || 'нет подтверждения'}; к РБ пока не иду`);
