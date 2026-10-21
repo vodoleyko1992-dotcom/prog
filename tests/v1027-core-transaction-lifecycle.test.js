@@ -52,14 +52,16 @@ test('reload сменил epoch: запоздалый acquire старого д�
  const stale=await f.call({...req,epoch:old.epoch});assert.equal(stale.ok,false);assert.equal(f.state.lock.epoch,fresh.epoch);
 });
 
-test('потерянный ACK и непроверенная карта → остановка → reload: повторного платежа нет',async()=>{
- const f=teleportFixture({noArrival:true});await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,false);assert.ok(f.e.rt.zoneGo.nativeTp);f.reload();await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,false);
+// 20.43 (автономность, разбор 21.10): неизвестный исход — сверка по серверу без паузы (бот включён); повторного платежа по-прежнему нет
+test('потерянный ACK и непроверенная карта → сверка без паузы → reload: повторного платежа нет',async()=>{
+ const f=teleportFixture({noArrival:true});await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,true);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.rt.zoneGo.check.n,1);f.reload();await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.on,true);assert.ok(f.e.rt.zoneGo.nativeTp);
 });
 test('обычная world-зона с currentZoneId=null подтверждается exact native ACK',async()=>{
  const f=teleportFixture({noArrival:true,receipt:true});await f.tick();assert.equal(f.clicks(),1);assert.equal(f.e.rt.zoneGo,null);assert.equal(f.e.on,true);
 });
+// 20.43: вместо паузы — сверка (бот включён), маршрут не завершён
 test('запоздалый ACK другого native intent не завершает маршрут',async()=>{
- const f=teleportFixture({noArrival:true,receipt:true,badNonce:true});await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,false);
+ const f=teleportFixture({noArrival:true,receipt:true,badNonce:true});await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,true);assert.ok(f.e.rt.zoneGo.check);
 });
 for(const change of ['stop','char','mode','lease'])test('изменение '+change+' во время durable intent запрещает клик',async()=>{
  const f=teleportFixture();f.e.rtCommit=async()=>{if(f.e.rt.zoneGo?.nativeTp){if(change==='stop')f.e.on=false;if(change==='char')f.e.rt={char:'Other'};if(change==='mode')f.e.rt.manualKickAt=100;if(change==='lease')f.e.lease=()=> 'lease-2';}return true};
@@ -88,4 +90,5 @@ test('BFCache восстановление перечитывает runtime в �
  listeners.pageshow({isTrusted:true,persisted:true});assert.equal(box.tabOwner,false);assert.equal(box.leaseEpoch,null);assert.deepEqual(calls,['clear','reload']);
 });
 
-test('город Heine не доказывает точную обычную локацию при lost ACK',async()=>{const f=teleportFixture({id:'heine',noArrival:true});f.ch.cityId='l2dop_heine';await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,false)});
+// 20.43: вместо паузы — сверка (бот включён); тот же город до и после клика не считается «герой уже в другом месте»
+test('город Heine не доказывает точную обычную локацию при lost ACK',async()=>{const f=teleportFixture({id:'heine',noArrival:true});f.ch.cityId='l2dop_heine';await f.tick();assert.equal(f.clicks(),1);assert.ok(f.e.rt.zoneGo.nativeTp);assert.equal(f.e.on,true);assert.ok(f.e.rt.zoneGo.check)});

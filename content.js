@@ -3140,7 +3140,8 @@ async function loopWatchdog() {
   // 20.13 (ревизия 17.10, шаг 5, аудит core-a/M5): заброс с неизвестным исходом (rt.fishCastPending) — тоже честное ожидание сверки
   // (повтор вслепую запрещён, рыбалка сама перечитывает сервер); раньше 3 перезагрузки и полная остановка бота за ≈36 мин.
   // Ревью: только пока сама рыбалка ждёт сверки (fishNow, не бой) — старая запись при другой задаче (бой/закупка/маршрут) сторожа не глушит
-  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
+  // 20.43 (автономность, разбор 21.10): сверка исхода перелёта (до 30 мин, GET раз в 30–60 с) — честное ожидание, не «нет прогресса»
+  const activeJob = !L2V7Modules.payments?.pending?.() && (!(typeof dailyWorkWaiting==='function' && dailyWorkWaiting())) && !L2V7Modules.navigation?.travelPending?.() && (autonomyMode() !== 'enchant' || isBattle() || !!rt.shop?.urgent || (isFishing() && fishState())) && !(rt.fishCastPending && fishNow() && !isBattle()) && (isBattle() || !!rt.shop || !!rt.rbGo || !!rt.zoneGo || !!rt.mmJob ||
     !!rt.tbuff || (!!rt.epic && !['pick', 'prep'].includes(rt.epic.step)) ||
     !!rt.invScan || fishNow());
   // 10.0 (аудит ядра): капча / блок PvE-фарма на странице боя — ждём человека, это не «нет прогресса» (раньше 3 перезагрузки и стоп через ≈36 мин)
@@ -3289,7 +3290,7 @@ async function loopMenuJobs() {
   if (rt.zoneScan && !isBattle()) { if (isTeleport()) await zoneCatalogScan(); else { (L2V7Modules.actions?.canAct?.() !== false && (location.href = '/teleport.html')); await sleep(4000); } return true; }
   if (rt.zoneGo && !isBattle()) {
     if (rt.zoneGo.id === 'ashen_bastion' && rt.zoneGo.returnPath === '/ashen-bastion.html') { await zoneGoStep(); return true; }
-    if (rt.zoneGo.forumTp) { await zoneGoStep(); return true; } // Не терять незавершённую оплату по таймауту маршрута.
+    if (rt.zoneGo.forumTp || rt.zoneGo.nativeTp) { await zoneGoStep(); return true; } // Не терять незавершённую оплату по таймауту маршрута; 20.43: и квитанцию обычного телепорта (сверка исхода)
     const onSrc = isTeleport() || (rt.zoneGo.url && location.pathname + location.search === rt.zoneGo.url);
     if (Date.now() - (rt.zoneGo.t || 0) < 120000 && (onSrc || !rt.zoneGoT || Date.now() - rt.zoneGoT > 120000)) { await zoneGoStep(); return true; }
     await setRt({ zoneGo: null });              // уже нажали «Телепорт» и страница сменилась — улетели, дальше обычная охота
@@ -5395,9 +5396,11 @@ L2V7Modules.actions = L2V7Factories.actions({
  ]}
 });
 const actionLocation=L2V7Modules.actions.locationProxy(location);
+// 20.43 (автономность, разбор 21.10): незакрытая квитанция перелёта (navigation.travelPending — исход клика сверяется, бот не на паузе)
+// запрещает новые оплаты так же, как ожидание оплаты кота и заточки
 L2V7Modules.payments = L2V7Factories.payments({
  get rt(){return rt},get setRt(){return setRt},get rtCommit(){return rtCommit},get on(){return on},get tabOwner(){return tabOwner},get rec(){return rec},get autonomyMode(){return autonomyMode},
- get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending}
+ get lease(){return ()=>leaseEpoch},get paymentContext(){return ()=>L2V7Modules.actions.context()},get canRun(){return ()=>L2V7Modules.actions.canAct()},get externalPending(){return ()=>!!rt.petFull?.pending||!!rt.enchant?.pending||!!L2V7Modules.navigation?.travelPending?.()}
 });
 
 

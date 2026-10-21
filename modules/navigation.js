@@ -386,6 +386,13 @@ function onNativeTeleportNet(path,d) {
   if(!p||path!=='/game/teleport'||d.method!=='POST'||p.char!==env.rt.char||p.kick!==env.rt.manualKickAt||
     d.nativeNonce!==p.nonce||d.req?.teleportId!==p.id||d.req?.expectedAdenaCost!==p.cost||!Number.isSafeInteger(d.req?.expectedRevision)||d.req.expectedRevision<p.revision)return;
   const ch=d.res?.character, good=d.status>=200&&d.status<300&&!d.error&&!d.res?.error&&d.res?.ok!==false;
+  // 20.43 (автономность, разбор 21.10): явный отказ сервера на этот самый запрос (4xx из списка, 2xx с error/ok:false, 500 с кодом
+  // «не хватает…» — общее правило L2PayOutcome.classify) — оплаты точно не было: шаг снимет перелёт без паузы. 5xx/обрыв — неизвестно
+  if(!good&&root.L2PayOutcome?.classify?.(d)==='rejected'&&(!ch||ch.name===p.char&&ch.id===p.charId)){
+    p.ack={ok:false,refused:true,status:+d.status||0,t:Date.now()};
+    try{root.sessionStorage?.setItem('l2bot.nativeTeleportAck',JSON.stringify({nonce:p.nonce,ack:p.ack}));}catch(_){}
+    env.setRt({zoneGo:g}).catch(()=>{});return;
+  }
   if(!good||!ch||ch.name!==p.char||ch.id!==p.charId||!Number.isSafeInteger(ch.revision)||ch.revision<=d.req.expectedRevision)return;
   p.ack={ok:true,t:Date.now()};
   try{root.sessionStorage?.setItem('l2bot.nativeTeleportAck',JSON.stringify({nonce:p.nonce,ack:p.ack}));}catch(_){}
@@ -412,16 +419,95 @@ function onForumTeleportNet(path, d) {
 async function forumCharacter() {
   try { const r = await env.gameGet('/character'); return r.ok ? (await r.json())?.character : null; } catch (_) { return null; }
 }
-async function forumFinish(g, active) {
+async function forumFinish(g, active, note = '') {
   if (!active()) return;
   await env.setRt({ zoneGo: null, zonePend: null, zone: g.id, zoneGoT: Date.now(), lvlRelax: null, lvlRelaxDown: null });
   try { root.sessionStorage?.removeItem(FORUM_TP_ACK); } catch (_) {}
-  env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером`);
+  env.rec('B', 'локации', `${zoneName(g.id)}: прибытие подтверждено сервером${note ? ` (${note})` : ''}`);
 }
 async function forumUncertain(why, active) {
   if (!active()) return;
   env.rec('B', 'локации', `${why}; повторная оплата телепорта запрещена`);
   await env.pauseBot?.(`Телепорт: ${why}. Проверьте положение героя`, { fault: true });   // 20.43: сервер лежит — ждём его, не пауза
+}
+
+// 20.43 (автономность, разбор 21.10; docs/NIGHT-FARM-2026-10-17.md: 07:25:08 POST телепорта в Coliseum → 502, 07:25:16 пауза
+// «прибытие не подтверждено» до утра, хотя уже в 07:25:46 GET /character вернул 200 и герой стоял в Aden): сбой перелёта больше
+// не ставит бота на паузу.
+//  (а) клика не было (не прочитался персонаж, квитанция не записалась до клика) или сервер явно отказал — оплаты точно не было:
+//      перелёт снят, зона 6 ч «плохая» (как при нехватке адены), строка в журнал, бот работает дальше (travelDrop);
+//  (б) клик был, исход неизвестен — маршрут и квитанция остаются, платное запрещено (маршрут держит круг, payments.prepare — через
+//      externalPending ядра), раз в 30–60 с бесплатный GET /character (travelVerify). Пауза с причиной — только если сверить не удаётся
+//      30 мин. Состояние сверки — zoneGo.check, переживает reload. Stop/другой герой — шаг выходит без оплаты, без паузы и без записи
+//      (новый Старт снимает старый маршрут сам — диспетчер действий по смене manualKickAt).
+const TRAVEL_GAP = 30000, TRAVEL_GAP_MAX = 60000, TRAVEL_GIVEUP = 30 * 60000, NATIVE_TP_ACK = 'l2bot.nativeTeleportAck';
+const travelReceipt = g => g?.nativeTp || g?.forumTp || null;
+// ядро: незакрытая квитанция перелёта запрещает другие оплаты и не считается «нет прогресса» у сторожа
+const travelPending = () => !!travelReceipt(env.rt.zoneGo);
+const travelPlace = ch => ({ zone: ch?.currentZoneId ?? null, city: ch?.cityId ?? null });
+const adenaOf = v => { const n = typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v; return Number.isSafeInteger(n) && n >= 0 ? n : null; };
+const travelRnd = (a, b) => typeof env.rnd === 'function' ? env.rnd(a, b) : a + Math.random() * (b - a);
+function travelForget() { try { root.sessionStorage?.removeItem(FORUM_TP_ACK); root.sessionStorage?.removeItem(NATIVE_TP_ACK); } catch (_) {} }
+// (а): перелёт без оплаты — снять маршрут без паузы; toMap — со страницы телепорта на карту (как при нехватке адены).
+// zoneGoT — «была попытка»: при сбоящем GET /character автофарм (10 мин) и цель ресурса (3 мин) не перебирают зоны подряд, помечая
+// их все «плохими»; поэтому и zoneLvlT не сбрасываем (выбор зоны по уровню — не чаще раза в 5 мин)
+async function travelDrop(g, why, active, toMap = false) {
+  if (!active()) return;
+  env.rec('B', 'локации', `${zoneName(g.id)}: ${why} — оплаты не было, перелёт снят, зону 6 ч не выбираю; работаю дальше без паузы`);
+  await env.setRt({ zoneGo: null, zoneGoT: Date.now(), zoneTried: { ...(env.rt.zoneTried || {}), [g.id + ':' + env.heroLvl()]: Date.now() },
+    zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } });
+  travelForget();
+  if (toMap && env.on !== false && env.tabOwner !== false) { location.href = '/map.html'; await env.sleep(3000); }
+}
+// Ревизия выросла, герой не в бою и уже не там, где стоял до клика, а адены убыло не меньше цены (или переход бесплатный), —
+// перелёт состоялся, только currentZoneId не совпал с id телепорта. Ошибиться этот вывод может лишь в сторону «оплата прошла»
+function travelMoved(p, ch) {
+  const a = p.from, b = travelPlace(ch), cost = +p.cost || 0, adena = adenaOf(ch?.adena);
+  if (!a || !ch || ch.inBattle || ch.activeDungeonId || (b.zone == null && b.city == null) || (a.zone === b.zone && a.city === b.city)) return false;
+  return cost === 0 || (p.adena != null && adena != null && adena <= p.adena - cost);
+}
+// (б): сверка исхода клика по серверу. Повтор оплаты допускается только после доказательства «телепорт не прошёл»:
+// ревизия и адена героя те же, что до клика (L2PayOutcome.unchanged), в двух сверках подряд с промежутком ≥ 30 с, первая — не раньше
+// 30 с после клика (поздний ответ сервера успеет изменить ревизию)
+async function travelVerify(g, active, why) {
+  const p = travelReceipt(g); if (!p || !active()) return;
+  const native = !!g.nativeTp, name = zoneName(g.id), kick = env.rt.manualKickAt;
+  let c = g.check && g.check.kick === kick ? g.check : null;
+  if (c && Date.now() < (+c.next || 0)) {
+    env.setStatus(`Телепорт в ${name}: исход не подтверждён — сверка ${c.n}, следующая через ${Math.ceil((c.next - Date.now()) / 1000)} с; платное не трачу`);
+    await env.sleep(1000); return;
+  }
+  const fresh = !c; if (fresh) c = { kick, t0: Date.now(), at: 0, next: 0, n: 0, same: 0, sameAt: 0, why };
+  const ch = await forumCharacter();
+  if (!active()) return;                           // Stop / другой герой / новый Старт во время сверки — без оплаты, паузы и записи
+  const now = Date.now(), mine = !!ch && p.char === env.rt.char && ch.name === p.char && (!p.charId || ch.id === p.charId) && Number.isSafeInteger(ch.revision);
+  c = { ...c, at: now, next: now + travelRnd(TRAVEL_GAP, TRAVEL_GAP_MAX), n: c.n + 1 };
+  if (mine && ch.revision > p.revision && (native ? nativeTargetReached(g.id, ch) : forumTargetReached(g.id, ch))) { await forumFinish(g, active, c.n > 1 ? `сверка ${c.n}` : ''); return; }
+  const same = mine && root.L2PayOutcome?.unchanged?.({ revision: p.revision, adena: p.adena ?? null }, ch) === true;
+  if (same && now - (+p.sentAt || 0) >= TRAVEL_GAP) {
+    if (c.same && now - c.sameAt >= TRAVEL_GAP) {
+      env.rec('B', 'локации', `${name}: телепорт не прошёл — ревизия героя (${p.revision}) и адена не изменились в двух сверках с промежутком ${Math.round((now - c.sameAt) / 1000)} с; оплаты не было, перелёт снят, работаю дальше`);
+      await env.setRt({ zoneGo: null, zonePend: null }); travelForget(); return;
+    }
+    if (!c.same) c = { ...c, same: 1, sameAt: now };
+  } else if (mine && ch.revision > p.revision) {
+    c = { ...c, same: 0, sameAt: 0 };
+    if (travelMoved(p, ch)) {
+      const a = p.from, b = travelPlace(ch);
+      env.rec('B', 'локации', `${name}: ответ телепорта не подтверждён, но герой уже в другом месте (было ${a.zone || a.city || '?'}, сейчас ${b.zone || b.city || '?'}) — перелёт состоялся, оплату считаю прошедшей; повтора нет`);
+      await env.setRt({ zoneGo: null, zonePend: null, zoneGoT: now }); travelForget(); return;
+    }
+  }
+  if (fresh) env.rec('B', 'локации', `${name}: ${why}; повторная оплата запрещена. На паузу не встаю: сверяю положение героя раз в 30–60 с (бесплатный GET /character), платное до итога не трачу`);
+  if (now - c.t0 >= TRAVEL_GIVEUP && !(c.same && now - c.sameAt < 2 * TRAVEL_GAP_MAX)) {
+    g.check = c; await env.setRt({ zoneGo: g }); if (!active()) return;
+    await forumUncertain(`${c.why || why}: исход перелёта в «${name}» не удалось сверить за 30 мин (${c.n} сверок)`, active);
+    // сервер лежал — pauseBot ждал его, а не встал на паузу: ещё 5 мин сверки после его возвращения
+    if (active()) { g.check = { ...c, t0: Date.now() - TRAVEL_GIVEUP + 5 * 60000 }; await env.setRt({ zoneGo: g }); }
+    return;
+  }
+  g.check = c; await env.setRt({ zoneGo: g });
+  env.setStatus(`Телепорт в ${name}: исход не подтверждён — сверка ${c.n}${c.same ? ' (без изменений)' : ''}; платное не трачу`);
 }
 
 async function zoneGoStep() {                     // полёт: Телепорт → раскрыть город → «Телепорт» у нужной зоны
@@ -430,10 +516,13 @@ async function zoneGoStep() {                     // полёт: Телепор�
   const kick = env.rt.manualKickAt, char = env.rt.char;
   const active = () => env.on !== false && env.tabOwner !== false && env.canAct?.() !== false && env.rt.zoneGo === g && env.rt.manualKickAt === kick && env.rt.char === char;
   if (!active()) return;
+  // 20.43 (автономность, разбор 21.10): квитанция обычного телепорта уже есть — клик мог быть. Вместо одной сверки после reload и
+  // паузы — ACK этого запроса, иначе сверка по серверу раз в 30–60 с (travelVerify); явный отказ — снять перелёт без паузы
   if(g.nativeTp){
-    const p=g.nativeTp,ack=nativeAck(g),ch=ack?.ok?null:await forumCharacter();if(!active())return;
-    if(ack?.ok||(p.char===char&&p.kick===kick&&ch?.name===char&&ch.id===p.charId&&ch.revision>p.revision&&nativeTargetReached(g.id,ch)))await forumFinish(g,active);
-    else await forumUncertain('результат обычного телепорта не подтверждён',active);
+    const ack=nativeAck(g);
+    if(ack?.ok)await forumFinish(g,active);
+    else if(ack?.refused)await travelDrop(g,`сервер отказал в телепорте${ack.status?' (HTTP '+ack.status+')':''}`,active,isTeleport());
+    else await travelVerify(g,active,'результат обычного телепорта не подтверждён');
     return;
   }
   // 10.0.22: после Маммона возвращаемся в Ashen, не считаем произвольную карту успешным возвратом.
@@ -459,15 +548,22 @@ async function zoneGoStep() {                     // полёт: Телепор�
   // телепорта нет в «Телепорте», но есть кнопка на странице форума (как «Фарм ресурсов» → pavel_ruins)
   const viaUrl = g.url || (env.rt.zoneCat?.[g.id]?.forum && env.rt.zoneCat[g.id].url);
   if (viaUrl && (g.forum || !env.rt.zoneCat?.[g.id]?.city)) {
-    if (g.forumTp && !forumPendingFor(g)) { await forumUncertain('сохранённый платёж относится к другому персонажу или маршруту', active); return; }
-    const ack = forumAck(g), snapshot = ack?.ok ? null : await forumCharacter();
-    if (!active()) return;
-    const mine = !!snapshot && !!char && snapshot.name === char && (!g.forumTp || snapshot.id === g.forumTp.charId && snapshot.revision > g.forumTp.revision);
-    if (ack?.ok || (mine && forumTargetReached(g.id, snapshot))) { await forumFinish(g, active); return; }
-    if (g.forumTp || (isMap() && g.t && env.rt.zoneGoT >= g.t)) {
-      await forumUncertain(ack?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active); return;
+    // 20.43 (автономность, разбор 21.10): квитанция есть — клик мог быть: ни нового клика, ни паузы. ACK своего запроса (тот же
+    // персонаж, Старт и маршрут), иначе сверка по серверу (travelVerify); раньше квитанция с прошлого Старта/маршрута сразу ставила паузу
+    if (g.forumTp) {
+      const ack = forumAck(g);
+      if (ack?.ok) await forumFinish(g, active);
+      else if (ack?.refused) await travelDrop(g, 'сервер отказал в телепорте', active);
+      else await travelVerify(g, active, forumPendingFor(g) ? 'прибытие не подтверждено' : 'квитанция телепорта с прошлого запуска не подтверждена');
+      return;
     }
-    if (!mine || !snapshot.id || !Number.isSafeInteger(snapshot.revision)) { await forumUncertain('не удалось сверить персонажа и локацию', active); return; }
+    const snapshot = await forumCharacter();
+    if (!active()) return;
+    const mine = !!snapshot && !!char && snapshot.name === char;
+    if (mine && forumTargetReached(g.id, snapshot)) { await forumFinish(g, active); return; }
+    // 20.43: квитанции нет — клика не было (она пишется до клика): без паузы, перелёт снят (а)
+    if (isMap() && g.t && env.rt.zoneGoT >= g.t) { await travelDrop(g, 'прошлая попытка перелёта прервана до оплаты', active); return; }
+    if (!mine || !snapshot.id || !Number.isSafeInteger(snapshot.revision)) { await travelDrop(g, 'не удалось сверить персонажа и локацию перед оплатой', active); return; }
     if (location.pathname + location.search !== viaUrl) { env.setStatus(`Локации: лечу в ${zoneName(g.id)} (через форум)`); location.href = viaUrl; await env.sleep(4000); return; }
     let fb = await env.waitX(() => env.$q(`[data-teleport-id="${g.id}"]`), env.isFarmPage() ? 2000 : 8000, 200);
     if (!active()) return;
@@ -491,7 +587,7 @@ async function zoneGoStep() {                     // полёт: Телепор�
     if (!fb) { env.rec('B', 'локации', `${zoneName(g.id)}: кнопки телепорта на форуме нет`); await env.setRt({ zoneGo: null, rbZoneVisit: { ...(env.rt.rbZoneVisit || {}), [g.id]: Date.now() } }); location.href = '/map.html'; await env.sleep(3000); return; }
     if (!active()) return;
     const beforePay = await forumCharacter(); if (!active()) return;
-    if (!beforePay || beforePay.name !== char || beforePay.id !== snapshot.id || !Number.isSafeInteger(beforePay.revision)) { await forumUncertain('персонаж перед оплатой не подтверждён', active); return; }
+    if (!beforePay || beforePay.name !== char || beforePay.id !== snapshot.id || !Number.isSafeInteger(beforePay.revision)) { await travelDrop(g, 'персонаж перед оплатой не подтверждён', active); return; }
     if (forumTargetReached(g.id, beforePay)) { await forumFinish(g, active); return; }
     const cost = forumTeleportCost(fb);
     const budget = !cost.why && await teleportBudget(cost.price, active, beforePay);
@@ -499,19 +595,19 @@ async function zoneGoStep() {                     // полёт: Телепор�
     if (cost.why || budget) { env.rec('B', 'локации', `${zoneName(g.id)}: ${cost.why || budget} — не телепортируюсь`); await env.setRt({ zoneGo: null, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() } }); return; }
     env.rec('B', 'локации', `телепорт с форума → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
     if (!active()) return;
-    g.forumTp = { id: g.id, url: viaUrl, char, charId: beforePay.id, revision: beforePay.revision,
+    // 20.43: адена и место до клика — для сверки «ничего не изменилось» (L2PayOutcome.unchanged) и «герой уже в другом месте»
+    g.forumTp = { id: g.id, url: viaUrl, char, charId: beforePay.id, revision: beforePay.revision, adena: adenaOf(beforePay.adena), from: travelPlace(beforePay),
       cost: Number(fb.dataset.adenaCost), sentAt: Date.now(), nonce: Date.now() + ':' + Math.random().toString(36).slice(2), kick };
     const saved = await env.setRt({ zoneGo: g, ...(cost.price > 0 ? { adenaSeen: null } : {}) });
-    if (env.rtCommit ? !(await env.rtCommit()) : saved?.ok === false) { await forumUncertain('не удалось сохранить платёж до клика', active); return; }
+    if (env.rtCommit ? !(await env.rtCommit()) : saved?.ok === false) { await travelDrop(g, 'не удалось сохранить квитанцию до клика', active); return; }
     if (!active()) return;
     env.fire(fb);
     await env.waitX(() => forumAck(g) || location.pathname + location.search !== viaUrl, 6000, 200);
     if (!active()) return;
-    const result = forumAck(g), after = result?.ok ? null : await forumCharacter();
-    if (!active()) return;
-    if (result?.ok || (after?.name === char && after.id === g.forumTp.charId && after.revision > g.forumTp.revision && forumTargetReached(g.id, after))) {
-      await forumFinish(g, active);
-    } else await forumUncertain(result?.refused ? 'сервер отказал в телепорте' : 'прибытие не подтверждено', active);
+    const result = forumAck(g);
+    if (result?.ok) await forumFinish(g, active);
+    else if (result?.refused) await travelDrop(g, 'сервер отказал в телепорте', active);
+    else await travelVerify(g, active, 'прибытие не подтверждено');   // 20.43: первая сверка — сразу, без паузы
     return;
   }
   if (!isTeleport()) { env.setStatus(`Локации: лечу в ${zoneName(g.id)}`); location.href = '/teleport.html'; await env.sleep(4000); return; }
@@ -545,19 +641,22 @@ async function zoneGoStep() {                     // полёт: Телепор�
     await env.setRt({ zoneGo: null, zoneTried: tried, zoneBad: { ...(env.rt.zoneBad || {}), [g.id]: Date.now() }, zoneLvlT: 0, zoneCat: { ...(env.rt.zoneCat || {}), [g.id]: { ...(env.rt.zoneCat?.[g.id] || {}), price: cost.price, ...tc } } });
     location.href = '/map.html'; await env.sleep(3000); return;
   }
-  if(!before||before.name!==char||!before.id||!Number.isSafeInteger(before.revision)){await forumUncertain('персонаж перед телепортом не подтверждён',active);return;}
-  g.nativeTp={id:g.id,char,charId:before.id,revision:before.revision,cost:cost.price,kick,sentAt:Date.now(),nonce:Date.now()+':'+Math.random().toString(36).slice(2)};
+  // 20.43 (автономность, разбор 21.10): до клика оплаты не было — без паузы, перелёт снят (а); в квитанцию — адена и место до клика
+  if(!before||before.name!==char||!before.id||!Number.isSafeInteger(before.revision)){await travelDrop(g,'персонаж перед телепортом не подтверждён',active,true);return;}
+  g.nativeTp={id:g.id,char,charId:before.id,revision:before.revision,adena:adenaOf(before.adena),from:travelPlace(before),cost:cost.price,kick,sentAt:Date.now(),nonce:Date.now()+':'+Math.random().toString(36).slice(2)};
   const saved=await env.setRt({zoneGo:g,zoneTried:tried,zoneGoT:Date.now(),...(cost.price>0?{adenaSeen:null}:{})});
-  if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await forumUncertain('не удалось сохранить платёж до клика',active);return;}
+  if(env.rtCommit?!(await env.rtCommit()):saved?.ok===false){await travelDrop(g,'не удалось сохранить квитанцию до клика',active,true);return;}
   if (!active()) return;
   env.rec('B', 'локации', `телепорт → ${zoneName(g.id)}${g.why ? ' · ' + g.why : ''}`);
   env.fire(btn);
   // 10.0 (аудит фарма): переход на карту бывает дольше 2,5 с — удачный платный полёт писался «не улетели» и зона «плохой» на 6 ч. Ждём до 8 с
   await env.waitX(() => !isTeleport() || /недостат|not enough/i.test(document.body.innerText.slice(-4000)) || null, 8000, 200);
   if(!active())return;
-  const ack=nativeAck(g),after=ack?.ok?null:await forumCharacter();if(!active())return;
-  if(ack?.ok||(after?.name===char&&after.id===g.nativeTp.charId&&after.revision>g.nativeTp.revision&&nativeTargetReached(g.id,after)))await forumFinish(g,active);
-  else await forumUncertain('прибытие не подтверждено',active);
+  // 20.43: ACK этого запроса; явный отказ — снять без паузы; иначе сверка по серверу (первая — сразу), бот не встаёт на паузу
+  const ack=nativeAck(g);
+  if(ack?.ok)await forumFinish(g,active);
+  else if(ack?.refused)await travelDrop(g,`сервер отказал в телепорте${ack.status?' (HTTP '+ack.status+')':''}`,active,isTeleport());
+  else await travelVerify(g,active,'прибытие не подтверждено');
 }
 
 // 10.0.7 (лог 13.10 13:21, Necropolis of Devotion): бой в подземелье (spawnId sdms_<подземелье>_NNN) кончился не победой (ошибка загрузки,
@@ -614,6 +713,6 @@ async function goOutskirts() {                   // с любой страниц
 }
 
 const isCity = () => /\/city\.html/i.test(location.pathname);
- return { onForumTeleportNet, curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
+ return { onForumTeleportNet, travelPending, curOf, isMap, zoneRows, isTeleport, tpCitiesReady, zoneCatalogScan, zoneHere, zoneCatThin, zoneName, zoneTrack, zoneRate, kpdOf, catAll, zoneForLevel, zonePick, zoneGoStep, toMap, dungeonOfBattle, toOutskirts, zoneByLoc, goOutskirts, isCity };
  };
 })(globalThis);
